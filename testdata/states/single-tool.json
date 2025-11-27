@@ -1,0 +1,9 @@
+{
+  "installed": {
+    "kubectl": {
+      "version": "1.29.0",
+      "is_explicit": true,
+      "required_by": []
+    }
+  }
+}

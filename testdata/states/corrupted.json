@@ -1,0 +1,10 @@
+{
+  "installed": {
+    "kubectl": {
+      "version": "1.29.0",
+      "is_explicit": true,
+      /* invalid JSON comment */
+      "required_by": []
+    }
+  },
+  // Missing closing brace

@@ -1,0 +1,30 @@
+# Node.js - JavaScript runtime built on Chrome's V8 JavaScript engine
+# Official site: https://nodejs.org/
+
+[metadata]
+name = "nodejs"
+description = "JavaScript runtime built on Chrome's V8 (LTS version)"
+homepage = "https://nodejs.org/"
+version_format = "semver"
+
+[version]
+source = "nodejs_dist"  # Uses custom resolver for nodejs.org/dist
+
+[[steps]]
+action = "download_archive"
+url = "https://nodejs.org/dist/{version_tag}/node-{version_tag}-{os}-{arch}.tar.gz"
+checksum_url = "https://nodejs.org/dist/{version_tag}/SHASUMS256.txt"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["bin/node", "bin/npm"]
+install_mode = "directory"
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+[verify]
+command = "{install_dir}/bin/node --version"
+pattern = "{version}"
+
+[[verify.additional]]
+command = "{install_dir}/bin/npm --version"
+pattern = ""  # Just check npm is available

@@ -1,0 +1,13 @@
+[metadata]
+name = "tool-a"
+description = "Test main tool with dependency"
+version_format = "semver"
+dependencies = ["tool-b"]
+
+[[steps]]
+action = "run_command"
+command = "mkdir -p .install/bin && echo '#!/bin/sh\\necho tool-a' > .install/bin/tool-a && chmod +x .install/bin/tool-a"
+
+[verify]
+command = "{binary}"
+pattern = "tool-a"

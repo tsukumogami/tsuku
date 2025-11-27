@@ -1,0 +1,33 @@
+{
+  "tiers": {
+    "tier1": ["T1", "T2", "T3", "T4", "T5"],
+    "tier2": ["T16", "T17", "T18", "T19"],
+    "tier3": ["T40"],
+    "tier5": ["T23", "T24", "T25", "T26", "T27", "T28", "T30", "T31", "T32"]
+  },
+  "tests": {
+    "T1":  { "tool": "actionlint",   "tier": 1, "desc": "github_archive with version", "features": ["action:github_archive", "verify:pattern_with_version"] },
+    "T2":  { "tool": "btop",         "tier": 1, "desc": "github_archive no version",   "features": ["action:github_archive", "verify:pattern_without_version"] },
+    "T3":  { "tool": "argo-cd",      "tier": 1, "desc": "github_file with binary",     "features": ["action:github_file", "binary_field"] },
+    "T4":  { "tool": "boundary",     "tier": 1, "desc": "hashicorp_release",           "features": ["action:hashicorp_release"] },
+    "T5":  { "tool": "bombardier",   "tier": 1, "desc": "github_file simple",          "features": ["action:github_file"] },
+    "T16": { "tool": "golang",       "tier": 2, "desc": "directory install",           "features": ["action:download_archive", "install_mode:directory", "version_detection:github_repo"] },
+    "T17": { "tool": "zig",          "tier": 2, "desc": "tar.xz install_dir",          "features": ["action:download_archive", "archive_format:tar.xz", "install_mode:directory"] },
+    "T18": { "tool": "rust",         "tier": 2, "desc": "custom source",               "features": ["action:download_archive", "install_mode:directory"] },
+    "T19": { "tool": "nodejs",       "tier": 2, "desc": "checksum verification",       "features": ["action:download_archive", "checksum:with", "install_mode:directory"] },
+    "T23": { "tool": "netlify-cli",  "tier": 5, "desc": "npm_install",                 "features": ["action:npm_install", "version_detection:npm"] },
+    "T24": { "tool": "serve",        "tier": 5, "desc": "npm_install empty pattern",   "features": ["action:npm_install", "verify:pattern_empty"] },
+    "T25": { "tool": "ruff",         "tier": 5, "desc": "pipx_install",                "features": ["action:pipx_install", "version_detection:pypi"] },
+    "T26": { "tool": "black",        "tier": 5, "desc": "pipx_install multi-exec",     "features": ["action:pipx_install", "executables:multiple"] },
+    "T27": { "tool": "cargo-audit",  "tier": 5, "desc": "cargo_install",               "features": ["action:cargo_install", "version_detection:crates_io"] },
+    "T28": { "tool": "cargo-watch",  "tier": 5, "desc": "cargo_install single",        "features": ["action:cargo_install"] },
+    "T30": { "tool": "bundler",      "tier": 5, "desc": "gem_install multi-exec",      "features": ["action:gem_install", "version_detection:rubygems", "executables:multiple"] },
+    "T31": { "tool": "jekyll",       "tier": 5, "desc": "gem_install single",          "features": ["action:gem_install"] },
+    "T32": { "tool": "fpm",          "tier": 5, "desc": "gem_install packaging",       "features": ["action:gem_install"] },
+    "T40": { "tool": "hello-nix",    "tier": 3, "desc": "nix_install simple",          "features": ["action:nix_install", "version_detection:nixpkgs", "platform:linux_only", "bootstrap:nix_portable"] }
+  },
+  "ci": {
+    "linux": ["T1", "T2", "T3", "T4", "T5", "T16", "T18", "T19", "T23", "T25", "T27", "T30", "T40"],
+    "macos": ["T1", "T3", "T4", "T16", "T18", "T19", "T23", "T25", "T27", "T30"]
+  }
+}

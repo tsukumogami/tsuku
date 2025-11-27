@@ -1,0 +1,12 @@
+[metadata]
+name = "tool-b"
+description = "Test dependency tool"
+version_format = "semver"
+
+[[steps]]
+action = "run_command"
+command = "mkdir -p .install/bin && echo '#!/bin/sh\\necho tool-b' > .install/bin/tool-b && chmod +x .install/bin/tool-b"
+
+[verify]
+command = "{binary}"
+pattern = "tool-b"

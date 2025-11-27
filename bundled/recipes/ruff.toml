@@ -1,0 +1,17 @@
+[metadata]
+name = "ruff"
+description = "An extremely fast Python linter, written in Rust"
+homepage = "https://github.com/astral-sh/ruff"
+version_format = "semver"
+
+[version]
+source = "pypi"
+
+[[steps]]
+action = "pipx_install"
+package = "ruff"
+executables = ["ruff"]
+
+[verify]
+command = "ruff --version"
+pattern = "ruff {version}"

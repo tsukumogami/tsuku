@@ -1,0 +1,108 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run tests
+        run: go test -v -race -coverprofile=coverage.out ./...
+
+      - name: Generate coverage report
+        run: go tool cover -func=coverage.out
+
+  # Generate test matrices - lightweight job that other jobs wait on
+  matrix:
+    name: Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      linux: ${{ steps.matrix.outputs.linux }}
+      macos: ${{ steps.matrix.outputs.macos }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate test matrices
+        id: matrix
+        run: |
+          LINUX=$(jq -c '[.ci.linux[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc}]' test-matrix.json)
+          MACOS=$(jq -c '[.ci.macos[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc}]' test-matrix.json)
+          echo "linux=$LINUX" >> $GITHUB_OUTPUT
+          echo "macos=$MACOS" >> $GITHUB_OUTPUT
+
+  integration-linux:
+    name: "Linux: ${{ matrix.test.tool }}"
+    needs: matrix
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        test: ${{ fromJson(needs.matrix.outputs.linux) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: "Install ${{ matrix.test.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install ${{ matrix.test.tool }}
+
+  integration-macos:
+    name: "macOS: ${{ matrix.test.tool }}"
+    needs: matrix
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        test: ${{ fromJson(needs.matrix.outputs.macos) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: "Install ${{ matrix.test.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install ${{ matrix.test.tool }}

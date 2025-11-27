@@ -1,0 +1,18 @@
+[metadata]
+name = "bundler"
+description = "Ruby dependency manager"
+homepage = "https://bundler.io/"
+version_format = "semver"
+dependencies = ["ruby"]
+
+[version]
+source = "rubygems"
+
+[[steps]]
+action = "gem_install"
+gem = "bundler"
+executables = ["bundle", "bundler"]
+
+[verify]
+command = "bundle --version"
+pattern = "Bundler version {version}"

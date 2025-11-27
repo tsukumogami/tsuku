@@ -1,0 +1,14 @@
+{
+  "installed": {
+    "tool-a": {
+      "version": "1.0.0",
+      "is_explicit": true,
+      "required_by": []
+    },
+    "tool-b": {
+      "version": "1.0.0",
+      "is_explicit": false,
+      "required_by": ["tool-a"]
+    }
+  }
+}
