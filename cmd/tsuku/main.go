@@ -9,19 +9,17 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/spf13/cobra"
 	"github.com/tsuku-dev/tsuku/bundled"
+	"github.com/tsuku-dev/tsuku/internal/buildinfo"
 	"github.com/tsuku-dev/tsuku/internal/config"
 	"github.com/tsuku-dev/tsuku/internal/executor"
 	"github.com/tsuku-dev/tsuku/internal/install"
 	"github.com/tsuku-dev/tsuku/internal/recipe"
 	"github.com/tsuku-dev/tsuku/internal/version"
-	"github.com/spf13/cobra"
 )
 
 var (
-	// Version is the current version of tsuku
-	Version = "0.3.0"
-
 	// loader holds the recipe loader
 	loader *recipe.Loader
 )
@@ -34,7 +32,6 @@ development tools across different platforms.
 
 It uses action-based recipes to download, extract, and install tools
 to version-specific directories, with automatic PATH management.`,
-	Version: Version,
 }
 
 var installCmd = &cobra.Command{
@@ -1040,6 +1037,9 @@ var verifyCmd = &cobra.Command{
 }
 
 func init() {
+	// Set version from build info (handles tagged releases and dev builds)
+	rootCmd.Version = buildinfo.Version()
+
 	// Initialize recipe loader
 	var err error
 	loader, err = recipe.NewLoader(bundled.Recipes)
