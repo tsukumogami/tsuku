@@ -1,0 +1,175 @@
+# Ruby - Dynamic programming language
+# Official site: https://www.ruby-lang.org/
+# Uses prebuilt binaries from ruby/ruby-builder (GitHub Actions team)
+# Bundles libyaml for full portability (no system dependencies required)
+
+[metadata]
+name = "ruby"
+description = "Ruby programming language (execution dependency for gem-based tools)"
+homepage = "https://www.ruby-lang.org/"
+version_format = "semver"
+
+[version]
+github_repo = "ruby/ruby-builder"
+tag_prefix = "ruby-"
+
+# Step 1: Download Ruby
+[[steps]]
+action = "download"
+url = "https://github.com/ruby/ruby-builder/releases/download/ruby-{version}/ruby-{version}-{os}-{arch}.tar.gz"
+dest = "ruby.tar.gz"
+os_mapping = { linux = "ubuntu-22.04", darwin = "darwin" }
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+# Step 2: Download libyaml from Homebrew bottles (tarballs, no ar needed)
+# Uses ghcr.io which requires anonymous token auth
+[[steps]]
+action = "run_command"
+command = '''
+# Homebrew bottles on ghcr.io require anonymous token auth
+# Platform-specific bottle SHA256s:
+ARCH=$(uname -m)
+OS=$(uname -s)
+
+if [ "$OS" = "Darwin" ]; then
+    # macOS bottles
+    if [ "$ARCH" = "arm64" ]; then
+        BLOB_SHA="98c0cf81bcdf7577d5fdc8cc18732970b9ae7e0e7423a733f88f0f566ba483ad"
+    else
+        BLOB_SHA="4d6e02ce3a82b60033bc7e55bef841dcfef0c05c051176d96accb50744136c6d"
+    fi
+else
+    # Linux bottles
+    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
+        BLOB_SHA="c725eb08fc7ab6aad7f744a30b230f9b9efa33f8d694849a2d4aadfabb203df3"
+    else
+        BLOB_SHA="354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8"
+    fi
+fi
+
+# Get anonymous token
+TOKEN=$(curl -sfS "https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/libyaml:pull" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+# Download bottle
+curl -sfSL -H "Authorization: Bearer $TOKEN" \
+    "https://ghcr.io/v2/homebrew/core/libyaml/blobs/sha256:$BLOB_SHA" \
+    -o libyaml.tar.gz
+'''
+description = "Downloading libyaml from Homebrew"
+
+# Step 3: Extract Ruby
+[[steps]]
+action = "extract"
+archive = "ruby.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+
+# Step 4: Extract libyaml (Homebrew bottles are tarballs for all platforms)
+[[steps]]
+action = "run_command"
+command = '''
+tar -xzf libyaml.tar.gz
+# Copy libyaml libraries to Ruby's lib directory
+# Linux uses .so, macOS uses .dylib
+find . -name "libyaml*.so*" -exec cp -L {} lib/ \; 2>/dev/null || true
+find . -name "libyaml*.dylib" -exec cp -L {} lib/ \; 2>/dev/null || true
+# Clean up extracted libyaml directory
+rm -rf libyaml libyaml.tar.gz
+'''
+description = "Extracting libyaml"
+
+# Step 5: Create wrapper for ruby binary
+[[steps]]
+action = "run_command"
+command = '''
+mv bin/ruby bin/ruby.real
+cat > bin/ruby << 'WRAPPER'
+#!/bin/bash
+# Resolve symlinks to get the real script location
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_PATH" ]; do
+    SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ $SCRIPT_PATH != /* ]] && SCRIPT_PATH="$SCRIPT_DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
+INSTALL_DIR="$(dirname "$SCRIPT_DIR")"
+
+# Set library paths for dynamically linked Ruby (includes bundled libyaml)
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export DYLD_LIBRARY_PATH="$INSTALL_DIR/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
+else
+    export LD_LIBRARY_PATH="$INSTALL_DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+fi
+
+# Dynamically detect Ruby version from lib/ruby directory
+RUBY_VERSION=$(ls -1 "$INSTALL_DIR/lib/ruby" 2>/dev/null | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+if [ -z "$RUBY_VERSION" ]; then
+    RUBY_VERSION=$("$INSTALL_DIR/bin/ruby.real" -e 'puts RUBY_VERSION' 2>/dev/null || echo "3.4.0")
+fi
+
+# Detect architecture for platform-specific paths
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    ARCH=$(uname -m)
+    if [ "$ARCH" = "arm64" ]; then
+        RUBY_ARCH="arm64-darwin"
+    else
+        RUBY_ARCH="x86_64-darwin"
+    fi
+    # Find the exact darwin version directory
+    DARWIN_DIR=$(ls -1 "$INSTALL_DIR/lib/ruby/$RUBY_VERSION" 2>/dev/null | grep -E "darwin" | head -1)
+    if [ -n "$DARWIN_DIR" ]; then
+        RUBY_ARCH="$DARWIN_DIR"
+    fi
+else
+    ARCH=$(uname -m)
+    case "$ARCH" in
+        x86_64) RUBY_ARCH="x86_64-linux" ;;
+        aarch64) RUBY_ARCH="aarch64-linux" ;;
+        *) RUBY_ARCH="$ARCH-linux" ;;
+    esac
+fi
+
+# Set Ruby library paths (override hardcoded paths from build)
+export RUBYLIB="$INSTALL_DIR/lib/ruby/site_ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/site_ruby/$RUBY_VERSION/$RUBY_ARCH:$INSTALL_DIR/lib/ruby/site_ruby:$INSTALL_DIR/lib/ruby/vendor_ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/vendor_ruby/$RUBY_VERSION/$RUBY_ARCH:$INSTALL_DIR/lib/ruby/vendor_ruby:$INSTALL_DIR/lib/ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/$RUBY_VERSION/$RUBY_ARCH${RUBYLIB:+:$RUBYLIB}"
+
+# Set GEM paths
+export GEM_HOME="$INSTALL_DIR/lib/ruby/gems/$RUBY_VERSION"
+export GEM_PATH="$GEM_HOME${GEM_PATH:+:$GEM_PATH}"
+
+exec "$INSTALL_DIR/bin/ruby.real" "$@"
+WRAPPER
+chmod +x bin/ruby
+
+# Convert Ruby scripts to bash wrappers that call ruby with the script
+for script in gem irb erb bundle bundler rake rdoc ri; do
+    if [ -f "bin/$script" ]; then
+        mv "bin/$script" "bin/$script.rb"
+        cat > "bin/$script" << 'SCRIPTWRAPPER'
+#!/bin/bash
+# Resolve symlinks to get the real script location
+SCRIPT_PATH="${BASH_SOURCE[0]}"
+while [ -L "$SCRIPT_PATH" ]; do
+    DIR="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
+    SCRIPT_PATH="$(readlink "$SCRIPT_PATH")"
+    [[ $SCRIPT_PATH != /* ]] && SCRIPT_PATH="$DIR/$SCRIPT_PATH"
+done
+SCRIPT_DIR="$(cd -P "$(dirname "$SCRIPT_PATH")" && pwd)"
+SCRIPT_NAME="$(basename "$SCRIPT_PATH")"
+exec "$SCRIPT_DIR/ruby" "$SCRIPT_DIR/${SCRIPT_NAME}.rb" "$@"
+SCRIPTWRAPPER
+        chmod +x "bin/$script"
+    fi
+done
+'''
+description = "Creating wrapper for ruby and converting Ruby scripts"
+
+# Step 6: Register binaries for symlinking
+[[steps]]
+action = "install_binaries"
+binaries = ["bin/ruby", "bin/gem", "bin/bundle", "bin/bundler", "bin/irb", "bin/erb"]
+install_mode = "directory"
+
+[verify]
+command = "{install_dir}/bin/ruby --version"
+pattern = "ruby {version}"
