@@ -1,0 +1,111 @@
+# golangci-lint configuration for tsuku
+# Documentation: https://golangci-lint.run/docs/configuration/
+version: "2"
+
+linters:
+  # Start with standard linters, then add specific ones
+  default: none
+  enable:
+    # Go's built-in checks
+    - govet
+
+    # Error handling
+    - errcheck
+
+    # Static analysis (staticcheck is comprehensive)
+    - staticcheck
+
+    # Detect ineffective assignments
+    - ineffassign
+
+    # Find unused code
+    - unused
+
+    # Catch common misspellings
+    - misspell
+
+    # Context usage patterns - disabled because version.New() is a constructor
+    # that doesn't make network calls, but sets up clients for later use
+    # - contextcheck
+
+    # Security checks
+    - gosec
+
+    # HTTP body close verification
+    - bodyclose
+
+    # Detect duplicate code
+    - dupl
+
+  settings:
+    misspell:
+      locale: US
+
+    gosec:
+      excludes:
+        # Allow use of math/rand for non-cryptographic purposes
+        - G404
+        # Package manager must execute subprocesses (cargo, gem, npm, etc.)
+        - G204
+        # Package manager must open archive files from upstream sources
+        - G304
+        # Package manager must create executable files with 0755 permissions
+        - G302
+        - G306
+        # Package manager must create directories for tool installation
+        - G301
+        # HTTP requests to versioned URLs are expected
+        - G107
+        # Decompression is size-limited elsewhere in the code
+        - G110
+        # Errors unhandled in cleanup (defer Close, RemoveAll, etc.)
+        - G104
+        # Integer conversion for tar file modes is safe
+        - G115
+
+    dupl:
+      # Increase threshold - version providers have similar structures by design
+      threshold: 250
+
+    errcheck:
+      # These are almost always fine to ignore in defer
+      exclude-functions:
+        - (*os.File).Close
+        - (io.Closer).Close
+        - (*compress/gzip.Reader).Close
+        - (*compress/gzip.Writer).Close
+        - (*archive/tar.Reader).Close
+        - (*archive/zip.ReadCloser).Close
+        - (io.ReadCloser).Close
+        - (*io.ReadCloser).Close
+        # Cleanup functions where failure just means cleanup didn't work
+        - os.Remove
+        - os.RemoveAll
+        # Lock file close during cleanup
+        - (*github.com/gofrs/flock.Flock).Close
+        # Environment variable operations in tests
+        - os.Setenv
+        # Write operations where result doesn't matter
+        - fmt.Fprintf
+
+    staticcheck:
+      checks:
+        - "all"
+        # Disable style suggestions (ST*) - focus on bugs and correctness
+        - "-ST*"
+        # Disable quickfix suggestions (QF*) - these are stylistic
+        - "-QF*"
+
+run:
+  # Use configuration file location for relative paths
+  relative-path-mode: cfg
+
+  # Timeout for analysis
+  timeout: 5m
+
+issues:
+  # Use human-readable exclusion presets
+  exclusions:
+    presets:
+      - comments
+      - std-error-handling
