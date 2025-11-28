@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/tsuku-dev/tsuku/bundled"
 	"github.com/tsuku-dev/tsuku/internal/executor"
 	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsuku-dev/tsuku/internal/registry"
 )
 
 // EnsureNpm ensures npm is available, installing nodejs explicitly (not hidden) if needed
@@ -85,11 +85,9 @@ func ensurePackageManager(mgr *Manager, toolName, checkCmd, execName string, hid
 		fmt.Printf("Installing %s as runtime dependency...\n", toolName)
 	}
 
-	// Load recipe from bundled recipes
-	loader, err := recipe.NewLoader(bundled.Recipes)
-	if err != nil {
-		return "", fmt.Errorf("failed to initialize recipe loader: %w", err)
-	}
+	// Load recipe from registry
+	reg := registry.New(cfg.RegistryDir)
+	loader := recipe.New(reg)
 
 	r, err := loader.Get(toolName)
 	if err != nil {

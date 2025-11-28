@@ -10,12 +10,12 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tsuku-dev/tsuku/bundled"
 	"github.com/tsuku-dev/tsuku/internal/buildinfo"
 	"github.com/tsuku-dev/tsuku/internal/config"
 	"github.com/tsuku-dev/tsuku/internal/executor"
 	"github.com/tsuku-dev/tsuku/internal/install"
 	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsuku-dev/tsuku/internal/registry"
 	"github.com/tsuku-dev/tsuku/internal/version"
 )
 
@@ -37,7 +37,7 @@ to version-specific directories, with automatic PATH management.`,
 var installCmd = &cobra.Command{
 	Use:   "install <tool>...",
 	Short: "Install a development tool",
-	Long: `Install a development tool from the bundled recipe collection.
+	Long: `Install a development tool from the recipe registry.
 You can specify a version using the @ syntax.
 
 Examples:
@@ -233,7 +233,7 @@ var versionsCmd = &cobra.Command{
 var searchCmd = &cobra.Command{
 	Use:   "search <query>",
 	Short: "Search for tools",
-	Long:  `Search for tools in the bundled recipes by name or description.`,
+	Long:  `Search for tools in the cached recipes by name or description.`,
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := ""
@@ -295,7 +295,7 @@ var searchCmd = &cobra.Command{
 		}
 
 		if len(results) == 0 {
-			fmt.Printf("No bundled recipes found for '%s'.\n\n", query)
+			fmt.Printf("No cached recipes found for '%s'.\n\n", query)
 			fmt.Println("💡 Tip: You can still try installing it!")
 			fmt.Printf("   Run: tsuku install %s\n", query)
 			fmt.Println("   (Tsuku will attempt to find and install it using AI)")
@@ -341,7 +341,7 @@ var infoCmd = &cobra.Command{
 		// Load recipe
 		r, err := loader.Get(toolName)
 		if err != nil {
-			fmt.Printf("Tool '%s' not found in bundled recipes.\n", toolName)
+			fmt.Printf("Tool '%s' not found in registry.\n", toolName)
 			return
 		}
 
@@ -822,7 +822,7 @@ func installWithDependencies(toolName, reqVersion string, isExplicit bool, paren
 var recipesCmd = &cobra.Command{
 	Use:   "recipes",
 	Short: "List available recipes",
-	Long:  `List all available recipes in the bundled collection.`,
+	Long:  `List all cached recipes from the registry.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		names := loader.List()
 		sort.Strings(names)
@@ -833,6 +833,33 @@ var recipesCmd = &cobra.Command{
 			r, _ := loader.Get(name)
 			fmt.Printf("  %-20s  %s\n", name, r.Metadata.Description)
 		}
+	},
+}
+
+var updateRegistryCmd = &cobra.Command{
+	Use:   "update-registry",
+	Short: "Clear the recipe cache",
+	Long: `Clear the local recipe cache to force fresh downloads from the registry.
+
+This is useful when you want to get the latest recipes without waiting for
+automatic cache expiration.`,
+	Run: func(cmd *cobra.Command, args []string) {
+		reg := loader.Registry()
+		if reg == nil {
+			fmt.Println("Registry not configured.")
+			return
+		}
+
+		fmt.Println("Clearing recipe cache...")
+		if err := reg.ClearCache(); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to clear cache: %v\n", err)
+			os.Exit(1)
+		}
+
+		// Also clear in-memory cache
+		loader.ClearCache()
+
+		fmt.Println("Recipe cache cleared. Recipes will be fetched fresh on next use.")
 	},
 }
 
@@ -1040,13 +1067,16 @@ func init() {
 	// Set version from build info (handles tagged releases and dev builds)
 	rootCmd.Version = buildinfo.Version()
 
-	// Initialize recipe loader
-	var err error
-	loader, err = recipe.NewLoader(bundled.Recipes)
+	// Initialize registry client
+	cfg, err := config.DefaultConfig()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to initialize recipe loader: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Failed to get config: %v\n", err)
 		os.Exit(1)
 	}
+	reg := registry.New(cfg.RegistryDir)
+
+	// Initialize recipe loader with registry
+	loader = recipe.New(reg)
 
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(listCmd)
@@ -1058,6 +1088,7 @@ func init() {
 	rootCmd.AddCommand(infoCmd)
 	rootCmd.AddCommand(outdatedCmd)
 	rootCmd.AddCommand(verifyCmd)
+	rootCmd.AddCommand(updateRegistryCmd)
 }
 
 func main() {
