@@ -23,6 +23,7 @@ type Executor struct {
 	version    string   // Resolved version
 	reqVersion string   // Requested version (optional)
 	execPaths  []string // Additional bin paths for execution (e.g., nodejs for npm tools)
+	toolsDir   string   // Tools directory (~/.tsuku/tools/) for finding other installed tools
 }
 
 // New creates a new executor
@@ -86,6 +87,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		WorkDir:        e.workDir,
 		InstallDir:     e.installDir,
 		ToolInstallDir: "", // Set by composite actions when install_mode="directory" is used
+		ToolsDir:       e.toolsDir,
 		Version:        versionInfo.Version,
 		VersionTag:     versionInfo.Tag,
 		OS:             runtime.GOOS,
@@ -272,6 +274,11 @@ func (e *Executor) WorkDir() string {
 // SetExecPaths sets additional bin paths needed for execution (e.g., nodejs for npm tools)
 func (e *Executor) SetExecPaths(paths []string) {
 	e.execPaths = paths
+}
+
+// SetToolsDir sets the tools directory for finding other installed tools
+func (e *Executor) SetToolsDir(dir string) {
+	e.toolsDir = dir
 }
 
 // expandVars replaces {var} placeholders in a string

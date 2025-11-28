@@ -759,6 +759,9 @@ func installWithDependencies(toolName, reqVersion string, isExplicit bool, paren
 	// Set execution paths (for package managers like npm, pip, cargo)
 	exec.SetExecPaths(execPaths)
 
+	// Set tools directory for finding other installed tools
+	exec.SetToolsDir(cfg.ToolsDir)
+
 	// Execute recipe
 	ctx := context.Background()
 	if err := exec.Execute(ctx); err != nil {

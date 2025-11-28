@@ -115,6 +115,9 @@ func ensurePackageManager(mgr *Manager, toolName, checkCmd, execName string, hid
 	}
 	defer exec.Cleanup()
 
+	// Set tools directory for finding other installed tools
+	exec.SetToolsDir(cfg.ToolsDir)
+
 	// Execute recipe
 	ctx := context.Background()
 	if err := exec.Execute(ctx); err != nil {

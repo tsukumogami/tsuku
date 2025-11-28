@@ -69,7 +69,7 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 
 	// Fix pipx shebangs after copying to final location
 	// This ensures Python script shebangs point to the venv's python in the final path
-	_ = fixPipxShebangs(toolDir) // Ignore errors - not all tools use pipx
+	_ = fixPipxShebangs(toolDir, m.config.ToolsDir) // Ignore errors - not all tools use pipx
 
 	// Create symlink in current/ (unless hidden)
 	if opts.CreateSymlinks {
@@ -250,7 +250,7 @@ func copyFile(src, dst string) error {
 // fixPipxShebangs fixes Python script shebangs in pipx venvs after installation.
 // pipx creates scripts with shebangs pointing to absolute paths in temp directories.
 // We need to rewrite them to point to the venv's python in the final installation path.
-func fixPipxShebangs(toolDir string) error {
+func fixPipxShebangs(toolDir, toolsDir string) error {
 	// Check if there's a venvs/ directory (indicates pipx installation)
 	venvsDir := filepath.Join(toolDir, "venvs")
 	if _, err := os.Stat(venvsDir); os.IsNotExist(err) {
@@ -281,7 +281,7 @@ func fixPipxShebangs(toolDir string) error {
 			os.Remove(python3Link)
 
 			// Find python-standalone
-			pythonPath := findPythonStandalone()
+			pythonPath := findPythonStandalone(toolsDir)
 			if pythonPath != "" {
 				// Create correct relative symlink from venv's bin/ to python-standalone
 				relPath, err := filepath.Rel(venvBinDir, pythonPath)
@@ -315,14 +315,7 @@ func fixPipxShebangs(toolDir string) error {
 }
 
 // findPythonStandalone finds the path to tsuku's python-standalone installation
-func findPythonStandalone() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-
-	// Look for python-standalone in ~/.tsuku/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
+func findPythonStandalone(toolsDir string) string {
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
