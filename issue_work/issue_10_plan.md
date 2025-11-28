@@ -25,13 +25,13 @@ The existing CONTRIBUTING.md already covers basic CI/CD and testing. Rather than
 - None
 
 ## Implementation Steps
-- [ ] Add Development Setup section (Go version, prerequisites, build)
-- [ ] Expand Testing section (unit tests, integration tests, coverage, race detection)
-- [ ] Add Code Style section (formatting, linting)
-- [ ] Expand commit conventions with conventional commit format
-- [ ] Add Branch Naming section
-- [ ] Expand PR Process section
-- [ ] Add Adding Recipes section (pointing to tsuku-registry)
+- [x] Add Development Setup section (Go version, prerequisites, build)
+- [x] Expand Testing section (unit tests, integration tests, coverage, race detection)
+- [x] Add Code Style section (formatting, linting)
+- [x] Expand commit conventions with conventional commit format
+- [x] Add Branch Naming section
+- [x] Expand PR Process section
+- [x] Add Adding Recipes section (pointing to tsuku-registry)
 
 ## Testing Strategy
 - Manual verification: Review CONTRIBUTING.md renders correctly on GitHub
