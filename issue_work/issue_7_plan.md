@@ -17,9 +17,9 @@ Use the `go-version-file` parameter supported by `actions/setup-go@v5` to read t
 None
 
 ## Implementation Steps
-- [ ] Update `unit-tests` job setup-go step (line 21)
-- [ ] Update `integration-linux` job setup-go step (line 71)
-- [ ] Update `integration-macos` job setup-go step (line 100)
+- [x] Update `unit-tests` job setup-go step (line 21)
+- [x] Update `integration-linux` job setup-go step (line 71)
+- [x] Update `integration-macos` job setup-go step (line 100)
 
 Mark each step [x] after it is implemented and committed. This enables clear resume detection.
 
