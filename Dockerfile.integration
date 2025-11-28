@@ -1,0 +1,34 @@
+# Dockerfile for integration testing
+# Matches the CI environment (ubuntu-latest) with minimal dependencies
+FROM ubuntu:22.04
+
+# Avoid interactive prompts
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install minimal essentials (same as main Dockerfile)
+# This replicates the target user environment
+RUN apt-get update && \
+    apt-get install -y \
+        wget \
+        curl \
+        ca-certificates \
+        && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create test user (non-root, like CI environment)
+RUN useradd -m -s /bin/bash testuser && \
+    echo 'testuser ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# Set up tsuku bin directory in PATH
+ENV PATH="/home/testuser/.tsuku/bin:${PATH}"
+
+# Switch to test user
+USER testuser
+WORKDIR /home/testuser
+
+# Copy pre-built tsuku binary (built on host)
+COPY --chown=testuser:testuser tsuku /home/testuser/tsuku
+
+# Default command: run tsuku install
+# Override with: docker run <image> ./tsuku install <tool>
+ENTRYPOINT ["./tsuku"]
