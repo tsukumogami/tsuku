@@ -18,7 +18,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache-dependency-path: go.sum
 
       - name: Download dependencies
@@ -27,8 +27,12 @@ jobs:
       - name: Run tests
         run: go test -v -race -coverprofile=coverage.out ./...
 
-      - name: Generate coverage report
-        run: go tool cover -func=coverage.out
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: coverage.out
+          fail_ci_if_error: true
 
   # Generate test matrices - lightweight job that other jobs wait on
   matrix:
@@ -64,7 +68,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache-dependency-path: go.sum
 
       - name: Build tsuku
@@ -93,7 +97,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
-          go-version: '1.21'
+          go-version: '1.24'
           cache-dependency-path: go.sum
 
       - name: Build tsuku

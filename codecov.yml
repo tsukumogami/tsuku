@@ -1,0 +1,14 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 30%
+        threshold: 1%
+    patch:
+      default:
+        target: 70%
+
+ignore:
+  - "bundled/**/*"
+  - "internal/testutil/**/*"
+  - "*_test.go"
