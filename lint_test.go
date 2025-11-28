@@ -45,6 +45,13 @@ func TestGoVet(t *testing.T) {
 	rungo(t, "vet", "./...")
 }
 
+func TestGovulncheck(t *testing.T) {
+	if testing.Short() {
+		t.Skip("short mode: skipping govulncheck")
+	}
+	rungo(t, "run", "golang.org/x/vuln/cmd/govulncheck@latest", "./...")
+}
+
 func rungo(t *testing.T, args ...string) {
 	t.Helper()
 
