@@ -34,16 +34,33 @@ jobs:
           files: coverage.out
           fail_ci_if_error: true
 
-  # Generate test matrices - lightweight job that other jobs wait on
+  # Detect changes and generate test matrices
+  # Skip integration tests when only documentation files change
   matrix:
     name: Matrix
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: read
     outputs:
       linux: ${{ steps.matrix.outputs.linux }}
       macos: ${{ steps.matrix.outputs.macos }}
+      # true when code files (not just docs) are modified
+      code: ${{ steps.filter.outputs.code }}
 
     steps:
       - uses: actions/checkout@v4
+
+      # Detect if code files changed (vs docs-only)
+      # Skip patterns: *.md, docs/**, .github/ISSUE_TEMPLATE/**
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**'
+              - '!**/*.md'
+              - '!docs/**'
+              - '!.github/ISSUE_TEMPLATE/**'
 
       - name: Generate test matrices
         id: matrix
@@ -56,6 +73,8 @@ jobs:
   integration-linux:
     name: "Linux: ${{ matrix.test.tool }}"
     needs: matrix
+    # Skip when only documentation files changed
+    if: ${{ needs.matrix.outputs.code == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -85,6 +104,8 @@ jobs:
   integration-macos:
     name: "macOS: ${{ matrix.test.tool }}"
     needs: matrix
+    # Skip when only documentation files changed
+    if: ${{ needs.matrix.outputs.code == 'true' }}
     runs-on: macos-latest
     strategy:
       fail-fast: false
