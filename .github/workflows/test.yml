@@ -55,6 +55,8 @@ jobs:
       - uses: dorny/paths-filter@v3
         id: filter
         with:
+          # Use 'every' so negation patterns work (file must match ALL patterns)
+          predicate-quantifier: 'every'
           filters: |
             code:
               - '**'
