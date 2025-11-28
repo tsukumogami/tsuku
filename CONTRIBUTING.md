@@ -245,6 +245,38 @@ If tests fail:
 - Run with race detection: `go test -race ./...`
 - Check if the failure is in CI-specific environment
 
+## Releases
+
+Releases are automated via GitHub Actions using GoReleaser.
+
+### Creating a Release
+
+To create a new release, push a version tag:
+
+```bash
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+The release workflow triggers only on tags matching `v*` (e.g., `v0.1.0`, `v1.0.0-beta.1`). Regular tags that don't start with `v` will not trigger a release.
+
+### What Gets Built
+
+Each release automatically builds binaries for:
+- linux/amd64
+- linux/arm64
+- darwin/amd64
+- darwin/arm64
+
+The release includes:
+- Binary files named `tsuku-{os}-{arch}`
+- SHA256 checksums in `checksums.txt`
+- Changelog generated from commit messages
+
+### Pre-releases
+
+Tags containing a hyphen after the version (e.g., `v1.0.0-rc.1`, `v0.2.0-beta`) are automatically marked as pre-releases on GitHub.
+
 ## Getting Help
 
 - Open an issue for bugs or feature requests

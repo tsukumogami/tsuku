@@ -45,22 +45,28 @@ echo "Latest version: $LATEST"
 # Download binary
 BINARY_NAME="tsuku-${OS}-${ARCH}"
 DOWNLOAD_URL="https://github.com/${REPO}/releases/download/${LATEST}/${BINARY_NAME}"
-CHECKSUM_URL="${DOWNLOAD_URL}.sha256"
+CHECKSUM_URL="https://github.com/${REPO}/releases/download/${LATEST}/checksums.txt"
 
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
 echo "Downloading ${BINARY_NAME}..."
 curl -fsSL -o "$TEMP_DIR/tsuku" "$DOWNLOAD_URL"
-curl -fsSL -o "$TEMP_DIR/tsuku.sha256" "$CHECKSUM_URL"
+curl -fsSL -o "$TEMP_DIR/checksums.txt" "$CHECKSUM_URL"
 
 # Verify checksum
 echo "Verifying checksum..."
 cd "$TEMP_DIR"
+EXPECTED_CHECKSUM=$(grep "${BINARY_NAME}$" checksums.txt | awk '{print $1}')
+if [ -z "$EXPECTED_CHECKSUM" ]; then
+    echo "Error: Could not find checksum for ${BINARY_NAME}" >&2
+    exit 1
+fi
+
 if command -v sha256sum &>/dev/null; then
-    echo "$(cat tsuku.sha256 | awk '{print $1}')  tsuku" | sha256sum -c - >/dev/null
+    echo "${EXPECTED_CHECKSUM}  tsuku" | sha256sum -c - >/dev/null
 elif command -v shasum &>/dev/null; then
-    echo "$(cat tsuku.sha256 | awk '{print $1}')  tsuku" | shasum -a 256 -c - >/dev/null
+    echo "${EXPECTED_CHECKSUM}  tsuku" | shasum -a 256 -c - >/dev/null
 else
     echo "Warning: Could not verify checksum (sha256sum/shasum not found)" >&2
 fi
