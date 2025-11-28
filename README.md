@@ -104,7 +104,7 @@ go tool cover -html=coverage.out
 go test ./internal/install
 ```
 
-See [docs/testing.md](../docs/testing.md) for detailed testing guide and best practices.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed testing guide and best practices.
 
 ## Development Environment
 
@@ -137,31 +137,11 @@ go build -o tsuku ./cmd/tsuku
 ```
 
 **Benefits:**
-- ✅ **No Secure Boot issues** (no kernel modules required)
-- ✅ **Fast** - starts in ~2 seconds
-- ✅ **Lightweight** - uses minimal RAM and disk
-- ✅ **Clean environment** (no npm, Python, or Rust pre-installed)
-- ✅ **Perfect for testing** auto-bootstrap features
-
-See [docs/development/docker.md](../docs/development/docker.md) for complete guide.
-
-### Using Vagrant (Alternative)
-
-If you prefer a full VM environment:
-
-```bash
-# Install Vagrant and VirtualBox
-# Note: VirtualBox requires MOK signing if Secure Boot is enabled
-
-# Start the VM
-vagrant up && vagrant ssh
-
-# Inside VM
-cd /vagrant
-go build -o tsuku ./cmd/tsuku
-```
-
-See [docs/development/vagrant.md](../docs/development/vagrant.md) for complete setup (includes Secure Boot handling).
+- **No Secure Boot issues** (no kernel modules required)
+- **Fast** - starts in ~2 seconds
+- **Lightweight** - uses minimal RAM and disk
+- **Clean environment** (no npm, Python, or Rust pre-installed)
+- **Perfect for testing** auto-bootstrap features
 
 ### Local Development
 
@@ -199,8 +179,6 @@ go test ./...
   - npm_install action implemented and working
   - pip_install action (Phase 0.6.3 - planned)
   - cargo_install action (Phase 0.6.4 - planned)
-
-See [ROADMAP.md](ROADMAP.md) for detailed development plan and future phases.
 
 ## Architecture
 
