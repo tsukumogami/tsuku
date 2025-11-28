@@ -32,13 +32,13 @@ Create a new `integration_test.go` file that:
 - `integration_test.go` - Main integration test file with build tag
 
 ## Implementation Steps
-- [ ] Update Dockerfile to install Go
-- [ ] Create integration_test.go with build tag
-- [ ] Parse test-matrix.json in test
-- [ ] Implement Docker build and run logic
-- [ ] Add individual subtests for each tool
-- [ ] Test locally with `go test -tags=integration -v ./...`
-- [ ] Verify unit tests still work without the tag
+- [x] Create Dockerfile.integration (separate from Vagrant Dockerfile)
+- [x] Create integration_test.go with build tag
+- [x] Parse test-matrix.json in test
+- [x] Implement Docker build and run logic
+- [x] Add individual subtests for each tool
+- [x] Test locally with `go test -tags=integration -v ./...`
+- [x] Verify unit tests still work without the tag
 
 ## Testing Strategy
 - Run `go test ./...` to verify unit tests unaffected
