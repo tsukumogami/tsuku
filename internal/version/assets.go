@@ -28,8 +28,8 @@ type cachedAssets struct {
 
 // assetCache provides thread-safe caching of GitHub release assets with TTL
 type assetCache struct {
-	mu      sync.Mutex // Use Mutex (not RWMutex) to prevent race in GetOrFetch pattern
-	entries map[string]*cachedAssets // key: "owner/repo:tag"
+	mu       sync.Mutex                 // Use Mutex (not RWMutex) to prevent race in GetOrFetch pattern
+	entries  map[string]*cachedAssets   // key: "owner/repo:tag"
 	fetching map[string]*sync.WaitGroup // tracks in-flight fetches to prevent duplicate requests
 }
 

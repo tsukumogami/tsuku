@@ -66,7 +66,7 @@ func TestListRubyGemsVersions(t *testing.T) {
 			{Number: "2.5.32", Platform: "ruby", Prerelease: false},
 			{Number: "2.5.31", Platform: "ruby", Prerelease: false},
 			{Number: "2.6.0.pre", Platform: "ruby", Prerelease: true}, // Should be filtered
-			{Number: "2.5.30", Platform: "java", Prerelease: false},  // Should be filtered (JRuby)
+			{Number: "2.5.30", Platform: "java", Prerelease: false},   // Should be filtered (JRuby)
 		}
 		_ = json.NewEncoder(w).Encode(versions)
 	}))

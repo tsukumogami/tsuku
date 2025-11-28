@@ -26,13 +26,13 @@ type VersionInfo struct {
 
 // Resolver resolves versions for different sources
 type Resolver struct {
-	client               *github.Client // GitHub API client
-	httpClient           *http.Client   // HTTP client for non-GitHub requests (injectable for testing)
-	registry             *Registry      // Custom version source registry
-	npmRegistryURL       string         // npm registry URL (injectable for testing)
-	pypiRegistryURL      string         // PyPI registry URL (injectable for testing)
-	cratesIORegistryURL  string         // crates.io registry URL (injectable for testing)
-	rubygemsRegistryURL  string         // RubyGems.org registry URL (injectable for testing)
+	client              *github.Client // GitHub API client
+	httpClient          *http.Client   // HTTP client for non-GitHub requests (injectable for testing)
+	registry            *Registry      // Custom version source registry
+	npmRegistryURL      string         // npm registry URL (injectable for testing)
+	pypiRegistryURL     string         // PyPI registry URL (injectable for testing)
+	cratesIORegistryURL string         // crates.io registry URL (injectable for testing)
+	rubygemsRegistryURL string         // RubyGems.org registry URL (injectable for testing)
 }
 
 // newHTTPClient creates an HTTP client with security hardening and proper timeouts
@@ -278,7 +278,7 @@ func (r *Resolver) resolveFromTags(ctx context.Context, owner, repoName string) 
 		}
 
 		if len(tags) == 0 {
-			break  // No more tags
+			break // No more tags
 		}
 
 		allTags = append(allTags, tags...)
@@ -291,14 +291,14 @@ func (r *Resolver) resolveFromTags(ctx context.Context, owner, repoName string) 
 				if tag.Name != nil {
 					normalized := normalizeVersion(*tag.Name)
 					if normalized != "" && isValidVersion(normalized) &&
-					   !strings.Contains(*tag.Name, "weekly") {
+						!strings.Contains(*tag.Name, "weekly") {
 						hasValidTag = true
 						break
 					}
 				}
 			}
 			if hasValidTag {
-				break  // We have valid tags, stop fetching
+				break // We have valid tags, stop fetching
 			}
 		}
 	}
@@ -320,8 +320,8 @@ func (r *Resolver) resolveFromTags(ctx context.Context, owner, repoName string) 
 
 		// Skip obvious non-release tags
 		if strings.Contains(tagName, "weekly") ||
-		   strings.Contains(strings.ToLower(tagName), "beta") ||
-		   strings.Contains(strings.ToLower(tagName), "-rc") {
+			strings.Contains(strings.ToLower(tagName), "beta") ||
+			strings.Contains(strings.ToLower(tagName), "-rc") {
 			continue
 		}
 
@@ -721,7 +721,7 @@ func (r *Resolver) ResolveNodeJS(ctx context.Context) (*VersionInfo, error) {
 	}
 
 	var versions []struct {
-		Version string `json:"version"`
+		Version string      `json:"version"`
 		LTS     interface{} `json:"lts"` // Can be string (LTS name) or false
 	}
 
@@ -736,7 +736,7 @@ func (r *Resolver) ResolveNodeJS(ctx context.Context) (*VersionInfo, error) {
 			version := normalizeVersion(v.Version)
 			return &VersionInfo{
 				Tag:     v.Version, // Keep "v" prefix for URL
-				Version: version,    // Without "v" for display
+				Version: version,   // Without "v" for display
 			}, nil
 		}
 	}

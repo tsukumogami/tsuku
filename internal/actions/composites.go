@@ -243,8 +243,8 @@ func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 
 	// Step 1: Download archive
 	downloadParams := map[string]interface{}{
-		"url":      url,
-		"dest":     assetName,
+		"url":  url,
+		"dest": assetName,
 	}
 
 	downloadAction := &DownloadAction{}
@@ -254,9 +254,9 @@ func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 
 	// Step 2: Extract archive
 	extractParams := map[string]interface{}{
-		"archive":     assetName,
-		"format":      archiveFormat,
-		"strip_dirs":  stripDirs,
+		"archive":    assetName,
+		"format":     archiveFormat,
+		"strip_dirs": stripDirs,
 	}
 
 	extractAction := &ExtractAction{}
@@ -280,7 +280,7 @@ func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 	installAction := &InstallBinariesAction{}
 	installParams := map[string]interface{}{
 		"binaries":     binariesRaw, // Pass raw []interface{} from TOML
-		"install_mode": installMode,  // Pass install_mode to install_binaries action
+		"install_mode": installMode, // Pass install_mode to install_binaries action
 	}
 
 	if err := installAction.Execute(ctx, installParams); err != nil {

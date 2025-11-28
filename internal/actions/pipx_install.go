@@ -25,16 +25,19 @@ func (a *PipxInstallAction) Name() string {
 //   - python_path (optional): Python interpreter for pipx to use
 //
 // Environment Strategy:
-//   PIPX_HOME=<install_dir>        - Where to create venvs
-//   PIPX_BIN_DIR=<install_dir>/bin - Where to symlink executables
+//
+//	PIPX_HOME=<install_dir>        - Where to create venvs
+//	PIPX_BIN_DIR=<install_dir>/bin - Where to symlink executables
 //
 // Installation:
-//   pipx install <package>==<version>
+//
+//	pipx install <package>==<version>
 //
 // Directory Structure Created:
-//   <install_dir>/
-//     venvs/<package>/           - Virtual environment
-//     bin/<executable>           - Symlink to venv/bin/<executable>
+//
+//	<install_dir>/
+//	  venvs/<package>/           - Virtual environment
+//	  bin/<executable>           - Symlink to venv/bin/<executable>
 func (a *PipxInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Get package name (required)
 	packageName, ok := GetString(params, "package")

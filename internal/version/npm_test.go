@@ -102,10 +102,10 @@ func TestListNpmVersions_InvalidPackageName(t *testing.T) {
 
 	invalidNames := []string{
 		"",
-		"InvalidName",  // Uppercase
-		strings.Repeat("a", 215),  // Too long
-		"my package",  // Spaces
-		"my@package",  // Invalid chars
+		"InvalidName",            // Uppercase
+		strings.Repeat("a", 215), // Too long
+		"my package",             // Spaces
+		"my@package",             // Invalid chars
 	}
 
 	for _, name := range invalidNames {
