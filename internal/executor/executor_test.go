@@ -2,6 +2,7 @@ package executor
 
 import (
 	"context"
+	"os"
 	"testing"
 
 	"github.com/tsuku-dev/tsuku/internal/recipe"
@@ -200,5 +201,258 @@ func TestExecute_NetworkFailureFallback(t *testing.T) {
 		t.Logf("Network available, version resolved to: %s", exec.version)
 	} else if exec.version == "dev" {
 		t.Logf("Correctly fell back to 'dev' on network failure")
+	}
+}
+
+// TestNewWithVersion tests creating an executor with a specific version
+func TestNewWithVersion(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := NewWithVersion(r, "1.2.3")
+	if err != nil {
+		t.Fatalf("NewWithVersion() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	if exec.reqVersion != "1.2.3" {
+		t.Errorf("reqVersion = %q, want %q", exec.reqVersion, "1.2.3")
+	}
+}
+
+// TestShouldExecute tests the conditional execution logic
+func TestShouldExecute(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	tests := []struct {
+		name     string
+		when     map[string]string
+		expected bool
+	}{
+		{
+			name:     "empty when - always execute",
+			when:     map[string]string{},
+			expected: true,
+		},
+		{
+			name:     "nil when - always execute",
+			when:     nil,
+			expected: true,
+		},
+		{
+			name:     "matching OS",
+			when:     map[string]string{"os": "linux"},
+			expected: true, // assuming test runs on linux
+		},
+		{
+			name:     "non-matching OS",
+			when:     map[string]string{"os": "windows"},
+			expected: false,
+		},
+		{
+			name:     "matching arch",
+			when:     map[string]string{"arch": "amd64"},
+			expected: true, // assuming test runs on amd64
+		},
+		{
+			name:     "non-matching arch",
+			when:     map[string]string{"arch": "arm"},
+			expected: false,
+		},
+		{
+			name:     "package_manager - always true (stub)",
+			when:     map[string]string{"package_manager": "apt"},
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := exec.shouldExecute(tt.when)
+			// Note: OS/arch tests depend on the actual runtime
+			// We check the logic is correctly evaluated
+			if tt.name == "empty when - always execute" || tt.name == "nil when - always execute" {
+				if result != tt.expected {
+					t.Errorf("shouldExecute(%v) = %v, want %v", tt.when, result, tt.expected)
+				}
+			}
+			if tt.name == "non-matching OS" {
+				if result != false {
+					t.Errorf("shouldExecute with non-matching OS should return false")
+				}
+			}
+			if tt.name == "non-matching arch" {
+				if result != false {
+					t.Errorf("shouldExecute with non-matching arch should return false")
+				}
+			}
+			if tt.name == "package_manager - always true (stub)" {
+				if result != true {
+					t.Errorf("shouldExecute with package_manager should return true (stub)")
+				}
+			}
+		})
+	}
+}
+
+// TestExpandVars tests the expandVars helper function
+func TestExpandVars(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		vars     map[string]string
+		expected string
+	}{
+		{
+			name:     "single variable",
+			input:    "tool-{version}.tar.gz",
+			vars:     map[string]string{"version": "1.2.3"},
+			expected: "tool-1.2.3.tar.gz",
+		},
+		{
+			name:     "multiple variables",
+			input:    "{binary} --version",
+			vars:     map[string]string{"binary": "/usr/bin/tool", "version": "1.0"},
+			expected: "/usr/bin/tool --version",
+		},
+		{
+			name:     "no variables",
+			input:    "static-string",
+			vars:     map[string]string{"version": "1.0.0"},
+			expected: "static-string",
+		},
+		{
+			name:     "empty string",
+			input:    "",
+			vars:     map[string]string{"version": "1.0.0"},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := expandVars(tt.input, tt.vars)
+			if result != tt.expected {
+				t.Errorf("expandVars(%q, %v) = %q, want %q", tt.input, tt.vars, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestVersion tests the Version() getter
+func TestVersion(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Initially empty
+	if exec.Version() != "" {
+		t.Errorf("Initial Version() = %q, want empty", exec.Version())
+	}
+
+	// Set version manually for test
+	exec.version = "2.0.0"
+	if exec.Version() != "2.0.0" {
+		t.Errorf("Version() = %q, want %q", exec.Version(), "2.0.0")
+	}
+}
+
+// TestWorkDir tests the WorkDir() getter
+func TestWorkDir(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	workDir := exec.WorkDir()
+	if workDir == "" {
+		t.Error("WorkDir() should not be empty")
+	}
+}
+
+// TestSetExecPaths tests the SetExecPaths method
+func TestSetExecPaths(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	paths := []string{"/usr/local/bin", "/opt/bin"}
+	exec.SetExecPaths(paths)
+
+	if len(exec.execPaths) != 2 {
+		t.Errorf("execPaths length = %d, want 2", len(exec.execPaths))
+	}
+	if exec.execPaths[0] != "/usr/local/bin" {
+		t.Errorf("execPaths[0] = %q, want %q", exec.execPaths[0], "/usr/local/bin")
+	}
+}
+
+// TestCleanup tests that Cleanup removes the work directory
+func TestCleanup(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+
+	workDir := exec.WorkDir()
+
+	// Verify work dir exists
+	if _, err := os.Stat(workDir); os.IsNotExist(err) {
+		t.Fatal("WorkDir should exist after New()")
+	}
+
+	exec.Cleanup()
+
+	// Verify work dir is removed
+	if _, err := os.Stat(workDir); !os.IsNotExist(err) {
+		t.Error("WorkDir should be removed after Cleanup()")
 	}
 }

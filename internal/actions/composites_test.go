@@ -112,6 +112,314 @@ func TestGitHubArchiveAction_VerificationEnforcement(t *testing.T) {
 	}
 }
 
+func TestDownloadArchiveAction_Name(t *testing.T) {
+	action := &DownloadArchiveAction{}
+	if action.Name() != "download_archive" {
+		t.Errorf("Name() = %q, want %q", action.Name(), "download_archive")
+	}
+}
+
+func TestGitHubArchiveAction_Name(t *testing.T) {
+	action := &GitHubArchiveAction{}
+	if action.Name() != "github_archive" {
+		t.Errorf("Name() = %q, want %q", action.Name(), "github_archive")
+	}
+}
+
+func TestGitHubFileAction_Name(t *testing.T) {
+	action := &GitHubFileAction{}
+	if action.Name() != "github_file" {
+		t.Errorf("Name() = %q, want %q", action.Name(), "github_file")
+	}
+}
+
+func TestHashiCorpReleaseAction_Name(t *testing.T) {
+	action := &HashiCorpReleaseAction{}
+	if action.Name() != "hashicorp_release" {
+		t.Errorf("Name() = %q, want %q", action.Name(), "hashicorp_release")
+	}
+}
+
+func TestHomebrewBottleAction_Name(t *testing.T) {
+	action := &HomebrewBottleAction{}
+	if action.Name() != "homebrew_bottle" {
+		t.Errorf("Name() = %q, want %q", action.Name(), "homebrew_bottle")
+	}
+}
+
+func TestExtractSourceFiles(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    interface{}
+		expected int
+	}{
+		{
+			name:     "nil input",
+			input:    nil,
+			expected: 0,
+		},
+		{
+			name:     "empty array",
+			input:    []interface{}{},
+			expected: 0,
+		},
+		{
+			name:     "string array",
+			input:    []interface{}{"file1", "file2", "file3"},
+			expected: 3,
+		},
+		{
+			name: "map array with src",
+			input: []interface{}{
+				map[string]interface{}{"src": "source1", "dest": "dest1"},
+				map[string]interface{}{"src": "source2", "dest": "dest2"},
+			},
+			expected: 2,
+		},
+		{
+			name: "mixed array",
+			input: []interface{}{
+				"simple_file",
+				map[string]interface{}{"src": "source1", "dest": "dest1"},
+			},
+			expected: 2,
+		},
+		{
+			name: "map without src",
+			input: []interface{}{
+				map[string]interface{}{"dest": "dest1"},
+			},
+			expected: 0,
+		},
+		{
+			name:     "non-array input",
+			input:    "string",
+			expected: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractSourceFiles(tt.input)
+			if len(result) != tt.expected {
+				t.Errorf("extractSourceFiles() returned %d items, want %d", len(result), tt.expected)
+			}
+		})
+	}
+}
+
+func TestDownloadArchiveAction_Execute_MissingParams(t *testing.T) {
+	action := &DownloadArchiveAction{}
+	tmpDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+	}{
+		{
+			name:   "missing url",
+			params: map[string]interface{}{},
+		},
+		{
+			name: "missing archive_format",
+			params: map[string]interface{}{
+				"url": "https://example.com/file.tar.gz",
+			},
+		},
+		{
+			name: "missing binaries",
+			params: map[string]interface{}{
+				"url":            "https://example.com/file.tar.gz",
+				"archive_format": "tar.gz",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := action.Execute(ctx, tt.params)
+			if err == nil {
+				t.Error("Execute() should fail with missing required params")
+			}
+		})
+	}
+}
+
+func TestGitHubArchiveAction_Execute_MissingParams(t *testing.T) {
+	action := &GitHubArchiveAction{}
+	tmpDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+	}{
+		{
+			name:   "missing repo",
+			params: map[string]interface{}{},
+		},
+		{
+			name: "missing asset_pattern",
+			params: map[string]interface{}{
+				"repo": "owner/repo",
+			},
+		},
+		{
+			name: "missing archive_format",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "file-{version}.tar.gz",
+			},
+		},
+		{
+			name: "missing binaries",
+			params: map[string]interface{}{
+				"repo":           "owner/repo",
+				"asset_pattern":  "file-{version}.tar.gz",
+				"archive_format": "tar.gz",
+			},
+		},
+		{
+			name: "invalid install_mode",
+			params: map[string]interface{}{
+				"repo":           "owner/repo",
+				"asset_pattern":  "file-{version}.tar.gz",
+				"archive_format": "tar.gz",
+				"binaries":       []interface{}{"bin"},
+				"install_mode":   "invalid_mode",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := action.Execute(ctx, tt.params)
+			if err == nil {
+				t.Error("Execute() should fail with missing/invalid params")
+			}
+		})
+	}
+}
+
+func TestGitHubFileAction_Execute_MissingParams(t *testing.T) {
+	action := &GitHubFileAction{}
+	tmpDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+	}{
+		{
+			name:   "missing repo",
+			params: map[string]interface{}{},
+		},
+		{
+			name: "missing asset_pattern",
+			params: map[string]interface{}{
+				"repo": "owner/repo",
+			},
+		},
+		{
+			name: "missing binary/binaries",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "file-{version}",
+			},
+		},
+		{
+			name: "binaries with missing src",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "file-{version}",
+				"binaries":      []interface{}{map[string]interface{}{"dest": "output"}},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := action.Execute(ctx, tt.params)
+			if err == nil {
+				t.Error("Execute() should fail with missing required params")
+			}
+		})
+	}
+}
+
+func TestHashiCorpReleaseAction_Execute_MissingParams(t *testing.T) {
+	action := &HashiCorpReleaseAction{}
+	tmpDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	err := action.Execute(ctx, map[string]interface{}{})
+	if err == nil {
+		t.Error("Execute() should fail when 'product' parameter is missing")
+	}
+}
+
+func TestHomebrewBottleAction_Execute_MissingParams(t *testing.T) {
+	action := &HomebrewBottleAction{}
+	tmpDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	err := action.Execute(ctx, map[string]interface{}{})
+	if err == nil {
+		t.Error("Execute() should fail when 'formula' parameter is missing")
+	}
+}
+
+func TestHomebrewBottleAction_Execute_WithFormula(t *testing.T) {
+	action := &HomebrewBottleAction{}
+	tmpDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	// This is a stub action that should succeed with formula param
+	err := action.Execute(ctx, map[string]interface{}{
+		"formula": "jq",
+	})
+	if err != nil {
+		t.Errorf("Execute() with formula should not error: %v", err)
+	}
+}
+
 // TestDownloadArchiveAction_VerificationEnforcement tests that directory mode requires verification
 func TestDownloadArchiveAction_VerificationEnforcement(t *testing.T) {
 	action := &DownloadArchiveAction{}

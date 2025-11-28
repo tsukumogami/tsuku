@@ -216,3 +216,46 @@ func TestFetchRecipeContextCancellation(t *testing.T) {
 		t.Error("FetchRecipe should fail with canceled context")
 	}
 }
+
+func TestClearCache_NoCacheDir(t *testing.T) {
+	reg := &Registry{
+		CacheDir: "",
+	}
+
+	err := reg.ClearCache()
+	if err == nil {
+		t.Error("ClearCache should fail when CacheDir is not set")
+	}
+}
+
+func TestIsCached_EmptyName(t *testing.T) {
+	reg := New(t.TempDir())
+
+	// Empty name should return false
+	if reg.IsCached("") {
+		t.Error("IsCached should return false for empty name")
+	}
+}
+
+func TestCacheRecipe_EmptyName(t *testing.T) {
+	reg := New(t.TempDir())
+
+	// Empty name should fail
+	err := reg.CacheRecipe("", []byte("content"))
+	if err == nil {
+		t.Error("CacheRecipe should fail for empty name")
+	}
+}
+
+func TestGetCached_EmptyName(t *testing.T) {
+	reg := New(t.TempDir())
+
+	// Empty name should return error
+	data, err := reg.GetCached("")
+	if err == nil {
+		t.Error("GetCached should fail for empty name")
+	}
+	if data != nil {
+		t.Error("GetCached should return nil data for empty name")
+	}
+}

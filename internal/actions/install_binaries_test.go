@@ -461,3 +461,91 @@ func findSubstring(s, substr string) bool {
 	}
 	return false
 }
+
+// TestParseBinaries tests the binaries parameter parsing
+func TestParseBinaries(t *testing.T) {
+	action := &InstallBinariesAction{}
+
+	tests := []struct {
+		name        string
+		input       interface{}
+		expectCount int
+		shouldErr   bool
+	}{
+		{
+			name:        "string slice",
+			input:       []interface{}{"bin/java", "bin/javac"},
+			expectCount: 2,
+			shouldErr:   false,
+		},
+		{
+			name: "map with src and dest",
+			input: []interface{}{
+				map[string]interface{}{"src": "bin/java", "dest": "bin/java"},
+				map[string]interface{}{"src": "bin/javac", "dest": "bin/javac"},
+			},
+			expectCount: 2,
+			shouldErr:   false,
+		},
+		{
+			name:        "empty slice",
+			input:       []interface{}{},
+			expectCount: 0,
+			shouldErr:   false,
+		},
+		{
+			name:      "invalid type",
+			input:     "not an array",
+			shouldErr: true,
+		},
+		{
+			name:      "invalid array item type",
+			input:     []interface{}{123},
+			shouldErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := action.parseBinaries(tt.input)
+			if tt.shouldErr {
+				if err == nil {
+					t.Error("expected error, got nil")
+				}
+				return
+			}
+			if err != nil {
+				t.Errorf("unexpected error: %v", err)
+				return
+			}
+			if len(result) != tt.expectCount {
+				t.Errorf("expected %d binaries, got %d", tt.expectCount, len(result))
+			}
+		})
+	}
+}
+
+// TestInstallBinariesAction_Name tests the Name method
+func TestInstallBinariesAction_Name(t *testing.T) {
+	action := &InstallBinariesAction{}
+	if action.Name() != "install_binaries" {
+		t.Errorf("Name() = %q, want %q", action.Name(), "install_binaries")
+	}
+}
+
+// TestInstallBinariesAction_Execute_MissingBinaries tests missing parameter
+func TestInstallBinariesAction_Execute_MissingBinaries(t *testing.T) {
+	action := &InstallBinariesAction{}
+	tmpDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+	}
+
+	err := action.Execute(ctx, map[string]interface{}{})
+	if err == nil {
+		t.Error("Execute() should fail when 'binaries' parameter is missing")
+	}
+}
