@@ -45,12 +45,12 @@ func TestResolveVersionWith_CustomSource(t *testing.T) {
 	// but the test verifies the integration works
 	versionInfo, err := exec.resolveVersionWith(ctx, resolver)
 
-	// If network is available, should get version; otherwise should fall back to "dev"
-	if err == nil || versionInfo.Version == "dev" {
-		t.Logf("resolveVersionWith() succeeded or fell back gracefully: version=%s", versionInfo.Version)
-	} else {
+	// If network is available, should get version; otherwise error is acceptable
+	if err != nil {
 		// Network failure is acceptable in unit tests
 		t.Logf("resolveVersionWith() failed (expected in offline tests): %v", err)
+	} else {
+		t.Logf("resolveVersionWith() succeeded: version=%s", versionInfo.Version)
 	}
 }
 
