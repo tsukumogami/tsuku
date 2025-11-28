@@ -8,11 +8,12 @@ import (
 
 // Config holds tsuku configuration
 type Config struct {
-	HomeDir    string // ~/.tsuku
-	ToolsDir   string // ~/.tsuku/tools
-	CurrentDir string // ~/.tsuku/tools/current
-	RecipesDir string // ~/.tsuku/recipes
-	ConfigFile string // ~/.tsuku/config.toml
+	HomeDir     string // ~/.tsuku
+	ToolsDir    string // ~/.tsuku/tools
+	CurrentDir  string // ~/.tsuku/tools/current
+	RecipesDir  string // ~/.tsuku/recipes
+	RegistryDir string // ~/.tsuku/registry (cached recipes from remote registry)
+	ConfigFile  string // ~/.tsuku/config.toml
 }
 
 // DefaultConfig returns the default configuration
@@ -25,11 +26,12 @@ func DefaultConfig() (*Config, error) {
 	tsukuHome := filepath.Join(home, ".tsuku")
 
 	return &Config{
-		HomeDir:    tsukuHome,
-		ToolsDir:   filepath.Join(tsukuHome, "tools"),
-		CurrentDir: filepath.Join(tsukuHome, "tools", "current"),
-		RecipesDir: filepath.Join(tsukuHome, "recipes"),
-		ConfigFile: filepath.Join(tsukuHome, "config.toml"),
+		HomeDir:     tsukuHome,
+		ToolsDir:    filepath.Join(tsukuHome, "tools"),
+		CurrentDir:  filepath.Join(tsukuHome, "tools", "current"),
+		RecipesDir:  filepath.Join(tsukuHome, "recipes"),
+		RegistryDir: filepath.Join(tsukuHome, "registry"),
+		ConfigFile:  filepath.Join(tsukuHome, "config.toml"),
 	}, nil
 }
 
@@ -40,6 +42,7 @@ func (c *Config) EnsureDirectories() error {
 		c.ToolsDir,
 		c.CurrentDir,
 		c.RecipesDir,
+		c.RegistryDir,
 	}
 
 	for _, dir := range dirs {

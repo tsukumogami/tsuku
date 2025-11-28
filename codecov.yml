@@ -10,5 +10,7 @@ coverage:
 
 ignore:
   - "bundled/**/*"
+  - "cmd/**/*"
+  - "internal/install/**/*"
   - "internal/testutil/**/*"
   - "*_test.go"

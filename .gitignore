@@ -9,6 +9,8 @@
 *.test
 !Dockerfile.test
 
+*.local*
+
 # Output of the go coverage tool
 *.out
 

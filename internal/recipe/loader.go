@@ -1,74 +1,83 @@
 package recipe
 
 import (
-	"embed"
+	"context"
 	"fmt"
-	"path/filepath"
-	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/tsuku-dev/tsuku/internal/registry"
 )
 
-// Loader handles loading and discovering recipes
+// Loader handles loading and discovering recipes from the registry
 type Loader struct {
-	recipes map[string]*Recipe
-	fs      embed.FS
+	recipes  map[string]*Recipe
+	registry *registry.Registry
 }
 
-// NewLoader creates a new recipe loader with bundled recipes
-func NewLoader(recipesFS embed.FS) (*Loader, error) {
-	loader := &Loader{
-		recipes: make(map[string]*Recipe),
-		fs:      recipesFS,
+// New creates a new recipe loader with the given registry
+func New(reg *registry.Registry) *Loader {
+	return &Loader{
+		recipes:  make(map[string]*Recipe),
+		registry: reg,
 	}
-
-	// Load all bundled recipes
-	if err := loader.loadBundled(); err != nil {
-		return nil, fmt.Errorf("failed to load bundled recipes: %w", err)
-	}
-
-	return loader, nil
 }
 
-// loadBundled loads all recipes from the embedded filesystem
-func (l *Loader) loadBundled() error {
-	entries, err := l.fs.ReadDir("recipes")
+// Get retrieves a recipe by name
+// Priority: 1. In-memory cache, 2. Disk cache, 3. Remote registry
+func (l *Loader) Get(name string) (*Recipe, error) {
+	return l.GetWithContext(context.Background(), name)
+}
+
+// GetWithContext retrieves a recipe by name with context support
+func (l *Loader) GetWithContext(ctx context.Context, name string) (*Recipe, error) {
+	// Check in-memory cache first
+	if recipe, ok := l.recipes[name]; ok {
+		return recipe, nil
+	}
+
+	// Fetch from registry (disk cache or remote)
+	recipe, err := l.fetchFromRegistry(ctx, name)
 	if err != nil {
-		return fmt.Errorf("failed to read embedded recipes directory: %w", err)
+		return nil, err
 	}
 
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".toml") {
-			continue
-		}
+	l.recipes[name] = recipe
+	return recipe, nil
+}
 
-		name := strings.TrimSuffix(entry.Name(), ".toml")
-		path := filepath.Join("recipes", entry.Name())
+// fetchFromRegistry attempts to get a recipe from the registry (cache or remote)
+func (l *Loader) fetchFromRegistry(ctx context.Context, name string) (*Recipe, error) {
+	// Check disk cache first
+	data, err := l.registry.GetCached(name)
+	if err != nil {
+		return nil, err
+	}
 
-		recipe, err := l.parseEmbedded(path)
+	if data == nil {
+		// Not cached, fetch from remote
+		data, err = l.registry.FetchRecipe(ctx, name)
 		if err != nil {
-			return fmt.Errorf("failed to parse recipe %s: %w", name, err)
+			return nil, err
 		}
 
-		l.recipes[name] = recipe
+		// Cache the fetched recipe
+		if cacheErr := l.registry.CacheRecipe(name, data); cacheErr != nil {
+			// Log warning but don't fail
+			fmt.Printf("Warning: failed to cache recipe %s: %v\n", name, cacheErr)
+		}
 	}
 
-	return nil
+	// Parse the recipe
+	return l.parseBytes(data)
 }
 
-// parseEmbedded parses a recipe from the embedded filesystem
-func (l *Loader) parseEmbedded(path string) (*Recipe, error) {
-	data, err := l.fs.ReadFile(path)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read recipe file: %w", err)
-	}
-
+// parseBytes parses a recipe from raw TOML bytes
+func (l *Loader) parseBytes(data []byte) (*Recipe, error) {
 	var recipe Recipe
 	if err := toml.Unmarshal(data, &recipe); err != nil {
 		return nil, fmt.Errorf("failed to parse TOML: %w", err)
 	}
 
-	// Validate recipe
 	if err := validate(&recipe); err != nil {
 		return nil, fmt.Errorf("recipe validation failed: %w", err)
 	}
@@ -76,16 +85,8 @@ func (l *Loader) parseEmbedded(path string) (*Recipe, error) {
 	return &recipe, nil
 }
 
-// Get retrieves a recipe by name
-func (l *Loader) Get(name string) (*Recipe, error) {
-	recipe, ok := l.recipes[name]
-	if !ok {
-		return nil, fmt.Errorf("recipe not found: %s", name)
-	}
-	return recipe, nil
-}
-
-// List returns all available recipe names
+// List returns all cached recipe names
+// Note: This only returns recipes that have been fetched and cached
 func (l *Loader) List() []string {
 	names := make([]string, 0, len(l.recipes))
 	for name := range l.recipes {
@@ -94,9 +95,20 @@ func (l *Loader) List() []string {
 	return names
 }
 
-// Count returns the number of loaded recipes
+// Count returns the number of loaded recipes in memory
 func (l *Loader) Count() int {
 	return len(l.recipes)
+}
+
+// Registry returns the registry client
+func (l *Loader) Registry() *registry.Registry {
+	return l.registry
+}
+
+// ClearCache clears the in-memory recipe cache
+// This forces recipes to be re-fetched from the registry on next access
+func (l *Loader) ClearCache() {
+	l.recipes = make(map[string]*Recipe)
 }
 
 // validate performs basic recipe validation
