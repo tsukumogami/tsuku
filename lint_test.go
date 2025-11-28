@@ -11,7 +11,7 @@ func TestGolangCILint(t *testing.T) {
 	if testing.Short() {
 		t.Skip("short mode: skipping golangci-lint")
 	}
-	rungo(t, "run", "github.com/golangci/golangci-lint/cmd/golangci-lint@latest", "run", "--timeout=5m")
+	rungo(t, "run", "github.com/golangci/golangci-lint/v2/cmd/golangci-lint@latest", "run", "--timeout=5m")
 }
 
 func TestGoFmt(t *testing.T) {
