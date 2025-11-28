@@ -8,11 +8,11 @@ import (
 
 // Config holds tsuku configuration
 type Config struct {
-	HomeDir     string // ~/.tsuku
-	ToolsDir    string // ~/.tsuku/tools
-	CurrentDir  string // ~/.tsuku/tools/current
-	RecipesDir  string // ~/.tsuku/recipes
-	ConfigFile  string // ~/.tsuku/config.toml
+	HomeDir    string // ~/.tsuku
+	ToolsDir   string // ~/.tsuku/tools
+	CurrentDir string // ~/.tsuku/tools/current
+	RecipesDir string // ~/.tsuku/recipes
+	ConfigFile string // ~/.tsuku/config.toml
 }
 
 // DefaultConfig returns the default configuration

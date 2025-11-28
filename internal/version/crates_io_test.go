@@ -101,9 +101,9 @@ func TestListCratesIOVersions_InvalidCrateName(t *testing.T) {
 
 	invalidNames := []string{
 		"",
-		"123abc",       // Starts with number
-		"my@crate",     // Invalid char
-		"my crate",     // Space
+		"123abc",                // Starts with number
+		"my@crate",              // Invalid char
+		"my crate",              // Space
 		strings.Repeat("a", 65), // Too long
 	}
 
