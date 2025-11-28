@@ -13,6 +13,7 @@ type ExecutionContext struct {
 	WorkDir        string            // Temporary work directory
 	InstallDir     string            // Installation directory (~/.tsuku/tools/.install/)
 	ToolInstallDir string            // Tool-specific directory for directory-based installations (~/.tsuku/tools/{name}-{version}/)
+	ToolsDir       string            // Tools directory (~/.tsuku/tools/) for finding other installed tools
 	Version        string            // Resolved version (e.g., "1.29.3")
 	VersionTag     string            // Original version tag (e.g., "v1.29.3" or "1.29.3")
 	OS             string            // Target OS (runtime.GOOS)

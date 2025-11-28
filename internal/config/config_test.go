@@ -94,3 +94,60 @@ func TestCurrentSymlink(t *testing.T) {
 		t.Errorf("CurrentSymlink() = %q, want %q", got, want)
 	}
 }
+
+func TestDefaultConfig_WithTsukuHome(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvTsukuHome)
+	defer os.Setenv(EnvTsukuHome, original)
+
+	// Set custom TSUKU_HOME
+	customHome := "/custom/tsuku/path"
+	os.Setenv(EnvTsukuHome, customHome)
+
+	cfg, err := DefaultConfig()
+	if err != nil {
+		t.Fatalf("DefaultConfig() failed: %v", err)
+	}
+
+	// Verify all paths are based on custom home
+	if cfg.HomeDir != customHome {
+		t.Errorf("HomeDir = %q, want %q", cfg.HomeDir, customHome)
+	}
+	if cfg.ToolsDir != filepath.Join(customHome, "tools") {
+		t.Errorf("ToolsDir = %q, want %q", cfg.ToolsDir, filepath.Join(customHome, "tools"))
+	}
+	if cfg.CurrentDir != filepath.Join(customHome, "tools", "current") {
+		t.Errorf("CurrentDir = %q, want %q", cfg.CurrentDir, filepath.Join(customHome, "tools", "current"))
+	}
+	if cfg.RecipesDir != filepath.Join(customHome, "recipes") {
+		t.Errorf("RecipesDir = %q, want %q", cfg.RecipesDir, filepath.Join(customHome, "recipes"))
+	}
+	if cfg.RegistryDir != filepath.Join(customHome, "registry") {
+		t.Errorf("RegistryDir = %q, want %q", cfg.RegistryDir, filepath.Join(customHome, "registry"))
+	}
+	if cfg.ConfigFile != filepath.Join(customHome, "config.toml") {
+		t.Errorf("ConfigFile = %q, want %q", cfg.ConfigFile, filepath.Join(customHome, "config.toml"))
+	}
+}
+
+func TestDefaultConfig_EmptyTsukuHome(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvTsukuHome)
+	defer os.Setenv(EnvTsukuHome, original)
+
+	// Ensure TSUKU_HOME is not set
+	_ = os.Unsetenv(EnvTsukuHome)
+
+	cfg, err := DefaultConfig()
+	if err != nil {
+		t.Fatalf("DefaultConfig() failed: %v", err)
+	}
+
+	// Verify it falls back to ~/.tsuku
+	home, _ := os.UserHomeDir()
+	expectedHome := filepath.Join(home, ".tsuku")
+
+	if cfg.HomeDir != expectedHome {
+		t.Errorf("HomeDir = %q, want %q", cfg.HomeDir, expectedHome)
+	}
+}

@@ -136,6 +136,30 @@ func TestExecute_FallbackToDev(t *testing.T) {
 	}
 }
 
+// TestSetToolsDir tests the SetToolsDir method
+func TestSetToolsDir(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Test setting ToolsDir
+	testToolsDir := "/custom/tools/path"
+	exec.SetToolsDir(testToolsDir)
+
+	if exec.toolsDir != testToolsDir {
+		t.Errorf("SetToolsDir() = %q, want %q", exec.toolsDir, testToolsDir)
+	}
+}
+
 // TestExecute_NetworkFailureFallback tests fallback on network errors
 func TestExecute_NetworkFailureFallback(t *testing.T) {
 	r := &recipe.Recipe{

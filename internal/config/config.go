@@ -6,6 +6,11 @@ import (
 	"path/filepath"
 )
 
+const (
+	// EnvTsukuHome is the environment variable to override the default tsuku home directory
+	EnvTsukuHome = "TSUKU_HOME"
+)
+
 // Config holds tsuku configuration
 type Config struct {
 	HomeDir     string // ~/.tsuku
@@ -18,12 +23,15 @@ type Config struct {
 
 // DefaultConfig returns the default configuration
 func DefaultConfig() (*Config, error) {
-	home, err := os.UserHomeDir()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get user home directory: %w", err)
+	// Check for TSUKU_HOME environment variable first
+	tsukuHome := os.Getenv(EnvTsukuHome)
+	if tsukuHome == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return nil, fmt.Errorf("failed to get user home directory: %w", err)
+		}
+		tsukuHome = filepath.Join(home, ".tsuku")
 	}
-
-	tsukuHome := filepath.Join(home, ".tsuku")
 
 	return &Config{
 		HomeDir:     tsukuHome,

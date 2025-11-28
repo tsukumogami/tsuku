@@ -128,8 +128,7 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Fall back to zig if no system compiler is found
 	if !hasSystemCompiler() {
 		if zigPath := ResolveZig(); zigPath != "" {
-			homeDir, _ := os.UserHomeDir()
-			wrapperDir := filepath.Join(homeDir, ".tsuku", "tools", "zig-cc-wrapper")
+			wrapperDir := filepath.Join(ctx.ToolsDir, "zig-cc-wrapper")
 			if err := setupZigWrappers(zigPath, wrapperDir); err == nil {
 				// Prepend wrapper directory to PATH and set CC/CXX
 				pathValue = fmt.Sprintf("%s:%s", wrapperDir, pathValue)
