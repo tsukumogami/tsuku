@@ -20,9 +20,9 @@ type MetadataSection struct {
 	Homepage            string   `toml:"homepage"`
 	VersionFormat       string   `toml:"version_format"`
 	RequiresSudo        bool     `toml:"requires_sudo"`
-	Dependencies        []string `toml:"dependencies"`          // Install-time dependencies
-	RuntimeDependencies []string `toml:"runtime_dependencies"`  // Runtime dependencies (must be exposed)
-	Tier                int      `toml:"tier"`                  // Installation tier: 1=binary, 2=package manager, 3=nix
+	Dependencies        []string `toml:"dependencies"`         // Install-time dependencies
+	RuntimeDependencies []string `toml:"runtime_dependencies"` // Runtime dependencies (must be exposed)
+	Tier                int      `toml:"tier"`                 // Installation tier: 1=binary, 2=package manager, 3=nix
 }
 
 // VersionSection specifies how to resolve versions

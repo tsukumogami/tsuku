@@ -339,39 +339,39 @@ func TestNpmProvider_ResolveVersion_FuzzyMatch(t *testing.T) {
 
 func TestNpmProvider_ResolveVersion_FuzzyMatchEdgeCases(t *testing.T) {
 	tests := []struct {
-		name           string
-		requestVersion string
+		name              string
+		requestVersion    string
 		availableVersions []string
-		expectedMatch  string
-		shouldMatch    bool
+		expectedMatch     string
+		shouldMatch       bool
 	}{
 		{
-			name:           "1.2 should match 1.2.3 not 1.20.0",
-			requestVersion: "1.2",
+			name:              "1.2 should match 1.2.3 not 1.20.0",
+			requestVersion:    "1.2",
 			availableVersions: []string{"2.0.0", "1.20.0", "1.2.3", "1.2.0", "1.0.0"},
-			expectedMatch:  "1.2.3",
-			shouldMatch:    true,
+			expectedMatch:     "1.2.3",
+			shouldMatch:       true,
 		},
 		{
-			name:           "1 should match 1.20.0",
-			requestVersion: "1",
+			name:              "1 should match 1.20.0",
+			requestVersion:    "1",
 			availableVersions: []string{"2.0.0", "1.20.0", "1.2.3", "1.0.0"},
-			expectedMatch:  "1.20.0",
-			shouldMatch:    true,
+			expectedMatch:     "1.20.0",
+			shouldMatch:       true,
 		},
 		{
-			name:           "1.2.3 exact match",
-			requestVersion: "1.2.3",
+			name:              "1.2.3 exact match",
+			requestVersion:    "1.2.3",
 			availableVersions: []string{"1.2.3", "1.2.0"},
-			expectedMatch:  "1.2.3",
-			shouldMatch:    true,
+			expectedMatch:     "1.2.3",
+			shouldMatch:       true,
 		},
 		{
-			name:           "10 should not match 1.0.0",
-			requestVersion: "10",
+			name:              "10 should not match 1.0.0",
+			requestVersion:    "10",
 			availableVersions: []string{"1.0.0", "2.0.0"},
-			expectedMatch:  "",
-			shouldMatch:    false,
+			expectedMatch:     "",
+			shouldMatch:       false,
 		},
 	}
 
@@ -482,10 +482,10 @@ func TestExplicitSourceStrategy_InvalidSourceName(t *testing.T) {
 	resolver := New()
 
 	invalidNames := []string{
-		"invalid name",          // spaces
-		"invalid@name",          // special chars
-		"invalid/name",          // slashes
-		"",                      // empty
+		"invalid name",           // spaces
+		"invalid@name",           // special chars
+		"invalid/name",           // slashes
+		"",                       // empty
 		string(make([]byte, 65)), // too long
 	}
 
@@ -510,9 +510,9 @@ func TestExplicitSourceStrategy_InvalidSourceName(t *testing.T) {
 
 func TestIsValidSourceName(t *testing.T) {
 	tests := []struct {
-		name      string
+		name       string
 		sourceName string
-		wantValid bool
+		wantValid  bool
 	}{
 		{"valid simple", "nodejs_dist", true},
 		{"valid with hyphen", "node-dist", true},

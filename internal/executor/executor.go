@@ -82,7 +82,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// Create execution context
 	e.ctx = &actions.ExecutionContext{
-		Context:        ctx,          // Pass context for cancellation and timeouts
+		Context:        ctx, // Pass context for cancellation and timeouts
 		WorkDir:        e.workDir,
 		InstallDir:     e.installDir,
 		ToolInstallDir: "", // Set by composite actions when install_mode="directory" is used
@@ -92,7 +92,7 @@ func (e *Executor) Execute(ctx context.Context) error {
 		Arch:           runtime.GOARCH,
 		Recipe:         e.recipe,
 		ExecPaths:      e.execPaths, // Include execution dependency paths
-		Resolver:       resolver,     // Pass resolver for asset resolution
+		Resolver:       resolver,    // Pass resolver for asset resolution
 	}
 
 	fmt.Println()

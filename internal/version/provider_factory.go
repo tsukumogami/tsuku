@@ -54,17 +54,17 @@ func NewProviderFactory() *ProviderFactory {
 	f := &ProviderFactory{}
 
 	// Register strategies (priority order determined by Priority() methods)
-	f.Register(&PyPISourceStrategy{})        // PriorityKnownRegistry (100) - intercepts source="pypi"
-	f.Register(&CratesIOSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="crates_io"
-	f.Register(&RubyGemsSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="rubygems"
-	f.Register(&NixpkgsSourceStrategy{})     // PriorityKnownRegistry (100) - intercepts source="nixpkgs"
-	f.Register(&GitHubRepoStrategy{})        // PriorityExplicitHint (90)
-	f.Register(&ExplicitSourceStrategy{})    // PriorityExplicitSource (80) - catch-all for custom sources
-	f.Register(&InferredNpmStrategy{})       // PriorityInferred (10)
-	f.Register(&InferredPyPIStrategy{})      // PriorityInferred (10)
-	f.Register(&InferredCratesIOStrategy{})  // PriorityInferred (10)
-	f.Register(&InferredRubyGemsStrategy{})  // PriorityInferred (10)
-	f.Register(&InferredGitHubStrategy{})    // PriorityInferred (10)
+	f.Register(&PyPISourceStrategy{})       // PriorityKnownRegistry (100) - intercepts source="pypi"
+	f.Register(&CratesIOSourceStrategy{})   // PriorityKnownRegistry (100) - intercepts source="crates_io"
+	f.Register(&RubyGemsSourceStrategy{})   // PriorityKnownRegistry (100) - intercepts source="rubygems"
+	f.Register(&NixpkgsSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="nixpkgs"
+	f.Register(&GitHubRepoStrategy{})       // PriorityExplicitHint (90)
+	f.Register(&ExplicitSourceStrategy{})   // PriorityExplicitSource (80) - catch-all for custom sources
+	f.Register(&InferredNpmStrategy{})      // PriorityInferred (10)
+	f.Register(&InferredPyPIStrategy{})     // PriorityInferred (10)
+	f.Register(&InferredCratesIOStrategy{}) // PriorityInferred (10)
+	f.Register(&InferredRubyGemsStrategy{}) // PriorityInferred (10)
+	f.Register(&InferredGitHubStrategy{})   // PriorityInferred (10)
 
 	return f
 }

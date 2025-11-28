@@ -7,11 +7,11 @@ import (
 
 func TestMatchAssetPattern(t *testing.T) {
 	tests := []struct {
-		name       string
-		pattern    string
-		assets     []string
-		want       string
-		wantErr    bool
+		name        string
+		pattern     string
+		assets      []string
+		want        string
+		wantErr     bool
 		errContains string
 	}{
 		// Basic wildcard matching
@@ -93,10 +93,10 @@ func TestMatchAssetPattern(t *testing.T) {
 			errContains: "pattern cannot be empty",
 		},
 		{
-			name:    "empty asset list",
-			pattern: "app-*.tar.gz",
-			assets:  []string{},
-			wantErr: true,
+			name:        "empty asset list",
+			pattern:     "app-*.tar.gz",
+			assets:      []string{},
+			wantErr:     true,
 			errContains: "no asset matched pattern",
 		},
 		{
@@ -371,11 +371,11 @@ func TestContainsWildcards(t *testing.T) {
 // TestMatchAssetPattern_BracketWildcards tests [] bracket wildcard patterns
 func TestMatchAssetPattern_BracketWildcards(t *testing.T) {
 	tests := []struct {
-		name       string
-		pattern    string
-		assets     []string
-		want       string
-		wantErr    bool
+		name    string
+		pattern string
+		assets  []string
+		want    string
+		wantErr bool
 	}{
 		{
 			name:    "bracket range matches single digit",
@@ -399,8 +399,8 @@ func TestMatchAssetPattern_BracketWildcards(t *testing.T) {
 			name:    "bracket negation with caret",
 			pattern: "app-[^0-9].tar.gz",
 			assets: []string{
-				"app-3.tar.gz",  // Won't match
-				"app-x.tar.gz",  // Will match
+				"app-3.tar.gz", // Won't match
+				"app-x.tar.gz", // Will match
 			},
 			want: "app-x.tar.gz",
 		},
@@ -418,7 +418,7 @@ func TestMatchAssetPattern_BracketWildcards(t *testing.T) {
 			pattern: "app-[0-9][0-9][0-9].tar.gz",
 			assets: []string{
 				"app-123.tar.gz",
-				"app-12.tar.gz",  // Won't match
+				"app-12.tar.gz", // Won't match
 			},
 			want: "app-123.tar.gz",
 		},
@@ -450,17 +450,17 @@ func TestMatchAssetPattern_BracketWildcards(t *testing.T) {
 // TestMatchAssetPattern_SecurityEdgeCases tests security-related edge cases
 func TestMatchAssetPattern_SecurityEdgeCases(t *testing.T) {
 	tests := []struct {
-		name       string
-		pattern    string
-		assets     []string
-		wantErr    bool
+		name        string
+		pattern     string
+		assets      []string
+		wantErr     bool
 		errContains string
 	}{
 		{
-			name:    "extremely long pattern",
-			pattern: "app-" + string(make([]byte, 10000)) + ".tar.gz",
-			assets:  []string{"app-1.0.tar.gz"},
-			wantErr: true, // Will error on no match (pattern is valid but won't match)
+			name:        "extremely long pattern",
+			pattern:     "app-" + string(make([]byte, 10000)) + ".tar.gz",
+			assets:      []string{"app-1.0.tar.gz"},
+			wantErr:     true, // Will error on no match (pattern is valid but won't match)
 			errContains: "no asset matched pattern",
 		},
 		{
@@ -470,10 +470,10 @@ func TestMatchAssetPattern_SecurityEdgeCases(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "invalid glob pattern unclosed bracket",
-			pattern: "app-[.tar.gz",
-			assets:  []string{"app-1.tar.gz"},
-			wantErr: true,
+			name:        "invalid glob pattern unclosed bracket",
+			pattern:     "app-[.tar.gz",
+			assets:      []string{"app-1.tar.gz"},
+			wantErr:     true,
 			errContains: "invalid glob pattern",
 		},
 		{
