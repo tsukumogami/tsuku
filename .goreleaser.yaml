@@ -15,8 +15,9 @@ builds:
       - arm64
     flags:
       - -trimpath
+      - -buildvcs=false
     ldflags:
-      - -s -w
+      - -s -w -X github.com/tsuku-dev/tsuku/internal/buildinfo.version={{.Version}} -X github.com/tsuku-dev/tsuku/internal/buildinfo.commit={{.Commit}}
     mod_timestamp: "{{ .CommitTimestamp }}"
     no_unique_dist_dir: true
 
