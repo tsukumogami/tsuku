@@ -9,6 +9,9 @@ on:
 jobs:
   unit-tests:
     name: Unit Tests
+    needs: matrix
+    # Skip when only documentation files changed
+    if: ${{ needs.matrix.outputs.code == 'true' }}
     runs-on: ubuntu-latest
 
     steps:
