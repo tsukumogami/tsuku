@@ -1,0 +1,108 @@
+name: Cargo Builder Tests
+
+# Runs on:
+# - Daily schedule (cargo tests are slow)
+# - When cargo builder files are changed
+on:
+  schedule:
+    - cron: '0 6 * * *'  # Daily at 6:00 UTC
+  push:
+    branches: [main]
+    paths:
+      - 'internal/builders/**'
+      - 'cmd/tsuku/create.go'
+      - '.github/workflows/cargo-builder-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/builders/**'
+      - 'cmd/tsuku/create.go'
+      - '.github/workflows/cargo-builder-tests.yml'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  cargo-builder-linux:
+    name: "Cargo Builder: Linux"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-action@stable
+
+      - name: Create recipe for hyperfine
+        run: ./tsuku create hyperfine --from crates.io
+
+      - name: Verify recipe was created
+        run: |
+          if [ ! -f "$HOME/.tsuku/recipes/hyperfine.toml" ]; then
+            echo "Recipe file not found!"
+            exit 1
+          fi
+          echo "Recipe contents:"
+          cat "$HOME/.tsuku/recipes/hyperfine.toml"
+
+      - name: Install hyperfine using generated recipe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install hyperfine
+
+      - name: Verify hyperfine works
+        run: hyperfine --version
+
+  cargo-builder-macos:
+    name: "Cargo Builder: macOS"
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-action@stable
+
+      - name: Create recipe for hyperfine
+        run: ./tsuku create hyperfine --from crates.io
+
+      - name: Verify recipe was created
+        run: |
+          if [ ! -f "$HOME/.tsuku/recipes/hyperfine.toml" ]; then
+            echo "Recipe file not found!"
+            exit 1
+          fi
+          echo "Recipe contents:"
+          cat "$HOME/.tsuku/recipes/hyperfine.toml"
+
+      - name: Install hyperfine using generated recipe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install hyperfine
+
+      - name: Verify hyperfine works
+        run: hyperfine --version
