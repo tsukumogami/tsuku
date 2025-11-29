@@ -21,8 +21,7 @@ tsuku is a package manager that makes it easy to install and manage development 
 ## Installation
 
 ```bash
-go build -o tsuku ./cmd/tsuku
-sudo mv tsuku /usr/local/bin/
+curl -fsSL https://get.tsuku.dev/now | bash
 ```
 
 ## Usage
