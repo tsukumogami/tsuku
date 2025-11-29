@@ -49,7 +49,7 @@ func showNoticeIfNeeded(homeDir string, output io.Writer) {
 	}
 
 	// Show notice to output
-	fmt.Fprint(output, NoticeText)
+	_, _ = fmt.Fprint(output, NoticeText)
 
 	// Create marker file (ensure directory exists)
 	if err := os.MkdirAll(homeDir, 0755); err != nil {
