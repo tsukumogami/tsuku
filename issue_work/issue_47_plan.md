@@ -34,20 +34,20 @@ Organize by responsibility: each command gets its own file containing the cobra.
 
 ## Implementation Steps
 
-- [ ] Create helpers.go with loader variable and GetLoader function
-- [ ] Create install.go with install command and related functions
-- [ ] Create list.go with list command
-- [ ] Create update.go with update command
-- [ ] Create versions.go with versions command
-- [ ] Create search.go with search command
-- [ ] Create info.go with info command
-- [ ] Create outdated.go with outdated command
-- [ ] Create remove.go with remove command and cleanupOrphans
-- [ ] Create recipes.go with recipes command
-- [ ] Create update_registry.go with update-registry command
-- [ ] Create verify.go with verify command and helpers
-- [ ] Refactor main.go to ~100 lines (root command, init, main)
-- [ ] Run tests and verify build
+- [x] Create helpers.go with loader variable and GetLoader function
+- [x] Create install.go with install command and related functions
+- [x] Create list.go with list command
+- [x] Create update.go with update command
+- [x] Create versions.go with versions command
+- [x] Create search.go with search command
+- [x] Create info.go with info command
+- [x] Create outdated.go with outdated command
+- [x] Create remove.go with remove command and cleanupOrphans
+- [x] Create recipes.go with recipes command
+- [x] Create update_registry.go with update-registry command
+- [x] Create verify.go with verify command and helpers
+- [x] Refactor main.go to ~100 lines (root command, init, main)
+- [x] Run tests and verify build
 
 ## Testing Strategy
 
@@ -62,11 +62,11 @@ Organize by responsibility: each command gets its own file containing the cobra.
 
 ## Success Criteria
 
-- [ ] main.go is ~100 lines or less
-- [ ] Each command is in its own file
-- [ ] All existing tests pass
-- [ ] Build succeeds
-- [ ] No functional changes
+- [x] main.go is ~100 lines or less (58 lines)
+- [x] Each command is in its own file
+- [x] All existing tests pass
+- [x] Build succeeds
+- [x] No functional changes
 
 ## Open Questions
 
