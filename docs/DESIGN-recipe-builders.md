@@ -1,6 +1,6 @@
 # Design Document: Ecosystem-Specific Recipe Builders
 
-**Status**: Accepted
+**Status**: Planned
 
 ## Context and Problem Statement
 
@@ -723,7 +723,7 @@ Milestone: [Recipe Builders](https://github.com/tsuku-dev/tsuku/milestone/4)
 
 | Issue | Phase | Description |
 |-------|-------|-------------|
-| TBD | Phase 1a | Recipe writer with atomic file operations |
+| #93 | Phase 1a | Recipe writer with atomic file operations |
 | #40 | Phase 1b | Local recipe support + Cargo builder |
 | #41 | Phase 2 | Gem builder for RubyGems |
 | #42 | Phase 3 | PyPI builder for Python packages |
@@ -734,7 +734,7 @@ Milestone: [Recipe Builders](https://github.com/tsuku-dev/tsuku/milestone/4)
 ### Dependency Graph
 
 ```
-Phase 1a: Recipe Writer (TBD)
+Phase 1a: Recipe Writer (#93)
     │
     v
 Phase 1b: Local Recipe Support + Cargo Builder (#40)
