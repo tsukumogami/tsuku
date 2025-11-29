@@ -80,7 +80,7 @@ func NewCargoBuilderWithBaseURL(httpClient *http.Client, baseURL string) *CargoB
 
 // Name returns the builder identifier
 func (b *CargoBuilder) Name() string {
-	return "crates_io"
+	return "crates.io"
 }
 
 // CanBuild checks if the crate exists on crates.io

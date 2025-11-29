@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsuku-dev/tsuku/internal/builders"
@@ -21,11 +22,11 @@ The generated recipe is written to ~/.tsuku/recipes/<tool>.toml and can be
 inspected or edited before running 'tsuku install <tool>'.
 
 Supported ecosystems:
-  crates_io    Rust crates from crates.io
+  crates.io    Rust crates from crates.io
 
 Examples:
-  tsuku create ripgrep --from crates_io
-  tsuku create bat --from crates_io --force`,
+  tsuku create ripgrep --from crates.io
+  tsuku create bat --from crates.io --force`,
 	Args: cobra.ExactArgs(1),
 	Run:  runCreate,
 }
@@ -41,15 +42,30 @@ func init() {
 	_ = createCmd.MarkFlagRequired("from")
 }
 
+// normalizeEcosystem converts user-friendly ecosystem names to internal identifiers
+func normalizeEcosystem(name string) string {
+	// Map common variations to internal names
+	normalized := strings.ToLower(name)
+	switch normalized {
+	case "crates.io", "crates_io", "crates", "cargo":
+		return "crates.io"
+	default:
+		return normalized
+	}
+}
+
 func runCreate(cmd *cobra.Command, args []string) {
 	toolName := args[0]
+
+	// Normalize ecosystem name
+	ecosystem := normalizeEcosystem(createFrom)
 
 	// Initialize builder registry
 	builderRegistry := builders.NewRegistry()
 	builderRegistry.Register(builders.NewCargoBuilder(nil))
 
 	// Get the builder
-	builder, ok := builderRegistry.Get(createFrom)
+	builder, ok := builderRegistry.Get(ecosystem)
 	if !ok {
 		fmt.Fprintf(os.Stderr, "Error: unknown ecosystem '%s'\n", createFrom)
 		fmt.Fprintf(os.Stderr, "\nAvailable ecosystems:\n")
@@ -68,12 +84,12 @@ func runCreate(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 	if !canBuild {
-		fmt.Fprintf(os.Stderr, "Error: package '%s' not found in %s\n", toolName, createFrom)
+		fmt.Fprintf(os.Stderr, "Error: package '%s' not found in %s\n", toolName, ecosystem)
 		os.Exit(1)
 	}
 
 	// Build the recipe
-	fmt.Printf("Creating recipe for %s from %s...\n", toolName, createFrom)
+	fmt.Printf("Creating recipe for %s from %s...\n", toolName, ecosystem)
 	result, err := builder.Build(ctx, toolName, "")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)

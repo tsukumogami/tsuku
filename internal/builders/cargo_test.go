@@ -9,8 +9,8 @@ import (
 
 func TestCargoBuilder_Name(t *testing.T) {
 	builder := NewCargoBuilder(nil)
-	if builder.Name() != "crates_io" {
-		t.Errorf("Name() = %q, want %q", builder.Name(), "crates_io")
+	if builder.Name() != "crates.io" {
+		t.Errorf("Name() = %q, want %q", builder.Name(), "crates.io")
 	}
 }
 
@@ -344,9 +344,9 @@ func TestRegistry_Operations(t *testing.T) {
 	reg.Register(builder)
 
 	// Test Get
-	got, ok := reg.Get("crates_io")
+	got, ok := reg.Get("crates.io")
 	if !ok {
-		t.Error("Get(\"crates_io\") should return true")
+		t.Error("Get(\"crates.io\") should return true")
 	}
 	if got != builder {
 		t.Error("Get should return the registered builder")
@@ -360,7 +360,7 @@ func TestRegistry_Operations(t *testing.T) {
 
 	// Test List
 	names := reg.List()
-	if len(names) != 1 || names[0] != "crates_io" {
-		t.Errorf("List() = %v, want [\"crates_io\"]", names)
+	if len(names) != 1 || names[0] != "crates.io" {
+		t.Errorf("List() = %v, want [\"crates.io\"]", names)
 	}
 }
