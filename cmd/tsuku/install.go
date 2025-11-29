@@ -57,10 +57,6 @@ Examples:
 	},
 }
 
-func runInstall(toolName, reqVersion string, isExplicit bool, parent string) error {
-	return installWithDependencies(toolName, reqVersion, "", isExplicit, parent, make(map[string]bool), nil)
-}
-
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
 	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client)
 }
