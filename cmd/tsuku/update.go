@@ -7,6 +7,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsuku-dev/tsuku/internal/config"
 	"github.com/tsuku-dev/tsuku/internal/install"
+	"github.com/tsuku-dev/tsuku/internal/telemetry"
 )
 
 var updateCmd = &cobra.Command{
@@ -20,6 +21,10 @@ Examples:
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		toolName := args[0]
+
+		// Initialize telemetry
+		telemetryClient := telemetry.NewClient()
+		telemetry.ShowNoticeIfNeeded()
 
 		// Check if installed
 		cfg, err := config.DefaultConfig()
@@ -35,10 +40,12 @@ Examples:
 			os.Exit(1)
 		}
 
+		var previousVersion string
 		installed := false
 		for _, tool := range tools {
 			if tool.Name == toolName {
 				installed = true
+				previousVersion = tool.Version
 				break
 			}
 		}
@@ -49,8 +56,24 @@ Examples:
 		}
 
 		fmt.Printf("Updating %s...\n", toolName)
-		if err := runInstall(toolName, "", true, ""); err != nil {
+		if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
 			os.Exit(1)
+		}
+
+		// Get the new version after update
+		tools, _ = mgr.List()
+		var newVersion string
+		for _, tool := range tools {
+			if tool.Name == toolName {
+				newVersion = tool.Version
+				break
+			}
+		}
+
+		// Send telemetry event for update
+		if telemetryClient != nil && newVersion != "" {
+			event := telemetry.NewUpdateEvent(toolName, previousVersion, newVersion)
+			telemetryClient.Send(event)
 		}
 	},
 }
