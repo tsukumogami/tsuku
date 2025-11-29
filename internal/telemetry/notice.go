@@ -2,6 +2,7 @@ package telemetry
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 
@@ -34,18 +35,24 @@ func ShowNoticeIfNeeded() {
 		return // Silent failure
 	}
 
-	markerPath := filepath.Join(cfg.HomeDir, NoticeMarkerFile)
+	showNoticeIfNeeded(cfg.HomeDir, os.Stderr)
+}
+
+// showNoticeIfNeeded is the internal implementation that accepts a home directory
+// and output writer for testability. It displays the notice and creates a marker file.
+func showNoticeIfNeeded(homeDir string, output io.Writer) {
+	markerPath := filepath.Join(homeDir, NoticeMarkerFile)
 
 	// Check if marker file exists
 	if _, err := os.Stat(markerPath); err == nil {
 		return // Already shown
 	}
 
-	// Show notice to stderr
-	fmt.Fprint(os.Stderr, NoticeText)
+	// Show notice to output
+	fmt.Fprint(output, NoticeText)
 
 	// Create marker file (ensure directory exists)
-	if err := os.MkdirAll(cfg.HomeDir, 0755); err != nil {
+	if err := os.MkdirAll(homeDir, 0755); err != nil {
 		return // Silent failure
 	}
 
