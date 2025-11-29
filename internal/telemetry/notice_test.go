@@ -239,11 +239,51 @@ func TestNoticeText_Content(t *testing.T) {
 		"No personal information is collected",
 		"https://tsuku.dev/telemetry",
 		"TSUKU_NO_TELEMETRY=1",
+		"tsuku config set telemetry false", // New config option
 	}
 
 	for _, expected := range expectedSubstrings {
 		if !bytes.Contains([]byte(NoticeText), []byte(expected)) {
 			t.Errorf("NoticeText missing expected content: %q", expected)
 		}
+	}
+}
+
+func TestShowNoticeIfNeeded_TelemetryDisabledByConfig(t *testing.T) {
+	// Setup temp directory
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+	_ = os.Unsetenv(EnvNoTelemetry)
+
+	// Write config with telemetry disabled
+	configPath := filepath.Join(tmpDir, "config.toml")
+	err := os.WriteFile(configPath, []byte("telemetry = false\n"), 0644)
+	if err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	// Capture stderr
+	oldStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	ShowNoticeIfNeeded()
+
+	w.Close()
+	os.Stderr = oldStderr
+
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	output := buf.String()
+
+	// Verify notice was NOT shown
+	if output != "" {
+		t.Errorf("notice was shown when telemetry disabled by config: %q", output)
+	}
+
+	// Verify marker file was NOT created
+	markerPath := filepath.Join(tmpDir, NoticeMarkerFile)
+	if _, err := os.Stat(markerPath); err == nil {
+		t.Error("marker file was created when telemetry disabled by config")
 	}
 }

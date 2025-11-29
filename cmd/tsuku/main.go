@@ -48,6 +48,7 @@ func init() {
 	rootCmd.AddCommand(outdatedCmd)
 	rootCmd.AddCommand(verifyCmd)
 	rootCmd.AddCommand(updateRegistryCmd)
+	rootCmd.AddCommand(configCmd)
 }
 
 func main() {

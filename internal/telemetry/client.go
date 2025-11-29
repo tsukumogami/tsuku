@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/tsuku-dev/tsuku/internal/userconfig"
 )
 
 const (
@@ -33,12 +35,26 @@ type Client struct {
 }
 
 // NewClient creates a telemetry client.
-// It checks TSUKU_NO_TELEMETRY and TSUKU_TELEMETRY_DEBUG environment variables.
+// It checks TSUKU_NO_TELEMETRY env var first (takes precedence), then config file.
+// TSUKU_TELEMETRY_DEBUG enables debug mode.
 func NewClient() *Client {
+	disabled := false
+
+	// Environment variable takes precedence
+	if os.Getenv(EnvNoTelemetry) != "" {
+		disabled = true
+	} else {
+		// Check config file
+		cfg, err := userconfig.Load()
+		if err == nil && !cfg.Telemetry {
+			disabled = true
+		}
+	}
+
 	return &Client{
 		endpoint: DefaultEndpoint,
 		timeout:  DefaultTimeout,
-		disabled: os.Getenv(EnvNoTelemetry) != "",
+		disabled: disabled,
 		debug:    os.Getenv(EnvDebug) != "",
 	}
 }

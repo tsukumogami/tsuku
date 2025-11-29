@@ -198,3 +198,48 @@ func TestSend_NetworkError(t *testing.T) {
 	// Give time for goroutine to complete
 	time.Sleep(150 * time.Millisecond)
 }
+
+func TestNewClient_DisabledByConfig(t *testing.T) {
+	// Create temp directory for config
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	// Clear env var so config file is checked
+	_ = os.Unsetenv(EnvNoTelemetry)
+	_ = os.Unsetenv(EnvDebug)
+
+	// Write config with telemetry disabled
+	configPath := tmpDir + "/config.toml"
+	err := os.WriteFile(configPath, []byte("telemetry = false\n"), 0644)
+	if err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	c := NewClient()
+
+	if !c.disabled {
+		t.Error("disabled = false, want true (from config)")
+	}
+}
+
+func TestNewClient_EnvVarTakesPrecedence(t *testing.T) {
+	// Create temp directory for config
+	tmpDir := t.TempDir()
+	t.Setenv("TSUKU_HOME", tmpDir)
+
+	// Config says telemetry enabled, but env var says disabled
+	configPath := tmpDir + "/config.toml"
+	err := os.WriteFile(configPath, []byte("telemetry = true\n"), 0644)
+	if err != nil {
+		t.Fatalf("failed to write config: %v", err)
+	}
+
+	// Env var should take precedence
+	t.Setenv(EnvNoTelemetry, "1")
+
+	c := NewClient()
+
+	if !c.disabled {
+		t.Error("disabled = false, want true (env var should override config)")
+	}
+}

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/tsuku-dev/tsuku/internal/config"
+	"github.com/tsuku-dev/tsuku/internal/userconfig"
 )
 
 const (
@@ -17,7 +18,8 @@ const (
 	NoticeText = `tsuku collects anonymous usage statistics to improve the tool.
 No personal information is collected. See: https://tsuku.dev/telemetry
 
-To opt out: export TSUKU_NO_TELEMETRY=1
+To opt out: tsuku config set telemetry false
+         or export TSUKU_NO_TELEMETRY=1
 `
 )
 
@@ -25,8 +27,14 @@ To opt out: export TSUKU_NO_TELEMETRY=1
 // It writes to stderr and creates a marker file to prevent future displays.
 // Returns silently on any error (file permissions, etc.).
 func ShowNoticeIfNeeded() {
-	// Don't show notice if telemetry is disabled
+	// Don't show notice if telemetry is disabled via env var
 	if os.Getenv(EnvNoTelemetry) != "" {
+		return
+	}
+
+	// Don't show notice if telemetry is disabled via config
+	userCfg, err := userconfig.Load()
+	if err == nil && !userCfg.Telemetry {
 		return
 	}
 
