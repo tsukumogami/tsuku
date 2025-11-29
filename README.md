@@ -16,8 +16,7 @@ tsuku is a package manager that makes it easy to install and manage development 
 - **Automatic PATH management**: Shell integration for easy access
 - **Dependency management**: Automatic installation and cleanup of tool dependencies
 - **Package manager integration**: npm_install action for npm tools (pip/cargo pending)
-- **151 bundled recipes**: Pre-validated recipes for popular development tools
-- **No dependencies**: Single binary with embedded recipes
+- **No dependencies**: Single binary, no system prerequisites
 
 ## Installation
 
