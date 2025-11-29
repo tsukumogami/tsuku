@@ -83,6 +83,33 @@ func (s *Step) UnmarshalTOML(data interface{}) error {
 	return nil
 }
 
+// ToMap converts a Step to a flat map representation for TOML encoding.
+// This reconstructs the flat map structure that the TOML encoder expects.
+func (s Step) ToMap() map[string]interface{} {
+	result := make(map[string]interface{})
+
+	// Add action (required)
+	result["action"] = s.Action
+
+	// Add optional fields if set
+	if s.Note != "" {
+		result["note"] = s.Note
+	}
+	if s.Description != "" {
+		result["description"] = s.Description
+	}
+	if len(s.When) > 0 {
+		result["when"] = s.When
+	}
+
+	// Add all params
+	for k, v := range s.Params {
+		result[k] = v
+	}
+
+	return result
+}
+
 // VerifySection defines how to verify the installation
 type VerifySection struct {
 	Command    string             `toml:"command"`
