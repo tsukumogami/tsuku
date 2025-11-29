@@ -13,9 +13,10 @@ import (
 )
 
 func TestNewClient_Default(t *testing.T) {
-	// Clear env vars
-	os.Unsetenv(EnvNoTelemetry)
-	os.Unsetenv(EnvDebug)
+	// Clear env vars using t.Setenv with empty string won't work,
+	// so we unset them and ignore errors (they may not be set)
+	_ = os.Unsetenv(EnvNoTelemetry)
+	_ = os.Unsetenv(EnvDebug)
 
 	c := NewClient()
 
@@ -101,7 +102,7 @@ func TestSend_Debug(t *testing.T) {
 	os.Stderr = oldStderr
 
 	var buf bytes.Buffer
-	io.Copy(&buf, r)
+	_, _ = io.Copy(&buf, r)
 	output := buf.String()
 
 	if !strings.Contains(output, "[telemetry]") {
