@@ -3,6 +3,8 @@ package recipe
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/BurntSushi/toml"
 	"github.com/tsuku-dev/tsuku/internal/registry"
@@ -10,8 +12,9 @@ import (
 
 // Loader handles loading and discovering recipes from the registry
 type Loader struct {
-	recipes  map[string]*Recipe
-	registry *registry.Registry
+	recipes    map[string]*Recipe
+	registry   *registry.Registry
+	recipesDir string // Local recipes directory (~/.tsuku/recipes)
 }
 
 // New creates a new recipe loader with the given registry
@@ -22,17 +25,48 @@ func New(reg *registry.Registry) *Loader {
 	}
 }
 
+// NewWithLocalRecipes creates a new recipe loader with local recipe support
+func NewWithLocalRecipes(reg *registry.Registry, recipesDir string) *Loader {
+	return &Loader{
+		recipes:    make(map[string]*Recipe),
+		registry:   reg,
+		recipesDir: recipesDir,
+	}
+}
+
+// SetRecipesDir sets the local recipes directory
+func (l *Loader) SetRecipesDir(dir string) {
+	l.recipesDir = dir
+}
+
 // Get retrieves a recipe by name
-// Priority: 1. In-memory cache, 2. Disk cache, 3. Remote registry
+// Priority: 1. In-memory cache, 2. Local recipes, 3. Registry (disk cache or remote)
 func (l *Loader) Get(name string) (*Recipe, error) {
 	return l.GetWithContext(context.Background(), name)
 }
 
 // GetWithContext retrieves a recipe by name with context support
+// Priority: 1. In-memory cache, 2. Local recipes, 3. Registry (disk cache or remote)
 func (l *Loader) GetWithContext(ctx context.Context, name string) (*Recipe, error) {
 	// Check in-memory cache first
 	if recipe, ok := l.recipes[name]; ok {
 		return recipe, nil
+	}
+
+	// Check local recipes directory if configured
+	if l.recipesDir != "" {
+		localRecipe, localErr := l.loadLocalRecipe(name)
+		if localErr == nil && localRecipe != nil {
+			// Check if this shadows a registry recipe and warn
+			l.warnIfShadowsRegistry(ctx, name)
+			l.recipes[name] = localRecipe
+			return localRecipe, nil
+		}
+		// If file doesn't exist, continue to registry
+		// If file exists but has parse error, return the error
+		if localErr != nil && !os.IsNotExist(localErr) {
+			return nil, localErr
+		}
 	}
 
 	// Fetch from registry (disk cache or remote)
@@ -43,6 +77,28 @@ func (l *Loader) GetWithContext(ctx context.Context, name string) (*Recipe, erro
 
 	l.recipes[name] = recipe
 	return recipe, nil
+}
+
+// loadLocalRecipe attempts to load a recipe from the local recipes directory
+func (l *Loader) loadLocalRecipe(name string) (*Recipe, error) {
+	path := filepath.Join(l.recipesDir, name+".toml")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	return l.parseBytes(data)
+}
+
+// warnIfShadowsRegistry checks if a local recipe shadows a registry recipe and logs a warning
+func (l *Loader) warnIfShadowsRegistry(ctx context.Context, name string) {
+	// Check if recipe exists in registry cache
+	data, _ := l.registry.GetCached(name)
+	if data != nil {
+		fmt.Printf("Warning: local recipe '%s' shadows registry recipe\n", name)
+		return
+	}
+	// Optionally check remote (but don't block on it)
+	// For now, we only warn if already cached to avoid network delay
 }
 
 // fetchFromRegistry attempts to get a recipe from the registry (cache or remote)

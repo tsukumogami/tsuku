@@ -33,8 +33,8 @@ func init() {
 	}
 	reg := registry.New(cfg.RegistryDir)
 
-	// Initialize recipe loader with registry
-	loader = recipe.New(reg)
+	// Initialize recipe loader with registry and local recipes directory
+	loader = recipe.NewWithLocalRecipes(reg, cfg.RecipesDir)
 
 	// Register all commands
 	rootCmd.AddCommand(installCmd)
@@ -49,6 +49,7 @@ func init() {
 	rootCmd.AddCommand(verifyCmd)
 	rootCmd.AddCommand(updateRegistryCmd)
 	rootCmd.AddCommand(configCmd)
+	rootCmd.AddCommand(createCmd)
 }
 
 func main() {
