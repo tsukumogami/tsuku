@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsuku-dev/tsuku/internal/config"
 	"github.com/tsuku-dev/tsuku/internal/install"
+	"github.com/tsuku-dev/tsuku/internal/telemetry"
 )
 
 var removeCmd = &cobra.Command{
@@ -22,6 +23,10 @@ Examples:
 	Run: func(cmd *cobra.Command, args []string) {
 		toolName := args[0]
 
+		// Initialize telemetry
+		telemetryClient := telemetry.NewClient()
+		telemetry.ShowNoticeIfNeeded()
+
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to get config: %v\n", err)
@@ -29,6 +34,17 @@ Examples:
 		}
 
 		mgr := install.New(cfg)
+
+		// Get version before removal for telemetry
+		var previousVersion string
+		tools, _ := mgr.List()
+		for _, tool := range tools {
+			if tool.Name == toolName {
+				previousVersion = tool.Version
+				break
+			}
+		}
+
 		// Check if tool is required by others
 		state, err := mgr.GetState().Load()
 		if err == nil {
@@ -44,6 +60,12 @@ Examples:
 		if err := mgr.Remove(toolName); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to remove %s: %v\n", toolName, err)
 			os.Exit(1)
+		}
+
+		// Send telemetry event for successful removal
+		if telemetryClient != nil && previousVersion != "" {
+			event := telemetry.NewRemoveEvent(toolName, previousVersion)
+			telemetryClient.Send(event)
 		}
 
 		// Remove this tool from dependencies' RequiredBy list

@@ -12,6 +12,7 @@ import (
 	"github.com/tsuku-dev/tsuku/internal/executor"
 	"github.com/tsuku-dev/tsuku/internal/install"
 	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsuku-dev/tsuku/internal/telemetry"
 )
 
 var installCmd = &cobra.Command{
@@ -26,21 +27,27 @@ Examples:
   tsuku install terraform@latest`,
 	Args: cobra.MinimumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
+		// Initialize telemetry
+		telemetryClient := telemetry.NewClient()
+		telemetry.ShowNoticeIfNeeded()
+
 		for _, arg := range args {
 			toolName := arg
-			version := ""
+			versionConstraint := ""
 
 			if strings.Contains(arg, "@") {
 				parts := strings.SplitN(arg, "@", 2)
 				toolName = parts[0]
-				version = parts[1]
-
-				if version == "latest" {
-					version = ""
-				}
+				versionConstraint = parts[1]
 			}
 
-			if err := runInstall(toolName, version, true, ""); err != nil {
+			// Convert "latest" to empty for resolution, but keep original constraint for telemetry
+			resolveVersion := versionConstraint
+			if resolveVersion == "latest" {
+				resolveVersion = ""
+			}
+
+			if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
 				// Continue installing other tools even if one fails?
 				// For now, exit on first failure to be safe
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -51,7 +58,11 @@ Examples:
 }
 
 func runInstall(toolName, reqVersion string, isExplicit bool, parent string) error {
-	return installWithDependencies(toolName, reqVersion, isExplicit, parent, make(map[string]bool))
+	return installWithDependencies(toolName, reqVersion, "", isExplicit, parent, make(map[string]bool), nil)
+}
+
+func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
+	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client)
 }
 
 // ensurePackageManagersForRecipe checks if a recipe uses package managers
@@ -104,7 +115,7 @@ func ensurePackageManagersForRecipe(mgr *install.Manager, r *recipe.Recipe) ([]s
 	return execPaths, nil
 }
 
-func installWithDependencies(toolName, reqVersion string, isExplicit bool, parent string, visited map[string]bool) error {
+func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client) error {
 	// Check for circular dependencies
 	if visited[toolName] {
 		return fmt.Errorf("circular dependency detected: %s", toolName)
@@ -187,7 +198,8 @@ func installWithDependencies(toolName, reqVersion string, isExplicit bool, paren
 		for _, dep := range r.Metadata.Dependencies {
 			fmt.Printf("  Resolving dependency '%s'...\n", dep)
 			// Install dependency (not explicit, parent is current tool)
-			if err := installWithDependencies(dep, "", false, toolName, visited); err != nil {
+			// Dependencies don't have version constraints and are tracked for telemetry
+			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient); err != nil {
 				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
 			}
 		}
@@ -210,7 +222,7 @@ func installWithDependencies(toolName, reqVersion string, isExplicit bool, paren
 			fmt.Printf("  Resolving runtime dependency '%s'...\n", dep)
 			// Install runtime dependency as explicit (exposed, not hidden)
 			// No parent - these are top-level explicit installs
-			if err := installWithDependencies(dep, "", true, "", visited); err != nil {
+			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient); err != nil {
 				return fmt.Errorf("failed to install runtime dependency '%s': %w", dep, err)
 			}
 		}
@@ -285,6 +297,13 @@ func installWithDependencies(toolName, reqVersion string, isExplicit bool, paren
 	})
 	if err != nil {
 		fmt.Printf("Warning: failed to update state: %v\n", err)
+	}
+
+	// Send telemetry event on successful installation
+	if telemetryClient != nil {
+		// isDependency is true when isExplicit is false (installed as a dependency)
+		event := telemetry.NewInstallEvent(toolName, versionConstraint, version, !isExplicit)
+		telemetryClient.Send(event)
 	}
 
 	fmt.Println()
