@@ -1,6 +1,6 @@
 # Design Document: Ecosystem-Specific Recipe Builders
 
-**Status**: Proposed
+**Status**: Planned
 
 ## Context and Problem Statement
 
@@ -716,3 +716,16 @@ When fetching Cargo.toml for executable discovery:
 2. **API dependencies**: Helpful error messages on API failure.
 3. **Explicit creation**: Clear error message when tool not found suggests `tsuku create` options.
 4. **Ecosystem knowledge**: Error message lists available ecosystems.
+
+## Implementation Issues
+
+Milestone: [Recipe Builders](https://github.com/tsuku-dev/tsuku/milestone/4)
+
+| Issue | Phase | Description |
+|-------|-------|-------------|
+| #40 | Phase 1 | Local recipe support + Cargo builder |
+| #41 | Phase 2 | Gem builder for RubyGems |
+| #42 | Phase 3 | PyPI builder for Python packages |
+| #43 | Phase 3 | npm builder for Node.js packages |
+| #44 | Phase 4 | Recipe management UX improvements |
+| #45 | Phase 5 | Toolchain bootstrapping |
