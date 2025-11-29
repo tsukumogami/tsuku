@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/tsuku-dev/tsuku/internal/registry"
@@ -271,6 +273,211 @@ name = ""
 `))
 	if err == nil {
 		t.Error("parseBytes should fail for invalid recipe (empty name)")
+	}
+}
+
+func TestNewWithLocalRecipes(t *testing.T) {
+	reg := registry.New(t.TempDir())
+	recipesDir := "/some/recipes/dir"
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	if loader == nil {
+		t.Fatal("NewWithLocalRecipes() returned nil")
+	}
+	if loader.registry != reg {
+		t.Error("loader.registry not set correctly")
+	}
+	if loader.recipesDir != recipesDir {
+		t.Errorf("loader.recipesDir = %q, want %q", loader.recipesDir, recipesDir)
+	}
+}
+
+func TestLoader_SetRecipesDir(t *testing.T) {
+	reg := registry.New(t.TempDir())
+	loader := New(reg)
+
+	if loader.recipesDir != "" {
+		t.Errorf("initial recipesDir should be empty, got %q", loader.recipesDir)
+	}
+
+	loader.SetRecipesDir("/test/dir")
+	if loader.recipesDir != "/test/dir" {
+		t.Errorf("recipesDir = %q, want %q", loader.recipesDir, "/test/dir")
+	}
+}
+
+func TestLoader_Get_LocalRecipe(t *testing.T) {
+	localRecipe := `[metadata]
+name = "local-tool"
+description = "A local test tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/local.tar.gz"
+
+[verify]
+command = "local-tool --version"
+`
+
+	// Create a temporary local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "local-tool.toml"), []byte(localRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	// Set up a registry server that returns 404 for everything
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	// Should load from local recipes directory
+	recipe, err := loader.Get("local-tool")
+	if err != nil {
+		t.Fatalf("Get() failed: %v", err)
+	}
+
+	if recipe.Metadata.Name != "local-tool" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "local-tool")
+	}
+
+	if recipe.Metadata.Description != "A local test tool" {
+		t.Errorf("recipe.Metadata.Description = %q, want %q", recipe.Metadata.Description, "A local test tool")
+	}
+}
+
+func TestLoader_Get_LocalRecipePriority(t *testing.T) {
+	localRecipe := `[metadata]
+name = "priority-tool"
+description = "Local version"
+
+[[steps]]
+action = "download"
+url = "https://example.com/local.tar.gz"
+
+[verify]
+command = "priority-tool --version"
+`
+
+	registryRecipe := `[metadata]
+name = "priority-tool"
+description = "Registry version"
+
+[[steps]]
+action = "download"
+url = "https://example.com/registry.tar.gz"
+
+[verify]
+command = "priority-tool --version"
+`
+
+	// Create a temporary local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "priority-tool.toml"), []byte(localRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	// Set up a registry server that returns the registry recipe
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/recipes/p/priority-tool.toml" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(registryRecipe))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	// Should load from local recipes directory, not registry
+	recipe, err := loader.Get("priority-tool")
+	if err != nil {
+		t.Fatalf("Get() failed: %v", err)
+	}
+
+	if recipe.Metadata.Description != "Local version" {
+		t.Errorf("recipe.Metadata.Description = %q, want %q (local should take priority)", recipe.Metadata.Description, "Local version")
+	}
+}
+
+func TestLoader_Get_FallbackToRegistry(t *testing.T) {
+	registryRecipe := `[metadata]
+name = "registry-tool"
+description = "Registry version"
+
+[[steps]]
+action = "download"
+url = "https://example.com/registry.tar.gz"
+
+[verify]
+command = "registry-tool --version"
+`
+
+	// Create an empty local recipes directory
+	recipesDir := t.TempDir()
+
+	// Set up a registry server that returns a recipe
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/recipes/r/registry-tool.toml" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(registryRecipe))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	// Should fall back to registry when local doesn't exist
+	recipe, err := loader.Get("registry-tool")
+	if err != nil {
+		t.Fatalf("Get() failed: %v", err)
+	}
+
+	if recipe.Metadata.Description != "Registry version" {
+		t.Errorf("recipe.Metadata.Description = %q, want %q", recipe.Metadata.Description, "Registry version")
+	}
+}
+
+func TestLoader_Get_LocalRecipeParseError(t *testing.T) {
+	// Create a local recipe with invalid TOML
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "invalid-tool.toml"), []byte("invalid toml [[["), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	// Set up a registry server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	// Should return parse error, not fallback to registry
+	_, err := loader.Get("invalid-tool")
+	if err == nil {
+		t.Error("Get() should fail for invalid local recipe TOML")
 	}
 }
 
