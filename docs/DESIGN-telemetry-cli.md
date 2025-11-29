@@ -1,6 +1,6 @@
 # Design: Telemetry CLI Integration
 
-**Status**: Proposed
+**Status**: Planned
 
 ## Context and Problem Statement
 
@@ -207,7 +207,7 @@ Core telemetry functionality with environment variable opt-out:
 
 General configuration infrastructure with telemetry setting:
 - `tsuku config get/set` commands
-- `~/.tsuku/config.json` file
+- `~/.tsuku/config.toml` file
 - `tsuku config set telemetry false` as alternative opt-out
 
 ## Consequences
@@ -224,4 +224,16 @@ General configuration infrastructure with telemetry setting:
 - Some users may object to opt-out model (mitigated by easy opt-out and transparency)
 - Backend dependency for full functionality (mitigated by silent failures)
 - Additional code to maintain (~350 lines)
+
+## Implementation Issues
+
+- [#79](https://github.com/tsuku-dev/tsuku/issues/79): Umbrella issue
+
+### Phase 1: Core Telemetry
+- [#82](https://github.com/tsuku-dev/tsuku/issues/82): feat(telemetry): add client with schema and env var opt-out
+- [#83](https://github.com/tsuku-dev/tsuku/issues/83): feat(telemetry): add first-run notice
+- [#84](https://github.com/tsuku-dev/tsuku/issues/84): feat(telemetry): integrate into install/update/remove commands
+
+### Phase 2: Config System
+- [#85](https://github.com/tsuku-dev/tsuku/issues/85): feat(config): add config system with telemetry setting
 
