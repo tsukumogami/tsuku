@@ -583,31 +583,6 @@ Key characteristics:
 - Detect when cargo/gem/pip/npm is missing
 - Suggest installing via tsuku or provide helpful error
 
-## Consequences
-
-### Positive
-
-1. **Expanded coverage**: Users can create recipes for any tool in supported ecosystems.
-2. **Foundation for AI**: The builder interface establishes the pattern for LLM-assisted builders.
-3. **Clean separation**: Recipe creation is completely decoupled from installation.
-4. **Contribution-ready**: Generated recipes use the same format as registry recipes.
-5. **User control**: Local recipes take precedence; users can customize.
-6. **Leverages existing infrastructure**: No changes to actions, version providers, or executor.
-
-### Negative
-
-1. **Executable discovery is imperfect**: Some generated recipes will have wrong executable names.
-2. **API dependencies**: Builders depend on external APIs; outages affect generation.
-3. **Explicit creation step**: Users must run `tsuku create` before `tsuku install` for new tools.
-4. **Ecosystem knowledge required**: Until LLM integration, users must know which ecosystem provides their tool.
-
-### Mitigations
-
-1. **Executable discovery**: Clear warnings when using fallback inference. Users can edit recipes.
-2. **API dependencies**: Helpful error messages on API failure.
-3. **Explicit creation**: Clear error message when tool not found suggests `tsuku create` options.
-4. **Ecosystem knowledge**: Error message lists available ecosystems.
-
 ## Security Considerations
 
 ### Download Verification
@@ -717,3 +692,27 @@ When fetching Cargo.toml for executable discovery:
 6. **Transparency**: Show users the generated recipe content and any warnings before writing to disk
 7. **Output sanitization**: Strip ANSI escape sequences from displayed metadata to prevent terminal injection
 
+## Consequences
+
+### Positive
+
+1. **Expanded coverage**: Users can create recipes for any tool in supported ecosystems.
+2. **Foundation for AI**: The builder interface establishes the pattern for LLM-assisted builders.
+3. **Clean separation**: Recipe creation is completely decoupled from installation.
+4. **Contribution-ready**: Generated recipes use the same format as registry recipes.
+5. **User control**: Local recipes take precedence; users can customize.
+6. **Leverages existing infrastructure**: No changes to actions, version providers, or executor.
+
+### Negative
+
+1. **Executable discovery is imperfect**: Some generated recipes will have wrong executable names.
+2. **API dependencies**: Builders depend on external APIs; outages affect generation.
+3. **Explicit creation step**: Users must run `tsuku create` before `tsuku install` for new tools.
+4. **Ecosystem knowledge required**: Until LLM integration, users must know which ecosystem provides their tool.
+
+### Mitigations
+
+1. **Executable discovery**: Clear warnings when using fallback inference. Users can edit recipes.
+2. **API dependencies**: Helpful error messages on API failure.
+3. **Explicit creation**: Clear error message when tool not found suggests `tsuku create` options.
+4. **Ecosystem knowledge**: Error message lists available ecosystems.
