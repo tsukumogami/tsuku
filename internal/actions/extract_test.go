@@ -397,3 +397,246 @@ func TestAtomicSymlink(t *testing.T) {
 		t.Errorf("Replaced symlink target = %q, want %q", target, "other.txt")
 	}
 }
+
+// TestExtractTar_PathTraversal_SecurityEdgeCases tests comprehensive path traversal attack vectors
+func TestExtractTar_PathTraversal_SecurityEdgeCases(t *testing.T) {
+	action := &ExtractAction{}
+
+	tests := []struct {
+		name      string
+		filename  string
+		shouldErr bool
+	}{
+		// Classic path traversal patterns
+		{"basic traversal", "../../../etc/passwd", true},
+		{"deeply nested traversal", "../../../../../../../../../../tmp/evil", true},
+
+		// Traversal with encoded sequences (after cleaning)
+		{"traversal in middle", "foo/../../../bar", true},
+		{"traversal at end", "foo/bar/../../../..", true},
+
+		// Traversal with current directory
+		{"dot current with traversal", "./../../etc/passwd", true},
+
+		// Note: Absolute paths like "/etc/passwd" become "etc/passwd" after Join
+		// This is actually safe behavior - they end up within the dest dir
+		{"absolute path becomes relative", "/etc/passwd", false},
+
+		// Valid relative paths (should work)
+		{"simple file", "file.txt", false},
+		{"nested file", "dir/subdir/file.txt", false},
+		{"deep nesting", "a/b/c/d/e/f/g.txt", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+
+			// Create a tar.gz archive with the malicious path
+			var buf bytes.Buffer
+			gzw := gzip.NewWriter(&buf)
+			tw := tar.NewWriter(gzw)
+
+			content := []byte("malicious content")
+			hdr := &tar.Header{
+				Name: tt.filename,
+				Mode: 0644,
+				Size: int64(len(content)),
+			}
+			if err := tw.WriteHeader(hdr); err != nil {
+				t.Fatalf("Failed to write tar header: %v", err)
+			}
+			if _, err := tw.Write(content); err != nil {
+				t.Fatalf("Failed to write tar content: %v", err)
+			}
+
+			_ = tw.Close()
+			_ = gzw.Close()
+
+			archivePath := filepath.Join(tmpDir, "test.tar.gz")
+			if err := os.WriteFile(archivePath, buf.Bytes(), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			destPath := filepath.Join(tmpDir, "extracted")
+			if err := os.MkdirAll(destPath, 0755); err != nil {
+				t.Fatal(err)
+			}
+
+			err := action.extractTarGz(archivePath, destPath, 0, nil)
+
+			if tt.shouldErr {
+				if err == nil {
+					t.Error("Expected error for path traversal attempt, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error for valid path: %v", err)
+				}
+			}
+		})
+	}
+}
+
+// TestExtractZip_PathTraversal_SecurityEdgeCases tests zip-specific path traversal attacks
+func TestExtractZip_PathTraversal_SecurityEdgeCases(t *testing.T) {
+	action := &ExtractAction{}
+
+	tests := []struct {
+		name      string
+		filename  string
+		shouldErr bool
+	}{
+		// Classic path traversal patterns
+		{"basic traversal", "../../../etc/passwd", true},
+		{"deeply nested traversal", "../../../../../../../../../../tmp/evil", true},
+
+		// Traversal with current directory
+		{"dot current with traversal", "./../../etc/passwd", true},
+
+		// Note: Absolute paths in zip become relative after Join - safe behavior
+		{"absolute path becomes relative", "/etc/passwd", false},
+
+		// Valid relative paths (should work)
+		{"simple file", "file.txt", false},
+		{"nested file", "dir/subdir/file.txt", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+
+			// Create a zip archive with the potentially malicious path
+			archivePath := filepath.Join(tmpDir, "test.zip")
+			zipFile, err := os.Create(archivePath)
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			zw := zip.NewWriter(zipFile)
+			content := []byte("zip content")
+
+			fw, err := zw.Create(tt.filename)
+			if err != nil {
+				// Some filenames might fail at create time
+				_ = zw.Close()
+				_ = zipFile.Close()
+				// This is also a valid security behavior - failing early
+				return
+			}
+			if _, err := fw.Write(content); err != nil {
+				t.Fatal(err)
+			}
+
+			_ = zw.Close()
+			_ = zipFile.Close()
+
+			destPath := filepath.Join(tmpDir, "extracted")
+			if err := os.MkdirAll(destPath, 0755); err != nil {
+				t.Fatal(err)
+			}
+
+			err = action.extractZip(archivePath, destPath, 0, nil)
+
+			if tt.shouldErr {
+				if err == nil {
+					t.Error("Expected error for path traversal attempt, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error for valid path: %v", err)
+				}
+			}
+		})
+	}
+}
+
+// TestExtractTar_SymlinkAttacks_SecurityEdgeCases tests extended symlink attack scenarios
+func TestExtractTar_SymlinkAttacks_SecurityEdgeCases(t *testing.T) {
+	action := &ExtractAction{}
+
+	tests := []struct {
+		name       string
+		linkName   string
+		linkTarget string
+		shouldErr  bool
+	}{
+		// Absolute symlink targets (should be blocked)
+		{"absolute symlink to root", "link", "/", true},
+		{"absolute symlink to etc", "link", "/etc/passwd", true},
+		{"absolute symlink to tmp", "link", "/tmp/evil", true},
+
+		// Relative symlink escapes (should be blocked)
+		{"escape via parent", "link", "../../../etc/passwd", true},
+		{"deep escape", "nested/dir/link", "../../../../../../../../tmp/evil", true},
+
+		// Self-referential symlinks (could cause loops)
+		{"self-reference", "link", "link", false}, // Not an escape, just a loop
+		{"cyclic a->b", "a", "b", false},          // Would need b->a for cycle
+
+		// Valid relative symlinks within archive (should work)
+		{"same dir symlink", "link", "target.txt", false},
+		{"sibling dir symlink", "bin/link", "../lib/libfoo.so", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+
+			// Create a tar.gz archive with symlink
+			var buf bytes.Buffer
+			gzw := gzip.NewWriter(&buf)
+			tw := tar.NewWriter(gzw)
+
+			// First add a regular file to reference
+			content := []byte("target content")
+			regHdr := &tar.Header{
+				Name: "target.txt",
+				Mode: 0644,
+				Size: int64(len(content)),
+			}
+			if err := tw.WriteHeader(regHdr); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := tw.Write(content); err != nil {
+				t.Fatal(err)
+			}
+
+			// Add the symlink
+			linkHdr := &tar.Header{
+				Name:     tt.linkName,
+				Mode:     0777,
+				Typeflag: tar.TypeSymlink,
+				Linkname: tt.linkTarget,
+			}
+			if err := tw.WriteHeader(linkHdr); err != nil {
+				t.Fatal(err)
+			}
+
+			_ = tw.Close()
+			_ = gzw.Close()
+
+			archivePath := filepath.Join(tmpDir, "test.tar.gz")
+			if err := os.WriteFile(archivePath, buf.Bytes(), 0644); err != nil {
+				t.Fatal(err)
+			}
+
+			destPath := filepath.Join(tmpDir, "extracted")
+			if err := os.MkdirAll(destPath, 0755); err != nil {
+				t.Fatal(err)
+			}
+
+			err := action.extractTarGz(archivePath, destPath, 0, nil)
+
+			if tt.shouldErr {
+				if err == nil {
+					t.Error("Expected error for symlink attack, got nil")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Unexpected error for valid symlink: %v", err)
+				}
+			}
+		})
+	}
+}
