@@ -1,6 +1,9 @@
 package version
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+)
 
 func TestNormalizeVersion(t *testing.T) {
 	tests := []struct {
@@ -125,4 +128,31 @@ func TestNewWithPyPIRegistry(t *testing.T) {
 	if resolver.httpClient == nil {
 		t.Error("NewWithPyPIRegistry() did not initialize httpClient")
 	}
+}
+
+func TestWrapGitHubRateLimitError(t *testing.T) {
+	resolver := New()
+
+	t.Run("non-rate-limit error returns nil", func(t *testing.T) {
+		err := fmt.Errorf("some other error")
+		result := resolver.wrapGitHubRateLimitError(err, GitHubContextVersionResolution)
+		if result != nil {
+			t.Errorf("wrapGitHubRateLimitError() = %v, want nil for non-rate-limit error", result)
+		}
+	})
+
+	t.Run("nil error returns nil", func(t *testing.T) {
+		result := resolver.wrapGitHubRateLimitError(nil, GitHubContextVersionResolution)
+		if result != nil {
+			t.Errorf("wrapGitHubRateLimitError() = %v, want nil for nil error", result)
+		}
+	})
+
+	t.Run("wrapped non-rate-limit error returns nil", func(t *testing.T) {
+		err := fmt.Errorf("wrapped: %w", fmt.Errorf("inner error"))
+		result := resolver.wrapGitHubRateLimitError(err, GitHubContextVersionResolution)
+		if result != nil {
+			t.Errorf("wrapGitHubRateLimitError() = %v, want nil for wrapped non-rate-limit error", result)
+		}
+	})
 }
