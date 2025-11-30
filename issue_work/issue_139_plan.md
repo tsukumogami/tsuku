@@ -25,9 +25,9 @@ None
 ## Implementation Steps
 
 - [x] Analyze current validation state (completed in baseline)
-- [ ] Add `isValidNpmPackageName()` check to `ResolveNpm()`
-- [ ] Add test for invalid package name in `ResolveNpm()`
-- [ ] Run all tests and verify
+- [x] Add `isValidNpmPackageName()` check to `ResolveNpm()`
+- [x] Add test for invalid package name in `ResolveNpm()`
+- [x] Run all tests and verify
 
 ## Testing Strategy
 
@@ -42,9 +42,9 @@ None
 ## Success Criteria
 
 - [x] `isValidSourceName()` already validates custom source names (verified in baseline)
-- [ ] `ResolveNpm()` validates package name before URL construction
-- [ ] All tests pass
-- [ ] Build succeeds
+- [x] `ResolveNpm()` validates package name before URL construction
+- [x] All tests pass
+- [x] Build succeeds
 
 ## Open Questions
 
