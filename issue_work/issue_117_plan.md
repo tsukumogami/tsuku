@@ -44,11 +44,11 @@ Mark each step [x] after it is implemented and committed. This enables clear res
 - **Network issues**: Handled by existing HTTP client with timeouts and error handling.
 
 ## Success Criteria
-- [ ] `provider_go_toolchain.go` implemented with VersionResolver and VersionLister interfaces
-- [ ] Provider queries `https://go.dev/dl/?mode=json` for stable releases
-- [ ] Returns versions without "v" prefix (e.g., "1.23.4")
-- [ ] Factory integration: `source = "go_toolchain"` works in recipes
-- [ ] Unit tests pass for version parsing and latest resolution
+- [x] `provider_go_toolchain.go` implemented with VersionResolver and VersionLister interfaces
+- [x] Provider queries `https://go.dev/dl/?mode=json` for stable releases
+- [x] Returns versions without "v" prefix (e.g., "1.23.4")
+- [x] Factory integration: `source = "go_toolchain"` works in recipes
+- [x] Unit tests pass for version parsing and latest resolution
 
 ## Open Questions
 None
