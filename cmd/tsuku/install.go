@@ -142,7 +142,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	if isExplicit && parent == "" {
 		wasHidden, err := install.CheckAndExposeHidden(mgr, toolName)
 		if err != nil {
-			fmt.Printf("Warning: failed to check hidden status: %v\n", err)
+			printInfof("Warning: failed to check hidden status: %v\n", err)
 		}
 		if wasHidden {
 			// Tool was hidden and is now exposed, we're done
@@ -181,7 +181,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 			}
 		})
 		if err != nil {
-			fmt.Printf("Warning: failed to update state for %s: %v\n", toolName, err)
+			printInfof("Warning: failed to update state for %s: %v\n", toolName, err)
 		}
 
 		// If explicit update requested, we might want to proceed with re-installation
@@ -206,10 +206,10 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 
 	// Check and install dependencies
 	if len(r.Metadata.Dependencies) > 0 {
-		fmt.Printf("Checking dependencies for %s...\n", toolName)
+		printInfof("Checking dependencies for %s...\n", toolName)
 
 		for _, dep := range r.Metadata.Dependencies {
-			fmt.Printf("  Resolving dependency '%s'...\n", dep)
+			printInfof("  Resolving dependency '%s'...\n", dep)
 			// Install dependency (not explicit, parent is current tool)
 			// Dependencies don't have version constraints and are tracked for telemetry
 			if err := installWithDependencies(dep, "", "", false, toolName, visited, telemetryClient); err != nil {
@@ -229,10 +229,10 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Check and install runtime dependencies (these must be exposed, not hidden)
 	// This happens AFTER package manager bootstrap so CheckAndExposeHidden can work
 	if len(r.Metadata.RuntimeDependencies) > 0 {
-		fmt.Printf("Checking runtime dependencies for %s...\n", toolName)
+		printInfof("Checking runtime dependencies for %s...\n", toolName)
 
 		for _, dep := range r.Metadata.RuntimeDependencies {
-			fmt.Printf("  Resolving runtime dependency '%s'...\n", dep)
+			printInfof("  Resolving runtime dependency '%s'...\n", dep)
 			// Install runtime dependency as explicit (exposed, not hidden)
 			// No parent - these are top-level explicit installs
 			if err := installWithDependencies(dep, "", "", true, "", visited, telemetryClient); err != nil {
@@ -309,7 +309,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 	})
 	if err != nil {
-		fmt.Printf("Warning: failed to update state: %v\n", err)
+		printInfof("Warning: failed to update state: %v\n", err)
 	}
 
 	// Send telemetry event on successful installation
@@ -319,11 +319,11 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		telemetryClient.Send(event)
 	}
 
-	fmt.Println()
-	fmt.Println("Installation successful!")
-	fmt.Println()
-	fmt.Println("To use the installed tool, add this to your shell profile:")
-	fmt.Printf("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
+	printInfo()
+	printInfo("Installation successful!")
+	printInfo()
+	printInfo("To use the installed tool, add this to your shell profile:")
+	printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
 
 	return nil
 }

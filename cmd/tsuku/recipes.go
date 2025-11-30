@@ -43,17 +43,17 @@ Use --local to show only recipes from your local recipes directory
 
 		if len(recipes) == 0 {
 			if recipesLocalOnly {
-				fmt.Println("No local recipes found.")
-				fmt.Println()
-				fmt.Println("Create a recipe with:")
-				fmt.Println("  tsuku create <tool> --from <ecosystem>")
-				fmt.Println()
-				fmt.Println("Available ecosystems: crates.io, rubygems, pypi, npm")
+				printInfo("No local recipes found.")
+				printInfo()
+				printInfo("Create a recipe with:")
+				printInfo("  tsuku create <tool> --from <ecosystem>")
+				printInfo()
+				printInfo("Available ecosystems: crates.io, rubygems, pypi, npm")
 			} else {
-				fmt.Println("No recipes found.")
-				fmt.Println()
-				fmt.Println("Update the registry cache with:")
-				fmt.Println("  tsuku update-registry")
+				printInfo("No recipes found.")
+				printInfo()
+				printInfo("Update the registry cache with:")
+				printInfo("  tsuku update-registry")
 			}
 			return
 		}
@@ -75,9 +75,9 @@ Use --local to show only recipes from your local recipes directory
 		}
 
 		if recipesLocalOnly {
-			fmt.Printf("Local recipes (%d total):\n\n", localCount)
+			printInfof("Local recipes (%d total):\n\n", localCount)
 		} else {
-			fmt.Printf("Available recipes (%d total: %d local, %d registry):\n\n", len(recipes), localCount, registryCount)
+			printInfof("Available recipes (%d total: %d local, %d registry):\n\n", len(recipes), localCount, registryCount)
 		}
 
 		for _, r := range recipes {

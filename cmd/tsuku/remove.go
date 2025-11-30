@@ -71,7 +71,7 @@ Examples:
 		// Remove this tool from dependencies' RequiredBy list
 		if state != nil {
 			if err := mgr.GetState().RemoveTool(toolName); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to remove tool from state: %v\n", err)
+				printInfof("Warning: failed to remove tool from state: %v\n", err)
 			}
 
 			// We need to find which tools this tool depended on to clean up references
@@ -81,7 +81,7 @@ Examples:
 			if r, err := loader.Get(toolName); err == nil {
 				for _, dep := range r.Metadata.Dependencies {
 					if err := mgr.GetState().RemoveRequiredBy(dep, toolName); err != nil {
-						fmt.Fprintf(os.Stderr, "Warning: failed to update dependency state for %s: %v\n", dep, err)
+						printInfof("Warning: failed to update dependency state for %s: %v\n", dep, err)
 					}
 					// Try to cleanup orphan
 					cleanupOrphans(mgr, dep)
@@ -89,7 +89,7 @@ Examples:
 			}
 		}
 
-		fmt.Printf("Removed %s\n", toolName)
+		printInfof("Removed %s\n", toolName)
 	},
 }
 
@@ -114,22 +114,22 @@ func cleanupOrphans(mgr *install.Manager, toolName string) {
 		return
 	}
 
-	fmt.Printf("Auto-removing orphaned dependency: %s\n", toolName)
+	printInfof("Auto-removing orphaned dependency: %s\n", toolName)
 	if err := mgr.Remove(toolName); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to auto-remove %s: %v\n", toolName, err)
+		printInfof("Warning: failed to auto-remove %s: %v\n", toolName, err)
 		return
 	}
 
 	// Remove from state
 	if err := mgr.GetState().RemoveTool(toolName); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to remove tool from state: %v\n", err)
+		printInfof("Warning: failed to remove tool from state: %v\n", err)
 	}
 
 	// Recursively clean up its dependencies
 	if r, err := loader.Get(toolName); err == nil {
 		for _, dep := range r.Metadata.Dependencies {
 			if err := mgr.GetState().RemoveRequiredBy(dep, toolName); err != nil {
-				fmt.Fprintf(os.Stderr, "Warning: failed to update dependency state for %s: %v\n", dep, err)
+				printInfof("Warning: failed to update dependency state for %s: %v\n", dep, err)
 			}
 			cleanupOrphans(mgr, dep)
 		}

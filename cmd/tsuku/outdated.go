@@ -30,11 +30,11 @@ var outdatedCmd = &cobra.Command{
 		}
 
 		if len(tools) == 0 {
-			fmt.Println("No tools installed.")
+			printInfo("No tools installed.")
 			return
 		}
 
-		fmt.Println("Checking for updates...")
+		printInfo("Checking for updates...")
 		res := version.New()
 		ctx := context.Background()
 
@@ -69,7 +69,7 @@ var outdatedCmd = &cobra.Command{
 			}
 
 			// Check latest version
-			fmt.Printf("Checking %s...\n", tool.Name)
+			printInfof("Checking %s...\n", tool.Name)
 			latest, err := res.ResolveGitHub(ctx, repo)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to check %s: %v\n", tool.Name, err)
@@ -90,9 +90,9 @@ var outdatedCmd = &cobra.Command{
 			}
 		}
 
-		fmt.Println()
+		printInfo()
 		if len(updates) == 0 {
-			fmt.Println("All tools are up to date!")
+			printInfo("All tools are up to date!")
 			return
 		}
 
@@ -100,6 +100,6 @@ var outdatedCmd = &cobra.Command{
 		for _, u := range updates {
 			fmt.Printf("%-15s  %-15s  %-15s\n", u.Name, u.Current, u.Latest)
 		}
-		fmt.Println("\nTo update, run: tsuku update <tool>")
+		printInfo("\nTo update, run: tsuku update <tool>")
 	},
 }
