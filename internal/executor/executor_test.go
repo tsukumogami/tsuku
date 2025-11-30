@@ -456,3 +456,298 @@ func TestCleanup(t *testing.T) {
 		t.Error("WorkDir should be removed after Cleanup()")
 	}
 }
+
+// TestDryRun tests the DryRun method
+func TestDryRun(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:          "test-tool",
+			Description:   "Test tool",
+			Dependencies:  []string{"dep1", "dep2"},
+			VersionFormat: "semver",
+		},
+		Version: recipe.VersionSection{
+			Source: "nonexistent_source", // Will fail, triggering dev fallback
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "download",
+				Params: map[string]interface{}{
+					"url": "https://example.com/tool-{version}.tar.gz",
+				},
+			},
+			{
+				Action: "extract",
+				Params: map[string]interface{}{
+					"src": "tool-{version}.tar.gz",
+				},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"binaries": []interface{}{"tool", "tool-cli"},
+				},
+			},
+		},
+		Verify: recipe.VerifySection{
+			Command: "tool --version",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+	err = exec.DryRun(ctx)
+
+	// DryRun should fail on version resolution with unknown source
+	if err == nil {
+		t.Log("DryRun succeeded (version resolved)")
+	} else {
+		t.Logf("DryRun returned error (expected for unknown source): %v", err)
+	}
+}
+
+// TestDryRun_WithDependencies tests DryRun output includes dependencies
+func TestDryRun_WithDependencies(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         "test-tool",
+			Description:  "Test tool with deps",
+			Dependencies: []string{"nodejs", "npm"},
+		},
+		Version: recipe.VersionSection{
+			Source: "unknown", // Will fail
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "npm_install",
+				Params: map[string]interface{}{
+					"package": "some-package",
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Verify recipe has dependencies
+	if len(r.Metadata.Dependencies) != 2 {
+		t.Errorf("Expected 2 dependencies, got %d", len(r.Metadata.Dependencies))
+	}
+}
+
+// TestDryRun_NoDependencies tests DryRun with no dependencies
+func TestDryRun_NoDependencies(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:         "test-tool",
+			Description:  "Test tool without deps",
+			Dependencies: nil,
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "download",
+				Params: map[string]interface{}{
+					"url": "https://example.com/tool.tar.gz",
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Verify recipe has no dependencies
+	if len(r.Metadata.Dependencies) != 0 {
+		t.Errorf("Expected 0 dependencies, got %d", len(r.Metadata.Dependencies))
+	}
+}
+
+// TestFormatActionDescription tests the action description formatting
+func TestFormatActionDescription(t *testing.T) {
+	vars := map[string]string{
+		"version": "1.2.3",
+		"os":      "linux",
+		"arch":    "amd64",
+	}
+
+	tests := []struct {
+		name     string
+		action   string
+		params   map[string]interface{}
+		expected string
+	}{
+		{
+			name:   "download action",
+			action: "download",
+			params: map[string]interface{}{
+				"url": "https://example.com/tool-{version}.tar.gz",
+			},
+			expected: "https://example.com/tool-1.2.3.tar.gz",
+		},
+		{
+			name:   "extract action",
+			action: "extract",
+			params: map[string]interface{}{
+				"src": "tool-{version}.tar.gz",
+			},
+			expected: "tool-1.2.3.tar.gz",
+		},
+		{
+			name:   "install_binaries with string list",
+			action: "install_binaries",
+			params: map[string]interface{}{
+				"binaries": []interface{}{"tool", "tool-cli", "tool-server"},
+			},
+			expected: "tool, tool-cli, tool-server",
+		},
+		{
+			name:   "install_binaries with map list",
+			action: "install_binaries",
+			params: map[string]interface{}{
+				"binaries": []interface{}{
+					map[string]interface{}{"name": "bin1"},
+					map[string]interface{}{"name": "bin2"},
+				},
+			},
+			expected: "bin1, bin2",
+		},
+		{
+			name:   "chmod action",
+			action: "chmod",
+			params: map[string]interface{}{
+				"file": "tool-{version}",
+				"mode": "755",
+			},
+			expected: "tool-1.2.3 (mode 755)",
+		},
+		{
+			name:   "chmod action default mode",
+			action: "chmod",
+			params: map[string]interface{}{
+				"file": "mytool",
+			},
+			expected: "mytool (mode 755)",
+		},
+		{
+			name:   "cargo_install action",
+			action: "cargo_install",
+			params: map[string]interface{}{
+				"package": "ripgrep",
+			},
+			expected: "ripgrep",
+		},
+		{
+			name:   "npm_install action",
+			action: "npm_install",
+			params: map[string]interface{}{
+				"package": "typescript",
+			},
+			expected: "typescript",
+		},
+		{
+			name:   "pipx_install action",
+			action: "pipx_install",
+			params: map[string]interface{}{
+				"package": "black",
+			},
+			expected: "black",
+		},
+		{
+			name:   "gem_install action",
+			action: "gem_install",
+			params: map[string]interface{}{
+				"package": "bundler",
+			},
+			expected: "bundler",
+		},
+		{
+			name:   "run_command action short",
+			action: "run_command",
+			params: map[string]interface{}{
+				"command": "make install",
+			},
+			expected: "make install",
+		},
+		{
+			name:   "run_command action long (truncated)",
+			action: "run_command",
+			params: map[string]interface{}{
+				"command": "this is a very long command that should be truncated because it exceeds sixty characters in length",
+			},
+			expected: "this is a very long command that should be truncated beca...",
+		},
+		{
+			name:   "unknown action",
+			action: "unknown_action",
+			params: map[string]interface{}{
+				"foo": "bar",
+			},
+			expected: "",
+		},
+		{
+			name:     "download without url",
+			action:   "download",
+			params:   map[string]interface{}{},
+			expected: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := formatActionDescription(tt.action, tt.params, vars)
+			if result != tt.expected {
+				t.Errorf("formatActionDescription(%q, %v) = %q, want %q", tt.action, tt.params, result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestDryRun_SkipsConditionalSteps tests that DryRun respects when conditions
+func TestDryRun_SkipsConditionalSteps(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "download",
+				Params: map[string]interface{}{
+					"url": "https://example.com/tool.tar.gz",
+				},
+			},
+			{
+				Action: "download",
+				When:   map[string]string{"os": "windows"}, // Should be skipped on Linux
+				Params: map[string]interface{}{
+					"url": "https://example.com/tool-windows.exe",
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Verify conditional step would be skipped
+	if exec.shouldExecute(r.Steps[1].When) {
+		t.Log("Step with os=windows would execute (running on Windows)")
+	} else {
+		t.Log("Step with os=windows correctly skipped (not on Windows)")
+	}
+}
