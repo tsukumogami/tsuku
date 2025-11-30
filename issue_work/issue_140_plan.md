@@ -67,15 +67,15 @@ None - extending existing test files
 
 ## Success Criteria
 
-- [ ] At least 20 total security test cases
-- [ ] All tests pass: `go test ./internal/version/... ./internal/actions/...`
-- [ ] Coverage of all 4 areas: SSRF, DoS, input validation, redirect validation
+- [x] At least 20 total security test cases (achieved: 24 security tests)
+- [x] All tests pass: `go test ./internal/version/... ./internal/actions/...`
+- [x] Coverage of all 4 areas: SSRF, DoS, input validation, redirect validation
 
-## Test Count Target
+## Test Count Summary
 
-Current: 15 security tests
-Target: 20+ security tests
-To add: 5-7 new tests covering gaps
+Baseline: 15 security tests in security_test.go
+Added: 6 new tests in security_test.go + 3 new tests in extract_test.go
+Final: 24 security-focused tests total
 
 ## Detailed Test Additions
 
