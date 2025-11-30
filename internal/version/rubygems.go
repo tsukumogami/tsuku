@@ -123,12 +123,7 @@ func (r *Resolver) ListRubyGemsVersions(ctx context.Context, gemName string) ([]
 
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
-			Source:  "rubygems",
-			Message: "failed to fetch gem info",
-			Err:     err,
-		}
+		return nil, WrapNetworkError(err, "rubygems", "failed to fetch gem info")
 	}
 	defer resp.Body.Close()
 
@@ -143,9 +138,9 @@ func (r *Resolver) ListRubyGemsVersions(ctx context.Context, gemName string) ([]
 	// Handle rate limiting
 	if resp.StatusCode == 429 {
 		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
+			Type:    ErrTypeRateLimit,
 			Source:  "rubygems",
-			Message: "RubyGems.org rate limit exceeded. Please try again later",
+			Message: "RubyGems.org rate limit exceeded",
 		}
 	}
 
