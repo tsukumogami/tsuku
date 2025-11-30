@@ -1,0 +1,118 @@
+name: PyPI Builder Tests
+
+# Runs on:
+# - Daily schedule (pip installs can be slow)
+# - When pypi builder files are changed
+on:
+  schedule:
+    - cron: '0 8 * * *'  # Daily at 8:00 UTC (after gem tests)
+  push:
+    branches: [main]
+    paths:
+      - 'internal/builders/**'
+      - 'cmd/tsuku/create.go'
+      - '.github/workflows/pypi-builder-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/builders/**'
+      - 'cmd/tsuku/create.go'
+      - '.github/workflows/pypi-builder-tests.yml'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  pypi-builder-linux:
+    name: "PyPI Builder: Linux"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pipx
+        run: pip install pipx
+
+      - name: Create recipe for ruff
+        run: ./tsuku create ruff --from pypi
+
+      - name: Verify recipe was created
+        run: |
+          if [ ! -f "$HOME/.tsuku/recipes/ruff.toml" ]; then
+            echo "Recipe file not found!"
+            exit 1
+          fi
+          echo "Recipe contents:"
+          cat "$HOME/.tsuku/recipes/ruff.toml"
+
+      - name: Install ruff using generated recipe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install ruff
+
+      - name: Verify ruff works
+        run: ruff --version
+
+  pypi-builder-macos:
+    name: "PyPI Builder: macOS"
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install pipx
+        run: pip install pipx
+
+      - name: Create recipe for ruff
+        run: ./tsuku create ruff --from pypi
+
+      - name: Verify recipe was created
+        run: |
+          if [ ! -f "$HOME/.tsuku/recipes/ruff.toml" ]; then
+            echo "Recipe file not found!"
+            exit 1
+          fi
+          echo "Recipe contents:"
+          cat "$HOME/.tsuku/recipes/ruff.toml"
+
+      - name: Install ruff using generated recipe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install ruff
+
+      - name: Verify ruff works
+        run: ruff --version
