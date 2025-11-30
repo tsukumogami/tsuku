@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/tsuku-dev/tsuku/internal/errmsg"
 	"github.com/tsuku-dev/tsuku/internal/recipe"
 )
 
@@ -33,4 +34,10 @@ func printJSON(v interface{}) {
 		fmt.Fprintf(os.Stderr, "Error encoding JSON: %v\n", err)
 		exitWithCode(ExitGeneral)
 	}
+}
+
+// printError prints an error to stderr with suggestions if available.
+// This uses the errmsg package to format errors with actionable suggestions.
+func printError(err error) {
+	errmsg.Fprint(os.Stderr, err)
 }
