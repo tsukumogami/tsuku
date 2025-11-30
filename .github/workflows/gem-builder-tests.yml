@@ -1,0 +1,112 @@
+name: Gem Builder Tests
+
+# Runs on:
+# - Daily schedule (gem installs can be slow)
+# - When gem builder files are changed
+on:
+  schedule:
+    - cron: '0 7 * * *'  # Daily at 7:00 UTC (after cargo tests)
+  push:
+    branches: [main]
+    paths:
+      - 'internal/builders/**'
+      - 'cmd/tsuku/create.go'
+      - '.github/workflows/gem-builder-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/builders/**'
+      - 'cmd/tsuku/create.go'
+      - '.github/workflows/gem-builder-tests.yml'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  gem-builder-linux:
+    name: "Gem Builder: Linux"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Create recipe for bundler
+        run: ./tsuku create bundler --from rubygems
+
+      - name: Verify recipe was created
+        run: |
+          if [ ! -f "$HOME/.tsuku/recipes/bundler.toml" ]; then
+            echo "Recipe file not found!"
+            exit 1
+          fi
+          echo "Recipe contents:"
+          cat "$HOME/.tsuku/recipes/bundler.toml"
+
+      - name: Install bundler using generated recipe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install bundler
+
+      - name: Verify bundler works
+        run: bundler --version
+
+  gem-builder-macos:
+    name: "Gem Builder: macOS"
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      - name: Create recipe for bundler
+        run: ./tsuku create bundler --from rubygems
+
+      - name: Verify recipe was created
+        run: |
+          if [ ! -f "$HOME/.tsuku/recipes/bundler.toml" ]; then
+            echo "Recipe file not found!"
+            exit 1
+          fi
+          echo "Recipe contents:"
+          cat "$HOME/.tsuku/recipes/bundler.toml"
+
+      - name: Install bundler using generated recipe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install bundler
+
+      - name: Verify bundler works
+        run: bundler --version
