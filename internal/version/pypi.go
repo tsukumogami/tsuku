@@ -73,12 +73,7 @@ func (r *Resolver) ResolvePyPI(ctx context.Context, packageName string) (*Versio
 
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
-			Source:  "pypi",
-			Message: "failed to fetch package info",
-			Err:     err,
-		}
+		return nil, WrapNetworkError(err, "pypi", "failed to fetch package info")
 	}
 	defer resp.Body.Close()
 
@@ -171,12 +166,7 @@ func (r *Resolver) ListPyPIVersions(ctx context.Context, packageName string) ([]
 
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
-			Source:  "pypi",
-			Message: "failed to fetch package info",
-			Err:     err,
-		}
+		return nil, WrapNetworkError(err, "pypi", "failed to fetch package info")
 	}
 	defer resp.Body.Close()
 

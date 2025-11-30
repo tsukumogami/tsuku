@@ -1,6 +1,14 @@
 package version
 
-import "fmt"
+import (
+	"context"
+	"crypto/tls"
+	"errors"
+	"fmt"
+	"net"
+	"net/url"
+	"strings"
+)
 
 // ErrorType classifies resolver errors for better handling
 type ErrorType int
@@ -71,5 +79,83 @@ func (e *ResolverError) Suggestion() string {
 		return "Check your internet connection and try again"
 	default:
 		return ""
+	}
+}
+
+// ClassifyError examines an error and returns the most specific ErrorType.
+// This function uses Go's error unwrapping to detect specific network error types.
+func ClassifyError(err error) ErrorType {
+	if err == nil {
+		return ErrTypeNetwork
+	}
+
+	// Check for context timeout/deadline exceeded
+	if errors.Is(err, context.DeadlineExceeded) {
+		return ErrTypeTimeout
+	}
+
+	// Check for context canceled (user interrupt)
+	if errors.Is(err, context.Canceled) {
+		return ErrTypeNetwork
+	}
+
+	// Check for DNS errors
+	var dnsErr *net.DNSError
+	if errors.As(err, &dnsErr) {
+		if dnsErr.IsTimeout {
+			return ErrTypeTimeout
+		}
+		return ErrTypeDNS
+	}
+
+	// Check for TLS certificate errors
+	var certErr *tls.CertificateVerificationError
+	if errors.As(err, &certErr) {
+		return ErrTypeTLS
+	}
+
+	// Check for net.OpError (connection errors)
+	var opErr *net.OpError
+	if errors.As(err, &opErr) {
+		if opErr.Timeout() {
+			return ErrTypeTimeout
+		}
+		// Check if underlying error is a DNS error
+		var innerDNS *net.DNSError
+		if errors.As(opErr.Err, &innerDNS) {
+			return ErrTypeDNS
+		}
+		// Connection refused, reset, etc.
+		return ErrTypeConnection
+	}
+
+	// Check for url.Error (wraps transport errors)
+	var urlErr *url.Error
+	if errors.As(err, &urlErr) {
+		if urlErr.Timeout() {
+			return ErrTypeTimeout
+		}
+		// Check error message for TLS hints
+		if strings.Contains(urlErr.Err.Error(), "certificate") ||
+			strings.Contains(urlErr.Err.Error(), "tls") ||
+			strings.Contains(urlErr.Err.Error(), "x509") {
+			return ErrTypeTLS
+		}
+		// Recurse into the wrapped error
+		return ClassifyError(urlErr.Err)
+	}
+
+	// Default to generic network error
+	return ErrTypeNetwork
+}
+
+// WrapNetworkError wraps an error with the appropriate error type based on classification.
+// This is a convenience function for providers to create properly typed ResolverErrors.
+func WrapNetworkError(err error, source, message string) *ResolverError {
+	return &ResolverError{
+		Type:    ClassifyError(err),
+		Source:  source,
+		Message: message,
+		Err:     err,
 	}
 }

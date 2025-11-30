@@ -163,8 +163,8 @@ func TestListRubyGemsVersions_RateLimit(t *testing.T) {
 	if !ok {
 		t.Errorf("expected ResolverError, got %T", err)
 	}
-	if resolverErr.Type != ErrTypeNetwork {
-		t.Errorf("expected ErrTypeNetwork for rate limit, got %v", resolverErr.Type)
+	if resolverErr.Type != ErrTypeRateLimit {
+		t.Errorf("expected ErrTypeRateLimit for rate limit, got %v", resolverErr.Type)
 	}
 }
 

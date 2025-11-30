@@ -114,12 +114,7 @@ func (r *Resolver) ListCratesIOVersions(ctx context.Context, crateName string) (
 
 	resp, err := r.httpClient.Do(req)
 	if err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
-			Source:  "crates_io",
-			Message: "failed to fetch crate info",
-			Err:     err,
-		}
+		return nil, WrapNetworkError(err, "crates_io", "failed to fetch crate info")
 	}
 	defer resp.Body.Close()
 
@@ -134,9 +129,9 @@ func (r *Resolver) ListCratesIOVersions(ctx context.Context, crateName string) (
 	// Handle rate limiting
 	if resp.StatusCode == 429 {
 		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
+			Type:    ErrTypeRateLimit,
 			Source:  "crates_io",
-			Message: "crates.io rate limit exceeded. Please try again later",
+			Message: "crates.io rate limit exceeded",
 		}
 	}
 

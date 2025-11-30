@@ -1,7 +1,10 @@
 package version
 
 import (
+	"context"
 	"errors"
+	"net"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -178,6 +181,159 @@ func TestResolverError_Suggestion(t *testing.T) {
 				} else if tt.wantSubstr != "" && !strings.Contains(suggestion, tt.wantSubstr) {
 					t.Errorf("Suggestion() = %q, want substring %q", suggestion, tt.wantSubstr)
 				}
+			}
+		})
+	}
+}
+
+func TestClassifyError(t *testing.T) {
+	tests := []struct {
+		name     string
+		err      error
+		wantType ErrorType
+	}{
+		{
+			name:     "nil error",
+			err:      nil,
+			wantType: ErrTypeNetwork,
+		},
+		{
+			name:     "context deadline exceeded",
+			err:      context.DeadlineExceeded,
+			wantType: ErrTypeTimeout,
+		},
+		{
+			name:     "context canceled",
+			err:      context.Canceled,
+			wantType: ErrTypeNetwork,
+		},
+		{
+			name: "DNS error",
+			err: &net.DNSError{
+				Err:  "no such host",
+				Name: "example.com",
+			},
+			wantType: ErrTypeDNS,
+		},
+		{
+			name: "DNS timeout error",
+			err: &net.DNSError{
+				Err:       "timeout",
+				Name:      "example.com",
+				IsTimeout: true,
+			},
+			wantType: ErrTypeTimeout,
+		},
+		{
+			name: "net.OpError timeout",
+			err: &net.OpError{
+				Op:  "read",
+				Net: "tcp",
+				Err: &timeoutError{},
+			},
+			wantType: ErrTypeTimeout,
+		},
+		{
+			name: "net.OpError connection refused",
+			err: &net.OpError{
+				Op:  "dial",
+				Net: "tcp",
+				Err: errors.New("connection refused"),
+			},
+			wantType: ErrTypeConnection,
+		},
+		{
+			name: "url.Error with timeout",
+			err: &url.Error{
+				Op:  "Get",
+				URL: "https://example.com",
+				Err: &timeoutError{},
+			},
+			wantType: ErrTypeTimeout,
+		},
+		{
+			name: "url.Error with certificate error",
+			err: &url.Error{
+				Op:  "Get",
+				URL: "https://example.com",
+				Err: errors.New("x509: certificate has expired"),
+			},
+			wantType: ErrTypeTLS,
+		},
+		{
+			name:     "generic error",
+			err:      errors.New("something went wrong"),
+			wantType: ErrTypeNetwork,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ClassifyError(tt.err)
+			if got != tt.wantType {
+				t.Errorf("ClassifyError() = %v, want %v", got, tt.wantType)
+			}
+		})
+	}
+}
+
+// timeoutError is a helper for testing timeout detection
+type timeoutError struct{}
+
+func (e *timeoutError) Error() string   { return "timeout" }
+func (e *timeoutError) Timeout() bool   { return true }
+func (e *timeoutError) Temporary() bool { return true }
+
+func TestWrapNetworkError(t *testing.T) {
+	tests := []struct {
+		name       string
+		err        error
+		source     string
+		message    string
+		wantType   ErrorType
+		wantSource string
+	}{
+		{
+			name:       "wraps DNS error",
+			err:        &net.DNSError{Err: "no such host", Name: "example.com"},
+			source:     "github",
+			message:    "failed to fetch",
+			wantType:   ErrTypeDNS,
+			wantSource: "github",
+		},
+		{
+			name:       "wraps timeout error",
+			err:        context.DeadlineExceeded,
+			source:     "npm",
+			message:    "request timed out",
+			wantType:   ErrTypeTimeout,
+			wantSource: "npm",
+		},
+		{
+			name:       "wraps generic error",
+			err:        errors.New("unknown error"),
+			source:     "pypi",
+			message:    "failed to connect",
+			wantType:   ErrTypeNetwork,
+			wantSource: "pypi",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := WrapNetworkError(tt.err, tt.source, tt.message)
+
+			if result.Type != tt.wantType {
+				t.Errorf("WrapNetworkError().Type = %v, want %v", result.Type, tt.wantType)
+			}
+			if result.Source != tt.wantSource {
+				t.Errorf("WrapNetworkError().Source = %v, want %v", result.Source, tt.wantSource)
+			}
+			if result.Message != tt.message {
+				t.Errorf("WrapNetworkError().Message = %v, want %v", result.Message, tt.message)
+			}
+			if result.Err != tt.err {
+				t.Errorf("WrapNetworkError().Err = %v, want %v", result.Err, tt.err)
 			}
 		})
 	}
