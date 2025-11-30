@@ -161,14 +161,24 @@ func WrapNetworkError(err error, source, message string) *ResolverError {
 	}
 }
 
+// GitHubRateLimitContext describes what operation was being performed when rate limited
+type GitHubRateLimitContext string
+
+const (
+	// GitHubContextVersionResolution indicates rate limit hit while resolving tool versions
+	GitHubContextVersionResolution GitHubRateLimitContext = "version_resolution"
+)
+
 // GitHubRateLimitError provides detailed information about GitHub API rate limit errors.
-// It includes the rate limit details and time until reset.
+// It includes the rate limit details, time until reset, and context about what operation
+// was being performed.
 type GitHubRateLimitError struct {
-	Limit         int       // Requests per hour
-	Remaining     int       // Remaining requests
-	ResetTime     time.Time // When the rate limit resets
-	Authenticated bool      // Whether the request was authenticated
-	Err           error     // Underlying error
+	Limit         int                    // Requests per hour
+	Remaining     int                    // Remaining requests
+	ResetTime     time.Time              // When the rate limit resets
+	Authenticated bool                   // Whether the request was authenticated
+	Context       GitHubRateLimitContext // What operation was being performed
+	Err           error                  // Underlying error
 }
 
 // Error implements the error interface
@@ -177,8 +187,17 @@ func (e *GitHubRateLimitError) Error() string {
 	if e.Authenticated {
 		authStatus = "authenticated"
 	}
-	return fmt.Sprintf("GitHub API rate limit exceeded: %d/%d requests used (%s), resets at %s",
-		e.Limit-e.Remaining, e.Limit, authStatus, e.ResetTime.Format(time.Kitchen))
+
+	var contextMsg string
+	switch e.Context {
+	case GitHubContextVersionResolution:
+		contextMsg = "while resolving tool versions from GitHub"
+	default:
+		contextMsg = "while accessing GitHub API"
+	}
+
+	return fmt.Sprintf("GitHub API rate limit exceeded %s: %d/%d requests used (%s), resets at %s",
+		contextMsg, e.Limit-e.Remaining, e.Limit, authStatus, e.ResetTime.Format(time.Kitchen))
 }
 
 // Unwrap returns the underlying error for error chain support
@@ -187,9 +206,17 @@ func (e *GitHubRateLimitError) Unwrap() error {
 }
 
 // Suggestion returns actionable suggestions for the user.
-// The suggestions are context-aware based on authentication status.
+// The suggestions are context-aware based on the operation context and authentication status.
 func (e *GitHubRateLimitError) Suggestion() string {
 	var sb strings.Builder
+
+	// Explain why tsuku uses GitHub based on context
+	switch e.Context {
+	case GitHubContextVersionResolution:
+		sb.WriteString("Tsuku uses the GitHub API to discover available versions for tools hosted on GitHub. ")
+	default:
+		sb.WriteString("Tsuku uses the GitHub API to access tool information. ")
+	}
 
 	// Calculate time until reset
 	timeUntilReset := time.Until(e.ResetTime)

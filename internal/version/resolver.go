@@ -247,7 +247,8 @@ func NewWithRubyGemsRegistry(registryURL string) *Resolver {
 
 // wrapGitHubRateLimitError converts a GitHub API rate limit error to a GitHubRateLimitError
 // with detailed information for the user. Returns nil if the error is not a rate limit error.
-func (r *Resolver) wrapGitHubRateLimitError(err error) *GitHubRateLimitError {
+// The context parameter describes what operation was being performed (e.g., version resolution).
+func (r *Resolver) wrapGitHubRateLimitError(err error, context GitHubRateLimitContext) *GitHubRateLimitError {
 	var rateLimitErr *github.RateLimitError
 	if errors.As(err, &rateLimitErr) {
 		return &GitHubRateLimitError{
@@ -255,6 +256,7 @@ func (r *Resolver) wrapGitHubRateLimitError(err error) *GitHubRateLimitError {
 			Remaining:     rateLimitErr.Rate.Remaining,
 			ResetTime:     rateLimitErr.Rate.Reset.Time,
 			Authenticated: r.authenticated,
+			Context:       context,
 			Err:           err,
 		}
 	}
@@ -273,7 +275,7 @@ func (r *Resolver) ResolveGitHub(ctx context.Context, repo string) (*VersionInfo
 	release, _, err := r.client.Repositories.GetLatestRelease(ctx, owner, repoName)
 	if err != nil {
 		// Check for rate limit errors first
-		if rateLimitErr := r.wrapGitHubRateLimitError(err); rateLimitErr != nil {
+		if rateLimitErr := r.wrapGitHubRateLimitError(err, GitHubContextVersionResolution); rateLimitErr != nil {
 			return nil, rateLimitErr
 		}
 
@@ -313,7 +315,7 @@ func (r *Resolver) resolveFromTags(ctx context.Context, owner, repoName string) 
 		tags, _, err := r.client.Repositories.ListTags(ctx, owner, repoName, opts)
 		if err != nil {
 			// Check for rate limit errors first
-			if rateLimitErr := r.wrapGitHubRateLimitError(err); rateLimitErr != nil {
+			if rateLimitErr := r.wrapGitHubRateLimitError(err, GitHubContextVersionResolution); rateLimitErr != nil {
 				return nil, rateLimitErr
 			}
 			return nil, fmt.Errorf("failed to list tags: %w", err)
@@ -434,7 +436,7 @@ func (r *Resolver) ListGitHubVersions(ctx context.Context, repo string) ([]strin
 	tags, _, err := r.client.Repositories.ListTags(ctx, owner, repoName, opts)
 	if err != nil {
 		// Check for rate limit errors first
-		if rateLimitErr := r.wrapGitHubRateLimitError(err); rateLimitErr != nil {
+		if rateLimitErr := r.wrapGitHubRateLimitError(err, GitHubContextVersionResolution); rateLimitErr != nil {
 			return nil, rateLimitErr
 		}
 		// Handle network errors gracefully

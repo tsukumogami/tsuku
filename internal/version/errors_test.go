@@ -347,23 +347,35 @@ func TestGitHubRateLimitError_Error(t *testing.T) {
 		remaining     int
 		resetTime     time.Time
 		authenticated bool
+		context       GitHubRateLimitContext
 		wantSubstr    []string
 	}{
 		{
-			name:          "unauthenticated",
+			name:          "unauthenticated version resolution",
 			limit:         60,
 			remaining:     0,
 			resetTime:     time.Date(2024, 1, 15, 14, 30, 0, 0, time.UTC),
 			authenticated: false,
-			wantSubstr:    []string{"60/60", "unauthenticated", "2:30PM"},
+			context:       GitHubContextVersionResolution,
+			wantSubstr:    []string{"60/60", "unauthenticated", "2:30PM", "resolving tool versions"},
 		},
 		{
-			name:          "authenticated",
+			name:          "authenticated version resolution",
 			limit:         5000,
 			remaining:     100,
 			resetTime:     time.Date(2024, 1, 15, 15, 0, 0, 0, time.UTC),
 			authenticated: true,
-			wantSubstr:    []string{"4900/5000", "authenticated", "3:00PM"},
+			context:       GitHubContextVersionResolution,
+			wantSubstr:    []string{"4900/5000", "authenticated", "3:00PM", "resolving tool versions"},
+		},
+		{
+			name:          "unknown context (default message)",
+			limit:         60,
+			remaining:     0,
+			resetTime:     time.Date(2024, 1, 15, 14, 30, 0, 0, time.UTC),
+			authenticated: false,
+			context:       "", // Empty context
+			wantSubstr:    []string{"60/60", "accessing GitHub API"},
 		},
 	}
 
@@ -374,6 +386,7 @@ func TestGitHubRateLimitError_Error(t *testing.T) {
 				Remaining:     tt.remaining,
 				ResetTime:     tt.resetTime,
 				Authenticated: tt.authenticated,
+				Context:       tt.context,
 			}
 			errStr := err.Error()
 			for _, substr := range tt.wantSubstr {
@@ -418,19 +431,29 @@ func TestGitHubRateLimitError_Suggestion(t *testing.T) {
 		name          string
 		resetTime     time.Time
 		authenticated bool
+		context       GitHubRateLimitContext
 		wantSubstrs   []string
 		dontWant      []string
 	}{
 		{
-			name:          "unauthenticated with time remaining",
+			name:          "version resolution context explains GitHub usage",
 			resetTime:     time.Now().Add(15 * time.Minute),
 			authenticated: false,
-			wantSubstrs:   []string{"resets in", "minute", "GITHUB_TOKEN", "5000 requests/hour", "specify a version"},
+			context:       GitHubContextVersionResolution,
+			wantSubstrs:   []string{"GitHub API to discover available versions", "resets in", "minute", "GITHUB_TOKEN", "5000 requests/hour", "specify a version"},
+		},
+		{
+			name:          "unknown context has generic explanation",
+			resetTime:     time.Now().Add(15 * time.Minute),
+			authenticated: false,
+			context:       "", // Empty context
+			wantSubstrs:   []string{"GitHub API to access tool information", "resets in", "minute"},
 		},
 		{
 			name:          "authenticated with time remaining",
 			resetTime:     time.Now().Add(15 * time.Minute),
 			authenticated: true,
+			context:       GitHubContextVersionResolution,
 			wantSubstrs:   []string{"resets in", "minute", "specify a version"},
 			dontWant:      []string{"GITHUB_TOKEN"},
 		},
@@ -438,6 +461,7 @@ func TestGitHubRateLimitError_Suggestion(t *testing.T) {
 			name:          "reset time in past",
 			resetTime:     time.Now().Add(-5 * time.Minute),
 			authenticated: false,
+			context:       GitHubContextVersionResolution,
 			wantSubstrs:   []string{"reset soon", "GITHUB_TOKEN"},
 		},
 	}
@@ -449,6 +473,7 @@ func TestGitHubRateLimitError_Suggestion(t *testing.T) {
 				Remaining:     0,
 				ResetTime:     tt.resetTime,
 				Authenticated: tt.authenticated,
+				Context:       tt.context,
 			}
 			suggestion := err.Suggestion()
 
