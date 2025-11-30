@@ -17,11 +17,11 @@ automatic cache expiration.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		reg := loader.Registry()
 		if reg == nil {
-			fmt.Println("Registry not configured.")
+			printInfo("Registry not configured.")
 			return
 		}
 
-		fmt.Println("Clearing recipe cache...")
+		printInfo("Clearing recipe cache...")
 		if err := reg.ClearCache(); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to clear cache: %v\n", err)
 			os.Exit(1)
@@ -30,6 +30,6 @@ automatic cache expiration.`,
 		// Also clear in-memory cache
 		loader.ClearCache()
 
-		fmt.Println("Recipe cache cleared. Recipes will be fetched fresh on next use.")
+		printInfo("Recipe cache cleared. Recipes will be fetched fresh on next use.")
 	},
 }

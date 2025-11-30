@@ -23,7 +23,7 @@ func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir stri
 	pattern = strings.ReplaceAll(pattern, "{version}", version)
 	pattern = strings.ReplaceAll(pattern, "{install_dir}", installDir)
 
-	fmt.Printf("  Running: %s\n", command)
+	printInfof("  Running: %s\n", command)
 
 	cmdExec := exec.Command("sh", "-c", command)
 	output, err := cmdExec.CombinedOutput()
@@ -33,21 +33,21 @@ func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir stri
 	}
 
 	outputStr := strings.TrimSpace(string(output))
-	fmt.Printf("  Output: %s\n", outputStr)
+	printInfof("  Output: %s\n", outputStr)
 
 	if pattern != "" {
 		if !strings.Contains(outputStr, pattern) {
 			fmt.Fprintf(os.Stderr, "Output does not match expected pattern\n  Expected: %s\n  Got: %s\n", pattern, outputStr)
 			os.Exit(1)
 		}
-		fmt.Printf("  Pattern matched: %s\n", pattern)
+		printInfof("  Pattern matched: %s\n", pattern)
 	}
 }
 
 // verifyVisibleTool performs comprehensive verification for visible tools
 func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.ToolState, installDir string, cfg *config.Config) {
 	// Step 1: Verify installation via current/ symlink
-	fmt.Printf("  Step 1: Verifying installation via symlink...\n")
+	printInfo("  Step 1: Verifying installation via symlink...")
 
 	command := r.Verify.Command
 	pattern := r.Verify.Pattern
@@ -60,7 +60,7 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 	pattern = strings.ReplaceAll(pattern, "{version}", version)
 	pattern = strings.ReplaceAll(pattern, "{install_dir}", installDir)
 
-	fmt.Printf("    Running: %s\n", command)
+	printInfof("    Running: %s\n", command)
 	cmdExec := exec.Command("sh", "-c", command)
 
 	// For Step 1, add install directory bin/ to PATH so binaries can be found
@@ -78,7 +78,7 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 		os.Exit(1)
 	}
 	outputStr := strings.TrimSpace(string(output))
-	fmt.Printf("    Output: %s\n", outputStr)
+	printInfof("    Output: %s\n", outputStr)
 
 	if pattern != "" && !strings.Contains(outputStr, pattern) {
 		fmt.Fprintf(os.Stderr, "    Pattern mismatch\n")
@@ -86,10 +86,10 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 		fmt.Fprintf(os.Stderr, "    Got: %s\n", outputStr)
 		os.Exit(1)
 	}
-	fmt.Printf("    Installation verified\n\n")
+	printInfo("    Installation verified\n")
 
 	// Step 2: Check if current/ is in PATH
-	fmt.Printf("  Step 2: Checking if %s is in PATH...\n", cfg.CurrentDir)
+	printInfof("  Step 2: Checking if %s is in PATH...\n", cfg.CurrentDir)
 	pathEnv := os.Getenv("PATH")
 	pathInPATH := false
 	for _, dir := range strings.Split(pathEnv, ":") {
@@ -105,10 +105,10 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 		fmt.Fprintf(os.Stderr, "  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
 		os.Exit(1)
 	}
-	fmt.Printf("    %s is in PATH\n\n", cfg.CurrentDir)
+	printInfof("    %s is in PATH\n\n", cfg.CurrentDir)
 
 	// Step 3: Verify tool binaries are accessible from PATH and check for conflicts
-	fmt.Printf("  Step 3: Checking PATH resolution for binaries...\n")
+	printInfo("  Step 3: Checking PATH resolution for binaries...")
 
 	// Check each binary provided by this tool
 	binariesToCheck := toolState.Binaries
@@ -132,9 +132,9 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 		resolvedPath := strings.TrimSpace(string(whichPath))
 		expectedPath := cfg.CurrentSymlink(binaryName)
 
-		fmt.Printf("    Binary '%s':\n", binaryName)
-		fmt.Printf("      Found: %s\n", resolvedPath)
-		fmt.Printf("      Expected: %s\n", expectedPath)
+		printInfof("    Binary '%s':\n", binaryName)
+		printInfof("      Found: %s\n", resolvedPath)
+		printInfof("      Expected: %s\n", expectedPath)
 
 		if resolvedPath != expectedPath {
 			fmt.Fprintf(os.Stderr, "      PATH conflict detected!\n")
@@ -149,7 +149,7 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 			}
 			os.Exit(1)
 		}
-		fmt.Printf("      Correct binary is being used from PATH\n")
+		printInfo("      Correct binary is being used from PATH")
 	}
 }
 
@@ -197,18 +197,18 @@ var verifyCmd = &cobra.Command{
 		}
 
 		installDir := filepath.Join(cfg.ToolsDir, fmt.Sprintf("%s-%s", toolName, toolState.Version))
-		fmt.Printf("Verifying %s (version %s)...\n", toolName, toolState.Version)
+		printInfof("Verifying %s (version %s)...\n", toolName, toolState.Version)
 
 		// Determine verification strategy based on tool visibility
 		if toolState.IsHidden {
 			// Hidden tools: verify with absolute path
-			fmt.Printf("  Tool is hidden (not in PATH)\n")
+			printInfo("  Tool is hidden (not in PATH)")
 			verifyWithAbsolutePath(r, toolName, toolState.Version, installDir)
 		} else {
 			// Visible tools: comprehensive verification
 			verifyVisibleTool(r, toolName, &toolState, installDir, cfg)
 		}
 
-		fmt.Printf("%s is working correctly\n", toolName)
+		printInfof("%s is working correctly\n", toolName)
 	},
 }

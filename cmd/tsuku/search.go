@@ -75,10 +75,10 @@ var searchCmd = &cobra.Command{
 		}
 
 		if len(results) == 0 {
-			fmt.Printf("No cached recipes found for '%s'.\n\n", query)
-			fmt.Println("Tip: You can still try installing it!")
-			fmt.Printf("   Run: tsuku install %s\n", query)
-			fmt.Println("   (Tsuku will attempt to find and install it using AI)")
+			printInfof("No cached recipes found for '%s'.\n\n", query)
+			printInfo("Tip: You can still try installing it!")
+			printInfof("   Run: tsuku install %s\n", query)
+			printInfo("   (Tsuku will attempt to find and install it using AI)")
 			return
 		}
 

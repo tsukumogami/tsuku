@@ -11,6 +11,8 @@ import (
 	"github.com/tsuku-dev/tsuku/internal/registry"
 )
 
+var quietFlag bool
+
 var rootCmd = &cobra.Command{
 	Use:   "tsuku",
 	Short: "A modern, universal package manager for development tools",
@@ -22,6 +24,9 @@ to version-specific directories, with automatic PATH management.`,
 }
 
 func init() {
+	// Global flags
+	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "Suppress informational output")
+
 	// Set version from build info (handles tagged releases and dev builds)
 	rootCmd.Version = buildinfo.Version()
 
