@@ -34,7 +34,7 @@ func init() {
 	cfg, err := config.DefaultConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to get config: %v\n", err)
-		os.Exit(1)
+		exitWithCode(ExitGeneral)
 	}
 	reg := registry.New(cfg.RegistryDir)
 
@@ -61,6 +61,6 @@ func init() {
 func main() {
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		exitWithCode(ExitGeneral)
 	}
 }

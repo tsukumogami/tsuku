@@ -17,7 +17,7 @@ var listCmd = &cobra.Command{
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to get config: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		mgr := install.New(cfg)
@@ -35,7 +35,7 @@ var listCmd = &cobra.Command{
 
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to list tools: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		// JSON output mode
@@ -75,7 +75,7 @@ var listCmd = &cobra.Command{
 		state, err := mgr.GetState().Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load state: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		for _, tool := range tools {

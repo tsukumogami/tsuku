@@ -31,6 +31,6 @@ func printJSON(v interface{}) {
 	enc.SetIndent("", "  ")
 	if err := enc.Encode(v); err != nil {
 		fmt.Fprintf(os.Stderr, "Error encoding JSON: %v\n", err)
-		os.Exit(1)
+		exitWithCode(ExitGeneral)
 	}
 }

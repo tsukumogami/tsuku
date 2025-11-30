@@ -30,7 +30,7 @@ Examples:
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to get config: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		mgr := install.New(cfg)
@@ -52,14 +52,14 @@ Examples:
 				if len(ts.RequiredBy) > 0 {
 					fmt.Fprintf(os.Stderr, "Error: %s is required by: %s\n", toolName, strings.Join(ts.RequiredBy, ", "))
 					fmt.Fprintf(os.Stderr, "Please remove them first.\n")
-					os.Exit(1)
+					exitWithCode(ExitDependencyFailed)
 				}
 			}
 		}
 
 		if err := mgr.Remove(toolName); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to remove %s: %v\n", toolName, err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		// Send telemetry event for successful removal
