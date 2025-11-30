@@ -3,6 +3,7 @@ package version
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net"
@@ -33,6 +34,7 @@ type Resolver struct {
 	pypiRegistryURL     string         // PyPI registry URL (injectable for testing)
 	cratesIORegistryURL string         // crates.io registry URL (injectable for testing)
 	rubygemsRegistryURL string         // RubyGems.org registry URL (injectable for testing)
+	authenticated       bool           // Whether GitHub requests are authenticated
 }
 
 // newHTTPClient creates an HTTP client with security hardening and proper timeouts
@@ -126,11 +128,13 @@ func validateIP(ip net.IP, host string) error {
 // If GITHUB_TOKEN environment variable is set, it will be used for authenticated requests
 func New() *Resolver {
 	var githubHTTPClient *http.Client
+	authenticated := false
 
 	// Check for GitHub token in environment
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
+		authenticated = true
 	}
 
 	return &Resolver{
@@ -141,17 +145,20 @@ func New() *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Production default
 		cratesIORegistryURL: "https://crates.io",          // Production default
 		rubygemsRegistryURL: "https://rubygems.org",       // Production default
+		authenticated:       authenticated,
 	}
 }
 
 // NewWithNpmRegistry creates a resolver with custom npm registry (for testing)
 func NewWithNpmRegistry(registryURL string) *Resolver {
 	var githubHTTPClient *http.Client
+	authenticated := false
 
 	// Check for GitHub token in environment
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
+		authenticated = true
 	}
 
 	return &Resolver{
@@ -162,17 +169,20 @@ func NewWithNpmRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",     // Default PyPI
 		cratesIORegistryURL: "https://crates.io",    // Default crates.io
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		authenticated:       authenticated,
 	}
 }
 
 // NewWithPyPIRegistry creates a resolver with custom PyPI registry (for testing)
 func NewWithPyPIRegistry(registryURL string) *Resolver {
 	var githubHTTPClient *http.Client
+	authenticated := false
 
 	// Check for GitHub token in environment
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
+		authenticated = true
 	}
 
 	return &Resolver{
@@ -183,17 +193,20 @@ func NewWithPyPIRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     registryURL,
 		cratesIORegistryURL: "https://crates.io",    // Default crates.io
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		authenticated:       authenticated,
 	}
 }
 
 // NewWithCratesIORegistry creates a resolver with custom crates.io registry (for testing)
 func NewWithCratesIORegistry(registryURL string) *Resolver {
 	var githubHTTPClient *http.Client
+	authenticated := false
 
 	// Check for GitHub token in environment
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
+		authenticated = true
 	}
 
 	return &Resolver{
@@ -204,17 +217,20 @@ func NewWithCratesIORegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
 		cratesIORegistryURL: registryURL,
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		authenticated:       authenticated,
 	}
 }
 
 // NewWithRubyGemsRegistry creates a resolver with custom RubyGems registry (for testing)
 func NewWithRubyGemsRegistry(registryURL string) *Resolver {
 	var githubHTTPClient *http.Client
+	authenticated := false
 
 	// Check for GitHub token in environment
 	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
 		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
 		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
+		authenticated = true
 	}
 
 	return &Resolver{
@@ -225,7 +241,24 @@ func NewWithRubyGemsRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
 		cratesIORegistryURL: "https://crates.io",          // Default crates.io
 		rubygemsRegistryURL: registryURL,
+		authenticated:       authenticated,
 	}
+}
+
+// wrapGitHubRateLimitError converts a GitHub API rate limit error to a GitHubRateLimitError
+// with detailed information for the user. Returns nil if the error is not a rate limit error.
+func (r *Resolver) wrapGitHubRateLimitError(err error) *GitHubRateLimitError {
+	var rateLimitErr *github.RateLimitError
+	if errors.As(err, &rateLimitErr) {
+		return &GitHubRateLimitError{
+			Limit:         rateLimitErr.Rate.Limit,
+			Remaining:     rateLimitErr.Rate.Remaining,
+			ResetTime:     rateLimitErr.Rate.Reset.Time,
+			Authenticated: r.authenticated,
+			Err:           err,
+		}
+	}
+	return nil
 }
 
 // ResolveGitHub resolves the latest version from a GitHub repository
@@ -239,6 +272,11 @@ func (r *Resolver) ResolveGitHub(ctx context.Context, repo string) (*VersionInfo
 
 	release, _, err := r.client.Repositories.GetLatestRelease(ctx, owner, repoName)
 	if err != nil {
+		// Check for rate limit errors first
+		if rateLimitErr := r.wrapGitHubRateLimitError(err); rateLimitErr != nil {
+			return nil, rateLimitErr
+		}
+
 		// Handle network errors gracefully
 		if strings.Contains(err.Error(), "network is unreachable") ||
 			strings.Contains(err.Error(), "no such host") ||
@@ -274,6 +312,10 @@ func (r *Resolver) resolveFromTags(ctx context.Context, owner, repoName string) 
 		opts.Page = page
 		tags, _, err := r.client.Repositories.ListTags(ctx, owner, repoName, opts)
 		if err != nil {
+			// Check for rate limit errors first
+			if rateLimitErr := r.wrapGitHubRateLimitError(err); rateLimitErr != nil {
+				return nil, rateLimitErr
+			}
 			return nil, fmt.Errorf("failed to list tags: %w", err)
 		}
 
@@ -391,6 +433,10 @@ func (r *Resolver) ListGitHubVersions(ctx context.Context, repo string) ([]strin
 	opts := &github.ListOptions{PerPage: 100}
 	tags, _, err := r.client.Repositories.ListTags(ctx, owner, repoName, opts)
 	if err != nil {
+		// Check for rate limit errors first
+		if rateLimitErr := r.wrapGitHubRateLimitError(err); rateLimitErr != nil {
+			return nil, rateLimitErr
+		}
 		// Handle network errors gracefully
 		if strings.Contains(err.Error(), "network is unreachable") ||
 			strings.Contains(err.Error(), "no such host") ||

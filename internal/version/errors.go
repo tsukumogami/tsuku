@@ -8,6 +8,7 @@ import (
 	"net"
 	"net/url"
 	"strings"
+	"time"
 )
 
 // ErrorType classifies resolver errors for better handling
@@ -158,4 +159,57 @@ func WrapNetworkError(err error, source, message string) *ResolverError {
 		Message: message,
 		Err:     err,
 	}
+}
+
+// GitHubRateLimitError provides detailed information about GitHub API rate limit errors.
+// It includes the rate limit details and time until reset.
+type GitHubRateLimitError struct {
+	Limit         int       // Requests per hour
+	Remaining     int       // Remaining requests
+	ResetTime     time.Time // When the rate limit resets
+	Authenticated bool      // Whether the request was authenticated
+	Err           error     // Underlying error
+}
+
+// Error implements the error interface
+func (e *GitHubRateLimitError) Error() string {
+	authStatus := "unauthenticated"
+	if e.Authenticated {
+		authStatus = "authenticated"
+	}
+	return fmt.Sprintf("GitHub API rate limit exceeded: %d/%d requests used (%s), resets at %s",
+		e.Limit-e.Remaining, e.Limit, authStatus, e.ResetTime.Format(time.Kitchen))
+}
+
+// Unwrap returns the underlying error for error chain support
+func (e *GitHubRateLimitError) Unwrap() error {
+	return e.Err
+}
+
+// Suggestion returns actionable suggestions for the user.
+// The suggestions are context-aware based on authentication status.
+func (e *GitHubRateLimitError) Suggestion() string {
+	var sb strings.Builder
+
+	// Calculate time until reset
+	timeUntilReset := time.Until(e.ResetTime)
+	if timeUntilReset < 0 {
+		timeUntilReset = 0
+	}
+
+	// Format the duration in a human-readable way
+	minutes := int(timeUntilReset.Minutes())
+	if minutes > 0 {
+		sb.WriteString(fmt.Sprintf("Rate limit resets in %d minute(s). ", minutes))
+	} else {
+		sb.WriteString("Rate limit should reset soon. ")
+	}
+
+	if !e.Authenticated {
+		sb.WriteString("Set GITHUB_TOKEN environment variable to increase limit from 60 to 5000 requests/hour. ")
+	}
+
+	sb.WriteString("You can also specify a version directly: tsuku install <tool>@<version>")
+
+	return sb.String()
 }

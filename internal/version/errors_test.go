@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 )
 
 func TestResolverError_Error(t *testing.T) {
@@ -334,6 +335,132 @@ func TestWrapNetworkError(t *testing.T) {
 			}
 			if result.Err != tt.err {
 				t.Errorf("WrapNetworkError().Err = %v, want %v", result.Err, tt.err)
+			}
+		})
+	}
+}
+
+func TestGitHubRateLimitError_Error(t *testing.T) {
+	tests := []struct {
+		name          string
+		limit         int
+		remaining     int
+		resetTime     time.Time
+		authenticated bool
+		wantSubstr    []string
+	}{
+		{
+			name:          "unauthenticated",
+			limit:         60,
+			remaining:     0,
+			resetTime:     time.Date(2024, 1, 15, 14, 30, 0, 0, time.UTC),
+			authenticated: false,
+			wantSubstr:    []string{"60/60", "unauthenticated", "2:30PM"},
+		},
+		{
+			name:          "authenticated",
+			limit:         5000,
+			remaining:     100,
+			resetTime:     time.Date(2024, 1, 15, 15, 0, 0, 0, time.UTC),
+			authenticated: true,
+			wantSubstr:    []string{"4900/5000", "authenticated", "3:00PM"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := &GitHubRateLimitError{
+				Limit:         tt.limit,
+				Remaining:     tt.remaining,
+				ResetTime:     tt.resetTime,
+				Authenticated: tt.authenticated,
+			}
+			errStr := err.Error()
+			for _, substr := range tt.wantSubstr {
+				if !strings.Contains(errStr, substr) {
+					t.Errorf("Error() = %q, want substring %q", errStr, substr)
+				}
+			}
+		})
+	}
+}
+
+func TestGitHubRateLimitError_Unwrap(t *testing.T) {
+	underlying := errors.New("rate limit exceeded")
+	err := &GitHubRateLimitError{
+		Limit:         60,
+		Remaining:     0,
+		ResetTime:     time.Now().Add(30 * time.Minute),
+		Authenticated: false,
+		Err:           underlying,
+	}
+
+	if err.Unwrap() != underlying {
+		t.Errorf("Unwrap() = %v, want %v", err.Unwrap(), underlying)
+	}
+
+	// Test with nil underlying error
+	errNoUnderlying := &GitHubRateLimitError{
+		Limit:         60,
+		Remaining:     0,
+		ResetTime:     time.Now().Add(30 * time.Minute),
+		Authenticated: false,
+		Err:           nil,
+	}
+
+	if errNoUnderlying.Unwrap() != nil {
+		t.Errorf("Unwrap() with nil underlying = %v, want nil", errNoUnderlying.Unwrap())
+	}
+}
+
+func TestGitHubRateLimitError_Suggestion(t *testing.T) {
+	tests := []struct {
+		name          string
+		resetTime     time.Time
+		authenticated bool
+		wantSubstrs   []string
+		dontWant      []string
+	}{
+		{
+			name:          "unauthenticated with time remaining",
+			resetTime:     time.Now().Add(15 * time.Minute),
+			authenticated: false,
+			wantSubstrs:   []string{"resets in", "minute", "GITHUB_TOKEN", "5000 requests/hour", "specify a version"},
+		},
+		{
+			name:          "authenticated with time remaining",
+			resetTime:     time.Now().Add(15 * time.Minute),
+			authenticated: true,
+			wantSubstrs:   []string{"resets in", "minute", "specify a version"},
+			dontWant:      []string{"GITHUB_TOKEN"},
+		},
+		{
+			name:          "reset time in past",
+			resetTime:     time.Now().Add(-5 * time.Minute),
+			authenticated: false,
+			wantSubstrs:   []string{"reset soon", "GITHUB_TOKEN"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := &GitHubRateLimitError{
+				Limit:         60,
+				Remaining:     0,
+				ResetTime:     tt.resetTime,
+				Authenticated: tt.authenticated,
+			}
+			suggestion := err.Suggestion()
+
+			for _, substr := range tt.wantSubstrs {
+				if !strings.Contains(suggestion, substr) {
+					t.Errorf("Suggestion() = %q, want substring %q", suggestion, substr)
+				}
+			}
+			for _, substr := range tt.dontWant {
+				if strings.Contains(suggestion, substr) {
+					t.Errorf("Suggestion() = %q, should not contain %q", suggestion, substr)
+				}
 			}
 		})
 	}
