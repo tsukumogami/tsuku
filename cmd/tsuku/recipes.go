@@ -31,13 +31,13 @@ Use --local to show only recipes from your local recipes directory
 			recipes, err = loader.ListLocal()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error listing local recipes: %v\n", err)
-				os.Exit(1)
+				exitWithCode(ExitGeneral)
 			}
 		} else {
 			recipes, err = loader.ListAllWithSource()
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Error listing recipes: %v\n", err)
-				os.Exit(1)
+				exitWithCode(ExitGeneral)
 			}
 		}
 

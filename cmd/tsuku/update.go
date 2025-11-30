@@ -32,14 +32,14 @@ Examples:
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to get config: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		mgr := install.New(cfg)
 		tools, err := mgr.List()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to list tools: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		var previousVersion string
@@ -54,21 +54,21 @@ Examples:
 
 		if !installed {
 			fmt.Fprintf(os.Stderr, "Error: %s is not installed. Use 'tsuku install %s' to install it.\n", toolName, toolName)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		if updateDryRun {
 			printInfof("Checking updates for %s...\n", toolName)
 			if err := runDryRun(toolName, ""); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-				os.Exit(1)
+				exitWithCode(ExitInstallFailed)
 			}
 			return
 		}
 
 		printInfof("Updating %s...\n", toolName)
 		if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
-			os.Exit(1)
+			exitWithCode(ExitInstallFailed)
 		}
 
 		// Get the new version after update

@@ -29,7 +29,7 @@ func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir stri
 	output, err := cmdExec.CombinedOutput()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Verification failed: %v\nOutput: %s\n", err, string(output))
-		os.Exit(1)
+		exitWithCode(ExitVerifyFailed)
 	}
 
 	outputStr := strings.TrimSpace(string(output))
@@ -38,7 +38,7 @@ func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir stri
 	if pattern != "" {
 		if !strings.Contains(outputStr, pattern) {
 			fmt.Fprintf(os.Stderr, "Output does not match expected pattern\n  Expected: %s\n  Got: %s\n", pattern, outputStr)
-			os.Exit(1)
+			exitWithCode(ExitVerifyFailed)
 		}
 		printInfof("  Pattern matched: %s\n", pattern)
 	}
@@ -75,7 +75,7 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 		fmt.Fprintf(os.Stderr, "    Installation verification failed: %v\n", err)
 		fmt.Fprintf(os.Stderr, "    Output: %s\n", string(output))
 		fmt.Fprintf(os.Stderr, "\nThe tool is installed but not working correctly.\n")
-		os.Exit(1)
+		exitWithCode(ExitVerifyFailed)
 	}
 	outputStr := strings.TrimSpace(string(output))
 	printInfof("    Output: %s\n", outputStr)
@@ -84,7 +84,7 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 		fmt.Fprintf(os.Stderr, "    Pattern mismatch\n")
 		fmt.Fprintf(os.Stderr, "    Expected: %s\n", pattern)
 		fmt.Fprintf(os.Stderr, "    Got: %s\n", outputStr)
-		os.Exit(1)
+		exitWithCode(ExitVerifyFailed)
 	}
 	printInfo("    Installation verified\n")
 
@@ -103,7 +103,7 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 		fmt.Fprintf(os.Stderr, "    %s is not in your PATH\n", cfg.CurrentDir)
 		fmt.Fprintf(os.Stderr, "\nThe tool is installed correctly, but you need to add this to your shell profile:\n")
 		fmt.Fprintf(os.Stderr, "  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
-		os.Exit(1)
+		exitWithCode(ExitVerifyFailed)
 	}
 	printInfof("    %s is in PATH\n\n", cfg.CurrentDir)
 
@@ -126,7 +126,7 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 			fmt.Fprintf(os.Stderr, "    Binary '%s' not found in PATH\n", binaryName)
 			fmt.Fprintf(os.Stderr, "\nThe tool is installed and current/ is in PATH, but '%s' cannot be found.\n", binaryName)
 			fmt.Fprintf(os.Stderr, "This may indicate a broken symlink in %s\n", cfg.CurrentDir)
-			os.Exit(1)
+			exitWithCode(ExitVerifyFailed)
 		}
 
 		resolvedPath := strings.TrimSpace(string(whichPath))
@@ -147,7 +147,7 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 			if versionOut, err := versionCmd.CombinedOutput(); err == nil {
 				fmt.Fprintf(os.Stderr, "  Conflicting version output: %s\n", strings.TrimSpace(string(versionOut)))
 			}
-			os.Exit(1)
+			exitWithCode(ExitVerifyFailed)
 		}
 		printInfo("      Correct binary is being used from PATH")
 	}
@@ -165,7 +165,7 @@ var verifyCmd = &cobra.Command{
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to get config: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		mgr := install.New(cfg)
@@ -174,26 +174,26 @@ var verifyCmd = &cobra.Command{
 		state, err := mgr.GetState().Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load state: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		toolState, ok := state.Installed[toolName]
 		if !ok {
 			fmt.Fprintf(os.Stderr, "Tool '%s' is not installed\n", toolName)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		// Load recipe
 		r, err := loader.Get(toolName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load recipe: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitRecipeNotFound)
 		}
 
 		// Check if recipe has verification
 		if r.Verify.Command == "" {
 			fmt.Fprintf(os.Stderr, "Recipe for '%s' does not define verification\n", toolName)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		installDir := filepath.Join(cfg.ToolsDir, fmt.Sprintf("%s-%s", toolName, toolState.Version))
