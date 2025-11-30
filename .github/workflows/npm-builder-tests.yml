@@ -61,7 +61,7 @@ jobs:
       - name: Install prettier using generated recipe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install prettier
+        run: ./tsuku install --force prettier
 
       - name: Verify prettier works
         run: prettier --version
@@ -106,7 +106,7 @@ jobs:
       - name: Install prettier using generated recipe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install prettier
+        run: ./tsuku install --force prettier
 
       - name: Verify prettier works
         run: prettier --version

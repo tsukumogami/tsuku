@@ -64,7 +64,7 @@ jobs:
       - name: Install ruff using generated recipe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install ruff
+        run: ./tsuku install --force ruff
 
       - name: Verify ruff works
         run: ruff --version
@@ -112,7 +112,7 @@ jobs:
       - name: Install ruff using generated recipe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install ruff
+        run: ./tsuku install --force ruff
 
       - name: Verify ruff works
         run: ruff --version
