@@ -38,11 +38,11 @@ None - all changes are to existing files.
 - [x] Step 1: Add signal handler in main.go with cancellable context
 - [x] Step 2: Update install.go to pass context from signal handler
 - [x] Step 3: Update run_command.go to use exec.CommandContext
-- [ ] Step 4: Update download.go to use http.NewRequestWithContext
-- [ ] Step 5: Update package manager actions (npm, cargo, gem, pipx, nix) to use exec.CommandContext
-- [ ] Step 6: Update nix_portable.go download to use context
-- [ ] Step 7: Add cleanup message on cancellation
-- [ ] Step 8: Add unit tests for signal handling
+- [x] Step 4: Update download.go to use http.NewRequestWithContext
+- [x] Step 5: Update package manager actions (npm, cargo, gem, pipx, nix) to use exec.CommandContext
+- [x] Step 6: Update nix_portable.go download to use context
+- [x] Step 7: Add cleanup message on cancellation (already implemented in main.go signal handler)
+- [x] Step 8: Add unit tests for context cancellation
 
 Mark each step [x] after it is implemented and committed. This enables clear resume detection.
 
