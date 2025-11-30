@@ -69,31 +69,61 @@ func (r *Registry) cachePath(name string) string {
 func (r *Registry) FetchRecipe(ctx context.Context, name string) ([]byte, error) {
 	url := r.recipeURL(name)
 	if url == "" {
-		return nil, fmt.Errorf("invalid recipe name")
+		return nil, &RegistryError{
+			Type:    ErrTypeValidation,
+			Recipe:  name,
+			Message: "invalid recipe name",
+		}
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
+		return nil, &RegistryError{
+			Type:    ErrTypeNetwork,
+			Recipe:  name,
+			Message: "failed to create request",
+			Err:     err,
+		}
 	}
 
 	resp, err := r.client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch recipe: %w", err)
+		return nil, WrapNetworkError(err, name, "failed to fetch recipe")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return nil, fmt.Errorf("recipe not found in registry: %s", name)
+		return nil, &RegistryError{
+			Type:    ErrTypeNotFound,
+			Recipe:  name,
+			Message: fmt.Sprintf("recipe %s not found in registry", name),
+		}
+	}
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return nil, &RegistryError{
+			Type:    ErrTypeRateLimit,
+			Recipe:  name,
+			Message: "registry rate limit exceeded",
+		}
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("registry returned status %d for recipe %s", resp.StatusCode, name)
+		return nil, &RegistryError{
+			Type:    ErrTypeNetwork,
+			Recipe:  name,
+			Message: fmt.Sprintf("registry returned status %d", resp.StatusCode),
+		}
 	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read recipe content: %w", err)
+		return nil, &RegistryError{
+			Type:    ErrTypeParsing,
+			Recipe:  name,
+			Message: "failed to read recipe content",
+			Err:     err,
+		}
 	}
 
 	return data, nil
