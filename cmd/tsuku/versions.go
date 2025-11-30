@@ -16,6 +16,7 @@ var versionsCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		toolName := args[0]
+		jsonOutput, _ := cmd.Flags().GetBool("json")
 
 		// Load recipe
 		r, err := loader.Get(toolName)
@@ -44,7 +45,9 @@ var versionsCmd = &cobra.Command{
 
 		// List versions
 		ctx := context.Background()
-		fmt.Printf("Fetching versions for %s (%s)...\n", toolName, provider.SourceDescription())
+		if !jsonOutput {
+			fmt.Printf("Fetching versions for %s (%s)...\n", toolName, provider.SourceDescription())
+		}
 
 		versions, err := lister.ListVersions(ctx)
 		if err != nil {
@@ -52,9 +55,22 @@ var versionsCmd = &cobra.Command{
 			os.Exit(1)
 		}
 
+		// JSON output mode
+		if jsonOutput {
+			type versionsOutput struct {
+				Versions []string `json:"versions"`
+			}
+			printJSON(versionsOutput{Versions: versions})
+			return
+		}
+
 		fmt.Printf("Available versions (%d total):\n\n", len(versions))
 		for _, v := range versions {
 			fmt.Printf("  %s\n", v)
 		}
 	},
+}
+
+func init() {
+	versionsCmd.Flags().Bool("json", false, "Output in JSON format")
 }

@@ -20,15 +20,16 @@ var searchCmd = &cobra.Command{
 		if len(args) > 0 {
 			query = strings.ToLower(args[0])
 		}
+		jsonOutput, _ := cmd.Flags().GetBool("json")
 
 		// Get all recipes
 		names := loader.List()
 
 		// Filter and collect results
 		type result struct {
-			Name        string
-			Description string
-			Installed   string
+			Name        string `json:"name"`
+			Description string `json:"description"`
+			Installed   string `json:"installed,omitempty"`
 		}
 		var results []result
 
@@ -58,7 +59,7 @@ var searchCmd = &cobra.Command{
 
 			if match {
 				// Check installed status
-				installedVer := "-"
+				installedVer := ""
 				for _, t := range installedTools {
 					if t.Name == name {
 						installedVer = t.Version
@@ -72,6 +73,19 @@ var searchCmd = &cobra.Command{
 					Installed:   installedVer,
 				})
 			}
+		}
+
+		// JSON output mode
+		if jsonOutput {
+			type searchOutput struct {
+				Results []result `json:"results"`
+			}
+			output := searchOutput{Results: results}
+			if output.Results == nil {
+				output.Results = []result{}
+			}
+			printJSON(output)
+			return
 		}
 
 		if len(results) == 0 {
@@ -105,7 +119,15 @@ var searchCmd = &cobra.Command{
 			if len(desc) > maxDesc {
 				desc = desc[:maxDesc-3] + "..."
 			}
-			fmt.Printf("%-*s  %-*s  %s\n", maxName, r.Name, maxDesc, desc, r.Installed)
+			installed := r.Installed
+			if installed == "" {
+				installed = "-"
+			}
+			fmt.Printf("%-*s  %-*s  %s\n", maxName, r.Name, maxDesc, desc, installed)
 		}
 	},
+}
+
+func init() {
+	searchCmd.Flags().Bool("json", false, "Output in JSON format")
 }
