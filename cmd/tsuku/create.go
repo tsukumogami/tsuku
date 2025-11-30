@@ -11,6 +11,7 @@ import (
 	"github.com/tsuku-dev/tsuku/internal/builders"
 	"github.com/tsuku-dev/tsuku/internal/config"
 	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsuku-dev/tsuku/internal/toolchain"
 )
 
 var createCmd = &cobra.Command{
@@ -71,6 +72,12 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Normalize ecosystem name
 	ecosystem := normalizeEcosystem(createFrom)
+
+	// Check toolchain availability before making API calls
+	if err := toolchain.CheckAvailable(ecosystem); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(1)
+	}
 
 	// Initialize builder registry
 	builderRegistry := builders.NewRegistry()
