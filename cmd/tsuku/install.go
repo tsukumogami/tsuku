@@ -15,6 +15,8 @@ import (
 	"github.com/tsuku-dev/tsuku/internal/telemetry"
 )
 
+var installDryRun bool
+
 var installCmd = &cobra.Command{
 	Use:   "install <tool>...",
 	Short: "Install a development tool",
@@ -47,14 +49,25 @@ Examples:
 				resolveVersion = ""
 			}
 
-			if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
-				// Continue installing other tools even if one fails?
-				// For now, exit on first failure to be safe
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-				os.Exit(1)
+			if installDryRun {
+				if err := runDryRun(toolName, resolveVersion); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+					os.Exit(1)
+				}
+			} else {
+				if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
+					// Continue installing other tools even if one fails?
+					// For now, exit on first failure to be safe
+					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+					os.Exit(1)
+				}
 			}
 		}
 	},
+}
+
+func init() {
+	installCmd.Flags().BoolVar(&installDryRun, "dry-run", false, "Show what would be installed without making changes")
 }
 
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
@@ -313,4 +326,29 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	fmt.Printf("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
 
 	return nil
+}
+
+// runDryRun shows what would be installed without making changes
+func runDryRun(toolName, reqVersion string) error {
+	// Load recipe
+	r, err := loader.Get(toolName)
+	if err != nil {
+		return fmt.Errorf("recipe not found: %w", err)
+	}
+
+	// Create executor
+	var exec *executor.Executor
+	if reqVersion != "" {
+		exec, err = executor.NewWithVersion(r, reqVersion)
+	} else {
+		exec, err = executor.New(r)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to create executor: %w", err)
+	}
+	defer exec.Cleanup()
+
+	// Run dry-run
+	ctx := context.Background()
+	return exec.DryRun(ctx)
 }
