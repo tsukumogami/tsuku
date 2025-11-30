@@ -233,7 +233,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		if !installForce {
 			if isInteractive() {
 				if !confirmInstall() {
-					return fmt.Errorf("installation cancelled by user")
+					return fmt.Errorf("installation canceled by user")
 				}
 			} else {
 				fmt.Fprintf(os.Stderr, "Use --force to proceed without verification.\n")
