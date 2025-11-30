@@ -4,11 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/tsuku-dev/tsuku/internal/config"
 	"github.com/tsuku-dev/tsuku/internal/progress"
 )
 
@@ -86,16 +89,47 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	return nil
 }
 
-// downloadFile performs the actual HTTP download with context for cancellation
-// SECURITY: Enforces HTTPS for all downloads to prevent MITM attacks
-func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string) error {
-	// SECURITY: Enforce HTTPS for all downloads
-	if !strings.HasPrefix(url, "https://") {
-		return fmt.Errorf("download URL must use HTTPS for security, got: %s", url)
+// validateDownloadIP checks if an IP is allowed for download redirects
+// (not private, loopback, link-local, etc.)
+func validateDownloadIP(ip net.IP, host string) error {
+	if ip.IsPrivate() {
+		return fmt.Errorf("refusing redirect to private IP: %s (%s)", host, ip)
 	}
+	if ip.IsLoopback() {
+		return fmt.Errorf("refusing redirect to loopback IP: %s (%s)", host, ip)
+	}
+	if ip.IsLinkLocalUnicast() {
+		return fmt.Errorf("refusing redirect to link-local IP: %s (%s)", host, ip)
+	}
+	if ip.IsLinkLocalMulticast() {
+		return fmt.Errorf("refusing redirect to link-local multicast: %s (%s)", host, ip)
+	}
+	if ip.IsMulticast() {
+		return fmt.Errorf("refusing redirect to multicast IP: %s (%s)", host, ip)
+	}
+	if ip.IsUnspecified() {
+		return fmt.Errorf("refusing redirect to unspecified IP: %s (%s)", host, ip)
+	}
+	return nil
+}
 
-	// Create HTTP client with redirect security check
-	client := &http.Client{
+// newDownloadHTTPClient creates a secure HTTP client for downloads with:
+// - DisableCompression: prevents decompression bomb attacks
+// - SSRF protection via redirect validation
+// - HTTPS-only redirects
+func newDownloadHTTPClient() *http.Client {
+	return &http.Client{
+		Timeout: config.GetAPITimeout(),
+		Transport: &http.Transport{
+			DisableCompression: true, // CRITICAL: Prevents decompression bomb attacks
+			DialContext: (&net.Dialer{
+				Timeout:   30 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			// SECURITY: Prevent redirect downgrade attacks (HTTPS -> HTTP)
 			if req.URL.Scheme != "https" {
@@ -105,13 +139,52 @@ func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string)
 			if len(via) >= 10 {
 				return fmt.Errorf("too many redirects")
 			}
+
+			// SSRF Protection: Check redirect target
+			host := req.URL.Hostname()
+
+			// If hostname is already an IP, check it directly
+			if ip := net.ParseIP(host); ip != nil {
+				if err := validateDownloadIP(ip, host); err != nil {
+					return err
+				}
+			} else {
+				// Hostname is a domain - resolve DNS and check ALL resulting IPs
+				// This prevents DNS rebinding attacks
+				ips, err := net.LookupIP(host)
+				if err != nil {
+					return fmt.Errorf("failed to resolve redirect host %s: %w", host, err)
+				}
+
+				for _, ip := range ips {
+					if err := validateDownloadIP(ip, host); err != nil {
+						return fmt.Errorf("refusing redirect: %s resolves to blocked IP %s", host, ip)
+					}
+				}
+			}
+
 			return nil
 		},
 	}
+}
+
+// downloadFile performs the actual HTTP download with context for cancellation
+// SECURITY: Enforces HTTPS for all downloads to prevent MITM attacks
+func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string) error {
+	// SECURITY: Enforce HTTPS for all downloads
+	if !strings.HasPrefix(url, "https://") {
+		return fmt.Errorf("download URL must use HTTPS for security, got: %s", url)
+	}
+
+	// Create secure HTTP client with decompression bomb and SSRF protection
+	client := newDownloadHTTPClient()
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
+
+	// Defense in depth: Explicitly request uncompressed response
+	req.Header.Set("Accept-Encoding", "identity")
 
 	// Perform request
 	resp, err := client.Do(req)
@@ -122,6 +195,11 @@ func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string)
 
 	if resp.StatusCode != http.StatusOK {
 		return fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	// Defense in depth: Reject compressed responses
+	if encoding := resp.Header.Get("Content-Encoding"); encoding != "" && encoding != "identity" {
+		return fmt.Errorf("compressed responses not supported (got %s)", encoding)
 	}
 
 	// Create destination file

@@ -4,10 +4,12 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/tsuku-dev/tsuku/internal/config"
 )
@@ -27,6 +29,25 @@ type Registry struct {
 	client   *http.Client
 }
 
+// newRegistryHTTPClient creates a secure HTTP client for registry operations with:
+// - DisableCompression: prevents decompression bomb attacks
+// - Proper timeouts
+func newRegistryHTTPClient() *http.Client {
+	return &http.Client{
+		Timeout: config.GetAPITimeout(),
+		Transport: &http.Transport{
+			DisableCompression: true, // CRITICAL: Prevents decompression bomb attacks
+			DialContext: (&net.Dialer{
+				Timeout:   10 * time.Second,
+				KeepAlive: 30 * time.Second,
+			}).DialContext,
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+			ExpectContinueTimeout: 1 * time.Second,
+		},
+	}
+}
+
 // New creates a new Registry with the given cache directory
 func New(cacheDir string) *Registry {
 	baseURL := os.Getenv(EnvRegistryURL)
@@ -37,9 +58,7 @@ func New(cacheDir string) *Registry {
 	return &Registry{
 		BaseURL:  baseURL,
 		CacheDir: cacheDir,
-		client: &http.Client{
-			Timeout: config.GetAPITimeout(),
-		},
+		client:   newRegistryHTTPClient(),
 	}
 }
 

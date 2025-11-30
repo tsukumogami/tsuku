@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"time"
 )
 
 // NixpkgsProvider resolves versions from nixpkgs channels.
@@ -80,11 +79,13 @@ func (p *NixpkgsProvider) fetchLatestChannel(ctx context.Context) (string, error
 	// We can also check the GitHub API for nixos-* branches
 	// For simplicity, check the channels.nixos.org JSON endpoint
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	// Use the secure HTTP client with decompression bomb protection
+	client := NewHTTPClient()
 	req, err := http.NewRequestWithContext(ctx, "GET", "https://channels.nixos.org/nixos-24.05/git-revision", nil)
 	if err != nil {
 		return "", err
 	}
+	req.Header.Set("Accept-Encoding", "identity") // Defense in depth
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -100,6 +101,9 @@ func (p *NixpkgsProvider) fetchLatestChannel(ctx context.Context) (string, error
 
 	// Try 23.11 as fallback
 	req2, _ := http.NewRequestWithContext(ctx, "GET", "https://channels.nixos.org/nixos-23.11/git-revision", nil)
+	if req2 != nil {
+		req2.Header.Set("Accept-Encoding", "identity") // Defense in depth
+	}
 	resp2, err := client.Do(req2)
 	if err != nil {
 		return "", err
@@ -149,7 +153,8 @@ func (p *NixpkgsProvider) LookupPackageVersion(ctx context.Context, packageAttr 
 	// This could be used to get actual package versions
 	// For now, return empty to indicate we're using channel versioning
 
-	client := &http.Client{Timeout: 10 * time.Second}
+	// Use the secure HTTP client with decompression bomb protection
+	client := NewHTTPClient()
 
 	// The NixOS search API endpoint
 	// Example: https://search.nixos.org/packages?channel=24.05&query=hello
@@ -159,6 +164,7 @@ func (p *NixpkgsProvider) LookupPackageVersion(ctx context.Context, packageAttr 
 	if err != nil {
 		return "", err
 	}
+	req.Header.Set("Accept-Encoding", "identity") // Defense in depth
 
 	resp, err := client.Do(req)
 	if err != nil {

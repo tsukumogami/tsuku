@@ -589,6 +589,21 @@ func TestPackageNameValidation_LongNames(t *testing.T) {
 	}
 }
 
+// TestHTTPClientDisableCompression tests that NewHTTPClient has compression disabled
+func TestHTTPClientDisableCompression(t *testing.T) {
+	client := NewHTTPClient()
+
+	// Verify the transport has DisableCompression set
+	transport, ok := client.Transport.(*http.Transport)
+	if !ok {
+		t.Fatal("Expected *http.Transport, got different type")
+	}
+
+	if !transport.DisableCompression {
+		t.Error("Expected DisableCompression to be true, got false")
+	}
+}
+
 // TestSSRFProtection_RedirectChainEdgeCases tests edge cases in redirect handling
 // This test verifies that the redirect limit (5) is enforced by our HTTP client.
 // We use httptest.NewTLSServer to allow HTTPS redirects to pass the security check.

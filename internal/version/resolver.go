@@ -39,9 +39,18 @@ type Resolver struct {
 	authenticated       bool           // Whether GitHub requests are authenticated
 }
 
-// newHTTPClient creates an HTTP client with security hardening and proper timeouts.
+// NewHTTPClient creates an HTTP client with security hardening and proper timeouts.
 // The timeout is configurable via TSUKU_API_TIMEOUT environment variable (default: 30s).
-func newHTTPClient() *http.Client {
+//
+// Security features:
+//   - DisableCompression: true - prevents decompression bomb attacks
+//   - SSRF protection via redirect validation (blocks private, loopback, link-local IPs)
+//   - DNS rebinding protection (resolves hostnames and validates all IPs)
+//   - HTTPS-only redirects
+//   - Redirect chain limit (5 redirects max)
+//
+// This function is exported for use by other packages that need secure HTTP clients.
+func NewHTTPClient() *http.Client {
 	return &http.Client{
 		Timeout: config.GetAPITimeout(),
 		Transport: &http.Transport{
@@ -148,7 +157,7 @@ func New() *Resolver {
 
 	return &Resolver{
 		client:              github.NewClient(githubHTTPClient),
-		httpClient:          newHTTPClient(),              // HTTP client with proper timeouts
+		httpClient:          NewHTTPClient(),              // HTTP client with proper timeouts
 		registry:            NewRegistry(),                // Initialize with default resolvers
 		npmRegistryURL:      "https://registry.npmjs.org", // Production default
 		pypiRegistryURL:     "https://pypi.org",           // Production default
@@ -172,7 +181,7 @@ func NewWithNpmRegistry(registryURL string) *Resolver {
 
 	return &Resolver{
 		client:              github.NewClient(githubHTTPClient),
-		httpClient:          newHTTPClient(),
+		httpClient:          NewHTTPClient(),
 		registry:            NewRegistry(),
 		npmRegistryURL:      registryURL,
 		pypiRegistryURL:     "https://pypi.org",     // Default PyPI
@@ -196,7 +205,7 @@ func NewWithPyPIRegistry(registryURL string) *Resolver {
 
 	return &Resolver{
 		client:              github.NewClient(githubHTTPClient),
-		httpClient:          newHTTPClient(),
+		httpClient:          NewHTTPClient(),
 		registry:            NewRegistry(),
 		npmRegistryURL:      "https://registry.npmjs.org", // Default npm
 		pypiRegistryURL:     registryURL,
@@ -220,7 +229,7 @@ func NewWithCratesIORegistry(registryURL string) *Resolver {
 
 	return &Resolver{
 		client:              github.NewClient(githubHTTPClient),
-		httpClient:          newHTTPClient(),
+		httpClient:          NewHTTPClient(),
 		registry:            NewRegistry(),
 		npmRegistryURL:      "https://registry.npmjs.org", // Default npm
 		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
@@ -244,7 +253,7 @@ func NewWithRubyGemsRegistry(registryURL string) *Resolver {
 
 	return &Resolver{
 		client:              github.NewClient(githubHTTPClient),
-		httpClient:          newHTTPClient(),
+		httpClient:          NewHTTPClient(),
 		registry:            NewRegistry(),
 		npmRegistryURL:      "https://registry.npmjs.org", // Default npm
 		pypiRegistryURL:     "https://pypi.org",           // Default PyPI

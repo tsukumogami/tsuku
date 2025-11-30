@@ -324,3 +324,18 @@ func TestListCached_NonExistentDir(t *testing.T) {
 		t.Errorf("ListCached() should return empty for non-existent dir")
 	}
 }
+
+// TestRegistryHTTPClient_DisableCompression tests that registry HTTP client has compression disabled
+func TestRegistryHTTPClient_DisableCompression(t *testing.T) {
+	client := newRegistryHTTPClient()
+
+	// Verify the transport has DisableCompression set
+	transport, ok := client.Transport.(*http.Transport)
+	if !ok {
+		t.Fatal("Expected *http.Transport, got different type")
+	}
+
+	if !transport.DisableCompression {
+		t.Error("Expected DisableCompression to be true, got false")
+	}
+}
