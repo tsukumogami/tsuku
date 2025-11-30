@@ -24,6 +24,7 @@ var listCmd = &cobra.Command{
 
 		// Check if --show-system-dependencies flag is set
 		showSystemDeps, _ := cmd.Flags().GetBool("show-system-dependencies")
+		jsonOutput, _ := cmd.Flags().GetBool("json")
 
 		var tools []install.InstalledTool
 		if showSystemDeps {
@@ -35,6 +36,28 @@ var listCmd = &cobra.Command{
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to list tools: %v\n", err)
 			os.Exit(1)
+		}
+
+		// JSON output mode
+		if jsonOutput {
+			type toolJSON struct {
+				Name    string `json:"name"`
+				Version string `json:"version"`
+				Path    string `json:"path"`
+			}
+			type listOutput struct {
+				Tools []toolJSON `json:"tools"`
+			}
+			output := listOutput{Tools: make([]toolJSON, 0, len(tools))}
+			for _, t := range tools {
+				output.Tools = append(output.Tools, toolJSON{
+					Name:    t.Name,
+					Version: t.Version,
+					Path:    t.Path,
+				})
+			}
+			printJSON(output)
+			return
 		}
 
 		if len(tools) == 0 {
@@ -71,4 +94,5 @@ var listCmd = &cobra.Command{
 
 func init() {
 	listCmd.Flags().Bool("show-system-dependencies", false, "Include hidden system dependencies in output")
+	listCmd.Flags().Bool("json", false, "Output in JSON format")
 }
