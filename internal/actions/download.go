@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/tsuku-dev/tsuku/internal/progress"
 )
 
 // DownloadAction implements file downloading with checksum verification
@@ -128,9 +130,17 @@ func (a *DownloadAction) downloadFile(url, destPath string) error {
 	}
 	defer out.Close()
 
-	// Copy response body to file
-	if _, err := io.Copy(out, resp.Body); err != nil {
-		return fmt.Errorf("failed to write file: %w", err)
+	// Copy response body to file with progress display
+	if progress.ShouldShowProgress() && resp.ContentLength > 0 {
+		pw := progress.NewWriter(out, resp.ContentLength, os.Stdout)
+		defer pw.Finish()
+		if _, err := io.Copy(pw, resp.Body); err != nil {
+			return fmt.Errorf("failed to write file: %w", err)
+		}
+	} else {
+		if _, err := io.Copy(out, resp.Body); err != nil {
+			return fmt.Errorf("failed to write file: %w", err)
+		}
 	}
 
 	return nil

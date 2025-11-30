@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"runtime"
 	"syscall"
+
+	"github.com/tsuku-dev/tsuku/internal/progress"
 )
 
 // nix-portable version and checksums
@@ -187,8 +189,14 @@ func downloadFile(url, destPath string) error {
 		return fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
 	}
 
-	// Copy response body to file
-	_, err = io.Copy(out, resp.Body)
+	// Copy response body to file with progress display
+	if progress.ShouldShowProgress() && resp.ContentLength > 0 {
+		pw := progress.NewWriter(out, resp.ContentLength, os.Stdout)
+		defer pw.Finish()
+		_, err = io.Copy(pw, resp.Body)
+	} else {
+		_, err = io.Copy(out, resp.Body)
+	}
 	return err
 }
 
