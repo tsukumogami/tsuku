@@ -50,6 +50,7 @@ func init() {
 	rootCmd.AddCommand(updateRegistryCmd)
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(completionCmd)
 }
 
 func main() {

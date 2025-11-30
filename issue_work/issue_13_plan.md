@@ -15,9 +15,9 @@ Use Cobra's built-in shell completion methods (GenBashCompletionV2, GenZshComple
 - `cmd/tsuku/main.go` - Register completion command
 
 ## Implementation Steps
-- [ ] Create completion.go with subcommands for bash, zsh, fish
-- [ ] Register completion command in main.go
-- [ ] Test generated completions work
+- [x] Create completion.go with subcommands for bash, zsh, fish
+- [x] Register completion command in main.go
+- [x] Test generated completions work
 
 ## Testing Strategy
 - Generate completions and verify they're valid shell scripts
