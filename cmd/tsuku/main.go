@@ -1,8 +1,11 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/tsuku-dev/tsuku/internal/buildinfo"
@@ -12,6 +15,11 @@ import (
 )
 
 var quietFlag bool
+
+// globalCtx is the application-level context that is canceled on SIGINT/SIGTERM.
+// Commands should use this context for cancellable operations.
+var globalCtx context.Context
+var globalCancel context.CancelFunc
 
 var rootCmd = &cobra.Command{
 	Use:   "tsuku",
@@ -59,7 +67,31 @@ func init() {
 }
 
 func main() {
+	// Set up cancellable context with signal handling
+	globalCtx, globalCancel = context.WithCancel(context.Background())
+	defer globalCancel()
+
+	// Set up signal handling for graceful cancellation
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+	// Handle signals in a goroutine
+	go func() {
+		sig := <-sigChan
+		fmt.Fprintf(os.Stderr, "\nReceived %s, canceling operation...\n", sig)
+		globalCancel()
+
+		// Wait for second signal to force exit
+		<-sigChan
+		fmt.Fprintln(os.Stderr, "Forced exit")
+		exitWithCode(ExitCancelled)
+	}()
+
 	if err := rootCmd.Execute(); err != nil {
+		// Check if the error was due to context cancellation
+		if globalCtx.Err() == context.Canceled {
+			exitWithCode(ExitCancelled)
+		}
 		fmt.Fprintln(os.Stderr, err)
 		exitWithCode(ExitGeneral)
 	}

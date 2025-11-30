@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -259,9 +258,8 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set tools directory for finding other installed tools
 	exec.SetToolsDir(cfg.ToolsDir)
 
-	// Execute recipe
-	ctx := context.Background()
-	if err := exec.Execute(ctx); err != nil {
+	// Execute recipe with cancellable context
+	if err := exec.Execute(globalCtx); err != nil {
 		fmt.Fprintf(os.Stderr, "Installation failed: %v\n", err)
 		return err
 	}
@@ -346,7 +344,6 @@ func runDryRun(toolName, reqVersion string) error {
 	}
 	defer exec.Cleanup()
 
-	// Run dry-run
-	ctx := context.Background()
-	return exec.DryRun(ctx)
+	// Run dry-run with cancellable context
+	return exec.DryRun(globalCtx)
 }

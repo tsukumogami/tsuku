@@ -69,8 +69,8 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 		fmt.Printf("   Working dir: %s\n", workingDir)
 	}
 
-	// Execute command
-	cmd := exec.Command("sh", "-c", command)
+	// Execute command with context for cancellation support
+	cmd := exec.CommandContext(ctx.Context, "sh", "-c", command)
 	cmd.Dir = workingDir
 
 	// Capture output

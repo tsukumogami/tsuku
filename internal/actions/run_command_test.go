@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"testing"
 
 	"github.com/tsuku-dev/tsuku/internal/recipe"
@@ -18,6 +19,7 @@ func TestRunCommandAction_Execute(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	ctx := &ExecutionContext{
+		Context:    context.Background(),
 		WorkDir:    tmpDir,
 		InstallDir: tmpDir,
 		Version:    "1.0.0",
@@ -41,6 +43,7 @@ func TestRunCommandAction_Execute_MissingCommand(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	ctx := &ExecutionContext{
+		Context:    context.Background(),
 		WorkDir:    tmpDir,
 		InstallDir: tmpDir,
 		Version:    "1.0.0",
@@ -62,6 +65,7 @@ func TestRunCommandAction_Execute_RequiresSudo(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	ctx := &ExecutionContext{
+		Context:    context.Background(),
 		WorkDir:    tmpDir,
 		InstallDir: tmpDir,
 		Version:    "1.0.0",
@@ -87,6 +91,7 @@ func TestRunCommandAction_Execute_WithDescription(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	ctx := &ExecutionContext{
+		Context:    context.Background(),
 		WorkDir:    tmpDir,
 		InstallDir: tmpDir,
 		Version:    "1.0.0",
@@ -111,6 +116,7 @@ func TestRunCommandAction_Execute_VariableExpansion(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	ctx := &ExecutionContext{
+		Context:    context.Background(),
 		WorkDir:    tmpDir,
 		InstallDir: tmpDir,
 		Version:    "1.2.3",
@@ -134,6 +140,7 @@ func TestRunCommandAction_Execute_FailingCommand(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	ctx := &ExecutionContext{
+		Context:    context.Background(),
 		WorkDir:    tmpDir,
 		InstallDir: tmpDir,
 		Version:    "1.0.0",
@@ -157,6 +164,7 @@ func TestRunCommandAction_Execute_CustomWorkDir(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	ctx := &ExecutionContext{
+		Context:    context.Background(),
 		WorkDir:    tmpDir,
 		InstallDir: tmpDir,
 		Version:    "1.0.0",
@@ -173,5 +181,34 @@ func TestRunCommandAction_Execute_CustomWorkDir(t *testing.T) {
 	})
 	if err != nil {
 		t.Errorf("Execute() with custom working_dir failed: %v", err)
+	}
+}
+
+func TestRunCommandAction_Execute_ContextCancellation(t *testing.T) {
+	action := &RunCommandAction{}
+	tmpDir := t.TempDir()
+
+	// Create a context that is already canceled
+	cancelledCtx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	ctx := &ExecutionContext{
+		Context:    cancelledCtx,
+		WorkDir:    tmpDir,
+		InstallDir: tmpDir,
+		Version:    "1.0.0",
+		Recipe: &recipe.Recipe{
+			Metadata: recipe.MetadataSection{
+				Name: "test-tool",
+			},
+		},
+	}
+
+	// Command should fail due to canceled context
+	err := action.Execute(ctx, map[string]interface{}{
+		"command": "sleep 10",
+	})
+	if err == nil {
+		t.Error("Execute() should fail when context is canceled")
 	}
 }

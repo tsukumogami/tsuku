@@ -91,12 +91,13 @@ func (a *PipxInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 	fmt.Printf("   Installing: pipx install %s\n", packageSpec)
 
 	// Build command: pipx install <package>==<version>
+	// Use CommandContext for cancellation support
 	args := []string{"install", packageSpec}
 	if pythonPath != "" {
 		args = append(args, "--python", pythonPath)
 	}
 
-	cmd := exec.Command(pipxPath, args...)
+	cmd := exec.CommandContext(ctx.Context, pipxPath, args...)
 
 	// Set environment for isolated installation
 	env := os.Environ()

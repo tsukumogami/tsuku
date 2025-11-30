@@ -106,7 +106,8 @@ func (a *GemInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		gemName, ctx.Version, installDir)
 
 	// Build command: gem install <gem> --version <version> --no-document --install-dir <dir>
-	cmd := exec.Command(gemPath, "install", gemName,
+	// Use CommandContext for cancellation support
+	cmd := exec.CommandContext(ctx.Context, gemPath, "install", gemName,
 		"--version", ctx.Version,
 		"--no-document",             // Skip documentation
 		"--install-dir", installDir, // Install to our directory

@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -63,7 +64,23 @@ func ResolveNixPortable() string {
 //   - Only supports Linux (nix-portable limitation)
 //   - Uses hardcoded SHA256 checksums for supply chain security
 //   - Uses file locking to prevent TOCTOU race conditions
+//
+// Deprecated: Use EnsureNixPortableWithContext for cancellation support.
 func EnsureNixPortable() (string, error) {
+	return EnsureNixPortableWithContext(context.Background())
+}
+
+// EnsureNixPortableWithContext ensures nix-portable is available in the internal directory.
+// It downloads and installs nix-portable if not present.
+// Uses file locking to prevent race conditions from concurrent tsuku processes.
+// Returns the path to the nix-portable binary.
+// The context parameter enables cancellation of the download operation.
+//
+// Security:
+//   - Only supports Linux (nix-portable limitation)
+//   - Uses hardcoded SHA256 checksums for supply chain security
+//   - Uses file locking to prevent TOCTOU race conditions
+func EnsureNixPortableWithContext(ctx context.Context) (string, error) {
 	// Check platform - nix-portable only supports Linux
 	if runtime.GOOS != "linux" {
 		return "", fmt.Errorf("nix_install action only supports Linux (nix-portable does not support %s)", runtime.GOOS)
@@ -132,9 +149,9 @@ func EnsureNixPortable() (string, error) {
 	fmt.Printf("   Downloading nix-portable %s for %s...\n", nixPortableVersion, archName)
 	fmt.Printf("   URL: %s\n", url)
 
-	// Download to temporary file first
+	// Download to temporary file first with context for cancellation
 	tmpPath := nixPortablePath + ".tmp"
-	if err := downloadFile(url, tmpPath); err != nil {
+	if err := downloadFileWithContext(ctx, url, tmpPath); err != nil {
 		os.Remove(tmpPath)
 		return "", fmt.Errorf("failed to download nix-portable: %w", err)
 	}
@@ -169,8 +186,8 @@ func EnsureNixPortable() (string, error) {
 	return nixPortablePath, nil
 }
 
-// downloadFile downloads a file from URL to the specified path
-func downloadFile(url, destPath string) error {
+// downloadFileWithContext downloads a file from URL to the specified path with context for cancellation
+func downloadFileWithContext(ctx context.Context, url, destPath string) error {
 	// Create the file
 	out, err := os.Create(destPath)
 	if err != nil {
@@ -178,8 +195,13 @@ func downloadFile(url, destPath string) error {
 	}
 	defer out.Close()
 
-	// Make HTTP request
-	resp, err := http.Get(url)
+	// Make HTTP request with context
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}

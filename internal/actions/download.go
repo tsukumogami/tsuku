@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -71,13 +72,13 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	fmt.Printf("   Downloading: %s\n", url)
 	fmt.Printf("   Destination: %s\n", dest)
 
-	// Download file
-	if err := a.downloadFile(url, destPath); err != nil {
+	// Download file with context for cancellation support
+	if err := a.downloadFile(ctx.Context, url, destPath); err != nil {
 		return fmt.Errorf("download failed: %w", err)
 	}
 
 	// Verify checksum if provided
-	if err := a.verifyChecksum(ctx, params, destPath, vars); err != nil {
+	if err := a.verifyChecksum(ctx.Context, ctx, params, destPath, vars); err != nil {
 		return fmt.Errorf("checksum verification failed: %w", err)
 	}
 
@@ -85,9 +86,9 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	return nil
 }
 
-// downloadFile performs the actual HTTP download
+// downloadFile performs the actual HTTP download with context for cancellation
 // SECURITY: Enforces HTTPS for all downloads to prevent MITM attacks
-func (a *DownloadAction) downloadFile(url, destPath string) error {
+func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string) error {
 	// SECURITY: Enforce HTTPS for all downloads
 	if !strings.HasPrefix(url, "https://") {
 		return fmt.Errorf("download URL must use HTTPS for security, got: %s", url)
@@ -107,7 +108,7 @@ func (a *DownloadAction) downloadFile(url, destPath string) error {
 			return nil
 		},
 	}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
@@ -147,7 +148,7 @@ func (a *DownloadAction) downloadFile(url, destPath string) error {
 }
 
 // verifyChecksum verifies the downloaded file's checksum
-func (a *DownloadAction) verifyChecksum(ctx *ExecutionContext, params map[string]interface{}, filePath string, vars map[string]string) error {
+func (a *DownloadAction) verifyChecksum(ctx context.Context, execCtx *ExecutionContext, params map[string]interface{}, filePath string, vars map[string]string) error {
 	// Check if checksum verification is requested
 	checksumURL, hasChecksumURL := GetString(params, "checksum_url")
 	inlineChecksum, hasInlineChecksum := GetString(params, "checksum")
@@ -166,12 +167,12 @@ func (a *DownloadAction) verifyChecksum(ctx *ExecutionContext, params map[string
 	var expectedChecksum string
 
 	if hasChecksumURL {
-		// Download checksum file
+		// Download checksum file with context for cancellation
 		checksumURL = ExpandVars(checksumURL, vars)
-		checksumPath := filepath.Join(ctx.WorkDir, "checksum.tmp")
+		checksumPath := filepath.Join(execCtx.WorkDir, "checksum.tmp")
 
 		fmt.Printf("   Downloading checksum: %s\n", checksumURL)
-		if err := a.downloadFile(checksumURL, checksumPath); err != nil {
+		if err := a.downloadFile(ctx, checksumURL, checksumPath); err != nil {
 			return fmt.Errorf("failed to download checksum: %w", err)
 		}
 

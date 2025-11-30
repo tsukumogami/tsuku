@@ -31,6 +31,9 @@ const (
 
 	// ExitDependencyFailed indicates dependency resolution failed
 	ExitDependencyFailed = 8
+
+	// ExitCancelled indicates the operation was canceled by the user (Ctrl+C)
+	ExitCancelled = 130
 )
 
 // exitWithCode exits with the specified exit code

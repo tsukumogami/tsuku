@@ -54,7 +54,8 @@ func (a *NpmInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 	fmt.Printf("   Installing: npm install -g --prefix=%s %s\n", installDir, packageSpec)
 
-	cmd := exec.Command(npmPath, "install", "-g", fmt.Sprintf("--prefix=%s", installDir), packageSpec)
+	// Use CommandContext for cancellation support
+	cmd := exec.CommandContext(ctx.Context, npmPath, "install", "-g", fmt.Sprintf("--prefix=%s", installDir), packageSpec)
 
 	// Set up environment: add npm's bin directory to PATH so npm can find node
 	// npm is a Node.js script that needs node in PATH

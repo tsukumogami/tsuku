@@ -85,8 +85,8 @@ func (a *NixInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 		fmt.Printf("   This is a one-time operation.\n\n")
 	}
 
-	// Ensure nix-portable is available
-	nixPortablePath, err := EnsureNixPortable()
+	// Ensure nix-portable is available (with context for cancellation)
+	nixPortablePath, err := EnsureNixPortableWithContext(ctx.Context)
 	if err != nil {
 		return fmt.Errorf("failed to ensure nix-portable: %w", err)
 	}
@@ -112,7 +112,8 @@ func (a *NixInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	// Using --profile to install to a specific profile location
 	fmt.Printf("   Installing: nix profile install nixpkgs#%s\n", packageName)
 
-	cmd := exec.Command(nixPortablePath, "nix", "profile", "install",
+	// Use CommandContext for cancellation support
+	cmd := exec.CommandContext(ctx.Context, nixPortablePath, "nix", "profile", "install",
 		"--profile", profilePath,
 		fmt.Sprintf("nixpkgs#%s", packageName))
 

@@ -85,7 +85,8 @@ func (a *CargoInstallAction) Execute(ctx *ExecutionContext, params map[string]in
 
 	fmt.Printf("   Installing: cargo install --root=%s %s\n", installDir, crateSpec)
 
-	cmd := exec.Command(cargoPath, "install", "--root", installDir, crateSpec)
+	// Use CommandContext for cancellation support
+	cmd := exec.CommandContext(ctx.Context, cargoPath, "install", "--root", installDir, crateSpec)
 
 	// Set up environment: add cargo's bin directory to PATH
 	// With the proper install.sh setup, cargo and rustc are both in bin/
