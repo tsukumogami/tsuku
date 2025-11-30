@@ -150,7 +150,7 @@ func TestInstallDirectoryWithSymlinks(t *testing.T) {
 		t.Fatalf("failed to create lib file: %v", err)
 	}
 
-	// Create execution context
+	// Create execution context with verification (required for directory mode)
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		WorkDir:    workDir,
@@ -159,6 +159,9 @@ func TestInstallDirectoryWithSymlinks(t *testing.T) {
 		Recipe: &recipe.Recipe{
 			Metadata: recipe.MetadataSection{
 				Name: "liberica",
+			},
+			Verify: recipe.VerifySection{
+				Command: "java --version",
 			},
 		},
 	}
@@ -242,39 +245,46 @@ func TestInstallDirectoryWithSymlinks_AtomicRollback(t *testing.T) {
 }
 
 // TestInstallBinaries_ModeRouting tests that install_mode parameter routes to correct implementation
+// Note: directory modes require verification to be set
 func TestInstallBinaries_ModeRouting(t *testing.T) {
 	action := &InstallBinariesAction{}
 
 	tests := []struct {
 		name        string
 		installMode string
+		hasVerify   bool
 		shouldErr   bool
 		errContains string
 	}{
 		{
 			name:        "binaries mode (default)",
 			installMode: "",
+			hasVerify:   false,
 			shouldErr:   false,
 		},
 		{
 			name:        "binaries mode (explicit)",
 			installMode: "binaries",
+			hasVerify:   false,
 			shouldErr:   false,
 		},
 		{
-			name:        "directory mode",
+			name:        "directory mode with verify",
 			installMode: "directory",
+			hasVerify:   true,
 			shouldErr:   false, // Should succeed - just copies directory tree
 		},
 		{
-			name:        "directory_wrapped mode",
+			name:        "directory_wrapped mode with verify",
 			installMode: "directory_wrapped",
+			hasVerify:   true,
 			shouldErr:   true,
 			errContains: "not yet implemented",
 		},
 		{
 			name:        "invalid mode",
 			installMode: "invalid",
+			hasVerify:   false,
 			shouldErr:   true,
 			errContains: "invalid install_mode",
 		},
@@ -301,6 +311,19 @@ func TestInstallBinaries_ModeRouting(t *testing.T) {
 				Context:    context.Background(),
 				WorkDir:    workDir,
 				InstallDir: installDir,
+				Recipe: &recipe.Recipe{
+					Metadata: recipe.MetadataSection{
+						Name: "test-tool",
+					},
+					Verify: recipe.VerifySection{
+						Command: "",
+					},
+				},
+			}
+
+			// Set verification command if test requires it
+			if tt.hasVerify {
+				ctx.Recipe.Verify.Command = "test-tool --version"
 			}
 
 			params := map[string]interface{}{
@@ -323,6 +346,123 @@ func TestInstallBinaries_ModeRouting(t *testing.T) {
 
 			if tt.shouldErr && tt.errContains != "" && !contains(err.Error(), tt.errContains) {
 				t.Errorf("expected error containing %q, got: %v", tt.errContains, err)
+			}
+		})
+	}
+}
+
+// TestInstallBinaries_VerificationEnforcement tests that directory mode requires verification
+// This is the defense-in-depth check that prevents bypassing composite action verification
+func TestInstallBinaries_VerificationEnforcement(t *testing.T) {
+	action := &InstallBinariesAction{}
+
+	tests := []struct {
+		name        string
+		installMode string
+		hasVerify   bool
+		shouldErr   bool
+		errContains string
+	}{
+		{
+			name:        "binaries mode without verify (allowed)",
+			installMode: "binaries",
+			hasVerify:   false,
+			shouldErr:   false,
+		},
+		{
+			name:        "binaries mode with verify (allowed)",
+			installMode: "binaries",
+			hasVerify:   true,
+			shouldErr:   false,
+		},
+		{
+			name:        "directory mode without verify (blocked)",
+			installMode: "directory",
+			hasVerify:   false,
+			shouldErr:   true,
+			errContains: "must include a [verify] section",
+		},
+		{
+			name:        "directory mode with verify (allowed)",
+			installMode: "directory",
+			hasVerify:   true,
+			shouldErr:   false,
+		},
+		{
+			name:        "directory_wrapped mode without verify (blocked)",
+			installMode: "directory_wrapped",
+			hasVerify:   false,
+			shouldErr:   true,
+			errContains: "must include a [verify] section",
+		},
+		{
+			name:        "directory_wrapped mode with verify (blocked by not implemented)",
+			installMode: "directory_wrapped",
+			hasVerify:   true,
+			shouldErr:   true,
+			errContains: "not yet implemented",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			workDir := filepath.Join(tmpDir, "work")
+			installDir := filepath.Join(tmpDir, ".install")
+
+			// Create work directory with mock binary
+			binDir := filepath.Join(workDir, "bin")
+			if err := os.MkdirAll(binDir, 0755); err != nil {
+				t.Fatalf("failed to create bin dir: %v", err)
+			}
+
+			testFile := filepath.Join(binDir, "test")
+			if err := os.WriteFile(testFile, []byte("test"), 0755); err != nil {
+				t.Fatalf("failed to create test file: %v", err)
+			}
+
+			// Create context with recipe
+			ctx := &ExecutionContext{
+				Context:    context.Background(),
+				WorkDir:    workDir,
+				InstallDir: installDir,
+				Recipe: &recipe.Recipe{
+					Metadata: recipe.MetadataSection{
+						Name: "test-tool",
+					},
+					Verify: recipe.VerifySection{
+						Command: "",
+					},
+				},
+			}
+
+			// Set verification command if test requires it
+			if tt.hasVerify {
+				ctx.Recipe.Verify.Command = "test-tool --version"
+			}
+
+			// Create params with install_mode
+			params := map[string]interface{}{
+				"binaries":     []interface{}{"bin/test"},
+				"install_mode": tt.installMode,
+			}
+
+			// Execute action
+			err := action.Execute(ctx, params)
+
+			// Check if error matches expectation
+			if tt.shouldErr && err == nil {
+				t.Errorf("expected error, got nil")
+			}
+
+			if !tt.shouldErr && err != nil {
+				t.Errorf("expected no error, got: %v", err)
+			}
+
+			if tt.shouldErr && tt.errContains != "" {
+				if err == nil || !contains(err.Error(), tt.errContains) {
+					t.Errorf("expected error containing %q, got: %v", tt.errContains, err)
+				}
 			}
 		})
 	}

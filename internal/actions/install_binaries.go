@@ -42,6 +42,14 @@ func (a *InstallBinariesAction) Execute(ctx *ExecutionContext, params map[string
 		installMode = "binaries"
 	}
 
+	// Enforce verification for directory-based installs (defense in depth)
+	// This check also exists in composite actions (github_archive, download_archive),
+	// but we enforce it here to prevent bypass via direct install_binaries usage
+	verifyCmd := strings.TrimSpace(ctx.Recipe.Verify.Command)
+	if (installMode == "directory" || installMode == "directory_wrapped") && verifyCmd == "" {
+		return fmt.Errorf("recipes with install_mode='%s' must include a [verify] section with a command to ensure the installation works correctly", installMode)
+	}
+
 	// Route to appropriate installation method
 	switch installMode {
 	case "binaries":
