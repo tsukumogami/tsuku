@@ -60,12 +60,14 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&NpmSourceStrategy{})         // PriorityKnownRegistry (100) - intercepts source="npm"
 	f.Register(&NixpkgsSourceStrategy{})     // PriorityKnownRegistry (100) - intercepts source="nixpkgs"
 	f.Register(&GoToolchainSourceStrategy{}) // PriorityKnownRegistry (100) - intercepts source="go_toolchain"
+	f.Register(&MetaCPANSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="metacpan"
 	f.Register(&GitHubRepoStrategy{})        // PriorityExplicitHint (90)
 	f.Register(&ExplicitSourceStrategy{})    // PriorityExplicitSource (80) - catch-all for custom sources
 	f.Register(&InferredNpmStrategy{})       // PriorityInferred (10)
 	f.Register(&InferredPyPIStrategy{})      // PriorityInferred (10)
 	f.Register(&InferredCratesIOStrategy{})  // PriorityInferred (10)
 	f.Register(&InferredRubyGemsStrategy{})  // PriorityInferred (10)
+	f.Register(&InferredMetaCPANStrategy{})  // PriorityInferred (10)
 	f.Register(&InferredGitHubStrategy{})    // PriorityInferred (10)
 
 	return f
@@ -418,6 +420,65 @@ func (s *GoToolchainSourceStrategy) CanHandle(r *recipe.Recipe) bool {
 
 func (s *GoToolchainSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
 	return NewGoToolchainProvider(resolver), nil
+}
+
+// MetaCPANSourceStrategy handles recipes with [version] source = "metacpan"
+// This intercepts source="metacpan" to use MetaCPANProvider instead of generic CustomProvider
+type MetaCPANSourceStrategy struct{}
+
+func (s *MetaCPANSourceStrategy) Priority() int { return PriorityKnownRegistry }
+
+func (s *MetaCPANSourceStrategy) CanHandle(r *recipe.Recipe) bool {
+	if r.Version.Source != "metacpan" {
+		return false
+	}
+	// Must have cpan_install action with distribution name
+	for _, step := range r.Steps {
+		if step.Action == "cpan_install" {
+			if _, ok := step.Params["distribution"].(string); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *MetaCPANSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	for _, step := range r.Steps {
+		if step.Action == "cpan_install" {
+			if dist, ok := step.Params["distribution"].(string); ok {
+				return NewMetaCPANProvider(resolver, dist), nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no distribution found in cpan_install steps")
+}
+
+// InferredMetaCPANStrategy infers MetaCPAN from cpan_install action
+type InferredMetaCPANStrategy struct{}
+
+func (s *InferredMetaCPANStrategy) Priority() int { return PriorityInferred } // Low priority
+
+func (s *InferredMetaCPANStrategy) CanHandle(r *recipe.Recipe) bool {
+	for _, step := range r.Steps {
+		if step.Action == "cpan_install" {
+			if _, ok := step.Params["distribution"].(string); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *InferredMetaCPANStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	for _, step := range r.Steps {
+		if step.Action == "cpan_install" {
+			if dist, ok := step.Params["distribution"].(string); ok {
+				return NewMetaCPANProvider(resolver, dist), nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no distribution found in cpan_install steps")
 }
 
 // Pre-compile regex for performance (avoid compiling on every call)
