@@ -36,6 +36,7 @@ type Resolver struct {
 	pypiRegistryURL     string         // PyPI registry URL (injectable for testing)
 	cratesIORegistryURL string         // crates.io registry URL (injectable for testing)
 	rubygemsRegistryURL string         // RubyGems.org registry URL (injectable for testing)
+	goDevURL            string         // go.dev URL (injectable for testing)
 	authenticated       bool           // Whether GitHub requests are authenticated
 }
 
@@ -163,6 +164,7 @@ func New() *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Production default
 		cratesIORegistryURL: "https://crates.io",          // Production default
 		rubygemsRegistryURL: "https://rubygems.org",       // Production default
+		goDevURL:            "https://go.dev",             // Production default
 		authenticated:       authenticated,
 	}
 }
@@ -187,6 +189,7 @@ func NewWithNpmRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",     // Default PyPI
 		cratesIORegistryURL: "https://crates.io",    // Default crates.io
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		goDevURL:            "https://go.dev",       // Default go.dev
 		authenticated:       authenticated,
 	}
 }
@@ -211,6 +214,7 @@ func NewWithPyPIRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     registryURL,
 		cratesIORegistryURL: "https://crates.io",    // Default crates.io
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		goDevURL:            "https://go.dev",       // Default go.dev
 		authenticated:       authenticated,
 	}
 }
@@ -235,6 +239,7 @@ func NewWithCratesIORegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
 		cratesIORegistryURL: registryURL,
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		goDevURL:            "https://go.dev",       // Default go.dev
 		authenticated:       authenticated,
 	}
 }
@@ -259,6 +264,32 @@ func NewWithRubyGemsRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
 		cratesIORegistryURL: "https://crates.io",          // Default crates.io
 		rubygemsRegistryURL: registryURL,
+		goDevURL:            "https://go.dev", // Default go.dev
+		authenticated:       authenticated,
+	}
+}
+
+// NewWithGoDevURL creates a resolver with custom go.dev URL (for testing)
+func NewWithGoDevURL(goDevURL string) *Resolver {
+	var githubHTTPClient *http.Client
+	authenticated := false
+
+	// Check for GitHub token in environment
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
+		authenticated = true
+	}
+
+	return &Resolver{
+		client:              github.NewClient(githubHTTPClient),
+		httpClient:          NewHTTPClient(),
+		registry:            NewRegistry(),
+		npmRegistryURL:      "https://registry.npmjs.org", // Default npm
+		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
+		cratesIORegistryURL: "https://crates.io",          // Default crates.io
+		rubygemsRegistryURL: "https://rubygems.org",       // Default RubyGems
+		goDevURL:            goDevURL,
 		authenticated:       authenticated,
 	}
 }
@@ -822,6 +853,157 @@ func (r *Resolver) ResolveNodeJS(ctx context.Context) (*VersionInfo, error) {
 	}
 
 	return nil, fmt.Errorf("no Node.js versions found")
+}
+
+// Go toolchain API response structure
+type goRelease struct {
+	Version string `json:"version"` // e.g., "go1.23.4"
+	Stable  bool   `json:"stable"`
+}
+
+const (
+	// Max response size for go.dev/dl API (10MB should be plenty)
+	maxGoToolchainResponseSize = 10 * 1024 * 1024
+)
+
+// ResolveGoToolchain fetches the latest stable Go version from go.dev/dl
+//
+// API: https://go.dev/dl/?mode=json
+// Returns: Latest stable version without "go" prefix (e.g., "1.23.4")
+func (r *Resolver) ResolveGoToolchain(ctx context.Context) (*VersionInfo, error) {
+	goDevURL := r.goDevURL
+	if goDevURL == "" {
+		goDevURL = "https://go.dev" // Default if not set
+	}
+	apiURL := goDevURL + "/dl/?mode=json"
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "go_toolchain",
+			Message: "failed to create request",
+			Err:     err,
+		}
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, WrapNetworkError(err, "go_toolchain", "failed to fetch Go releases")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "go_toolchain",
+			Message: fmt.Sprintf("go.dev returned status %d", resp.StatusCode),
+		}
+	}
+
+	// Limit response size to prevent memory exhaustion
+	limitedReader := io.LimitReader(resp.Body, maxGoToolchainResponseSize)
+
+	var releases []goRelease
+	if err := json.NewDecoder(limitedReader).Decode(&releases); err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeParsing,
+			Source:  "go_toolchain",
+			Message: "failed to parse go.dev response",
+			Err:     err,
+		}
+	}
+
+	// Find the first stable release (list is ordered newest first)
+	for _, release := range releases {
+		if release.Stable {
+			version := normalizeGoToolchainVersion(release.Version)
+			if version == "" {
+				continue
+			}
+			return &VersionInfo{
+				Tag:     version, // Go toolchain uses version without "v" prefix
+				Version: version,
+			}, nil
+		}
+	}
+
+	return nil, &ResolverError{
+		Type:    ErrTypeNotFound,
+		Source:  "go_toolchain",
+		Message: "no stable Go releases found",
+	}
+}
+
+// ListGoToolchainVersions fetches all available stable Go versions from go.dev/dl
+//
+// Returns: Sorted list (newest first) of all stable versions without "go" prefix
+func (r *Resolver) ListGoToolchainVersions(ctx context.Context) ([]string, error) {
+	goDevURL := r.goDevURL
+	if goDevURL == "" {
+		goDevURL = "https://go.dev" // Default if not set
+	}
+	apiURL := goDevURL + "/dl/?mode=json"
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "go_toolchain",
+			Message: "failed to create request",
+			Err:     err,
+		}
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, WrapNetworkError(err, "go_toolchain", "failed to fetch Go releases")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "go_toolchain",
+			Message: fmt.Sprintf("go.dev returned status %d", resp.StatusCode),
+		}
+	}
+
+	// Limit response size to prevent memory exhaustion
+	limitedReader := io.LimitReader(resp.Body, maxGoToolchainResponseSize)
+
+	var releases []goRelease
+	if err := json.NewDecoder(limitedReader).Decode(&releases); err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeParsing,
+			Source:  "go_toolchain",
+			Message: "failed to parse go.dev response",
+			Err:     err,
+		}
+	}
+
+	// Extract stable versions (API returns them in newest-first order)
+	var versions []string
+	for _, release := range releases {
+		if release.Stable {
+			version := normalizeGoToolchainVersion(release.Version)
+			if version != "" {
+				versions = append(versions, version)
+			}
+		}
+	}
+
+	return versions, nil
+}
+
+// normalizeGoToolchainVersion strips the "go" prefix from Go version strings
+// e.g., "go1.23.4" -> "1.23.4"
+func normalizeGoToolchainVersion(version string) string {
+	return strings.TrimPrefix(version, "go")
 }
 
 // ResolveCustom resolves a version using a custom source from the registry
