@@ -55,7 +55,7 @@ jobs:
       - name: "Install ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install ${{ matrix.test.tool }}
+        run: ./tsuku install --force ${{ matrix.test.tool }}
 
   integration-macos:
     name: "macOS: ${{ matrix.test.tool }}"
@@ -84,4 +84,4 @@ jobs:
       - name: "Install ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install ${{ matrix.test.tool }}
+        run: ./tsuku install --force ${{ matrix.test.tool }}

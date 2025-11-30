@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -15,6 +16,7 @@ import (
 )
 
 var installDryRun bool
+var installForce bool
 
 var installCmd = &cobra.Command{
 	Use:   "install <tool>...",
@@ -67,6 +69,28 @@ Examples:
 
 func init() {
 	installCmd.Flags().BoolVar(&installDryRun, "dry-run", false, "Show what would be installed without making changes")
+	installCmd.Flags().BoolVar(&installForce, "force", false, "Skip security warnings and proceed without prompts")
+}
+
+// isInteractive returns true if stdin is connected to a terminal
+func isInteractive() bool {
+	fileInfo, err := os.Stdin.Stat()
+	if err != nil {
+		return false
+	}
+	return (fileInfo.Mode() & os.ModeCharDevice) != 0
+}
+
+// confirmInstall prompts the user for confirmation and returns true if they agree
+func confirmInstall() bool {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Fprint(os.Stderr, "Continue installation? [y/N] ")
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return false
+	}
+	response = strings.TrimSpace(strings.ToLower(response))
+	return response == "y" || response == "yes"
 }
 
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
@@ -199,6 +223,23 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		fmt.Fprintf(os.Stderr, "  tsuku create %s --from <ecosystem>\n", toolName)
 		fmt.Fprintf(os.Stderr, "\nAvailable ecosystems: crates.io, rubygems, pypi, npm\n")
 		return err
+	}
+
+	// Check for checksum verification (only warn for explicit installs)
+	if isExplicit && !r.HasChecksumVerification() {
+		fmt.Fprintf(os.Stderr, "Warning: Recipe '%s' does not include checksum verification.\n", toolName)
+		fmt.Fprintf(os.Stderr, "The downloaded binary cannot be verified for integrity.\n")
+
+		if !installForce {
+			if isInteractive() {
+				if !confirmInstall() {
+					return fmt.Errorf("installation canceled by user")
+				}
+			} else {
+				fmt.Fprintf(os.Stderr, "Use --force to proceed without verification.\n")
+				return fmt.Errorf("checksum verification required (use --force to override)")
+			}
+		}
 	}
 
 	// Check and install dependencies

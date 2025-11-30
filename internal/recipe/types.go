@@ -224,3 +224,35 @@ func (r *Recipe) ExtractBinaries() []string {
 
 	return binaries
 }
+
+// HasChecksumVerification returns true if any download step includes checksum verification.
+// This checks for the presence of "checksum" or "checksum_url" parameters in download-related actions.
+func (r *Recipe) HasChecksumVerification() bool {
+	// Actions that download external files and can verify checksums
+	downloadActions := map[string]bool{
+		"download":          true,
+		"download_archive":  true,
+		"github_archive":    true,
+		"github_file":       true,
+		"hashicorp_release": true,
+	}
+
+	hasDownloadStep := false
+	for _, step := range r.Steps {
+		if !downloadActions[step.Action] {
+			continue
+		}
+		hasDownloadStep = true
+
+		// Check for checksum parameters
+		if _, hasChecksum := step.Params["checksum"]; hasChecksum {
+			return true
+		}
+		if _, hasChecksumURL := step.Params["checksum_url"]; hasChecksumURL {
+			return true
+		}
+	}
+
+	// If there are no download steps, consider it "verified" (nothing to verify)
+	return !hasDownloadStep
+}

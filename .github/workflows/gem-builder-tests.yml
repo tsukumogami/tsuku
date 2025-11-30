@@ -61,7 +61,7 @@ jobs:
       - name: Install bundler using generated recipe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install bundler
+        run: ./tsuku install --force bundler
 
       - name: Verify bundler works
         run: bundler --version
@@ -106,7 +106,7 @@ jobs:
       - name: Install bundler using generated recipe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install bundler
+        run: ./tsuku install --force bundler
 
       - name: Verify bundler works
         run: bundler --version

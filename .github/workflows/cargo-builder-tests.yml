@@ -59,7 +59,7 @@ jobs:
       - name: Install hyperfine using generated recipe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install hyperfine
+        run: ./tsuku install --force hyperfine
 
       - name: Verify hyperfine works
         run: hyperfine --version
@@ -102,7 +102,7 @@ jobs:
       - name: Install hyperfine using generated recipe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install hyperfine
+        run: ./tsuku install --force hyperfine
 
       - name: Verify hyperfine works
         run: hyperfine --version
