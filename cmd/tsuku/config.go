@@ -38,7 +38,7 @@ Available keys:
 		cfg, err := userconfig.Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		value, ok := cfg.Get(key)
@@ -46,7 +46,7 @@ Available keys:
 			fmt.Fprintf(os.Stderr, "Unknown config key: %s\n", key)
 			fmt.Fprintf(os.Stderr, "\nAvailable keys:\n")
 			printAvailableKeys()
-			os.Exit(1)
+			exitWithCode(ExitUsage)
 		}
 
 		fmt.Println(value)
@@ -72,19 +72,19 @@ Examples:
 		cfg, err := userconfig.Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		if err := cfg.Set(key, value); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			fmt.Fprintf(os.Stderr, "\nAvailable keys:\n")
 			printAvailableKeys()
-			os.Exit(1)
+			exitWithCode(ExitUsage)
 		}
 
 		if err := cfg.Save(); err != nil {
 			fmt.Fprintf(os.Stderr, "Error saving config: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		fmt.Printf("%s = %s\n", key, value)

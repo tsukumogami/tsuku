@@ -76,7 +76,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Check toolchain availability before making API calls
 	if err := toolchain.CheckAvailable(ecosystem); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		os.Exit(1)
+		exitWithCode(ExitDependencyFailed)
 	}
 
 	// Initialize builder registry
@@ -94,7 +94,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 		for _, name := range builderRegistry.List() {
 			fmt.Fprintf(os.Stderr, "  %s\n", name)
 		}
-		os.Exit(1)
+		exitWithCode(ExitUsage)
 	}
 
 	ctx := context.Background()
@@ -103,11 +103,11 @@ func runCreate(cmd *cobra.Command, args []string) {
 	canBuild, err := builder.CanBuild(ctx, toolName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error checking package: %v\n", err)
-		os.Exit(1)
+		exitWithCode(ExitNetwork)
 	}
 	if !canBuild {
 		fmt.Fprintf(os.Stderr, "Error: package '%s' not found in %s\n", toolName, ecosystem)
-		os.Exit(1)
+		exitWithCode(ExitRecipeNotFound)
 	}
 
 	// Build the recipe
@@ -115,7 +115,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	result, err := builder.Build(ctx, toolName, "")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)
-		os.Exit(1)
+		exitWithCode(ExitGeneral)
 	}
 
 	// Show warnings
@@ -127,7 +127,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	cfg, err := config.DefaultConfig()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
-		os.Exit(1)
+		exitWithCode(ExitGeneral)
 	}
 
 	recipePath := filepath.Join(cfg.RecipesDir, toolName+".toml")
@@ -136,13 +136,13 @@ func runCreate(cmd *cobra.Command, args []string) {
 	if _, err := os.Stat(recipePath); err == nil && !createForce {
 		fmt.Fprintf(os.Stderr, "Error: recipe already exists at %s\n", recipePath)
 		fmt.Fprintf(os.Stderr, "Use --force to overwrite\n")
-		os.Exit(1)
+		exitWithCode(ExitGeneral)
 	}
 
 	// Write the recipe
 	if err := recipe.WriteRecipe(result.Recipe, recipePath); err != nil {
 		fmt.Fprintf(os.Stderr, "Error writing recipe: %v\n", err)
-		os.Exit(1)
+		exitWithCode(ExitGeneral)
 	}
 
 	printInfof("\nRecipe created: %s\n", recipePath)

@@ -21,14 +21,14 @@ var outdatedCmd = &cobra.Command{
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		mgr := install.New(cfg)
 		tools, err := mgr.List()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error listing tools: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		if len(tools) == 0 {

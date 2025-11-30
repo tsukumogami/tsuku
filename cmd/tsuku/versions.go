@@ -22,7 +22,7 @@ var versionsCmd = &cobra.Command{
 		r, err := loader.Get(toolName)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitRecipeNotFound)
 		}
 
 		// Create version provider using factory
@@ -31,7 +31,7 @@ var versionsCmd = &cobra.Command{
 		provider, err := factory.ProviderFromRecipe(res, r)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		// Check if provider can list versions (Interface Segregation Principle)
@@ -40,7 +40,7 @@ var versionsCmd = &cobra.Command{
 			fmt.Fprintf(os.Stderr, "Version listing not supported for %s (%s)\n",
 				toolName, provider.SourceDescription())
 			fmt.Fprintln(os.Stderr, "This source can resolve specific versions but cannot enumerate all versions.")
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		// List versions
@@ -52,7 +52,7 @@ var versionsCmd = &cobra.Command{
 		versions, err := lister.ListVersions(ctx)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to list versions: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitNetwork)
 		}
 
 		// JSON output mode

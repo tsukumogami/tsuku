@@ -24,7 +24,7 @@ automatic cache expiration.`,
 		printInfo("Clearing recipe cache...")
 		if err := reg.ClearCache(); err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to clear cache: %v\n", err)
-			os.Exit(1)
+			exitWithCode(ExitGeneral)
 		}
 
 		// Also clear in-memory cache
