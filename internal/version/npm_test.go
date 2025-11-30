@@ -253,5 +253,33 @@ func TestListNpmVersions_ScopedPackage(t *testing.T) {
 	}
 }
 
+// TestResolveNpm_InvalidPackageName tests defense-in-depth validation in ResolveNpm
+func TestResolveNpm_InvalidPackageName(t *testing.T) {
+	r := New()
+	ctx := context.Background()
+
+	invalidNames := []string{
+		"",
+		"InvalidName",            // Uppercase
+		strings.Repeat("a", 215), // Too long
+		"my package",             // Spaces
+		"my@package",             // Invalid chars
+		"--evil-flag",            // Command injection attempt
+		"../../../etc/passwd",    // Path traversal attempt
+	}
+
+	for _, name := range invalidNames {
+		t.Run(name, func(t *testing.T) {
+			_, err := r.ResolveNpm(ctx, name)
+			if err == nil {
+				t.Errorf("ResolveNpm(%q) expected error for invalid name, got nil", name)
+			}
+			if !strings.Contains(err.Error(), "invalid npm package name") {
+				t.Errorf("ResolveNpm(%q) error = %v, want 'invalid npm package name'", name, err)
+			}
+		})
+	}
+}
+
 // Note: All npm tests now use NewWithNpmRegistry() to inject a test server URL,
 // allowing comprehensive testing without hitting the real npm registry.

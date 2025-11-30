@@ -721,6 +721,11 @@ func compareVersions(v1, v2 string) int {
 
 // ResolveNpm resolves the latest version from npm registry
 func (r *Resolver) ResolveNpm(ctx context.Context, packageName string) (*VersionInfo, error) {
+	// Defense-in-depth: Validate package name before URL construction
+	if !isValidNpmPackageName(packageName) {
+		return nil, fmt.Errorf("invalid npm package name: %s", packageName)
+	}
+
 	url := fmt.Sprintf("https://registry.npmjs.org/%s/latest", packageName)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
