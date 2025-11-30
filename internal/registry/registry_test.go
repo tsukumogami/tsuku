@@ -259,3 +259,68 @@ func TestGetCached_EmptyName(t *testing.T) {
 		t.Error("GetCached should return nil data for empty name")
 	}
 }
+
+func TestListCached(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Initially empty
+	names, err := reg.ListCached()
+	if err != nil {
+		t.Fatalf("ListCached() failed: %v", err)
+	}
+	if len(names) != 0 {
+		t.Errorf("ListCached() returned %d names, want 0", len(names))
+	}
+
+	// Add some recipes
+	_ = reg.CacheRecipe("tool-a", []byte("content a"))
+	_ = reg.CacheRecipe("tool-b", []byte("content b"))
+
+	// List again
+	names, err = reg.ListCached()
+	if err != nil {
+		t.Fatalf("ListCached() failed: %v", err)
+	}
+	if len(names) != 2 {
+		t.Errorf("ListCached() returned %d names, want 2", len(names))
+	}
+
+	// Verify names
+	foundA, foundB := false, false
+	for _, n := range names {
+		if n == "tool-a" {
+			foundA = true
+		}
+		if n == "tool-b" {
+			foundB = true
+		}
+	}
+	if !foundA || !foundB {
+		t.Errorf("ListCached() returned %v, expected tool-a and tool-b", names)
+	}
+}
+
+func TestListCached_EmptyCacheDir(t *testing.T) {
+	reg := &Registry{CacheDir: ""}
+
+	names, err := reg.ListCached()
+	if err != nil {
+		t.Fatalf("ListCached() failed: %v", err)
+	}
+	if len(names) != 0 {
+		t.Errorf("ListCached() should return empty for empty cache dir")
+	}
+}
+
+func TestListCached_NonExistentDir(t *testing.T) {
+	reg := New("/non/existent/path")
+
+	names, err := reg.ListCached()
+	if err != nil {
+		t.Fatalf("ListCached() should not fail for non-existent dir: %v", err)
+	}
+	if len(names) != 0 {
+		t.Errorf("ListCached() should return empty for non-existent dir")
+	}
+}

@@ -183,7 +183,11 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	r, err := loader.Get(toolName)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		fmt.Fprintf(os.Stderr, "Run 'tsuku recipes' to see available recipes\n")
+		fmt.Fprintf(os.Stderr, "\nTo see available recipes:\n")
+		fmt.Fprintf(os.Stderr, "  tsuku recipes\n")
+		fmt.Fprintf(os.Stderr, "\nTo create a recipe from a package ecosystem:\n")
+		fmt.Fprintf(os.Stderr, "  tsuku create %s --from <ecosystem>\n", toolName)
+		fmt.Fprintf(os.Stderr, "\nAvailable ecosystems: crates.io, rubygems, pypi, npm\n")
 		return err
 	}
 
