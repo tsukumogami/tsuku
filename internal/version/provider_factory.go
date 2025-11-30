@@ -57,6 +57,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&PyPISourceStrategy{})       // PriorityKnownRegistry (100) - intercepts source="pypi"
 	f.Register(&CratesIOSourceStrategy{})   // PriorityKnownRegistry (100) - intercepts source="crates_io"
 	f.Register(&RubyGemsSourceStrategy{})   // PriorityKnownRegistry (100) - intercepts source="rubygems"
+	f.Register(&NpmSourceStrategy{})        // PriorityKnownRegistry (100) - intercepts source="npm"
 	f.Register(&NixpkgsSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="nixpkgs"
 	f.Register(&GitHubRepoStrategy{})       // PriorityExplicitHint (90)
 	f.Register(&ExplicitSourceStrategy{})   // PriorityExplicitSource (80) - catch-all for custom sources
@@ -356,6 +357,38 @@ func (s *InferredRubyGemsStrategy) Create(resolver *Resolver, r *recipe.Recipe) 
 		}
 	}
 	return nil, fmt.Errorf("no gem found in gem_install steps")
+}
+
+// NpmSourceStrategy handles recipes with [version] source = "npm"
+// This intercepts source="npm" to use NpmProvider instead of generic CustomProvider
+type NpmSourceStrategy struct{}
+
+func (s *NpmSourceStrategy) Priority() int { return PriorityKnownRegistry }
+
+func (s *NpmSourceStrategy) CanHandle(r *recipe.Recipe) bool {
+	if r.Version.Source != "npm" {
+		return false
+	}
+	// Must have npm_install action with package name
+	for _, step := range r.Steps {
+		if step.Action == "npm_install" {
+			if _, ok := step.Params["package"].(string); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *NpmSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	for _, step := range r.Steps {
+		if step.Action == "npm_install" {
+			if pkg, ok := step.Params["package"].(string); ok {
+				return NewNpmProvider(resolver, pkg), nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no npm package found in npm_install steps")
 }
 
 // NixpkgsSourceStrategy handles recipes with [version] source = "nixpkgs"
