@@ -8,7 +8,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
+
+	"github.com/tsuku-dev/tsuku/internal/config"
 )
 
 const (
@@ -17,9 +18,6 @@ const (
 
 	// EnvRegistryURL is the environment variable to override the registry URL
 	EnvRegistryURL = "TSUKU_REGISTRY_URL"
-
-	// fetchTimeout is the timeout for fetching a single recipe
-	fetchTimeout = 30 * time.Second
 )
 
 // Registry handles fetching recipes from the remote registry
@@ -40,7 +38,7 @@ func New(cacheDir string) *Registry {
 		BaseURL:  baseURL,
 		CacheDir: cacheDir,
 		client: &http.Client{
-			Timeout: fetchTimeout,
+			Timeout: config.GetAPITimeout(),
 		},
 	}
 }

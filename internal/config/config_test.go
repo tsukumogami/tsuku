@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -149,5 +150,79 @@ func TestDefaultConfig_EmptyTsukuHome(t *testing.T) {
 
 	if cfg.HomeDir != expectedHome {
 		t.Errorf("HomeDir = %q, want %q", cfg.HomeDir, expectedHome)
+	}
+}
+
+func TestGetAPITimeout_Default(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvAPITimeout)
+	defer os.Setenv(EnvAPITimeout, original)
+
+	// Ensure env var is not set
+	_ = os.Unsetenv(EnvAPITimeout)
+
+	timeout := GetAPITimeout()
+	if timeout != DefaultAPITimeout {
+		t.Errorf("GetAPITimeout() = %v, want %v", timeout, DefaultAPITimeout)
+	}
+}
+
+func TestGetAPITimeout_CustomValue(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvAPITimeout)
+	defer os.Setenv(EnvAPITimeout, original)
+
+	// Set custom timeout
+	os.Setenv(EnvAPITimeout, "45s")
+
+	timeout := GetAPITimeout()
+	expected := 45 * time.Second
+	if timeout != expected {
+		t.Errorf("GetAPITimeout() = %v, want %v", timeout, expected)
+	}
+}
+
+func TestGetAPITimeout_InvalidValue(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvAPITimeout)
+	defer os.Setenv(EnvAPITimeout, original)
+
+	// Set invalid value
+	os.Setenv(EnvAPITimeout, "invalid")
+
+	timeout := GetAPITimeout()
+	// Should return default on invalid input
+	if timeout != DefaultAPITimeout {
+		t.Errorf("GetAPITimeout() = %v, want %v (default)", timeout, DefaultAPITimeout)
+	}
+}
+
+func TestGetAPITimeout_TooLow(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvAPITimeout)
+	defer os.Setenv(EnvAPITimeout, original)
+
+	// Set too low value
+	os.Setenv(EnvAPITimeout, "100ms")
+
+	timeout := GetAPITimeout()
+	// Should return minimum 1s
+	if timeout != 1*time.Second {
+		t.Errorf("GetAPITimeout() = %v, want 1s (minimum)", timeout)
+	}
+}
+
+func TestGetAPITimeout_TooHigh(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvAPITimeout)
+	defer os.Setenv(EnvAPITimeout, original)
+
+	// Set too high value
+	os.Setenv(EnvAPITimeout, "1h")
+
+	timeout := GetAPITimeout()
+	// Should return maximum 10m
+	if timeout != 10*time.Minute {
+		t.Errorf("GetAPITimeout() = %v, want 10m (maximum)", timeout)
 	}
 }

@@ -4,12 +4,51 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const (
 	// EnvTsukuHome is the environment variable to override the default tsuku home directory
 	EnvTsukuHome = "TSUKU_HOME"
+
+	// EnvAPITimeout is the environment variable to configure API request timeout
+	EnvAPITimeout = "TSUKU_API_TIMEOUT"
+
+	// DefaultAPITimeout is the default timeout for API requests (30 seconds)
+	DefaultAPITimeout = 30 * time.Second
 )
+
+// GetAPITimeout returns the configured API timeout from TSUKU_API_TIMEOUT environment variable.
+// If not set or invalid, returns DefaultAPITimeout (30 seconds).
+// Accepts duration strings like "30s", "1m", "2m30s".
+func GetAPITimeout() time.Duration {
+	envValue := os.Getenv(EnvAPITimeout)
+	if envValue == "" {
+		return DefaultAPITimeout
+	}
+
+	duration, err := time.ParseDuration(envValue)
+	if err != nil {
+		// Invalid duration format, use default
+		fmt.Fprintf(os.Stderr, "Warning: invalid %s value %q, using default %v\n",
+			EnvAPITimeout, envValue, DefaultAPITimeout)
+		return DefaultAPITimeout
+	}
+
+	// Validate reasonable range (1 second to 10 minutes)
+	if duration < 1*time.Second {
+		fmt.Fprintf(os.Stderr, "Warning: %s too low (%v), using minimum 1s\n",
+			EnvAPITimeout, duration)
+		return 1 * time.Second
+	}
+	if duration > 10*time.Minute {
+		fmt.Fprintf(os.Stderr, "Warning: %s too high (%v), using maximum 10m\n",
+			EnvAPITimeout, duration)
+		return 10 * time.Minute
+	}
+
+	return duration
+}
 
 // Config holds tsuku configuration
 type Config struct {

@@ -17,6 +17,8 @@ import (
 
 	"github.com/google/go-github/v57/github"
 	"golang.org/x/oauth2"
+
+	"github.com/tsuku-dev/tsuku/internal/config"
 )
 
 // VersionInfo contains both the original tag and normalized version
@@ -37,10 +39,11 @@ type Resolver struct {
 	authenticated       bool           // Whether GitHub requests are authenticated
 }
 
-// newHTTPClient creates an HTTP client with security hardening and proper timeouts
+// newHTTPClient creates an HTTP client with security hardening and proper timeouts.
+// The timeout is configurable via TSUKU_API_TIMEOUT environment variable (default: 30s).
 func newHTTPClient() *http.Client {
 	return &http.Client{
-		Timeout: 60 * time.Second,
+		Timeout: config.GetAPITimeout(),
 		Transport: &http.Transport{
 			DisableCompression: true, // CRITICAL: Prevents decompression bomb attacks
 			DialContext: (&net.Dialer{
