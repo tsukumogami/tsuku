@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"net/url"
 	"strings"
 	"testing"
 )
@@ -244,6 +245,69 @@ func TestClassifyError(t *testing.T) {
 			wantType: ErrTypeTimeout,
 		},
 		{
+			name: "net.OpError timeout",
+			err: &net.OpError{
+				Op:  "read",
+				Net: "tcp",
+				Err: &timeoutError{},
+			},
+			wantType: ErrTypeTimeout,
+		},
+		{
+			name: "net.OpError connection refused",
+			err: &net.OpError{
+				Op:  "dial",
+				Net: "tcp",
+				Err: errors.New("connection refused"),
+			},
+			wantType: ErrTypeConnection,
+		},
+		{
+			name: "net.OpError with nested DNS error",
+			err: &net.OpError{
+				Op:  "dial",
+				Net: "tcp",
+				Err: &net.DNSError{Err: "no such host", Name: "example.com"},
+			},
+			wantType: ErrTypeDNS,
+		},
+		{
+			name: "url.Error with timeout",
+			err: &url.Error{
+				Op:  "Get",
+				URL: "https://example.com",
+				Err: &timeoutError{},
+			},
+			wantType: ErrTypeTimeout,
+		},
+		{
+			name: "url.Error with certificate error",
+			err: &url.Error{
+				Op:  "Get",
+				URL: "https://example.com",
+				Err: errors.New("x509: certificate has expired"),
+			},
+			wantType: ErrTypeTLS,
+		},
+		{
+			name: "url.Error with tls error",
+			err: &url.Error{
+				Op:  "Get",
+				URL: "https://example.com",
+				Err: errors.New("tls: handshake failure"),
+			},
+			wantType: ErrTypeTLS,
+		},
+		{
+			name: "url.Error with generic error",
+			err: &url.Error{
+				Op:  "Get",
+				URL: "https://example.com",
+				Err: errors.New("connection reset"),
+			},
+			wantType: ErrTypeNetwork,
+		},
+		{
 			name:     "generic error",
 			err:      errors.New("something went wrong"),
 			wantType: ErrTypeNetwork,
@@ -259,3 +323,10 @@ func TestClassifyError(t *testing.T) {
 		})
 	}
 }
+
+// timeoutError is a helper for testing timeout detection
+type timeoutError struct{}
+
+func (e *timeoutError) Error() string   { return "timeout" }
+func (e *timeoutError) Timeout() bool   { return true }
+func (e *timeoutError) Temporary() bool { return true }
