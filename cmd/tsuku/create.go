@@ -111,7 +111,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Build the recipe
-	fmt.Printf("Creating recipe for %s from %s...\n", toolName, ecosystem)
+	printInfof("Creating recipe for %s from %s...\n", toolName, ecosystem)
 	result, err := builder.Build(ctx, toolName, "")
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)
@@ -120,7 +120,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Show warnings
 	for _, warning := range result.Warnings {
-		fmt.Printf("Warning: %s\n", warning)
+		printInfof("Warning: %s\n", warning)
 	}
 
 	// Get recipes directory
@@ -145,9 +145,9 @@ func runCreate(cmd *cobra.Command, args []string) {
 		os.Exit(1)
 	}
 
-	fmt.Printf("\nRecipe created: %s\n", recipePath)
-	fmt.Printf("Source: %s\n", result.Source)
-	fmt.Println()
-	fmt.Printf("To install, run:\n")
-	fmt.Printf("  tsuku install %s\n", toolName)
+	printInfof("\nRecipe created: %s\n", recipePath)
+	printInfof("Source: %s\n", result.Source)
+	printInfo()
+	printInfo("To install, run:")
+	printInfof("  tsuku install %s\n", toolName)
 }

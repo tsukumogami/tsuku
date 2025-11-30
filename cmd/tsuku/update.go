@@ -58,7 +58,7 @@ Examples:
 		}
 
 		if updateDryRun {
-			fmt.Printf("Checking updates for %s...\n", toolName)
+			printInfof("Checking updates for %s...\n", toolName)
 			if err := runDryRun(toolName, ""); err != nil {
 				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 				os.Exit(1)
@@ -66,7 +66,7 @@ Examples:
 			return
 		}
 
-		fmt.Printf("Updating %s...\n", toolName)
+		printInfof("Updating %s...\n", toolName)
 		if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
 			os.Exit(1)
 		}

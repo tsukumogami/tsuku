@@ -38,14 +38,14 @@ var listCmd = &cobra.Command{
 		}
 
 		if len(tools) == 0 {
-			fmt.Println("No tools installed.")
+			printInfo("No tools installed.")
 			return
 		}
 
 		if showSystemDeps {
-			fmt.Printf("Installed tools (%d total, including system dependencies):\n\n", len(tools))
+			printInfof("Installed tools (%d total, including system dependencies):\n\n", len(tools))
 		} else {
-			fmt.Printf("Installed tools (%d total):\n\n", len(tools))
+			printInfof("Installed tools (%d total):\n\n", len(tools))
 		}
 
 		// Load state to show system dependency indicator
@@ -64,7 +64,7 @@ var listCmd = &cobra.Command{
 		}
 
 		if showSystemDeps {
-			fmt.Println("\n* System dependency (installed by tsuku for internal use)")
+			printInfo("\n* System dependency (installed by tsuku for internal use)")
 		}
 	},
 }
