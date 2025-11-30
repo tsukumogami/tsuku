@@ -289,3 +289,102 @@ func expandVars(s string, vars map[string]string) string {
 	}
 	return result
 }
+
+// DryRun shows what would be done without actually executing
+func (e *Executor) DryRun(ctx context.Context) error {
+	// Create version resolver
+	resolver := version.New()
+
+	// Resolve version from recipe steps
+	versionInfo, err := e.resolveVersionWith(ctx, resolver)
+	if err != nil {
+		return fmt.Errorf("version resolution failed: %w", err)
+	}
+
+	// Store version
+	e.version = versionInfo.Version
+
+	// Print dry-run header
+	fmt.Printf("Would install: %s@%s\n", e.recipe.Metadata.Name, versionInfo.Version)
+
+	// Print dependencies
+	if len(e.recipe.Metadata.Dependencies) > 0 {
+		fmt.Printf("  Dependencies: %s\n", strings.Join(e.recipe.Metadata.Dependencies, ", "))
+	} else {
+		fmt.Printf("  Dependencies: (none)\n")
+	}
+
+	// Print actions
+	fmt.Printf("  Actions:\n")
+
+	// Build variable map for expansion
+	vars := actions.GetStandardVars(versionInfo.Version, "", "")
+
+	stepNum := 0
+	for _, step := range e.recipe.Steps {
+		// Check conditional execution
+		if !e.shouldExecute(step.When) {
+			continue
+		}
+
+		stepNum++
+		actionDesc := formatActionDescription(step.Action, step.Params, vars)
+		fmt.Printf("    %d. %s: %s\n", stepNum, step.Action, actionDesc)
+	}
+
+	// Print verification command
+	if e.recipe.Verify.Command != "" {
+		fmt.Printf("  Verification: %s\n", e.recipe.Verify.Command)
+	}
+
+	return nil
+}
+
+// formatActionDescription formats action parameters for dry-run display
+func formatActionDescription(action string, params map[string]interface{}, vars map[string]string) string {
+	switch action {
+	case "download":
+		if url, ok := params["url"].(string); ok {
+			return actions.ExpandVars(url, vars)
+		}
+	case "extract":
+		if src, ok := params["src"].(string); ok {
+			return actions.ExpandVars(src, vars)
+		}
+	case "install_binaries":
+		if bins, ok := params["binaries"].([]interface{}); ok {
+			names := make([]string, len(bins))
+			for i, b := range bins {
+				if name, ok := b.(string); ok {
+					names[i] = name
+				} else if m, ok := b.(map[string]interface{}); ok {
+					if name, ok := m["name"].(string); ok {
+						names[i] = name
+					}
+				}
+			}
+			return strings.Join(names, ", ")
+		}
+	case "chmod":
+		if file, ok := params["file"].(string); ok {
+			mode := "755"
+			if m, ok := params["mode"].(string); ok {
+				mode = m
+			}
+			return fmt.Sprintf("%s (mode %s)", actions.ExpandVars(file, vars), mode)
+		}
+	case "cargo_install", "npm_install", "pipx_install", "gem_install":
+		if pkg, ok := params["package"].(string); ok {
+			return pkg
+		}
+	case "run_command":
+		if cmd, ok := params["command"].(string); ok {
+			expanded := actions.ExpandVars(cmd, vars)
+			if len(expanded) > 60 {
+				return expanded[:57] + "..."
+			}
+			return expanded
+		}
+	}
+	return ""
+}

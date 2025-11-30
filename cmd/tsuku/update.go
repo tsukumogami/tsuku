@@ -10,6 +10,8 @@ import (
 	"github.com/tsuku-dev/tsuku/internal/telemetry"
 )
 
+var updateDryRun bool
+
 var updateCmd = &cobra.Command{
 	Use:   "update <tool>",
 	Short: "Update a tool to the latest version",
@@ -55,6 +57,15 @@ Examples:
 			os.Exit(1)
 		}
 
+		if updateDryRun {
+			fmt.Printf("Checking updates for %s...\n", toolName)
+			if err := runDryRun(toolName, ""); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				os.Exit(1)
+			}
+			return
+		}
+
 		fmt.Printf("Updating %s...\n", toolName)
 		if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
 			os.Exit(1)
@@ -76,4 +87,8 @@ Examples:
 			telemetryClient.Send(event)
 		}
 	},
+}
+
+func init() {
+	updateCmd.Flags().BoolVar(&updateDryRun, "dry-run", false, "Show what would be updated without making changes")
 }
