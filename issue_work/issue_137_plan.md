@@ -14,9 +14,9 @@ Currently only `IsLinkLocalMulticast()` is checked, which covers a subset (224.0
 
 ## Implementation Steps
 
-- [ ] Add `IsMulticast()` check to `validateIP()` function in resolver.go
-- [ ] Add test case for multicast addresses in security_test.go
-- [ ] Run tests to verify no regressions
+- [x] Add `IsMulticast()` check to `validateIP()` function in resolver.go
+- [x] Add test case for multicast addresses in security_test.go
+- [x] Run tests to verify no regressions
 
 ## Files to Modify
 

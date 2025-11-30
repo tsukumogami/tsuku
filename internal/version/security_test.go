@@ -319,6 +319,43 @@ func TestValidateIP_UnspecifiedAddress(t *testing.T) {
 	}
 }
 
+// TestValidateIP_Multicast tests blocking of all multicast addresses
+// This covers addresses beyond link-local multicast (224.0.0.0/4, ff00::/8)
+func TestValidateIP_Multicast(t *testing.T) {
+	tests := []struct {
+		name string
+		ip   string
+	}{
+		// IPv4 multicast (224.0.0.0/4)
+		{"IPv4 all hosts", "224.0.0.1"},
+		{"IPv4 SSDP", "239.255.255.250"},
+		{"IPv4 organization local", "239.192.0.1"},
+		// IPv6 multicast (ff00::/8)
+		{"IPv6 all nodes", "ff02::1"},
+		{"IPv6 site-local", "ff05::1"},
+		{"IPv6 organization-local", "ff08::1"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ip := net.ParseIP(tt.ip)
+			if ip == nil {
+				t.Fatalf("Failed to parse IP: %s", tt.ip)
+			}
+			err := validateIP(ip, tt.ip)
+
+			if err == nil {
+				t.Errorf("Expected error for multicast address %s, got nil", tt.ip)
+			}
+
+			// Should contain either "multicast" or "link-local multicast"
+			if !strings.Contains(err.Error(), "multicast") {
+				t.Errorf("Expected 'multicast' in error for %s, got: %v", tt.ip, err)
+			}
+		})
+	}
+}
+
 // TestAcceptEncodingHeader tests that we request uncompressed responses
 func TestAcceptEncodingHeader(t *testing.T) {
 	headerReceived := ""

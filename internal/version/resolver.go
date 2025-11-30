@@ -119,6 +119,12 @@ func validateIP(ip net.IP, host string) error {
 		return fmt.Errorf("refusing redirect to link-local multicast: %s (%s)", host, ip)
 	}
 
+	// Block ALL multicast addresses (224.0.0.0/4 for IPv4, ff00::/8 for IPv6)
+	// This is broader than link-local multicast and blocks site-local, organization-local, etc.
+	if ip.IsMulticast() {
+		return fmt.Errorf("refusing redirect to multicast IP: %s (%s)", host, ip)
+	}
+
 	// Block unspecified address (0.0.0.0, ::)
 	if ip.IsUnspecified() {
 		return fmt.Errorf("refusing redirect to unspecified IP: %s (%s)", host, ip)
