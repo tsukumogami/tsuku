@@ -24,6 +24,14 @@ jobs:
           go-version-file: "go.mod"
           cache-dependency-path: go.sum
 
+      - name: Verify go.mod is tidy
+        run: |
+          go mod tidy
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "::error::go.mod or go.sum is not tidy. Cannot release with untidy module files."
+            exit 1
+          fi
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
