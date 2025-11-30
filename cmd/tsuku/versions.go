@@ -21,7 +21,7 @@ var versionsCmd = &cobra.Command{
 		// Load recipe
 		r, err := loader.Get(toolName)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			printError(err)
 			exitWithCode(ExitRecipeNotFound)
 		}
 
@@ -30,7 +30,7 @@ var versionsCmd = &cobra.Command{
 		factory := version.NewProviderFactory()
 		provider, err := factory.ProviderFromRecipe(res, r)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			printError(err)
 			exitWithCode(ExitGeneral)
 		}
 
@@ -51,7 +51,7 @@ var versionsCmd = &cobra.Command{
 
 		versions, err := lister.ListVersions(ctx)
 		if err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to list versions: %v\n", err)
+			printError(err)
 			exitWithCode(ExitNetwork)
 		}
 

@@ -85,7 +85,7 @@ var outdatedCmd = &cobra.Command{
 			}
 			latest, err := res.ResolveGitHub(ctx, repo)
 			if err != nil {
-				fmt.Fprintf(os.Stderr, "Failed to check %s: %v\n", tool.Name, err)
+				printError(err)
 				continue
 			}
 

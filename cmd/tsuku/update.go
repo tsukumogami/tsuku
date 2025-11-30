@@ -60,7 +60,7 @@ Examples:
 		if updateDryRun {
 			printInfof("Checking updates for %s...\n", toolName)
 			if err := runDryRun(toolName, ""); err != nil {
-				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				printError(err)
 				exitWithCode(ExitInstallFailed)
 			}
 			return
