@@ -26,14 +26,14 @@ The implementation adds new methods to the recipe Loader to enumerate recipes fr
 
 ## Implementation Steps
 
-- [ ] Add `ListAllWithSource()` method to Loader that returns recipes from both local and registry with source indicator
-- [ ] Add `ListLocal()` method to Loader for local-only listing
-- [ ] Update `tsuku recipes` command to show source indicator (local/registry)
-- [ ] Add `--local` flag to `tsuku recipes` command
-- [ ] Verify `--force` flag works correctly on `tsuku create`
-- [ ] Enhance error message in `tsuku install` when tool not found
-- [ ] Add tests for new loader methods
-- [ ] Add tests for CLI flag behavior
+- [x] Add `ListAllWithSource()` method to Loader that returns recipes from both local and registry with source indicator
+- [x] Add `ListLocal()` method to Loader for local-only listing
+- [x] Update `tsuku recipes` command to show source indicator (local/registry)
+- [x] Add `--local` flag to `tsuku recipes` command
+- [x] Verify `--force` flag works correctly on `tsuku create`
+- [x] Enhance error message in `tsuku install` when tool not found
+- [x] Add tests for new loader methods
+- [x] Add tests for CLI flag behavior
 
 ## Testing Strategy
 
@@ -48,11 +48,11 @@ The implementation adds new methods to the recipe Loader to enumerate recipes fr
 
 ## Success Criteria
 
-- [ ] `tsuku recipes` shows source indicator (local/registry) for each recipe
-- [ ] `tsuku recipes --local` shows only recipes in `$TSUKU_HOME/recipes/`
-- [ ] `tsuku create bat --from crates.io --force` overwrites existing recipe
-- [ ] Error when tool not found shows: "To create a recipe: tsuku create <tool> --from <ecosystem>"
-- [ ] Error lists available ecosystems (crates.io, rubygems, pypi, npm)
+- [x] `tsuku recipes` shows source indicator (local/registry) for each recipe
+- [x] `tsuku recipes --local` shows only recipes in `$TSUKU_HOME/recipes/`
+- [x] `tsuku create bat --from crates.io --force` overwrites existing recipe
+- [x] Error when tool not found shows: "To create a recipe: tsuku create <tool> --from <ecosystem>"
+- [x] Error lists available ecosystems (crates.io, rubygems, pypi, npm)
 
 ## Open Questions
 
