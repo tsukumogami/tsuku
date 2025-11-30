@@ -481,6 +481,264 @@ func TestLoader_Get_LocalRecipeParseError(t *testing.T) {
 	}
 }
 
+func TestLoader_ListAllWithSource(t *testing.T) {
+	localRecipe := `[metadata]
+name = "local-tool"
+description = "A local tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "local-tool --version"
+`
+
+	registryRecipe := `[metadata]
+name = "registry-tool"
+description = "A registry tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "registry-tool --version"
+`
+
+	// Create local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "local-tool.toml"), []byte(localRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	// Create registry cache directory with letter subdirectory
+	cacheDir := t.TempDir()
+	letterDir := filepath.Join(cacheDir, "r")
+	if err := os.MkdirAll(letterDir, 0755); err != nil {
+		t.Fatalf("Failed to create registry letter directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(letterDir, "registry-tool.toml"), []byte(registryRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write registry recipe: %v", err)
+	}
+
+	reg := registry.New(cacheDir)
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	recipes, err := loader.ListAllWithSource()
+	if err != nil {
+		t.Fatalf("ListAllWithSource() failed: %v", err)
+	}
+
+	if len(recipes) != 2 {
+		t.Errorf("ListAllWithSource() returned %d recipes, want 2", len(recipes))
+	}
+
+	// Check that we have both sources
+	var hasLocal, hasRegistry bool
+	for _, r := range recipes {
+		if r.Source == SourceLocal && r.Name == "local-tool" {
+			hasLocal = true
+		}
+		if r.Source == SourceRegistry && r.Name == "registry-tool" {
+			hasRegistry = true
+		}
+	}
+
+	if !hasLocal {
+		t.Error("Expected local recipe in results")
+	}
+	if !hasRegistry {
+		t.Error("Expected registry recipe in results")
+	}
+}
+
+func TestLoader_ListAllWithSource_LocalShadowsRegistry(t *testing.T) {
+	localRecipe := `[metadata]
+name = "shared-tool"
+description = "Local version"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "shared-tool --version"
+`
+
+	registryRecipe := `[metadata]
+name = "shared-tool"
+description = "Registry version"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "shared-tool --version"
+`
+
+	// Create local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "shared-tool.toml"), []byte(localRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	// Create registry cache directory
+	cacheDir := t.TempDir()
+	letterDir := filepath.Join(cacheDir, "s")
+	if err := os.MkdirAll(letterDir, 0755); err != nil {
+		t.Fatalf("Failed to create registry letter directory: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(letterDir, "shared-tool.toml"), []byte(registryRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write registry recipe: %v", err)
+	}
+
+	reg := registry.New(cacheDir)
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	recipes, err := loader.ListAllWithSource()
+	if err != nil {
+		t.Fatalf("ListAllWithSource() failed: %v", err)
+	}
+
+	// Should only have one recipe (local shadows registry)
+	if len(recipes) != 1 {
+		t.Errorf("ListAllWithSource() returned %d recipes, want 1", len(recipes))
+	}
+
+	if len(recipes) > 0 && recipes[0].Source != SourceLocal {
+		t.Errorf("Expected local source, got %q", recipes[0].Source)
+	}
+}
+
+func TestLoader_ListLocal(t *testing.T) {
+	localRecipe := `[metadata]
+name = "only-local"
+description = "A local only tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "only-local --version"
+`
+
+	// Create local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "only-local.toml"), []byte(localRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	recipes, err := loader.ListLocal()
+	if err != nil {
+		t.Fatalf("ListLocal() failed: %v", err)
+	}
+
+	if len(recipes) != 1 {
+		t.Errorf("ListLocal() returned %d recipes, want 1", len(recipes))
+	}
+
+	if len(recipes) > 0 {
+		if recipes[0].Name != "only-local" {
+			t.Errorf("Expected recipe name 'only-local', got %q", recipes[0].Name)
+		}
+		if recipes[0].Source != SourceLocal {
+			t.Errorf("Expected local source, got %q", recipes[0].Source)
+		}
+	}
+}
+
+func TestLoader_ListLocal_EmptyDirectory(t *testing.T) {
+	recipesDir := t.TempDir()
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	recipes, err := loader.ListLocal()
+	if err != nil {
+		t.Fatalf("ListLocal() failed: %v", err)
+	}
+
+	if len(recipes) != 0 {
+		t.Errorf("ListLocal() returned %d recipes, want 0", len(recipes))
+	}
+}
+
+func TestLoader_ListLocal_NoRecipesDir(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	loader := New(reg) // No recipes dir set
+
+	recipes, err := loader.ListLocal()
+	if err != nil {
+		t.Fatalf("ListLocal() failed: %v", err)
+	}
+
+	if len(recipes) != 0 {
+		t.Errorf("ListLocal() returned %d recipes, want 0", len(recipes))
+	}
+}
+
+func TestLoader_RecipesDir(t *testing.T) {
+	reg := registry.New(t.TempDir())
+	loader := NewWithLocalRecipes(reg, "/some/path")
+
+	if loader.RecipesDir() != "/some/path" {
+		t.Errorf("RecipesDir() = %q, want %q", loader.RecipesDir(), "/some/path")
+	}
+}
+
+func TestIsTomlFile(t *testing.T) {
+	tests := []struct {
+		name string
+		want bool
+	}{
+		{"test.toml", true},
+		{"recipe.toml", true},
+		{".toml", false}, // too short
+		{"toml", false},
+		{"test.txt", false},
+		{"test.TOML", false}, // case sensitive
+		{"", false},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := isTomlFile(tc.name)
+			if got != tc.want {
+				t.Errorf("isTomlFile(%q) = %v, want %v", tc.name, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestTrimTomlExtension(t *testing.T) {
+	tests := []struct {
+		name string
+		want string
+	}{
+		{"test.toml", "test"},
+		{"recipe.toml", "recipe"},
+		{"test.txt", "test.txt"}, // not .toml, unchanged
+		{"test", "test"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			got := trimTomlExtension(tc.name)
+			if got != tc.want {
+				t.Errorf("trimTomlExtension(%q) = %q, want %q", tc.name, got, tc.want)
+			}
+		})
+	}
+}
+
 func TestValidate(t *testing.T) {
 	tests := []struct {
 		name    string

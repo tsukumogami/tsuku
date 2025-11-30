@@ -164,3 +164,46 @@ func (r *Registry) IsCached(name string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
+
+// ListCached returns all cached recipe names
+func (r *Registry) ListCached() ([]string, error) {
+	if r.CacheDir == "" {
+		return nil, nil
+	}
+
+	var names []string
+
+	// Walk the cache directory structure (letter/name.toml)
+	entries, err := os.ReadDir(r.CacheDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("failed to read cache directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		// Read recipes in each letter directory
+		letterDir := filepath.Join(r.CacheDir, entry.Name())
+		recipeEntries, err := os.ReadDir(letterDir)
+		if err != nil {
+			continue
+		}
+
+		for _, recipeEntry := range recipeEntries {
+			if recipeEntry.IsDir() {
+				continue
+			}
+			name := recipeEntry.Name()
+			if strings.HasSuffix(name, ".toml") {
+				names = append(names, strings.TrimSuffix(name, ".toml"))
+			}
+		}
+	}
+
+	return names, nil
+}

@@ -167,6 +167,148 @@ func (l *Loader) ClearCache() {
 	l.recipes = make(map[string]*Recipe)
 }
 
+// RecipeSource indicates where a recipe comes from
+type RecipeSource string
+
+const (
+	// SourceLocal indicates a recipe from the local recipes directory ($TSUKU_HOME/recipes)
+	SourceLocal RecipeSource = "local"
+	// SourceRegistry indicates a recipe from the cached registry ($TSUKU_HOME/registry)
+	SourceRegistry RecipeSource = "registry"
+)
+
+// RecipeInfo contains a recipe with its source information
+type RecipeInfo struct {
+	Name        string
+	Description string
+	Source      RecipeSource
+}
+
+// ListAllWithSource returns all available recipes from both local and registry sources
+// Local recipes are listed first, and recipes that appear in both are shown as local
+func (l *Loader) ListAllWithSource() ([]RecipeInfo, error) {
+	seen := make(map[string]bool)
+	var result []RecipeInfo
+
+	// First, list local recipes
+	localRecipes, err := l.listLocalRecipes()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list local recipes: %w", err)
+	}
+	for _, info := range localRecipes {
+		seen[info.Name] = true
+		result = append(result, info)
+	}
+
+	// Then, list registry recipes (cached only)
+	registryRecipes, err := l.listRegistryRecipes()
+	if err != nil {
+		return nil, fmt.Errorf("failed to list registry recipes: %w", err)
+	}
+	for _, info := range registryRecipes {
+		if !seen[info.Name] {
+			result = append(result, info)
+		}
+	}
+
+	return result, nil
+}
+
+// ListLocal returns only recipes from the local recipes directory
+func (l *Loader) ListLocal() ([]RecipeInfo, error) {
+	return l.listLocalRecipes()
+}
+
+// listLocalRecipes scans the local recipes directory and returns recipe info
+func (l *Loader) listLocalRecipes() ([]RecipeInfo, error) {
+	if l.recipesDir == "" {
+		return nil, nil
+	}
+
+	entries, err := os.ReadDir(l.recipesDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	var result []RecipeInfo
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		name := entry.Name()
+		if !isTomlFile(name) {
+			continue
+		}
+
+		recipeName := trimTomlExtension(name)
+		description := ""
+
+		// Try to load the recipe to get description
+		recipe, err := l.loadLocalRecipe(recipeName)
+		if err == nil && recipe != nil {
+			description = recipe.Metadata.Description
+		}
+
+		result = append(result, RecipeInfo{
+			Name:        recipeName,
+			Description: description,
+			Source:      SourceLocal,
+		})
+	}
+
+	return result, nil
+}
+
+// listRegistryRecipes scans the registry cache and returns recipe info
+func (l *Loader) listRegistryRecipes() ([]RecipeInfo, error) {
+	names, err := l.registry.ListCached()
+	if err != nil {
+		return nil, err
+	}
+
+	var result []RecipeInfo
+	for _, name := range names {
+		description := ""
+
+		// Try to load the recipe to get description
+		data, err := l.registry.GetCached(name)
+		if err == nil && data != nil {
+			if recipe, err := l.parseBytes(data); err == nil {
+				description = recipe.Metadata.Description
+			}
+		}
+
+		result = append(result, RecipeInfo{
+			Name:        name,
+			Description: description,
+			Source:      SourceRegistry,
+		})
+	}
+
+	return result, nil
+}
+
+// isTomlFile checks if a filename has a .toml extension
+func isTomlFile(name string) bool {
+	return len(name) > 5 && name[len(name)-5:] == ".toml"
+}
+
+// trimTomlExtension removes the .toml extension from a filename
+func trimTomlExtension(name string) string {
+	if isTomlFile(name) {
+		return name[:len(name)-5]
+	}
+	return name
+}
+
+// RecipesDir returns the local recipes directory
+func (l *Loader) RecipesDir() string {
+	return l.recipesDir
+}
+
 // validate performs basic recipe validation
 func validate(r *Recipe) error {
 	// Check metadata
