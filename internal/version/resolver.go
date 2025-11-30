@@ -36,6 +36,7 @@ type Resolver struct {
 	pypiRegistryURL     string         // PyPI registry URL (injectable for testing)
 	cratesIORegistryURL string         // crates.io registry URL (injectable for testing)
 	rubygemsRegistryURL string         // RubyGems.org registry URL (injectable for testing)
+	goDevURL            string         // go.dev URL (injectable for testing)
 	authenticated       bool           // Whether GitHub requests are authenticated
 }
 
@@ -163,6 +164,7 @@ func New() *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Production default
 		cratesIORegistryURL: "https://crates.io",          // Production default
 		rubygemsRegistryURL: "https://rubygems.org",       // Production default
+		goDevURL:            "https://go.dev",             // Production default
 		authenticated:       authenticated,
 	}
 }
@@ -187,6 +189,7 @@ func NewWithNpmRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",     // Default PyPI
 		cratesIORegistryURL: "https://crates.io",    // Default crates.io
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		goDevURL:            "https://go.dev",       // Default go.dev
 		authenticated:       authenticated,
 	}
 }
@@ -211,6 +214,7 @@ func NewWithPyPIRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     registryURL,
 		cratesIORegistryURL: "https://crates.io",    // Default crates.io
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		goDevURL:            "https://go.dev",       // Default go.dev
 		authenticated:       authenticated,
 	}
 }
@@ -235,6 +239,7 @@ func NewWithCratesIORegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
 		cratesIORegistryURL: registryURL,
 		rubygemsRegistryURL: "https://rubygems.org", // Default RubyGems
+		goDevURL:            "https://go.dev",       // Default go.dev
 		authenticated:       authenticated,
 	}
 }
@@ -259,6 +264,32 @@ func NewWithRubyGemsRegistry(registryURL string) *Resolver {
 		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
 		cratesIORegistryURL: "https://crates.io",          // Default crates.io
 		rubygemsRegistryURL: registryURL,
+		goDevURL:            "https://go.dev", // Default go.dev
+		authenticated:       authenticated,
+	}
+}
+
+// NewWithGoDevURL creates a resolver with custom go.dev URL (for testing)
+func NewWithGoDevURL(goDevURL string) *Resolver {
+	var githubHTTPClient *http.Client
+	authenticated := false
+
+	// Check for GitHub token in environment
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
+		authenticated = true
+	}
+
+	return &Resolver{
+		client:              github.NewClient(githubHTTPClient),
+		httpClient:          NewHTTPClient(),
+		registry:            NewRegistry(),
+		npmRegistryURL:      "https://registry.npmjs.org", // Default npm
+		pypiRegistryURL:     "https://pypi.org",           // Default PyPI
+		cratesIORegistryURL: "https://crates.io",          // Default crates.io
+		rubygemsRegistryURL: "https://rubygems.org",       // Default RubyGems
+		goDevURL:            goDevURL,
 		authenticated:       authenticated,
 	}
 }
@@ -840,7 +871,11 @@ const (
 // API: https://go.dev/dl/?mode=json
 // Returns: Latest stable version without "go" prefix (e.g., "1.23.4")
 func (r *Resolver) ResolveGoToolchain(ctx context.Context) (*VersionInfo, error) {
-	apiURL := "https://go.dev/dl/?mode=json"
+	goDevURL := r.goDevURL
+	if goDevURL == "" {
+		goDevURL = "https://go.dev" // Default if not set
+	}
+	apiURL := goDevURL + "/dl/?mode=json"
 
 	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
 	if err != nil {
@@ -906,7 +941,11 @@ func (r *Resolver) ResolveGoToolchain(ctx context.Context) (*VersionInfo, error)
 //
 // Returns: Sorted list (newest first) of all stable versions without "go" prefix
 func (r *Resolver) ListGoToolchainVersions(ctx context.Context) ([]string, error) {
-	apiURL := "https://go.dev/dl/?mode=json"
+	goDevURL := r.goDevURL
+	if goDevURL == "" {
+		goDevURL = "https://go.dev" // Default if not set
+	}
+	apiURL := goDevURL + "/dl/?mode=json"
 
 	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
 	if err != nil {

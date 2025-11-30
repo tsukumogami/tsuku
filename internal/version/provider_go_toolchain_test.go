@@ -40,8 +40,8 @@ func TestResolveGoToolchain_ValidResponse(t *testing.T) {
 	// Create mock go.dev/dl server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Verify it's the correct endpoint
-		if r.URL.Path != "/" || r.URL.Query().Get("mode") != "json" {
-			t.Errorf("Expected /?mode=json, got %s", r.URL.String())
+		if r.URL.Path != "/dl/" || r.URL.Query().Get("mode") != "json" {
+			t.Errorf("Expected /dl/?mode=json, got %s", r.URL.String())
 		}
 
 		response := []goRelease{
@@ -55,8 +55,7 @@ func TestResolveGoToolchain_ValidResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create resolver with mock server (we need to inject the URL)
-	resolver := newResolverWithGoToolchainURL(server.URL)
+	resolver := NewWithGoDevURL(server.URL)
 	ctx := context.Background()
 
 	info, err := resolver.ResolveGoToolchain(ctx)
@@ -87,7 +86,7 @@ func TestResolveGoToolchain_OnlyStableVersions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := newResolverWithGoToolchainURL(server.URL)
+	resolver := NewWithGoDevURL(server.URL)
 	ctx := context.Background()
 
 	info, err := resolver.ResolveGoToolchain(ctx)
@@ -114,7 +113,7 @@ func TestResolveGoToolchain_NoStableVersions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := newResolverWithGoToolchainURL(server.URL)
+	resolver := NewWithGoDevURL(server.URL)
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoToolchain(ctx)
@@ -142,7 +141,7 @@ func TestListGoToolchainVersions_ValidResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := newResolverWithGoToolchainURL(server.URL)
+	resolver := NewWithGoDevURL(server.URL)
 	ctx := context.Background()
 
 	versions, err := resolver.ListGoToolchainVersions(ctx)
@@ -172,7 +171,7 @@ func TestListGoToolchainVersions_EmptyResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := newResolverWithGoToolchainURL(server.URL)
+	resolver := NewWithGoDevURL(server.URL)
 	ctx := context.Background()
 
 	versions, err := resolver.ListGoToolchainVersions(ctx)
@@ -192,7 +191,7 @@ func TestResolveGoToolchain_HTTPError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := newResolverWithGoToolchainURL(server.URL)
+	resolver := NewWithGoDevURL(server.URL)
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoToolchain(ctx)
@@ -200,9 +199,9 @@ func TestResolveGoToolchain_HTTPError(t *testing.T) {
 		t.Fatal("Expected error for 500 status, got nil")
 	}
 
-	// Error may contain status code or status text
-	if !strings.Contains(err.Error(), "500") && !strings.Contains(err.Error(), "Internal Server Error") {
-		t.Errorf("Expected error to contain status code or text, got: %v", err)
+	// Error should contain status code
+	if !strings.Contains(err.Error(), "500") {
+		t.Errorf("Expected error to contain status code 500, got: %v", err)
 	}
 }
 
@@ -214,7 +213,7 @@ func TestResolveGoToolchain_MalformedJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := newResolverWithGoToolchainURL(server.URL)
+	resolver := NewWithGoDevURL(server.URL)
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoToolchain(ctx)
@@ -227,7 +226,48 @@ func TestResolveGoToolchain_MalformedJSON(t *testing.T) {
 	}
 }
 
-// TestGoToolchainProvider_ResolveVersion tests specific version resolution
+// TestListGoToolchainVersions_HTTPError tests error handling for non-200 status in list
+func TestListGoToolchainVersions_HTTPError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	}))
+	defer server.Close()
+
+	resolver := NewWithGoDevURL(server.URL)
+	ctx := context.Background()
+
+	_, err := resolver.ListGoToolchainVersions(ctx)
+	if err == nil {
+		t.Fatal("Expected error for 503 status, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "503") {
+		t.Errorf("Expected error to contain status code 503, got: %v", err)
+	}
+}
+
+// TestListGoToolchainVersions_MalformedJSON tests error handling for invalid JSON in list
+func TestListGoToolchainVersions_MalformedJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`not json at all`))
+	}))
+	defer server.Close()
+
+	resolver := NewWithGoDevURL(server.URL)
+	ctx := context.Background()
+
+	_, err := resolver.ListGoToolchainVersions(ctx)
+	if err == nil {
+		t.Fatal("Expected error for malformed JSON, got nil")
+	}
+
+	if !strings.Contains(err.Error(), "parse") {
+		t.Errorf("Expected 'parse' error, got: %v", err)
+	}
+}
+
+// TestGoToolchainProvider_ResolveVersion tests specific version resolution via provider
 func TestGoToolchainProvider_ResolveVersion(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := []goRelease{
@@ -241,39 +281,89 @@ func TestGoToolchainProvider_ResolveVersion(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolverWrapper := newResolverWithGoToolchainURL(server.URL)
+	resolver := NewWithGoDevURL(server.URL)
+	provider := NewGoToolchainProvider(resolver)
 	ctx := context.Background()
 
-	// Test exact version match using the wrapper's ListGoToolchainVersions
-	versions, err := resolverWrapper.ListGoToolchainVersions(ctx)
-	if err != nil {
-		t.Fatalf("ListGoToolchainVersions failed: %v", err)
-	}
-
 	// Test exact version match
-	found := false
-	for _, v := range versions {
-		if v == "1.23.4" {
-			found = true
-			break
-		}
+	info, err := provider.ResolveVersion(ctx, "1.23.4")
+	if err != nil {
+		t.Fatalf("ResolveVersion failed for exact match: %v", err)
 	}
-	if !found {
-		t.Errorf("Expected to find version 1.23.4 in list")
+	if info.Version != "1.23.4" {
+		t.Errorf("Expected 1.23.4, got %s", info.Version)
 	}
 
-	// Test fuzzy matching logic directly (since it's the same as provider)
-	// Fuzzy match: "1.23" should match "1.23.4"
-	prefix := "1.23."
-	foundFuzzy := false
-	for _, v := range versions {
-		if strings.HasPrefix(v, prefix) {
-			foundFuzzy = true
-			break
-		}
+	// Test fuzzy version match (1.23 -> 1.23.4)
+	info, err = provider.ResolveVersion(ctx, "1.23")
+	if err != nil {
+		t.Fatalf("ResolveVersion failed for fuzzy match: %v", err)
 	}
-	if !foundFuzzy {
-		t.Errorf("Expected to find version matching 1.23.x")
+	if info.Version != "1.23.4" {
+		t.Errorf("Expected 1.23.4 for fuzzy match, got %s", info.Version)
+	}
+
+	// Test non-existent version
+	_, err = provider.ResolveVersion(ctx, "1.99.0")
+	if err == nil {
+		t.Fatal("Expected error for non-existent version, got nil")
+	}
+	if !strings.Contains(err.Error(), "not found") {
+		t.Errorf("Expected 'not found' error, got: %v", err)
+	}
+}
+
+// TestGoToolchainProvider_ListVersions tests version listing via provider
+func TestGoToolchainProvider_ListVersions(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := []goRelease{
+			{Version: "go1.23.4", Stable: true},
+			{Version: "go1.22.8", Stable: true},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	resolver := NewWithGoDevURL(server.URL)
+	provider := NewGoToolchainProvider(resolver)
+	ctx := context.Background()
+
+	versions, err := provider.ListVersions(ctx)
+	if err != nil {
+		t.Fatalf("ListVersions failed: %v", err)
+	}
+
+	if len(versions) != 2 {
+		t.Errorf("Expected 2 versions, got %d", len(versions))
+	}
+}
+
+// TestGoToolchainProvider_ResolveLatest tests latest version resolution via provider
+func TestGoToolchainProvider_ResolveLatest(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := []goRelease{
+			{Version: "go1.23.4", Stable: true},
+			{Version: "go1.22.8", Stable: true},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	resolver := NewWithGoDevURL(server.URL)
+	provider := NewGoToolchainProvider(resolver)
+	ctx := context.Background()
+
+	info, err := provider.ResolveLatest(ctx)
+	if err != nil {
+		t.Fatalf("ResolveLatest failed: %v", err)
+	}
+
+	if info.Version != "1.23.4" {
+		t.Errorf("Expected 1.23.4, got %s", info.Version)
 	}
 }
 
@@ -316,130 +406,91 @@ func TestGoToolchainSourceStrategy_CanHandle(t *testing.T) {
 	}
 }
 
-// newResolverWithGoToolchainURL creates a resolver with a custom go.dev URL for testing
-// This is a helper function to enable unit testing without hitting the real API
-func newResolverWithGoToolchainURL(baseURL string) *resolverWithGoURL {
-	return &resolverWithGoURL{
-		Resolver: New(),
-		goDevURL: baseURL,
+// TestGoToolchainSourceStrategy_Create tests the factory creates correct provider
+func TestGoToolchainSourceStrategy_Create(t *testing.T) {
+	strategy := &GoToolchainSourceStrategy{}
+	resolver := New()
+	r := &recipe.Recipe{
+		Version: recipe.VersionSection{Source: "go_toolchain"},
+	}
+
+	provider, err := strategy.Create(resolver, r)
+	if err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	if provider == nil {
+		t.Fatal("Expected provider, got nil")
+	}
+
+	// Verify it's the right type
+	_, ok := provider.(*GoToolchainProvider)
+	if !ok {
+		t.Errorf("Expected *GoToolchainProvider, got %T", provider)
 	}
 }
 
-// resolverWithGoURL wraps Resolver to allow testing with a mock go.dev server
-type resolverWithGoURL struct {
-	*Resolver
-	goDevURL string
-}
+// TestGoToolchainSourceStrategy_Priority tests the strategy priority
+func TestGoToolchainSourceStrategy_Priority(t *testing.T) {
+	strategy := &GoToolchainSourceStrategy{}
 
-// ResolveGoToolchain overrides the base method to use the test URL
-func (r *resolverWithGoURL) ResolveGoToolchain(ctx context.Context) (*VersionInfo, error) {
-	apiURL := r.goDevURL + "/?mode=json"
-
-	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
-	if err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
-			Source:  "go_toolchain",
-			Message: "failed to create request",
-			Err:     err,
-		}
-	}
-
-	req.Header.Set("Accept", "application/json")
-
-	resp, err := r.httpClient.Do(req)
-	if err != nil {
-		return nil, WrapNetworkError(err, "go_toolchain", "failed to fetch Go releases")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
-			Source:  "go_toolchain",
-			Message: "go.dev returned status " + http.StatusText(resp.StatusCode),
-		}
-	}
-
-	var releases []goRelease
-	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeParsing,
-			Source:  "go_toolchain",
-			Message: "failed to parse go.dev response",
-			Err:     err,
-		}
-	}
-
-	for _, release := range releases {
-		if release.Stable {
-			version := normalizeGoToolchainVersion(release.Version)
-			if version == "" {
-				continue
-			}
-			return &VersionInfo{
-				Tag:     version,
-				Version: version,
-			}, nil
-		}
-	}
-
-	return nil, &ResolverError{
-		Type:    ErrTypeNotFound,
-		Source:  "go_toolchain",
-		Message: "no stable Go releases found",
+	if strategy.Priority() != PriorityKnownRegistry {
+		t.Errorf("Expected priority %d, got %d", PriorityKnownRegistry, strategy.Priority())
 	}
 }
 
-// ListGoToolchainVersions overrides the base method to use the test URL
-func (r *resolverWithGoURL) ListGoToolchainVersions(ctx context.Context) ([]string, error) {
-	apiURL := r.goDevURL + "/?mode=json"
+// TestResolveGoToolchain_EmptyVersionString tests handling of empty version strings
+func TestResolveGoToolchain_EmptyVersionString(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := []goRelease{
+			{Version: "", Stable: true},         // Empty version
+			{Version: "go1.23.4", Stable: true}, // Valid version
+		}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	resolver := NewWithGoDevURL(server.URL)
+	ctx := context.Background()
+
+	info, err := resolver.ResolveGoToolchain(ctx)
 	if err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
-			Source:  "go_toolchain",
-			Message: "failed to create request",
-			Err:     err,
-		}
+		t.Fatalf("ResolveGoToolchain failed: %v", err)
 	}
 
-	req.Header.Set("Accept", "application/json")
+	// Should skip the empty version and return the valid one
+	if info.Version != "1.23.4" {
+		t.Errorf("Expected version 1.23.4, got %s", info.Version)
+	}
+}
 
-	resp, err := r.httpClient.Do(req)
+// TestListGoToolchainVersions_SkipsEmptyVersions tests that empty versions are filtered out
+func TestListGoToolchainVersions_SkipsEmptyVersions(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		response := []goRelease{
+			{Version: "", Stable: true},         // Empty version - should be skipped
+			{Version: "go1.23.4", Stable: true}, // Valid version
+			{Version: "go", Stable: true},       // Just "go" - normalizes to empty string
+			{Version: "go1.22.8", Stable: true}, // Valid version
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	resolver := NewWithGoDevURL(server.URL)
+	ctx := context.Background()
+
+	versions, err := resolver.ListGoToolchainVersions(ctx)
 	if err != nil {
-		return nil, WrapNetworkError(err, "go_toolchain", "failed to fetch Go releases")
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		return nil, &ResolverError{
-			Type:    ErrTypeNetwork,
-			Source:  "go_toolchain",
-			Message: "go.dev returned status " + http.StatusText(resp.StatusCode),
-		}
+		t.Fatalf("ListGoToolchainVersions failed: %v", err)
 	}
 
-	var releases []goRelease
-	if err := json.NewDecoder(resp.Body).Decode(&releases); err != nil {
-		return nil, &ResolverError{
-			Type:    ErrTypeParsing,
-			Source:  "go_toolchain",
-			Message: "failed to parse go.dev response",
-			Err:     err,
-		}
+	// Should only include valid versions (empty ones filtered out)
+	if len(versions) != 2 {
+		t.Errorf("Expected 2 valid versions, got %d: %v", len(versions), versions)
 	}
-
-	var versions []string
-	for _, release := range releases {
-		if release.Stable {
-			version := normalizeGoToolchainVersion(release.Version)
-			if version != "" {
-				versions = append(versions, version)
-			}
-		}
-	}
-
-	return versions, nil
 }
