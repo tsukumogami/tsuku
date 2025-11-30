@@ -1,0 +1,112 @@
+name: npm Builder Tests
+
+# Runs on:
+# - Daily schedule
+# - When npm builder files are changed
+on:
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 9:00 UTC (after pypi tests)
+  push:
+    branches: [main]
+    paths:
+      - 'internal/builders/**'
+      - 'cmd/tsuku/create.go'
+      - '.github/workflows/npm-builder-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/builders/**'
+      - 'cmd/tsuku/create.go'
+      - '.github/workflows/npm-builder-tests.yml'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  npm-builder-linux:
+    name: "npm Builder: Linux"
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create recipe for prettier
+        run: ./tsuku create prettier --from npm
+
+      - name: Verify recipe was created
+        run: |
+          if [ ! -f "$HOME/.tsuku/recipes/prettier.toml" ]; then
+            echo "Recipe file not found!"
+            exit 1
+          fi
+          echo "Recipe contents:"
+          cat "$HOME/.tsuku/recipes/prettier.toml"
+
+      - name: Install prettier using generated recipe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install prettier
+
+      - name: Verify prettier works
+        run: prettier --version
+
+  npm-builder-macos:
+    name: "npm Builder: macOS"
+    runs-on: macos-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Create recipe for prettier
+        run: ./tsuku create prettier --from npm
+
+      - name: Verify recipe was created
+        run: |
+          if [ ! -f "$HOME/.tsuku/recipes/prettier.toml" ]; then
+            echo "Recipe file not found!"
+            exit 1
+          fi
+          echo "Recipe contents:"
+          cat "$HOME/.tsuku/recipes/prettier.toml"
+
+      - name: Install prettier using generated recipe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install prettier
+
+      - name: Verify prettier works
+        run: prettier --version

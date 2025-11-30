@@ -25,12 +25,14 @@ Supported ecosystems:
   crates.io    Rust crates from crates.io
   rubygems     Ruby gems from rubygems.org
   pypi         Python packages from pypi.org
+  npm          Node.js packages from npmjs.com
 
 Examples:
   tsuku create ripgrep --from crates.io
   tsuku create bat --from crates.io --force
   tsuku create jekyll --from rubygems
-  tsuku create ruff --from pypi`,
+  tsuku create ruff --from pypi
+  tsuku create prettier --from npm`,
 	Args: cobra.ExactArgs(1),
 	Run:  runCreate,
 }
@@ -57,6 +59,8 @@ func normalizeEcosystem(name string) string {
 		return "rubygems"
 	case "pypi", "pypi.org", "pip", "python":
 		return "pypi"
+	case "npm", "npmjs", "npmjs.com", "node", "nodejs":
+		return "npm"
 	default:
 		return normalized
 	}
@@ -73,6 +77,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	builderRegistry.Register(builders.NewCargoBuilder(nil))
 	builderRegistry.Register(builders.NewGemBuilder(nil))
 	builderRegistry.Register(builders.NewPyPIBuilder(nil))
+	builderRegistry.Register(builders.NewNpmBuilder(nil))
 
 	// Get the builder
 	builder, ok := builderRegistry.Get(ecosystem)

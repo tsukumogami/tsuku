@@ -1078,3 +1078,152 @@ func TestInferredRubyGemsStrategy_Create_NoGem(t *testing.T) {
 		t.Error("Create() should fail when gem is missing")
 	}
 }
+
+func TestNpmSourceStrategy_Priority(t *testing.T) {
+	s := &NpmSourceStrategy{}
+	if s.Priority() != PriorityKnownRegistry {
+		t.Errorf("Priority() = %d, want %d", s.Priority(), PriorityKnownRegistry)
+	}
+}
+
+func TestNpmSourceStrategy_CanHandle(t *testing.T) {
+	s := &NpmSourceStrategy{}
+
+	tests := []struct {
+		name     string
+		recipe   *recipe.Recipe
+		expected bool
+	}{
+		{
+			name: "npm source with npm_install action",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Source: "npm"},
+				Steps: []recipe.Step{
+					{Action: "npm_install", Params: map[string]interface{}{"package": "prettier"}},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "npm source without npm_install",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Source: "npm"},
+				Steps:   []recipe.Step{},
+			},
+			expected: false,
+		},
+		{
+			name: "non-npm source",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Source: "github"},
+				Steps: []recipe.Step{
+					{Action: "npm_install", Params: map[string]interface{}{"package": "prettier"}},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := s.CanHandle(tt.recipe)
+			if result != tt.expected {
+				t.Errorf("CanHandle() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestNpmSourceStrategy_Create(t *testing.T) {
+	resolver := New()
+	s := &NpmSourceStrategy{}
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "test-tool"},
+		Version:  recipe.VersionSection{Source: "npm"},
+		Steps: []recipe.Step{
+			{
+				Action: "npm_install",
+				Params: map[string]interface{}{
+					"package": "prettier",
+				},
+			},
+		},
+	}
+
+	provider, err := s.Create(resolver, r)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	if provider == nil {
+		t.Fatal("Create() returned nil provider")
+	}
+}
+
+func TestNpmSourceStrategy_Create_NoPackage(t *testing.T) {
+	resolver := New()
+	s := &NpmSourceStrategy{}
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "test-tool"},
+		Version:  recipe.VersionSection{Source: "npm"},
+		Steps: []recipe.Step{
+			{
+				Action: "npm_install",
+				Params: map[string]interface{}{}, // Missing package
+			},
+		},
+	}
+
+	_, err := s.Create(resolver, r)
+	if err == nil {
+		t.Error("Create() should fail when package is missing")
+	}
+}
+
+func TestInferredNpmStrategy_Create(t *testing.T) {
+	resolver := New()
+	s := &InferredNpmStrategy{}
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "test-tool"},
+		Steps: []recipe.Step{
+			{
+				Action: "npm_install",
+				Params: map[string]interface{}{
+					"package": "prettier",
+				},
+			},
+		},
+	}
+
+	provider, err := s.Create(resolver, r)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	if provider == nil {
+		t.Fatal("Create() returned nil provider")
+	}
+}
+
+func TestInferredNpmStrategy_Create_NoPackage(t *testing.T) {
+	resolver := New()
+	s := &InferredNpmStrategy{}
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "test-tool"},
+		Steps: []recipe.Step{
+			{
+				Action: "npm_install",
+				Params: map[string]interface{}{}, // Missing package
+			},
+		},
+	}
+
+	_, err := s.Create(resolver, r)
+	if err == nil {
+		t.Error("Create() should fail when package is missing")
+	}
+}
