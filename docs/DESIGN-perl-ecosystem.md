@@ -1,6 +1,6 @@
 # Design Document: Perl Ecosystem Support
 
-**Status**: Proposed
+**Status**: Accepted
 
 ## Context and Problem Statement
 
