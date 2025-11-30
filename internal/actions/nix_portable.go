@@ -186,12 +186,6 @@ func EnsureNixPortableWithContext(ctx context.Context) (string, error) {
 	return nixPortablePath, nil
 }
 
-// downloadFile downloads a file from URL to the specified path
-// Deprecated: Use downloadFileWithContext for cancellation support.
-func downloadFile(url, destPath string) error {
-	return downloadFileWithContext(context.Background(), url, destPath)
-}
-
 // downloadFileWithContext downloads a file from URL to the specified path with context for cancellation
 func downloadFileWithContext(ctx context.Context, url, destPath string) error {
 	// Create the file

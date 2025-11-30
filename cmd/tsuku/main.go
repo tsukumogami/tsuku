@@ -16,7 +16,7 @@ import (
 
 var quietFlag bool
 
-// globalCtx is the application-level context that is cancelled on SIGINT/SIGTERM.
+// globalCtx is the application-level context that is canceled on SIGINT/SIGTERM.
 // Commands should use this context for cancellable operations.
 var globalCtx context.Context
 var globalCancel context.CancelFunc
@@ -78,7 +78,7 @@ func main() {
 	// Handle signals in a goroutine
 	go func() {
 		sig := <-sigChan
-		fmt.Fprintf(os.Stderr, "\nReceived %s, cancelling operation...\n", sig)
+		fmt.Fprintf(os.Stderr, "\nReceived %s, canceling operation...\n", sig)
 		globalCancel()
 
 		// Wait for second signal to force exit

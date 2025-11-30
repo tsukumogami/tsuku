@@ -188,7 +188,7 @@ func TestRunCommandAction_Execute_ContextCancellation(t *testing.T) {
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 
-	// Create a context that is already cancelled
+	// Create a context that is already canceled
 	cancelledCtx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
@@ -204,11 +204,11 @@ func TestRunCommandAction_Execute_ContextCancellation(t *testing.T) {
 		},
 	}
 
-	// Command should fail due to cancelled context
+	// Command should fail due to canceled context
 	err := action.Execute(ctx, map[string]interface{}{
 		"command": "sleep 10",
 	})
 	if err == nil {
-		t.Error("Execute() should fail when context is cancelled")
+		t.Error("Execute() should fail when context is canceled")
 	}
 }
