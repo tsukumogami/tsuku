@@ -523,3 +523,330 @@ func TestListMetaCPANVersions_DeduplicatesVersions(t *testing.T) {
 		t.Errorf("expected 2 unique versions, got %d: %v", len(versions), versions)
 	}
 }
+
+func TestMetaCPANProvider_ResolveLatest(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		release := metacpanRelease{
+			Distribution: "App-Ack",
+			Version:      "3.7.0",
+			Author:       "PETDANCE",
+			Status:       "latest",
+		}
+		_ = json.NewEncoder(w).Encode(release)
+	}))
+	defer server.Close()
+
+	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver.httpClient = server.Client()
+	provider := NewMetaCPANProvider(resolver, "App-Ack")
+
+	ctx := context.Background()
+	info, err := provider.ResolveLatest(ctx)
+	if err != nil {
+		t.Fatalf("ResolveLatest failed: %v", err)
+	}
+
+	if info.Version != "3.7.0" {
+		t.Errorf("expected version 3.7.0, got %s", info.Version)
+	}
+}
+
+func TestListMetaCPANVersions_InvalidDistributionName(t *testing.T) {
+	resolver := New()
+	ctx := context.Background()
+
+	// Test invalid distribution name
+	_, err := resolver.ListMetaCPANVersions(ctx, "invalid;name")
+	if err == nil {
+		t.Error("expected error for invalid distribution name")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeValidation {
+		t.Errorf("expected ErrTypeValidation, got %v", resolverErr.Type)
+	}
+}
+
+func TestListMetaCPANVersions_ModuleNameSuggestion(t *testing.T) {
+	resolver := New()
+	ctx := context.Background()
+
+	// Test module name (should suggest conversion)
+	_, err := resolver.ListMetaCPANVersions(ctx, "App::Ack")
+	if err == nil {
+		t.Error("expected error for module name")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeValidation {
+		t.Errorf("expected ErrTypeValidation, got %v", resolverErr.Type)
+	}
+
+	// Error message should suggest App-Ack
+	if resolverErr.Message == "" {
+		t.Error("expected error message with suggestion")
+	}
+}
+
+func TestListMetaCPANVersions_HTTPSEnforcement(t *testing.T) {
+	// Create a resolver with HTTP URL (should fail)
+	resolver := NewWithMetaCPANRegistry("http://fastapi.metacpan.org/v1")
+
+	ctx := context.Background()
+	_, err := resolver.ListMetaCPANVersions(ctx, "App-Ack")
+	if err == nil {
+		t.Error("expected error for HTTP URL")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeValidation {
+		t.Errorf("expected ErrTypeValidation for HTTPS enforcement, got %v", resolverErr.Type)
+	}
+}
+
+func TestListMetaCPANVersions_NotFound(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver.httpClient = server.Client()
+
+	ctx := context.Background()
+	_, err := resolver.ListMetaCPANVersions(ctx, "Nonexistent-Distribution")
+	if err == nil {
+		t.Error("expected error for nonexistent distribution")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeNotFound {
+		t.Errorf("expected ErrTypeNotFound, got %v", resolverErr.Type)
+	}
+}
+
+func TestListMetaCPANVersions_RateLimit(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTooManyRequests)
+	}))
+	defer server.Close()
+
+	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver.httpClient = server.Client()
+
+	ctx := context.Background()
+	_, err := resolver.ListMetaCPANVersions(ctx, "App-Ack")
+	if err == nil {
+		t.Error("expected error for rate limit")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeRateLimit {
+		t.Errorf("expected ErrTypeRateLimit, got %v", resolverErr.Type)
+	}
+}
+
+func TestListMetaCPANVersions_InvalidContentType(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte("<html>Not JSON</html>"))
+	}))
+	defer server.Close()
+
+	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver.httpClient = server.Client()
+
+	ctx := context.Background()
+	_, err := resolver.ListMetaCPANVersions(ctx, "App-Ack")
+	if err == nil {
+		t.Error("expected error for invalid content-type")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeParsing {
+		t.Errorf("expected ErrTypeParsing, got %v", resolverErr.Type)
+	}
+}
+
+func TestListMetaCPANVersions_ServerError(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver.httpClient = server.Client()
+
+	ctx := context.Background()
+	_, err := resolver.ListMetaCPANVersions(ctx, "App-Ack")
+	if err == nil {
+		t.Error("expected error for server error")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeNetwork {
+		t.Errorf("expected ErrTypeNetwork, got %v", resolverErr.Type)
+	}
+}
+
+func TestResolveMetaCPAN_EmptyVersion(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		release := metacpanRelease{
+			Distribution: "App-Ack",
+			Version:      "", // Empty version
+			Author:       "PETDANCE",
+		}
+		_ = json.NewEncoder(w).Encode(release)
+	}))
+	defer server.Close()
+
+	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver.httpClient = server.Client()
+
+	ctx := context.Background()
+	_, err := resolver.ResolveMetaCPAN(ctx, "App-Ack")
+	if err == nil {
+		t.Error("expected error for empty version")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeNotFound {
+		t.Errorf("expected ErrTypeNotFound, got %v", resolverErr.Type)
+	}
+}
+
+func TestResolveMetaCPAN_ServerError(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver.httpClient = server.Client()
+
+	ctx := context.Background()
+	_, err := resolver.ResolveMetaCPAN(ctx, "App-Ack")
+	if err == nil {
+		t.Error("expected error for server error")
+	}
+
+	resolverErr, ok := err.(*ResolverError)
+	if !ok {
+		t.Errorf("expected ResolverError, got %T", err)
+	}
+	if resolverErr.Type != ErrTypeNetwork {
+		t.Errorf("expected ErrTypeNetwork, got %v", resolverErr.Type)
+	}
+}
+
+func TestMetaCPANSourceStrategy_Create(t *testing.T) {
+	strategy := &MetaCPANSourceStrategy{}
+	resolver := New()
+
+	r := &recipe.Recipe{
+		Version: recipe.VersionSection{Source: "metacpan"},
+		Steps: []recipe.Step{
+			{
+				Action: "cpan_install",
+				Params: map[string]interface{}{"distribution": "App-Ack"},
+			},
+		},
+	}
+
+	provider, err := strategy.Create(resolver, r)
+	if err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	if provider.SourceDescription() != "metacpan:App-Ack" {
+		t.Errorf("expected 'metacpan:App-Ack', got %s", provider.SourceDescription())
+	}
+}
+
+func TestMetaCPANSourceStrategy_Create_NoDistribution(t *testing.T) {
+	strategy := &MetaCPANSourceStrategy{}
+	resolver := New()
+
+	r := &recipe.Recipe{
+		Version: recipe.VersionSection{Source: "metacpan"},
+		Steps: []recipe.Step{
+			{
+				Action: "cpan_install",
+				Params: map[string]interface{}{}, // No distribution
+			},
+		},
+	}
+
+	_, err := strategy.Create(resolver, r)
+	if err == nil {
+		t.Error("expected error when no distribution found")
+	}
+}
+
+func TestInferredMetaCPANStrategy_Create(t *testing.T) {
+	strategy := &InferredMetaCPANStrategy{}
+	resolver := New()
+
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action: "cpan_install",
+				Params: map[string]interface{}{"distribution": "Perl-Critic"},
+			},
+		},
+	}
+
+	provider, err := strategy.Create(resolver, r)
+	if err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	if provider.SourceDescription() != "metacpan:Perl-Critic" {
+		t.Errorf("expected 'metacpan:Perl-Critic', got %s", provider.SourceDescription())
+	}
+}
+
+func TestInferredMetaCPANStrategy_Create_NoDistribution(t *testing.T) {
+	strategy := &InferredMetaCPANStrategy{}
+	resolver := New()
+
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action: "cpan_install",
+				Params: map[string]interface{}{}, // No distribution
+			},
+		},
+	}
+
+	_, err := strategy.Create(resolver, r)
+	if err == nil {
+		t.Error("expected error when no distribution found")
+	}
+}
