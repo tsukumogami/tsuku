@@ -23,10 +23,12 @@ inspected or edited before running 'tsuku install <tool>'.
 
 Supported ecosystems:
   crates.io    Rust crates from crates.io
+  rubygems     Ruby gems from rubygems.org
 
 Examples:
   tsuku create ripgrep --from crates.io
-  tsuku create bat --from crates.io --force`,
+  tsuku create bat --from crates.io --force
+  tsuku create jekyll --from rubygems`,
 	Args: cobra.ExactArgs(1),
 	Run:  runCreate,
 }
@@ -49,6 +51,8 @@ func normalizeEcosystem(name string) string {
 	switch normalized {
 	case "crates.io", "crates_io", "crates", "cargo":
 		return "crates.io"
+	case "rubygems", "rubygems.org", "gems", "gem":
+		return "rubygems"
 	default:
 		return normalized
 	}
@@ -63,6 +67,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Initialize builder registry
 	builderRegistry := builders.NewRegistry()
 	builderRegistry.Register(builders.NewCargoBuilder(nil))
+	builderRegistry.Register(builders.NewGemBuilder(nil))
 
 	// Get the builder
 	builder, ok := builderRegistry.Get(ecosystem)
