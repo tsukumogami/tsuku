@@ -32,8 +32,8 @@ This approach keeps error message logic in one place, making it easy to maintain
 
 ## Implementation Steps
 
-- [ ] Create internal/errmsg/errmsg.go with Format function and error detection
-- [ ] Add unit tests for errmsg package
+- [x] Create internal/errmsg/errmsg.go with Format function and error detection
+- [x] Add unit tests for errmsg package
 - [ ] Update install.go to use errmsg.Format
 - [ ] Update versions.go to use errmsg.Format
 - [ ] Update verify.go to use errmsg.Format
