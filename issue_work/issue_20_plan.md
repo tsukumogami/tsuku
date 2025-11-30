@@ -38,8 +38,8 @@ The key insight is that both error types already have `Suggestion()` methods ret
 - [x] Create `internal/errmsg/errmsg_test.go` with comprehensive tests
 - [x] Add printError helper to `cmd/tsuku/helpers.go`
 - [x] Update install.go to use printError
-- [ ] Update other commands (versions, update, outdated, info) to use printError
-- [ ] Verify all tests pass
+- [x] Update other commands (versions, update, outdated, info) to use printError
+- [x] Verify all tests pass
 
 ## Testing Strategy
 
