@@ -15,11 +15,56 @@ var infoCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		toolName := args[0]
+		jsonOutput, _ := cmd.Flags().GetBool("json")
 
 		// Load recipe
 		r, err := loader.Get(toolName)
 		if err != nil {
 			fmt.Printf("Tool '%s' not found in registry.\n", toolName)
+			return
+		}
+
+		// Check installation status
+		var installedVersion, location string
+		status := "not_installed"
+		cfg, err := config.DefaultConfig()
+		if err == nil {
+			mgr := install.New(cfg)
+			tools, _ := mgr.List()
+
+			for _, t := range tools {
+				if t.Name == toolName {
+					status = "installed"
+					installedVersion = t.Version
+					location = cfg.ToolDir(toolName, t.Version)
+					break
+				}
+			}
+		}
+
+		// JSON output mode
+		if jsonOutput {
+			type infoOutput struct {
+				Name             string `json:"name"`
+				Description      string `json:"description"`
+				Homepage         string `json:"homepage,omitempty"`
+				VersionFormat    string `json:"version_format"`
+				Status           string `json:"status"`
+				InstalledVersion string `json:"installed_version,omitempty"`
+				Location         string `json:"location,omitempty"`
+				VerifyCommand    string `json:"verify_command,omitempty"`
+			}
+			output := infoOutput{
+				Name:             r.Metadata.Name,
+				Description:      r.Metadata.Description,
+				Homepage:         r.Metadata.Homepage,
+				VersionFormat:    r.Metadata.VersionFormat,
+				Status:           status,
+				InstalledVersion: installedVersion,
+				Location:         location,
+				VerifyCommand:    r.Verify.Command,
+			}
+			printJSON(output)
 			return
 		}
 
@@ -30,24 +75,11 @@ var infoCmd = &cobra.Command{
 		}
 		fmt.Printf("Version Format: %s\n", r.Metadata.VersionFormat)
 
-		// Check installation status
-		cfg, err := config.DefaultConfig()
-		if err == nil {
-			mgr := install.New(cfg)
-			tools, _ := mgr.List()
-
-			installed := false
-			for _, t := range tools {
-				if t.Name == toolName {
-					fmt.Printf("Status:         Installed (v%s)\n", t.Version)
-					fmt.Printf("Location:       %s\n", cfg.ToolDir(toolName, t.Version))
-					installed = true
-					break
-				}
-			}
-			if !installed {
-				fmt.Printf("Status:         Not installed\n")
-			}
+		if status == "installed" {
+			fmt.Printf("Status:         Installed (v%s)\n", installedVersion)
+			fmt.Printf("Location:       %s\n", location)
+		} else {
+			fmt.Printf("Status:         Not installed\n")
 		}
 
 		// Show verification method
@@ -55,4 +87,8 @@ var infoCmd = &cobra.Command{
 			fmt.Printf("Verify Command: %s\n", r.Verify.Command)
 		}
 	},
+}
+
+func init() {
+	infoCmd.Flags().Bool("json", false, "Output in JSON format")
 }

@@ -16,6 +16,8 @@ var outdatedCmd = &cobra.Command{
 	Short: "Check for outdated tools",
 	Long:  `Check for newer versions of installed tools.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		jsonOutput, _ := cmd.Flags().GetBool("json")
+
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
@@ -30,19 +32,28 @@ var outdatedCmd = &cobra.Command{
 		}
 
 		if len(tools) == 0 {
+			if jsonOutput {
+				type outdatedOutput struct {
+					Updates []struct{} `json:"updates"`
+				}
+				printJSON(outdatedOutput{Updates: []struct{}{}})
+				return
+			}
 			printInfo("No tools installed.")
 			return
 		}
 
-		printInfo("Checking for updates...")
+		if !jsonOutput {
+			printInfo("Checking for updates...")
+		}
 		res := version.New()
 		ctx := context.Background()
 
 		type updateInfo struct {
-			Name    string
-			Current string
-			Latest  string
-			Repo    string
+			Name    string `json:"name"`
+			Current string `json:"current"`
+			Latest  string `json:"latest"`
+			Repo    string `json:"-"`
 		}
 		var updates []updateInfo
 
@@ -69,7 +80,9 @@ var outdatedCmd = &cobra.Command{
 			}
 
 			// Check latest version
-			printInfof("Checking %s...\n", tool.Name)
+			if !jsonOutput {
+				printInfof("Checking %s...\n", tool.Name)
+			}
 			latest, err := res.ResolveGitHub(ctx, repo)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "Failed to check %s: %v\n", tool.Name, err)
@@ -90,6 +103,19 @@ var outdatedCmd = &cobra.Command{
 			}
 		}
 
+		// JSON output mode
+		if jsonOutput {
+			type outdatedOutput struct {
+				Updates []updateInfo `json:"updates"`
+			}
+			output := outdatedOutput{Updates: updates}
+			if output.Updates == nil {
+				output.Updates = []updateInfo{}
+			}
+			printJSON(output)
+			return
+		}
+
 		printInfo()
 		if len(updates) == 0 {
 			printInfo("All tools are up to date!")
@@ -102,4 +128,8 @@ var outdatedCmd = &cobra.Command{
 		}
 		printInfo("\nTo update, run: tsuku update <tool>")
 	},
+}
+
+func init() {
+	outdatedCmd.Flags().Bool("json", false, "Output in JSON format")
 }
