@@ -38,6 +38,7 @@ type Resolver struct {
 	rubygemsRegistryURL string         // RubyGems.org registry URL (injectable for testing)
 	metacpanRegistryURL string         // MetaCPAN registry URL (injectable for testing)
 	goDevURL            string         // go.dev URL (injectable for testing)
+	goProxyURL          string         // Go module proxy URL (injectable for testing)
 	authenticated       bool           // Whether GitHub requests are authenticated
 }
 
@@ -167,6 +168,7 @@ func New() *Resolver {
 		rubygemsRegistryURL: "https://rubygems.org",            // Production default
 		metacpanRegistryURL: "https://fastapi.metacpan.org/v1", // Production default
 		goDevURL:            "https://go.dev",                  // Production default
+		goProxyURL:          "https://proxy.golang.org",        // Production default
 		authenticated:       authenticated,
 	}
 }
@@ -193,6 +195,7 @@ func NewWithNpmRegistry(registryURL string) *Resolver {
 		rubygemsRegistryURL: "https://rubygems.org",            // Default RubyGems
 		metacpanRegistryURL: "https://fastapi.metacpan.org/v1", // Default MetaCPAN
 		goDevURL:            "https://go.dev",                  // Default go.dev
+		goProxyURL:          "https://proxy.golang.org",        // Default Go proxy
 		authenticated:       authenticated,
 	}
 }
@@ -219,6 +222,7 @@ func NewWithPyPIRegistry(registryURL string) *Resolver {
 		rubygemsRegistryURL: "https://rubygems.org",            // Default RubyGems
 		metacpanRegistryURL: "https://fastapi.metacpan.org/v1", // Default MetaCPAN
 		goDevURL:            "https://go.dev",                  // Default go.dev
+		goProxyURL:          "https://proxy.golang.org",        // Default Go proxy
 		authenticated:       authenticated,
 	}
 }
@@ -245,6 +249,7 @@ func NewWithCratesIORegistry(registryURL string) *Resolver {
 		rubygemsRegistryURL: "https://rubygems.org",            // Default RubyGems
 		metacpanRegistryURL: "https://fastapi.metacpan.org/v1", // Default MetaCPAN
 		goDevURL:            "https://go.dev",                  // Default go.dev
+		goProxyURL:          "https://proxy.golang.org",        // Default Go proxy
 		authenticated:       authenticated,
 	}
 }
@@ -271,6 +276,7 @@ func NewWithRubyGemsRegistry(registryURL string) *Resolver {
 		rubygemsRegistryURL: registryURL,
 		metacpanRegistryURL: "https://fastapi.metacpan.org/v1", // Default MetaCPAN
 		goDevURL:            "https://go.dev",                  // Default go.dev
+		goProxyURL:          "https://proxy.golang.org",        // Default Go proxy
 		authenticated:       authenticated,
 	}
 }
@@ -296,7 +302,8 @@ func NewWithMetaCPANRegistry(registryURL string) *Resolver {
 		cratesIORegistryURL: "https://crates.io",          // Default crates.io
 		rubygemsRegistryURL: "https://rubygems.org",       // Default RubyGems
 		metacpanRegistryURL: registryURL,
-		goDevURL:            "https://go.dev", // Default go.dev
+		goDevURL:            "https://go.dev",           // Default go.dev
+		goProxyURL:          "https://proxy.golang.org", // Default Go proxy
 		authenticated:       authenticated,
 	}
 }
@@ -323,6 +330,34 @@ func NewWithGoDevURL(goDevURL string) *Resolver {
 		rubygemsRegistryURL: "https://rubygems.org",            // Default RubyGems
 		metacpanRegistryURL: "https://fastapi.metacpan.org/v1", // Default MetaCPAN
 		goDevURL:            goDevURL,
+		goProxyURL:          "https://proxy.golang.org", // Default Go proxy
+		authenticated:       authenticated,
+	}
+}
+
+// NewWithGoProxyURL creates a resolver with custom Go proxy URL (for testing)
+func NewWithGoProxyURL(goProxyURL string) *Resolver {
+	var githubHTTPClient *http.Client
+	authenticated := false
+
+	// Check for GitHub token in environment
+	if token := os.Getenv("GITHUB_TOKEN"); token != "" {
+		ts := oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})
+		githubHTTPClient = oauth2.NewClient(context.Background(), ts)
+		authenticated = true
+	}
+
+	return &Resolver{
+		client:              github.NewClient(githubHTTPClient),
+		httpClient:          NewHTTPClient(),
+		registry:            NewRegistry(),
+		npmRegistryURL:      "https://registry.npmjs.org",      // Default npm
+		pypiRegistryURL:     "https://pypi.org",                // Default PyPI
+		cratesIORegistryURL: "https://crates.io",               // Default crates.io
+		rubygemsRegistryURL: "https://rubygems.org",            // Default RubyGems
+		metacpanRegistryURL: "https://fastapi.metacpan.org/v1", // Default MetaCPAN
+		goDevURL:            "https://go.dev",                  // Default go.dev
+		goProxyURL:          goProxyURL,
 		authenticated:       authenticated,
 	}
 }
@@ -1037,6 +1072,178 @@ func (r *Resolver) ListGoToolchainVersions(ctx context.Context) ([]string, error
 // e.g., "go1.23.4" -> "1.23.4"
 func normalizeGoToolchainVersion(version string) string {
 	return strings.TrimPrefix(version, "go")
+}
+
+// Go module proxy API response structure
+type goModuleInfo struct {
+	Version string `json:"Version"` // e.g., "v1.64.8"
+	Time    string `json:"Time"`    // e.g., "2025-03-17T16:54:02Z"
+}
+
+const (
+	// Max response size for Go proxy API (1MB should be plenty for version lists)
+	maxGoProxyResponseSize = 1 * 1024 * 1024
+)
+
+// encodeModulePath encodes a Go module path for use in proxy URLs.
+// Uppercase letters are replaced with '!' followed by the lowercase letter.
+// e.g., "github.com/User/Repo" -> "github.com/!user/!repo"
+func encodeModulePath(path string) string {
+	var result strings.Builder
+	for _, r := range path {
+		if r >= 'A' && r <= 'Z' {
+			result.WriteRune('!')
+			result.WriteRune(r + 32) // Convert to lowercase
+		} else {
+			result.WriteRune(r)
+		}
+	}
+	return result.String()
+}
+
+// ResolveGoProxy fetches the latest version of a Go module from proxy.golang.org
+//
+// API: https://proxy.golang.org/{module}/@latest
+// Returns: Version with "v" prefix (e.g., "v1.64.8")
+func (r *Resolver) ResolveGoProxy(ctx context.Context, modulePath string) (*VersionInfo, error) {
+	goProxyURL := r.goProxyURL
+	if goProxyURL == "" {
+		goProxyURL = "https://proxy.golang.org" // Default if not set
+	}
+
+	encodedPath := encodeModulePath(modulePath)
+	apiURL := fmt.Sprintf("%s/%s/@latest", goProxyURL, encodedPath)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "goproxy",
+			Message: "failed to create request",
+			Err:     err,
+		}
+	}
+
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, WrapNetworkError(err, "goproxy", "failed to fetch module info")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, &ResolverError{
+			Type:    ErrTypeNotFound,
+			Source:  "goproxy",
+			Message: fmt.Sprintf("module %s not found", modulePath),
+		}
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "goproxy",
+			Message: fmt.Sprintf("proxy.golang.org returned status %d", resp.StatusCode),
+		}
+	}
+
+	// Limit response size to prevent memory exhaustion
+	limitedReader := io.LimitReader(resp.Body, maxGoProxyResponseSize)
+
+	var info goModuleInfo
+	if err := json.NewDecoder(limitedReader).Decode(&info); err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeParsing,
+			Source:  "goproxy",
+			Message: "failed to parse proxy response",
+			Err:     err,
+		}
+	}
+
+	if info.Version == "" {
+		return nil, &ResolverError{
+			Type:    ErrTypeNotFound,
+			Source:  "goproxy",
+			Message: "no version found in response",
+		}
+	}
+
+	return &VersionInfo{
+		Tag:     info.Version,
+		Version: strings.TrimPrefix(info.Version, "v"), // Normalize to "1.64.8"
+	}, nil
+}
+
+// ListGoProxyVersions fetches all available versions of a Go module from proxy.golang.org
+//
+// API: https://proxy.golang.org/{module}/@v/list
+// Returns: List of versions with "v" prefix (e.g., ["v1.64.8", "v1.64.7", ...])
+func (r *Resolver) ListGoProxyVersions(ctx context.Context, modulePath string) ([]string, error) {
+	goProxyURL := r.goProxyURL
+	if goProxyURL == "" {
+		goProxyURL = "https://proxy.golang.org" // Default if not set
+	}
+
+	encodedPath := encodeModulePath(modulePath)
+	apiURL := fmt.Sprintf("%s/%s/@v/list", goProxyURL, encodedPath)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
+	if err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "goproxy",
+			Message: "failed to create request",
+			Err:     err,
+		}
+	}
+
+	resp, err := r.httpClient.Do(req)
+	if err != nil {
+		return nil, WrapNetworkError(err, "goproxy", "failed to fetch version list")
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return nil, &ResolverError{
+			Type:    ErrTypeNotFound,
+			Source:  "goproxy",
+			Message: fmt.Sprintf("module %s not found", modulePath),
+		}
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, &ResolverError{
+			Type:    ErrTypeNetwork,
+			Source:  "goproxy",
+			Message: fmt.Sprintf("proxy.golang.org returned status %d", resp.StatusCode),
+		}
+	}
+
+	// Limit response size to prevent memory exhaustion
+	limitedReader := io.LimitReader(resp.Body, maxGoProxyResponseSize)
+
+	// Response is newline-separated list of versions
+	body, err := io.ReadAll(limitedReader)
+	if err != nil {
+		return nil, &ResolverError{
+			Type:    ErrTypeParsing,
+			Source:  "goproxy",
+			Message: "failed to read response",
+			Err:     err,
+		}
+	}
+
+	lines := strings.Split(strings.TrimSpace(string(body)), "\n")
+	var versions []string
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line != "" {
+			versions = append(versions, line)
+		}
+	}
+
+	return versions, nil
 }
 
 // ResolveCustom resolves a version using a custom source from the registry
