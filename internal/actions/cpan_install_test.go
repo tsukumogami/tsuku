@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -205,5 +207,328 @@ func TestCpanInstallAction_Registration(t *testing.T) {
 	}
 	if action.Name() != "cpan_install" {
 		t.Errorf("registered action name = %q, want %q", action.Name(), "cpan_install")
+	}
+}
+
+func TestCpanInstallAction_Execute_ExecutableValidation(t *testing.T) {
+	action := &CpanInstallAction{}
+
+	tests := []struct {
+		name        string
+		executables []interface{}
+		expectError string
+	}{
+		{
+			name:        "empty executable name",
+			executables: []interface{}{""},
+			expectError: "invalid executable name length",
+		},
+		{
+			name:        "executable with backslash",
+			executables: []interface{}{"exe\\name"},
+			expectError: "must not contain path separators",
+		},
+		{
+			name:        "executable with dot-dot",
+			executables: []interface{}{".."},
+			expectError: "must not contain path separators",
+		},
+		{
+			name:        "executable is single dot",
+			executables: []interface{}{"."},
+			expectError: "must not contain path separators",
+		},
+		{
+			name:        "executable with control char",
+			executables: []interface{}{"exe\x00name"},
+			expectError: "contains control characters",
+		},
+		{
+			name:        "executable with tab",
+			executables: []interface{}{"exe\tname"},
+			expectError: "contains control characters",
+		},
+		{
+			name:        "executable with dollar sign",
+			executables: []interface{}{"$PATH"},
+			expectError: "contains shell metacharacters",
+		},
+		{
+			name:        "executable with backtick",
+			executables: []interface{}{"`cmd`"},
+			expectError: "contains shell metacharacters",
+		},
+		{
+			name:        "executable with pipe",
+			executables: []interface{}{"cmd|cat"},
+			expectError: "contains shell metacharacters",
+		},
+		{
+			name:        "executable with ampersand",
+			executables: []interface{}{"cmd&"},
+			expectError: "contains shell metacharacters",
+		},
+		{
+			name:        "executable with angle brackets",
+			executables: []interface{}{"cmd>file"},
+			expectError: "contains shell metacharacters",
+		},
+		{
+			name:        "executable with parentheses",
+			executables: []interface{}{"cmd()"},
+			expectError: "contains shell metacharacters",
+		},
+		{
+			name:        "executable with brackets",
+			executables: []interface{}{"cmd[0]"},
+			expectError: "contains shell metacharacters",
+		},
+		{
+			name:        "executable with braces",
+			executables: []interface{}{"cmd{}"},
+			expectError: "contains shell metacharacters",
+		},
+		{
+			name:        "executable too long",
+			executables: []interface{}{strings.Repeat("a", 257)},
+			expectError: "invalid executable name length",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &ExecutionContext{
+				Version:    "1.0.0",
+				InstallDir: "/tmp/test",
+			}
+
+			params := map[string]interface{}{
+				"distribution": "App-Ack",
+				"executables":  tt.executables,
+			}
+
+			err := action.Execute(ctx, params)
+			if err == nil {
+				t.Errorf("expected error containing %q, got nil", tt.expectError)
+				return
+			}
+
+			if !strings.Contains(err.Error(), tt.expectError) {
+				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
+			}
+		})
+	}
+}
+
+func TestCpanInstallAction_Execute_PerlNotFound(t *testing.T) {
+	action := &CpanInstallAction{}
+
+	// This test verifies the error when perl is not installed
+	// Since we don't have perl installed in test environment, this will fail at that stage
+	ctx := &ExecutionContext{
+		Version:    "1.0.0",
+		InstallDir: "/tmp/test",
+	}
+
+	params := map[string]interface{}{
+		"distribution": "App-Ack",
+		"executables":  []interface{}{"ack"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error about perl not found, got nil")
+		return
+	}
+
+	// Should fail because perl is not installed
+	if !strings.Contains(err.Error(), "perl not found") && !strings.Contains(err.Error(), "/bin/bash not found") {
+		t.Errorf("expected error about perl or bash not found, got %q", err.Error())
+	}
+}
+
+func TestResolvePerl(t *testing.T) {
+	// Test with non-existent home directory
+	// ResolvePerl should return empty string when perl is not installed
+	result := ResolvePerl()
+	// In test environment, perl is likely not installed via tsuku
+	// so we just verify it doesn't panic and returns a string
+	if result != "" {
+		// If perl is found, verify the path looks valid
+		if !strings.Contains(result, "perl") {
+			t.Errorf("ResolvePerl() returned path not containing 'perl': %s", result)
+		}
+	}
+}
+
+func TestResolveCpanm(t *testing.T) {
+	// Test with non-existent home directory
+	// ResolveCpanm should return empty string when perl is not installed
+	result := ResolveCpanm()
+	// In test environment, perl is likely not installed via tsuku
+	// so we just verify it doesn't panic and returns a string
+	if result != "" {
+		// If cpanm is found, verify the path looks valid
+		if !strings.Contains(result, "cpanm") {
+			t.Errorf("ResolveCpanm() returned path not containing 'cpanm': %s", result)
+		}
+	}
+}
+
+func TestResolvePerl_WithMockDirectory(t *testing.T) {
+	// Create a temporary directory structure mimicking tsuku's tools
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory
+	os.Setenv("HOME", tmpDir)
+
+	// Test 1: No .tsuku directory
+	result := ResolvePerl()
+	if result != "" {
+		t.Errorf("expected empty string when .tsuku doesn't exist, got %q", result)
+	}
+
+	// Test 2: .tsuku/tools exists but no perl directories
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatalf("failed to create tools dir: %v", err)
+	}
+
+	result = ResolvePerl()
+	if result != "" {
+		t.Errorf("expected empty string when no perl dirs exist, got %q", result)
+	}
+
+	// Test 3: perl directory exists but no bin/perl
+	perlDir := filepath.Join(toolsDir, "perl-5.38.0")
+	if err := os.MkdirAll(perlDir, 0755); err != nil {
+		t.Fatalf("failed to create perl dir: %v", err)
+	}
+
+	result = ResolvePerl()
+	if result != "" {
+		t.Errorf("expected empty string when bin/perl doesn't exist, got %q", result)
+	}
+
+	// Test 4: bin directory exists but perl is not executable
+	binDir := filepath.Join(perlDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	perlPath := filepath.Join(binDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho perl"), 0644); err != nil {
+		t.Fatalf("failed to create perl file: %v", err)
+	}
+
+	result = ResolvePerl()
+	if result != "" {
+		t.Errorf("expected empty string when perl is not executable, got %q", result)
+	}
+
+	// Test 5: perl is executable
+	if err := os.Chmod(perlPath, 0755); err != nil {
+		t.Fatalf("failed to chmod perl: %v", err)
+	}
+
+	result = ResolvePerl()
+	if result != perlPath {
+		t.Errorf("expected %q, got %q", perlPath, result)
+	}
+
+	// Test 6: Multiple perl versions - should return latest
+	perl2Dir := filepath.Join(toolsDir, "perl-5.40.0")
+	bin2Dir := filepath.Join(perl2Dir, "bin")
+	if err := os.MkdirAll(bin2Dir, 0755); err != nil {
+		t.Fatalf("failed to create perl2 dir: %v", err)
+	}
+
+	perl2Path := filepath.Join(bin2Dir, "perl")
+	if err := os.WriteFile(perl2Path, []byte("#!/bin/sh\necho perl"), 0755); err != nil {
+		t.Fatalf("failed to create perl2 file: %v", err)
+	}
+
+	result = ResolvePerl()
+	if result != perl2Path {
+		t.Errorf("expected latest version %q, got %q", perl2Path, result)
+	}
+}
+
+func TestResolveCpanm_WithMockDirectory(t *testing.T) {
+	// Create a temporary directory structure mimicking tsuku's tools
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory
+	os.Setenv("HOME", tmpDir)
+
+	// Test 1: No .tsuku directory
+	result := ResolveCpanm()
+	if result != "" {
+		t.Errorf("expected empty string when .tsuku doesn't exist, got %q", result)
+	}
+
+	// Test 2: .tsuku/tools exists but no perl directories
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatalf("failed to create tools dir: %v", err)
+	}
+
+	result = ResolveCpanm()
+	if result != "" {
+		t.Errorf("expected empty string when no perl dirs exist, got %q", result)
+	}
+
+	// Test 3: perl directory exists but no bin/cpanm
+	perlDir := filepath.Join(toolsDir, "perl-5.38.0")
+	binDir := filepath.Join(perlDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	result = ResolveCpanm()
+	if result != "" {
+		t.Errorf("expected empty string when bin/cpanm doesn't exist, got %q", result)
+	}
+
+	// Test 4: cpanm exists but is not executable
+	cpanmPath := filepath.Join(binDir, "cpanm")
+	if err := os.WriteFile(cpanmPath, []byte("#!/bin/sh\necho cpanm"), 0644); err != nil {
+		t.Fatalf("failed to create cpanm file: %v", err)
+	}
+
+	result = ResolveCpanm()
+	if result != "" {
+		t.Errorf("expected empty string when cpanm is not executable, got %q", result)
+	}
+
+	// Test 5: cpanm is executable
+	if err := os.Chmod(cpanmPath, 0755); err != nil {
+		t.Fatalf("failed to chmod cpanm: %v", err)
+	}
+
+	result = ResolveCpanm()
+	if result != cpanmPath {
+		t.Errorf("expected %q, got %q", cpanmPath, result)
+	}
+
+	// Test 6: Multiple perl versions - should return cpanm from latest
+	perl2Dir := filepath.Join(toolsDir, "perl-5.40.0")
+	bin2Dir := filepath.Join(perl2Dir, "bin")
+	if err := os.MkdirAll(bin2Dir, 0755); err != nil {
+		t.Fatalf("failed to create perl2 dir: %v", err)
+	}
+
+	cpanm2Path := filepath.Join(bin2Dir, "cpanm")
+	if err := os.WriteFile(cpanm2Path, []byte("#!/bin/sh\necho cpanm"), 0755); err != nil {
+		t.Fatalf("failed to create cpanm2 file: %v", err)
+	}
+
+	result = ResolveCpanm()
+	if result != cpanm2Path {
+		t.Errorf("expected latest version %q, got %q", cpanm2Path, result)
 	}
 }
