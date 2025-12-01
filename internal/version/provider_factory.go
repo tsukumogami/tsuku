@@ -60,6 +60,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&NpmSourceStrategy{})         // PriorityKnownRegistry (100) - intercepts source="npm"
 	f.Register(&NixpkgsSourceStrategy{})     // PriorityKnownRegistry (100) - intercepts source="nixpkgs"
 	f.Register(&GoToolchainSourceStrategy{}) // PriorityKnownRegistry (100) - intercepts source="go_toolchain"
+	f.Register(&GoProxySourceStrategy{})     // PriorityKnownRegistry (100) - intercepts source="goproxy"
 	f.Register(&MetaCPANSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="metacpan"
 	f.Register(&GitHubRepoStrategy{})        // PriorityExplicitHint (90)
 	f.Register(&ExplicitSourceStrategy{})    // PriorityExplicitSource (80) - catch-all for custom sources
@@ -420,6 +421,38 @@ func (s *GoToolchainSourceStrategy) CanHandle(r *recipe.Recipe) bool {
 
 func (s *GoToolchainSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
 	return NewGoToolchainProvider(resolver), nil
+}
+
+// GoProxySourceStrategy handles recipes with [version] source = "goproxy"
+// This intercepts source="goproxy" to use GoProxyProvider for Go module versioning
+type GoProxySourceStrategy struct{}
+
+func (s *GoProxySourceStrategy) Priority() int { return PriorityKnownRegistry }
+
+func (s *GoProxySourceStrategy) CanHandle(r *recipe.Recipe) bool {
+	if r.Version.Source != "goproxy" {
+		return false
+	}
+	// Must have go_install action with module path
+	for _, step := range r.Steps {
+		if step.Action == "go_install" {
+			if _, ok := step.Params["module"].(string); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *GoProxySourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	for _, step := range r.Steps {
+		if step.Action == "go_install" {
+			if module, ok := step.Params["module"].(string); ok {
+				return NewGoProxyProvider(resolver, module), nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no Go module found in go_install steps")
 }
 
 // MetaCPANSourceStrategy handles recipes with [version] source = "metacpan"
