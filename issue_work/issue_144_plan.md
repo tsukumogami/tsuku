@@ -20,7 +20,7 @@ Follow the existing integration test pattern: add Perl test cases to test-matrix
 - [x] Add T51: ack test (tier 5, cpan_install with App-Ack distribution) - in scheduled array pending ack recipe
 - [x] Add Perl tests to CI linux array (T50 for now; T51 in scheduled pending ack recipe in registry)
 - [x] Verify test-matrix.json is valid JSON
-- [ ] Run integration tests locally to verify
+- [x] Run integration tests locally to verify
 
 Mark each step [x] after it is implemented and committed.
 
