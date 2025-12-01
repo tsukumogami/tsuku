@@ -64,6 +64,7 @@ func init() {
 	rootCmd.AddCommand(configCmd)
 	rootCmd.AddCommand(createCmd)
 	rootCmd.AddCommand(completionCmd)
+	rootCmd.AddCommand(validateCmd)
 }
 
 func main() {
