@@ -347,7 +347,7 @@ func TestLevenshteinDistance(t *testing.T) {
 		{"abc", "ab", 1},
 		{"abc", "abd", 1},
 		{"download", "downlod", 1},
-		{"download", "downlaod", 2},
+		{"download", "downlaod", 2}, //nolint:misspell // intentional typo for testing
 		{"download_archive", "download_archiv", 1},
 	}
 
