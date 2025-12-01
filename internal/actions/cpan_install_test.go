@@ -887,3 +887,195 @@ exit 0
 		t.Errorf("expected successful installation with empty version, got error: %v", err)
 	}
 }
+
+func TestIsValidModuleName(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		// Valid module names
+		{"simple name", "App", true},
+		{"with colons", "App::Ack", true},
+		{"with underscore", "App_Test", true},
+		{"mixed case", "MyModule", true},
+		{"with numbers", "App5", true},
+		{"complex", "File::Slurp::Tiny", true},
+		{"deeply nested", "A::B::C::D::E", true},
+		{"with underscore and colons", "My_App::Test_Module", true},
+
+		// Invalid module names
+		{"empty", "", false},
+		{"starts with number", "1App", false},
+		{"starts with underscore", "_App", false},
+		{"starts with colons", "::App", false},
+		{"ends with colons", "App::", false},
+		{"empty part", "App::::Ack", false},
+		{"contains hyphen", "App-Ack", false},
+		{"contains dot", "App.Ack", false},
+		{"contains space", "App Ack", false},
+		{"contains slash", "App/Ack", false},
+		{"too long", strings.Repeat("A", 129), false},
+		{"part starts with number", "App::1Test", false},
+
+		// Security test cases
+		{"injection semicolon", "App;echo", false},
+		{"injection backtick", "App`pwd`", false},
+		{"injection dollar", "App$()", false},
+		{"path traversal", "../../etc/passwd", false},
+		{"command substitution", "$(whoami)", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isValidModuleName(tt.input)
+			if result != tt.expected {
+				t.Errorf("isValidModuleName(%q) = %v, want %v", tt.input, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestCpanInstallAction_Execute_ModuleParameter(t *testing.T) {
+	action := &CpanInstallAction{}
+
+	// Test invalid module name validation
+	tests := []struct {
+		name        string
+		params      map[string]interface{}
+		expectError string
+	}{
+		{
+			name: "invalid module name with semicolon",
+			params: map[string]interface{}{
+				"distribution": "ack",
+				"module":       "App;Ack",
+				"executables":  []interface{}{"ack"},
+			},
+			expectError: "invalid module name",
+		},
+		{
+			name: "invalid module name with hyphen",
+			params: map[string]interface{}{
+				"distribution": "ack",
+				"module":       "App-Ack",
+				"executables":  []interface{}{"ack"},
+			},
+			expectError: "invalid module name",
+		},
+		{
+			name: "invalid module name empty part",
+			params: map[string]interface{}{
+				"distribution": "ack",
+				"module":       "App::::Ack",
+				"executables":  []interface{}{"ack"},
+			},
+			expectError: "invalid module name",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &ExecutionContext{
+				Version:    "1.0.0",
+				InstallDir: "/tmp/test",
+			}
+
+			err := action.Execute(ctx, tt.params)
+			if err == nil {
+				t.Errorf("expected error containing %q, got nil", tt.expectError)
+				return
+			}
+
+			if !strings.Contains(err.Error(), tt.expectError) {
+				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
+			}
+		})
+	}
+}
+
+func TestCpanInstallAction_Execute_WithModuleParameter(t *testing.T) {
+	// Test that module parameter is used when provided
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory
+	os.Setenv("HOME", tmpDir)
+
+	// Create a mock perl installation
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	perlDir := filepath.Join(toolsDir, "perl-5.38.0")
+	perlBinDir := filepath.Join(perlDir, "bin")
+	if err := os.MkdirAll(perlBinDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create executable perl
+	perlPath := filepath.Join(perlBinDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho perl"), 0755); err != nil {
+		t.Fatalf("failed to create perl file: %v", err)
+	}
+
+	// Create install directory
+	installDir := filepath.Join(tmpDir, "install")
+	installBinDir := filepath.Join(installDir, "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+
+	// Create cpanm that records the module name it receives
+	cpanmPath := filepath.Join(perlBinDir, "cpanm")
+	logFile := filepath.Join(tmpDir, "cpanm.log")
+	cpanmScript := fmt.Sprintf(`#!/bin/sh
+# Record the last argument (the module name)
+echo "$@" > "%s"
+mkdir -p "%s/bin"
+cat > "%s/bin/ack" << 'SCRIPT'
+#!/bin/sh
+echo "ack"
+SCRIPT
+chmod +x "%s/bin/ack"
+exit 0
+`, logFile, installDir, installDir, installDir)
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create cpanm file: %v", err)
+	}
+
+	action := &CpanInstallAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		Version:    "v3.9.0",
+		InstallDir: installDir,
+	}
+
+	// Use module parameter to override distribution name conversion
+	params := map[string]interface{}{
+		"distribution": "ack",
+		"module":       "App::Ack",
+		"executables":  []interface{}{"ack"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err != nil {
+		t.Errorf("expected successful installation, got error: %v", err)
+		return
+	}
+
+	// Verify cpanm was called with App::Ack@v3.9.0, not ack@v3.9.0
+	logContent, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatalf("failed to read cpanm log: %v", err)
+	}
+
+	// The cpanm call should contain App::Ack@v3.9.0
+	if !strings.Contains(string(logContent), "App::Ack@v3.9.0") {
+		t.Errorf("expected cpanm to be called with App::Ack@v3.9.0, got: %s", string(logContent))
+	}
+
+	// It should NOT contain just "ack" (the distribution name converted would be "ack")
+	// Actually the distribution "ack" converted is just "ack", so we need to ensure the module is used
+	if strings.Contains(string(logContent), " ack@") {
+		t.Errorf("expected cpanm to use module name not distribution, got: %s", string(logContent))
+	}
+}

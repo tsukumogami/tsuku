@@ -268,9 +268,14 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 		}
 
 	case "cpan_install":
-		if _, ok := step.Params["module"]; !ok {
-			result.addError(stepField, "cpan_install action requires 'module' parameter")
+		if _, ok := step.Params["distribution"]; !ok {
+			result.addError(stepField, "cpan_install action requires 'distribution' parameter")
 		}
+		if _, ok := step.Params["executables"]; !ok {
+			result.addError(stepField, "cpan_install action requires 'executables' parameter")
+		}
+		// Check for redundant module parameter
+		validateCpanModule(result, stepField, step)
 
 	case "run_command":
 		if _, ok := step.Params["command"]; !ok {
@@ -333,6 +338,33 @@ func validatePathParam(result *ValidationResult, field, path string) {
 	// Check for absolute paths
 	if strings.HasPrefix(path, "/") {
 		result.addWarning(field, "absolute paths may cause issues across different systems")
+	}
+}
+
+// validateCpanModule checks if the module parameter is redundant
+// A module is redundant if it matches what would be inferred from the distribution name
+// by replacing hyphens with double colons (e.g., "Perl-Critic" -> "Perl::Critic")
+func validateCpanModule(result *ValidationResult, stepField string, step *Step) {
+	moduleVal, hasModule := step.Params["module"]
+	distVal, hasDist := step.Params["distribution"]
+
+	if !hasModule || !hasDist {
+		return
+	}
+
+	module, moduleOk := moduleVal.(string)
+	dist, distOk := distVal.(string)
+
+	if !moduleOk || !distOk {
+		return
+	}
+
+	// Convert distribution to expected module name (replace hyphens with ::)
+	expectedModule := strings.ReplaceAll(dist, "-", "::")
+
+	if module == expectedModule {
+		result.addWarning(stepField+".module",
+			fmt.Sprintf("module '%s' is redundant (can be inferred from distribution '%s')", module, dist))
 	}
 }
 

@@ -20,6 +20,10 @@ func (a *CpanInstallAction) Name() string {
 //
 // Parameters:
 //   - distribution (required): CPAN distribution name (e.g., "App-Ack")
+//   - module (optional): Module name to install (e.g., "App::Ack")
+//     When provided, this is used directly with cpanm instead of converting
+//     distribution name. Use this when the distribution name doesn't follow
+//     standard naming convention (e.g., "ack" distribution contains "App::Ack").
 //   - executables (required): List of executable names to verify
 //
 // Environment Strategy:
@@ -48,6 +52,15 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 	// SECURITY: Validate distribution name to prevent command injection
 	if !isValidDistribution(distribution) {
 		return fmt.Errorf("invalid distribution name '%s': must match CPAN naming rules (letters, numbers, hyphens)", distribution)
+	}
+
+	// Get optional module name (for non-standard distributions like "ack" -> "App::Ack")
+	moduleName, hasModule := GetString(params, "module")
+	if hasModule {
+		// SECURITY: Validate module name to prevent command injection
+		if !isValidModuleName(moduleName) {
+			return fmt.Errorf("invalid module name '%s': must match CPAN module naming rules", moduleName)
+		}
 	}
 
 	// SECURITY: Validate version string
@@ -106,9 +119,11 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 	installDir := ctx.InstallDir
 
 	// Build install target
-	// Convert distribution name (Perl-Critic) to module name (Perl::Critic) for cpanm
+	// Use explicit module name if provided, otherwise convert distribution name
 	// cpanm only understands module names or full tarball paths
-	moduleName := distributionToModule(distribution)
+	if !hasModule {
+		moduleName = distributionToModule(distribution)
+	}
 	target := moduleName
 	if ctx.Version != "" {
 		target = moduleName + "@" + ctx.Version
@@ -237,6 +252,38 @@ func isValidDistribution(name string) bool {
 		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
 			(c >= '0' && c <= '9') || c == '-' || c == '_') {
 			return false
+		}
+	}
+
+	return true
+}
+
+// isValidModuleName validates CPAN module names to prevent command injection
+// Module names: alphanumeric + underscores, separated by ::
+// Max length: 128 characters (reasonable limit for CPAN)
+// Examples: App::Ack, Perl::Critic, File::Slurp::Tiny
+func isValidModuleName(name string) bool {
+	if name == "" || len(name) > 128 {
+		return false
+	}
+
+	// Split by :: and validate each part
+	parts := strings.Split(name, "::")
+	for _, part := range parts {
+		if part == "" {
+			return false // Empty part (e.g., "Foo::" or "::Bar" or "Foo::::Bar")
+		}
+		// Each part must start with a letter
+		first := part[0]
+		if !((first >= 'a' && first <= 'z') || (first >= 'A' && first <= 'Z')) {
+			return false
+		}
+		// Check allowed characters: alphanumeric and underscores
+		for _, c := range part {
+			if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+				(c >= '0' && c <= '9') || c == '_') {
+				return false
+			}
 		}
 	}
 

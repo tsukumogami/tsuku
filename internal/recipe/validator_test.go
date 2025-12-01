@@ -506,17 +506,32 @@ command = "test"
 			expectedMsg:   "requires 'gem'",
 		},
 		{
-			name: "cpan_install missing module",
+			name: "cpan_install missing distribution",
 			recipe: `
 [metadata]
 name = "test"
 [[steps]]
 action = "cpan_install"
+executables = ["test"]
 [verify]
 command = "test"
 `,
 			expectedField: "steps[0]",
-			expectedMsg:   "requires 'module'",
+			expectedMsg:   "requires 'distribution'",
+		},
+		{
+			name: "cpan_install missing executables",
+			recipe: `
+[metadata]
+name = "test"
+[[steps]]
+action = "cpan_install"
+distribution = "Test-Tool"
+[verify]
+command = "test"
+`,
+			expectedField: "steps[0]",
+			expectedMsg:   "requires 'executables'",
 		},
 		{
 			name: "run_command missing command",
@@ -691,5 +706,99 @@ command = "` + tt.command + `"
 				t.Errorf("expected warning about dangerous pattern '%s'", tt.pattern)
 			}
 		})
+	}
+}
+
+func TestValidateBytes_CpanModuleRedundant(t *testing.T) {
+	// Test case where module is redundant (matches inferred from distribution)
+	recipe := `
+[metadata]
+name = "perl-critic"
+
+[version]
+source = "metacpan"
+distribution = "Perl-Critic"
+
+[[steps]]
+action = "cpan_install"
+distribution = "Perl-Critic"
+module = "Perl::Critic"
+executables = ["perlcritic"]
+
+[verify]
+command = "perlcritic --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	// Should be valid but with warning about redundant module
+	if !result.Valid {
+		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+	}
+	if !hasWarning(result, "steps[0].module", "redundant") {
+		t.Error("expected warning about redundant module parameter")
+	}
+}
+
+func TestValidateBytes_CpanModuleNotRedundant(t *testing.T) {
+	// Test case where module is NOT redundant (differs from inferred)
+	recipe := `
+[metadata]
+name = "ack"
+
+[version]
+source = "metacpan"
+distribution = "ack"
+
+[[steps]]
+action = "cpan_install"
+distribution = "ack"
+module = "App::Ack"
+executables = ["ack"]
+
+[verify]
+command = "ack --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	// Should be valid without warning about redundant module
+	if !result.Valid {
+		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+	}
+	// Should NOT have warning about redundant module
+	for _, w := range result.Warnings {
+		if strings.Contains(w.Field, "module") && strings.Contains(w.Message, "redundant") {
+			t.Error("should NOT have warning about redundant module for non-standard naming")
+		}
+	}
+}
+
+func TestValidateBytes_CpanNoModule(t *testing.T) {
+	// Test case where module is not provided (should be valid, no warning)
+	recipe := `
+[metadata]
+name = "perl-critic"
+
+[version]
+source = "metacpan"
+distribution = "Perl-Critic"
+
+[[steps]]
+action = "cpan_install"
+distribution = "Perl-Critic"
+executables = ["perlcritic"]
+
+[verify]
+command = "perlcritic --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+	}
+	// Should NOT have warning about module
+	for _, w := range result.Warnings {
+		if strings.Contains(w.Field, "module") {
+			t.Errorf("should NOT have warning about module when not provided, got: %v", w)
+		}
 	}
 }
