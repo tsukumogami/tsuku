@@ -17,15 +17,15 @@ Follow the existing GemBuilder pattern: create a CPANBuilder struct with an HTTP
 - `internal/builders/cpan_test.go` - Comprehensive tests
 
 ## Implementation Steps
-- [ ] Create CPANBuilder struct with HTTP client and metacpanBaseURL
-- [ ] Implement Name() returning "cpan"
-- [ ] Implement CanBuild() that queries MetaCPAN to verify distribution exists
-- [ ] Implement Build() that fetches metadata and generates recipe
-- [ ] Add distribution name validation (isValidDistribution)
-- [ ] Add module-to-distribution normalization (App::Ack -> App-Ack)
-- [ ] Add executable name inference (App-Ack -> ack, Perl-Critic -> perlcritic)
-- [ ] Add comprehensive unit tests with mock HTTP server
-- [ ] Verify tests pass and coverage is adequate
+- [x] Create CPANBuilder struct with HTTP client and metacpanBaseURL
+- [x] Implement Name() returning "cpan"
+- [x] Implement CanBuild() that queries MetaCPAN to verify distribution exists
+- [x] Implement Build() that fetches metadata and generates recipe
+- [x] Add distribution name validation (isValidDistribution)
+- [x] Add module-to-distribution normalization (App::Ack -> App-Ack)
+- [x] Add executable name inference (App-Ack -> ack, Perl-Critic -> perlcritic)
+- [x] Add comprehensive unit tests with mock HTTP server
+- [x] Verify tests pass and coverage is adequate
 
 Mark each step [x] after it is implemented and committed. This enables clear resume detection.
 
