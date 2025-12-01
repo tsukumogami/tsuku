@@ -323,10 +323,17 @@ func TestCpanInstallAction_Execute_ExecutableValidation(t *testing.T) {
 }
 
 func TestCpanInstallAction_Execute_PerlNotFound(t *testing.T) {
+	// Test the case where perl is not installed in tsuku's tools directory
+	// We use a temporary HOME to ensure ResolvePerl() returns empty
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory (no .tsuku/tools/perl-*)
+	os.Setenv("HOME", tmpDir)
+
 	action := &CpanInstallAction{}
 
-	// This test verifies the error when perl is not installed
-	// Since we don't have perl installed in test environment, this will fail at that stage
 	ctx := &ExecutionContext{
 		Version:    "1.0.0",
 		InstallDir: "/tmp/test",
