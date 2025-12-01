@@ -106,7 +106,8 @@ func TestGoInstallAction_Execute_MissingModule(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -130,7 +131,8 @@ func TestGoInstallAction_Execute_MissingExecutables(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -154,7 +156,8 @@ func TestGoInstallAction_Execute_EmptyExecutables(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -175,7 +178,8 @@ func TestGoInstallAction_Execute_InvalidModule(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -199,7 +203,8 @@ func TestGoInstallAction_Execute_InvalidVersion(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0;rm -rf /", // Injection attempt
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0;rm -rf /", // Injection attempt in VersionTag
 		WorkDir:    t.TempDir(),
 	}
 
@@ -223,7 +228,8 @@ func TestGoInstallAction_Execute_InvalidExecutableName(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -261,7 +267,8 @@ func TestGoInstallAction_Execute_GoNotInstalled(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -415,7 +422,8 @@ func TestGoInstallAction_Execute_GoInstallFails(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -460,7 +468,8 @@ func TestGoInstallAction_Execute_ExecutableNotCreated(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -505,7 +514,8 @@ func TestGoInstallAction_Execute_EmptyVersion(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: t.TempDir(),
-		Version:    "", // Empty version should use @latest
+		Version:    "",
+		VersionTag: "", // Empty version should use @latest
 		WorkDir:    t.TempDir(),
 	}
 
@@ -549,7 +559,8 @@ func TestGoInstallAction_Execute_Success(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: installDir,
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -607,7 +618,8 @@ func TestGoInstallAction_Execute_SuccessWithDebug(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: installDir,
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -652,7 +664,8 @@ func TestGoInstallAction_Execute_MultipleExecutables(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: installDir,
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 
@@ -697,7 +710,8 @@ func TestGoInstallAction_Execute_SecondExecutableMissing(t *testing.T) {
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
 		InstallDir: installDir,
-		Version:    "v1.0.0",
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
 		WorkDir:    t.TempDir(),
 	}
 

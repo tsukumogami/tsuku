@@ -50,8 +50,9 @@ func (a *GoInstallAction) Execute(ctx *ExecutionContext, params map[string]inter
 	}
 
 	// SECURITY: Validate version string
-	if !isValidGoVersion(ctx.Version) {
-		return fmt.Errorf("invalid version format '%s': must match semver format", ctx.Version)
+	// Use VersionTag for Go modules as they require the "v" prefix (e.g., v1.0.0)
+	if !isValidGoVersion(ctx.VersionTag) {
+		return fmt.Errorf("invalid version format '%s': must match semver format", ctx.VersionTag)
 	}
 
 	// Get executables list (required)
@@ -74,7 +75,7 @@ func (a *GoInstallAction) Execute(ctx *ExecutionContext, params map[string]inter
 		return fmt.Errorf("go not found: install go first (tsuku install go)")
 	}
 
-	fmt.Printf("   Module: %s@%s\n", module, ctx.Version)
+	fmt.Printf("   Module: %s@%s\n", module, ctx.VersionTag)
 	fmt.Printf("   Executables: %v\n", executables)
 	fmt.Printf("   Using go: %s\n", goPath)
 
@@ -88,9 +89,10 @@ func (a *GoInstallAction) Execute(ctx *ExecutionContext, params map[string]inter
 	binDir := filepath.Join(installDir, "bin")
 
 	// Build install target
+	// Use VersionTag which preserves the "v" prefix required by Go modules
 	var target string
-	if ctx.Version != "" {
-		target = module + "@" + ctx.Version
+	if ctx.VersionTag != "" {
+		target = module + "@" + ctx.VersionTag
 	} else {
 		target = module + "@latest"
 	}
