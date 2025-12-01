@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/tsuku-dev/tsuku/internal/config"
 )
 
 const (
@@ -15,9 +17,6 @@ const (
 
 	// MaxCacheSize limits the number of cached entries to prevent unbounded growth
 	MaxCacheSize = 1000
-
-	// APITimeout is the timeout for individual GitHub API calls
-	APITimeout = 30 * time.Second
 )
 
 // cachedAssets holds asset list with expiration timestamp
@@ -122,7 +121,7 @@ func (r *Resolver) FetchReleaseAssets(ctx context.Context, repo, tag string) ([]
 	}
 
 	// Fetch from GitHub API with timeout (use passed context, not Background!)
-	fetchCtx, cancel := context.WithTimeout(ctx, APITimeout)
+	fetchCtx, cancel := context.WithTimeout(ctx, config.GetAPITimeout())
 	defer cancel()
 
 	release, resp, err := r.client.Repositories.GetReleaseByTag(fetchCtx, owner, repoName, tag)

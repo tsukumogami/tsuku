@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/google/go-github/v57/github"
+	"github.com/tsuku-dev/tsuku/internal/config"
 )
 
 // mockGitHubServer creates a test HTTP server that mimics GitHub API responses
@@ -287,9 +289,15 @@ func TestFetchReleaseAssets_403RateLimit(t *testing.T) {
 func TestFetchReleaseAssets_Timeout(t *testing.T) {
 	resetGlobalCache()
 
+	// Use a very short timeout via environment variable to speed up the test
+	// The minimum allowed by config.GetAPITimeout() is 1 second
+	original := os.Getenv(config.EnvAPITimeout)
+	os.Setenv(config.EnvAPITimeout, "1s")
+	defer os.Setenv(config.EnvAPITimeout, original)
+
 	server := mockGitHubServer(t, func(w http.ResponseWriter, r *http.Request) {
-		// Sleep longer than APITimeout
-		time.Sleep(35 * time.Second)
+		// Sleep longer than the configured timeout (1s) to trigger timeout error
+		time.Sleep(2 * time.Second)
 		release := mockRelease([]string{"asset.tar.gz"})
 		_ = json.NewEncoder(w).Encode(release)
 	})
