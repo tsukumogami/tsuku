@@ -513,3 +513,83 @@ func SetupCCompilerEnv(env []string) ([]string, bool) {
 
 	return env, true
 }
+
+// ResolvePerl finds the path to tsuku's perl executable
+// Returns empty string if not found
+func ResolvePerl() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	// Look for perl-* directories in ~/.tsuku/tools/
+	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
+	entries, err := os.ReadDir(toolsDir)
+	if err != nil {
+		return ""
+	}
+
+	// Find all perl-* directories (tsuku's perl installation)
+	var perlDirs []string
+	for _, entry := range entries {
+		if entry.IsDir() && strings.HasPrefix(entry.Name(), "perl-") {
+			perlDirs = append(perlDirs, entry.Name())
+		}
+	}
+
+	if len(perlDirs) == 0 {
+		return ""
+	}
+
+	// Sort to get the latest version (lexicographically)
+	sort.Strings(perlDirs)
+	latestDir := perlDirs[len(perlDirs)-1]
+
+	// Check if perl exists and is executable
+	perlPath := filepath.Join(toolsDir, latestDir, "bin", "perl")
+	if info, err := os.Stat(perlPath); err == nil && info.Mode()&0111 != 0 {
+		return perlPath
+	}
+
+	return ""
+}
+
+// ResolveCpanm finds the path to tsuku's cpanm executable (from perl installation)
+// Returns empty string if not found
+func ResolveCpanm() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	// Look for perl-* directories in ~/.tsuku/tools/
+	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
+	entries, err := os.ReadDir(toolsDir)
+	if err != nil {
+		return ""
+	}
+
+	// Find all perl-* directories (tsuku's perl installation)
+	var perlDirs []string
+	for _, entry := range entries {
+		if entry.IsDir() && strings.HasPrefix(entry.Name(), "perl-") {
+			perlDirs = append(perlDirs, entry.Name())
+		}
+	}
+
+	if len(perlDirs) == 0 {
+		return ""
+	}
+
+	// Sort to get the latest version (lexicographically)
+	sort.Strings(perlDirs)
+	latestDir := perlDirs[len(perlDirs)-1]
+
+	// Check if cpanm exists and is executable
+	cpanmPath := filepath.Join(toolsDir, latestDir, "bin", "cpanm")
+	if info, err := os.Stat(cpanmPath); err == nil && info.Mode()&0111 != 0 {
+		return cpanmPath
+	}
+
+	return ""
+}

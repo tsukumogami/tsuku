@@ -29,16 +29,16 @@ The cpan_install action will mirror the gem_install implementation:
 
 ## Implementation Steps
 
-- [ ] Create cpan_install.go with CpanInstallAction struct
-- [ ] Implement distribution name validation (isValidDistribution)
-- [ ] Implement version validation (isValidCpanVersion)
-- [ ] Implement executable name validation (reuse pattern from gem_install)
-- [ ] Add ResolvePerl() and ResolveCpanm() helper functions to util.go
-- [ ] Implement Execute() method with cpanm invocation
-- [ ] Implement wrapper script generation
-- [ ] Register action in action.go
-- [ ] Create comprehensive unit tests
-- [ ] Verify all tests pass
+- [x] Create cpan_install.go with CpanInstallAction struct
+- [x] Implement distribution name validation (isValidDistribution)
+- [x] Implement version validation (isValidCpanVersion)
+- [x] Implement executable name validation (reuse pattern from gem_install)
+- [x] Add ResolvePerl() and ResolveCpanm() helper functions to util.go
+- [x] Implement Execute() method with cpanm invocation
+- [x] Implement wrapper script generation
+- [x] Register action in action.go
+- [x] Create comprehensive unit tests
+- [x] Verify all tests pass
 
 ## Testing Strategy
 

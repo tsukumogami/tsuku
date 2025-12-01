@@ -63,6 +63,7 @@ func init() {
 	Register(&PipxInstallAction{})
 	Register(&CargoInstallAction{})
 	Register(&GemInstallAction{})
+	Register(&CpanInstallAction{})
 	Register(&NixInstallAction{})
 
 	// Composite actions
