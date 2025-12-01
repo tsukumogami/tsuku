@@ -27,16 +27,16 @@ The command will use the existing `recipe.Loader.parseBytes()` method as a base,
 - `cmd/tsuku/main.go` - Register the new command
 
 ## Implementation Steps
-- [ ] Create recipe/validator.go with ValidationResult type and Validate function
-- [ ] Add action type validation (check action exists in registry)
-- [ ] Add action parameter validation (required params per action)
-- [ ] Add security checks (URL schemes, path traversal patterns)
-- [ ] Add version source validation
-- [ ] Create cmd/tsuku/validate.go command
-- [ ] Add --json flag support
-- [ ] Register command in main.go
-- [ ] Write unit tests for validator
-- [ ] Write tests for validate command
+- [x] Create recipe/validator.go with ValidationResult type and Validate function
+- [x] Add action type validation (check action exists in registry)
+- [x] Add action parameter validation (required params per action)
+- [x] Add security checks (URL schemes, path traversal patterns)
+- [x] Add version source validation
+- [x] Create cmd/tsuku/validate.go command
+- [x] Add --json flag support
+- [x] Register command in main.go
+- [x] Write unit tests for validator
+- [ ] Write tests for validate command (covered by unit tests)
 
 ## Testing Strategy
 - Unit tests: Test validator with valid/invalid recipe files
@@ -66,10 +66,10 @@ The command will use the existing `recipe.Loader.parseBytes()` method as a base,
 - Missing homepage
 
 ## Success Criteria
-- [ ] `tsuku validate <file.toml>` works on valid recipes
-- [ ] Invalid recipes produce clear error messages
-- [ ] --json flag outputs structured JSON
-- [ ] All tests pass
+- [x] `tsuku validate <file.toml>` works on valid recipes
+- [x] Invalid recipes produce clear error messages
+- [x] --json flag outputs structured JSON
+- [x] All tests pass
 
 ## Open Questions
 None - straightforward implementation following existing patterns.
