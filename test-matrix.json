@@ -1,9 +1,9 @@
 {
   "tiers": {
     "tier1": ["T1", "T2", "T3", "T4", "T5"],
-    "tier2": ["T16", "T17", "T18", "T19"],
+    "tier2": ["T16", "T17", "T18", "T19", "T50"],
     "tier3": ["T40"],
-    "tier5": ["T23", "T24", "T25", "T26", "T27", "T28", "T30", "T31", "T32"]
+    "tier5": ["T23", "T24", "T25", "T26", "T27", "T28", "T30", "T31", "T32", "T51"]
   },
   "tests": {
     "T1":  { "tool": "actionlint",   "tier": 1, "desc": "github_archive with version", "features": ["action:github_archive", "verify:pattern_with_version"] },
@@ -24,11 +24,13 @@
     "T30": { "tool": "bundler",      "tier": 5, "desc": "gem_install multi-exec",      "features": ["action:gem_install", "version_detection:rubygems", "executables:multiple"] },
     "T31": { "tool": "jekyll",       "tier": 5, "desc": "gem_install single",          "features": ["action:gem_install"] },
     "T32": { "tool": "fpm",          "tier": 5, "desc": "gem_install packaging",       "features": ["action:gem_install"] },
-    "T40": { "tool": "hello-nix",    "tier": 3, "desc": "nix_install simple",          "features": ["action:nix_install", "version_detection:nixpkgs", "platform:linux_only", "bootstrap:nix_portable"] }
+    "T40": { "tool": "hello-nix",    "tier": 3, "desc": "nix_install simple",          "features": ["action:nix_install", "version_detection:nixpkgs", "platform:linux_only", "bootstrap:nix_portable"] },
+    "T50": { "tool": "perl",         "tier": 2, "desc": "relocatable perl runtime",    "features": ["action:download_archive", "install_mode:directory", "bootstrap:relocatable_perl"] },
+    "T51": { "tool": "ack",          "tier": 5, "desc": "cpan_install with dependency", "features": ["action:cpan_install", "version_detection:metacpan", "dependency:perl"] }
   },
   "ci": {
-    "linux": ["T1", "T2", "T3", "T4", "T5", "T16", "T19", "T23", "T25", "T30"],
+    "linux": ["T1", "T2", "T3", "T4", "T5", "T16", "T19", "T23", "T25", "T30", "T50"],
     "macos": ["T1", "T3", "T4", "T16", "T19", "T23", "T25", "T30"],
-    "scheduled": ["T18", "T27"]
+    "scheduled": ["T18", "T27", "T51"]
   }
 }
