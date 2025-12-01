@@ -94,6 +94,29 @@ func TestIsValidCpanVersion(t *testing.T) {
 	}
 }
 
+func TestDistributionToModule(t *testing.T) {
+	tests := []struct {
+		distribution string
+		expected     string
+	}{
+		{"App-Ack", "App::Ack"},
+		{"Perl-Critic", "Perl::Critic"},
+		{"File-Slurp-Tiny", "File::Slurp::Tiny"},
+		{"App-cpanminus", "App::cpanminus"},
+		{"Simple", "Simple"}, // no hyphens
+		{"A-B-C-D", "A::B::C::D"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.distribution, func(t *testing.T) {
+			result := distributionToModule(tt.distribution)
+			if result != tt.expected {
+				t.Errorf("distributionToModule(%q) = %q, want %q", tt.distribution, result, tt.expected)
+			}
+		})
+	}
+}
+
 func TestCpanInstallAction_Execute_Validation(t *testing.T) {
 	action := &CpanInstallAction{}
 

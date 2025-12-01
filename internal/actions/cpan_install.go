@@ -106,9 +106,12 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 	installDir := ctx.InstallDir
 
 	// Build install target
-	target := distribution
+	// Convert distribution name (Perl-Critic) to module name (Perl::Critic) for cpanm
+	// cpanm only understands module names or full tarball paths
+	moduleName := distributionToModule(distribution)
+	target := moduleName
 	if ctx.Version != "" {
-		target = distribution + "@" + ctx.Version
+		target = moduleName + "@" + ctx.Version
 	}
 
 	fmt.Printf("   Installing: cpanm --local-lib %s --notest %s\n", installDir, target)
@@ -238,6 +241,13 @@ func isValidDistribution(name string) bool {
 	}
 
 	return true
+}
+
+// distributionToModule converts a CPAN distribution name to a module name
+// Distribution names use hyphens (Perl-Critic), module names use :: (Perl::Critic)
+// cpanm only understands module names, not distribution names
+func distributionToModule(distribution string) string {
+	return strings.ReplaceAll(distribution, "-", "::")
 }
 
 // isValidCpanVersion validates CPAN version strings
