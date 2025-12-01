@@ -243,8 +243,8 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 		if _, ok := step.Params["repo"]; !ok {
 			result.addError(stepField, fmt.Sprintf("%s action requires 'repo' parameter", step.Action))
 		}
-		if _, ok := step.Params["asset"]; !ok {
-			result.addError(stepField, fmt.Sprintf("%s action requires 'asset' parameter", step.Action))
+		if _, ok := step.Params["asset_pattern"]; !ok {
+			result.addError(stepField, fmt.Sprintf("%s action requires 'asset_pattern' parameter", step.Action))
 		}
 
 	case "npm_install":

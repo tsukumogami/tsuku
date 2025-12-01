@@ -193,7 +193,7 @@ command = "test"
 name = "test"
 [[steps]]
 action = "github_archive"
-asset = "test.tar.gz"
+asset_pattern = "test.tar.gz"
 [verify]
 command = "test"
 `,
@@ -560,7 +560,7 @@ command = "test"
 			expectedMsg:   "requires 'product'",
 		},
 		{
-			name: "github_file missing asset",
+			name: "github_file missing asset_pattern",
 			recipe: `
 [metadata]
 name = "test"
@@ -571,7 +571,7 @@ repo = "owner/repo"
 command = "test"
 `,
 			expectedField: "steps[0]",
-			expectedMsg:   "requires 'asset'",
+			expectedMsg:   "requires 'asset_pattern'",
 		},
 	}
 
