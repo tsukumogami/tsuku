@@ -23,11 +23,13 @@ Checks include:
 
 Examples:
   tsuku validate recipes/mytool.toml
-  tsuku validate ~/.tsuku/recipes/custom-tool.toml --json`,
+  tsuku validate ~/.tsuku/recipes/custom-tool.toml --json
+  tsuku validate recipes/mytool.toml --strict`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		filePath := args[0]
 		jsonOutput, _ := cmd.Flags().GetBool("json")
+		strictMode, _ := cmd.Flags().GetBool("strict")
 
 		// Check file exists
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -47,6 +49,11 @@ Examples:
 
 		// Validate the recipe
 		result := recipe.ValidateFile(filePath)
+
+		// In strict mode, warnings are treated as errors
+		if strictMode && len(result.Warnings) > 0 {
+			result.Valid = false
+		}
 
 		// JSON output mode
 		if jsonOutput {
@@ -107,15 +114,25 @@ Examples:
 		} else {
 			fmt.Printf("Invalid recipe: %s\n", recipeName)
 			fmt.Println()
-			fmt.Println("Errors:")
-			for _, e := range result.Errors {
-				fmt.Printf("  - %s\n", e)
+
+			// Show errors if any
+			if len(result.Errors) > 0 {
+				fmt.Println("Errors:")
+				for _, e := range result.Errors {
+					fmt.Printf("  - %s\n", e)
+				}
 			}
 
-			// Show warnings too
+			// Show warnings (as errors if in strict mode)
 			if len(result.Warnings) > 0 {
-				fmt.Println()
-				fmt.Println("Warnings:")
+				if strictMode && len(result.Errors) == 0 {
+					fmt.Println("Warnings (treated as errors in strict mode):")
+				} else if len(result.Errors) > 0 {
+					fmt.Println()
+					fmt.Println("Warnings:")
+				} else {
+					fmt.Println("Warnings:")
+				}
 				for _, w := range result.Warnings {
 					fmt.Printf("  - %s\n", w)
 				}
@@ -143,4 +160,5 @@ func formatList(items []string) string {
 
 func init() {
 	validateCmd.Flags().Bool("json", false, "Output in JSON format")
+	validateCmd.Flags().Bool("strict", false, "Treat warnings as errors")
 }
