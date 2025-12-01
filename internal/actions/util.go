@@ -593,3 +593,43 @@ func ResolveCpanm() string {
 
 	return ""
 }
+
+// ResolveGo finds the path to tsuku's go executable
+// Returns empty string if not found
+func ResolveGo() string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	// Look for go-* directories in $TSUKU_HOME/tools/
+	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
+	entries, err := os.ReadDir(toolsDir)
+	if err != nil {
+		return ""
+	}
+
+	// Find all go-* directories (tsuku's go installation)
+	var goDirs []string
+	for _, entry := range entries {
+		if entry.IsDir() && strings.HasPrefix(entry.Name(), "go-") {
+			goDirs = append(goDirs, entry.Name())
+		}
+	}
+
+	if len(goDirs) == 0 {
+		return ""
+	}
+
+	// Sort to get the latest version (lexicographically)
+	sort.Strings(goDirs)
+	latestDir := goDirs[len(goDirs)-1]
+
+	// Check if go exists and is executable
+	goPath := filepath.Join(toolsDir, latestDir, "bin", "go")
+	if info, err := os.Stat(goPath); err == nil && info.Mode()&0111 != 0 {
+		return goPath
+	}
+
+	return ""
+}

@@ -64,6 +64,7 @@ func init() {
 	Register(&CargoInstallAction{})
 	Register(&GemInstallAction{})
 	Register(&CpanInstallAction{})
+	Register(&GoInstallAction{})
 	Register(&NixInstallAction{})
 
 	// Composite actions
