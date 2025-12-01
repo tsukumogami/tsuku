@@ -1,6 +1,8 @@
 package actions
 
 import (
+	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -530,5 +532,328 @@ func TestResolveCpanm_WithMockDirectory(t *testing.T) {
 	result = ResolveCpanm()
 	if result != cpanm2Path {
 		t.Errorf("expected latest version %q, got %q", cpanm2Path, result)
+	}
+}
+
+func TestCpanInstallAction_Execute_CpanmNotFound(t *testing.T) {
+	// Test the case where perl is found but cpanm is missing
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory
+	os.Setenv("HOME", tmpDir)
+
+	// Create a mock perl installation WITHOUT cpanm
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	perlDir := filepath.Join(toolsDir, "perl-5.38.0")
+	binDir := filepath.Join(perlDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create executable perl but no cpanm
+	perlPath := filepath.Join(binDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho perl"), 0755); err != nil {
+		t.Fatalf("failed to create perl file: %v", err)
+	}
+
+	action := &CpanInstallAction{}
+	ctx := &ExecutionContext{
+		Version:    "1.0.0",
+		InstallDir: "/tmp/test",
+	}
+
+	params := map[string]interface{}{
+		"distribution": "App-Ack",
+		"executables":  []interface{}{"ack"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error about cpanm not found, got nil")
+		return
+	}
+
+	if !strings.Contains(err.Error(), "cpanm not found") {
+		t.Errorf("expected error about cpanm not found, got %q", err.Error())
+	}
+}
+
+func TestCpanInstallAction_Execute_CpanmFails(t *testing.T) {
+	// Test the case where both perl and cpanm exist but cpanm fails
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory
+	os.Setenv("HOME", tmpDir)
+
+	// Create a mock perl installation with a fake cpanm that fails
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	perlDir := filepath.Join(toolsDir, "perl-5.38.0")
+	binDir := filepath.Join(perlDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create executable perl
+	perlPath := filepath.Join(binDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho perl"), 0755); err != nil {
+		t.Fatalf("failed to create perl file: %v", err)
+	}
+
+	// Create cpanm that always fails
+	cpanmPath := filepath.Join(binDir, "cpanm")
+	cpanmScript := `#!/bin/sh
+echo "cpanm: mock failure" >&2
+exit 1
+`
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create cpanm file: %v", err)
+	}
+
+	// Create install directory
+	installDir := filepath.Join(tmpDir, "install")
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatalf("failed to create install dir: %v", err)
+	}
+
+	action := &CpanInstallAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		InstallDir: installDir,
+	}
+
+	params := map[string]interface{}{
+		"distribution": "App-Ack",
+		"executables":  []interface{}{"ack"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error about cpanm install failure, got nil")
+		return
+	}
+
+	if !strings.Contains(err.Error(), "cpanm install failed") {
+		t.Errorf("expected error about cpanm install failed, got %q", err.Error())
+	}
+}
+
+func TestCpanInstallAction_Execute_MissingExecutable(t *testing.T) {
+	// Test the case where cpanm succeeds but the expected executable is not created
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory
+	os.Setenv("HOME", tmpDir)
+
+	// Create a mock perl installation
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	perlDir := filepath.Join(toolsDir, "perl-5.38.0")
+	binDir := filepath.Join(perlDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create executable perl
+	perlPath := filepath.Join(binDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho perl"), 0755); err != nil {
+		t.Fatalf("failed to create perl file: %v", err)
+	}
+
+	// Create cpanm that "succeeds" but doesn't create the executable
+	cpanmPath := filepath.Join(binDir, "cpanm")
+	cpanmScript := `#!/bin/sh
+# Mock cpanm that succeeds but creates nothing
+exit 0
+`
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create cpanm file: %v", err)
+	}
+
+	// Create install directory
+	installDir := filepath.Join(tmpDir, "install")
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatalf("failed to create install dir: %v", err)
+	}
+
+	action := &CpanInstallAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		InstallDir: installDir,
+	}
+
+	params := map[string]interface{}{
+		"distribution": "App-Ack",
+		"executables":  []interface{}{"ack"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error about missing executable, got nil")
+		return
+	}
+
+	if !strings.Contains(err.Error(), "expected executable") && !strings.Contains(err.Error(), "not found") {
+		t.Errorf("expected error about missing executable, got %q", err.Error())
+	}
+}
+
+func TestCpanInstallAction_Execute_SuccessfulInstall(t *testing.T) {
+	// Test successful installation with wrapper script creation
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory
+	os.Setenv("HOME", tmpDir)
+
+	// Create a mock perl installation
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	perlDir := filepath.Join(toolsDir, "perl-5.38.0")
+	perlBinDir := filepath.Join(perlDir, "bin")
+	if err := os.MkdirAll(perlBinDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create executable perl
+	perlPath := filepath.Join(perlBinDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho perl"), 0755); err != nil {
+		t.Fatalf("failed to create perl file: %v", err)
+	}
+
+	// Create install directory
+	installDir := filepath.Join(tmpDir, "install")
+	installBinDir := filepath.Join(installDir, "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+
+	// Create cpanm that creates the expected executable
+	cpanmPath := filepath.Join(perlBinDir, "cpanm")
+	cpanmScript := fmt.Sprintf(`#!/bin/sh
+# Mock cpanm that creates the executable
+mkdir -p "%s/bin"
+cat > "%s/bin/ack" << 'SCRIPT'
+#!/bin/sh
+echo "ack - mock script"
+SCRIPT
+chmod +x "%s/bin/ack"
+exit 0
+`, installDir, installDir, installDir)
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create cpanm file: %v", err)
+	}
+
+	action := &CpanInstallAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		Version:    "3.7.0",
+		InstallDir: installDir,
+	}
+
+	params := map[string]interface{}{
+		"distribution": "App-Ack",
+		"executables":  []interface{}{"ack"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err != nil {
+		t.Errorf("expected successful installation, got error: %v", err)
+		return
+	}
+
+	// Verify wrapper was created
+	wrapperPath := filepath.Join(installBinDir, "ack")
+	if _, err := os.Stat(wrapperPath); os.IsNotExist(err) {
+		t.Errorf("expected wrapper at %s to exist", wrapperPath)
+	}
+
+	// Verify original was renamed to .cpanm
+	cpanmOrigPath := filepath.Join(installBinDir, "ack.cpanm")
+	if _, err := os.Stat(cpanmOrigPath); os.IsNotExist(err) {
+		t.Errorf("expected original at %s to exist", cpanmOrigPath)
+	}
+
+	// Verify wrapper content contains PERL5LIB
+	wrapperContent, err := os.ReadFile(wrapperPath)
+	if err != nil {
+		t.Fatalf("failed to read wrapper: %v", err)
+	}
+
+	if !strings.Contains(string(wrapperContent), "PERL5LIB") {
+		t.Errorf("wrapper should contain PERL5LIB, got: %s", string(wrapperContent))
+	}
+
+	if !strings.Contains(string(wrapperContent), "ack.cpanm") {
+		t.Errorf("wrapper should reference ack.cpanm, got: %s", string(wrapperContent))
+	}
+}
+
+func TestCpanInstallAction_Execute_EmptyVersion(t *testing.T) {
+	// Test installation with empty version (latest)
+	tmpDir := t.TempDir()
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+
+	// Set HOME to temp directory
+	os.Setenv("HOME", tmpDir)
+
+	// Create a mock perl installation
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	perlDir := filepath.Join(toolsDir, "perl-5.38.0")
+	perlBinDir := filepath.Join(perlDir, "bin")
+	if err := os.MkdirAll(perlBinDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create executable perl
+	perlPath := filepath.Join(perlBinDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho perl"), 0755); err != nil {
+		t.Fatalf("failed to create perl file: %v", err)
+	}
+
+	// Create install directory
+	installDir := filepath.Join(tmpDir, "install")
+	installBinDir := filepath.Join(installDir, "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+
+	// Create cpanm that creates the expected executable
+	cpanmPath := filepath.Join(perlBinDir, "cpanm")
+	cpanmScript := fmt.Sprintf(`#!/bin/sh
+mkdir -p "%s/bin"
+cat > "%s/bin/myapp" << 'SCRIPT'
+#!/bin/sh
+echo "myapp"
+SCRIPT
+chmod +x "%s/bin/myapp"
+exit 0
+`, installDir, installDir, installDir)
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create cpanm file: %v", err)
+	}
+
+	action := &CpanInstallAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		Version:    "", // Empty version means latest
+		InstallDir: installDir,
+	}
+
+	params := map[string]interface{}{
+		"distribution": "MyApp",
+		"executables":  []interface{}{"myapp"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err != nil {
+		t.Errorf("expected successful installation with empty version, got error: %v", err)
 	}
 }
