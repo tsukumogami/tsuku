@@ -609,11 +609,17 @@ func ResolveGo() string {
 		return ""
 	}
 
-	// Find all go-* directories (tsuku's go installation)
+	// Find all go-<version> directories (tsuku's go installation)
+	// Must match go-<digit...> to avoid matching tools like go-migrate, go-task
 	var goDirs []string
 	for _, entry := range entries {
 		if entry.IsDir() && strings.HasPrefix(entry.Name(), "go-") {
-			goDirs = append(goDirs, entry.Name())
+			// Skip tool directories like go-migrate, go-task, etc.
+			// Go toolchain versions start with a digit (e.g., go-1.23.4)
+			rest := strings.TrimPrefix(entry.Name(), "go-")
+			if len(rest) > 0 && rest[0] >= '0' && rest[0] <= '9' {
+				goDirs = append(goDirs, entry.Name())
+			}
 		}
 	}
 

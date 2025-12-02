@@ -452,3 +452,83 @@ func TestReadChecksumFile_NotFound(t *testing.T) {
 		t.Error("ReadChecksumFile with non-existent file should fail")
 	}
 }
+
+func TestResolveGo_IgnoresGoTools(t *testing.T) {
+	// Create a temporary directory structure to simulate $TSUKU_HOME
+	tmpHome := t.TempDir()
+	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create directories that should be matched (Go toolchain)
+	goToolchainDir := filepath.Join(toolsDir, "go-1.23.4", "bin")
+	if err := os.MkdirAll(goToolchainDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	goExe := filepath.Join(goToolchainDir, "go")
+	if err := os.WriteFile(goExe, []byte("#!/bin/sh\necho go"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create directories that should NOT be matched (Go tools)
+	goMigrateDir := filepath.Join(toolsDir, "go-migrate-4.19.1", "bin")
+	if err := os.MkdirAll(goMigrateDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	goTaskDir := filepath.Join(toolsDir, "go-task-3.38.0", "bin")
+	if err := os.MkdirAll(goTaskDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Override HOME for the test
+	oldHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpHome)
+	defer os.Setenv("HOME", oldHome)
+
+	result := ResolveGo()
+
+	// Should find the Go toolchain, not go-migrate or go-task
+	if result == "" {
+		t.Error("ResolveGo() returned empty string, expected to find go-1.23.4")
+	}
+	if filepath.Base(filepath.Dir(filepath.Dir(result))) != "go-1.23.4" {
+		t.Errorf("ResolveGo() found wrong directory: %s, expected go-1.23.4", result)
+	}
+}
+
+func TestResolveGo_PicksLatestVersion(t *testing.T) {
+	// Create a temporary directory structure to simulate $TSUKU_HOME
+	tmpHome := t.TempDir()
+	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create multiple Go toolchain versions
+	for _, version := range []string{"go-1.21.0", "go-1.22.5", "go-1.23.4"} {
+		dir := filepath.Join(toolsDir, version, "bin")
+		if err := os.MkdirAll(dir, 0755); err != nil {
+			t.Fatal(err)
+		}
+		goExe := filepath.Join(dir, "go")
+		if err := os.WriteFile(goExe, []byte("#!/bin/sh\necho go"), 0755); err != nil {
+			t.Fatal(err)
+		}
+	}
+
+	// Override HOME for the test
+	oldHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpHome)
+	defer os.Setenv("HOME", oldHome)
+
+	result := ResolveGo()
+
+	// Should pick the latest version (lexicographically)
+	if result == "" {
+		t.Error("ResolveGo() returned empty string")
+	}
+	if filepath.Base(filepath.Dir(filepath.Dir(result))) != "go-1.23.4" {
+		t.Errorf("ResolveGo() picked wrong version: %s, expected go-1.23.4", result)
+	}
+}
