@@ -40,3 +40,4 @@ tmp/
 
 # Test progress state
 .test-progress
+tmp/
