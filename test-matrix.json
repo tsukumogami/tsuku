@@ -26,11 +26,13 @@
     "T32": { "tool": "fpm",          "tier": 5, "desc": "gem_install packaging",       "features": ["action:gem_install"] },
     "T40": { "tool": "hello-nix",    "tier": 3, "desc": "nix_install simple",          "features": ["action:nix_install", "version_detection:nixpkgs", "platform:linux_only", "bootstrap:nix_portable"] },
     "T50": { "tool": "perl",         "tier": 2, "desc": "relocatable perl runtime",    "features": ["action:download_archive", "install_mode:directory", "bootstrap:relocatable_perl"] },
-    "T51": { "tool": "ack",          "tier": 5, "desc": "cpan_install with dependency", "features": ["action:cpan_install", "version_detection:metacpan", "dependency:perl"] }
+    "T51": { "tool": "ack",          "tier": 5, "desc": "cpan_install with dependency", "features": ["action:cpan_install", "version_detection:metacpan", "dependency:perl"] },
+    "T52": { "tool": "go",           "tier": 2, "desc": "go toolchain",               "features": ["action:download_archive", "install_mode:directory", "version_detection:go_toolchain"] },
+    "T53": { "tool": "gofumpt",      "tier": 5, "desc": "go_install with dependency", "features": ["action:go_install", "version_detection:goproxy", "dependency:go"] }
   },
   "ci": {
     "linux": ["T1", "T2", "T3", "T4", "T5", "T16", "T19", "T23", "T25", "T30", "T50"],
     "macos": ["T1", "T3", "T4", "T16", "T19", "T23", "T25", "T30"],
-    "scheduled": ["T18", "T27", "T51"]
+    "scheduled": ["T18", "T27", "T51", "T52", "T53"]
   }
 }
