@@ -1,0 +1,15 @@
+[metadata]
+name = "borg"
+description = "Deduplicating backup program with compression and encryption"
+homepage = "https://www.borgbackup.org/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "borgbackup/borg"
+asset_pattern = "borg-linux-glibc235-x86_64-gh"
+binaries = [{src = "borg-linux-glibc235-x86_64-gh", dest = "bin/borg"}]
+
+[verify]
+command = "borg --version"
+pattern = "borg"
