@@ -1,0 +1,19 @@
+[metadata]
+name = "tilt"
+description = "Multi-service development environment"
+homepage = "https://github.com/tilt-dev/tilt"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "tilt-dev/tilt"
+asset_pattern = "tilt.{version}.{os}.{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["tilt"]
+os_mapping = { darwin = "mac", linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "tilt version"
+pattern = "{version}"

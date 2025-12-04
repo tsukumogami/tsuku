@@ -1,0 +1,16 @@
+[metadata]
+name = "goose"
+description = "Database migration tool"
+homepage = "https://github.com/pressly/goose"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "pressly/goose"
+asset_pattern = "goose_{os}_{arch}"
+binary = "goose"
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "goose --version"
+pattern = "goose"

@@ -1,0 +1,19 @@
+[metadata]
+name = "stern"
+description = "Multi-pod log tailing for Kubernetes"
+homepage = "https://github.com/stern/stern"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "stern/stern"
+asset_pattern = "stern_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["stern"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "stern --version"
+pattern = "{version}"

@@ -1,0 +1,15 @@
+[metadata]
+name = "direnv"
+description = "Environment switcher for the shell"
+homepage = "https://direnv.net/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "direnv/direnv"
+asset_pattern = "direnv.{os}-{arch}"
+binary = "direnv"
+
+[verify]
+command = "direnv version"
+pattern = "{version}"

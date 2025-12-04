@@ -1,0 +1,19 @@
+[metadata]
+name = "atlantis"
+description = "Terraform Pull Request Automation"
+homepage = "https://www.runatlantis.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "runatlantis/atlantis"
+asset_pattern = "atlantis_{os}_{arch}.zip"
+archive_format = "zip"
+strip_dirs = 0
+binaries = ["atlantis"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "atlantis version"
+pattern = "{version}"

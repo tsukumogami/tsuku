@@ -1,0 +1,19 @@
+[metadata]
+name = "jj"
+description = "Jujutsu version control system"
+homepage = "https://martinvonz.github.io/jj/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "jj-vcs/jj"
+asset_pattern = "jj-v{version}-{arch}-{os}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["jj"]
+os_mapping = { linux = "unknown-linux-musl", darwin = "apple-darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "jj --version"
+pattern = "jj"

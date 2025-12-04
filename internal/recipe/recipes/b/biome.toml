@@ -1,0 +1,16 @@
+[metadata]
+name = "biome"
+description = "Fast formatter and linter for JavaScript, TypeScript, JSX, JSON"
+homepage = "https://biomejs.dev/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "biomejs/biome"
+asset_pattern = "biome-{os}-{arch}"
+binary = "biome"
+arch_mapping = { amd64 = "x64" }
+
+[verify]
+command = "biome --version"
+pattern = "Version:"

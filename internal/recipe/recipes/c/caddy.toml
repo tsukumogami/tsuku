@@ -1,0 +1,19 @@
+[metadata]
+name = "caddy"
+description = "Fast HTTP server with automatic HTTPS"
+homepage = "https://caddyserver.com/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "caddyserver/caddy"
+asset_pattern = "caddy_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["caddy"]
+os_mapping = { darwin = "mac", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "caddy version"
+pattern = "v{version}"

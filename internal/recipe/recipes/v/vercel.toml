@@ -1,0 +1,14 @@
+[metadata]
+name = "vercel"
+description = "Vercel CLI - develop, deploy, and manage your Vercel projects"
+homepage = "https://vercel.com/cli"
+version_format = "semver"
+
+[[steps]]
+action = "npm_install"
+package = "vercel"
+executables = ["vercel", "vc"]
+
+[verify]
+command = "vercel --version"
+pattern = "Vercel CLI"

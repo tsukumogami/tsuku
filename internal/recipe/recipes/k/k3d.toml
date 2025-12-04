@@ -1,0 +1,15 @@
+[metadata]
+name = "k3d"
+description = "k3s in docker - lightweight Kubernetes in Docker"
+homepage = "https://k3d.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "k3d-io/k3d"
+asset_pattern = "k3d-{os}-{arch}"
+binary = "k3d"
+
+[verify]
+command = "k3d version"
+pattern = "v{version}"

@@ -1,0 +1,18 @@
+[metadata]
+name = "vault"
+description = "Secrets management"
+homepage = "https://www.vaultproject.io/"
+version_format = "semver"
+
+[version]
+github_repo = "hashicorp/vault"
+
+[[steps]]
+action = "hashicorp_release"
+product = "vault"
+binary = "vault"
+verify_signature = false
+
+[verify]
+command = "vault version"
+pattern = "{version}"

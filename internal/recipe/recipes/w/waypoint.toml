@@ -1,0 +1,18 @@
+[metadata]
+name = "waypoint"
+description = "Build deploy and release across platforms"
+homepage = "https://www.waypointproject.io/"
+version_format = "semver"
+
+[version]
+github_repo = "hashicorp/waypoint"
+
+[[steps]]
+action = "hashicorp_release"
+product = "waypoint"
+binary = "waypoint"
+verify_signature = false
+
+[verify]
+command = "waypoint version"
+pattern = "{version}"

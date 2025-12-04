@@ -1,0 +1,19 @@
+[metadata]
+name = "helix"
+description = "Post-modern text editor"
+homepage = "https://helix-editor.com/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "helix-editor/helix"
+asset_pattern = "helix-{version}-{arch}-{os}.tar.xz"
+archive_format = "tar.xz"
+strip_dirs = 1
+binaries = ["hx"]
+os_mapping = { linux = "linux", darwin = "macos" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "hx --version"
+pattern = "helix"

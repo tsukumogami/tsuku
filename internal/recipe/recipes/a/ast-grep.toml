@@ -1,0 +1,19 @@
+[metadata]
+name = "ast-grep"
+description = "Structural code search and refactoring tool"
+homepage = "https://ast-grep.github.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "ast-grep/ast-grep"
+asset_pattern = "app-{arch}-{os}.zip"
+archive_format = "zip"
+strip_dirs = 0
+binaries = ["ast-grep"]
+os_mapping = { darwin = "apple-darwin", linux = "unknown-linux-gnu" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "ast-grep --version"
+pattern = "{version}"

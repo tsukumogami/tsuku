@@ -1,0 +1,19 @@
+[metadata]
+name = "popeye"
+description = "Kubernetes cluster sanitizer"
+homepage = "https://github.com/derailed/popeye"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "derailed/popeye"
+asset_pattern = "popeye_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["popeye"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "popeye version"
+pattern = "{version}"

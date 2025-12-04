@@ -1,0 +1,14 @@
+[metadata]
+name = "cdk"
+description = "AWS Cloud Development Kit - Infrastructure as Code framework"
+homepage = "https://aws.amazon.com/cdk/"
+version_format = "semver"
+
+[[steps]]
+action = "npm_install"
+package = "aws-cdk"
+executables = ["cdk"]
+
+[verify]
+command = "cdk --version"
+pattern = "{version}"

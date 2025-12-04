@@ -1,0 +1,19 @@
+[metadata]
+name = "cargo-deny"
+description = "Cargo plugin for linting dependencies"
+homepage = "https://embarkstudios.github.io/cargo-deny/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "EmbarkStudios/cargo-deny"
+asset_pattern = "cargo-deny-{version}-{arch}-{os}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["cargo-deny"]
+os_mapping = { darwin = "apple-darwin", linux = "unknown-linux-musl" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "cargo-deny --version"
+pattern = "cargo-deny"

@@ -1,0 +1,14 @@
+[metadata]
+name = "turbo"
+description = "Turborepo - High-performance build system for JavaScript and TypeScript monorepos"
+homepage = "https://turbo.build/repo"
+version_format = "semver"
+
+[[steps]]
+action = "npm_install"
+package = "turbo"
+executables = ["turbo"]
+
+[verify]
+command = "turbo --version"
+pattern = "{version}"

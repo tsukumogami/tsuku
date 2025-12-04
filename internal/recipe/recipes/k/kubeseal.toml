@@ -1,0 +1,19 @@
+[metadata]
+name = "kubeseal"
+description = "Encrypt Kubernetes secrets"
+homepage = "https://github.com/bitnami-labs/sealed-secrets"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "bitnami-labs/sealed-secrets"
+asset_pattern = "kubeseal-{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["kubeseal"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "kubeseal --version"
+pattern = "{version}"

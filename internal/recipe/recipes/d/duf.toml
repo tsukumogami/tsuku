@@ -1,0 +1,19 @@
+[metadata]
+name = "duf"
+description = "Disk Usage/Free Utility - a better 'df' alternative"
+homepage = "https://github.com/muesli/duf"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "muesli/duf"
+asset_pattern = "duf_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["duf"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "duf --version"
+pattern = "duf"

@@ -1,0 +1,24 @@
+[metadata]
+name = "pipx"
+description = "Install and run Python applications in isolated environments"
+homepage = "https://pypa.github.io/pipx/"
+version_format = "semver"
+dependencies = ["python-standalone"]
+
+[version]
+source = "pypi"
+
+# Bootstrap pipx using tsuku's python-standalone (don't rely on system pip)
+# The Manager will resolve python-standalone's path from tsuku tools
+[[steps]]
+action = "run_command"
+command = "{PYTHON} -m pip install --user pipx"
+
+# Copy pipx from ~/.local/bin to tsuku's managed location
+[[steps]]
+action = "run_command"
+command = "mkdir -p {install_dir}/bin && cp $HOME/.local/bin/pipx {install_dir}/bin/pipx && chmod +x {install_dir}/bin/pipx"
+
+[verify]
+command = "pipx --version"
+pattern = ""

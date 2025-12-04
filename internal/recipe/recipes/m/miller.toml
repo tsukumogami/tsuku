@@ -1,0 +1,19 @@
+[metadata]
+name = "miller"
+description = "CSV/JSON/tabular data processor"
+homepage = "https://github.com/johnkerl/miller"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "johnkerl/miller"
+asset_pattern = "miller-{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["mlr"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "mlr --version"
+pattern = "{version}"

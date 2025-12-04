@@ -1,0 +1,18 @@
+[metadata]
+name = "fnm"
+description = "Fast and simple Node.js version manager"
+homepage = "https://github.com/Schniz/fnm"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "Schniz/fnm"
+asset_pattern = "fnm-{os}.zip"
+archive_format = "zip"
+strip_dirs = 0
+binaries = ["fnm"]
+os_mapping = { darwin = "macos", linux = "linux" }
+
+[verify]
+command = "fnm --version"
+pattern = "fnm"

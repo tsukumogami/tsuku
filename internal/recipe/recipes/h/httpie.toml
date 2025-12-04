@@ -1,0 +1,17 @@
+[metadata]
+name = "httpie"
+description = "A user-friendly HTTP client for the API era"
+homepage = "https://httpie.io/"
+version_format = "semver"
+
+[version]
+source = "pypi"
+
+[[steps]]
+action = "pipx_install"
+package = "httpie"
+executables = ["http", "https"]
+
+[verify]
+command = "http --version"
+pattern = "{version}"

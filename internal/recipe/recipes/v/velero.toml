@@ -1,0 +1,19 @@
+[metadata]
+name = "velero"
+description = "Kubernetes backup and restore"
+homepage = "https://github.com/vmware-tanzu/velero"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "vmware-tanzu/velero"
+asset_pattern = "velero-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["velero"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "velero version --client-only"
+pattern = "{version}"

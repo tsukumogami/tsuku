@@ -1,0 +1,17 @@
+[metadata]
+name = "poetry"
+description = "Python dependency management and packaging made easy"
+homepage = "https://python-poetry.org/"
+version_format = "semver"
+
+[version]
+source = "pypi"
+
+[[steps]]
+action = "pipx_install"
+package = "poetry"
+executables = ["poetry"]
+
+[verify]
+command = "poetry --version"
+pattern = "Poetry (version {version})"

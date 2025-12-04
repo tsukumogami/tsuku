@@ -1,0 +1,15 @@
+[metadata]
+name = "cloud-nuke"
+description = "CLI tool to delete all resources in an AWS account"
+homepage = "https://github.com/gruntwork-io/cloud-nuke"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "gruntwork-io/cloud-nuke"
+asset_pattern = "cloud-nuke_{os}_{arch}"
+binary = "cloud-nuke"
+
+[verify]
+command = "cloud-nuke --version"
+pattern = "cloud-nuke"

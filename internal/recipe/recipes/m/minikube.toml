@@ -1,0 +1,15 @@
+[metadata]
+name = "minikube"
+description = "Run Kubernetes locally"
+homepage = "https://minikube.sigs.k8s.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "kubernetes/minikube"
+asset_pattern = "minikube-{os}-{arch}"
+binary = "minikube"
+
+[verify]
+command = "minikube version"
+pattern = "{version}"

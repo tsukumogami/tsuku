@@ -1,0 +1,19 @@
+[metadata]
+name = "bottom"
+description = "Graphical process/system monitor for the terminal"
+homepage = "https://clementtsang.github.io/bottom/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "ClementTsang/bottom"
+asset_pattern = "bottom_{arch}-{os}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["btm"]
+os_mapping = { darwin = "apple-darwin", linux = "unknown-linux-gnu" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "btm --version"
+pattern = "{version}"

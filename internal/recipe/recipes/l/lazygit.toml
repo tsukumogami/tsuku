@@ -1,0 +1,19 @@
+[metadata]
+name = "lazygit"
+description = "Simple terminal UI for git"
+homepage = "https://github.com/jesseduffield/lazygit"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "jesseduffield/lazygit"
+asset_pattern = "lazygit_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["lazygit"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "lazygit --version"
+pattern = "{version}"

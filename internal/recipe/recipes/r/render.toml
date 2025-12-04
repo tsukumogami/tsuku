@@ -1,0 +1,19 @@
+[metadata]
+name = "render"
+description = "Render CLI"
+homepage = "https://github.com/render-oss/cli"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "render-oss/cli"
+asset_pattern = "cli_{version}_{os}_{arch}.zip"
+archive_format = "zip"
+strip_dirs = 0
+binaries = [{src = "cli_v2.5.0", dest = "bin/render"}]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "render --version"
+pattern = "{version}"

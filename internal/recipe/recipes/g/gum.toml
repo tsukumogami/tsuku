@@ -1,0 +1,19 @@
+[metadata]
+name = "gum"
+description = "Tool for glamorous shell scripts"
+homepage = "https://github.com/charmbracelet/gum"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "charmbracelet/gum"
+asset_pattern = "gum_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["gum"]
+os_mapping = { linux = "Linux", darwin = "Darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "gum --version"
+pattern = "gum"

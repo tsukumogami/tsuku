@@ -1,0 +1,15 @@
+[metadata]
+name = "devspace"
+description = "Developer tool for Kubernetes applications"
+homepage = "https://devspace.sh/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "loft-sh/devspace"
+asset_pattern = "devspace-{os}-{arch}"
+binary = "devspace"
+
+[verify]
+command = "devspace version"
+pattern = "DevSpace"

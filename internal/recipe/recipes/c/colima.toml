@@ -1,0 +1,17 @@
+[metadata]
+name = "colima"
+description = "Container runtimes on macOS with minimal setup"
+homepage = "https://github.com/abiosoft/colima"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "abiosoft/colima"
+asset_pattern = "colima-{os}-{arch}"
+binary = "colima"
+os_mapping = { linux = "Linux" }
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "colima version"
+pattern = "{version}"

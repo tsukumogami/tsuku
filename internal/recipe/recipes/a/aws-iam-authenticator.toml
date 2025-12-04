@@ -1,0 +1,15 @@
+[metadata]
+name = "aws-iam-authenticator"
+description = "Use AWS IAM credentials for Kubernetes"
+homepage = "https://github.com/kubernetes-sigs/aws-iam-authenticator"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "kubernetes-sigs/aws-iam-authenticator"
+asset_pattern = "aws-iam-authenticator_{version}_{os}_{arch}"
+binary = "aws-iam-authenticator"
+
+[verify]
+command = "aws-iam-authenticator version"
+pattern = "{version}"

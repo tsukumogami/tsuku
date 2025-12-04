@@ -1,0 +1,19 @@
+[metadata]
+name = "mise"
+description = "Dev tools version manager"
+homepage = "https://github.com/jdx/mise"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "jdx/mise"
+asset_pattern = "mise-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["bin/mise"]
+os_mapping = { linux = "linux", darwin = "macos" }
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+[verify]
+command = "mise --version"
+pattern = "{version}"

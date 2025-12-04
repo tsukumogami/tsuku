@@ -1,0 +1,19 @@
+[metadata]
+name = "annie"
+description = "Fast, simple video downloader"
+homepage = "https://github.com/iawia002/annie"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "iawia002/lux"
+asset_pattern = "lux_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["lux"]
+os_mapping = { darwin = "Darwin", linux = "Linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "lux -v"
+pattern = "{version}"

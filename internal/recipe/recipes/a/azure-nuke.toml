@@ -1,0 +1,19 @@
+[metadata]
+name = "azure-nuke"
+description = "Tool to delete all resources in an Azure subscription"
+homepage = "https://github.com/ekristen/azure-nuke"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "ekristen/azure-nuke"
+asset_pattern = "azure-nuke-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["azure-nuke"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "azure-nuke --version"
+pattern = "{version}"

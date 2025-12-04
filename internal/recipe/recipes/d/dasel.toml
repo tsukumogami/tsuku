@@ -1,0 +1,15 @@
+[metadata]
+name = "dasel"
+description = "Query and modify data structures using selector strings"
+homepage = "https://daseldocs.tomwright.me/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "TomWright/dasel"
+asset_pattern = "dasel_{os}_{arch}"
+binary = "dasel"
+
+[verify]
+command = "dasel --version"
+pattern = "dasel"

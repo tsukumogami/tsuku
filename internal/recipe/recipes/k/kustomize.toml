@@ -1,0 +1,19 @@
+[metadata]
+name = "kustomize"
+description = "Kubernetes native configuration management"
+homepage = "https://github.com/kubernetes-sigs/kustomize"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "kubernetes-sigs/kustomize"
+asset_pattern = "kustomize_v{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["kustomize"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "kustomize version"
+pattern = "{version}"

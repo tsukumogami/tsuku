@@ -1,0 +1,19 @@
+[metadata]
+name = "golangci-lint"
+description = "Fast Go linters runner"
+homepage = "https://github.com/golangci/golangci-lint"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "golangci/golangci-lint"
+asset_pattern = "golangci-lint-{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["golangci-lint"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "golangci-lint --version"
+pattern = "golangci-lint"

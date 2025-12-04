@@ -1,0 +1,19 @@
+[metadata]
+name = "gotop"
+description = "Terminal based graphical activity monitor"
+homepage = "https://github.com/xxxserxxx/gotop"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "xxxserxxx/gotop"
+asset_pattern = "gotop_v{version}_{os}_{arch}.tgz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["gotop"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "gotop --version"
+pattern = "gotop"

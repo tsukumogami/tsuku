@@ -1,0 +1,19 @@
+[metadata]
+name = "kopia"
+description = "Fast and secure backup tool"
+homepage = "https://kopia.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "kopia/kopia"
+asset_pattern = "kopia-{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["kopia"]
+os_mapping = { linux = "linux", darwin = "macOS" }
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+[verify]
+command = "kopia --version"
+pattern = "kopia"

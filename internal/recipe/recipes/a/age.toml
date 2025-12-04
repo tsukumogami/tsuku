@@ -1,0 +1,19 @@
+[metadata]
+name = "age"
+description = "Simple file encryption tool"
+homepage = "https://github.com/FiloSottile/age"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "FiloSottile/age"
+asset_pattern = "age-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["age"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "age --version"
+pattern = "{version}"

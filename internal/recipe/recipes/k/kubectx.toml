@@ -1,0 +1,19 @@
+[metadata]
+name = "kubectx"
+description = "Switch between kubectl contexts (clusters)"
+homepage = "https://github.com/ahmetb/kubectx"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "ahmetb/kubectx"
+asset_pattern = "kubectx_v{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["kubectx"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "kubectx --version"
+pattern = "{version}"

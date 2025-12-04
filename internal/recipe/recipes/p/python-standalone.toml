@@ -1,0 +1,20 @@
+[metadata]
+name = "python-standalone"
+description = "Standalone Python distribution (execution dependency for pip-based tools)"
+homepage = "https://github.com/indygreg/python-build-standalone"
+version_format = "custom"
+
+[[steps]]
+action = "github_archive"
+repo = "indygreg/python-build-standalone"
+asset_pattern = "cpython-*+{version}-{arch}-{os}-install_only.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+install_mode = "directory"
+binaries = ["bin/python3", "bin/pip3"]
+os_mapping = { linux = "unknown-linux-gnu", darwin = "apple-darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "python3 --version"
+pattern = "Python 3."
