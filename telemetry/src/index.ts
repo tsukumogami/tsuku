@@ -2,6 +2,9 @@ export interface Env {
   ANALYTICS: AnalyticsEngineDataset;
   CF_ACCOUNT_ID: string;
   CF_API_TOKEN: string;
+  VERSION_TOKEN: string;
+  COMMIT_SHA: string;
+  DEPLOY_TIME: string;
 }
 
 const SCHEMA_VERSION = "1";
@@ -392,6 +395,38 @@ export default {
     // GET /health - health check
     if (url.pathname === "/health") {
       return new Response("ok", { status: 200, headers: corsHeaders });
+    }
+
+    // GET /version - deployment info (protected by token)
+    if (request.method === "GET" && url.pathname === "/version") {
+      const authHeader = request.headers.get("Authorization");
+      const expectedToken = env.VERSION_TOKEN;
+
+      if (!expectedToken) {
+        return new Response("Version endpoint not configured", {
+          status: 503,
+          headers: corsHeaders,
+        });
+      }
+
+      if (!authHeader || authHeader !== `Bearer ${expectedToken}`) {
+        return new Response("Unauthorized", {
+          status: 401,
+          headers: corsHeaders,
+        });
+      }
+
+      return new Response(
+        JSON.stringify({
+          commit_sha: env.COMMIT_SHA || "unknown",
+          deploy_time: env.DEPLOY_TIME || "unknown",
+          schema_version: SCHEMA_VERSION,
+        }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
     }
 
     return new Response("Not found", { status: 404, headers: corsHeaders });

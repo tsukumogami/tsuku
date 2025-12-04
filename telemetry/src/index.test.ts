@@ -37,6 +37,46 @@ describe("tsuku-telemetry worker", () => {
     });
   });
 
+  describe("GET /version", () => {
+    it("returns 401 without authorization header", async () => {
+      const response = await SELF.fetch("http://localhost/version");
+      expect(response.status).toBe(401);
+      expect(await response.text()).toBe("Unauthorized");
+    });
+
+    it("returns 401 with invalid token", async () => {
+      const response = await SELF.fetch("http://localhost/version", {
+        headers: { Authorization: "Bearer wrong-token" },
+      });
+      expect(response.status).toBe(401);
+      expect(await response.text()).toBe("Unauthorized");
+    });
+
+    it("returns version info with valid token", async () => {
+      const response = await SELF.fetch("http://localhost/version", {
+        headers: { Authorization: "Bearer test-version-token" },
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe("application/json");
+
+      const data = (await response.json()) as {
+        commit_sha: string;
+        deploy_time: string;
+        schema_version: string;
+      };
+      expect(data.commit_sha).toBeDefined();
+      expect(data.deploy_time).toBeDefined();
+      expect(data.schema_version).toBe("1");
+    });
+
+    it("includes CORS headers", async () => {
+      const response = await SELF.fetch("http://localhost/version", {
+        headers: { Authorization: "Bearer test-version-token" },
+      });
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    });
+  });
+
   describe("GET /stats", () => {
     it("returns aggregated statistics", async () => {
       // Mock the Analytics Engine API responses
