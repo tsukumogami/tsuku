@@ -19,12 +19,15 @@ jobs:
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
+        env:
+          COMMIT_SHA: ${{ github.sha }}
+          DEPLOY_TIME: ${{ github.event.head_commit.timestamp }}
         with:
           apiToken: ${{ secrets.CLOUDFLARE_WORKERS_DEPLOYER_TOKEN }}
           workingDirectory: telemetry
           vars: |
-            COMMIT_SHA:${{ github.sha }}
-            DEPLOY_TIME:${{ github.event.head_commit.timestamp }}
+            COMMIT_SHA
+            DEPLOY_TIME
 
       - name: Verify deployment
         run: |
