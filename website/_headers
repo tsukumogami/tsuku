@@ -1,7 +1,0 @@
-# Cloudflare Pages custom headers
-# https://developers.cloudflare.com/pages/platform/headers
-
-# Set correct Content-Type for install script
-/install.sh
-  Content-Type: text/plain; charset=utf-8
-  Cache-Control: public, max-age=300
