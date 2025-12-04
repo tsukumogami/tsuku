@@ -14,22 +14,37 @@ import (
 type Loader struct {
 	recipes    map[string]*Recipe
 	registry   *registry.Registry
+	embedded   *EmbeddedRegistry
 	recipesDir string // Local recipes directory (~/.tsuku/recipes)
 }
 
 // New creates a new recipe loader with the given registry
 func New(reg *registry.Registry) *Loader {
+	embedded, _ := NewEmbeddedRegistry() // Ignore error - embedded recipes are optional
 	return &Loader{
 		recipes:  make(map[string]*Recipe),
 		registry: reg,
+		embedded: embedded,
 	}
 }
 
 // NewWithLocalRecipes creates a new recipe loader with local recipe support
 func NewWithLocalRecipes(reg *registry.Registry, recipesDir string) *Loader {
+	embedded, _ := NewEmbeddedRegistry() // Ignore error - embedded recipes are optional
 	return &Loader{
 		recipes:    make(map[string]*Recipe),
 		registry:   reg,
+		embedded:   embedded,
+		recipesDir: recipesDir,
+	}
+}
+
+// NewWithoutEmbedded creates a new recipe loader without embedded recipes (for testing)
+func NewWithoutEmbedded(reg *registry.Registry, recipesDir string) *Loader {
+	return &Loader{
+		recipes:    make(map[string]*Recipe),
+		registry:   reg,
+		embedded:   nil, // No embedded recipes
 		recipesDir: recipesDir,
 	}
 }
@@ -46,7 +61,7 @@ func (l *Loader) Get(name string) (*Recipe, error) {
 }
 
 // GetWithContext retrieves a recipe by name with context support
-// Priority: 1. In-memory cache, 2. Local recipes, 3. Registry (disk cache or remote)
+// Priority: 1. In-memory cache, 2. Local recipes, 3. Embedded recipes, 4. Registry (disk cache or remote)
 func (l *Loader) GetWithContext(ctx context.Context, name string) (*Recipe, error) {
 	// Check in-memory cache first
 	if recipe, ok := l.recipes[name]; ok {
@@ -57,15 +72,27 @@ func (l *Loader) GetWithContext(ctx context.Context, name string) (*Recipe, erro
 	if l.recipesDir != "" {
 		localRecipe, localErr := l.loadLocalRecipe(name)
 		if localErr == nil && localRecipe != nil {
-			// Check if this shadows a registry recipe and warn
-			l.warnIfShadowsRegistry(ctx, name)
+			// Check if this shadows an embedded or registry recipe and warn
+			l.warnIfShadows(ctx, name)
 			l.recipes[name] = localRecipe
 			return localRecipe, nil
 		}
-		// If file doesn't exist, continue to registry
+		// If file doesn't exist, continue to embedded/registry
 		// If file exists but has parse error, return the error
 		if localErr != nil && !os.IsNotExist(localErr) {
 			return nil, localErr
+		}
+	}
+
+	// Check embedded recipes
+	if l.embedded != nil {
+		if data, ok := l.embedded.Get(name); ok {
+			recipe, err := l.parseBytes(data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse embedded recipe %s: %w", name, err)
+			}
+			l.recipes[name] = recipe
+			return recipe, nil
 		}
 	}
 
@@ -89,8 +116,13 @@ func (l *Loader) loadLocalRecipe(name string) (*Recipe, error) {
 	return l.parseBytes(data)
 }
 
-// warnIfShadowsRegistry checks if a local recipe shadows a registry recipe and logs a warning
-func (l *Loader) warnIfShadowsRegistry(ctx context.Context, name string) {
+// warnIfShadows checks if a local recipe shadows an embedded or registry recipe and logs a warning
+func (l *Loader) warnIfShadows(ctx context.Context, name string) {
+	// Check if recipe exists in embedded recipes
+	if l.embedded != nil && l.embedded.Has(name) {
+		fmt.Printf("Warning: local recipe '%s' shadows embedded recipe\n", name)
+		return
+	}
 	// Check if recipe exists in registry cache
 	data, _ := l.registry.GetCached(name)
 	if data != nil {
@@ -173,6 +205,8 @@ type RecipeSource string
 const (
 	// SourceLocal indicates a recipe from the local recipes directory ($TSUKU_HOME/recipes)
 	SourceLocal RecipeSource = "local"
+	// SourceEmbedded indicates a recipe embedded in the binary
+	SourceEmbedded RecipeSource = "embedded"
 	// SourceRegistry indicates a recipe from the cached registry ($TSUKU_HOME/registry)
 	SourceRegistry RecipeSource = "registry"
 )
@@ -184,8 +218,8 @@ type RecipeInfo struct {
 	Source      RecipeSource
 }
 
-// ListAllWithSource returns all available recipes from both local and registry sources
-// Local recipes are listed first, and recipes that appear in both are shown as local
+// ListAllWithSource returns all available recipes from local, embedded, and registry sources
+// Priority order: local > embedded > registry (same as resolution chain)
 func (l *Loader) ListAllWithSource() ([]RecipeInfo, error) {
 	seen := make(map[string]bool)
 	var result []RecipeInfo
@@ -200,7 +234,21 @@ func (l *Loader) ListAllWithSource() ([]RecipeInfo, error) {
 		result = append(result, info)
 	}
 
-	// Then, list registry recipes (cached only)
+	// Then, list embedded recipes
+	if l.embedded != nil {
+		embeddedRecipes, err := l.embedded.ListWithInfo()
+		if err != nil {
+			return nil, fmt.Errorf("failed to list embedded recipes: %w", err)
+		}
+		for _, info := range embeddedRecipes {
+			if !seen[info.Name] {
+				seen[info.Name] = true
+				result = append(result, info)
+			}
+		}
+	}
+
+	// Finally, list registry recipes (cached only)
 	registryRecipes, err := l.listRegistryRecipes()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list registry recipes: %w", err)
@@ -217,6 +265,14 @@ func (l *Loader) ListAllWithSource() ([]RecipeInfo, error) {
 // ListLocal returns only recipes from the local recipes directory
 func (l *Loader) ListLocal() ([]RecipeInfo, error) {
 	return l.listLocalRecipes()
+}
+
+// ListEmbedded returns only recipes embedded in the binary
+func (l *Loader) ListEmbedded() ([]RecipeInfo, error) {
+	if l.embedded == nil {
+		return nil, nil
+	}
+	return l.embedded.ListWithInfo()
 }
 
 // listLocalRecipes scans the local recipes directory and returns recipe info

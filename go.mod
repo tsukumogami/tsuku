@@ -1,6 +1,6 @@
 module github.com/tsuku-dev/tsuku
 
-go 1.24.9
+go 1.24.11
 
 require (
 	github.com/BurntSushi/toml v1.5.0

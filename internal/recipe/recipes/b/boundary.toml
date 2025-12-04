@@ -1,0 +1,18 @@
+[metadata]
+name = "boundary"
+description = "Secure remote access"
+homepage = "https://www.boundaryproject.io/"
+version_format = "semver"
+
+[version]
+github_repo = "hashicorp/boundary"
+
+[[steps]]
+action = "hashicorp_release"
+product = "boundary"
+binary = "boundary"
+verify_signature = false
+
+[verify]
+command = "boundary version"
+pattern = "{version}"

@@ -65,11 +65,15 @@ Use --local to show only recipes from your local recipes directory
 
 		// Count by source
 		localCount := 0
+		embeddedCount := 0
 		registryCount := 0
 		for _, r := range recipes {
-			if r.Source == recipe.SourceLocal {
+			switch r.Source {
+			case recipe.SourceLocal:
 				localCount++
-			} else {
+			case recipe.SourceEmbedded:
+				embeddedCount++
+			case recipe.SourceRegistry:
 				registryCount++
 			}
 		}
@@ -77,15 +81,18 @@ Use --local to show only recipes from your local recipes directory
 		if recipesLocalOnly {
 			printInfof("Local recipes (%d total):\n\n", localCount)
 		} else {
-			printInfof("Available recipes (%d total: %d local, %d registry):\n\n", len(recipes), localCount, registryCount)
+			printInfof("Available recipes (%d total: %d local, %d embedded, %d registry):\n\n", len(recipes), localCount, embeddedCount, registryCount)
 		}
 
 		for _, r := range recipes {
 			sourceIndicator := ""
 			if !recipesLocalOnly {
-				if r.Source == recipe.SourceLocal {
+				switch r.Source {
+				case recipe.SourceLocal:
 					sourceIndicator = "[local]    "
-				} else {
+				case recipe.SourceEmbedded:
+					sourceIndicator = "[embedded] "
+				case recipe.SourceRegistry:
 					sourceIndicator = "[registry] "
 				}
 			}
