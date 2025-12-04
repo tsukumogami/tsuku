@@ -22,3 +22,17 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_WORKERS_DEPLOYER_TOKEN }}
           workingDirectory: telemetry
+          vars: |
+            COMMIT_SHA:${{ github.sha }}
+            DEPLOY_TIME:${{ github.event.head_commit.timestamp }}
+
+      - name: Verify deployment
+        run: |
+          sleep 5  # Give Workers a moment to propagate
+          RESPONSE=$(curl -sf -H "Authorization: Bearer ${{ vars.TELEMETRY_VERSION_TOKEN }}" https://telemetry.tsuku.dev/version)
+          DEPLOYED_SHA=$(echo "$RESPONSE" | jq -r '.commit_sha')
+          if [ "$DEPLOYED_SHA" != "${{ github.sha }}" ]; then
+            echo "::error::Deployment verification failed: expected ${{ github.sha }}, got $DEPLOYED_SHA"
+            exit 1
+          fi
+          echo "Deployment verified: $DEPLOYED_SHA"
