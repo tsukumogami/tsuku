@@ -9,61 +9,111 @@ on:
   workflow_dispatch:
 
 jobs:
-  test-changed-recipes:
-    name: "Test Changed Recipes"
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-
+  # Detect changed recipes and generate matrix
+  matrix:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      recipes: ${{ steps.changed.outputs.recipes }}
+      has_changes: ${{ steps.changed.outputs.has_changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get changed recipe files
-        id: changed-files
+      - name: Get changed recipes
+        id: changed
         run: |
-          CHANGED=$(git diff --name-only origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml' | tr '\n' ' ')
-          echo "recipes=$CHANGED" >> $GITHUB_OUTPUT
+          # Get list of changed recipe files
+          CHANGED=$(git diff --name-only origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml')
+
           if [ -z "$CHANGED" ]; then
             echo "No recipe files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "recipes=[]" >> $GITHUB_OUTPUT
           else
-            echo "Changed recipes: $CHANGED"
+            echo "Changed recipes:"
+            echo "$CHANGED"
+
+            # Build JSON array of {tool, path} objects
+            JSON="["
+            FIRST=true
+            for path in $CHANGED; do
+              tool=$(basename "$path" .toml)
+              if [ "$FIRST" = true ]; then
+                FIRST=false
+              else
+                JSON="$JSON,"
+              fi
+              JSON="$JSON{\"tool\":\"$tool\",\"path\":\"$path\"}"
+            done
+            JSON="$JSON]"
+
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "recipes=$JSON" >> $GITHUB_OUTPUT
           fi
 
+  # Test each changed recipe on Linux
+  test-linux:
+    name: "Linux: ${{ matrix.recipe.tool }}"
+    needs: matrix
+    if: ${{ needs.matrix.outputs.has_changes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJson(needs.matrix.outputs.recipes) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Set up Go
-        if: steps.changed-files.outputs.recipes != ''
         uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
       - name: Build tsuku
-        if: steps.changed-files.outputs.recipes != ''
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Verify tsuku build
-        if: steps.changed-files.outputs.recipes != ''
-        run: ./tsuku --version
-
       - name: Setup PATH
-        if: steps.changed-files.outputs.recipes != ''
         run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
 
-      - name: Test changed recipes
-        if: steps.changed-files.outputs.recipes != ''
+      - name: "Install ${{ matrix.recipe.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          for recipe in ${{ steps.changed-files.outputs.recipes }}; do
-            # Extract tool name from path (e.g., internal/recipe/recipes/a/ack.toml -> ack)
-            tool=$(basename "$recipe" .toml)
-            echo "Testing: $tool (from $recipe)"
-            # Install the tool (embedded recipes are used automatically)
-            ./tsuku install "$tool" --force
-            echo "---"
-          done
+        run: ./tsuku install --force ${{ matrix.recipe.tool }}
+
+  # Test each changed recipe on macOS
+  test-macos:
+    name: "macOS: ${{ matrix.recipe.tool }}"
+    needs: matrix
+    if: ${{ needs.matrix.outputs.has_changes == 'true' }}
+    runs-on: macos-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJson(needs.matrix.outputs.recipes) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: "Install ${{ matrix.recipe.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force ${{ matrix.recipe.tool }}
