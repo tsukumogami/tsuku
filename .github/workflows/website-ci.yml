@@ -1,0 +1,81 @@
+name: Website CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/install.sh'
+      - '.github/workflows/website-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'website/install.sh'
+      - '.github/workflows/website-ci.yml'
+
+jobs:
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        run: shellcheck website/install.sh
+
+  install-linux:
+    name: Install (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run install script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash website/install.sh --no-modify-path
+
+      - name: Verify env file created
+        run: |
+          test -f "$HOME/.tsuku/env"
+          cat "$HOME/.tsuku/env"
+
+      - name: Verify PATH setup works
+        run: |
+          source "$HOME/.tsuku/env"
+          echo "PATH: $PATH"
+          echo "TSUKU_HOME: $TSUKU_HOME"
+          echo "$PATH" | grep -q "$HOME/.tsuku/bin" || (echo "bin not in PATH" && exit 1)
+          echo "$PATH" | grep -q "$HOME/.tsuku/tools/current" || (echo "tools/current not in PATH" && exit 1)
+
+      - name: Verify tsuku binary
+        run: |
+          source "$HOME/.tsuku/env"
+          tsuku --version
+
+  install-macos:
+    name: Install (macOS)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run install script
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bash website/install.sh --no-modify-path
+
+      - name: Verify env file created
+        run: |
+          test -f "$HOME/.tsuku/env"
+          cat "$HOME/.tsuku/env"
+
+      - name: Verify PATH setup works
+        run: |
+          source "$HOME/.tsuku/env"
+          echo "PATH: $PATH"
+          echo "TSUKU_HOME: $TSUKU_HOME"
+          echo "$PATH" | grep -q "$HOME/.tsuku/bin" || (echo "bin not in PATH" && exit 1)
+          echo "$PATH" | grep -q "$HOME/.tsuku/tools/current" || (echo "tools/current not in PATH" && exit 1)
+
+      - name: Verify tsuku binary
+        run: |
+          source "$HOME/.tsuku/env"
+          tsuku --version
