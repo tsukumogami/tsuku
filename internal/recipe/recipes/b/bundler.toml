@@ -15,4 +15,4 @@ executables = ["bundle", "bundler"]
 
 [verify]
 command = "bundle --version"
-pattern = "Bundler version {version}"
+pattern = "{version}"
