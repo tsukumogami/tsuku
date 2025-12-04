@@ -1,0 +1,18 @@
+[metadata]
+name = "micro"
+description = "Modern terminal text editor"
+homepage = "https://github.com/zyedidia/micro"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "zyedidia/micro"
+asset_pattern = "micro-{version}-linux{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["micro"]
+arch_mapping = { amd64 = "64", arm64 = "-arm64" }
+
+[verify]
+command = "micro --version"
+pattern = "{version}"

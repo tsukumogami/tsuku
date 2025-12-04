@@ -1,0 +1,19 @@
+[metadata]
+name = "go-migrate"
+description = "Database migration CLI"
+homepage = "https://github.com/golang-migrate/migrate"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "golang-migrate/migrate"
+asset_pattern = "migrate.{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["migrate"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "migrate -version"
+pattern = "{version}"

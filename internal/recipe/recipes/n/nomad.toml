@@ -1,0 +1,18 @@
+[metadata]
+name = "nomad"
+description = "Workload orchestrator"
+homepage = "https://www.nomadproject.io/"
+version_format = "semver"
+
+[version]
+github_repo = "hashicorp/nomad"
+
+[[steps]]
+action = "hashicorp_release"
+product = "nomad"
+binary = "nomad"
+verify_signature = false
+
+[verify]
+command = "nomad version"
+pattern = "{version}"

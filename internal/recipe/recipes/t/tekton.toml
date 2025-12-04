@@ -1,0 +1,19 @@
+[metadata]
+name = "tekton"
+description = "Cloud-native CI/CD"
+homepage = "https://github.com/tektoncd/cli"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "tektoncd/cli"
+asset_pattern = "tkn_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["tkn"]
+os_mapping = { darwin = "Darwin", linux = "Linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "tkn version"
+pattern = "{version}"

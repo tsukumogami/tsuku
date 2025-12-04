@@ -1,0 +1,18 @@
+[metadata]
+name = "vagrant"
+description = "Development environment builder"
+homepage = "https://www.vagrantup.com/"
+version_format = "semver"
+
+[version]
+github_repo = "hashicorp/vagrant"
+
+[[steps]]
+action = "hashicorp_release"
+product = "vagrant"
+binary = "vagrant"
+verify_signature = false
+
+[verify]
+command = "vagrant version"
+pattern = "{version}"

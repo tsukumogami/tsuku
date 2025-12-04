@@ -1,0 +1,19 @@
+[metadata]
+name = "kompose"
+description = "Convert Docker Compose to Kubernetes"
+homepage = "https://kompose.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "kubernetes/kompose"
+asset_pattern = "kompose-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["kompose-linux-amd64"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "kompose-linux-amd64 version"
+pattern = "{version}"

@@ -1,0 +1,19 @@
+[metadata]
+name = "perltidy"
+description = "Indent and reformat Perl scripts"
+homepage = "https://metacpan.org/pod/Perl::Tidy"
+version_format = "calver"
+dependencies = ["perl"]
+
+[version]
+source = "metacpan"
+distribution = "Perl-Tidy"
+
+[[steps]]
+action = "cpan_install"
+distribution = "Perl-Tidy"
+executables = ["perltidy"]
+
+[verify]
+command = "perltidy --version"
+pattern = "perltidy"

@@ -1,0 +1,18 @@
+[metadata]
+name = "k9s"
+description = "Kubernetes CLI and TUI"
+homepage = "https://k9scli.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "derailed/k9s"
+asset_pattern = "k9s_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["k9s"]
+os_mapping = { linux = "Linux", darwin = "Darwin" }
+
+[verify]
+command = "k9s version"
+pattern = "v{version}"

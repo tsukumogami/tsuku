@@ -1,0 +1,18 @@
+[metadata]
+name = "packer"
+description = "Build automated machine images"
+homepage = "https://www.packer.io/"
+version_format = "semver"
+
+[version]
+github_repo = "hashicorp/packer"
+
+[[steps]]
+action = "hashicorp_release"
+product = "packer"
+binary = "packer"
+verify_signature = false
+
+[verify]
+command = "packer version"
+pattern = "{version}"

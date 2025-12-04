@@ -1,0 +1,15 @@
+[metadata]
+name = "jq"
+description = "JSON processor"
+homepage = "https://jqlang.github.io/jq/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "jqlang/jq"
+asset_pattern = "jq-{os}-{arch}"
+binary = "jq"
+
+[verify]
+command = "jq --version"
+pattern = "jq"

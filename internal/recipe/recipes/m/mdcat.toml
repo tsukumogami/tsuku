@@ -1,0 +1,19 @@
+[metadata]
+name = "mdcat"
+description = "Cat for markdown"
+homepage = "https://github.com/swsnr/mdcat"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "swsnr/mdcat"
+asset_pattern = "{version}-{arch}-{os}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["mdcat"]
+os_mapping = { linux = "unknown-linux-gnu" }
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "mdcat --version"
+pattern = "mdcat"

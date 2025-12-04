@@ -1,0 +1,19 @@
+[metadata]
+name = "tflint"
+description = "Terraform linter"
+homepage = "https://github.com/terraform-linters/tflint"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "terraform-linters/tflint"
+asset_pattern = "tflint_{os}_{arch}.zip"
+archive_format = "zip"
+strip_dirs = 0
+binaries = ["tflint"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "tflint --version"
+pattern = "{version}"

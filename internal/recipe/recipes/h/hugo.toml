@@ -1,0 +1,19 @@
+[metadata]
+name = "hugo"
+description = "Static site generator"
+homepage = "https://gohugo.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "gohugoio/hugo"
+asset_pattern = "hugo_{version}_{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["hugo"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "hugo version"
+pattern = "hugo"

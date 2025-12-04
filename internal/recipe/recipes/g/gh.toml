@@ -1,0 +1,19 @@
+[metadata]
+name = "gh"
+description = "GitHub CLI"
+homepage = "https://github.com/cli/cli"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "cli/cli"
+asset_pattern = "gh_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 2
+binaries = ["gh"]
+os_mapping = { darwin = "macOS", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "gh --version"
+pattern = "{version}"

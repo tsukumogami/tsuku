@@ -1,0 +1,19 @@
+[metadata]
+name = "etcd"
+description = "Distributed reliable key-value store"
+homepage = "https://etcd.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "etcd-io/etcd"
+asset_pattern = "etcd-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["etcd"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "etcd --version"
+pattern = "etcd"

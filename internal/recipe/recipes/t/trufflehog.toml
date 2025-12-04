@@ -1,0 +1,19 @@
+[metadata]
+name = "trufflehog"
+description = "Find credentials in git repositories"
+homepage = "https://github.com/trufflesecurity/trufflehog"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "trufflesecurity/trufflehog"
+asset_pattern = "trufflehog_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["trufflehog"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "trufflehog --version"
+pattern = "{version}"

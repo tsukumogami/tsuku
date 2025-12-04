@@ -1,0 +1,19 @@
+[metadata]
+name = "gobuster"
+description = "Directory/file brute forcer"
+homepage = "https://github.com/OJ/gobuster"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "OJ/gobuster"
+asset_pattern = "gobuster_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["gobuster"]
+os_mapping = { linux = "Linux", darwin = "Darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "gobuster --version"
+pattern = "gobuster"

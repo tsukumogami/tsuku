@@ -1,0 +1,16 @@
+[metadata]
+name = "git-crypt"
+description = "Transparent file encryption in git"
+homepage = "https://www.agwa.name/projects/git-crypt/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "AGWA/git-crypt"
+asset_pattern = "git-crypt-{version}-{os}-{arch}"
+binary = "git-crypt"
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "git-crypt version"
+pattern = "git-crypt"

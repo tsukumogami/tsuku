@@ -1,0 +1,19 @@
+[metadata]
+name = "delta"
+description = "Syntax-highlighting pager for git, diff, and grep output"
+homepage = "https://github.com/dandavison/delta"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "dandavison/delta"
+asset_pattern = "delta-{version}-{arch}-unknown-{os}-gnu.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["delta"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "delta --version"
+pattern = "delta"

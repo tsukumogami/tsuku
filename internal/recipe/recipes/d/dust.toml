@@ -1,0 +1,19 @@
+[metadata]
+name = "dust"
+description = "Intuitive disk usage tool (like du + rust)"
+homepage = "https://github.com/bootandy/dust"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "bootandy/dust"
+asset_pattern = "dust-v{version}-{arch}-unknown-{os}-gnu.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["dust"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "dust --version"
+pattern = "Dust"

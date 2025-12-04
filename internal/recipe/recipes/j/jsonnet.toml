@@ -1,0 +1,19 @@
+[metadata]
+name = "jsonnet"
+description = "Data templating language"
+homepage = "https://jsonnet.org/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "google/go-jsonnet"
+asset_pattern = "go-jsonnet_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["jsonnet"]
+os_mapping = { linux = "Linux", darwin = "Darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "jsonnet --version"
+pattern = "Jsonnet"

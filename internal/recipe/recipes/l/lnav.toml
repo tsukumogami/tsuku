@@ -1,0 +1,19 @@
+[metadata]
+name = "lnav"
+description = "Log file navigator"
+homepage = "https://github.com/tstack/lnav"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "tstack/lnav"
+asset_pattern = "lnav-{version}-{os}-{arch}.zip"
+archive_format = "zip"
+strip_dirs = 1
+binaries = ["lnav"]
+os_mapping = { linux = "linux-musl", darwin = "macos" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "lnav -V"
+pattern = "{version}"

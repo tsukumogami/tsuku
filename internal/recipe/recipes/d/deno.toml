@@ -1,0 +1,19 @@
+[metadata]
+name = "deno"
+description = "Secure JavaScript and TypeScript runtime"
+homepage = "https://deno.com/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "denoland/deno"
+asset_pattern = "deno-{arch}-unknown-{os}-gnu.zip"
+archive_format = "zip"
+strip_dirs = 0
+binaries = ["deno"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "deno --version"
+pattern = "deno"

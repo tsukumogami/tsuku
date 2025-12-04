@@ -1,0 +1,18 @@
+[metadata]
+name = "micromamba"
+description = "Tiny conda package manager"
+homepage = "https://mamba.readthedocs.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "mamba-org/micromamba-releases"
+asset_pattern = "micromamba-{os}-{arch}"
+binary = "micromamba"
+arch_mapping = { amd64 = "64" }
+
+[verify]
+command = "micromamba --version"
+# TODO: Add pattern once version format transformation is implemented
+# See: https://github.com/tsuku-dev/tsuku-vision/issues/93
+# Binary outputs "2.4.0" while GitHub tag is "2.4.0-0" (needs strip_suffix:-0)

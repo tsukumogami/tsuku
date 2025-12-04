@@ -1,0 +1,15 @@
+[metadata]
+name = "scaleway-cli"
+description = "Scaleway CLI"
+homepage = "https://github.com/scaleway/scaleway-cli"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "scaleway/scaleway-cli"
+asset_pattern = "scaleway-cli_{version}_{os}_{arch}"
+binaries = [{src = "scaleway-cli_{version}_{os}_{arch}", dest = "bin/scw"}]
+
+[verify]
+command = "scw version"
+pattern = "{version}"

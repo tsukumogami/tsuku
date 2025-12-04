@@ -1,0 +1,18 @@
+[metadata]
+name = "jpegoptim"
+description = "JPEG optimizer"
+homepage = "https://github.com/tjko/jpegoptim"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "tjko/jpegoptim"
+asset_pattern = "jpegoptim-{version}-x64-{os}.zip"
+archive_format = "zip"
+strip_dirs = 0
+binaries = ["jpegoptim"]
+os_mapping = { linux = "linux", darwin = "osx" }
+
+[verify]
+command = "jpegoptim --version"
+pattern = "jpegoptim"

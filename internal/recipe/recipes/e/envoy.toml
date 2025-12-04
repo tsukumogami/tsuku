@@ -1,0 +1,16 @@
+[metadata]
+name = "envoy"
+description = "Cloud-native high-performance edge/middle/service proxy"
+homepage = "https://www.envoyproxy.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "envoyproxy/envoy"
+asset_pattern = "envoy-{version}-{os}-{arch}"
+binary = "envoy"
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "envoy --version"
+pattern = "{version}"

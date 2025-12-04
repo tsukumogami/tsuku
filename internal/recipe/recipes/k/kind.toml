@@ -1,0 +1,15 @@
+[metadata]
+name = "kind"
+description = "Kubernetes IN Docker - local Kubernetes clusters"
+homepage = "https://kind.sigs.k8s.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "kubernetes-sigs/kind"
+asset_pattern = "kind-{os}-{arch}"
+binary = "kind"
+
+[verify]
+command = "kind version"
+pattern = "kind v{version}"

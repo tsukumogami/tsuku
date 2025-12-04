@@ -1,0 +1,19 @@
+[metadata]
+name = "mage"
+description = "Make-like build tool using Go"
+homepage = "https://github.com/magefile/mage"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "magefile/mage"
+asset_pattern = "mage_{version}_{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["mage"]
+os_mapping = { linux = "Linux", darwin = "macOS" }
+arch_mapping = { amd64 = "64bit", arm64 = "ARM64" }
+
+[verify]
+command = "mage -version"
+pattern = "{version}"

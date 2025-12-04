@@ -1,0 +1,15 @@
+[metadata]
+name = "k3s"
+description = "Lightweight Kubernetes distribution"
+homepage = "https://k3s.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "k3s-io/k3s"
+asset_pattern = "k3s"
+binary = "k3s"
+
+[verify]
+command = "k3s --version"
+pattern = "v{version}"

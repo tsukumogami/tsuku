@@ -1,0 +1,16 @@
+[metadata]
+name = "hadolint"
+description = "Dockerfile linter"
+homepage = "https://github.com/hadolint/hadolint"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "hadolint/hadolint"
+asset_pattern = "hadolint-{os}-{arch}"
+binary = "hadolint"
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "hadolint --version"
+pattern = "Haskell Dockerfile Linter"

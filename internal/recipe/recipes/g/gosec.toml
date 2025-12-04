@@ -1,0 +1,19 @@
+[metadata]
+name = "gosec"
+description = "Go security checker"
+homepage = "https://github.com/securego/gosec"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "securego/gosec"
+asset_pattern = "gosec_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["gosec"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "gosec --version"
+pattern = "{version}"

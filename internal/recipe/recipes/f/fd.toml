@@ -1,0 +1,19 @@
+[metadata]
+name = "fd"
+description = "Simple, fast and user-friendly alternative to find"
+homepage = "https://github.com/sharkdp/fd"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "sharkdp/fd"
+asset_pattern = "fd-v{version}-{arch}-unknown-{os}-gnu.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["fd"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "fd --version"
+pattern = "fd"

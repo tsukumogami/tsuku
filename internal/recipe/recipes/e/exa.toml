@@ -1,0 +1,19 @@
+[metadata]
+name = "exa"
+description = "Modern replacement for ls"
+homepage = "https://the.exa.website/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "ogham/exa"
+asset_pattern = "exa-{os}-{arch}-v{version}.zip"
+archive_format = "zip"
+strip_dirs = 0
+binaries = ["bin/exa"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "exa --version"
+pattern = "exa"

@@ -1,0 +1,19 @@
+[metadata]
+name = "dgraph"
+description = "High-performance graph database for production use"
+homepage = "https://dgraph.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "dgraph-io/dgraph"
+asset_pattern = "dgraph-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["dgraph"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "dgraph version"
+pattern = "v{version}"

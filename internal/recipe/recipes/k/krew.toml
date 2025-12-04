@@ -1,0 +1,19 @@
+[metadata]
+name = "krew"
+description = "Plugin manager for kubectl"
+homepage = "https://github.com/kubernetes-sigs/krew"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "kubernetes-sigs/krew"
+asset_pattern = "krew-{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = [{src = "krew-linux_amd64", dest = "bin/krew"}]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "krew version"
+pattern = "{version}"

@@ -1,0 +1,19 @@
+[metadata]
+name = "gitleaks"
+description = "Detect hardcoded secrets"
+homepage = "https://github.com/zricethezav/gitleaks"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "zricethezav/gitleaks"
+asset_pattern = "gitleaks_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["gitleaks"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+[verify]
+command = "gitleaks version"
+pattern = "{version}"

@@ -1,0 +1,19 @@
+[metadata]
+name = "railway"
+description = "Railway CLI"
+homepage = "https://github.com/railwayapp/cli"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "railwayapp/cli"
+asset_pattern = "railway-v{version}-{arch}-{os}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["railway"]
+os_mapping = { darwin = "apple-darwin", linux = "unknown-linux-gnu" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "railway --version"
+pattern = "{version}"

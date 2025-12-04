@@ -1,0 +1,15 @@
+[metadata]
+name = "jabba"
+description = "Java version manager"
+homepage = "https://github.com/shyiko/jabba"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "shyiko/jabba"
+asset_pattern = "jabba-{version}-{os}-{arch}"
+binary = "jabba"
+
+[verify]
+command = "jabba --version"
+pattern = "{version}"

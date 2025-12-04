@@ -1,0 +1,19 @@
+[metadata]
+name = "fly"
+description = "Fly.io CLI"
+homepage = "https://github.com/superfly/flyctl"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "superfly/flyctl"
+asset_pattern = "flyctl_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = [{src = "flyctl", dest = "bin/fly"}]
+os_mapping = { darwin = "macOS", linux = "Linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "fly version"
+pattern = "{version}"

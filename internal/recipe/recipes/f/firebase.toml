@@ -1,0 +1,15 @@
+[metadata]
+name = "firebase"
+description = "Firebase CLI"
+homepage = "https://github.com/firebase/firebase-tools"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "firebase/firebase-tools"
+asset_pattern = "firebase-tools-{os}"
+binaries = [{src = "firebase-tools-{os}", dest = "bin/firebase"}]
+
+[verify]
+command = "firebase --version"
+pattern = "{version}"

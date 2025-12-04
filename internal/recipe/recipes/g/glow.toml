@@ -1,0 +1,19 @@
+[metadata]
+name = "glow"
+description = "Render markdown on CLI"
+homepage = "https://github.com/charmbracelet/glow"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "charmbracelet/glow"
+asset_pattern = "glow_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["glow"]
+os_mapping = { linux = "Linux", darwin = "Darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "glow --version"
+pattern = "glow"

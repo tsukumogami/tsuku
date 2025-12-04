@@ -1,0 +1,19 @@
+[metadata]
+name = "htmlq"
+description = "HTML processor"
+homepage = "https://github.com/mgdm/htmlq"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "mgdm/htmlq"
+asset_pattern = "htmlq-{arch}-{os}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["htmlq"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "x86_64" }
+
+[verify]
+command = "htmlq --version"
+pattern = "htmlq"

@@ -1,0 +1,19 @@
+[metadata]
+name = "k6"
+description = "Load testing tool"
+homepage = "https://k6.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "grafana/k6"
+asset_pattern = "k6-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["k6"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "k6 version"
+pattern = "k6"

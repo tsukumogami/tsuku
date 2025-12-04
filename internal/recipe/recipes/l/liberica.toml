@@ -1,0 +1,20 @@
+[metadata]
+name = "liberica"
+description = "BellSoft Liberica JDK - OpenJDK distribution"
+homepage = "https://bell-sw.com/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "bell-sw/Liberica"
+asset_pattern = "bellsoft-jdk{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+install_mode = "directory"  # Install full directory tree with symlinks (lib/, bin/, conf/, etc.)
+binaries = ["bin/java", "bin/javac", "bin/jar"]  # Create symlinks for these binaries
+os_mapping = { darwin = "macos", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "aarch64" }
+
+[verify]
+command = "java -version"
+pattern = "OpenJDK"

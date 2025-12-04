@@ -1,0 +1,14 @@
+[metadata]
+name = "serverless"
+description = "Serverless Framework - Build applications on AWS Lambda, Azure, GCP and more"
+homepage = "https://www.serverless.com/"
+version_format = "semver"
+
+[[steps]]
+action = "npm_install"
+package = "serverless"
+executables = ["serverless", "sls"]
+
+[verify]
+command = "serverless --version"
+pattern = "{version}"

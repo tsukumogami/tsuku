@@ -1,0 +1,19 @@
+[metadata]
+name = "gitui"
+description = "Terminal UI for git"
+homepage = "https://github.com/extrawurst/gitui"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "gitui-org/gitui"
+asset_pattern = "gitui-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["gitui"]
+os_mapping = { linux = "linux", darwin = "mac" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "gitui --version"
+pattern = "gitui"

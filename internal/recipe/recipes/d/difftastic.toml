@@ -1,0 +1,19 @@
+[metadata]
+name = "difftastic"
+description = "Structural diff tool that understands syntax"
+homepage = "https://difftastic.wilfred.me.uk/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "Wilfred/difftastic"
+asset_pattern = "difft-{arch}-unknown-{os}-gnu.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["difft"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "difft --version"
+pattern = "Difftastic"

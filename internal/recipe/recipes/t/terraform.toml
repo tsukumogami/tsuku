@@ -1,0 +1,18 @@
+[metadata]
+name = "terraform"
+description = "Infrastructure as Code tool"
+homepage = "https://www.terraform.io/"
+version_format = "semver"
+
+[version]
+github_repo = "hashicorp/terraform"
+
+[[steps]]
+action = "hashicorp_release"
+product = "terraform"
+binary = "terraform"
+verify_signature = false
+
+[verify]
+command = "terraform version"
+pattern = "{version}"

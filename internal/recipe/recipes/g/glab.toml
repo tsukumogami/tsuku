@@ -1,0 +1,19 @@
+[metadata]
+name = "glab"
+description = "GitLab CLI"
+homepage = "https://github.com/profclems/glab"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "profclems/glab"
+asset_pattern = "glab_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["glab"]
+os_mapping = { darwin = "macOS", linux = "Linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "glab --version"
+pattern = "{version}"

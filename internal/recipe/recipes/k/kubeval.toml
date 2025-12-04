@@ -1,0 +1,19 @@
+[metadata]
+name = "kubeval"
+description = "Validate Kubernetes configuration files"
+homepage = "https://github.com/instrumenta/kubeval"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "instrumenta/kubeval"
+asset_pattern = "kubeval-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["kubeval"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64" }
+
+[verify]
+command = "kubeval --version"
+pattern = "{version}"

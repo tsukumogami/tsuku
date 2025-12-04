@@ -1,0 +1,19 @@
+[metadata]
+name = "infracost"
+description = "Cloud cost estimates for Terraform"
+homepage = "https://www.infracost.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "infracost/infracost"
+asset_pattern = "infracost-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["infracost-linux-amd64"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "infracost-linux-amd64 --version"
+pattern = "Infracost"

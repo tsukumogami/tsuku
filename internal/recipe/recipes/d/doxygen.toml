@@ -1,0 +1,17 @@
+[metadata]
+name = "doxygen"
+description = "Documentation generator for C++, C, Java, and other languages"
+homepage = "https://www.doxygen.nl/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "doxygen/doxygen"
+asset_pattern = "doxygen-{version}.linux.bin.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["bin/doxygen"]
+
+[verify]
+command = "doxygen --version"
+pattern = "{version}"

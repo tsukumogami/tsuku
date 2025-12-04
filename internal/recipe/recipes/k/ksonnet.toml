@@ -1,0 +1,19 @@
+[metadata]
+name = "ksonnet"
+description = "Kubernetes application framework"
+homepage = "https://ksonnet.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "ksonnet/ksonnet"
+asset_pattern = "ks_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["ks"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64" }
+
+[verify]
+command = "ks version"
+pattern = "ksonnet"

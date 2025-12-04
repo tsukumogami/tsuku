@@ -1,0 +1,19 @@
+[metadata]
+name = "eksctl"
+description = "CLI for Amazon EKS"
+homepage = "https://github.com/eksctl-io/eksctl"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "eksctl-io/eksctl"
+asset_pattern = "eksctl_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["eksctl"]
+os_mapping = { darwin = "Darwin", linux = "Linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "eksctl version"
+pattern = "{version}"

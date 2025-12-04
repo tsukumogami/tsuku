@@ -1,0 +1,19 @@
+[metadata]
+name = "eza"
+description = "Modern maintained replacement for ls"
+homepage = "https://eza.rocks/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "eza-community/eza"
+asset_pattern = "eza_{arch}-unknown-{os}-gnu.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["eza"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "eza --version"
+pattern = "eza"

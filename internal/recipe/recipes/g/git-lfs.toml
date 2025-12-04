@@ -1,0 +1,19 @@
+[metadata]
+name = "git-lfs"
+description = "Git Large File Storage"
+homepage = "https://git-lfs.com/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "git-lfs/git-lfs"
+asset_pattern = "git-lfs-{os}-{arch}-v{version}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["git-lfs"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "git-lfs version"
+pattern = "git-lfs"

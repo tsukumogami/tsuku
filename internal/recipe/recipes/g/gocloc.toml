@@ -1,0 +1,19 @@
+[metadata]
+name = "gocloc"
+description = "Go lines of code counter"
+homepage = "https://github.com/hhatto/gocloc"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "hhatto/gocloc"
+asset_pattern = "gocloc_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["gocloc"]
+os_mapping = { linux = "Linux", darwin = "Darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "gocloc --version"
+pattern = "{version}"
