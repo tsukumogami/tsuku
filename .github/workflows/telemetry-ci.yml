@@ -1,0 +1,46 @@
+name: Telemetry CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'telemetry/**'
+      - '.github/workflows/telemetry-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'telemetry/**'
+      - '.github/workflows/telemetry-ci.yml'
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: telemetry
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: telemetry/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: telemetry
+          directory: telemetry

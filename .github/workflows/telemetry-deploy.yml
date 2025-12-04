@@ -1,0 +1,24 @@
+name: Deploy Telemetry
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'telemetry/**'
+      - '.github/workflows/telemetry-deploy.yml'
+
+jobs:
+  deploy:
+    name: Deploy to Cloudflare Workers
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: telemetry
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_WORKERS_DEPLOYER_TOKEN }}
+          workingDirectory: telemetry

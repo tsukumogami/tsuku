@@ -63,8 +63,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Detect if code files changed (vs docs-only or website-only)
-      # Skip patterns: *.md, docs/**, .github/ISSUE_TEMPLATE/**, website/**
+      # Detect if code files changed (vs docs-only, website-only, or telemetry-only)
+      # Skip patterns: *.md, docs/**, .github/ISSUE_TEMPLATE/**, website/**, telemetry/**
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -77,6 +77,7 @@ jobs:
               - '!docs/**'
               - '!.github/ISSUE_TEMPLATE/**'
               - '!website/**'
+              - '!telemetry/**'
             recipes:
               - 'internal/recipe/recipes/**/*.toml'
 
