@@ -1,0 +1,19 @@
+[metadata]
+name = "air"
+description = "Live reload for Go apps"
+homepage = "https://github.com/cosmtrek/air"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "cosmtrek/air"
+asset_pattern = "air_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["air"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "air -v"
+pattern = "{version}"
