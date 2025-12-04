@@ -1,0 +1,22 @@
+[metadata]
+name = "go"
+description = "Go programming language toolchain"
+homepage = "https://go.dev/"
+version_format = "semver"
+
+[version]
+source = "go_toolchain"
+
+[[steps]]
+action = "download_archive"
+url = "https://go.dev/dl/go{version}.{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["bin/go", "bin/gofmt"]
+install_mode = "directory"
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "{install_dir}/bin/go version"
+pattern = "go{version}"

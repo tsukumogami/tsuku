@@ -1,0 +1,22 @@
+[metadata]
+name = "perl"
+description = "Perl programming language with cpanm"
+homepage = "https://www.perl.org/"
+version_format = "semver"
+
+[version]
+github_repo = "skaji/relocatable-perl"
+
+[[steps]]
+action = "download_archive"
+url = "https://github.com/skaji/relocatable-perl/releases/download/{version}/perl-{os}-{arch}.tar.xz"
+archive_format = "tar.xz"
+strip_dirs = 1
+binaries = ["bin/perl", "bin/cpanm"]
+install_mode = "directory"
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "{install_dir}/bin/perl -v"
+pattern = "perl 5"

@@ -1,0 +1,19 @@
+[metadata]
+name = "actionlint"
+description = "Static checker for GitHub Actions workflow files"
+homepage = "https://github.com/rhysd/actionlint"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "rhysd/actionlint"
+asset_pattern = "actionlint_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["actionlint"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "actionlint -version"
+pattern = "{version}"

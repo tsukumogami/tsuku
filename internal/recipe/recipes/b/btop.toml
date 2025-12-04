@@ -1,0 +1,19 @@
+[metadata]
+name = "btop"
+description = "Resource monitor that shows usage and stats"
+homepage = "https://github.com/aristocratos/btop"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "aristocratos/btop"
+asset_pattern = "btop-{arch}-{os}-musl.tbz"
+archive_format = "tbz"
+strip_dirs = 0
+binaries = ["btop/bin/btop"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "btop --version"
+pattern = "btop"

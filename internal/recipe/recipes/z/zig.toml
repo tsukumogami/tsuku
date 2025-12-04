@@ -1,0 +1,26 @@
+# Zig - General-purpose programming language
+# Official site: https://ziglang.org/
+# NOTE: Uses GitHub for version detection, downloads from ziglang.org
+
+[metadata]
+name = "zig"
+description = "General-purpose programming language and toolchain"
+homepage = "https://ziglang.org/"
+version_format = "semver"
+
+[version]
+github_repo = "ziglang/zig"  # Detect version from GitHub releases
+
+[[steps]]
+action = "download_archive"
+url = "https://ziglang.org/download/{version}/zig-{arch}-{os}-{version}.tar.xz"
+archive_format = "tar.xz"
+strip_dirs = 1
+binaries = ["zig"]
+install_mode = "directory"
+os_mapping = { darwin = "macos", linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "{install_dir}/zig version"
+pattern = "{version}"

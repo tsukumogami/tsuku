@@ -1,0 +1,15 @@
+[metadata]
+name = "bombardier"
+description = "Fast HTTP(S) benchmarking tool"
+homepage = "https://github.com/codesenberg/bombardier"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "codesenberg/bombardier"
+asset_pattern = "bombardier-{os}-{arch}"
+binary = "bombardier"
+
+[verify]
+command = "bombardier --version"
+pattern = "bombardier version"

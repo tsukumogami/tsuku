@@ -57,6 +57,8 @@ jobs:
       macos: ${{ steps.matrix.outputs.macos }}
       # true when code files (not just docs) are modified
       code: ${{ steps.filter.outputs.code }}
+      # true when recipe files are modified
+      recipes: ${{ steps.filter.outputs.recipes }}
 
     steps:
       - uses: actions/checkout@v4
@@ -74,6 +76,8 @@ jobs:
               - '!**/*.md'
               - '!docs/**'
               - '!.github/ISSUE_TEMPLATE/**'
+            recipes:
+              - 'internal/recipe/recipes/**/*.toml'
 
       - name: Generate test matrices
         id: matrix
@@ -83,11 +87,32 @@ jobs:
           echo "linux=$LINUX" >> $GITHUB_OUTPUT
           echo "macos=$MACOS" >> $GITHUB_OUTPUT
 
+  # Validate embedded recipes when they change
+  validate-recipes:
+    name: Validate Recipes
+    needs: matrix
+    if: ${{ needs.matrix.outputs.recipes == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Validate recipes (TOML syntax and metadata)
+        run: |
+          cd internal/recipe
+          python3 ../../scripts/generate-registry.py
+          echo "Validated $(find recipes -name '*.toml' | wc -l) recipes"
+
   integration-linux:
     name: "Linux: ${{ matrix.test.tool }}"
     needs: matrix
-    # Skip when only documentation files changed
-    if: ${{ needs.matrix.outputs.code == 'true' }}
+    # Run when code files or recipes changed (skip for docs-only changes)
+    if: ${{ needs.matrix.outputs.code == 'true' || needs.matrix.outputs.recipes == 'true' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -117,8 +142,8 @@ jobs:
   integration-macos:
     name: "macOS: ${{ matrix.test.tool }}"
     needs: matrix
-    # Skip when only documentation files changed
-    if: ${{ needs.matrix.outputs.code == 'true' }}
+    # Run when code files or recipes changed (skip for docs-only changes)
+    if: ${{ needs.matrix.outputs.code == 'true' || needs.matrix.outputs.recipes == 'true' }}
     runs-on: macos-latest
     strategy:
       fail-fast: false

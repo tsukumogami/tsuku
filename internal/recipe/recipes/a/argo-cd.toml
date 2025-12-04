@@ -1,0 +1,15 @@
+[metadata]
+name = "argo-cd"
+description = "Declarative GitOps CD for Kubernetes"
+homepage = "https://github.com/argoproj/argo-cd"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "argoproj/argo-cd"
+asset_pattern = "argocd-{os}-{arch}"
+binary = "argocd"
+
+[verify]
+command = "argocd version --client"
+pattern = "{version}"

@@ -523,7 +523,7 @@ command = "registry-tool --version"
 	}
 
 	reg := registry.New(cacheDir)
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := NewWithoutEmbedded(reg, recipesDir) // Use NewWithoutEmbedded to exclude embedded recipes
 
 	recipes, err := loader.ListAllWithSource()
 	if err != nil {
@@ -595,7 +595,7 @@ command = "shared-tool --version"
 	}
 
 	reg := registry.New(cacheDir)
-	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader := NewWithoutEmbedded(reg, recipesDir) // Use NewWithoutEmbedded to exclude embedded recipes
 
 	recipes, err := loader.ListAllWithSource()
 	if err != nil {
