@@ -1,0 +1,19 @@
+[metadata]
+name = "cmake"
+description = "Cross-platform build system"
+homepage = "https://cmake.org/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "Kitware/CMake"
+asset_pattern = "cmake-{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["bin/cmake"]
+os_mapping = { darwin = "macos-universal", linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "cmake --version"
+pattern = "{version}"

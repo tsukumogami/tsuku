@@ -1,0 +1,19 @@
+[metadata]
+name = "copilot-cli"
+description = "Build release and operate containerized applications on AWS"
+homepage = "https://github.com/aws/copilot-cli"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "aws/copilot-cli"
+asset_pattern = "copilot_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["copilot"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "copilot --version"
+pattern = "{version}"

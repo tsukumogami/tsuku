@@ -1,0 +1,19 @@
+[metadata]
+name = "containerd"
+description = "Industry-standard container runtime"
+homepage = "https://containerd.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "containerd/containerd"
+asset_pattern = "containerd-static-{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["bin/containerd"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "containerd --version"
+pattern = "containerd"

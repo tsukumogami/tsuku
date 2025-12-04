@@ -1,0 +1,19 @@
+[metadata]
+name = "carton"
+description = "Perl module dependency manager"
+homepage = "https://metacpan.org/pod/Carton"
+version_format = "semver"
+dependencies = ["perl"]
+
+[version]
+source = "metacpan"
+distribution = "Carton"
+
+[[steps]]
+action = "cpan_install"
+distribution = "Carton"
+executables = ["carton"]
+
+[verify]
+command = "carton version"
+pattern = "carton {version}"

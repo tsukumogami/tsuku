@@ -1,0 +1,15 @@
+[metadata]
+name = "clair"
+description = "Vulnerability static analysis for containers"
+homepage = "https://github.com/quay/clair"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "quay/clair"
+asset_pattern = "clairctl-{os}-{arch}"
+binaries = [{src = "clairctl-{os}-{arch}", dest = "bin/clairctl"}]
+
+[verify]
+command = "clairctl --help"
+pattern = "clairctl"

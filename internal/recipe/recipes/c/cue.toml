@@ -1,0 +1,19 @@
+[metadata]
+name = "cue"
+description = "Validate and define text-based and dynamic configuration"
+homepage = "https://cuelang.org/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "cue-lang/cue"
+asset_pattern = "cue_v{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["cue"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "cue version"
+pattern = "cue"

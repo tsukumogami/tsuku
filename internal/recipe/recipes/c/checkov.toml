@@ -1,0 +1,19 @@
+[metadata]
+name = "checkov"
+description = "Static code analysis for infrastructure as code"
+homepage = "https://github.com/bridgecrewio/checkov"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "bridgecrewio/checkov"
+asset_pattern = "checkov_{os}_{arch}.zip"
+archive_format = "zip"
+strip_dirs = 1
+binaries = ["checkov"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "X86_64", arm64 = "arm64" }
+
+[verify]
+command = "checkov --version"
+pattern = "{version}"

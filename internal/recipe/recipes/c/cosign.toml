@@ -1,0 +1,15 @@
+[metadata]
+name = "cosign"
+description = "Container signing and verification"
+homepage = "https://github.com/sigstore/cosign"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "sigstore/cosign"
+asset_pattern = "cosign-{os}-{arch}"
+binaries = [{src = "cosign-{os}-{arch}", dest = "bin/cosign"}]
+
+[verify]
+command = "cosign version"
+pattern = "{version}"

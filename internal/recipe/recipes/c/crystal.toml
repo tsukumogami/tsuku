@@ -1,0 +1,19 @@
+[metadata]
+name = "crystal"
+description = "Crystal programming language"
+homepage = "https://crystal-lang.org/"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "crystal-lang/crystal"
+asset_pattern = "crystal-{version}-1-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["bin/crystal"]
+os_mapping = { darwin = "darwin-universal", linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "crystal --version"
+pattern = "Crystal"
