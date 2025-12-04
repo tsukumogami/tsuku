@@ -1,0 +1,69 @@
+name: Test Changed Recipes
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/recipe/recipes/**/*.toml'
+      - '.github/workflows/test-changed-recipes.yml'
+  workflow_dispatch:
+
+jobs:
+  test-changed-recipes:
+    name: "Test Changed Recipes"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed recipe files
+        id: changed-files
+        run: |
+          CHANGED=$(git diff --name-only origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml' | tr '\n' ' ')
+          echo "recipes=$CHANGED" >> $GITHUB_OUTPUT
+          if [ -z "$CHANGED" ]; then
+            echo "No recipe files changed"
+          else
+            echo "Changed recipes: $CHANGED"
+          fi
+
+      - name: Set up Go
+        if: steps.changed-files.outputs.recipes != ''
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        if: steps.changed-files.outputs.recipes != ''
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Verify tsuku build
+        if: steps.changed-files.outputs.recipes != ''
+        run: ./tsuku --version
+
+      - name: Setup PATH
+        if: steps.changed-files.outputs.recipes != ''
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: Test changed recipes
+        if: steps.changed-files.outputs.recipes != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          for recipe in ${{ steps.changed-files.outputs.recipes }}; do
+            # Extract tool name from path (e.g., internal/recipe/recipes/a/ack.toml -> ack)
+            tool=$(basename "$recipe" .toml)
+            echo "Testing: $tool (from $recipe)"
+            # Install the tool (embedded recipes are used automatically)
+            ./tsuku install "$tool" --force
+            echo "---"
+          done
