@@ -1,0 +1,6 @@
+# Cloudflare Pages redirects
+# https://developers.cloudflare.com/pages/platform/redirects
+
+# Note: Domain-specific routing (get.tsuku.dev vs tsuku.dev) is handled
+# by Cloudflare Pages custom domains configuration, not this file.
+# This file handles path-based redirects only.

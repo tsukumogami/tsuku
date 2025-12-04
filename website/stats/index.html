@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="tsuku installation statistics and usage telemetry">
+    <title>Stats - tsuku</title>
+    <link rel="stylesheet" href="/assets/style.css">
+    <style>
+        /* Stats-specific styles */
+        .stats-header {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-header span {
+            margin: 0 0.5rem;
+        }
+
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.2;
+        }
+
+        .stat-card .label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+        }
+
+        .stat-card .sublabel {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--text);
+        }
+
+        .recipes-section {
+            margin-bottom: 3rem;
+        }
+
+        .recipe-list {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .recipe-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .recipe-item:last-child {
+            border-bottom: none;
+        }
+
+        .recipe-rank {
+            width: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .recipe-name {
+            width: 120px;
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.9rem;
+        }
+
+        .recipe-bar-container {
+            flex: 1;
+            margin: 0 1rem;
+            height: 20px;
+            background: var(--bg);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .recipe-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .recipe-count {
+            width: 80px;
+            text-align: right;
+            font-family: "SF Mono", Consolas, monospace;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .distribution-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .distribution-card {
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .distribution-card h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+        }
+
+        .distribution-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .distribution-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .distribution-label {
+            width: 60px;
+            font-size: 0.85rem;
+        }
+
+        .distribution-bar-container {
+            flex: 1;
+            height: 16px;
+            background: var(--bg);
+            border-radius: 4px;
+            margin: 0 0.75rem;
+            overflow: hidden;
+        }
+
+        .distribution-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .distribution-percent {
+            width: 45px;
+            text-align: right;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .privacy-notice {
+            text-align: center;
+            padding: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            line-height: 1.8;
+        }
+
+        .privacy-notice code {
+            font-family: "SF Mono", Consolas, monospace;
+            background: var(--code-bg);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .privacy-notice a {
+            color: var(--accent);
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Error state */
+        .error {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--code-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .error h3 {
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .error p {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .error .retry-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--accent);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: border-color 0.2s, background 0.2s;
+        }
+
+        .error .retry-btn:hover {
+            border-color: var(--accent);
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+            .recipe-name {
+                width: 80px;
+                font-size: 0.8rem;
+            }
+
+            .recipe-count {
+                width: 60px;
+                font-size: 0.8rem;
+            }
+
+            .stat-card .value {
+                font-size: 1.5rem;
+            }
+
+            .distribution-label {
+                width: 50px;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <a href="/" class="logo">tsuku</a>
+            <a href="https://github.com/tsuku-dev/tsuku" class="github-link" aria-label="GitHub">
+                <svg viewBox="0 0 16 16" width="24" height="24" fill="currentColor">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+                </svg>
+            </a>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>Usage Statistics</h1>
+            <p class="tagline">Anonymous telemetry from tsuku installations</p>
+        </section>
+
+        <div id="stats-content">
+            <div class="loading">
+                <div class="loading-spinner"></div>
+                <p>Loading statistics...</p>
+            </div>
+        </div>
+
+        <section class="privacy-notice">
+            <p>
+                We collect only recipe names, versions, OS, and architecture.<br>
+                No personal information is collected.
+            </p>
+            <p>
+                Opt out: <code>export TSUKU_NO_TELEMETRY=1</code>
+            </p>
+            <p>
+                <a href="/telemetry">Learn more about our privacy policy</a>
+            </p>
+        </section>
+
+        <section class="links">
+            <a href="/" class="link-btn">Back to Home</a>
+        </section>
+    </main>
+
+    <footer>
+        <p>
+            <a href="/telemetry">Privacy</a>
+            <span class="sep">|</span>
+            <a href="https://github.com/tsuku-dev/tsuku">GitHub</a>
+        </p>
+    </footer>
+
+    <script>
+        const API_URL = 'https://telemetry.tsuku.dev/stats';
+
+        function formatNumber(num) {
+            return num.toLocaleString();
+        }
+
+        function formatDate(isoString) {
+            const date = new Date(isoString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function renderStats(data) {
+            const container = document.getElementById('stats-content');
+            const maxInstalls = data.recipes.length > 0 ? data.recipes[0].installs : 1;
+
+            const totalByOs = Object.values(data.by_os).reduce((a, b) => a + b, 0);
+            const totalByArch = Object.values(data.by_arch).reduce((a, b) => a + b, 0);
+
+            const topRecipe = data.recipes.length > 0 ? data.recipes[0] : null;
+
+            container.innerHTML = `
+                <div class="stats-header">
+                    <span>Last 30 days</span>
+                    <span>|</span>
+                    <span>Updated ${formatDate(data.generated_at)}</span>
+                </div>
+
+                <div class="overview">
+                    <div class="stat-card">
+                        <div class="value">${formatNumber(data.total_installs)}</div>
+                        <div class="label">Installs</div>
+                        <div class="sublabel">this month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${data.recipes.length}</div>
+                        <div class="label">Recipes</div>
+                        <div class="sublabel">tracked</div>
+                    </div>
+                    ${topRecipe ? `
+                    <div class="stat-card">
+                        <div class="value">${formatNumber(topRecipe.installs)}</div>
+                        <div class="label">Top Recipe</div>
+                        <div class="sublabel">${topRecipe.name}</div>
+                    </div>
+                    ` : ''}
+                </div>
+
+                <div class="recipes-section">
+                    <h2 class="section-title">Top Recipes (30 days)</h2>
+                    <div class="recipe-list">
+                        ${data.recipes.slice(0, 20).map((recipe, i) => `
+                            <div class="recipe-item">
+                                <span class="recipe-rank">${i + 1}.</span>
+                                <span class="recipe-name">${recipe.name}</span>
+                                <div class="recipe-bar-container">
+                                    <div class="recipe-bar" style="width: ${(recipe.installs / maxInstalls * 100).toFixed(1)}%"></div>
+                                </div>
+                                <span class="recipe-count">${formatNumber(recipe.installs)}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="distribution-grid">
+                    <div class="distribution-card">
+                        <h3>By Operating System</h3>
+                        ${Object.entries(data.by_os)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([os, count]) => {
+                                const percent = totalByOs > 0 ? (count / totalByOs * 100).toFixed(0) : 0;
+                                const label = os === 'darwin' ? 'macOS' : os.charAt(0).toUpperCase() + os.slice(1);
+                                return `
+                                    <div class="distribution-item">
+                                        <span class="distribution-label">${label}</span>
+                                        <div class="distribution-bar-container">
+                                            <div class="distribution-bar" style="width: ${percent}%"></div>
+                                        </div>
+                                        <span class="distribution-percent">${percent}%</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                    </div>
+
+                    <div class="distribution-card">
+                        <h3>By Architecture</h3>
+                        ${Object.entries(data.by_arch)
+                            .sort((a, b) => b[1] - a[1])
+                            .map(([arch, count]) => {
+                                const percent = totalByArch > 0 ? (count / totalByArch * 100).toFixed(0) : 0;
+                                return `
+                                    <div class="distribution-item">
+                                        <span class="distribution-label">${arch}</span>
+                                        <div class="distribution-bar-container">
+                                            <div class="distribution-bar" style="width: ${percent}%"></div>
+                                        </div>
+                                        <span class="distribution-percent">${percent}%</span>
+                                    </div>
+                                `;
+                            }).join('')}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderError(message) {
+            const container = document.getElementById('stats-content');
+            container.innerHTML = `
+                <div class="error">
+                    <h3>Statistics Unavailable</h3>
+                    <p>${message}</p>
+                    <button class="retry-btn" onclick="loadStats()">Try Again</button>
+                </div>
+            `;
+        }
+
+        async function loadStats() {
+            const container = document.getElementById('stats-content');
+            container.innerHTML = `
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading statistics...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(API_URL);
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                renderStats(data);
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+                renderError('Unable to connect to the telemetry service. The service may be temporarily unavailable.');
+            }
+        }
+
+        // Load stats on page load
+        loadStats();
+    </script>
+</body>
+</html>
