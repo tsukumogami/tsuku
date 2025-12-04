@@ -251,7 +251,135 @@ This is out of scope for this design but noted for future consideration.
 5. **Update `generate-registry.py`** to read from `recipes/`
 6. **Update deploy workflows** for new paths
 7. **Add validation test** for core recipes
-8. **Update documentation**
+8. **Update CI/CD testing infrastructure** (see below)
+9. **Update documentation**
+
+## Testing Infrastructure Changes
+
+The separation of core vs registry recipes enables differentiated testing strategies:
+
+### Core Recipes: Comprehensive Testing
+
+Core recipes are critical CLI dependencies and should be tested on every CI run:
+
+**`.github/workflows/test.yml`** (existing, modify):
+```yaml
+# Add to existing test.yml - runs on every push/PR
+integration-core:
+  name: "Core: ${{ matrix.recipe.tool }} (${{ matrix.os }})"
+  runs-on: ${{ matrix.os }}
+  strategy:
+    fail-fast: false
+    matrix:
+      os: [ubuntu-latest, macos-latest]
+      recipe:
+        - { tool: nodejs }
+        - { tool: python-standalone }
+        - { tool: rust }
+        - { tool: pipx }
+        - { tool: ruby }
+        - { tool: go }
+        - { tool: golang }
+  steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version-file: 'go.mod'
+    - run: go build -o tsuku ./cmd/tsuku
+    - run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+    - name: "Install ${{ matrix.recipe.tool }}"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: ./tsuku install --force ${{ matrix.recipe.tool }}
+```
+
+This ensures:
+- Core recipes are always functional
+- Bootstrap operations work on all platforms
+- Regressions are caught immediately
+
+### Registry Recipes: Change-Based Testing
+
+Registry recipes should only be tested when they change:
+
+**`.github/workflows/test-changed-recipes.yml`** (existing, keep as-is):
+- Triggers on `pull_request` when `recipes/**/*.toml` changes
+- Uses matrix strategy to test each changed recipe individually
+- Runs on both Linux and macOS
+
+### Scheduled Comprehensive Testing
+
+Add a scheduled workflow to catch upstream breakage (e.g., tool releases that break recipes):
+
+**`.github/workflows/scheduled-recipe-tests.yml`** (new):
+```yaml
+name: Scheduled Recipe Tests
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6 AM UTC
+  workflow_dispatch:
+
+jobs:
+  # Test all core recipes
+  test-core:
+    name: "Core: ${{ matrix.recipe }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        recipe: [nodejs, python-standalone, rust, pipx, ruby, go, golang]
+    runs-on: ${{ matrix.os }}
+    steps:
+      # ... same as above
+
+  # Test a rotating subset of registry recipes
+  test-registry-sample:
+    name: "Registry Sample: ${{ matrix.recipe }}"
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        recipe:
+          # Popular/important recipes - rotate this list periodically
+          - terraform
+          - kubectl
+          - k9s
+          - trivy
+          - lazygit
+          # ... 10-20 high-value recipes
+    runs-on: ${{ matrix.os }}
+    steps:
+      # ... same pattern
+```
+
+### Testing Summary
+
+| Recipe Type | Trigger | Scope | Purpose |
+|-------------|---------|-------|---------|
+| Core | Every push/PR | All core recipes | Ensure CLI dependencies work |
+| Registry | PR with changes | Changed recipes only | Validate recipe modifications |
+| All | Weekly schedule | Core + sample registry | Catch upstream breakage |
+
+### Path Filters Update
+
+Update `.github/workflows/test.yml` path filters:
+
+```yaml
+# Detect if code files changed
+- uses: dorny/paths-filter@v3
+  id: filter
+  with:
+    filters: |
+      code:
+        - '**'
+        - '!**/*.md'
+        - '!docs/**'
+        - '!recipes/**'        # Registry recipes don't trigger code tests
+        - '!website/**'
+      core_recipes:
+        - 'internal/recipe/core/**/*.toml'  # Core recipe changes trigger full tests
+```
 
 ## Security Considerations
 
