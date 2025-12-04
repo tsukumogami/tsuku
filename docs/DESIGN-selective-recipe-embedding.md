@@ -1,7 +1,6 @@
 # Design: Selective Recipe Embedding
 
 **Status**: Proposed
-**Author**: Claude
 **Created**: 2024-12-04
 
 ## Problem Statement
