@@ -1,0 +1,119 @@
+name: Test Changed Recipes
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/recipe/recipes/**/*.toml'
+      - '.github/workflows/test-changed-recipes.yml'
+  workflow_dispatch:
+
+jobs:
+  # Detect changed recipes and generate matrix
+  matrix:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      recipes: ${{ steps.changed.outputs.recipes }}
+      has_changes: ${{ steps.changed.outputs.has_changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed recipes
+        id: changed
+        run: |
+          # Get list of changed recipe files
+          CHANGED=$(git diff --name-only origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml')
+
+          if [ -z "$CHANGED" ]; then
+            echo "No recipe files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "recipes=[]" >> $GITHUB_OUTPUT
+          else
+            echo "Changed recipes:"
+            echo "$CHANGED"
+
+            # Build JSON array of {tool, path} objects
+            JSON="["
+            FIRST=true
+            for path in $CHANGED; do
+              tool=$(basename "$path" .toml)
+              if [ "$FIRST" = true ]; then
+                FIRST=false
+              else
+                JSON="$JSON,"
+              fi
+              JSON="$JSON{\"tool\":\"$tool\",\"path\":\"$path\"}"
+            done
+            JSON="$JSON]"
+
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "recipes=$JSON" >> $GITHUB_OUTPUT
+          fi
+
+  # Test each changed recipe on Linux
+  test-linux:
+    name: "Linux: ${{ matrix.recipe.tool }}"
+    needs: matrix
+    if: ${{ needs.matrix.outputs.has_changes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJson(needs.matrix.outputs.recipes) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: "Install ${{ matrix.recipe.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force ${{ matrix.recipe.tool }}
+
+  # Test each changed recipe on macOS
+  test-macos:
+    name: "macOS: ${{ matrix.recipe.tool }}"
+    needs: matrix
+    if: ${{ needs.matrix.outputs.has_changes == 'true' }}
+    runs-on: macos-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJson(needs.matrix.outputs.recipes) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: "Install ${{ matrix.recipe.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force ${{ matrix.recipe.tool }}

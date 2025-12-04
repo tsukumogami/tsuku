@@ -1,0 +1,19 @@
+[metadata]
+name = "jc"
+description = "Convert command output to JSON"
+homepage = "https://github.com/kellyjonbrazil/jc"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "kellyjonbrazil/jc"
+asset_pattern = "jc-{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["jc"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "jc --version"
+pattern = "jc"

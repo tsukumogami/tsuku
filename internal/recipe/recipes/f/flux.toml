@@ -1,0 +1,19 @@
+[metadata]
+name = "flux"
+description = "GitOps toolkit for Kubernetes"
+homepage = "https://github.com/fluxcd/flux2"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "fluxcd/flux2"
+asset_pattern = "flux_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["flux"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "flux version --client"
+pattern = "{version}"

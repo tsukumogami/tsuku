@@ -1,0 +1,15 @@
+[metadata]
+name = "fx"
+description = "Terminal JSON viewer and processor"
+homepage = "https://fx.wtf/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "antonmedv/fx"
+asset_pattern = "fx_{os}_{arch}"
+binary = "fx"
+
+[verify]
+command = "fx --version"
+pattern = "{version}"

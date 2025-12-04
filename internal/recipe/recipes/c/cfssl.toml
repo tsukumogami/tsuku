@@ -1,0 +1,15 @@
+[metadata]
+name = "cfssl"
+description = "CloudFlare's PKI and TLS toolkit"
+homepage = "https://github.com/cloudflare/cfssl"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "cloudflare/cfssl"
+asset_pattern = "cfssl_{version}_{os}_{arch}"
+binary = "cfssl"
+
+[verify]
+command = "cfssl version"
+pattern = "{version}"

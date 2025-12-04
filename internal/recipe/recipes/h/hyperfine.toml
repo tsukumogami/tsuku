@@ -1,0 +1,19 @@
+[metadata]
+name = "hyperfine"
+description = "Command-line benchmarking tool"
+homepage = "https://github.com/sharkdp/hyperfine"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "sharkdp/hyperfine"
+asset_pattern = "hyperfine-v{version}-{arch}-{os}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["hyperfine"]
+os_mapping = { linux = "unknown-linux-musl", darwin = "apple-darwin" }
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "hyperfine --version"
+pattern = "hyperfine"

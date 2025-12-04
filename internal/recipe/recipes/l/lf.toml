@@ -1,0 +1,19 @@
+[metadata]
+name = "lf"
+description = "Terminal file manager"
+homepage = "https://github.com/gokcehan/lf"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "gokcehan/lf"
+asset_pattern = "lf-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["lf"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "lf -version"
+pattern = "{version}"

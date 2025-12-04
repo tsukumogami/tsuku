@@ -1,0 +1,19 @@
+[metadata]
+name = "trivy"
+description = "Vulnerability scanner for containers"
+homepage = "https://github.com/aquasecurity/trivy"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "aquasecurity/trivy"
+asset_pattern = "trivy_{version}_{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["trivy"]
+os_mapping = { darwin = "macOS", linux = "Linux" }
+arch_mapping = { amd64 = "64bit", arm64 = "ARM64" }
+
+[verify]
+command = "trivy --version"
+pattern = "{version}"

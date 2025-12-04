@@ -1,0 +1,19 @@
+[metadata]
+name = "fzf"
+description = "Command-line fuzzy finder"
+homepage = "https://github.com/junegunn/fzf"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "junegunn/fzf"
+asset_pattern = "fzf-{version}-{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["fzf"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "fzf --version"
+pattern = "{version}"

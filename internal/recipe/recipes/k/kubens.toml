@@ -1,0 +1,19 @@
+[metadata]
+name = "kubens"
+description = "Switch between Kubernetes namespaces"
+homepage = "https://github.com/ahmetb/kubectx"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "ahmetb/kubectx"
+asset_pattern = "kubens_v{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["kubens"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
+
+[verify]
+command = "kubens --version"
+pattern = "{version}"

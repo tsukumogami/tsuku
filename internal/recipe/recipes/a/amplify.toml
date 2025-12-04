@@ -1,0 +1,14 @@
+[metadata]
+name = "amplify"
+description = "AWS Amplify CLI - Build full-stack web and mobile apps"
+homepage = "https://aws.amazon.com/amplify/"
+version_format = "semver"
+
+[[steps]]
+action = "npm_install"
+package = "@aws-amplify/cli"
+executables = ["amplify"]
+
+[verify]
+command = "amplify --version"
+pattern = "{version}"

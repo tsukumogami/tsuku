@@ -1,0 +1,19 @@
+[metadata]
+name = "gitleaks-cli"
+description = "Scan git repos for secrets"
+homepage = "https://github.com/gitleaks/gitleaks"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "gitleaks/gitleaks"
+asset_pattern = "gitleaks_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["gitleaks"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+[verify]
+command = "gitleaks version"
+pattern = "{version}"

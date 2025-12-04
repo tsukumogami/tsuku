@@ -1,0 +1,15 @@
+[metadata]
+name = "draft"
+description = "Tool for developers to create cloud-native applications on Kubernetes"
+homepage = "https://draft.sh/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "Azure/draft"
+asset_pattern = "draft-{os}-{arch}"
+binary = "draft"
+
+[verify]
+command = "draft version"
+pattern = "version"

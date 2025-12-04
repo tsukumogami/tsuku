@@ -1,0 +1,19 @@
+[metadata]
+name = "doctl"
+description = "DigitalOcean CLI"
+homepage = "https://github.com/digitalocean/doctl"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "digitalocean/doctl"
+asset_pattern = "doctl-{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["doctl"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "doctl version"
+pattern = "{version}"

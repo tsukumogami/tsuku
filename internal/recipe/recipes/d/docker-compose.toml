@@ -1,0 +1,15 @@
+[metadata]
+name = "docker-compose"
+description = "Define and run multi-container Docker applications"
+homepage = "https://docs.docker.com/compose/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "docker/compose"
+asset_pattern = "docker-compose-{os}-x86_64"
+binary = "docker-compose"
+
+[verify]
+command = "docker-compose version"
+pattern = "v{version}"

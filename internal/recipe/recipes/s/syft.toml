@@ -1,0 +1,19 @@
+[metadata]
+name = "syft"
+description = "SBOM generation tool"
+homepage = "https://github.com/anchore/syft"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "anchore/syft"
+asset_pattern = "syft_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["syft"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "syft version"
+pattern = "{version}"

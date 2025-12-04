@@ -1,0 +1,19 @@
+[metadata]
+name = "rancher"
+description = "Complete container management platform"
+homepage = "https://github.com/rancher/cli"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "rancher/cli"
+asset_pattern = "rancher-{os}-{arch}-v{version}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 1
+binaries = ["rancher"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "rancher --version"
+pattern = "{version}"

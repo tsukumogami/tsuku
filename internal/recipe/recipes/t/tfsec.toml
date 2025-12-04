@@ -1,0 +1,19 @@
+[metadata]
+name = "tfsec"
+description = "Security scanner for Terraform"
+homepage = "https://github.com/aquasecurity/tfsec"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "aquasecurity/tfsec"
+asset_pattern = "tfsec_{version}_{os}_{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["tfsec"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "tfsec --version"
+pattern = "{version}"

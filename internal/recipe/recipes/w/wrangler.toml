@@ -1,0 +1,14 @@
+[metadata]
+name = "wrangler"
+description = "Cloudflare Workers CLI for building and deploying serverless applications"
+homepage = "https://developers.cloudflare.com/workers/wrangler/"
+version_format = "semver"
+
+[[steps]]
+action = "npm_install"
+package = "wrangler"
+executables = ["wrangler"]
+
+[verify]
+command = "wrangler --version"
+pattern = "{version}"

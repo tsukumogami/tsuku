@@ -1,0 +1,19 @@
+[metadata]
+name = "gron"
+description = "Make JSON greppable"
+homepage = "https://github.com/tomnomnom/gron"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "tomnomnom/gron"
+asset_pattern = "gron-{os}-{arch}-{version}.tgz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["gron"]
+os_mapping = { linux = "linux", darwin = "darwin" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "gron --version"
+pattern = "gron"

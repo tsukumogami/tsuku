@@ -1,0 +1,19 @@
+[metadata]
+name = "terraform-docs"
+description = "Generate documentation from Terraform modules"
+homepage = "https://github.com/terraform-docs/terraform-docs"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "terraform-docs/terraform-docs"
+asset_pattern = "terraform-docs-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = ["terraform-docs"]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "terraform-docs --version"
+pattern = "{version}"
