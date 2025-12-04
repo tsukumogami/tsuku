@@ -1,0 +1,19 @@
+[metadata]
+name = "aws-nuke"
+description = "Tool to remove all resources from an AWS account"
+homepage = "https://github.com/rebuy-de/aws-nuke"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "rebuy-de/aws-nuke"
+asset_pattern = "aws-nuke-v{version}-{os}-{arch}.tar.gz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = [{src = "aws-nuke-v{version}-{os}-{arch}", dest = "bin/aws-nuke"}]
+os_mapping = { darwin = "darwin", linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
+
+[verify]
+command = "aws-nuke version"
+pattern = "{version}"

@@ -1,0 +1,16 @@
+[metadata]
+name = "appwrite"
+description = "Appwrite CLI - Command line tool for Appwrite backend server"
+homepage = "https://appwrite.io/"
+version_format = "semver"
+
+[[steps]]
+action = "github_file"
+repo = "appwrite/sdk-for-cli"
+asset_pattern = "appwrite-cli-{os}-{arch}"
+binary = "appwrite"
+arch_mapping = { amd64 = "x64" }
+
+[verify]
+command = "appwrite --version"
+pattern = "{version}"

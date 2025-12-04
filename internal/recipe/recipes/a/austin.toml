@@ -1,0 +1,19 @@
+[metadata]
+name = "austin"
+description = "Python frame stack sampler for CPython"
+homepage = "https://github.com/P403n1x87/austin"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "P403n1x87/austin"
+asset_pattern = "austin-{version}-gnu-{os}-{arch}.tar.xz"
+archive_format = "tar.xz"
+strip_dirs = 0
+binaries = ["austin"]
+os_mapping = { linux = "linux" }
+arch_mapping = { amd64 = "amd64", arm64 = "aarch64" }
+
+[verify]
+command = "austin --version"
+pattern = "{version}"

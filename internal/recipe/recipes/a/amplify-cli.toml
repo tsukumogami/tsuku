@@ -1,0 +1,18 @@
+[metadata]
+name = "amplify-cli"
+description = "AWS Amplify CLI"
+homepage = "https://github.com/aws-amplify/amplify-cli"
+version_format = "semver"
+
+[[steps]]
+action = "github_archive"
+repo = "aws-amplify/amplify-cli"
+asset_pattern = "amplify-pkg-{os}.tgz"
+archive_format = "tar.gz"
+strip_dirs = 0
+binaries = [{src = "amplify-pkg-linux", dest = "bin/amplify"}]
+os_mapping = { darwin = "macos", linux = "linux" }
+
+[verify]
+command = "amplify --version"
+pattern = "{version}"
