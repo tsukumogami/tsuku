@@ -1,0 +1,19 @@
+[metadata]
+name = "godoc"
+description = "Go documentation server and tool"
+homepage = "https://pkg.go.dev/golang.org/x/tools/cmd/godoc"
+version_format = "semver"
+dependencies = ["go"]
+
+[version]
+source = "goproxy"
+module = "golang.org/x/tools"
+
+[[steps]]
+action = "go_install"
+module = "golang.org/x/tools/cmd/godoc"
+executables = ["godoc"]
+
+[verify]
+command = "godoc -h"
+pattern = "usage:"

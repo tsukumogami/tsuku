@@ -1,0 +1,19 @@
+[metadata]
+name = "staticcheck"
+description = "Go static analysis tool"
+homepage = "https://staticcheck.dev/"
+version_format = "semver"
+dependencies = ["go"]
+
+[version]
+source = "goproxy"
+module = "honnef.co/go/tools"
+
+[[steps]]
+action = "go_install"
+module = "honnef.co/go/tools/cmd/staticcheck"
+executables = ["staticcheck"]
+
+[verify]
+command = "staticcheck --version"
+pattern = "staticcheck"

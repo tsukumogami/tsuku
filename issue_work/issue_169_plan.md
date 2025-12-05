@@ -30,17 +30,17 @@ Recipes for affected tools:
 
 ## Implementation Steps
 
-- [ ] Add `Module` field to `VersionSection` struct in types.go
-- [ ] Update `GoProxySourceStrategy.Create()` to check `r.Version.Module` first
-- [ ] Add test for new behavior in provider_goproxy_test.go
-- [ ] Create staticcheck recipe with module field
-- [ ] Create goimports recipe with module field
-- [ ] Create godoc recipe with module field
-- [ ] Create gore recipe with module field
-- [ ] Create mockgen recipe with module field
-- [ ] Create dlv recipe with module field
-- [ ] Create cobra-cli recipe (needs verify command fix)
-- [ ] Run tests
+- [x] Add `Module` field to `VersionSection` struct in types.go
+- [x] Update `GoProxySourceStrategy.Create()` to check `r.Version.Module` first
+- [x] Add test for new behavior in provider_goproxy_test.go
+- [x] Create staticcheck recipe with module field
+- [x] Create goimports recipe with module field
+- [x] Create godoc recipe with module field
+- [x] Create gore recipe with module field
+- [x] Create mockgen recipe with module field
+- [x] Create dlv recipe with module field
+- [x] Create cobra-cli recipe (needs verify command fix)
+- [x] Run tests
 
 ## Testing Strategy
 
@@ -74,7 +74,7 @@ pattern = "<pattern>"
 
 ## Success Criteria
 
-- [ ] `Module` field added to `VersionSection`
-- [ ] `GoProxySourceStrategy` prefers `r.Version.Module` over step params
-- [ ] 7 new Go tool recipes created
-- [ ] All tests pass
+- [x] `Module` field added to `VersionSection`
+- [x] `GoProxySourceStrategy` prefers `r.Version.Module` over step params
+- [x] 7 new Go tool recipes created
+- [x] All tests pass
