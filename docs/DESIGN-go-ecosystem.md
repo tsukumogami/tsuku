@@ -1,6 +1,6 @@
 # Design Document: Go Ecosystem Support
 
-**Status**: Planned
+**Status**: Implemented
 
 ## Context and Problem Statement
 
@@ -597,7 +597,7 @@ registry.Register(NewGoBuilder(resolver))
 ### Phase 1b: Go Toolchain Recipe
 
 **Deliverables:**
-- `go.toml` recipe in tsuku-registry (or embedded for testing)
+- `go.toml` recipe in `internal/recipe/recipes/g/`
 - Uses Phase 1a provider for version resolution
 - Checksum verification from go.dev
 - Tests for Go installation
@@ -638,7 +638,7 @@ registry.Register(NewGoBuilder(resolver))
 ### Phase 5: Popular Tool Recipes
 
 **Deliverables:**
-- Recipes for 10+ popular Go tools in tsuku-registry
+- Recipes for 10+ popular Go tools in `internal/recipe/recipes/`
 - Tools: lazygit, k9s, gh, golangci-lint, gofumpt, air, cobra-cli, gore, dlv, staticcheck
 
 **Validation:** All tools install and verify successfully.
@@ -785,10 +785,13 @@ registry.Register(NewGoBuilder(resolver))
 
 ### Milestone: [Go Ecosystem Support](https://github.com/tsuku-dev/tsuku/milestone/5)
 
+**Completed:**
 - [#117](https://github.com/tsuku-dev/tsuku/issues/117): feat(version): add Go toolchain version provider
 - [#118](https://github.com/tsuku-dev/tsuku/issues/118): feat(version): add Go module version provider
-- [#119](https://github.com/tsuku-dev/tsuku/issues/119): feat(registry): add Go toolchain recipe
 - [#120](https://github.com/tsuku-dev/tsuku/issues/120): feat(actions): add go_install action
 - [#121](https://github.com/tsuku-dev/tsuku/issues/121): feat(builders): add Go builder
-- [#122](https://github.com/tsuku-dev/tsuku/issues/122): feat(registry): add popular Go tool recipes
 - [#123](https://github.com/tsuku-dev/tsuku/issues/123): test: add integration test for Go tool installation
+
+**Remaining:**
+- Go toolchain recipe exists at `internal/recipe/recipes/g/go.toml`
+- Popular Go tool recipes needed (tracked in milestone issue [#110](https://github.com/tsuku-dev/tsuku/issues/110))
