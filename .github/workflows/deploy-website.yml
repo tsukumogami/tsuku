@@ -27,6 +27,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_PAGES_DEPLOYER_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: tsukumogami
+          projectName: tsuku-dev
           directory: website
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
