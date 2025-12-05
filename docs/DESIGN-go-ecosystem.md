@@ -783,15 +783,15 @@ registry.Register(NewGoBuilder(resolver))
 
 ## Implementation Issues
 
-### Milestone: [Go Ecosystem Support](https://github.com/tsuku-dev/tsuku/milestone/5)
+### Milestone: [Go Ecosystem Support](https://github.com/tsukumogami/tsuku/milestone/5)
 
 **Completed:**
-- [#117](https://github.com/tsuku-dev/tsuku/issues/117): feat(version): add Go toolchain version provider
-- [#118](https://github.com/tsuku-dev/tsuku/issues/118): feat(version): add Go module version provider
-- [#120](https://github.com/tsuku-dev/tsuku/issues/120): feat(actions): add go_install action
-- [#121](https://github.com/tsuku-dev/tsuku/issues/121): feat(builders): add Go builder
-- [#123](https://github.com/tsuku-dev/tsuku/issues/123): test: add integration test for Go tool installation
+- [#117](https://github.com/tsukumogami/tsuku/issues/117): feat(version): add Go toolchain version provider
+- [#118](https://github.com/tsukumogami/tsuku/issues/118): feat(version): add Go module version provider
+- [#120](https://github.com/tsukumogami/tsuku/issues/120): feat(actions): add go_install action
+- [#121](https://github.com/tsukumogami/tsuku/issues/121): feat(builders): add Go builder
+- [#123](https://github.com/tsukumogami/tsuku/issues/123): test: add integration test for Go tool installation
 
 **Remaining:**
 - Go toolchain recipe exists at `internal/recipe/recipes/g/go.toml`
-- Popular Go tool recipes needed (tracked in milestone issue [#110](https://github.com/tsuku-dev/tsuku/issues/110))
+- Popular Go tool recipes needed (tracked in milestone issue [#110](https://github.com/tsukumogami/tsuku/issues/110))
