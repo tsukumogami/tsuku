@@ -23,7 +23,7 @@ if [ -n "${TSUKU_NO_TELEMETRY:-}" ]; then
     NO_TELEMETRY=true
 fi
 
-REPO="tsuku-dev/tsuku"
+REPO="tsukumogami/tsuku"
 INSTALL_DIR="${TSUKU_INSTALL_DIR:-$HOME/.tsuku}"
 BIN_DIR="$INSTALL_DIR/bin"
 ENV_FILE="$INSTALL_DIR/env"
