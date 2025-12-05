@@ -11,8 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsuku-dev/tsuku/internal/config"
-	"github.com/tsuku-dev/tsuku/internal/progress"
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // DownloadAction implements file downloading with checksum verification

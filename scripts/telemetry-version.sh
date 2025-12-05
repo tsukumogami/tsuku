@@ -4,7 +4,7 @@
 
 set -euo pipefail
 
-REPO="tsuku-dev/tsuku"
+REPO="tsukumogami/tsuku"
 ENDPOINT="https://telemetry.tsuku.dev/version"
 
 TOKEN=$(gh variable get TELEMETRY_VERSION_TOKEN --repo "$REPO" 2>/dev/null) || {

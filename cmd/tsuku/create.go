@@ -8,10 +8,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"github.com/tsuku-dev/tsuku/internal/builders"
-	"github.com/tsuku-dev/tsuku/internal/config"
-	"github.com/tsuku-dev/tsuku/internal/recipe"
-	"github.com/tsuku-dev/tsuku/internal/toolchain"
+	"github.com/tsukumogami/tsuku/internal/builders"
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/toolchain"
 )
 
 var createCmd = &cobra.Command{

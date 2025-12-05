@@ -9,7 +9,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/tsuku-dev/tsuku/internal/userconfig"
+	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
 const (

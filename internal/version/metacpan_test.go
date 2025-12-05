@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestIsValidMetaCPANDistribution(t *testing.T) {

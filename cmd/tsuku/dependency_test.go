@@ -3,8 +3,8 @@ package main
 import (
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/install"
-	"github.com/tsuku-dev/tsuku/internal/testutil"
+	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 func TestCircularDependencyDetection(t *testing.T) {

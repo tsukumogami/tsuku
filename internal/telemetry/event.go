@@ -4,7 +4,7 @@ package telemetry
 import (
 	"runtime"
 
-	"github.com/tsuku-dev/tsuku/internal/buildinfo"
+	"github.com/tsukumogami/tsuku/internal/buildinfo"
 )
 
 // Event represents a telemetry event sent to the backend.

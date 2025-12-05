@@ -3,7 +3,7 @@ package version
 import (
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestNewProviderFactory(t *testing.T) {

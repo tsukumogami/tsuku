@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/registry"
+	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
 func TestNew(t *testing.T) {

@@ -14,7 +14,7 @@ Thank you for your interest in contributing to tsuku! This document provides gui
 
 ```bash
 # Clone the repository
-git clone https://github.com/tsuku-dev/tsuku.git
+git clone https://github.com/tsukumogami/tsuku.git
 cd tsuku
 
 # Build

@@ -227,13 +227,13 @@ General configuration infrastructure with telemetry setting:
 
 ## Implementation Issues
 
-- [#79](https://github.com/tsuku-dev/tsuku/issues/79): Umbrella issue
+- [#79](https://github.com/tsukumogami/tsuku/issues/79): Umbrella issue
 
 ### Phase 1: Core Telemetry
-- [#82](https://github.com/tsuku-dev/tsuku/issues/82): feat(telemetry): add client with schema and env var opt-out
-- [#83](https://github.com/tsuku-dev/tsuku/issues/83): feat(telemetry): add first-run notice
-- [#84](https://github.com/tsuku-dev/tsuku/issues/84): feat(telemetry): integrate into install/update/remove commands
+- [#82](https://github.com/tsukumogami/tsuku/issues/82): feat(telemetry): add client with schema and env var opt-out
+- [#83](https://github.com/tsukumogami/tsuku/issues/83): feat(telemetry): add first-run notice
+- [#84](https://github.com/tsukumogami/tsuku/issues/84): feat(telemetry): integrate into install/update/remove commands
 
 ### Phase 2: Config System
-- [#85](https://github.com/tsuku-dev/tsuku/issues/85): feat(config): add config system with telemetry setting
+- [#85](https://github.com/tsukumogami/tsuku/issues/85): feat(config): add config system with telemetry setting
 

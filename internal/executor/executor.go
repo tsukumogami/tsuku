@@ -9,9 +9,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/tsuku-dev/tsuku/internal/actions"
-	"github.com/tsuku-dev/tsuku/internal/recipe"
-	"github.com/tsuku-dev/tsuku/internal/version"
+	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/version"
 )
 
 // Executor executes action-based recipes

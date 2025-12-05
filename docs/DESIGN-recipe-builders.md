@@ -719,7 +719,7 @@ When fetching Cargo.toml for executable discovery:
 
 ## Implementation Issues
 
-Milestone: [Recipe Builders](https://github.com/tsuku-dev/tsuku/milestone/4)
+Milestone: [Recipe Builders](https://github.com/tsukumogami/tsuku/milestone/4)
 
 | Issue | Phase | Description |
 |-------|-------|-------------|

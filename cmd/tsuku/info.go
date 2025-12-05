@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	"github.com/tsuku-dev/tsuku/internal/config"
-	"github.com/tsuku-dev/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 )
 
 var infoCmd = &cobra.Command{

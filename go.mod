@@ -1,4 +1,4 @@
-module github.com/tsuku-dev/tsuku
+module github.com/tsukumogami/tsuku
 
 go 1.24.11
 

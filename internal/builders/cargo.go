@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 const (
@@ -170,7 +170,7 @@ func (b *CargoBuilder) fetchCrateInfo(ctx context.Context, crateName string) (*c
 	}
 
 	// crates.io requires a User-Agent header
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := b.httpClient.Do(req)
@@ -284,7 +284,7 @@ func (b *CargoBuilder) fetchCargoTomlExecutables(ctx context.Context, cargoTomlU
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 
 	resp, err := b.httpClient.Do(req)
 	if err != nil {

@@ -3,7 +3,7 @@ package install
 import (
 	"fmt"
 
-	"github.com/tsuku-dev/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/config"
 )
 
 // HiddenInstallOptions returns options for hidden installation

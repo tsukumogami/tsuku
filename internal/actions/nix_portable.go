@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/tsuku-dev/tsuku/internal/progress"
+	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
 // nix-portable version and checksums

@@ -3,7 +3,7 @@ package builders
 import (
 	"context"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // Builder generates recipes for packages from a specific ecosystem.

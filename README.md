@@ -1,7 +1,7 @@
 # tsuku
 
-[![Tests](https://github.com/tsuku-dev/tsuku/actions/workflows/test.yml/badge.svg)](https://github.com/tsuku-dev/tsuku/actions/workflows/test.yml)
-[![codecov](https://codecov.io/gh/tsuku-dev/tsuku/graph/badge.svg)](https://codecov.io/gh/tsuku-dev/tsuku)
+[![Tests](https://github.com/tsukumogami/tsuku/actions/workflows/test.yml/badge.svg)](https://github.com/tsukumogami/tsuku/actions/workflows/test.yml)
+[![codecov](https://codecov.io/gh/tsukumogami/tsuku/graph/badge.svg)](https://codecov.io/gh/tsukumogami/tsuku)
 
 A modern, universal package manager for development tools.
 

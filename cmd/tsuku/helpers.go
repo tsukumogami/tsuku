@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tsuku-dev/tsuku/internal/errmsg"
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/errmsg"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // loader holds the recipe loader (shared across all commands)

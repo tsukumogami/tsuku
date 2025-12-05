@@ -18,7 +18,7 @@ import (
 	"github.com/google/go-github/v57/github"
 	"golang.org/x/oauth2"
 
-	"github.com/tsuku-dev/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/config"
 )
 
 // VersionInfo contains both the original tag and normalized version

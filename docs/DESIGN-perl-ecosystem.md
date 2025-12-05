@@ -898,12 +898,12 @@ func inferExecutable(distribution string) string {
 
 ## Implementation Issues
 
-### Milestone: [Perl Ecosystem Support](https://github.com/tsuku-dev/tsuku/milestone/6)
+### Milestone: [Perl Ecosystem Support](https://github.com/tsukumogami/tsuku/milestone/6)
 
 **Completed:**
-- [#129](https://github.com/tsuku-dev/tsuku/issues/129): feat(version): add CPAN version provider
-- [#130](https://github.com/tsuku-dev/tsuku/issues/130): feat(actions): add cpan_install action
-- [#131](https://github.com/tsuku-dev/tsuku/issues/131): feat(builders): add CPAN builder
+- [#129](https://github.com/tsukumogami/tsuku/issues/129): feat(version): add CPAN version provider
+- [#130](https://github.com/tsukumogami/tsuku/issues/130): feat(actions): add cpan_install action
+- [#131](https://github.com/tsukumogami/tsuku/issues/131): feat(builders): add CPAN builder
 
 **Remaining:**
 - Perl runtime recipe exists at `internal/recipe/recipes/p/perl.toml`

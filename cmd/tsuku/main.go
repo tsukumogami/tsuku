@@ -8,10 +8,10 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
-	"github.com/tsuku-dev/tsuku/internal/buildinfo"
-	"github.com/tsuku-dev/tsuku/internal/config"
-	"github.com/tsuku-dev/tsuku/internal/recipe"
-	"github.com/tsuku-dev/tsuku/internal/registry"
+	"github.com/tsukumogami/tsuku/internal/buildinfo"
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
 var quietFlag bool

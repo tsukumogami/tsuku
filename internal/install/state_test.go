@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/testutil"
+	"github.com/tsukumogami/tsuku/internal/testutil"
 )
 
 func newTestStateManager(t *testing.T) (*StateManager, func()) {

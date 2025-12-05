@@ -5,8 +5,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
-	"github.com/tsuku-dev/tsuku/internal/version"
+	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/version"
 )
 
 // TestResolveVersionWith_CustomSource tests that executor correctly uses custom version sources

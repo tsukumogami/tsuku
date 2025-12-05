@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsuku-dev/tsuku/internal/version"
+	"github.com/tsukumogami/tsuku/internal/version"
 )
 
 // DownloadArchiveAction downloads, extracts, and installs binaries from an archive
