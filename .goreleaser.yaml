@@ -38,7 +38,7 @@ changelog:
 
 release:
   github:
-    owner: tsuku-dev
+    owner: tsukumogami
     name: tsuku
   draft: false
   prerelease: auto

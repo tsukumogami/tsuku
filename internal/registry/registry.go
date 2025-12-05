@@ -18,7 +18,7 @@ const (
 	// DefaultRegistryURL is the default URL for the tsuku recipe registry
 	// Points to the recipe package in the tsuku repo (monorepo structure)
 	// The recipeURL function appends /recipes/{letter}/{name}.toml
-	DefaultRegistryURL = "https://raw.githubusercontent.com/tsuku-dev/tsuku/main/internal/recipe"
+	DefaultRegistryURL = "https://raw.githubusercontent.com/tsukumogami/tsuku/main/internal/recipe"
 
 	// EnvRegistryURL is the environment variable to override the registry URL
 	EnvRegistryURL = "TSUKU_REGISTRY_URL"
