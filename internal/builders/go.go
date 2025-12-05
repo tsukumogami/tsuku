@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 const (
@@ -152,7 +152,7 @@ func (b *GoBuilder) fetchModuleInfo(ctx context.Context, modulePath string) (*go
 	}
 
 	// Go proxy recommends a User-Agent header
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := b.httpClient.Do(req)

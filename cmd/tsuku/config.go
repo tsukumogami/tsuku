@@ -6,7 +6,7 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	"github.com/tsuku-dev/tsuku/internal/userconfig"
+	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
 var configCmd = &cobra.Command{

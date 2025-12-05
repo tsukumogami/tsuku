@@ -126,7 +126,7 @@ func (r *Resolver) ResolveMetaCPAN(ctx context.Context, distribution string) (*V
 	}
 
 	// Set headers (User-Agent required for good API citizenship)
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Accept-Encoding", "identity") // Prevent compression attacks
 
@@ -283,7 +283,7 @@ func (r *Resolver) ListMetaCPANVersions(ctx context.Context, distribution string
 	}
 
 	// Set headers
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "identity") // Prevent compression attacks

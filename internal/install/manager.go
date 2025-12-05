@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/tsuku-dev/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/config"
 )
 
 // Manager handles tool installation to ~/.tsuku

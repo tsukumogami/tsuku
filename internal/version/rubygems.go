@@ -117,7 +117,7 @@ func (r *Resolver) ListRubyGemsVersions(ctx context.Context, gemName string) ([]
 	}
 
 	// Set headers (User-Agent required for good API citizenship)
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Accept-Encoding", "identity") // Prevent compression attacks
 

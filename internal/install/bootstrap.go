@@ -7,9 +7,9 @@ import (
 	"os/exec"
 	"path/filepath"
 
-	"github.com/tsuku-dev/tsuku/internal/executor"
-	"github.com/tsuku-dev/tsuku/internal/recipe"
-	"github.com/tsuku-dev/tsuku/internal/registry"
+	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
 // EnsureNpm ensures npm is available, installing nodejs explicitly (not hidden) if needed

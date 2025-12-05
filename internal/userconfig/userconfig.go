@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
-	"github.com/tsuku-dev/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/config"
 )
 
 // Config represents user-configurable settings.

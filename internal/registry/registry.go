@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsuku-dev/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/config"
 )
 
 const (

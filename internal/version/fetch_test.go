@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/google/go-github/v57/github"
-	"github.com/tsuku-dev/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/config"
 )
 
 // mockGitHubServer creates a test HTTP server that mimics GitHub API responses

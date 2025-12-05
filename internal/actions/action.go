@@ -3,8 +3,8 @@ package actions
 import (
 	"context"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
-	"github.com/tsuku-dev/tsuku/internal/version"
+	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/version"
 )
 
 // ExecutionContext provides context for action execution

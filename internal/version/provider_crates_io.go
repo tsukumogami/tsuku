@@ -109,7 +109,7 @@ func (r *Resolver) ListCratesIOVersions(ctx context.Context, crateName string) (
 	}
 
 	// crates.io requires a User-Agent header (mandatory per their API policy)
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := r.httpClient.Do(req)

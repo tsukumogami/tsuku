@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/buildinfo"
+	"github.com/tsukumogami/tsuku/internal/buildinfo"
 )
 
 func TestNewInstallEvent(t *testing.T) {

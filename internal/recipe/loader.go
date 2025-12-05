@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/BurntSushi/toml"
-	"github.com/tsuku-dev/tsuku/internal/registry"
+	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
 // Loader handles loading and discovering recipes from the registry

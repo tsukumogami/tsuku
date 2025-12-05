@@ -6,7 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-	"github.com/tsuku-dev/tsuku/internal/version"
+	"github.com/tsukumogami/tsuku/internal/version"
 )
 
 var versionsCmd = &cobra.Command{

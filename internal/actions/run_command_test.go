@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 func TestRunCommandAction_Name(t *testing.T) {

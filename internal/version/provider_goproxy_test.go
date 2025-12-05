@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // TestEncodeModulePath tests the module path encoding function

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"sort"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // Priority levels for strategy evaluation (higher = evaluated first)

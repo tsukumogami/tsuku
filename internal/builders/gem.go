@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 const (
@@ -153,7 +153,7 @@ func (b *GemBuilder) fetchGemInfo(ctx context.Context, gemName string) (*rubyGem
 	}
 
 	// RubyGems recommends a User-Agent header
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 	req.Header.Set("Accept", "application/json")
 
 	resp, err := b.httpClient.Do(req)
@@ -267,7 +267,7 @@ func (b *GemBuilder) fetchGemspecExecutables(ctx context.Context, gemspecURL str
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsuku-dev/tsuku)")
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
 
 	resp, err := b.httpClient.Do(req)
 	if err != nil {

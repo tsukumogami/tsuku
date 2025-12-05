@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/tsuku-dev/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // TestValidateBinaryPath tests path traversal security validation
