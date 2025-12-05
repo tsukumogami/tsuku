@@ -1,6 +1,6 @@
 # Design Document: Perl Ecosystem Support
 
-**Status**: Accepted
+**Status**: Implemented
 
 ## Context and Problem Statement
 
@@ -719,7 +719,7 @@ func inferExecutable(distribution string) string {
 ### Phase 1: Perl Runtime Recipe
 
 **Deliverables:**
-- `perl.toml` recipe in tsuku-registry
+- `perl.toml` recipe in `internal/recipe/recipes/p/`
 - Uses GitHub releases provider for skaji/relocatable-perl
 - Platform-specific URL templates
 - Tests for Perl installation and cpanm availability
@@ -762,7 +762,7 @@ func inferExecutable(distribution string) string {
 ### Phase 5: Popular Tool Recipes
 
 **Deliverables:**
-- Recipes for popular Perl CLI tools in tsuku-registry
+- Recipes for popular Perl CLI tools in `internal/recipe/recipes/`
 - Tools: ack, cpanm, carton, plenv, cpm, prove, perltidy, perlcritic
 
 **Validation:** All tools install and verify successfully.
@@ -898,31 +898,14 @@ func inferExecutable(distribution string) string {
 
 ## Implementation Issues
 
-Milestone: [Perl Ecosystem Support](https://github.com/tsuku-dev/tsuku/milestone/6)
+### Milestone: [Perl Ecosystem Support](https://github.com/tsuku-dev/tsuku/milestone/6)
 
-| Issue | Phase | Description |
-|-------|-------|-------------|
-| tsuku-registry#13 | Phase 1 | feat(registry): add Perl runtime recipe |
-| #129 | Phase 2 | feat(version): add CPAN version provider |
-| #130 | Phase 3 | feat(actions): add cpan_install action |
-| #131 | Phase 4 | feat(builders): add CPAN builder |
-| TBD | Phase 5 | feat(registry): add popular Perl tool recipes |
-| TBD | Phase 6 | test: add integration tests for Perl tool installation |
+**Completed:**
+- [#129](https://github.com/tsuku-dev/tsuku/issues/129): feat(version): add CPAN version provider
+- [#130](https://github.com/tsuku-dev/tsuku/issues/130): feat(actions): add cpan_install action
+- [#131](https://github.com/tsuku-dev/tsuku/issues/131): feat(builders): add CPAN builder
 
-### Dependency Graph
-
-```
-tsuku-registry#13 (Perl runtime recipe)
-    │
-    v
-#129 (CPAN version provider)
-    │
-    v
-#130 (cpan_install action)
-    │
-    v
-#131 (CPAN builder)
-    │
-    v
-Popular tool recipes + Integration tests
-```
+**Remaining:**
+- Perl runtime recipe exists at `internal/recipe/recipes/p/perl.toml`
+- Popular Perl tool recipes: perlcritic, perltidy, carton at `internal/recipe/recipes/`
+- Additional tools (ack, cpanm, plenv, cpm, prove) may be added as needed
