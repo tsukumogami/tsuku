@@ -1,0 +1,18 @@
+[metadata]
+name = "gopls"
+description = "Official Go language server"
+homepage = "https://pkg.go.dev/golang.org/x/tools/gopls"
+version_format = "semver"
+dependencies = ["go"]
+
+[version]
+source = "goproxy"
+
+[[steps]]
+action = "go_install"
+module = "golang.org/x/tools/gopls"
+executables = ["gopls"]
+
+[verify]
+command = "gopls version"
+pattern = "golang.org/x/tools/gopls"
