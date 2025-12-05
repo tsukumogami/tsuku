@@ -1,0 +1,19 @@
+[metadata]
+name = "gore"
+description = "Go REPL with line editing and code completion"
+homepage = "https://github.com/x-motemen/gore"
+version_format = "semver"
+dependencies = ["go"]
+
+[version]
+source = "goproxy"
+module = "github.com/x-motemen/gore"
+
+[[steps]]
+action = "go_install"
+module = "github.com/x-motemen/gore/cmd/gore"
+executables = ["gore"]
+
+[verify]
+command = "gore --version"
+pattern = "gore"

@@ -30,6 +30,7 @@ type VersionSection struct {
 	Source     string `toml:"source"`      // e.g., "nodejs_dist", "github_releases", "npm_registry"
 	GitHubRepo string `toml:"github_repo"` // e.g., "rust-lang/rust" - use GitHub for version detection only
 	TagPrefix  string `toml:"tag_prefix"`  // e.g., "ruby-" - filter tags by prefix and strip it from version
+	Module     string `toml:"module"`      // Go module path for goproxy version resolution (when different from install path)
 }
 
 // Step represents a single action step

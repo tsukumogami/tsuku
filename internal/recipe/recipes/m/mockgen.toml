@@ -1,0 +1,19 @@
+[metadata]
+name = "mockgen"
+description = "Mock generator for Go interfaces"
+homepage = "https://github.com/uber-go/mock"
+version_format = "semver"
+dependencies = ["go"]
+
+[version]
+source = "goproxy"
+module = "go.uber.org/mock"
+
+[[steps]]
+action = "go_install"
+module = "go.uber.org/mock/mockgen"
+executables = ["mockgen"]
+
+[verify]
+command = "mockgen --version"
+pattern = "{version}"

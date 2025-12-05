@@ -445,6 +445,14 @@ func (s *GoProxySourceStrategy) CanHandle(r *recipe.Recipe) bool {
 }
 
 func (s *GoProxySourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	// First, check [version] section for explicit module path
+	// This allows recipes to specify a different module for version resolution
+	// than the install path (e.g., honnef.co/go/tools vs honnef.co/go/tools/cmd/staticcheck)
+	if r.Version.Module != "" {
+		return NewGoProxyProvider(resolver, r.Version.Module), nil
+	}
+
+	// Fall back to module from go_install step params
 	for _, step := range r.Steps {
 		if step.Action == "go_install" {
 			if module, ok := step.Params["module"].(string); ok {

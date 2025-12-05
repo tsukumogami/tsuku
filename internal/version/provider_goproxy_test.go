@@ -480,3 +480,44 @@ func TestGoProxySourceStrategy_Priority(t *testing.T) {
 		t.Errorf("Expected priority %d, got %d", PriorityKnownRegistry, strategy.Priority())
 	}
 }
+
+// TestGoProxySourceStrategy_Create_WithVersionModule tests that Version.Module takes precedence
+func TestGoProxySourceStrategy_Create_WithVersionModule(t *testing.T) {
+	strategy := &GoProxySourceStrategy{}
+	resolver := New()
+
+	// Recipe where version module differs from install module
+	// This is the case for tools like staticcheck where:
+	// - Version lookup: honnef.co/go/tools
+	// - Install path: honnef.co/go/tools/cmd/staticcheck
+	r := &recipe.Recipe{
+		Version: recipe.VersionSection{
+			Source: "goproxy",
+			Module: "honnef.co/go/tools", // Version resolution uses parent module
+		},
+		Steps: []recipe.Step{{
+			Action: "go_install",
+			Params: map[string]interface{}{"module": "honnef.co/go/tools/cmd/staticcheck"}, // Install uses subpackage
+		}},
+	}
+
+	provider, err := strategy.Create(resolver, r)
+	if err != nil {
+		t.Fatalf("Create failed: %v", err)
+	}
+
+	if provider == nil {
+		t.Fatal("Expected provider, got nil")
+	}
+
+	// Verify it uses Version.Module, not the step param
+	goProxyProvider, ok := provider.(*GoProxyProvider)
+	if !ok {
+		t.Errorf("Expected *GoProxyProvider, got %T", provider)
+	}
+
+	// The provider should use the version section module, not the step module
+	if goProxyProvider.modulePath != "honnef.co/go/tools" {
+		t.Errorf("Expected module path 'honnef.co/go/tools', got %s", goProxyProvider.modulePath)
+	}
+}
