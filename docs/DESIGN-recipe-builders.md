@@ -4,7 +4,7 @@
 
 ## Context and Problem Statement
 
-Tsuku fetches recipes from an external GitHub registry (`tsuku-dev/tsuku-registry`) on demand. This works well for the tools in the registry, but creates a coverage gap: thousands of CLI tools exist across package ecosystems (crates.io, RubyGems, PyPI, npm) that are not in the registry.
+Tsuku includes embedded recipes at `internal/recipe/recipes/`. This works well for the tools in the registry, but creates a coverage gap: thousands of CLI tools exist across package ecosystems (crates.io, RubyGems, PyPI, npm) that are not included.
 
 Users who need these tools must either wait for someone to write a recipe or write one themselves. This friction prevents tsuku from being a complete solution for developer tooling.
 

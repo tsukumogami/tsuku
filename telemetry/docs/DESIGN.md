@@ -19,20 +19,19 @@ Cloudflare Worker that receives telemetry events from tsuku CLI and stores them 
                     └──────────────────┘
 ```
 
-## Repository Structure
+## Directory Structure
 
 ```
-tsuku-telemetry/
+telemetry/
 ├── src/
 │   └── index.ts          # Worker code
 ├── wrangler.toml         # Cloudflare config
 ├── package.json
 ├── tsconfig.json
-├── README.md
-└── .github/
-    └── workflows/
-        └── deploy.yml    # Auto-deploy on push to main
+└── README.md
 ```
+
+The telemetry service is part of the tsuku monorepo. Deployment is handled by the monorepo CI workflow.
 
 ## Endpoints
 
