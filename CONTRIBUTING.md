@@ -189,7 +189,7 @@ gh pr checks --watch
 
 ## Adding Recipes
 
-Recipes are maintained in a separate repository: [tsuku-registry](https://github.com/tsuku-dev/tsuku-registry).
+Recipes are embedded in the monorepo at `internal/recipe/recipes/`.
 
 ### Recipe Format
 
@@ -220,15 +220,15 @@ pattern = "{version}"
 
 ### Submitting Recipes
 
-1. Fork [tsuku-registry](https://github.com/tsuku-dev/tsuku-registry)
-2. Create your recipe in `recipes/<first-letter>/<tool-name>.toml`
-3. Test locally:
+1. Create your recipe in `internal/recipe/recipes/<first-letter>/<tool-name>.toml`
+2. Test locally:
    ```bash
+   go build -o tsuku ./cmd/tsuku
    ./tsuku install <tool-name>
    ```
-4. Submit a PR to tsuku-registry
+3. Submit a PR to this repository
 
-See the [tsuku-registry README](https://github.com/tsuku-dev/tsuku-registry) for detailed recipe documentation.
+See the existing recipes in `internal/recipe/recipes/` for examples.
 
 ## Troubleshooting
 
