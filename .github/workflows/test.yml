@@ -69,20 +69,15 @@ jobs:
       - uses: actions/checkout@v4
 
       # Detect if code files changed (vs docs-only, website-only, or telemetry-only)
-      # Skip patterns: *.md, docs/**, .github/ISSUE_TEMPLATE/**, website/**, telemetry/**
       - uses: dorny/paths-filter@v3
         id: filter
         with:
-          # Use 'every' so negation patterns work (file must match ALL patterns)
-          predicate-quantifier: 'every'
           filters: |
             code:
-              - '**'
-              - '!**/*.md'
-              - '!docs/**'
-              - '!.github/ISSUE_TEMPLATE/**'
-              - '!website/**'
-              - '!telemetry/**'
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - '.github/workflows/**'
             recipes:
               - 'internal/recipe/recipes/**/*.toml'
             validator:
