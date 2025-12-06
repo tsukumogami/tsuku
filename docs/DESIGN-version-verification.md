@@ -123,7 +123,7 @@ Python packages specifically run `checkPhase` as `installCheckPhase` because ver
 - Con: Complex two-phase system
 - Con: Many tests need disabling due to sandbox restrictions
 
-**Relevance to tsuku**: The insight that version info is only available post-install aligns with tsuku's verify step. The two-phase approach is overkill for tsuku.
+**Relevance to tsuku**: The insight that version info is only available post-install aligns with tsuku's verify step. For nix-based recipes, tsuku could potentially leverage `installCheckPhase` tests from nixpkgs derivations.
 
 ### Research Summary
 
