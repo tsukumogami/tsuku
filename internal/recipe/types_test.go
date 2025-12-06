@@ -875,3 +875,169 @@ func TestRecipe_HasChecksumVerification_NonDownloadActions(t *testing.T) {
 		t.Error("HasChecksumVerification() = false for non-download actions, want true")
 	}
 }
+
+func TestVerifySection_ModeAndVersionFormat(t *testing.T) {
+	tomlData := `
+[metadata]
+name = "test-tool"
+description = "A test tool"
+
+[[steps]]
+action = "github_file"
+repo = "owner/repo"
+asset_pattern = "tool-{os}-{arch}"
+binary = "tool"
+
+[verify]
+command = "tool --version"
+pattern = "Version: {version}"
+mode = "version"
+version_format = "semver"
+`
+
+	var recipe Recipe
+	err := toml.Unmarshal([]byte(tomlData), &recipe)
+	if err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+
+	if recipe.Verify.Mode != VerifyModeVersion {
+		t.Errorf("Verify.Mode = %s, want %s", recipe.Verify.Mode, VerifyModeVersion)
+	}
+
+	if recipe.Verify.VersionFormat != VersionFormatSemver {
+		t.Errorf("Verify.VersionFormat = %s, want %s", recipe.Verify.VersionFormat, VersionFormatSemver)
+	}
+}
+
+func TestVerifySection_OutputModeWithReason(t *testing.T) {
+	tomlData := `
+[metadata]
+name = "gofumpt"
+description = "A stricter gofmt"
+
+[[steps]]
+action = "go_install"
+package = "mvdan.cc/gofumpt"
+
+[verify]
+command = "gofumpt -h"
+pattern = "usage:"
+mode = "output"
+reason = "Tool does not support --version flag"
+`
+
+	var recipe Recipe
+	err := toml.Unmarshal([]byte(tomlData), &recipe)
+	if err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+
+	if recipe.Verify.Mode != VerifyModeOutput {
+		t.Errorf("Verify.Mode = %s, want %s", recipe.Verify.Mode, VerifyModeOutput)
+	}
+
+	if recipe.Verify.Pattern != "usage:" {
+		t.Errorf("Verify.Pattern = %s, want usage:", recipe.Verify.Pattern)
+	}
+
+	expectedReason := "Tool does not support --version flag"
+	if recipe.Verify.Reason != expectedReason {
+		t.Errorf("Verify.Reason = %s, want %s", recipe.Verify.Reason, expectedReason)
+	}
+}
+
+func TestVerifySection_AllVersionFormats(t *testing.T) {
+	formats := []string{
+		VersionFormatRaw,
+		VersionFormatSemver,
+		VersionFormatSemverFull,
+		VersionFormatStripV,
+	}
+
+	for _, format := range formats {
+		t.Run(format, func(t *testing.T) {
+			tomlData := `
+[metadata]
+name = "test-tool"
+description = "A test tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/tool"
+
+[verify]
+command = "tool --version"
+pattern = "{version}"
+version_format = "` + format + `"
+`
+
+			var recipe Recipe
+			err := toml.Unmarshal([]byte(tomlData), &recipe)
+			if err != nil {
+				t.Fatalf("Unmarshal() error = %v", err)
+			}
+
+			if recipe.Verify.VersionFormat != format {
+				t.Errorf("Verify.VersionFormat = %s, want %s", recipe.Verify.VersionFormat, format)
+			}
+		})
+	}
+}
+
+func TestVerifySection_DefaultsWhenOmitted(t *testing.T) {
+	tomlData := `
+[metadata]
+name = "test-tool"
+description = "A test tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/tool"
+
+[verify]
+command = "tool --version"
+pattern = "{version}"
+`
+
+	var recipe Recipe
+	err := toml.Unmarshal([]byte(tomlData), &recipe)
+	if err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+
+	// Fields should be empty strings when omitted (defaults applied at runtime)
+	if recipe.Verify.Mode != "" {
+		t.Errorf("Verify.Mode = %s, want empty (default applied at runtime)", recipe.Verify.Mode)
+	}
+
+	if recipe.Verify.VersionFormat != "" {
+		t.Errorf("Verify.VersionFormat = %s, want empty (default applied at runtime)", recipe.Verify.VersionFormat)
+	}
+
+	if recipe.Verify.Reason != "" {
+		t.Errorf("Verify.Reason = %s, want empty", recipe.Verify.Reason)
+	}
+}
+
+func TestVerifyConstants(t *testing.T) {
+	// Verify constants have expected values
+	if VerifyModeVersion != "version" {
+		t.Errorf("VerifyModeVersion = %s, want version", VerifyModeVersion)
+	}
+	if VerifyModeOutput != "output" {
+		t.Errorf("VerifyModeOutput = %s, want output", VerifyModeOutput)
+	}
+	if VersionFormatRaw != "raw" {
+		t.Errorf("VersionFormatRaw = %s, want raw", VersionFormatRaw)
+	}
+	if VersionFormatSemver != "semver" {
+		t.Errorf("VersionFormatSemver = %s, want semver", VersionFormatSemver)
+	}
+	if VersionFormatSemverFull != "semver_full" {
+		t.Errorf("VersionFormatSemverFull = %s, want semver_full", VersionFormatSemverFull)
+	}
+	if VersionFormatStripV != "strip_v" {
+		t.Errorf("VersionFormatStripV = %s, want strip_v", VersionFormatStripV)
+	}
+}
