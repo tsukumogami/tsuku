@@ -111,11 +111,34 @@ func (s Step) ToMap() map[string]interface{} {
 	return result
 }
 
+// Verification modes
+const (
+	// VerifyModeVersion verifies the exact version is installed (default)
+	VerifyModeVersion = "version"
+	// VerifyModeOutput matches a pattern in command output without version check
+	VerifyModeOutput = "output"
+)
+
+// Version format transforms
+const (
+	// VersionFormatRaw leaves the version string unchanged (default)
+	VersionFormatRaw = "raw"
+	// VersionFormatSemver extracts X.Y.Z from any format
+	VersionFormatSemver = "semver"
+	// VersionFormatSemverFull extracts X.Y.Z[-pre][+build]
+	VersionFormatSemverFull = "semver_full"
+	// VersionFormatStripV removes leading "v" from the version
+	VersionFormatStripV = "strip_v"
+)
+
 // VerifySection defines how to verify the installation
 type VerifySection struct {
-	Command    string             `toml:"command"`
-	Pattern    string             `toml:"pattern"`
-	Additional []AdditionalVerify `toml:"additional,omitempty"`
+	Command       string             `toml:"command"`
+	Pattern       string             `toml:"pattern"`
+	Mode          string             `toml:"mode,omitempty"`
+	VersionFormat string             `toml:"version_format,omitempty"`
+	Reason        string             `toml:"reason,omitempty"`
+	Additional    []AdditionalVerify `toml:"additional,omitempty"`
 }
 
 // AdditionalVerify represents additional verification commands
