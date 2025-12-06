@@ -143,200 +143,126 @@ Python packages specifically run `checkPhase` as `installCheckPhase` because ver
 
 | Strength | What it verifies | Homebrew | Nix | Tsuku (proposed) |
 |----------|------------------|----------|-----|------------------|
-| Strong | Core functionality works | `test do` block | `installCheckPhase` | `mode = "functional"` |
+| Strong | Core functionality works | `test do` block | `installCheckPhase` | `mode = "functional"` (v2) |
 | Medium | Correct version installed | Discouraged but used | Version assertions | `mode = "version"` (default) |
-| Weak | Tool executes without crash | Fallback | - | `mode = "functional"` + exit code |
+| Weak | Tool outputs expected pattern | Fallback | - | `mode = "output"` |
 
 **Implications for tsuku:**
-1. **Verification tiers** - Support functional tests as strongest option, version verification as automatable baseline, exit-code-only as fallback
-2. **Homebrew corpus reuse** - Import tests from Homebrew formulas for tools that have them (reduces recipe author burden)
-3. **Version format transforms** - Still needed for version verification tier (separate concern from verification strategy)
+1. **Verification tiers** - Support version verification as automatable baseline (v1), output mode as weak fallback (v1), functional tests as strongest option (v2)
+2. **Homebrew corpus reuse** - Import tests from Homebrew formulas for tools that have them (reduces recipe author burden) - v2
+3. **Version format transforms** - Needed for version verification tier (separate concern from verification strategy)
 4. **Keep it simple** - One verification step per recipe, not multiple phases like Nix
-5. **Clear opt-in** - Functional mode requires explicit `reason` field to document why used instead of version verification
+5. **Clear opt-in** - Output mode requires explicit `reason` field to document why version verification isn't possible
 
-## Considered Options
+## Decision Framework
 
-### Option 1: Version Transform Directives
+The verification design requires several **independent decisions**. These are not mutually exclusive options - they address different concerns that compose together.
 
-Add explicit transformation directives to normalize version strings before pattern matching.
+### Decision 1: Version Format Transformation
 
+**Question**: How should tsuku handle version string format mismatches between providers and tool output?
+
+**Context**: Version providers (GitHub, npm, etc.) return version strings like `v1.29.0` or `biome@2.3.8`, but tools often output different formats like `1.29.0` or `Version: 2.3.8`.
+
+**Options considered**:
+
+| Option | Approach | Pros | Cons |
+|--------|----------|------|------|
+| A. Explicit transforms | `version_format = "semver"` | Predictable, self-documenting | Requires learning syntax |
+| B. Automatic heuristics | Strip `v`, extract semver | Zero config for common cases | Magic, hard to debug |
+| C. Multiple placeholders | `{version}` vs `{version_raw}` | Flexible | Two concepts to learn |
+| D. Pattern-side transforms | `{version\|semver}` | Co-located with usage | Custom parsing needed |
+
+**Decision**: **Option A - Explicit transforms**
+
+Use four predefined formats that cover ~95% of real-world cases:
+- `semver` - Extract `X.Y.Z` from any format (`biome@2.3.8` → `2.3.8`)
+- `semver_full` - Extract `X.Y.Z[-pre][+build]`
+- `strip_v` - Remove leading `v` (`v1.2.3` → `1.2.3`)
+- `raw` (default) - No transformation
+
+**Rationale**: Package managers require correctness over convenience. Explicit transforms are self-documenting and fail predictably. The common formats cover most cases without requiring recipe authors to learn complex syntax.
+
+---
+
+### Decision 2: Fallback for Tools Without Version Output
+
+**Question**: How should tsuku verify tools that don't support `--version`?
+
+**Context**: Some tools (like `gofumpt`) don't have version flags. We need a fallback that provides some verification confidence.
+
+**Options considered**:
+
+| Option | Approach | Security | Practicality |
+|--------|----------|----------|--------------|
+| A. Exit code only | Just check command succeeds | Weak | High |
+| B. Output pattern | Match expected output string | Medium | High |
+| C. Require functional tests | Must write behavioral tests | Strong | Low |
+| D. Skip verification | Allow opting out entirely | None | High |
+
+**Decision**: **Option B - Output pattern with required justification**
+
+For v1, tools without version output use `mode = "output"`:
 ```toml
 [verify]
-command = "biome --version"
-pattern = "Version: {version}"
-version_transform = "strip_prefix:biome@"
-```
-
-Or with multiple transforms:
-```toml
-version_transforms = ["strip_prefix:v", "strip_suffix:-0"]
-```
-
-**Pros:**
-- Explicit and self-documenting - maintainer intent is clear
-- Handles any version format mismatch
-- Recipe author has full control
-- No magic or heuristics
-- Predictable behavior
-
-**Cons:**
-- Verbose for common cases (v-prefix is very common)
-- Recipe authors must understand transform syntax
-- Doesn't address tools without version output
-- Adds complexity to recipe format
-- Doesn't compose well - chaining multiple transforms is awkward
-- Requires defining all transform types upfront
-
-### Option 2: Automatic Version Normalization
-
-Automatically extract semver from version strings using heuristics.
-
-The executor would:
-1. Strip common prefixes: `v`, `release-`, `tool@`
-2. Extract semver pattern: `\d+\.\d+\.\d+`
-3. Use normalized version for `{version}` expansion
-
-```toml
-[verify]
-command = "biome --version"
-pattern = "Version: {version}"
-# biome@2.3.8 automatically becomes 2.3.8
-```
-
-**Pros:**
-- Zero configuration for common cases
-- Existing recipes may work without changes
-- Simple recipe format
-- Gradual improvement over status quo
-
-**Cons:**
-- Magic behavior may surprise users
-- Heuristics won't work for all formats
-- Hard to debug when normalization fails silently
-- Creates invisible contract - authors don't know what heuristics match
-- Heuristics may break when tools change output format
-- Doesn't address tools without version output
-
-**Note:** This option alone is insufficient for a package manager where correctness matters. However, the auto-normalization approach could be combined with explicit fallbacks (see Option 5).
-
-### Option 3: Verification Modes
-
-Introduce explicit verification modes that change how verification works.
-
-```toml
-[verify]
-mode = "version"  # default - requires {version} pattern match
-command = "tool --version"
-pattern = "{version}"
-```
-
-```toml
-[verify]
-mode = "functional"  # tool runs successfully = verified
-command = "tool --help"
-# pattern optional, just checks exit code
-```
-
-```toml
-[verify]
-mode = "output"  # custom output matching, no version requirement
-command = "tool info"
-pattern = "Tool v"
-```
-
-**Pros:**
-- Clear intent - mode declares verification strategy
-- Validator can enforce appropriate patterns per mode
-- Accommodates tools without version output
-- Extensible for future modes
-
-**Cons:**
-- Breaking change if mode becomes required
-- Three concepts to learn instead of one
-- Doesn't solve version format mismatch (still need transforms)
-
-### Option 4: Tiered Verification with Fallback
-
-Combine version verification with fallback strategies. Require version verification by default, but allow explicit opt-out with justification.
-
-```toml
-[verify]
-command = "tool --version"
-pattern = "{version}"
-version_format = "semver_core"  # optional: extract 1.2.3 from any format
-```
-
-For tools without version support:
-```toml
-[verify]
-command = "tool --help"
-pattern = "Usage:"
-skip_version_check = true
-skip_reason = "Tool does not support --version"
-```
-
-**Pros:**
-- Version check is the default expectation
-- Explicit opt-out requires justification
-- Validator can flag recipes without version checks
-- Combines format normalization with fallback support
-
-**Cons:**
-- Two features in one (format + fallback)
-- `skip_reason` is verbose
-- May encourage lazy opt-outs
-
-### Option 5: Smart Defaults with Override
-
-Use automatic normalization as default, but allow explicit `{version_raw}` for cases where the raw version string is needed.
-
-```toml
-[verify]
-command = "biome --version"
-pattern = "Version: {version}"  # auto-normalized: biome@2.3.8 → 2.3.8
-```
-
-```toml
-[verify]
-command = "go version"
-pattern = "go{version_raw}"  # raw: go1.21.0 (no normalization)
-```
-
-For tools without version output, use empty pattern with explicit command:
-```toml
-[verify]
+mode = "output"
 command = "gofumpt -h"
-pattern = "usage:"  # no {version} = no version check
+pattern = "usage:"
+reason = "Tool does not support --version flag"
 ```
 
-**Pros:**
-- Common case (normalized version) is simple
-- Raw version available when needed
-- Empty/non-version patterns work naturally
-- Backward compatible
+**Rationale**: Output patterns provide better confidence than exit code alone, while remaining practical for recipe authors. The required `reason` field documents why version verification isn't possible and enables validator enforcement.
 
-**Cons:**
-- Two placeholders to understand
-- Auto-normalization is still heuristic-based
-- No explicit "I know this doesn't have version check" signal
+---
 
-## Options Comparison
+### Decision 3: Verification Mode Naming
 
-| Criterion | Option 1 | Option 2 | Option 3 | Option 4 | Option 5 |
-|-----------|----------|----------|----------|----------|----------|
-| Version accuracy | Good | Fair | Good | Good | Good |
-| Recipe simplicity | Poor | Good | Fair | Fair | Good |
-| Backward compat | Good | Good | Poor | Good | Good |
-| Fail-safe defaults | Good | Poor | Good | Good | Fair |
-| Minimal config | Poor | Good | Fair | Fair | Good |
-| Validation coverage | Fair | Poor | Good | Good | Fair |
+**Question**: What should the verification modes be called in v1, given that we plan to add Homebrew-style functional tests later?
 
-### Uncertainties
+**Context**: The initial design used `mode = "functional"` for the weak fallback. But true functional testing (verifying tool behavior) is planned for future work.
 
-- **Normalization accuracy**: We haven't measured how many recipes would benefit from auto-normalization vs. break from it
-- **Recipe author burden**: Unknown how many recipe authors would find transforms confusing vs. helpful
-- **Version format diversity**: The full range of version formats in the wild is not fully catalogued
-- **Validator strictness**: Unclear whether strict validation should require version checks or just encourage them
+**Options considered**:
+
+| Option | v1 Modes | Future Compatibility |
+|--------|----------|---------------------|
+| A. Use "functional" now | `version`, `functional` | Confusing when real tests added |
+| B. Rename to "output" | `version`, `output` | Clean - reserve "functional" for future |
+| C. Split now | `version`, `output`, `functional` (reserved) | Clear but more complex |
+
+**Decision**: **Option B - Use "output" for v1 fallback, reserve "functional"**
+
+v1 modes:
+- `version` (default) - Verify exact version via `{version}` pattern
+- `output` - Custom pattern matching without version (weak fallback)
+
+Future (v2+):
+- `functional` - Homebrew-style behavioral tests (e.g., `echo '{"foo":1}' | jq .foo`)
+
+**Rationale**: Names should match what they do. "Output" accurately describes "check command output matches pattern." Reserving "functional" prevents confusion when we add real behavioral testing later.
+
+---
+
+### Decision 4: Validator Strictness
+
+**Question**: How should `--strict` validation handle recipes with weak verification?
+
+**Options considered**:
+
+| Option | Behavior |
+|--------|----------|
+| A. Errors only | Only error on invalid syntax |
+| B. Warn on weak patterns | Warn if version mode lacks `{version}` |
+| C. Require justification | Error if output mode lacks `reason` |
+
+**Decision**: **Combination of B and C**
+
+- Warn if `version` mode pattern doesn't contain `{version}` (likely mistake)
+- Error if `output` mode lacks `reason` field (missing documentation)
+- Existing recipes get warnings for backward compatibility
+
+**Rationale**: Encourages best practices without blocking adoption. The `reason` field ensures weak verification is documented and intentional.
+
+---
 
 ### Assumptions
 
@@ -356,22 +282,24 @@ The following assumptions underlie this design:
 
 ## Decision Outcome
 
-**Chosen option: Hybrid of Option 1 (Transform Directives) + Option 3 (Verification Modes)**
+Based on the decisions above, the v1 implementation provides:
 
-This approach provides explicit version format transforms for the version mismatch problem, combined with verification modes for tools that don't support version output. It prioritizes explicitness and correctness over convenience.
+1. **Version verification with explicit transforms** (Decision 1) - The default mode that works for ~95% of tools
+2. **Output mode as fallback** (Decisions 2 & 3) - For tools without `--version`, with required justification
+3. **Functional mode reserved** (Decision 3) - For future Homebrew-style behavioral tests
 
-### Rationale
+### Why Version Verification First
 
-Version verification is chosen as the **foundation** of tsuku's verification strategy because:
+Version verification is the **foundation** of tsuku's verification strategy because:
 
-1. **Universal applicability**: ~95% of tools support `--version` or equivalent, making version verification the most automatable baseline
+1. **Universal applicability**: ~95% of tools support `--version` or equivalent, making it the most automatable baseline
 2. **Supply chain detection**: Version checks detect wrong/outdated versions, rollback attacks, and some supply chain compromises
 3. **No custom code required**: Unlike functional tests, version verification works without per-recipe test authoring
 
 This is the **first verification method** we support, not the only one. Future work will add:
-- **Functional testing** (stronger behavioral guarantees)
-- **Cryptographic verification** (supply chain integrity)
-- **Checksum pinning** (tamper detection)
+- **Functional testing** (stronger behavioral guarantees) - v2
+- **Cryptographic verification** (supply chain integrity) - future
+- **Checksum pinning** (tamper detection) - future
 
 These are **complementary**, not competing alternatives - each addresses different concerns.
 
@@ -379,34 +307,23 @@ These are **complementary**, not competing alternatives - each addresses differe
 
 1. **Version accuracy** (Driver 1): Explicit transforms ensure the recipe author controls exactly how version strings are normalized. No heuristic guessing.
 
-2. **Recipe simplicity** (Driver 2): Common transforms (strip `v` prefix) can have shorthand names. Most recipes won't need transforms at all.
+2. **Recipe simplicity** (Driver 2): Four predefined formats (`semver`, `semver_full`, `strip_v`, `raw`) cover ~95% of cases. Most recipes won't need transforms at all.
 
-3. **Backward compatibility** (Driver 3): Existing recipes continue working. New fields are optional.
+3. **Backward compatibility** (Driver 3): Existing recipes continue working. New fields are optional. Default mode is `version` with `raw` format.
 
-4. **Fail-safe defaults** (Driver 4): The default mode is `version`, requiring `{version}` in pattern. The `functional` mode is a fallback for tools that genuinely cannot report version, not an alternative strategy.
+4. **Fail-safe defaults** (Driver 4): The default mode is `version`, requiring `{version}` in pattern. The `output` mode is a fallback for tools that genuinely cannot report version, not an alternative strategy.
 
-5. **Validation coverage** (Driver 6): The validator can enforce that:
-   - `version` mode has `{version}` in pattern
-   - `functional` mode has a `reason` explaining why version check isn't possible
-   - Empty patterns are only allowed with explicit mode
-
-### Alternatives Rejected
-
-- **Option 2 (Auto-normalization)**: Magic heuristics are inappropriate for a package manager where correctness matters. Silent failures undermine user trust.
-
-- **Option 4 (Tiered with fallback)**: The `skip_version_check` + `skip_reason` approach conflates two concerns. Separate mode selection is cleaner.
-
-- **Option 5 (Smart defaults)**: The `{version}` vs `{version_raw}` split adds cognitive overhead. Recipe authors shouldn't need to understand normalization internals.
+5. **Validation coverage** (Driver 6): The validator enforces that:
+   - `version` mode has `{version}` in pattern (warn if missing)
+   - `output` mode has a `reason` explaining why version check isn't possible (error if missing)
 
 ### Trade-offs Accepted
 
-By choosing this option, we accept:
+1. **More verbose recipes for edge cases**: Tools with unusual version formats need explicit `version_format` configuration.
 
-1. **More verbose recipes for edge cases**: Tools with unusual version formats need explicit transform configuration.
+2. **Two new concepts**: Recipe authors may need to learn `version_format` (for transforms) and `mode` (for fallback). Most recipes need neither.
 
-2. **Two new concepts**: Recipe authors must understand both transforms and modes (though most recipes need neither).
-
-3. **Migration burden**: Recipes currently using weak patterns should be updated to use appropriate modes.
+3. **Migration burden**: Recipes currently using weak patterns should be updated to use `mode = "output"` with `reason`.
 
 These are acceptable because:
 - Verbosity is localized to the ~40 recipes with version mismatches
@@ -419,7 +336,7 @@ These are acceptable because:
 
 The solution adds two optional fields to the `[verify]` section:
 
-1. **`mode`**: Declares the verification strategy (`version`, `functional`, or `output`)
+1. **`mode`**: Declares the verification strategy (`version` or `output`; `functional` reserved for v2)
 2. **`version_format`**: Specifies how to transform the version string before pattern expansion
 
 ### Recipe Format
@@ -437,35 +354,29 @@ command = "biome --version"
 pattern = "Version: {version}"
 version_format = "semver"  # strips prefixes like "biome@", "v", extracts X.Y.Z
 
-# Functional mode: verify core functionality works (strongest)
-# Test adapted from Homebrew formula
-[verify]
-mode = "functional"
-command = "sh"
-args = ["-c", "echo '{\"foo\":1, \"bar\":2}' | jq .bar | grep -q '^2$'"]
-reason = "Verifies jq can parse JSON and execute filters (from Homebrew test)"
-
-# Functional mode: minimal verification for tools without --version
-[verify]
-mode = "functional"
-command = "gofumpt -h"
-pattern = "usage:"  # optional in functional mode
-reason = "Tool does not support --version flag"
-
-# Output mode: custom pattern without version requirement
+# Output mode: fallback for tools without --version
 [verify]
 mode = "output"
-command = "tool info"
-pattern = "Tool v"
+command = "gofumpt -h"
+pattern = "usage:"
+reason = "Tool does not support --version flag"
+
+# Future (v2): Functional mode with Homebrew-style behavioral tests
+# [verify]
+# mode = "functional"
+# command = "sh"
+# args = ["-c", "echo '{\"foo\":1}' | jq .foo"]
+# expected_output = "1"
+# reason = "Verifies jq can parse JSON (from Homebrew test)"
 ```
 
 ### Verification Modes
 
-| Mode | Purpose | Pattern | `{version}` |
-|------|---------|---------|-------------|
-| `version` (default) | Verify exact version installed | Required, must contain `{version}` | Expanded from resolved version |
-| `functional` | Verify tool runs successfully | Optional | Not expanded |
-| `output` | Custom output matching | Required | Not expanded |
+| Mode | Purpose | Pattern | `{version}` | Strength |
+|------|---------|---------|-------------|----------|
+| `version` (default) | Verify exact version installed | Required, must contain `{version}` | Expanded from resolved version | Strong |
+| `output` | Fallback for tools without version | Required | Not expanded | Weak |
+| `functional` (v2) | Homebrew-style behavioral tests | TBD | Not expanded | Strongest |
 
 ### Version Format Transforms
 
@@ -482,10 +393,11 @@ Custom transforms can be added later (e.g., `strip_prefix:biome@`) but the commo
 
 ### Edge Cases
 
-- **`version_format` with non-version mode**: If `mode = "functional"` and `version_format` is set, the format is ignored (no `{version}` to expand)
+- **`version_format` with output mode**: If `mode = "output"` and `version_format` is set, the format is ignored (no `{version}` to expand)
 - **Pattern without `{version}` in version mode**: Validator warns but allows; pattern is matched literally
 - **Unknown `version_format`**: Treated as `raw` with warning; allows forward compatibility
 - **Transform fails to extract version**: Falls back to raw version with warning
+- **`mode = "functional"` in v1**: Validator errors with message to use `output` mode instead (reserved for v2)
 
 ### Component Changes
 
@@ -529,7 +441,8 @@ Custom transforms can be added later (e.g., `strip_prefix:biome@`) but the commo
 
 - Add mode-specific validation rules
 - Warn if `version` mode pattern lacks `{version}`
-- Require `reason` field for `functional` mode
+- Require `reason` field for `output` mode
+- Error if `mode = "functional"` used (reserved for v2)
 - Expand dangerous pattern detection to include `||`, `&&`, `eval`, `exec`, `$()`, backticks
 - Update `--strict` to enforce mode requirements
 
@@ -544,7 +457,7 @@ Custom transforms can be added later (e.g., `strip_prefix:biome@`) but the commo
 
 - Audit existing recipes for verification patterns
 - Update recipes with version mismatches to use appropriate `version_format`
-- Update recipes without version output to use `functional` mode
+- Update recipes without version output to use `output` mode with `reason`
 
 ### Phase 6 (Future): Homebrew Test Import
 
@@ -605,7 +518,7 @@ Custom transforms can be added later (e.g., `strip_prefix:biome@`) but the commo
 
 **Risks**:
 - If verification is bypassed or misconfigured, a wrong version could be installed silently
-- The `functional` mode provides minimal verification (only checks command runs)
+- The `output` mode provides weak verification (checks pattern, not version)
 - Version format transforms could theoretically mask version mismatches
 
 ### Execution Isolation
@@ -653,7 +566,7 @@ No new data is collected or transmitted.
 
 | Risk | Mitigation | Residual Risk |
 |------|------------|---------------|
-| Weak verification in `functional` mode | Require `reason` field; validator flags missing reasons | Lazy authors may provide poor justifications |
+| Weak verification in `output` mode | Require `reason` field; validator flags missing reasons | Lazy authors may provide poor justifications |
 | Malicious verify commands | Validator warns about dangerous patterns; recipe review process | Sophisticated attacks may evade pattern detection |
 | Wrong version installed silently | Default to `version` mode; strict validation | User must explicitly opt into weaker modes |
 | Version format transforms hide issues | Transforms are explicit and auditable in recipe | None - transforms are visible |
@@ -670,11 +583,11 @@ Different verification methods provide different guarantees. They are **compleme
 
 | Method | What it Guarantees | What it Cannot Detect | Relationship |
 |--------|-------------------|----------------------|--------------|
-| **Version verification** | Correct version installed | Backdoored binary that reports correct version | Foundation - automatable baseline |
-| **Functional testing** | Core functionality works | Version-specific bugs not covered by test | Complements version (behavior proof) |
-| **Cryptographic verification** | Artifact is authentic/untampered | Compromised upstream that signs malicious releases | Complements version (integrity proof) |
-| **Checksum pinning** | Installed binary hasn't changed | Initial compromise if checksum computed post-attack | Temporal complement (ongoing integrity) |
-| **Dependency verification** | Runtime deps are present | Tool bugs unrelated to deps | Precondition for functional tests |
+| **Version verification** (v1) | Correct version installed | Backdoored binary that reports correct version | Foundation - automatable baseline |
+| **Output matching** (v1 fallback) | Tool produces expected output | Wrong version if output is version-agnostic | Weak fallback when version unavailable |
+| **Functional testing** (v2) | Core functionality works | Version-specific bugs not covered by test | Complements version (behavior proof) |
+| **Cryptographic verification** (future) | Artifact is authentic/untampered | Compromised upstream that signs malicious releases | Complements version (integrity proof) |
+| **Checksum pinning** (future) | Installed binary hasn't changed | Initial compromise if checksum computed post-attack | Temporal complement (ongoing integrity) |
 
 ### Defense-in-Depth Layers
 
