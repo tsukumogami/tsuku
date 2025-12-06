@@ -26,11 +26,11 @@ None
 
 ## Implementation Steps
 
-- [ ] Add `RecipeTypeTool` and `RecipeTypeLibrary` constants to types.go
-- [ ] Add `Type` field to `MetadataSection` struct
-- [ ] Add type validation to `validateMetadata()` in validator.go
-- [ ] Add parsing test for type field in types_test.go
-- [ ] Add validation tests for valid and invalid type values in validator_test.go
+- [x] Add `RecipeTypeTool` and `RecipeTypeLibrary` constants to types.go
+- [x] Add `Type` field to `MetadataSection` struct
+- [x] Add type validation to `validateMetadata()` in validator.go
+- [x] Add parsing test for type field in types_test.go
+- [x] Add validation tests for valid and invalid type values in validator_test.go
 
 ## Testing Strategy
 
@@ -43,10 +43,10 @@ None
 
 ## Success Criteria
 
-- [ ] `type` field added to metadata schema (valid values: "tool", "library"; default: "tool")
-- [ ] Recipe validation accepts `type = "library"`
-- [ ] Unit tests for schema validation
-- [ ] All existing tests pass
+- [x] `type` field added to metadata schema (valid values: "tool", "library"; default: "tool")
+- [x] Recipe validation accepts `type = "library"`
+- [x] Unit tests for schema validation
+- [x] All existing tests pass
 
 ## Open Questions
 

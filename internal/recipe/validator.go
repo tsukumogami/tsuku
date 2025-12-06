@@ -107,6 +107,16 @@ func validateMetadata(result *ValidationResult, r *Recipe) {
 	if r.Metadata.Description == "" {
 		result.addWarning("metadata.description", "description is recommended")
 	}
+
+	// Validate type field
+	validTypes := map[string]bool{
+		RecipeTypeTool:    true,
+		RecipeTypeLibrary: true,
+		"":                true, // Empty defaults to "tool"
+	}
+	if !validTypes[r.Metadata.Type] {
+		result.addError("metadata.type", fmt.Sprintf("invalid type '%s' (valid values: tool, library)", r.Metadata.Type))
+	}
 }
 
 // validateVersion checks the version section

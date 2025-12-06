@@ -23,6 +23,7 @@ type MetadataSection struct {
 	Dependencies        []string `toml:"dependencies"`         // Install-time dependencies
 	RuntimeDependencies []string `toml:"runtime_dependencies"` // Runtime dependencies (must be exposed)
 	Tier                int      `toml:"tier"`                 // Installation tier: 1=binary, 2=package manager, 3=nix
+	Type                string   `toml:"type"`                 // Recipe type: "tool" (default) or "library"
 }
 
 // VersionSection specifies how to resolve versions
@@ -110,6 +111,14 @@ func (s Step) ToMap() map[string]interface{} {
 
 	return result
 }
+
+// Recipe types
+const (
+	// RecipeTypeTool is the default type for recipes that install tools
+	RecipeTypeTool = "tool"
+	// RecipeTypeLibrary is for recipes that install shared libraries
+	RecipeTypeLibrary = "library"
+)
 
 // Verification modes
 const (
