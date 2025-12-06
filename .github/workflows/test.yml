@@ -5,6 +5,9 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  schedule:
+    # Run nightly at 00:00 UTC for recipe validation
+    - cron: '0 0 * * *'
 
 jobs:
   unit-tests:
@@ -89,26 +92,42 @@ jobs:
           echo "linux=$LINUX" >> $GITHUB_OUTPUT
           echo "macos=$MACOS" >> $GITHUB_OUTPUT
 
-  # Validate embedded recipes when they change
+  # Validate embedded recipes when they change or on schedule
   validate-recipes:
     name: Validate Recipes
     needs: matrix
-    if: ${{ needs.matrix.outputs.recipes == 'true' }}
+    # Run on recipe changes, or on scheduled runs (nightly)
+    if: ${{ needs.matrix.outputs.recipes == 'true' || github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          python-version: '3.11'
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
 
-      - name: Validate recipes (TOML syntax and metadata)
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Validate all recipes
         run: |
-          cd internal/recipe
-          python3 ../../scripts/generate-registry.py
-          echo "Validated $(find recipes -name '*.toml' | wc -l) recipes"
+          failed=0
+          for recipe in internal/recipe/recipes/*/*.toml; do
+            if ! ./tsuku validate --strict "$recipe"; then
+              failed=$((failed + 1))
+            fi
+          done
+
+          total=$(find internal/recipe/recipes -name '*.toml' | wc -l)
+          echo "Validated $total recipes"
+
+          if [ $failed -gt 0 ]; then
+            echo "::error::$failed recipe(s) failed validation"
+            exit 1
+          fi
 
   integration-linux:
     name: "Linux: ${{ matrix.test.tool }}"

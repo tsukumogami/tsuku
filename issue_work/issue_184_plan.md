@@ -27,10 +27,10 @@ None
 
 - [x] Fix validator to recognize `go_install` action
 - [x] Fix validator to recognize `nixpkgs` version source (goproxy was already recognized)
-- [ ] Update test.yml to add schedule trigger for recipe validation (nightly at 00:00 UTC)
-- [ ] Replace Python-based validation with Go-based tsuku validate --strict
-- [ ] Verify workflow syntax is valid
-- [ ] Test locally that tsuku validate --strict works on all recipes
+- [x] Update test.yml to add schedule trigger for recipe validation (nightly at 00:00 UTC)
+- [x] Replace Python-based validation with Go-based tsuku validate --strict
+- [x] Verify workflow syntax is valid
+- [x] Test locally that tsuku validate --strict works on all recipes
 
 Mark each step [x] after it is implemented and committed. This enables clear resume detection.
 
