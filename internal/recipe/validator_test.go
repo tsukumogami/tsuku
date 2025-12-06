@@ -802,3 +802,211 @@ command = "perlcritic --version"
 		}
 	}
 }
+
+func TestValidateBytes_ExpandedDangerousPatterns(t *testing.T) {
+	tests := []struct {
+		name    string
+		command string
+		pattern string
+	}{
+		{"conditional or", "test || echo fail", "||"},
+		{"conditional and", "test && echo pass", "&&"},
+		{"eval command", "eval test", "eval"},
+		{"eval in middle", "foo eval bar", "eval"},
+		{"exec command", "exec test", "exec"},
+		{"exec in middle", "foo exec bar", "exec"},
+		{"command substitution dollar", "echo $(whoami)", "$()"},
+		{"command substitution backtick", "echo `whoami`", "`"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "` + tt.command + `"
+`
+			result := ValidateBytes([]byte(recipe))
+
+			if !hasWarning(result, "verify.command", tt.pattern) {
+				t.Errorf("expected warning about dangerous pattern '%s', got warnings: %v", tt.pattern, result.Warnings)
+			}
+		})
+	}
+}
+
+func TestValidateBytes_VerifyModeVersion(t *testing.T) {
+	// Default mode (version) should warn if pattern doesn't contain {version}
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "test --version"
+pattern = "v\\d+\\.\\d+\\.\\d+"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	// Should be valid but with warning about missing {version}
+	if !result.Valid {
+		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+	}
+	if !hasWarning(result, "verify.pattern", "{version}") {
+		t.Error("expected warning about missing {version} in pattern")
+	}
+}
+
+func TestValidateBytes_VerifyModeVersionWithVersion(t *testing.T) {
+	// Version mode with {version} should not have warning
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "test --version"
+pattern = "{version}"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+	}
+	// Should NOT have warning about {version}
+	for _, w := range result.Warnings {
+		if strings.Contains(w.Field, "pattern") && strings.Contains(w.Message, "{version}") {
+			t.Errorf("should NOT have warning about {version} when present, got: %v", w)
+		}
+	}
+}
+
+func TestValidateBytes_VerifyModeOutput(t *testing.T) {
+	// Output mode without reason should be error
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test v"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected invalid recipe due to missing reason in output mode")
+	}
+	if !hasError(result, "verify.reason", "requires a reason") {
+		t.Errorf("expected error about missing reason, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyModeOutputWithReason(t *testing.T) {
+	// Output mode with reason should be valid
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "test --version"
+mode = "output"
+pattern = "test v"
+reason = "Tool does not output version in a parseable format"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyModeFunctional(t *testing.T) {
+	// Functional mode should be error (reserved for v2)
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "test --version"
+mode = "functional"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected invalid recipe due to functional mode being reserved")
+	}
+	if !hasError(result, "verify.mode", "reserved") {
+		t.Errorf("expected error about functional mode being reserved, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyModeUnknown(t *testing.T) {
+	// Unknown mode should be error
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "test --version"
+mode = "invalid_mode"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected invalid recipe due to unknown mode")
+	}
+	if !hasError(result, "verify.mode", "unknown verification mode") {
+		t.Errorf("expected error about unknown mode, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_VerifyModeExplicitVersion(t *testing.T) {
+	// Explicit version mode should work the same as default
+	recipe := `
+[metadata]
+name = "test"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "test --version"
+mode = "version"
+pattern = "{version}"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+	}
+}

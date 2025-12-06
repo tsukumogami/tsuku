@@ -17,4 +17,6 @@ arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
 [verify]
 command = "python3 --version"
+mode = "output"
 pattern = "Python 3."
+reason = "python-standalone uses custom version format that differs from Python version"

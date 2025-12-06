@@ -13,4 +13,5 @@ arch_mapping = { amd64 = "x64" }
 
 [verify]
 command = "biome --version"
-pattern = "Version:"
+pattern = "{version}"
+version_format = "semver"

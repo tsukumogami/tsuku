@@ -179,9 +179,21 @@ func (e *Executor) shouldExecute(when map[string]string) bool {
 
 // verify runs the verification command
 func (e *Executor) verify() error {
+	// Apply version format transform if specified in verify section
+	verifyVersion := e.ctx.Version
+	if e.recipe.Verify.VersionFormat != "" {
+		transformed, err := version.TransformVersion(e.ctx.Version, e.recipe.Verify.VersionFormat)
+		if err != nil {
+			// Log warning but continue with original version
+			fmt.Printf("   Warning: version transform failed: %v\n", err)
+		} else {
+			verifyVersion = transformed
+		}
+	}
+
 	// Expand variables in command
 	vars := map[string]string{
-		"version":     e.ctx.Version,
+		"version":     verifyVersion,
 		"install_dir": e.installDir,
 		"binary":      filepath.Join(e.installDir, "bin", e.recipe.Metadata.Name),
 	}
@@ -214,8 +226,29 @@ func (e *Executor) verify() error {
 	cmd := exec.Command("sh", "-c", command)
 	cmd.Env = env
 	output, err := cmd.CombinedOutput()
+
+	// Check exit code - default expected is 0, but can be overridden
+	expectedExitCode := 0
+	if e.recipe.Verify.ExitCode != nil {
+		expectedExitCode = *e.recipe.Verify.ExitCode
+	}
+
 	if err != nil {
-		return fmt.Errorf("command failed: %w\nOutput: %s", err, string(output))
+		// Check if this is an exit error with the expected code
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			actualCode := exitErr.ExitCode()
+			if actualCode != expectedExitCode {
+				return fmt.Errorf("command failed with exit code %d (expected %d): %w\nOutput: %s",
+					actualCode, expectedExitCode, err, string(output))
+			}
+			// Exit code matches expected non-zero code, continue
+		} else {
+			return fmt.Errorf("command failed: %w\nOutput: %s", err, string(output))
+		}
+	} else if expectedExitCode != 0 {
+		// Command succeeded but we expected a non-zero exit code
+		return fmt.Errorf("command succeeded with exit code 0 (expected %d)\nOutput: %s",
+			expectedExitCode, string(output))
 	}
 
 	outputStr := strings.TrimSpace(string(output))

@@ -15,5 +15,8 @@ module = "golang.org/x/tools/cmd/goimports"
 executables = ["goimports"]
 
 [verify]
-command = "goimports -h 2>&1 || true"
+command = "goimports -h 2>&1"
+mode = "output"
 pattern = "usage:"
+exit_code = 2
+reason = "goimports has no --version flag, verify via help output"

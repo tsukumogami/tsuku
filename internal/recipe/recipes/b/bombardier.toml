@@ -12,4 +12,6 @@ binary = "bombardier"
 
 [verify]
 command = "bombardier --version"
-pattern = "bombardier version"
+mode = "output"
+pattern = "bombardier"
+reason = "bombardier binary does not embed version information"

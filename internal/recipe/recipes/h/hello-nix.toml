@@ -27,4 +27,6 @@ executables = ["hello"]
 
 [verify]
 command = "{install_dir}/bin/hello --version"
+mode = "output"
 pattern = "hello"
+reason = "nix package version differs from upstream GNU Hello version"
