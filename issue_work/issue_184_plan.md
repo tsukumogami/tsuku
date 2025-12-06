@@ -25,8 +25,8 @@ None
 
 ## Implementation Steps
 
-- [ ] Fix validator to recognize `go_install` action
-- [ ] Fix validator to recognize `goproxy` and `nixpkgs` version sources
+- [x] Fix validator to recognize `go_install` action
+- [x] Fix validator to recognize `nixpkgs` version source (goproxy was already recognized)
 - [ ] Update test.yml to add schedule trigger for recipe validation (nightly at 00:00 UTC)
 - [ ] Replace Python-based validation with Go-based tsuku validate --strict
 - [ ] Verify workflow syntax is valid

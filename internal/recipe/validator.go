@@ -126,6 +126,7 @@ func validateVersion(result *ValidationResult, r *Recipe) {
 		"go_toolchain":    true,
 		"goproxy":         true,
 		"metacpan":        true,
+		"nixpkgs":         true,
 		"":                true, // Empty is allowed (defaults to github_releases)
 	}
 
@@ -177,6 +178,7 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"npm_install":       true,
 		"pipx_install":      true,
 		"cargo_install":     true,
+		"go_install":        true,
 		"gem_install":       true,
 		"cpan_install":      true,
 		"nix_install":       true,
@@ -260,6 +262,11 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 	case "cargo_install":
 		if _, ok := step.Params["crate"]; !ok {
 			result.addError(stepField, "cargo_install action requires 'crate' parameter")
+		}
+
+	case "go_install":
+		if _, ok := step.Params["module"]; !ok {
+			result.addError(stepField, "go_install action requires 'module' parameter")
 		}
 
 	case "gem_install":
