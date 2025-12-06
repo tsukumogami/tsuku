@@ -16,4 +16,6 @@ executables = ["perltidy"]
 
 [verify]
 command = "perltidy --version"
+mode = "output"
 pattern = "perltidy"
+reason = "perltidy uses calver format, version output is non-standard"

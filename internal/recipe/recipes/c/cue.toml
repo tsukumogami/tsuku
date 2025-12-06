@@ -16,4 +16,4 @@ arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
 
 [verify]
 command = "cue version"
-pattern = "cue"
+pattern = "{version}"

@@ -19,4 +19,5 @@ arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
 
 [verify]
 command = "{install_dir}/bin/perl -v"
-pattern = "perl 5"
+pattern = "{version}"
+version_format = "semver"

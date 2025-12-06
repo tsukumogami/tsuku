@@ -426,27 +426,93 @@ func validateVerify(result *ValidationResult, r *Recipe) {
 	}
 
 	// Check for dangerous patterns in verify command
+	validateDangerousPatterns(result, r.Verify.Command)
+
+	// Validate verification mode
+	validateVerifyMode(result, r)
+}
+
+// validateDangerousPatterns checks for potentially dangerous patterns in verify commands
+func validateDangerousPatterns(result *ValidationResult, command string) {
 	// Patterns with word boundaries to avoid false positives on tool names (e.g., "terraform")
 	dangerous := []string{" rm ", "\trm ", "> /", "| sh", "| bash", "curl |", "wget |"}
 	for _, pattern := range dangerous {
-		if strings.Contains(r.Verify.Command, pattern) {
+		if strings.Contains(command, pattern) {
 			result.addWarning("verify.command", fmt.Sprintf("verify command contains potentially dangerous pattern '%s'", strings.TrimSpace(pattern)))
 		}
 	}
+
 	// Check if command starts with rm (word boundary at start)
-	if strings.HasPrefix(r.Verify.Command, "rm ") || strings.HasPrefix(r.Verify.Command, "rm\t") {
+	if strings.HasPrefix(command, "rm ") || strings.HasPrefix(command, "rm\t") {
 		result.addWarning("verify.command", "verify command contains potentially dangerous pattern 'rm'")
 	}
 
-	// Note: We don't warn about missing {version} in pattern because:
-	// 1. Many tools output versions in formats that differ from GitHub tags
-	//    (e.g., GitHub tag "biome@2.3.8" but tool outputs "Version: 2.3.8")
-	// 2. A pattern that matches the tool output (e.g., "Version:") is valid
-	// 3. Version verification is optional - some tools just need presence check
-	//
-	// TODO(#192): Once version format transformation is implemented, we can
-	// re-enable validation that patterns include {version} when transforms
-	// are available to normalize version formats.
+	// Expanded dangerous pattern detection (per design doc)
+	// Check for conditional execution operators
+	if strings.Contains(command, "||") {
+		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '||' (conditional execution); use exit_code field instead")
+	}
+	if strings.Contains(command, "&&") {
+		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '&&' (conditional execution)")
+	}
+
+	// Check for eval/exec with word boundaries
+	evalPatterns := []string{" eval ", "\teval ", " eval\t", ";eval ", " exec ", "\texec ", " exec\t", ";exec "}
+	for _, pattern := range evalPatterns {
+		if strings.Contains(command, pattern) {
+			keyword := strings.TrimSpace(strings.Trim(pattern, ";\t "))
+			result.addWarning("verify.command", fmt.Sprintf("verify command contains potentially dangerous pattern '%s' (arbitrary code execution)", keyword))
+			break // Only warn once per keyword type
+		}
+	}
+	// Check if command starts with eval or exec
+	if strings.HasPrefix(command, "eval ") || strings.HasPrefix(command, "eval\t") {
+		result.addWarning("verify.command", "verify command contains potentially dangerous pattern 'eval' (arbitrary code execution)")
+	}
+	if strings.HasPrefix(command, "exec ") || strings.HasPrefix(command, "exec\t") {
+		result.addWarning("verify.command", "verify command contains potentially dangerous pattern 'exec' (process replacement)")
+	}
+
+	// Check for command substitution
+	if strings.Contains(command, "$(") {
+		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '$()' (command substitution)")
+	}
+	if strings.Contains(command, "`") {
+		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '`' (command substitution)")
+	}
+}
+
+// validateVerifyMode checks mode-specific requirements
+func validateVerifyMode(result *ValidationResult, r *Recipe) {
+	mode := r.Verify.Mode
+	if mode == "" {
+		mode = VerifyModeVersion // Default mode
+	}
+
+	switch mode {
+	case VerifyModeVersion:
+		// Version mode should have {version} in pattern for proper verification
+		// This is a warning because version_format transforms can normalize versions
+		if r.Verify.Pattern != "" && !strings.Contains(r.Verify.Pattern, "{version}") {
+			result.addWarning("verify.pattern", "version mode pattern should include {version} for proper verification")
+		}
+
+	case VerifyModeOutput:
+		// Output mode requires a reason explaining why version verification isn't possible
+		if r.Verify.Reason == "" {
+			result.addError("verify.reason", "output mode requires a reason explaining why version verification is not possible")
+		}
+
+	case "functional":
+		// Functional mode is reserved for v2
+		result.addError("verify.mode", "functional mode is reserved for future implementation")
+
+	default:
+		// Unknown mode - error
+		if mode != "" {
+			result.addError("verify.mode", fmt.Sprintf("unknown verification mode '%s' (valid: version, output)", mode))
+		}
+	}
 }
 
 // suggestSimilar finds a similar string from the known set

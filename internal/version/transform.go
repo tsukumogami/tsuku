@@ -14,8 +14,9 @@ const MaxVersionLength = 128
 // ErrInvalidVersionString indicates the version string contains invalid characters or is too long
 var ErrInvalidVersionString = errors.New("invalid version string")
 
-// validVersionChars matches the allowed character set for version strings: [a-zA-Z0-9._+-]
-var validVersionChars = regexp.MustCompile(`^[a-zA-Z0-9._+-]+$`)
+// validVersionChars matches the allowed character set for version strings: [a-zA-Z0-9._+\-@/]
+// Includes @ and / to support scoped package names like @biomejs/biome@2.3.8
+var validVersionChars = regexp.MustCompile(`^[a-zA-Z0-9._+\-@/]+$`)
 
 // semverRegex extracts X.Y.Z from any format (ignores prerelease/build)
 var semverRegex = regexp.MustCompile(`(\d+)\.(\d+)\.(\d+)`)

@@ -37,7 +37,9 @@ func TestValidateVersionString(t *testing.T) {
 		{"contains brackets", "1.2.3[]", true},
 		{"contains quotes", "1.2.3\"", true},
 		{"contains ampersand", "1.2.3&", true},
-		{"contains at sign", "biome@1.2.3", true}, // @ is NOT in allowlist per design
+		// @ and / are allowed to support scoped package versions like @biomejs/biome@2.3.8
+		{"contains at sign", "biome@1.2.3", false},
+		{"scoped package", "@biomejs/biome@2.3.8", false},
 	}
 
 	for _, tt := range tests {
@@ -222,8 +224,10 @@ func TestTransformVersion_RealWorldExamples(t *testing.T) {
 		format  string
 		want    string
 	}{
-		// biome@2.3.8 → 2.3.8 (but @ is not in allowlist, so this would fail validation)
-		// {"biome format", "biome@2.3.8", recipe.VersionFormatSemver, "2.3.8"},
+		// biome@2.3.8 → 2.3.8 (@ is now allowed in version strings)
+		{"biome format", "biome@2.3.8", recipe.VersionFormatSemver, "2.3.8"},
+		// Scoped npm package format
+		{"scoped package format", "@biomejs/biome@2.3.8", recipe.VersionFormatSemver, "2.3.8"},
 
 		// v1.29.0 → 1.29.0
 		{"strip v prefix", "v1.29.0", recipe.VersionFormatStripV, "1.29.0"},

@@ -15,4 +15,6 @@ executables = ["cobra-cli"]
 
 [verify]
 command = "cobra-cli help"
+mode = "output"
 pattern = "Cobra is a CLI"
+reason = "cobra-cli outputs help text without version information"

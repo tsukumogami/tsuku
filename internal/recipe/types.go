@@ -138,6 +138,7 @@ type VerifySection struct {
 	Mode          string             `toml:"mode,omitempty"`
 	VersionFormat string             `toml:"version_format,omitempty"`
 	Reason        string             `toml:"reason,omitempty"`
+	ExitCode      *int               `toml:"exit_code,omitempty"` // Expected exit code (default: 0)
 	Additional    []AdditionalVerify `toml:"additional,omitempty"`
 }
 

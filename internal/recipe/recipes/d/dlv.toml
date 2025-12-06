@@ -16,4 +16,4 @@ executables = ["dlv"]
 
 [verify]
 command = "dlv version"
-pattern = "Delve Debugger"
+pattern = "{version}"
