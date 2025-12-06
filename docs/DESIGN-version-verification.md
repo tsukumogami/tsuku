@@ -68,18 +68,35 @@ Recipes should verify the exact installed version matches the requested version,
 
 ### Homebrew
 
-**Approach**: Homebrew uses a `test do` block in formulas that runs arbitrary shell commands after installation. Tests explicitly discourage `--version` checks.
+**Approach**: Homebrew uses a `test do` block in formulas that runs arbitrary shell commands after installation. The [Formula Cookbook](https://docs.brew.sh/Formula-Cookbook) encourages functional tests over version checks:
 
-From the [Formula Cookbook](https://docs.brew.sh/Formula-Cookbook):
-> "We want tests that don't require any user input and test the basic functionality of the application. For example `foo build-foo input.foo` is a good test and (despite their widespread use) `foo --version` and `foo --help` are bad tests."
+> "We want tests that don't require any user input and test the basic functionality of the application. For example `foo build-foo input.foo` is a good test and (despite their widespread use) `foo --version` and `foo --help` are bad tests. **However, a bad test is better than no test at all.**"
+
+**What Homebrew tests verify (examples from homebrew-core):**
+
+- **jq**: Parses JSON and extracts fields: `pipe_output("#{bin}/jq .bar", '{"foo":1, "bar":2}')`
+- **ripgrep**: Searches file contents: creates test file, runs `rg "pattern" testpath`
+- **tinyxml2**: Compiles and links against library: writes C++ code, compiles with `-ltinyxml2`, executes binary
+- **cmake**: Generates build files: writes CMakeLists.txt, runs `cmake .`
 
 **Trade-offs**:
-- Pro: Tests actual functionality, not just presence
+- Pro: Tests actual functionality (parsing, searching, linking), not just presence
+- Pro: Catches runtime issues version checks miss (segfaults, missing dependencies)
 - Pro: Flexible - any shell command can be a test
-- Con: Requires writing custom tests per formula
-- Con: Version verification is explicitly discouraged
+- Con: Requires writing custom tests per formula (human effort)
+- Con: Many formulas lack tests - they're optional in Homebrew
 
-**Relevance to tsuku**: Homebrew's philosophy is that version checks are weak validation. They prefer functional tests. However, tsuku's use case differs - we want to verify the *correct version* was installed, not just that the tool works.
+**Relevance to tsuku**: Homebrew and tsuku have complementary verification goals:
+
+| Verification Type | What it guarantees | When to use |
+|-------------------|-------------------|-------------|
+| **Functional test** (Homebrew-style) | Tool performs core functionality correctly | When test exists or can be written |
+| **Version verification** (tsuku default) | Correct version installed, not compromised/outdated | Automatable baseline for all tools |
+| **Exit code check** (fallback) | Tool runs without crashing | When tool lacks version output |
+
+**Key insight**: Version checks aren't useless - they're insufficient *as the sole verification*. Homebrew acknowledges "a bad test is better than no test" and many formulas use version checks as fallback. Tsuku should support both: version verification as automatable baseline, functional tests as stronger optional layer.
+
+**Opportunity**: Homebrew's test corpus could be imported. For tools with Homebrew tests, tsuku recipes could offer functional verification mode with tests adapted from formulas. This provides stronger guarantees without requiring recipe authors to write tests from scratch.
 
 ### asdf / mise
 
@@ -111,21 +128,31 @@ Python packages specifically run `checkPhase` as `installCheckPhase` because ver
 ### Research Summary
 
 **Common patterns:**
-- All systems run verification AFTER installation
-- Version output verification is either discouraged (Homebrew) or implicit (asdf)
-- Functional tests are preferred over version checks
+- All systems run verification AFTER installation (not at build time)
+- Multiple verification strengths exist: functional tests (strongest) → version checks (baseline) → exit code (weakest)
 - Cryptographic verification is separate from output verification
+- Test corpus reuse is valuable (Homebrew has ~5000 formulas with tests)
 
 **Key differences:**
-- Homebrew explicitly discourages `--version` tests
-- Nix distinguishes build-time vs install-time checks
-- mise adds optional cryptographic verification layer
+- **Homebrew**: Functional tests preferred, but acknowledges version checks have value ("bad test better than no test")
+- **Nix**: Distinguishes build-time (`checkPhase`) vs install-time (`installCheckPhase`) checks
+- **mise**: Adds optional cryptographic verification layer (Cosign/Minisign)
+- **asdf**: No explicit verification, relies on tool execution as proof of success
+
+**Verification hierarchy across systems:**
+
+| Strength | What it verifies | Homebrew | Nix | Tsuku (proposed) |
+|----------|------------------|----------|-----|------------------|
+| Strong | Core functionality works | `test do` block | `installCheckPhase` | `mode = "functional"` |
+| Medium | Correct version installed | Discouraged but used | Version assertions | `mode = "version"` (default) |
+| Weak | Tool executes without crash | Fallback | - | `mode = "functional"` + exit code |
 
 **Implications for tsuku:**
-1. **Version verification is valuable** but shouldn't be the only option
-2. **Functional verification** should be a first-class alternative for tools without version output
-3. **Keep it simple** - one verification step, not multiple phases
-4. **Separation of concerns** - version format transformation is distinct from verification strategy
+1. **Verification tiers** - Support functional tests as strongest option, version verification as automatable baseline, exit-code-only as fallback
+2. **Homebrew corpus reuse** - Import tests from Homebrew formulas for tools that have them (reduces recipe author burden)
+3. **Version format transforms** - Still needed for version verification tier (separate concern from verification strategy)
+4. **Keep it simple** - One verification step per recipe, not multiple phases like Nix
+5. **Clear opt-in** - Functional mode requires explicit `reason` field to document why used instead of version verification
 
 ## Considered Options
 
@@ -335,7 +362,20 @@ This approach provides explicit version format transforms for the version mismat
 
 ### Rationale
 
-This hybrid was chosen because:
+Version verification is chosen as the **foundation** of tsuku's verification strategy because:
+
+1. **Universal applicability**: ~95% of tools support `--version` or equivalent, making version verification the most automatable baseline
+2. **Supply chain detection**: Version checks detect wrong/outdated versions, rollback attacks, and some supply chain compromises
+3. **No custom code required**: Unlike functional tests, version verification works without per-recipe test authoring
+
+This is the **first verification method** we support, not the only one. Future work will add:
+- **Functional testing** (stronger behavioral guarantees)
+- **Cryptographic verification** (supply chain integrity)
+- **Checksum pinning** (tamper detection)
+
+These are **complementary**, not competing alternatives - each addresses different concerns.
+
+### Design Alignment with Decision Drivers
 
 1. **Version accuracy** (Driver 1): Explicit transforms ensure the recipe author controls exactly how version strings are normalized. No heuristic guessing.
 
@@ -343,11 +383,11 @@ This hybrid was chosen because:
 
 3. **Backward compatibility** (Driver 3): Existing recipes continue working. New fields are optional.
 
-4. **Fail-safe defaults** (Driver 4): The default mode is `version`, requiring `{version}` in pattern. Recipes must explicitly opt into weaker verification modes.
+4. **Fail-safe defaults** (Driver 4): The default mode is `version`, requiring `{version}` in pattern. The `functional` mode is a fallback for tools that genuinely cannot report version, not an alternative strategy.
 
 5. **Validation coverage** (Driver 6): The validator can enforce that:
    - `version` mode has `{version}` in pattern
-   - `functional` mode has a justification
+   - `functional` mode has a `reason` explaining why version check isn't possible
    - Empty patterns are only allowed with explicit mode
 
 ### Alternatives Rejected
@@ -397,7 +437,15 @@ command = "biome --version"
 pattern = "Version: {version}"
 version_format = "semver"  # strips prefixes like "biome@", "v", extracts X.Y.Z
 
-# Functional mode: just verify the tool runs
+# Functional mode: verify core functionality works (strongest)
+# Test adapted from Homebrew formula
+[verify]
+mode = "functional"
+command = "sh"
+args = ["-c", "echo '{\"foo\":1, \"bar\":2}' | jq .bar | grep -q '^2$'"]
+reason = "Verifies jq can parse JSON and execute filters (from Homebrew test)"
+
+# Functional mode: minimal verification for tools without --version
 [verify]
 mode = "functional"
 command = "gofumpt -h"
@@ -498,6 +546,34 @@ Custom transforms can be added later (e.g., `strip_prefix:biome@`) but the commo
 - Update recipes with version mismatches to use appropriate `version_format`
 - Update recipes without version output to use `functional` mode
 
+### Phase 6 (Future): Homebrew Test Import
+
+**Goal**: Leverage Homebrew's test corpus to provide stronger verification for tsuku recipes.
+
+**Approach**: Manual curation rather than automated parsing
+- Homebrew's JSON API does not include `test do` blocks
+- Ruby formula parsing is complex (Ruby DSL with Homebrew helpers)
+- Many Homebrew tests require translation (e.g., `pipe_output`, `assert_equal`, `testpath`)
+
+**Strategy**:
+1. Identify high-value tools (top 50 by install count in tsuku)
+2. Check if Homebrew formula has a `test do` block
+3. Manually translate test to tsuku `[verify]` format
+4. Document source in recipe comment: `# Test adapted from Homebrew formula`
+5. Track in registry metadata which recipes have Homebrew-derived tests
+
+**Example translations**:
+
+| Homebrew (Ruby) | Tsuku (TOML) |
+|-----------------|--------------|
+| `pipe_output("#{bin}/jq .bar", '{"foo":1, "bar":2}')` | `command = "sh"`, `args = ["-c", "echo '...' \| jq .bar"]` |
+| `(testpath/"test.txt").write("data")` | Use temporary directory in shell script |
+| `system bin/"rg", "pattern", testpath` | `command = "sh"`, `args = ["-c", "echo 'data' > test.txt && rg 'pattern' ."]` |
+
+**Maintenance**: Update tests when Homebrew formulas change (quarterly audit)
+
+**Out of scope for Phase 6**: Automated Ruby formula parsing, `test_dependencies` handling, complex multi-step tests requiring Homebrew helpers
+
 ## Consequences
 
 ### Positive
@@ -583,4 +659,187 @@ No new data is collected or transmitted.
 | Version format transforms hide issues | Transforms are explicit and auditable in recipe | None - transforms are visible |
 | Command injection via version strings | Version string validation (allowlist chars, max length) | Compromised provider could still serve malicious content within constraints |
 | Conditional execution in verify commands | Expanded pattern detection for `\|\|`, `&&`, `eval`, `$()` | Novel obfuscation techniques may evade detection |
+
+## Future Verification Methods
+
+This design establishes version verification as the **foundational layer** of tsuku's verification strategy. The following methods address complementary concerns and should be explored as future enhancements.
+
+### Verification Taxonomy
+
+Different verification methods provide different guarantees. They are **complementary**, not competing alternatives:
+
+| Method | What it Guarantees | What it Cannot Detect | Relationship |
+|--------|-------------------|----------------------|--------------|
+| **Version verification** | Correct version installed | Backdoored binary that reports correct version | Foundation - automatable baseline |
+| **Functional testing** | Core functionality works | Version-specific bugs not covered by test | Complements version (behavior proof) |
+| **Cryptographic verification** | Artifact is authentic/untampered | Compromised upstream that signs malicious releases | Complements version (integrity proof) |
+| **Checksum pinning** | Installed binary hasn't changed | Initial compromise if checksum computed post-attack | Temporal complement (ongoing integrity) |
+| **Dependency verification** | Runtime deps are present | Tool bugs unrelated to deps | Precondition for functional tests |
+
+### Defense-in-Depth Layers
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ Layer 4: Functional Testing (Future)                            │
+│ Guarantees: Tool performs core operations correctly             │
+│ Example: echo '{"foo":1}' | jq .foo → 1                         │
+├─────────────────────────────────────────────────────────────────┤
+│ Layer 3: Checksum Pinning (Future)                              │
+│ Guarantees: Installed binary hasn't been modified post-install  │
+│ Example: SHA256 of $TSUKU_HOME/tools/jq-1.7/bin/jq              │
+├─────────────────────────────────────────────────────────────────┤
+│ Layer 2: Version Verification (This Design)                     │
+│ Guarantees: Correct version was installed and reports correctly │
+│ Example: jq --version → jq-1.7                                  │
+├─────────────────────────────────────────────────────────────────┤
+│ Layer 1: Cryptographic Verification (Existing/Partial)          │
+│ Guarantees: Downloaded artifact matches expected checksum       │
+│ Example: SHA256 of downloaded archive                           │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### Future Feature: Functional Testing
+
+**Purpose**: Verify installed tools actually work, not just that they report the correct version.
+
+**Value proposition**:
+- Catches corrupted or incomplete installations that pass version checks
+- Verifies tool works on the target system (architecture, dependencies)
+- Provides strongest runtime guarantee
+
+**Potential recipe format**:
+```toml
+[[verify.tests]]
+name = "parse_json"
+command = "sh"
+args = ["-c", "echo '{\"foo\":1}' | jq .foo"]
+expected_output = "1"
+
+[[verify.tests]]
+name = "filter_array"
+command = "sh"
+args = ["-c", "echo '[1,2,3]' | jq '.[1]'"]
+expected_output = "2"
+```
+
+**Complexity**: Medium
+- Test orchestration framework needed
+- Timeout handling for hanging tests
+- Temporary directory management for file-based tests
+
+**Dependencies**: Version verification (this design) should be stable first
+
+**Suggested issue**: `Explore: Functional test suites for recipe verification`
+
+### Future Feature: Cryptographic Signature Verification
+
+**Purpose**: Verify binary authenticity using signatures (Cosign, Minisign, GPG) and SLSA provenance.
+
+**Value proposition**:
+- Protects against compromised mirrors serving modified binaries
+- Verifies binaries were built by legitimate CI systems
+- Industry best practice for supply chain security
+
+**Potential recipe format**:
+```toml
+[download]
+url = "https://example.com/tool-{version}.tar.gz"
+
+[download.signature]
+method = "cosign"  # or "minisign", "gpg"
+public_key_url = "https://example.com/cosign.pub"
+```
+
+**Complexity**: High
+- Multiple signature standards to support
+- Key distribution and trust model
+- Not all upstream projects provide signatures
+
+**Dependencies**: Download infrastructure changes
+
+**Suggested issue**: `Explore: Cryptographic signature verification for supply chain security`
+
+### Future Feature: Post-Install Checksum Pinning
+
+**Purpose**: Detect post-installation tampering by storing and verifying checksums of installed binaries.
+
+**Value proposition**:
+- Detects malware injection after installation
+- Catches disk corruption affecting binaries
+- Enables periodic integrity verification
+
+**How it would work**:
+1. After installation, compute SHA256 of installed binaries
+2. Store checksums in `state.json`
+3. `tsuku verify` recomputes and compares against stored values
+
+**Complexity**: Medium
+- Extends `state.json` schema
+- Must handle tool updates (recompute checksums)
+
+**Dependencies**: Stable state management
+
+**Suggested issue**: `Explore: Post-install checksum pinning for tamper detection`
+
+### Future Feature: Upstream Test Import
+
+**Purpose**: Import tests from upstream package managers (Homebrew, Nix) to reduce recipe maintenance burden.
+
+**Value proposition**:
+- Leverages community-vetted tests
+- Reduces per-recipe test authoring effort
+- Keeps tests in sync with upstream
+
+**Approach**: Manual curation rather than automated parsing (see Phase 6 in Implementation)
+
+**Complexity**: High (if automated), Medium (if manually curated)
+
+**Dependencies**: Functional testing framework
+
+**Suggested issue**: `Explore: Import verification tests from Homebrew formulas`
+
+### Future Feature: Platform-Specific Verification
+
+**Purpose**: Define different verification strategies per platform (Linux vs macOS, different architectures).
+
+**Value proposition**:
+- Handles tools with platform-dependent behavior
+- Enables more accurate verification on each platform
+
+**Potential recipe format**:
+```toml
+[verify.linux]
+command = "tool --version"
+pattern = "Version: {version}"
+
+[verify.darwin]
+command = "tool -v"  # Different flag on macOS
+pattern = "tool {version}"
+```
+
+**Complexity**: Low - extends existing recipe format
+
+**Dependencies**: Current verification modes
+
+**Suggested issue**: `Explore: Platform-specific verification modes`
+
+### Roadmap Summary
+
+| Feature | Priority | Complexity | Dependencies |
+|---------|----------|------------|--------------|
+| Version verification (this design) | **Now** | Medium | - |
+| Platform-specific verification | High | Low | This design |
+| Functional testing | High | Medium | This design |
+| Cryptographic signatures | Medium | High | Download changes |
+| Checksum pinning | Medium | Medium | State management |
+| Upstream test import | Low | High | Functional testing |
+
+### Design Principles for Future Work
+
+When adding verification methods:
+
+1. **Layered, not exclusive**: Each method addresses different concerns; all should be usable together
+2. **Opt-in enhancement**: Version verification remains the required baseline; additional methods are optional
+3. **Clear failure modes**: Each layer should report distinct, actionable errors
+4. **Independent evolution**: Recipes can adopt new methods without changing existing verification
 
