@@ -24,13 +24,13 @@ None
 
 ## Implementation Steps
 
-- [ ] Create transform.go with ValidateVersionString function
-- [ ] Implement TransformVersion with raw/unknown format handling
-- [ ] Implement semver transform (extract X.Y.Z)
-- [ ] Implement semver_full transform (extract X.Y.Z[-pre][+build])
-- [ ] Implement strip_v transform (remove leading v)
-- [ ] Add comprehensive unit tests for all transforms
-- [ ] Add edge case tests for validation
+- [x] Create transform.go with ValidateVersionString function
+- [x] Implement TransformVersion with raw/unknown format handling
+- [x] Implement semver transform (extract X.Y.Z)
+- [x] Implement semver_full transform (extract X.Y.Z[-pre][+build])
+- [x] Implement strip_v transform (remove leading v)
+- [x] Add comprehensive unit tests for all transforms
+- [x] Add edge case tests for validation
 
 ## Testing Strategy
 
@@ -47,11 +47,11 @@ None
 
 ## Success Criteria
 
-- [ ] ValidateVersionString rejects invalid characters and overlength strings
-- [ ] TransformVersion handles all four formats correctly
-- [ ] Unknown formats fall back to raw (return original)
-- [ ] All unit tests pass
-- [ ] No regressions in existing tests
+- [x] ValidateVersionString rejects invalid characters and overlength strings
+- [x] TransformVersion handles all four formats correctly
+- [x] Unknown formats fall back to raw (return original)
+- [x] All unit tests pass
+- [x] No regressions in existing tests
 
 ## Open Questions
 
