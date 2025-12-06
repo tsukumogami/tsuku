@@ -12,4 +12,4 @@ binary = "cloud-nuke"
 
 [verify]
 command = "cloud-nuke --version"
-pattern = "cloud-nuke"
+pattern = "{version}"

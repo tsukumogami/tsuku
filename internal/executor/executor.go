@@ -214,8 +214,29 @@ func (e *Executor) verify() error {
 	cmd := exec.Command("sh", "-c", command)
 	cmd.Env = env
 	output, err := cmd.CombinedOutput()
+
+	// Check exit code - default expected is 0, but can be overridden
+	expectedExitCode := 0
+	if e.recipe.Verify.ExitCode != nil {
+		expectedExitCode = *e.recipe.Verify.ExitCode
+	}
+
 	if err != nil {
-		return fmt.Errorf("command failed: %w\nOutput: %s", err, string(output))
+		// Check if this is an exit error with the expected code
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			actualCode := exitErr.ExitCode()
+			if actualCode != expectedExitCode {
+				return fmt.Errorf("command failed with exit code %d (expected %d): %w\nOutput: %s",
+					actualCode, expectedExitCode, err, string(output))
+			}
+			// Exit code matches expected non-zero code, continue
+		} else {
+			return fmt.Errorf("command failed: %w\nOutput: %s", err, string(output))
+		}
+	} else if expectedExitCode != 0 {
+		// Command succeeded but we expected a non-zero exit code
+		return fmt.Errorf("command succeeded with exit code 0 (expected %d)\nOutput: %s",
+			expectedExitCode, string(output))
 	}
 
 	outputStr := strings.TrimSpace(string(output))

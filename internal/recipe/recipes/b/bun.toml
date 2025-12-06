@@ -16,4 +16,4 @@ arch_mapping = { amd64 = "x64", arm64 = "aarch64" }
 
 [verify]
 command = "bun --version"
-pattern = "1."
+pattern = "{version}"

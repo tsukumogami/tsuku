@@ -450,7 +450,7 @@ func validateDangerousPatterns(result *ValidationResult, command string) {
 	// Expanded dangerous pattern detection (per design doc)
 	// Check for conditional execution operators
 	if strings.Contains(command, "||") {
-		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '||' (conditional execution)")
+		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '||' (conditional execution); use exit_code field instead")
 	}
 	if strings.Contains(command, "&&") {
 		result.addWarning("verify.command", "verify command contains potentially dangerous pattern '&&' (conditional execution)")

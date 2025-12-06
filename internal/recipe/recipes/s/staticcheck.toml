@@ -16,4 +16,4 @@ executables = ["staticcheck"]
 
 [verify]
 command = "staticcheck --version"
-pattern = "staticcheck"
+pattern = "{version}"

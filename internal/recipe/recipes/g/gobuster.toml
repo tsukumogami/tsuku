@@ -16,4 +16,4 @@ arch_mapping = { amd64 = "x86_64", arm64 = "arm64" }
 
 [verify]
 command = "gobuster --version"
-pattern = "gobuster"
+pattern = "{version}"

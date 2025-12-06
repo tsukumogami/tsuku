@@ -17,4 +17,4 @@ arch_mapping = { amd64 = "amd64", arm64 = "aarch64" }
 
 [verify]
 command = "java -version"
-pattern = "OpenJDK"
+pattern = "{version}"

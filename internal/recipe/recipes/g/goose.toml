@@ -13,4 +13,4 @@ arch_mapping = { amd64 = "x86_64" }
 
 [verify]
 command = "goose --version"
-pattern = "goose"
+pattern = "{version}"
