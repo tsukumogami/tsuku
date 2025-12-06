@@ -455,11 +455,56 @@ Custom transforms can be added later (e.g., `strip_prefix:biome@`) but the commo
 - Update recipes with version mismatches to use appropriate `version_format`
 - Update recipes without version output to use `output` mode with `reason`
 
-### Phase 6 (Future): Upstream Test Import
+---
 
-**Goal**: Leverage existing test corpora from Homebrew and Nix to provide stronger verification for tsuku recipes without requiring recipe authors to write tests from scratch.
+**Phases 1-5 implement Layer 2 (Version Verification) of the defense-in-depth strategy. The following phases are future work for additional layers.**
 
-#### 6a: Homebrew Test Import
+---
+
+### Phase 6 (Future - Layer 3): Post-Install Checksum Pinning
+
+**Goal**: Detect post-installation tampering by storing and verifying checksums of installed binaries.
+
+**Scope**:
+- Compute SHA256 of installed binaries after successful installation
+- Store checksums in `state.json`
+- `tsuku verify` recomputes and compares against stored values
+- Detect tampering, corruption, or unauthorized modifications
+
+**Implementation considerations**:
+- Extend `state.json` schema to include binary checksums
+- Handle tool updates (recompute checksums on upgrade)
+- Consider optional periodic verification via `tsuku doctor`
+
+### Phase 7 (Future - Layer 4): Functional Testing Framework
+
+**Goal**: Support Homebrew-style behavioral tests that verify tool functionality, not just presence.
+
+**Scope**:
+- Implement `mode = "functional"` with test orchestration
+- Support `[[verify.tests]]` array for multiple test cases
+- Handle expected output matching, exit codes, timeouts
+- Temporary directory management for file-based tests
+
+**Recipe format**:
+```toml
+[verify]
+mode = "functional"
+
+[[verify.tests]]
+name = "parse_json"
+command = "sh"
+args = ["-c", "echo '{\"foo\":1}' | jq .foo"]
+expected_output = "1"
+```
+
+### Phase 8 (Future - Layer 4): Upstream Test Import
+
+**Goal**: Leverage existing test corpora from Homebrew and Nix to populate functional tests without writing them from scratch.
+
+**Depends on**: Phase 7 (Functional Testing Framework)
+
+#### 8a: Homebrew Test Import
 
 **Approach**: Manual curation rather than automated parsing
 - Homebrew's JSON API does not include `test do` blocks
@@ -480,7 +525,7 @@ Custom transforms can be added later (e.g., `strip_prefix:biome@`) but the commo
 | `(testpath/"test.txt").write("data")` | Use temporary directory in shell script |
 | `system bin/"rg", "pattern", testpath` | `command = "sh"`, `args = ["-c", "echo 'data' > test.txt && rg 'pattern' ."]` |
 
-#### 6b: Nix Test Import
+#### 8b: Nix Test Import
 
 **Approach**: Leverage `installCheckPhase` from nixpkgs derivations for nix-based recipes
 
@@ -498,8 +543,6 @@ Custom transforms can be added later (e.g., `strip_prefix:biome@`) but the commo
 - Nix tests may depend on sandbox features not available in tsuku
 - Some tests require `nix-shell` environment
 - Test expressions can be complex
-
-**Out of scope for Phase 6**: Automated parsing of either Homebrew or Nix tests, `test_dependencies` handling, complex multi-step tests requiring ecosystem-specific helpers
 
 ## Consequences
 
@@ -607,19 +650,19 @@ Different verification methods provide different guarantees. They are **compleme
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ Layer 4: Functional Testing (Future)                            │
+│ Layer 4: Functional Testing (Phases 7-8)                        │
 │ Guarantees: Tool performs core operations correctly             │
 │ Example: echo '{"foo":1}' | jq .foo → 1                         │
 ├─────────────────────────────────────────────────────────────────┤
-│ Layer 3: Checksum Pinning (Future)                              │
+│ Layer 3: Checksum Pinning (Phase 6)                             │
 │ Guarantees: Installed binary hasn't been modified post-install  │
 │ Example: SHA256 of $TSUKU_HOME/tools/jq-1.7/bin/jq              │
 ├─────────────────────────────────────────────────────────────────┤
-│ Layer 2: Version Verification (This Design)                     │
+│ Layer 2: Version Verification (Phases 1-5 - This Design)        │
 │ Guarantees: Correct version was installed and reports correctly │
 │ Example: jq --version → jq-1.7                                  │
 ├─────────────────────────────────────────────────────────────────┤
-│ Layer 1: Cryptographic Verification (Existing/Partial)          │
+│ Layer 1: Cryptographic Verification (Existing)                  │
 │ Guarantees: Downloaded artifact matches expected checksum       │
 │ Example: SHA256 of downloaded archive                           │
 └─────────────────────────────────────────────────────────────────┘
@@ -758,14 +801,14 @@ pattern = "tool {version}"
 
 ### Roadmap Summary
 
-| Feature | Priority | Complexity | Dependencies |
-|---------|----------|------------|--------------|
-| Version verification (this design) | **Now** | Medium | - |
-| Platform-specific verification | High | Low | This design |
-| Functional testing | High | Medium | This design |
-| Cryptographic signatures | Medium | High | Download changes |
-| Checksum pinning | Medium | Medium | State management |
-| Upstream test import | Low | High | Functional testing |
+| Feature | Phase | Layer | Priority | Complexity |
+|---------|-------|-------|----------|------------|
+| Version verification | 1-5 | 2 | **Now** | Medium |
+| Checksum pinning | 6 | 3 | Future | Medium |
+| Functional testing framework | 7 | 4 | Future | Medium |
+| Upstream test import | 8 | 4 | Future | High |
+| Platform-specific verification | TBD | 2 | Future | Low |
+| Cryptographic signatures | TBD | 1 | Future | High |
 
 ### Design Principles for Future Work
 
