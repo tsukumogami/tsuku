@@ -16,5 +16,3 @@ executables = ["cobra-cli"]
 [verify]
 command = "cobra-cli help"
 pattern = "Cobra is a CLI"
-mode = "output"
-reason = "Tool does not support --version flag"

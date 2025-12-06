@@ -16,4 +16,3 @@ os_mapping = { linux = "Linux", darwin = "Darwin" }
 [verify]
 command = "k9s version"
 pattern = "v{version}"
-version_format = "strip_v"
