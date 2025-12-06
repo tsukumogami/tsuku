@@ -285,10 +285,10 @@ pattern = "test v"
 		t.Error("expected warning about missing description")
 	}
 
-	// Should have warning about missing version placeholder in pattern
-	if !hasWarning(result, "verify.pattern", "version") {
-		t.Error("expected warning about missing version placeholder")
-	}
+	// Note: We don't warn about missing {version} in pattern because:
+	// 1. Many tools output versions in formats that differ from GitHub tags
+	// 2. A pattern that matches the tool output (e.g., "Version:") is valid
+	// 3. Version verification is optional - some tools just need presence check
 }
 
 func TestValidateBytes_InvalidTOML(t *testing.T) {

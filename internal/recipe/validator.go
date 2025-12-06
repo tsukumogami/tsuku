@@ -116,7 +116,7 @@ func validateVersion(result *ValidationResult, r *Recipe) {
 		"github_releases": true,
 		"github_tags":     true,
 		"nodejs_dist":     true,
-		"npm_registry":    true,
+		"npm":             true,
 		"pypi":            true,
 		"crates_io":       true,
 		"rubygems":        true,
@@ -126,7 +126,8 @@ func validateVersion(result *ValidationResult, r *Recipe) {
 		"go_toolchain":    true,
 		"goproxy":         true,
 		"metacpan":        true,
-		"":                true, // Empty is allowed (defaults to github_releases)
+		"nixpkgs":         true,
+		"":                true, // Empty is allowed (can be inferred from actions)
 	}
 
 	// Handle sources with parameters like "goproxy:module/path"
@@ -139,7 +140,11 @@ func validateVersion(result *ValidationResult, r *Recipe) {
 		result.addWarning("version.source", fmt.Sprintf("unknown version source '%s'", r.Version.Source))
 	}
 
-	// If using github sources, check github_repo
+	// Check if version source can be inferred from install actions
+	// This matches the inference logic in internal/version/provider_factory.go
+	canInferVersionSource := canInferVersionFromActions(r)
+
+	// If using github sources, check github_repo (but only if not inferable from actions)
 	if (source == "github_releases" || source == "github_tags" || source == "") && r.Version.GitHubRepo == "" {
 		// Check if any step has repo parameter that could provide this
 		hasRepoInStep := false
@@ -149,10 +154,49 @@ func validateVersion(result *ValidationResult, r *Recipe) {
 				break
 			}
 		}
-		if !hasRepoInStep {
+		// Only warn if we can't infer the version source from install actions
+		if !hasRepoInStep && !canInferVersionSource {
 			result.addWarning("version.github_repo", "github_repo is recommended when using github version source")
 		}
 	}
+}
+
+// canInferVersionFromActions checks if version source can be inferred from install actions.
+// This mirrors the inference logic in internal/version/provider_factory.go (Inferred*Strategy).
+func canInferVersionFromActions(r *Recipe) bool {
+	for _, step := range r.Steps {
+		switch step.Action {
+		case "npm_install":
+			if _, ok := step.Params["package"].(string); ok {
+				return true // InferredNpmStrategy
+			}
+		case "pipx_install":
+			if _, ok := step.Params["package"].(string); ok {
+				return true // InferredPyPIStrategy
+			}
+		case "cargo_install":
+			if _, ok := step.Params["crate"].(string); ok {
+				return true // InferredCratesIOStrategy
+			}
+		case "gem_install":
+			if _, ok := step.Params["gem"].(string); ok {
+				return true // InferredRubyGemsStrategy
+			}
+		case "cpan_install":
+			if _, ok := step.Params["distribution"].(string); ok {
+				return true // InferredMetaCPANStrategy
+			}
+		case "go_install":
+			if _, ok := step.Params["module"].(string); ok {
+				return true // Requires explicit goproxy source, but module provides context
+			}
+		case "github_archive", "github_file":
+			if _, ok := step.Params["repo"].(string); ok {
+				return true // InferredGitHubStrategy
+			}
+		}
+	}
+	return false
 }
 
 // validateSteps checks all steps
@@ -177,6 +221,7 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"npm_install":       true,
 		"pipx_install":      true,
 		"cargo_install":     true,
+		"go_install":        true,
 		"gem_install":       true,
 		"cpan_install":      true,
 		"nix_install":       true,
@@ -260,6 +305,11 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 	case "cargo_install":
 		if _, ok := step.Params["crate"]; !ok {
 			result.addError(stepField, "cargo_install action requires 'crate' parameter")
+		}
+
+	case "go_install":
+		if _, ok := step.Params["module"]; !ok {
+			result.addError(stepField, "go_install action requires 'module' parameter")
 		}
 
 	case "gem_install":
@@ -376,17 +426,27 @@ func validateVerify(result *ValidationResult, r *Recipe) {
 	}
 
 	// Check for dangerous patterns in verify command
-	dangerous := []string{"rm ", "rm\t", "> /", "| sh", "| bash", "curl |", "wget |"}
+	// Patterns with word boundaries to avoid false positives on tool names (e.g., "terraform")
+	dangerous := []string{" rm ", "\trm ", "> /", "| sh", "| bash", "curl |", "wget |"}
 	for _, pattern := range dangerous {
 		if strings.Contains(r.Verify.Command, pattern) {
 			result.addWarning("verify.command", fmt.Sprintf("verify command contains potentially dangerous pattern '%s'", strings.TrimSpace(pattern)))
 		}
 	}
-
-	// Check if pattern contains version placeholder
-	if r.Verify.Pattern != "" && !strings.Contains(r.Verify.Pattern, "{version}") {
-		result.addWarning("verify.pattern", "pattern does not contain {version} placeholder - version verification may not work correctly")
+	// Check if command starts with rm (word boundary at start)
+	if strings.HasPrefix(r.Verify.Command, "rm ") || strings.HasPrefix(r.Verify.Command, "rm\t") {
+		result.addWarning("verify.command", "verify command contains potentially dangerous pattern 'rm'")
 	}
+
+	// Note: We don't warn about missing {version} in pattern because:
+	// 1. Many tools output versions in formats that differ from GitHub tags
+	//    (e.g., GitHub tag "biome@2.3.8" but tool outputs "Version: 2.3.8")
+	// 2. A pattern that matches the tool output (e.g., "Version:") is valid
+	// 3. Version verification is optional - some tools just need presence check
+	//
+	// TODO(#192): Once version format transformation is implemented, we can
+	// re-enable validation that patterns include {version} when transforms
+	// are available to normalize version formats.
 }
 
 // suggestSimilar finds a similar string from the known set
