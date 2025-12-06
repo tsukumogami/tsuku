@@ -62,6 +62,8 @@ jobs:
       code: ${{ steps.filter.outputs.code }}
       # true when recipe files are modified
       recipes: ${{ steps.filter.outputs.recipes }}
+      # true when validator code is modified
+      validator: ${{ steps.filter.outputs.validator }}
 
     steps:
       - uses: actions/checkout@v4
@@ -83,6 +85,9 @@ jobs:
               - '!telemetry/**'
             recipes:
               - 'internal/recipe/recipes/**/*.toml'
+            validator:
+              - 'internal/recipe/validator.go'
+              - 'internal/recipe/validator_test.go'
 
       - name: Generate test matrices
         id: matrix
@@ -96,8 +101,8 @@ jobs:
   validate-recipes:
     name: Validate Recipes
     needs: matrix
-    # Run on recipe changes, or on scheduled runs (nightly)
-    if: ${{ needs.matrix.outputs.recipes == 'true' || github.event_name == 'schedule' }}
+    # Run on recipe changes, validator changes, or on scheduled runs (nightly)
+    if: ${{ needs.matrix.outputs.recipes == 'true' || needs.matrix.outputs.validator == 'true' || github.event_name == 'schedule' }}
     runs-on: ubuntu-latest
 
     steps:
