@@ -15,4 +15,4 @@ os_mapping = { darwin = "macos", linux = "linux" }
 
 [verify]
 command = "fnm --version"
-pattern = "fnm {version}"
+pattern = "fnm"

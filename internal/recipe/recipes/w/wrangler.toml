@@ -4,10 +4,6 @@ description = "Cloudflare Workers CLI for building and deploying serverless appl
 homepage = "https://developers.cloudflare.com/workers/wrangler/"
 version_format = "semver"
 
-[version]
-source = "npm"
-package = "wrangler"
-
 [[steps]]
 action = "npm_install"
 package = "wrangler"

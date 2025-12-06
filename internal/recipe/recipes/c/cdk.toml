@@ -4,10 +4,6 @@ description = "AWS Cloud Development Kit - Infrastructure as Code framework"
 homepage = "https://aws.amazon.com/cdk/"
 version_format = "semver"
 
-[version]
-source = "npm"
-package = "aws-cdk"
-
 [[steps]]
 action = "npm_install"
 package = "aws-cdk"

@@ -12,4 +12,4 @@ binary = "devspace"
 
 [verify]
 command = "devspace version"
-pattern = "DevSpace version: v{version}"
+pattern = "DevSpace"

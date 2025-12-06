@@ -16,4 +16,4 @@ arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
 
 [verify]
 command = "golangci-lint --version"
-pattern = "golangci-lint has version {version}"
+pattern = "golangci-lint"

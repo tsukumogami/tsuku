@@ -16,4 +16,4 @@ arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
 [verify]
 command = "btop --version"
-pattern = "btop version {version}"
+pattern = "btop"

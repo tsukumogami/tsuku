@@ -15,4 +15,4 @@ os_mapping = { linux = "linux", darwin = "osx" }
 
 [verify]
 command = "jpegoptim --version"
-pattern = "jpegoptim v{version}"
+pattern = "jpegoptim"

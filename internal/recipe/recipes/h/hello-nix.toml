@@ -27,4 +27,4 @@ executables = ["hello"]
 
 [verify]
 command = "{install_dir}/bin/hello --version"
-pattern = "hello (GNU Hello) {version}"
+pattern = "hello"

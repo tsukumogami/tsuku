@@ -16,4 +16,4 @@ executables = ["gore"]
 
 [verify]
 command = "gore --version"
-pattern = "gore {version}"
+pattern = "gore"

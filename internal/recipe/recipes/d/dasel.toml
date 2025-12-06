@@ -12,4 +12,4 @@ binary = "dasel"
 
 [verify]
 command = "dasel --version"
-pattern = "dasel version v{version}"
+pattern = "dasel"

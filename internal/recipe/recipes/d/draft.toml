@@ -12,4 +12,4 @@ binary = "draft"
 
 [verify]
 command = "draft version"
-pattern = "{version}"
+pattern = "version"

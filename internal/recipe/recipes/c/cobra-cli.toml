@@ -14,6 +14,5 @@ module = "github.com/spf13/cobra-cli"
 executables = ["cobra-cli"]
 
 [verify]
-# cobra-cli doesn't support --version, verify via help output (no version verification)
 command = "cobra-cli help"
-pattern = ""
+pattern = "Cobra is a CLI"

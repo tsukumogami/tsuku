@@ -14,6 +14,6 @@ executables = ["cargo-add", "cargo-rm", "cargo-upgrade"]
 
 [verify]
 # cargo-add is a cargo subcommand, doesn't support --version directly
-# verify by checking the help output (no version verification)
+# verify by checking the help output
 command = "cargo-add --help"
-pattern = ""
+pattern = "Add dependencies to a Cargo.toml"

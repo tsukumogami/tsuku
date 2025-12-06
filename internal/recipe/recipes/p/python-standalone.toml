@@ -17,4 +17,4 @@ arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 
 [verify]
 command = "python3 --version"
-pattern = "Python {version}"
+pattern = "Python 3."

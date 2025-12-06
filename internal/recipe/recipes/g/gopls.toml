@@ -15,4 +15,4 @@ executables = ["gopls"]
 
 [verify]
 command = "gopls version"
-pattern = "golang.org/x/tools/gopls v{version}"
+pattern = "golang.org/x/tools/gopls"

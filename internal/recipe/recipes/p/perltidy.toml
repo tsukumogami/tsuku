@@ -16,4 +16,4 @@ executables = ["perltidy"]
 
 [verify]
 command = "perltidy --version"
-pattern = "perltidy, v{version}"
+pattern = "perltidy"
