@@ -24,10 +24,10 @@ None
 
 ## Implementation Steps
 
-- [ ] Add Mode, VersionFormat, Reason fields to VerifySection struct
-- [ ] Add constants for valid modes (version, output)
-- [ ] Add constants for valid formats (raw, semver, semver_full, strip_v)
-- [ ] Add unit tests for parsing recipes with new verify fields
+- [x] Add Mode, VersionFormat, Reason fields to VerifySection struct
+- [x] Add constants for valid modes (version, output)
+- [x] Add constants for valid formats (raw, semver, semver_full, strip_v)
+- [x] Add unit tests for parsing recipes with new verify fields
 
 ## Testing Strategy
 
