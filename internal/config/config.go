@@ -52,12 +52,13 @@ func GetAPITimeout() time.Duration {
 
 // Config holds tsuku configuration
 type Config struct {
-	HomeDir     string // ~/.tsuku
-	ToolsDir    string // ~/.tsuku/tools
-	CurrentDir  string // ~/.tsuku/tools/current
-	RecipesDir  string // ~/.tsuku/recipes
-	RegistryDir string // ~/.tsuku/registry (cached recipes from remote registry)
-	ConfigFile  string // ~/.tsuku/config.toml
+	HomeDir     string // $TSUKU_HOME
+	ToolsDir    string // $TSUKU_HOME/tools
+	CurrentDir  string // $TSUKU_HOME/tools/current
+	RecipesDir  string // $TSUKU_HOME/recipes
+	RegistryDir string // $TSUKU_HOME/registry (cached recipes from remote registry)
+	LibsDir     string // $TSUKU_HOME/libs (shared libraries)
+	ConfigFile  string // $TSUKU_HOME/config.toml
 }
 
 // DefaultConfig returns the default configuration
@@ -78,6 +79,7 @@ func DefaultConfig() (*Config, error) {
 		CurrentDir:  filepath.Join(tsukuHome, "tools", "current"),
 		RecipesDir:  filepath.Join(tsukuHome, "recipes"),
 		RegistryDir: filepath.Join(tsukuHome, "registry"),
+		LibsDir:     filepath.Join(tsukuHome, "libs"),
 		ConfigFile:  filepath.Join(tsukuHome, "config.toml"),
 	}, nil
 }
@@ -90,6 +92,7 @@ func (c *Config) EnsureDirectories() error {
 		c.CurrentDir,
 		c.RecipesDir,
 		c.RegistryDir,
+		c.LibsDir,
 	}
 
 	for _, dir := range dirs {
@@ -114,4 +117,9 @@ func (c *Config) ToolBinDir(name, version string) string {
 // CurrentSymlink returns the path to the current symlink for a tool
 func (c *Config) CurrentSymlink(name string) string {
 	return filepath.Join(c.CurrentDir, name)
+}
+
+// LibDir returns the installation directory for a specific library version
+func (c *Config) LibDir(name, version string) string {
+	return filepath.Join(c.LibsDir, fmt.Sprintf("%s-%s", name, version))
 }
