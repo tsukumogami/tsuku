@@ -19,7 +19,8 @@ func (a *LinkDependenciesAction) Name() string {
 //
 // Parameters:
 //   - library (required): Library name (e.g., "libyaml")
-//   - version (required): Library version (e.g., "0.2.5")
+//   - version (optional): Library version (e.g., "0.2.5"). If not specified,
+//     discovers the installed version from $TSUKU_HOME/libs/{library}-*/
 //
 // The action creates relative symlinks so the installation is relocatable.
 // Example: ruby-3.4.0/lib/libyaml.so.2 -> ../../../libs/libyaml-0.2.5/lib/libyaml.so.2
@@ -34,14 +35,20 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 		return fmt.Errorf("'library' parameter must be a string")
 	}
 
-	// Get version (required)
-	versionRaw, ok := params["version"]
-	if !ok {
-		return fmt.Errorf("link_dependencies action requires 'version' parameter")
-	}
-	version, ok := versionRaw.(string)
-	if !ok {
-		return fmt.Errorf("'version' parameter must be a string")
+	// Get version (optional - discover if not provided)
+	var version string
+	if versionRaw, ok := params["version"]; ok {
+		version, ok = versionRaw.(string)
+		if !ok {
+			return fmt.Errorf("'version' parameter must be a string")
+		}
+	} else {
+		// Discover installed version from libs directory
+		var err error
+		version, err = a.discoverLibraryVersion(ctx.ToolsDir, library)
+		if err != nil {
+			return fmt.Errorf("failed to discover %s version: %w", library, err)
+		}
 	}
 
 	// Validate library name for security
@@ -71,18 +78,39 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 		return fmt.Errorf("library directory does not exist: %s", srcLibDir)
 	}
 
-	// Destination: tool's lib directory
-	destLibDir := filepath.Join(ctx.ToolInstallDir, "lib")
+	// Determine work directory and final tool directory
+	// - If ToolInstallDir is set (post-install), use it for both work and final
+	// - If only WorkDir is set (pre-install), create files there but compute
+	//   relative paths based on final location ($TSUKU_HOME/tools/{name}-{version}/)
+	var workDir, finalToolDir string
+	if ctx.ToolInstallDir != "" {
+		// Post-install: tool is already in its final location
+		workDir = ctx.ToolInstallDir
+		finalToolDir = ctx.ToolInstallDir
+	} else if ctx.WorkDir != "" {
+		// Pre-install: create files in work dir, paths relative to final location
+		workDir = ctx.WorkDir
+		toolName := ctx.Recipe.Metadata.Name
+		toolVersion := ctx.Version
+		finalToolDir = filepath.Join(ctx.ToolsDir, fmt.Sprintf("%s-%s", toolName, toolVersion))
+	} else {
+		return fmt.Errorf("link_dependencies requires either ToolInstallDir or WorkDir to be set")
+	}
+
+	// Destination: tool's lib directory (in work dir for actual file creation)
+	destLibDir := filepath.Join(workDir, "lib")
 
 	// Ensure destination lib directory exists
 	if err := os.MkdirAll(destLibDir, 0755); err != nil {
 		return fmt.Errorf("failed to create lib directory: %w", err)
 	}
 
-	// Calculate relative path from destLibDir to srcLibDir
+	// Calculate relative path from FINAL lib location to source lib location
+	// This ensures symlinks work after the tool is installed to its final location
 	// From tools/{tool}-{version}/lib/ to libs/{library}-{version}/lib/
 	// That's: ../../../libs/{library}-{version}/lib/
-	relPath, err := filepath.Rel(destLibDir, srcLibDir)
+	finalLibDir := filepath.Join(finalToolDir, "lib")
+	relPath, err := filepath.Rel(finalLibDir, srcLibDir)
 	if err != nil {
 		return fmt.Errorf("failed to compute relative path: %w", err)
 	}
@@ -199,4 +227,44 @@ func (a *LinkDependenciesAction) validateSymlinkTarget(target, symlinkName strin
 	}
 
 	return nil
+}
+
+// discoverLibraryVersion finds the installed version of a library by scanning the libs directory
+func (a *LinkDependenciesAction) discoverLibraryVersion(toolsDir, library string) (string, error) {
+	// ToolsDir is $TSUKU_HOME/tools, libs is at ../libs
+	tsukuHome := filepath.Dir(toolsDir)
+	libsDir := filepath.Join(tsukuHome, "libs")
+
+	// Look for directories matching {library}-*
+	entries, err := os.ReadDir(libsDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("libs directory does not exist; library %s may not be installed", library)
+		}
+		return "", fmt.Errorf("failed to read libs directory: %w", err)
+	}
+
+	prefix := library + "-"
+	var matchedVersion string
+	var matchCount int
+
+	for _, entry := range entries {
+		if entry.IsDir() && strings.HasPrefix(entry.Name(), prefix) {
+			version := strings.TrimPrefix(entry.Name(), prefix)
+			matchedVersion = version
+			matchCount++
+		}
+	}
+
+	if matchCount == 0 {
+		return "", fmt.Errorf("library %s is not installed (no %s* directory found in %s)", library, prefix, libsDir)
+	}
+
+	if matchCount > 1 {
+		// Multiple versions installed - for now, we'll just use the last one found
+		// In the future, we might want to use the state.json to determine the correct version
+		fmt.Printf("   Warning: Multiple versions of %s found, using %s\n", library, matchedVersion)
+	}
+
+	return matchedVersion, nil
 }

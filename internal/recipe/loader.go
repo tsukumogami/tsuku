@@ -383,8 +383,8 @@ func validate(r *Recipe) error {
 		}
 	}
 
-	// Check verify
-	if r.Verify.Command == "" {
+	// Check verify (libraries don't require verification)
+	if r.Metadata.Type != RecipeTypeLibrary && r.Verify.Command == "" {
 		return fmt.Errorf("verify.command is required")
 	}
 

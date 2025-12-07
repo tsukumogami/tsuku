@@ -1052,3 +1052,48 @@ pattern = "{version}"
 		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
 	}
 }
+
+func TestValidateBytes_LibraryRecipeNoVerify(t *testing.T) {
+	// Library recipes should not require verification
+	recipe := `
+[metadata]
+name = "libyaml"
+description = "YAML 1.1 parser and emitter library"
+type = "library"
+
+[version]
+source = "homebrew"
+formula = "libyaml"
+
+[[steps]]
+action = "homebrew_bottle"
+formula = "libyaml"
+
+[[steps]]
+action = "install_libraries"
+patterns = ["lib/*.so*", "lib/*.dylib"]
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected valid library recipe without verify section, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_InstallLibrariesAction(t *testing.T) {
+	// install_libraries action should be recognized
+	recipe := `
+[metadata]
+name = "test-lib"
+type = "library"
+
+[[steps]]
+action = "install_libraries"
+patterns = ["lib/*.so*"]
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected valid recipe with install_libraries action, got errors: %v", result.Errors)
+	}
+}

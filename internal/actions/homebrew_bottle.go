@@ -9,6 +9,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -95,11 +96,9 @@ func (a *HomebrewBottleAction) Execute(ctx *ExecutionContext, params map[string]
 		installPath = ctx.InstallDir
 	}
 
-	// Validate path length (@@HOMEBREW_PREFIX@@ is 19 chars)
-	if len(installPath) > 19 {
-		return fmt.Errorf("install path too long for Homebrew placeholder relocation: %d chars (max 19): %s", len(installPath), installPath)
-	}
-
+	// Relocate placeholders in files
+	// - Text files: Direct replacement (no length limit)
+	// - Binary files: Use patchelf/install_name_tool to reset RPATH
 	if err := a.relocatePlaceholders(ctx.WorkDir, installPath); err != nil {
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
@@ -226,14 +225,19 @@ func (a *HomebrewBottleAction) getBlobSHA(formula, version, platformTag, token s
 		return "", fmt.Errorf("failed to parse manifest: %w", err)
 	}
 
+	// The expected ref name format is "{version}.{platform_tag}"
+	// e.g., "0.2.5.arm64_sonoma" or "0.2.5.x86_64_linux"
+	expectedRefName := fmt.Sprintf("%s.%s", version, platformTag)
+
 	// Find the entry matching our platform tag
 	for _, entry := range manifest.Manifests {
-		// Check annotations for platform tag
-		if tag, ok := entry.Annotations["sh.brew.bottle.tag"]; ok {
-			if tag == platformTag {
-				// Return the blob digest from annotations
+		// Check org.opencontainers.image.ref.name annotation for the bottle tag
+		// Format: "{version}.{platform_tag}" e.g., "0.2.5.arm64_sonoma"
+		if refName, ok := entry.Annotations["org.opencontainers.image.ref.name"]; ok {
+			if refName == expectedRefName {
+				// Return the blob digest from sh.brew.bottle.digest annotation
 				if digest, ok := entry.Annotations["sh.brew.bottle.digest"]; ok {
-					// Digest format: sha256:xxx
+					// Digest format: sha256:xxx or just the hash
 					if strings.HasPrefix(digest, "sha256:") {
 						return strings.TrimPrefix(digest, "sha256:"), nil
 					}
@@ -248,7 +252,7 @@ func (a *HomebrewBottleAction) getBlobSHA(formula, version, platformTag, token s
 		}
 	}
 
-	return "", fmt.Errorf("no bottle found for platform tag: %s", platformTag)
+	return "", fmt.Errorf("no bottle found for platform tag: %s (expected ref: %s)", platformTag, expectedRefName)
 }
 
 // downloadBottle downloads a bottle blob from GHCR
@@ -310,20 +314,22 @@ func (a *HomebrewBottleAction) verifySHA256(filePath, expectedSHA string) error 
 	return nil
 }
 
-// relocatePlaceholders replaces @@HOMEBREW_PREFIX@@ in all files
+// homebrewPlaceholders contains all Homebrew placeholders that need relocation
+var homebrewPlaceholders = [][]byte{
+	[]byte("@@HOMEBREW_PREFIX@@"),
+	[]byte("@@HOMEBREW_CELLAR@@"),
+}
+
+// relocatePlaceholders replaces Homebrew placeholders in all files
+// For text files: direct replacement with install path
+// For binary files: use patchelf/install_name_tool to reset RPATH
 func (a *HomebrewBottleAction) relocatePlaceholders(dir, installPath string) error {
-	placeholder := []byte("@@HOMEBREW_PREFIX@@")
 	replacement := []byte(installPath)
 
-	// Pad replacement to match placeholder length for binary files
-	paddedReplacement := make([]byte, len(placeholder))
-	copy(paddedReplacement, replacement)
-	// Fill remaining bytes with null for binary compatibility
-	for i := len(replacement); i < len(placeholder); i++ {
-		paddedReplacement[i] = 0
-	}
+	// Collect binaries that need RPATH fixup
+	var binariesToFix []string
 
-	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
 		}
@@ -339,30 +345,232 @@ func (a *HomebrewBottleAction) relocatePlaceholders(dir, installPath string) err
 			return fmt.Errorf("failed to read %s: %w", path, err)
 		}
 
-		// Check if file contains placeholder
-		if !bytes.Contains(content, placeholder) {
+		// Check if file contains any placeholder
+		hasPlaceholder := false
+		for _, placeholder := range homebrewPlaceholders {
+			if bytes.Contains(content, placeholder) {
+				hasPlaceholder = true
+				break
+			}
+		}
+
+		if !hasPlaceholder {
 			return nil
 		}
 
 		// Determine if binary or text file
 		isBinary := a.isBinaryFile(content)
 
-		var newContent []byte
 		if isBinary {
-			// Binary: use padded replacement to preserve file size
-			newContent = bytes.ReplaceAll(content, placeholder, paddedReplacement)
+			// Binary files: collect for RPATH fixup using patchelf/install_name_tool
+			binariesToFix = append(binariesToFix, path)
 		} else {
-			// Text: simple replacement
-			newContent = bytes.ReplaceAll(content, placeholder, replacement)
-		}
+			// Text files: simple replacement with install path
+			newContent := content
+			for _, placeholder := range homebrewPlaceholders {
+				newContent = bytes.ReplaceAll(newContent, placeholder, replacement)
+			}
 
-		// Write modified content
-		if err := os.WriteFile(path, newContent, info.Mode()); err != nil {
-			return fmt.Errorf("failed to write %s: %w", path, err)
+			// Homebrew bottles often have read-only files; make writable before writing
+			originalMode := info.Mode()
+			if originalMode&0200 == 0 {
+				if err := os.Chmod(path, originalMode|0200); err != nil {
+					return fmt.Errorf("failed to make %s writable: %w", path, err)
+				}
+			}
+
+			if err := os.WriteFile(path, newContent, originalMode); err != nil {
+				return fmt.Errorf("failed to write %s: %w", path, err)
+			}
 		}
 
 		return nil
 	})
+
+	if err != nil {
+		return err
+	}
+
+	// Fix RPATH on binary files using patchelf/install_name_tool
+	for _, binaryPath := range binariesToFix {
+		if err := a.fixBinaryRpath(binaryPath, installPath); err != nil {
+			return fmt.Errorf("failed to fix RPATH for %s: %w", binaryPath, err)
+		}
+	}
+
+	return nil
+}
+
+// fixBinaryRpath uses patchelf or install_name_tool to set a proper RPATH
+// This replaces the Homebrew placeholder RPATH with a working path
+func (a *HomebrewBottleAction) fixBinaryRpath(binaryPath, installPath string) error {
+	// Detect binary format
+	f, err := os.Open(binaryPath)
+	if err != nil {
+		return err
+	}
+
+	magic := make([]byte, 4)
+	_, err = f.Read(magic)
+	f.Close()
+	if err != nil {
+		return err
+	}
+
+	// Check if it's an ELF binary
+	if bytes.Equal(magic, []byte{0x7f, 'E', 'L', 'F'}) {
+		return a.fixElfRpath(binaryPath, installPath)
+	}
+
+	// Check if it's a Mach-O binary
+	if bytes.Equal(magic, []byte{0xfe, 0xed, 0xfa, 0xce}) || // 32-bit big-endian
+		bytes.Equal(magic, []byte{0xce, 0xfa, 0xed, 0xfe}) || // 32-bit little-endian
+		bytes.Equal(magic, []byte{0xfe, 0xed, 0xfa, 0xcf}) || // 64-bit big-endian
+		bytes.Equal(magic, []byte{0xcf, 0xfa, 0xed, 0xfe}) || // 64-bit little-endian
+		bytes.Equal(magic, []byte{0xca, 0xfe, 0xba, 0xbe}) || // Fat binary big-endian
+		bytes.Equal(magic, []byte{0xbe, 0xba, 0xfe, 0xca}) { // Fat binary little-endian
+		return a.fixMachoRpath(binaryPath, installPath)
+	}
+
+	// Not a recognized binary format, skip silently
+	return nil
+}
+
+// fixElfRpath uses patchelf to set RPATH on Linux ELF binaries
+func (a *HomebrewBottleAction) fixElfRpath(binaryPath, installPath string) error {
+	patchelf, err := exec.LookPath("patchelf")
+	if err != nil {
+		// patchelf not available - try to proceed without it
+		// The binary may still work if its dependencies are system libraries
+		fmt.Printf("   Warning: patchelf not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
+		return nil
+	}
+
+	// Homebrew bottles often have read-only files; make writable before patching
+	info, err := os.Stat(binaryPath)
+	if err != nil {
+		return fmt.Errorf("failed to stat binary: %w", err)
+	}
+	originalMode := info.Mode()
+	if originalMode&0200 == 0 {
+		if err := os.Chmod(binaryPath, originalMode|0200); err != nil {
+			return fmt.Errorf("failed to make binary writable: %w", err)
+		}
+		// Restore original mode after patching (best-effort cleanup)
+		defer func() { _ = os.Chmod(binaryPath, originalMode) }()
+	}
+
+	// Remove existing RPATH first (contains placeholders)
+	removeCmd := exec.Command(patchelf, "--remove-rpath", binaryPath)
+	if output, err := removeCmd.CombinedOutput(); err != nil {
+		// Some binaries might not have RPATH, which is fine
+		if !strings.Contains(string(output), "cannot find") {
+			// Log but continue
+			fmt.Printf("   Note: Could not remove existing RPATH from %s\n", filepath.Base(binaryPath))
+		}
+	}
+
+	// For shared libraries, set RPATH to $ORIGIN so they can find sibling libraries
+	// For executables, RPATH would typically be $ORIGIN/../lib
+	// Since Homebrew bottles are libraries, use $ORIGIN
+	newRpath := "$ORIGIN"
+
+	// Check if there's a lib subdirectory (common pattern)
+	libDir := filepath.Join(filepath.Dir(binaryPath), "lib")
+	if _, err := os.Stat(libDir); err == nil {
+		// Binary is not in lib/, might need to point to lib/
+		relPath, _ := filepath.Rel(filepath.Dir(binaryPath), libDir)
+		if relPath != "" && relPath != "." {
+			newRpath = "$ORIGIN/" + relPath
+		}
+	}
+
+	setCmd := exec.Command(patchelf, "--force-rpath", "--set-rpath", newRpath, binaryPath)
+	if output, err := setCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("patchelf --set-rpath failed: %s: %w", strings.TrimSpace(string(output)), err)
+	}
+
+	return nil
+}
+
+// fixMachoRpath uses install_name_tool to fix RPATH on macOS Mach-O binaries
+func (a *HomebrewBottleAction) fixMachoRpath(binaryPath, installPath string) error {
+	installNameTool, err := exec.LookPath("install_name_tool")
+	if err != nil {
+		fmt.Printf("   Warning: install_name_tool not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
+		return nil
+	}
+
+	otool, err := exec.LookPath("otool")
+	if err != nil {
+		fmt.Printf("   Warning: otool not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
+		return nil
+	}
+
+	// Homebrew bottles often have read-only files; make writable before patching
+	info, err := os.Stat(binaryPath)
+	if err != nil {
+		return fmt.Errorf("failed to stat binary: %w", err)
+	}
+	originalMode := info.Mode()
+	if originalMode&0200 == 0 {
+		if err := os.Chmod(binaryPath, originalMode|0200); err != nil {
+			return fmt.Errorf("failed to make binary writable: %w", err)
+		}
+		// Restore original mode after patching (best-effort cleanup)
+		defer func() { _ = os.Chmod(binaryPath, originalMode) }()
+	}
+
+	// Get existing rpaths that contain placeholders
+	otoolCmd := exec.Command(otool, "-l", binaryPath)
+	output, err := otoolCmd.Output()
+	if err != nil {
+		return fmt.Errorf("otool failed: %w", err)
+	}
+
+	// Parse and delete rpaths containing HOMEBREW placeholders
+	lines := strings.Split(string(output), "\n")
+	inRpathSection := false
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "cmd LC_RPATH" {
+			inRpathSection = true
+			continue
+		}
+		if inRpathSection && strings.HasPrefix(line, "path ") {
+			pathLine := strings.TrimPrefix(line, "path ")
+			if idx := strings.Index(pathLine, " (offset"); idx != -1 {
+				pathLine = pathLine[:idx]
+			}
+			// Delete if it contains placeholder
+			if strings.Contains(pathLine, "HOMEBREW") {
+				deleteCmd := exec.Command(installNameTool, "-delete_rpath", pathLine, binaryPath)
+				_ = deleteCmd.Run() // Ignore errors
+			}
+			inRpathSection = false
+		}
+	}
+
+	// Add new RPATH
+	newRpath := "@loader_path"
+	addCmd := exec.Command(installNameTool, "-add_rpath", newRpath, binaryPath)
+	if output, err := addCmd.CombinedOutput(); err != nil {
+		// Ignore "would duplicate" errors
+		if !strings.Contains(string(output), "would duplicate") {
+			return fmt.Errorf("install_name_tool -add_rpath failed: %s: %w", strings.TrimSpace(string(output)), err)
+		}
+	}
+
+	// Re-sign the binary (required on Apple Silicon)
+	if runtime.GOARCH == "arm64" {
+		codesign, err := exec.LookPath("codesign")
+		if err == nil {
+			signCmd := exec.Command(codesign, "-f", "-s", "-", binaryPath)
+			_ = signCmd.Run() // Best effort
+		}
+	}
+
+	return nil
 }
 
 // isBinaryFile detects if content is binary (contains null bytes in first 8KB)

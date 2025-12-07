@@ -37,9 +37,16 @@ jobs:
             echo "$CHANGED"
 
             # Build JSON array of {tool, path} objects
+            # Skip library recipes (type = "library") as they cannot be installed directly
             JSON="["
             FIRST=true
             for path in $CHANGED; do
+              # Check if recipe is a library type
+              if grep -q 'type = "library"' "$path" 2>/dev/null; then
+                echo "Skipping library recipe: $path"
+                continue
+              fi
+
               tool=$(basename "$path" .toml)
               if [ "$FIRST" = true ]; then
                 FIRST=false
@@ -50,7 +57,12 @@ jobs:
             done
             JSON="$JSON]"
 
-            echo "has_changes=true" >> $GITHUB_OUTPUT
+            # Check if we have any non-library recipes
+            if [ "$JSON" = "[]" ]; then
+              echo "has_changes=false" >> $GITHUB_OUTPUT
+            else
+              echo "has_changes=true" >> $GITHUB_OUTPUT
+            fi
             echo "recipes=$JSON" >> $GITHUB_OUTPUT
           fi
 

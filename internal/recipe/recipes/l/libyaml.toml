@@ -1,0 +1,16 @@
+[metadata]
+name = "libyaml"
+description = "YAML 1.1 parser and emitter library"
+type = "library"
+
+[version]
+source = "homebrew"
+formula = "libyaml"
+
+[[steps]]
+action = "homebrew_bottle"
+formula = "libyaml"
+
+[[steps]]
+action = "install_libraries"
+patterns = ["lib/*.so*", "lib/*.dylib"]
