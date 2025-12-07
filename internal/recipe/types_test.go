@@ -114,6 +114,75 @@ pattern = "verified"
 	}
 }
 
+func TestRecipe_UnmarshalTOML_TypeField(t *testing.T) {
+	tests := []struct {
+		name     string
+		tomlData string
+		wantType string
+	}{
+		{
+			name: "type tool",
+			tomlData: `
+[metadata]
+name = "test-tool"
+type = "tool"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "echo verified"
+`,
+			wantType: "tool",
+		},
+		{
+			name: "type library",
+			tomlData: `
+[metadata]
+name = "test-lib"
+type = "library"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "echo verified"
+`,
+			wantType: "library",
+		},
+		{
+			name: "type omitted defaults to empty",
+			tomlData: `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "echo verified"
+`,
+			wantType: "", // Empty string, defaults to "tool" at runtime
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var recipe Recipe
+			err := toml.Unmarshal([]byte(tt.tomlData), &recipe)
+			if err != nil {
+				t.Fatalf("Unmarshal() error = %v", err)
+			}
+			if recipe.Metadata.Type != tt.wantType {
+				t.Errorf("Type = %q, want %q", recipe.Metadata.Type, tt.wantType)
+			}
+		})
+	}
+}
+
 func TestStep_UnmarshalTOML_Params(t *testing.T) {
 	tomlData := `
 [[steps]]
