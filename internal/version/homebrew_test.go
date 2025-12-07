@@ -17,7 +17,7 @@ func TestResolveHomebrew_Success(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "libyaml",
 			"full_name": "libyaml",
 			"versions": {
@@ -79,7 +79,7 @@ func TestResolveHomebrew_NotFound(t *testing.T) {
 func TestResolveHomebrew_DisabledFormula(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "oldformula",
 			"versions": {
 				"stable": "1.0.0"
@@ -130,7 +130,7 @@ func TestResolveHomebrew_InvalidFormula(t *testing.T) {
 func TestListHomebrewVersions_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "openssl",
 			"versions": {
 				"stable": "3.2.0"
@@ -171,7 +171,7 @@ func TestListHomebrewVersions_Success(t *testing.T) {
 func TestListHomebrewVersions_NoVersionedFormulae(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "libyaml",
 			"versions": {
 				"stable": "0.2.5"
@@ -202,7 +202,7 @@ func TestListHomebrewVersions_NoVersionedFormulae(t *testing.T) {
 func TestHomebrewProvider_ResolveLatest(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "libyaml",
 			"versions": {"stable": "0.2.5"},
 			"versioned_formulae": []
@@ -229,7 +229,7 @@ func TestHomebrewProvider_ResolveLatest(t *testing.T) {
 func TestHomebrewProvider_ResolveVersion_Exact(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "libyaml",
 			"versions": {"stable": "0.2.5"},
 			"versioned_formulae": []
@@ -256,7 +256,7 @@ func TestHomebrewProvider_ResolveVersion_Exact(t *testing.T) {
 func TestHomebrewProvider_ResolveVersion_Fuzzy(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "libyaml",
 			"versions": {"stable": "0.2.5"},
 			"versioned_formulae": []
@@ -284,7 +284,7 @@ func TestHomebrewProvider_ResolveVersion_Fuzzy(t *testing.T) {
 func TestHomebrewProvider_ResolveVersion_NotFound(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "libyaml",
 			"versions": {"stable": "0.2.5"},
 			"versioned_formulae": []
@@ -365,7 +365,7 @@ func TestResolveHomebrew_NetworkError(t *testing.T) {
 func TestResolveHomebrew_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{invalid json`))
+		_, _ = w.Write([]byte(`{invalid json`))
 	}))
 	defer server.Close()
 
@@ -391,7 +391,7 @@ func TestResolveHomebrew_InvalidJSON(t *testing.T) {
 func TestResolveHomebrew_NoStableVersion(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{
+		_, _ = w.Write([]byte(`{
 			"name": "headonly",
 			"versions": {
 				"stable": "",

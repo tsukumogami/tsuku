@@ -28,11 +28,11 @@ type homebrewFormulaInfo struct {
 		Head   string `json:"head,omitempty"`
 		Bottle bool   `json:"bottle"`
 	} `json:"versions"`
-	Revision       int      `json:"revision"`
-	VersionScheme  int      `json:"version_scheme"`
-	Deprecated     bool     `json:"deprecated"`
-	Disabled       bool     `json:"disabled"`
-	Versioned      []string `json:"versioned_formulae"` // List of versioned formulae (e.g., "openssl@1.1")
+	Revision      int      `json:"revision"`
+	VersionScheme int      `json:"version_scheme"`
+	Deprecated    bool     `json:"deprecated"`
+	Disabled      bool     `json:"disabled"`
+	Versioned     []string `json:"versioned_formulae"` // List of versioned formulae (e.g., "openssl@1.1")
 }
 
 // ResolveHomebrew fetches the latest stable version from Homebrew API
@@ -122,10 +122,7 @@ func (r *Resolver) ResolveHomebrew(ctx context.Context, formula string) (*Versio
 		}
 	}
 
-	// Check if formula is deprecated or disabled
-	if formulaInfo.Deprecated {
-		// Still return the version, but could log a warning in the future
-	}
+	// Check if formula is disabled
 	if formulaInfo.Disabled {
 		return nil, &ResolverError{
 			Type:    ErrTypeNotFound,
