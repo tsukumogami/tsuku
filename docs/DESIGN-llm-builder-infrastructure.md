@@ -1,6 +1,6 @@
 # Design Document: LLM Builder Infrastructure
 
-**Status**: Proposed
+**Status**: Accepted
 
 ## Context and Problem Statement
 
