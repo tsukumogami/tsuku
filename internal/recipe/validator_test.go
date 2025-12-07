@@ -80,6 +80,48 @@ command = "test --version"
 	}
 }
 
+func TestValidateBytes_TypeField(t *testing.T) {
+	tests := []struct {
+		name      string
+		typeValue string
+		wantValid bool
+	}{
+		{name: "type tool", typeValue: `type = "tool"`, wantValid: true},
+		{name: "type library", typeValue: `type = "library"`, wantValid: true},
+		{name: "type omitted", typeValue: "", wantValid: true},
+		{name: "type invalid", typeValue: `type = "invalid"`, wantValid: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recipe := `
+[metadata]
+name = "test"
+` + tt.typeValue + `
+
+[[steps]]
+action = "run_command"
+command = "echo test"
+
+[verify]
+command = "test"
+`
+			result := ValidateBytes([]byte(recipe))
+
+			if result.Valid != tt.wantValid {
+				if tt.wantValid {
+					t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+				} else {
+					t.Error("expected invalid recipe due to invalid type")
+				}
+			}
+			if !tt.wantValid && !hasError(result, "metadata.type", "invalid type") {
+				t.Error("expected error about invalid metadata.type")
+			}
+		})
+	}
+}
+
 func TestValidateBytes_MissingVerifyCommand(t *testing.T) {
 	recipe := `
 [metadata]
