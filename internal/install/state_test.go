@@ -668,3 +668,300 @@ func TestStateManager_statePath(t *testing.T) {
 		t.Errorf("statePath() = %q, want %q", sm.statePath(), expected)
 	}
 }
+
+// Library state tests
+
+func TestStateManager_LoadMissing_InitializesLibs(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v, want nil", err)
+	}
+
+	if state.Libs == nil {
+		t.Fatal("Libs map is nil, should be initialized")
+	}
+
+	if len(state.Libs) != 0 {
+		t.Errorf("Libs count = %d, want 0", len(state.Libs))
+	}
+}
+
+func TestStateManager_BackwardCompatibility_NoLibsSection(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write state.json without libs section (old format)
+	oldState := `{"installed":{"kubectl":{"version":"1.29.0","is_explicit":true,"required_by":[]}}}`
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(oldState), 0644); err != nil {
+		t.Fatalf("failed to write old state: %v", err)
+	}
+
+	// Load should succeed and initialize Libs
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if state.Libs == nil {
+		t.Fatal("Libs map is nil after loading old format")
+	}
+
+	if len(state.Libs) != 0 {
+		t.Errorf("Libs count = %d, want 0", len(state.Libs))
+	}
+
+	// Verify installed tools still work
+	if _, ok := state.Installed["kubectl"]; !ok {
+		t.Error("kubectl not found in installed tools")
+	}
+}
+
+func TestStateManager_AddLibraryUsedBy(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	err := sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+	if err != nil {
+		t.Fatalf("AddLibraryUsedBy() error = %v", err)
+	}
+
+	// Verify
+	state, _ := sm.Load()
+	libState := state.Libs["libyaml"]["0.2.5"]
+
+	if len(libState.UsedBy) != 1 {
+		t.Fatalf("UsedBy length = %d, want 1", len(libState.UsedBy))
+	}
+
+	if libState.UsedBy[0] != "ruby-3.4.0" {
+		t.Errorf("UsedBy[0] = %s, want ruby-3.4.0", libState.UsedBy[0])
+	}
+}
+
+func TestStateManager_AddLibraryUsedBy_Multiple(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Add multiple tools using same library
+	err := sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+	if err != nil {
+		t.Fatalf("AddLibraryUsedBy() error = %v", err)
+	}
+
+	err = sm.AddLibraryUsedBy("libyaml", "0.2.5", "python-3.12")
+	if err != nil {
+		t.Fatalf("AddLibraryUsedBy() error = %v", err)
+	}
+
+	// Verify
+	state, _ := sm.Load()
+	libState := state.Libs["libyaml"]["0.2.5"]
+
+	if len(libState.UsedBy) != 2 {
+		t.Fatalf("UsedBy length = %d, want 2", len(libState.UsedBy))
+	}
+}
+
+func TestStateManager_AddLibraryUsedBy_Duplicate(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Add same tool twice
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+
+	// Verify only one entry
+	state, _ := sm.Load()
+	libState := state.Libs["libyaml"]["0.2.5"]
+
+	if len(libState.UsedBy) != 1 {
+		t.Errorf("UsedBy length = %d, want 1 (duplicates should be ignored)", len(libState.UsedBy))
+	}
+}
+
+func TestStateManager_RemoveLibraryUsedBy(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Setup
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.5", "python-3.12")
+
+	// Remove one
+	err := sm.RemoveLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+	if err != nil {
+		t.Fatalf("RemoveLibraryUsedBy() error = %v", err)
+	}
+
+	// Verify
+	state, _ := sm.Load()
+	libState := state.Libs["libyaml"]["0.2.5"]
+
+	if len(libState.UsedBy) != 1 {
+		t.Fatalf("UsedBy length = %d, want 1", len(libState.UsedBy))
+	}
+
+	if libState.UsedBy[0] != "python-3.12" {
+		t.Errorf("UsedBy[0] = %s, want python-3.12", libState.UsedBy[0])
+	}
+}
+
+func TestStateManager_RemoveLibraryVersion(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Setup
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.4", "python-3.11")
+
+	// Remove one version
+	err := sm.RemoveLibraryVersion("libyaml", "0.2.5")
+	if err != nil {
+		t.Fatalf("RemoveLibraryVersion() error = %v", err)
+	}
+
+	// Verify version removed
+	state, _ := sm.Load()
+	if _, exists := state.Libs["libyaml"]["0.2.5"]; exists {
+		t.Error("libyaml 0.2.5 should be removed")
+	}
+
+	// Other version should still exist
+	if _, exists := state.Libs["libyaml"]["0.2.4"]; !exists {
+		t.Error("libyaml 0.2.4 should still exist")
+	}
+}
+
+func TestStateManager_RemoveLibraryVersion_CleansEmptyLib(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Setup single version
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+
+	// Remove only version
+	err := sm.RemoveLibraryVersion("libyaml", "0.2.5")
+	if err != nil {
+		t.Fatalf("RemoveLibraryVersion() error = %v", err)
+	}
+
+	// Verify library entry is cleaned up
+	state, _ := sm.Load()
+	if _, exists := state.Libs["libyaml"]; exists {
+		t.Error("libyaml entry should be removed when empty")
+	}
+}
+
+func TestStateManager_GetLibraryState(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Setup
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+
+	// Get existing
+	libState, err := sm.GetLibraryState("libyaml", "0.2.5")
+	if err != nil {
+		t.Fatalf("GetLibraryState() error = %v", err)
+	}
+
+	if libState == nil {
+		t.Fatal("GetLibraryState() returned nil for existing library")
+	}
+
+	if len(libState.UsedBy) != 1 {
+		t.Errorf("UsedBy length = %d, want 1", len(libState.UsedBy))
+	}
+}
+
+func TestStateManager_GetLibraryState_NotFound(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Get non-existent
+	libState, err := sm.GetLibraryState("nonexistent", "1.0.0")
+	if err != nil {
+		t.Fatalf("GetLibraryState() error = %v", err)
+	}
+
+	if libState != nil {
+		t.Error("GetLibraryState() should return nil for non-existent library")
+	}
+}
+
+func TestStateManager_MultipleLibraryVersions(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Setup multiple versions of same library
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.5", "ruby-3.4.0")
+	_ = sm.AddLibraryUsedBy("libyaml", "0.2.4", "ruby-3.3.0")
+	_ = sm.AddLibraryUsedBy("openssl", "3.0.0", "python-3.12")
+
+	// Verify
+	state, _ := sm.Load()
+
+	if len(state.Libs) != 2 {
+		t.Errorf("Libs count = %d, want 2", len(state.Libs))
+	}
+
+	if len(state.Libs["libyaml"]) != 2 {
+		t.Errorf("libyaml versions count = %d, want 2", len(state.Libs["libyaml"]))
+	}
+
+	if len(state.Libs["openssl"]) != 1 {
+		t.Errorf("openssl versions count = %d, want 1", len(state.Libs["openssl"]))
+	}
+}
+
+func TestStateManager_SaveAndLoad_WithLibs(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Create state with both tools and libs
+	state := &State{
+		Installed: map[string]ToolState{
+			"ruby": {
+				Version:    "3.4.0",
+				IsExplicit: true,
+				RequiredBy: []string{},
+			},
+		},
+		Libs: map[string]map[string]LibraryVersionState{
+			"libyaml": {
+				"0.2.5": {UsedBy: []string{"ruby-3.4.0"}},
+			},
+		},
+	}
+
+	// Save
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Load
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// Verify tools
+	if _, ok := loaded.Installed["ruby"]; !ok {
+		t.Error("ruby not found in loaded state")
+	}
+
+	// Verify libs
+	libState := loaded.Libs["libyaml"]["0.2.5"]
+	if len(libState.UsedBy) != 1 {
+		t.Errorf("UsedBy length = %d, want 1", len(libState.UsedBy))
+	}
+	if libState.UsedBy[0] != "ruby-3.4.0" {
+		t.Errorf("UsedBy[0] = %s, want ruby-3.4.0", libState.UsedBy[0])
+	}
+}
