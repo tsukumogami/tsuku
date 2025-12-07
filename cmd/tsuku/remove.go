@@ -22,6 +22,7 @@ Examples:
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		toolName := args[0]
+		forceRemove, _ := cmd.Flags().GetBool("force")
 
 		// Initialize telemetry
 		telemetryClient := telemetry.NewClient()
@@ -50,9 +51,12 @@ Examples:
 		if err == nil {
 			if ts, ok := state.Installed[toolName]; ok {
 				if len(ts.RequiredBy) > 0 {
-					fmt.Fprintf(os.Stderr, "Error: %s is required by: %s\n", toolName, strings.Join(ts.RequiredBy, ", "))
-					fmt.Fprintf(os.Stderr, "Please remove them first.\n")
-					exitWithCode(ExitDependencyFailed)
+					fmt.Fprintf(os.Stderr, "Warning: %s is required by: %s\n", toolName, strings.Join(ts.RequiredBy, ", "))
+					if !forceRemove {
+						fmt.Fprintf(os.Stderr, "Use --force to remove anyway.\n")
+						exitWithCode(ExitDependencyFailed)
+					}
+					fmt.Fprintf(os.Stderr, "Proceeding with removal due to --force flag.\n")
 				}
 			}
 		}
@@ -134,4 +138,8 @@ func cleanupOrphans(mgr *install.Manager, toolName string) {
 			cleanupOrphans(mgr, dep)
 		}
 	}
+}
+
+func init() {
+	removeCmd.Flags().BoolP("force", "f", false, "Force removal even if other tools depend on this one")
 }
