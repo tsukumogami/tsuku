@@ -262,6 +262,11 @@ func (r *Recipe) ExtractBinaries() []string {
 	return binaries
 }
 
+// IsLibrary returns true if this recipe is a library (type = "library")
+func (r *Recipe) IsLibrary() bool {
+	return r.Metadata.Type == RecipeTypeLibrary
+}
+
 // HasChecksumVerification returns true if any download step includes checksum verification.
 // This checks for the presence of "checksum" or "checksum_url" parameters in download-related actions.
 func (r *Recipe) HasChecksumVerification() bool {

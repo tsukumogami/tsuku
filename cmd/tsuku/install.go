@@ -225,6 +225,11 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		return err
 	}
 
+	// Check if this is a library recipe - route to library installation
+	if r.IsLibrary() {
+		return installLibrary(toolName, reqVersion, parent, mgr, telemetryClient)
+	}
+
 	// Check for checksum verification (only warn for explicit installs)
 	if isExplicit && !r.HasChecksumVerification() {
 		fmt.Fprintf(os.Stderr, "Warning: Recipe '%s' does not include checksum verification.\n", toolName)
@@ -349,6 +354,25 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		printInfof("Warning: failed to update state: %v\n", err)
 	}
 
+	// Update used_by for any library dependencies now that we know the tool version
+	toolNameVersion := fmt.Sprintf("%s-%s", toolName, version)
+	for _, dep := range r.Metadata.Dependencies {
+		// Load dependency recipe to check if it's a library
+		depRecipe, err := loader.Get(dep)
+		if err != nil {
+			continue // Skip if recipe not found
+		}
+		if depRecipe.IsLibrary() {
+			// Get installed library version
+			libVersion := mgr.GetInstalledLibraryVersion(dep)
+			if libVersion != "" {
+				if err := mgr.AddLibraryUsedBy(dep, libVersion, toolNameVersion); err != nil {
+					printInfof("Warning: failed to update library state for %s: %v\n", dep, err)
+				}
+			}
+		}
+	}
+
 	// Send telemetry event on successful installation
 	if telemetryClient != nil {
 		// isDependency is true when isExplicit is false (installed as a dependency)
@@ -362,6 +386,75 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	printInfo("To use the installed tool, add this to your shell profile:")
 	printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
 
+	return nil
+}
+
+// installLibrary handles installation of library recipes
+// Libraries are installed to $TSUKU_HOME/libs/{name}-{version}/ and track used_by
+// Note: used_by tracking is handled by the caller after tool installation completes
+func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, telemetryClient *telemetry.Client) error {
+	// Load recipe
+	r, err := loader.Get(libName)
+	if err != nil {
+		return fmt.Errorf("library recipe not found: %w", err)
+	}
+
+	// Check if we can skip installation (reuse existing version)
+	// For now, just check if any version is installed
+	existingVersion := mgr.GetInstalledLibraryVersion(libName)
+	if existingVersion != "" && reqVersion == "" {
+		printInfof("Library %s@%s already installed, reusing\n", libName, existingVersion)
+		return nil
+	}
+
+	// Create executor
+	var exec *executor.Executor
+	if reqVersion != "" {
+		exec, err = executor.NewWithVersion(r, reqVersion)
+	} else {
+		exec, err = executor.New(r)
+	}
+	if err != nil {
+		return fmt.Errorf("failed to create executor for library: %w", err)
+	}
+	defer exec.Cleanup()
+
+	// Set tools directory for finding other installed tools
+	cfg, _ := config.DefaultConfig()
+	exec.SetToolsDir(cfg.ToolsDir)
+
+	// Execute recipe to download and prepare library
+	if err := exec.Execute(globalCtx); err != nil {
+		return fmt.Errorf("library installation failed: %w", err)
+	}
+
+	version := exec.Version()
+	if version == "" {
+		version = "dev"
+	}
+
+	// Check if this specific version is already installed
+	if mgr.IsLibraryInstalled(libName, version) {
+		printInfof("Library %s@%s already installed\n", libName, version)
+		return nil
+	}
+
+	// Install to libs directory
+	// Note: used_by tracking is handled by the caller (installWithDependencies) after
+	// tool installation completes, since we need the tool's version for proper tracking
+	opts := install.LibraryInstallOptions{}
+
+	if err := mgr.InstallLibrary(libName, version, exec.WorkDir(), opts); err != nil {
+		return fmt.Errorf("failed to install library to permanent location: %w", err)
+	}
+
+	// Send telemetry event
+	if telemetryClient != nil {
+		event := telemetry.NewInstallEvent(libName, "", version, true) // Libraries are always dependencies
+		telemetryClient.Send(event)
+	}
+
+	printInfof("Library %s@%s installed successfully\n", libName, version)
 	return nil
 }
 
