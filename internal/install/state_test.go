@@ -1061,10 +1061,10 @@ func TestStateManager_BackwardCompatibility_NoDependencyFields(t *testing.T) {
 	}
 
 	// Dependency fields should be nil (empty), not cause errors
-	if kubectl.InstallDependencies != nil && len(kubectl.InstallDependencies) != 0 {
+	if len(kubectl.InstallDependencies) != 0 {
 		t.Errorf("InstallDependencies = %v, want nil or empty", kubectl.InstallDependencies)
 	}
-	if kubectl.RuntimeDependencies != nil && len(kubectl.RuntimeDependencies) != 0 {
+	if len(kubectl.RuntimeDependencies) != 0 {
 		t.Errorf("RuntimeDependencies = %v, want nil or empty", kubectl.RuntimeDependencies)
 	}
 }
