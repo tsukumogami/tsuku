@@ -13,12 +13,14 @@ import (
 // ToolState represents the state of an installed tool
 type ToolState struct {
 	Version               string   `json:"version"`
-	IsExplicit            bool     `json:"is_explicit"`             // User requested this tool directly
-	RequiredBy            []string `json:"required_by"`             // Tools that depend on this tool
-	IsHidden              bool     `json:"is_hidden"`               // Hidden from PATH and default list output
-	IsExecutionDependency bool     `json:"is_execution_dependency"` // Installed by tsuku for internal use (npm, Python, cargo)
-	InstalledVia          string   `json:"installed_via,omitempty"` // Package manager used to install (npm, pip, cargo, etc.)
-	Binaries              []string `json:"binaries,omitempty"`      // List of binary names this tool provides
+	IsExplicit            bool     `json:"is_explicit"`                    // User requested this tool directly
+	RequiredBy            []string `json:"required_by"`                    // Tools that depend on this tool
+	IsHidden              bool     `json:"is_hidden"`                      // Hidden from PATH and default list output
+	IsExecutionDependency bool     `json:"is_execution_dependency"`        // Installed by tsuku for internal use (npm, Python, cargo)
+	InstalledVia          string   `json:"installed_via,omitempty"`        // Package manager used to install (npm, pip, cargo, etc.)
+	Binaries              []string `json:"binaries,omitempty"`             // List of binary names this tool provides
+	InstallDependencies   []string `json:"install_dependencies,omitempty"` // Dependencies needed during installation
+	RuntimeDependencies   []string `json:"runtime_dependencies,omitempty"` // Dependencies needed when the tool runs
 }
 
 // LibraryVersionState represents the state of a specific library version

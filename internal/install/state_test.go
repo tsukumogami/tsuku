@@ -965,3 +965,136 @@ func TestStateManager_SaveAndLoad_WithLibs(t *testing.T) {
 		t.Errorf("UsedBy[0] = %s, want ruby-3.4.0", libState.UsedBy[0])
 	}
 }
+
+func TestStateManager_SaveAndLoad_WithDependencies(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Create test state with dependencies
+	state := &State{
+		Installed: map[string]ToolState{
+			"turbo": {
+				Version:             "1.10.0",
+				IsExplicit:          true,
+				RequiredBy:          []string{},
+				InstallDependencies: []string{"nodejs"},
+				RuntimeDependencies: []string{"nodejs"},
+			},
+			"esbuild": {
+				Version:             "0.19.0",
+				IsExplicit:          true,
+				RequiredBy:          []string{},
+				InstallDependencies: []string{"nodejs"},
+				RuntimeDependencies: []string{}, // compiled binary, no runtime deps
+			},
+		},
+		Libs: make(map[string]map[string]LibraryVersionState),
+	}
+
+	// Save
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Load
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// Verify turbo
+	turbo, ok := loaded.Installed["turbo"]
+	if !ok {
+		t.Fatal("turbo not found in loaded state")
+	}
+	if len(turbo.InstallDependencies) != 1 || turbo.InstallDependencies[0] != "nodejs" {
+		t.Errorf("turbo.InstallDependencies = %v, want [nodejs]", turbo.InstallDependencies)
+	}
+	if len(turbo.RuntimeDependencies) != 1 || turbo.RuntimeDependencies[0] != "nodejs" {
+		t.Errorf("turbo.RuntimeDependencies = %v, want [nodejs]", turbo.RuntimeDependencies)
+	}
+
+	// Verify esbuild
+	esbuild, ok := loaded.Installed["esbuild"]
+	if !ok {
+		t.Fatal("esbuild not found in loaded state")
+	}
+	if len(esbuild.InstallDependencies) != 1 || esbuild.InstallDependencies[0] != "nodejs" {
+		t.Errorf("esbuild.InstallDependencies = %v, want [nodejs]", esbuild.InstallDependencies)
+	}
+	if len(esbuild.RuntimeDependencies) != 0 {
+		t.Errorf("esbuild.RuntimeDependencies = %v, want []", esbuild.RuntimeDependencies)
+	}
+}
+
+func TestStateManager_BackwardCompatibility_NoDependencyFields(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write state file without dependency fields (simulates old state.json)
+	oldStateJSON := `{
+  "installed": {
+    "kubectl": {
+      "version": "1.29.0",
+      "is_explicit": true,
+      "required_by": []
+    }
+  }
+}`
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(oldStateJSON), 0644); err != nil {
+		t.Fatalf("failed to write old state: %v", err)
+	}
+
+	// Load should succeed
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// Verify tool exists
+	kubectl, ok := loaded.Installed["kubectl"]
+	if !ok {
+		t.Fatal("kubectl not found in loaded state")
+	}
+
+	// Dependency fields should be nil (empty), not cause errors
+	if len(kubectl.InstallDependencies) != 0 {
+		t.Errorf("InstallDependencies = %v, want nil or empty", kubectl.InstallDependencies)
+	}
+	if len(kubectl.RuntimeDependencies) != 0 {
+		t.Errorf("RuntimeDependencies = %v, want nil or empty", kubectl.RuntimeDependencies)
+	}
+}
+
+func TestStateManager_UpdateTool_WithDependencies(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Update tool with dependencies
+	err := sm.UpdateTool("turbo", func(ts *ToolState) {
+		ts.Version = "1.10.0"
+		ts.IsExplicit = true
+		ts.InstallDependencies = []string{"nodejs"}
+		ts.RuntimeDependencies = []string{"nodejs"}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Load and verify
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	turbo := state.Installed["turbo"]
+	if len(turbo.InstallDependencies) != 1 || turbo.InstallDependencies[0] != "nodejs" {
+		t.Errorf("InstallDependencies = %v, want [nodejs]", turbo.InstallDependencies)
+	}
+	if len(turbo.RuntimeDependencies) != 1 || turbo.RuntimeDependencies[0] != "nodejs" {
+		t.Errorf("RuntimeDependencies = %v, want [nodejs]", turbo.RuntimeDependencies)
+	}
+}
