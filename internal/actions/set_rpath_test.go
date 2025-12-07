@@ -3,6 +3,7 @@ package actions
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -347,5 +348,268 @@ func TestSetRpathAction_UnsupportedFormat(t *testing.T) {
 
 	if err == nil {
 		t.Error("expected error for unsupported binary format")
+	}
+}
+
+func TestValidatePathWithinDir(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	tests := []struct {
+		name      string
+		target    string
+		base      string
+		wantError bool
+	}{
+		{
+			name:      "valid path within dir",
+			target:    filepath.Join(tmpDir, "subdir", "file"),
+			base:      tmpDir,
+			wantError: false,
+		},
+		{
+			name:      "path traversal attack",
+			target:    filepath.Join(tmpDir, "..", "etc", "passwd"),
+			base:      tmpDir,
+			wantError: true,
+		},
+		{
+			name:      "absolute path outside base",
+			target:    "/etc/passwd",
+			base:      tmpDir,
+			wantError: true,
+		},
+		{
+			name:      "same as base dir",
+			target:    tmpDir,
+			base:      tmpDir,
+			wantError: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validatePathWithinDir(tt.target, tt.base)
+			if (err != nil) != tt.wantError {
+				t.Errorf("validatePathWithinDir() error = %v, wantError %v", err, tt.wantError)
+			}
+		})
+	}
+}
+
+func TestValidateRpath(t *testing.T) {
+	tests := []struct {
+		name      string
+		rpath     string
+		wantError bool
+	}{
+		{
+			name:      "empty rpath (uses default)",
+			rpath:     "",
+			wantError: false,
+		},
+		{
+			name:      "valid $ORIGIN relative",
+			rpath:     "$ORIGIN/../lib",
+			wantError: false,
+		},
+		{
+			name:      "valid @executable_path",
+			rpath:     "@executable_path/../lib",
+			wantError: false,
+		},
+		{
+			name:      "valid @loader_path",
+			rpath:     "@loader_path/../lib",
+			wantError: false,
+		},
+		{
+			name:      "valid @rpath",
+			rpath:     "@rpath/lib",
+			wantError: false,
+		},
+		{
+			name:      "colon injection attack",
+			rpath:     "$ORIGIN/../lib:/tmp/evil",
+			wantError: true,
+		},
+		{
+			name:      "absolute path attack",
+			rpath:     "/tmp/evil/lib",
+			wantError: true,
+		},
+		{
+			name:      "missing valid prefix",
+			rpath:     "../lib",
+			wantError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateRpath(tt.rpath)
+			if (err != nil) != tt.wantError {
+				t.Errorf("validateRpath() error = %v, wantError %v", err, tt.wantError)
+			}
+		})
+	}
+}
+
+func TestValidateBinaryName(t *testing.T) {
+	tests := []struct {
+		name      string
+		binName   string
+		wantError bool
+	}{
+		{
+			name:      "simple name",
+			binName:   "ruby",
+			wantError: false,
+		},
+		{
+			name:      "name with dash",
+			binName:   "cargo-audit",
+			wantError: false,
+		},
+		{
+			name:      "name with underscore",
+			binName:   "my_tool",
+			wantError: false,
+		},
+		{
+			name:      "name with dot",
+			binName:   "ruby.orig",
+			wantError: false,
+		},
+		{
+			name:      "shell injection - semicolon",
+			binName:   "ruby;rm -rf /",
+			wantError: true,
+		},
+		{
+			name:      "shell injection - backticks",
+			binName:   "ruby`whoami`",
+			wantError: true,
+		},
+		{
+			name:      "shell injection - dollar",
+			binName:   "ruby$(whoami)",
+			wantError: true,
+		},
+		{
+			name:      "shell injection - space",
+			binName:   "ruby test",
+			wantError: true,
+		},
+		{
+			name:      "shell injection - single quote",
+			binName:   "ruby'test",
+			wantError: true,
+		},
+		{
+			name:      "shell injection - double quote",
+			binName:   "ruby\"test",
+			wantError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateBinaryName(tt.binName)
+			if (err != nil) != tt.wantError {
+				t.Errorf("validateBinaryName() error = %v, wantError %v", err, tt.wantError)
+			}
+		})
+	}
+}
+
+func TestSetRpathAction_PathTraversal(t *testing.T) {
+	action := &SetRpathAction{}
+	ctx := &ExecutionContext{
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+	}
+
+	// Try to escape the work directory
+	err := action.Execute(ctx, map[string]interface{}{
+		"binaries": []interface{}{"../../../etc/passwd"},
+	})
+
+	if err == nil {
+		t.Error("expected error for path traversal attack")
+	}
+	if !strings.Contains(err.Error(), "path escapes") {
+		t.Errorf("expected 'path escapes' error, got: %v", err)
+	}
+}
+
+func TestSetRpathAction_RpathInjection(t *testing.T) {
+	action := &SetRpathAction{}
+	ctx := &ExecutionContext{
+		WorkDir: t.TempDir(),
+		Version: "1.0.0",
+	}
+
+	// Create a fake ELF binary
+	elfPath := filepath.Join(ctx.WorkDir, "test")
+	elfContent := []byte{0x7f, 'E', 'L', 'F', 0x02, 0x01, 0x01, 0x00}
+	if err := os.WriteFile(elfPath, elfContent, 0755); err != nil {
+		t.Fatalf("failed to create test ELF file: %v", err)
+	}
+
+	// Try to inject multiple paths via colon
+	err := action.Execute(ctx, map[string]interface{}{
+		"binaries": []interface{}{"test"},
+		"rpath":    "$ORIGIN/../lib:/tmp/evil",
+	})
+
+	if err == nil {
+		t.Error("expected error for RPATH injection attack")
+	}
+	if !strings.Contains(err.Error(), "invalid rpath") {
+		t.Errorf("expected 'invalid rpath' error, got: %v", err)
+	}
+}
+
+func TestCreateLibraryWrapper_SymlinkAttack(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a real file
+	realFile := filepath.Join(tmpDir, "real")
+	if err := os.WriteFile(realFile, []byte("content"), 0755); err != nil {
+		t.Fatalf("failed to create real file: %v", err)
+	}
+
+	// Create a symlink
+	symlinkPath := filepath.Join(tmpDir, "symlink")
+	if err := os.Symlink(realFile, symlinkPath); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	// Try to create wrapper for symlink - should fail
+	err := createLibraryWrapper(symlinkPath, "$ORIGIN/../lib")
+	if err == nil {
+		t.Error("expected error when creating wrapper for symlink")
+	}
+	if !strings.Contains(err.Error(), "symlink") {
+		t.Errorf("expected 'symlink' error, got: %v", err)
+	}
+}
+
+func TestCreateLibraryWrapper_UnsafeName(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create file with unsafe name
+	unsafeName := filepath.Join(tmpDir, "test;rm -rf")
+	if err := os.WriteFile(unsafeName, []byte("content"), 0755); err != nil {
+		t.Fatalf("failed to create file: %v", err)
+	}
+
+	// Try to create wrapper - should fail due to unsafe name
+	err := createLibraryWrapper(unsafeName, "$ORIGIN/../lib")
+	if err == nil {
+		t.Error("expected error for unsafe binary name")
+	}
+	if !strings.Contains(err.Error(), "unsafe") {
+		t.Errorf("expected 'unsafe' error, got: %v", err)
 	}
 }
