@@ -8,27 +8,27 @@
 
 ## Context and Problem Statement
 
-The LLM Builder Infrastructure milestone (M12) proposes using LLMs to generate tsuku recipes from GitHub release data. Before investing in infrastructure components like container validation, provider abstraction, or repair loops, we need to validate the core hypothesis:
+The LLM Builder Infrastructure milestone (M12) will enable tsuku to generate recipes from GitHub release data using LLMs. Before building supporting infrastructure (container validation, provider abstraction, repair loops), we implement the critical path end-to-end to discover real integration issues early.
 
-**Can an LLM correctly match GitHub release assets to platform/architecture combinations and produce syntactically valid, working recipes?**
+### Purpose of This Slice
 
-This is the riskiest assumption in the entire milestone. If the LLM cannot reliably produce working recipes from release data, the infrastructure built around it would be wasted effort.
+This is not an experiment to see if LLM recipe generation is possible - we know it works. The purpose is to:
 
-### The Hypothesis
+1. **Discover integration issues** by building the real feature path
+2. **Inform the design** of later slices with concrete experience
+3. **Establish patterns** that will be extended, not thrown away
 
-Given a GitHub repository with release assets, an LLM can:
-1. Analyze asset filenames and identify platform/architecture patterns
-2. Generate valid TOML recipe syntax following tsuku conventions
-3. Produce recipes that actually install and work when manually tested
+The code written in this slice is production code. It will evolve through later slices, not be rewritten.
 
-### Why This First
+### Why Critical Path First
 
-The parent design outlines four vertical slices. Slice 1 exists specifically to prove the LLM's capability before investing in:
-- Container validation infrastructure (Slice 2)
-- Repair loops and multi-provider abstraction (Slice 3)
-- Production UX and error handling (Slice 4)
+The parent design outlines four vertical slices. Slice 1 implements the critical path to surface issues that would otherwise be discovered late:
+- How does the LLM output integrate with existing recipe structures?
+- What edge cases exist in GitHub release naming conventions?
+- What prompt patterns produce reliable results?
+- Where does the builder interface need extension?
 
-If the spike fails, we can abandon the approach early. If it succeeds, we have confidence to build the supporting infrastructure.
+Issues discovered here inform the designs for Slices 2-4.
 
 ### Scope
 
@@ -49,44 +49,37 @@ If the spike fails, we can abandon the approach early. If it succeeds, we have c
 - CLI integration (`tsuku create` command)
 - Rate limiting, budgets, or confirmation prompts
 
-### Success Criteria
+### Exit Criteria
 
-- [ ] LLM produces syntactically valid TOML recipes
-- [ ] Generated recipe can be manually installed (`tsuku install` from local file)
-- [ ] Works for at least 3 test repos with different naming conventions
-- [ ] Cost per generation is tracked and displayed
+- [ ] GitHub Release Builder registered and callable via `tsuku create <tool> --from github`
+- [ ] Generated recipes are syntactically valid and follow existing recipe patterns
+- [ ] At least 3 test repos produce working installations
+- [ ] Cost per generation tracked and displayed
+- [ ] Issues discovered are documented for Slice 2-4 designs
 
-### Failure Criteria
+### What This Slice Will Discover
 
-The hypothesis is disproved if any of:
-- Less than 80% of generated recipes are syntactically valid TOML
-- Less than 50% of syntactically valid recipes successfully install
-- Cannot generate working recipes for at least 3 mainstream CLI tools
-- Cost per generation exceeds $0.15 (more than 2x estimated upper bound)
-
-### What We'll Learn
-
-Regardless of outcome, this spike will reveal:
-1. **Asset matching accuracy**: How well does Claude understand release naming conventions?
-2. **Recipe completeness**: Does it infer correct extraction steps, binary names, verify commands?
-3. **Token consumption**: Actual cost per recipe (estimated ~$0.02-0.06 in parent design)
-4. **Prompt sensitivity**: How much prompt engineering is needed for consistent results?
+Building the critical path will reveal:
+1. **Integration patterns**: How LLM output maps to existing `recipe.Recipe` structures
+2. **Edge cases**: GitHub release naming variations that need special handling
+3. **Prompt engineering**: What instructions produce consistent, correct output
+4. **Builder interface gaps**: Where the existing Builder interface needs extension for LLM builders
+5. **Cost characteristics**: Actual token consumption for real-world repos
 
 ## Assumptions
 
-- Claude API key available with sufficient quota for experimentation (~100 requests)
-- GitHub release asset naming is sufficient signal (no README parsing needed for spike)
-- Test repos (cli/cli, BurntSushi/ripgrep, sharkdp/fd) are representative of target tools
-- Tool use pattern is appropriate for structured extraction (vs. text parsing)
-- Manual validation is acceptable for initial spike (5-10 recipes tested)
-- Cost measured in API tokens; developer time is not tracked as a cost metric
+- Claude API key available with sufficient quota for development and testing
+- GitHub release asset naming contains sufficient signal for pattern extraction
+- Test repos (cli/cli, BurntSushi/ripgrep, sharkdp/fd, hashicorp/terraform, jqlang/jq) cover common naming conventions
+- Tool use pattern produces more reliable structured output than text parsing
+- Manual validation acceptable for Slice 1; container validation added in Slice 2
 
 ## Decision Drivers
 
-- **Minimal investment**: Prove/disprove the hypothesis with minimal code
-- **Fast feedback**: Quick iteration on prompts and tool definitions
-- **Reusable learnings**: Prompts and tool schemas will carry forward to production
-- **No abstractions yet**: Direct API calls, no interfaces or factories
+- **Follow existing patterns**: Use existing Builder interface, HTTP clients, recipe structures
+- **Discover issues early**: Build the critical path first to surface problems before infrastructure
+- **Production code from start**: Code written here will evolve, not be thrown away
+- **Defer complexity**: Single provider, no repair loop, manual validation - add in later slices
 
 ## External Research
 
@@ -136,136 +129,55 @@ Response includes `assets` array with:
 - `size`: File size in bytes
 - `content_type`: MIME type
 
-## Considered Options
+## Implementation Approach
 
-### Option 1: Standalone Spike Binary
+This is a tsuku feature. The code lives in `internal/` and integrates with the existing builder infrastructure.
 
-Create a separate `cmd/spike-llm/main.go` binary that:
-- Takes a GitHub repo URL as argument
-- Fetches release data
-- Calls Claude API directly
-- Prints generated TOML to stdout
+### New Files
 
-**Pros:**
-- Fully isolated from production code
-- Can be deleted after spike with no trace
-- No risk of coupling to spike decisions
-- Can commit generated recipes to testdata/ for inspection
-- Easy to benchmark in isolation
+| File | Purpose |
+|------|---------|
+| `internal/llm/client.go` | Claude API client using Anthropic Go SDK |
+| `internal/llm/cost.go` | Token usage and cost tracking |
+| `internal/builders/github_release.go` | GitHub Release Builder implementing Builder interface |
 
-**Cons:**
-- Prompts and schemas must be manually ported to production code
-- Cannot leverage existing recipe validation logic
-- Must duplicate HTTP client setup
-- Learnings are not documented in production codebase
+### Integration Points
 
-### Option 2: Internal Package with CLI Hook
+1. **Builder Registry**: Register `GitHubReleaseBuilder` alongside existing builders (Cargo, npm, PyPI, etc.)
+2. **CLI**: Extend `tsuku create` with `--from github` flag
+3. **Recipe Generation**: Use existing `recipe.Recipe` structures and TOML marshaling
+4. **HTTP Client**: Use existing `version.NewHTTPClient()` patterns for GitHub API
 
-Create `internal/llm/spike.go` with a public `GenerateRecipe` function. Add a hidden `--llm-spike` flag to `tsuku create`.
+### Why This Structure
 
-**Pros:**
-- Code can evolve into production implementation
-- Uses existing HTTP client patterns and recipe validation
-- Integrated testing possible with existing fixtures
-- Learnings about prompt engineering documented in code
-
-**Cons:**
-- Pollutes main binary with experimental code
-- Risk of shipping spike code accidentally
-- Harder to deprecate if approach changes (hidden flag becomes tech debt)
-- May create premature coupling (hardcoded model/provider)
-
-### Option 3: Integration Test as Spike
-
-Write the spike as a test file (`internal/llm/spike_test.go`) that can be run with `go test -run TestSpike -v`.
-
-**Pros:**
-- Clearly experimental
-- Built-in assertion framework for validating recipe structure
-- Can use `t.Skip()` to disable in CI initially
-- Can output to testdata/ for inspection
-
-**Cons:**
-- Semantic mismatch: tests assert correctness, spikes explore feasibility
-- Cannot easily parameterize repo URL without env vars
-- Running "tests" implies correctness checking, misleading for experimental code
-- Go test framework expects pass/fail, not exploratory output
-
-### Option 4: Python Notebook for Prompt Iteration
-
-Use a Python Jupyter notebook or REPL to:
-- Prototype prompts interactively
-- Inspect API responses immediately
-- Iterate on tool schemas visually
-- Export final prompt/tool definitions to Go
-
-**Pros:**
-- Fastest iteration cycle (no compile step)
-- Rich inspection of API responses (JSON pretty-print, diffs)
-- Can compare prompt variants side-by-side
-- Industry-standard approach for LLM experimentation
-- Claude API has official Python SDK
-
-**Cons:**
-- Results must be manually ported to Go
-- Different HTTP client than production
-- Requires Python environment setup
-- Not integrated with tsuku codebase
-- Two-language context switching
-
-### Evaluation
-
-| Criterion | Option 1 | Option 2 | Option 3 | Option 4 |
-|-----------|----------|----------|----------|----------|
-| Isolation | Excellent | Poor | Good | Excellent |
-| Reusability | Poor | Good | Fair | Poor |
-| Iteration speed | Good | Good | Poor | Excellent |
-| Risk of pollution | None | High | Low | None |
-| Learning capture | Fair | Good | Fair | Poor |
-
-## Decision Outcome
-
-**Chosen: Option 1 (Standalone Spike Binary)**
-
-Create `cmd/spike-llm/main.go` as a throwaway experiment. This maximizes isolation and makes the spike's temporary nature explicit.
-
-### Rationale
-
-1. **Clear boundaries**: A separate binary cannot accidentally ship or couple to production code
-2. **Fast iteration**: Direct `go run` with immediate stdout output
-3. **Explicit throwaway**: Named "spike" to signal temporary nature
-4. **Learning capture**: Prompts and tool schemas are the reusable artifacts, not code structure
-5. **Single language**: Stays in Go ecosystem, avoiding context switch to Python
-
-### Why Not Option 4 (Python Notebook)?
-
-Option 4 (Python) offers the fastest prompt iteration, but:
-- Production code is Go; Python adds a translation step that may introduce bugs
-- The Anthropic Go SDK is mature; no need to prototype in Python first
-- Go compilation is fast enough (<1s) that iteration speed difference is marginal
-- Keeping everything in Go means the spike code, while throwaway, serves as a direct reference for production implementation
-
-For teams unfamiliar with Go or with more complex prompt engineering needs, Option 4 would be preferred. For this spike, Go is sufficient.
-
-### Trade-offs Accepted
-
-- Code will be rewritten for production (acceptable for a spike)
-- HTTP client will be minimal (no SSRF protection for dev-only tool)
-- Prompt iteration slightly slower than Python notebook approach
+- **Follows existing patterns**: Other builders live in `internal/builders/`
+- **Leverages infrastructure**: Reuse HTTP clients, recipe validation, TOML serialization
+- **Extensible**: Slice 3 will add Gemini provider to `internal/llm/`
+- **No throwaway code**: Everything written here evolves through later slices
 
 ## Solution Architecture
 
 ### Overview
 
 ```
-cmd/spike-llm/main.go
-├── main()
-│   ├── Parse args (owner/repo)
-│   ├── Fetch GitHub release
-│   ├── Call Claude with tool
-│   ├── Parse tool response
-│   ├── Generate recipe TOML
-│   └── Print to stdout with cost
+tsuku create gh --from github
+
+cmd/tsuku/create.go
+├── Parse --from github flag
+├── Get GitHubReleaseBuilder from registry
+└── builder.Build(ctx, "cli/cli", "")
+
+internal/builders/github_release.go
+├── Fetch release metadata from GitHub API
+├── Call Claude via internal/llm/client.go
+├── Parse tool response into asset pattern
+├── Generate recipe.Recipe struct
+└── Return BuildResult with recipe and cost info
+
+internal/llm/client.go
+├── Anthropic SDK wrapper
+├── Tool use with extract_pattern
+└── Usage tracking for cost calculation
 ```
 
 ### Data Structures
@@ -296,31 +208,48 @@ type AssetPattern struct {
 
 ### Components
 
-#### 1. GitHub Release Fetcher
+#### 1. GitHubReleaseBuilder (`internal/builders/github_release.go`)
 
-Minimal HTTP client to fetch release data:
-
-```go
-func fetchLatestRelease(owner, repo string) (*Release, error)
-```
-
-- Endpoint: `https://api.github.com/repos/{owner}/{repo}/releases/latest`
-- Uses `GITHUB_TOKEN` if available (for rate limits)
-- Returns release tag and asset list
-- Also fetches repo metadata (description, homepage) via `/repos/{owner}/{repo}`
-
-#### 2. Claude Client
-
-Direct use of Anthropic Go SDK:
+Implements the existing `Builder` interface:
 
 ```go
-func callClaude(ctx context.Context, tag string, assets []Asset) (*AssetPattern, *Usage, error)
+type GitHubReleaseBuilder struct {
+    httpClient *http.Client
+    llmClient  *llm.Client
+}
+
+func (b *GitHubReleaseBuilder) Name() string { return "github" }
+
+func (b *GitHubReleaseBuilder) CanBuild(ctx context.Context, pkg string) (bool, error)
+
+func (b *GitHubReleaseBuilder) Build(ctx context.Context, pkg, version string) (*BuildResult, error)
 ```
 
-Uses tool use to get structured output:
-- Model: `claude-sonnet-4-5-20250929` (cost-effective, capable)
-- Tool: `extract_pattern` with structured schema
-- Force tool use via `tool_choice: { type: "tool", name: "extract_pattern" }`
+The `Build` method:
+1. Parses `pkg` as `owner/repo` or GitHub URL
+2. Fetches release data via GitHub API (reusing existing HTTP client patterns)
+3. Fetches repo metadata (description, homepage)
+4. Calls LLM client with assets and version tag
+5. Constructs `recipe.Recipe` from LLM response
+6. Returns `BuildResult` with recipe and warnings
+
+#### 2. LLM Client (`internal/llm/client.go`)
+
+Wraps Anthropic Go SDK with tsuku-specific patterns:
+
+```go
+type Client struct {
+    anthropic *anthropic.Client
+    model     string
+}
+
+func (c *Client) ExtractPattern(ctx context.Context, tag string, assets []string) (*AssetPattern, *Usage, error)
+```
+
+- Model: `claude-sonnet-4-5-20250929` (hardcoded for Slice 1, configurable in Slice 3)
+- Uses tool use with `extract_pattern` tool
+- Forces tool use via `tool_choice`
+- Returns usage for cost tracking
 
 #### 3. Tool Definition
 
@@ -378,31 +307,60 @@ Example response for cli/cli:
 }
 ```
 
-#### 4. Recipe Generator
+#### 4. Recipe Generation
 
-Convert tool response to TOML recipe:
+The builder constructs a `recipe.Recipe` directly (using existing types from `internal/recipe/types.go`):
 
 ```go
-func generateRecipe(repo string, mappings *AssetMappings) string
+func (b *GitHubReleaseBuilder) buildRecipe(repo string, meta *RepoMeta, pattern *AssetPattern) *recipe.Recipe {
+    return &recipe.Recipe{
+        Metadata: recipe.MetadataSection{
+            Name:        pattern.Executable,
+            Description: meta.Description,
+            Homepage:    meta.Homepage,
+        },
+        Version: recipe.VersionSection{
+            Source:     "github_releases",
+            GitHubRepo: repo,
+        },
+        Steps: []recipe.Step{{
+            Action: "github_archive",
+            Params: map[string]interface{}{
+                "repo":           repo,
+                "asset_pattern":  pattern.Pattern,
+                "archive_format": pattern.Format,
+                "strip_dirs":     1,
+                "binaries":       []string{pattern.Executable},
+                "os_mapping":     pattern.OSMapping,
+                "arch_mapping":   pattern.ArchMapping,
+            },
+        }},
+        Verify: recipe.VerifySection{
+            Command: pattern.Verify,
+        },
+    }
+}
 ```
 
-Produces recipe with:
-- `[metadata]`: name, description, homepage
-- `[version]`: source = "github_releases", github_repo
-- `[[steps]]`: download, extract, install_binaries
-- `[verify]`: command from LLM
+#### 5. Cost Tracking (`internal/llm/cost.go`)
 
-#### 5. Cost Calculator
-
-Calculate and display cost from usage:
+Track and display token usage:
 
 ```go
-func calculateCost(usage Usage) float64
+type Usage struct {
+    InputTokens  int
+    OutputTokens int
+}
+
+func (u Usage) Cost() float64 // Returns cost in USD
+func (u Usage) String() string // Returns human-readable summary
 ```
 
 Claude Sonnet pricing (as of 2025):
 - Input: $3 per 1M tokens
 - Output: $15 per 1M tokens
+
+Cost is included in `BuildResult.Warnings` for display to user.
 
 ### System Prompt
 
@@ -499,32 +457,30 @@ For this spike, errors are fatal with descriptive messages:
 
 ### Testing Approach
 
-Manual testing with a structured test matrix:
+Test with 5 repositories covering different GitHub release naming conventions:
 
-| Repository | Convention | Expected Difficulty | Goal |
-|------------|------------|---------------------|------|
-| cli/cli | Go (linux_amd64) | Easy | Baseline validation |
-| BurntSushi/ripgrep | Rust (x86_64-unknown-linux-musl) | Medium | Different naming |
-| sharkdp/fd | Rust | Medium | Confirm Rust pattern |
-| hashicorp/terraform | Go (many platforms) | Medium | Many variants |
-| jqlang/jq | Generic (linux-amd64) | Medium | Generic naming |
+| Repository | Convention | Goal |
+|------------|------------|------|
+| cli/cli | Go (linux_amd64) | Baseline - common Go pattern |
+| BurntSushi/ripgrep | Rust (x86_64-unknown-linux-musl) | Rust target triples |
+| sharkdp/fd | Rust | Confirm Rust pattern consistency |
+| hashicorp/terraform | Go (many platforms) | Many platform variants |
+| jqlang/jq | Generic (linux-amd64) | Generic naming conventions |
 
-**Validation steps for each:**
-1. Generate recipe: `go run ./cmd/spike-llm owner/repo > /tmp/tool.toml`
-2. Verify TOML syntax: `cat /tmp/tool.toml | toml-lint` (or manual inspection)
-3. Copy to recipes: `cp /tmp/tool.toml ~/.tsuku/recipes/tool.toml`
-4. Install: `tsuku install tool`
-5. Verify: Run the verify command from recipe
+**Validation steps:**
+1. Run: `tsuku create <tool> --from github`
+2. Inspect generated recipe for correctness
+3. Install: `tsuku install <tool>`
+4. Verify: Run the tool's verify command
 
-**Success metrics:**
-- 4/5 recipes syntactically valid (80%)
-- 3/5 recipes install and run successfully (60%, with expectation to improve)
-- Document failures for future prompt improvement
+**Exit criteria:**
+- At least 3/5 repos produce working installations
+- Generated recipes follow existing recipe patterns
+- Issues discovered are documented
 
-**Recording results:**
-- Save all generated recipes to `testdata/spike-llm/` for reference
-- Document actual cost per generation
-- Note any prompt adjustments needed
+**Artifacts:**
+- Generated recipes saved to `testdata/llm/` for regression testing
+- Issues discovered recorded in design doc updates or new issues
 
 ## Security Considerations
 
@@ -598,37 +554,37 @@ Manual testing with a structured test matrix:
 
 ### Positive
 
-1. **Fast validation**: Proves/disproves core hypothesis in days, not weeks
-2. **Reusable artifacts**: Prompt and tool schema carry forward
-3. **Cost data**: Real measurements instead of estimates
-4. **Learning**: Understand LLM behavior with real release data
+1. **Early issue discovery**: Building the critical path surfaces integration issues before infrastructure investment
+2. **Real cost data**: Actual token consumption measured against estimates
+3. **Production-ready patterns**: Code structure and prompts evolve, not rewrite
+4. **Informed later designs**: Slice 2-4 designs benefit from concrete experience
 
 ### Negative
 
-1. **Throwaway code**: Spike code will be rewritten
-2. **No automation**: Manual testing only
-3. **Limited error handling**: Developer experience, not user experience
+1. **No automated validation**: Manual testing until Slice 2 adds container validation
+2. **Single provider**: Claude only until Slice 3 adds Gemini
+3. **Limited error handling**: Basic errors until Slice 4 adds production UX
 
-### Mitigations
+### What We'll Document
 
-1. **Document learnings**: Record prompt iterations, failure modes, costs
-2. **Save successful recipes**: Build a test corpus for future validation
-3. **Time-box**: If not working after reasonable effort, document blockers
+After this slice:
+1. **Issues discovered**: Any gaps in Builder interface, recipe structures, or LLM behavior
+2. **Prompt evolution**: What changes were needed to get consistent output
+3. **Cost actuals**: Real token consumption for test repos
+4. **Edge cases**: GitHub release naming patterns that need special handling
 
 ## Implementation Checklist
 
-- [ ] Create `cmd/spike-llm/main.go`
-- [ ] Implement GitHub release fetcher (with repo metadata)
-- [ ] Implement Claude client with tool use
-- [ ] Define `extract_pattern` tool schema
-- [ ] Write system prompt
-- [ ] Implement recipe generator (using `github_archive` action)
-- [ ] Add cost calculation
+- [ ] Create `internal/llm/client.go` - Claude API client with tool use
+- [ ] Create `internal/llm/cost.go` - Usage tracking and cost calculation
+- [ ] Create `internal/builders/github_release.go` - Builder implementation
+- [ ] Register builder in `cmd/tsuku/create.go`
+- [ ] Add `--from github` flag to `tsuku create`
+- [ ] Write `extract_pattern` tool schema and system prompt
 - [ ] Test with cli/cli (baseline, Go naming)
 - [ ] Test with BurntSushi/ripgrep (Rust naming)
 - [ ] Test with sharkdp/fd (confirm Rust pattern)
 - [ ] Test with hashicorp/terraform (many variants)
 - [ ] Test with jqlang/jq (generic naming)
-- [ ] Save all generated recipes to testdata/spike-llm/
-- [ ] Document results: success rate, cost per recipe, failure modes
-- [ ] Decide: continue to Slice 2 or pivot approach
+- [ ] Save generated recipes to testdata for regression testing
+- [ ] Document issues discovered for Slice 2-4 designs
