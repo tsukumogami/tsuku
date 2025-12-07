@@ -52,13 +52,13 @@ func GetAPITimeout() time.Duration {
 
 // Config holds tsuku configuration
 type Config struct {
-	HomeDir     string // ~/.tsuku
-	ToolsDir    string // ~/.tsuku/tools
-	CurrentDir  string // ~/.tsuku/tools/current
-	RecipesDir  string // ~/.tsuku/recipes
-	RegistryDir string // ~/.tsuku/registry (cached recipes from remote registry)
-	LibsDir     string // ~/.tsuku/libs (shared libraries)
-	ConfigFile  string // ~/.tsuku/config.toml
+	HomeDir     string // $TSUKU_HOME
+	ToolsDir    string // $TSUKU_HOME/tools
+	CurrentDir  string // $TSUKU_HOME/tools/current
+	RecipesDir  string // $TSUKU_HOME/recipes
+	RegistryDir string // $TSUKU_HOME/registry (cached recipes from remote registry)
+	LibsDir     string // $TSUKU_HOME/libs (shared libraries)
+	ConfigFile  string // $TSUKU_HOME/config.toml
 }
 
 // DefaultConfig returns the default configuration
