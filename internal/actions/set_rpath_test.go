@@ -883,7 +883,7 @@ func TestCreateLibraryWrapper_RenameError(t *testing.T) {
 	if err := os.Chmod(readOnlyDir, 0555); err != nil {
 		t.Fatalf("failed to chmod directory: %v", err)
 	}
-	defer os.Chmod(readOnlyDir, 0755) // Restore permissions for cleanup
+	defer func() { _ = os.Chmod(readOnlyDir, 0755) }() // Restore permissions for cleanup
 
 	err := createLibraryWrapper(binaryPath, "$ORIGIN/../lib")
 	if err == nil {
