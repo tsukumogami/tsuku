@@ -54,6 +54,7 @@ func init() {
 	Register(&InstallBinariesAction{})
 	Register(&SetEnvAction{})
 	Register(&RunCommandAction{})
+	Register(&SetRpathAction{})
 	Register(&AptInstallAction{})
 	Register(&YumInstallAction{})
 	Register(&BrewInstallAction{})
