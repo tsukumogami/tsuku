@@ -3,7 +3,8 @@ name = "gore"
 description = "Go REPL with line editing and code completion"
 homepage = "https://github.com/x-motemen/gore"
 version_format = "semver"
-dependencies = ["go"]
+# Gore is a Go REPL that needs Go at runtime to interpret code
+runtime_dependencies = ["golang"]
 
 [version]
 source = "goproxy"

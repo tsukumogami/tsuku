@@ -3,6 +3,8 @@ name = "ruff"
 description = "An extremely fast Python linter, written in Rust"
 homepage = "https://github.com/astral-sh/ruff"
 version_format = "semver"
+# Ruff is a compiled Rust binary distributed via PyPI - no Python needed at runtime
+runtime_dependencies = []
 
 [version]
 source = "pypi"
