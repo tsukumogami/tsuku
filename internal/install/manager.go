@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -191,34 +192,74 @@ func (m *Manager) createWrappersForBinaries(toolName, version string, binaries [
 // createBinaryWrapper creates a wrapper script for a specific binary.
 // The wrapper prepends runtime dependency paths to PATH and exec's the real binary.
 func (m *Manager) createBinaryWrapper(toolName, version, binaryPath string, runtimeDeps map[string]string) error {
+	// Validate binaryPath
+	if binaryPath == "" || binaryPath == "." || binaryPath == ".." {
+		return fmt.Errorf("invalid binary path: %q", binaryPath)
+	}
+
 	binaryName := filepath.Base(binaryPath)
 	wrapperPath := m.config.CurrentSymlink(binaryName)
 
 	// Build the target path (absolute)
 	targetPath := filepath.Join(m.config.ToolDir(toolName, version), binaryPath)
 
-	// Build PATH additions from runtime deps
+	// Validate target path doesn't contain shell metacharacters
+	if err := validateShellSafePath(targetPath); err != nil {
+		return fmt.Errorf("invalid target path: %w", err)
+	}
+
+	// Build PATH additions from runtime deps in deterministic order
+	// Sort by dependency name to ensure reproducible wrapper content
+	depNames := make([]string, 0, len(runtimeDeps))
+	for depName := range runtimeDeps {
+		depNames = append(depNames, depName)
+	}
+	sort.Strings(depNames)
+
 	var pathAdditions []string
-	for depName, depVersion := range runtimeDeps {
+	for _, depName := range depNames {
+		depVersion := runtimeDeps[depName]
 		depBinDir := m.config.ToolBinDir(depName, depVersion)
+
+		// Validate each PATH addition
+		if err := validateShellSafePath(depBinDir); err != nil {
+			return fmt.Errorf("invalid dependency path for %s: %w", depName, err)
+		}
+
 		pathAdditions = append(pathAdditions, depBinDir)
 	}
 
 	// Generate wrapper script content
 	content := generateWrapperScript(targetPath, pathAdditions)
 
-	// Remove existing file/symlink if it exists
-	if _, err := os.Lstat(wrapperPath); err == nil {
-		if err := os.Remove(wrapperPath); err != nil {
-			return fmt.Errorf("failed to remove old wrapper: %w", err)
-		}
-	}
+	// Use atomic write: write to temp file then rename
+	// This prevents TOCTOU race conditions and ensures atomicity
+	tmpPath := wrapperPath + ".tmp"
 
-	// Write wrapper script
-	if err := os.WriteFile(wrapperPath, []byte(content), 0755); err != nil {
+	// Write to temporary file
+	if err := os.WriteFile(tmpPath, []byte(content), 0755); err != nil {
 		return fmt.Errorf("failed to write wrapper script: %w", err)
 	}
 
+	// Atomic rename (replaces existing file atomically on Unix)
+	if err := os.Rename(tmpPath, wrapperPath); err != nil {
+		os.Remove(tmpPath) // Clean up temp file
+		return fmt.Errorf("failed to install wrapper script: %w", err)
+	}
+
+	return nil
+}
+
+// validateShellSafePath checks that a path doesn't contain characters that could
+// cause shell injection or break the wrapper script.
+func validateShellSafePath(path string) error {
+	// Reject paths containing characters that could break shell quoting or enable injection
+	dangerous := "\n\r\"'`$\\;"
+	for _, char := range dangerous {
+		if strings.ContainsRune(path, char) {
+			return fmt.Errorf("path contains dangerous character %q: %s", char, path)
+		}
+	}
 	return nil
 }
 

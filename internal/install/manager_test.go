@@ -132,3 +132,45 @@ func TestGenerateWrapperScript_NoEmptyPathEntries(t *testing.T) {
 		t.Errorf("wrapper should not start PATH with colon, got: %s", content)
 	}
 }
+
+func TestValidateShellSafePath_ValidPaths(t *testing.T) {
+	validPaths := []string{
+		"/home/user/.tsuku/tools/nodejs-20.10.0/bin",
+		"/usr/local/bin/tool",
+		"/path/with-dashes/and_underscores/v1.0.0",
+		"/path/with spaces/is fine",
+		"/tmp/tool@version",
+	}
+
+	for _, path := range validPaths {
+		if err := validateShellSafePath(path); err != nil {
+			t.Errorf("expected path %q to be valid, got error: %v", path, err)
+		}
+	}
+}
+
+func TestValidateShellSafePath_DangerousChars(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		char rune
+	}{
+		{"newline", "/path/with\nnewline", '\n'},
+		{"carriage return", "/path/with\rreturn", '\r'},
+		{"double quote", "/path/with\"quote", '"'},
+		{"single quote", "/path/with'quote", '\''},
+		{"backtick", "/path/with`command`", '`'},
+		{"dollar sign", "/path/with$var", '$'},
+		{"backslash", "/path/with\\escape", '\\'},
+		{"semicolon", "/path/with;command", ';'},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := validateShellSafePath(tc.path)
+			if err == nil {
+				t.Errorf("expected error for path with %s, got nil", tc.name)
+			}
+		})
+	}
+}
