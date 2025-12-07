@@ -1,6 +1,14 @@
 # Design Document: LLM Builder Infrastructure
 
-**Status**: Accepted
+**Status**: Planned
+
+**Milestone**: [LLM Builder Infrastructure](https://github.com/tsukumogami/tsuku/milestone/12)
+
+**Implementation Issues**:
+- [#266 - Slice 1: End-to-End Spike](https://github.com/tsukumogami/tsuku/issues/266)
+- [#268 - Slice 2: Container Validation](https://github.com/tsukumogami/tsuku/issues/268)
+- [#269 - Slice 3: Repair Loop + Second Provider](https://github.com/tsukumogami/tsuku/issues/269)
+- [#270 - Slice 4: Productionize](https://github.com/tsukumogami/tsuku/issues/270)
 
 ## Context and Problem Statement
 
