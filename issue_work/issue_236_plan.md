@@ -21,16 +21,16 @@ Update the existing `ResolveDependencies` function to implement the full algorit
 
 ## Implementation Steps
 
-- [ ] Add ExtraDependencies and ExtraRuntimeDependencies fields to MetadataSection
-- [ ] Update resolver: step-level dependencies replaces install deps
-- [ ] Update resolver: step-level runtime_dependencies replaces runtime deps
-- [ ] Update resolver: recipe-level Dependencies replaces all install deps
-- [ ] Update resolver: recipe-level RuntimeDependencies replaces all runtime deps
-- [ ] Update resolver: recipe-level ExtraDependencies adds to install deps
-- [ ] Update resolver: recipe-level ExtraRuntimeDependencies adds to runtime deps
-- [ ] Write tests for step-level replace behavior
-- [ ] Write tests for recipe-level replace behavior
-- [ ] Write tests for recipe-level extend behavior
+- [x] Add ExtraDependencies and ExtraRuntimeDependencies fields to MetadataSection
+- [x] Update resolver: step-level dependencies replaces install deps
+- [x] Update resolver: step-level runtime_dependencies replaces runtime deps
+- [x] Update resolver: recipe-level Dependencies replaces all install deps
+- [x] Update resolver: recipe-level RuntimeDependencies replaces all runtime deps
+- [x] Update resolver: recipe-level ExtraDependencies adds to install deps
+- [x] Update resolver: recipe-level ExtraRuntimeDependencies adds to runtime deps
+- [x] Write tests for step-level replace behavior
+- [x] Write tests for recipe-level replace behavior
+- [x] Write tests for recipe-level extend behavior
 
 ## Testing Strategy
 
@@ -50,13 +50,13 @@ Update the existing `ResolveDependencies` function to implement the full algorit
 
 ## Success Criteria
 
-- [ ] Step-level runtime_dependencies replaces action implicit
-- [ ] Step-level dependencies replaces action implicit install deps
-- [ ] Recipe-level Dependencies replaces all install deps
-- [ ] Recipe-level RuntimeDependencies replaces all runtime deps
-- [ ] Recipe-level ExtraDependencies adds without replacing
-- [ ] Recipe-level ExtraRuntimeDependencies adds without replacing
-- [ ] All tests pass
+- [x] Step-level runtime_dependencies replaces action implicit
+- [x] Step-level dependencies replaces action implicit install deps
+- [x] Recipe-level Dependencies replaces all install deps
+- [x] Recipe-level RuntimeDependencies replaces all runtime deps
+- [x] Recipe-level ExtraDependencies adds without replacing
+- [x] Recipe-level ExtraRuntimeDependencies adds without replacing
+- [x] All tests pass
 
 ## Open Questions
 

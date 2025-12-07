@@ -254,3 +254,203 @@ func TestGetStringSliceParam(t *testing.T) {
 		})
 	}
 }
+
+// Tests for step-level replace behavior
+
+func TestResolveDependencies_StepRuntimeDependenciesReplace(t *testing.T) {
+	// esbuild case: npm_install but compiled binary, no runtime needed
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action: "npm_install",
+				Params: map[string]interface{}{
+					"runtime_dependencies": []interface{}{}, // Empty: no runtime deps
+				},
+			},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	// Install still has nodejs (implicit from npm_install)
+	if deps.InstallTime["nodejs"] != "latest" {
+		t.Errorf("InstallTime[nodejs] = %q, want %q", deps.InstallTime["nodejs"], "latest")
+	}
+	// Runtime should be empty (replaced with [])
+	if len(deps.Runtime) != 0 {
+		t.Errorf("Runtime = %v, want empty", deps.Runtime)
+	}
+}
+
+func TestResolveDependencies_StepDependenciesReplace(t *testing.T) {
+	// Replace implicit install deps with custom ones
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action: "npm_install",
+				Params: map[string]interface{}{
+					"dependencies": []interface{}{"bun@1.0"}, // Use bun instead of nodejs
+				},
+			},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	// Install has only bun (replaced nodejs)
+	if deps.InstallTime["bun"] != "1.0" {
+		t.Errorf("InstallTime[bun] = %q, want %q", deps.InstallTime["bun"], "1.0")
+	}
+	if _, hasNodejs := deps.InstallTime["nodejs"]; hasNodejs {
+		t.Errorf("InstallTime should not contain nodejs, got %v", deps.InstallTime)
+	}
+	// Runtime still has nodejs (action implicit, not replaced)
+	if deps.Runtime["nodejs"] != "latest" {
+		t.Errorf("Runtime[nodejs] = %q, want %q", deps.Runtime["nodejs"], "latest")
+	}
+}
+
+// Tests for recipe-level replace behavior
+
+func TestResolveDependencies_RecipeDependenciesReplace(t *testing.T) {
+	// Recipe-level dependencies replaces all install deps
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Dependencies: []string{"nodejs@20", "python@3.11"},
+		},
+		Steps: []recipe.Step{
+			{Action: "npm_install", Params: map[string]interface{}{}},
+			{Action: "go_install", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	// Install has only recipe-level deps (replaced step-level)
+	if deps.InstallTime["nodejs"] != "20" {
+		t.Errorf("InstallTime[nodejs] = %q, want %q", deps.InstallTime["nodejs"], "20")
+	}
+	if deps.InstallTime["python"] != "3.11" {
+		t.Errorf("InstallTime[python] = %q, want %q", deps.InstallTime["python"], "3.11")
+	}
+	if _, hasGo := deps.InstallTime["go"]; hasGo {
+		t.Errorf("InstallTime should not contain go (replaced), got %v", deps.InstallTime)
+	}
+	if len(deps.InstallTime) != 2 {
+		t.Errorf("InstallTime has %d deps, want 2", len(deps.InstallTime))
+	}
+
+	// Runtime still has nodejs from npm_install (not replaced)
+	if deps.Runtime["nodejs"] != "latest" {
+		t.Errorf("Runtime[nodejs] = %q, want %q", deps.Runtime["nodejs"], "latest")
+	}
+}
+
+func TestResolveDependencies_RecipeRuntimeDependenciesReplace(t *testing.T) {
+	// Recipe-level runtime_dependencies replaces all runtime deps
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			RuntimeDependencies: []string{"python@3.11"},
+		},
+		Steps: []recipe.Step{
+			{Action: "npm_install", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	// Install still has nodejs (not replaced)
+	if deps.InstallTime["nodejs"] != "latest" {
+		t.Errorf("InstallTime[nodejs] = %q, want %q", deps.InstallTime["nodejs"], "latest")
+	}
+	// Runtime has only recipe-level deps (replaced step-level)
+	if deps.Runtime["python"] != "3.11" {
+		t.Errorf("Runtime[python] = %q, want %q", deps.Runtime["python"], "3.11")
+	}
+	if _, hasNodejs := deps.Runtime["nodejs"]; hasNodejs {
+		t.Errorf("Runtime should not contain nodejs (replaced), got %v", deps.Runtime)
+	}
+	if len(deps.Runtime) != 1 {
+		t.Errorf("Runtime has %d deps, want 1", len(deps.Runtime))
+	}
+}
+
+// Tests for recipe-level extend behavior
+
+func TestResolveDependencies_RecipeExtraDependencies(t *testing.T) {
+	// Recipe-level extra_dependencies adds to install deps
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			ExtraDependencies: []string{"wget", "curl@7.0"},
+		},
+		Steps: []recipe.Step{
+			{Action: "npm_install", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	// Install has nodejs (implicit) + extras
+	if deps.InstallTime["nodejs"] != "latest" {
+		t.Errorf("InstallTime[nodejs] = %q, want %q", deps.InstallTime["nodejs"], "latest")
+	}
+	if deps.InstallTime["wget"] != "latest" {
+		t.Errorf("InstallTime[wget] = %q, want %q", deps.InstallTime["wget"], "latest")
+	}
+	if deps.InstallTime["curl"] != "7.0" {
+		t.Errorf("InstallTime[curl] = %q, want %q", deps.InstallTime["curl"], "7.0")
+	}
+}
+
+func TestResolveDependencies_RecipeExtraRuntimeDependencies(t *testing.T) {
+	// Recipe-level extra_runtime_dependencies adds to runtime deps
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			ExtraRuntimeDependencies: []string{"bash"},
+		},
+		Steps: []recipe.Step{
+			{Action: "npm_install", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	// Runtime has nodejs (implicit) + extras
+	if deps.Runtime["nodejs"] != "latest" {
+		t.Errorf("Runtime[nodejs] = %q, want %q", deps.Runtime["nodejs"], "latest")
+	}
+	if deps.Runtime["bash"] != "latest" {
+		t.Errorf("Runtime[bash] = %q, want %q", deps.Runtime["bash"], "latest")
+	}
+}
+
+func TestResolveDependencies_RecipeReplaceAndExtend(t *testing.T) {
+	// Recipe-level replace + extend
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Dependencies:             []string{"nodejs@20"},       // Replace
+			ExtraRuntimeDependencies: []string{"bash"},            // Extend
+		},
+		Steps: []recipe.Step{
+			{Action: "npm_install", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	// Install has only nodejs@20 (replaced)
+	if deps.InstallTime["nodejs"] != "20" {
+		t.Errorf("InstallTime[nodejs] = %q, want %q", deps.InstallTime["nodejs"], "20")
+	}
+	if len(deps.InstallTime) != 1 {
+		t.Errorf("InstallTime has %d deps, want 1", len(deps.InstallTime))
+	}
+
+	// Runtime has nodejs (implicit) + bash (extended)
+	if deps.Runtime["nodejs"] != "latest" {
+		t.Errorf("Runtime[nodejs] = %q, want %q", deps.Runtime["nodejs"], "latest")
+	}
+	if deps.Runtime["bash"] != "latest" {
+		t.Errorf("Runtime[bash] = %q, want %q", deps.Runtime["bash"], "latest")
+	}
+}

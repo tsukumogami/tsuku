@@ -10,49 +10,103 @@ type ResolvedDeps struct {
 }
 
 // ResolveDependencies collects dependencies from a recipe by examining
-// each step's action and merging with step-level extensions.
+// each step's action and merging with step-level and recipe-level overrides.
 //
-// The resolution process:
-// 1. For each step, get implicit deps from ActionDependencies registry
-// 2. Merge step-level extra_dependencies into install-time deps
-// 3. Merge step-level extra_runtime_dependencies into runtime deps
+// The resolution process follows precedence rules:
+// 1. For each step:
+//   - If step has "dependencies", use those (replaces action implicit)
+//   - Otherwise, use action's InstallTime deps + step's extra_dependencies
+//   - If step has "runtime_dependencies", use those (replaces action implicit)
+//   - Otherwise, use action's Runtime deps + step's extra_runtime_dependencies
 //
-// Note: Recipe-level overrides and transitive resolution are handled separately.
+// 2. Recipe-level replace (if set, overrides everything from steps):
+//   - Dependencies replaces all install deps
+//   - RuntimeDependencies replaces all runtime deps
+//
+// 3. Recipe-level extend (adds to current set):
+//   - ExtraDependencies adds to install deps
+//   - ExtraRuntimeDependencies adds to runtime deps
+//
+// Note: Transitive resolution is handled separately.
 func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 	result := ResolvedDeps{
 		InstallTime: make(map[string]string),
 		Runtime:     make(map[string]string),
 	}
 
+	// Phase 1: Collect from steps
 	for _, step := range r.Steps {
-		// Get implicit deps from action registry
 		actionDeps := GetActionDeps(step.Action)
 
-		// Add install-time deps from action
-		for _, dep := range actionDeps.InstallTime {
-			result.InstallTime[dep] = "latest"
-		}
-
-		// Add runtime deps from action
-		for _, dep := range actionDeps.Runtime {
-			result.Runtime[dep] = "latest"
-		}
-
-		// Merge step-level extra_dependencies
-		if extraDeps := getStringSliceParam(step.Params, "extra_dependencies"); extraDeps != nil {
-			for _, dep := range extraDeps {
+		// Install-time: step replace OR (action implicit + step extend)
+		if stepDeps := getStringSliceParam(step.Params, "dependencies"); stepDeps != nil {
+			// Step-level replace: use only what's declared
+			for _, dep := range stepDeps {
 				name, version := parseDependency(dep)
 				result.InstallTime[name] = version
 			}
+		} else {
+			// Action implicit
+			for _, dep := range actionDeps.InstallTime {
+				result.InstallTime[dep] = "latest"
+			}
+			// Step-level extend
+			if extraDeps := getStringSliceParam(step.Params, "extra_dependencies"); extraDeps != nil {
+				for _, dep := range extraDeps {
+					name, version := parseDependency(dep)
+					result.InstallTime[name] = version
+				}
+			}
 		}
 
-		// Merge step-level extra_runtime_dependencies
-		if extraRuntimeDeps := getStringSliceParam(step.Params, "extra_runtime_dependencies"); extraRuntimeDeps != nil {
-			for _, dep := range extraRuntimeDeps {
+		// Runtime: step replace OR (action implicit + step extend)
+		if stepRuntimeDeps := getStringSliceParam(step.Params, "runtime_dependencies"); stepRuntimeDeps != nil {
+			// Step-level replace: use only what's declared
+			for _, dep := range stepRuntimeDeps {
 				name, version := parseDependency(dep)
 				result.Runtime[name] = version
 			}
+		} else {
+			// Action implicit
+			for _, dep := range actionDeps.Runtime {
+				result.Runtime[dep] = "latest"
+			}
+			// Step-level extend
+			if extraRuntimeDeps := getStringSliceParam(step.Params, "extra_runtime_dependencies"); extraRuntimeDeps != nil {
+				for _, dep := range extraRuntimeDeps {
+					name, version := parseDependency(dep)
+					result.Runtime[name] = version
+				}
+			}
 		}
+	}
+
+	// Phase 2: Recipe-level replace (if set, overrides everything above)
+	if len(r.Metadata.Dependencies) > 0 {
+		result.InstallTime = make(map[string]string) // Clear
+		for _, dep := range r.Metadata.Dependencies {
+			name, version := parseDependency(dep)
+			result.InstallTime[name] = version
+		}
+	}
+
+	if len(r.Metadata.RuntimeDependencies) > 0 {
+		result.Runtime = make(map[string]string) // Clear
+		for _, dep := range r.Metadata.RuntimeDependencies {
+			name, version := parseDependency(dep)
+			result.Runtime[name] = version
+		}
+	}
+
+	// Phase 3: Recipe-level extend (adds to current set)
+	for _, dep := range r.Metadata.ExtraDependencies {
+		name, version := parseDependency(dep)
+		result.InstallTime[name] = version
+	}
+
+	for _, dep := range r.Metadata.ExtraRuntimeDependencies {
+		name, version := parseDependency(dep)
+		result.Runtime[name] = version
 	}
 
 	return result
