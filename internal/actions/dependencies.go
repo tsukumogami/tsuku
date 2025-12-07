@@ -26,13 +26,14 @@ var ActionDependencies = map[string]ActionDeps{
 
 	// Download/extract actions: no dependencies
 	// These actions work with files directly using Go's standard library.
-	"download":         {InstallTime: nil, Runtime: nil},
-	"extract":          {InstallTime: nil, Runtime: nil},
-	"chmod":            {InstallTime: nil, Runtime: nil},
-	"install_binaries": {InstallTime: nil, Runtime: nil},
-	"set_env":          {InstallTime: nil, Runtime: nil},
-	"set_rpath":        {InstallTime: nil, Runtime: nil},
-	"run_command":      {InstallTime: nil, Runtime: nil},
+	"download":          {InstallTime: nil, Runtime: nil},
+	"extract":           {InstallTime: nil, Runtime: nil},
+	"chmod":             {InstallTime: nil, Runtime: nil},
+	"install_binaries":  {InstallTime: nil, Runtime: nil},
+	"install_libraries": {InstallTime: nil, Runtime: nil},
+	"set_env":           {InstallTime: nil, Runtime: nil},
+	"set_rpath":         {InstallTime: nil, Runtime: nil},
+	"run_command":       {InstallTime: nil, Runtime: nil},
 
 	// System package manager actions: no dependencies
 	// These rely on system package managers being pre-installed.
