@@ -353,3 +353,114 @@ func TestLinkDependenciesAction_ValidateVersion(t *testing.T) {
 		})
 	}
 }
+
+func TestLinkDependenciesAction_ValidateSymlinkTarget(t *testing.T) {
+	action := &LinkDependenciesAction{}
+
+	tests := []struct {
+		name        string
+		target      string
+		shouldError bool
+	}{
+		{"valid same directory", "libyaml.so.2.0.9", false},
+		{"valid with extension", "libfoo.so.1.2.3", false},
+		{"absolute path", "/etc/passwd", true},
+		{"path traversal simple", "../evil", true},
+		{"path traversal deep", "../../../etc/passwd", true},
+		{"path traversal middle", "foo/../../../etc", true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := action.validateSymlinkTarget(tc.target, "test.so")
+			if tc.shouldError && err == nil {
+				t.Errorf("expected error for target %q", tc.target)
+			}
+			if !tc.shouldError && err != nil {
+				t.Errorf("unexpected error for target %q: %v", tc.target, err)
+			}
+		})
+	}
+}
+
+func TestLinkDependenciesAction_Execute_MaliciousSymlinkBlocked(t *testing.T) {
+	// Create directory structure
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+
+	toolInstallDir := filepath.Join(toolsDir, "ruby-3.4.0")
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	libVersionDir := filepath.Join(libsDir, "libyaml-0.2.5", "lib")
+	if err := os.MkdirAll(libVersionDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a malicious symlink that tries to escape
+	maliciousSymlink := filepath.Join(libVersionDir, "evil.so")
+	if err := os.Symlink("../../../etc/passwd", maliciousSymlink); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:        context.Background(),
+		ToolsDir:       toolsDir,
+		ToolInstallDir: toolInstallDir,
+		Recipe:         &recipe.Recipe{},
+	}
+
+	action := &LinkDependenciesAction{}
+	params := map[string]interface{}{
+		"library": "libyaml",
+		"version": "0.2.5",
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error for malicious symlink target, got none")
+	}
+}
+
+func TestLinkDependenciesAction_Execute_AbsoluteSymlinkBlocked(t *testing.T) {
+	// Create directory structure
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+
+	toolInstallDir := filepath.Join(toolsDir, "ruby-3.4.0")
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	libVersionDir := filepath.Join(libsDir, "libyaml-0.2.5", "lib")
+	if err := os.MkdirAll(libVersionDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a symlink with absolute target
+	absSymlink := filepath.Join(libVersionDir, "abs.so")
+	if err := os.Symlink("/etc/passwd", absSymlink); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:        context.Background(),
+		ToolsDir:       toolsDir,
+		ToolInstallDir: toolInstallDir,
+		Recipe:         &recipe.Recipe{},
+	}
+
+	action := &LinkDependenciesAction{}
+	params := map[string]interface{}{
+		"library": "libyaml",
+		"version": "0.2.5",
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error for absolute symlink target, got none")
+	}
+}

@@ -132,6 +132,12 @@ func (a *LinkDependenciesAction) Execute(ctx *ExecutionContext, params map[strin
 			if err != nil {
 				return fmt.Errorf("failed to read source symlink %s: %w", entry.Name(), err)
 			}
+
+			// Validate symlink target doesn't escape lib/ directory
+			if err := a.validateSymlinkTarget(srcTarget, entry.Name()); err != nil {
+				return err
+			}
+
 			// Create symlink with same target (relative within lib/)
 			if err := os.Symlink(srcTarget, destFile); err != nil {
 				return fmt.Errorf("failed to create symlink %s: %w", entry.Name(), err)
@@ -177,5 +183,20 @@ func (a *LinkDependenciesAction) validateVersion(version string) error {
 	if strings.Contains(version, "/") || strings.Contains(version, "\\") {
 		return fmt.Errorf("version cannot contain path separators: %s", version)
 	}
+	return nil
+}
+
+// validateSymlinkTarget validates that a symlink target doesn't escape the lib/ directory
+func (a *LinkDependenciesAction) validateSymlinkTarget(target, symlinkName string) error {
+	// Absolute symlinks could point anywhere - reject them
+	if filepath.IsAbs(target) {
+		return fmt.Errorf("source symlink %s has absolute target which could escape lib directory: %s", symlinkName, target)
+	}
+
+	// Check for directory traversal
+	if strings.Contains(target, "..") {
+		return fmt.Errorf("source symlink %s has target with path traversal: %s", symlinkName, target)
+	}
+
 	return nil
 }
