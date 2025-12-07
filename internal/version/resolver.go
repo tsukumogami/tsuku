@@ -37,6 +37,7 @@ type Resolver struct {
 	cratesIORegistryURL string         // crates.io registry URL (injectable for testing)
 	rubygemsRegistryURL string         // RubyGems.org registry URL (injectable for testing)
 	metacpanRegistryURL string         // MetaCPAN registry URL (injectable for testing)
+	homebrewRegistryURL string         // Homebrew API URL (injectable for testing)
 	goDevURL            string         // go.dev URL (injectable for testing)
 	goProxyURL          string         // Go module proxy URL (injectable for testing)
 	authenticated       bool           // Whether GitHub requests are authenticated

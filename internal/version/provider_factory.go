@@ -62,6 +62,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&GoToolchainSourceStrategy{}) // PriorityKnownRegistry (100) - intercepts source="go_toolchain"
 	f.Register(&GoProxySourceStrategy{})     // PriorityKnownRegistry (100) - intercepts source="goproxy"
 	f.Register(&MetaCPANSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="metacpan"
+	f.Register(&HomebrewSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="homebrew"
 	f.Register(&GitHubRepoStrategy{})        // PriorityExplicitHint (90)
 	f.Register(&ExplicitSourceStrategy{})    // PriorityExplicitSource (80) - catch-all for custom sources
 	f.Register(&InferredNpmStrategy{})       // PriorityInferred (10)
@@ -520,6 +521,27 @@ func (s *InferredMetaCPANStrategy) Create(resolver *Resolver, r *recipe.Recipe) 
 		}
 	}
 	return nil, fmt.Errorf("no distribution found in cpan_install steps")
+}
+
+// HomebrewSourceStrategy handles recipes with [version] source = "homebrew"
+// This intercepts source="homebrew" to use HomebrewProvider for library version resolution
+type HomebrewSourceStrategy struct{}
+
+func (s *HomebrewSourceStrategy) Priority() int { return PriorityKnownRegistry }
+
+func (s *HomebrewSourceStrategy) CanHandle(r *recipe.Recipe) bool {
+	if r.Version.Source != "homebrew" {
+		return false
+	}
+	// Must have formula specified in version section
+	return r.Version.Formula != ""
+}
+
+func (s *HomebrewSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	if r.Version.Formula == "" {
+		return nil, fmt.Errorf("no formula specified for Homebrew version source")
+	}
+	return NewHomebrewProvider(resolver, r.Version.Formula), nil
 }
 
 // Pre-compile regex for performance (avoid compiling on every call)
