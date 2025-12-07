@@ -792,3 +792,90 @@ func TestInstallWithOptions_HiddenTool(t *testing.T) {
 		t.Error("tool should be marked as execution dependency")
 	}
 }
+
+func TestInstallWithOptions_NoBinariesFallback(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create a work directory
+	workDir, workCleanup := testutil.TempDir(t)
+	defer workCleanup()
+
+	// Create .install/bin structure
+	installBinDir := filepath.Join(workDir, ".install", "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+
+	// Create binary with same name as tool (fallback case)
+	binaryPath := filepath.Join(installBinDir, "fallbacktool")
+	if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	opts := InstallOptions{
+		CreateSymlinks: true,
+		IsHidden:       false,
+		// No Binaries specified - should fallback to bin/toolname
+	}
+
+	err := mgr.InstallWithOptions("fallbacktool", "1.0.0", workDir, opts)
+	if err != nil {
+		t.Fatalf("InstallWithOptions() error = %v", err)
+	}
+
+	// Verify symlink was created with tool name
+	symlinkPath := cfg.CurrentSymlink("fallbacktool")
+	if _, err := os.Lstat(symlinkPath); err != nil {
+		t.Errorf("symlink should exist at %s: %v", symlinkPath, err)
+	}
+}
+
+func TestInstallWithOptions_NoBinariesWithRuntimeDeps(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create a work directory
+	workDir, workCleanup := testutil.TempDir(t)
+	defer workCleanup()
+
+	// Create .install/bin structure
+	installBinDir := filepath.Join(workDir, ".install", "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+
+	// Create binary with same name as tool
+	binaryPath := filepath.Join(installBinDir, "depfallback")
+	if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	opts := InstallOptions{
+		CreateSymlinks:      true,
+		IsHidden:            false,
+		RuntimeDependencies: map[string]string{"nodejs": "20.0.0"},
+		// No Binaries specified - should fallback to bin/toolname and create wrapper
+	}
+
+	err := mgr.InstallWithOptions("depfallback", "1.0.0", workDir, opts)
+	if err != nil {
+		t.Fatalf("InstallWithOptions() error = %v", err)
+	}
+
+	// Verify wrapper was created with tool name
+	wrapperPath := cfg.CurrentSymlink("depfallback")
+	content, err := os.ReadFile(wrapperPath)
+	if err != nil {
+		t.Fatalf("failed to read wrapper: %v", err)
+	}
+
+	// Should be a wrapper, not symlink
+	if !strings.HasPrefix(string(content), "#!/bin/sh") {
+		t.Errorf("expected wrapper script, got symlink or other")
+	}
+}
