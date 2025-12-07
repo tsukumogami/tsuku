@@ -1,6 +1,6 @@
 # Design: Flexible Recipe Verification
 
-- **Status**: Planned
+- **Status**: Implemented
 - **Issue**: #192
 - **Author**: @dangazineu
 - **Created**: 2025-12-06
