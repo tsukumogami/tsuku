@@ -22,8 +22,9 @@ var listCmd = &cobra.Command{
 
 		mgr := install.New(cfg)
 
-		// Check if --show-system-dependencies flag is set
+		// Check flags
 		showSystemDeps, _ := cmd.Flags().GetBool("show-system-dependencies")
+		showAll, _ := cmd.Flags().GetBool("all")
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
 		var tools []install.InstalledTool
@@ -38,29 +39,53 @@ var listCmd = &cobra.Command{
 			exitWithCode(ExitGeneral)
 		}
 
+		// Get libraries if --all flag is set
+		var libs []install.InstalledLibrary
+		if showAll {
+			libs, err = mgr.ListLibraries()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to list libraries: %v\n", err)
+				exitWithCode(ExitGeneral)
+			}
+		}
+
 		// JSON output mode
 		if jsonOutput {
-			type toolJSON struct {
+			type itemJSON struct {
 				Name    string `json:"name"`
 				Version string `json:"version"`
 				Path    string `json:"path"`
+				Type    string `json:"type,omitempty"`
 			}
 			type listOutput struct {
-				Tools []toolJSON `json:"tools"`
+				Tools     []itemJSON `json:"tools"`
+				Libraries []itemJSON `json:"libraries,omitempty"`
 			}
-			output := listOutput{Tools: make([]toolJSON, 0, len(tools))}
+			output := listOutput{
+				Tools:     make([]itemJSON, 0, len(tools)),
+				Libraries: make([]itemJSON, 0, len(libs)),
+			}
 			for _, t := range tools {
-				output.Tools = append(output.Tools, toolJSON{
+				output.Tools = append(output.Tools, itemJSON{
 					Name:    t.Name,
 					Version: t.Version,
 					Path:    t.Path,
+					Type:    "tool",
+				})
+			}
+			for _, l := range libs {
+				output.Libraries = append(output.Libraries, itemJSON{
+					Name:    l.Name,
+					Version: l.Version,
+					Path:    l.Path,
+					Type:    "library",
 				})
 			}
 			printJSON(output)
 			return
 		}
 
-		if len(tools) == 0 {
+		if len(tools) == 0 && len(libs) == 0 {
 			printInfo("No tools installed.")
 			return
 		}
@@ -89,10 +114,19 @@ var listCmd = &cobra.Command{
 		if showSystemDeps {
 			printInfo("\n* System dependency (installed by tsuku for internal use)")
 		}
+
+		// Show libraries if --all flag is set
+		if showAll && len(libs) > 0 {
+			printInfof("\nInstalled libraries (%d total):\n\n", len(libs))
+			for _, lib := range libs {
+				fmt.Printf("  %-20s  %s  [lib]\n", lib.Name, lib.Version)
+			}
+		}
 	},
 }
 
 func init() {
 	listCmd.Flags().Bool("show-system-dependencies", false, "Include hidden system dependencies in output")
+	listCmd.Flags().Bool("all", false, "Include libraries in output")
 	listCmd.Flags().Bool("json", false, "Output in JSON format")
 }

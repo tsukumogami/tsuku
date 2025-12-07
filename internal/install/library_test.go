@@ -249,3 +249,103 @@ func TestManager_GetInstalledLibraryVersion_PartialMatch(t *testing.T) {
 		t.Errorf("GetInstalledLibraryVersion(libyaml) = %q, want 0.2.5", ver)
 	}
 }
+
+func TestManager_ListLibraries_Empty(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// libs directory doesn't exist yet
+	libs, err := mgr.ListLibraries()
+	if err != nil {
+		t.Fatalf("ListLibraries() error = %v", err)
+	}
+	if len(libs) != 0 {
+		t.Errorf("ListLibraries() returned %d libraries, want 0", len(libs))
+	}
+}
+
+func TestManager_ListLibraries(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create some library directories
+	libs := []struct {
+		name    string
+		version string
+	}{
+		{"libyaml", "0.2.5"},
+		{"libffi", "3.4.4"},
+	}
+
+	for _, lib := range libs {
+		libDir := cfg.LibDir(lib.name, lib.version)
+		if err := os.MkdirAll(libDir, 0755); err != nil {
+			t.Fatalf("failed to create lib dir: %v", err)
+		}
+	}
+
+	// List libraries
+	result, err := mgr.ListLibraries()
+	if err != nil {
+		t.Fatalf("ListLibraries() error = %v", err)
+	}
+
+	if len(result) != 2 {
+		t.Fatalf("ListLibraries() returned %d libraries, want 2", len(result))
+	}
+
+	// Check that both are present (order may vary)
+	found := make(map[string]bool)
+	for _, lib := range result {
+		found[lib.Name+"-"+lib.Version] = true
+	}
+
+	for _, lib := range libs {
+		key := lib.name + "-" + lib.version
+		if !found[key] {
+			t.Errorf("ListLibraries() missing %s", key)
+		}
+	}
+}
+
+func TestManager_ListLibraries_IgnoresFiles(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create libs directory with a file (not directory)
+	if err := os.MkdirAll(cfg.LibsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Create a regular file (should be ignored)
+	filePath := filepath.Join(cfg.LibsDir, "some-file.txt")
+	if err := os.WriteFile(filePath, []byte("test"), 0644); err != nil {
+		t.Fatalf("failed to create file: %v", err)
+	}
+
+	// Create a valid library directory
+	libDir := cfg.LibDir("libyaml", "0.2.5")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatalf("failed to create lib dir: %v", err)
+	}
+
+	result, err := mgr.ListLibraries()
+	if err != nil {
+		t.Fatalf("ListLibraries() error = %v", err)
+	}
+
+	// Should only return the directory, not the file
+	if len(result) != 1 {
+		t.Fatalf("ListLibraries() returned %d libraries, want 1", len(result))
+	}
+
+	if result[0].Name != "libyaml" || result[0].Version != "0.2.5" {
+		t.Errorf("ListLibraries()[0] = {%s, %s}, want {libyaml, 0.2.5}", result[0].Name, result[0].Version)
+	}
+}

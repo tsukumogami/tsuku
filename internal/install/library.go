@@ -105,3 +105,59 @@ func CheckLibraryInstalled(cfg *config.Config, name, version string) string {
 	}
 	return ""
 }
+
+// InstalledLibrary represents an installed library
+type InstalledLibrary struct {
+	Name    string
+	Version string
+	Path    string
+}
+
+// ListLibraries returns a list of all installed libraries from $TSUKU_HOME/libs/
+func (m *Manager) ListLibraries() ([]InstalledLibrary, error) {
+	libsDir := m.config.LibsDir
+
+	// Return empty list if libs directory doesn't exist
+	if _, err := os.Stat(libsDir); os.IsNotExist(err) {
+		return []InstalledLibrary{}, nil
+	}
+
+	entries, err := os.ReadDir(libsDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read libs directory: %w", err)
+	}
+
+	var libs []InstalledLibrary
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			continue
+		}
+
+		// Expected format: name-version (e.g., libyaml-0.2.5)
+		name := entry.Name()
+		lastHyphen := -1
+		// Find the last hyphen that's followed by a digit (version start)
+		for i := len(name) - 1; i >= 0; i-- {
+			if name[i] == '-' && i < len(name)-1 && name[i+1] >= '0' && name[i+1] <= '9' {
+				lastHyphen = i
+				break
+			}
+		}
+
+		if lastHyphen == -1 || lastHyphen == 0 {
+			// Invalid format, skip
+			continue
+		}
+
+		libName := name[:lastHyphen]
+		libVersion := name[lastHyphen+1:]
+
+		libs = append(libs, InstalledLibrary{
+			Name:    libName,
+			Version: libVersion,
+			Path:    filepath.Join(libsDir, name),
+		})
+	}
+
+	return libs, nil
+}
