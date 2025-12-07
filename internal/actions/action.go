@@ -55,6 +55,7 @@ func init() {
 	Register(&SetEnvAction{})
 	Register(&RunCommandAction{})
 	Register(&SetRpathAction{})
+	Register(&InstallLibrariesAction{})
 	Register(&AptInstallAction{})
 	Register(&YumInstallAction{})
 	Register(&BrewInstallAction{})
