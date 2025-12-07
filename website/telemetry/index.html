@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="tsuku privacy policy and telemetry information">
-    <title>Privacy - tsuku</title>
+    <meta name="description" content="tsuku privacy policy - what telemetry data we collect and how to opt out">
+    <title>Privacy Policy - tsuku</title>
     <link rel="stylesheet" href="/assets/style.css">
 </head>
 <body>
@@ -22,19 +22,102 @@
     <main>
         <section class="hero">
             <h1>Privacy Policy</h1>
-            <p class="tagline">What we collect and how we use it</p>
+            <p class="tagline">What we collect and how to opt out</p>
         </section>
 
-        <section class="content">
-            <h2>Coming Soon</h2>
-            <p>This page will contain detailed information about:</p>
+        <section class="policy-content">
+            <h2>Purpose</h2>
+            <p>
+                tsuku collects anonymous telemetry to help us understand which tools are most used
+                and which platforms need support. This data helps us prioritize recipe development
+                and make informed decisions about platform compatibility.
+            </p>
+
+            <h2>What We Collect</h2>
+            <p>When you install or update a tool, tsuku sends a single telemetry event containing:</p>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Field</th>
+                        <th>Example</th>
+                        <th>Purpose</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>recipe</code></td>
+                        <td>nodejs</td>
+                        <td>Know which recipes are used</td>
+                    </tr>
+                    <tr>
+                        <td><code>version</code></td>
+                        <td>22.0.0</td>
+                        <td>Track version adoption</td>
+                    </tr>
+                    <tr>
+                        <td><code>os</code></td>
+                        <td>linux</td>
+                        <td>Platform support decisions</td>
+                    </tr>
+                    <tr>
+                        <td><code>arch</code></td>
+                        <td>amd64</td>
+                        <td>Architecture support</td>
+                    </tr>
+                    <tr>
+                        <td><code>tsuku_version</code></td>
+                        <td>0.3.0</td>
+                        <td>Track tsuku adoption</td>
+                    </tr>
+                    <tr>
+                        <td><code>action</code></td>
+                        <td>install</td>
+                        <td>Distinguish installs from updates</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h2>What We Do NOT Collect</h2>
+            <p>We are committed to your privacy. tsuku does not collect:</p>
             <ul>
-                <li>What data tsuku collects (if any)</li>
-                <li>What data we do NOT collect</li>
-                <li>How to opt out of telemetry</li>
-                <li>Data retention policies</li>
+                <li>IP addresses</li>
+                <li>User identifiers or account information</li>
+                <li>Hostnames or machine names</li>
+                <li>File paths or directory structures</li>
+                <li>Environment variables</li>
+                <li>Any personally identifiable information (PII)</li>
             </ul>
-            <p>Currently, tsuku does not collect any telemetry data.</p>
+
+            <h2>How to Opt Out</h2>
+            <p>You can disable telemetry at any time by setting an environment variable:</p>
+            <div class="policy-code">
+                <code>export TSUKU_NO_TELEMETRY=1</code>
+            </div>
+            <p>Or, disable telemetry during initial installation:</p>
+            <div class="policy-code">
+                <code>curl -fsSL https://get.tsuku.dev/now | bash -s -- --no-telemetry</code>
+            </div>
+            <p>
+                When telemetry is disabled, tsuku will not send any data. The tool works identically
+                whether telemetry is enabled or disabled.
+            </p>
+
+            <h2>Data Retention</h2>
+            <ul>
+                <li><strong>Raw events:</strong> 90 days</li>
+                <li><strong>Aggregated statistics:</strong> Indefinitely</li>
+            </ul>
+            <p>
+                Aggregated statistics contain no individual event data and cannot be traced back
+                to any specific installation or user.
+            </p>
+
+            <h2>Source Code</h2>
+            <p>Both the telemetry client and backend are open source:</p>
+            <ul>
+                <li><a href="https://github.com/tsukumogami/tsuku/tree/main/internal/telemetry">CLI telemetry client</a></li>
+                <li><a href="https://github.com/tsukumogami/tsuku/tree/main/telemetry">Telemetry backend</a></li>
+            </ul>
         </section>
 
         <section class="links">
