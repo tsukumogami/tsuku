@@ -1007,21 +1007,9 @@ Asset names could theoretically contain prompt injection attempts. Mitigations:
 
 A validated recipe could pass with benign binaries, but malicious binaries could be served when the user later runs `tsuku install`.
 
-Mitigations:
+This risk is **deferred to the Defense-in-Depth milestone (M9)**, which will implement checksum and signature verification for all recipes. Checksums cannot be embedded in LLM-generated recipes because tsuku recipes include version resolution logic - embedding checksums would lock recipes to a single version.
 
-1. **Checksum generation during validation**: After successful container validation, compute SHA256 of all downloaded assets
-2. **Checksum embedding**: Add computed checksums to generated recipe before writing to disk
-3. **Mandatory verification**: All LLM-generated recipes include checksums; installation fails if checksums don't match
-4. **Timestamp warning**: Display warning that recipe was validated at specific timestamp
-
-**Recipe metadata for LLM-generated recipes:**
-```toml
-[metadata]
-name = "gh"
-generated_by = "llm:claude"
-validated_at = "2025-01-15T10:30:00Z"
-validation_platform = "linux/amd64"
-```
+**Accepted risk for this milestone:** LLM-generated recipes have the same TOCTOU exposure as manually-written recipes until M9 is complete.
 
 ### LLM-Specific Recipe Validation
 
@@ -1043,7 +1031,7 @@ Generated recipes undergo additional validation beyond standard registry recipes
 | Container escape | Network isolation, IPC isolation, resource limits | Docker vulnerabilities |
 | Cost explosion | Retry limits (3), hourly rate limit (10), daily budget ($5), confirmation >$0.50 | Users ignoring cost warnings |
 | LLM hallucination | Container validation catches failures | Subtle issues passing validation |
-| TOCTOU attacks | Checksum generation during validation, embedded in recipe | Assets changing to same checksum |
+| TOCTOU attacks | Deferred to M9 (Defense-in-Depth) | Same exposure as manual recipes until M9 |
 | Resource exhaustion | Container limits (2GB RAM, 2 CPU, 10GB disk, 5 min) | Attacks below limits |
 
 ## Consequences
