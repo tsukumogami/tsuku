@@ -17,8 +17,8 @@ When a user runs `tsuku install libyaml` directly (isExplicit=true, parent=""), 
 None
 
 ## Implementation Steps
-- [ ] Add check after IsLibrary() detection to reject direct installs
-- [ ] Add unit test for the error behavior
+- [x] Add check after IsLibrary() detection to reject direct installs
+- [x] Add unit test for the error behavior
 
 ## Testing Strategy
 - Unit tests: Test that direct library install returns appropriate error

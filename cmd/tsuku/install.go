@@ -258,8 +258,14 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		return err
 	}
 
-	// Check if this is a library recipe - route to library installation
+	// Check if this is a library recipe
 	if r.IsLibrary() {
+		// Prevent direct installation of libraries
+		if isExplicit && parent == "" {
+			return fmt.Errorf("'%s' is a library and cannot be installed directly.\n"+
+				"Libraries are installed automatically when you install a tool that depends on them.\n"+
+				"For example, 'tsuku install ruby' will automatically install libyaml.", toolName)
+		}
 		return installLibrary(toolName, reqVersion, parent, mgr, telemetryClient)
 	}
 

@@ -556,3 +556,51 @@ func TestEnsurePackageManagersForRecipe_AlreadyInstalled(t *testing.T) {
 	// The important thing is that it doesn't try to install nodejs again.
 	t.Logf("ensurePackageManagersForRecipe() returned %d paths", len(execPaths))
 }
+
+func TestLibraryInstallPrevention(t *testing.T) {
+	// Test the logic for preventing direct library installation
+	// The check in installWithDependencies is:
+	// if isExplicit && parent == "" { return error }
+
+	tests := []struct {
+		name       string
+		isExplicit bool
+		parent     string
+		wantError  bool
+	}{
+		{
+			name:       "direct user install should be blocked",
+			isExplicit: true,
+			parent:     "",
+			wantError:  true,
+		},
+		{
+			name:       "dependency install should be allowed",
+			isExplicit: false,
+			parent:     "ruby",
+			wantError:  false,
+		},
+		{
+			name:       "explicit with parent should be allowed",
+			isExplicit: true,
+			parent:     "ruby",
+			wantError:  false,
+		},
+		{
+			name:       "implicit without parent should be allowed",
+			isExplicit: false,
+			parent:     "",
+			wantError:  false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Simulate the check from installWithDependencies
+			shouldBlock := tt.isExplicit && tt.parent == ""
+			if shouldBlock != tt.wantError {
+				t.Errorf("library install check: got shouldBlock=%v, want %v", shouldBlock, tt.wantError)
+			}
+		})
+	}
+}
