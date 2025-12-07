@@ -24,13 +24,13 @@ None
 
 ## Implementation Steps
 
-- [ ] Add `LibsDir` field to Config struct
-- [ ] Initialize LibsDir in DefaultConfig()
-- [ ] Add LibsDir to EnsureDirectories()
-- [ ] Add LibDir(name, version) helper method
-- [ ] Add tests for LibsDir in DefaultConfig
-- [ ] Add tests for LibsDir in EnsureDirectories
-- [ ] Add test for LibDir helper method
+- [x] Add `LibsDir` field to Config struct
+- [x] Initialize LibsDir in DefaultConfig()
+- [x] Add LibsDir to EnsureDirectories()
+- [x] Add LibDir(name, version) helper method
+- [x] Add tests for LibsDir in DefaultConfig
+- [x] Add tests for LibsDir in EnsureDirectories
+- [x] Add test for LibDir helper method
 
 ## Testing Strategy
 
@@ -42,9 +42,9 @@ None
 
 ## Success Criteria
 
-- [ ] `LibsDir` added to config struct
-- [ ] Directory created during tsuku initialization
-- [ ] Unit tests for config
+- [x] `LibsDir` added to config struct
+- [x] Directory created during tsuku initialization
+- [x] Unit tests for config
 
 ## Open Questions
 

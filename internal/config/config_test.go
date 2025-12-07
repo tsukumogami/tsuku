@@ -31,6 +31,9 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.RegistryDir != filepath.Join(expectedHome, "registry") {
 		t.Errorf("RegistryDir = %q, want %q", cfg.RegistryDir, filepath.Join(expectedHome, "registry"))
 	}
+	if cfg.LibsDir != filepath.Join(expectedHome, "libs") {
+		t.Errorf("LibsDir = %q, want %q", cfg.LibsDir, filepath.Join(expectedHome, "libs"))
+	}
 	if cfg.ConfigFile != filepath.Join(expectedHome, "config.toml") {
 		t.Errorf("ConfigFile = %q, want %q", cfg.ConfigFile, filepath.Join(expectedHome, "config.toml"))
 	}
@@ -45,6 +48,7 @@ func TestEnsureDirectories(t *testing.T) {
 		CurrentDir:  filepath.Join(tmpDir, "tsuku", "tools", "current"),
 		RecipesDir:  filepath.Join(tmpDir, "tsuku", "recipes"),
 		RegistryDir: filepath.Join(tmpDir, "tsuku", "registry"),
+		LibsDir:     filepath.Join(tmpDir, "tsuku", "libs"),
 	}
 
 	err := cfg.EnsureDirectories()
@@ -53,7 +57,7 @@ func TestEnsureDirectories(t *testing.T) {
 	}
 
 	// Verify all directories exist
-	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir}
+	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir}
 	for _, dir := range dirs {
 		info, err := os.Stat(dir)
 		if err != nil {
@@ -96,6 +100,16 @@ func TestCurrentSymlink(t *testing.T) {
 	}
 }
 
+func TestLibDir(t *testing.T) {
+	cfg := &Config{LibsDir: "/home/user/.tsuku/libs"}
+
+	got := cfg.LibDir("libyaml", "0.2.5")
+	want := "/home/user/.tsuku/libs/libyaml-0.2.5"
+	if got != want {
+		t.Errorf("LibDir() = %q, want %q", got, want)
+	}
+}
+
 func TestDefaultConfig_WithTsukuHome(t *testing.T) {
 	// Save original env value
 	original := os.Getenv(EnvTsukuHome)
@@ -125,6 +139,9 @@ func TestDefaultConfig_WithTsukuHome(t *testing.T) {
 	}
 	if cfg.RegistryDir != filepath.Join(customHome, "registry") {
 		t.Errorf("RegistryDir = %q, want %q", cfg.RegistryDir, filepath.Join(customHome, "registry"))
+	}
+	if cfg.LibsDir != filepath.Join(customHome, "libs") {
+		t.Errorf("LibsDir = %q, want %q", cfg.LibsDir, filepath.Join(customHome, "libs"))
 	}
 	if cfg.ConfigFile != filepath.Join(customHome, "config.toml") {
 		t.Errorf("ConfigFile = %q, want %q", cfg.ConfigFile, filepath.Join(customHome, "config.toml"))
