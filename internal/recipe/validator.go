@@ -223,7 +223,10 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"extract":           true,
 		"chmod":             true,
 		"install_binaries":  true,
+		"install_libraries": true,
+		"link_dependencies": true,
 		"set_env":           true,
+		"set_rpath":         true,
 		"run_command":       true,
 		"apt_install":       true,
 		"yum_install":       true,
@@ -430,6 +433,11 @@ func validateCpanModule(result *ValidationResult, stepField string, step *Step) 
 
 // validateVerify checks the verify section
 func validateVerify(result *ValidationResult, r *Recipe) {
+	// Libraries don't require verification (they are files, not executables)
+	if r.Metadata.Type == RecipeTypeLibrary {
+		return
+	}
+
 	if r.Verify.Command == "" {
 		result.addError("verify.command", "command is required")
 		return

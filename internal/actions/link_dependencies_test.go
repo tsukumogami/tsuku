@@ -272,24 +272,31 @@ func TestLinkDependenciesAction_Execute_MissingLibraryDir(t *testing.T) {
 func TestLinkDependenciesAction_Execute_MissingParameters(t *testing.T) {
 	action := &LinkDependenciesAction{}
 	ctx := &ExecutionContext{
-		Context: context.Background(),
-		Recipe:  &recipe.Recipe{},
+		Context:  context.Background(),
+		Recipe:   &recipe.Recipe{},
+		ToolsDir: "/nonexistent/tools", // No libs dir, so version discovery will fail
 	}
 
 	tests := []struct {
-		name   string
-		params map[string]interface{}
+		name        string
+		params      map[string]interface{}
+		expectError bool
 	}{
-		{"missing library", map[string]interface{}{"version": "0.2.5"}},
-		{"missing version", map[string]interface{}{"library": "libyaml"}},
-		{"empty params", map[string]interface{}{}},
+		{"missing library", map[string]interface{}{"version": "0.2.5"}, true},
+		// Version is now optional - when missing, it tries to discover from libs dir
+		// With a nonexistent ToolsDir, discovery will fail, so we still expect an error
+		{"missing version (discovery fails)", map[string]interface{}{"library": "libyaml"}, true},
+		{"empty params", map[string]interface{}{}, true},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			err := action.Execute(ctx, tc.params)
-			if err == nil {
+			if tc.expectError && err == nil {
 				t.Errorf("expected error for %s", tc.name)
+			}
+			if !tc.expectError && err != nil {
+				t.Errorf("unexpected error for %s: %v", tc.name, err)
 			}
 		})
 	}
@@ -462,5 +469,280 @@ func TestLinkDependenciesAction_Execute_AbsoluteSymlinkBlocked(t *testing.T) {
 	err := action.Execute(ctx, params)
 	if err == nil {
 		t.Error("expected error for absolute symlink target, got none")
+	}
+}
+
+func TestLinkDependenciesAction_DiscoverLibraryVersion(t *testing.T) {
+	action := &LinkDependenciesAction{}
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+
+	// Create tools and libs directories
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create library directory
+	if err := os.MkdirAll(filepath.Join(libsDir, "libyaml-0.2.5"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test discovery
+	version, err := action.discoverLibraryVersion(toolsDir, "libyaml")
+	if err != nil {
+		t.Fatalf("discoverLibraryVersion failed: %v", err)
+	}
+	if version != "0.2.5" {
+		t.Errorf("got version %q, want %q", version, "0.2.5")
+	}
+}
+
+func TestLinkDependenciesAction_DiscoverLibraryVersion_NotFound(t *testing.T) {
+	action := &LinkDependenciesAction{}
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+
+	// Create tools and libs directories (but no library)
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test discovery fails for missing library
+	_, err := action.discoverLibraryVersion(toolsDir, "nonexistent")
+	if err == nil {
+		t.Error("expected error for nonexistent library")
+	}
+}
+
+func TestLinkDependenciesAction_DiscoverLibraryVersion_NoLibsDir(t *testing.T) {
+	action := &LinkDependenciesAction{}
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+
+	// Create only tools directory (no libs)
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test discovery fails when libs dir doesn't exist
+	_, err := action.discoverLibraryVersion(toolsDir, "libyaml")
+	if err == nil {
+		t.Error("expected error when libs directory doesn't exist")
+	}
+}
+
+func TestLinkDependenciesAction_DiscoverLibraryVersion_MultipleVersions(t *testing.T) {
+	action := &LinkDependenciesAction{}
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+
+	// Create tools and libs directories
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create multiple versions of the same library
+	if err := os.MkdirAll(filepath.Join(libsDir, "libyaml-0.2.4"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(libsDir, "libyaml-0.2.5"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Test discovery returns one of them (with warning)
+	version, err := action.discoverLibraryVersion(toolsDir, "libyaml")
+	if err != nil {
+		t.Fatalf("discoverLibraryVersion failed: %v", err)
+	}
+	if version != "0.2.4" && version != "0.2.5" {
+		t.Errorf("got unexpected version %q", version)
+	}
+}
+
+func TestLinkDependenciesAction_Execute_NoWorkDirOrToolInstallDir(t *testing.T) {
+	// Create directory structure
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	libVersionDir := filepath.Join(libsDir, "libyaml-0.2.5", "lib")
+	if err := os.MkdirAll(libVersionDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create library file
+	libFile := filepath.Join(libVersionDir, "libyaml.so.2.0.9")
+	if err := os.WriteFile(libFile, []byte("library content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Context with neither WorkDir nor ToolInstallDir
+	ctx := &ExecutionContext{
+		Context:  context.Background(),
+		ToolsDir: toolsDir,
+		Recipe:   &recipe.Recipe{},
+	}
+
+	action := &LinkDependenciesAction{}
+	params := map[string]interface{}{
+		"library": "libyaml",
+		"version": "0.2.5",
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error when neither WorkDir nor ToolInstallDir is set")
+	}
+}
+
+func TestLinkDependenciesAction_Execute_WithWorkDir(t *testing.T) {
+	// Create directory structure simulating pre-install scenario
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+	workDir := t.TempDir()
+
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create library directory with test files
+	libVersionDir := filepath.Join(libsDir, "libyaml-0.2.5", "lib")
+	if err := os.MkdirAll(libVersionDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create library file
+	libFile := filepath.Join(libVersionDir, "libyaml.so.2.0.9")
+	if err := os.WriteFile(libFile, []byte("library content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create context with WorkDir (pre-install scenario)
+	ctx := &ExecutionContext{
+		Context:  context.Background(),
+		ToolsDir: toolsDir,
+		WorkDir:  workDir,
+		Version:  "3.4.0",
+		Recipe: &recipe.Recipe{
+			Metadata: recipe.MetadataSection{
+				Name: "ruby",
+			},
+		},
+	}
+
+	action := &LinkDependenciesAction{}
+	params := map[string]interface{}{
+		"library": "libyaml",
+		"version": "0.2.5",
+	}
+
+	if err := action.Execute(ctx, params); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	// Verify symlink was created in WorkDir
+	destSymlink := filepath.Join(workDir, "lib", "libyaml.so.2.0.9")
+	info, err := os.Lstat(destSymlink)
+	if err != nil {
+		t.Fatalf("failed to stat destination: %v", err)
+	}
+
+	if info.Mode()&os.ModeSymlink == 0 {
+		t.Error("expected symlink, got regular file")
+	}
+}
+
+func TestLinkDependenciesAction_Execute_EmptyLibraryDir(t *testing.T) {
+	// Create directory structure
+	tsukuHome := t.TempDir()
+	toolsDir := filepath.Join(tsukuHome, "tools")
+	libsDir := filepath.Join(tsukuHome, "libs")
+
+	toolInstallDir := filepath.Join(toolsDir, "ruby-3.4.0")
+	if err := os.MkdirAll(toolInstallDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create EMPTY library directory
+	libVersionDir := filepath.Join(libsDir, "libyaml-0.2.5", "lib")
+	if err := os.MkdirAll(libVersionDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:        context.Background(),
+		ToolsDir:       toolsDir,
+		ToolInstallDir: toolInstallDir,
+		Recipe:         &recipe.Recipe{},
+	}
+
+	action := &LinkDependenciesAction{}
+	params := map[string]interface{}{
+		"library": "libyaml",
+		"version": "0.2.5",
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error for empty library directory")
+	}
+}
+
+func TestLinkDependenciesAction_Execute_InvalidLibraryType(t *testing.T) {
+	action := &LinkDependenciesAction{}
+	ctx := &ExecutionContext{
+		Context:        context.Background(),
+		ToolInstallDir: t.TempDir(),
+		ToolsDir:       t.TempDir(),
+		Recipe:         &recipe.Recipe{},
+	}
+
+	// Test with non-string library parameter
+	params := map[string]interface{}{
+		"library": 123, // Should be string
+		"version": "0.2.5",
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error for non-string library parameter")
+	}
+}
+
+func TestLinkDependenciesAction_Execute_InvalidVersionType(t *testing.T) {
+	action := &LinkDependenciesAction{}
+	ctx := &ExecutionContext{
+		Context:        context.Background(),
+		ToolInstallDir: t.TempDir(),
+		ToolsDir:       t.TempDir(),
+		Recipe:         &recipe.Recipe{},
+	}
+
+	// Test with non-string version parameter
+	params := map[string]interface{}{
+		"library": "libyaml",
+		"version": 123, // Should be string
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error for non-string version parameter")
 	}
 }

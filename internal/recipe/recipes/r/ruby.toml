@@ -1,13 +1,14 @@
 # Ruby - Dynamic programming language
 # Official site: https://www.ruby-lang.org/
 # Uses prebuilt binaries from ruby/ruby-builder (GitHub Actions team)
-# Bundles libyaml for full portability (no system dependencies required)
+# Depends on libyaml library for YAML support
 
 [metadata]
 name = "ruby"
 description = "Ruby programming language (execution dependency for gem-based tools)"
 homepage = "https://www.ruby-lang.org/"
 version_format = "semver"
+dependencies = ["libyaml"]
 
 [version]
 github_repo = "ruby/ruby-builder"
@@ -21,64 +22,19 @@ dest = "ruby.tar.gz"
 os_mapping = { linux = "ubuntu-22.04", darwin = "darwin" }
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
 
-# Step 2: Download libyaml from Homebrew bottles (tarballs, no ar needed)
-# Uses ghcr.io which requires anonymous token auth
-[[steps]]
-action = "run_command"
-command = '''
-# Homebrew bottles on ghcr.io require anonymous token auth
-# Platform-specific bottle SHA256s:
-ARCH=$(uname -m)
-OS=$(uname -s)
-
-if [ "$OS" = "Darwin" ]; then
-    # macOS bottles
-    if [ "$ARCH" = "arm64" ]; then
-        BLOB_SHA="98c0cf81bcdf7577d5fdc8cc18732970b9ae7e0e7423a733f88f0f566ba483ad"
-    else
-        BLOB_SHA="4d6e02ce3a82b60033bc7e55bef841dcfef0c05c051176d96accb50744136c6d"
-    fi
-else
-    # Linux bottles
-    if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then
-        BLOB_SHA="c725eb08fc7ab6aad7f744a30b230f9b9efa33f8d694849a2d4aadfabb203df3"
-    else
-        BLOB_SHA="354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8"
-    fi
-fi
-
-# Get anonymous token
-TOKEN=$(curl -sfS "https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/libyaml:pull" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
-
-# Download bottle
-curl -sfSL -H "Authorization: Bearer $TOKEN" \
-    "https://ghcr.io/v2/homebrew/core/libyaml/blobs/sha256:$BLOB_SHA" \
-    -o libyaml.tar.gz
-'''
-description = "Downloading libyaml from Homebrew"
-
-# Step 3: Extract Ruby
+# Step 2: Extract Ruby
 [[steps]]
 action = "extract"
 archive = "ruby.tar.gz"
 format = "tar.gz"
 strip_dirs = 1
 
-# Step 4: Extract libyaml (Homebrew bottles are tarballs for all platforms)
+# Step 3: Link libyaml library from shared libs
 [[steps]]
-action = "run_command"
-command = '''
-tar -xzf libyaml.tar.gz
-# Copy libyaml libraries to Ruby's lib directory
-# Linux uses .so, macOS uses .dylib
-find . -name "libyaml*.so*" -exec cp -L {} lib/ \; 2>/dev/null || true
-find . -name "libyaml*.dylib" -exec cp -L {} lib/ \; 2>/dev/null || true
-# Clean up extracted libyaml directory
-rm -rf libyaml libyaml.tar.gz
-'''
-description = "Extracting libyaml"
+action = "link_dependencies"
+library = "libyaml"
 
-# Step 5: Create wrapper for ruby binary
+# Step 4: Create wrapper for ruby binary
 [[steps]]
 action = "run_command"
 command = '''
@@ -164,7 +120,7 @@ done
 '''
 description = "Creating wrapper for ruby and converting Ruby scripts"
 
-# Step 6: Register binaries for symlinking
+# Step 5: Register binaries for symlinking
 [[steps]]
 action = "install_binaries"
 binaries = ["bin/ruby", "bin/gem", "bin/bundle", "bin/bundler", "bin/irb", "bin/erb"]

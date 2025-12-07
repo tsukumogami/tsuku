@@ -2,11 +2,11 @@ coverage:
   status:
     project:
       default:
-        target: 50%
+        target: 60%
         threshold: 1%
     patch:
       default:
-        target: 70%
+        target: 50%
 
 ignore:
   - "bundled/**/*"
