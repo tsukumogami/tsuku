@@ -1,7 +1,8 @@
 # Design: Implicit Dependency Pattern
 
-**Status**: Accepted
+**Status**: Planned
 **Created**: 2025-12-07
+**Milestone**: [Implicit Dependency Pattern](https://github.com/tsukumogami/tsuku/milestone/11)
 
 ## Context and Problem Statement
 
@@ -369,6 +370,19 @@ Remove legacy code and validate recipes.
 - Remove `EnsureNpm()`, `EnsurePipx()`, etc. from actions
 - Audit recipes for edge cases needing overrides
 - Update documentation
+
+### Implementation Issues
+
+- [#234](https://github.com/tsukumogami/tsuku/issues/234): feat(deps): create action dependency registry
+- [#235](https://github.com/tsukumogami/tsuku/issues/235): feat(deps): implement dependency resolution algorithm
+- [#236](https://github.com/tsukumogami/tsuku/issues/236): feat(deps): add override and extension mechanisms
+- [#237](https://github.com/tsukumogami/tsuku/issues/237): feat(deps): implement transitive resolution with cycle detection
+- [#238](https://github.com/tsukumogami/tsuku/issues/238): feat(deps): generate wrappers with runtime dependencies in PATH
+- [#239](https://github.com/tsukumogami/tsuku/issues/239): feat(deps): track dependencies in state.json
+- [#240](https://github.com/tsukumogami/tsuku/issues/240): feat(info): display dependency tree
+- [#241](https://github.com/tsukumogami/tsuku/issues/241): feat(uninstall): warn about dependent tools
+- [#242](https://github.com/tsukumogami/tsuku/issues/242): refactor(deps): remove legacy bootstrap functions
+- [#243](https://github.com/tsukumogami/tsuku/issues/243): chore(recipes): add dependency overrides for edge cases
 
 ### Acceptance Criteria
 
