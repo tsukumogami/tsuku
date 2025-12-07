@@ -1110,3 +1110,55 @@ func TestVerifyConstants(t *testing.T) {
 		t.Errorf("VersionFormatStripV = %s, want strip_v", VersionFormatStripV)
 	}
 }
+
+func TestRecipe_IsLibrary(t *testing.T) {
+	tests := []struct {
+		name       string
+		recipeType string
+		want       bool
+	}{
+		{
+			name:       "type library returns true",
+			recipeType: RecipeTypeLibrary,
+			want:       true,
+		},
+		{
+			name:       "type tool returns false",
+			recipeType: RecipeTypeTool,
+			want:       false,
+		},
+		{
+			name:       "empty type returns false",
+			recipeType: "",
+			want:       false,
+		},
+		{
+			name:       "unknown type returns false",
+			recipeType: "unknown",
+			want:       false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			recipe := Recipe{
+				Metadata: MetadataSection{
+					Type: tt.recipeType,
+				},
+			}
+			if got := recipe.IsLibrary(); got != tt.want {
+				t.Errorf("IsLibrary() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRecipeTypeConstants(t *testing.T) {
+	// Verify constants have expected values
+	if RecipeTypeTool != "tool" {
+		t.Errorf("RecipeTypeTool = %s, want tool", RecipeTypeTool)
+	}
+	if RecipeTypeLibrary != "library" {
+		t.Errorf("RecipeTypeLibrary = %s, want library", RecipeTypeLibrary)
+	}
+}
