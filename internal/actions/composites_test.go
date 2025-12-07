@@ -140,12 +140,7 @@ func TestHashiCorpReleaseAction_Name(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_Name(t *testing.T) {
-	action := &HomebrewBottleAction{}
-	if action.Name() != "homebrew_bottle" {
-		t.Errorf("Name() = %q, want %q", action.Name(), "homebrew_bottle")
-	}
-}
+// HomebrewBottleAction tests moved to homebrew_bottle_test.go
 
 func TestExtractSourceFiles(t *testing.T) {
 	tests := []struct {
@@ -383,42 +378,7 @@ func TestHashiCorpReleaseAction_Execute_MissingParams(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_Execute_MissingParams(t *testing.T) {
-	action := &HomebrewBottleAction{}
-	tmpDir := t.TempDir()
-
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    tmpDir,
-		InstallDir: tmpDir,
-		Version:    "1.0.0",
-	}
-
-	err := action.Execute(ctx, map[string]interface{}{})
-	if err == nil {
-		t.Error("Execute() should fail when 'formula' parameter is missing")
-	}
-}
-
-func TestHomebrewBottleAction_Execute_WithFormula(t *testing.T) {
-	action := &HomebrewBottleAction{}
-	tmpDir := t.TempDir()
-
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    tmpDir,
-		InstallDir: tmpDir,
-		Version:    "1.0.0",
-	}
-
-	// This is a stub action that should succeed with formula param
-	err := action.Execute(ctx, map[string]interface{}{
-		"formula": "jq",
-	})
-	if err != nil {
-		t.Errorf("Execute() with formula should not error: %v", err)
-	}
-}
+// HomebrewBottleAction Execute tests moved to homebrew_bottle_test.go
 
 // TestDownloadArchiveAction_VerificationEnforcement tests that directory mode requires verification
 func TestDownloadArchiveAction_VerificationEnforcement(t *testing.T) {

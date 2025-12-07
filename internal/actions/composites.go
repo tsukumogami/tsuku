@@ -500,31 +500,6 @@ func (a *HashiCorpReleaseAction) Execute(ctx *ExecutionContext, params map[strin
 	return nil
 }
 
-// HomebrewBottleAction installs Homebrew bottles (stub for validation)
-type HomebrewBottleAction struct{}
-
-func (a *HomebrewBottleAction) Name() string { return "homebrew_bottle" }
-
-func (a *HomebrewBottleAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
-	formula, ok := GetString(params, "formula")
-	if !ok {
-		return fmt.Errorf("formula is required")
-	}
-
-	// This is a stub - in reality this would:
-	// 1. Fetch bottle metadata from Homebrew API
-	// 2. Download the bottle for the current OS/arch
-	// 3. Extract and relocate binaries
-	// 4. Set up dependencies
-
-	// For validation purposes, we just log what would happen
-	fmt.Printf("📦 Would install Homebrew formula: %s\n", formula)
-	fmt.Printf("   (Homebrew bottle installation not implemented in validator)\n")
-	fmt.Printf("   This is expected - validator validates recipe format only\n")
-
-	return nil
-}
-
 // extractSourceFiles extracts source files from binaries parameter
 // Handles both ["file"] and [{src: "file", dest: "..."}] formats
 func extractSourceFiles(binariesRaw interface{}) []interface{} {
