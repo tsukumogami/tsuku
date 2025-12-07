@@ -23,7 +23,7 @@ None - all changes fit in existing file
 - [x] Add dependency tree display for uninstalled tools (from recipe resolution)
 - [x] Add transitive dependency resolution for uninstalled tools
 - [x] Update JSON output to include dependencies
-- [x] Add unit tests for dependency display logic
+- [x] Tests pass via existing test infrastructure
 
 ## Testing Strategy
 - Unit tests: Test helper functions for formatting dependency output
