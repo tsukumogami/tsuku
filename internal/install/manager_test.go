@@ -457,3 +457,125 @@ func TestCreateBinaryWrapper_AtomicWrite(t *testing.T) {
 		t.Errorf("temp file should not exist after successful write")
 	}
 }
+
+func TestCreateBinaryWrapper_NoDeps(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create tool directory
+	toolDir := cfg.ToolDir("nodeptool", "1.0.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+	if err := os.MkdirAll(cfg.CurrentDir, 0755); err != nil {
+		t.Fatalf("failed to create current dir: %v", err)
+	}
+
+	// Create wrapper with nil runtime deps
+	err := mgr.createBinaryWrapper("nodeptool", "1.0.0", "bin/nodeptool", nil)
+	if err != nil {
+		t.Fatalf("createBinaryWrapper() error = %v", err)
+	}
+
+	// Verify wrapper was created without PATH modification
+	wrapperPath := cfg.CurrentSymlink("nodeptool")
+	content, err := os.ReadFile(wrapperPath)
+	if err != nil {
+		t.Fatalf("failed to read wrapper: %v", err)
+	}
+
+	contentStr := string(content)
+	if strings.Contains(contentStr, "PATH=") {
+		t.Errorf("wrapper should not have PATH= when no deps")
+	}
+	if !strings.Contains(contentStr, "exec") {
+		t.Errorf("wrapper should contain exec")
+	}
+}
+
+func TestCreateBinaryWrapper_EmptyDeps(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create tool directory
+	toolDir := cfg.ToolDir("emptydeptool", "1.0.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+	if err := os.MkdirAll(cfg.CurrentDir, 0755); err != nil {
+		t.Fatalf("failed to create current dir: %v", err)
+	}
+
+	// Create wrapper with empty runtime deps map
+	err := mgr.createBinaryWrapper("emptydeptool", "1.0.0", "bin/emptydeptool", map[string]string{})
+	if err != nil {
+		t.Fatalf("createBinaryWrapper() error = %v", err)
+	}
+
+	// Verify wrapper was created without PATH modification
+	wrapperPath := cfg.CurrentSymlink("emptydeptool")
+	content, err := os.ReadFile(wrapperPath)
+	if err != nil {
+		t.Fatalf("failed to read wrapper: %v", err)
+	}
+
+	contentStr := string(content)
+	if strings.Contains(contentStr, "PATH=") {
+		t.Errorf("wrapper should not have PATH= when empty deps")
+	}
+}
+
+func TestCreateWrappersForBinaries_ErrorPropagation(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Remove current dir to force write error
+	if err := os.RemoveAll(cfg.CurrentDir); err != nil {
+		t.Fatalf("failed to remove current dir: %v", err)
+	}
+
+	runtimeDeps := map[string]string{"nodejs": "20.0.0"}
+
+	// This should fail because current dir doesn't exist
+	err := mgr.createWrappersForBinaries("failtool", "1.0.0", []string{"bin/tool"}, runtimeDeps)
+	if err == nil {
+		t.Error("createWrappersForBinaries() should fail when current dir doesn't exist")
+	}
+}
+
+func TestCreateBinaryWrapper_WriteError(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create tool directory
+	toolDir := cfg.ToolDir("writefail", "1.0.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Remove current dir to force write error
+	if err := os.RemoveAll(cfg.CurrentDir); err != nil {
+		t.Fatalf("failed to remove current dir: %v", err)
+	}
+
+	runtimeDeps := map[string]string{"dep": "1.0.0"}
+
+	err := mgr.createBinaryWrapper("writefail", "1.0.0", "bin/writefail", runtimeDeps)
+	if err == nil {
+		t.Error("createBinaryWrapper() should fail when current dir doesn't exist")
+	}
+	if !strings.Contains(err.Error(), "failed to write wrapper script") {
+		t.Errorf("error should mention write failure, got: %v", err)
+	}
+}
