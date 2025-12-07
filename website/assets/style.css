@@ -255,6 +255,111 @@ main.wide {
     color: var(--accent);
 }
 
+/* Privacy/Policy page styles */
+.policy-content {
+    text-align: left;
+    padding: 2rem 0;
+}
+
+.policy-content h2 {
+    font-size: 1.5rem;
+    margin: 2rem 0 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border);
+}
+
+.policy-content h2:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.policy-content p {
+    color: var(--text-muted);
+    margin-bottom: 1rem;
+    line-height: 1.7;
+}
+
+.policy-content ul {
+    color: var(--text-muted);
+    margin: 0 0 1.5rem 1.5rem;
+    list-style: disc;
+}
+
+.policy-content ul li {
+    padding: 0.25rem 0;
+    line-height: 1.6;
+}
+
+.policy-content code {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    background: var(--code-bg);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+}
+
+.policy-content a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.policy-content a:hover {
+    text-decoration: underline;
+}
+
+/* Data table */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0 1.5rem;
+    font-size: 0.9rem;
+}
+
+.data-table th,
+.data-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border: 1px solid var(--border);
+}
+
+.data-table th {
+    background: var(--code-bg);
+    font-weight: 600;
+    color: var(--text);
+}
+
+.data-table td {
+    color: var(--text-muted);
+}
+
+.data-table td code {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    background: var(--code-bg);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    color: var(--accent);
+}
+
+/* Code block for policy pages */
+.policy-code {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin: 1rem 0 1.5rem;
+    overflow-x: auto;
+}
+
+.policy-code code {
+    font-family: "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.9rem;
+    color: var(--accent);
+    background: none;
+    padding: 0;
+}
+
 /* Recipe Browser */
 .recipe-browser {
     padding: 0 0 2rem;
@@ -514,5 +619,23 @@ footer .sep {
 
     .recipe-card {
         padding: 1rem;
+    }
+
+    /* Policy page mobile */
+    .data-table {
+        font-size: 0.8rem;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 0.5rem;
+    }
+
+    .policy-code {
+        padding: 0.75rem 1rem;
+    }
+
+    .policy-code code {
+        font-size: 0.8rem;
     }
 }
