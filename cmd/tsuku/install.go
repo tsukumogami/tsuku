@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
@@ -321,6 +322,13 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	installOpts := install.DefaultInstallOptions()
 	installOpts.Binaries = binaries
 
+	// Resolve runtime dependencies for wrapper generation
+	runtimeDeps := resolveRuntimeDeps(r, mgr)
+	if len(runtimeDeps) > 0 {
+		installOpts.RuntimeDependencies = runtimeDeps
+		printInfof("Runtime dependencies: %v\n", mapKeys(runtimeDeps))
+	}
+
 	if err := mgr.InstallWithOptions(toolName, version, exec.WorkDir(), installOpts); err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to install to permanent location: %v\n", err)
 		return err
@@ -387,4 +395,39 @@ func runDryRun(toolName, reqVersion string) error {
 
 	// Run dry-run with cancellable context
 	return exec.DryRun(globalCtx)
+}
+
+// resolveRuntimeDeps uses the new dependency resolution to get runtime dependencies
+// and looks up their installed versions from state.
+// Returns a map of dep name -> version for use in wrapper scripts.
+func resolveRuntimeDeps(r *recipe.Recipe, mgr *install.Manager) map[string]string {
+	// Use the new dependency resolution algorithm
+	deps := actions.ResolveDependencies(r)
+
+	if len(deps.Runtime) == 0 {
+		return nil
+	}
+
+	// Look up installed versions for each runtime dep
+	result := make(map[string]string)
+	for depName := range deps.Runtime {
+		toolState, err := mgr.GetState().GetToolState(depName)
+		if err != nil || toolState == nil {
+			// Dependency not installed - skip (shouldn't happen if install order is correct)
+			printInfof("Warning: runtime dependency %s not found in state\n", depName)
+			continue
+		}
+		result[depName] = toolState.Version
+	}
+
+	return result
+}
+
+// mapKeys returns the keys of a map as a slice (for display)
+func mapKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	return keys
 }
