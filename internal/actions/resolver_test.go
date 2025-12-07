@@ -1,10 +1,33 @@
 package actions
 
 import (
+	"context"
+	"errors"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
+
+// mockLoader implements RecipeLoader for testing
+type mockLoader struct {
+	recipes map[string]*recipe.Recipe
+}
+
+func newMockLoader() *mockLoader {
+	return &mockLoader{recipes: make(map[string]*recipe.Recipe)}
+}
+
+func (m *mockLoader) GetWithContext(ctx context.Context, name string) (*recipe.Recipe, error) {
+	if r, ok := m.recipes[name]; ok {
+		return r, nil
+	}
+	return nil, errors.New("recipe not found")
+}
+
+func (m *mockLoader) addRecipe(name string, r *recipe.Recipe) {
+	r.Metadata.Name = name
+	m.recipes[name] = r
+}
 
 func TestResolveDependencies_NpmInstall(t *testing.T) {
 	r := &recipe.Recipe{
@@ -453,4 +476,360 @@ func TestResolveDependencies_RecipeReplaceAndExtend(t *testing.T) {
 	if deps.Runtime["bash"] != "latest" {
 		t.Errorf("Runtime[bash] = %q, want %q", deps.Runtime["bash"], "latest")
 	}
+}
+
+// Tests for transitive resolution
+
+func TestResolveTransitive_EmptyDeps(t *testing.T) {
+	loader := newMockLoader()
+	ctx := context.Background()
+
+	deps := ResolvedDeps{
+		InstallTime: make(map[string]string),
+		Runtime:     make(map[string]string),
+	}
+
+	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v", err)
+	}
+
+	if len(result.InstallTime) != 0 {
+		t.Errorf("InstallTime = %v, want empty", result.InstallTime)
+	}
+	if len(result.Runtime) != 0 {
+		t.Errorf("Runtime = %v, want empty", result.Runtime)
+	}
+}
+
+func TestResolveTransitive_NoDepsRecipe(t *testing.T) {
+	// Dependency exists but has no deps of its own
+	loader := newMockLoader()
+	loader.addRecipe("nodejs", &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "download", Params: map[string]interface{}{}},
+		},
+	})
+	ctx := context.Background()
+
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"nodejs": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v", err)
+	}
+
+	if result.InstallTime["nodejs"] != "latest" {
+		t.Errorf("InstallTime[nodejs] = %q, want %q", result.InstallTime["nodejs"], "latest")
+	}
+	if len(result.InstallTime) != 1 {
+		t.Errorf("InstallTime has %d deps, want 1", len(result.InstallTime))
+	}
+}
+
+func TestResolveTransitive_LinearChain(t *testing.T) {
+	// A -> B -> C (linear chain)
+	loader := newMockLoader()
+
+	// B depends on C via npm_install (needs nodejs)
+	loader.addRecipe("B", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"C"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	// C has no deps
+	loader.addRecipe("C", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	ctx := context.Background()
+
+	// A depends on B
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"B": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	result, err := ResolveTransitive(ctx, loader, deps, "A")
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v", err)
+	}
+
+	// Should have B and C
+	if result.InstallTime["B"] != "latest" {
+		t.Errorf("InstallTime[B] = %q, want %q", result.InstallTime["B"], "latest")
+	}
+	if result.InstallTime["C"] != "latest" {
+		t.Errorf("InstallTime[C] = %q, want %q", result.InstallTime["C"], "latest")
+	}
+	if len(result.InstallTime) != 2 {
+		t.Errorf("InstallTime has %d deps, want 2", len(result.InstallTime))
+	}
+}
+
+func TestResolveTransitive_Diamond(t *testing.T) {
+	// Diamond: A -> B, A -> C, B -> D, C -> D
+	loader := newMockLoader()
+
+	// B depends on D
+	loader.addRecipe("B", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"D"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	// C depends on D
+	loader.addRecipe("C", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"D"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	// D has no deps
+	loader.addRecipe("D", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	ctx := context.Background()
+
+	// A depends on B and C
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"B": "latest", "C": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	result, err := ResolveTransitive(ctx, loader, deps, "A")
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v", err)
+	}
+
+	// Should have B, C, and D
+	if result.InstallTime["B"] != "latest" {
+		t.Errorf("InstallTime[B] = %q, want %q", result.InstallTime["B"], "latest")
+	}
+	if result.InstallTime["C"] != "latest" {
+		t.Errorf("InstallTime[C] = %q, want %q", result.InstallTime["C"], "latest")
+	}
+	if result.InstallTime["D"] != "latest" {
+		t.Errorf("InstallTime[D] = %q, want %q", result.InstallTime["D"], "latest")
+	}
+	if len(result.InstallTime) != 3 {
+		t.Errorf("InstallTime has %d deps, want 3", len(result.InstallTime))
+	}
+}
+
+func TestResolveTransitive_CycleDetection(t *testing.T) {
+	// Cycle: A -> B -> C -> A
+	loader := newMockLoader()
+
+	// B depends on C
+	loader.addRecipe("B", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"C"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	// C depends on A (creates cycle)
+	loader.addRecipe("C", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"A"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	// A is in registry too (needed for cycle detection)
+	loader.addRecipe("A", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"B"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	ctx := context.Background()
+
+	// A depends on B
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"B": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	_, err := ResolveTransitive(ctx, loader, deps, "A")
+	if err == nil {
+		t.Fatal("ResolveTransitive() expected error for cycle, got nil")
+	}
+	if !errors.Is(err, ErrCyclicDependency) {
+		t.Errorf("error = %v, want ErrCyclicDependency", err)
+	}
+	// Check that error message contains the cycle path
+	if !containsAll(err.Error(), "A", "B", "C") {
+		t.Errorf("error message %q should contain cycle path A -> B -> C -> A", err.Error())
+	}
+}
+
+func TestResolveTransitive_SelfCycle(t *testing.T) {
+	// Self-cycle: A -> A
+	loader := newMockLoader()
+
+	// A depends on itself
+	loader.addRecipe("A", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"A"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	ctx := context.Background()
+
+	// Root depends on A
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"A": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	_, err := ResolveTransitive(ctx, loader, deps, "root")
+	if err == nil {
+		t.Fatal("ResolveTransitive() expected error for self-cycle, got nil")
+	}
+	if !errors.Is(err, ErrCyclicDependency) {
+		t.Errorf("error = %v, want ErrCyclicDependency", err)
+	}
+}
+
+func TestResolveTransitive_MaxDepthExceeded(t *testing.T) {
+	// Create a chain of 15 deps: D0 -> D1 -> D2 -> ... -> D14
+	loader := newMockLoader()
+
+	for i := 0; i < 15; i++ {
+		name := depName(i)
+		var deps []string
+		if i < 14 {
+			deps = []string{depName(i + 1)}
+		}
+		loader.addRecipe(name, &recipe.Recipe{
+			Metadata: recipe.MetadataSection{Dependencies: deps},
+			Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+		})
+	}
+
+	ctx := context.Background()
+
+	// Root depends on D0
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"D0": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	_, err := ResolveTransitive(ctx, loader, deps, "root")
+	if err == nil {
+		t.Fatal("ResolveTransitive() expected error for max depth, got nil")
+	}
+	if !errors.Is(err, ErrMaxDepthExceeded) {
+		t.Errorf("error = %v, want ErrMaxDepthExceeded", err)
+	}
+}
+
+func TestResolveTransitive_VersionPreservation(t *testing.T) {
+	// B depends on C@2.0, but root already has C@1.0
+	// First encountered version should win
+	loader := newMockLoader()
+
+	// B depends on C@2.0
+	loader.addRecipe("B", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"C@2.0"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	loader.addRecipe("C", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	ctx := context.Background()
+
+	// Root has C@1.0 and B
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"B": "latest", "C": "1.0"},
+		Runtime:     make(map[string]string),
+	}
+
+	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v", err)
+	}
+
+	// C should keep version 1.0 (first encountered)
+	if result.InstallTime["C"] != "1.0" {
+		t.Errorf("InstallTime[C] = %q, want %q (first version wins)", result.InstallTime["C"], "1.0")
+	}
+}
+
+func TestResolveTransitive_MissingRecipe(t *testing.T) {
+	// Dependency recipe not in registry should be skipped (not error)
+	loader := newMockLoader()
+	ctx := context.Background()
+
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"missing-tool": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v, want nil (missing recipe should be skipped)", err)
+	}
+
+	// missing-tool should still be in deps (just not expanded)
+	if result.InstallTime["missing-tool"] != "latest" {
+		t.Errorf("InstallTime[missing-tool] = %q, want %q", result.InstallTime["missing-tool"], "latest")
+	}
+}
+
+func TestResolveTransitive_RuntimeDeps(t *testing.T) {
+	// Runtime deps should also be resolved transitively
+	loader := newMockLoader()
+
+	// B has runtime dep on C
+	loader.addRecipe("B", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{RuntimeDependencies: []string{"C"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	loader.addRecipe("C", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	ctx := context.Background()
+
+	deps := ResolvedDeps{
+		InstallTime: make(map[string]string),
+		Runtime:     map[string]string{"B": "latest"},
+	}
+
+	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v", err)
+	}
+
+	// Runtime should have B and C
+	if result.Runtime["B"] != "latest" {
+		t.Errorf("Runtime[B] = %q, want %q", result.Runtime["B"], "latest")
+	}
+	if result.Runtime["C"] != "latest" {
+		t.Errorf("Runtime[C] = %q, want %q", result.Runtime["C"], "latest")
+	}
+}
+
+// Helper functions for tests
+
+func depName(i int) string {
+	return "D" + string(rune('0'+i))
+}
+
+func containsAll(s string, substrs ...string) bool {
+	for _, sub := range substrs {
+		found := false
+		for i := 0; i <= len(s)-len(sub); i++ {
+			if s[i:i+len(sub)] == sub {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }

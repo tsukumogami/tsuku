@@ -1,6 +1,29 @@
 package actions
 
-import "github.com/tsukumogami/tsuku/internal/recipe"
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/recipe"
+)
+
+// MaxTransitiveDepth is the maximum depth for transitive dependency resolution.
+// This prevents infinite loops from undetected cycles and limits resolution time.
+const MaxTransitiveDepth = 10
+
+// Errors for transitive dependency resolution
+var (
+	ErrCyclicDependency = errors.New("cyclic dependency detected")
+	ErrMaxDepthExceeded = errors.New("maximum dependency depth exceeded")
+)
+
+// RecipeLoader is an interface for loading recipes by name.
+// This abstraction allows testing without a real registry.
+type RecipeLoader interface {
+	GetWithContext(ctx context.Context, name string) (*recipe.Recipe, error)
+}
 
 // ResolvedDeps contains the resolved dependencies for a recipe.
 // Keys are dependency names, values are version constraints ("latest" for implicit).
@@ -149,4 +172,149 @@ func parseDependency(dep string) (name, version string) {
 		}
 	}
 	return dep, "latest"
+}
+
+// ResolveTransitive expands dependencies transitively by loading each dependency's
+// recipe and resolving its dependencies recursively.
+//
+// Parameters:
+//   - ctx: Context for cancellation and timeouts
+//   - loader: RecipeLoader to fetch dependency recipes
+//   - deps: Direct dependencies to expand (from ResolveDependencies)
+//   - rootName: Name of the root recipe (used for cycle detection)
+//
+// The function:
+//   - Resolves each dependency's own dependencies recursively
+//   - Detects cycles and returns ErrCyclicDependency with the cycle path
+//   - Enforces MaxTransitiveDepth to prevent excessive recursion
+//   - Preserves version constraints (first encountered wins)
+//
+// Returns the fully expanded dependencies or an error if a cycle is detected
+// or max depth is exceeded.
+func ResolveTransitive(
+	ctx context.Context,
+	loader RecipeLoader,
+	deps ResolvedDeps,
+	rootName string,
+) (ResolvedDeps, error) {
+	result := ResolvedDeps{
+		InstallTime: make(map[string]string),
+		Runtime:     make(map[string]string),
+	}
+
+	// Copy direct deps to result
+	for name, version := range deps.InstallTime {
+		result.InstallTime[name] = version
+	}
+	for name, version := range deps.Runtime {
+		result.Runtime[name] = version
+	}
+
+	// Resolve install-time deps transitively
+	installVisited := make(map[string]bool)
+	if err := resolveTransitiveSet(ctx, loader, result.InstallTime, []string{rootName}, 0, installVisited, false); err != nil {
+		return ResolvedDeps{}, err
+	}
+
+	// Resolve runtime deps transitively
+	runtimeVisited := make(map[string]bool)
+	if err := resolveTransitiveSet(ctx, loader, result.Runtime, []string{rootName}, 0, runtimeVisited, true); err != nil {
+		return ResolvedDeps{}, err
+	}
+
+	return result, nil
+}
+
+// resolveTransitiveSet recursively resolves a set of dependencies.
+// It modifies the deps map in place, adding transitive dependencies.
+// The path slice tracks the current resolution path for cycle detection.
+// The visited map tracks already-processed deps to avoid redundant work.
+// The forRuntime flag indicates whether to use Runtime or InstallTime deps.
+func resolveTransitiveSet(
+	ctx context.Context,
+	loader RecipeLoader,
+	deps map[string]string,
+	path []string,
+	depth int,
+	visited map[string]bool,
+	forRuntime bool,
+) error {
+	if depth >= MaxTransitiveDepth {
+		return fmt.Errorf("%w: exceeded depth %d at path %s",
+			ErrMaxDepthExceeded, MaxTransitiveDepth, strings.Join(path, " -> "))
+	}
+
+	// Get current deps to process (snapshot to avoid modifying while iterating)
+	toProcess := make([]string, 0, len(deps))
+	for name := range deps {
+		toProcess = append(toProcess, name)
+	}
+
+	for _, depName := range toProcess {
+		// Check for cycle BEFORE checking visited (self-cycle: A -> A)
+		for _, ancestor := range path {
+			if ancestor == depName {
+				cyclePath := append(path, depName)
+				return fmt.Errorf("%w: %s", ErrCyclicDependency, strings.Join(cyclePath, " -> "))
+			}
+		}
+
+		// Skip if already visited (processed in a different branch)
+		if visited[depName] {
+			continue
+		}
+
+		// Mark as visited
+		visited[depName] = true
+
+		// Load the dependency's recipe
+		depRecipe, err := loader.GetWithContext(ctx, depName)
+		if err != nil {
+			// Dependency recipe not found - skip (may be a system dep or not in registry)
+			continue
+		}
+
+		// Resolve the dependency's own dependencies
+		depDeps := ResolveDependencies(depRecipe)
+
+		// Select the appropriate dep set based on forRuntime flag
+		var sourceDeps map[string]string
+		if forRuntime {
+			sourceDeps = depDeps.Runtime
+		} else {
+			sourceDeps = depDeps.InstallTime
+		}
+
+		// Collect new transitive deps (not yet in our deps map)
+		// Also check for self-reference cycle
+		newDeps := make(map[string]string)
+		for transName, transVersion := range sourceDeps {
+			// Check for self-reference (A depends on A)
+			if transName == depName {
+				cyclePath := append(path, depName, transName)
+				return fmt.Errorf("%w: %s", ErrCyclicDependency, strings.Join(cyclePath, " -> "))
+			}
+			// Check for cycle back to an ancestor in the path
+			for _, ancestor := range path {
+				if transName == ancestor {
+					cyclePath := append(path, depName, transName)
+					return fmt.Errorf("%w: %s", ErrCyclicDependency, strings.Join(cyclePath, " -> "))
+				}
+			}
+			if _, exists := deps[transName]; !exists {
+				deps[transName] = transVersion
+				newDeps[transName] = transVersion
+			}
+		}
+
+		// Only recurse if there are new deps to process
+		if len(newDeps) > 0 {
+			newPath := append(path, depName)
+			if err := resolveTransitiveSet(ctx, loader, newDeps, newPath, depth+1, visited, forRuntime); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
