@@ -242,3 +242,18 @@ func (sm *StateManager) GetLibraryState(libName, libVersion string) (*LibraryVer
 
 	return &libState, nil
 }
+
+// GetToolState returns the state for a specific tool, or nil if not found
+func (sm *StateManager) GetToolState(name string) (*ToolState, error) {
+	state, err := sm.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	toolState, exists := state.Installed[name]
+	if !exists {
+		return nil, nil
+	}
+
+	return &toolState, nil
+}
