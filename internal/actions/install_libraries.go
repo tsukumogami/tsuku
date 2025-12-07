@@ -47,7 +47,8 @@ func (a *InstallLibrariesAction) Execute(ctx *ExecutionContext, params map[strin
 		}
 	}
 
-	// Collect all matching files
+	// Collect all matching files and deduplicate
+	seen := make(map[string]struct{})
 	var matches []string
 	for _, pattern := range patterns {
 		fullPattern := filepath.Join(ctx.WorkDir, pattern)
@@ -55,7 +56,12 @@ func (a *InstallLibrariesAction) Execute(ctx *ExecutionContext, params map[strin
 		if err != nil {
 			return fmt.Errorf("invalid glob pattern '%s': %w", pattern, err)
 		}
-		matches = append(matches, m...)
+		for _, match := range m {
+			if _, exists := seen[match]; !exists {
+				seen[match] = struct{}{}
+				matches = append(matches, match)
+			}
+		}
 	}
 
 	if len(matches) == 0 {
@@ -87,14 +93,19 @@ func (a *InstallLibrariesAction) Execute(ctx *ExecutionContext, params map[strin
 		}
 
 		if info.Mode()&os.ModeSymlink != 0 {
+			// Validate symlink target doesn't escape install directory
+			if err := a.validateSymlinkTarget(srcPath, destPath, ctx.InstallDir); err != nil {
+				return err
+			}
 			// Copy as symlink
 			if err := CopySymlink(srcPath, destPath); err != nil {
 				return fmt.Errorf("failed to copy symlink %s: %w", relPath, err)
 			}
 			fmt.Printf("   ✓ Installed symlink: %s\n", relPath)
 		} else {
-			// Copy as regular file
-			if err := CopyFile(srcPath, destPath, info.Mode()); err != nil {
+			// Copy as regular file, masking dangerous permission bits
+			safePerm := info.Mode() &^ (os.ModeSetuid | os.ModeSetgid | os.ModeSticky)
+			if err := CopyFile(srcPath, destPath, safePerm); err != nil {
 				return fmt.Errorf("failed to copy file %s: %w", relPath, err)
 			}
 			fmt.Printf("   ✓ Installed: %s\n", relPath)
@@ -121,6 +132,33 @@ func (a *InstallLibrariesAction) parsePatterns(raw interface{}) ([]string, error
 	}
 
 	return result, nil
+}
+
+// validateSymlinkTarget ensures symlink targets don't escape the install directory
+func (a *InstallLibrariesAction) validateSymlinkTarget(srcPath, destPath, installDir string) error {
+	target, err := os.Readlink(srcPath)
+	if err != nil {
+		return fmt.Errorf("failed to read symlink %s: %w", srcPath, err)
+	}
+
+	// Resolve the target relative to where the symlink will be placed
+	var resolvedTarget string
+	if filepath.IsAbs(target) {
+		// Absolute symlinks are not allowed - they could point anywhere
+		return fmt.Errorf("symlink has absolute target which could escape install directory: %s -> %s", filepath.Base(srcPath), target)
+	}
+
+	// Relative symlink: resolve relative to the symlink's directory
+	symlinkDir := filepath.Dir(destPath)
+	resolvedTarget = filepath.Clean(filepath.Join(symlinkDir, target))
+
+	// Ensure resolved path stays within installDir
+	cleanInstallDir := filepath.Clean(installDir)
+	if !strings.HasPrefix(resolvedTarget, cleanInstallDir+string(os.PathSeparator)) && resolvedTarget != cleanInstallDir {
+		return fmt.Errorf("symlink target escapes install directory: %s -> %s (resolves to %s)", filepath.Base(srcPath), target, resolvedTarget)
+	}
+
+	return nil
 }
 
 // validatePattern validates that a pattern doesn't contain directory traversal

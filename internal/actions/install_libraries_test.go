@@ -272,3 +272,163 @@ func TestInstallLibrariesAction_ParsePatterns_InvalidElement(t *testing.T) {
 		t.Error("expected error for non-string pattern element")
 	}
 }
+
+func TestInstallLibrariesAction_Execute_SymlinkEscapeBlocked(t *testing.T) {
+	// Create temp directories
+	workDir := t.TempDir()
+	installDir := t.TempDir()
+
+	// Create lib directory
+	libDir := filepath.Join(workDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a malicious symlink that escapes the install directory
+	maliciousSymlink := filepath.Join(libDir, "evil.so")
+	if err := os.Symlink("../../../etc/passwd", maliciousSymlink); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: installDir,
+		Recipe:     &recipe.Recipe{},
+	}
+
+	action := &InstallLibrariesAction{}
+	params := map[string]interface{}{
+		"patterns": []interface{}{"lib/*.so*"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error for symlink that escapes install directory")
+	}
+}
+
+func TestInstallLibrariesAction_Execute_AbsoluteSymlinkBlocked(t *testing.T) {
+	// Create temp directories
+	workDir := t.TempDir()
+	installDir := t.TempDir()
+
+	// Create lib directory
+	libDir := filepath.Join(workDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a symlink with absolute target
+	absSymlink := filepath.Join(libDir, "abs.so")
+	if err := os.Symlink("/etc/passwd", absSymlink); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: installDir,
+		Recipe:     &recipe.Recipe{},
+	}
+
+	action := &InstallLibrariesAction{}
+	params := map[string]interface{}{
+		"patterns": []interface{}{"lib/*.so*"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("expected error for symlink with absolute target")
+	}
+}
+
+func TestInstallLibrariesAction_Execute_DeduplicatesMatches(t *testing.T) {
+	// Create temp directories
+	workDir := t.TempDir()
+	installDir := t.TempDir()
+
+	// Create lib directory
+	libDir := filepath.Join(workDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create a file that will match multiple patterns
+	libFile := filepath.Join(libDir, "libtest.so.1")
+	if err := os.WriteFile(libFile, []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: installDir,
+		Recipe:     &recipe.Recipe{},
+	}
+
+	action := &InstallLibrariesAction{}
+	// Both patterns match the same file
+	params := map[string]interface{}{
+		"patterns": []interface{}{"lib/*.so*", "lib/libtest*"},
+	}
+
+	// Should succeed without error (file only copied once)
+	if err := action.Execute(ctx, params); err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	// Verify file exists
+	destFile := filepath.Join(installDir, "lib", "libtest.so.1")
+	if _, err := os.Stat(destFile); os.IsNotExist(err) {
+		t.Error("expected file to be copied")
+	}
+}
+
+func TestInstallLibrariesAction_ValidateSymlinkTarget(t *testing.T) {
+	action := &InstallLibrariesAction{}
+	workDir := t.TempDir()
+	installDir := t.TempDir()
+
+	// Create lib directory in both work and install dirs
+	libDir := filepath.Join(workDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	installLibDir := filepath.Join(installDir, "lib")
+	if err := os.MkdirAll(installLibDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name        string
+		target      string
+		shouldError bool
+	}{
+		{"safe relative same dir", "libyaml.so.2.0.9", false},
+		{"safe relative subdir", "subdir/lib.so", false},
+		{"escape with dotdot", "../../../etc/passwd", true},
+		{"absolute path", "/etc/passwd", true},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			// Create symlink in workDir
+			symlinkPath := filepath.Join(libDir, "test.so")
+			os.Remove(symlinkPath) // Clean up from previous iteration
+			if err := os.Symlink(tc.target, symlinkPath); err != nil {
+				t.Fatal(err)
+			}
+
+			destPath := filepath.Join(installLibDir, "test.so")
+			err := action.validateSymlinkTarget(symlinkPath, destPath, installDir)
+
+			if tc.shouldError && err == nil {
+				t.Errorf("expected error for target %q but got none", tc.target)
+			}
+			if !tc.shouldError && err != nil {
+				t.Errorf("unexpected error for target %q: %v", tc.target, err)
+			}
+		})
+	}
+}
