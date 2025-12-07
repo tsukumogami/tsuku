@@ -1,9 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"sort"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 )
@@ -24,8 +27,9 @@ var infoCmd = &cobra.Command{
 			return
 		}
 
-		// Check installation status
+		// Check installation status and get dependencies
 		var installedVersion, location string
+		var installDeps, runtimeDeps []string
 		status := "not_installed"
 		cfg, err := config.DefaultConfig()
 		if err == nil {
@@ -40,29 +44,58 @@ var infoCmd = &cobra.Command{
 					break
 				}
 			}
+
+			// Get dependencies from state for installed tools
+			if status == "installed" {
+				stateMgr := install.NewStateManager(cfg)
+				toolState, err := stateMgr.GetToolState(toolName)
+				if err == nil && toolState != nil {
+					installDeps = toolState.InstallDependencies
+					runtimeDeps = toolState.RuntimeDependencies
+				}
+			}
+		}
+
+		// For uninstalled tools, resolve dependencies from recipe
+		if status == "not_installed" {
+			directDeps := actions.ResolveDependencies(r)
+			// Resolve transitive dependencies
+			resolvedDeps, err := actions.ResolveTransitive(context.Background(), loader, directDeps, toolName)
+			if err == nil {
+				installDeps = sortedKeys(resolvedDeps.InstallTime)
+				runtimeDeps = sortedKeys(resolvedDeps.Runtime)
+			} else {
+				// Fall back to direct deps if transitive resolution fails
+				installDeps = sortedKeys(directDeps.InstallTime)
+				runtimeDeps = sortedKeys(directDeps.Runtime)
+			}
 		}
 
 		// JSON output mode
 		if jsonOutput {
 			type infoOutput struct {
-				Name             string `json:"name"`
-				Description      string `json:"description"`
-				Homepage         string `json:"homepage,omitempty"`
-				VersionFormat    string `json:"version_format"`
-				Status           string `json:"status"`
-				InstalledVersion string `json:"installed_version,omitempty"`
-				Location         string `json:"location,omitempty"`
-				VerifyCommand    string `json:"verify_command,omitempty"`
+				Name                string   `json:"name"`
+				Description         string   `json:"description"`
+				Homepage            string   `json:"homepage,omitempty"`
+				VersionFormat       string   `json:"version_format"`
+				Status              string   `json:"status"`
+				InstalledVersion    string   `json:"installed_version,omitempty"`
+				Location            string   `json:"location,omitempty"`
+				VerifyCommand       string   `json:"verify_command,omitempty"`
+				InstallDependencies []string `json:"install_dependencies,omitempty"`
+				RuntimeDependencies []string `json:"runtime_dependencies,omitempty"`
 			}
 			output := infoOutput{
-				Name:             r.Metadata.Name,
-				Description:      r.Metadata.Description,
-				Homepage:         r.Metadata.Homepage,
-				VersionFormat:    r.Metadata.VersionFormat,
-				Status:           status,
-				InstalledVersion: installedVersion,
-				Location:         location,
-				VerifyCommand:    r.Verify.Command,
+				Name:                r.Metadata.Name,
+				Description:         r.Metadata.Description,
+				Homepage:            r.Metadata.Homepage,
+				VersionFormat:       r.Metadata.VersionFormat,
+				Status:              status,
+				InstalledVersion:    installedVersion,
+				Location:            location,
+				VerifyCommand:       r.Verify.Command,
+				InstallDependencies: installDeps,
+				RuntimeDependencies: runtimeDeps,
 			}
 			printJSON(output)
 			return
@@ -86,7 +119,31 @@ var infoCmd = &cobra.Command{
 		if r.Verify.Command != "" {
 			fmt.Printf("Verify Command: %s\n", r.Verify.Command)
 		}
+
+		// Show dependencies
+		if len(installDeps) > 0 {
+			fmt.Printf("\nInstall Dependencies:\n")
+			for _, dep := range installDeps {
+				fmt.Printf("  - %s\n", dep)
+			}
+		}
+		if len(runtimeDeps) > 0 {
+			fmt.Printf("\nRuntime Dependencies:\n")
+			for _, dep := range runtimeDeps {
+				fmt.Printf("  - %s\n", dep)
+			}
+		}
 	},
+}
+
+// sortedKeys returns the keys of a map[string]string as a sorted slice.
+func sortedKeys(m map[string]string) []string {
+	keys := make([]string, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	return keys
 }
 
 func init() {
