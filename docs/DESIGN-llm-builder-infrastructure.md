@@ -51,6 +51,10 @@ Modern LLMs with tool use capabilities can:
 - Automatic registry contribution workflow
 - LLM-based orchestration for builder selection
 
+**Deferred to other issues/milestones:**
+- Recipe network access declarations (#259) - requires broader architectural design
+- Debug/replay capability for LLM interactions (#91) - part of structured logging work
+
 ### Success Criteria
 
 - **Recipe success rate**: 80% of generated recipes produce working installations
@@ -751,6 +755,14 @@ The implementation follows **vertical slices** that deliver end-to-end value at 
 **Container Runtime Abstraction:**
 
 A unified interface supporting both Docker and Podman with auto-detection (prefer Podman for rootless-friendly environments, fall back to Docker).
+
+**Cleanup and Parallel Safety:**
+
+Startup cleanup removes orphaned validation artifacts from previous runs. To handle parallel tsuku instances safely:
+- Each validation creates a lock file with the container ID
+- Cleanup only removes containers in "exited" or "dead" state
+- Lock files use `flock` to prevent concurrent cleanup of in-use containers
+- Temp directories follow naming convention `tsuku-validate-{pid}-{timestamp}` for ownership identification
 
 **Validation:** Validate existing registry recipes in containers before adding LLM complexity.
 
