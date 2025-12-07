@@ -327,7 +327,10 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	installOpts := install.DefaultInstallOptions()
 	installOpts.Binaries = binaries
 
-	// Resolve runtime dependencies for wrapper generation
+	// Resolve all dependencies using the central resolution algorithm
+	resolvedDeps := actions.ResolveDependencies(r)
+
+	// Resolve runtime dependencies for wrapper generation (with versions)
 	runtimeDeps := resolveRuntimeDeps(r, mgr)
 	if len(runtimeDeps) > 0 {
 		installOpts.RuntimeDependencies = runtimeDeps
@@ -339,7 +342,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		return err
 	}
 
-	// Update state with explicit flag and parent
+	// Update state with explicit flag, parent, and dependencies
 	err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
 		if isExplicit {
 			ts.IsExplicit = true
@@ -357,6 +360,9 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 				ts.RequiredBy = append(ts.RequiredBy, parent)
 			}
 		}
+		// Record dependencies in state for dependency tree display and uninstall warnings
+		ts.InstallDependencies = mapKeys(resolvedDeps.InstallTime)
+		ts.RuntimeDependencies = mapKeys(resolvedDeps.Runtime)
 	})
 	if err != nil {
 		printInfof("Warning: failed to update state: %v\n", err)
