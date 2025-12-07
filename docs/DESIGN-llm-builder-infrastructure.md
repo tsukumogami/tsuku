@@ -35,12 +35,13 @@ Modern LLMs with tool use capabilities can:
 ### Scope
 
 **In scope (this design):**
-- LLM client abstraction supporting Claude (tool use) and Gemini (function calling)
+- LLM client abstraction supporting Claude (tool use) and Gemini (function calling) - both required for MVP
 - Infrastructure components: web fetcher with caching, secrets management, cost tracking
-- Container-based recipe validation with network isolation
+- Container-based recipe validation with network isolation (Docker and Podman support)
 - Repair loop for iterative recipe improvement on validation failure
 - GitHub Release Builder as the first LLM builder implementation
 - CLI integration via `tsuku create <tool> --from github`
+- Recipe preview requirement before installation of LLM-generated recipes
 
 **Out of scope (future milestones):**
 - Aqua Registry Builder
@@ -566,7 +567,6 @@ func (f *Factory) Available() []string
 ```toml
 [llm]
 provider = "claude"           # "claude" or "gemini"
-model = "claude-sonnet-4-20250514"  # Optional, defaults to latest
 daily_budget = 5.0            # USD, default $5
 require_confirmation = 0.50   # USD, prompt before operations exceeding this
 
@@ -577,11 +577,13 @@ api_key_env = "ANTHROPIC_API_KEY"  # Environment variable name
 api_key_env = "GOOGLE_API_KEY"
 ```
 
+**Note:** Model selection is NOT user-configurable. Each provider has a tested model version that tsuku uses internally. This ensures consistent behavior and allows prompts to be optimized for specific models.
+
 Configuration resolution order:
-1. Command-line flags (`--provider`, `--model`)
-2. Environment variables (`TSUKU_LLM_PROVIDER`, `TSUKU_LLM_MODEL`)
+1. Command-line flags (`--provider`)
+2. Environment variables (`TSUKU_LLM_PROVIDER`)
 3. Config file (`$TSUKU_HOME/config.toml`)
-4. Defaults (Claude, latest model)
+4. Defaults (Claude)
 
 #### Infrastructure Services
 
@@ -809,31 +811,29 @@ Build workflow:
 ### Key Interfaces
 
 **Tool Definitions for LLM:**
+
+Tool parameters use typed structs for compile-time safety:
+
 ```go
+// Typed parameter structs ensure compile-time validation
+type AssetMapping struct {
+    Asset  string `json:"asset"`                    // Asset filename
+    OS     string `json:"os" enum:"linux,darwin,windows"`
+    Arch   string `json:"arch" enum:"amd64,arm64,386"`
+    Format string `json:"format" enum:"tar.gz,zip,binary"`
+}
+
+type AssetMatchResult struct {
+    Mappings      []AssetMapping `json:"mappings"`
+    Executable    string         `json:"executable"`     // Name of the binary executable
+    VerifyCommand string         `json:"verify_command"` // Command to verify installation
+}
+
+// ToolDefinition converts typed struct to JSON Schema at registration time
 var AssetMatchingTool = llm.ToolDefinition{
-    Name: "match_assets",
+    Name:        "match_assets",
     Description: "Match GitHub release assets to OS/architecture combinations",
-    Parameters: map[string]interface{}{
-        "type": "object",
-        "properties": map[string]interface{}{
-            "mappings": map[string]interface{}{
-                "type": "array",
-                "items": map[string]interface{}{
-                    "type": "object",
-                    "properties": map[string]interface{}{
-                        "asset":   {"type": "string", "description": "Asset filename"},
-                        "os":      {"type": "string", "enum": ["linux", "darwin", "windows"]},
-                        "arch":    {"type": "string", "enum": ["amd64", "arm64", "386"]},
-                        "format":  {"type": "string", "enum": ["tar.gz", "zip", "binary"]},
-                    },
-                    "required": ["asset", "os", "arch", "format"],
-                },
-            },
-            "executable": {"type": "string", "description": "Name of the binary executable"},
-            "verify_command": {"type": "string", "description": "Command to verify installation"},
-        },
-        "required": ["mappings", "executable"],
-    },
+    Parameters:  llm.SchemaFromType(AssetMatchResult{}),
 }
 ```
 
@@ -862,86 +862,249 @@ Please fix the issues and generate a corrected recipe.`,
 
 ## Implementation Approach
 
-### Phase 1A: Core Infrastructure (No Docker Dependency)
+The implementation follows **vertical slices** that deliver end-to-end value at each stage, rather than building horizontal layers. Each slice proves a key hypothesis before moving to the next.
+
+### Slice 1: End-to-End Spike
+
+**Goal:** Prove an LLM can produce working recipes from GitHub release data.
 
 **Deliverables:**
-- `internal/secrets/manager.go` - API key resolution from env vars and config (enforce 0600 permissions)
-- `internal/llm/cost.go` - Cost tracking with per-request display and daily budget ($5 default)
-- `internal/builders/errors.go` - Builder error types
+- Direct Claude API integration (no abstraction yet)
+- Hardcoded test with a known GitHub repo (e.g., cli/cli)
+- Print generated TOML to stdout
+- Basic cost tracking
 
-**Validation:** Unit tests for all components.
+**Explicitly excluded:**
+- Container validation
+- Repair loops
+- Configuration management
+- Error handling beyond basic
 
-### Phase 1B: Container Validation (Docker Required)
+**Validation:** Generated recipe can be manually installed and works.
+
+**Exit criteria:** LLM produces syntactically valid recipes that work for at least one test repo.
+
+### Slice 2: Add Container Validation
+
+**Goal:** Prove container-based validation catches broken recipes.
 
 **Deliverables:**
-- `internal/validate/container.go` - Container validator with network isolation
+- `internal/validate/container.go` - Container runtime abstraction (Docker + Podman)
 - `internal/validate/predownload.go` - Asset pre-download with checksum capture
-- `internal/validate/sanitize.go` - Error message sanitization (remove paths, env vars)
-- Resource limits enforcement (2GB RAM, 2 CPU, 10GB disk, 5 min timeout)
+- Container isolation (`--network=none --ipc=none`)
+- Resource limits (2GB RAM, 2 CPU, 10GB disk, 5 min timeout)
+- Lock file mechanism for parallel execution safety
+- Startup cleanup for orphaned containers/temp directories
 
-**Validation:** Validate existing registry recipes in containers (test infrastructure before LLM).
+**Container Runtime Abstraction:**
+```go
+type ContainerRuntime interface {
+    CreateContainer(ctx context.Context, config *ContainerConfig) (string, error)
+    StartContainer(ctx context.Context, containerID string) error
+    WaitContainer(ctx context.Context, containerID string) (int, error)
+    RemoveContainer(ctx context.Context, containerID string) error
+    GetLogs(ctx context.Context, containerID string) (string, string, error)
+}
 
-### Phase 2: LLM Client
+// Auto-detection: Try Podman first (rootless-friendly), fall back to Docker
+func NewContainerRuntime(ctx context.Context) (ContainerRuntime, error)
+```
+
+**Validation:** Validate existing registry recipes in containers before adding LLM complexity.
+
+**Exit criteria:** Container validation correctly identifies broken recipes and passes working ones.
+
+### Slice 3: Add Repair Loop + Second Provider
+
+**Goal:** Prove repair loops improve success rate and validate the provider abstraction with two real implementations.
 
 **Deliverables:**
 - `internal/llm/provider.go` - Provider interface
-- `internal/llm/factory.go` - Provider factory
-- `internal/llm/claude.go` - Claude implementation with tool use
-- `internal/llm/gemini.go` - Gemini implementation (can be deferred to v1.1)
-- `internal/llm/sanitize.go` - Input sanitization (asset names: max 256 chars, no control chars, no template syntax)
+- `internal/llm/factory.go` - Provider factory with circuit breaker
+- `internal/llm/claude.go` - Claude implementation
+- `internal/llm/gemini.go` - Gemini implementation
+- `internal/validate/sanitize.go` - Error message sanitization for repair loop
+- `internal/validate/errors.go` - Error parser for structured feedback
+- Repair loop with max 2 retries
+- Telemetry events for success rates
 
-**Validation:** Integration tests with real API calls (gated by env vars).
+**Circuit Breaker Pattern:**
+```go
+type CircuitBreaker struct {
+    failures     int
+    lastFailure  time.Time
+    state        State // Closed, Open, HalfOpen
+    threshold    int   // failures before opening (default: 3)
+    timeout      time.Duration // time before half-open (default: 60s)
+}
+```
 
-**Note:** For MVP, implementing only Claude is acceptable. The factory architecture supports adding Gemini later without breaking changes.
+Per-provider circuit breakers ensure one provider's outage doesn't block the other.
 
-### Phase 3: GitHub Release Builder with Repair Loop
+**Error Sanitization (MVP):**
+```go
+func SanitizeErrorOutput(output string) string {
+    // Truncate to reasonable length
+    if len(output) > 2000 {
+        output = output[:2000] + "\n[truncated]"
+    }
 
-**Deliverables:**
-- `internal/builders/llm_base.go` - Base builder with `BuildWithRetry` (includes repair loop)
-- `internal/builders/github_release.go` - GitHub Release Builder
-- `internal/builders/llm_validator.go` - LLM-specific validation (max 20 steps, dependency limits)
-- Asset matching prompt and tool definitions
-- `internal/validate/errors.go` - Error parser for repair loop
-- Metrics collection for success rates
+    // Redact sensitive patterns
+    patterns := []struct {
+        regex   *regexp.Regexp
+        replace string
+    }{
+        {regexp.MustCompile(`/home/[^/\s]+`), "[HOME]"},
+        {regexp.MustCompile(`/Users/[^/\s]+`), "[HOME]"},
+        {regexp.MustCompile(`\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b`), "[IP]"},
+        {regexp.MustCompile(`(api[_-]?key|token|secret|password)=\S+`), "$1=[REDACTED]"},
+    }
 
-**Why combined:** The repair loop is integral to `BuildWithRetry`. You can't meaningfully test the GitHub Release Builder without it because first implementations will frequently fail validation.
+    for _, p := range patterns {
+        output = p.regex.ReplaceAllString(output, p.replace)
+    }
 
-**Validation:** End-to-end tests with real GitHub repos (e.g., cli/cli, BurntSushi/ripgrep).
+    return output
+}
+```
 
-### Phase 4: CLI Integration
+**Telemetry Events:**
+- `llm_generation_started` - provider, tool name
+- `llm_generation_completed` - success/failure, cost, duration, attempt count
+- `llm_validation_result` - pass/fail, error category
+
+**Validation:** A/B test Claude vs Gemini on same repos. Measure repair loop improvement.
+
+**Exit criteria:**
+- Both providers work through unified interface
+- Repair loops improve success rate by measurable amount
+- Circuit breaker correctly handles API failures
+
+### Slice 4: Productionize
+
+**Goal:** Ship to users with proper UX, error handling, and safety features.
 
 **Deliverables:**
 - Update `tsuku create` to support `--from github`
 - Register GitHub Release Builder in builder registry
+- Configuration management (4-level: flags → env → file → defaults)
+- `internal/secrets/manager.go` - API key resolution with 0600 permission enforcement
 - Cost display after generation with confirmation for operations >$0.50
 - `--skip-validation` flag
-- Error messages for missing API keys
+- Recipe preview before installation (mandatory for LLM-generated recipes)
+- Actionable error messages
 - Progress indicators during generation
 - Rate limiting: max 10 LLM generations per hour
+- Daily budget enforcement ($5 default)
 
-**Validation:** Full user flow testing.
+**Recipe Preview Requirement:**
+
+LLM-generated recipes must be shown to the user before installation:
+```
+$ tsuku create mytool --from github
+
+Generated recipe for mytool:
+
+  Downloads:
+    - https://github.com/owner/mytool/releases/download/v1.0.0/mytool-linux-amd64.tar.gz
+
+  Actions:
+    1. Download release asset
+    2. Extract tar.gz archive
+    3. Install binary: mytool
+
+  Verification: mytool --version
+
+Install this recipe? [y/N]
+```
+
+**Error Message Examples:**
+
+```
+Recipe generation failed: no release artifacts found for "owner/repo"
+
+This usually means:
+  1. The repository has no GitHub releases
+  2. Releases exist but contain no binary artifacts
+
+Try:
+  - Check https://github.com/owner/repo/releases
+  - Use --version flag to target a specific release
+```
+
+```
+Validation failed after 2 attempts:
+
+Attempt 1: Binary not found after extraction
+  Expected: tool-linux-amd64
+  Found: tool_linux_amd64
+
+Attempt 2: Same error (repair did not fix)
+
+Suggestions:
+  - Review generated recipe at ~/.tsuku/recipes/tool.toml
+  - Edit the 'executables' field to match actual binary names
+```
+
+**Validation:** Full user flow testing with real users.
+
+**Exit criteria:** Users can generate and install recipes with clear feedback at each step.
+
+### Testing Strategy
+
+LLM-dependent code uses a **record/replay** pattern:
+
+1. **Development:** Record real API responses during development
+2. **Storage:** Save responses to `testdata/llm_responses/` as fixtures
+3. **CI:** Replay recorded responses to avoid API costs and ensure determinism
+4. **Maintenance:** Re-record periodically to catch API changes
+
+```go
+// Test mode detection
+func (c *Client) Complete(ctx context.Context, req *CompletionRequest) (*CompletionResponse, error) {
+    if replayPath := os.Getenv("TSUKU_LLM_REPLAY_DIR"); replayPath != "" {
+        return c.replayFromFixture(replayPath, req)
+    }
+
+    resp, err := c.doAPICall(ctx, req)
+
+    if recordPath := os.Getenv("TSUKU_LLM_RECORD_DIR"); recordPath != "" {
+        c.recordFixture(recordPath, req, resp)
+    }
+
+    return resp, err
+}
+```
 
 ### Dependency Graph
 
 ```
-Phase 1A: Core Infrastructure ──────────────────────┐
-    │                                               │
-    v                                               v
-Phase 1B: Container Validation                Phase 2: LLM Client
-    │                                               │
-    └───────────────────┬───────────────────────────┘
-                        │
-                        v
-            Phase 3: GitHub Builder + Repair Loop
-                        │
-                        v
-            Phase 4: CLI Integration
+Slice 1: End-to-End Spike
+    │
+    │ Proves: LLM can produce working recipes
+    │
+    v
+Slice 2: Container Validation
+    │
+    │ Proves: Validation catches broken recipes
+    │
+    v
+Slice 3: Repair + Second Provider
+    │
+    │ Proves: Repair loops help, abstraction works
+    │
+    v
+Slice 4: Productionize
+    │
+    │ Result: Ship to users
+    v
 ```
 
-**Benefits of revised sequencing:**
-1. Developers without Docker can work on Phase 1A and Phase 2
-2. Phase 1B validates container infrastructure using existing recipes before LLM complexity
-3. Repair loop integrated into Phase 3 ensures GitHub builder is functional before CLI integration
+**Benefits of vertical slices:**
+1. Each slice delivers end-to-end proof of a hypothesis
+2. Problems are discovered early (e.g., if LLM can't produce good recipes, we know in Slice 1)
+3. Abstraction is validated with real implementations (two providers in Slice 3)
+4. No wasted infrastructure work if core approach doesn't work
 
 ## Security Considerations
 
