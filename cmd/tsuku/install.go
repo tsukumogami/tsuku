@@ -99,53 +99,85 @@ func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isE
 }
 
 // ensurePackageManagersForRecipe checks if a recipe uses package managers
-// and auto-bootstraps them as hidden execution dependencies if needed
-// It also injects the package manager paths into the step params
-// Returns a list of bin paths that should be added to PATH for execution
-func ensurePackageManagersForRecipe(mgr *install.Manager, r *recipe.Recipe) ([]string, error) {
+// and auto-bootstraps them as execution dependencies if needed.
+// It uses the central dependency resolver (actions.ResolveDependencies) to determine
+// which dependencies are needed, then installs them via installWithDependencies.
+// Returns a list of bin paths that should be added to PATH for execution.
+func ensurePackageManagersForRecipe(mgr *install.Manager, r *recipe.Recipe, visited map[string]bool, telemetryClient *telemetry.Client) ([]string, error) {
+	// Use the central dependency resolver to get install-time deps
+	resolvedDeps := actions.ResolveDependencies(r)
+
 	var execPaths []string
-	for i := range r.Steps {
-		step := &r.Steps[i]
-		switch step.Action {
-		case "npm_install":
-			npmPath, err := install.EnsureNpm(mgr)
-			if err != nil {
-				return nil, fmt.Errorf("failed to ensure npm: %w", err)
-			}
-			// Inject npm path into step params
-			step.Params["npm_path"] = npmPath
-			// Add nodejs bin directory to exec paths
-			execPaths = append(execPaths, filepath.Dir(npmPath))
-		case "pip_install":
-			pythonPath, err := install.EnsurePython(mgr)
-			if err != nil {
-				return nil, fmt.Errorf("failed to ensure python: %w", err)
-			}
-			// Inject python path into step params
-			step.Params["python_path"] = pythonPath
-			// Add python bin directory to exec paths
-			execPaths = append(execPaths, filepath.Dir(pythonPath))
-		case "cargo_install":
-			cargoPath, err := install.EnsureCargo(mgr)
-			if err != nil {
-				return nil, fmt.Errorf("failed to ensure cargo: %w", err)
-			}
-			// Inject cargo path into step params
-			step.Params["cargo_path"] = cargoPath
-			// Add cargo bin directory to exec paths
-			execPaths = append(execPaths, filepath.Dir(cargoPath))
-		case "pipx_install":
-			pipxPath, err := install.EnsurePipx(mgr)
-			if err != nil {
-				return nil, fmt.Errorf("failed to ensure pipx: %w", err)
-			}
-			// Inject pipx path into step params
-			step.Params["pipx_path"] = pipxPath
-			// Add pipx bin directory to exec paths
-			execPaths = append(execPaths, filepath.Dir(pipxPath))
+	processedDeps := make(map[string]bool)
+
+	// Load state once for checking installed deps
+	state, _ := mgr.GetState().Load()
+
+	for depName := range resolvedDeps.InstallTime {
+		// Skip if already processed in this call
+		if processedDeps[depName] {
+			continue
 		}
+		processedDeps[depName] = true
+
+		// Check if already installed - if so, just get the bin path
+		if state != nil {
+			if _, exists := state.Installed[depName]; exists {
+				binPath, err := findDependencyBinPath(mgr, depName)
+				if err == nil {
+					execPaths = append(execPaths, binPath)
+				}
+				continue
+			}
+		}
+
+		printInfof("Ensuring dependency '%s' for package manager action...\n", depName)
+
+		// Install the dependency using the standard mechanism
+		// Use a fresh visited map to avoid false positives from parent installations
+		depVisited := make(map[string]bool)
+		if err := installWithDependencies(depName, "", "", false, r.Metadata.Name, depVisited, telemetryClient); err != nil {
+			return nil, fmt.Errorf("failed to install dependency '%s': %w", depName, err)
+		}
+
+		// Find the installed binary path to add to execPaths
+		binPath, err := findDependencyBinPath(mgr, depName)
+		if err != nil {
+			printInfof("Warning: could not find bin path for %s: %v\n", depName, err)
+			continue
+		}
+		execPaths = append(execPaths, binPath)
 	}
+
 	return execPaths, nil
+}
+
+// findDependencyBinPath finds the bin directory for an installed dependency
+func findDependencyBinPath(mgr *install.Manager, depName string) (string, error) {
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		return "", fmt.Errorf("failed to load config: %w", err)
+	}
+
+	state, err := mgr.GetState().Load()
+	if err != nil {
+		return "", err
+	}
+
+	toolState, exists := state.Installed[depName]
+	if !exists {
+		return "", fmt.Errorf("dependency %s not found in state", depName)
+	}
+
+	toolDir := cfg.ToolDir(depName, toolState.Version)
+	binDir := filepath.Join(toolDir, "bin")
+
+	// Verify the bin directory exists
+	if _, err := os.Stat(binDir); err != nil {
+		return "", fmt.Errorf("bin directory not found: %s", binDir)
+	}
+
+	return binDir, nil
 }
 
 func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client) error {
@@ -265,7 +297,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Auto-bootstrap package managers if recipe uses them
 	// This must happen BEFORE checking runtime dependencies so that if a package manager
 	// (like npm/nodejs) is also a runtime dependency, we can expose it
-	execPaths, err := ensurePackageManagersForRecipe(mgr, r)
+	execPaths, err := ensurePackageManagersForRecipe(mgr, r, visited, telemetryClient)
 	if err != nil {
 		return fmt.Errorf("failed to ensure package managers: %w", err)
 	}
