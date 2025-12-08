@@ -35,7 +35,7 @@ The implementation follows the issue specification directly, using patterns esta
 - [x] Add Anthropic SDK dependency to go.mod
 - [x] Create `internal/llm/cost.go` with Usage struct and cost calculation
 - [x] Create `internal/llm/cost_test.go` with unit tests
-- [ ] Create `internal/llm/tools.go` with tool schema definitions
+- [x] Create `internal/llm/tools.go` with tool schema definitions
 - [ ] Create `internal/llm/client.go` with Client struct and GenerateRecipe method
 - [ ] Create `internal/llm/client_test.go` with integration tests (skip if no API key)
 
