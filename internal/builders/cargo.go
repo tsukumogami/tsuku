@@ -103,19 +103,19 @@ func (b *CargoBuilder) CanBuild(ctx context.Context, packageName string) (bool, 
 }
 
 // Build generates a recipe for the crate
-func (b *CargoBuilder) Build(ctx context.Context, packageName string, version string) (*BuildResult, error) {
-	if !isValidCrateName(packageName) {
-		return nil, fmt.Errorf("invalid crate name: %s", packageName)
+func (b *CargoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
+	if !isValidCrateName(req.Package) {
+		return nil, fmt.Errorf("invalid crate name: %s", req.Package)
 	}
 
 	// Fetch crate metadata from crates.io
-	crateInfo, err := b.fetchCrateInfo(ctx, packageName)
+	crateInfo, err := b.fetchCrateInfo(ctx, req.Package)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch crate info: %w", err)
 	}
 
 	result := &BuildResult{
-		Source:   fmt.Sprintf("crates.io:%s", packageName),
+		Source:   fmt.Sprintf("crates.io:%s", req.Package),
 		Warnings: []string{},
 	}
 
@@ -126,7 +126,7 @@ func (b *CargoBuilder) Build(ctx context.Context, packageName string, version st
 	// Build the recipe
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
-			Name:        packageName,
+			Name:        req.Package,
 			Description: crateInfo.Crate.Description,
 			Homepage:    crateInfo.Crate.Homepage,
 		},
@@ -137,7 +137,7 @@ func (b *CargoBuilder) Build(ctx context.Context, packageName string, version st
 			{
 				Action: "cargo_install",
 				Params: map[string]interface{}{
-					"crate":       packageName,
+					"crate":       req.Package,
 					"executables": executables,
 				},
 			},

@@ -36,16 +36,16 @@ None
 
 ## Implementation Steps
 
-- [ ] Step 1: Add `BuildRequest` struct to `internal/builders/builder.go`
-- [ ] Step 2: Update `Builder` interface to use `BuildRequest`
-- [ ] Step 3: Update CargoBuilder to accept BuildRequest
-- [ ] Step 4: Update GemBuilder to accept BuildRequest
-- [ ] Step 5: Update PyPIBuilder to accept BuildRequest
-- [ ] Step 6: Update NpmBuilder to accept BuildRequest
-- [ ] Step 7: Update GoBuilder to accept BuildRequest
-- [ ] Step 8: Update CpanBuilder to accept BuildRequest
-- [ ] Step 9: Update `cmd/tsuku/create.go` to use BuildRequest
-- [ ] Step 10: Run tests and fix any issues
+- [x] Step 1: Add `BuildRequest` struct to `internal/builders/builder.go`
+- [x] Step 2: Update `Builder` interface to use `BuildRequest`
+- [x] Step 3: Update CargoBuilder to accept BuildRequest
+- [x] Step 4: Update GemBuilder to accept BuildRequest
+- [x] Step 5: Update PyPIBuilder to accept BuildRequest
+- [x] Step 6: Update NpmBuilder to accept BuildRequest
+- [x] Step 7: Update GoBuilder to accept BuildRequest
+- [x] Step 8: Update CpanBuilder to accept BuildRequest
+- [x] Step 9: Update `cmd/tsuku/create.go` to use BuildRequest
+- [x] Step 10: Run tests and fix any issues
 
 ## Testing Strategy
 

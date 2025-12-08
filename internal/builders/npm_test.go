@@ -131,7 +131,7 @@ func TestNpmBuilder_Build(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("build prettier recipe", func(t *testing.T) {
-		result, err := builder.Build(ctx, "prettier", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "prettier"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -160,7 +160,7 @@ func TestNpmBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("fallback when no bin field", func(t *testing.T) {
-		result, err := builder.Build(ctx, "no-bin", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "no-bin"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -174,7 +174,7 @@ func TestNpmBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("repository object URL", func(t *testing.T) {
-		result, err := builder.Build(ctx, "with-repo-object", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "with-repo-object"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -184,7 +184,7 @@ func TestNpmBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("repository string URL", func(t *testing.T) {
-		result, err := builder.Build(ctx, "with-repo-string", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "with-repo-string"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -194,7 +194,7 @@ func TestNpmBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("multiple binaries", func(t *testing.T) {
-		result, err := builder.Build(ctx, "multiple-bins", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "multiple-bins"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -205,7 +205,7 @@ func TestNpmBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("fallback when no latest tag", func(t *testing.T) {
-		result, err := builder.Build(ctx, "no-latest", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "no-latest"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -215,14 +215,14 @@ func TestNpmBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("invalid package name returns error", func(t *testing.T) {
-		_, err := builder.Build(ctx, "../invalid", "")
+		_, err := builder.Build(ctx, BuildRequest{Package: "../invalid"})
 		if err == nil {
 			t.Error("Build() should fail for invalid package name")
 		}
 	})
 
 	t.Run("not found returns error", func(t *testing.T) {
-		_, err := builder.Build(ctx, "nonexistent", "")
+		_, err := builder.Build(ctx, BuildRequest{Package: "nonexistent"})
 		if err == nil {
 			t.Error("Build() should fail for nonexistent package")
 		}

@@ -130,7 +130,7 @@ func TestCPANBuilder_Build_AppDistribution(t *testing.T) {
 	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "App-Ack", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "App-Ack"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -221,7 +221,7 @@ func TestCPANBuilder_Build_NonAppDistribution(t *testing.T) {
 	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "Perl-Critic", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "Perl-Critic"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -259,7 +259,7 @@ func TestCPANBuilder_Build_ModuleName(t *testing.T) {
 	ctx := context.Background()
 
 	// Build with module name (App::Ack)
-	result, err := builder.Build(ctx, "App::Ack", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "App::Ack"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -280,7 +280,7 @@ func TestCPANBuilder_Build_NotFound(t *testing.T) {
 	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	_, err := builder.Build(ctx, "Nonexistent-Distribution", "")
+	_, err := builder.Build(ctx, BuildRequest{Package: "Nonexistent-Distribution"})
 	if err == nil {
 		t.Error("Build() should fail for nonexistent distribution")
 	}
@@ -295,7 +295,7 @@ func TestCPANBuilder_Build_RateLimit(t *testing.T) {
 	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	_, err := builder.Build(ctx, "App-Ack", "")
+	_, err := builder.Build(ctx, BuildRequest{Package: "App-Ack"})
 	if err == nil {
 		t.Error("Build() should fail on rate limit")
 	}
@@ -399,7 +399,7 @@ func TestCPANBuilder_Build_InvalidContentType(t *testing.T) {
 	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	_, err := builder.Build(ctx, "App-Ack", "")
+	_, err := builder.Build(ctx, BuildRequest{Package: "App-Ack"})
 	if err == nil {
 		t.Error("Build() should fail on invalid content type")
 	}

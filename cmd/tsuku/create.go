@@ -112,7 +112,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Build the recipe
 	printInfof("Creating recipe for %s from %s...\n", toolName, ecosystem)
-	result, err := builder.Build(ctx, toolName, "")
+	result, err := builder.Build(ctx, builders.BuildRequest{Package: toolName})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)
 		exitWithCode(ExitGeneral)

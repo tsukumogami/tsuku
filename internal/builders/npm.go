@@ -96,19 +96,19 @@ func (b *NpmBuilder) CanBuild(ctx context.Context, packageName string) (bool, er
 }
 
 // Build generates a recipe for the package
-func (b *NpmBuilder) Build(ctx context.Context, packageName string, version string) (*BuildResult, error) {
-	if !isValidNpmPackageNameForBuilder(packageName) {
-		return nil, fmt.Errorf("invalid package name: %s", packageName)
+func (b *NpmBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
+	if !isValidNpmPackageNameForBuilder(req.Package) {
+		return nil, fmt.Errorf("invalid package name: %s", req.Package)
 	}
 
 	// Fetch package metadata from npm registry
-	pkgInfo, err := b.fetchPackageInfo(ctx, packageName)
+	pkgInfo, err := b.fetchPackageInfo(ctx, req.Package)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch package info: %w", err)
 	}
 
 	result := &BuildResult{
-		Source:   fmt.Sprintf("npm:%s", packageName),
+		Source:   fmt.Sprintf("npm:%s", req.Package),
 		Warnings: []string{},
 	}
 
@@ -126,7 +126,7 @@ func (b *NpmBuilder) Build(ctx context.Context, packageName string, version stri
 	// Build the recipe
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
-			Name:        packageName,
+			Name:        req.Package,
 			Description: pkgInfo.Description,
 			Homepage:    homepage,
 		},
@@ -137,7 +137,7 @@ func (b *NpmBuilder) Build(ctx context.Context, packageName string, version stri
 			{
 				Action: "npm_install",
 				Params: map[string]interface{}{
-					"package":     packageName,
+					"package":     req.Package,
 					"executables": executables,
 				},
 			},
