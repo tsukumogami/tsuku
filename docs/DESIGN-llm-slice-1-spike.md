@@ -1,6 +1,6 @@
 # Design Document: LLM Slice 1 - End-to-End Spike
 
-**Status**: Proposed
+**Status**: Accepted
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
 
@@ -51,7 +51,7 @@ Issues discovered here inform the designs for Slices 2-4.
 
 ### Exit Criteria
 
-- [ ] GitHub Release Builder registered and callable via `tsuku create <tool> --from github`
+- [ ] GitHub Release Builder registered and callable via `tsuku create <tool> --from github:owner/repo`
 - [ ] Generated recipes are syntactically valid and follow existing recipe patterns
 - [ ] At least 3 test repos produce working installations
 - [ ] Cost per generation tracked and displayed
@@ -144,9 +144,27 @@ This is a tsuku feature. The code lives in `internal/` and integrates with the e
 ### Integration Points
 
 1. **Builder Registry**: Register `GitHubReleaseBuilder` alongside existing builders (Cargo, npm, PyPI, etc.)
-2. **CLI**: Extend `tsuku create` with `--from github` flag
-3. **Recipe Generation**: Use existing `recipe.Recipe` structures and TOML marshaling
-4. **HTTP Client**: Use existing `version.NewHTTPClient()` patterns for GitHub API
+2. **CLI**: Extend `tsuku create` with `--from github:owner/repo` syntax
+3. **Builder Interface**: Extend with `BuildRequest` struct for builder-specific arguments
+4. **Recipe Generation**: Use existing `recipe.Recipe` structures and TOML marshaling
+5. **HTTP Client**: Use existing `version.NewHTTPClient()` patterns for GitHub API
+
+### CLI Syntax
+
+The `--from` flag uses a colon-separated format: `builder:source-arg`
+
+```bash
+tsuku create age --from github:FiloSottile/age
+```
+
+- `age` - The tool name (goes in recipe metadata, used for `tsuku install age`)
+- `github` - The builder to use
+- `FiloSottile/age` - Builder-specific source argument (the GitHub repo)
+
+This separation is necessary because:
+1. Tool name and repo name often differ (e.g., `gh` from `cli/cli`)
+2. Repos can be monorepos containing multiple tools
+3. Each builder needs different source information
 
 ### Why This Structure
 
@@ -160,12 +178,12 @@ This is a tsuku feature. The code lives in `internal/` and integrates with the e
 ### Overview
 
 ```
-tsuku create gh --from github
+tsuku create gh --from github:cli/cli
 
 cmd/tsuku/create.go
-├── Parse --from github flag
+├── Parse --from github:cli/cli
 ├── Get GitHubReleaseBuilder from registry
-└── builder.Build(ctx, "cli/cli", "")
+└── builder.Build(ctx, BuildRequest{Package: "gh", SourceArg: "cli/cli"})
 
 internal/builders/github_release.go
 ├── Fetch release metadata from GitHub API
@@ -197,20 +215,41 @@ type Asset struct {
 
 // Output: LLM tool response
 type AssetPattern struct {
+    AssetType   string            `json:"asset_type"`   // "archive" or "binary"
     Pattern     string            `json:"pattern"`      // e.g., "gh_{version}_{os}_{arch}.tar.gz"
     OSMapping   map[string]string `json:"os_mapping"`   // e.g., {"linux": "linux", "darwin": "darwin"}
     ArchMapping map[string]string `json:"arch_mapping"` // e.g., {"amd64": "amd64", "arm64": "arm64"}
-    Format      string            `json:"format"`       // e.g., "tar.gz"
-    Executable  string            `json:"executable"`   // e.g., "gh"
+    Format      string            `json:"format"`       // e.g., "tar.gz" (only for archives)
+    Binaries    []string          `json:"binaries"`     // e.g., ["gh"] or ["age", "age-keygen"]
     Verify      string            `json:"verify"`       // e.g., "gh --version"
 }
 ```
 
 ### Components
 
-#### 1. GitHubReleaseBuilder (`internal/builders/github_release.go`)
+#### 1. Builder Interface Extension
 
-Implements the existing `Builder` interface:
+The existing Builder interface needs extension to support builder-specific arguments:
+
+```go
+// BuildRequest contains all parameters for recipe generation
+type BuildRequest struct {
+    Package   string // Tool name for recipe metadata (e.g., "gh")
+    Version   string // Optional version constraint
+    SourceArg string // Builder-specific source (e.g., "cli/cli" for github)
+}
+
+// Builder interface (extended)
+type Builder interface {
+    Name() string
+    CanBuild(ctx context.Context, req BuildRequest) (bool, error)
+    Build(ctx context.Context, req BuildRequest) (*BuildResult, error)
+}
+```
+
+#### 2. GitHubReleaseBuilder (`internal/builders/github_release.go`)
+
+Implements the Builder interface:
 
 ```go
 type GitHubReleaseBuilder struct {
@@ -220,51 +259,189 @@ type GitHubReleaseBuilder struct {
 
 func (b *GitHubReleaseBuilder) Name() string { return "github" }
 
-func (b *GitHubReleaseBuilder) CanBuild(ctx context.Context, pkg string) (bool, error)
+func (b *GitHubReleaseBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
+    // SourceArg must be owner/repo format
+    if req.SourceArg == "" {
+        return false, fmt.Errorf("github builder requires repo: --from github:owner/repo")
+    }
+    return strings.Contains(req.SourceArg, "/"), nil
+}
 
-func (b *GitHubReleaseBuilder) Build(ctx context.Context, pkg, version string) (*BuildResult, error)
+func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error)
 ```
 
 The `Build` method:
-1. Parses `pkg` as `owner/repo` or GitHub URL
-2. Fetches release data via GitHub API (reusing existing HTTP client patterns)
-3. Fetches repo metadata (description, homepage)
-4. Calls LLM client with assets and version tag
-5. Constructs `recipe.Recipe` from LLM response
-6. Returns `BuildResult` with recipe and warnings
+1. Uses `req.SourceArg` as `owner/repo`
+2. Uses `req.Package` as the tool name for recipe metadata
+3. Fetches release data via GitHub API (reusing existing HTTP client patterns)
+4. Fetches repo metadata (description, homepage)
+5. Calls LLM client with assets and version tag
+6. Constructs `recipe.Recipe` from LLM response
+7. Returns `BuildResult` with recipe and warnings
 
-#### 2. LLM Client (`internal/llm/client.go`)
+#### 3. LLM Client (`internal/llm/client.go`)
 
-Wraps Anthropic Go SDK with tsuku-specific patterns:
+Wraps Anthropic Go SDK with multi-turn tool use:
 
 ```go
 type Client struct {
-    anthropic *anthropic.Client
-    model     string
+    anthropic  *anthropic.Client
+    model      string
+    httpClient *http.Client  // For fetch_file
 }
 
-func (c *Client) ExtractPattern(ctx context.Context, tag string, assets []string) (*AssetPattern, *Usage, error)
+// GenerateRecipe runs multi-turn conversation until extract_pattern is called
+func (c *Client) GenerateRecipe(ctx context.Context, req *GenerateRequest) (*AssetPattern, *Usage, error)
+
+type GenerateRequest struct {
+    Repo        string    // "FiloSottile/age"
+    Releases    []Release // Last 3-5 releases for pattern inference
+    Description string    // Repo description
+    README      string    // README.md content (fetched proactively)
+}
+
+type Release struct {
+    Tag    string   // "v1.2.1"
+    Assets []string // Asset filenames for this release
+}
 ```
 
-- Model: `claude-sonnet-4-5-20250929` (hardcoded for Slice 1, configurable in Slice 3)
-- Uses tool use with `extract_pattern` tool
-- Forces tool use via `tool_choice`
-- Returns usage for cost tracking
+**Multi-turn flow:**
+1. Send initial prompt with: last 3-5 releases (tag + assets each), repo metadata, README.md
+2. Loop: handle tool calls (`fetch_file`, `inspect_archive`)
+3. Exit when `extract_pattern` is called
 
-#### 3. Tool Definition
+**Why multiple releases:**
+- LLM sees how version appears across releases: `v1.2.0` → `age-v1.2.0-...`, `v1.2.1` → `age-v1.2.1-...`
+- Validates pattern consistency (detect if a release is anomalous)
+- Makes `{version}` placeholder extraction obvious
 
-The `extract_pattern` tool asks the LLM to directly produce the asset pattern template rather than specific asset matches. This is simpler because it eliminates the need for post-processing to extract patterns from specific filenames.
+**Tool handlers:**
+- `fetch_file`: GET `https://raw.githubusercontent.com/{repo}/{tag}/{path}` - for any file (INSTALL.md, docs/, etc.)
+- `inspect_archive`: Download asset, extract in container, return file list with executable detection
+- `extract_pattern`: Parse response, return `AssetPattern`
 
+- Model: `claude-sonnet-4-5-20250929` (hardcoded for Slice 1)
+- Accumulates usage across all turns
+- Max turns: 5 (prevent infinite loops)
+
+#### 4. Tool Definitions
+
+The LLM has access to multiple tools for gathering information before producing the final pattern. This enables multi-turn reasoning when the LLM needs more context.
+
+**Available tools:**
+
+| Tool | Purpose | Required |
+|------|---------|----------|
+| `fetch_file` | Fetch README.md or other repo files | Optional |
+| `inspect_archive` | Download & list archive contents in container | Optional |
+| `extract_pattern` | Final output - the asset pattern | Required (forced via `tool_choice`) |
+
+**Why multi-turn:**
+- README often documents binary names explicitly
+- Archive inspection reveals actual binaries when names don't match tool name
+- LLM can ask for what it needs rather than guessing
+
+**Typical flows:**
+
+Simple case (e.g., age):
+```
+LLM sees:
+  - v1.2.0: age-v1.2.0-linux-amd64.tar.gz, age-v1.2.0-darwin-arm64.tar.gz, ...
+  - v1.2.1: age-v1.2.1-linux-amd64.tar.gz, age-v1.2.1-darwin-arm64.tar.gz, ...
+  - README.md
+LLM infers: pattern is "age-v{version}-{os}-{arch}.tar.gz"
+LLM calls: extract_pattern with binaries=["age"]
+```
+
+Binary name in README (e.g., ripgrep → rg):
+```
+LLM sees:
+  - v14.1.0: ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz, ...
+  - v14.0.3: ripgrep-14.0.3-x86_64-unknown-linux-musl.tar.gz, ...
+  - README says: "Install the rg binary to your PATH"
+LLM calls: extract_pattern with binaries=["rg"]
+```
+
+Multi-binary discovery:
+```
+LLM sees: assets, README mentions multiple commands
+LLM calls: inspect_archive("age-v1.2.1-linux-amd64.tar.gz")
+Container returns: ["age/age", "age/age-keygen"] (both executable)
+LLM calls: extract_pattern with binaries=["age", "age-keygen"]
+```
+
+Need more docs:
+```
+LLM sees: README unclear about installation
+LLM calls: fetch_file("INSTALL.md")
+INSTALL.md explains binary structure
+LLM calls: extract_pattern
+```
+
+**Tool: fetch_file** (optional, for additional docs)
 ```json
 {
-  "name": "extract_pattern",
-  "description": "Extract the asset naming pattern from GitHub release assets for a tsuku recipe",
+  "name": "fetch_file",
+  "description": "Fetch a file from the repository. README.md is already provided - use this for other files like INSTALL.md, docs/usage.md, etc.",
   "input_schema": {
     "type": "object",
     "properties": {
+      "path": {
+        "type": "string",
+        "description": "File path in repo (e.g., 'INSTALL.md', 'docs/install.md', 'Makefile')"
+      }
+    },
+    "required": ["path"]
+  }
+}
+```
+
+**Tool: inspect_archive** (optional, for binary discovery)
+```json
+{
+  "name": "inspect_archive",
+  "description": "Download and list contents of a release archive to discover binaries. Runs in isolated container.",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "asset_name": {
+        "type": "string",
+        "description": "Exact asset filename to inspect (e.g., 'age-v1.2.1-linux-amd64.tar.gz')"
+      }
+    },
+    "required": ["asset_name"]
+  }
+}
+```
+
+Returns file listing with types:
+```json
+{
+  "files": [
+    {"path": "age/age", "type": "executable", "size": 4521984},
+    {"path": "age/age-keygen", "type": "executable", "size": 3201024},
+    {"path": "age/LICENSE", "type": "file", "size": 1523}
+  ]
+}
+```
+
+**Tool: extract_pattern** (required, final output)
+```json
+{
+  "name": "extract_pattern",
+  "description": "Final output: the asset naming pattern for a tsuku recipe",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "asset_type": {
+        "type": "string",
+        "enum": ["archive", "binary"],
+        "description": "Whether assets are archives (tar.gz, zip) or standalone binaries"
+      },
       "asset_pattern": {
         "type": "string",
-        "description": "Pattern with {version}, {os}, {arch} placeholders, e.g., 'tool-{version}-{os}-{arch}.tar.gz'"
+        "description": "Pattern with placeholders. Use {version}, {os}, {arch} as needed."
       },
       "os_mapping": {
         "type": "object",
@@ -279,43 +456,70 @@ The `extract_pattern` tool asks the LLM to directly produce the asset pattern te
       "archive_format": {
         "type": "string",
         "enum": ["tar.gz", "tar.xz", "zip"],
-        "description": "Archive format for extraction"
+        "description": "Archive format (only if asset_type is 'archive')"
       },
-      "executable": {
-        "type": "string",
-        "description": "Name of the main executable binary"
+      "binaries": {
+        "type": "array",
+        "items": { "type": "string" },
+        "description": "Binary paths to install (e.g., ['age', 'age-keygen'] or ['bin/node', 'bin/npm'])"
       },
       "verify_command": {
         "type": "string",
         "description": "Command to verify installation (e.g., 'gh --version')"
       }
     },
-    "required": ["asset_pattern", "os_mapping", "arch_mapping", "archive_format", "executable", "verify_command"]
+    "required": ["asset_type", "asset_pattern", "os_mapping", "arch_mapping", "binaries", "verify_command"]
   }
 }
 ```
 
-Example response for cli/cli:
+Example response for cli/cli (archive, single binary):
 ```json
 {
+  "asset_type": "archive",
   "asset_pattern": "gh_{version}_{os}_{arch}.tar.gz",
   "os_mapping": { "linux": "linux", "darwin": "macOS" },
   "arch_mapping": { "amd64": "amd64", "arm64": "arm64" },
   "archive_format": "tar.gz",
-  "executable": "gh",
+  "binaries": ["gh"],
   "verify_command": "gh --version"
 }
 ```
 
-#### 4. Recipe Generation
+Example response for k3d-io/k3d (standalone binary):
+```json
+{
+  "asset_type": "binary",
+  "asset_pattern": "k3d-{os}-{arch}",
+  "os_mapping": { "linux": "linux", "darwin": "darwin" },
+  "arch_mapping": { "amd64": "amd64", "arm64": "arm64" },
+  "binaries": ["k3d"],
+  "verify_command": "k3d version"
+}
+```
+
+Example response for FiloSottile/age (archive, multiple binaries after inspect_archive):
+```json
+{
+  "asset_type": "archive",
+  "asset_pattern": "age-v{version}-{os}-{arch}.tar.gz",
+  "os_mapping": { "linux": "linux", "darwin": "darwin" },
+  "arch_mapping": { "amd64": "amd64", "arm64": "arm64" },
+  "archive_format": "tar.gz",
+  "binaries": ["age", "age-keygen"],
+  "verify_command": "age --version"
+}
+```
+
+#### 5. Recipe Generation
 
 The builder constructs a `recipe.Recipe` directly (using existing types from `internal/recipe/types.go`):
 
 ```go
-func (b *GitHubReleaseBuilder) buildRecipe(repo string, meta *RepoMeta, pattern *AssetPattern) *recipe.Recipe {
-    return &recipe.Recipe{
+func (b *GitHubReleaseBuilder) buildRecipe(req BuildRequest, repo string, meta *RepoMeta, pattern *AssetPattern) *recipe.Recipe {
+    r := &recipe.Recipe{
         Metadata: recipe.MetadataSection{
-            Name:        pattern.Executable,
+            Name:        req.Package,  // Use requested package name, not executable
             Description: meta.Description,
             Homepage:    meta.Homepage,
         },
@@ -323,26 +527,43 @@ func (b *GitHubReleaseBuilder) buildRecipe(repo string, meta *RepoMeta, pattern 
             Source:     "github_releases",
             GitHubRepo: repo,
         },
-        Steps: []recipe.Step{{
+        Verify: recipe.VerifySection{
+            Command: pattern.Verify,
+        },
+    }
+
+    if pattern.AssetType == "archive" {
+        r.Steps = []recipe.Step{{
             Action: "github_archive",
             Params: map[string]interface{}{
                 "repo":           repo,
                 "asset_pattern":  pattern.Pattern,
                 "archive_format": pattern.Format,
                 "strip_dirs":     1,
-                "binaries":       []string{pattern.Executable},
+                "binaries":       pattern.Binaries,
                 "os_mapping":     pattern.OSMapping,
                 "arch_mapping":   pattern.ArchMapping,
             },
-        }},
-        Verify: recipe.VerifySection{
-            Command: pattern.Verify,
-        },
+        }}
+    } else {
+        // github_file for standalone binaries (single binary only)
+        r.Steps = []recipe.Step{{
+            Action: "github_file",
+            Params: map[string]interface{}{
+                "repo":          repo,
+                "asset_pattern": pattern.Pattern,
+                "binary":        pattern.Binaries[0],
+                "os_mapping":    pattern.OSMapping,
+                "arch_mapping":  pattern.ArchMapping,
+            },
+        }}
     }
+
+    return r
 }
 ```
 
-#### 5. Cost Tracking (`internal/llm/cost.go`)
+#### 6. Cost Tracking (`internal/llm/cost.go`)
 
 Track and display token usage:
 
@@ -367,15 +588,25 @@ Cost is included in `BuildResult.Warnings` for display to user.
 ```
 You are extracting asset naming patterns from GitHub release assets for tsuku, a package manager for developer tools.
 
-Given a list of release assets and the release version tag, identify:
-1. The pattern used for asset filenames with {version}, {os}, {arch} placeholders
-2. How standard OS names (linux, darwin, windows) appear in filenames
-3. How standard arch names (amd64, arm64) appear in filenames
-4. The archive format (tar.gz, tar.xz, or zip)
-5. The main executable name
-6. A command to verify the tool works
+You will receive:
+- Multiple releases with their tags and asset filenames (use these to identify how version appears in patterns)
+- Repository metadata (description, homepage)
+- README.md content
 
-Common naming patterns:
+Your task:
+1. Identify the asset pattern with {version}, {os}, {arch} placeholders
+2. Map standard OS names (linux, darwin) to strings used in filenames
+3. Map standard arch names (amd64, arm64) to strings used in filenames
+4. Determine if assets are archives or standalone binaries
+5. Identify the executable binary name(s) - check README or use inspect_archive if unclear
+6. Provide a verify command
+
+Use the multiple releases to see how version numbers appear in filenames. For example:
+- v1.2.0 → age-v1.2.0-linux-amd64.tar.gz
+- v1.2.1 → age-v1.2.1-linux-amd64.tar.gz
+- Pattern: age-v{version}-{os}-{arch}.tar.gz
+
+Common naming conventions:
 - Rust targets: x86_64-unknown-linux-musl, aarch64-apple-darwin
 - Go conventions: linux_amd64, darwin_arm64, macOS_arm64
 - Generic: linux-x64, macos-arm64
@@ -384,36 +615,53 @@ Preferences:
 - musl over glibc for Linux (more portable)
 - tar.gz or tar.xz over zip for Unix platforms
 
-Output the pattern with placeholders, NOT specific filenames. For example:
-- "gh_{version}_{os}_{arch}.tar.gz" not "gh_2.42.0_linux_amd64.tar.gz"
-- "ripgrep-{version}-{arch}-{os}.tar.gz" not "ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz"
+Tools available:
+- fetch_file: Get additional files from repo (INSTALL.md, docs/, etc.)
+- inspect_archive: Download and list archive contents to discover binaries
+- extract_pattern: Final output (required)
 ```
 
 ### Data Flow
 
 ```
-1. User runs: go run ./cmd/spike-llm cli/cli
+1. User runs: tsuku create gh --from github:cli/cli
 
-2. Fetch release metadata:
-   GET https://api.github.com/repos/cli/cli/releases/latest
-   → tag_name: "v2.42.0", 20+ assets with names like "gh_2.42.0_linux_amd64.tar.gz"
+   CLI parses:
+   - Package: "gh"
+   - Builder: "github"
+   - SourceArg: "cli/cli"
+
+   Calls: builder.Build(ctx, BuildRequest{Package: "gh", SourceArg: "cli/cli"})
+
+2. Fetch context (parallel):
+   GET https://api.github.com/repos/cli/cli/releases?per_page=5
+   → Last 5 releases with tags and asset names:
+     - v2.42.0: ["gh_2.42.0_linux_amd64.tar.gz", "gh_2.42.0_darwin_arm64.tar.gz", ...]
+     - v2.41.0: ["gh_2.41.0_linux_amd64.tar.gz", "gh_2.41.0_darwin_arm64.tar.gz", ...]
+     - v2.40.1: ["gh_2.40.1_linux_amd64.tar.gz", ...]
+     - ...
 
    GET https://api.github.com/repos/cli/cli
    → description: "GitHub CLI", homepage: "https://cli.github.com"
 
-3. Call Claude:
+   GET https://raw.githubusercontent.com/cli/cli/v2.42.0/README.md
+   → README content
+
+3. Call Claude (multi-turn):
    POST https://api.anthropic.com/v1/messages
    - System prompt (pattern extraction instructions)
-   - User message: {"tag": "v2.42.0", "assets": ["gh_2.42.0_linux_amd64.tar.gz", ...]}
-   - Tool: extract_pattern
-   - tool_choice: { type: "tool", name: "extract_pattern" }
+   - User message with releases, repo metadata, README
+   - Tools: [fetch_file, inspect_archive, extract_pattern]
 
-4. Parse response:
+   (LLM may call fetch_file or inspect_archive, loop until extract_pattern)
+
+4. Parse extract_pattern response:
    → tool_use block:
+     asset_type: "archive"
      asset_pattern: "gh_{version}_{os}_{arch}.tar.gz"
      os_mapping: {"linux": "linux", "darwin": "macOS"}
      arch_mapping: {"amd64": "amd64", "arm64": "arm64"}
-     executable: "gh"
+     binaries: ["gh"]
      verify_command: "gh --version"
 
 5. Generate recipe:
@@ -457,30 +705,54 @@ For this spike, errors are fatal with descriptive messages:
 
 ### Testing Approach
 
-Test with 5 repositories covering different GitHub release naming conventions:
+We have ground truth: existing recipes in `internal/recipe/recipes/`. Tests validate that the builder produces equivalent recipes.
 
-| Repository | Convention | Goal |
-|------------|------------|------|
-| cli/cli | Go (linux_amd64) | Baseline - common Go pattern |
-| BurntSushi/ripgrep | Rust (x86_64-unknown-linux-musl) | Rust target triples |
-| sharkdp/fd | Rust | Confirm Rust pattern consistency |
-| hashicorp/terraform | Go (many platforms) | Many platform variants |
-| jqlang/jq | Generic (linux-amd64) | Generic naming conventions |
+**Test matrix** covering `github_archive`, `github_file`, and versionless patterns:
 
-**Validation steps:**
-1. Run: `tsuku create <tool> --from github`
-2. Inspect generated recipe for correctness
-3. Install: `tsuku install <tool>`
-4. Verify: Run the tool's verify command
+| Repository | Action | Convention | Existing Recipe |
+|------------|--------|------------|-----------------|
+| stern/stern | archive | Go standard | `s/stern.toml` |
+| ast-grep/ast-grep | archive | Rust target triples | `a/ast-grep.toml` |
+| aquasecurity/trivy | archive | Non-standard mappings | `t/trivy.toml` |
+| FiloSottile/age | archive | Multiple binaries | `a/age.toml` |
+| k3d-io/k3d | binary | Standalone binary | `k/k3d.toml` |
+| kubernetes-sigs/kind | binary | Standalone binary | `k/kind.toml` |
+| derailed/k9s | archive | **No {version}** in pattern | `k/k9s.toml` |
+| terraform-linters/tflint | archive | **No {version}**, zip | `t/tflint.toml` |
+| runatlantis/atlantis | archive | **No {version}**, zip | `a/atlantis.toml` |
+
+**Validation approach:**
+1. Run: `tsuku create <tool> --from github:owner/repo`
+2. Compare generated recipe against existing recipe in `internal/recipe/recipes/`
+3. Key fields must match: `action`, `asset_pattern`, `os_mapping`, `arch_mapping`
+4. Install: `tsuku install <tool>` (validates the recipe actually works)
+
+**Example commands:**
+```bash
+# Archives (with version in pattern)
+tsuku create stern --from github:stern/stern
+tsuku create ast-grep --from github:ast-grep/ast-grep
+tsuku create age --from github:FiloSottile/age
+
+# Archives (versionless patterns)
+tsuku create k9s --from github:derailed/k9s
+tsuku create tflint --from github:terraform-linters/tflint
+tsuku create atlantis --from github:runatlantis/atlantis
+
+# Binaries (standalone executables)
+tsuku create k3d --from github:k3d-io/k3d
+tsuku create kind --from github:kubernetes-sigs/kind
+```
 
 **Exit criteria:**
-- At least 3/5 repos produce working installations
-- Generated recipes follow existing recipe patterns
-- Issues discovered are documented
+- At least 7/9 repos produce recipes matching existing ground truth
+- All three categories work: archive+version, archive+versionless, binary
+- Generated recipes install successfully
 
-**Artifacts:**
+**Test artifacts:**
 - Generated recipes saved to `testdata/llm/` for regression testing
-- Issues discovered recorded in design doc updates or new issues
+- Comparison diffs saved when generated != expected
+- Issues discovered recorded for Slice 2-4 designs
 
 ## Security Considerations
 
@@ -575,16 +847,37 @@ After this slice:
 
 ## Implementation Checklist
 
-- [ ] Create `internal/llm/client.go` - Claude API client with tool use
+**Infrastructure:**
+- [ ] Extend Builder interface with `BuildRequest` struct in `internal/builders/builder.go`
+- [ ] Create `internal/llm/client.go` - Multi-turn Claude client with tool handling
 - [ ] Create `internal/llm/cost.go` - Usage tracking and cost calculation
+- [ ] Create `internal/llm/tools.go` - Tool schemas and handlers
 - [ ] Create `internal/builders/github_release.go` - Builder implementation
-- [ ] Register builder in `cmd/tsuku/create.go`
-- [ ] Add `--from github` flag to `tsuku create`
-- [ ] Write `extract_pattern` tool schema and system prompt
-- [ ] Test with cli/cli (baseline, Go naming)
-- [ ] Test with BurntSushi/ripgrep (Rust naming)
-- [ ] Test with sharkdp/fd (confirm Rust pattern)
-- [ ] Test with hashicorp/terraform (many variants)
-- [ ] Test with jqlang/jq (generic naming)
-- [ ] Save generated recipes to testdata for regression testing
+- [ ] Update `cmd/tsuku/create.go` to parse `--from builder:sourceArg` syntax
+- [ ] Register GitHubReleaseBuilder in builder registry
+
+**Tool implementations:**
+- [ ] `fetch_file` - Fetch README.md and other repo files via GitHub raw URLs
+- [ ] `inspect_archive` - Download asset, extract in container, return file listing
+- [ ] `extract_pattern` - Parse final LLM response into AssetPattern struct
+
+**Test: github_archive (with version):**
+- [ ] `tsuku create stern --from github:stern/stern` → compare to `s/stern.toml`
+- [ ] `tsuku create ast-grep --from github:ast-grep/ast-grep` → compare to `a/ast-grep.toml`
+- [ ] `tsuku create trivy --from github:aquasecurity/trivy` → compare to `t/trivy.toml`
+- [ ] `tsuku create age --from github:FiloSottile/age` → compare to `a/age.toml`
+
+**Test: github_archive (versionless patterns):**
+- [ ] `tsuku create k9s --from github:derailed/k9s` → compare to `k/k9s.toml`
+- [ ] `tsuku create tflint --from github:terraform-linters/tflint` → compare to `t/tflint.toml`
+- [ ] `tsuku create atlantis --from github:runatlantis/atlantis` → compare to `a/atlantis.toml`
+
+**Test: github_file (standalone binaries):**
+- [ ] `tsuku create k3d --from github:k3d-io/k3d` → compare to `k/k3d.toml`
+- [ ] `tsuku create kind --from github:kubernetes-sigs/kind` → compare to `k/kind.toml`
+
+**Validation:**
+- [ ] All generated recipes match key fields in existing recipes
+- [ ] All generated recipes install successfully
+- [ ] Save generated recipes to `testdata/llm/` for regression
 - [ ] Document issues discovered for Slice 2-4 designs
