@@ -9,15 +9,27 @@ import (
 	"time"
 )
 
-func TestNewClient_NoAPIKey(t *testing.T) {
-	// Save and clear the API key
+// setTestAPIKey sets the ANTHROPIC_API_KEY for testing and returns a cleanup function.
+func setTestAPIKey(t *testing.T, key string) func() {
+	t.Helper()
 	original := os.Getenv("ANTHROPIC_API_KEY")
-	os.Unsetenv("ANTHROPIC_API_KEY")
-	defer func() {
+	if key == "" {
+		_ = os.Unsetenv("ANTHROPIC_API_KEY")
+	} else {
+		_ = os.Setenv("ANTHROPIC_API_KEY", key)
+	}
+	return func() {
 		if original != "" {
-			os.Setenv("ANTHROPIC_API_KEY", original)
+			_ = os.Setenv("ANTHROPIC_API_KEY", original)
+		} else {
+			_ = os.Unsetenv("ANTHROPIC_API_KEY")
 		}
-	}()
+	}
+}
+
+func TestNewClient_NoAPIKey(t *testing.T) {
+	cleanup := setTestAPIKey(t, "")
+	defer cleanup()
 
 	_, err := NewClient()
 	if err == nil {
@@ -26,16 +38,8 @@ func TestNewClient_NoAPIKey(t *testing.T) {
 }
 
 func TestNewClient_WithAPIKey(t *testing.T) {
-	// Set a test API key
-	original := os.Getenv("ANTHROPIC_API_KEY")
-	os.Setenv("ANTHROPIC_API_KEY", "test-key")
-	defer func() {
-		if original != "" {
-			os.Setenv("ANTHROPIC_API_KEY", original)
-		} else {
-			os.Unsetenv("ANTHROPIC_API_KEY")
-		}
-	}()
+	cleanup := setTestAPIKey(t, "test-key")
+	defer cleanup()
 
 	client, err := NewClient()
 	if err != nil {
@@ -47,24 +51,13 @@ func TestNewClient_WithAPIKey(t *testing.T) {
 }
 
 func TestNewClientWithHTTPClient(t *testing.T) {
-	// Set a test API key
-	original := os.Getenv("ANTHROPIC_API_KEY")
-	os.Setenv("ANTHROPIC_API_KEY", "test-key")
-	defer func() {
-		if original != "" {
-			os.Setenv("ANTHROPIC_API_KEY", original)
-		} else {
-			os.Unsetenv("ANTHROPIC_API_KEY")
-		}
-	}()
+	cleanup := setTestAPIKey(t, "test-key")
+	defer cleanup()
 
 	customClient := &http.Client{Timeout: 30 * time.Second}
 	client, err := NewClientWithHTTPClient(customClient)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
-	}
-	if client == nil {
-		t.Error("expected non-nil client")
 	}
 	if client.httpClient != customClient {
 		t.Error("expected custom HTTP client to be used")
@@ -72,16 +65,8 @@ func TestNewClientWithHTTPClient(t *testing.T) {
 }
 
 func TestFetchFile(t *testing.T) {
-	// Set a test API key
-	original := os.Getenv("ANTHROPIC_API_KEY")
-	os.Setenv("ANTHROPIC_API_KEY", "test-key")
-	defer func() {
-		if original != "" {
-			os.Setenv("ANTHROPIC_API_KEY", original)
-		} else {
-			os.Unsetenv("ANTHROPIC_API_KEY")
-		}
-	}()
+	cleanup := setTestAPIKey(t, "test-key")
+	defer cleanup()
 
 	// Create a test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -107,16 +92,8 @@ func TestFetchFile(t *testing.T) {
 }
 
 func TestFetchFile_HTTPError(t *testing.T) {
-	// Set a test API key
-	original := os.Getenv("ANTHROPIC_API_KEY")
-	os.Setenv("ANTHROPIC_API_KEY", "test-key")
-	defer func() {
-		if original != "" {
-			os.Setenv("ANTHROPIC_API_KEY", original)
-		} else {
-			os.Unsetenv("ANTHROPIC_API_KEY")
-		}
-	}()
+	cleanup := setTestAPIKey(t, "test-key")
+	defer cleanup()
 
 	// Create a test server that returns an error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -136,16 +113,8 @@ func TestFetchFile_HTTPError(t *testing.T) {
 }
 
 func TestInspectArchive_Stub(t *testing.T) {
-	// Set a test API key
-	original := os.Getenv("ANTHROPIC_API_KEY")
-	os.Setenv("ANTHROPIC_API_KEY", "test-key")
-	defer func() {
-		if original != "" {
-			os.Setenv("ANTHROPIC_API_KEY", original)
-		} else {
-			os.Unsetenv("ANTHROPIC_API_KEY")
-		}
-	}()
+	cleanup := setTestAPIKey(t, "test-key")
+	defer cleanup()
 
 	client, err := NewClient()
 	if err != nil {
