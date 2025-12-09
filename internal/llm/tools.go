@@ -13,7 +13,7 @@ const (
 
 // FetchFileInput is the input schema for the fetch_file tool.
 type FetchFileInput struct {
-	URL string `json:"url"`
+	Path string `json:"path"`
 }
 
 // InspectArchiveInput is the input schema for the inspect_archive tool.
@@ -45,16 +45,16 @@ func toolSchemas() []anthropic.ToolUnionParam {
 		{
 			OfTool: &anthropic.ToolParam{
 				Name:        ToolFetchFile,
-				Description: anthropic.String("Fetch a file from a URL to examine its contents. Use this to inspect README files, documentation, or other text files that might help understand the tool's installation requirements."),
+				Description: anthropic.String("Fetch a file from the repository. README.md is already provided - use this for other files like INSTALL.md, docs/usage.md, etc."),
 				InputSchema: anthropic.ToolInputSchemaParam{
 					Type: "object",
 					Properties: map[string]interface{}{
-						"url": map[string]interface{}{
+						"path": map[string]interface{}{
 							"type":        "string",
-							"description": "The URL to fetch the file from",
+							"description": "File path in repo (e.g., 'INSTALL.md', 'docs/install.md', 'Makefile')",
 						},
 					},
-					Required: []string{"url"},
+					Required: []string{"path"},
 				},
 			},
 		},

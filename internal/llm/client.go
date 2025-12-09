@@ -68,6 +68,12 @@ type GenerateRequest struct {
 	README      string    `json:"readme"`
 }
 
+// generationContext holds context needed during tool execution.
+type generationContext struct {
+	repo string // GitHub repository (owner/repo)
+	tag  string // Release tag to use for file fetching
+}
+
 // AssetPattern contains the discovered pattern for matching release assets to platforms.
 type AssetPattern struct {
 	Mappings       []PlatformMapping `json:"mappings"`
@@ -89,6 +95,15 @@ func (c *Client) GenerateRecipe(ctx context.Context, req *GenerateRequest) (*Ass
 
 	tools := toolSchemas()
 	var totalUsage Usage
+
+	// Create generation context for tool execution
+	genCtx := &generationContext{
+		repo: req.Repo,
+	}
+	// Use the first release tag for file fetching
+	if len(req.Releases) > 0 {
+		genCtx.tag = req.Releases[0].Tag
+	}
 
 	for turn := 0; turn < MaxTurns; turn++ {
 		resp, err := c.anthropic.Messages.New(ctx, anthropic.MessageNewParams{
@@ -120,7 +135,7 @@ func (c *Client) GenerateRecipe(ctx context.Context, req *GenerateRequest) (*Ass
 		for _, block := range resp.Content {
 			switch variant := block.AsAny().(type) {
 			case anthropic.ToolUseBlock:
-				result, extractedPattern, err := c.executeToolUse(ctx, variant)
+				result, extractedPattern, err := c.executeToolUse(ctx, genCtx, variant)
 				if err != nil {
 					// Return error as tool result so Claude can try again
 					toolResults = append(toolResults,
@@ -160,14 +175,14 @@ func (c *Client) GenerateRecipe(ctx context.Context, req *GenerateRequest) (*Ass
 
 // executeToolUse executes a tool call and returns the result.
 // For extract_pattern, it returns the parsed pattern instead of a string result.
-func (c *Client) executeToolUse(ctx context.Context, toolUse anthropic.ToolUseBlock) (string, *AssetPattern, error) {
+func (c *Client) executeToolUse(ctx context.Context, genCtx *generationContext, toolUse anthropic.ToolUseBlock) (string, *AssetPattern, error) {
 	switch toolUse.Name {
 	case ToolFetchFile:
 		var input FetchFileInput
 		if err := json.Unmarshal(toolUse.Input, &input); err != nil {
 			return "", nil, fmt.Errorf("invalid fetch_file input: %w", err)
 		}
-		content, err := c.fetchFile(ctx, input.URL)
+		content, err := c.fetchFile(ctx, genCtx.repo, genCtx.tag, input.Path)
 		if err != nil {
 			return "", nil, err
 		}
@@ -203,8 +218,12 @@ func (c *Client) executeToolUse(ctx context.Context, toolUse anthropic.ToolUseBl
 	}
 }
 
-// fetchFile fetches a file from a URL and returns its contents.
-func (c *Client) fetchFile(ctx context.Context, url string) (string, error) {
+// fetchFile fetches a file from a GitHub repository using raw.githubusercontent.com.
+// It constructs the URL from the repo, tag, and path parameters.
+func (c *Client) fetchFile(ctx context.Context, repo, tag, path string) (string, error) {
+	// Construct raw.githubusercontent.com URL
+	url := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/%s", repo, tag, path)
+
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
@@ -212,12 +231,21 @@ func (c *Client) fetchFile(ctx context.Context, url string) (string, error) {
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		return "", fmt.Errorf("failed to fetch URL: %w", err)
+		return "", fmt.Errorf("failed to fetch file: %w", err)
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == http.StatusNotFound {
+		return "", fmt.Errorf("file not found: %s (check if the file exists in the repository at tag %s)", path, tag)
+	}
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
+	}
+
+	// Check content type - reject binary files
+	contentType := resp.Header.Get("Content-Type")
+	if contentType != "" && !isTextContentType(contentType) {
+		return "", fmt.Errorf("file appears to be binary (Content-Type: %s), only text files are supported", contentType)
 	}
 
 	// Limit response size to 1MB to prevent memory issues
@@ -229,6 +257,25 @@ func (c *Client) fetchFile(ctx context.Context, url string) (string, error) {
 	}
 
 	return string(content[:n]), nil
+}
+
+// isTextContentType checks if the content type indicates a text file.
+func isTextContentType(contentType string) bool {
+	// Common text content types
+	textPrefixes := []string{
+		"text/",
+		"application/json",
+		"application/xml",
+		"application/javascript",
+		"application/x-yaml",
+		"application/toml",
+	}
+	for _, prefix := range textPrefixes {
+		if len(contentType) >= len(prefix) && contentType[:len(prefix)] == prefix {
+			return true
+		}
+	}
+	return false
 }
 
 // buildSystemPrompt creates the system prompt for recipe generation.
