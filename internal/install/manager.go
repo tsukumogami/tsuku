@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 )
@@ -32,6 +33,7 @@ type InstallOptions struct {
 	IsHidden            bool              // Mark as hidden execution dependency
 	Binaries            []string          // List of binary names this tool provides
 	RuntimeDependencies map[string]string // Runtime deps: name -> version (for wrapper scripts)
+	RequestedVersion    string            // What user originally requested ("17", "@lts", "")
 }
 
 // DefaultInstallOptions returns the default installation options
@@ -103,12 +105,28 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 		fmt.Printf("📍 Installed to: %s (hidden)\n", toolDir)
 	}
 
-	// Update state
+	// Update state with multi-version support
 	// Note: IsExplicit and RequiredBy are handled by the caller (main.go)
-	// Here we just ensure the version is recorded
 	err := m.state.UpdateTool(name, func(ts *ToolState) {
+		// Initialize Versions map if needed
+		if ts.Versions == nil {
+			ts.Versions = make(map[string]VersionState)
+		}
+
+		// Add this version to the map (preserves existing versions)
+		ts.Versions[version] = VersionState{
+			Requested:   opts.RequestedVersion,
+			Binaries:    opts.Binaries,
+			InstalledAt: time.Now(),
+		}
+
+		// Set as active version
+		ts.ActiveVersion = version
+
+		// Keep legacy fields for backward compatibility
 		ts.Version = version
 		ts.Binaries = opts.Binaries
+
 		if opts.IsHidden {
 			ts.IsHidden = true
 			ts.IsExecutionDependency = true
@@ -124,6 +142,16 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 // GetState returns the state manager
 func (m *Manager) GetState() *StateManager {
 	return m.state
+}
+
+// IsVersionInstalled checks if a specific version of a tool is installed.
+func (m *Manager) IsVersionInstalled(name, version string) bool {
+	toolState, err := m.state.GetToolState(name)
+	if err != nil || toolState == nil {
+		return false
+	}
+	_, exists := toolState.Versions[version]
+	return exists
 }
 
 // ErrVersionNotInstalled indicates the requested version is not installed.
