@@ -412,8 +412,22 @@
         // Initialization
         // ============================================================
 
+        // Check for redirect from 404.html (workaround for Cloudflare Pages splat bug)
+        // See: https://github.com/cloudflare/workers-sdk/issues/2671
+        function handleRedirectParam() {
+            const params = new URLSearchParams(window.location.search);
+            const redirectPath = params.get('p');
+            if (redirectPath && redirectPath.startsWith('/recipes/')) {
+                // Restore the clean URL without the ?p= param
+                history.replaceState(null, '', redirectPath);
+            }
+        }
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
+            // Handle redirect from 404.html first
+            handleRedirectParam();
+
             // Set up search with debouncing
             const searchInput = document.getElementById('recipe-search');
             const debouncedSearch = debounce(handleSearch, 150);

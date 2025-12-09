@@ -6,6 +6,21 @@
     <meta name="robots" content="noindex">
     <title>Page Not Found - tsuku</title>
     <link rel="stylesheet" href="/assets/style.css">
+    <script>
+        // SPA routing workaround for Cloudflare Pages direct uploads.
+        // Splat redirects in _redirects don't work with wrangler direct uploads
+        // (see https://github.com/cloudflare/workers-sdk/issues/2671).
+        // This script redirects /recipes/* paths to the recipes SPA with a redirect param,
+        // which the SPA reads and uses history.replaceState to restore the clean URL.
+        (function() {
+            var path = window.location.pathname;
+            if (path.match(/^\/recipes\/[a-z0-9-]+\/?$/)) {
+                // Recipe detail page - redirect to recipes SPA with path in query param
+                var redirectUrl = '/recipes/?p=' + encodeURIComponent(path);
+                window.location.replace(redirectUrl);
+            }
+        })();
+    </script>
 </head>
 <body>
     <header>
