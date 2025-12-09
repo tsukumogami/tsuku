@@ -80,6 +80,36 @@ tsuku install tool-a  # tool-b already present
 tsuku remove tool-a   # tool-b remains (it was explicit)
 ```
 
+### Multi-Version Support
+
+tsuku supports installing and managing multiple versions of the same tool:
+
+```bash
+# Install specific versions
+tsuku install nodejs@18.20.0
+tsuku install nodejs@20.10.0
+
+# List shows all installed versions with active indicator
+tsuku list
+#   nodejs  18.20.0
+#   nodejs  20.10.0 (active)
+
+# Switch between versions instantly
+tsuku activate nodejs 18.20.0
+
+# Remove a specific version (keeps others)
+tsuku remove nodejs@18.20.0
+
+# Remove all versions of a tool
+tsuku remove nodejs
+```
+
+Key behaviors:
+- **Parallel installation**: Installing a new version preserves existing versions
+- **Active version**: The most recently installed or activated version is symlinked to PATH
+- **Version-specific removal**: Use `tool@version` syntax to remove only that version
+- **Automatic fallback**: If you remove the active version, tsuku switches to the most recently installed remaining version
+
 ## Testing
 
 tsuku has comprehensive test coverage for critical components:

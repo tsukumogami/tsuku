@@ -558,9 +558,30 @@ func TestManager_ListWithOptions_WithTools(t *testing.T) {
 		t.Fatalf("failed to create tool dir: %v", err)
 	}
 
-	// Mark hidden-tool as hidden in state
+	// Add state entries for all tools (List now uses state.json, not directory scanning)
 	sm := NewStateManager(cfg)
-	err := sm.UpdateTool("hidden-tool", func(ts *ToolState) {
+	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions = map[string]VersionState{
+			"1.29.0": {Requested: "", Binaries: []string{"kubectl"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	err = sm.UpdateTool("jq", func(ts *ToolState) {
+		ts.ActiveVersion = "1.7"
+		ts.Versions = map[string]VersionState{
+			"1.7": {Requested: "", Binaries: []string{"jq"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Mark hidden-tool as hidden in state
+	err = sm.UpdateTool("hidden-tool", func(ts *ToolState) {
 		ts.ActiveVersion = "1.0.0"
 		ts.Versions = map[string]VersionState{
 			"1.0.0": {Requested: "", Binaries: []string{"hidden-tool"}},

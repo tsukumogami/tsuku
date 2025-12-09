@@ -3,78 +3,70 @@ package install
 import (
 	"fmt"
 	"os"
-	"path/filepath"
-	"strings"
+	"sort"
 )
 
-// InstalledTool represents an installed tool
+// InstalledTool represents an installed tool version
 type InstalledTool struct {
-	Name    string
-	Version string
-	Path    string
+	Name     string
+	Version  string
+	Path     string
+	IsActive bool // Whether this is the currently active version
 }
 
-// List returns a list of all installed tools (excluding hidden tools)
+// List returns a list of all installed tool versions (excluding hidden tools)
 func (m *Manager) List() ([]InstalledTool, error) {
 	return m.ListWithOptions(false)
 }
 
-// ListAll returns a list of all installed tools including hidden ones
+// ListAll returns a list of all installed tool versions including hidden ones
 func (m *Manager) ListAll() ([]InstalledTool, error) {
 	return m.ListWithOptions(true)
 }
 
-// ListWithOptions returns a list of installed tools with option to include hidden
+// ListWithOptions returns a list of installed tool versions with option to include hidden.
+// Returns one entry per installed version, sorted by tool name then version.
 func (m *Manager) ListWithOptions(includeHidden bool) ([]InstalledTool, error) {
-	// Ensure tools directory exists
-	if _, err := os.Stat(m.config.ToolsDir); os.IsNotExist(err) {
-		return []InstalledTool{}, nil
-	}
-
-	// Load state to check for hidden tools
+	// Load state to get version information
 	state, err := m.state.Load()
 	if err != nil {
 		return nil, fmt.Errorf("failed to load state: %w", err)
 	}
 
-	entries, err := os.ReadDir(m.config.ToolsDir)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read tools directory: %w", err)
-	}
-
 	var tools []InstalledTool
 
-	for _, entry := range entries {
-		if !entry.IsDir() || entry.Name() == "current" {
-			continue
-		}
-
-		// Expected format: name-version
-		// We need to find the last hyphen to separate name and version
-		name := entry.Name()
-		lastHyphen := strings.LastIndex(name, "-")
-
-		if lastHyphen == -1 || lastHyphen == 0 || lastHyphen == len(name)-1 {
-			// Invalid format, skip
-			continue
-		}
-
-		toolName := name[:lastHyphen]
-		toolVersion := name[lastHyphen+1:]
-
+	// Iterate over all tools in state
+	for toolName, toolState := range state.Installed {
 		// Check if tool is hidden (unless we're including hidden)
-		if !includeHidden {
-			if toolState, exists := state.Installed[toolName]; exists && toolState.IsHidden {
+		if !includeHidden && toolState.IsHidden {
+			continue
+		}
+
+		// Add entry for each installed version
+		for version := range toolState.Versions {
+			toolDir := m.config.ToolDir(toolName, version)
+
+			// Verify directory exists (skip stale state entries)
+			if _, err := os.Stat(toolDir); os.IsNotExist(err) {
 				continue
 			}
-		}
 
-		tools = append(tools, InstalledTool{
-			Name:    toolName,
-			Version: toolVersion,
-			Path:    filepath.Join(m.config.ToolsDir, name),
-		})
+			tools = append(tools, InstalledTool{
+				Name:     toolName,
+				Version:  version,
+				Path:     toolDir,
+				IsActive: version == toolState.ActiveVersion,
+			})
+		}
 	}
+
+	// Sort by tool name, then by version
+	sort.Slice(tools, func(i, j int) bool {
+		if tools[i].Name != tools[j].Name {
+			return tools[i].Name < tools[j].Name
+		}
+		return tools[i].Version < tools[j].Version
+	})
 
 	return tools, nil
 }

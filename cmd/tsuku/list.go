@@ -52,10 +52,11 @@ var listCmd = &cobra.Command{
 		// JSON output mode
 		if jsonOutput {
 			type itemJSON struct {
-				Name    string `json:"name"`
-				Version string `json:"version"`
-				Path    string `json:"path"`
-				Type    string `json:"type,omitempty"`
+				Name     string `json:"name"`
+				Version  string `json:"version"`
+				Path     string `json:"path"`
+				Type     string `json:"type,omitempty"`
+				IsActive bool   `json:"is_active,omitempty"`
 			}
 			type listOutput struct {
 				Tools     []itemJSON `json:"tools"`
@@ -67,10 +68,11 @@ var listCmd = &cobra.Command{
 			}
 			for _, t := range tools {
 				output.Tools = append(output.Tools, itemJSON{
-					Name:    t.Name,
-					Version: t.Version,
-					Path:    t.Path,
-					Type:    "tool",
+					Name:     t.Name,
+					Version:  t.Version,
+					Path:     t.Path,
+					Type:     "tool",
+					IsActive: t.IsActive,
 				})
 			}
 			for _, l := range libs {
@@ -108,7 +110,11 @@ var listCmd = &cobra.Command{
 			if toolState, exists := state.Installed[tool.Name]; exists && toolState.IsExecutionDependency {
 				prefix = "* "
 			}
-			fmt.Printf("%s%-20s  %s\n", prefix, tool.Name, tool.Version)
+			activeIndicator := ""
+			if tool.IsActive {
+				activeIndicator = " (active)"
+			}
+			fmt.Printf("%s%-20s  %s%s\n", prefix, tool.Name, tool.Version, activeIndicator)
 		}
 
 		if showSystemDeps {
