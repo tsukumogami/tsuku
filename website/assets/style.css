@@ -523,6 +523,7 @@ main.wide {
 
 /* Recipe Detail View */
 .recipe-detail {
+    grid-column: 1 / -1;
     text-align: center;
     padding: 2rem;
 }

@@ -411,9 +411,11 @@
 
         // Render the grid view (recipe browser)
         function renderGridView() {
-            // Show search container
+            // Show search container and tagline
             const searchContainer = document.querySelector('.search-container');
             if (searchContainer) searchContainer.hidden = false;
+            const tagline = document.querySelector('.hero .tagline');
+            if (tagline) tagline.hidden = false;
 
             // Apply current search filter
             const searchInput = document.getElementById('recipe-search');
@@ -430,9 +432,11 @@
                 return;
             }
 
-            // Hide search container in detail view
+            // Hide search container and tagline in detail view
             const searchContainer = document.querySelector('.search-container');
             if (searchContainer) searchContainer.hidden = true;
+            const tagline = document.querySelector('.hero .tagline');
+            if (tagline) tagline.hidden = true;
 
             const grid = document.getElementById('recipe-grid');
             const countEl = document.getElementById('recipe-count');
