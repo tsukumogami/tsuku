@@ -8,8 +8,17 @@ export interface Env {
 }
 
 const SCHEMA_VERSION = "1";
+const LLM_SCHEMA_VERSION = "1";
 
 type ActionType = "install" | "update" | "remove" | "create" | "command";
+
+type LLMActionType =
+  | "llm_generation_started"
+  | "llm_generation_completed"
+  | "llm_repair_attempt"
+  | "llm_validation_result"
+  | "llm_provider_failover"
+  | "llm_circuit_breaker_trip";
 
 interface TelemetryEvent {
   action: ActionType;
@@ -24,6 +33,27 @@ interface TelemetryEvent {
   command?: string;
   flags?: string;
   template?: string;
+}
+
+interface LLMTelemetryEvent {
+  action: LLMActionType;
+  provider?: string;
+  tool_name?: string;
+  repo?: string;
+  success?: boolean;
+  duration_ms?: number;
+  attempts?: number;
+  attempt_number?: number;
+  error_category?: string;
+  passed?: boolean;
+  from_provider?: string;
+  to_provider?: string;
+  reason?: string;
+  failures?: number;
+  os?: string;
+  arch?: string;
+  tsuku_version?: string;
+  schema_version?: string;
 }
 
 function validateEvent(event: TelemetryEvent): string | null {
@@ -144,6 +174,49 @@ function validateEvent(event: TelemetryEvent): string | null {
       if (err) return err;
       break;
     }
+  }
+
+  return null;
+}
+
+function validateLLMEvent(event: LLMTelemetryEvent): string | null {
+  // Common required fields for all LLM events
+  if (!event.os || typeof event.os !== "string") {
+    return "os is required";
+  }
+  if (!event.arch || typeof event.arch !== "string") {
+    return "arch is required";
+  }
+  if (!event.tsuku_version || typeof event.tsuku_version !== "string") {
+    return "tsuku_version is required";
+  }
+
+  // Action-specific validation
+  switch (event.action) {
+    case "llm_generation_started":
+      if (!event.provider) return "provider is required for llm_generation_started";
+      if (!event.tool_name) return "tool_name is required for llm_generation_started";
+      if (!event.repo) return "repo is required for llm_generation_started";
+      break;
+    case "llm_generation_completed":
+      if (!event.provider) return "provider is required for llm_generation_completed";
+      if (!event.tool_name) return "tool_name is required for llm_generation_completed";
+      break;
+    case "llm_repair_attempt":
+      if (!event.provider) return "provider is required for llm_repair_attempt";
+      if (event.attempt_number === undefined) return "attempt_number is required for llm_repair_attempt";
+      break;
+    case "llm_validation_result":
+      if (event.attempt_number === undefined) return "attempt_number is required for llm_validation_result";
+      break;
+    case "llm_provider_failover":
+      if (!event.from_provider) return "from_provider is required for llm_provider_failover";
+      if (!event.to_provider) return "to_provider is required for llm_provider_failover";
+      break;
+    case "llm_circuit_breaker_trip":
+      if (!event.provider) return "provider is required for llm_circuit_breaker_trip";
+      if (event.failures === undefined) return "failures is required for llm_circuit_breaker_trip";
+      break;
   }
 
   return null;
@@ -290,7 +363,75 @@ export default {
       try {
         const event = (await request.json()) as Record<string, unknown>;
 
-        // Validate required action field
+        // Check if it's an LLM event
+        const llmActions: LLMActionType[] = [
+          "llm_generation_started",
+          "llm_generation_completed",
+          "llm_repair_attempt",
+          "llm_validation_result",
+          "llm_provider_failover",
+          "llm_circuit_breaker_trip",
+        ];
+
+        if (typeof event.action === "string" && llmActions.includes(event.action as LLMActionType)) {
+          // Handle LLM event
+          const llmEvent: LLMTelemetryEvent = {
+            action: event.action as LLMActionType,
+            provider: event.provider as string | undefined,
+            tool_name: event.tool_name as string | undefined,
+            repo: event.repo as string | undefined,
+            success: event.success as boolean | undefined,
+            duration_ms: event.duration_ms as number | undefined,
+            attempts: event.attempts as number | undefined,
+            attempt_number: event.attempt_number as number | undefined,
+            error_category: event.error_category as string | undefined,
+            passed: event.passed as boolean | undefined,
+            from_provider: event.from_provider as string | undefined,
+            to_provider: event.to_provider as string | undefined,
+            reason: event.reason as string | undefined,
+            failures: event.failures as number | undefined,
+            os: event.os as string | undefined,
+            arch: event.arch as string | undefined,
+            tsuku_version: event.tsuku_version as string | undefined,
+            schema_version: event.schema_version as string | undefined,
+          };
+
+          const validationError = validateLLMEvent(llmEvent);
+          if (validationError) {
+            return new Response(`Bad request: ${validationError}`, {
+              status: 400,
+              headers: corsHeaders,
+            });
+          }
+
+          // Write LLM event to analytics engine
+          // Using a separate blob layout for LLM events
+          env.ANALYTICS.writeDataPoint({
+            blobs: [
+              llmEvent.action, // blob0: action
+              llmEvent.provider || "", // blob1: provider
+              llmEvent.tool_name || "", // blob2: tool_name
+              llmEvent.repo || "", // blob3: repo
+              llmEvent.success !== undefined ? String(llmEvent.success) : "", // blob4: success
+              llmEvent.duration_ms !== undefined ? String(llmEvent.duration_ms) : "", // blob5: duration_ms
+              llmEvent.attempts !== undefined ? String(llmEvent.attempts) : "", // blob6: attempts
+              llmEvent.attempt_number !== undefined ? String(llmEvent.attempt_number) : "", // blob7: attempt_number
+              llmEvent.error_category || "", // blob8: error_category
+              llmEvent.passed !== undefined ? String(llmEvent.passed) : "", // blob9: passed
+              llmEvent.from_provider || llmEvent.reason || "", // blob10: from_provider or reason
+              llmEvent.to_provider || (llmEvent.failures !== undefined ? String(llmEvent.failures) : ""), // blob11: to_provider or failures
+              llmEvent.os || "", // blob12: os
+              llmEvent.arch || "", // blob13: arch
+              llmEvent.tsuku_version || "", // blob14: tsuku_version
+              LLM_SCHEMA_VERSION, // blob15: schema_version
+            ],
+            indexes: [llmEvent.action],
+          });
+
+          return new Response("ok", { status: 200, headers: corsHeaders });
+        }
+
+        // Validate required action field for regular events
         const validActions: ActionType[] = [
           "install",
           "update",
