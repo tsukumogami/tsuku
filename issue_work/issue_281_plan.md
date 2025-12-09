@@ -31,14 +31,14 @@ None - the builder will be registered in application code when the CLI is update
 
 ## Implementation Steps
 
-- [ ] Create `GitHubReleaseBuilder` struct with `httpClient` and `llmClient` fields
-- [ ] Implement `Name()` returning "github"
-- [ ] Implement `CanBuild()` checking for valid owner/repo format in SourceArg
-- [ ] Implement GitHub API client: fetch releases, repo metadata, README
-- [ ] Implement `Build()` orchestrating: fetch context → call LLM → generate recipe
-- [ ] Implement recipe generation from `AssetPattern` supporting both `github_archive` and `github_file`
-- [ ] Add unit tests with mock HTTP server for GitHub API
-- [ ] Add unit tests for recipe generation from AssetPattern
+- [x] Create `GitHubReleaseBuilder` struct with `httpClient` and `llmClient` fields
+- [x] Implement `Name()` returning "github"
+- [x] Implement `CanBuild()` checking for valid owner/repo format in SourceArg
+- [x] Implement GitHub API client: fetch releases, repo metadata, README
+- [x] Implement `Build()` orchestrating: fetch context → call LLM → generate recipe
+- [x] Implement recipe generation from `AssetPattern` supporting both `github_archive` and `github_file`
+- [x] Add unit tests with mock HTTP server for GitHub API
+- [x] Add unit tests for recipe generation from AssetPattern
 
 ## Testing Strategy
 
@@ -116,12 +116,12 @@ Step{
 
 ## Success Criteria
 
-- [ ] `GitHubReleaseBuilder` implements `Builder` interface
-- [ ] Fetches last 5 releases from GitHub API
-- [ ] Fetches README proactively
-- [ ] Generates valid recipes for both archive and binary formats
-- [ ] Unit tests pass
-- [ ] LLM cost included in warnings
+- [x] `GitHubReleaseBuilder` implements `Builder` interface
+- [x] Fetches last 5 releases from GitHub API
+- [x] Fetches README proactively
+- [x] Generates valid recipes for both archive and binary formats
+- [x] Unit tests pass
+- [x] LLM cost included in warnings
 
 ## Open Questions
 
