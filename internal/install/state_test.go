@@ -1,6 +1,7 @@
 package install
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -1379,5 +1380,187 @@ func TestStateManager_GetToolState(t *testing.T) {
 	}
 	if nonExistentState != nil {
 		t.Error("GetToolState() should return nil for non-existent tool")
+	}
+}
+
+// Concurrent access tests
+
+func TestStateManager_ConcurrentUpdates(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Run concurrent updates from multiple goroutines
+	const numGoroutines = 10
+	const updatesPerGoroutine = 10
+	done := make(chan bool, numGoroutines)
+	errors := make(chan error, numGoroutines*updatesPerGoroutine)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func(id int) {
+			defer func() { done <- true }()
+			for j := 0; j < updatesPerGoroutine; j++ {
+				toolName := "tool-" + string(rune('a'+id))
+				err := sm.UpdateTool(toolName, func(ts *ToolState) {
+					ts.ActiveVersion = "1.0.0"
+					ts.Versions = map[string]VersionState{
+						"1.0.0": {Requested: "", Binaries: []string{toolName}},
+					}
+					ts.IsExplicit = true
+				})
+				if err != nil {
+					errors <- err
+				}
+			}
+		}(i)
+	}
+
+	// Wait for all goroutines
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
+	close(errors)
+
+	// Check for errors
+	var errs []error
+	for err := range errors {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		t.Fatalf("concurrent updates failed with %d errors, first: %v", len(errs), errs[0])
+	}
+
+	// Verify state is consistent
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// Should have numGoroutines tools (tool-a through tool-j)
+	if len(state.Installed) != numGoroutines {
+		t.Errorf("installed tools count = %d, want %d", len(state.Installed), numGoroutines)
+	}
+}
+
+func TestStateManager_ConcurrentReadWrite(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Initialize with a tool
+	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions = map[string]VersionState{
+			"1.29.0": {Requested: "", Binaries: []string{"kubectl"}},
+		}
+		ts.IsExplicit = true
+	})
+	if err != nil {
+		t.Fatalf("initial UpdateTool() error = %v", err)
+	}
+
+	// Run concurrent reads and writes
+	const numReaders = 5
+	const numWriters = 3
+	const ops = 20
+	done := make(chan bool, numReaders+numWriters)
+	readErrors := make(chan error, numReaders*ops)
+	writeErrors := make(chan error, numWriters*ops)
+
+	// Start readers
+	for i := 0; i < numReaders; i++ {
+		go func() {
+			defer func() { done <- true }()
+			for j := 0; j < ops; j++ {
+				state, err := sm.Load()
+				if err != nil {
+					readErrors <- err
+					continue
+				}
+				// Verify state is valid
+				if state.Installed == nil {
+					readErrors <- fmt.Errorf("Installed map is nil")
+				}
+			}
+		}()
+	}
+
+	// Start writers
+	for i := 0; i < numWriters; i++ {
+		go func(id int) {
+			defer func() { done <- true }()
+			for j := 0; j < ops; j++ {
+				err := sm.UpdateTool("kubectl", func(ts *ToolState) {
+					ts.ActiveVersion = "1.29.0"
+				})
+				if err != nil {
+					writeErrors <- err
+				}
+			}
+		}(i)
+	}
+
+	// Wait for all goroutines
+	for i := 0; i < numReaders+numWriters; i++ {
+		<-done
+	}
+	close(readErrors)
+	close(writeErrors)
+
+	// Check for errors
+	for err := range readErrors {
+		t.Errorf("read error: %v", err)
+	}
+	for err := range writeErrors {
+		t.Errorf("write error: %v", err)
+	}
+}
+
+func TestStateManager_lockPath(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	expected := filepath.Join(cfg.HomeDir, "state.json.lock")
+	if sm.lockPath() != expected {
+		t.Errorf("lockPath() = %q, want %q", sm.lockPath(), expected)
+	}
+}
+
+func TestStateManager_AtomicWrite_NoPartialState(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Save initial state
+	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions = map[string]VersionState{
+			"1.29.0": {Requested: "", Binaries: []string{"kubectl"}},
+		}
+		ts.IsExplicit = true
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Load and verify state is complete (not partial)
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	kubectl, exists := state.Installed["kubectl"]
+	if !exists {
+		t.Fatal("kubectl should exist in state")
+	}
+
+	if kubectl.ActiveVersion != "1.29.0" {
+		t.Errorf("ActiveVersion = %q, want 1.29.0", kubectl.ActiveVersion)
+	}
+
+	// Temp file should not exist after save
+	statePath := sm.statePath()
+	tmpPath := statePath + ".tmp"
+	if _, err := os.Stat(tmpPath); !os.IsNotExist(err) {
+		t.Error("temp file should not exist after successful save")
 	}
 }

@@ -53,7 +53,7 @@ type State struct {
 // StateManager handles reading and writing the state file
 type StateManager struct {
 	config *config.Config
-	mu     sync.RWMutex
+	mu     sync.RWMutex // Protects in-process concurrent access
 }
 
 // NewStateManager creates a new state manager
@@ -68,11 +68,104 @@ func (sm *StateManager) statePath() string {
 	return filepath.Join(sm.config.HomeDir, "state.json")
 }
 
+// lockPath returns the path to the lock file
+func (sm *StateManager) lockPath() string {
+	return filepath.Join(sm.config.HomeDir, "state.json.lock")
+}
+
 // Load reads the state from disk
 func (sm *StateManager) Load() (*State, error) {
 	sm.mu.RLock()
 	defer sm.mu.RUnlock()
 
+	return sm.loadWithLock()
+}
+
+// loadWithLock reads the state from disk with file locking.
+// Caller must hold sm.mu (read or write lock).
+func (sm *StateManager) loadWithLock() (*State, error) {
+	path := sm.statePath()
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return &State{
+			Installed: make(map[string]ToolState),
+			Libs:      make(map[string]map[string]LibraryVersionState),
+		}, nil
+	}
+
+	// Acquire shared file lock for reading
+	lock := NewFileLock(sm.lockPath())
+	if err := lock.LockShared(); err != nil {
+		return nil, fmt.Errorf("failed to acquire read lock: %w", err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read state file: %w", err)
+	}
+
+	var state State
+	if err := json.Unmarshal(data, &state); err != nil {
+		return nil, fmt.Errorf("failed to parse state file: %w", err)
+	}
+
+	// Initialize maps if nil (backward compatibility)
+	if state.Installed == nil {
+		state.Installed = make(map[string]ToolState)
+	}
+	if state.Libs == nil {
+		state.Libs = make(map[string]map[string]LibraryVersionState)
+	}
+
+	// Migrate old single-version format to new multi-version format
+	state.migrateToMultiVersion()
+
+	return &state, nil
+}
+
+// Save writes the state to disk
+func (sm *StateManager) Save(state *State) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	return sm.saveWithLock(state)
+}
+
+// saveWithLock writes the state to disk with file locking and atomic write.
+// Caller must hold sm.mu write lock.
+func (sm *StateManager) saveWithLock(state *State) error {
+	data, err := json.MarshalIndent(state, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal state: %w", err)
+	}
+
+	// Acquire exclusive file lock for writing
+	lock := NewFileLock(sm.lockPath())
+	if err := lock.LockExclusive(); err != nil {
+		return fmt.Errorf("failed to acquire write lock: %w", err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	// Atomic write: write to temp file, then rename
+	path := sm.statePath()
+	tmpPath := path + ".tmp"
+
+	if err := os.WriteFile(tmpPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write temp state file: %w", err)
+	}
+
+	if err := os.Rename(tmpPath, path); err != nil {
+		// Clean up temp file on rename failure
+		os.Remove(tmpPath)
+		return fmt.Errorf("failed to rename state file: %w", err)
+	}
+
+	return nil
+}
+
+// loadWithoutLock reads the state from disk without acquiring the file lock.
+// Caller must already hold both sm.mu and the file lock.
+func (sm *StateManager) loadWithoutLock() (*State, error) {
 	path := sm.statePath()
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		return &State{
@@ -105,26 +198,46 @@ func (sm *StateManager) Load() (*State, error) {
 	return &state, nil
 }
 
-// Save writes the state to disk
-func (sm *StateManager) Save(state *State) error {
-	sm.mu.Lock()
-	defer sm.mu.Unlock()
-
+// saveWithoutLock writes the state to disk without acquiring the file lock.
+// Caller must already hold both sm.mu and the file lock.
+func (sm *StateManager) saveWithoutLock(state *State) error {
 	data, err := json.MarshalIndent(state, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal state: %w", err)
 	}
 
-	if err := os.WriteFile(sm.statePath(), data, 0644); err != nil {
-		return fmt.Errorf("failed to write state file: %w", err)
+	// Atomic write: write to temp file, then rename
+	path := sm.statePath()
+	tmpPath := path + ".tmp"
+
+	if err := os.WriteFile(tmpPath, data, 0644); err != nil {
+		return fmt.Errorf("failed to write temp state file: %w", err)
+	}
+
+	if err := os.Rename(tmpPath, path); err != nil {
+		// Clean up temp file on rename failure
+		os.Remove(tmpPath)
+		return fmt.Errorf("failed to rename state file: %w", err)
 	}
 
 	return nil
 }
 
-// UpdateTool updates the state for a single tool
+// UpdateTool updates the state for a single tool atomically.
+// The exclusive lock is held for the entire read-modify-write cycle.
 func (sm *StateManager) UpdateTool(name string, update func(*ToolState)) error {
-	state, err := sm.Load()
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	// Acquire exclusive file lock for the entire operation
+	lock := NewFileLock(sm.lockPath())
+	if err := lock.LockExclusive(); err != nil {
+		return fmt.Errorf("failed to acquire lock for update: %w", err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	// Load state (without acquiring lock again)
+	state, err := sm.loadWithoutLock()
 	if err != nil {
 		return err
 	}
@@ -139,19 +252,30 @@ func (sm *StateManager) UpdateTool(name string, update func(*ToolState)) error {
 	update(&toolState)
 	state.Installed[name] = toolState
 
-	return sm.Save(state)
+	return sm.saveWithoutLock(state)
 }
 
-// RemoveTool removes a tool from the state
+// RemoveTool removes a tool from the state atomically.
+// The exclusive lock is held for the entire read-modify-write cycle.
 func (sm *StateManager) RemoveTool(name string) error {
-	state, err := sm.Load()
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	// Acquire exclusive file lock for the entire operation
+	lock := NewFileLock(sm.lockPath())
+	if err := lock.LockExclusive(); err != nil {
+		return fmt.Errorf("failed to acquire lock for removal: %w", err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	state, err := sm.loadWithoutLock()
 	if err != nil {
 		return err
 	}
 
 	delete(state.Installed, name)
 
-	return sm.Save(state)
+	return sm.saveWithoutLock(state)
 }
 
 // AddRequiredBy adds a dependent tool to the RequiredBy list
@@ -179,9 +303,20 @@ func (sm *StateManager) RemoveRequiredBy(dependency, dependent string) error {
 	})
 }
 
-// UpdateLibrary updates the state for a specific library version
+// UpdateLibrary updates the state for a specific library version atomically.
+// The exclusive lock is held for the entire read-modify-write cycle.
 func (sm *StateManager) UpdateLibrary(name, version string, update func(*LibraryVersionState)) error {
-	state, err := sm.Load()
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	// Acquire exclusive file lock for the entire operation
+	lock := NewFileLock(sm.lockPath())
+	if err := lock.LockExclusive(); err != nil {
+		return fmt.Errorf("failed to acquire lock for library update: %w", err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	state, err := sm.loadWithoutLock()
 	if err != nil {
 		return err
 	}
@@ -199,7 +334,7 @@ func (sm *StateManager) UpdateLibrary(name, version string, update func(*Library
 	update(&libState)
 	state.Libs[name][version] = libState
 
-	return sm.Save(state)
+	return sm.saveWithoutLock(state)
 }
 
 // AddLibraryUsedBy adds a dependent tool to the UsedBy list for a library version
@@ -227,9 +362,20 @@ func (sm *StateManager) RemoveLibraryUsedBy(libName, libVersion, toolNameVersion
 	})
 }
 
-// RemoveLibraryVersion removes a specific library version from state
+// RemoveLibraryVersion removes a specific library version from state atomically.
+// The exclusive lock is held for the entire read-modify-write cycle.
 func (sm *StateManager) RemoveLibraryVersion(libName, libVersion string) error {
-	state, err := sm.Load()
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	// Acquire exclusive file lock for the entire operation
+	lock := NewFileLock(sm.lockPath())
+	if err := lock.LockExclusive(); err != nil {
+		return fmt.Errorf("failed to acquire lock for library removal: %w", err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	state, err := sm.loadWithoutLock()
 	if err != nil {
 		return err
 	}
@@ -242,7 +388,7 @@ func (sm *StateManager) RemoveLibraryVersion(libName, libVersion string) error {
 		}
 	}
 
-	return sm.Save(state)
+	return sm.saveWithoutLock(state)
 }
 
 // GetLibraryState returns the state for a specific library version, or nil if not found
