@@ -6,13 +6,17 @@ import (
 	"os"
 )
 
+// FailoverCallback is called when the factory fails over from one provider to another.
+type FailoverCallback func(from, to, reason string)
+
 // Factory creates and manages LLM providers with circuit breakers.
 // It auto-detects available providers from environment variables and
 // supports automatic failover when the primary provider is unavailable.
 type Factory struct {
-	providers map[string]Provider
-	breakers  map[string]*CircuitBreaker
-	primary   string
+	providers  map[string]Provider
+	breakers   map[string]*CircuitBreaker
+	primary    string
+	onFailover FailoverCallback
 }
 
 // FactoryOption configures a Factory.
@@ -87,11 +91,27 @@ func (f *Factory) GetProvider(ctx context.Context) (Provider, error) {
 			continue // Already tried primary
 		}
 		if breaker := f.breakers[name]; breaker != nil && breaker.Allow() {
+			// Notify of failover
+			if f.onFailover != nil {
+				f.onFailover(f.primary, name, "circuit_breaker_open")
+			}
 			return provider, nil
 		}
 	}
 
 	return nil, fmt.Errorf("no LLM providers available: all circuit breakers are open")
+}
+
+// SetOnFailover sets the callback to be invoked when provider failover occurs.
+func (f *Factory) SetOnFailover(callback FailoverCallback) {
+	f.onFailover = callback
+}
+
+// SetOnBreakerTrip sets the callback to be invoked when any circuit breaker trips.
+func (f *Factory) SetOnBreakerTrip(callback BreakerTripCallback) {
+	for _, breaker := range f.breakers {
+		breaker.SetOnTrip(callback)
+	}
 }
 
 // ReportSuccess records a successful operation for the specified provider.

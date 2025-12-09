@@ -13,6 +13,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
@@ -31,11 +32,12 @@ const (
 
 // GitHubReleaseBuilder generates recipes from GitHub release assets using LLM analysis.
 type GitHubReleaseBuilder struct {
-	httpClient    *http.Client
-	factory       *llm.Factory
-	executor      *validate.Executor
-	sanitizer     *validate.Sanitizer
-	githubBaseURL string
+	httpClient      *http.Client
+	factory         *llm.Factory
+	executor        *validate.Executor
+	sanitizer       *validate.Sanitizer
+	githubBaseURL   string
+	telemetryClient *telemetry.Client
 }
 
 // GitHubReleaseBuilderOption configures a GitHubReleaseBuilder.
@@ -76,12 +78,20 @@ func WithGitHubBaseURL(url string) GitHubReleaseBuilderOption {
 	}
 }
 
+// WithTelemetryClient sets the telemetry client for emitting LLM events.
+func WithTelemetryClient(c *telemetry.Client) GitHubReleaseBuilderOption {
+	return func(b *GitHubReleaseBuilder) {
+		b.telemetryClient = c
+	}
+}
+
 // NewGitHubReleaseBuilder creates a new GitHubReleaseBuilder.
 // If no options are provided, defaults are used:
 // - HTTP client with 60s timeout
 // - Factory auto-detected from environment (ANTHROPIC_API_KEY, GOOGLE_API_KEY)
 // - Sanitizer with default patterns
 // - No executor (validation skipped)
+// - Default telemetry client (respects TSUKU_NO_TELEMETRY)
 func NewGitHubReleaseBuilder(ctx context.Context, opts ...GitHubReleaseBuilderOption) (*GitHubReleaseBuilder, error) {
 	b := &GitHubReleaseBuilder{
 		githubBaseURL: "https://api.github.com",
@@ -109,6 +119,18 @@ func NewGitHubReleaseBuilder(ctx context.Context, opts ...GitHubReleaseBuilderOp
 	if b.sanitizer == nil {
 		b.sanitizer = validate.NewSanitizer()
 	}
+
+	if b.telemetryClient == nil {
+		b.telemetryClient = telemetry.NewClient()
+	}
+
+	// Set up factory callbacks for telemetry events
+	b.factory.SetOnFailover(func(from, to, reason string) {
+		b.telemetryClient.SendLLM(telemetry.NewLLMProviderFailoverEvent(from, to, reason))
+	})
+	b.factory.SetOnBreakerTrip(func(provider string, failures int) {
+		b.telemetryClient.SendLLM(telemetry.NewLLMCircuitBreakerTripEvent(provider, failures))
+	})
 
 	// executor is optional - validation skipped if nil
 
@@ -174,13 +196,26 @@ func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*Bu
 		return nil, fmt.Errorf("no LLM provider available: %w", err)
 	}
 
+	// Emit generation started event
+	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, repoPath))
+	startTime := time.Now()
+
 	// Generate recipe with repair loop
 	pattern, usage, repairAttempts, validationSkipped, err := b.generateWithRepair(ctx, provider, genCtx, req.Package, repoPath, repoMeta)
+
+	// Calculate duration for completed event
+	durationMs := time.Since(startTime).Milliseconds()
+
 	if err != nil {
 		b.factory.ReportFailure(provider.Name())
+		// Emit generation completed (failure) event
+		b.telemetryClient.SendLLM(telemetry.NewLLMGenerationCompletedEvent(provider.Name(), req.Package, false, durationMs, repairAttempts+1))
 		return nil, err
 	}
 	b.factory.ReportSuccess(provider.Name())
+
+	// Emit generation completed (success) event
+	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationCompletedEvent(provider.Name(), req.Package, true, durationMs, repairAttempts+1))
 
 	// Generate recipe from pattern
 	r, err := generateRecipe(req.Package, repoPath, repoMeta, pattern)
@@ -235,8 +270,14 @@ func (b *GitHubReleaseBuilder) generateWithRepair(
 	var totalUsage llm.Usage
 	var repairAttempts int
 	var validationSkipped bool
+	var lastErrorCategory string
 
 	for attempt := 0; attempt <= MaxRepairAttempts; attempt++ {
+		// Emit repair attempt event for retries (not the first attempt)
+		if attempt > 0 {
+			b.telemetryClient.SendLLM(telemetry.NewLLMRepairAttemptEvent(provider.Name(), attempt, lastErrorCategory))
+		}
+
 		// Run conversation loop to get pattern
 		pattern, turnUsage, err := b.runConversationLoop(ctx, provider, systemPrompt, messages, tools, genCtx)
 		if err != nil {
@@ -247,6 +288,8 @@ func (b *GitHubReleaseBuilder) generateWithRepair(
 		// If no executor, skip validation
 		if b.executor == nil {
 			validationSkipped = true
+			// Emit validation skipped event
+			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", attempt+1))
 			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
 		}
 
@@ -268,12 +311,23 @@ func (b *GitHubReleaseBuilder) generateWithRepair(
 		// Check validation result
 		if result.Skipped {
 			validationSkipped = true
+			// Emit validation skipped event
+			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", attempt+1))
 			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
 		}
 
 		if result.Passed {
+			// Emit validation passed event
+			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "", attempt+1))
 			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
 		}
+
+		// Parse error category for telemetry
+		parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)
+		lastErrorCategory = string(parsed.Category)
+
+		// Emit validation failed event
+		b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(false, lastErrorCategory, attempt+1))
 
 		// Validation failed - prepare repair if we have attempts left
 		if attempt >= MaxRepairAttempts {
