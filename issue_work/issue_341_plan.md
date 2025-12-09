@@ -25,10 +25,10 @@ All rendering uses safe DOM APIs (`textContent`, `createElement`) as required.
 - None
 
 ## Implementation Steps
-- [ ] Add `renderInstallCommand()` helper function with copy button
-- [ ] Add `renderDependencies()` helper function with grouped display
-- [ ] Enhance `renderDetailView()` to call helper functions
-- [ ] Add CSS styles for install command box and dependency lists
+- [x] Add `renderInstallCommand()` helper function with copy button
+- [x] Add `renderDependencies()` helper function with grouped display
+- [x] Enhance `renderDetailView()` to call helper functions
+- [x] Add CSS styles for install command box and dependency lists
 - [ ] Test manually on preview deployment
 
 Mark each step [x] after it is implemented and committed.
