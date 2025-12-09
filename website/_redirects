@@ -7,4 +7,9 @@
 
 # SPA routing for recipe detail pages
 # Serves index.html for all /recipes/* paths, letting client-side router handle the URL
+# Must come before any catch-all rule
 /recipes/*  /recipes/index.html  200
+
+# Catch-all for SPA - prevents Cloudflare's default fallback to /index.html
+# which would show the landing page for unknown routes
+/*  /index.html  200
