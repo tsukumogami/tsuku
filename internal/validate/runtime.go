@@ -2,13 +2,10 @@
 package validate
 
 import (
-	"bufio"
 	"context"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
-	"os/user"
 	"strings"
 	"sync"
 	"time"
@@ -219,31 +216,6 @@ func (d *RuntimeDetector) canAccessDocker(ctx context.Context, dockerPath string
 	// Try to run docker info - this will fail if user doesn't have access
 	_, err := d.cmdRun(ctx, dockerPath, "info")
 	return err == nil
-}
-
-// hasSubuidEntry checks if the current user has an entry in /etc/subuid.
-func hasSubuidEntry() bool {
-	currentUser, err := user.Current()
-	if err != nil {
-		return false
-	}
-
-	file, err := os.Open("/etc/subuid")
-	if err != nil {
-		return false
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		line := scanner.Text()
-		// Format: username:start:count or uid:start:count
-		parts := strings.Split(line, ":")
-		if len(parts) >= 1 && (parts[0] == currentUser.Username || parts[0] == currentUser.Uid) {
-			return true
-		}
-	}
-	return false
 }
 
 // podmanRuntime implements Runtime for Podman.
