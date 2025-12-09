@@ -25,13 +25,15 @@ func NewTestConfig(t *testing.T) (*config.Config, func()) {
 	tmpDir, cleanup := TempDir(t)
 
 	cfg := &config.Config{
-		HomeDir:     tmpDir,
-		ToolsDir:    filepath.Join(tmpDir, "tools"),
-		CurrentDir:  filepath.Join(tmpDir, "tools", "current"),
-		RecipesDir:  filepath.Join(tmpDir, "recipes"),
-		RegistryDir: filepath.Join(tmpDir, "registry"),
-		LibsDir:     filepath.Join(tmpDir, "libs"),
-		ConfigFile:  filepath.Join(tmpDir, "config.toml"),
+		HomeDir:         tmpDir,
+		ToolsDir:        filepath.Join(tmpDir, "tools"),
+		CurrentDir:      filepath.Join(tmpDir, "tools", "current"),
+		RecipesDir:      filepath.Join(tmpDir, "recipes"),
+		RegistryDir:     filepath.Join(tmpDir, "registry"),
+		LibsDir:         filepath.Join(tmpDir, "libs"),
+		CacheDir:        filepath.Join(tmpDir, "cache"),
+		VersionCacheDir: filepath.Join(tmpDir, "cache", "versions"),
+		ConfigFile:      filepath.Join(tmpDir, "config.toml"),
 	}
 
 	// Create directories
@@ -54,6 +56,14 @@ func NewTestConfig(t *testing.T) (*config.Config, func()) {
 	if err := os.MkdirAll(cfg.LibsDir, 0755); err != nil {
 		cleanup()
 		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	if err := os.MkdirAll(cfg.CacheDir, 0755); err != nil {
+		cleanup()
+		t.Fatalf("failed to create cache dir: %v", err)
+	}
+	if err := os.MkdirAll(cfg.VersionCacheDir, 0755); err != nil {
+		cleanup()
+		t.Fatalf("failed to create version cache dir: %v", err)
 	}
 
 	return cfg, cleanup

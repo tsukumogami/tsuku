@@ -43,12 +43,14 @@ func TestEnsureDirectories(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	cfg := &Config{
-		HomeDir:     filepath.Join(tmpDir, "tsuku"),
-		ToolsDir:    filepath.Join(tmpDir, "tsuku", "tools"),
-		CurrentDir:  filepath.Join(tmpDir, "tsuku", "tools", "current"),
-		RecipesDir:  filepath.Join(tmpDir, "tsuku", "recipes"),
-		RegistryDir: filepath.Join(tmpDir, "tsuku", "registry"),
-		LibsDir:     filepath.Join(tmpDir, "tsuku", "libs"),
+		HomeDir:         filepath.Join(tmpDir, "tsuku"),
+		ToolsDir:        filepath.Join(tmpDir, "tsuku", "tools"),
+		CurrentDir:      filepath.Join(tmpDir, "tsuku", "tools", "current"),
+		RecipesDir:      filepath.Join(tmpDir, "tsuku", "recipes"),
+		RegistryDir:     filepath.Join(tmpDir, "tsuku", "registry"),
+		LibsDir:         filepath.Join(tmpDir, "tsuku", "libs"),
+		CacheDir:        filepath.Join(tmpDir, "tsuku", "cache"),
+		VersionCacheDir: filepath.Join(tmpDir, "tsuku", "cache", "versions"),
 	}
 
 	err := cfg.EnsureDirectories()
@@ -57,7 +59,7 @@ func TestEnsureDirectories(t *testing.T) {
 	}
 
 	// Verify all directories exist
-	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir}
+	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir, cfg.CacheDir, cfg.VersionCacheDir}
 	for _, dir := range dirs {
 		info, err := os.Stat(dir)
 		if err != nil {
@@ -241,5 +243,79 @@ func TestGetAPITimeout_TooHigh(t *testing.T) {
 	// Should return maximum 10m
 	if timeout != 10*time.Minute {
 		t.Errorf("GetAPITimeout() = %v, want 10m (maximum)", timeout)
+	}
+}
+
+func TestGetVersionCacheTTL_Default(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvVersionCacheTTL)
+	defer os.Setenv(EnvVersionCacheTTL, original)
+
+	// Ensure env var is not set
+	_ = os.Unsetenv(EnvVersionCacheTTL)
+
+	ttl := GetVersionCacheTTL()
+	if ttl != DefaultVersionCacheTTL {
+		t.Errorf("GetVersionCacheTTL() = %v, want %v", ttl, DefaultVersionCacheTTL)
+	}
+}
+
+func TestGetVersionCacheTTL_CustomValue(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvVersionCacheTTL)
+	defer os.Setenv(EnvVersionCacheTTL, original)
+
+	// Set custom TTL
+	os.Setenv(EnvVersionCacheTTL, "30m")
+
+	ttl := GetVersionCacheTTL()
+	expected := 30 * time.Minute
+	if ttl != expected {
+		t.Errorf("GetVersionCacheTTL() = %v, want %v", ttl, expected)
+	}
+}
+
+func TestGetVersionCacheTTL_InvalidValue(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvVersionCacheTTL)
+	defer os.Setenv(EnvVersionCacheTTL, original)
+
+	// Set invalid value
+	os.Setenv(EnvVersionCacheTTL, "invalid")
+
+	ttl := GetVersionCacheTTL()
+	// Should return default on invalid input
+	if ttl != DefaultVersionCacheTTL {
+		t.Errorf("GetVersionCacheTTL() = %v, want %v (default)", ttl, DefaultVersionCacheTTL)
+	}
+}
+
+func TestGetVersionCacheTTL_TooLow(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvVersionCacheTTL)
+	defer os.Setenv(EnvVersionCacheTTL, original)
+
+	// Set too low value (minimum is 5m)
+	os.Setenv(EnvVersionCacheTTL, "1m")
+
+	ttl := GetVersionCacheTTL()
+	// Should return minimum 5m
+	if ttl != 5*time.Minute {
+		t.Errorf("GetVersionCacheTTL() = %v, want 5m (minimum)", ttl)
+	}
+}
+
+func TestGetVersionCacheTTL_TooHigh(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvVersionCacheTTL)
+	defer os.Setenv(EnvVersionCacheTTL, original)
+
+	// Set too high value (maximum is 7 days)
+	os.Setenv(EnvVersionCacheTTL, "200h")
+
+	ttl := GetVersionCacheTTL()
+	// Should return maximum 7 days
+	if ttl != 7*24*time.Hour {
+		t.Errorf("GetVersionCacheTTL() = %v, want 168h (maximum)", ttl)
 	}
 }

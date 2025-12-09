@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
@@ -17,6 +18,7 @@ var versionsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		toolName := args[0]
 		jsonOutput, _ := cmd.Flags().GetBool("json")
+		refresh, _ := cmd.Flags().GetBool("refresh")
 
 		// Load recipe
 		r, err := loader.Get(toolName)
@@ -43,13 +45,40 @@ var versionsCmd = &cobra.Command{
 			exitWithCode(ExitGeneral)
 		}
 
+		// Wrap with cache
+		cfg, err := config.DefaultConfig()
+		if err != nil {
+			printError(err)
+			exitWithCode(ExitGeneral)
+		}
+		cachedLister := version.NewCachedVersionLister(lister, cfg.VersionCacheDir, config.GetVersionCacheTTL())
+
 		// List versions
 		ctx := context.Background()
-		if !jsonOutput {
-			fmt.Printf("Fetching versions for %s (%s)...\n", toolName, provider.SourceDescription())
+
+		var versions []string
+		var fromCache bool
+
+		if refresh {
+			// Bypass cache with --refresh flag
+			if !jsonOutput {
+				fmt.Printf("Fetching fresh versions for %s (%s)...\n", toolName, provider.SourceDescription())
+			}
+			versions, err = cachedLister.Refresh(ctx)
+		} else {
+			// Use cache
+			versions, fromCache, err = cachedLister.ListVersionsWithCacheInfo(ctx)
+			if !jsonOutput {
+				if fromCache {
+					cacheInfo := cachedLister.GetCacheInfo()
+					fmt.Printf("Using cached versions for %s (%s) [expires %s]\n",
+						toolName, provider.SourceDescription(), cacheInfo.ExpiresAt.Format("2006-01-02 15:04"))
+				} else {
+					fmt.Printf("Fetching versions for %s (%s)...\n", toolName, provider.SourceDescription())
+				}
+			}
 		}
 
-		versions, err := lister.ListVersions(ctx)
 		if err != nil {
 			printError(err)
 			exitWithCode(ExitNetwork)
@@ -58,9 +87,10 @@ var versionsCmd = &cobra.Command{
 		// JSON output mode
 		if jsonOutput {
 			type versionsOutput struct {
-				Versions []string `json:"versions"`
+				Versions  []string `json:"versions"`
+				FromCache bool     `json:"from_cache"`
 			}
-			printJSON(versionsOutput{Versions: versions})
+			printJSON(versionsOutput{Versions: versions, FromCache: fromCache})
 			return
 		}
 
@@ -73,4 +103,5 @@ var versionsCmd = &cobra.Command{
 
 func init() {
 	versionsCmd.Flags().Bool("json", false, "Output in JSON format")
+	versionsCmd.Flags().Bool("refresh", false, "Bypass cache and fetch fresh version list")
 }

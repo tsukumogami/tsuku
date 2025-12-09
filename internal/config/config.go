@@ -14,8 +14,14 @@ const (
 	// EnvAPITimeout is the environment variable to configure API request timeout
 	EnvAPITimeout = "TSUKU_API_TIMEOUT"
 
+	// EnvVersionCacheTTL is the environment variable to configure version cache TTL
+	EnvVersionCacheTTL = "TSUKU_VERSION_CACHE_TTL"
+
 	// DefaultAPITimeout is the default timeout for API requests (30 seconds)
 	DefaultAPITimeout = 30 * time.Second
+
+	// DefaultVersionCacheTTL is the default TTL for cached version lists (1 hour)
+	DefaultVersionCacheTTL = 1 * time.Hour
 )
 
 // GetAPITimeout returns the configured API timeout from TSUKU_API_TIMEOUT environment variable.
@@ -50,15 +56,49 @@ func GetAPITimeout() time.Duration {
 	return duration
 }
 
+// GetVersionCacheTTL returns the configured version cache TTL from TSUKU_VERSION_CACHE_TTL.
+// If not set or invalid, returns DefaultVersionCacheTTL (1 hour).
+// Accepts duration strings like "30m", "1h", "24h".
+func GetVersionCacheTTL() time.Duration {
+	envValue := os.Getenv(EnvVersionCacheTTL)
+	if envValue == "" {
+		return DefaultVersionCacheTTL
+	}
+
+	duration, err := time.ParseDuration(envValue)
+	if err != nil {
+		// Invalid duration format, use default
+		fmt.Fprintf(os.Stderr, "Warning: invalid %s value %q, using default %v\n",
+			EnvVersionCacheTTL, envValue, DefaultVersionCacheTTL)
+		return DefaultVersionCacheTTL
+	}
+
+	// Validate reasonable range (5 minutes to 7 days)
+	if duration < 5*time.Minute {
+		fmt.Fprintf(os.Stderr, "Warning: %s too low (%v), using minimum 5m\n",
+			EnvVersionCacheTTL, duration)
+		return 5 * time.Minute
+	}
+	if duration > 7*24*time.Hour {
+		fmt.Fprintf(os.Stderr, "Warning: %s too high (%v), using maximum 7d\n",
+			EnvVersionCacheTTL, duration)
+		return 7 * 24 * time.Hour
+	}
+
+	return duration
+}
+
 // Config holds tsuku configuration
 type Config struct {
-	HomeDir     string // $TSUKU_HOME
-	ToolsDir    string // $TSUKU_HOME/tools
-	CurrentDir  string // $TSUKU_HOME/tools/current
-	RecipesDir  string // $TSUKU_HOME/recipes
-	RegistryDir string // $TSUKU_HOME/registry (cached recipes from remote registry)
-	LibsDir     string // $TSUKU_HOME/libs (shared libraries)
-	ConfigFile  string // $TSUKU_HOME/config.toml
+	HomeDir         string // $TSUKU_HOME
+	ToolsDir        string // $TSUKU_HOME/tools
+	CurrentDir      string // $TSUKU_HOME/tools/current
+	RecipesDir      string // $TSUKU_HOME/recipes
+	RegistryDir     string // $TSUKU_HOME/registry (cached recipes from remote registry)
+	LibsDir         string // $TSUKU_HOME/libs (shared libraries)
+	CacheDir        string // $TSUKU_HOME/cache
+	VersionCacheDir string // $TSUKU_HOME/cache/versions
+	ConfigFile      string // $TSUKU_HOME/config.toml
 }
 
 // DefaultConfig returns the default configuration
@@ -74,13 +114,15 @@ func DefaultConfig() (*Config, error) {
 	}
 
 	return &Config{
-		HomeDir:     tsukuHome,
-		ToolsDir:    filepath.Join(tsukuHome, "tools"),
-		CurrentDir:  filepath.Join(tsukuHome, "tools", "current"),
-		RecipesDir:  filepath.Join(tsukuHome, "recipes"),
-		RegistryDir: filepath.Join(tsukuHome, "registry"),
-		LibsDir:     filepath.Join(tsukuHome, "libs"),
-		ConfigFile:  filepath.Join(tsukuHome, "config.toml"),
+		HomeDir:         tsukuHome,
+		ToolsDir:        filepath.Join(tsukuHome, "tools"),
+		CurrentDir:      filepath.Join(tsukuHome, "tools", "current"),
+		RecipesDir:      filepath.Join(tsukuHome, "recipes"),
+		RegistryDir:     filepath.Join(tsukuHome, "registry"),
+		LibsDir:         filepath.Join(tsukuHome, "libs"),
+		CacheDir:        filepath.Join(tsukuHome, "cache"),
+		VersionCacheDir: filepath.Join(tsukuHome, "cache", "versions"),
+		ConfigFile:      filepath.Join(tsukuHome, "config.toml"),
 	}, nil
 }
 
@@ -93,6 +135,8 @@ func (c *Config) EnsureDirectories() error {
 		c.RecipesDir,
 		c.RegistryDir,
 		c.LibsDir,
+		c.CacheDir,
+		c.VersionCacheDir,
 	}
 
 	for _, dir := range dirs {
