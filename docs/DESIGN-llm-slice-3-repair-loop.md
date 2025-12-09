@@ -1,6 +1,6 @@
 # Design Document: LLM Slice 3 - Repair Loop + Second Provider
 
-**Status**: Draft
+**Status**: Approved
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
 
