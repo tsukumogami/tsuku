@@ -1,10 +1,35 @@
 # Design Document: LLM Slice 1 - End-to-End Spike
 
-**Status**: Accepted
+**Status**: Planned
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
 
 **Issue**: [#266 - Slice 1: End-to-End Spike](https://github.com/tsukumogami/tsuku/issues/266)
+
+<a id="implementation-issues"></a>
+**Implementation Issues**:
+
+| Issue | Title | Design Section | Dependencies |
+|-------|-------|----------------|--------------|
+| [#277](https://github.com/tsukumogami/tsuku/issues/277) | Extend Builder interface with BuildRequest struct | [Builder Interface Extension](#1-builder-interface-extension) | None |
+| [#278](https://github.com/tsukumogami/tsuku/issues/278) | Implement LLM client package with multi-turn tool use | [LLM Client](#3-llm-client-internalllmclientgo) | None |
+| [#279](https://github.com/tsukumogami/tsuku/issues/279) | Implement fetch_file tool handler for LLM | [Tool Definitions](#4-tool-definitions) | #278 |
+| [#280](https://github.com/tsukumogami/tsuku/issues/280) | Implement inspect_archive tool handler for LLM | [Tool Definitions](#4-tool-definitions) | #278 |
+| [#281](https://github.com/tsukumogami/tsuku/issues/281) | Implement GitHub Release Builder | [GitHubReleaseBuilder](#2-githubreleasebuilder-internalbuildsgithub_releasego) | #277, #278 |
+| [#282](https://github.com/tsukumogami/tsuku/issues/282) | Add --from flag to tsuku create command | [CLI Syntax](#cli-syntax) | #277, #281 |
+| [#283](https://github.com/tsukumogami/tsuku/issues/283) | Ground truth validation tests for LLM recipe generation | [Testing Approach](#testing-approach) | #281, #282 |
+
+```
+Dependency Graph:
+
+#277 (Builder interface) ───┐
+                            ├──> #281 (GitHub Release Builder) ──> #282 (CLI --from) ──> #283 (Validation)
+#278 (LLM client) ──────────┤         ↑ (optional)
+        │                   │         │
+        ├──> #279 (fetch_file) ───────┘
+        │                             │
+        └──> #280 (inspect_archive) ──┘
+```
 
 ## Context and Problem Statement
 
@@ -847,19 +872,54 @@ After this slice:
 
 ## Implementation Checklist
 
-**Infrastructure:**
-- [ ] Extend Builder interface with `BuildRequest` struct in `internal/builders/builder.go`
+Each section maps to implementation issues. See the [Implementation Issues](#implementation-issues) table above for dependencies.
+
+### #277: Builder Interface Extension
+
+- [ ] Define `BuildRequest` struct with `Package`, `Version`, `SourceArg` fields
+- [ ] Update `Builder` interface to accept `BuildRequest`
+- [ ] Define `BuildResult` struct with recipe and warnings
+
+### #278: LLM Client Package
+
 - [ ] Create `internal/llm/client.go` - Multi-turn Claude client with tool handling
 - [ ] Create `internal/llm/cost.go` - Usage tracking and cost calculation
-- [ ] Create `internal/llm/tools.go` - Tool schemas and handlers
-- [ ] Create `internal/builders/github_release.go` - Builder implementation
-- [ ] Update `cmd/tsuku/create.go` to parse `--from builder:sourceArg` syntax
-- [ ] Register GitHubReleaseBuilder in builder registry
+- [ ] Create `internal/llm/tools.go` - Tool schemas (`fetch_file`, `inspect_archive`, `extract_pattern`)
+- [ ] Implement multi-turn conversation loop (max 5 turns)
+- [ ] Accumulate token usage across turns
 
-**Tool implementations:**
-- [ ] `fetch_file` - Fetch README.md and other repo files via GitHub raw URLs
-- [ ] `inspect_archive` - Download asset, extract in container, return file listing
-- [ ] `extract_pattern` - Parse final LLM response into AssetPattern struct
+### #279: fetch_file Tool Handler
+
+- [ ] Implement handler: `GET https://raw.githubusercontent.com/{repo}/{tag}/{path}`
+- [ ] Return file content or helpful error message for 404s
+- [ ] 60 second timeout, reject binary content types
+
+### #280: inspect_archive Tool Handler
+
+- [ ] Download archive to temp directory
+- [ ] Extract based on format (tar.gz, tar.xz, zip)
+- [ ] Return file listing with executable detection
+- [ ] Clean up temp files after inspection
+
+### #281: GitHub Release Builder
+
+- [ ] Create `internal/builders/github_release.go`
+- [ ] Fetch last 3-5 releases from GitHub API
+- [ ] Fetch repo metadata (description, homepage)
+- [ ] Fetch README.md proactively
+- [ ] Call LLM client and handle response
+- [ ] Generate `recipe.Recipe` from `AssetPattern`
+- [ ] Register in builder registry
+
+### #282: CLI --from Flag
+
+- [ ] Add `--from` flag to `tsuku create` command
+- [ ] Parse `builder:sourceArg` format
+- [ ] Look up builder by name from registry
+- [ ] Print recipe TOML to stdout
+- [ ] Print cost/warnings to stderr
+
+### #283: Ground Truth Validation Tests
 
 **Test: github_archive (with version):**
 - [ ] `tsuku create stern --from github:stern/stern` → compare to `s/stern.toml`
@@ -877,7 +937,8 @@ After this slice:
 - [ ] `tsuku create kind --from github:kubernetes-sigs/kind` → compare to `k/kind.toml`
 
 **Validation:**
-- [ ] All generated recipes match key fields in existing recipes
-- [ ] All generated recipes install successfully
+- [ ] At least 7/9 repos produce recipes matching ground truth
+- [ ] All three categories work: archive+version, archive+versionless, binary
+- [ ] Generated recipes install successfully
 - [ ] Save generated recipes to `testdata/llm/` for regression
 - [ ] Document issues discovered for Slice 2-4 designs
