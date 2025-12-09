@@ -43,14 +43,15 @@ func TestEnsureDirectories(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	cfg := &Config{
-		HomeDir:         filepath.Join(tmpDir, "tsuku"),
-		ToolsDir:        filepath.Join(tmpDir, "tsuku", "tools"),
-		CurrentDir:      filepath.Join(tmpDir, "tsuku", "tools", "current"),
-		RecipesDir:      filepath.Join(tmpDir, "tsuku", "recipes"),
-		RegistryDir:     filepath.Join(tmpDir, "tsuku", "registry"),
-		LibsDir:         filepath.Join(tmpDir, "tsuku", "libs"),
-		CacheDir:        filepath.Join(tmpDir, "tsuku", "cache"),
-		VersionCacheDir: filepath.Join(tmpDir, "tsuku", "cache", "versions"),
+		HomeDir:          filepath.Join(tmpDir, "tsuku"),
+		ToolsDir:         filepath.Join(tmpDir, "tsuku", "tools"),
+		CurrentDir:       filepath.Join(tmpDir, "tsuku", "tools", "current"),
+		RecipesDir:       filepath.Join(tmpDir, "tsuku", "recipes"),
+		RegistryDir:      filepath.Join(tmpDir, "tsuku", "registry"),
+		LibsDir:          filepath.Join(tmpDir, "tsuku", "libs"),
+		CacheDir:         filepath.Join(tmpDir, "tsuku", "cache"),
+		VersionCacheDir:  filepath.Join(tmpDir, "tsuku", "cache", "versions"),
+		DownloadCacheDir: filepath.Join(tmpDir, "tsuku", "cache", "downloads"),
 	}
 
 	err := cfg.EnsureDirectories()
@@ -59,7 +60,7 @@ func TestEnsureDirectories(t *testing.T) {
 	}
 
 	// Verify all directories exist
-	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir, cfg.CacheDir, cfg.VersionCacheDir}
+	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir, cfg.CacheDir, cfg.VersionCacheDir, cfg.DownloadCacheDir}
 	for _, dir := range dirs {
 		info, err := os.Stat(dir)
 		if err != nil {

@@ -343,6 +343,9 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set tools directory for finding other installed tools
 	exec.SetToolsDir(cfg.ToolsDir)
 
+	// Set download cache directory
+	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
+
 	// Execute recipe with cancellable context
 	if err := exec.Execute(globalCtx); err != nil {
 		fmt.Fprintf(os.Stderr, "Installation failed: %v\n", err)
@@ -503,6 +506,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	// Set tools directory for finding other installed tools
 	cfg, _ := config.DefaultConfig()
 	exec.SetToolsDir(cfg.ToolsDir)
+	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 
 	// Execute recipe to download and prepare library
 	if err := exec.Execute(globalCtx); err != nil {

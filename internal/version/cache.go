@@ -178,3 +178,71 @@ func (c *CachedVersionLister) GetCacheInfo() CacheInfo {
 		IsExpired: time.Now().After(entry.ExpiresAt),
 	}
 }
+
+// Cache provides direct access to the version cache directory for management operations.
+// Use this for global cache operations like clearing all entries.
+type Cache struct {
+	cacheDir string
+}
+
+// NewCache creates a new Cache for managing the version cache directory.
+func NewCache(cacheDir string) *Cache {
+	return &Cache{cacheDir: cacheDir}
+}
+
+// VersionCacheInfo contains information about the version cache
+type VersionCacheInfo struct {
+	EntryCount int
+	TotalSize  int64
+}
+
+// Info returns information about the version cache
+func (c *Cache) Info() (*VersionCacheInfo, error) {
+	entries, err := os.ReadDir(c.cacheDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return &VersionCacheInfo{}, nil
+		}
+		return nil, fmt.Errorf("failed to read cache directory: %w", err)
+	}
+
+	info := &VersionCacheInfo{}
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		// Count .json files as cache entries
+		if filepath.Ext(entry.Name()) == ".json" {
+			info.EntryCount++
+			if fi, err := entry.Info(); err == nil {
+				info.TotalSize += fi.Size()
+			}
+		}
+	}
+
+	return info, nil
+}
+
+// Clear removes all version cache entries
+func (c *Cache) Clear() error {
+	entries, err := os.ReadDir(c.cacheDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil // Nothing to clear
+		}
+		return fmt.Errorf("failed to read cache directory: %w", err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			continue
+		}
+		path := filepath.Join(c.cacheDir, entry.Name())
+		if err := os.Remove(path); err != nil {
+			// Continue on error, try to remove as many as possible
+			continue
+		}
+	}
+
+	return nil
+}

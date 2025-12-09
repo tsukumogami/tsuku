@@ -361,3 +361,110 @@ func TestCachedVersionLister_UnderlyingError(t *testing.T) {
 		t.Error("expected error to propagate")
 	}
 }
+
+func TestCache_InfoEmpty(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir)
+
+	info, err := cache.Info()
+	if err != nil {
+		t.Fatalf("Info() error = %v", err)
+	}
+	if info.EntryCount != 0 {
+		t.Errorf("expected 0 entries, got %d", info.EntryCount)
+	}
+	if info.TotalSize != 0 {
+		t.Errorf("expected 0 size, got %d", info.TotalSize)
+	}
+}
+
+func TestCache_InfoNonexistent(t *testing.T) {
+	cache := NewCache("/nonexistent/path/cache")
+
+	info, err := cache.Info()
+	if err != nil {
+		t.Fatalf("Info() on nonexistent dir error = %v", err)
+	}
+	if info.EntryCount != 0 {
+		t.Errorf("expected 0 entries, got %d", info.EntryCount)
+	}
+}
+
+func TestCache_InfoWithEntries(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir)
+
+	// Create some cache entries
+	content := []byte(`{"versions": ["v1.0.0"], "cached_at": "2024-01-01T00:00:00Z"}`)
+	if err := os.WriteFile(filepath.Join(cacheDir, "test1.json"), content, 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(cacheDir, "test2.json"), content, 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+	// Create a non-JSON file (should be ignored)
+	if err := os.WriteFile(filepath.Join(cacheDir, "test.txt"), []byte("not json"), 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+
+	info, err := cache.Info()
+	if err != nil {
+		t.Fatalf("Info() error = %v", err)
+	}
+	if info.EntryCount != 2 {
+		t.Errorf("expected 2 entries, got %d", info.EntryCount)
+	}
+	if info.TotalSize != int64(len(content)*2) {
+		t.Errorf("expected size %d, got %d", len(content)*2, info.TotalSize)
+	}
+}
+
+func TestCache_Clear(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir)
+
+	// Create some cache entries
+	content := []byte(`{"versions": ["v1.0.0"]}`)
+	if err := os.WriteFile(filepath.Join(cacheDir, "test1.json"), content, 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(cacheDir, "test2.json"), content, 0644); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+
+	// Verify entries exist
+	info, _ := cache.Info()
+	if info.EntryCount != 2 {
+		t.Fatalf("expected 2 entries before clear, got %d", info.EntryCount)
+	}
+
+	// Clear cache
+	if err := cache.Clear(); err != nil {
+		t.Fatalf("Clear() error = %v", err)
+	}
+
+	// Verify cleared
+	info, _ = cache.Info()
+	if info.EntryCount != 0 {
+		t.Errorf("expected 0 entries after clear, got %d", info.EntryCount)
+	}
+}
+
+func TestCache_ClearEmpty(t *testing.T) {
+	cacheDir := t.TempDir()
+	cache := NewCache(cacheDir)
+
+	// Clear on empty cache should not error
+	if err := cache.Clear(); err != nil {
+		t.Fatalf("Clear() on empty cache error = %v", err)
+	}
+}
+
+func TestCache_ClearNonexistent(t *testing.T) {
+	cache := NewCache("/nonexistent/path/cache")
+
+	// Clear on nonexistent directory should not error
+	if err := cache.Clear(); err != nil {
+		t.Fatalf("Clear() on nonexistent dir error = %v", err)
+	}
+}
