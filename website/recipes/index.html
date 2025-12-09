@@ -154,6 +154,11 @@
             const card = document.createElement('article');
             card.className = 'recipe-card';
 
+            // Navigate to detail page on card click
+            card.addEventListener('click', () => {
+                navigateTo(`/recipes/${recipe.name}/`);
+            });
+
             const name = document.createElement('h3');
             name.className = 'recipe-name';
             name.textContent = recipe.name;
@@ -168,6 +173,10 @@
             link.target = '_blank';
             link.rel = 'noopener noreferrer';
             link.textContent = 'Homepage';
+            // Prevent card navigation when clicking the homepage link
+            link.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
 
             card.appendChild(name);
             card.appendChild(desc);

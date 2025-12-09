@@ -28,10 +28,10 @@ None
 
 ## Implementation Steps
 
-- [ ] Add click event listener to recipe cards in `createRecipeCard()`
-- [ ] Add `stopPropagation()` to homepage link to prevent double navigation
-- [ ] Add `cursor: pointer` style to `.recipe-card` in CSS
-- [ ] Test navigation from grid to detail and back
+- [x] Add click event listener to recipe cards in `createRecipeCard()`
+- [x] Add `stopPropagation()` to homepage link to prevent double navigation
+- [x] Add `cursor: pointer` style to `.recipe-card` in CSS
+- [x] Test navigation from grid to detail and back
 
 ## Testing Strategy
 
@@ -53,10 +53,10 @@ None
 ## Success Criteria
 
 - [x] Recipe cards are clickable (entire card)
-- [ ] Clicking navigates via `navigateTo()` (no page reload)
-- [ ] Existing search/filter functionality preserved
-- [ ] Cards have appropriate hover states (already exists)
-- [ ] Homepage link still works correctly
+- [x] Clicking navigates via `navigateTo()` (no page reload)
+- [x] Existing search/filter functionality preserved
+- [x] Cards have appropriate hover states (already exists)
+- [x] Homepage link still works correctly
 
 ## Open Questions
 
