@@ -24,12 +24,12 @@ Modify the list implementation to iterate over all installed versions from state
 
 ## Implementation Steps
 
-- [ ] Add `IsActive` field to `InstalledTool` struct
-- [ ] Update `ListWithOptions()` to iterate over all versions from state
-- [ ] Ensure output is sorted by tool name, then by version
-- [ ] Update `cmd/tsuku/list.go` to display `(active)` indicator
-- [ ] Update JSON output format to include `is_active` field
-- [ ] Write tests for multi-version list output
+- [x] Add `IsActive` field to `InstalledTool` struct
+- [x] Update `ListWithOptions()` to iterate over all versions from state
+- [x] Ensure output is sorted by tool name, then by version
+- [x] Update `cmd/tsuku/list.go` to display `(active)` indicator
+- [x] Update JSON output format to include `is_active` field
+- [x] Write tests for multi-version list output
 
 ## Testing Strategy
 
@@ -44,11 +44,11 @@ Modify the list implementation to iterate over all installed versions from state
 
 ## Success Criteria
 
-- [ ] `tsuku list` shows one line per installed version
-- [ ] Active version is marked with `(active)` indicator
-- [ ] Output is sorted by tool name, then by version
-- [ ] JSON output includes `is_active` field
-- [ ] Tests pass for multi-version scenarios
+- [x] `tsuku list` shows one line per installed version
+- [x] Active version is marked with `(active)` indicator
+- [x] Output is sorted by tool name, then by version
+- [x] JSON output includes `is_active` field
+- [x] Tests pass for multi-version scenarios
 
 ## Open Questions
 
