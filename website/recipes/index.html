@@ -300,6 +300,112 @@
         }
 
         // ============================================================
+        // Detail View Helpers
+        // ============================================================
+
+        // Render install command with copy button
+        function renderInstallCommand(container, recipeName) {
+            const installSection = document.createElement('div');
+            installSection.className = 'install-section';
+
+            const label = document.createElement('p');
+            label.className = 'install-label';
+            label.textContent = 'Install with tsuku:';
+            installSection.appendChild(label);
+
+            const installBox = document.createElement('div');
+            installBox.className = 'install-box';
+
+            const code = document.createElement('code');
+            code.textContent = `tsuku install ${recipeName}`;
+            installBox.appendChild(code);
+
+            const copyBtn = document.createElement('button');
+            copyBtn.className = 'copy-btn';
+            copyBtn.setAttribute('aria-label', 'Copy to clipboard');
+            copyBtn.innerHTML = `<svg viewBox="0 0 16 16" width="16" height="16" fill="currentColor">
+                <path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z"/>
+                <path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z"/>
+            </svg>`;
+            copyBtn.addEventListener('click', () => {
+                navigator.clipboard.writeText(code.textContent).then(() => {
+                    copyBtn.classList.add('copied');
+                    setTimeout(() => copyBtn.classList.remove('copied'), 2000);
+                });
+            });
+            installBox.appendChild(copyBtn);
+
+            installSection.appendChild(installBox);
+            container.appendChild(installSection);
+        }
+
+        // Render dependencies grouped by type
+        function renderDependencies(container, recipe) {
+            const depsSection = document.createElement('div');
+            depsSection.className = 'dependencies-section';
+
+            const heading = document.createElement('h2');
+            heading.textContent = 'Dependencies';
+            depsSection.appendChild(heading);
+
+            // Install dependencies
+            if (recipe.dependencies && recipe.dependencies.length > 0) {
+                const installDeps = document.createElement('div');
+                installDeps.className = 'dep-group';
+
+                const installLabel = document.createElement('h3');
+                installLabel.textContent = 'Install Dependencies';
+                installDeps.appendChild(installLabel);
+
+                const installList = document.createElement('ul');
+                installList.className = 'dep-list';
+                recipe.dependencies.forEach(dep => {
+                    const li = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `/recipes/${dep}/`;
+                    link.textContent = dep;
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        navigateTo(`/recipes/${dep}/`);
+                    });
+                    li.appendChild(link);
+                    installList.appendChild(li);
+                });
+                installDeps.appendChild(installList);
+                depsSection.appendChild(installDeps);
+            }
+
+            // Runtime dependencies
+            if (recipe.runtime_dependencies && recipe.runtime_dependencies.length > 0) {
+                const runtimeDeps = document.createElement('div');
+                runtimeDeps.className = 'dep-group';
+
+                const runtimeLabel = document.createElement('h3');
+                runtimeLabel.textContent = 'Runtime Dependencies';
+                runtimeDeps.appendChild(runtimeLabel);
+
+                const runtimeList = document.createElement('ul');
+                runtimeList.className = 'dep-list';
+                recipe.runtime_dependencies.forEach(dep => {
+                    const li = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = `/recipes/${dep}/`;
+                    link.textContent = dep;
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        navigateTo(`/recipes/${dep}/`);
+                    });
+                    li.appendChild(link);
+                    runtimeList.appendChild(li);
+                });
+                runtimeDeps.appendChild(runtimeList);
+                depsSection.appendChild(runtimeDeps);
+            }
+
+            container.appendChild(depsSection);
+        }
+
+        // ============================================================
         // View Renderers
         // ============================================================
 
@@ -316,7 +422,7 @@
             renderRecipes(filtered, query.trim().length > 0);
         }
 
-        // Render detail view for a recipe (placeholder - implemented in #341)
+        // Render detail view for a recipe
         function renderDetailView(recipeName) {
             const recipe = allRecipes.find(r => r.name === recipeName);
             if (!recipe) {
@@ -333,19 +439,41 @@
             grid.innerHTML = '';
             countEl.hidden = true;
 
-            // Placeholder detail view - will be replaced by #341
             const detail = document.createElement('section');
             detail.className = 'recipe-detail';
 
+            // Recipe name
             const h1 = document.createElement('h1');
             h1.textContent = recipe.name;
             detail.appendChild(h1);
 
+            // Description
             const desc = document.createElement('p');
             desc.className = 'description';
             desc.textContent = recipe.description;
             detail.appendChild(desc);
 
+            // Homepage link
+            const homepageP = document.createElement('p');
+            homepageP.className = 'homepage';
+            const homepageLink = document.createElement('a');
+            homepageLink.href = recipe.homepage;
+            homepageLink.textContent = 'Official Homepage';
+            homepageLink.target = '_blank';
+            homepageLink.rel = 'noopener noreferrer';
+            homepageP.appendChild(homepageLink);
+            detail.appendChild(homepageP);
+
+            // Install command with copy button
+            renderInstallCommand(detail, recipe.name);
+
+            // Dependencies (if any)
+            if ((recipe.dependencies && recipe.dependencies.length > 0) ||
+                (recipe.runtime_dependencies && recipe.runtime_dependencies.length > 0)) {
+                renderDependencies(detail, recipe);
+            }
+
+            // Back link
             const back = document.createElement('a');
             back.href = '/recipes/';
             back.className = 'link-btn';
