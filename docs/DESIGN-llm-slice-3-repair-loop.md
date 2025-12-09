@@ -977,20 +977,42 @@ Record/replay pattern from parent design:
 
 ### Milestone: LLM Builder Infrastructure
 
-**Wave 1 (no dependencies):**
-- [#323](https://github.com/tsukumogami/tsuku/issues/323): feat(llm): define provider interface and types
-- [#324](https://github.com/tsukumogami/tsuku/issues/324): feat(llm): implement circuit breaker
-- [#325](https://github.com/tsukumogami/tsuku/issues/325): feat(validate): implement error sanitizer
-- [#326](https://github.com/tsukumogami/tsuku/issues/326): feat(validate): implement error parser
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#323](https://github.com/tsukumogami/tsuku/issues/323) | feat(llm): define provider interface and types | None |
+| [#324](https://github.com/tsukumogami/tsuku/issues/324) | feat(llm): implement circuit breaker | None |
+| [#325](https://github.com/tsukumogami/tsuku/issues/325) | feat(validate): implement error sanitizer | None |
+| [#326](https://github.com/tsukumogami/tsuku/issues/326) | feat(validate): implement error parser | None |
+| [#327](https://github.com/tsukumogami/tsuku/issues/327) | refactor(llm): extract Claude provider from client.go | #323 |
+| [#328](https://github.com/tsukumogami/tsuku/issues/328) | feat(llm): implement Gemini provider | #323 |
+| [#329](https://github.com/tsukumogami/tsuku/issues/329) | feat(llm): implement provider factory with failover | #323, #324 |
+| [#330](https://github.com/tsukumogami/tsuku/issues/330) | feat(llm): add repair loop to GitHub Release Builder | #327, #329, #325, #326 |
+| [#331](https://github.com/tsukumogami/tsuku/issues/331) | feat(telemetry): add LLM generation events | #330 |
+| [#332](https://github.com/tsukumogami/tsuku/issues/332) | test(llm): add integration tests for provider parity and repair loop | #328, #330 |
 
-**Wave 2 (after interface):**
-- [#327](https://github.com/tsukumogami/tsuku/issues/327): refactor(llm): extract Claude provider from client.go
-- [#328](https://github.com/tsukumogami/tsuku/issues/328): feat(llm): implement Gemini provider
-- [#329](https://github.com/tsukumogami/tsuku/issues/329): feat(llm): implement provider factory with failover
+### Dependency Graph
 
-**Wave 3 (core feature):**
-- [#330](https://github.com/tsukumogami/tsuku/issues/330): feat(llm): add repair loop to GitHub Release Builder
-
-**Wave 4 (finalization):**
-- [#331](https://github.com/tsukumogami/tsuku/issues/331): feat(telemetry): add LLM generation events
-- [#332](https://github.com/tsukumogami/tsuku/issues/332): test(llm): add integration tests for provider parity and repair loop
+```
+#323 Provider Interface ──────────────────────────────────────────┐
+                                                                   │
+#324 Circuit Breaker ─────────────────────────────────────────────┤
+                                                                   │
+#325 Error Sanitizer ─────────────────────────────────────────────┤
+                                                                   │
+#326 Error Parser ────────────────────────────────────────────────┤
+                                                                   │
+├── #327 Claude Provider (← #323) ────────────────────────────────┤
+│                                                                  │
+├── #328 Gemini Provider (← #323) ────────────────────────────────┤
+│                                                                  │
+├── #329 Factory (← #323, #324) ──────────────────────────────────┤
+│                                                                  │
+└─────────────────────────┬────────────────────────────────────────┘
+                          │
+                          v
+        #330 Repair Loop (← #327, #329, #325, #326)
+                          │
+                          v
+        #331 Telemetry (← #330)
+        #332 Integration Tests (← #328, #330)
+```
