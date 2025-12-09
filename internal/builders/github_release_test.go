@@ -5,11 +5,57 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/llm"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
+
+// mockProvider is a simple mock implementation of llm.Provider for testing.
+type mockProvider struct {
+	name      string
+	responses []*llm.CompletionResponse
+	callCount int
+}
+
+func (m *mockProvider) Name() string {
+	return m.name
+}
+
+func (m *mockProvider) Complete(ctx context.Context, req *llm.CompletionRequest) (*llm.CompletionResponse, error) {
+	if m.callCount < len(m.responses) {
+		resp := m.responses[m.callCount]
+		m.callCount++
+		return resp, nil
+	}
+	// Default response with extract_pattern tool call
+	return &llm.CompletionResponse{
+		Content:    "Analyzing the release...",
+		StopReason: "tool_use",
+		ToolCalls: []llm.ToolCall{
+			{
+				ID:   "call_1",
+				Name: llm.ToolExtractPattern,
+				Arguments: map[string]any{
+					"mappings": []map[string]any{
+						{"os": "linux", "arch": "amd64", "asset": "test_linux_amd64.tar.gz", "format": "tar.gz"},
+					},
+					"executable":     "test",
+					"verify_command": "test --version",
+				},
+			},
+		},
+		Usage: llm.Usage{InputTokens: 100, OutputTokens: 50},
+	}, nil
+}
+
+// createMockFactory creates a factory with a mock provider for testing.
+func createMockFactory(provider llm.Provider) *llm.Factory {
+	providers := map[string]llm.Provider{
+		provider.Name(): provider,
+	}
+	return llm.NewFactoryWithProviders(providers)
+}
 
 func TestParseRepo(t *testing.T) {
 	tests := []struct {
@@ -122,29 +168,12 @@ func TestDeriveAssetPattern(t *testing.T) {
 	}
 }
 
-// setTestAPIKey sets the ANTHROPIC_API_KEY for testing and returns a cleanup function.
-func setTestAPIKey(t *testing.T, key string) func() {
-	t.Helper()
-	original := os.Getenv("ANTHROPIC_API_KEY")
-	if key == "" {
-		_ = os.Unsetenv("ANTHROPIC_API_KEY")
-	} else {
-		_ = os.Setenv("ANTHROPIC_API_KEY", key)
-	}
-	return func() {
-		if original != "" {
-			_ = os.Setenv("ANTHROPIC_API_KEY", original)
-		} else {
-			_ = os.Unsetenv("ANTHROPIC_API_KEY")
-		}
-	}
-}
-
 func TestGitHubReleaseBuilder_Name(t *testing.T) {
-	cleanup := setTestAPIKey(t, "test-key")
-	defer cleanup()
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
 
-	b, err := NewGitHubReleaseBuilder(nil, nil)
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
 	if err != nil {
 		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
 	}
@@ -155,10 +184,11 @@ func TestGitHubReleaseBuilder_Name(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_CanBuild(t *testing.T) {
-	cleanup := setTestAPIKey(t, "test-key")
-	defer cleanup()
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
 
-	b, err := NewGitHubReleaseBuilder(nil, nil)
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
 	if err != nil {
 		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
 	}
@@ -174,8 +204,9 @@ func TestGitHubReleaseBuilder_CanBuild(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_FetchReleases(t *testing.T) {
-	cleanup := setTestAPIKey(t, "test-key")
-	defer cleanup()
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
 
 	// Create mock GitHub API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -204,9 +235,9 @@ func TestGitHubReleaseBuilder_FetchReleases(t *testing.T) {
 	}))
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilderWithBaseURL(nil, nil, server.URL)
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
 	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilderWithBaseURL error: %v", err)
+		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
 	}
 
 	releases, err := b.fetchReleases(context.Background(), "cli", "cli")
@@ -228,17 +259,18 @@ func TestGitHubReleaseBuilder_FetchReleases(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_FetchReleases_NotFound(t *testing.T) {
-	cleanup := setTestAPIKey(t, "test-key")
-	defer cleanup()
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilderWithBaseURL(nil, nil, server.URL)
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
 	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilderWithBaseURL error: %v", err)
+		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
 	}
 
 	_, err = b.fetchReleases(context.Background(), "nonexistent", "repo")
@@ -248,8 +280,9 @@ func TestGitHubReleaseBuilder_FetchReleases_NotFound(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_FetchRepoMeta(t *testing.T) {
-	cleanup := setTestAPIKey(t, "test-key")
-	defer cleanup()
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/repos/cli/cli" {
@@ -266,9 +299,9 @@ func TestGitHubReleaseBuilder_FetchRepoMeta(t *testing.T) {
 	}))
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilderWithBaseURL(nil, nil, server.URL)
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
 	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilderWithBaseURL error: %v", err)
+		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
 	}
 
 	meta, err := b.fetchRepoMeta(context.Background(), "cli", "cli")
@@ -286,8 +319,9 @@ func TestGitHubReleaseBuilder_FetchRepoMeta(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_FetchRepoMeta_FallbackHomepage(t *testing.T) {
-	cleanup := setTestAPIKey(t, "test-key")
-	defer cleanup()
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		repo := githubRepo{
@@ -300,9 +334,9 @@ func TestGitHubReleaseBuilder_FetchRepoMeta_FallbackHomepage(t *testing.T) {
 	}))
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilderWithBaseURL(nil, nil, server.URL)
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
 	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilderWithBaseURL error: %v", err)
+		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
 	}
 
 	meta, err := b.fetchRepoMeta(context.Background(), "owner", "repo")
@@ -402,4 +436,136 @@ func TestGenerateRecipe_EmptyMappings(t *testing.T) {
 	if err == nil {
 		t.Error("expected error for empty mappings")
 	}
+}
+
+func TestGitHubReleaseBuilder_Build_ValidationSkipped(t *testing.T) {
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
+
+	// Create mock GitHub API server
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/repos/cli/cli/releases":
+			releases := []githubRelease{
+				{
+					TagName: "v2.42.0",
+					Assets: []githubAsset{
+						{Name: "gh_2.42.0_linux_amd64.tar.gz"},
+					},
+				},
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(releases)
+		case "/repos/cli/cli":
+			repo := githubRepo{
+				Description: "GitHub CLI",
+				Homepage:    "https://cli.github.com",
+				HTMLURL:     "https://github.com/cli/cli",
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(repo)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	// Build without executor - validation should be skipped
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
+	if err != nil {
+		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
+	}
+
+	result, err := b.Build(ctx, BuildRequest{
+		Package:   "gh",
+		SourceArg: "cli/cli",
+	})
+	if err != nil {
+		t.Fatalf("Build error: %v", err)
+	}
+
+	if result.Recipe == nil {
+		t.Fatal("expected recipe, got nil")
+	}
+
+	if !result.ValidationSkipped {
+		t.Error("expected ValidationSkipped to be true when no executor")
+	}
+
+	if result.Provider != "mock" {
+		t.Errorf("Provider = %q, want %q", result.Provider, "mock")
+	}
+}
+
+func TestGitHubReleaseBuilder_BuildRepairMessage(t *testing.T) {
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
+
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
+	if err != nil {
+		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
+	}
+
+	result := &validate.ValidationResult{
+		Passed:   false,
+		ExitCode: 127,
+		Stdout:   "",
+		Stderr:   "sh: mytool: not found",
+	}
+
+	msg := b.buildRepairMessage(result)
+
+	// Should contain sanitized error
+	if msg == "" {
+		t.Error("expected non-empty repair message")
+	}
+
+	// Should contain error category
+	if !contains(msg, "Error category:") {
+		t.Error("expected repair message to contain error category")
+	}
+
+	// Should contain exit code
+	if !contains(msg, "Exit code: 127") {
+		t.Error("expected repair message to contain exit code")
+	}
+}
+
+func TestGitHubReleaseBuilder_FormatValidationError(t *testing.T) {
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
+
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
+	if err != nil {
+		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
+	}
+
+	result := &validate.ValidationResult{
+		Passed:   false,
+		ExitCode: 1,
+		Stdout:   "some output",
+		Stderr:   "error message",
+	}
+
+	formatted := b.formatValidationError(result)
+
+	if !contains(formatted, "exit code 1") {
+		t.Error("expected formatted error to contain exit code")
+	}
+}
+
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
+}
+
+func containsHelper(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }

@@ -95,8 +95,9 @@ func TestLLMGroundTruth(t *testing.T) {
 		t.Skip("Skipping LLM integration test: ANTHROPIC_API_KEY not set")
 	}
 
-	// Create the builder
-	builder, err := NewGitHubReleaseBuilder(nil, nil)
+	// Create the builder with default factory (auto-detects from env)
+	ctx := context.Background()
+	builder, err := NewGitHubReleaseBuilder(ctx)
 	if err != nil {
 		t.Fatalf("Failed to create GitHubReleaseBuilder: %v", err)
 	}

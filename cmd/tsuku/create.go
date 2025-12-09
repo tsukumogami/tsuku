@@ -99,7 +99,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Register GitHub builder (may fail if ANTHROPIC_API_KEY not set)
 	if isGitHub {
-		ghBuilder, err := builders.NewGitHubReleaseBuilder(nil, nil)
+		ghBuilder, err := builders.NewGitHubReleaseBuilder(context.Background())
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			exitWithCode(ExitDependencyFailed)
