@@ -231,14 +231,6 @@ func (c *Client) fetchFile(ctx context.Context, url string) (string, error) {
 	return string(content[:n]), nil
 }
 
-// inspectArchive downloads an archive and returns a listing of its contents.
-// TODO: Implement actual archive inspection. For now, returns a placeholder.
-func (c *Client) inspectArchive(ctx context.Context, url string) (string, error) {
-	// For Slice 1, this is a stub. Full implementation will be in Slice 2.
-	// The LLM can still generate patterns based on asset naming conventions.
-	return "Archive inspection not yet implemented. Please infer structure from asset names.", nil
-}
-
 // buildSystemPrompt creates the system prompt for recipe generation.
 func buildSystemPrompt() string {
 	return `You are an expert at analyzing GitHub releases to create installation recipes for tsuku, a package manager.
