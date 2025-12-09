@@ -51,6 +51,7 @@ func init() {
 
 	// Register all commands
 	rootCmd.AddCommand(activateCmd)
+	rootCmd.AddCommand(cacheCmd)
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(updateCmd)

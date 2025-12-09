@@ -72,6 +72,41 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 
 	destPath := filepath.Join(ctx.WorkDir, dest)
 
+	// Get checksum info for cache validation
+	inlineChecksum, _ := GetString(params, "checksum")
+	checksumAlgo, _ := GetString(params, "checksum_algo")
+	if checksumAlgo == "" {
+		checksumAlgo = "sha256"
+	}
+
+	// Check download cache if available
+	var cache *DownloadCache
+	if ctx.DownloadCacheDir != "" {
+		cache = NewDownloadCache(ctx.DownloadCacheDir)
+		found, err := cache.Check(url, destPath, inlineChecksum, checksumAlgo)
+		if err != nil {
+			// Log warning but continue with download
+			fmt.Printf("   Warning: cache check failed: %v\n", err)
+		} else if found {
+			fmt.Printf("   Using cached: %s\n", dest)
+			// For cached files, still verify checksum if provided via URL
+			// (inline checksum was already verified by cache.Check)
+			checksumURL, hasChecksumURL := GetString(params, "checksum_url")
+			if hasChecksumURL {
+				if err := a.verifyChecksumFromURL(ctx.Context, ctx, checksumURL, destPath, checksumAlgo, vars); err != nil {
+					// Cache may be stale, invalidate and re-download
+					fmt.Printf("   Cache checksum mismatch, re-downloading...\n")
+				} else {
+					fmt.Printf("   ✓ Restored from cache\n")
+					return nil
+				}
+			} else {
+				fmt.Printf("   ✓ Restored from cache\n")
+				return nil
+			}
+		}
+	}
+
 	fmt.Printf("   Downloading: %s\n", url)
 	fmt.Printf("   Destination: %s\n", dest)
 
@@ -83,6 +118,14 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	// Verify checksum if provided
 	if err := a.verifyChecksum(ctx.Context, ctx, params, destPath, vars); err != nil {
 		return fmt.Errorf("checksum verification failed: %w", err)
+	}
+
+	// Save to cache if available
+	if cache != nil {
+		if err := cache.Save(url, destPath, inlineChecksum); err != nil {
+			// Log warning but don't fail the download
+			fmt.Printf("   Warning: failed to cache download: %v\n", err)
+		}
 	}
 
 	fmt.Printf("   ✓ Downloaded successfully\n")
@@ -275,5 +318,32 @@ func (a *DownloadAction) verifyChecksum(ctx context.Context, execCtx *ExecutionC
 	}
 
 	fmt.Printf("   ✓ Checksum verified\n")
+	return nil
+}
+
+// verifyChecksumFromURL downloads a checksum file and verifies the file against it
+func (a *DownloadAction) verifyChecksumFromURL(ctx context.Context, execCtx *ExecutionContext, checksumURL, filePath, algo string, vars map[string]string) error {
+	// Download checksum file with context for cancellation
+	checksumURL = ExpandVars(checksumURL, vars)
+	checksumPath := filepath.Join(execCtx.WorkDir, "checksum.tmp")
+
+	if err := a.downloadFile(ctx, checksumURL, checksumPath); err != nil {
+		return fmt.Errorf("failed to download checksum: %w", err)
+	}
+
+	// Read checksum from file
+	checksum, err := ReadChecksumFile(checksumPath)
+	if err != nil {
+		return err
+	}
+
+	// Clean up checksum file
+	os.Remove(checksumPath)
+
+	// Verify checksum
+	if err := VerifyChecksum(filePath, checksum, algo); err != nil {
+		return err
+	}
+
 	return nil
 }
