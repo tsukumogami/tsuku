@@ -39,7 +39,95 @@ type ExtractPatternInput struct {
 	InstallSubpath string            `json:"install_subpath,omitempty"`
 }
 
+// buildToolDefs returns tool definitions using the common ToolDef format.
+// These are converted to provider-specific formats by the Provider implementation.
+func buildToolDefs() []ToolDef {
+	return []ToolDef{
+		{
+			Name:        ToolFetchFile,
+			Description: "Fetch a file from the repository. README.md is already provided - use this for other files like INSTALL.md, docs/usage.md, etc.",
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"path": map[string]any{
+						"type":        "string",
+						"description": "File path in repo (e.g., 'INSTALL.md', 'docs/install.md', 'Makefile')",
+					},
+				},
+				"required": []string{"path"},
+			},
+		},
+		{
+			Name:        ToolInspectArchive,
+			Description: "Download and inspect the contents of an archive (tar.gz, zip, etc.) to see what files are inside. Use this to understand the archive structure and find the executable binary.",
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"url": map[string]any{
+						"type":        "string",
+						"description": "The URL of the archive to inspect",
+					},
+				},
+				"required": []string{"url"},
+			},
+		},
+		{
+			Name:        ToolExtractPattern,
+			Description: "Signal that you have discovered the asset pattern. Call this when you understand how release assets map to platforms and are ready to generate the recipe. This ends the conversation.",
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"mappings": map[string]any{
+						"type":        "array",
+						"description": "List of asset-to-platform mappings",
+						"items": map[string]any{
+							"type": "object",
+							"properties": map[string]any{
+								"asset": map[string]any{
+									"type":        "string",
+									"description": "The release asset filename",
+								},
+								"os": map[string]any{
+									"type":        "string",
+									"description": "The operating system (linux, darwin, windows)",
+								},
+								"arch": map[string]any{
+									"type":        "string",
+									"description": "The architecture (amd64, arm64)",
+								},
+								"format": map[string]any{
+									"type":        "string",
+									"description": "The archive format (tar.gz, zip, binary)",
+								},
+							},
+							"required": []string{"asset", "os", "arch", "format"},
+						},
+					},
+					"executable": map[string]any{
+						"type":        "string",
+						"description": "The name of the executable binary inside the archive",
+					},
+					"verify_command": map[string]any{
+						"type":        "string",
+						"description": "Command to verify the installation works (e.g., 'gh --version')",
+					},
+					"strip_prefix": map[string]any{
+						"type":        "string",
+						"description": "Optional prefix to strip from archive paths during extraction",
+					},
+					"install_subpath": map[string]any{
+						"type":        "string",
+						"description": "Optional subpath within the archive where the executable is located",
+					},
+				},
+				"required": []string{"mappings", "executable", "verify_command"},
+			},
+		},
+	}
+}
+
 // toolSchemas returns the tool definitions for the recipe generation conversation.
+// Deprecated: Use buildToolDefs() with ClaudeProvider instead.
 func toolSchemas() []anthropic.ToolUnionParam {
 	return []anthropic.ToolUnionParam{
 		{

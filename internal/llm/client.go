@@ -5,11 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"os"
 	"time"
-
-	"github.com/anthropics/anthropic-sdk-go"
-	"github.com/anthropics/anthropic-sdk-go/option"
 )
 
 // Model is the Claude model used for recipe generation.
@@ -19,10 +15,10 @@ const Model = "claude-sonnet-4-5-20250929"
 // MaxTurns is the maximum number of conversation turns to prevent infinite loops.
 const MaxTurns = 5
 
-// Client wraps the Anthropic API for recipe generation.
+// Client wraps a Provider for recipe generation with tool execution.
+// It manages multi-turn conversations and executes tools on behalf of the LLM.
 type Client struct {
-	anthropic  anthropic.Client
-	model      anthropic.Model
+	provider   *ClaudeProvider
 	httpClient *http.Client // For executing fetch_file and inspect_archive tools
 }
 
@@ -36,9 +32,9 @@ func NewClient() (*Client, error) {
 // for tool execution (fetch_file, inspect_archive).
 // If httpClient is nil, a default client with timeouts will be created.
 func NewClientWithHTTPClient(httpClient *http.Client) (*Client, error) {
-	apiKey := os.Getenv("ANTHROPIC_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("ANTHROPIC_API_KEY environment variable not set")
+	provider, err := NewClaudeProvider()
+	if err != nil {
+		return nil, err
 	}
 
 	if httpClient == nil {
@@ -48,8 +44,7 @@ func NewClientWithHTTPClient(httpClient *http.Client) (*Client, error) {
 	}
 
 	return &Client{
-		anthropic:  anthropic.NewClient(option.WithAPIKey(apiKey)),
-		model:      anthropic.Model(Model),
+		provider:   provider,
 		httpClient: httpClient,
 	}, nil
 }
@@ -89,11 +84,13 @@ func (c *Client) GenerateRecipe(ctx context.Context, req *GenerateRequest) (*Ass
 	systemPrompt := buildSystemPrompt()
 	userMessage := buildUserMessage(req)
 
-	messages := []anthropic.MessageParam{
-		anthropic.NewUserMessage(anthropic.NewTextBlock(userMessage)),
+	// Build common message types for the conversation
+	messages := []Message{
+		{Role: RoleUser, Content: userMessage},
 	}
 
-	tools := toolSchemas()
+	// Convert tool schemas to common ToolDef format
+	tools := buildToolDefs()
 	var totalUsage Usage
 
 	// Create generation context for tool execution
@@ -106,50 +103,57 @@ func (c *Client) GenerateRecipe(ctx context.Context, req *GenerateRequest) (*Ass
 	}
 
 	for turn := 0; turn < MaxTurns; turn++ {
-		resp, err := c.anthropic.Messages.New(ctx, anthropic.MessageNewParams{
-			Model:     c.model,
-			MaxTokens: 4096,
-			System: []anthropic.TextBlockParam{
-				{Text: systemPrompt},
-			},
-			Messages: messages,
-			Tools:    tools,
+		resp, err := c.provider.Complete(ctx, &CompletionRequest{
+			SystemPrompt: systemPrompt,
+			Messages:     messages,
+			Tools:        tools,
+			MaxTokens:    4096,
 		})
 		if err != nil {
-			return nil, &totalUsage, fmt.Errorf("anthropic API call failed: %w", err)
+			return nil, &totalUsage, err
 		}
 
 		// Accumulate usage
-		totalUsage.Add(Usage{
-			InputTokens:  int(resp.Usage.InputTokens),
-			OutputTokens: int(resp.Usage.OutputTokens),
-		})
+		totalUsage.Add(resp.Usage)
 
 		// Add assistant response to conversation
-		messages = append(messages, resp.ToParam())
+		messages = append(messages, Message{
+			Role:      RoleAssistant,
+			Content:   resp.Content,
+			ToolCalls: resp.ToolCalls,
+		})
 
-		// Process content blocks looking for tool use
-		var toolResults []anthropic.ContentBlockParamUnion
+		// Process tool calls
+		var toolResults []Message
 		var pattern *AssetPattern
 
-		for _, block := range resp.Content {
-			switch variant := block.AsAny().(type) {
-			case anthropic.ToolUseBlock:
-				result, extractedPattern, err := c.executeToolUse(ctx, genCtx, variant)
-				if err != nil {
-					// Return error as tool result so Claude can try again
-					toolResults = append(toolResults,
-						anthropic.NewToolResultBlock(variant.ID, fmt.Sprintf("Error: %v", err), true))
-					continue
-				}
+		for _, tc := range resp.ToolCalls {
+			result, extractedPattern, err := c.executeToolCall(ctx, genCtx, tc)
+			if err != nil {
+				// Return error as tool result so Claude can try again
+				toolResults = append(toolResults, Message{
+					Role: RoleUser,
+					ToolResult: &ToolResult{
+						CallID:  tc.ID,
+						Content: fmt.Sprintf("Error: %v", err),
+						IsError: true,
+					},
+				})
+				continue
+			}
 
-				if extractedPattern != nil {
-					// extract_pattern was called - we're done
-					pattern = extractedPattern
-				} else {
-					toolResults = append(toolResults,
-						anthropic.NewToolResultBlock(variant.ID, result, false))
-				}
+			if extractedPattern != nil {
+				// extract_pattern was called - we're done
+				pattern = extractedPattern
+			} else {
+				toolResults = append(toolResults, Message{
+					Role: RoleUser,
+					ToolResult: &ToolResult{
+						CallID:  tc.ID,
+						Content: result,
+						IsError: false,
+					},
+				})
 			}
 		}
 
@@ -160,7 +164,7 @@ func (c *Client) GenerateRecipe(ctx context.Context, req *GenerateRequest) (*Ass
 
 		// If there were tool calls, add results and continue
 		if len(toolResults) > 0 {
-			messages = append(messages, anthropic.NewUserMessage(toolResults...))
+			messages = append(messages, toolResults...)
 			continue
 		}
 
@@ -173,35 +177,40 @@ func (c *Client) GenerateRecipe(ctx context.Context, req *GenerateRequest) (*Ass
 	return nil, &totalUsage, fmt.Errorf("max turns (%d) exceeded without completing recipe generation", MaxTurns)
 }
 
-// executeToolUse executes a tool call and returns the result.
+// executeToolCall executes a tool call using common types and returns the result.
 // For extract_pattern, it returns the parsed pattern instead of a string result.
-func (c *Client) executeToolUse(ctx context.Context, genCtx *generationContext, toolUse anthropic.ToolUseBlock) (string, *AssetPattern, error) {
-	switch toolUse.Name {
+func (c *Client) executeToolCall(ctx context.Context, genCtx *generationContext, tc ToolCall) (string, *AssetPattern, error) {
+	switch tc.Name {
 	case ToolFetchFile:
-		var input FetchFileInput
-		if err := json.Unmarshal(toolUse.Input, &input); err != nil {
-			return "", nil, fmt.Errorf("invalid fetch_file input: %w", err)
+		path, _ := tc.Arguments["path"].(string)
+		if path == "" {
+			return "", nil, fmt.Errorf("invalid fetch_file input: missing path")
 		}
-		content, err := c.fetchFile(ctx, genCtx.repo, genCtx.tag, input.Path)
+		content, err := c.fetchFile(ctx, genCtx.repo, genCtx.tag, path)
 		if err != nil {
 			return "", nil, err
 		}
 		return content, nil, nil
 
 	case ToolInspectArchive:
-		var input InspectArchiveInput
-		if err := json.Unmarshal(toolUse.Input, &input); err != nil {
-			return "", nil, fmt.Errorf("invalid inspect_archive input: %w", err)
+		url, _ := tc.Arguments["url"].(string)
+		if url == "" {
+			return "", nil, fmt.Errorf("invalid inspect_archive input: missing url")
 		}
-		listing, err := c.inspectArchive(ctx, input.URL)
+		listing, err := c.inspectArchive(ctx, url)
 		if err != nil {
 			return "", nil, err
 		}
 		return listing, nil, nil
 
 	case ToolExtractPattern:
+		// Convert Arguments map to ExtractPatternInput
+		argsJSON, err := json.Marshal(tc.Arguments)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid extract_pattern input: %w", err)
+		}
 		var input ExtractPatternInput
-		if err := json.Unmarshal(toolUse.Input, &input); err != nil {
+		if err := json.Unmarshal(argsJSON, &input); err != nil {
 			return "", nil, fmt.Errorf("invalid extract_pattern input: %w", err)
 		}
 		pattern := &AssetPattern{
@@ -214,7 +223,7 @@ func (c *Client) executeToolUse(ctx context.Context, genCtx *generationContext, 
 		return "", pattern, nil
 
 	default:
-		return "", nil, fmt.Errorf("unknown tool: %s", toolUse.Name)
+		return "", nil, fmt.Errorf("unknown tool: %s", tc.Name)
 	}
 }
 
