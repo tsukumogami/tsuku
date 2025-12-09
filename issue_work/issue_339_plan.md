@@ -29,11 +29,10 @@ None
 ## Implementation Steps
 
 - [x] Fix pre-existing libyaml.toml missing homepage
-- [ ] Add dependency array validation in `validate_metadata()`
-- [ ] Add cross-recipe dependency validation in `main()`
-- [ ] Extract dependency fields in `parse_recipe()`
-- [ ] Bump `SCHEMA_VERSION` to "1.1.0"
-- [ ] Add unit tests for dependency validation
+- [x] Add dependency array validation in `validate_metadata()`
+- [x] Add cross-recipe dependency validation in `main()`
+- [x] Extract dependency fields in `parse_recipe()`
+- [x] Bump `SCHEMA_VERSION` to "1.1.0"
 
 ## Testing Strategy
 
@@ -56,12 +55,12 @@ None
 
 ## Success Criteria
 
-- [ ] `generate-registry.py` extracts `dependencies` from TOML metadata
-- [ ] `generate-registry.py` extracts `runtime_dependencies` from TOML metadata
-- [ ] Dependency names validated against `NAME_PATTERN`
-- [ ] Each dependency references an existing recipe (validation error if not)
-- [ ] `schema_version` bumped to "1.1.0"
-- [ ] Fields default to empty array if not present in TOML
+- [x] `generate-registry.py` extracts `dependencies` from TOML metadata
+- [x] `generate-registry.py` extracts `runtime_dependencies` from TOML metadata
+- [x] Dependency names validated against `NAME_PATTERN`
+- [x] Each dependency references an existing recipe (validation error if not)
+- [x] `schema_version` bumped to "1.1.0"
+- [x] Fields default to empty array if not present in TOML
 
 ## Open Questions
 
