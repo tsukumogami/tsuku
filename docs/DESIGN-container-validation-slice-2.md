@@ -1,10 +1,35 @@
 # Design Document: Container Validation (Slice 2)
 
-**Status**: Proposed
+**Status**: Planned
 
 **Parent Issue**: [#268 - Slice 2: Container Validation](https://github.com/tsukumogami/tsuku/issues/268)
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
+
+<a id="implementation-issues"></a>
+**Implementation Issues**:
+
+| Issue | Title | Design Section | Dependencies |
+|-------|-------|----------------|--------------|
+| [#302](https://github.com/tsukumogami/tsuku/issues/302) | Implement container runtime abstraction and detection | [Runtime Detector](#runtime-detector-internalvalidateruntimego) | None |
+| [#303](https://github.com/tsukumogami/tsuku/issues/303) | Implement asset pre-download with checksum capture | [Pre-Download](#pre-download-internalvalidatepredownloadgo) | None |
+| [#304](https://github.com/tsukumogami/tsuku/issues/304) | Implement parallel safety with lock files | [Parallel Safety](#parallel-safety-internalvalidatelockgo) | None |
+| [#305](https://github.com/tsukumogami/tsuku/issues/305) | Implement Podman runtime | [Components](#components) | #302 |
+| [#306](https://github.com/tsukumogami/tsuku/issues/306) | Implement Docker runtime | [Components](#components) | #302 |
+| [#307](https://github.com/tsukumogami/tsuku/issues/307) | Implement startup cleanup for orphaned containers | [Startup Cleanup](#startup-cleanup) | #304 |
+| [#308](https://github.com/tsukumogami/tsuku/issues/308) | Implement container executor for recipe validation | [Container Executor](#container-executor-internalvalidatecontainergo) | #303, #305, #306 |
+
+```
+Dependency Graph:
+
+#302 (Runtime abstraction) ──┬──> #305 (Podman runtime) ───┐
+                             │                              │
+                             └──> #306 (Docker runtime) ────┼──> #308 (Container executor)
+                                                            │
+#303 (Pre-download) ────────────────────────────────────────┘
+
+#304 (Lock manager) ──> #307 (Startup cleanup)
+```
 
 ## Context and Problem Statement
 
