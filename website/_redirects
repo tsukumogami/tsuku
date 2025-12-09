@@ -1,15 +1,15 @@
 # Cloudflare Pages redirects
-# https://developers.cloudflare.com/pages/platform/redirects
+# https://developers.cloudflare.com/pages/configuration/redirects/
 
 # Note: Domain-specific routing (get.tsuku.dev vs tsuku.dev) is handled
 # by Cloudflare Pages custom domains configuration, not this file.
 # This file handles path-based redirects only.
 
+# IMPORTANT: A 404.html file exists to disable Cloudflare's implicit SPA behavior.
+# Without 404.html, Cloudflare would serve /index.html for all missing paths,
+# bypassing these redirect rules entirely.
+
 # SPA routing for recipe detail pages
-# Serves index.html for all /recipes/* paths, letting client-side router handle the URL
+# Serves recipes/index.html for all /recipes/* paths, letting client-side router handle the URL
 # Must come before any catch-all rule
 /recipes/*  /recipes/index.html  200
-
-# Catch-all for SPA - prevents Cloudflare's default fallback to /index.html
-# which would show the landing page for unknown routes
-/*  /index.html  200
