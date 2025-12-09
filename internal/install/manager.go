@@ -131,7 +131,8 @@ func (m *Manager) createSymlink(name, version string) error {
 	return m.createBinarySymlink(name, version, name)
 }
 
-// createBinarySymlink creates a symlink for a specific binary
+// createBinarySymlink creates a symlink for a specific binary atomically.
+// The atomic update prevents race conditions during version switching.
 func (m *Manager) createBinarySymlink(toolName, version, binaryPath string) error {
 	// For directory-mode installs, binaryPath is relative to tool root (e.g., "cargo/bin/cargo", "zig")
 	// Extract basename for the symlink name in current/ (e.g., "cargo", "zig")
@@ -141,15 +142,13 @@ func (m *Manager) createBinarySymlink(toolName, version, binaryPath string) erro
 	// Target is relative to tool directory (not bin/), since binaryPath is already relative
 	targetPath := filepath.Join(m.config.ToolDir(toolName, version), binaryPath)
 
-	// Remove existing symlink if it exists
-	if _, err := os.Lstat(symlinkPath); err == nil {
-		if err := os.Remove(symlinkPath); err != nil {
-			return fmt.Errorf("failed to remove old symlink: %w", err)
-		}
+	// Validate target is within tools directory to prevent path traversal attacks
+	if err := ValidateSymlinkTarget(targetPath, m.config.ToolsDir); err != nil {
+		return fmt.Errorf("invalid symlink target: %w", err)
 	}
 
-	// Create new symlink
-	if err := os.Symlink(targetPath, symlinkPath); err != nil {
+	// Create or replace symlink atomically
+	if err := AtomicSymlink(targetPath, symlinkPath); err != nil {
 		return fmt.Errorf("failed to create symlink: %w", err)
 	}
 
