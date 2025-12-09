@@ -47,4 +47,15 @@ type BuildResult struct {
 
 	// Source identifies where the metadata came from (e.g., "crates.io:ripgrep")
 	Source string
+
+	// RepairAttempts is the number of repair attempts made after validation failures.
+	// Only populated by builders that support validation (e.g., GitHubReleaseBuilder).
+	RepairAttempts int
+
+	// Provider is the LLM provider that generated the recipe (e.g., "claude", "gemini").
+	// Only populated by LLM-based builders.
+	Provider string
+
+	// ValidationSkipped indicates validation was skipped (e.g., no container runtime).
+	ValidationSkipped bool
 }

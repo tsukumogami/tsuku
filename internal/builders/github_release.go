@@ -13,6 +13,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 const (
@@ -22,47 +23,95 @@ const (
 	maxREADMESize = 1 * 1024 * 1024
 	// releasesToFetch is the number of releases to fetch for pattern inference
 	releasesToFetch = 5
+	// MaxTurns is the maximum number of conversation turns to prevent infinite loops.
+	MaxTurns = 5
+	// MaxRepairAttempts is the maximum number of times to retry after validation failure.
+	MaxRepairAttempts = 2
 )
 
 // GitHubReleaseBuilder generates recipes from GitHub release assets using LLM analysis.
 type GitHubReleaseBuilder struct {
 	httpClient    *http.Client
-	llmClient     *llm.Client
+	factory       *llm.Factory
+	executor      *validate.Executor
+	sanitizer     *validate.Sanitizer
 	githubBaseURL string
 }
 
+// GitHubReleaseBuilderOption configures a GitHubReleaseBuilder.
+type GitHubReleaseBuilderOption func(*GitHubReleaseBuilder)
+
+// WithHTTPClient sets a custom HTTP client.
+func WithHTTPClient(c *http.Client) GitHubReleaseBuilderOption {
+	return func(b *GitHubReleaseBuilder) {
+		b.httpClient = c
+	}
+}
+
+// WithFactory sets the LLM provider factory.
+func WithFactory(f *llm.Factory) GitHubReleaseBuilderOption {
+	return func(b *GitHubReleaseBuilder) {
+		b.factory = f
+	}
+}
+
+// WithExecutor sets the validation executor.
+func WithExecutor(e *validate.Executor) GitHubReleaseBuilderOption {
+	return func(b *GitHubReleaseBuilder) {
+		b.executor = e
+	}
+}
+
+// WithSanitizer sets the error sanitizer.
+func WithSanitizer(s *validate.Sanitizer) GitHubReleaseBuilderOption {
+	return func(b *GitHubReleaseBuilder) {
+		b.sanitizer = s
+	}
+}
+
+// WithGitHubBaseURL sets a custom GitHub API base URL (for testing).
+func WithGitHubBaseURL(url string) GitHubReleaseBuilderOption {
+	return func(b *GitHubReleaseBuilder) {
+		b.githubBaseURL = url
+	}
+}
+
 // NewGitHubReleaseBuilder creates a new GitHubReleaseBuilder.
-// If httpClient is nil, a default client with timeouts will be created.
-// If llmClient is nil, a new client will be created using ANTHROPIC_API_KEY.
-func NewGitHubReleaseBuilder(httpClient *http.Client, llmClient *llm.Client) (*GitHubReleaseBuilder, error) {
-	if httpClient == nil {
-		httpClient = &http.Client{
+// If no options are provided, defaults are used:
+// - HTTP client with 60s timeout
+// - Factory auto-detected from environment (ANTHROPIC_API_KEY, GOOGLE_API_KEY)
+// - Sanitizer with default patterns
+// - No executor (validation skipped)
+func NewGitHubReleaseBuilder(ctx context.Context, opts ...GitHubReleaseBuilderOption) (*GitHubReleaseBuilder, error) {
+	b := &GitHubReleaseBuilder{
+		githubBaseURL: "https://api.github.com",
+	}
+
+	for _, opt := range opts {
+		opt(b)
+	}
+
+	// Set defaults for unset options
+	if b.httpClient == nil {
+		b.httpClient = &http.Client{
 			Timeout: 60 * time.Second,
 		}
 	}
 
-	if llmClient == nil {
-		var err error
-		llmClient, err = llm.NewClientWithHTTPClient(httpClient)
+	if b.factory == nil {
+		factory, err := llm.NewFactory(ctx)
 		if err != nil {
-			return nil, fmt.Errorf("failed to create LLM client: %w", err)
+			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
 		}
+		b.factory = factory
 	}
 
-	return &GitHubReleaseBuilder{
-		httpClient:    httpClient,
-		llmClient:     llmClient,
-		githubBaseURL: "https://api.github.com",
-	}, nil
-}
-
-// NewGitHubReleaseBuilderWithBaseURL creates a builder with custom GitHub API URL (for testing).
-func NewGitHubReleaseBuilderWithBaseURL(httpClient *http.Client, llmClient *llm.Client, githubBaseURL string) (*GitHubReleaseBuilder, error) {
-	b, err := NewGitHubReleaseBuilder(httpClient, llmClient)
-	if err != nil {
-		return nil, err
+	if b.sanitizer == nil {
+		b.sanitizer = validate.NewSanitizer()
 	}
-	b.githubBaseURL = githubBaseURL
+
+	// executor is optional - validation skipped if nil
+
 	return b, nil
 }
 
@@ -107,18 +156,31 @@ func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*Bu
 	// Fetch README (non-fatal if it fails)
 	readme := b.fetchREADME(ctx, owner, repo, releases[0].Tag)
 
-	// Call LLM to extract pattern
-	llmReq := &llm.GenerateRequest{
-		Repo:        repoPath,
-		Releases:    releases,
-		Description: repoMeta.Description,
-		README:      readme,
+	// Build generation context
+	genCtx := &generationContext{
+		repo:        repoPath,
+		releases:    releases,
+		description: repoMeta.Description,
+		readme:      readme,
+		httpClient:  b.httpClient,
+	}
+	if len(releases) > 0 {
+		genCtx.tag = releases[0].Tag
 	}
 
-	pattern, usage, err := b.llmClient.GenerateRecipe(ctx, llmReq)
+	// Get provider from factory
+	provider, err := b.factory.GetProvider(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("LLM recipe generation failed: %w", err)
+		return nil, fmt.Errorf("no LLM provider available: %w", err)
 	}
+
+	// Generate recipe with repair loop
+	pattern, usage, repairAttempts, validationSkipped, err := b.generateWithRepair(ctx, provider, genCtx, req.Package, repoPath, repoMeta)
+	if err != nil {
+		b.factory.ReportFailure(provider.Name())
+		return nil, err
+	}
+	b.factory.ReportSuccess(provider.Name())
 
 	// Generate recipe from pattern
 	r, err := generateRecipe(req.Package, repoPath, repoMeta, pattern)
@@ -132,9 +194,287 @@ func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*Bu
 		Warnings: []string{
 			fmt.Sprintf("LLM usage: %s", usage.String()),
 		},
+		RepairAttempts:    repairAttempts,
+		Provider:          provider.Name(),
+		ValidationSkipped: validationSkipped,
+	}
+
+	if repairAttempts > 0 {
+		result.Warnings = append(result.Warnings, fmt.Sprintf("Recipe repaired after %d attempt(s)", repairAttempts))
 	}
 
 	return result, nil
+}
+
+// generationContext holds context needed during recipe generation.
+type generationContext struct {
+	repo        string // GitHub repository (owner/repo)
+	tag         string // Release tag to use for file fetching
+	releases    []llm.Release
+	description string
+	readme      string
+	httpClient  *http.Client
+}
+
+// generateWithRepair runs the conversation loop with validation and repair.
+func (b *GitHubReleaseBuilder) generateWithRepair(
+	ctx context.Context,
+	provider llm.Provider,
+	genCtx *generationContext,
+	packageName, repoPath string,
+	repoMeta *repoMeta,
+) (*llm.AssetPattern, *llm.Usage, int, bool, error) {
+	// Build initial conversation
+	systemPrompt := buildSystemPrompt()
+	userMessage := buildUserMessage(genCtx)
+	messages := []llm.Message{
+		{Role: llm.RoleUser, Content: userMessage},
+	}
+	tools := buildToolDefs()
+
+	var totalUsage llm.Usage
+	var repairAttempts int
+	var validationSkipped bool
+
+	for attempt := 0; attempt <= MaxRepairAttempts; attempt++ {
+		// Run conversation loop to get pattern
+		pattern, turnUsage, err := b.runConversationLoop(ctx, provider, systemPrompt, messages, tools, genCtx)
+		if err != nil {
+			return nil, &totalUsage, repairAttempts, validationSkipped, err
+		}
+		totalUsage.Add(*turnUsage)
+
+		// If no executor, skip validation
+		if b.executor == nil {
+			validationSkipped = true
+			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
+		}
+
+		// Generate recipe for validation
+		r, err := generateRecipe(packageName, repoPath, repoMeta, pattern)
+		if err != nil {
+			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("failed to generate recipe for validation: %w", err)
+		}
+
+		// Build asset URL for validation
+		assetURL := b.buildAssetURL(genCtx, pattern)
+
+		// Validate in container
+		result, err := b.executor.Validate(ctx, r, assetURL)
+		if err != nil {
+			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("validation error: %w", err)
+		}
+
+		// Check validation result
+		if result.Skipped {
+			validationSkipped = true
+			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
+		}
+
+		if result.Passed {
+			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
+		}
+
+		// Validation failed - prepare repair if we have attempts left
+		if attempt >= MaxRepairAttempts {
+			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("recipe validation failed after %d repair attempts: %s", repairAttempts, b.formatValidationError(result))
+		}
+
+		// Continue conversation with error feedback
+		repairAttempts++
+		repairMessage := b.buildRepairMessage(result)
+		messages = append(messages, llm.Message{Role: llm.RoleUser, Content: repairMessage})
+	}
+
+	return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("unexpected end of repair loop")
+}
+
+// runConversationLoop executes the multi-turn conversation until extract_pattern is called.
+func (b *GitHubReleaseBuilder) runConversationLoop(
+	ctx context.Context,
+	provider llm.Provider,
+	systemPrompt string,
+	messages []llm.Message,
+	tools []llm.ToolDef,
+	genCtx *generationContext,
+) (*llm.AssetPattern, *llm.Usage, error) {
+	var totalUsage llm.Usage
+
+	for turn := 0; turn < MaxTurns; turn++ {
+		resp, err := provider.Complete(ctx, &llm.CompletionRequest{
+			SystemPrompt: systemPrompt,
+			Messages:     messages,
+			Tools:        tools,
+			MaxTokens:    4096,
+		})
+		if err != nil {
+			return nil, &totalUsage, err
+		}
+
+		totalUsage.Add(resp.Usage)
+
+		// Add assistant response to conversation
+		messages = append(messages, llm.Message{
+			Role:      llm.RoleAssistant,
+			Content:   resp.Content,
+			ToolCalls: resp.ToolCalls,
+		})
+
+		// Process tool calls
+		var toolResults []llm.Message
+		var pattern *llm.AssetPattern
+
+		for _, tc := range resp.ToolCalls {
+			result, extractedPattern, err := b.executeToolCall(ctx, genCtx, tc)
+			if err != nil {
+				// Return error as tool result so LLM can try again
+				toolResults = append(toolResults, llm.Message{
+					Role: llm.RoleUser,
+					ToolResult: &llm.ToolResult{
+						CallID:  tc.ID,
+						Content: fmt.Sprintf("Error: %v", err),
+						IsError: true,
+					},
+				})
+				continue
+			}
+
+			if extractedPattern != nil {
+				pattern = extractedPattern
+			} else {
+				toolResults = append(toolResults, llm.Message{
+					Role: llm.RoleUser,
+					ToolResult: &llm.ToolResult{
+						CallID:  tc.ID,
+						Content: result,
+						IsError: false,
+					},
+				})
+			}
+		}
+
+		// If extract_pattern was called, return the pattern
+		if pattern != nil {
+			return pattern, &totalUsage, nil
+		}
+
+		// If there were tool calls, add results and continue
+		if len(toolResults) > 0 {
+			messages = append(messages, toolResults...)
+			continue
+		}
+
+		// No tool calls and no extract_pattern - LLM is done but didn't call the tool
+		if resp.StopReason == "end_turn" {
+			return nil, &totalUsage, fmt.Errorf("conversation ended without extract_pattern being called")
+		}
+	}
+
+	return nil, &totalUsage, fmt.Errorf("max turns (%d) exceeded without completing recipe generation", MaxTurns)
+}
+
+// executeToolCall executes a tool call and returns the result.
+func (b *GitHubReleaseBuilder) executeToolCall(ctx context.Context, genCtx *generationContext, tc llm.ToolCall) (string, *llm.AssetPattern, error) {
+	switch tc.Name {
+	case llm.ToolFetchFile:
+		path, _ := tc.Arguments["path"].(string)
+		if path == "" {
+			return "", nil, fmt.Errorf("invalid fetch_file input: missing path")
+		}
+		content, err := fetchFile(ctx, genCtx.httpClient, genCtx.repo, genCtx.tag, path)
+		if err != nil {
+			return "", nil, err
+		}
+		return content, nil, nil
+
+	case llm.ToolInspectArchive:
+		url, _ := tc.Arguments["url"].(string)
+		if url == "" {
+			return "", nil, fmt.Errorf("invalid inspect_archive input: missing url")
+		}
+		listing, err := inspectArchive(ctx, genCtx.httpClient, url)
+		if err != nil {
+			return "", nil, err
+		}
+		return listing, nil, nil
+
+	case llm.ToolExtractPattern:
+		argsJSON, err := json.Marshal(tc.Arguments)
+		if err != nil {
+			return "", nil, fmt.Errorf("invalid extract_pattern input: %w", err)
+		}
+		var input llm.ExtractPatternInput
+		if err := json.Unmarshal(argsJSON, &input); err != nil {
+			return "", nil, fmt.Errorf("invalid extract_pattern input: %w", err)
+		}
+		pattern := &llm.AssetPattern{
+			Mappings:       input.Mappings,
+			Executable:     input.Executable,
+			VerifyCommand:  input.VerifyCommand,
+			StripPrefix:    input.StripPrefix,
+			InstallSubpath: input.InstallSubpath,
+		}
+		return "", pattern, nil
+
+	default:
+		return "", nil, fmt.Errorf("unknown tool: %s", tc.Name)
+	}
+}
+
+// buildAssetURL constructs the download URL for the first matching platform.
+func (b *GitHubReleaseBuilder) buildAssetURL(genCtx *generationContext, pattern *llm.AssetPattern) string {
+	if len(pattern.Mappings) == 0 || len(genCtx.releases) == 0 {
+		return ""
+	}
+
+	// Find asset URL for the first mapping (typically linux/amd64)
+	firstAsset := pattern.Mappings[0].Asset
+	release := genCtx.releases[0]
+
+	// Construct GitHub release download URL
+	return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s",
+		genCtx.repo, release.Tag, firstAsset)
+}
+
+// buildRepairMessage constructs the error feedback message for the LLM.
+func (b *GitHubReleaseBuilder) buildRepairMessage(result *validate.ValidationResult) string {
+	// Combine stdout and stderr
+	output := result.Stdout + "\n" + result.Stderr
+
+	// Sanitize the output
+	sanitizedOutput := b.sanitizer.Sanitize(output)
+
+	// Parse the error for structured feedback
+	parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)
+
+	var sb strings.Builder
+	sb.WriteString("The recipe you generated failed validation. Here is the error:\n\n")
+	sb.WriteString("---\n")
+	sb.WriteString(sanitizedOutput)
+	sb.WriteString("\n---\n\n")
+	sb.WriteString(fmt.Sprintf("Exit code: %d\n", result.ExitCode))
+	sb.WriteString(fmt.Sprintf("Error category: %s\n", parsed.Category))
+
+	if len(parsed.Suggestions) > 0 {
+		sb.WriteString("\nSuggested fixes:\n")
+		for _, suggestion := range parsed.Suggestions {
+			sb.WriteString(fmt.Sprintf("- %s\n", suggestion))
+		}
+	}
+
+	sb.WriteString("\nPlease analyze what went wrong and call extract_pattern again with a corrected recipe.")
+
+	return sb.String()
+}
+
+// formatValidationError creates a human-readable validation error message.
+func (b *GitHubReleaseBuilder) formatValidationError(result *validate.ValidationResult) string {
+	output := result.Stdout + "\n" + result.Stderr
+	sanitized := b.sanitizer.Sanitize(output)
+	if len(sanitized) > 500 {
+		sanitized = sanitized[:500] + "..."
+	}
+	return fmt.Sprintf("exit code %d: %s", result.ExitCode, sanitized)
 }
 
 // parseRepo parses "owner/repo" into separate components.
@@ -427,4 +767,256 @@ func deriveAssetPattern(mappings []llm.PlatformMapping) string {
 	}
 
 	return pattern
+}
+
+// buildSystemPrompt creates the system prompt for recipe generation.
+func buildSystemPrompt() string {
+	return `You are an expert at analyzing GitHub releases to create installation recipes for tsuku, a package manager.
+
+Your task is to analyze the provided release information and determine how to match release assets to different platforms (linux/darwin, amd64/arm64).
+
+You have three tools available:
+1. fetch_file: Fetch a file from a URL to examine its contents (useful for READMEs)
+2. inspect_archive: Inspect the contents of an archive to find the executable
+3. extract_pattern: Call this when you've determined the asset-to-platform mappings
+
+Common patterns you should recognize:
+- Rust-style targets: x86_64-unknown-linux-musl, aarch64-apple-darwin
+- Go-style targets: linux_amd64, darwin_arm64
+- Generic: linux-x64, macos-arm64, linux-amd64
+
+When analyzing assets:
+- Look for patterns in filenames that indicate OS and architecture
+- Identify the archive format (tar.gz, zip, or bare binary)
+- Determine the executable name inside the archive
+- Consider common verification commands (tool --version, tool version)
+
+Once you understand the pattern, call extract_pattern with the mappings.
+Focus on linux (amd64, arm64) and darwin (amd64, arm64) platforms.`
+}
+
+// buildUserMessage creates the initial user message with release context.
+func buildUserMessage(genCtx *generationContext) string {
+	releasesJSON, _ := json.MarshalIndent(genCtx.releases, "", "  ")
+
+	msg := fmt.Sprintf(`Please analyze this GitHub repository and its releases to create a recipe.
+
+Repository: %s
+Description: %s
+
+Recent releases:
+%s
+
+`, genCtx.repo, genCtx.description, string(releasesJSON))
+
+	if genCtx.readme != "" {
+		// Truncate README if too long
+		readme := genCtx.readme
+		if len(readme) > 10000 {
+			readme = readme[:10000] + "\n...(truncated)"
+		}
+		msg += fmt.Sprintf("README.md:\n%s\n", readme)
+	}
+
+	msg += "\nAnalyze the release assets and call extract_pattern with the platform mappings."
+
+	return msg
+}
+
+// buildToolDefs creates the tool definitions for recipe generation.
+func buildToolDefs() []llm.ToolDef {
+	return []llm.ToolDef{
+		{
+			Name:        llm.ToolFetchFile,
+			Description: "Fetch a file from the repository to examine its contents. Use this to read READMEs, Makefiles, or other documentation that might help understand the project structure.",
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"path": map[string]any{
+						"type":        "string",
+						"description": "The path to the file in the repository (e.g., 'README.md', 'Makefile')",
+					},
+				},
+				"required": []string{"path"},
+			},
+		},
+		{
+			Name:        llm.ToolInspectArchive,
+			Description: "Download and inspect the contents of an archive to find the executable. Returns a listing of files in the archive.",
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"url": map[string]any{
+						"type":        "string",
+						"description": "The URL of the archive to inspect",
+					},
+				},
+				"required": []string{"url"},
+			},
+		},
+		{
+			Name:        llm.ToolExtractPattern,
+			Description: "Report the discovered pattern for matching release assets to platforms. Call this when you've determined how to map assets to OS/arch combinations.",
+			Parameters: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"mappings": map[string]any{
+						"type":        "array",
+						"description": "List of platform-to-asset mappings",
+						"items": map[string]any{
+							"type": "object",
+							"properties": map[string]any{
+								"os": map[string]any{
+									"type":        "string",
+									"description": "OS identifier as it appears in the asset name (e.g., 'linux', 'darwin', 'x86_64-unknown-linux-musl')",
+								},
+								"arch": map[string]any{
+									"type":        "string",
+									"description": "Architecture identifier as it appears in the asset name (e.g., 'amd64', 'arm64', '')",
+								},
+								"asset": map[string]any{
+									"type":        "string",
+									"description": "The exact asset filename for this platform",
+								},
+								"format": map[string]any{
+									"type":        "string",
+									"description": "Archive format: 'tar.gz', 'zip', or 'binary'",
+									"enum":        []string{"tar.gz", "zip", "binary"},
+								},
+							},
+							"required": []string{"os", "arch", "asset", "format"},
+						},
+					},
+					"executable": map[string]any{
+						"type":        "string",
+						"description": "Name of the executable binary",
+					},
+					"verify_command": map[string]any{
+						"type":        "string",
+						"description": "Command to verify installation (e.g., 'mytool --version')",
+					},
+					"strip_prefix": map[string]any{
+						"type":        "string",
+						"description": "Directory prefix to strip from archives (optional)",
+					},
+					"install_subpath": map[string]any{
+						"type":        "string",
+						"description": "Subdirectory in archive where binary is located (optional)",
+					},
+				},
+				"required": []string{"mappings", "executable", "verify_command"},
+			},
+		},
+	}
+}
+
+// fetchFile fetches a file from a GitHub repository using raw.githubusercontent.com.
+func fetchFile(ctx context.Context, httpClient *http.Client, repo, tag, path string) (string, error) {
+	url := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/%s", repo, tag, path)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to fetch file: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusNotFound {
+		return "", fmt.Errorf("file not found: %s (check if the file exists in the repository at tag %s)", path, tag)
+	}
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
+	}
+
+	// Check content type - reject binary files
+	contentType := resp.Header.Get("Content-Type")
+	if contentType != "" && !isTextContentType(contentType) {
+		return "", fmt.Errorf("file appears to be binary (Content-Type: %s), only text files are supported", contentType)
+	}
+
+	// Limit response size to 1MB to prevent memory issues
+	const maxSize = 1 * 1024 * 1024
+	content := make([]byte, maxSize)
+	n, err := resp.Body.Read(content)
+	if err != nil && err.Error() != "EOF" {
+		return "", fmt.Errorf("failed to read response: %w", err)
+	}
+
+	return string(content[:n]), nil
+}
+
+// isTextContentType checks if the content type indicates a text file.
+func isTextContentType(contentType string) bool {
+	textPrefixes := []string{
+		"text/",
+		"application/json",
+		"application/xml",
+		"application/javascript",
+		"application/x-yaml",
+		"application/toml",
+	}
+	for _, prefix := range textPrefixes {
+		if len(contentType) >= len(prefix) && contentType[:len(prefix)] == prefix {
+			return true
+		}
+	}
+	return false
+}
+
+// inspectArchive downloads and lists the contents of an archive.
+func inspectArchive(ctx context.Context, httpClient *http.Client, archiveURL string) (string, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", archiveURL, nil)
+	if err != nil {
+		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("failed to download archive: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("HTTP %d: %s", resp.StatusCode, resp.Status)
+	}
+
+	// For now, return a placeholder - archive inspection requires more complex logic
+	// This is consistent with the existing implementation in client.go
+	return "Archive inspection not fully implemented - please analyze based on filename patterns", nil
+}
+
+// Legacy constructors for backward compatibility
+
+// NewGitHubReleaseBuilderLegacy creates a builder with legacy constructor signature.
+// Deprecated: Use NewGitHubReleaseBuilder instead.
+func NewGitHubReleaseBuilderLegacy(httpClient *http.Client, llmClient *llm.Client) (*GitHubReleaseBuilder, error) {
+	ctx := context.Background()
+	opts := []GitHubReleaseBuilderOption{}
+
+	if httpClient != nil {
+		opts = append(opts, WithHTTPClient(httpClient))
+	}
+
+	// Note: llmClient is ignored in new implementation - factory is used instead
+
+	return NewGitHubReleaseBuilder(ctx, opts...)
+}
+
+// NewGitHubReleaseBuilderWithBaseURL creates a builder with custom GitHub API URL.
+// Deprecated: Use NewGitHubReleaseBuilder with WithGitHubBaseURL option instead.
+func NewGitHubReleaseBuilderWithBaseURL(httpClient *http.Client, llmClient *llm.Client, githubBaseURL string) (*GitHubReleaseBuilder, error) {
+	ctx := context.Background()
+	opts := []GitHubReleaseBuilderOption{
+		WithGitHubBaseURL(githubBaseURL),
+	}
+
+	if httpClient != nil {
+		opts = append(opts, WithHTTPClient(httpClient))
+	}
+
+	return NewGitHubReleaseBuilder(ctx, opts...)
 }
