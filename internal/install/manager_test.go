@@ -641,8 +641,8 @@ func TestInstallWithOptions_WithRuntimeDeps(t *testing.T) {
 	if !ok {
 		t.Error("tool should be in state")
 	}
-	if toolState.Version != "1.0.0" {
-		t.Errorf("version = %s, want 1.0.0", toolState.Version)
+	if toolState.ActiveVersion != "1.0.0" {
+		t.Errorf("active_version = %s, want 1.0.0", toolState.ActiveVersion)
 	}
 }
 

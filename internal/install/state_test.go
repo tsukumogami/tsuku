@@ -37,11 +37,14 @@ func TestStateManager_SaveAndLoad(t *testing.T) {
 	sm, cleanup := newTestStateManager(t)
 	defer cleanup()
 
-	// Create test state
+	// Create test state using new multi-version format
 	state := &State{
 		Installed: map[string]ToolState{
 			"kubectl": {
-				Version:    "1.29.0",
+				ActiveVersion: "1.29.0",
+				Versions: map[string]VersionState{
+					"1.29.0": {Requested: "", Binaries: []string{"kubectl"}},
+				},
 				IsExplicit: true,
 				RequiredBy: []string{},
 			},
@@ -65,8 +68,8 @@ func TestStateManager_SaveAndLoad(t *testing.T) {
 		t.Fatal("kubectl not found in loaded state")
 	}
 
-	if kubectl.Version != "1.29.0" {
-		t.Errorf("Version = %s, want 1.29.0", kubectl.Version)
+	if kubectl.ActiveVersion != "1.29.0" {
+		t.Errorf("ActiveVersion = %s, want 1.29.0", kubectl.ActiveVersion)
 	}
 
 	if !kubectl.IsExplicit {
@@ -102,7 +105,10 @@ func TestStateManager_UpdateTool_NewTool(t *testing.T) {
 	defer cleanup()
 
 	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
-		ts.Version = "1.29.0"
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions = map[string]VersionState{
+			"1.29.0": {Requested: "", Binaries: []string{"kubectl"}},
+		}
 		ts.IsExplicit = true
 	})
 
@@ -117,8 +123,8 @@ func TestStateManager_UpdateTool_NewTool(t *testing.T) {
 		t.Fatal("kubectl not found in state")
 	}
 
-	if kubectl.Version != "1.29.0" {
-		t.Errorf("Version = %s, want 1.29.0", kubectl.Version)
+	if kubectl.ActiveVersion != "1.29.0" {
+		t.Errorf("ActiveVersion = %s, want 1.29.0", kubectl.ActiveVersion)
 	}
 
 	if !kubectl.IsExplicit {
@@ -132,16 +138,20 @@ func TestStateManager_UpdateTool_ExistingTool(t *testing.T) {
 
 	// Add initial tool
 	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
-		ts.Version = "1.28.0"
+		ts.ActiveVersion = "1.28.0"
+		ts.Versions = map[string]VersionState{
+			"1.28.0": {Requested: "", Binaries: []string{"kubectl"}},
+		}
 		ts.IsExplicit = false
 	})
 	if err != nil {
 		t.Fatalf("UpdateTool() error = %v", err)
 	}
 
-	// Update to new version
+	// Update to new version (add new version, change active)
 	err = sm.UpdateTool("kubectl", func(ts *ToolState) {
-		ts.Version = "1.29.0"
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions["1.29.0"] = VersionState{Requested: "", Binaries: []string{"kubectl"}}
 		ts.IsExplicit = true
 	})
 	if err != nil {
@@ -152,8 +162,8 @@ func TestStateManager_UpdateTool_ExistingTool(t *testing.T) {
 	state, _ := sm.Load()
 	kubectl := state.Installed["kubectl"]
 
-	if kubectl.Version != "1.29.0" {
-		t.Errorf("Version = %s, want 1.29.0", kubectl.Version)
+	if kubectl.ActiveVersion != "1.29.0" {
+		t.Errorf("ActiveVersion = %s, want 1.29.0", kubectl.ActiveVersion)
 	}
 
 	if !kubectl.IsExplicit {
@@ -167,7 +177,10 @@ func TestStateManager_RemoveTool(t *testing.T) {
 
 	// Add tool
 	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
-		ts.Version = "1.29.0"
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions = map[string]VersionState{
+			"1.29.0": {Requested: "", Binaries: []string{"kubectl"}},
+		}
 		ts.IsExplicit = true
 	})
 	if err != nil {
@@ -204,7 +217,10 @@ func TestStateManager_AddRequiredBy(t *testing.T) {
 
 	// Add dependency tool
 	err := sm.UpdateTool("tool-b", func(ts *ToolState) {
-		ts.Version = "1.0.0"
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Requested: "", Binaries: []string{"tool-b"}},
+		}
 		ts.IsExplicit = false
 	})
 	if err != nil {
@@ -236,7 +252,10 @@ func TestStateManager_AddRequiredBy_Duplicate(t *testing.T) {
 
 	// Add dependency tool
 	err := sm.UpdateTool("tool-b", func(ts *ToolState) {
-		ts.Version = "1.0.0"
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Requested: "", Binaries: []string{"tool-b"}},
+		}
 		ts.IsExplicit = false
 	})
 	if err != nil {
@@ -269,7 +288,10 @@ func TestStateManager_RemoveRequiredBy(t *testing.T) {
 
 	// Setup tool with dependencies
 	err := sm.UpdateTool("tool-b", func(ts *ToolState) {
-		ts.Version = "1.0.0"
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Requested: "", Binaries: []string{"tool-b"}},
+		}
 		ts.IsExplicit = false
 		ts.RequiredBy = []string{"tool-a", "tool-c"}
 	})
@@ -302,7 +324,10 @@ func TestStateManager_RemoveRequiredBy_NotExists(t *testing.T) {
 
 	// Setup tool
 	err := sm.UpdateTool("tool-b", func(ts *ToolState) {
-		ts.Version = "1.0.0"
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Requested: "", Binaries: []string{"tool-b"}},
+		}
 		ts.RequiredBy = []string{"tool-a"}
 	})
 	if err != nil {
@@ -400,7 +425,10 @@ func TestIsHidden_NotHidden(t *testing.T) {
 
 	// Add a non-hidden tool
 	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
-		ts.Version = "1.29.0"
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions = map[string]VersionState{
+			"1.29.0": {Requested: "", Binaries: []string{"kubectl"}},
+		}
 		ts.IsExplicit = true
 		ts.IsHidden = false
 	})
@@ -426,7 +454,10 @@ func TestIsHidden_Hidden(t *testing.T) {
 
 	// Add a hidden tool
 	err := sm.UpdateTool("python", func(ts *ToolState) {
-		ts.Version = "3.12.0"
+		ts.ActiveVersion = "3.12.0"
+		ts.Versions = map[string]VersionState{
+			"3.12.0": {Requested: "", Binaries: []string{"python"}},
+		}
 		ts.IsExplicit = false
 		ts.IsHidden = true
 	})
@@ -529,7 +560,10 @@ func TestManager_ListWithOptions_WithTools(t *testing.T) {
 	// Mark hidden-tool as hidden in state
 	sm := NewStateManager(cfg)
 	err := sm.UpdateTool("hidden-tool", func(ts *ToolState) {
-		ts.Version = "1.0.0"
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Requested: "", Binaries: []string{"hidden-tool"}},
+		}
 		ts.IsHidden = true
 	})
 	if err != nil {
@@ -626,8 +660,12 @@ func TestManager_GetState(t *testing.T) {
 		t.Error("kubectl not found in state")
 	}
 
+	// After migration, both Version (for backward compat) and ActiveVersion should be set
+	if kubectl.ActiveVersion != "1.29.0" {
+		t.Errorf("kubectl ActiveVersion = %q, want %q", kubectl.ActiveVersion, "1.29.0")
+	}
 	if kubectl.Version != "1.29.0" {
-		t.Errorf("kubectl version = %q, want %q", kubectl.Version, "1.29.0")
+		t.Errorf("kubectl Version = %q, want %q (preserved for backward compat)", kubectl.Version, "1.29.0")
 	}
 }
 
@@ -928,7 +966,10 @@ func TestStateManager_SaveAndLoad_WithLibs(t *testing.T) {
 	state := &State{
 		Installed: map[string]ToolState{
 			"ruby": {
-				Version:    "3.4.0",
+				ActiveVersion: "3.4.0",
+				Versions: map[string]VersionState{
+					"3.4.0": {Requested: "", Binaries: []string{"ruby"}},
+				},
 				IsExplicit: true,
 				RequiredBy: []string{},
 			},
@@ -974,14 +1015,20 @@ func TestStateManager_SaveAndLoad_WithDependencies(t *testing.T) {
 	state := &State{
 		Installed: map[string]ToolState{
 			"turbo": {
-				Version:             "1.10.0",
+				ActiveVersion: "1.10.0",
+				Versions: map[string]VersionState{
+					"1.10.0": {Requested: "", Binaries: []string{"turbo"}},
+				},
 				IsExplicit:          true,
 				RequiredBy:          []string{},
 				InstallDependencies: []string{"nodejs"},
 				RuntimeDependencies: []string{"nodejs"},
 			},
 			"esbuild": {
-				Version:             "0.19.0",
+				ActiveVersion: "0.19.0",
+				Versions: map[string]VersionState{
+					"0.19.0": {Requested: "", Binaries: []string{"esbuild"}},
+				},
 				IsExplicit:          true,
 				RequiredBy:          []string{},
 				InstallDependencies: []string{"nodejs"},
@@ -1075,7 +1122,10 @@ func TestStateManager_UpdateTool_WithDependencies(t *testing.T) {
 
 	// Update tool with dependencies
 	err := sm.UpdateTool("turbo", func(ts *ToolState) {
-		ts.Version = "1.10.0"
+		ts.ActiveVersion = "1.10.0"
+		ts.Versions = map[string]VersionState{
+			"1.10.0": {Requested: "", Binaries: []string{"turbo"}},
+		}
 		ts.IsExplicit = true
 		ts.InstallDependencies = []string{"nodejs"}
 		ts.RuntimeDependencies = []string{"nodejs"}
@@ -1096,5 +1146,238 @@ func TestStateManager_UpdateTool_WithDependencies(t *testing.T) {
 	}
 	if len(turbo.RuntimeDependencies) != 1 || turbo.RuntimeDependencies[0] != "nodejs" {
 		t.Errorf("RuntimeDependencies = %v, want [nodejs]", turbo.RuntimeDependencies)
+	}
+}
+
+// Multi-version state tests
+
+func TestStateManager_MigrateSingleVersionToMultiVersion(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write state.json in old format (single version field)
+	oldStateJSON := `{
+  "installed": {
+    "kubectl": {
+      "version": "1.29.0",
+      "is_explicit": true,
+      "required_by": [],
+      "binaries": ["kubectl"]
+    }
+  }
+}`
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(oldStateJSON), 0644); err != nil {
+		t.Fatalf("failed to write old state: %v", err)
+	}
+
+	// Load should migrate to new format
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	kubectl, ok := state.Installed["kubectl"]
+	if !ok {
+		t.Fatal("kubectl not found in loaded state")
+	}
+
+	// Verify migration: Version preserved for backward compat, ActiveVersion set
+	if kubectl.Version != "1.29.0" {
+		t.Errorf("Version = %q, want 1.29.0 (preserved for backward compat)", kubectl.Version)
+	}
+	if kubectl.ActiveVersion != "1.29.0" {
+		t.Errorf("ActiveVersion = %q, want 1.29.0", kubectl.ActiveVersion)
+	}
+
+	// Verify Versions map created
+	if len(kubectl.Versions) != 1 {
+		t.Fatalf("Versions count = %d, want 1", len(kubectl.Versions))
+	}
+	vs, exists := kubectl.Versions["1.29.0"]
+	if !exists {
+		t.Fatal("version 1.29.0 not found in Versions map")
+	}
+	if len(vs.Binaries) != 1 || vs.Binaries[0] != "kubectl" {
+		t.Errorf("VersionState.Binaries = %v, want [kubectl]", vs.Binaries)
+	}
+
+	// Verify other fields preserved
+	if !kubectl.IsExplicit {
+		t.Error("IsExplicit = false, want true")
+	}
+}
+
+func TestStateManager_NoMigrationForNewFormat(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write state.json in new format (already migrated)
+	newStateJSON := `{
+  "installed": {
+    "kubectl": {
+      "active_version": "1.29.0",
+      "versions": {
+        "1.29.0": {"requested": "@lts", "binaries": ["kubectl"]}
+      },
+      "is_explicit": true,
+      "required_by": []
+    }
+  }
+}`
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(newStateJSON), 0644); err != nil {
+		t.Fatalf("failed to write new state: %v", err)
+	}
+
+	// Load should NOT modify already-migrated state
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	kubectl := state.Installed["kubectl"]
+
+	// ActiveVersion should remain as-is
+	if kubectl.ActiveVersion != "1.29.0" {
+		t.Errorf("ActiveVersion = %q, want 1.29.0", kubectl.ActiveVersion)
+	}
+
+	// Versions map should preserve original data
+	vs := kubectl.Versions["1.29.0"]
+	if vs.Requested != "@lts" {
+		t.Errorf("Requested = %q, want @lts", vs.Requested)
+	}
+}
+
+func TestValidateVersionString_Valid(t *testing.T) {
+	validVersions := []string{
+		"1.0.0",
+		"17.0.12",
+		"21.0.5+9-LTS",
+		"3.12.0-rc1",
+		"v1.2.3",
+	}
+
+	for _, v := range validVersions {
+		t.Run(v, func(t *testing.T) {
+			err := ValidateVersionString(v)
+			if err != nil {
+				t.Errorf("ValidateVersionString(%q) = %v, want nil", v, err)
+			}
+		})
+	}
+}
+
+func TestValidateVersionString_PathTraversal(t *testing.T) {
+	tests := []struct {
+		version string
+		desc    string
+	}{
+		{"../etc/passwd", "path traversal with .."},
+		{"1.0.0/../2.0.0", "embedded path traversal"},
+		{"foo/bar", "forward slash"},
+		{"foo\\bar", "backslash"},
+		{"..\\windows\\system32", "backslash traversal"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.desc, func(t *testing.T) {
+			err := ValidateVersionString(tt.version)
+			if err == nil {
+				t.Errorf("ValidateVersionString(%q) = nil, want error", tt.version)
+			}
+		})
+	}
+}
+
+func TestStateManager_MultipleVersionsPerTool(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Install first version
+	err := sm.UpdateTool("liberica-jdk", func(ts *ToolState) {
+		ts.ActiveVersion = "17.0.12"
+		ts.Versions = map[string]VersionState{
+			"17.0.12": {Requested: "17", Binaries: []string{"java", "javac"}},
+		}
+		ts.IsExplicit = true
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Install second version (add to versions map, change active)
+	err = sm.UpdateTool("liberica-jdk", func(ts *ToolState) {
+		ts.ActiveVersion = "21.0.5"
+		ts.Versions["21.0.5"] = VersionState{Requested: "@lts", Binaries: []string{"java", "javac"}}
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Verify both versions exist
+	state, _ := sm.Load()
+	jdk := state.Installed["liberica-jdk"]
+
+	if jdk.ActiveVersion != "21.0.5" {
+		t.Errorf("ActiveVersion = %q, want 21.0.5", jdk.ActiveVersion)
+	}
+
+	if len(jdk.Versions) != 2 {
+		t.Fatalf("Versions count = %d, want 2", len(jdk.Versions))
+	}
+
+	// Check both versions have their metadata
+	v17 := jdk.Versions["17.0.12"]
+	if v17.Requested != "17" {
+		t.Errorf("v17.Requested = %q, want 17", v17.Requested)
+	}
+
+	v21 := jdk.Versions["21.0.5"]
+	if v21.Requested != "@lts" {
+		t.Errorf("v21.Requested = %q, want @lts", v21.Requested)
+	}
+}
+
+func TestStateManager_GetToolState(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Add a tool
+	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions = map[string]VersionState{
+			"1.29.0": {Requested: "", Binaries: []string{"kubectl"}},
+		}
+		ts.IsExplicit = true
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Get existing tool
+	toolState, err := sm.GetToolState("kubectl")
+	if err != nil {
+		t.Fatalf("GetToolState() error = %v", err)
+	}
+	switch {
+	case toolState == nil:
+		t.Fatal("GetToolState() returned nil for existing tool")
+	case toolState.ActiveVersion != "1.29.0":
+		t.Errorf("ActiveVersion = %q, want 1.29.0", toolState.ActiveVersion)
+	}
+
+	// Get non-existent tool
+	nonExistentState, err := sm.GetToolState("nonexistent")
+	if err != nil {
+		t.Fatalf("GetToolState() error = %v", err)
+	}
+	if nonExistentState != nil {
+		t.Error("GetToolState() should return nil for non-existent tool")
 	}
 }

@@ -5,20 +5,36 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 )
 
+// VersionState holds per-version metadata for an installed tool version.
+type VersionState struct {
+	Requested   string    `json:"requested"`          // What user asked for ("17", "@lts", "")
+	Binaries    []string  `json:"binaries,omitempty"` // Binary names this version provides
+	InstalledAt time.Time `json:"installed_at"`       // When this version was installed
+}
+
 // ToolState represents the state of an installed tool
 type ToolState struct {
-	Version               string   `json:"version"`
+	// ActiveVersion is the currently symlinked version (new multi-version field)
+	ActiveVersion string `json:"active_version,omitempty"`
+	// Versions contains all installed versions for this tool (new multi-version field)
+	Versions map[string]VersionState `json:"versions,omitempty"`
+
+	// Version is deprecated: use ActiveVersion instead. Kept for migration from old state files.
+	Version string `json:"version,omitempty"`
+
 	IsExplicit            bool     `json:"is_explicit"`                    // User requested this tool directly
 	RequiredBy            []string `json:"required_by"`                    // Tools that depend on this tool
 	IsHidden              bool     `json:"is_hidden"`                      // Hidden from PATH and default list output
 	IsExecutionDependency bool     `json:"is_execution_dependency"`        // Installed by tsuku for internal use (npm, Python, cargo)
 	InstalledVia          string   `json:"installed_via,omitempty"`        // Package manager used to install (npm, pip, cargo, etc.)
-	Binaries              []string `json:"binaries,omitempty"`             // List of binary names this tool provides
+	Binaries              []string `json:"binaries,omitempty"`             // List of binary names this tool provides (deprecated: use Versions[v].Binaries)
 	InstallDependencies   []string `json:"install_dependencies,omitempty"` // Dependencies needed during installation
 	RuntimeDependencies   []string `json:"runtime_dependencies,omitempty"` // Dependencies needed when the tool runs
 }
@@ -82,6 +98,9 @@ func (sm *StateManager) Load() (*State, error) {
 	if state.Libs == nil {
 		state.Libs = make(map[string]map[string]LibraryVersionState)
 	}
+
+	// Migrate old single-version format to new multi-version format
+	state.migrateToMultiVersion()
 
 	return &state, nil
 }
@@ -258,4 +277,43 @@ func (sm *StateManager) GetToolState(name string) (*ToolState, error) {
 	}
 
 	return &toolState, nil
+}
+
+// ValidateVersionString validates a version string to prevent path traversal attacks.
+// Returns an error if the version contains characters that could be used for path traversal.
+func ValidateVersionString(version string) error {
+	if strings.Contains(version, "..") {
+		return fmt.Errorf("invalid version string: contains '..'")
+	}
+	if strings.Contains(version, "/") {
+		return fmt.Errorf("invalid version string: contains '/'")
+	}
+	if strings.Contains(version, "\\") {
+		return fmt.Errorf("invalid version string: contains '\\'")
+	}
+	return nil
+}
+
+// migrateToMultiVersion migrates old single-version state entries to the new multi-version format.
+// Old format: ToolState.Version = "1.0.0", ToolState.Binaries = ["foo"]
+// New format: ToolState.ActiveVersion = "1.0.0", ToolState.Versions = {"1.0.0": {Binaries: ["foo"], ...}}
+func (s *State) migrateToMultiVersion() {
+	for name, tool := range s.Installed {
+		// Detect old format: has Version but no ActiveVersion
+		if tool.Version != "" && tool.ActiveVersion == "" {
+			// Migrate to new format
+			tool.ActiveVersion = tool.Version
+			tool.Versions = map[string]VersionState{
+				tool.Version: {
+					Requested:   "",            // Unknown for migrated entries
+					Binaries:    tool.Binaries, // Copy binaries to version state
+					InstalledAt: time.Now(),    // Best effort timestamp
+				},
+			}
+			// Keep tool.Version and tool.Binaries for backward compat
+			// Later issues will update callers to use ActiveVersion, then Version can be cleared
+
+			s.Installed[name] = tool
+		}
+	}
 }
