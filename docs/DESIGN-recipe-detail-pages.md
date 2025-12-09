@@ -21,7 +21,7 @@ Users can discover dependency information through the CLI:
 - `tsuku install <tool>` shows dependencies being installed as they happen
 - No pre-installation preview of what will be installed
 
-The website shows a searchable grid of tools with name, description, and homepage link only.
+The website shows a searchable grid of tools with name, description, and homepage link only. **The grid already requires JavaScript** - it fetches `recipes.json` and renders cards client-side, with a `<noscript>` fallback linking to GitHub.
 
 ### Scope
 
@@ -30,7 +30,6 @@ The website shows a searchable grid of tools with name, description, and homepag
 - Display of install dependencies (runtime and build-time)
 - Visual representation of dependency relationships
 - Navigation between recipe grid and detail pages
-- Progressive enhancement (core content accessible without JavaScript)
 
 **Out of scope:**
 - Version history or changelog
@@ -43,16 +42,15 @@ The website shows a searchable grid of tools with name, description, and homepag
 
 1. **Dependency data exists**: Recipe TOML files already include `dependencies` and `runtime_dependencies` fields where applicable.
 2. **No circular dependencies**: The dependency graph is acyclic. (Verified: tsuku's dependency resolution validates this at build time.)
-3. **Same deployment pipeline**: Website and registry can share a build step or trigger rebuilds together.
-4. **Sparse dependencies**: Most recipes (pre-built binaries) have zero dependencies. This feature primarily benefits language-ecosystem tools (Ruby gems, Python packages, Rust crates).
+3. **Sparse dependencies**: Most recipes (pre-built binaries) have zero dependencies. This feature primarily benefits language-ecosystem tools (Ruby gems, Python packages, Rust crates).
+4. **JavaScript is acceptable**: The existing recipe browser already requires JavaScript; detail views can follow the same pattern.
 
 ## Decision Drivers
 
-- **Static site architecture**: No build step beyond JSON generation; pages served as static HTML
-- **Progressive enhancement**: Core content must be accessible without JavaScript
+- **Architectural consistency**: Solution should match existing patterns (client-side rendering from JSON)
+- **Minimal complexity**: Avoid adding build steps or generated files
 - **Dependency visibility**: Users should understand prerequisites before installing
-- **URL stability**: Detail page URLs should be predictable and permanent
-- **Minimal complexity**: Solution should integrate with existing vanilla JS patterns
+- **URL stability**: Detail page URLs should be predictable and shareable
 - **Schema evolution**: Solution must handle recipes with or without dependency data
 
 ## Implementation Context
@@ -63,6 +61,7 @@ The website shows a searchable grid of tools with name, description, and homepag
 - Client-side fetches `https://registry.tsuku.dev/recipes.json`
 - Vanilla JavaScript renders recipe cards using safe DOM APIs
 - Debounced search filters in-memory array
+- `<noscript>` fallback links to GitHub
 - No build step - static HTML with inline script
 
 **Current JSON schema** (v1.0.0):
@@ -93,11 +92,10 @@ The website shows a searchable grid of tools with name, description, and homepag
 - All external links use `target="_blank" rel="noopener noreferrer"`
 - Validate URLs are HTTPS before rendering
 - Match existing dark theme CSS variables
-- No build step - static files only
 
 ## Considered Options
 
-This design involves three independent decisions:
+This design involves two independent decisions:
 
 ### Decision 1: Page Generation Strategy
 
@@ -108,15 +106,14 @@ How should individual recipe detail pages be created and served?
 Generate individual `recipes/<tool>/index.html` files during the registry build step.
 
 **Pros:**
-- Pages work without JavaScript (true progressive enhancement)
+- Pages work without JavaScript
 - SEO-friendly: search engines can index individual tool pages
 - Fast initial render - no fetch required
-- URL structure is guaranteed stable (real files)
 
 **Cons:**
 - Requires build step changes (Python script modifications)
-- Site deployment depends on recipe registry build
 - 267+ HTML files to generate and deploy
+- Inconsistent with existing architecture (grid is client-rendered)
 - Updating page template requires full rebuild
 
 #### Option 1B: Single-Page with History API Routing
@@ -126,28 +123,13 @@ One HTML page at `/recipes/index.html` handles both grid and detail views using 
 **Pros:**
 - No build step changes - pure JavaScript solution
 - Recipe data already fetched; navigation between grid and detail is instant
+- Consistent with existing client-side rendering pattern
 - Simple deployment - one HTML file plus Cloudflare Pages catch-all redirect
 
 **Cons:**
-- Requires JavaScript for detail views (fails progressive enhancement)
+- Requires JavaScript (but grid already requires it)
 - Requires catch-all redirect: `/recipes/*` → `/recipes/index.html`
-- More JavaScript complexity for routing logic
-- Direct links work but show loading state before content
-
-#### Option 1C: Dynamic HTML Template with URL Rewriting
-
-Single template file serves all `/recipes/<tool>/` URLs via Cloudflare Pages Functions or redirects.
-
-**Pros:**
-- Clean URL structure
-- Single template to maintain
-- No build of 267+ files
-
-**Cons:**
-- Cloudflare Pages Functions add complexity (separate deployment)
-- Redirect-based approaches break direct linking
-- Template still needs JavaScript to fetch tool-specific data
-- Adds runtime dependency on Cloudflare infrastructure
+- Direct links show brief loading state before content
 
 ### Decision 2: Dependency Data Location
 
@@ -160,12 +142,10 @@ Add `dependencies` and `runtime_dependencies` arrays to each recipe object in re
 **Pros:**
 - Single fetch gets all data needed for detail pages
 - Consistent with existing data flow
-- Dependencies visible in same JSON used by grid
 - Simple schema change (additive, backwards compatible)
 
 **Cons:**
-- Larger JSON payload (~20% increase estimated)
-- All dependency data loaded even for grid view
+- Larger JSON payload (~10% increase estimated)
 - Requires `generate-registry.py` changes
 
 #### Option 2B: Separate Dependencies JSON
@@ -175,166 +155,84 @@ Create a new `dependencies.json` file with dependency data only.
 **Pros:**
 - Grid page continues to use lean recipes.json
 - Dependency data fetched only when needed
-- Clear separation of concerns
 
 **Cons:**
-- Two fetches for detail pages (recipes + dependencies)
+- Two fetches for detail pages
 - More complex data joining in JavaScript
 - Two files to keep in sync
-- More build script complexity
-
-*Note: A third option (inline dependencies in HTML) was considered but is really an implementation detail of Option 1A rather than a separate architectural choice. If 1A is chosen, dependency data would naturally be embedded in the generated HTML.*
-
-### Decision 3: Dependency Visualization
-
-How should dependencies be visually represented on detail pages?
-
-#### Option 3A: Simple List
-
-Display dependencies as a bulleted list, grouped by type (install vs runtime).
-
-**Pros:**
-- Simple to implement
-- Works well without JavaScript
-- Clear and scannable
-- Accessible by default
-
-**Cons:**
-- Doesn't show transitive dependencies
-- No visual hierarchy
-- Less engaging than graphical display
-
-#### Option 3B: Interactive Tree Diagram
-
-Use JavaScript to render an expandable tree showing dependency chains.
-
-**Pros:**
-- Shows full dependency graph including transitives
-- Visually engaging
-- Collapsible for complex chains
-
-**Cons:**
-- Requires JavaScript
-- Complex to implement well
-- May be overkill for typical 1-2 dependency chains
-- Accessibility concerns with interactive trees
-
-#### Option 3C: Static Nested List
-
-Show dependencies with their own dependencies as nested sublists.
-
-**Pros:**
-- Shows transitive dependencies without JavaScript
-- Works with screen readers
-- Moderate implementation complexity
-
-**Cons:**
-- Requires pre-computing transitive dependencies
-- Deep nesting may be visually confusing
-- Need to handle circular dependencies
 
 ### Option Evaluation Matrix
 
-| Decision | Driver: No Build Step | Driver: Works without JS | Driver: URL Stability | Driver: Minimal Complexity |
-|----------|----------------------|--------------------------|----------------------|---------------------------|
-| 1A: Static HTML | Poor | Good | Good | Fair |
-| 1B: SPA + History API | Good | Poor | Good | Fair |
-| 1C: Dynamic Template | Poor | Poor | Good | Poor |
-| 2A: Extend JSON | Good | N/A | N/A | Good |
-| 2B: Separate JSON | Good | N/A | N/A | Poor |
-| 3A: Simple List | Good | Good | N/A | Good |
-| 3B: Tree Diagram | Good | Poor | N/A | Poor |
-| 3C: Nested List | Fair | Good | N/A | Fair |
-
-### Uncertainties
-
-- Performance impact of larger recipes.json on slow connections not measured (current JSON is ~50KB; adding dependencies would add ~5KB estimated)
-- Whether users value transitive dependency visibility or just immediate dependencies
+| Decision | Driver: Consistency | Driver: Minimal Complexity | Driver: URL Stability |
+|----------|---------------------|---------------------------|----------------------|
+| 1A: Static HTML | Poor | Poor | Good |
+| 1B: SPA + History API | Good | Good | Good |
+| 2A: Extend JSON | Good | Good | N/A |
+| 2B: Separate JSON | Fair | Poor | N/A |
 
 ## Decision Outcome
 
-**Chosen: 1A + 2A + 3A**
+**Chosen: 1B + 2A**
 
 ### Summary
 
-Generate static HTML detail pages at build time with dependency data embedded in an extended recipes.json schema. Display dependencies as simple grouped lists (install vs runtime).
+Use client-side routing with the History API to render detail views from the same `recipes.json` data, extended with dependency information. No static HTML generation.
 
 ### Rationale
 
-This combination prioritizes **progressive enhancement** and **URL stability** - the two most important drivers for a documentation-style website intended to help users make informed decisions before installation.
+This combination prioritizes **architectural consistency** and **minimal complexity** - the recipe browser already uses client-side rendering, so detail pages should follow the same pattern.
 
-**Decision 1: Static HTML Pages (1A)** was chosen because:
-- Detail pages work without JavaScript, critical for users researching tools in constrained environments
-- Clean, permanent URLs (`/recipes/k9s/`) enable direct linking from documentation, blog posts, and other resources
-- SEO benefits allow search engines to index individual tool pages
-- The "build step" concern is minimal since `generate-registry.py` already exists and generates JSON; extending it to generate HTML is straightforward
+**Decision 1: SPA with History API (1B)** was chosen because:
+- Consistent with existing architecture - the grid is already client-rendered from JSON
+- No build step changes - keeps the static site simple
+- Instant navigation - data is already loaded, switching views is immediate
+- The "requires JavaScript" concern is moot since the grid already requires it
 
 **Decision 2: Extend recipes.json (2A)** was chosen because:
-- Single data source maintains consistency - the grid and detail pages always show the same data
-- Minimal payload increase (~5KB for 267 recipes with sparse dependency data)
-- Backwards compatible schema change - clients ignoring dependencies still work
-- Simpler than maintaining separate JSON files
-
-**Decision 3: Simple List (3A)** was chosen because:
-- Most recipes have zero or 1-2 direct dependencies - elaborate visualization would be over-engineered
-- Works without JavaScript, maintaining progressive enhancement
-- Accessible by default (screen readers handle lists well)
-- Can be enhanced later if transitive dependency visualization proves valuable
+- Single data source - one fetch powers both grid and detail views
+- Minimal payload increase (~5KB for dependency arrays)
+- Backwards compatible - clients ignoring new fields still work
 
 ### Alternatives Rejected
 
-- **Option 1B (SPA routing)**: Fails progressive enhancement - users without JavaScript see nothing
-- **Option 1C (Dynamic template)**: Adds infrastructure complexity (Cloudflare Functions) for no additional benefit
-- **Option 2B (Separate JSON)**: Extra complexity for marginal payload savings; complicates caching strategy
-- **Option 3B (Tree diagram)**: Over-engineered for typical 0-2 dependency scenarios; fails progressive enhancement
-- **Option 3C (Nested list)**: Adds complexity for transitive deps that most users don't need
+- **Option 1A (Static HTML)**: Adds build complexity and 267+ generated files for marginal benefit (SEO for individual recipes is not valuable). Creates architectural inconsistency - grid is client-rendered but details would be static.
+- **Option 2B (Separate JSON)**: Extra complexity for marginal payload savings; requires coordination between two files.
 
 ### Trade-offs Accepted
 
-By choosing static generation with simple lists, we accept:
+1. **No SEO for individual recipes**: Search engines won't index `/recipes/k9s/`. This is acceptable because users search for "tsuku" not "tsuku k9s recipe".
 
-1. **Build step dependency**: Detail pages update only when `generate-registry.py` runs. This is acceptable because:
-   - Recipes change infrequently (weekly at most)
-   - The build already runs on recipe changes
-   - Stale data by hours/days is acceptable for documentation content
+2. **Brief loading state on direct links**: Users navigating directly to `/recipes/k9s/` see a loading spinner while JSON fetches. This matches the existing grid behavior and is acceptable for a developer tools site.
 
-2. **No transitive dependency display**: Users see only direct dependencies. This is acceptable because:
-   - Direct dependencies are the actionable information ("install these first")
-   - Transitive deps can be explored by clicking through to dependency pages
-   - Most users don't care about full dependency graphs
-
-3. **Larger repository size**: 267+ HTML files add to repository. This is acceptable because:
-   - Each file is ~5KB = ~1.3MB total
-   - Files are generated, not hand-maintained
-   - Modern hosting (Cloudflare Pages) handles this trivially
+3. **Requires JavaScript**: Detail pages won't work without JS. This is acceptable because the grid already requires JS, and the `<noscript>` fallback (link to GitHub) covers users without JS.
 
 ## Solution Architecture
 
 ### Overview
 
-The solution extends the existing registry generation script to produce both JSON data and static HTML detail pages. Detail pages are self-contained HTML files with embedded recipe data.
+The solution extends the existing recipe browser page to handle both grid and detail views via client-side routing. The same `recipes.json` powers both views.
 
 ```
-Recipe TOML Files
-       │
-       ▼
-┌─────────────────────────────┐
-│  generate-registry.py       │
-│  (extended script)          │
-└─────────────────────────────┘
-       │
-       ├──────────────────────┐
-       ▼                      ▼
-┌─────────────────┐    ┌─────────────────────────┐
-│ recipes.json    │    │ recipes/<tool>/         │
-│ (extended)      │    │ index.html (×267+)      │
-└─────────────────┘    └─────────────────────────┘
-       │                      │
-       ▼                      ▼
-┌─────────────────┐    ┌─────────────────────────┐
-│ /recipes/       │    │ /recipes/k9s/           │
-│ Grid view       │    │ Detail page             │
-└─────────────────┘    └─────────────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  recipes/index.html                                 │
+│  (single page, handles grid + detail views)         │
+└─────────────────────────────────────────────────────┘
+                        │
+                        │ fetch()
+                        ▼
+┌─────────────────────────────────────────────────────┐
+│  registry.tsuku.dev/recipes.json (extended)         │
+│  { recipes: [{ name, description, homepage,         │
+│               dependencies, runtime_dependencies }] │
+└─────────────────────────────────────────────────────┘
+                        │
+          ┌─────────────┴─────────────┐
+          ▼                           ▼
+┌─────────────────────┐     ┌─────────────────────┐
+│  Grid View          │     │  Detail View        │
+│  /recipes/          │     │  /recipes/k9s/      │
+│  (search + cards)   │     │  (deps + install)   │
+└─────────────────────┘     └─────────────────────┘
 ```
 
 ### Components
@@ -366,135 +264,144 @@ Recipe TOML Files
 - New optional fields: `dependencies` (array of strings), `runtime_dependencies` (array of strings)
 - Both default to empty array if not present in TOML
 
-#### 2. Static HTML Detail Page Template
+#### 2. Client-Side Router
 
-Each detail page at `recipes/<tool>/index.html` contains:
+JavaScript in `recipes/index.html` handles URL routing:
 
-```html
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{description} - Install with tsuku">
-    <title>{name} - tsuku</title>
-    <link rel="stylesheet" href="/assets/style.css">
-</head>
-<body>
-    <header><!-- standard nav --></header>
-    <main>
-        <section class="recipe-detail">
-            <h1>{name}</h1>
-            <p class="description">{description}</p>
-            <p class="homepage">
-                <a href="{homepage}" target="_blank" rel="noopener noreferrer">
-                    Official Homepage
-                </a>
-            </p>
+```javascript
+// Determine view from URL
+function getViewFromURL() {
+    const path = window.location.pathname;
+    const match = path.match(/^\/recipes\/([a-z0-9-]+)\/?$/);
+    if (match) {
+        return { view: 'detail', recipe: match[1] };
+    }
+    return { view: 'grid' };
+}
 
-            <h2>Install</h2>
-            <div class="code-block">
-                <pre>tsuku install {name}</pre>
-            </div>
+// Navigate between views
+function navigateTo(path) {
+    history.pushState(null, '', path);
+    renderCurrentView();
+}
 
-            <!-- Only shown if dependencies exist -->
-            <section class="dependencies">
-                <h2>Dependencies</h2>
-
-                <!-- Install dependencies -->
-                <h3>Required to Install</h3>
-                <ul>
-                    <li><a href="/recipes/ruby/">ruby</a></li>
-                    <li><a href="/recipes/zig/">zig</a></li>
-                </ul>
-
-                <!-- Runtime dependencies (if any) -->
-                <h3>Required at Runtime</h3>
-                <p>None</p>
-            </section>
-        </section>
-
-        <section class="links">
-            <a href="/recipes/" class="link-btn">Back to Recipes</a>
-        </section>
-    </main>
-    <footer><!-- standard footer --></footer>
-</body>
-</html>
+// Handle browser back/forward
+window.addEventListener('popstate', renderCurrentView);
 ```
 
-#### 3. Recipe Grid Navigation
+#### 3. Detail View Renderer
 
-Update `recipes/index.html` recipe cards to link to detail pages:
+```javascript
+function renderDetailView(recipeName) {
+    const recipe = allRecipes.find(r => r.name === recipeName);
+    if (!recipe) {
+        render404();
+        return;
+    }
 
-```html
-<article class="recipe-card">
-    <h3 class="recipe-name">
-        <a href="/recipes/k9s/">k9s</a>
-    </h3>
-    <p class="recipe-description">Kubernetes CLI and TUI</p>
-    <a class="recipe-homepage" href="https://k9scli.io/"
-       target="_blank" rel="noopener noreferrer">Homepage</a>
-</article>
+    const detail = document.createElement('section');
+    detail.className = 'recipe-detail';
+
+    // Recipe name
+    const h1 = document.createElement('h1');
+    h1.textContent = recipe.name;
+    detail.appendChild(h1);
+
+    // Description
+    const desc = document.createElement('p');
+    desc.className = 'description';
+    desc.textContent = recipe.description;
+    detail.appendChild(desc);
+
+    // Homepage link
+    const homepage = document.createElement('p');
+    const link = document.createElement('a');
+    link.href = recipe.homepage;
+    link.textContent = 'Official Homepage';
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    homepage.appendChild(link);
+    detail.appendChild(homepage);
+
+    // Install command
+    renderInstallCommand(detail, recipe.name);
+
+    // Dependencies (if any)
+    if (recipe.dependencies?.length || recipe.runtime_dependencies?.length) {
+        renderDependencies(detail, recipe);
+    }
+
+    // Back link
+    const back = document.createElement('a');
+    back.href = '/recipes/';
+    back.className = 'link-btn';
+    back.textContent = 'Back to Recipes';
+    back.addEventListener('click', (e) => {
+        e.preventDefault();
+        navigateTo('/recipes/');
+    });
+    detail.appendChild(back);
+
+    container.appendChild(detail);
+}
 ```
+
+#### 4. Cloudflare Pages Redirect
+
+Add to `_redirects`:
+```
+/recipes/*  /recipes/index.html  200
+```
+
+This ensures direct navigation to `/recipes/k9s/` serves the SPA, which then renders the correct view.
 
 ### Data Flow
 
-1. **Build time** (`generate-registry.py`):
-   - Read all `recipes/*/*.toml` files
-   - Extract metadata including `dependencies` and `runtime_dependencies`
-   - Write `_site/recipes.json` with extended schema
-   - For each recipe, render `_site/recipes/<name>/index.html` from template
+1. **Page load** (any `/recipes/*` URL):
+   - HTML page loads with skeleton UI
+   - JavaScript fetches `recipes.json`
+   - Router determines view from URL
+   - Appropriate view renders (grid or detail)
 
-2. **Grid page load** (`/recipes/`):
-   - Fetch recipes.json (unchanged behavior)
-   - Render cards with links to `/recipes/<name>/`
-   - Dependency data in JSON ignored by grid (backwards compatible)
+2. **Grid to detail navigation**:
+   - User clicks recipe card
+   - `navigateTo('/recipes/<name>/')` called
+   - History API updates URL without page reload
+   - Detail view renders instantly (data already loaded)
 
-3. **Detail page load** (`/recipes/<name>/`):
-   - Static HTML served directly by Cloudflare Pages
-   - No JavaScript required for core content
-   - Links to dependency pages are just `<a href="/recipes/dep/">`
+3. **Detail to grid navigation**:
+   - User clicks "Back to Recipes"
+   - `navigateTo('/recipes/')` called
+   - Grid view renders instantly
+
+4. **Direct link to detail**:
+   - User navigates to `/recipes/k9s/`
+   - Cloudflare redirect serves `index.html`
+   - JSON fetches, router sees detail view
+   - Detail renders after brief loading state
 
 ### Key Interfaces
 
-**Template variables for HTML generation:**
-
-| Variable | Source | Example |
-|----------|--------|---------|
-| `{name}` | `metadata.name` | `jekyll` |
-| `{description}` | `metadata.description` | `Static site generator...` |
-| `{homepage}` | `metadata.homepage` | `https://jekyllrb.com/` |
-| `{dependencies}` | `metadata.dependencies` | `["ruby", "zig"]` |
-| `{runtime_dependencies}` | `metadata.runtime_dependencies` | `[]` |
-
-**File output structure:**
-
+**Recipe object (extended):**
+```typescript
+interface Recipe {
+    name: string;
+    description: string;
+    homepage: string;
+    dependencies?: string[];
+    runtime_dependencies?: string[];
+}
 ```
-_site/
-├── recipes.json           # Extended JSON with dependencies
-└── recipes/
-    ├── index.html         # Grid page (existing, modified)
-    ├── actionlint/
-    │   └── index.html     # Detail page
-    ├── k9s/
-    │   └── index.html
-    └── jekyll/
-        └── index.html
+
+**Router state:**
+```typescript
+type View =
+    | { view: 'grid' }
+    | { view: 'detail', recipe: string }
+    | { view: '404' };
 ```
 
 ## Implementation Approach
-
-### Phase 0: Deployment Strategy
-
-Clarify where generated files live and how they deploy:
-
-1. HTML detail pages generate to `_site/recipes/<name>/index.html` (same location as recipes.json)
-2. Update `deploy-website.yml` to copy `_site/recipes/` to website deployment
-3. Both grid and detail pages will be on `tsuku.dev` (same domain)
-4. `recipes.json` continues to be served from `registry.tsuku.dev` for backwards compatibility
-
-**Deliverable:** Deployment workflow updated
 
 ### Phase 1: Extend JSON Schema
 
@@ -503,79 +410,85 @@ Clarify where generated files live and how they deploy:
 3. Add validation: each dependency references an existing recipe (prevents broken links)
 4. Update JSON output to include these fields (empty arrays if not present)
 5. Bump `schema_version` to "1.1.0"
-6. Verify existing recipe browser still works (backwards compatibility)
 
 **Deliverable:** Extended recipes.json with dependency data
 
-### Phase 2: Create HTML Generation
+### Phase 2: Add Client-Side Router
 
-1. Add HTML template string to `generate-registry.py`
-2. Implement template rendering with safe escaping
-3. Generate `_site/recipes/<name>/index.html` for each recipe
-4. Handle dependency section conditionally (hide if no deps)
+1. Implement `getViewFromURL()` to parse current path
+2. Implement `navigateTo()` using History API
+3. Add `popstate` listener for browser navigation
+4. Add `renderCurrentView()` dispatcher
 
-**Deliverable:** Static HTML detail pages generated
+**Deliverable:** URL-based view switching works
 
-### Phase 3: Style Detail Pages
+### Phase 3: Implement Detail View
 
-1. Add CSS for `.recipe-detail` component to `style.css`
-2. Style dependency lists (grouped by type)
-3. Ensure responsive layout at mobile breakpoints
-4. Match existing dark theme aesthetic
+1. Create `renderDetailView(recipeName)` function
+2. Render recipe metadata (name, description, homepage)
+3. Render install command with copy button
+4. Render dependency lists (grouped by type)
+5. Add back navigation link
+6. Handle 404 for unknown recipes
 
-**Deliverable:** Styled detail pages
+**Deliverable:** Detail view renders correctly
 
 ### Phase 4: Update Grid Navigation
 
-1. Modify `recipes/index.html` JavaScript to render card names as links
-2. Update card hover states for clickable cards
+1. Modify recipe cards to use `navigateTo()` instead of href
+2. Update card structure to be clickable
 3. Maintain existing search/filter functionality
 
-**Deliverable:** Grid cards link to detail pages
+**Deliverable:** Grid cards navigate to detail views
 
-### Phase 5: Deployment Integration
+### Phase 5: Add Redirect Rule
 
-1. Update GitHub Actions workflow to copy generated HTML to deployment
-2. Verify Cloudflare Pages serves `/recipes/<name>/` correctly
-3. Test direct URL access and navigation
+1. Add `/recipes/*` redirect to `_redirects`
+2. Test direct URL navigation
+3. Verify browser back/forward works
 
-**Deliverable:** End-to-end flow working in production
+**Deliverable:** Direct links work correctly
+
+### Phase 6: Style Detail Pages
+
+1. Add CSS for `.recipe-detail` component
+2. Style dependency lists
+3. Ensure responsive layout
+4. Match existing dark theme
+
+**Deliverable:** Polished detail view styling
 
 ## Consequences
 
 ### Positive
 
 - **Dependency visibility**: Users can see all prerequisites before installing
-- **Direct linking**: Tools can be referenced with permanent URLs
-- **SEO**: Search engines can index individual tool pages
-- **Progressive enhancement**: Core content works without JavaScript
-- **Consistent data**: Grid and detail pages share the same data source
+- **Direct linking**: Tools can be referenced with shareable URLs
+- **Architectural consistency**: Same client-rendering pattern as grid
+- **Instant navigation**: No page reloads when switching between views
+- **Simple deployment**: No generated files, just one HTML page
 
 ### Negative
 
-- **Build complexity**: Script now generates both JSON and HTML
-- **Repository size**: 267+ generated HTML files (~1.3MB)
-- **Template maintenance**: HTML template changes require regeneration
+- **No SEO**: Individual recipes not indexed by search engines
+- **Requires JavaScript**: No content without JS (but grid already requires it)
+- **Loading state on direct links**: Brief spinner before content appears
 
 ### Mitigations
 
-- **Build complexity**: Keep template simple; use Python's built-in string formatting
-- **Repository size**: Generated files go in `_site/` (excluded from main repo); only deployed to Cloudflare
-- **Template maintenance**: Template is inline in Python script; changes automatically propagate on next build
+- **SEO**: Not a priority - users search for "tsuku" not individual recipes
+- **JavaScript requirement**: Existing `<noscript>` fallback links to GitHub
+- **Loading state**: Minimal impact; same UX as current grid page
 
 ## Security Considerations
 
 ### Download Verification
 
-**Not applicable** - This feature does not download or execute binaries. It generates static HTML pages from trusted source data (recipe TOML files in the same repository) and displays metadata to users.
+**Not applicable** - This feature does not download or execute binaries. It displays metadata from `recipes.json`.
 
 ### Execution Isolation
 
-**Not applicable** - No code execution occurs beyond:
-1. Build-time Python script (already trusted, runs in GitHub Actions)
-2. Browser rendering of static HTML (standard web security model)
-
-The detail pages contain no JavaScript by design. The grid page's JavaScript is unchanged.
+**Not applicable** - Standard browser JavaScript execution with no elevated privileges.
 
 ### Supply Chain Risks
 
@@ -586,72 +499,25 @@ Recipe metadata originates from TOML files in the tsuku repository, controlled b
 2. Maintainer approval for recipe changes
 3. Automated validation in CI
 
-**Risk: Malicious recipe metadata could be embedded in HTML**
-
-If an attacker compromised the recipe repository and added malicious content to a recipe's `name`, `description`, or `homepage` field, this could be rendered in the detail pages.
+**Risk: Malicious recipe metadata could be rendered**
 
 | Attack Vector | Likelihood | Impact | Mitigation |
 |--------------|------------|--------|------------|
-| XSS via recipe name/description | Very Low | High | HTML escape all template variables |
+| XSS via recipe name/description | Very Low | High | Use `textContent`, never `innerHTML` |
 | Phishing via homepage URL | Very Low | Medium | Validate HTTPS-only; use `rel="noopener noreferrer"` |
-| Dependency link manipulation | Very Low | Low | Validate deps match NAME_PATTERN; link only to existing recipes |
-| Path traversal in dependency names | Very Low | Low | Validate each dependency name matches `^[a-z0-9-]+$` |
+| Dependency name injection | Very Low | Low | Validate deps match `^[a-z0-9-]+$` in generator |
 
-**Mitigations implemented:**
+**Mitigations:**
 
-1. **HTML escaping**: All template variables are escaped using Python's `html.escape()` before insertion
-2. **URL validation**: Homepage URLs validated as HTTPS during generation (existing check)
-3. **Dependency links**: Only link to dependencies that exist as recipes (prevent link injection)
-4. **No user input**: Detail pages have no forms, inputs, or user-controllable content
+1. **Safe DOM APIs**: All dynamic content rendered via `textContent`, `createElement`, `setAttribute` - never `innerHTML`
+2. **URL validation**: Homepage URLs validated as HTTPS during JSON generation
+3. **Dependency validation**: Generator validates dependency names match recipe name pattern
+4. **Link attributes**: All external links use `target="_blank" rel="noopener noreferrer"`
 
 ### User Data Exposure
 
-**Data accessed**: None. Detail pages are static HTML with no JavaScript accessing user data.
+**Data accessed**: None. The page displays public recipe metadata only.
 
-**Data transmitted**: Standard HTTP requests for page resources. No cookies, localStorage, or analytics on detail pages.
+**Data transmitted**: Standard HTTP request for `recipes.json`. No cookies, localStorage, or analytics.
 
-**Privacy implications**: None. The feature displays public recipe metadata only.
-
-### Additional Security Measures
-
-1. **Content Security Policy**: Add CSP header in `_headers` for detail pages:
-   ```
-   /recipes/*
-     Content-Security-Policy: default-src 'none'; style-src 'self'; img-src 'self'; script-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'none'
-   ```
-
-   Key directives:
-   - `default-src 'none'`: Deny all by default, whitelist what's needed
-   - `script-src 'none'`: Enforce "no JavaScript" design principle
-   - `frame-ancestors 'none'`: Prevent clickjacking via iframes
-   - `img-src 'self'`: Only allow images from tsuku.dev (detail pages have no external images)
-
-2. **Safe template rendering**: Use Python's `html.escape()` for all string interpolation
-   ```python
-   from html import escape
-   html = f"<h1>{escape(recipe['name'])}</h1>"
-   ```
-
-3. **Link validation**: Validate and generate dependency links safely:
-   ```python
-   # During validation phase
-   for dep in metadata.get("dependencies", []):
-       if not NAME_PATTERN.match(dep):
-           errors.append(f"invalid dependency name: {dep}")
-       if dep not in all_recipe_names:
-           errors.append(f"dependency does not exist: {dep}")
-
-   # During HTML generation (validation already passed)
-   from urllib.parse import quote
-   link = f'<a href="/recipes/{quote(escape(dep), safe="")}/">{escape(dep)}</a>'
-   ```
-
-4. **Dependency array validation**: Ensure dependencies are arrays, not objects:
-   ```python
-   if "dependencies" in metadata:
-       if not isinstance(metadata["dependencies"], list):
-           errors.append("dependencies must be an array")
-       if len(metadata["dependencies"]) > 50:  # Reasonable limit
-           errors.append("too many dependencies")
-   ```
-
+**Privacy implications**: None.
