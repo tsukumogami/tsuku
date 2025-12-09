@@ -23,12 +23,12 @@ None
 
 ## Implementation Steps
 
-- [ ] Create LockManager struct with configurable lock directory
-- [ ] Implement Acquire() to create lock file and acquire exclusive flock
-- [ ] Implement Lock struct with container metadata and Release() method
-- [ ] Add ListOrphaned() to find stale locks (for cleanup integration)
-- [ ] Write unit tests for basic lock/unlock operations
-- [ ] Write concurrent access tests using goroutines
+- [x] Create LockManager struct with configurable lock directory
+- [x] Implement Acquire() to create lock file and acquire exclusive flock
+- [x] Implement Lock struct with container metadata and Release() method
+- [x] Add ListLocks() and TryCleanupStale() for cleanup integration
+- [x] Write unit tests for basic lock/unlock operations
+- [x] Write concurrent access tests using goroutines
 
 ## Testing Strategy
 
@@ -48,11 +48,11 @@ None
 
 ## Success Criteria
 
-- [ ] LockManager creates lock files in `$TSUKU_HOME/validate/locks`
-- [ ] Uses flock for atomic lock acquisition
-- [ ] Lock file contains container ID for debugging
-- [ ] Lock released properly (both explicit and via Close)
-- [ ] Unit tests for concurrent access pass
+- [x] LockManager creates lock files in `$TSUKU_HOME/validate/locks`
+- [x] Uses flock for atomic lock acquisition
+- [x] Lock file contains container ID for debugging
+- [x] Lock released properly (both explicit and via Close)
+- [x] Unit tests for concurrent access pass
 
 ## Open Questions
 
