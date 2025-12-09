@@ -18,13 +18,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check for issue_work files
+      - name: Check for work artifacts
         run: |
-          if [ -d "issue_work" ] && [ "$(ls -A issue_work 2>/dev/null)" ]; then
-            echo "::error::issue_work/ contains intermediate work artifacts that should not be merged into main. Delete this folder before merging the Pull Request."
-            ls -la issue_work/
-            exit 1
-          fi
+          failed=0
+          for dir in issue_work wip; do
+            if [ -d "$dir" ] && [ "$(ls -A "$dir" 2>/dev/null)" ]; then
+              echo "::error::$dir/ contains intermediate work artifacts that should not be merged into main. Delete this folder before merging the Pull Request."
+              ls -la "$dir/"
+              failed=1
+            fi
+          done
+          exit $failed
 
   unit-tests:
     name: Unit Tests
