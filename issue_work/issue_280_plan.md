@@ -24,15 +24,15 @@ Leverage existing archive extraction patterns from `internal/actions/extract.go`
 
 ## Implementation Steps
 
-- [ ] Create `internal/llm/archive.go` with `InspectArchiveResult` type and `inspectArchive` implementation
-- [ ] Implement archive format detection from URL/Content-Type
-- [ ] Implement tar.gz extraction and file listing
-- [ ] Implement tar.xz extraction and file listing
-- [ ] Implement zip extraction and file listing
-- [ ] Add executable bit detection for listed files
-- [ ] Update `client.go` to use the new implementation
-- [ ] Create `archive_test.go` with unit tests using sample archives
-- [ ] Update existing stub test to use real implementation
+- [x] Create `internal/llm/archive.go` with `InspectArchiveResult` type and `inspectArchive` implementation
+- [x] Implement archive format detection from URL/Content-Type
+- [x] Implement tar.gz extraction and file listing
+- [x] Implement tar.xz extraction and file listing
+- [x] Implement zip extraction and file listing
+- [x] Add executable bit detection for listed files
+- [x] Update `client.go` to use the new implementation
+- [x] Create `archive_test.go` with unit tests using sample archives
+- [x] Update existing stub test to use real implementation
 
 ## Testing Strategy
 
@@ -53,13 +53,13 @@ Leverage existing archive extraction patterns from `internal/actions/extract.go`
 
 ## Success Criteria
 
-- [ ] `inspectArchive` downloads and extracts archives
-- [ ] Returns correct file listing with paths and sizes
-- [ ] Correctly detects executable files
-- [ ] Supports tar.gz, tar.xz, zip formats
-- [ ] Cleans up temp files after inspection
-- [ ] Unit tests pass
-- [ ] Existing tests continue to pass
+- [x] `inspectArchive` downloads and extracts archives
+- [x] Returns correct file listing with paths and sizes
+- [x] Correctly detects executable files
+- [x] Supports tar.gz, tar.xz, zip formats
+- [x] Cleans up temp files after inspection
+- [x] Unit tests pass
+- [x] Existing tests continue to pass
 
 ## Open Questions
 
