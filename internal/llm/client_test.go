@@ -112,26 +112,6 @@ func TestFetchFile_HTTPError(t *testing.T) {
 	}
 }
 
-func TestInspectArchive_Stub(t *testing.T) {
-	cleanup := setTestAPIKey(t, "test-key")
-	defer cleanup()
-
-	client, err := NewClient()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	// inspectArchive is a stub for Slice 1
-	result, err := client.inspectArchive(context.Background(), "https://example.com/archive.tar.gz")
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if result == "" {
-		t.Error("expected non-empty result from stub")
-	}
-}
-
 func TestBuildSystemPrompt(t *testing.T) {
 	prompt := buildSystemPrompt()
 	if prompt == "" {
