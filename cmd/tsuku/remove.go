@@ -12,17 +12,30 @@ import (
 )
 
 var removeCmd = &cobra.Command{
-	Use:   "remove <tool>",
+	Use:   "remove <tool>[@version]",
 	Short: "Remove an installed tool",
 	Long: `Remove a tool that was installed by tsuku.
 
+Without a version, removes all installed versions of the tool.
+With @version syntax, removes only the specified version.
+
 Examples:
-  tsuku remove kubectl
+  tsuku remove kubectl           # Remove all versions
+  tsuku remove kubectl@1.29.0    # Remove specific version
   tsuku remove terraform`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		toolName := args[0]
+		arg := args[0]
 		forceRemove, _ := cmd.Flags().GetBool("force")
+
+		// Parse tool@version syntax
+		toolName := arg
+		targetVersion := ""
+		if strings.Contains(arg, "@") {
+			parts := strings.SplitN(arg, "@", 2)
+			toolName = parts[0]
+			targetVersion = parts[1]
+		}
 
 		// Initialize telemetry
 		telemetryClient := telemetry.NewClient()
@@ -36,21 +49,12 @@ Examples:
 
 		mgr := install.New(cfg)
 
-		// Get version before removal for telemetry
-		var previousVersion string
-		tools, _ := mgr.List()
-		for _, tool := range tools {
-			if tool.Name == toolName {
-				previousVersion = tool.Version
-				break
-			}
-		}
-
-		// Check if tool is required by others
+		// Check if tool is required by others (only when removing all versions)
 		state, err := mgr.GetState().Load()
 		if err == nil {
 			if ts, ok := state.Installed[toolName]; ok {
-				if len(ts.RequiredBy) > 0 {
+				if len(ts.RequiredBy) > 0 && targetVersion == "" {
+					// Only warn when removing all versions
 					fmt.Fprintf(os.Stderr, "Warning: %s is required by: %s\n", toolName, strings.Join(ts.RequiredBy, ", "))
 					if !forceRemove {
 						fmt.Fprintf(os.Stderr, "Use --force to remove anyway.\n")
@@ -61,27 +65,41 @@ Examples:
 			}
 		}
 
-		if err := mgr.Remove(toolName); err != nil {
-			fmt.Fprintf(os.Stderr, "Failed to remove %s: %v\n", toolName, err)
+		// Get version for telemetry before removal
+		var removedVersion string
+		if targetVersion != "" {
+			removedVersion = targetVersion
+		} else if state != nil {
+			if ts, ok := state.Installed[toolName]; ok {
+				removedVersion = ts.ActiveVersion
+			}
+		}
+
+		// Perform removal
+		var removeErr error
+		if targetVersion != "" {
+			// Remove specific version
+			removeErr = mgr.RemoveVersion(toolName, targetVersion)
+		} else {
+			// Remove all versions
+			removeErr = mgr.RemoveAllVersions(toolName)
+		}
+
+		if removeErr != nil {
+			fmt.Fprintf(os.Stderr, "Failed to remove %s: %v\n", toolName, removeErr)
 			exitWithCode(ExitGeneral)
 		}
 
 		// Send telemetry event for successful removal
-		if telemetryClient != nil && previousVersion != "" {
-			event := telemetry.NewRemoveEvent(toolName, previousVersion)
+		if telemetryClient != nil && removedVersion != "" {
+			event := telemetry.NewRemoveEvent(toolName, removedVersion)
 			telemetryClient.Send(event)
 		}
 
-		// Remove this tool from dependencies' RequiredBy list
-		if state != nil {
-			if err := mgr.GetState().RemoveTool(toolName); err != nil {
-				printInfof("Warning: failed to remove tool from state: %v\n", err)
-			}
-
+		// Clean up dependency references (only when removing all versions)
+		if targetVersion == "" {
 			// We need to find which tools this tool depended on to clean up references
-			// But we just removed it, so we might have lost that info if we didn't load the recipe.
-			// Ideally, we should load the recipe before removing.
-			// For now, let's try to load the recipe.
+			// Load the recipe to get dependencies
 			if r, err := loader.Get(toolName); err == nil {
 				for _, dep := range r.Metadata.Dependencies {
 					if err := mgr.GetState().RemoveRequiredBy(dep, toolName); err != nil {
@@ -93,7 +111,11 @@ Examples:
 			}
 		}
 
-		printInfof("Removed %s\n", toolName)
+		if targetVersion != "" {
+			printInfof("Removed %s@%s\n", toolName, targetVersion)
+		} else {
+			printInfof("Removed %s (all versions)\n", toolName)
+		}
 	},
 }
 
