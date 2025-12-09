@@ -101,19 +101,19 @@ func (b *PyPIBuilder) CanBuild(ctx context.Context, packageName string) (bool, e
 }
 
 // Build generates a recipe for the package
-func (b *PyPIBuilder) Build(ctx context.Context, packageName string, version string) (*BuildResult, error) {
-	if !isValidPyPIPackageName(packageName) {
-		return nil, fmt.Errorf("invalid package name: %s", packageName)
+func (b *PyPIBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
+	if !isValidPyPIPackageName(req.Package) {
+		return nil, fmt.Errorf("invalid package name: %s", req.Package)
 	}
 
 	// Fetch package metadata from PyPI
-	pkgInfo, err := b.fetchPackageInfo(ctx, packageName)
+	pkgInfo, err := b.fetchPackageInfo(ctx, req.Package)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch package info: %w", err)
 	}
 
 	result := &BuildResult{
-		Source:   fmt.Sprintf("pypi:%s", packageName),
+		Source:   fmt.Sprintf("pypi:%s", req.Package),
 		Warnings: []string{},
 	}
 
@@ -139,7 +139,7 @@ func (b *PyPIBuilder) Build(ctx context.Context, packageName string, version str
 	// Build the recipe
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
-			Name:        packageName,
+			Name:        req.Package,
 			Description: pkgInfo.Info.Summary,
 			Homepage:    homepage,
 		},
@@ -150,7 +150,7 @@ func (b *PyPIBuilder) Build(ctx context.Context, packageName string, version str
 			{
 				Action: "pipx_install",
 				Params: map[string]interface{}{
-					"package":     packageName,
+					"package":     req.Package,
 					"executables": executables,
 				},
 			},

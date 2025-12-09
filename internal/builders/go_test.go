@@ -109,7 +109,7 @@ func TestGoBuilder_Build_SimpleModule(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "github.com/jesseduffield/lazygit", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "github.com/jesseduffield/lazygit"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -210,7 +210,7 @@ func TestGoBuilder_Build_CmdSubpath(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "github.com/golangci/golangci-lint/cmd/golangci-lint", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "github.com/golangci/golangci-lint/cmd/golangci-lint"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -244,7 +244,7 @@ func TestGoBuilder_Build_NonGitHubModule(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "mvdan.cc/gofumpt", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "mvdan.cc/gofumpt"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -264,7 +264,7 @@ func TestGoBuilder_Build_NotFound(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	_, err := builder.Build(ctx, "github.com/nonexistent/module", "")
+	_, err := builder.Build(ctx, BuildRequest{Package: "github.com/nonexistent/module"})
 	if err == nil {
 		t.Error("Build() should fail for nonexistent module")
 	}
@@ -279,7 +279,7 @@ func TestGoBuilder_Build_RateLimit(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	_, err := builder.Build(ctx, "github.com/jesseduffield/lazygit", "")
+	_, err := builder.Build(ctx, BuildRequest{Package: "github.com/jesseduffield/lazygit"})
 	if err == nil {
 		t.Error("Build() should fail on rate limit")
 	}
@@ -292,7 +292,7 @@ func TestGoBuilder_Build_InvalidModule(t *testing.T) {
 	builder := NewGoBuilder(nil)
 	ctx := context.Background()
 
-	_, err := builder.Build(ctx, "invalid;module", "")
+	_, err := builder.Build(ctx, BuildRequest{Package: "invalid;module"})
 	if err == nil {
 		t.Error("Build() should fail for invalid module path")
 	}

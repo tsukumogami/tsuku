@@ -105,7 +105,7 @@ func TestPyPIBuilder_Build(t *testing.T) {
 	ctx := context.Background()
 
 	t.Run("build ruff recipe", func(t *testing.T) {
-		result, err := builder.Build(ctx, "ruff", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "ruff"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -131,7 +131,7 @@ func TestPyPIBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("fallback to package name when no source URL", func(t *testing.T) {
-		result, err := builder.Build(ctx, "no-source", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "no-source"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -145,7 +145,7 @@ func TestPyPIBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("uses home_page when available", func(t *testing.T) {
-		result, err := builder.Build(ctx, "with-homepage", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "with-homepage"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -155,7 +155,7 @@ func TestPyPIBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("fallback homepage to Repository", func(t *testing.T) {
-		result, err := builder.Build(ctx, "repo-homepage", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "repo-homepage"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -165,7 +165,7 @@ func TestPyPIBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("fallback homepage to Source", func(t *testing.T) {
-		result, err := builder.Build(ctx, "source-homepage", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "source-homepage"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -175,7 +175,7 @@ func TestPyPIBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("discovers source from Source Code key", func(t *testing.T) {
-		result, err := builder.Build(ctx, "source-code-url", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "source-code-url"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -186,7 +186,7 @@ func TestPyPIBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("fallback when non-GitHub source URL", func(t *testing.T) {
-		result, err := builder.Build(ctx, "gitlab-source", "")
+		result, err := builder.Build(ctx, BuildRequest{Package: "gitlab-source"})
 		if err != nil {
 			t.Fatalf("Build() error = %v", err)
 		}
@@ -204,14 +204,14 @@ func TestPyPIBuilder_Build(t *testing.T) {
 	})
 
 	t.Run("invalid package name returns error", func(t *testing.T) {
-		_, err := builder.Build(ctx, "../invalid", "")
+		_, err := builder.Build(ctx, BuildRequest{Package: "../invalid"})
 		if err == nil {
 			t.Error("Build() should fail for invalid package name")
 		}
 	})
 
 	t.Run("not found returns error", func(t *testing.T) {
-		_, err := builder.Build(ctx, "nonexistent", "")
+		_, err := builder.Build(ctx, BuildRequest{Package: "nonexistent"})
 		if err == nil {
 			t.Error("Build() should fail for nonexistent package")
 		}

@@ -86,19 +86,19 @@ func (b *GemBuilder) CanBuild(ctx context.Context, packageName string) (bool, er
 }
 
 // Build generates a recipe for the gem
-func (b *GemBuilder) Build(ctx context.Context, packageName string, version string) (*BuildResult, error) {
-	if !isValidGemName(packageName) {
-		return nil, fmt.Errorf("invalid gem name: %s", packageName)
+func (b *GemBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
+	if !isValidGemName(req.Package) {
+		return nil, fmt.Errorf("invalid gem name: %s", req.Package)
 	}
 
 	// Fetch gem metadata from RubyGems
-	gemInfo, err := b.fetchGemInfo(ctx, packageName)
+	gemInfo, err := b.fetchGemInfo(ctx, req.Package)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch gem info: %w", err)
 	}
 
 	result := &BuildResult{
-		Source:   fmt.Sprintf("rubygems:%s", packageName),
+		Source:   fmt.Sprintf("rubygems:%s", req.Package),
 		Warnings: []string{},
 	}
 
@@ -109,7 +109,7 @@ func (b *GemBuilder) Build(ctx context.Context, packageName string, version stri
 	// Build the recipe
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
-			Name:        packageName,
+			Name:        req.Package,
 			Description: gemInfo.Info,
 			Homepage:    gemInfo.HomepageURI,
 		},
@@ -120,7 +120,7 @@ func (b *GemBuilder) Build(ctx context.Context, packageName string, version stri
 			{
 				Action: "gem_install",
 				Params: map[string]interface{}{
-					"gem":         packageName,
+					"gem":         req.Package,
 					"executables": executables,
 				},
 			},

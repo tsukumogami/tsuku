@@ -102,7 +102,7 @@ func TestGemBuilder_Build_WithGemspec(t *testing.T) {
 	builder := NewGemBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "jekyll", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "jekyll"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -167,7 +167,7 @@ func TestGemBuilder_Build_FallbackToGemName(t *testing.T) {
 	builder := NewGemBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "some-tool", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "some-tool"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -201,7 +201,7 @@ func TestGemBuilder_Build_NotFound(t *testing.T) {
 	builder := NewGemBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	_, err := builder.Build(ctx, "nonexistent", "")
+	_, err := builder.Build(ctx, BuildRequest{Package: "nonexistent"})
 	if err == nil {
 		t.Error("Build() should fail for nonexistent gem")
 	}

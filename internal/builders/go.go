@@ -81,37 +81,33 @@ func (b *GoBuilder) CanBuild(ctx context.Context, packageName string) (bool, err
 }
 
 // Build generates a recipe for the Go module
-func (b *GoBuilder) Build(ctx context.Context, packageName string, version string) (*BuildResult, error) {
-	if !isValidGoModule(packageName) {
-		return nil, fmt.Errorf("invalid Go module path: %s", packageName)
+func (b *GoBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
+	if !isValidGoModule(req.Package) {
+		return nil, fmt.Errorf("invalid Go module path: %s", req.Package)
 	}
 
 	// Validate module exists by fetching info from Go proxy
-	if _, err := b.fetchModuleInfo(ctx, packageName); err != nil {
+	if _, err := b.fetchModuleInfo(ctx, req.Package); err != nil {
 		return nil, fmt.Errorf("failed to fetch module info: %w", err)
 	}
 
 	result := &BuildResult{
-		Source:   fmt.Sprintf("goproxy:%s", packageName),
+		Source:   fmt.Sprintf("goproxy:%s", req.Package),
 		Warnings: []string{},
 	}
 
 	// Infer executable name from module path
-	executable, warning := inferGoExecutableName(packageName)
+	executable, warning := inferGoExecutableName(req.Package)
 	if warning != "" {
 		result.Warnings = append(result.Warnings, warning)
 	}
-
-	// Note: version parameter is currently unused - recipes use goproxy for dynamic
-	// version resolution. The moduleInfo.Version is available if needed in future.
-	_ = version
 
 	// Build the recipe
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
 			Name:         executable,
-			Description:  fmt.Sprintf("Go CLI tool from %s", packageName),
-			Homepage:     fmt.Sprintf("https://pkg.go.dev/%s", packageName),
+			Description:  fmt.Sprintf("Go CLI tool from %s", req.Package),
+			Homepage:     fmt.Sprintf("https://pkg.go.dev/%s", req.Package),
 			Dependencies: []string{"go"},
 		},
 		Version: recipe.VersionSection{
@@ -121,7 +117,7 @@ func (b *GoBuilder) Build(ctx context.Context, packageName string, version strin
 			{
 				Action: "go_install",
 				Params: map[string]interface{}{
-					"module":      packageName,
+					"module":      req.Package,
 					"executables": []string{executable},
 				},
 			},

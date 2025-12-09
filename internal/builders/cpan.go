@@ -85,9 +85,9 @@ func (b *CPANBuilder) CanBuild(ctx context.Context, packageName string) (bool, e
 }
 
 // Build generates a recipe for the CPAN distribution
-func (b *CPANBuilder) Build(ctx context.Context, packageName string, version string) (*BuildResult, error) {
+func (b *CPANBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
 	// Normalize module name to distribution name if needed
-	distribution := normalizeToDistribution(packageName)
+	distribution := normalizeToDistribution(req.Package)
 
 	if !isValidCPANDistribution(distribution) {
 		return nil, fmt.Errorf("invalid distribution name: %s", distribution)

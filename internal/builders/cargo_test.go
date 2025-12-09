@@ -130,7 +130,7 @@ path = "src/main.rs"
 	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "ripgrep", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "ripgrep"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -193,7 +193,7 @@ func TestCargoBuilder_Build_FallbackToPackageName(t *testing.T) {
 	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	result, err := builder.Build(ctx, "some-tool", "")
+	result, err := builder.Build(ctx, BuildRequest{Package: "some-tool"})
 	if err != nil {
 		t.Fatalf("Build() error = %v", err)
 	}
@@ -227,7 +227,7 @@ func TestCargoBuilder_Build_NotFound(t *testing.T) {
 	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	_, err := builder.Build(ctx, "nonexistent", "")
+	_, err := builder.Build(ctx, BuildRequest{Package: "nonexistent"})
 	if err == nil {
 		t.Error("Build() should fail for nonexistent crate")
 	}
