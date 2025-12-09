@@ -5,11 +5,15 @@ on:
     branches: [main]
     paths:
       - 'website/**'
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'scripts/generate-registry.py'
       - '.github/workflows/deploy-website.yml'
   pull_request:
     branches: [main]
     paths:
       - 'website/**'
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'scripts/generate-registry.py'
       - '.github/workflows/deploy-website.yml'
 
 jobs:
@@ -21,6 +25,17 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Generate recipes.json
+        run: |
+          cd internal/recipe
+          python3 ../../scripts/generate-registry.py
+          cp _site/recipes.json ../../website/
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/pages-action@v1
