@@ -16,14 +16,15 @@ import (
 
 // Executor executes action-based recipes
 type Executor struct {
-	workDir    string
-	installDir string
-	recipe     *recipe.Recipe
-	ctx        *actions.ExecutionContext
-	version    string   // Resolved version
-	reqVersion string   // Requested version (optional)
-	execPaths  []string // Additional bin paths for execution (e.g., nodejs for npm tools)
-	toolsDir   string   // Tools directory (~/.tsuku/tools/) for finding other installed tools
+	workDir          string
+	installDir       string
+	downloadCacheDir string // Download cache directory
+	recipe           *recipe.Recipe
+	ctx              *actions.ExecutionContext
+	version          string   // Resolved version
+	reqVersion       string   // Requested version (optional)
+	execPaths        []string // Additional bin paths for execution (e.g., nodejs for npm tools)
+	toolsDir         string   // Tools directory (~/.tsuku/tools/) for finding other installed tools
 }
 
 // New creates a new executor
@@ -57,6 +58,11 @@ func NewWithVersion(r *recipe.Recipe, version string) (*Executor, error) {
 	return exec, nil
 }
 
+// SetDownloadCacheDir sets the download cache directory
+func (e *Executor) SetDownloadCacheDir(dir string) {
+	e.downloadCacheDir = dir
+}
+
 // Execute runs the recipe
 func (e *Executor) Execute(ctx context.Context) error {
 	fmt.Printf("📦 Executing action-based recipe: %s\n", e.recipe.Metadata.Name)
@@ -83,18 +89,19 @@ func (e *Executor) Execute(ctx context.Context) error {
 
 	// Create execution context
 	e.ctx = &actions.ExecutionContext{
-		Context:        ctx, // Pass context for cancellation and timeouts
-		WorkDir:        e.workDir,
-		InstallDir:     e.installDir,
-		ToolInstallDir: "", // Set by composite actions when install_mode="directory" is used
-		ToolsDir:       e.toolsDir,
-		Version:        versionInfo.Version,
-		VersionTag:     versionInfo.Tag,
-		OS:             runtime.GOOS,
-		Arch:           runtime.GOARCH,
-		Recipe:         e.recipe,
-		ExecPaths:      e.execPaths, // Include execution dependency paths
-		Resolver:       resolver,    // Pass resolver for asset resolution
+		Context:          ctx, // Pass context for cancellation and timeouts
+		WorkDir:          e.workDir,
+		InstallDir:       e.installDir,
+		ToolInstallDir:   "", // Set by composite actions when install_mode="directory" is used
+		ToolsDir:         e.toolsDir,
+		DownloadCacheDir: e.downloadCacheDir,
+		Version:          versionInfo.Version,
+		VersionTag:       versionInfo.Tag,
+		OS:               runtime.GOOS,
+		Arch:             runtime.GOARCH,
+		Recipe:           e.recipe,
+		ExecPaths:        e.execPaths, // Include execution dependency paths
+		Resolver:         resolver,    // Pass resolver for asset resolution
 	}
 
 	fmt.Println()

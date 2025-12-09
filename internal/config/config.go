@@ -90,15 +90,16 @@ func GetVersionCacheTTL() time.Duration {
 
 // Config holds tsuku configuration
 type Config struct {
-	HomeDir         string // $TSUKU_HOME
-	ToolsDir        string // $TSUKU_HOME/tools
-	CurrentDir      string // $TSUKU_HOME/tools/current
-	RecipesDir      string // $TSUKU_HOME/recipes
-	RegistryDir     string // $TSUKU_HOME/registry (cached recipes from remote registry)
-	LibsDir         string // $TSUKU_HOME/libs (shared libraries)
-	CacheDir        string // $TSUKU_HOME/cache
-	VersionCacheDir string // $TSUKU_HOME/cache/versions
-	ConfigFile      string // $TSUKU_HOME/config.toml
+	HomeDir          string // $TSUKU_HOME
+	ToolsDir         string // $TSUKU_HOME/tools
+	CurrentDir       string // $TSUKU_HOME/tools/current
+	RecipesDir       string // $TSUKU_HOME/recipes
+	RegistryDir      string // $TSUKU_HOME/registry (cached recipes from remote registry)
+	LibsDir          string // $TSUKU_HOME/libs (shared libraries)
+	CacheDir         string // $TSUKU_HOME/cache
+	VersionCacheDir  string // $TSUKU_HOME/cache/versions
+	DownloadCacheDir string // $TSUKU_HOME/cache/downloads
+	ConfigFile       string // $TSUKU_HOME/config.toml
 }
 
 // DefaultConfig returns the default configuration
@@ -114,15 +115,16 @@ func DefaultConfig() (*Config, error) {
 	}
 
 	return &Config{
-		HomeDir:         tsukuHome,
-		ToolsDir:        filepath.Join(tsukuHome, "tools"),
-		CurrentDir:      filepath.Join(tsukuHome, "tools", "current"),
-		RecipesDir:      filepath.Join(tsukuHome, "recipes"),
-		RegistryDir:     filepath.Join(tsukuHome, "registry"),
-		LibsDir:         filepath.Join(tsukuHome, "libs"),
-		CacheDir:        filepath.Join(tsukuHome, "cache"),
-		VersionCacheDir: filepath.Join(tsukuHome, "cache", "versions"),
-		ConfigFile:      filepath.Join(tsukuHome, "config.toml"),
+		HomeDir:          tsukuHome,
+		ToolsDir:         filepath.Join(tsukuHome, "tools"),
+		CurrentDir:       filepath.Join(tsukuHome, "tools", "current"),
+		RecipesDir:       filepath.Join(tsukuHome, "recipes"),
+		RegistryDir:      filepath.Join(tsukuHome, "registry"),
+		LibsDir:          filepath.Join(tsukuHome, "libs"),
+		CacheDir:         filepath.Join(tsukuHome, "cache"),
+		VersionCacheDir:  filepath.Join(tsukuHome, "cache", "versions"),
+		DownloadCacheDir: filepath.Join(tsukuHome, "cache", "downloads"),
+		ConfigFile:       filepath.Join(tsukuHome, "config.toml"),
 	}, nil
 }
 
@@ -137,6 +139,7 @@ func (c *Config) EnsureDirectories() error {
 		c.LibsDir,
 		c.CacheDir,
 		c.VersionCacheDir,
+		c.DownloadCacheDir,
 	}
 
 	for _, dir := range dirs {
