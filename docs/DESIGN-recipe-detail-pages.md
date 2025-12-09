@@ -1,6 +1,6 @@
 # Design: Recipe Detail Pages with Dependency Visualization
 
-**Status**: Accepted
+**Status**: Planned
 
 ## Context and Problem Statement
 
@@ -402,6 +402,18 @@ type View =
 ```
 
 ## Implementation Approach
+
+**Milestone:** [Recipe Detail Pages](https://github.com/tsukumogami/tsuku/milestone/14)
+**Parent Issue:** [#263](https://github.com/tsukumogami/tsuku/issues/263)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#339](https://github.com/tsukumogami/tsuku/issues/339) | feat(registry): add dependency fields to recipes.json schema | None |
+| [#340](https://github.com/tsukumogami/tsuku/issues/340) | feat(website): add client-side router for recipe pages | None |
+| [#341](https://github.com/tsukumogami/tsuku/issues/341) | feat(website): implement recipe detail view renderer | #339, #340 |
+| [#342](https://github.com/tsukumogami/tsuku/issues/342) | feat(website): update grid cards to navigate to detail pages | #340 |
+| [#343](https://github.com/tsukumogami/tsuku/issues/343) | feat(website): add Cloudflare Pages redirect for recipe URLs | None |
+| [#344](https://github.com/tsukumogami/tsuku/issues/344) | feat(website): style recipe detail pages | #341 |
 
 ### Phase 1: Extend JSON Schema
 
