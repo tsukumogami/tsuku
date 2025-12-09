@@ -30,15 +30,15 @@ None - all changes in existing files
 
 ## Implementation Steps
 
-- [ ] 1. Add `getViewFromURL()` function to parse URL and return view state
-- [ ] 2. Add `navigateTo(path)` function using History API
-- [ ] 3. Add `renderCurrentView()` dispatcher function
-- [ ] 4. Add placeholder `renderDetailView()` and `render404()` stubs
-- [ ] 5. Add `popstate` event listener for browser navigation
-- [ ] 6. Modify `DOMContentLoaded` handler to use router
-- [ ] 7. Update grid rendering to preserve search state across view switches
+- [x] 1. Add `getViewFromURL()` function to parse URL and return view state
+- [x] 2. Add `navigateTo(path)` function using History API
+- [x] 3. Add `renderCurrentView()` dispatcher function
+- [x] 4. Add placeholder `renderDetailView()` and `render404()` stubs
+- [x] 5. Add `popstate` event listener for browser navigation
+- [x] 6. Modify `DOMContentLoaded` handler to use router
+- [x] 7. Update grid rendering to preserve search state across view switches
 
-Note: The redirect rule (`/recipes/*` -> `/recipes/index.html`) is covered by #343, but I'll add it here since it's needed to test the router with direct URLs.
+Note: The redirect rule (`/recipes/*` -> `/recipes/index.html`) is covered by #343, but added here since it's needed to test the router with direct URLs.
 
 ## Testing Strategy
 

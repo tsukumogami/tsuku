@@ -75,6 +75,36 @@
         let allRecipes = [];
         let isFetching = false;
 
+        // ============================================================
+        // Router
+        // ============================================================
+
+        // Determine view from URL path
+        // Returns: { view: 'grid' } | { view: 'detail', recipe: string } | { view: '404' }
+        function getViewFromURL() {
+            const path = window.location.pathname;
+
+            // Match /recipes/<name>/ or /recipes/<name>
+            const detailMatch = path.match(/^\/recipes\/([a-z0-9-]+)\/?$/);
+            if (detailMatch) {
+                return { view: 'detail', recipe: detailMatch[1] };
+            }
+
+            // Match /recipes/ or /recipes
+            if (path === '/recipes/' || path === '/recipes') {
+                return { view: 'grid' };
+            }
+
+            // Unknown path under /recipes/*
+            return { view: '404' };
+        }
+
+        // Navigate to a new path without page reload
+        function navigateTo(path) {
+            history.pushState(null, '', path);
+            renderCurrentView();
+        }
+
         // Debounce utility
         function debounce(fn, delay) {
             let timeoutId;
@@ -252,7 +282,8 @@
                     return valid;
                 });
 
-                renderRecipes(allRecipes);
+                // Render the appropriate view based on URL
+                renderCurrentView();
             } catch (error) {
                 console.error('Failed to load recipes:', error);
 
@@ -268,15 +299,131 @@
             }
         }
 
+        // ============================================================
+        // View Renderers
+        // ============================================================
+
+        // Render the grid view (recipe browser)
+        function renderGridView() {
+            // Show search container
+            const searchContainer = document.querySelector('.search-container');
+            if (searchContainer) searchContainer.hidden = false;
+
+            // Apply current search filter
+            const searchInput = document.getElementById('recipe-search');
+            const query = searchInput ? searchInput.value : '';
+            const filtered = filterRecipes(query);
+            renderRecipes(filtered, query.trim().length > 0);
+        }
+
+        // Render detail view for a recipe (placeholder - implemented in #341)
+        function renderDetailView(recipeName) {
+            const recipe = allRecipes.find(r => r.name === recipeName);
+            if (!recipe) {
+                render404();
+                return;
+            }
+
+            // Hide search container in detail view
+            const searchContainer = document.querySelector('.search-container');
+            if (searchContainer) searchContainer.hidden = true;
+
+            const grid = document.getElementById('recipe-grid');
+            const countEl = document.getElementById('recipe-count');
+            grid.innerHTML = '';
+            countEl.hidden = true;
+
+            // Placeholder detail view - will be replaced by #341
+            const detail = document.createElement('section');
+            detail.className = 'recipe-detail';
+
+            const h1 = document.createElement('h1');
+            h1.textContent = recipe.name;
+            detail.appendChild(h1);
+
+            const desc = document.createElement('p');
+            desc.className = 'description';
+            desc.textContent = recipe.description;
+            detail.appendChild(desc);
+
+            const back = document.createElement('a');
+            back.href = '/recipes/';
+            back.className = 'link-btn';
+            back.textContent = 'Back to Recipes';
+            back.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo('/recipes/');
+            });
+            detail.appendChild(back);
+
+            grid.appendChild(detail);
+        }
+
+        // Render 404 view for unknown recipes
+        function render404() {
+            // Hide search container
+            const searchContainer = document.querySelector('.search-container');
+            if (searchContainer) searchContainer.hidden = true;
+
+            const grid = document.getElementById('recipe-grid');
+            const countEl = document.getElementById('recipe-count');
+            grid.innerHTML = '';
+            countEl.hidden = true;
+
+            const notFound = document.createElement('div');
+            notFound.className = 'error-state';
+
+            const msg = document.createElement('p');
+            msg.textContent = 'Recipe not found.';
+            notFound.appendChild(msg);
+
+            const back = document.createElement('a');
+            back.href = '/recipes/';
+            back.className = 'link-btn';
+            back.textContent = 'Back to Recipes';
+            back.addEventListener('click', (e) => {
+                e.preventDefault();
+                navigateTo('/recipes/');
+            });
+            notFound.appendChild(back);
+
+            grid.appendChild(notFound);
+        }
+
+        // Dispatch to the appropriate view based on current URL
+        function renderCurrentView() {
+            const viewState = getViewFromURL();
+
+            switch (viewState.view) {
+                case 'grid':
+                    renderGridView();
+                    break;
+                case 'detail':
+                    renderDetailView(viewState.recipe);
+                    break;
+                case '404':
+                default:
+                    render404();
+                    break;
+            }
+        }
+
+        // ============================================================
+        // Initialization
+        // ============================================================
+
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
-            // Load recipes
-            loadRecipes();
-
             // Set up search with debouncing
             const searchInput = document.getElementById('recipe-search');
             const debouncedSearch = debounce(handleSearch, 150);
             searchInput.addEventListener('input', debouncedSearch);
+
+            // Handle browser back/forward
+            window.addEventListener('popstate', renderCurrentView);
+
+            // Load recipes, then render current view
+            loadRecipes();
         });
     </script>
 </body>

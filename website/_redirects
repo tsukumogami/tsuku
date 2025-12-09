@@ -4,3 +4,7 @@
 # Note: Domain-specific routing (get.tsuku.dev vs tsuku.dev) is handled
 # by Cloudflare Pages custom domains configuration, not this file.
 # This file handles path-based redirects only.
+
+# SPA routing for recipe detail pages
+# Serves index.html for all /recipes/* paths, letting client-side router handle the URL
+/recipes/*  /recipes/index.html  200
