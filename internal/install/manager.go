@@ -1,6 +1,7 @@
 package install
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -123,6 +124,81 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 // GetState returns the state manager
 func (m *Manager) GetState() *StateManager {
 	return m.state
+}
+
+// ErrVersionNotInstalled indicates the requested version is not installed.
+var ErrVersionNotInstalled = errors.New("version not installed")
+
+// Activate switches the active version of a tool.
+// It updates symlinks and the active_version in state.json.
+func (m *Manager) Activate(name, version string) error {
+	// Validate version string to prevent path traversal attacks
+	if err := ValidateVersionString(version); err != nil {
+		return fmt.Errorf("invalid version: %w", err)
+	}
+
+	// Load tool state
+	toolState, err := m.state.GetToolState(name)
+	if err != nil {
+		return fmt.Errorf("failed to load state: %w", err)
+	}
+	if toolState == nil {
+		return fmt.Errorf("tool %q is not installed", name)
+	}
+
+	// Check if version is installed
+	versionState, exists := toolState.Versions[version]
+	if !exists {
+		return m.versionNotInstalledError(name, version, toolState)
+	}
+
+	// Check if already active
+	if toolState.ActiveVersion == version {
+		return nil // Already active, nothing to do
+	}
+
+	// Verify tool directory exists
+	toolDir := m.config.ToolDir(name, version)
+	if _, err := os.Stat(toolDir); os.IsNotExist(err) {
+		return fmt.Errorf("version %s installed in state but directory missing: %s", version, toolDir)
+	}
+
+	// Create symlinks for all binaries
+	binaries := versionState.Binaries
+	if len(binaries) == 0 {
+		// Fallback: use tool name as binary (legacy behavior)
+		binaries = []string{name}
+	}
+
+	if err := m.createSymlinksForBinaries(name, version, binaries); err != nil {
+		return fmt.Errorf("failed to update symlinks: %w", err)
+	}
+
+	// Update state.json with new active version
+	err = m.state.UpdateTool(name, func(ts *ToolState) {
+		ts.ActiveVersion = version
+	})
+	if err != nil {
+		return fmt.Errorf("failed to update state: %w", err)
+	}
+
+	return nil
+}
+
+// versionNotInstalledError returns a formatted error with available versions.
+func (m *Manager) versionNotInstalledError(name, requested string, state *ToolState) error {
+	var installed []string
+	for v := range state.Versions {
+		installed = append(installed, v)
+	}
+	sort.Strings(installed)
+
+	if len(installed) == 0 {
+		return fmt.Errorf("%w: tool %q has no installed versions", ErrVersionNotInstalled, name)
+	}
+
+	return fmt.Errorf("%w: version %q not installed for %s\nInstalled versions: %s",
+		ErrVersionNotInstalled, requested, name, strings.Join(installed, ", "))
 }
 
 // createSymlink creates or updates the symlink in current/ to point to the latest version

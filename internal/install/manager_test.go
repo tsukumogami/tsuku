@@ -879,3 +879,302 @@ func TestInstallWithOptions_NoBinariesWithRuntimeDeps(t *testing.T) {
 		t.Errorf("expected wrapper script, got symlink or other")
 	}
 }
+
+// TestActivate_Success tests switching to a valid installed version.
+func TestActivate_Success(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state with two versions
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/mytool"}},
+			"2.0.0": {Binaries: []string{"bin/mytool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directories and binaries
+	for _, v := range []string{"1.0.0", "2.0.0"} {
+		toolDir := cfg.ToolDir("mytool", v)
+		binDir := filepath.Join(toolDir, "bin")
+		if err := os.MkdirAll(binDir, 0755); err != nil {
+			t.Fatalf("failed to create bin dir: %v", err)
+		}
+		binaryPath := filepath.Join(binDir, "mytool")
+		if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho "+v), 0755); err != nil {
+			t.Fatalf("failed to create binary: %v", err)
+		}
+	}
+
+	// Activate version 2.0.0
+	err = mgr.Activate("mytool", "2.0.0")
+	if err != nil {
+		t.Fatalf("Activate() error = %v", err)
+	}
+
+	// Verify state was updated
+	state, err := mgr.state.Load()
+	if err != nil {
+		t.Fatalf("failed to load state: %v", err)
+	}
+	if state.Installed["mytool"].ActiveVersion != "2.0.0" {
+		t.Errorf("active_version = %s, want 2.0.0", state.Installed["mytool"].ActiveVersion)
+	}
+
+	// Verify symlink points to version 2.0.0
+	symlinkPath := cfg.CurrentSymlink("mytool")
+	target, err := os.Readlink(symlinkPath)
+	if err != nil {
+		t.Fatalf("failed to read symlink: %v", err)
+	}
+	if !strings.Contains(target, "2.0.0") {
+		t.Errorf("symlink target = %s, want to contain 2.0.0", target)
+	}
+}
+
+// TestActivate_ToolNotInstalled tests error when tool is not installed.
+func TestActivate_ToolNotInstalled(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	err := mgr.Activate("nonexistent", "1.0.0")
+	if err == nil {
+		t.Error("Activate() should error for non-existent tool")
+	}
+	if !strings.Contains(err.Error(), "not installed") {
+		t.Errorf("error should mention 'not installed', got: %v", err)
+	}
+}
+
+// TestActivate_VersionNotInstalled tests error when version is not installed.
+func TestActivate_VersionNotInstalled(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state with one version
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/mytool"}},
+			"2.0.0": {Binaries: []string{"bin/mytool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Try to activate non-existent version
+	err = mgr.Activate("mytool", "3.0.0")
+	if err == nil {
+		t.Error("Activate() should error for non-existent version")
+	}
+	if !strings.Contains(err.Error(), "3.0.0") {
+		t.Errorf("error should mention requested version, got: %v", err)
+	}
+	// Should list available versions
+	if !strings.Contains(err.Error(), "1.0.0") || !strings.Contains(err.Error(), "2.0.0") {
+		t.Errorf("error should list available versions, got: %v", err)
+	}
+}
+
+// TestActivate_AlreadyActive tests no-op when version is already active.
+func TestActivate_AlreadyActive(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/mytool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directory
+	toolDir := cfg.ToolDir("mytool", "1.0.0")
+	binDir := filepath.Join(toolDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Activate same version (should be no-op)
+	err = mgr.Activate("mytool", "1.0.0")
+	if err != nil {
+		t.Errorf("Activate() should succeed for already active version, got: %v", err)
+	}
+}
+
+// TestActivate_InvalidVersion tests error for path traversal attempts.
+func TestActivate_InvalidVersion(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	tests := []struct {
+		name    string
+		version string
+	}{
+		{"path traversal", "../etc/passwd"},
+		{"forward slash", "1.0/2.0"},
+		{"backslash", "1.0\\2.0"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := mgr.Activate("sometool", tc.version)
+			if err == nil {
+				t.Error("Activate() should error for invalid version")
+			}
+			if !strings.Contains(err.Error(), "invalid version") {
+				t.Errorf("error should mention 'invalid version', got: %v", err)
+			}
+		})
+	}
+}
+
+// TestActivate_MissingDirectory tests error when state says installed but directory is missing.
+func TestActivate_MissingDirectory(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state with version but don't create directory
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/mytool"}},
+			"2.0.0": {Binaries: []string{"bin/mytool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Try to activate version without creating the directory
+	err = mgr.Activate("mytool", "2.0.0")
+	if err == nil {
+		t.Error("Activate() should error for missing directory")
+	}
+	if !strings.Contains(err.Error(), "directory missing") {
+		t.Errorf("error should mention 'directory missing', got: %v", err)
+	}
+}
+
+// TestActivate_MultipleBinaries tests activating a tool with multiple binaries.
+func TestActivate_MultipleBinaries(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state with multiple binaries
+	err := mgr.state.UpdateTool("multitool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/tool1", "bin/tool2"}},
+			"2.0.0": {Binaries: []string{"bin/tool1", "bin/tool2"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directories and binaries
+	for _, v := range []string{"1.0.0", "2.0.0"} {
+		toolDir := cfg.ToolDir("multitool", v)
+		binDir := filepath.Join(toolDir, "bin")
+		if err := os.MkdirAll(binDir, 0755); err != nil {
+			t.Fatalf("failed to create bin dir: %v", err)
+		}
+		for _, bin := range []string{"tool1", "tool2"} {
+			binaryPath := filepath.Join(binDir, bin)
+			if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho "+v), 0755); err != nil {
+				t.Fatalf("failed to create binary: %v", err)
+			}
+		}
+	}
+
+	// Activate version 2.0.0
+	err = mgr.Activate("multitool", "2.0.0")
+	if err != nil {
+		t.Fatalf("Activate() error = %v", err)
+	}
+
+	// Verify both symlinks point to version 2.0.0
+	for _, bin := range []string{"tool1", "tool2"} {
+		symlinkPath := cfg.CurrentSymlink(bin)
+		target, err := os.Readlink(symlinkPath)
+		if err != nil {
+			t.Fatalf("failed to read symlink for %s: %v", bin, err)
+		}
+		if !strings.Contains(target, "2.0.0") {
+			t.Errorf("symlink target for %s = %s, want to contain 2.0.0", bin, target)
+		}
+	}
+}
+
+// TestActivate_FallbackToBinaryName tests fallback when no binaries specified.
+func TestActivate_FallbackToBinaryName(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Set up state with empty binaries (legacy format)
+	err := mgr.state.UpdateTool("legacytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: nil}, // Empty binaries
+			"2.0.0": {Binaries: nil},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Create tool directories - binary uses tool name as path
+	for _, v := range []string{"1.0.0", "2.0.0"} {
+		toolDir := cfg.ToolDir("legacytool", v)
+		if err := os.MkdirAll(toolDir, 0755); err != nil {
+			t.Fatalf("failed to create tool dir: %v", err)
+		}
+		// Binary is at root level (tool name as binary path)
+		binaryPath := filepath.Join(toolDir, "legacytool")
+		if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho "+v), 0755); err != nil {
+			t.Fatalf("failed to create binary: %v", err)
+		}
+	}
+
+	// Activate version 2.0.0
+	err = mgr.Activate("legacytool", "2.0.0")
+	if err != nil {
+		t.Fatalf("Activate() error = %v", err)
+	}
+
+	// Verify symlink was created with tool name
+	symlinkPath := cfg.CurrentSymlink("legacytool")
+	target, err := os.Readlink(symlinkPath)
+	if err != nil {
+		t.Fatalf("failed to read symlink: %v", err)
+	}
+	if !strings.Contains(target, "2.0.0") {
+		t.Errorf("symlink target = %s, want to contain 2.0.0", target)
+	}
+}
