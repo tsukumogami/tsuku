@@ -849,6 +849,345 @@ describe("tsuku-telemetry worker", () => {
     });
   });
 
+  describe("POST /event (LLM events)", () => {
+    // Common fields for LLM events
+    const baseFields = {
+      os: "linux",
+      arch: "amd64",
+      tsuku_version: "0.3.0",
+    };
+
+    // Valid LLM events
+    it("returns ok for valid llm_generation_started event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_started",
+          provider: "claude",
+          tool_name: "serve",
+          repo: "owner/repo",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid llm_generation_completed event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_completed",
+          provider: "gemini",
+          tool_name: "serve",
+          success: true,
+          duration_ms: 1500,
+          attempts: 2,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid llm_repair_attempt event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_repair_attempt",
+          provider: "claude",
+          attempt_number: 2,
+          error_category: "install_failure",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid llm_validation_result event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_validation_result",
+          passed: true,
+          attempt_number: 1,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid llm_provider_failover event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_provider_failover",
+          from_provider: "claude",
+          to_provider: "gemini",
+          reason: "circuit_breaker_open",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid llm_circuit_breaker_trip event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_circuit_breaker_trip",
+          provider: "claude",
+          failures: 3,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    // Validation: missing common fields
+    it("returns 400 for LLM event missing os", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_started",
+          provider: "claude",
+          tool_name: "serve",
+          repo: "owner/repo",
+          arch: "amd64",
+          tsuku_version: "0.3.0",
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("os is required");
+    });
+
+    it("returns 400 for LLM event missing arch", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_started",
+          provider: "claude",
+          tool_name: "serve",
+          repo: "owner/repo",
+          os: "linux",
+          tsuku_version: "0.3.0",
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("arch is required");
+    });
+
+    it("returns 400 for LLM event missing tsuku_version", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_started",
+          provider: "claude",
+          tool_name: "serve",
+          repo: "owner/repo",
+          os: "linux",
+          arch: "amd64",
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("tsuku_version is required");
+    });
+
+    // Validation: llm_generation_started required fields
+    it("returns 400 for llm_generation_started missing provider", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_started",
+          tool_name: "serve",
+          repo: "owner/repo",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("provider is required");
+    });
+
+    it("returns 400 for llm_generation_started missing tool_name", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_started",
+          provider: "claude",
+          repo: "owner/repo",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("tool_name is required");
+    });
+
+    it("returns 400 for llm_generation_started missing repo", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_started",
+          provider: "claude",
+          tool_name: "serve",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("repo is required");
+    });
+
+    // Validation: llm_generation_completed required fields
+    it("returns 400 for llm_generation_completed missing provider", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_completed",
+          tool_name: "serve",
+          success: true,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("provider is required");
+    });
+
+    it("returns 400 for llm_generation_completed missing tool_name", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_generation_completed",
+          provider: "claude",
+          success: true,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("tool_name is required");
+    });
+
+    // Validation: llm_repair_attempt required fields
+    it("returns 400 for llm_repair_attempt missing provider", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_repair_attempt",
+          attempt_number: 2,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("provider is required");
+    });
+
+    it("returns 400 for llm_repair_attempt missing attempt_number", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_repair_attempt",
+          provider: "claude",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("attempt_number is required");
+    });
+
+    // Validation: llm_validation_result required fields
+    it("returns 400 for llm_validation_result missing attempt_number", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_validation_result",
+          passed: true,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("attempt_number is required");
+    });
+
+    // Validation: llm_provider_failover required fields
+    it("returns 400 for llm_provider_failover missing from_provider", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_provider_failover",
+          to_provider: "gemini",
+          reason: "circuit_breaker_open",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("from_provider is required");
+    });
+
+    it("returns 400 for llm_provider_failover missing to_provider", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_provider_failover",
+          from_provider: "claude",
+          reason: "circuit_breaker_open",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("to_provider is required");
+    });
+
+    // Validation: llm_circuit_breaker_trip required fields
+    it("returns 400 for llm_circuit_breaker_trip missing provider", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_circuit_breaker_trip",
+          failures: 3,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("provider is required");
+    });
+
+    it("returns 400 for llm_circuit_breaker_trip missing failures", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "llm_circuit_breaker_trip",
+          provider: "claude",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("failures is required");
+    });
+  });
+
   describe("unknown routes", () => {
     it("returns 404 for unknown paths", async () => {
       const response = await SELF.fetch("http://localhost/unknown");
