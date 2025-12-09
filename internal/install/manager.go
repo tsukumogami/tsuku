@@ -51,55 +51,94 @@ func (m *Manager) Install(name, version, workDir string) error {
 }
 
 // InstallWithOptions copies a tool from the work directory to the permanent location
-// with custom options for symlink creation and visibility
+// with custom options for symlink creation and visibility.
+//
+// Installation is atomic: files are first copied to a staging directory, then
+// atomically renamed to the final location. This ensures the tool directory is
+// either fully installed or not present at all - never partially installed.
 func (m *Manager) InstallWithOptions(name, version, workDir string, opts InstallOptions) error {
 	// Ensure directories exist
 	if err := m.config.EnsureDirectories(); err != nil {
 		return err
 	}
 
-	// Create tool-specific directory
 	toolDir := m.config.ToolDir(name, version)
-	if err := os.MkdirAll(toolDir, 0755); err != nil {
-		return fmt.Errorf("failed to create tool directory: %w", err)
+	stagingDir := m.stagingDir(name, version)
+
+	// Clean up any stale staging directory from a previous failed installation
+	if err := os.RemoveAll(stagingDir); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("failed to clean up stale staging directory: %w", err)
 	}
 
-	// Copy from work directory to tool directory
+	// Create staging directory
+	if err := os.MkdirAll(stagingDir, 0755); err != nil {
+		return fmt.Errorf("failed to create staging directory: %w", err)
+	}
+
+	// Copy from work directory to staging directory
 	// Copy the entire .install directory to preserve full structure (bin/, lib/, share/, etc.)
 	srcInstallDir := filepath.Join(workDir, ".install")
 
-	if err := copyDir(srcInstallDir, toolDir); err != nil {
+	if err := copyDir(srcInstallDir, stagingDir); err != nil {
+		// Clean up staging directory on copy failure
+		os.RemoveAll(stagingDir)
 		return fmt.Errorf("failed to copy installation: %w", err)
 	}
 
-	// Fix pipx shebangs after copying to final location
+	// Fix pipx shebangs in staging directory (before atomic rename)
 	// This ensures Python script shebangs point to the venv's python in the final path
-	_ = fixPipxShebangs(toolDir, m.config.ToolsDir) // Ignore errors - not all tools use pipx
+	// Note: We fix shebangs with the final toolDir path since that's where files will end up
+	_ = fixPipxShebangs(stagingDir, m.config.ToolsDir) // Ignore errors - not all tools use pipx
+
+	// If the final directory already exists (e.g., reinstalling same version),
+	// remove it before the atomic rename
+	if err := os.RemoveAll(toolDir); err != nil && !os.IsNotExist(err) {
+		os.RemoveAll(stagingDir)
+		return fmt.Errorf("failed to remove existing installation: %w", err)
+	}
+
+	// Atomically rename staging directory to final location
+	// This is the critical atomic operation that ensures consistency
+	if err := os.Rename(stagingDir, toolDir); err != nil {
+		os.RemoveAll(stagingDir)
+		return fmt.Errorf("failed to finalize installation: %w", err)
+	}
 
 	// Create symlink or wrapper in current/ (unless hidden)
+	// If symlink creation fails, we need to rollback by removing the tool directory
 	if opts.CreateSymlinks {
+		var symlinkErr error
 		if len(opts.RuntimeDependencies) > 0 {
 			// Tool has runtime deps - create wrapper scripts
-			if err := m.createWrappersForBinaries(name, version, opts.Binaries, opts.RuntimeDependencies); err != nil {
-				return fmt.Errorf("failed to create wrappers: %w", err)
-			}
-			fmt.Printf("📍 Installed to: %s\n", toolDir)
-			if len(opts.Binaries) > 0 {
-				fmt.Printf("🔗 Wrapped %d binaries: %v\n", len(opts.Binaries), opts.Binaries)
-			} else {
-				fmt.Printf("🔗 Wrapped: %s\n", m.config.CurrentSymlink(name))
+			symlinkErr = m.createWrappersForBinaries(name, version, opts.Binaries, opts.RuntimeDependencies)
+			if symlinkErr == nil {
+				fmt.Printf("📍 Installed to: %s\n", toolDir)
+				if len(opts.Binaries) > 0 {
+					fmt.Printf("🔗 Wrapped %d binaries: %v\n", len(opts.Binaries), opts.Binaries)
+				} else {
+					fmt.Printf("🔗 Wrapped: %s\n", m.config.CurrentSymlink(name))
+				}
 			}
 		} else {
 			// No runtime deps - use symlinks (faster)
-			if err := m.createSymlinksForBinaries(name, version, opts.Binaries); err != nil {
-				return fmt.Errorf("failed to create symlinks: %w", err)
+			symlinkErr = m.createSymlinksForBinaries(name, version, opts.Binaries)
+			if symlinkErr == nil {
+				fmt.Printf("📍 Installed to: %s\n", toolDir)
+				if len(opts.Binaries) > 0 {
+					fmt.Printf("🔗 Symlinked %d binaries: %v\n", len(opts.Binaries), opts.Binaries)
+				} else {
+					fmt.Printf("🔗 Symlinked: %s -> %s\n", m.config.CurrentSymlink(name), filepath.Join(toolDir, "bin", name))
+				}
 			}
-			fmt.Printf("📍 Installed to: %s\n", toolDir)
-			if len(opts.Binaries) > 0 {
-				fmt.Printf("🔗 Symlinked %d binaries: %v\n", len(opts.Binaries), opts.Binaries)
-			} else {
-				fmt.Printf("🔗 Symlinked: %s -> %s\n", m.config.CurrentSymlink(name), filepath.Join(toolDir, "bin", name))
+		}
+
+		// If symlink/wrapper creation failed, rollback the installation
+		if symlinkErr != nil {
+			os.RemoveAll(toolDir)
+			if len(opts.RuntimeDependencies) > 0 {
+				return fmt.Errorf("failed to create wrappers: %w", symlinkErr)
 			}
+			return fmt.Errorf("failed to create symlinks: %w", symlinkErr)
 		}
 	} else {
 		fmt.Printf("📍 Installed to: %s (hidden)\n", toolDir)
@@ -142,6 +181,13 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 // GetState returns the state manager
 func (m *Manager) GetState() *StateManager {
 	return m.state
+}
+
+// stagingDir returns the path to the staging directory for atomic installation.
+// The staging directory is in the same parent as the final tool directory to ensure
+// os.Rename() works atomically (same filesystem requirement).
+func (m *Manager) stagingDir(name, version string) string {
+	return filepath.Join(m.config.ToolsDir, fmt.Sprintf(".%s-%s.staging", name, version))
 }
 
 // IsVersionInstalled checks if a specific version of a tool is installed.

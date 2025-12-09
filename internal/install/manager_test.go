@@ -1419,3 +1419,224 @@ func TestInstallWithOptions_NewVersionBecomesActive(t *testing.T) {
 		t.Errorf("expected 2 versions, got %d", len(state.Installed["mytool"].Versions))
 	}
 }
+
+// TestInstallWithOptions_AtomicInstallation tests that installation is atomic.
+// The tool directory should either be fully present or not present at all.
+func TestInstallWithOptions_AtomicInstallation(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create work directory
+	workDir, workCleanup := testutil.TempDir(t)
+	defer workCleanup()
+
+	installBinDir := filepath.Join(workDir, ".install", "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+
+	binaryPath := filepath.Join(installBinDir, "atomictool")
+	if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	opts := InstallOptions{
+		CreateSymlinks: true,
+		Binaries:       []string{"bin/atomictool"},
+	}
+
+	err := mgr.InstallWithOptions("atomictool", "1.0.0", workDir, opts)
+	if err != nil {
+		t.Fatalf("InstallWithOptions() error = %v", err)
+	}
+
+	// Verify tool directory exists
+	toolDir := cfg.ToolDir("atomictool", "1.0.0")
+	if _, err := os.Stat(toolDir); os.IsNotExist(err) {
+		t.Error("tool directory should exist after successful install")
+	}
+
+	// Verify no staging directory remains
+	stagingDir := filepath.Join(cfg.ToolsDir, ".atomictool-1.0.0.staging")
+	if _, err := os.Stat(stagingDir); !os.IsNotExist(err) {
+		t.Error("staging directory should not exist after successful install")
+	}
+
+	// Verify binary was copied correctly
+	installedBinary := filepath.Join(toolDir, "bin", "atomictool")
+	if _, err := os.Stat(installedBinary); os.IsNotExist(err) {
+		t.Error("binary should exist in tool directory")
+	}
+}
+
+// TestInstallWithOptions_CleansUpStaleStagingDir tests cleanup of stale staging directories.
+func TestInstallWithOptions_CleansUpStaleStagingDir(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create a stale staging directory (simulating a previous failed install)
+	stagingDir := filepath.Join(cfg.ToolsDir, ".stalecleanup-1.0.0.staging")
+	if err := os.MkdirAll(filepath.Join(stagingDir, "bin"), 0755); err != nil {
+		t.Fatalf("failed to create stale staging dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(stagingDir, "bin", "stale"), []byte("stale"), 0755); err != nil {
+		t.Fatalf("failed to create stale file: %v", err)
+	}
+
+	// Create work directory for new install
+	workDir, workCleanup := testutil.TempDir(t)
+	defer workCleanup()
+
+	installBinDir := filepath.Join(workDir, ".install", "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(installBinDir, "stalecleanup"), []byte("new"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	opts := InstallOptions{
+		CreateSymlinks: true,
+		Binaries:       []string{"bin/stalecleanup"},
+	}
+
+	err := mgr.InstallWithOptions("stalecleanup", "1.0.0", workDir, opts)
+	if err != nil {
+		t.Fatalf("InstallWithOptions() error = %v", err)
+	}
+
+	// Verify staging directory is gone
+	if _, err := os.Stat(stagingDir); !os.IsNotExist(err) {
+		t.Error("stale staging directory should be cleaned up")
+	}
+
+	// Verify new installation succeeded
+	toolDir := cfg.ToolDir("stalecleanup", "1.0.0")
+	if _, err := os.Stat(toolDir); os.IsNotExist(err) {
+		t.Error("tool directory should exist after install")
+	}
+}
+
+// TestInstallWithOptions_ReinstallSameVersion tests reinstalling the same version.
+func TestInstallWithOptions_ReinstallSameVersion(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// First install
+	workDir1, cleanup1 := testutil.TempDir(t)
+	defer cleanup1()
+
+	installBinDir1 := filepath.Join(workDir1, ".install", "bin")
+	if err := os.MkdirAll(installBinDir1, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(installBinDir1, "reinstall"), []byte("version1"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	opts := InstallOptions{
+		CreateSymlinks: true,
+		Binaries:       []string{"bin/reinstall"},
+	}
+
+	if err := mgr.InstallWithOptions("reinstall", "1.0.0", workDir1, opts); err != nil {
+		t.Fatalf("first install failed: %v", err)
+	}
+
+	// Second install of same version (with different content)
+	workDir2, cleanup2 := testutil.TempDir(t)
+	defer cleanup2()
+
+	installBinDir2 := filepath.Join(workDir2, ".install", "bin")
+	if err := os.MkdirAll(installBinDir2, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(installBinDir2, "reinstall"), []byte("version2"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	if err := mgr.InstallWithOptions("reinstall", "1.0.0", workDir2, opts); err != nil {
+		t.Fatalf("reinstall failed: %v", err)
+	}
+
+	// Verify the new content is in place
+	toolDir := cfg.ToolDir("reinstall", "1.0.0")
+	content, err := os.ReadFile(filepath.Join(toolDir, "bin", "reinstall"))
+	if err != nil {
+		t.Fatalf("failed to read binary: %v", err)
+	}
+	if string(content) != "version2" {
+		t.Errorf("binary content = %q, want version2", content)
+	}
+}
+
+// TestInstallWithOptions_RollbackOnSymlinkFailure tests rollback when symlink creation fails.
+func TestInstallWithOptions_RollbackOnSymlinkFailure(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create work directory
+	workDir, workCleanup := testutil.TempDir(t)
+	defer workCleanup()
+
+	installBinDir := filepath.Join(workDir, ".install", "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(installBinDir, "rollbacktest"), []byte("test"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	// Make current directory read-only to cause symlink creation to fail
+	// EnsureDirectories() will create it, so we need to make it read-only after
+	if err := os.Chmod(cfg.CurrentDir, 0555); err != nil {
+		t.Fatalf("failed to make current dir read-only: %v", err)
+	}
+	// Restore permissions on cleanup to allow temp dir removal
+	defer func() { _ = os.Chmod(cfg.CurrentDir, 0755) }()
+
+	opts := InstallOptions{
+		CreateSymlinks: true,
+		Binaries:       []string{"bin/rollbacktest"},
+	}
+
+	err := mgr.InstallWithOptions("rollbacktest", "1.0.0", workDir, opts)
+	if err == nil {
+		t.Fatal("InstallWithOptions() should fail when symlink creation fails")
+	}
+
+	// Verify tool directory was rolled back (removed)
+	toolDir := cfg.ToolDir("rollbacktest", "1.0.0")
+	if _, err := os.Stat(toolDir); !os.IsNotExist(err) {
+		t.Error("tool directory should be removed after symlink failure")
+	}
+
+	// Verify staging directory is also cleaned up
+	stagingDir := filepath.Join(cfg.ToolsDir, ".rollbacktest-1.0.0.staging")
+	if _, err := os.Stat(stagingDir); !os.IsNotExist(err) {
+		t.Error("staging directory should not exist after failure")
+	}
+}
+
+// TestStagingDir tests the staging directory path generation.
+func TestStagingDir(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	stagingDir := mgr.stagingDir("mytool", "1.2.3")
+	expected := filepath.Join(cfg.ToolsDir, ".mytool-1.2.3.staging")
+
+	if stagingDir != expected {
+		t.Errorf("stagingDir() = %q, want %q", stagingDir, expected)
+	}
+}
