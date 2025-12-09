@@ -19,7 +19,7 @@ import tomllib
 from datetime import datetime, timezone
 from pathlib import Path
 
-SCHEMA_VERSION = "1.0.0"
+SCHEMA_VERSION = "1.1.0"
 MAX_DESCRIPTION_LENGTH = 200
 MAX_FILE_SIZE = 100 * 1024  # 100KB
 RECIPES_DIR = Path("recipes")
@@ -138,6 +138,28 @@ def validate_metadata(file_path: Path, metadata: dict) -> list[ValidationError]:
                     f"homepage contains dangerous scheme: {scheme}"
                 ))
 
+    # Validate dependency arrays
+    for field in ["dependencies", "runtime_dependencies"]:
+        if field in metadata:
+            deps = metadata[field]
+            if not isinstance(deps, list):
+                errors.append(ValidationError(
+                    path_str,
+                    f"{field} must be an array"
+                ))
+            else:
+                for dep in deps:
+                    if not isinstance(dep, str):
+                        errors.append(ValidationError(
+                            path_str,
+                            f"{field} contains non-string value: {dep}"
+                        ))
+                    elif not NAME_PATTERN.match(dep):
+                        errors.append(ValidationError(
+                            path_str,
+                            f"{field} contains invalid name '{dep}' (must match {NAME_PATTERN.pattern})"
+                        ))
+
     return errors
 
 
@@ -174,11 +196,13 @@ def parse_recipe(file_path: Path) -> tuple[dict | None, list[ValidationError]]:
     if errors:
         return None, errors
 
-    # Return extracted metadata
+    # Return extracted metadata with dependencies (default to empty arrays)
     return {
         "name": metadata["name"],
         "description": metadata["description"],
         "homepage": metadata["homepage"],
+        "dependencies": metadata.get("dependencies", []),
+        "runtime_dependencies": metadata.get("runtime_dependencies", []),
     }, []
 
 
@@ -207,6 +231,22 @@ def main() -> int:
             all_errors.extend(errors)
         elif recipe:
             recipes.append(recipe)
+
+    # Validate cross-recipe dependencies (each referenced dependency must exist)
+    recipe_names = {r["name"] for r in recipes}
+    for recipe in recipes:
+        for dep in recipe["dependencies"]:
+            if dep not in recipe_names:
+                all_errors.append(ValidationError(
+                    f"recipe '{recipe['name']}'",
+                    f"dependency '{dep}' references non-existent recipe"
+                ))
+        for dep in recipe["runtime_dependencies"]:
+            if dep not in recipe_names:
+                all_errors.append(ValidationError(
+                    f"recipe '{recipe['name']}'",
+                    f"runtime_dependency '{dep}' references non-existent recipe"
+                ))
 
     # Report errors
     if all_errors:
