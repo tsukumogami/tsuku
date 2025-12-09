@@ -524,6 +524,7 @@ main.wide {
 
 /* Recipe Detail View */
 .recipe-detail {
+    grid-column: 1 / -1;
     text-align: center;
     padding: 2rem;
 }
@@ -544,6 +545,81 @@ main.wide {
 
 .recipe-detail .link-btn {
     display: inline-block;
+}
+
+.recipe-detail .homepage {
+    margin-bottom: 2rem;
+}
+
+.recipe-detail .homepage a {
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.recipe-detail .homepage a:hover {
+    text-decoration: underline;
+}
+
+/* Install Section */
+.install-section {
+    margin-bottom: 2rem;
+}
+
+.install-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Dependencies Section */
+.dependencies-section {
+    text-align: left;
+    max-width: 500px;
+    margin: 0 auto 2rem;
+    padding: 1.5rem;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.dependencies-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+
+.dep-group {
+    margin-bottom: 1rem;
+}
+
+.dep-group:last-child {
+    margin-bottom: 0;
+}
+
+.dep-group h3 {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    margin-bottom: 0.5rem;
+}
+
+.dep-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.dep-list li {
+    padding: 0.25rem 0;
+}
+
+.dep-list a {
+    font-family: "SF Mono", Consolas, monospace;
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.dep-list a:hover {
+    text-decoration: underline;
 }
 
 /* Noscript Message */
