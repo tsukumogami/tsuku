@@ -109,10 +109,12 @@ Generate individual `recipes/<tool>/index.html` files during the registry build 
 - Pages work without JavaScript
 - SEO-friendly: search engines can index individual tool pages
 - Fast initial render - no fetch required
+- No redirect/routing complexity
 
 **Cons:**
 - Requires build step changes (Python script modifications)
-- 267+ HTML files to generate and deploy
+- Does not scale: tsuku aims to cover homebrew + apt + yum (thousands of recipes)
+- Cloudflare Pages has 20,000 file limit - could become a constraint
 - Inconsistent with existing architecture (grid is client-rendered)
 - Updating page template requires full rebuild
 
@@ -124,12 +126,14 @@ One HTML page at `/recipes/index.html` handles both grid and detail views using 
 - No build step changes - pure JavaScript solution
 - Recipe data already fetched; navigation between grid and detail is instant
 - Consistent with existing client-side rendering pattern
-- Simple deployment - one HTML file plus Cloudflare Pages catch-all redirect
+- Scales to thousands of recipes without deployment concerns
+- One HTML file handles all recipe detail pages
 
 **Cons:**
 - Requires JavaScript (but grid already requires it)
 - Requires catch-all redirect: `/recipes/*` → `/recipes/index.html`
 - Direct links show brief loading state before content
+- Cloudflare Pages splat redirect bug requires workaround (see Known Limitations)
 
 ### Decision 2: Dependency Data Location
 
@@ -469,6 +473,23 @@ type View =
 4. Match existing dark theme
 
 **Deliverable:** Polished detail view styling
+
+## Known Limitations
+
+### Cloudflare Pages Splat Redirect Bug
+
+Cloudflare Pages ignores splat patterns (like `/recipes/*`) in `_redirects` when deploying via direct upload through wrangler. This is a known bug: [cloudflare/workers-sdk#2671](https://github.com/cloudflare/workers-sdk/issues/2671).
+
+**Impact:** The `_redirects` rule `/recipes/* /recipes/index.html 200` does not work with the GitHub Actions deployment workflow.
+
+**Workaround implemented:**
+1. A `404.html` file disables Cloudflare's implicit SPA fallback behavior
+2. JavaScript in `404.html` detects `/recipes/<name>/` paths and redirects to `/recipes/?p=<path>`
+3. The recipes SPA reads the `?p=` parameter and uses `history.replaceState` to restore the clean URL
+
+**User experience:** Direct links to `/recipes/k9s/` briefly show the 404 page before redirecting. Navigation within the SPA (grid to detail, back button) works instantly without this workaround.
+
+**Future resolution:** If Cloudflare fixes the bug, the workaround can be removed and the `_redirects` rule will work as intended.
 
 ## Consequences
 
