@@ -356,6 +356,34 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		version = "dev"
 	}
 
+	// Check if this exact version is already installed (multi-version support)
+	// Skip installation if exact version exists, but still update state
+	if mgr.IsVersionInstalled(toolName, version) {
+		printInfof("%s@%s is already installed\n", toolName, version)
+		// Still update state flags (is_explicit, required_by)
+		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
+			if isExplicit {
+				ts.IsExplicit = true
+			}
+			if parent != "" {
+				found := false
+				for _, r := range ts.RequiredBy {
+					if r == parent {
+						found = true
+						break
+					}
+				}
+				if !found {
+					ts.RequiredBy = append(ts.RequiredBy, parent)
+				}
+			}
+		})
+		if err != nil {
+			printInfof("Warning: failed to update state: %v\n", err)
+		}
+		return nil
+	}
+
 	// Install to permanent location
 	// cfg is already loaded
 	// mgr is already initialized
@@ -364,6 +392,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	binaries := r.ExtractBinaries()
 	installOpts := install.DefaultInstallOptions()
 	installOpts.Binaries = binaries
+	installOpts.RequestedVersion = versionConstraint // Record what user asked for ("17", "@lts", "")
 
 	// Resolve all dependencies using the central resolution algorithm
 	resolvedDeps := actions.ResolveDependencies(r)

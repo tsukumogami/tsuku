@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/testutil"
 )
@@ -1176,5 +1177,245 @@ func TestActivate_FallbackToBinaryName(t *testing.T) {
 	}
 	if !strings.Contains(target, "2.0.0") {
 		t.Errorf("symlink target = %s, want to contain 2.0.0", target)
+	}
+}
+
+// TestIsVersionInstalled tests the IsVersionInstalled method.
+func TestIsVersionInstalled(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Initially no versions installed
+	if mgr.IsVersionInstalled("mytool", "1.0.0") {
+		t.Error("IsVersionInstalled should return false for non-existent tool")
+	}
+
+	// Add a version
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {Binaries: []string{"bin/mytool"}},
+		}
+	})
+	if err != nil {
+		t.Fatalf("failed to set up state: %v", err)
+	}
+
+	// Now version 1.0.0 should be installed
+	if !mgr.IsVersionInstalled("mytool", "1.0.0") {
+		t.Error("IsVersionInstalled should return true for installed version")
+	}
+
+	// But version 2.0.0 should not be
+	if mgr.IsVersionInstalled("mytool", "2.0.0") {
+		t.Error("IsVersionInstalled should return false for non-installed version")
+	}
+}
+
+// TestInstallWithOptions_PreservesExistingVersions tests that installing a new version
+// preserves existing versions in the state.
+func TestInstallWithOptions_PreservesExistingVersions(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// First, set up an existing version in state
+	err := mgr.state.UpdateTool("mytool", func(ts *ToolState) {
+		ts.ActiveVersion = "1.0.0"
+		ts.Versions = map[string]VersionState{
+			"1.0.0": {
+				Requested: "1",
+				Binaries:  []string{"bin/mytool"},
+			},
+		}
+		ts.IsExplicit = true
+	})
+	if err != nil {
+		t.Fatalf("failed to set up initial state: %v", err)
+	}
+
+	// Create work directories for the new version
+	workDir, workCleanup := testutil.TempDir(t)
+	defer workCleanup()
+
+	installBinDir := filepath.Join(workDir, ".install", "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+
+	binaryPath := filepath.Join(installBinDir, "mytool")
+	if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho v2"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	// Install version 2.0.0
+	opts := InstallOptions{
+		CreateSymlinks:   true,
+		Binaries:         []string{"bin/mytool"},
+		RequestedVersion: "2",
+	}
+
+	err = mgr.InstallWithOptions("mytool", "2.0.0", workDir, opts)
+	if err != nil {
+		t.Fatalf("InstallWithOptions() error = %v", err)
+	}
+
+	// Verify state has both versions
+	state, err := mgr.state.Load()
+	if err != nil {
+		t.Fatalf("failed to load state: %v", err)
+	}
+
+	toolState := state.Installed["mytool"]
+
+	// Should have both versions
+	if len(toolState.Versions) != 2 {
+		t.Errorf("expected 2 versions, got %d", len(toolState.Versions))
+	}
+
+	if _, exists := toolState.Versions["1.0.0"]; !exists {
+		t.Error("version 1.0.0 should still exist")
+	}
+	if _, exists := toolState.Versions["2.0.0"]; !exists {
+		t.Error("version 2.0.0 should exist")
+	}
+
+	// New version should be active
+	if toolState.ActiveVersion != "2.0.0" {
+		t.Errorf("active_version = %s, want 2.0.0", toolState.ActiveVersion)
+	}
+
+	// RequestedVersion should be recorded
+	if toolState.Versions["2.0.0"].Requested != "2" {
+		t.Errorf("requested = %s, want 2", toolState.Versions["2.0.0"].Requested)
+	}
+
+	// InstalledAt should be set
+	if toolState.Versions["2.0.0"].InstalledAt.IsZero() {
+		t.Error("installed_at should be set")
+	}
+}
+
+// TestInstallWithOptions_RecordsMetadata tests that requested and installed_at are recorded.
+func TestInstallWithOptions_RecordsMetadata(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create work directory
+	workDir, workCleanup := testutil.TempDir(t)
+	defer workCleanup()
+
+	installBinDir := filepath.Join(workDir, ".install", "bin")
+	if err := os.MkdirAll(installBinDir, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+
+	binaryPath := filepath.Join(installBinDir, "mytool")
+	if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	// Install with requested version "@lts"
+	opts := InstallOptions{
+		CreateSymlinks:   true,
+		Binaries:         []string{"bin/mytool"},
+		RequestedVersion: "@lts",
+	}
+
+	beforeInstall := time.Now()
+	err := mgr.InstallWithOptions("mytool", "21.0.5", workDir, opts)
+	if err != nil {
+		t.Fatalf("InstallWithOptions() error = %v", err)
+	}
+	afterInstall := time.Now()
+
+	// Verify state
+	state, err := mgr.state.Load()
+	if err != nil {
+		t.Fatalf("failed to load state: %v", err)
+	}
+
+	toolState := state.Installed["mytool"]
+	versionState := toolState.Versions["21.0.5"]
+
+	// Check requested
+	if versionState.Requested != "@lts" {
+		t.Errorf("requested = %q, want @lts", versionState.Requested)
+	}
+
+	// Check installed_at is within expected range
+	if versionState.InstalledAt.Before(beforeInstall) || versionState.InstalledAt.After(afterInstall) {
+		t.Errorf("installed_at = %v, want between %v and %v",
+			versionState.InstalledAt, beforeInstall, afterInstall)
+	}
+
+	// Check binaries
+	if len(versionState.Binaries) != 1 || versionState.Binaries[0] != "bin/mytool" {
+		t.Errorf("binaries = %v, want [bin/mytool]", versionState.Binaries)
+	}
+}
+
+// TestInstallWithOptions_NewVersionBecomesActive tests that newly installed version becomes active.
+func TestInstallWithOptions_NewVersionBecomesActive(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	mgr := New(cfg)
+
+	// Create work directory for first version
+	workDir1, cleanup1 := testutil.TempDir(t)
+	defer cleanup1()
+
+	installBinDir1 := filepath.Join(workDir1, ".install", "bin")
+	if err := os.MkdirAll(installBinDir1, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(installBinDir1, "mytool"), []byte("v1"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	// Install version 1
+	opts1 := InstallOptions{CreateSymlinks: true, Binaries: []string{"bin/mytool"}}
+	if err := mgr.InstallWithOptions("mytool", "1.0.0", workDir1, opts1); err != nil {
+		t.Fatalf("InstallWithOptions(v1) error = %v", err)
+	}
+
+	// Check v1 is active
+	state, _ := mgr.state.Load()
+	if state.Installed["mytool"].ActiveVersion != "1.0.0" {
+		t.Errorf("active_version after v1 = %s, want 1.0.0", state.Installed["mytool"].ActiveVersion)
+	}
+
+	// Create work directory for second version
+	workDir2, cleanup2 := testutil.TempDir(t)
+	defer cleanup2()
+
+	installBinDir2 := filepath.Join(workDir2, ".install", "bin")
+	if err := os.MkdirAll(installBinDir2, 0755); err != nil {
+		t.Fatalf("failed to create install bin dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(installBinDir2, "mytool"), []byte("v2"), 0755); err != nil {
+		t.Fatalf("failed to create binary: %v", err)
+	}
+
+	// Install version 2
+	opts2 := InstallOptions{CreateSymlinks: true, Binaries: []string{"bin/mytool"}}
+	if err := mgr.InstallWithOptions("mytool", "2.0.0", workDir2, opts2); err != nil {
+		t.Fatalf("InstallWithOptions(v2) error = %v", err)
+	}
+
+	// Check v2 is now active
+	state, _ = mgr.state.Load()
+	if state.Installed["mytool"].ActiveVersion != "2.0.0" {
+		t.Errorf("active_version after v2 = %s, want 2.0.0", state.Installed["mytool"].ActiveVersion)
+	}
+
+	// Both versions should exist
+	if len(state.Installed["mytool"].Versions) != 2 {
+		t.Errorf("expected 2 versions, got %d", len(state.Installed["mytool"].Versions))
 	}
 }
