@@ -6,13 +6,16 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
 )
 
 var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Manage tsuku configuration",
-	Long: `Manage tsuku configuration settings.
+	Long: `Display or manage tsuku configuration settings.
+
+When invoked without a subcommand, displays current configuration values.
 
 Configuration is stored in ~/.tsuku/config.toml.
 
@@ -20,8 +23,11 @@ Available settings:
   telemetry    Enable anonymous usage statistics (true/false)
 
 Examples:
+  tsuku config
+  tsuku config --json
   tsuku config get telemetry
   tsuku config set telemetry false`,
+	Run: runConfig,
 }
 
 var configGetCmd = &cobra.Command{
@@ -106,6 +112,64 @@ func printAvailableKeys() {
 }
 
 func init() {
+	configCmd.Flags().Bool("json", false, "Output in JSON format")
 	configCmd.AddCommand(configGetCmd)
 	configCmd.AddCommand(configSetCmd)
+}
+
+func runConfig(cmd *cobra.Command, args []string) {
+	jsonOutput, _ := cmd.Flags().GetBool("json")
+
+	// Load system config
+	sysCfg, err := config.DefaultConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading config: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	// Load user config
+	userCfg, err := userconfig.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading user config: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	// Get environment variable status
+	githubToken := os.Getenv("GITHUB_TOKEN")
+
+	if jsonOutput {
+		type configOutput struct {
+			TsukuHome       string `json:"tsuku_home"`
+			GithubToken     string `json:"github_token"`
+			APITimeout      string `json:"api_timeout"`
+			VersionCacheTTL string `json:"version_cache_ttl"`
+			Telemetry       bool   `json:"telemetry"`
+		}
+
+		tokenStatus := "(not set)"
+		if githubToken != "" {
+			tokenStatus = "(set)"
+		}
+
+		output := configOutput{
+			TsukuHome:       sysCfg.HomeDir,
+			GithubToken:     tokenStatus,
+			APITimeout:      config.GetAPITimeout().String(),
+			VersionCacheTTL: config.GetVersionCacheTTL().String(),
+			Telemetry:       userCfg.Telemetry,
+		}
+		printJSON(output)
+		return
+	}
+
+	// Human-readable output
+	fmt.Printf("TSUKU_HOME: %s\n", sysCfg.HomeDir)
+	if githubToken != "" {
+		fmt.Printf("GITHUB_TOKEN: (set)\n")
+	} else {
+		fmt.Printf("GITHUB_TOKEN: (not set)\n")
+	}
+	fmt.Printf("TSUKU_API_TIMEOUT: %s\n", config.GetAPITimeout())
+	fmt.Printf("TSUKU_VERSION_CACHE_TTL: %s\n", config.GetVersionCacheTTL())
+	fmt.Printf("telemetry: %t\n", userCfg.Telemetry)
 }
