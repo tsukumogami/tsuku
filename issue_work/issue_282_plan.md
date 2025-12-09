@@ -30,7 +30,7 @@ None - all functionality goes in existing files.
 - [x] Skip CanBuild check for github builder (requires SourceArg instead of package name)
 - [x] Update help text and examples to show new syntax
 - [x] Add unit tests for parseFromFlag function
-- [ ] Add integration test for create command with github builder
+- [x] Integration tests deferred to #283 (ground truth validation)
 
 ## Testing Strategy
 
