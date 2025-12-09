@@ -74,13 +74,13 @@ func (m *LockManager) Acquire(containerID string, blocking bool) (*Lock, error) 
 
 	// Truncate and write new metadata
 	if err := file.Truncate(0); err != nil {
-		syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+		_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
 		file.Close()
 		return nil, fmt.Errorf("failed to truncate lock file: %w", err)
 	}
 
 	if _, err := file.Seek(0, 0); err != nil {
-		syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+		_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
 		file.Close()
 		return nil, fmt.Errorf("failed to seek lock file: %w", err)
 	}
@@ -88,7 +88,7 @@ func (m *LockManager) Acquire(containerID string, blocking bool) (*Lock, error) 
 	encoder := json.NewEncoder(file)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(metadata); err != nil {
-		syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+		_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
 		file.Close()
 		return nil, fmt.Errorf("failed to write lock metadata: %w", err)
 	}
@@ -194,7 +194,7 @@ func (m *LockManager) TryCleanupStale() ([]string, error) {
 		}
 
 		// Successfully acquired - this was orphaned
-		syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+		_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
 		file.Close()
 
 		if err := os.Remove(lockPath); err == nil {
