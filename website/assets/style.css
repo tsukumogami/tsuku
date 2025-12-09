@@ -521,6 +521,30 @@ main.wide {
     text-decoration: underline;
 }
 
+/* Recipe Detail View */
+.recipe-detail {
+    text-align: center;
+    padding: 2rem;
+}
+
+.recipe-detail h1 {
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 2rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+.recipe-detail .description {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+}
+
+.recipe-detail .link-btn {
+    display: inline-block;
+}
+
 /* Noscript Message */
 .noscript-message {
     text-align: center;
