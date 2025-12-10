@@ -22,7 +22,6 @@ However, the feature is not production-ready. Users interacting with LLM-based g
 4. **No validation escape hatch**: Users without Docker cannot use the feature
 5. **Poor error UX**: Error messages lack troubleshooting guidance
 6. **No progress feedback**: Long-running generation shows no progress
-7. **No checksum injection**: LLM-generated recipes lack download verification
 
 This slice addresses these gaps to ship a production-ready LLM builder experience.
 
@@ -102,7 +101,6 @@ From [DESIGN-llm-builder-infrastructure.md](docs/DESIGN-llm-builder-infrastructu
 | Skip validation | `--skip-validation` flag | Add flag to create command |
 | Progress indicators | Show progress during generation | Progress output |
 | Error messages | Actionable with troubleshooting | Error message templates |
-| Checksum injection | Inject checksums from validation | Extend recipe generation |
 
 ## Considered Options
 
@@ -317,7 +315,6 @@ Rationale: Balances user fairness (repair loops are automatic, not user-initiate
 |------|--------|
 | `internal/userconfig/` | Add rate limit, budget settings, config validation |
 | `internal/state/` | Add LLM generation tracking with timestamp pruning |
-| `internal/builders/` | Inject checksums from validation into recipes |
 | `cmd/tsuku/create.go` | Add `--skip-validation`, `--yes`, preview flow, progress |
 | Error templates | New actionable error messages with recovery guidance |
 
@@ -450,14 +447,10 @@ func previewRecipe(recipe *recipe.Recipe, result *BuildResult) (approved bool, e
     fmt.Println("Generated recipe for", recipe.Metadata.Name+":")
     fmt.Println()
 
-    // Show downloads with checksum status
+    // Show downloads
     fmt.Println("  Downloads:")
-    for _, dl := range extractDownloads(recipe) {
-        checksumStatus := "verified"
-        if dl.Checksum == "" {
-            checksumStatus = "NO CHECKSUM"
-        }
-        fmt.Printf("    - %s [%s]\n", dl.URL, checksumStatus)
+    for _, url := range extractDownloadURLs(recipe) {
+        fmt.Println("    -", url)
     }
     fmt.Println()
 
@@ -711,18 +704,6 @@ func RunBenchmark(repos []string) []BenchmarkResult
 
 ## Security Considerations
 
-### Download Verification (CRITICAL)
-
-**Risk**: LLM-generated recipes may lack checksum verification for downloaded binaries, enabling supply chain attacks.
-
-**Mitigations**:
-- Inject checksums captured during container validation into generated recipes
-- Recipe preview prominently shows checksum status for each download
-- Warn users if checksums are missing (only possible with `--skip-validation`)
-- Document that checksums are required for production use
-
-**Implementation**: The PreDownloader (Slice 2) already captures SHA256 checksums. These must be injected into the recipe before finalization.
-
 ### API Key Storage
 
 **Risk**: API keys in environment variables could be exposed via process listings or shell history.
@@ -757,13 +738,13 @@ func RunBenchmark(repos []string) []BenchmarkResult
 
 ### Validation Escape Hatch
 
-**Risk**: Users with `--skip-validation` install untested LLM output without checksums.
+**Risk**: Users with `--skip-validation` install untested LLM output.
 
 **Mitigations**:
 - Require explicit consent when using `--skip-validation`:
   ```
   WARNING: Skipping validation. The recipe has NOT been tested.
-  Risks: Binary path errors, missing extraction steps, failed verification, NO CHECKSUM VERIFICATION
+  Risks: Binary path errors, missing extraction steps, failed verification
   Continue without validation? (y/N)
   ```
 - Add metadata to recipe: `llm_validation = "skipped"`
@@ -778,11 +759,10 @@ func RunBenchmark(repos []string) []BenchmarkResult
 - [ ] Cost is displayed after generation
 - [ ] Rate limiting enforced (10/hour rolling window)
 - [ ] Daily budget enforced ($5 default, resets at UTC midnight)
-- [ ] Recipe preview shown before installation with checksum status
+- [ ] Recipe preview shown before installation
 - [ ] `--skip-validation` flag works with consent flow
 - [ ] Error messages are actionable with troubleshooting steps
 - [ ] Progress indicators show during generation
-- [ ] Checksums injected from validation into generated recipes
 
 ### Safety Requirements
 - [ ] Rate limiting prevents >10 generations per rolling hour
@@ -801,7 +781,7 @@ func RunBenchmark(repos []string) []BenchmarkResult
 - Users have visibility into LLM costs before and after generation
 - Rate limiting prevents accidental cost overruns
 - Recipe preview enables informed decisions before installation
-- Checksum injection provides supply chain protection
+- Container validation catches recipe errors before installation
 - Users without Docker can still use the feature (with appropriate warnings)
 
 ### Negative
