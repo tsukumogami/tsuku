@@ -1,6 +1,6 @@
 # Design Document: LLM Slice 1 - End-to-End Spike
 
-**Status**: Planned
+**Status**: Current
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
 
