@@ -43,13 +43,15 @@ Examples:
 }
 
 var (
-	createFrom  string
-	createForce bool
+	createFrom        string
+	createForce       bool
+	createAutoApprove bool
 )
 
 func init() {
 	createCmd.Flags().StringVar(&createFrom, "from", "", "Source: ecosystem name or github:owner/repo (required)")
 	createCmd.Flags().BoolVar(&createForce, "force", false, "Overwrite existing local recipe")
+	createCmd.Flags().BoolVar(&createAutoApprove, "yes", false, "Skip recipe preview confirmation")
 	_ = createCmd.MarkFlagRequired("from")
 }
 
@@ -86,6 +88,11 @@ func normalizeEcosystem(name string) string {
 
 func runCreate(cmd *cobra.Command, args []string) {
 	toolName := args[0]
+
+	// Warn if skipping review
+	if createAutoApprove {
+		fmt.Fprintln(os.Stderr, "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.")
+	}
 
 	// Parse the --from flag
 	builderName, sourceArg, isGitHub := parseFromFlag(createFrom)
