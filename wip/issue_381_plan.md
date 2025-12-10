@@ -23,10 +23,10 @@ All required infrastructure already exists:
 - None
 
 ## Implementation Steps
-- [ ] Add cost display line after "Source:" line for GitHub builds
-- [ ] Use stateManager.DailySpent() for cumulative (already updated after RecordGeneration)
-- [ ] Use userCfg.LLMDailyBudget() for budget display
-- [ ] Handle unlimited budget case (budget = 0) gracefully
+- [x] Add cost display line after "Source:" line for GitHub builds
+- [x] Use stateManager.DailySpent() for cumulative (already updated after RecordGeneration)
+- [x] Use userCfg.LLMDailyBudget() for budget display
+- [x] Handle unlimited budget case (budget = 0) gracefully
 
 ## Design Decisions
 
