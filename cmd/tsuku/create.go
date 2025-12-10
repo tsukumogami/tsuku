@@ -7,12 +7,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/builders"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/toolchain"
+	"github.com/tsukumogami/tsuku/internal/userconfig"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
@@ -57,6 +60,49 @@ func init() {
 	createCmd.Flags().BoolVar(&createAutoApprove, "yes", false, "Skip recipe preview confirmation")
 	createCmd.Flags().BoolVar(&createSkipValidation, "skip-validation", false, "Skip container validation (use when Docker is unavailable)")
 	_ = createCmd.MarkFlagRequired("from")
+}
+
+// formatWaitTime returns a human-readable string for how long until the rate limit resets.
+// It calculates the time until the oldest generation timestamp expires (1 hour window).
+func formatWaitTime(sm *install.StateManager) string {
+	state, err := sm.Load()
+	if err != nil || state.LLMUsage == nil || len(state.LLMUsage.GenerationTimestamps) == 0 {
+		return "unknown"
+	}
+
+	// Find the oldest timestamp in the rolling window
+	now := time.Now().UTC()
+	oneHourAgo := now.Add(-time.Hour)
+	var oldest time.Time
+
+	for _, ts := range state.LLMUsage.GenerationTimestamps {
+		if ts.After(oneHourAgo) {
+			if oldest.IsZero() || ts.Before(oldest) {
+				oldest = ts
+			}
+		}
+	}
+
+	if oldest.IsZero() {
+		return "unknown"
+	}
+
+	// Time until oldest expires = oldest + 1 hour - now
+	expiresAt := oldest.Add(time.Hour)
+	wait := expiresAt.Sub(now)
+
+	if wait <= 0 {
+		return "less than a minute"
+	}
+
+	minutes := int(wait.Minutes())
+	if minutes < 1 {
+		return "less than a minute"
+	}
+	if minutes == 1 {
+		return "1 minute"
+	}
+	return fmt.Sprintf("%d minutes", minutes)
 }
 
 // confirmSkipValidation prompts the user to confirm skipping validation.
@@ -146,6 +192,50 @@ func runCreate(cmd *cobra.Command, args []string) {
 	builderRegistry.Register(builders.NewPyPIBuilder(nil))
 	builderRegistry.Register(builders.NewNpmBuilder(nil))
 
+	// For GitHub builder, check rate limit before starting LLM generation
+	var stateManager *install.StateManager
+	if isGitHub {
+		// Load user config for rate limit settings
+		userCfg, err := userconfig.Load()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to load user config: %v\n", err)
+			// Continue with defaults
+			userCfg = userconfig.DefaultConfig()
+		}
+
+		// Get rate limit setting (0 = disabled)
+		hourlyLimit := userCfg.LLMHourlyRateLimit()
+
+		// Check rate limit if enabled
+		if hourlyLimit > 0 {
+			cfg, err := config.DefaultConfig()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
+				exitWithCode(ExitGeneral)
+			}
+			stateManager = install.NewStateManager(cfg)
+
+			allowed, reason := stateManager.CanGenerate(hourlyLimit, userCfg.LLMDailyBudget())
+			if !allowed {
+				fmt.Fprintf(os.Stderr, "Error: %s\n", reason)
+				fmt.Fprintln(os.Stderr)
+				fmt.Fprintln(os.Stderr, "To increase the limit:")
+				fmt.Fprintln(os.Stderr, "  tsuku config set llm.hourly_rate_limit 20")
+				fmt.Fprintln(os.Stderr)
+				fmt.Fprintf(os.Stderr, "Wait time: %s\n", formatWaitTime(stateManager))
+				exitWithCode(ExitGeneral)
+			}
+		} else {
+			// Rate limiting disabled, but still need state manager for recording
+			cfg, err := config.DefaultConfig()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
+				exitWithCode(ExitGeneral)
+			}
+			stateManager = install.NewStateManager(cfg)
+		}
+	}
+
 	// Register GitHub builder (may fail if ANTHROPIC_API_KEY not set)
 	if isGitHub {
 		var opts []builders.GitHubReleaseBuilderOption
@@ -221,6 +311,14 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Show warnings (printed to stderr)
 	for _, warning := range result.Warnings {
 		fmt.Fprintf(os.Stderr, "Warning: %s\n", warning)
+	}
+
+	// Record LLM generation for rate limiting (GitHub builder only)
+	if isGitHub && stateManager != nil {
+		// Record with cost 0 for now; actual cost tracking to be added later
+		if err := stateManager.RecordGeneration(0); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to record generation: %v\n", err)
+		}
 	}
 
 	// Add llm_validation metadata if validation was skipped
