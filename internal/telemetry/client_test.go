@@ -243,3 +243,92 @@ func TestNewClient_EnvVarTakesPrecedence(t *testing.T) {
 		t.Error("disabled = false, want true (env var should override config)")
 	}
 }
+
+func TestSendLLM_Disabled(t *testing.T) {
+	// Create a server that should never receive requests
+	called := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	c := NewClientWithOptions(server.URL, time.Second, true, false)
+	c.SendLLM(NewLLMGenerationStartedEvent("claude", "test-tool", "owner/repo"))
+
+	// Give time for goroutine to potentially run
+	time.Sleep(50 * time.Millisecond)
+
+	if called {
+		t.Error("server was called when telemetry was disabled")
+	}
+}
+
+func TestSendLLM_Debug(t *testing.T) {
+	// Capture stderr
+	oldStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	c := NewClientWithOptions("http://unused", time.Second, false, true)
+	c.SendLLM(NewLLMGenerationStartedEvent("claude", "test-tool", "owner/repo"))
+
+	// Restore stderr and read captured output
+	w.Close()
+	os.Stderr = oldStderr
+
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	output := buf.String()
+
+	if !strings.Contains(output, "[telemetry]") {
+		t.Errorf("output does not contain [telemetry] prefix: %q", output)
+	}
+	if !strings.Contains(output, "llm_generation_started") {
+		t.Errorf("output does not contain action: %q", output)
+	}
+	if !strings.Contains(output, "claude") {
+		t.Errorf("output does not contain provider: %q", output)
+	}
+}
+
+func TestSendLLM_Success(t *testing.T) {
+	received := make(chan LLMEvent, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			t.Errorf("method = %q, want %q", r.Method, http.MethodPost)
+		}
+		if ct := r.Header.Get("Content-Type"); ct != "application/json" {
+			t.Errorf("Content-Type = %q, want %q", ct, "application/json")
+		}
+
+		var event LLMEvent
+		if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+			t.Errorf("failed to decode event: %v", err)
+		}
+		received <- event
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	c := NewClientWithOptions(server.URL, time.Second, false, false)
+	c.SendLLM(NewLLMGenerationCompletedEvent("gemini", "serve", true, 1500, 2))
+
+	select {
+	case event := <-received:
+		if event.Action != "llm_generation_completed" {
+			t.Errorf("Action = %q, want %q", event.Action, "llm_generation_completed")
+		}
+		if event.Provider != "gemini" {
+			t.Errorf("Provider = %q, want %q", event.Provider, "gemini")
+		}
+		if event.Success != true {
+			t.Errorf("Success = %v, want %v", event.Success, true)
+		}
+		if event.DurationMs != 1500 {
+			t.Errorf("DurationMs = %d, want %d", event.DurationMs, 1500)
+		}
+	case <-time.After(time.Second):
+		t.Error("event not received within timeout")
+	}
+}

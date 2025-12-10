@@ -31,6 +31,9 @@ func (s State) String() string {
 	}
 }
 
+// BreakerTripCallback is called when a circuit breaker trips open.
+type BreakerTripCallback func(provider string, failures int)
+
 // CircuitBreaker implements the circuit breaker pattern for LLM providers.
 // It tracks failures and temporarily blocks requests to failing providers,
 // allowing recovery time while traffic shifts to healthy providers.
@@ -45,6 +48,9 @@ type CircuitBreaker struct {
 
 	// now is a function that returns current time, injectable for testing.
 	now func() time.Time
+
+	// onTrip is called when the breaker trips open.
+	onTrip BreakerTripCallback
 }
 
 // NewCircuitBreaker creates a circuit breaker with default settings.
@@ -102,14 +108,34 @@ func (cb *CircuitBreaker) RecordSuccess() {
 // If the failure threshold is reached, the breaker opens.
 func (cb *CircuitBreaker) RecordFailure() {
 	cb.mu.Lock()
-	defer cb.mu.Unlock()
 
 	cb.failures++
 	cb.lastFailure = cb.now()
 
-	if cb.failures >= cb.failureThreshold {
+	tripped := false
+	if cb.failures >= cb.failureThreshold && cb.state != StateOpen {
 		cb.state = StateOpen
+		tripped = true
 	}
+
+	// Capture values before unlocking
+	name := cb.name
+	failures := cb.failures
+	onTrip := cb.onTrip
+
+	cb.mu.Unlock()
+
+	// Call callback outside of lock to avoid deadlock
+	if tripped && onTrip != nil {
+		onTrip(name, failures)
+	}
+}
+
+// SetOnTrip sets the callback to be invoked when the breaker trips.
+func (cb *CircuitBreaker) SetOnTrip(callback BreakerTripCallback) {
+	cb.mu.Lock()
+	defer cb.mu.Unlock()
+	cb.onTrip = callback
 }
 
 // State returns the current breaker state.

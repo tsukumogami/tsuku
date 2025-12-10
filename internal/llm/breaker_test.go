@@ -267,3 +267,53 @@ func TestCircuitBreakerSuccessResetsFailureCount(t *testing.T) {
 		t.Errorf("expected state StateOpen after 3 new failures, got %v", cb.State())
 	}
 }
+
+func TestCircuitBreakerSetOnTrip(t *testing.T) {
+	cb := NewCircuitBreaker("test")
+
+	var callbackCalled bool
+	var callbackProvider string
+	var callbackFailures int
+
+	cb.SetOnTrip(func(provider string, failures int) {
+		callbackCalled = true
+		callbackProvider = provider
+		callbackFailures = failures
+	})
+
+	// Record failures to trip the breaker
+	cb.RecordFailure()
+	cb.RecordFailure()
+
+	if callbackCalled {
+		t.Error("callback should not be called before threshold")
+	}
+
+	cb.RecordFailure() // Third failure should trip
+
+	if !callbackCalled {
+		t.Error("callback should be called when breaker trips")
+	}
+	if callbackProvider != "test" {
+		t.Errorf("callback provider = %q, want %q", callbackProvider, "test")
+	}
+	if callbackFailures != 3 {
+		t.Errorf("callback failures = %d, want %d", callbackFailures, 3)
+	}
+}
+
+func TestCircuitBreakerSetOnTripNilCallback(t *testing.T) {
+	cb := NewCircuitBreaker("test")
+
+	// Setting nil callback should not panic
+	cb.SetOnTrip(nil)
+
+	// Tripping should not panic with nil callback
+	cb.RecordFailure()
+	cb.RecordFailure()
+	cb.RecordFailure()
+
+	if cb.State() != StateOpen {
+		t.Errorf("expected state StateOpen, got %v", cb.State())
+	}
+}

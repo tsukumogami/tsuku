@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/llm"
+	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
@@ -568,4 +569,23 @@ func containsHelper(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+func TestWithTelemetryClient(t *testing.T) {
+	ctx := context.Background()
+	mockProv := &mockProvider{name: "mock"}
+	factory := createMockFactory(mockProv)
+
+	// Create a telemetry client (disabled to avoid actual sends)
+	telemetryClient := telemetry.NewClientWithOptions("http://unused", 0, true, false)
+
+	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithTelemetryClient(telemetryClient))
+	if err != nil {
+		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
+	}
+
+	// Verify the telemetry client was set correctly
+	if b.telemetryClient != telemetryClient {
+		t.Error("telemetry client not set correctly")
+	}
 }

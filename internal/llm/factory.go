@@ -94,6 +94,13 @@ func (f *Factory) GetProvider(ctx context.Context) (Provider, error) {
 	return nil, fmt.Errorf("no LLM providers available: all circuit breakers are open")
 }
 
+// SetOnBreakerTrip sets the callback to be invoked when any circuit breaker trips.
+func (f *Factory) SetOnBreakerTrip(callback BreakerTripCallback) {
+	for _, breaker := range f.breakers {
+		breaker.SetOnTrip(callback)
+	}
+}
+
 // ReportSuccess records a successful operation for the specified provider.
 // This resets the circuit breaker failure count and closes the breaker.
 func (f *Factory) ReportSuccess(providerName string) {

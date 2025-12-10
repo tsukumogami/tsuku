@@ -326,3 +326,65 @@ func TestGetProviderEmptyFactory(t *testing.T) {
 		t.Error("GetProvider should fail with empty factory")
 	}
 }
+
+func TestSetOnBreakerTrip(t *testing.T) {
+	providers := map[string]Provider{
+		"claude": &mockProvider{name: "claude"},
+		"gemini": &mockProvider{name: "gemini"},
+	}
+
+	factory := NewFactoryWithProviders(providers)
+
+	var callbackCalled bool
+	var callbackProvider string
+	var callbackFailures int
+
+	factory.SetOnBreakerTrip(func(provider string, failures int) {
+		callbackCalled = true
+		callbackProvider = provider
+		callbackFailures = failures
+	})
+
+	// Trip the claude breaker
+	factory.ReportFailure("claude")
+	factory.ReportFailure("claude")
+
+	if callbackCalled {
+		t.Error("callback should not be called before threshold")
+	}
+
+	factory.ReportFailure("claude") // Third failure should trip
+
+	if !callbackCalled {
+		t.Error("callback should be called when breaker trips")
+	}
+	if callbackProvider != "claude" {
+		t.Errorf("provider = %q, want %q", callbackProvider, "claude")
+	}
+	if callbackFailures != 3 {
+		t.Errorf("failures = %d, want %d", callbackFailures, 3)
+	}
+}
+
+func TestSetOnBreakerTripNilCallback(t *testing.T) {
+	providers := map[string]Provider{
+		"claude": &mockProvider{name: "claude"},
+	}
+
+	factory := NewFactoryWithProviders(providers)
+
+	// Setting nil callback should not panic
+	factory.SetOnBreakerTrip(nil)
+
+	// Trip breaker - should not panic
+	factory.ReportFailure("claude")
+	factory.ReportFailure("claude")
+	factory.ReportFailure("claude")
+
+	// Breaker should still trip even without callback
+	ctx := context.Background()
+	_, err := factory.GetProvider(ctx)
+	if err == nil {
+		t.Error("GetProvider should fail after breaker trips")
+	}
+}
