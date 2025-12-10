@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"context"
 	"fmt"
 	"os"
@@ -12,6 +13,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/toolchain"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 var createCmd = &cobra.Command{
@@ -43,16 +45,41 @@ Examples:
 }
 
 var (
-	createFrom        string
-	createForce       bool
-	createAutoApprove bool
+	createFrom           string
+	createForce          bool
+	createAutoApprove    bool
+	createSkipValidation bool
 )
 
 func init() {
 	createCmd.Flags().StringVar(&createFrom, "from", "", "Source: ecosystem name or github:owner/repo (required)")
 	createCmd.Flags().BoolVar(&createForce, "force", false, "Overwrite existing local recipe")
 	createCmd.Flags().BoolVar(&createAutoApprove, "yes", false, "Skip recipe preview confirmation")
+	createCmd.Flags().BoolVar(&createSkipValidation, "skip-validation", false, "Skip container validation (use when Docker is unavailable)")
 	_ = createCmd.MarkFlagRequired("from")
+}
+
+// confirmSkipValidation prompts the user to confirm skipping validation.
+// Returns true if the user consents, false otherwise.
+func confirmSkipValidation() bool {
+	// Check if running interactively
+	if !isInteractive() {
+		fmt.Fprintln(os.Stderr, "Error: --skip-validation requires interactive mode")
+		fmt.Fprintln(os.Stderr, "Cannot prompt for consent when stdin is not a terminal")
+		return false
+	}
+
+	fmt.Fprintln(os.Stderr, "WARNING: Skipping validation. The recipe has NOT been tested.")
+	fmt.Fprintln(os.Stderr, "Risks: Binary path errors, missing extraction steps, failed verification")
+	fmt.Fprint(os.Stderr, "Continue without validation? (y/N) ")
+
+	reader := bufio.NewReader(os.Stdin)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return false
+	}
+	response = strings.TrimSpace(strings.ToLower(response))
+	return response == "y" || response == "yes"
 }
 
 // parseFromFlag parses the --from flag value.
@@ -97,6 +124,21 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Parse the --from flag
 	builderName, sourceArg, isGitHub := parseFromFlag(createFrom)
 
+	// Handle --skip-validation flag (only applies to GitHub builder)
+	skipValidation := false
+	if createSkipValidation {
+		if !isGitHub {
+			fmt.Fprintln(os.Stderr, "Warning: --skip-validation has no effect for non-GitHub sources")
+		} else {
+			// Require explicit consent for skipping validation
+			if !confirmSkipValidation() {
+				fmt.Fprintln(os.Stderr, "Aborted.")
+				exitWithCode(ExitGeneral)
+			}
+			skipValidation = true
+		}
+	}
+
 	// Initialize builder registry
 	builderRegistry := builders.NewRegistry()
 	builderRegistry.Register(builders.NewCargoBuilder(nil))
@@ -106,7 +148,17 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Register GitHub builder (may fail if ANTHROPIC_API_KEY not set)
 	if isGitHub {
-		ghBuilder, err := builders.NewGitHubReleaseBuilder(context.Background())
+		var opts []builders.GitHubReleaseBuilderOption
+
+		// Set up validation executor unless --skip-validation was confirmed
+		if !skipValidation {
+			detector := validate.NewRuntimeDetector()
+			predownloader := validate.NewPreDownloader()
+			executor := validate.NewExecutor(detector, predownloader)
+			opts = append(opts, builders.WithExecutor(executor))
+		}
+
+		ghBuilder, err := builders.NewGitHubReleaseBuilder(context.Background(), opts...)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 			exitWithCode(ExitDependencyFailed)
@@ -171,6 +223,11 @@ func runCreate(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(os.Stderr, "Warning: %s\n", warning)
 	}
 
+	// Add llm_validation metadata if validation was skipped
+	if result.ValidationSkipped {
+		result.Recipe.Metadata.LLMValidation = "skipped"
+	}
+
 	// Get recipes directory
 	cfg, err := config.DefaultConfig()
 	if err != nil {
@@ -195,6 +252,14 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	printInfof("\nRecipe created: %s\n", recipePath)
 	printInfof("Source: %s\n", result.Source)
+
+	// Show validation skipped warning
+	if result.ValidationSkipped {
+		printInfo()
+		fmt.Fprintln(os.Stderr, "WARNING: Recipe was NOT validated in a container.")
+		fmt.Fprintln(os.Stderr, "The recipe may have errors. Review before installing.")
+	}
+
 	printInfo()
 	printInfo("To install, run:")
 	printInfof("  tsuku install %s\n", toolName)
