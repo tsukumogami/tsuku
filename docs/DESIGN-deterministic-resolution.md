@@ -1,6 +1,6 @@
 # Design: Deterministic Recipe Resolution and Installation Plans
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Issue**: #227
 - **Author**: @dangazineu
 - **Created**: 2025-12-09
