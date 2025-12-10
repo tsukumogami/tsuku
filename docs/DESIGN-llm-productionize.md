@@ -628,6 +628,59 @@ func confirmCostIfNeeded(estimatedCost float64, config *userconfig.Config) (bool
 - **Integration tests**: Full create flow with mock LLM responses
 - **Manual testing**: End-to-end with real LLM providers
 
+### Validation Strategy (Success Rate Measurement)
+
+The "80% success rate" criterion requires systematic measurement. Since each generation incurs LLM costs, this is measured via an on-demand benchmark harness rather than continuous CI.
+
+**Test Corpus**
+
+A curated list of GitHub repos covering different release patterns:
+
+| Category | Examples | Pattern |
+|----------|----------|---------|
+| Simple single-binary | ripgrep, fd, fzf | Single executable in archive |
+| Multi-binary | gh, kubectl | Multiple executables |
+| Archive formats | Various | tar.gz, zip, raw binary |
+| Naming conventions | Various | Platform in filename vs. directory |
+
+Target corpus size: 20-30 repos representing common patterns.
+
+**Benchmark Harness**
+
+```go
+// cmd/benchmark-llm/main.go (not shipped in release)
+
+type BenchmarkResult struct {
+    Repo           string
+    Success        bool        // Passed validation within 3 attempts
+    RepairAttempts int
+    FailureReason  string
+    Cost           float64
+    Duration       time.Duration
+}
+
+func RunBenchmark(repos []string) []BenchmarkResult
+```
+
+**When to Run**
+
+| Trigger | Action |
+|---------|--------|
+| Pre-release | Required. Must achieve 80%+ pass rate |
+| On-demand | Manual workflow dispatch for testing changes |
+| Weekly (optional) | Track trends, catch provider regressions |
+
+**Cost Estimate**
+
+- 25 repos × $0.05/recipe = ~$1.25 per full benchmark run
+- Acceptable for pre-release validation, not for every PR
+
+**Success Criteria**
+
+- "Success" = recipe passes container validation within 3 repair attempts
+- 80% = 20/25 repos generate working recipes
+- Results logged to file for historical comparison
+
 ## Security Considerations
 
 ### Download Verification (CRITICAL)
