@@ -27,17 +27,17 @@ None.
 
 ## Implementation Steps
 
-- [ ] 1. Add `Cost` field to `BuildResult` struct in `internal/builders/builder.go`
-- [ ] 2. Update `GitHubReleaseBuilder.Build()` to populate `Cost` field
-- [ ] 3. Add helper functions for preview display in `create.go`:
+- [x] 1. Add `Cost` field to `BuildResult` struct in `internal/builders/builder.go`
+- [x] 2. Update `GitHubReleaseBuilder.Build()` to populate `Cost` field
+- [x] 3. Add helper functions for preview display in `create.go`:
   - `previewRecipe()` - displays summary and handles prompt loop
   - `promptForApproval()` - handles user input (v/i/c)
   - `extractDownloadURLs()` - extracts download URLs from recipe
   - `describeStep()` - returns human-readable description of a recipe step
   - `formatRecipeTOML()` - formats recipe as TOML string for display
-- [ ] 4. Integrate preview flow into `runCreate()` for GitHub builder path
-- [ ] 5. Add unit tests for preview helper functions
-- [ ] 6. Run tests and lint checks
+- [x] 4. Integrate preview flow into `runCreate()` for GitHub builder path
+- [x] 5. Add unit tests for preview helper functions
+- [x] 6. Run tests and lint checks
 
 ## Testing Strategy
 
