@@ -233,10 +233,10 @@ func (c *Config) Set(key, value string) error {
 // AvailableKeys returns a list of all configurable keys with descriptions.
 func AvailableKeys() map[string]string {
 	return map[string]string{
-		"telemetry":            "Enable anonymous usage statistics (true/false)",
-		"llm.enabled":          "Enable LLM features for recipe generation (true/false)",
-		"llm.providers":        "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
-		"llm.daily_budget":     "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
+		"telemetry":             "Enable anonymous usage statistics (true/false)",
+		"llm.enabled":           "Enable LLM features for recipe generation (true/false)",
+		"llm.providers":         "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
+		"llm.daily_budget":      "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
 		"llm.hourly_rate_limit": "Max LLM generations per hour (default: 10, 0 to disable)",
 	}
 }
