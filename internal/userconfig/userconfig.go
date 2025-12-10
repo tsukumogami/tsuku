@@ -18,6 +18,21 @@ type Config struct {
 	// Telemetry enables or disables anonymous usage statistics.
 	// Default is true (enabled).
 	Telemetry bool `toml:"telemetry"`
+
+	// LLM contains LLM-related configuration.
+	LLM LLMConfig `toml:"llm"`
+}
+
+// LLMConfig holds LLM-specific settings.
+type LLMConfig struct {
+	// Enabled enables or disables LLM features.
+	// Default is true (enabled).
+	Enabled *bool `toml:"enabled,omitempty"`
+
+	// Providers specifies the preferred provider order.
+	// The first provider in the list becomes the primary.
+	// Empty means auto-detect from environment variables.
+	Providers []string `toml:"providers,omitempty"`
 }
 
 // DefaultConfig returns a Config with default values.
@@ -90,12 +105,34 @@ func (c *Config) saveToPath(path string) error {
 	return nil
 }
 
+// LLMEnabled returns whether LLM features are enabled.
+// Returns true if not explicitly set (default behavior).
+func (c *Config) LLMEnabled() bool {
+	if c.LLM.Enabled == nil {
+		return true // Default to enabled
+	}
+	return *c.LLM.Enabled
+}
+
+// LLMProviders returns the configured provider order.
+// Returns nil if not set (use auto-detection).
+func (c *Config) LLMProviders() []string {
+	return c.LLM.Providers
+}
+
 // Get returns the value of a config key as a string.
 // Returns empty string and false if the key doesn't exist.
 func (c *Config) Get(key string) (string, bool) {
 	switch strings.ToLower(key) {
 	case "telemetry":
 		return strconv.FormatBool(c.Telemetry), true
+	case "llm.enabled":
+		return strconv.FormatBool(c.LLMEnabled()), true
+	case "llm.providers":
+		if len(c.LLM.Providers) == 0 {
+			return "", true
+		}
+		return strings.Join(c.LLM.Providers, ","), true
 	default:
 		return "", false
 	}
@@ -112,6 +149,24 @@ func (c *Config) Set(key, value string) error {
 		}
 		c.Telemetry = b
 		return nil
+	case "llm.enabled":
+		b, err := strconv.ParseBool(value)
+		if err != nil {
+			return fmt.Errorf("invalid value for llm.enabled: must be true or false")
+		}
+		c.LLM.Enabled = &b
+		return nil
+	case "llm.providers":
+		if value == "" {
+			c.LLM.Providers = nil
+			return nil
+		}
+		providers := strings.Split(value, ",")
+		for i, p := range providers {
+			providers[i] = strings.TrimSpace(p)
+		}
+		c.LLM.Providers = providers
+		return nil
 	default:
 		return fmt.Errorf("unknown config key: %s", key)
 	}
@@ -120,6 +175,8 @@ func (c *Config) Set(key, value string) error {
 // AvailableKeys returns a list of all configurable keys with descriptions.
 func AvailableKeys() map[string]string {
 	return map[string]string{
-		"telemetry": "Enable anonymous usage statistics (true/false)",
+		"telemetry":     "Enable anonymous usage statistics (true/false)",
+		"llm.enabled":   "Enable LLM features for recipe generation (true/false)",
+		"llm.providers": "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
 	}
 }

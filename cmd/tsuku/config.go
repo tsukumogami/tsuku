@@ -20,13 +20,17 @@ When invoked without a subcommand, displays current configuration values.
 Configuration is stored in ~/.tsuku/config.toml.
 
 Available settings:
-  telemetry    Enable anonymous usage statistics (true/false)
+  telemetry      Enable anonymous usage statistics (true/false)
+  llm.enabled    Enable LLM features for recipe generation (true/false)
+  llm.providers  Preferred LLM provider order (comma-separated, e.g., claude,gemini)
 
 Examples:
   tsuku config
   tsuku config --json
   tsuku config get telemetry
-  tsuku config set telemetry false`,
+  tsuku config set telemetry false
+  tsuku config set llm.enabled false
+  tsuku config set llm.providers gemini,claude`,
 	Run: runConfig,
 }
 
@@ -36,7 +40,9 @@ var configGetCmd = &cobra.Command{
 	Long: `Get the current value of a configuration setting.
 
 Available keys:
-  telemetry    Enable anonymous usage statistics (true/false)`,
+  telemetry      Enable anonymous usage statistics (true/false)
+  llm.enabled    Enable LLM features for recipe generation (true/false)
+  llm.providers  Preferred LLM provider order (comma-separated)`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]
@@ -65,11 +71,14 @@ var configSetCmd = &cobra.Command{
 	Long: `Set a configuration value.
 
 Available keys:
-  telemetry    Enable anonymous usage statistics (true/false)
+  telemetry      Enable anonymous usage statistics (true/false)
+  llm.enabled    Enable LLM features for recipe generation (true/false)
+  llm.providers  Preferred LLM provider order (comma-separated)
 
 Examples:
   tsuku config set telemetry false
-  tsuku config set telemetry true`,
+  tsuku config set llm.enabled false
+  tsuku config set llm.providers gemini,claude`,
 	Args: cobra.ExactArgs(2),
 	Run: func(cmd *cobra.Command, args []string) {
 		key := args[0]

@@ -156,6 +156,210 @@ func TestAvailableKeys(t *testing.T) {
 	if _, ok := keys["telemetry"]; !ok {
 		t.Error("expected telemetry in available keys")
 	}
+	if _, ok := keys["llm.enabled"]; !ok {
+		t.Error("expected llm.enabled in available keys")
+	}
+	if _, ok := keys["llm.providers"]; !ok {
+		t.Error("expected llm.providers in available keys")
+	}
+}
+
+func TestGetLLMEnabled(t *testing.T) {
+	// Default (nil) should return true
+	cfg := DefaultConfig()
+	val, ok := cfg.Get("llm.enabled")
+	if !ok {
+		t.Error("expected llm.enabled key to exist")
+	}
+	if val != "true" {
+		t.Errorf("expected 'true' for default, got %q", val)
+	}
+
+	// Explicitly set to false
+	enabled := false
+	cfg.LLM.Enabled = &enabled
+	val, ok = cfg.Get("llm.enabled")
+	if !ok {
+		t.Error("expected llm.enabled key to exist")
+	}
+	if val != "false" {
+		t.Errorf("expected 'false', got %q", val)
+	}
+
+	// Explicitly set to true
+	enabled = true
+	cfg.LLM.Enabled = &enabled
+	val, ok = cfg.Get("llm.enabled")
+	if !ok {
+		t.Error("expected llm.enabled key to exist")
+	}
+	if val != "true" {
+		t.Errorf("expected 'true', got %q", val)
+	}
+}
+
+func TestGetLLMProviders(t *testing.T) {
+	// Default (empty) should return empty string
+	cfg := DefaultConfig()
+	val, ok := cfg.Get("llm.providers")
+	if !ok {
+		t.Error("expected llm.providers key to exist")
+	}
+	if val != "" {
+		t.Errorf("expected empty string for default, got %q", val)
+	}
+
+	// Set providers
+	cfg.LLM.Providers = []string{"gemini", "claude"}
+	val, ok = cfg.Get("llm.providers")
+	if !ok {
+		t.Error("expected llm.providers key to exist")
+	}
+	if val != "gemini,claude" {
+		t.Errorf("expected 'gemini,claude', got %q", val)
+	}
+}
+
+func TestSetLLMEnabled(t *testing.T) {
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("llm.enabled", "false"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMEnabled() {
+		t.Error("expected LLMEnabled()=false")
+	}
+
+	if err := cfg.Set("llm.enabled", "true"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !cfg.LLMEnabled() {
+		t.Error("expected LLMEnabled()=true")
+	}
+
+	// Test case insensitivity
+	if err := cfg.Set("LLM.ENABLED", "false"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMEnabled() {
+		t.Error("expected LLMEnabled()=false (case insensitive)")
+	}
+}
+
+func TestSetLLMEnabledInvalid(t *testing.T) {
+	cfg := DefaultConfig()
+
+	err := cfg.Set("llm.enabled", "invalid")
+	if err == nil {
+		t.Error("expected error for invalid boolean value")
+	}
+}
+
+func TestSetLLMProviders(t *testing.T) {
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("llm.providers", "gemini,claude"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	providers := cfg.LLMProviders()
+	if len(providers) != 2 {
+		t.Fatalf("expected 2 providers, got %d", len(providers))
+	}
+	if providers[0] != "gemini" || providers[1] != "claude" {
+		t.Errorf("expected [gemini, claude], got %v", providers)
+	}
+
+	// Test with spaces
+	if err := cfg.Set("llm.providers", "claude , gemini"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	providers = cfg.LLMProviders()
+	if providers[0] != "claude" || providers[1] != "gemini" {
+		t.Errorf("expected [claude, gemini], got %v", providers)
+	}
+
+	// Test clearing
+	if err := cfg.Set("llm.providers", ""); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMProviders() != nil {
+		t.Error("expected nil providers after clearing")
+	}
+}
+
+func TestLLMEnabledDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if !cfg.LLMEnabled() {
+		t.Error("expected LLMEnabled() to default to true")
+	}
+}
+
+func TestLLMProvidersDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if cfg.LLMProviders() != nil {
+		t.Error("expected LLMProviders() to default to nil")
+	}
+}
+
+func TestLoadLLMConfigFromFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	// Write config with LLM settings
+	content := `telemetry = true
+
+[llm]
+enabled = false
+providers = ["gemini", "claude"]
+`
+	err := os.WriteFile(path, []byte(content), 0644)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMEnabled() {
+		t.Error("expected LLMEnabled()=false from file")
+	}
+	providers := cfg.LLMProviders()
+	if len(providers) != 2 {
+		t.Fatalf("expected 2 providers, got %d", len(providers))
+	}
+	if providers[0] != "gemini" || providers[1] != "claude" {
+		t.Errorf("expected [gemini, claude], got %v", providers)
+	}
+}
+
+func TestSaveLLMConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	enabled := false
+	cfg.LLM.Enabled = &enabled
+	cfg.LLM.Providers = []string{"claude", "gemini"}
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+	if loaded.LLMEnabled() {
+		t.Error("expected LLMEnabled()=false after save/load")
+	}
+	providers := loaded.LLMProviders()
+	if len(providers) != 2 {
+		t.Fatalf("expected 2 providers, got %d", len(providers))
+	}
+	if providers[0] != "claude" || providers[1] != "gemini" {
+		t.Errorf("expected [claude, gemini], got %v", providers)
+	}
 }
 
 func TestLoadWithTsukuHome(t *testing.T) {
