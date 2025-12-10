@@ -35,20 +35,21 @@ Follow the existing error handling patterns established in `internal/version/err
 
 ## Implementation Steps
 
-- [ ] 1. Create error types in `internal/builders/errors.go`:
+- [x] 1. Create error types in `internal/builders/errors.go`:
   - RateLimitError (hourly generation limit)
   - BudgetError (daily cost budget)
-  - GitHubAPIError (rate limit, repo not found) - enhance existing
+  - GitHubRateLimitError (GitHub API rate limit)
+  - GitHubRepoNotFoundError (repository not found)
   - LLMAuthError (authentication failure)
   - ValidationError (repair loop exhausted)
 
-- [ ] 2. Add Suggestion() method to each error type implementing errmsg.Suggester
+- [x] 2. Add Suggestion() method to each error type implementing errmsg.Suggester
 
-- [ ] 3. Add unit tests for error formatting in `internal/builders/errors_test.go`
+- [x] 3. Add unit tests for error formatting in `internal/builders/errors_test.go`
 
-- [ ] 4. Update github_release.go to use new error types where appropriate
+- [x] 4. Update github_release.go to use new error types where appropriate
 
-- [ ] 5. Run tests and verify implementation
+- [x] 5. Run tests and verify implementation
 
 ## Testing Strategy
 
