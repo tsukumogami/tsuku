@@ -44,10 +44,25 @@ type LibraryVersionState struct {
 	UsedBy []string `json:"used_by"` // Tools that depend on this library version (e.g., ["ruby-3.4.0", "python-3.12"])
 }
 
+// LLMUsage tracks LLM generation history for rate limiting and budget enforcement.
+type LLMUsage struct {
+	// GenerationTimestamps holds recent generation timestamps for rate limiting.
+	// Timestamps older than 1 hour are pruned on access.
+	GenerationTimestamps []time.Time `json:"generation_timestamps,omitempty"`
+
+	// DailyCost tracks total LLM cost for the current day in USD.
+	DailyCost float64 `json:"daily_cost,omitempty"`
+
+	// DailyCostDate is the date (YYYY-MM-DD in UTC) for DailyCost tracking.
+	// When the current date differs, DailyCost is reset to 0.
+	DailyCostDate string `json:"daily_cost_date,omitempty"`
+}
+
 // State represents the global state of installed tools and libraries
 type State struct {
 	Installed map[string]ToolState                      `json:"installed"`
-	Libs      map[string]map[string]LibraryVersionState `json:"libs,omitempty"` // map[libName]map[version]LibraryVersionState
+	Libs      map[string]map[string]LibraryVersionState `json:"libs,omitempty"`     // map[libName]map[version]LibraryVersionState
+	LLMUsage  *LLMUsage                                 `json:"llm_usage,omitempty"` // LLM generation tracking
 }
 
 // StateManager handles reading and writing the state file
@@ -462,4 +477,137 @@ func (s *State) migrateToMultiVersion() {
 			s.Installed[name] = tool
 		}
 	}
+}
+
+// RecordGeneration records an LLM generation with its cost.
+// It adds the current timestamp to the generation history and updates the daily cost.
+// Timestamps older than 1 hour are pruned. Daily cost resets at UTC midnight.
+func (sm *StateManager) RecordGeneration(cost float64) error {
+	sm.mu.Lock()
+	defer sm.mu.Unlock()
+
+	lock := NewFileLock(sm.lockPath())
+	if err := lock.LockExclusive(); err != nil {
+		return fmt.Errorf("failed to acquire lock for LLM usage update: %w", err)
+	}
+	defer func() { _ = lock.Unlock() }()
+
+	state, err := sm.loadWithoutLock()
+	if err != nil {
+		return err
+	}
+
+	if state.LLMUsage == nil {
+		state.LLMUsage = &LLMUsage{}
+	}
+
+	now := time.Now().UTC()
+	today := now.Format("2006-01-02")
+
+	// Reset daily cost if date changed
+	if state.LLMUsage.DailyCostDate != today {
+		state.LLMUsage.DailyCost = 0
+		state.LLMUsage.DailyCostDate = today
+	}
+
+	// Add current timestamp
+	state.LLMUsage.GenerationTimestamps = append(state.LLMUsage.GenerationTimestamps, now)
+
+	// Prune timestamps older than 1 hour
+	oneHourAgo := now.Add(-time.Hour)
+	pruned := make([]time.Time, 0, len(state.LLMUsage.GenerationTimestamps))
+	for _, ts := range state.LLMUsage.GenerationTimestamps {
+		if ts.After(oneHourAgo) {
+			pruned = append(pruned, ts)
+		}
+	}
+	state.LLMUsage.GenerationTimestamps = pruned
+
+	// Update daily cost
+	state.LLMUsage.DailyCost += cost
+
+	return sm.saveWithoutLock(state)
+}
+
+// CanGenerate checks if a new LLM generation is allowed based on rate limit and daily budget.
+// Returns (allowed, reason) where reason explains why generation is denied.
+// A zero or negative limit means unlimited.
+func (sm *StateManager) CanGenerate(hourlyLimit int, dailyBudget float64) (bool, string) {
+	state, err := sm.Load()
+	if err != nil {
+		// If we can't load state, allow generation but log warning
+		return true, ""
+	}
+
+	if state.LLMUsage == nil {
+		return true, ""
+	}
+
+	now := time.Now().UTC()
+	today := now.Format("2006-01-02")
+
+	// Check rate limit (if limit > 0)
+	if hourlyLimit > 0 {
+		oneHourAgo := now.Add(-time.Hour)
+		recentCount := 0
+		for _, ts := range state.LLMUsage.GenerationTimestamps {
+			if ts.After(oneHourAgo) {
+				recentCount++
+			}
+		}
+		if recentCount >= hourlyLimit {
+			return false, fmt.Sprintf("rate limit exceeded: %d generations in the last hour (limit: %d)", recentCount, hourlyLimit)
+		}
+	}
+
+	// Check daily budget (if budget > 0)
+	if dailyBudget > 0 && state.LLMUsage.DailyCostDate == today {
+		if state.LLMUsage.DailyCost >= dailyBudget {
+			return false, fmt.Sprintf("daily budget exceeded: $%.2f spent today (budget: $%.2f)", state.LLMUsage.DailyCost, dailyBudget)
+		}
+	}
+
+	return true, ""
+}
+
+// DailySpent returns the total LLM cost spent today in USD.
+// Returns 0 if no cost has been recorded today.
+func (sm *StateManager) DailySpent() float64 {
+	state, err := sm.Load()
+	if err != nil {
+		return 0
+	}
+
+	if state.LLMUsage == nil {
+		return 0
+	}
+
+	today := time.Now().UTC().Format("2006-01-02")
+	if state.LLMUsage.DailyCostDate != today {
+		return 0
+	}
+
+	return state.LLMUsage.DailyCost
+}
+
+// RecentGenerationCount returns the number of LLM generations in the last hour.
+func (sm *StateManager) RecentGenerationCount() int {
+	state, err := sm.Load()
+	if err != nil {
+		return 0
+	}
+
+	if state.LLMUsage == nil {
+		return 0
+	}
+
+	now := time.Now().UTC()
+	oneHourAgo := now.Add(-time.Hour)
+	count := 0
+	for _, ts := range state.LLMUsage.GenerationTimestamps {
+		if ts.After(oneHourAgo) {
+			count++
+		}
+	}
+	return count
 }

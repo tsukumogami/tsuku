@@ -24,14 +24,15 @@ None - all changes fit within existing files.
 
 ## Implementation Steps
 
-- [ ] Add `LLMUsage` struct to state schema with generation timestamps, daily cost, and daily cost date
-- [ ] Add `LLMUsage` field to `State` struct with JSON tag
-- [ ] Add `RecordGeneration` method to `StateManager` that adds timestamp, adds cost, and prunes old timestamps
-- [ ] Add `CanGenerate` method to `StateManager` that checks rate limit and daily budget
-- [ ] Add `DailySpent` method to `StateManager` that returns today's total cost
-- [ ] Add helper to reset daily cost when date changes (UTC midnight)
-- [ ] Handle corrupted state gracefully (reset with warning message)
-- [ ] Add unit tests for all new methods including edge cases
+- [x] Add `LLMUsage` struct to state schema with generation timestamps, daily cost, and daily cost date
+- [x] Add `LLMUsage` field to `State` struct with JSON tag
+- [x] Add `RecordGeneration` method to `StateManager` that adds timestamp, adds cost, and prunes old timestamps
+- [x] Add `CanGenerate` method to `StateManager` that checks rate limit and daily budget
+- [x] Add `DailySpent` method to `StateManager` that returns today's total cost
+- [x] Add helper to reset daily cost when date changes (UTC midnight)
+- [x] Handle corrupted state gracefully (reset with warning message) - note: existing behavior preserved, Load() returns error on corruption
+- [x] Add unit tests for all new methods including edge cases
+- [x] Add `RecentGenerationCount` helper method for observability
 
 ## Testing Strategy
 
