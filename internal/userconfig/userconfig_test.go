@@ -456,3 +456,250 @@ func TestSaveToPathCreateError(t *testing.T) {
 		t.Error("expected error for invalid path")
 	}
 }
+
+func TestGetLLMDailyBudget(t *testing.T) {
+	// Default (nil) should return DefaultDailyBudget
+	cfg := DefaultConfig()
+	val, ok := cfg.Get("llm.daily_budget")
+	if !ok {
+		t.Error("expected llm.daily_budget key to exist")
+	}
+	if val != "5" {
+		t.Errorf("expected '5' for default, got %q", val)
+	}
+
+	// Explicitly set to 10
+	budget := 10.0
+	cfg.LLM.DailyBudget = &budget
+	val, ok = cfg.Get("llm.daily_budget")
+	if !ok {
+		t.Error("expected llm.daily_budget key to exist")
+	}
+	if val != "10" {
+		t.Errorf("expected '10', got %q", val)
+	}
+
+	// Explicitly set to 0 (disabled)
+	budget = 0.0
+	cfg.LLM.DailyBudget = &budget
+	val, ok = cfg.Get("llm.daily_budget")
+	if !ok {
+		t.Error("expected llm.daily_budget key to exist")
+	}
+	if val != "0" {
+		t.Errorf("expected '0', got %q", val)
+	}
+}
+
+func TestGetLLMHourlyRateLimit(t *testing.T) {
+	// Default (nil) should return DefaultHourlyRateLimit
+	cfg := DefaultConfig()
+	val, ok := cfg.Get("llm.hourly_rate_limit")
+	if !ok {
+		t.Error("expected llm.hourly_rate_limit key to exist")
+	}
+	if val != "10" {
+		t.Errorf("expected '10' for default, got %q", val)
+	}
+
+	// Explicitly set to 20
+	limit := 20
+	cfg.LLM.HourlyRateLimit = &limit
+	val, ok = cfg.Get("llm.hourly_rate_limit")
+	if !ok {
+		t.Error("expected llm.hourly_rate_limit key to exist")
+	}
+	if val != "20" {
+		t.Errorf("expected '20', got %q", val)
+	}
+
+	// Explicitly set to 0 (disabled)
+	limit = 0
+	cfg.LLM.HourlyRateLimit = &limit
+	val, ok = cfg.Get("llm.hourly_rate_limit")
+	if !ok {
+		t.Error("expected llm.hourly_rate_limit key to exist")
+	}
+	if val != "0" {
+		t.Errorf("expected '0', got %q", val)
+	}
+}
+
+func TestSetLLMDailyBudget(t *testing.T) {
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("llm.daily_budget", "10"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMDailyBudget() != 10.0 {
+		t.Errorf("expected LLMDailyBudget()=10.0, got %v", cfg.LLMDailyBudget())
+	}
+
+	// Set to 0 (disabled)
+	if err := cfg.Set("llm.daily_budget", "0"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMDailyBudget() != 0.0 {
+		t.Errorf("expected LLMDailyBudget()=0.0, got %v", cfg.LLMDailyBudget())
+	}
+
+	// Set with decimal
+	if err := cfg.Set("llm.daily_budget", "2.5"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMDailyBudget() != 2.5 {
+		t.Errorf("expected LLMDailyBudget()=2.5, got %v", cfg.LLMDailyBudget())
+	}
+
+	// Test case insensitivity
+	if err := cfg.Set("LLM.DAILY_BUDGET", "7"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMDailyBudget() != 7.0 {
+		t.Errorf("expected LLMDailyBudget()=7.0 (case insensitive), got %v", cfg.LLMDailyBudget())
+	}
+}
+
+func TestSetLLMDailyBudgetInvalid(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// Non-numeric value
+	err := cfg.Set("llm.daily_budget", "invalid")
+	if err == nil {
+		t.Error("expected error for non-numeric value")
+	}
+
+	// Negative value
+	err = cfg.Set("llm.daily_budget", "-5")
+	if err == nil {
+		t.Error("expected error for negative value")
+	}
+}
+
+func TestSetLLMHourlyRateLimit(t *testing.T) {
+	cfg := DefaultConfig()
+
+	if err := cfg.Set("llm.hourly_rate_limit", "20"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMHourlyRateLimit() != 20 {
+		t.Errorf("expected LLMHourlyRateLimit()=20, got %v", cfg.LLMHourlyRateLimit())
+	}
+
+	// Set to 0 (disabled)
+	if err := cfg.Set("llm.hourly_rate_limit", "0"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMHourlyRateLimit() != 0 {
+		t.Errorf("expected LLMHourlyRateLimit()=0, got %v", cfg.LLMHourlyRateLimit())
+	}
+
+	// Test case insensitivity
+	if err := cfg.Set("LLM.HOURLY_RATE_LIMIT", "15"); err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMHourlyRateLimit() != 15 {
+		t.Errorf("expected LLMHourlyRateLimit()=15 (case insensitive), got %v", cfg.LLMHourlyRateLimit())
+	}
+}
+
+func TestSetLLMHourlyRateLimitInvalid(t *testing.T) {
+	cfg := DefaultConfig()
+
+	// Non-integer value
+	err := cfg.Set("llm.hourly_rate_limit", "invalid")
+	if err == nil {
+		t.Error("expected error for non-integer value")
+	}
+
+	// Float value (should fail for int)
+	err = cfg.Set("llm.hourly_rate_limit", "5.5")
+	if err == nil {
+		t.Error("expected error for float value")
+	}
+
+	// Negative value
+	err = cfg.Set("llm.hourly_rate_limit", "-5")
+	if err == nil {
+		t.Error("expected error for negative value")
+	}
+}
+
+func TestLLMDailyBudgetDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if cfg.LLMDailyBudget() != DefaultDailyBudget {
+		t.Errorf("expected LLMDailyBudget() to default to %v, got %v", DefaultDailyBudget, cfg.LLMDailyBudget())
+	}
+}
+
+func TestLLMHourlyRateLimitDefault(t *testing.T) {
+	cfg := DefaultConfig()
+	if cfg.LLMHourlyRateLimit() != DefaultHourlyRateLimit {
+		t.Errorf("expected LLMHourlyRateLimit() to default to %v, got %v", DefaultHourlyRateLimit, cfg.LLMHourlyRateLimit())
+	}
+}
+
+func TestLoadLLMBudgetConfigFromFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	// Write config with LLM budget settings
+	content := `telemetry = true
+
+[llm]
+enabled = true
+daily_budget = 10.0
+hourly_rate_limit = 20
+`
+	err := os.WriteFile(path, []byte(content), 0644)
+	if err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	cfg, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cfg.LLMDailyBudget() != 10.0 {
+		t.Errorf("expected LLMDailyBudget()=10.0 from file, got %v", cfg.LLMDailyBudget())
+	}
+	if cfg.LLMHourlyRateLimit() != 20 {
+		t.Errorf("expected LLMHourlyRateLimit()=20 from file, got %v", cfg.LLMHourlyRateLimit())
+	}
+}
+
+func TestSaveLLMBudgetConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	path := filepath.Join(tmpDir, "config.toml")
+
+	cfg := DefaultConfig()
+	budget := 15.0
+	limit := 25
+	cfg.LLM.DailyBudget = &budget
+	cfg.LLM.HourlyRateLimit = &limit
+
+	if err := cfg.saveToPath(path); err != nil {
+		t.Fatalf("failed to save: %v", err)
+	}
+
+	loaded, err := loadFromPath(path)
+	if err != nil {
+		t.Fatalf("failed to load: %v", err)
+	}
+	if loaded.LLMDailyBudget() != 15.0 {
+		t.Errorf("expected LLMDailyBudget()=15.0 after save/load, got %v", loaded.LLMDailyBudget())
+	}
+	if loaded.LLMHourlyRateLimit() != 25 {
+		t.Errorf("expected LLMHourlyRateLimit()=25 after save/load, got %v", loaded.LLMHourlyRateLimit())
+	}
+}
+
+func TestAvailableKeysIncludesBudgetSettings(t *testing.T) {
+	keys := AvailableKeys()
+	if _, ok := keys["llm.daily_budget"]; !ok {
+		t.Error("expected llm.daily_budget in available keys")
+	}
+	if _, ok := keys["llm.hourly_rate_limit"]; !ok {
+		t.Error("expected llm.hourly_rate_limit in available keys")
+	}
+}
