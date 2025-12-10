@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -593,11 +594,25 @@ func (b *GitHubReleaseBuilder) fetchReleases(ctx context.Context, owner, repo st
 	defer resp.Body.Close()
 
 	if resp.StatusCode == 404 {
-		return nil, fmt.Errorf("repository %s/%s not found", owner, repo)
+		return nil, &GitHubRepoNotFoundError{Owner: owner, Repo: repo}
 	}
 
-	if resp.StatusCode == 403 {
-		return nil, fmt.Errorf("GitHub API rate limit exceeded; set GITHUB_TOKEN for higher limits")
+	if resp.StatusCode == 403 || resp.StatusCode == 429 {
+		// Parse rate limit reset time from headers
+		retryAfter := 60 * time.Minute // Default fallback
+		if resetStr := resp.Header.Get("X-RateLimit-Reset"); resetStr != "" {
+			if resetUnix, err := strconv.ParseInt(resetStr, 10, 64); err == nil {
+				resetTime := time.Unix(resetUnix, 0)
+				retryAfter = time.Until(resetTime)
+				if retryAfter < 0 {
+					retryAfter = time.Minute
+				}
+			}
+		}
+		return nil, &GitHubRateLimitError{
+			RetryAfter:    retryAfter,
+			Authenticated: os.Getenv("GITHUB_TOKEN") != "",
+		}
 	}
 
 	if resp.StatusCode != 200 {
@@ -648,6 +663,27 @@ func (b *GitHubReleaseBuilder) fetchRepoMeta(ctx context.Context, owner, repo st
 		return nil, fmt.Errorf("failed to fetch repo: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == 404 {
+		return nil, &GitHubRepoNotFoundError{Owner: owner, Repo: repo}
+	}
+
+	if resp.StatusCode == 403 || resp.StatusCode == 429 {
+		retryAfter := 60 * time.Minute
+		if resetStr := resp.Header.Get("X-RateLimit-Reset"); resetStr != "" {
+			if resetUnix, err := strconv.ParseInt(resetStr, 10, 64); err == nil {
+				resetTime := time.Unix(resetUnix, 0)
+				retryAfter = time.Until(resetTime)
+				if retryAfter < 0 {
+					retryAfter = time.Minute
+				}
+			}
+		}
+		return nil, &GitHubRateLimitError{
+			RetryAfter:    retryAfter,
+			Authenticated: os.Getenv("GITHUB_TOKEN") != "",
+		}
+	}
 
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("GitHub API returned status %d", resp.StatusCode)
