@@ -1,12 +1,10 @@
 # Design Document: LLM Slice 3 - Repair Loop + Second Provider
 
-**Status**: Planned
+**Status**: Current
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
 
 **Issue**: [#269 - Slice 3: Repair Loop + Second Provider](https://github.com/tsukumogami/tsuku/issues/269)
-
-**Blocked by**: [#268 - Slice 2: Container Validation](https://github.com/tsukumogami/tsuku/issues/268)
 
 ## Context and Problem Statement
 
@@ -814,46 +812,6 @@ Provider preference (from parent design):
 Repair settings:
 - Max repair attempts: 2 (hardcoded for Slice 3)
 - Move to config in Slice 4
-
-## Implementation Plan
-
-### Issue Breakdown
-
-| Issue | Title | Dependencies | Effort |
-|-------|-------|--------------|--------|
-| #TBD | Define Provider interface and types | None | S |
-| #TBD | Implement circuit breaker | None | S |
-| #TBD | Implement provider factory | Provider interface, circuit breaker | M |
-| #TBD | Refactor client.go to Claude provider | Provider interface | M |
-| #TBD | Implement Gemini provider | Provider interface | M |
-| #TBD | Implement error sanitizer | None | S |
-| #TBD | Implement error parser | None | S |
-| #TBD | Add repair loop to GitHub Release Builder | All above | M |
-| #TBD | Add telemetry events | Repair loop | S |
-| #TBD | Integration tests for repair loop | All above | M |
-
-### Phased Implementation
-
-**Phase 1: Provider Abstraction**
-1. Define provider interface and types
-2. Implement circuit breaker
-3. Refactor client.go to ClaudeProvider
-4. Create factory with single provider
-
-**Phase 2: Second Provider**
-5. Implement GeminiProvider
-6. Add Gemini to factory
-7. Test failover behavior
-
-**Phase 3: Repair Loop**
-8. Implement error sanitizer
-9. Implement error parser
-10. Add ContinueWithError to providers
-11. Add repair loop to builder
-
-**Phase 4: Telemetry**
-12. Add telemetry events
-13. Integration tests
 
 ## Security Considerations
 
