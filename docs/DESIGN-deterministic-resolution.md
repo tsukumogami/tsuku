@@ -77,10 +77,10 @@ The installation plan is the key artifact - a fully-resolved, deterministic spec
 
 ### Milestone 2: Deterministic Execution
 
-**Goal**: Make plan replay the default for re-installations.
+**Goal**: Make plan replay the default for re-installations when version is pinned.
 
 **Deliverables**:
-- Re-install uses stored plan by default (no re-evaluation)
+- Re-install uses stored plan when version constraint exactly matches resolved version
 - `--refresh` flag to force fresh evaluation
 - Checksum verification during download
 - Clear error on checksum mismatch (indicates upstream change)
@@ -90,7 +90,12 @@ The installation plan is the key artifact - a fully-resolved, deterministic spec
 - Detection of upstream changes (re-tagged releases, modified assets)
 - Security: checksum mismatch is a failure, not a warning
 
-**Behavior change**: Users must use `--refresh` to pick up upstream changes. This is intentional - determinism is the default.
+**Version constraint behavior**:
+- Exact version (`ripgrep@14.1.0`): Reuse cached plan, verify checksums
+- Dynamic constraint (`ripgrep`, `ripgrep@latest`, `go@1.x`): Always re-evaluate to resolve current version
+- When dynamic resolution yields a new version, inform user of the change
+
+**Behavior change**: For pinned versions, users must use `--refresh` to pick up upstream changes. This is intentional - determinism is the default for exact version pins.
 
 ### Milestone 3: Plan-Based Installation
 
