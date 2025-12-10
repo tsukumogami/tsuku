@@ -388,3 +388,170 @@ func TestSetOnBreakerTripNilCallback(t *testing.T) {
 		t.Error("GetProvider should fail after breaker trips")
 	}
 }
+
+// mockLLMConfig is a mock implementation of LLMConfig for testing.
+type mockLLMConfig struct {
+	enabled   bool
+	providers []string
+}
+
+func (m *mockLLMConfig) LLMEnabled() bool {
+	return m.enabled
+}
+
+func (m *mockLLMConfig) LLMProviders() []string {
+	return m.providers
+}
+
+func TestNewFactoryWithConfigDisabled(t *testing.T) {
+	// Clear all API keys to avoid actual provider creation
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	originalGoogle := os.Getenv("GOOGLE_API_KEY")
+	originalGemini := os.Getenv("GEMINI_API_KEY")
+	_ = os.Setenv("ANTHROPIC_API_KEY", "test-key")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+		_ = os.Setenv("GOOGLE_API_KEY", originalGoogle)
+		_ = os.Setenv("GEMINI_API_KEY", originalGemini)
+	}()
+
+	cfg := &mockLLMConfig{enabled: false}
+	ctx := context.Background()
+	_, err := NewFactory(ctx, WithConfig(cfg))
+	if err != ErrLLMDisabled {
+		t.Errorf("NewFactory with disabled config should return ErrLLMDisabled, got %v", err)
+	}
+}
+
+func TestNewFactoryWithConfigEnabled(t *testing.T) {
+	// Set API key to allow provider creation
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	_ = os.Setenv("ANTHROPIC_API_KEY", "test-key")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+	}()
+
+	cfg := &mockLLMConfig{enabled: true}
+	ctx := context.Background()
+	factory, err := NewFactory(ctx, WithConfig(cfg))
+	if err != nil {
+		t.Fatalf("NewFactory with enabled config should succeed, got %v", err)
+	}
+	if factory == nil {
+		t.Error("Factory should not be nil")
+	}
+}
+
+func TestWithConfigProviderOrder(t *testing.T) {
+	providers := map[string]Provider{
+		"claude": &mockProvider{name: "claude"},
+		"gemini": &mockProvider{name: "gemini"},
+	}
+
+	cfg := &mockLLMConfig{enabled: true, providers: []string{"gemini", "claude"}}
+	factory := NewFactoryWithProviders(providers, WithConfig(cfg))
+
+	ctx := context.Background()
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		t.Fatalf("GetProvider failed: %v", err)
+	}
+
+	// gemini should be primary now
+	if provider.Name() != "gemini" {
+		t.Errorf("GetProvider returned %q, want %q (from config)", provider.Name(), "gemini")
+	}
+}
+
+func TestWithEnabledFalse(t *testing.T) {
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	_ = os.Setenv("ANTHROPIC_API_KEY", "test-key")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+	}()
+
+	ctx := context.Background()
+	_, err := NewFactory(ctx, WithEnabled(false))
+	if err != ErrLLMDisabled {
+		t.Errorf("NewFactory with WithEnabled(false) should return ErrLLMDisabled, got %v", err)
+	}
+}
+
+func TestWithEnabledTrue(t *testing.T) {
+	originalAnthropic := os.Getenv("ANTHROPIC_API_KEY")
+	_ = os.Setenv("ANTHROPIC_API_KEY", "test-key")
+	defer func() {
+		_ = os.Setenv("ANTHROPIC_API_KEY", originalAnthropic)
+	}()
+
+	ctx := context.Background()
+	factory, err := NewFactory(ctx, WithEnabled(true))
+	if err != nil {
+		t.Fatalf("NewFactory with WithEnabled(true) should succeed, got %v", err)
+	}
+	if factory == nil {
+		t.Error("Factory should not be nil")
+	}
+}
+
+func TestWithProviderOrder(t *testing.T) {
+	providers := map[string]Provider{
+		"claude": &mockProvider{name: "claude"},
+		"gemini": &mockProvider{name: "gemini"},
+	}
+
+	factory := NewFactoryWithProviders(providers, WithProviderOrder([]string{"gemini", "claude"}))
+
+	ctx := context.Background()
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		t.Fatalf("GetProvider failed: %v", err)
+	}
+
+	// gemini should be primary
+	if provider.Name() != "gemini" {
+		t.Errorf("GetProvider returned %q, want %q", provider.Name(), "gemini")
+	}
+}
+
+func TestWithProviderOrderEmpty(t *testing.T) {
+	providers := map[string]Provider{
+		"claude": &mockProvider{name: "claude"},
+		"gemini": &mockProvider{name: "gemini"},
+	}
+
+	// Empty provider order should not change the default
+	factory := NewFactoryWithProviders(providers, WithProviderOrder(nil))
+
+	ctx := context.Background()
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		t.Fatalf("GetProvider failed: %v", err)
+	}
+
+	// claude should still be primary (default)
+	if provider.Name() != "claude" {
+		t.Errorf("GetProvider returned %q, want %q (default)", provider.Name(), "claude")
+	}
+}
+
+func TestWithConfigEmptyProviders(t *testing.T) {
+	providers := map[string]Provider{
+		"claude": &mockProvider{name: "claude"},
+		"gemini": &mockProvider{name: "gemini"},
+	}
+
+	cfg := &mockLLMConfig{enabled: true, providers: nil}
+	factory := NewFactoryWithProviders(providers, WithConfig(cfg))
+
+	ctx := context.Background()
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		t.Fatalf("GetProvider failed: %v", err)
+	}
+
+	// claude should still be primary (default when config has no providers)
+	if provider.Name() != "claude" {
+		t.Errorf("GetProvider returned %q, want %q (default)", provider.Name(), "claude")
+	}
+}

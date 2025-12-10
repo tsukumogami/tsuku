@@ -15,14 +15,66 @@ type Factory struct {
 	primary   string
 }
 
+// LLMConfig provides LLM configuration settings.
+// This interface matches the methods provided by userconfig.Config.
+type LLMConfig interface {
+	LLMEnabled() bool
+	LLMProviders() []string
+}
+
+// ErrLLMDisabled is returned when LLM features are disabled via configuration.
+var ErrLLMDisabled = fmt.Errorf("LLM features are disabled via configuration")
+
+// factoryOptions holds configuration for creating a factory.
+type factoryOptions struct {
+	primary         string
+	enabled         bool
+	preferredOrder  []string
+	enabledExplicit bool // Whether enabled was explicitly set
+}
+
 // FactoryOption configures a Factory.
-type FactoryOption func(*Factory)
+type FactoryOption func(*factoryOptions)
 
 // WithPrimaryProvider sets the preferred provider name.
 // If the primary provider is unavailable, the factory falls back to others.
 func WithPrimaryProvider(name string) FactoryOption {
-	return func(f *Factory) {
-		f.primary = name
+	return func(o *factoryOptions) {
+		o.primary = name
+	}
+}
+
+// WithConfig applies LLM configuration settings.
+// If config.LLMEnabled() returns false, NewFactory will return ErrLLMDisabled.
+// If config.LLMProviders() returns a non-empty list, the first provider becomes primary.
+func WithConfig(cfg LLMConfig) FactoryOption {
+	return func(o *factoryOptions) {
+		o.enabled = cfg.LLMEnabled()
+		o.enabledExplicit = true
+		providers := cfg.LLMProviders()
+		if len(providers) > 0 {
+			o.preferredOrder = providers
+			o.primary = providers[0]
+		}
+	}
+}
+
+// WithEnabled explicitly enables or disables LLM features.
+func WithEnabled(enabled bool) FactoryOption {
+	return func(o *factoryOptions) {
+		o.enabled = enabled
+		o.enabledExplicit = true
+	}
+}
+
+// WithProviderOrder sets the preferred provider order.
+// The first provider in the list becomes the primary.
+func WithProviderOrder(providers []string) FactoryOption {
+	return func(o *factoryOptions) {
+		if len(providers) > 0 {
+			o.preferredOrder = providers
+			o.primary = providers[0]
+		}
 	}
 }
 
@@ -31,17 +83,27 @@ func WithPrimaryProvider(name string) FactoryOption {
 // - Claude: Available if ANTHROPIC_API_KEY is set
 // - Gemini: Available if GOOGLE_API_KEY or GEMINI_API_KEY is set
 //
+// Returns ErrLLMDisabled if LLM features are explicitly disabled via WithConfig or WithEnabled.
 // Returns an error if no providers are available.
 func NewFactory(ctx context.Context, opts ...FactoryOption) (*Factory, error) {
+	// Process options
+	o := &factoryOptions{
+		primary: "claude", // Default primary provider
+		enabled: true,     // Default enabled
+	}
+	for _, opt := range opts {
+		opt(o)
+	}
+
+	// Check if LLM is explicitly disabled
+	if o.enabledExplicit && !o.enabled {
+		return nil, ErrLLMDisabled
+	}
+
 	f := &Factory{
 		providers: make(map[string]Provider),
 		breakers:  make(map[string]*CircuitBreaker),
-		primary:   "claude", // Default primary provider
-	}
-
-	// Apply options
-	for _, opt := range opts {
-		opt(f)
+		primary:   o.primary,
 	}
 
 	// Auto-detect and initialize Claude provider
@@ -143,14 +205,19 @@ func (f *Factory) ProviderCount() int {
 // NewFactoryWithProviders creates a factory with the given providers.
 // This is useful for testing with mock providers.
 func NewFactoryWithProviders(providers map[string]Provider, opts ...FactoryOption) *Factory {
-	f := &Factory{
-		providers: make(map[string]Provider),
-		breakers:  make(map[string]*CircuitBreaker),
-		primary:   "claude",
+	o := &factoryOptions{
+		primary: "claude",
+		enabled: true,
 	}
 
 	for _, opt := range opts {
-		opt(f)
+		opt(o)
+	}
+
+	f := &Factory{
+		providers: make(map[string]Provider),
+		breakers:  make(map[string]*CircuitBreaker),
+		primary:   o.primary,
 	}
 
 	for name, provider := range providers {
