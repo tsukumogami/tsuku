@@ -425,11 +425,6 @@ func createMockGitHubServer() *httptest.Server {
 	}))
 }
 
-// testExecutorWrapper wraps mockValidationExecutor to implement validate.Executor interface.
-type testExecutorWrapper struct {
-	mock *mockValidationExecutor
-}
-
 func createTestExecutor(mock *mockValidationExecutor) *validate.Executor {
 	// For testing, we need to create a real executor but control its behavior
 	// Since we can't easily mock the Executor struct, we test through the builder's
