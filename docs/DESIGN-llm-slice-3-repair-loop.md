@@ -1,12 +1,10 @@
 # Design Document: LLM Slice 3 - Repair Loop + Second Provider
 
-**Status**: Planned
+**Status**: Current
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
 
 **Issue**: [#269 - Slice 3: Repair Loop + Second Provider](https://github.com/tsukumogami/tsuku/issues/269)
-
-**Blocked by**: [#268 - Slice 2: Container Validation](https://github.com/tsukumogami/tsuku/issues/268)
 
 ## Context and Problem Statement
 
