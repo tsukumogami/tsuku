@@ -202,6 +202,13 @@ The executor should be refactored to:
 - [ ] `tsuku install --plan` works with pre-downloaded assets
 - [ ] Recipe changes can be tested via plan comparison
 
+## Implementation Issues
+
+- Milestone: [Deterministic Recipe Execution](https://github.com/tsukumogami/tsuku/milestone/15)
+- #367: Installation plans and tsuku eval command
+- #368: Deterministic execution for pinned versions
+- #370: Plan-based installation
+
 ## Future Work
 
 Lock files for team version coordination are tracked separately in the vision repository. This design provides the infrastructure (installation plans) that lock files will build upon.
