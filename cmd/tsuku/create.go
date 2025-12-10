@@ -19,6 +19,12 @@ import (
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
+const (
+	// defaultLLMCostEstimate is the estimated cost per LLM generation in USD.
+	// This is a conservative estimate based on typical token usage.
+	defaultLLMCostEstimate = 0.10
+)
+
 var createCmd = &cobra.Command{
 	Use:   "create <tool> --from <source>",
 	Short: "Create a recipe from a package ecosystem or GitHub",
@@ -192,10 +198,10 @@ func runCreate(cmd *cobra.Command, args []string) {
 	builderRegistry.Register(builders.NewPyPIBuilder(nil))
 	builderRegistry.Register(builders.NewNpmBuilder(nil))
 
-	// For GitHub builder, check rate limit before starting LLM generation
+	// For GitHub builder, check LLM budget and rate limits before proceeding
 	var stateManager *install.StateManager
 	if isGitHub {
-		// Load user config for rate limit settings
+		// Load user config for settings
 		userCfg, err := userconfig.Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to load user config: %v\n", err)
@@ -203,36 +209,42 @@ func runCreate(cmd *cobra.Command, args []string) {
 			userCfg = userconfig.DefaultConfig()
 		}
 
-		// Get rate limit setting (0 = disabled)
+		// Check if LLM is enabled
+		if !userCfg.LLMEnabled() {
+			fmt.Fprintln(os.Stderr, "Error: LLM features are disabled")
+			fmt.Fprintln(os.Stderr, "To enable: tsuku config set llm.enabled true")
+			exitWithCode(ExitGeneral)
+		}
+
+		// Initialize state manager
+		cfg, err := config.DefaultConfig()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
+			exitWithCode(ExitGeneral)
+		}
+		stateManager = install.NewStateManager(cfg)
+
+		// Get limit settings
 		hourlyLimit := userCfg.LLMHourlyRateLimit()
+		dailyBudget := userCfg.LLMDailyBudget()
 
-		// Check rate limit if enabled
-		if hourlyLimit > 0 {
-			cfg, err := config.DefaultConfig()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
-				exitWithCode(ExitGeneral)
-			}
-			stateManager = install.NewStateManager(cfg)
-
-			allowed, reason := stateManager.CanGenerate(hourlyLimit, userCfg.LLMDailyBudget())
-			if !allowed {
+		// Check budget and rate limits
+		allowed, reason := stateManager.CanGenerate(hourlyLimit, dailyBudget)
+		if !allowed {
+			// Format error message based on the reason
+			if strings.Contains(reason, "budget") {
+				spent := stateManager.DailySpent()
+				fmt.Fprintf(os.Stderr, "Error: daily LLM budget exhausted ($%.2f spent today)\n", spent)
+				fmt.Fprintln(os.Stderr, "Budget resets at midnight. To adjust: tsuku config set llm.daily_budget 10.0")
+			} else {
 				fmt.Fprintf(os.Stderr, "Error: %s\n", reason)
 				fmt.Fprintln(os.Stderr)
 				fmt.Fprintln(os.Stderr, "To increase the limit:")
 				fmt.Fprintln(os.Stderr, "  tsuku config set llm.hourly_rate_limit 20")
 				fmt.Fprintln(os.Stderr)
 				fmt.Fprintf(os.Stderr, "Wait time: %s\n", formatWaitTime(stateManager))
-				exitWithCode(ExitGeneral)
 			}
-		} else {
-			// Rate limiting disabled, but still need state manager for recording
-			cfg, err := config.DefaultConfig()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
-				exitWithCode(ExitGeneral)
-			}
-			stateManager = install.NewStateManager(cfg)
+			exitWithCode(ExitGeneral)
 		}
 	}
 
@@ -308,17 +320,17 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
+	// Record LLM usage for successful GitHub builds (includes cost tracking)
+	if isGitHub && stateManager != nil {
+		if err := stateManager.RecordGeneration(defaultLLMCostEstimate); err != nil {
+			// Non-fatal: log warning but continue
+			fmt.Fprintf(os.Stderr, "Warning: failed to record LLM usage: %v\n", err)
+		}
+	}
+
 	// Show warnings (printed to stderr)
 	for _, warning := range result.Warnings {
 		fmt.Fprintf(os.Stderr, "Warning: %s\n", warning)
-	}
-
-	// Record LLM generation for rate limiting (GitHub builder only)
-	if isGitHub && stateManager != nil {
-		// Record with cost 0 for now; actual cost tracking to be added later
-		if err := stateManager.RecordGeneration(0); err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to record generation: %v\n", err)
-		}
 	}
 
 	// Add llm_validation metadata if validation was skipped

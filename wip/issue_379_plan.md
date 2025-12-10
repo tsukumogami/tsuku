@@ -27,10 +27,10 @@ Integration points:
 - None (infrastructure already exists in `internal/install/state.go`)
 
 ## Implementation Steps
-- [ ] Add budget check before GitHub builder creation/usage in runCreate
-- [ ] Add cost recording after successful LLM generation
-- [ ] Add clear error message when budget exhausted (matching issue format)
-- [ ] Add tests for budget enforcement integration
+- [x] Add budget check before GitHub builder creation/usage in runCreate
+- [x] Add cost recording after successful LLM generation
+- [x] Add clear error message when budget exhausted (matching issue format)
+- [x] Manual verification of all cases (budget, rate limit, LLM disabled)
 
 ## Design Decisions
 
