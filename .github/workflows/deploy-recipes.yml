@@ -1,4 +1,11 @@
-name: Deploy Recipes
+name: Deploy Recipes (Deprecated)
+
+# DEPRECATED: registry.tsuku.dev is deprecated in favor of tsuku.dev/recipes.json
+# This workflow is kept for backwards compatibility during the transition period.
+# See issue #353 for context.
+#
+# The website deployment (deploy-website.yml) now generates and serves recipes.json
+# from the same origin, eliminating CORS requirements and enabling full preview testing.
 
 on:
   push:
