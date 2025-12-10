@@ -33,7 +33,23 @@ type LLMConfig struct {
 	// The first provider in the list becomes the primary.
 	// Empty means auto-detect from environment variables.
 	Providers []string `toml:"providers,omitempty"`
+
+	// DailyBudget is the maximum daily LLM cost in USD.
+	// Default is $5. Set to 0 to disable the limit.
+	DailyBudget *float64 `toml:"daily_budget,omitempty"`
+
+	// HourlyRateLimit is the maximum LLM generations per hour.
+	// Default is 10. Set to 0 to disable the limit.
+	HourlyRateLimit *int `toml:"hourly_rate_limit,omitempty"`
 }
+
+const (
+	// DefaultDailyBudget is the default daily LLM cost limit in USD.
+	DefaultDailyBudget = 5.0
+
+	// DefaultHourlyRateLimit is the default maximum LLM generations per hour.
+	DefaultHourlyRateLimit = 10
+)
 
 // DefaultConfig returns a Config with default values.
 func DefaultConfig() *Config {
@@ -120,6 +136,24 @@ func (c *Config) LLMProviders() []string {
 	return c.LLM.Providers
 }
 
+// LLMDailyBudget returns the daily LLM cost limit in USD.
+// Returns DefaultDailyBudget if not explicitly set.
+func (c *Config) LLMDailyBudget() float64 {
+	if c.LLM.DailyBudget == nil {
+		return DefaultDailyBudget
+	}
+	return *c.LLM.DailyBudget
+}
+
+// LLMHourlyRateLimit returns the maximum LLM generations per hour.
+// Returns DefaultHourlyRateLimit if not explicitly set.
+func (c *Config) LLMHourlyRateLimit() int {
+	if c.LLM.HourlyRateLimit == nil {
+		return DefaultHourlyRateLimit
+	}
+	return *c.LLM.HourlyRateLimit
+}
+
 // Get returns the value of a config key as a string.
 // Returns empty string and false if the key doesn't exist.
 func (c *Config) Get(key string) (string, bool) {
@@ -133,6 +167,10 @@ func (c *Config) Get(key string) (string, bool) {
 			return "", true
 		}
 		return strings.Join(c.LLM.Providers, ","), true
+	case "llm.daily_budget":
+		return strconv.FormatFloat(c.LLMDailyBudget(), 'g', -1, 64), true
+	case "llm.hourly_rate_limit":
+		return strconv.Itoa(c.LLMHourlyRateLimit()), true
 	default:
 		return "", false
 	}
@@ -167,6 +205,26 @@ func (c *Config) Set(key, value string) error {
 		}
 		c.LLM.Providers = providers
 		return nil
+	case "llm.daily_budget":
+		f, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return fmt.Errorf("invalid value for llm.daily_budget: must be a number")
+		}
+		if f < 0 {
+			return fmt.Errorf("invalid value for llm.daily_budget: must be non-negative")
+		}
+		c.LLM.DailyBudget = &f
+		return nil
+	case "llm.hourly_rate_limit":
+		i, err := strconv.Atoi(value)
+		if err != nil {
+			return fmt.Errorf("invalid value for llm.hourly_rate_limit: must be an integer")
+		}
+		if i < 0 {
+			return fmt.Errorf("invalid value for llm.hourly_rate_limit: must be non-negative")
+		}
+		c.LLM.HourlyRateLimit = &i
+		return nil
 	default:
 		return fmt.Errorf("unknown config key: %s", key)
 	}
@@ -175,8 +233,10 @@ func (c *Config) Set(key, value string) error {
 // AvailableKeys returns a list of all configurable keys with descriptions.
 func AvailableKeys() map[string]string {
 	return map[string]string{
-		"telemetry":     "Enable anonymous usage statistics (true/false)",
-		"llm.enabled":   "Enable LLM features for recipe generation (true/false)",
-		"llm.providers": "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
+		"telemetry":             "Enable anonymous usage statistics (true/false)",
+		"llm.enabled":           "Enable LLM features for recipe generation (true/false)",
+		"llm.providers":         "Preferred LLM provider order (comma-separated, e.g., claude,gemini)",
+		"llm.daily_budget":      "Daily LLM cost limit in USD (default: 5.0, 0 to disable)",
+		"llm.hourly_rate_limit": "Max LLM generations per hour (default: 10, 0 to disable)",
 	}
 }
