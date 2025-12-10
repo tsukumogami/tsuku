@@ -1585,3 +1585,298 @@ func TestStateManager_AtomicWrite_NoPartialState(t *testing.T) {
 		t.Error("temp file should not exist after successful save")
 	}
 }
+
+// LLM Usage Tracking Tests
+
+func TestStateManager_RecordGeneration_FirstGeneration(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	err := sm.RecordGeneration(0.05)
+	if err != nil {
+		t.Fatalf("RecordGeneration() error = %v", err)
+	}
+
+	// Verify
+	state, _ := sm.Load()
+	if state.LLMUsage == nil {
+		t.Fatal("LLMUsage should not be nil after recording")
+	}
+
+	if len(state.LLMUsage.GenerationTimestamps) != 1 {
+		t.Errorf("GenerationTimestamps count = %d, want 1", len(state.LLMUsage.GenerationTimestamps))
+	}
+
+	if state.LLMUsage.DailyCost != 0.05 {
+		t.Errorf("DailyCost = %f, want 0.05", state.LLMUsage.DailyCost)
+	}
+
+	if state.LLMUsage.DailyCostDate == "" {
+		t.Error("DailyCostDate should be set")
+	}
+}
+
+func TestStateManager_RecordGeneration_AccumulatesCost(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Record multiple generations
+	_ = sm.RecordGeneration(0.05)
+	_ = sm.RecordGeneration(0.03)
+	_ = sm.RecordGeneration(0.02)
+
+	// Verify accumulated cost
+	state, _ := sm.Load()
+	expectedCost := 0.10
+	if state.LLMUsage.DailyCost < expectedCost-0.001 || state.LLMUsage.DailyCost > expectedCost+0.001 {
+		t.Errorf("DailyCost = %f, want %f", state.LLMUsage.DailyCost, expectedCost)
+	}
+
+	if len(state.LLMUsage.GenerationTimestamps) != 3 {
+		t.Errorf("GenerationTimestamps count = %d, want 3", len(state.LLMUsage.GenerationTimestamps))
+	}
+}
+
+func TestStateManager_DailySpent(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Initially should be 0
+	if spent := sm.DailySpent(); spent != 0 {
+		t.Errorf("DailySpent() = %f, want 0", spent)
+	}
+
+	// Record some cost
+	_ = sm.RecordGeneration(0.05)
+	_ = sm.RecordGeneration(0.03)
+
+	if spent := sm.DailySpent(); spent < 0.079 || spent > 0.081 {
+		t.Errorf("DailySpent() = %f, want ~0.08", spent)
+	}
+}
+
+func TestStateManager_RecentGenerationCount(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Initially should be 0
+	if count := sm.RecentGenerationCount(); count != 0 {
+		t.Errorf("RecentGenerationCount() = %d, want 0", count)
+	}
+
+	// Record some generations
+	_ = sm.RecordGeneration(0.01)
+	_ = sm.RecordGeneration(0.01)
+	_ = sm.RecordGeneration(0.01)
+
+	if count := sm.RecentGenerationCount(); count != 3 {
+		t.Errorf("RecentGenerationCount() = %d, want 3", count)
+	}
+}
+
+func TestStateManager_CanGenerate_NoUsage(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Should allow when no usage recorded
+	allowed, reason := sm.CanGenerate(10, 5.0)
+	if !allowed {
+		t.Errorf("CanGenerate() = false, %q; want true", reason)
+	}
+}
+
+func TestStateManager_CanGenerate_UnderLimits(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Record some usage under limits
+	_ = sm.RecordGeneration(0.50)
+	_ = sm.RecordGeneration(0.50)
+
+	// Should allow (2 generations < 10 limit, $1.00 < $5.00 budget)
+	allowed, reason := sm.CanGenerate(10, 5.0)
+	if !allowed {
+		t.Errorf("CanGenerate() = false, %q; want true", reason)
+	}
+}
+
+func TestStateManager_CanGenerate_RateLimitExceeded(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Record 5 generations
+	for i := 0; i < 5; i++ {
+		_ = sm.RecordGeneration(0.01)
+	}
+
+	// Should deny when rate limit is 5
+	allowed, reason := sm.CanGenerate(5, 100.0)
+	if allowed {
+		t.Error("CanGenerate() = true; want false (rate limit exceeded)")
+	}
+	if reason == "" {
+		t.Error("reason should not be empty when rate limited")
+	}
+}
+
+func TestStateManager_CanGenerate_BudgetExceeded(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Record $5 worth of generations
+	_ = sm.RecordGeneration(5.0)
+
+	// Should deny when budget is $5
+	allowed, reason := sm.CanGenerate(100, 5.0)
+	if allowed {
+		t.Error("CanGenerate() = true; want false (budget exceeded)")
+	}
+	if reason == "" {
+		t.Error("reason should not be empty when budget exceeded")
+	}
+}
+
+func TestStateManager_CanGenerate_UnlimitedRate(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Record many generations
+	for i := 0; i < 100; i++ {
+		_ = sm.RecordGeneration(0.01)
+	}
+
+	// Should allow when rate limit is 0 (unlimited)
+	allowed, _ := sm.CanGenerate(0, 100.0)
+	if !allowed {
+		t.Error("CanGenerate() = false; want true (unlimited rate)")
+	}
+}
+
+func TestStateManager_CanGenerate_UnlimitedBudget(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Record high cost
+	_ = sm.RecordGeneration(1000.0)
+
+	// Should allow when budget is 0 (unlimited)
+	allowed, _ := sm.CanGenerate(100, 0)
+	if !allowed {
+		t.Error("CanGenerate() = false; want true (unlimited budget)")
+	}
+}
+
+func TestStateManager_LLMUsage_SaveAndLoad(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Record some usage
+	_ = sm.RecordGeneration(0.05)
+
+	// Load and verify it persists
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if state.LLMUsage == nil {
+		t.Fatal("LLMUsage should persist after save/load")
+	}
+
+	if state.LLMUsage.DailyCost != 0.05 {
+		t.Errorf("DailyCost = %f, want 0.05", state.LLMUsage.DailyCost)
+	}
+}
+
+func TestStateManager_LLMUsage_BackwardCompatibility(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write state without llm_usage field (old format)
+	oldStateJSON := `{
+  "installed": {
+    "kubectl": {
+      "version": "1.29.0",
+      "is_explicit": true,
+      "required_by": []
+    }
+  }
+}`
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(oldStateJSON), 0644); err != nil {
+		t.Fatalf("failed to write old state: %v", err)
+	}
+
+	// Load should succeed
+	state, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// LLMUsage should be nil (not set in old format)
+	if state.LLMUsage != nil {
+		t.Error("LLMUsage should be nil when loading old format")
+	}
+
+	// Recording should still work
+	err = sm.RecordGeneration(0.05)
+	if err != nil {
+		t.Fatalf("RecordGeneration() error = %v", err)
+	}
+
+	// Verify it was created
+	state, _ = sm.Load()
+	if state.LLMUsage == nil {
+		t.Fatal("LLMUsage should be created after recording")
+	}
+}
+
+func TestStateManager_LLMUsage_ConcurrentAccess(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	const numGoroutines = 10
+	const opsPerGoroutine = 5
+	done := make(chan bool, numGoroutines)
+	errors := make(chan error, numGoroutines*opsPerGoroutine)
+
+	for i := 0; i < numGoroutines; i++ {
+		go func() {
+			defer func() { done <- true }()
+			for j := 0; j < opsPerGoroutine; j++ {
+				if err := sm.RecordGeneration(0.01); err != nil {
+					errors <- err
+				}
+			}
+		}()
+	}
+
+	// Wait for all goroutines
+	for i := 0; i < numGoroutines; i++ {
+		<-done
+	}
+	close(errors)
+
+	// Check for errors
+	var errs []error
+	for err := range errors {
+		errs = append(errs, err)
+	}
+	if len(errs) > 0 {
+		t.Fatalf("concurrent RecordGeneration failed with %d errors, first: %v", len(errs), errs[0])
+	}
+
+	// Verify total count and cost
+	state, _ := sm.Load()
+	expectedCount := numGoroutines * opsPerGoroutine
+	if len(state.LLMUsage.GenerationTimestamps) != expectedCount {
+		t.Errorf("GenerationTimestamps count = %d, want %d", len(state.LLMUsage.GenerationTimestamps), expectedCount)
+	}
+
+	expectedCost := float64(numGoroutines*opsPerGoroutine) * 0.01
+	if state.LLMUsage.DailyCost < expectedCost-0.01 || state.LLMUsage.DailyCost > expectedCost+0.01 {
+		t.Errorf("DailyCost = %f, want ~%f", state.LLMUsage.DailyCost, expectedCost)
+	}
+}
