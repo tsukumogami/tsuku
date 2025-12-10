@@ -1,6 +1,6 @@
 # Design Document: LLM Builder Productionization (Slice 4)
 
-**Status**: Proposed
+**Status**: Accepted
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](docs/DESIGN-llm-builder-infrastructure.md)
 
