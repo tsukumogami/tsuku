@@ -1,10 +1,82 @@
 # Design Document: LLM Builder Productionization (Slice 4)
 
-**Status**: Accepted
+**Status**: Planned
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](docs/DESIGN-llm-builder-infrastructure.md)
 
 **Issue**: [#270 - Slice 4: Productionize](https://github.com/tsukumogami/tsuku/issues/270)
+
+**Milestone**: [LLM Builder Infrastructure](https://github.com/tsukumogami/tsuku/milestone/12)
+
+## Implementation Issues
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#371](https://github.com/tsukumogami/tsuku/issues/371) | feat(config): add LLM budget and rate limit settings | - |
+| [#372](https://github.com/tsukumogami/tsuku/issues/372) | feat(state): add LLM usage tracking | - |
+| [#373](https://github.com/tsukumogami/tsuku/issues/373) | feat(create): add --skip-validation flag with consent flow | - |
+| [#374](https://github.com/tsukumogami/tsuku/issues/374) | feat(create): add --yes flag with warning | - |
+| [#375](https://github.com/tsukumogami/tsuku/issues/375) | feat(create): implement recipe preview flow | - |
+| [#377](https://github.com/tsukumogami/tsuku/issues/377) | feat(create): add progress indicators | - |
+| [#378](https://github.com/tsukumogami/tsuku/issues/378) | feat(create): implement rate limiting enforcement | #371, #372 |
+| [#379](https://github.com/tsukumogami/tsuku/issues/379) | feat(create): implement daily budget enforcement | #371, #372 |
+| [#380](https://github.com/tsukumogami/tsuku/issues/380) | feat(builders): add actionable error message templates | - |
+| [#381](https://github.com/tsukumogami/tsuku/issues/381) | feat(create): display cost after LLM generation | #371, #372, #379 |
+| [#382](https://github.com/tsukumogami/tsuku/issues/382) | test: add benchmark harness for LLM success rate | #378, #379 |
+
+**Deferred**: [#369](https://github.com/tsukumogami/tsuku/issues/369) - Secrets manager with config file support (needs-design)
+
+### Dependency Graph
+
+```
+                    ┌─────────────────────────────────────────┐
+                    │           Independent Issues             │
+                    │  #373 --skip-validation                  │
+                    │  #374 --yes flag                         │
+                    │  #375 recipe preview                     │
+                    │  #377 progress indicators                │
+                    │  #380 error templates                    │
+                    └─────────────────────────────────────────┘
+
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │                         Foundation Layer                               │
+    │                                                                        │
+    │   ┌─────────────┐                           ┌─────────────┐           │
+    │   │    #371     │                           │    #372     │           │
+    │   │   config    │                           │   state     │           │
+    │   │  settings   │                           │  tracking   │           │
+    │   └──────┬──────┘                           └──────┬──────┘           │
+    │          │                                         │                   │
+    └──────────┼─────────────────────────────────────────┼───────────────────┘
+               │                                         │
+               └────────────────┬────────────────────────┘
+                                │
+                                ▼
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │                        Enforcement Layer                               │
+    │                                                                        │
+    │   ┌─────────────┐                           ┌─────────────┐           │
+    │   │    #378     │                           │    #379     │           │
+    │   │    rate     │                           │   budget    │           │
+    │   │  limiting   │                           │ enforcement │           │
+    │   └──────┬──────┘                           └──────┬──────┘           │
+    │          │                                         │                   │
+    └──────────┼─────────────────────────────────────────┼───────────────────┘
+               │                                         │
+               │              ┌──────────────────────────┘
+               │              │
+               ▼              ▼
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │                          Polish Layer                                  │
+    │                                                                        │
+    │   ┌─────────────┐                           ┌─────────────┐           │
+    │   │    #381     │                           │    #382     │           │
+    │   │    cost     │                           │  benchmark  │           │
+    │   │  display    │                           │   harness   │           │
+    │   └─────────────┘                           └─────────────┘           │
+    │                                                                        │
+    └───────────────────────────────────────────────────────────────────────┘
+```
 
 ## Context and Problem Statement
 
