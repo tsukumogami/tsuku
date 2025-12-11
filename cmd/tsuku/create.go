@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,6 +27,27 @@ const (
 	// This is a conservative estimate based on typical token usage.
 	defaultLLMCostEstimate = 0.10
 )
+
+// cliProgressReporter implements builders.ProgressReporter for CLI output.
+type cliProgressReporter struct {
+	out io.Writer
+}
+
+func (r *cliProgressReporter) OnStageStart(stage string) {
+	_, _ = fmt.Fprintf(r.out, "%s... ", stage)
+}
+
+func (r *cliProgressReporter) OnStageDone(detail string) {
+	if detail != "" {
+		_, _ = fmt.Fprintf(r.out, "done (%s)\n", detail)
+	} else {
+		_, _ = fmt.Fprintln(r.out, "done")
+	}
+}
+
+func (r *cliProgressReporter) OnStageFailed() {
+	_, _ = fmt.Fprintln(r.out, "failed")
+}
 
 var createCmd = &cobra.Command{
 	Use:   "create <tool> --from <source>",
@@ -264,6 +286,9 @@ func runCreate(cmd *cobra.Command, args []string) {
 			opts = append(opts, builders.WithExecutor(executor))
 		}
 
+		if !quietFlag {
+			opts = append(opts, builders.WithProgressReporter(&cliProgressReporter{out: os.Stdout}))
+		}
 		ghBuilder, err := builders.NewGitHubReleaseBuilder(context.Background(), opts...)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)

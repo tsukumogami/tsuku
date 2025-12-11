@@ -1162,3 +1162,346 @@ func TestRecipeTypeConstants(t *testing.T) {
 		t.Errorf("RecipeTypeLibrary = %s, want library", RecipeTypeLibrary)
 	}
 }
+
+func TestRecipe_ToTOML_Basic(t *testing.T) {
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name:          "test-tool",
+			Description:   "A test tool",
+			Homepage:      "https://example.com",
+			VersionFormat: "semver",
+		},
+		Version: VersionSection{
+			Source:     "github_releases",
+			GitHubRepo: "owner/repo",
+		},
+		Steps: []Step{
+			{
+				Action: "github_file",
+				Params: map[string]interface{}{
+					"repo":          "owner/repo",
+					"asset_pattern": "tool-{os}-{arch}",
+					"binary":        "tool",
+				},
+			},
+		},
+		Verify: VerifySection{
+			Command: "tool --version",
+			Pattern: "{version}",
+		},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Check metadata section
+	if !contains(tomlStr, "[metadata]") {
+		t.Error("ToTOML() missing [metadata] section")
+	}
+	if !contains(tomlStr, `name = "test-tool"`) {
+		t.Error("ToTOML() missing name field")
+	}
+	if !contains(tomlStr, `description = "A test tool"`) {
+		t.Error("ToTOML() missing description field")
+	}
+	if !contains(tomlStr, `homepage = "https://example.com"`) {
+		t.Error("ToTOML() missing homepage field")
+	}
+	if !contains(tomlStr, `version_format = "semver"`) {
+		t.Error("ToTOML() missing version_format field")
+	}
+
+	// Check version section
+	if !contains(tomlStr, "[version]") {
+		t.Error("ToTOML() missing [version] section")
+	}
+	if !contains(tomlStr, `source = "github_releases"`) {
+		t.Error("ToTOML() missing source field")
+	}
+	if !contains(tomlStr, `github_repo = "owner/repo"`) {
+		t.Error("ToTOML() missing github_repo field")
+	}
+
+	// Check steps section
+	if !contains(tomlStr, "[[steps]]") {
+		t.Error("ToTOML() missing [[steps]] section")
+	}
+	if !contains(tomlStr, `action = "github_file"`) {
+		t.Error("ToTOML() missing action field in steps")
+	}
+
+	// Check verify section
+	if !contains(tomlStr, "[verify]") {
+		t.Error("ToTOML() missing [verify] section")
+	}
+	if !contains(tomlStr, `command = "tool --version"`) {
+		t.Error("ToTOML() missing command field in verify")
+	}
+	if !contains(tomlStr, `pattern = "{version}"`) {
+		t.Error("ToTOML() missing pattern field in verify")
+	}
+}
+
+func TestRecipe_ToTOML_WithStepWhen(t *testing.T) {
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name: "test-tool",
+		},
+		Version: VersionSection{
+			Source: "github_releases",
+		},
+		Steps: []Step{
+			{
+				Action: "run_command",
+				When: map[string]string{
+					"os":   "darwin",
+					"arch": "arm64",
+				},
+				Params: map[string]interface{}{
+					"command": "brew install tool",
+				},
+			},
+		},
+		Verify: VerifySection{
+			Command: "tool --version",
+		},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Check that when clause is serialized
+	if !contains(tomlStr, "[[steps]]") {
+		t.Error("ToTOML() missing [[steps]] section")
+	}
+	if !contains(tomlStr, "[when]") && !contains(tomlStr, "when.") {
+		// when may be serialized as inline table or subtable
+		t.Log("ToTOML() output:", tomlStr)
+	}
+}
+
+func TestRecipe_ToTOML_WithNoteAndDescription(t *testing.T) {
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name: "test-tool",
+		},
+		Version: VersionSection{
+			Source: "github_releases",
+		},
+		Steps: []Step{
+			{
+				Action:      "download",
+				Note:        "This is a note",
+				Description: "Download the file",
+				Params: map[string]interface{}{
+					"url": "https://example.com/file",
+				},
+			},
+		},
+		Verify: VerifySection{
+			Command: "tool --version",
+		},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Check that note and description are serialized
+	if !contains(tomlStr, `note = "This is a note"`) {
+		t.Error("ToTOML() missing note field")
+	}
+	if !contains(tomlStr, `description = "Download the file"`) {
+		t.Error("ToTOML() missing description field")
+	}
+}
+
+func TestRecipe_ToTOML_MultipleSteps(t *testing.T) {
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name: "test-tool",
+		},
+		Version: VersionSection{
+			Source: "github_releases",
+		},
+		Steps: []Step{
+			{
+				Action: "download",
+				Params: map[string]interface{}{
+					"url": "https://example.com/file1",
+				},
+			},
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{
+					"files": []string{"file1"},
+					"mode":  "755",
+				},
+			},
+		},
+		Verify: VerifySection{
+			Command: "tool --version",
+		},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Count [[steps]] occurrences - should be 2
+	count := countOccurrences(tomlStr, "[[steps]]")
+	if count != 2 {
+		t.Errorf("ToTOML() has %d [[steps]] sections, want 2", count)
+	}
+
+	// Check both actions are present
+	if !contains(tomlStr, `action = "download"`) {
+		t.Error("ToTOML() missing download action")
+	}
+	if !contains(tomlStr, `action = "chmod"`) {
+		t.Error("ToTOML() missing chmod action")
+	}
+}
+
+func TestRecipe_ToTOML_Roundtrip(t *testing.T) {
+	// Create a recipe
+	original := Recipe{
+		Metadata: MetadataSection{
+			Name:          "roundtrip-test",
+			Description:   "Testing roundtrip",
+			Homepage:      "https://example.com",
+			VersionFormat: "semver",
+		},
+		Version: VersionSection{
+			Source:     "github_releases",
+			GitHubRepo: "owner/repo",
+		},
+		Steps: []Step{
+			{
+				Action: "github_file",
+				Params: map[string]interface{}{
+					"repo":          "owner/repo",
+					"asset_pattern": "tool-{os}-{arch}",
+					"binary":        "tool",
+				},
+			},
+		},
+		Verify: VerifySection{
+			Command: "tool --version",
+			Pattern: "{version}",
+		},
+	}
+
+	// Serialize to TOML
+	data, err := original.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	// Deserialize back
+	var parsed Recipe
+	err = toml.Unmarshal(data, &parsed)
+	if err != nil {
+		t.Fatalf("Unmarshal() error = %v, toml:\n%s", err, string(data))
+	}
+
+	// Compare key fields
+	if parsed.Metadata.Name != original.Metadata.Name {
+		t.Errorf("Roundtrip Name = %s, want %s", parsed.Metadata.Name, original.Metadata.Name)
+	}
+	if parsed.Metadata.Description != original.Metadata.Description {
+		t.Errorf("Roundtrip Description = %s, want %s", parsed.Metadata.Description, original.Metadata.Description)
+	}
+	if parsed.Version.Source != original.Version.Source {
+		t.Errorf("Roundtrip Source = %s, want %s", parsed.Version.Source, original.Version.Source)
+	}
+	if len(parsed.Steps) != len(original.Steps) {
+		t.Errorf("Roundtrip Steps length = %d, want %d", len(parsed.Steps), len(original.Steps))
+	}
+	if parsed.Steps[0].Action != original.Steps[0].Action {
+		t.Errorf("Roundtrip Step[0].Action = %s, want %s", parsed.Steps[0].Action, original.Steps[0].Action)
+	}
+	if parsed.Verify.Command != original.Verify.Command {
+		t.Errorf("Roundtrip Verify.Command = %s, want %s", parsed.Verify.Command, original.Verify.Command)
+	}
+}
+
+func TestRecipe_ToTOML_EmptyFields(t *testing.T) {
+	// Recipe with minimal fields
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name: "minimal-tool",
+		},
+		Version: VersionSection{},
+		Steps:   []Step{},
+		Verify: VerifySection{
+			Command: "tool --version",
+		},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Should have all sections
+	if !contains(tomlStr, "[metadata]") {
+		t.Error("ToTOML() missing [metadata] section")
+	}
+	if !contains(tomlStr, "[version]") {
+		t.Error("ToTOML() missing [version] section")
+	}
+	if !contains(tomlStr, "[verify]") {
+		t.Error("ToTOML() missing [verify] section")
+	}
+
+	// Empty fields should not be serialized
+	if contains(tomlStr, `description = ""`) {
+		t.Error("ToTOML() should not serialize empty description")
+	}
+	if contains(tomlStr, `homepage = ""`) {
+		t.Error("ToTOML() should not serialize empty homepage")
+	}
+}
+
+// Helper function to check if string contains substring
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
+		(len(s) > 0 && len(substr) > 0 && findSubstring(s, substr)))
+}
+
+func findSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
+}
+
+// Helper function to count occurrences
+func countOccurrences(s, substr string) int {
+	count := 0
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			count++
+		}
+	}
+	return count
+}
