@@ -73,7 +73,7 @@ func TestListRubyGemsVersions(t *testing.T) {
 	defer server.Close()
 
 	// Create resolver with mock server
-	resolver := NewWithRubyGemsRegistry(server.URL)
+	resolver := New(WithRubyGemsRegistry(server.URL))
 	// Use the mock server's client to handle self-signed cert
 	resolver.httpClient = server.Client()
 
@@ -106,7 +106,7 @@ func TestResolveRubyGems(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithRubyGemsRegistry(server.URL)
+	resolver := New(WithRubyGemsRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -126,7 +126,7 @@ func TestListRubyGemsVersions_NotFound(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithRubyGemsRegistry(server.URL)
+	resolver := New(WithRubyGemsRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -150,7 +150,7 @@ func TestListRubyGemsVersions_RateLimit(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithRubyGemsRegistry(server.URL)
+	resolver := New(WithRubyGemsRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -188,7 +188,7 @@ func TestListRubyGemsVersions_InvalidGemName(t *testing.T) {
 
 func TestListRubyGemsVersions_HTTPSEnforcement(t *testing.T) {
 	// Create a resolver with HTTP URL (should fail)
-	resolver := NewWithRubyGemsRegistry("http://rubygems.org")
+	resolver := New(WithRubyGemsRegistry("http://rubygems.org"))
 
 	ctx := context.Background()
 	_, err := resolver.ListRubyGemsVersions(ctx, "bundler")
@@ -218,7 +218,7 @@ func TestRubyGemsProvider_ResolveVersion(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithRubyGemsRegistry(server.URL)
+	resolver := New(WithRubyGemsRegistry(server.URL))
 	resolver.httpClient = server.Client()
 	provider := NewRubyGemsProvider(resolver, "bundler")
 

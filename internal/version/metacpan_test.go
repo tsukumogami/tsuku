@@ -100,7 +100,7 @@ func TestResolveMetaCPAN(t *testing.T) {
 	defer server.Close()
 
 	// Create resolver with mock server
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -156,7 +156,7 @@ func TestListMetaCPANVersions(t *testing.T) {
 	defer server.Close()
 
 	// Create resolver with mock server
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -182,7 +182,7 @@ func TestResolveMetaCPAN_NotFound(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -206,7 +206,7 @@ func TestResolveMetaCPAN_RateLimit(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -269,7 +269,7 @@ func TestResolveMetaCPAN_ModuleNameSuggestion(t *testing.T) {
 
 func TestResolveMetaCPAN_HTTPSEnforcement(t *testing.T) {
 	// Create a resolver with HTTP URL (should fail)
-	resolver := NewWithMetaCPANRegistry("http://fastapi.metacpan.org/v1")
+	resolver := New(WithMetaCPANRegistry("http://fastapi.metacpan.org/v1"))
 
 	ctx := context.Background()
 	_, err := resolver.ResolveMetaCPAN(ctx, "App-Ack")
@@ -293,7 +293,7 @@ func TestResolveMetaCPAN_InvalidContentType(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -334,7 +334,7 @@ func TestMetaCPANProvider_ResolveVersion(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 	provider := NewMetaCPANProvider(resolver, "App-Ack")
 
@@ -509,7 +509,7 @@ func TestListMetaCPANVersions_DeduplicatesVersions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -537,7 +537,7 @@ func TestMetaCPANProvider_ResolveLatest(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 	provider := NewMetaCPANProvider(resolver, "App-Ack")
 
@@ -597,7 +597,7 @@ func TestListMetaCPANVersions_ModuleNameSuggestion(t *testing.T) {
 
 func TestListMetaCPANVersions_HTTPSEnforcement(t *testing.T) {
 	// Create a resolver with HTTP URL (should fail)
-	resolver := NewWithMetaCPANRegistry("http://fastapi.metacpan.org/v1")
+	resolver := New(WithMetaCPANRegistry("http://fastapi.metacpan.org/v1"))
 
 	ctx := context.Background()
 	_, err := resolver.ListMetaCPANVersions(ctx, "App-Ack")
@@ -620,7 +620,7 @@ func TestListMetaCPANVersions_NotFound(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -644,7 +644,7 @@ func TestListMetaCPANVersions_RateLimit(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -669,7 +669,7 @@ func TestListMetaCPANVersions_InvalidContentType(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -693,7 +693,7 @@ func TestListMetaCPANVersions_ServerError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -723,7 +723,7 @@ func TestResolveMetaCPAN_EmptyVersion(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()
@@ -747,7 +747,7 @@ func TestResolveMetaCPAN_ServerError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithMetaCPANRegistry(server.URL)
+	resolver := New(WithMetaCPANRegistry(server.URL))
 	resolver.httpClient = server.Client()
 
 	ctx := context.Background()

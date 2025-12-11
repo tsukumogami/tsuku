@@ -266,7 +266,7 @@ func TestNpmProvider_ResolveVersion_ExactMatch(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	provider := NewNpmProvider(resolver, "turbo")
 
 	ctx := context.Background()
@@ -304,7 +304,7 @@ func TestNpmProvider_ResolveVersion_FuzzyMatch(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	provider := NewNpmProvider(resolver, "test-package")
 
 	ctx := context.Background()
@@ -394,7 +394,7 @@ func TestNpmProvider_ResolveVersion_FuzzyMatchEdgeCases(t *testing.T) {
 			}))
 			defer server.Close()
 
-			resolver := NewWithNpmRegistry(server.URL)
+			resolver := New(WithNpmRegistry(server.URL))
 			provider := NewNpmProvider(resolver, "test-package")
 
 			ctx := context.Background()
@@ -432,7 +432,7 @@ func TestNpmProvider_ResolveVersion_NotFound(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	provider := NewNpmProvider(resolver, "turbo")
 
 	ctx := context.Background()

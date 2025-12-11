@@ -55,7 +55,7 @@ func TestResolveGoToolchain_ValidResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	info, err := resolver.ResolveGoToolchain(ctx)
@@ -86,7 +86,7 @@ func TestResolveGoToolchain_OnlyStableVersions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	info, err := resolver.ResolveGoToolchain(ctx)
@@ -113,7 +113,7 @@ func TestResolveGoToolchain_NoStableVersions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoToolchain(ctx)
@@ -141,7 +141,7 @@ func TestListGoToolchainVersions_ValidResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	versions, err := resolver.ListGoToolchainVersions(ctx)
@@ -171,7 +171,7 @@ func TestListGoToolchainVersions_EmptyResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	versions, err := resolver.ListGoToolchainVersions(ctx)
@@ -191,7 +191,7 @@ func TestResolveGoToolchain_HTTPError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoToolchain(ctx)
@@ -213,7 +213,7 @@ func TestResolveGoToolchain_MalformedJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoToolchain(ctx)
@@ -233,7 +233,7 @@ func TestListGoToolchainVersions_HTTPError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ListGoToolchainVersions(ctx)
@@ -254,7 +254,7 @@ func TestListGoToolchainVersions_MalformedJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ListGoToolchainVersions(ctx)
@@ -281,7 +281,7 @@ func TestGoToolchainProvider_ResolveVersion(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	provider := NewGoToolchainProvider(resolver)
 	ctx := context.Background()
 
@@ -326,7 +326,7 @@ func TestGoToolchainProvider_ListVersions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	provider := NewGoToolchainProvider(resolver)
 	ctx := context.Background()
 
@@ -353,7 +353,7 @@ func TestGoToolchainProvider_ResolveLatest(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	provider := NewGoToolchainProvider(resolver)
 	ctx := context.Background()
 
@@ -452,7 +452,7 @@ func TestResolveGoToolchain_EmptyVersionString(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	info, err := resolver.ResolveGoToolchain(ctx)
@@ -481,7 +481,7 @@ func TestListGoToolchainVersions_SkipsEmptyVersions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoDevURL(server.URL)
+	resolver := New(WithGoDevURL(server.URL))
 	ctx := context.Background()
 
 	versions, err := resolver.ListGoToolchainVersions(ctx)

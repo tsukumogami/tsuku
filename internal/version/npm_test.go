@@ -77,7 +77,7 @@ func TestListNpmVersions_ValidPackage(t *testing.T) {
 	defer server.Close()
 
 	// Use NewWithNpmRegistry to inject test server URL
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	versions, err := resolver.ListNpmVersions(ctx, "turbo")
 
@@ -130,7 +130,7 @@ func TestListNpmVersions_PackageNotFound(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "nonexistent-package")
 
@@ -152,7 +152,7 @@ func TestListNpmVersions_RateLimitExceeded(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "test-package")
 
@@ -174,7 +174,7 @@ func TestListNpmVersions_MalformedJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "test-package")
 
@@ -206,7 +206,7 @@ func TestListNpmVersions_VersionSorting(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	versions, err := resolver.ListNpmVersions(ctx, "test-package")
 
@@ -240,7 +240,7 @@ func TestListNpmVersions_ScopedPackage(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	versions, err := resolver.ListNpmVersions(ctx, "@aws-amplify/cli")
 
@@ -281,5 +281,5 @@ func TestResolveNpm_InvalidPackageName(t *testing.T) {
 	}
 }
 
-// Note: All npm tests now use NewWithNpmRegistry() to inject a test server URL,
+// Note: All npm tests now use New(WithNpmRegistry()) to inject a test server URL,
 // allowing comprehensive testing without hitting the real npm registry.
