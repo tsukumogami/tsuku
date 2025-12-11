@@ -114,6 +114,37 @@ The boundary: if removing the message would break a user's understanding of what
 - TextHandler for human-readable, JSONHandler for machine-parseable
 - HandlerOptions configure minimum level, source info, attribute transformation
 
+### Industry CLI Patterns (gh, kubectl, docker)
+
+Research into three prominent Go CLIs reveals distinct approaches:
+
+| CLI | Logging Library | Debug Mechanism | Output Separation |
+|-----|-----------------|-----------------|-------------------|
+| **gh** | None (IOStreams pattern) | `GH_DEBUG` env var | stdout=data, stderr=messages |
+| **kubectl** | klog (Kubernetes fork of glog) | `-v=0-9` numeric levels | stdout=user output, stderr=diagnostics |
+| **docker** | logrus (structured logging) | `--log-level` flag | streams package (`Out`, `Err`) |
+
+**Key insights:**
+
+1. **gh uses no logging library** - Instead uses an IOStreams abstraction that wraps stdout/stderr with terminal capability detection. Debug output enabled via environment variable rather than flags.
+
+2. **kubectl uses numeric verbosity** - Levels 0-9 with progressively more detail. Levels 6-9 show HTTP traffic. Uses klog's `V()` pattern for conditional logging that avoids evaluation overhead when disabled.
+
+3. **docker uses logrus** - Structured field-based logging. Streams package provides testable I/O abstraction. Strong emphasis on `--password-stdin` pattern for credentials.
+
+**Common patterns across all three:**
+- User output goes to stdout for piping (`cmd | grep`)
+- Diagnostic/debug logs go to stderr
+- Verbosity controlled by flags or environment variables
+- Streams abstraction for testable output
+- Sensitive data protection (avoid logging credentials)
+
+**Implications for tsuku:**
+- Our choice of slog (stdlib) is consistent with the trend toward structured logging
+- IOStreams-style output abstraction is a proven pattern (gh, docker)
+- Numeric verbosity (kubectl-style) vs named levels (docker-style) - both work; we're choosing named flags for simplicity
+- Environment variable support (`TSUKU_DEBUG`) could complement flags
+
 ## Considered Options
 
 This design addresses two related decisions: (1) which logging framework to adopt, and (2) how to ensure log coverage remains consistent as code evolves.
@@ -419,13 +450,15 @@ The interface mirrors slog's method signatures so the implementation is a thin w
 
 **Verbosity levels:**
 ```
-Level     Flag              Shows
-─────────────────────────────────────────
-ERROR     --quiet           Errors only
-WARN      (default)         + Warnings + user output
-INFO      --verbose         + Info messages
-DEBUG     --debug           + Debug details
+Level     Flag              Env Var            Shows
+──────────────────────────────────────────────────────────────
+ERROR     --quiet           TSUKU_QUIET=1      Errors only
+WARN      (default)         -                  + Warnings + user output
+INFO      --verbose         TSUKU_VERBOSE=1    + Info messages
+DEBUG     --debug           TSUKU_DEBUG=1      + Debug details
 ```
+
+**Environment variable support:** Following the gh CLI pattern, verbosity can also be controlled via environment variables. This is useful in CI environments where modifying command-line flags may be inconvenient. Flags take precedence over environment variables.
 
 ### Data Flow
 
