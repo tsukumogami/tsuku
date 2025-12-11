@@ -288,7 +288,6 @@ func (r *Resolver) ListGitHubVersions(ctx context.Context, repo string) ([]strin
 	return versions, nil
 }
 
-
 // ResolveHashiCorp resolves the latest version from HashiCorp releases
 // For now, this is a placeholder - real implementation would query releases.hashicorp.com
 func (r *Resolver) ResolveHashiCorp(ctx context.Context, product string) (string, error) {
