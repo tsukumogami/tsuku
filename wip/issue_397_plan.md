@@ -29,11 +29,11 @@ Extract code incrementally, ensuring tests pass after each step:
 
 ### Step 2: Extract version utilities to version_utils.go
 
-- [ ] Create `internal/version/version_utils.go`
-- [ ] Move `normalizeVersion()` function (lines 744-765)
-- [ ] Move `isValidVersion()` function (lines 767-783)
-- [ ] Move `compareVersions()` function (lines 785-820)
-- [ ] Verify tests pass
+- [x] Create `internal/version/version_utils.go`
+- [x] Move `normalizeVersion()` function
+- [x] Move `isValidVersion()` function
+- [x] Move `compareVersions()` function
+- [x] Verify tests pass
 
 ### Step 3: Introduce functional options pattern
 
