@@ -58,4 +58,8 @@ type BuildResult struct {
 
 	// ValidationSkipped indicates validation was skipped (e.g., no container runtime).
 	ValidationSkipped bool
+
+	// Cost is the estimated cost in USD for LLM-based generation.
+	// Only populated by LLM-based builders (e.g., GitHubReleaseBuilder).
+	Cost float64
 }
