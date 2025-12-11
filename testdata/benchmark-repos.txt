@@ -1,0 +1,44 @@
+# Benchmark corpus for LLM recipe generation
+# Lines starting with # are comments
+# One repo per line in owner/repo format
+
+# CLI tools with complex release naming
+cli/cli
+BurntSushi/ripgrep
+sharkdp/bat
+junegunn/fzf
+jesseduffield/lazygit
+
+# Kubernetes/DevOps tools
+derailed/k9s
+stern/stern
+k3d-io/k3d
+kubernetes-sigs/kind
+aquasecurity/trivy
+
+# Security/encryption tools
+FiloSottile/age
+
+# Go tools with standard naming
+golangci/golangci-lint
+goreleaser/goreleaser
+
+# Rust tools
+ast-grep/ast-grep
+lsd-rs/lsd
+eza-community/eza
+
+# Infrastructure tools
+terraform-linters/tflint
+runatlantis/atlantis
+
+# Development tools
+nektos/act
+charmbracelet/glow
+extrawurst/gitui
+
+# Misc popular tools
+ajeetdsouza/zoxide
+sharkdp/fd
+ogham/exa
+starship/starship
