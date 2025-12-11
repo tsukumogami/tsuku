@@ -5,6 +5,20 @@
 - **Created**: 2025-12-10
 - **Scope**: Tactical
 
+## Implementation Issues
+
+Milestone: [Deterministic Recipe Execution](https://github.com/tsukumogami/tsuku/milestone/15)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| #401 | feat(executor): add installation plan data types | None |
+| #402 | feat(executor): implement plan generator | Blocked by #401 |
+| #403 | feat(cli): add tsuku eval command | Blocked by #402 |
+| #404 | feat(install): store plans in state.json | Blocked by #402 |
+| #405 | feat(cli): add tsuku plan show command | Blocked by #404 |
+| #406 | feat(cli): add tsuku plan export command | Blocked by #404 |
+| #407 | fix(cache): harden download cache security | None (parallel) |
+
 ## Upstream Design Reference
 
 This design implements Milestone 1 of [DESIGN-deterministic-resolution.md](DESIGN-deterministic-resolution.md).
@@ -594,15 +608,4 @@ The following security measures are deferred to future milestones:
 - **Download size limits**: Optional maximum download size to prevent resource exhaustion.
 
 These are not required for Milestone 1 (evaluation only) but will be addressed before plan-based installation.
-
-## Implementation Issues
-
-- Milestone: [Deterministic Recipe Execution](https://github.com/tsukumogami/tsuku/milestone/15)
-- #401: Installation plan data types
-- #402: Plan generator implementation
-- #403: tsuku eval command
-- #404: Plan storage in state.json
-- #405: tsuku plan show command
-- #406: tsuku plan export command
-- #407: Cache security hardening
 
