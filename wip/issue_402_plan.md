@@ -31,15 +31,15 @@ For checksum computation, we'll reuse PreDownloader from `internal/validate/pred
 
 ## Implementation Steps
 
-- [ ] Add PlanConfig struct and GeneratePlan method signature to plan_generator.go
-- [ ] Implement version resolution integration
-- [ ] Implement recipe hash computation (SHA256 of TOML)
-- [ ] Implement step processing with template expansion
-- [ ] Implement download checksum computation using PreDownloader
-- [ ] Add non-evaluable action warning callback
-- [ ] Implement platform-specific when clause filtering with override support
-- [ ] Add unit tests with mock recipes
-- [ ] Run tests and verify build
+- [x] Add PlanConfig struct and GeneratePlan method signature to plan_generator.go
+- [x] Implement version resolution integration
+- [x] Implement recipe hash computation (SHA256 of TOML)
+- [x] Implement step processing with template expansion
+- [x] Implement download checksum computation using PreDownloader
+- [x] Add non-evaluable action warning callback
+- [x] Implement platform-specific when clause filtering with override support
+- [x] Add unit tests with mock recipes
+- [x] Run tests and verify build
 
 ## Testing Strategy
 
