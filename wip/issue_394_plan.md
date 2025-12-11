@@ -108,7 +108,7 @@ The package already has separate provider files (`provider_*.go`). The main reso
   - Decision: SKIP - only 5 commits in 2 months (vs 13-17 for HIGH/MEDIUM files)
   - File has high cohesion (LLM conversation flow is inherently complex)
   - No significant merge conflict issues reported
-- [ ] Document refactoring guidelines in CONTRIBUTING.md or docs/
+- [x] Document refactoring guidelines in CONTRIBUTING.md
 
 ## Testing Strategy
 
