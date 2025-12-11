@@ -277,6 +277,54 @@ The release includes:
 
 Tags containing a hyphen after the version (e.g., `v1.0.0-rc.1`, `v0.2.0-beta`) are automatically marked as pre-releases on GitHub.
 
+## Code Organization
+
+### File Size Guidelines
+
+Keep individual files focused and reasonably sized to reduce merge conflicts and improve maintainability:
+
+- **Target**: 200-400 lines per file
+- **Maximum**: 600 lines before considering a split
+- **Indicator**: If a file regularly causes merge conflicts, consider splitting it
+
+### When to Split Files
+
+Split a file when:
+1. It has multiple distinct responsibilities (violates single-responsibility principle)
+2. Different parts change at different rates (high churn in one area)
+3. It causes frequent merge conflicts
+4. It's difficult to navigate or understand
+
+### How to Split Files
+
+1. **Identify functional boundaries**: Group related functions, types, and constants
+2. **Preserve cohesion**: Keep tightly coupled code together
+3. **Follow Go conventions**:
+   - One package per directory
+   - Related types and their methods in the same file
+   - Test files next to implementation (`foo.go` and `foo_test.go`)
+4. **Use clear naming**: File names should describe their contents (`state_tool.go`, `state_lib.go`)
+
+### Refactoring Patterns
+
+Common patterns used in this codebase:
+
+- **Facade pattern**: Main file delegates to specialized modules (see `internal/version/resolver.go`)
+- **Functional options**: Replace multiple constructors with `With*` functions
+- **Type-per-file**: Large types with many methods get their own file
+
+### Package Structure
+
+```
+internal/
+  package/
+    types.go        # Core types shared across the package
+    foo.go          # Implementation for foo functionality
+    foo_test.go     # Tests for foo.go
+    bar.go          # Implementation for bar functionality
+    bar_test.go     # Tests for bar.go
+```
+
 ## Getting Help
 
 - Open an issue for bugs or feature requests
