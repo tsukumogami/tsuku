@@ -90,44 +90,74 @@ func TestNew(t *testing.T) {
 	}
 }
 
-func TestNewWithNpmRegistry(t *testing.T) {
-	resolver := NewWithNpmRegistry("express")
-	if resolver == nil {
-		t.Fatal("NewWithNpmRegistry() returned nil")
-	}
-	if resolver.httpClient == nil {
-		t.Error("NewWithNpmRegistry() did not initialize httpClient")
-	}
-}
+func TestNewWithOptions(t *testing.T) {
+	t.Run("WithNpmRegistry", func(t *testing.T) {
+		resolver := New(WithNpmRegistry("https://custom.npm.registry"))
+		if resolver == nil {
+			t.Fatal("New(WithNpmRegistry()) returned nil")
+		}
+		if resolver.httpClient == nil {
+			t.Error("New(WithNpmRegistry()) did not initialize httpClient")
+		}
+		if resolver.npmRegistryURL != "https://custom.npm.registry" {
+			t.Errorf("Expected npm registry URL 'https://custom.npm.registry', got '%s'", resolver.npmRegistryURL)
+		}
+	})
 
-func TestNewWithCratesIORegistry(t *testing.T) {
-	resolver := NewWithCratesIORegistry("ripgrep")
-	if resolver == nil {
-		t.Fatal("NewWithCratesIORegistry() returned nil")
-	}
-	if resolver.httpClient == nil {
-		t.Error("NewWithCratesIORegistry() did not initialize httpClient")
-	}
-}
+	t.Run("WithCratesIORegistry", func(t *testing.T) {
+		resolver := New(WithCratesIORegistry("https://custom.crates.io"))
+		if resolver == nil {
+			t.Fatal("New(WithCratesIORegistry()) returned nil")
+		}
+		if resolver.httpClient == nil {
+			t.Error("New(WithCratesIORegistry()) did not initialize httpClient")
+		}
+		if resolver.cratesIORegistryURL != "https://custom.crates.io" {
+			t.Errorf("Expected crates.io registry URL 'https://custom.crates.io', got '%s'", resolver.cratesIORegistryURL)
+		}
+	})
 
-func TestNewWithRubyGemsRegistry(t *testing.T) {
-	resolver := NewWithRubyGemsRegistry("rails")
-	if resolver == nil {
-		t.Fatal("NewWithRubyGemsRegistry() returned nil")
-	}
-	if resolver.httpClient == nil {
-		t.Error("NewWithRubyGemsRegistry() did not initialize httpClient")
-	}
-}
+	t.Run("WithRubyGemsRegistry", func(t *testing.T) {
+		resolver := New(WithRubyGemsRegistry("https://custom.rubygems.org"))
+		if resolver == nil {
+			t.Fatal("New(WithRubyGemsRegistry()) returned nil")
+		}
+		if resolver.httpClient == nil {
+			t.Error("New(WithRubyGemsRegistry()) did not initialize httpClient")
+		}
+		if resolver.rubygemsRegistryURL != "https://custom.rubygems.org" {
+			t.Errorf("Expected RubyGems registry URL 'https://custom.rubygems.org', got '%s'", resolver.rubygemsRegistryURL)
+		}
+	})
 
-func TestNewWithPyPIRegistry(t *testing.T) {
-	resolver := NewWithPyPIRegistry("requests")
-	if resolver == nil {
-		t.Fatal("NewWithPyPIRegistry() returned nil")
-	}
-	if resolver.httpClient == nil {
-		t.Error("NewWithPyPIRegistry() did not initialize httpClient")
-	}
+	t.Run("WithPyPIRegistry", func(t *testing.T) {
+		resolver := New(WithPyPIRegistry("https://custom.pypi.org"))
+		if resolver == nil {
+			t.Fatal("New(WithPyPIRegistry()) returned nil")
+		}
+		if resolver.httpClient == nil {
+			t.Error("New(WithPyPIRegistry()) did not initialize httpClient")
+		}
+		if resolver.pypiRegistryURL != "https://custom.pypi.org" {
+			t.Errorf("Expected PyPI registry URL 'https://custom.pypi.org', got '%s'", resolver.pypiRegistryURL)
+		}
+	})
+
+	t.Run("MultipleOptions", func(t *testing.T) {
+		resolver := New(
+			WithNpmRegistry("https://npm.example.com"),
+			WithGoDevURL("https://go.example.com"),
+		)
+		if resolver == nil {
+			t.Fatal("New() with multiple options returned nil")
+		}
+		if resolver.npmRegistryURL != "https://npm.example.com" {
+			t.Errorf("Expected npm registry URL 'https://npm.example.com', got '%s'", resolver.npmRegistryURL)
+		}
+		if resolver.goDevURL != "https://go.example.com" {
+			t.Errorf("Expected go.dev URL 'https://go.example.com', got '%s'", resolver.goDevURL)
+		}
+	})
 }
 
 func TestWrapGitHubRateLimitError(t *testing.T) {

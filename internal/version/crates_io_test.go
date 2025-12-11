@@ -75,7 +75,7 @@ func TestListCratesIOVersions_ValidCrate(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	ctx := context.Background()
 	versions, err := resolver.ListCratesIOVersions(ctx, "cargo-audit")
 
@@ -128,7 +128,7 @@ func TestListCratesIOVersions_CrateNotFound(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListCratesIOVersions(ctx, "nonexistent-crate")
 
@@ -149,7 +149,7 @@ func TestListCratesIOVersions_RateLimitExceeded(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListCratesIOVersions(ctx, "test-crate")
 
@@ -170,7 +170,7 @@ func TestListCratesIOVersions_MalformedJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListCratesIOVersions(ctx, "test-crate")
 
@@ -191,7 +191,7 @@ func TestListCratesIOVersions_WrongContentType(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListCratesIOVersions(ctx, "test-crate")
 
@@ -223,7 +223,7 @@ func TestListCratesIOVersions_VersionSorting(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	ctx := context.Background()
 	versions, err := resolver.ListCratesIOVersions(ctx, "test-crate")
 
@@ -259,7 +259,7 @@ func TestCratesIOProvider_ResolveVersion_ExactMatch(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	provider := NewCratesIOProvider(resolver, "cargo-audit")
 	ctx := context.Background()
 
@@ -288,7 +288,7 @@ func TestCratesIOProvider_ResolveVersion_FuzzyMatch(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	provider := NewCratesIOProvider(resolver, "cargo-audit")
 	ctx := context.Background()
 
@@ -317,7 +317,7 @@ func TestCratesIOProvider_ResolveVersion_NotFound(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	provider := NewCratesIOProvider(resolver, "cargo-audit")
 	ctx := context.Background()
 
@@ -347,7 +347,7 @@ func TestCratesIOProvider_ResolveLatest(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithCratesIORegistry(server.URL)
+	resolver := New(WithCratesIORegistry(server.URL))
 	provider := NewCratesIOProvider(resolver, "cargo-audit")
 	ctx := context.Background()
 

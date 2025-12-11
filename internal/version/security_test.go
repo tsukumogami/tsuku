@@ -103,7 +103,7 @@ func TestSSRFProtection_RedirectToPrivate(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "test")
 
@@ -125,7 +125,7 @@ func TestSSRFProtection_RedirectToLoopback(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "test")
 
@@ -146,7 +146,7 @@ func TestSSRFProtection_NonHTTPSRedirect(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "test")
 
@@ -171,7 +171,7 @@ func TestSSRFProtection_TooManyRedirects(t *testing.T) {
 	defer server.Close()
 	serverURL = server.URL
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "test")
 
@@ -199,7 +199,7 @@ func TestDecompressionBomb(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "test")
 
@@ -374,7 +374,7 @@ func TestAcceptEncodingHeader(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithNpmRegistry(server.URL)
+	resolver := New(WithNpmRegistry(server.URL))
 	ctx := context.Background()
 	_, err := resolver.ListNpmVersions(ctx, "test")
 
@@ -644,7 +644,7 @@ func TestSSRFProtection_RedirectChainEdgeCases(t *testing.T) {
 			serverURL = server.URL
 
 			// Create resolver that uses the test server's TLS client
-			resolver := NewWithNpmRegistry(server.URL)
+			resolver := New(WithNpmRegistry(server.URL))
 			// Override the HTTP client to use the test server's TLS config
 			resolver.httpClient = server.Client()
 			// Re-apply our security-hardened CheckRedirect to the test client

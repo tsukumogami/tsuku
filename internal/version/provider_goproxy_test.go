@@ -61,7 +61,7 @@ func TestResolveGoProxy_ValidResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	ctx := context.Background()
 
 	info, err := resolver.ResolveGoProxy(ctx, "github.com/golangci/golangci-lint")
@@ -94,7 +94,7 @@ func TestResolveGoProxy_EncodesModulePath(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoProxy(ctx, "github.com/User/Repo")
@@ -116,7 +116,7 @@ func TestResolveGoProxy_HTTPError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoProxy(ctx, "github.com/nonexistent/module")
@@ -138,7 +138,7 @@ func TestResolveGoProxy_MalformedJSON(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ResolveGoProxy(ctx, "github.com/test/module")
@@ -164,7 +164,7 @@ func TestListGoProxyVersions_ValidResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	ctx := context.Background()
 
 	versions, err := resolver.ListGoProxyVersions(ctx, "github.com/golangci/golangci-lint")
@@ -193,7 +193,7 @@ func TestListGoProxyVersions_EmptyResponse(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	ctx := context.Background()
 
 	versions, err := resolver.ListGoProxyVersions(ctx, "github.com/test/module")
@@ -213,7 +213,7 @@ func TestListGoProxyVersions_HTTPError(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ListGoProxyVersions(ctx, "github.com/test/module")
@@ -235,7 +235,7 @@ func TestListGoProxyVersions_EncodesModulePath(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	ctx := context.Background()
 
 	_, err := resolver.ListGoProxyVersions(ctx, "github.com/User/Repo")
@@ -262,7 +262,7 @@ func TestGoProxyProvider_ResolveLatest(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	provider := NewGoProxyProvider(resolver, "github.com/golangci/golangci-lint")
 	ctx := context.Background()
 
@@ -283,7 +283,7 @@ func TestGoProxyProvider_ListVersions(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	provider := NewGoProxyProvider(resolver, "github.com/golangci/golangci-lint")
 	ctx := context.Background()
 
@@ -305,7 +305,7 @@ func TestGoProxyProvider_ResolveVersion(t *testing.T) {
 	}))
 	defer server.Close()
 
-	resolver := NewWithGoProxyURL(server.URL)
+	resolver := New(WithGoProxyURL(server.URL))
 	provider := NewGoProxyProvider(resolver, "github.com/golangci/golangci-lint")
 	ctx := context.Background()
 
