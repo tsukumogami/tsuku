@@ -230,6 +230,7 @@ func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*Bu
 		RepairAttempts:    repairAttempts,
 		Provider:          provider.Name(),
 		ValidationSkipped: validationSkipped,
+		Cost:              usage.Cost(),
 	}
 
 	if repairAttempts > 0 {

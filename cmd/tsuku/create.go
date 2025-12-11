@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/builders"
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -324,15 +326,15 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Record LLM usage for successful GitHub builds (includes cost tracking)
 	if isGitHub && stateManager != nil {
-		if err := stateManager.RecordGeneration(defaultLLMCostEstimate); err != nil {
+		// Use actual cost from build result if available, otherwise fall back to estimate
+		cost := result.Cost
+		if cost == 0 {
+			cost = defaultLLMCostEstimate
+		}
+		if err := stateManager.RecordGeneration(cost); err != nil {
 			// Non-fatal: log warning but continue
 			fmt.Fprintf(os.Stderr, "Warning: failed to record LLM usage: %v\n", err)
 		}
-	}
-
-	// Show warnings (printed to stderr)
-	for _, warning := range result.Warnings {
-		fmt.Fprintf(os.Stderr, "Warning: %s\n", warning)
 	}
 
 	// Add llm_validation metadata if validation was skipped
@@ -354,6 +356,25 @@ func runCreate(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(os.Stderr, "Error: recipe already exists at %s\n", recipePath)
 		fmt.Fprintf(os.Stderr, "Use --force to overwrite\n")
 		exitWithCode(ExitGeneral)
+	}
+
+	// For GitHub builder, show preview and prompt for approval (unless --yes)
+	if isGitHub && !createAutoApprove {
+		fmt.Println() // Blank line after "Creating recipe..." message
+		approved, err := previewRecipe(result.Recipe, result)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading input: %v\n", err)
+			exitWithCode(ExitGeneral)
+		}
+		if !approved {
+			printInfo("Canceled.")
+			return
+		}
+	} else {
+		// For ecosystem builders or when --yes is used, show warnings (printed to stderr)
+		for _, warning := range result.Warnings {
+			fmt.Fprintf(os.Stderr, "Warning: %s\n", warning)
+		}
 	}
 
 	// Write the recipe
@@ -391,4 +412,194 @@ func runCreate(cmd *cobra.Command, args []string) {
 	printInfo()
 	printInfo("To install, run:")
 	printInfof("  tsuku install %s\n", toolName)
+}
+
+// previewRecipe displays a recipe summary and prompts for user action.
+// Returns true if the user approves installation, false if canceled.
+func previewRecipe(r *recipe.Recipe, result *builders.BuildResult) (bool, error) {
+	fmt.Printf("Generated recipe for %s:\n\n", r.Metadata.Name)
+
+	// Show downloads
+	fmt.Println("  Downloads:")
+	urls := extractDownloadURLs(r)
+	if len(urls) == 0 {
+		fmt.Println("    (none)")
+	} else {
+		for _, url := range urls {
+			fmt.Printf("    - %s\n", url)
+		}
+	}
+	fmt.Println()
+
+	// Show actions
+	fmt.Println("  Actions:")
+	for i, step := range r.Steps {
+		fmt.Printf("    %d. %s\n", i+1, describeStep(step))
+	}
+	fmt.Println()
+
+	// Show verification
+	if r.Verify.Command != "" {
+		fmt.Printf("  Verification: %s\n", r.Verify.Command)
+		fmt.Println()
+	}
+
+	// Show LLM info if available
+	if result.Provider != "" {
+		fmt.Printf("  LLM: %s (cost: $%.4f)\n", result.Provider, result.Cost)
+	}
+
+	// Show repair attempts if any
+	if result.RepairAttempts > 0 {
+		fmt.Printf("  Note: Recipe required %d repair attempt(s)\n", result.RepairAttempts)
+	}
+
+	// Show validation status
+	if result.ValidationSkipped {
+		fmt.Println("  Warning: Validation was skipped")
+	}
+
+	// Show other warnings
+	for _, warning := range result.Warnings {
+		// Skip LLM usage warning as we show cost separately
+		if !strings.HasPrefix(warning, "LLM usage:") {
+			fmt.Printf("  Warning: %s\n", warning)
+		}
+	}
+	fmt.Println()
+
+	return promptForApproval(r)
+}
+
+// promptForApproval handles the interactive prompt loop.
+// Returns true if user chooses to install, false if canceled.
+func promptForApproval(r *recipe.Recipe) (bool, error) {
+	reader := bufio.NewReader(os.Stdin)
+
+	for {
+		fmt.Print("[v]iew full recipe, [i]nstall, [c]ancel? ")
+		input, err := reader.ReadString('\n')
+		if err != nil {
+			return false, err
+		}
+
+		input = strings.TrimSpace(strings.ToLower(input))
+
+		switch input {
+		case "v", "view":
+			// Show full TOML and re-prompt
+			tomlStr, err := formatRecipeTOML(r)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Error formatting recipe: %v\n", err)
+			} else {
+				fmt.Println()
+				fmt.Println(tomlStr)
+				fmt.Println()
+			}
+		case "i", "install":
+			return true, nil
+		case "c", "cancel", "":
+			return false, nil
+		default:
+			fmt.Println("Invalid input. Please enter 'v', 'i', or 'c'.")
+		}
+	}
+}
+
+// extractDownloadURLs returns download URLs from the recipe.
+func extractDownloadURLs(r *recipe.Recipe) []string {
+	var urls []string
+	for _, step := range r.Steps {
+		switch step.Action {
+		case "github_archive", "github_file":
+			if repo, ok := step.Params["repo"].(string); ok {
+				if pattern, ok := step.Params["asset_pattern"].(string); ok {
+					urls = append(urls, fmt.Sprintf("github.com/%s/releases/.../%s", repo, pattern))
+				}
+			}
+		case "download", "download_archive":
+			if url, ok := step.Params["url"].(string); ok {
+				urls = append(urls, url)
+			}
+		case "hashicorp_release":
+			if product, ok := step.Params["product"].(string); ok {
+				urls = append(urls, fmt.Sprintf("releases.hashicorp.com/%s/...", product))
+			}
+		}
+	}
+	return urls
+}
+
+// describeStep returns a human-readable description of a recipe step.
+func describeStep(step recipe.Step) string {
+	switch step.Action {
+	case "github_archive":
+		format := "tar.gz"
+		if f, ok := step.Params["archive_format"].(string); ok {
+			format = f
+		}
+		return fmt.Sprintf("Download and extract %s archive from GitHub", format)
+	case "github_file":
+		return "Download binary from GitHub releases"
+	case "download":
+		return "Download file"
+	case "download_archive":
+		return "Download and extract archive"
+	case "hashicorp_release":
+		return "Download from HashiCorp releases"
+	case "chmod":
+		return "Set file permissions"
+	case "npm_install":
+		return "Install via npm"
+	case "pip_install":
+		return "Install via pip"
+	case "gem_install":
+		return "Install via gem"
+	case "cargo_install":
+		return "Install via cargo"
+	case "run":
+		if cmd, ok := step.Params["command"].(string); ok {
+			// Truncate long commands
+			if len(cmd) > 40 {
+				cmd = cmd[:37] + "..."
+			}
+			return fmt.Sprintf("Run: %s", cmd)
+		}
+		return "Run command"
+	default:
+		if step.Description != "" {
+			return step.Description
+		}
+		return step.Action
+	}
+}
+
+// formatRecipeTOML returns the recipe as a TOML string.
+func formatRecipeTOML(r *recipe.Recipe) (string, error) {
+	// Use the same encoding structure as recipe.WriteRecipe
+	type recipeForEncoding struct {
+		Metadata recipe.MetadataSection   `toml:"metadata"`
+		Version  recipe.VersionSection    `toml:"version"`
+		Steps    []map[string]interface{} `toml:"steps"`
+		Verify   recipe.VerifySection     `toml:"verify"`
+	}
+
+	steps := make([]map[string]interface{}, len(r.Steps))
+	for i, step := range r.Steps {
+		steps[i] = step.ToMap()
+	}
+
+	encodable := &recipeForEncoding{
+		Metadata: r.Metadata,
+		Version:  r.Version,
+		Steps:    steps,
+		Verify:   r.Verify,
+	}
+
+	var buf bytes.Buffer
+	encoder := toml.NewEncoder(&buf)
+	if err := encoder.Encode(encodable); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
