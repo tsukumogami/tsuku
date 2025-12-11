@@ -31,6 +31,18 @@ const (
 	MaxRepairAttempts = 2
 )
 
+// ProgressReporter receives progress updates during recipe generation.
+type ProgressReporter interface {
+	// OnStageStart is called when a stage begins. The stage name is printed
+	// followed by "... " (no newline).
+	OnStageStart(stage string)
+	// OnStageDone is called when a stage completes successfully.
+	// If detail is non-empty, prints "done (detail)", otherwise just "done".
+	OnStageDone(detail string)
+	// OnStageFailed is called when a stage fails.
+	OnStageFailed()
+}
+
 // GitHubReleaseBuilder generates recipes from GitHub release assets using LLM analysis.
 type GitHubReleaseBuilder struct {
 	httpClient      *http.Client
@@ -39,6 +51,7 @@ type GitHubReleaseBuilder struct {
 	sanitizer       *validate.Sanitizer
 	githubBaseURL   string
 	telemetryClient *telemetry.Client
+	progress        ProgressReporter
 }
 
 // GitHubReleaseBuilderOption configures a GitHubReleaseBuilder.
@@ -83,6 +96,13 @@ func WithGitHubBaseURL(url string) GitHubReleaseBuilderOption {
 func WithTelemetryClient(c *telemetry.Client) GitHubReleaseBuilderOption {
 	return func(b *GitHubReleaseBuilder) {
 		b.telemetryClient = c
+	}
+}
+
+// WithProgressReporter sets the progress reporter for stage updates.
+func WithProgressReporter(p ProgressReporter) GitHubReleaseBuilderOption {
+	return func(b *GitHubReleaseBuilder) {
+		b.progress = p
 	}
 }
 
@@ -140,6 +160,27 @@ func (b *GitHubReleaseBuilder) Name() string {
 	return "github"
 }
 
+// reportStart reports a stage starting, if progress reporter is set.
+func (b *GitHubReleaseBuilder) reportStart(stage string) {
+	if b.progress != nil {
+		b.progress.OnStageStart(stage)
+	}
+}
+
+// reportDone reports a stage completed successfully, if progress reporter is set.
+func (b *GitHubReleaseBuilder) reportDone(detail string) {
+	if b.progress != nil {
+		b.progress.OnStageDone(detail)
+	}
+}
+
+// reportFailed reports a stage failed, if progress reporter is set.
+func (b *GitHubReleaseBuilder) reportFailed() {
+	if b.progress != nil {
+		b.progress.OnStageFailed()
+	}
+}
+
 // CanBuild checks if the SourceArg contains a valid owner/repo format.
 func (b *GitHubReleaseBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
 	// This builder requires SourceArg, not packageName
@@ -158,23 +199,34 @@ func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*Bu
 	repoPath := fmt.Sprintf("%s/%s", owner, repo)
 
 	// Fetch releases
+	b.reportStart("Fetching release metadata")
 	releases, err := b.fetchReleases(ctx, owner, repo)
 	if err != nil {
+		b.reportFailed()
 		return nil, fmt.Errorf("failed to fetch releases: %w", err)
 	}
 
 	if len(releases) == 0 {
+		b.reportFailed()
 		return nil, fmt.Errorf("no releases found for %s", repoPath)
 	}
 
 	// Fetch repo metadata
 	repoMeta, err := b.fetchRepoMeta(ctx, owner, repo)
 	if err != nil {
+		b.reportFailed()
 		return nil, fmt.Errorf("failed to fetch repo metadata: %w", err)
 	}
 
 	// Fetch README (non-fatal if it fails)
 	readme := b.fetchREADME(ctx, owner, repo, releases[0].Tag)
+
+	// Report metadata fetch complete with details
+	assetCount := 0
+	if len(releases) > 0 {
+		assetCount = len(releases[0].Assets)
+	}
+	b.reportDone(fmt.Sprintf("%s, %d assets", releases[0].Tag, assetCount))
 
 	// Build generation context
 	genCtx := &generationContext{
@@ -275,14 +327,23 @@ func (b *GitHubReleaseBuilder) generateWithRepair(
 		// Emit repair attempt event for retries (not the first attempt)
 		if attempt > 0 {
 			b.telemetryClient.SendLLM(telemetry.NewLLMRepairAttemptEvent(provider.Name(), attempt, lastErrorCategory))
+			// Report repair progress
+			b.reportStart(fmt.Sprintf("Repairing recipe (attempt %d/%d)", attempt, MaxRepairAttempts+1))
+		} else {
+			// Report LLM analysis starting (first attempt only)
+			b.reportStart(fmt.Sprintf("Analyzing assets with %s", provider.Name()))
 		}
 
 		// Run conversation loop to get pattern
 		pattern, turnUsage, err := b.runConversationLoop(ctx, provider, systemPrompt, messages, tools, genCtx)
 		if err != nil {
+			b.reportFailed()
 			return nil, &totalUsage, repairAttempts, validationSkipped, err
 		}
 		totalUsage.Add(*turnUsage)
+
+		// Report LLM analysis done
+		b.reportDone("")
 
 		// If no executor, skip validation
 		if b.executor == nil {
@@ -298,12 +359,29 @@ func (b *GitHubReleaseBuilder) generateWithRepair(
 			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("failed to generate recipe for validation: %w", err)
 		}
 
+		// Substitute {version} in verify command and pattern with actual version tag
+		// This allows the pattern check to work correctly during validation
+		if genCtx.tag != "" {
+			// Strip 'v' prefix if present for version matching
+			version := strings.TrimPrefix(genCtx.tag, "v")
+			if r.Verify.Command != "" {
+				r.Verify.Command = strings.ReplaceAll(r.Verify.Command, "{version}", version)
+			}
+			if r.Verify.Pattern != "" {
+				r.Verify.Pattern = strings.ReplaceAll(r.Verify.Pattern, "{version}", version)
+			}
+		}
+
 		// Build asset URL for validation
 		assetURL := b.buildAssetURL(genCtx, pattern)
+
+		// Report validation starting
+		b.reportStart("Validating in container")
 
 		// Validate in container
 		result, err := b.executor.Validate(ctx, r, assetURL)
 		if err != nil {
+			b.reportFailed()
 			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("validation error: %w", err)
 		}
 
@@ -312,14 +390,19 @@ func (b *GitHubReleaseBuilder) generateWithRepair(
 			validationSkipped = true
 			// Emit validation skipped event
 			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", attempt+1))
+			b.reportDone("skipped")
 			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
 		}
 
 		if result.Passed {
 			// Emit validation passed event
 			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "", attempt+1))
+			b.reportDone("")
 			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
 		}
+
+		// Validation failed
+		b.reportFailed()
 
 		// Parse error category for telemetry
 		parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)

@@ -3,6 +3,9 @@ package recipe
 import (
 	"fmt"
 	"path/filepath"
+	"strings"
+
+	"github.com/BurntSushi/toml"
 )
 
 // Recipe represents an action-based recipe
@@ -11,6 +14,60 @@ type Recipe struct {
 	Version  VersionSection  `toml:"version"`
 	Steps    []Step          `toml:"steps"`
 	Verify   VerifySection   `toml:"verify"`
+}
+
+// ToTOML serializes the recipe to TOML format.
+// This handles the special step encoding where action params are flattened.
+func (r *Recipe) ToTOML() ([]byte, error) {
+	var buf strings.Builder
+
+	// Encode metadata section
+	buf.WriteString("[metadata]\n")
+	if r.Metadata.Name != "" {
+		buf.WriteString(fmt.Sprintf("name = %q\n", r.Metadata.Name))
+	}
+	if r.Metadata.Description != "" {
+		buf.WriteString(fmt.Sprintf("description = %q\n", r.Metadata.Description))
+	}
+	if r.Metadata.Homepage != "" {
+		buf.WriteString(fmt.Sprintf("homepage = %q\n", r.Metadata.Homepage))
+	}
+	if r.Metadata.VersionFormat != "" {
+		buf.WriteString(fmt.Sprintf("version_format = %q\n", r.Metadata.VersionFormat))
+	}
+	buf.WriteString("\n")
+
+	// Encode version section
+	buf.WriteString("[version]\n")
+	if r.Version.Source != "" {
+		buf.WriteString(fmt.Sprintf("source = %q\n", r.Version.Source))
+	}
+	if r.Version.GitHubRepo != "" {
+		buf.WriteString(fmt.Sprintf("github_repo = %q\n", r.Version.GitHubRepo))
+	}
+	buf.WriteString("\n")
+
+	// Encode steps - each step as [[steps]] with flattened params
+	for _, step := range r.Steps {
+		buf.WriteString("[[steps]]\n")
+		stepMap := step.ToMap()
+		enc := toml.NewEncoder(&buf)
+		if err := enc.Encode(stepMap); err != nil {
+			return nil, fmt.Errorf("failed to encode step: %w", err)
+		}
+		buf.WriteString("\n")
+	}
+
+	// Encode verify section
+	buf.WriteString("[verify]\n")
+	if r.Verify.Command != "" {
+		buf.WriteString(fmt.Sprintf("command = %q\n", r.Verify.Command))
+	}
+	if r.Verify.Pattern != "" {
+		buf.WriteString(fmt.Sprintf("pattern = %q\n", r.Verify.Pattern))
+	}
+
+	return []byte(buf.String()), nil
 }
 
 // MetadataSection contains recipe metadata
