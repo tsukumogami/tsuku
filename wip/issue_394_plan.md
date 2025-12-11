@@ -104,7 +104,10 @@ The package already has separate provider files (`provider_*.go`). The main reso
 - [x] Create refactoring issue for `internal/version/resolver.go` with detailed split proposal (#397)
 - [x] Create refactoring issue for `cmd/tsuku/install.go` with detailed split proposal (#398)
 - [x] Create refactoring issue for `internal/install/state.go` with detailed split proposal (#399)
-- [ ] Evaluate `internal/builders/github_release.go` and decide if issue needed
+- [x] Evaluate `internal/builders/github_release.go` and decide if issue needed
+  - Decision: SKIP - only 5 commits in 2 months (vs 13-17 for HIGH/MEDIUM files)
+  - File has high cohesion (LLM conversation flow is inherently complex)
+  - No significant merge conflict issues reported
 - [ ] Document refactoring guidelines in CONTRIBUTING.md or docs/
 
 ## Testing Strategy
