@@ -200,9 +200,11 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// For GitHub builder, check LLM budget and rate limits before proceeding
 	var stateManager *install.StateManager
+	var userCfg *userconfig.Config
 	if isGitHub {
 		// Load user config for settings
-		userCfg, err := userconfig.Load()
+		var err error
+		userCfg, err = userconfig.Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to load user config: %v\n", err)
 			// Continue with defaults
@@ -362,6 +364,22 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	printInfof("\nRecipe created: %s\n", recipePath)
 	printInfof("Source: %s\n", result.Source)
+
+	// Display cost for GitHub (LLM) builds
+	if isGitHub && stateManager != nil && userCfg != nil {
+		dailySpent := stateManager.DailySpent()
+		dailyBudget := userCfg.LLMDailyBudget()
+
+		if dailyBudget > 0 {
+			// Show cost with budget context
+			printInfof("Cost: ~$%.2f (today: $%.2f of $%.2f budget)\n",
+				defaultLLMCostEstimate, dailySpent, dailyBudget)
+		} else {
+			// Unlimited budget - show without budget portion
+			printInfof("Cost: ~$%.2f (today: $%.2f)\n",
+				defaultLLMCostEstimate, dailySpent)
+		}
+	}
 
 	// Show validation skipped warning
 	if result.ValidationSkipped {
