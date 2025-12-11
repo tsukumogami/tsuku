@@ -39,9 +39,13 @@ type Resolver struct {
 	authenticated       bool           // Whether GitHub requests are authenticated
 }
 
-// New creates a new version resolver
-// If GITHUB_TOKEN environment variable is set, it will be used for authenticated requests
-func New() *Resolver {
+// New creates a new version resolver with optional configuration.
+// If GITHUB_TOKEN environment variable is set, it will be used for authenticated requests.
+//
+// Options can be used to customize registry URLs for testing:
+//
+//	resolver := New(WithNpmRegistry("http://localhost:8080"))
+func New(opts ...Option) *Resolver {
 	var githubHTTPClient *http.Client
 	authenticated := false
 
@@ -52,7 +56,7 @@ func New() *Resolver {
 		authenticated = true
 	}
 
-	return &Resolver{
+	r := &Resolver{
 		client:              github.NewClient(githubHTTPClient),
 		httpClient:          NewHTTPClient(),                   // HTTP client with proper timeouts
 		registry:            NewRegistry(),                     // Initialize with default resolvers
@@ -65,6 +69,13 @@ func New() *Resolver {
 		goProxyURL:          "https://proxy.golang.org",        // Production default
 		authenticated:       authenticated,
 	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(r)
+	}
+
+	return r
 }
 
 // NewWithNpmRegistry creates a resolver with custom npm registry (for testing)

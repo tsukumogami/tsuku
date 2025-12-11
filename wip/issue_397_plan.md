@@ -37,7 +37,7 @@ Extract code incrementally, ensuring tests pass after each step:
 
 ### Step 3: Introduce functional options pattern
 
-- [ ] Create `internal/version/options.go` with:
+- [x] Create `internal/version/options.go` with:
   - `Option` type: `type Option func(*Resolver)`
   - `WithNpmRegistry(url string) Option`
   - `WithPyPIRegistry(url string) Option`
@@ -47,9 +47,8 @@ Extract code incrementally, ensuring tests pass after each step:
   - `WithGoDevURL(url string) Option`
   - `WithGoProxyURL(url string) Option`
   - `WithHomebrewRegistry(url string) Option`
-- [ ] Modify `New()` to accept variadic options: `New(opts ...Option) *Resolver`
-- [ ] Update tests to use new pattern
-- [ ] Verify tests pass
+- [x] Modify `New()` to accept variadic options: `New(opts ...Option) *Resolver`
+- [x] Verify tests pass (old constructors still work during transition)
 
 ### Step 4: Remove duplicate constructors
 
