@@ -4,14 +4,13 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/httputil"
 	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
@@ -132,83 +131,12 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	return nil
 }
 
-// validateDownloadIP checks if an IP is allowed for download redirects
-// (not private, loopback, link-local, etc.)
-func validateDownloadIP(ip net.IP, host string) error {
-	if ip.IsPrivate() {
-		return fmt.Errorf("refusing redirect to private IP: %s (%s)", host, ip)
-	}
-	if ip.IsLoopback() {
-		return fmt.Errorf("refusing redirect to loopback IP: %s (%s)", host, ip)
-	}
-	if ip.IsLinkLocalUnicast() {
-		return fmt.Errorf("refusing redirect to link-local IP: %s (%s)", host, ip)
-	}
-	if ip.IsLinkLocalMulticast() {
-		return fmt.Errorf("refusing redirect to link-local multicast: %s (%s)", host, ip)
-	}
-	if ip.IsMulticast() {
-		return fmt.Errorf("refusing redirect to multicast IP: %s (%s)", host, ip)
-	}
-	if ip.IsUnspecified() {
-		return fmt.Errorf("refusing redirect to unspecified IP: %s (%s)", host, ip)
-	}
-	return nil
-}
-
-// newDownloadHTTPClient creates a secure HTTP client for downloads with:
-// - DisableCompression: prevents decompression bomb attacks
-// - SSRF protection via redirect validation
-// - HTTPS-only redirects
+// newDownloadHTTPClient creates a secure HTTP client for downloads using the
+// shared httputil package for SSRF protection and security hardening.
 func newDownloadHTTPClient() *http.Client {
-	return &http.Client{
+	return httputil.NewSecureClient(httputil.ClientOptions{
 		Timeout: config.GetAPITimeout(),
-		Transport: &http.Transport{
-			DisableCompression: true, // CRITICAL: Prevents decompression bomb attacks
-			DialContext: (&net.Dialer{
-				Timeout:   30 * time.Second,
-				KeepAlive: 30 * time.Second,
-			}).DialContext,
-			TLSHandshakeTimeout:   10 * time.Second,
-			ResponseHeaderTimeout: 10 * time.Second,
-			ExpectContinueTimeout: 1 * time.Second,
-		},
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			// SECURITY: Prevent redirect downgrade attacks (HTTPS -> HTTP)
-			if req.URL.Scheme != "https" {
-				return fmt.Errorf("redirect to non-HTTPS URL is not allowed: %s", req.URL)
-			}
-			// Limit redirect depth
-			if len(via) >= 10 {
-				return fmt.Errorf("too many redirects")
-			}
-
-			// SSRF Protection: Check redirect target
-			host := req.URL.Hostname()
-
-			// If hostname is already an IP, check it directly
-			if ip := net.ParseIP(host); ip != nil {
-				if err := validateDownloadIP(ip, host); err != nil {
-					return err
-				}
-			} else {
-				// Hostname is a domain - resolve DNS and check ALL resulting IPs
-				// This prevents DNS rebinding attacks
-				ips, err := net.LookupIP(host)
-				if err != nil {
-					return fmt.Errorf("failed to resolve redirect host %s: %w", host, err)
-				}
-
-				for _, ip := range ips {
-					if err := validateDownloadIP(ip, host); err != nil {
-						return fmt.Errorf("refusing redirect: %s resolves to blocked IP %s", host, ip)
-					}
-				}
-			}
-
-			return nil
-		},
-	}
+	})
 }
 
 // downloadFile performs the actual HTTP download with context for cancellation

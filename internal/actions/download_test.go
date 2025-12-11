@@ -10,6 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/httputil"
 )
 
 func TestDownloadAction_Name(t *testing.T) {
@@ -353,7 +355,7 @@ func TestDownloadAction_ValidateIP(t *testing.T) {
 				t.Fatalf("Failed to parse IP: %s", tt.ip)
 			}
 
-			err := validateDownloadIP(ip, tt.ip)
+			err := httputil.ValidateIP(ip, tt.ip)
 
 			if tt.shouldErr {
 				if err == nil {
