@@ -1,6 +1,6 @@
 # DESIGN: Structured Logging Framework
 
-**Status:** Accepted
+**Status:** Planned
 
 ## Context and Problem Statement
 
@@ -638,4 +638,30 @@ This feature has low security impact because it:
 3. Downloads nothing
 
 The main consideration is preventing sensitive data leakage in debug output, mitigated through logging hygiene guidelines and user awareness.
+
+## Implementation Issues
+
+### Milestone: [Structured Logging Framework](https://github.com/tsukumogami/tsuku/milestone/16)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#417](https://github.com/tsukumogami/tsuku/issues/417) | feat(log): add Logger interface and slog implementation | None |
+| [#418](https://github.com/tsukumogami/tsuku/issues/418) | feat(log): add URL sanitizer for safe logging | None |
+| [#419](https://github.com/tsukumogami/tsuku/issues/419) | feat(log): add CLI handler with verbosity support | Blocked by #417 |
+| [#420](https://github.com/tsukumogami/tsuku/issues/420) | refactor(validate): migrate to unified Logger interface | Blocked by #417 |
+| [#421](https://github.com/tsukumogami/tsuku/issues/421) | feat(cli): add verbosity flags and environment variable support | Blocked by #417, #419 |
+| [#422](https://github.com/tsukumogami/tsuku/issues/422) | feat(actions): add ExecutionContext logger and migrate high-value actions | Blocked by #417, #418, #421 |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    I417[#417: Logger interface] --> I419[#419: CLI handler]
+    I417 --> I420[#420: Migrate validate]
+    I417 --> I421[#421: Verbosity flags]
+    I419 --> I421
+    I418[#418: URL sanitizer] --> I422[#422: Migrate actions]
+    I417 --> I422
+    I421 --> I422
+```
 
