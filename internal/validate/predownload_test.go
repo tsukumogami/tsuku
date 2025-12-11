@@ -11,6 +11,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/httputil"
 )
 
 func TestPreDownloader_Download_Success(t *testing.T) {
@@ -293,7 +295,7 @@ func TestValidatePreDownloadIP(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ip := net.ParseIP(tt.ip)
-			err := validatePreDownloadIP(ip, "test-host")
+			err := httputil.ValidateIP(ip, "test-host")
 
 			if (err != nil) != tt.wantErr {
 				t.Errorf("validatePreDownloadIP(%q) error = %v, wantErr = %v", tt.ip, err, tt.wantErr)
