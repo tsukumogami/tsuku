@@ -22,10 +22,10 @@ Extract code incrementally, ensuring tests pass after each step:
 
 ### Step 1: Extract HTTP client factory to httpclient.go
 
-- [ ] Create `internal/version/httpclient.go`
-- [ ] Move `NewHTTPClient()` function (lines 46-110)
-- [ ] Move `validateIP()` function (lines 112-147)
-- [ ] Verify tests pass
+- [x] Create `internal/version/httpclient.go`
+- [x] Move `NewHTTPClient()` function (lines 46-110)
+- [x] Move `validateIP()` function (lines 112-147)
+- [x] Verify tests pass
 
 ### Step 2: Extract version utilities to version_utils.go
 
