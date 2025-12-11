@@ -1,6 +1,6 @@
 # Design: Installation Plans and tsuku eval Command
 
-- **Status**: Proposed
+- **Status**: Accepted
 - **Author**: @dangazineu
 - **Created**: 2025-12-10
 - **Scope**: Tactical
