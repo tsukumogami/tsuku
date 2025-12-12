@@ -2,6 +2,8 @@ package main
 
 import (
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/install"
 )
 
 func TestFormatBytes(t *testing.T) {
@@ -119,6 +121,59 @@ func TestFormatParams(t *testing.T) {
 				if containsSubstring(result, s) {
 					t.Errorf("formatParams() = %q, want it NOT to contain %q", result, s)
 				}
+			}
+		})
+	}
+}
+
+func TestDefaultPlanFilename(t *testing.T) {
+	tests := []struct {
+		name     string
+		tool     string
+		version  string
+		os       string
+		arch     string
+		expected string
+	}{
+		{
+			name:     "standard tool",
+			tool:     "gh",
+			version:  "2.40.0",
+			os:       "linux",
+			arch:     "amd64",
+			expected: "gh-2.40.0-linux-amd64.plan.json",
+		},
+		{
+			name:     "tool with dashes",
+			tool:     "aws-cli",
+			version:  "2.15.0",
+			os:       "darwin",
+			arch:     "arm64",
+			expected: "aws-cli-2.15.0-darwin-arm64.plan.json",
+		},
+		{
+			name:     "semver with v prefix",
+			tool:     "kubectl",
+			version:  "v1.29.0",
+			os:       "windows",
+			arch:     "amd64",
+			expected: "kubectl-v1.29.0-windows-amd64.plan.json",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			plan := &install.Plan{
+				Tool:    tt.tool,
+				Version: tt.version,
+				Platform: install.PlanPlatform{
+					OS:   tt.os,
+					Arch: tt.arch,
+				},
+			}
+			result := defaultPlanFilename(plan)
+			if result != tt.expected {
+				t.Errorf("defaultPlanFilename() = %q, want %q", result, tt.expected)
 			}
 		})
 	}

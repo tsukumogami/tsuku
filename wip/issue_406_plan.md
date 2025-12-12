@@ -23,14 +23,14 @@ None - adding to existing plan.go
 
 ## Implementation Steps
 
-- [ ] Add `planExportCmd` with flags (`--output`/`-o`)
-- [ ] Add helper function `getPlanForTool` to extract common plan retrieval logic
-- [ ] Implement `runPlanExport` with:
-  - [ ] Default filename: `<tool>-<version>-<os>-<arch>.plan.json`
-  - [ ] `-` support for stdout
-  - [ ] Custom output path via `--output`
-- [ ] Add unit tests for filename generation
-- [ ] Run `go vet`, `go test`, and `go build` to verify
+- [x] Add `planExportCmd` with flags (`--output`/`-o`)
+- [x] Add helper function `getPlanForTool` to extract common plan retrieval logic
+- [x] Implement `runPlanExport` with:
+  - [x] Default filename: `<tool>-<version>-<os>-<arch>.plan.json`
+  - [x] `-` support for stdout
+  - [x] Custom output path via `--output`
+- [x] Add unit tests for filename generation
+- [x] Run `go vet`, `go test`, and `go build` to verify
 
 ## Testing Strategy
 
@@ -39,15 +39,15 @@ None - adding to existing plan.go
 
 ## Success Criteria
 
-- [ ] `tsuku plan export <tool>` exports plan to default filename
-- [ ] Default filename is `<tool>-<version>-<os>-<arch>.plan.json`
-- [ ] `--output` / `-o` allows custom output path
-- [ ] `-` outputs to stdout (enables piping)
-- [ ] JSON format matches `tsuku eval` output
-- [ ] Clear error if tool not installed
-- [ ] Clear error if tool has no stored plan
-- [ ] Help text documents usage
-- [ ] All tests pass, no lint errors
+- [x] `tsuku plan export <tool>` exports plan to default filename
+- [x] Default filename is `<tool>-<version>-<os>-<arch>.plan.json`
+- [x] `--output` / `-o` allows custom output path
+- [x] `-` outputs to stdout (enables piping)
+- [x] JSON format matches `tsuku eval` output
+- [x] Clear error if tool not installed
+- [x] Clear error if tool has no stored plan
+- [x] Help text documents usage
+- [x] All tests pass, no lint errors
 
 ## Open Questions
 
