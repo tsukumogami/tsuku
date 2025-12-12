@@ -123,4 +123,3 @@ func TestFormatParams(t *testing.T) {
 		})
 	}
 }
-
