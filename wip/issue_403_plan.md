@@ -23,16 +23,16 @@ Follow existing command patterns (info.go, install.go) to create eval.go. Use th
 
 ## Implementation Steps
 
-- [ ] Create `cmd/tsuku/eval.go` with:
-  - [ ] Platform flag validation (whitelist for os/arch values)
-  - [ ] Recipe loading and executor creation
-  - [ ] Plan generation via `Executor.GeneratePlan()`
-  - [ ] JSON output to stdout (pretty-printed)
-  - [ ] Warnings to stderr for non-evaluable actions
-  - [ ] Help text and usage examples
-- [ ] Register `evalCmd` in `cmd/tsuku/main.go`
-- [ ] Add unit tests for platform validation
-- [ ] Run `go vet`, `go test`, and `go build` to verify
+- [x] Create `cmd/tsuku/eval.go` with:
+  - [x] Platform flag validation (whitelist for os/arch values)
+  - [x] Recipe loading and executor creation
+  - [x] Plan generation via `Executor.GeneratePlan()`
+  - [x] JSON output to stdout (pretty-printed)
+  - [x] Warnings to stderr for non-evaluable actions
+  - [x] Help text and usage examples
+- [x] Register `evalCmd` in `cmd/tsuku/main.go`
+- [x] Add unit tests for platform validation
+- [x] Run `go vet`, `go test`, and `go build` to verify
 
 ## Testing Strategy
 
