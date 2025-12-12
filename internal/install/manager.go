@@ -34,6 +34,7 @@ type InstallOptions struct {
 	Binaries            []string          // List of binary names this tool provides
 	RuntimeDependencies map[string]string // Runtime deps: name -> version (for wrapper scripts)
 	RequestedVersion    string            // What user originally requested ("17", "@lts", "")
+	Plan                *Plan             // Installation plan to store (if generated)
 }
 
 // DefaultInstallOptions returns the default installation options
@@ -157,6 +158,7 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 			Requested:   opts.RequestedVersion,
 			Binaries:    opts.Binaries,
 			InstalledAt: time.Now(),
+			Plan:        opts.Plan,
 		}
 
 		// Set as active version

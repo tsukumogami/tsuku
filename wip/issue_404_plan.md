@@ -21,12 +21,12 @@ Extend the existing state management with a Plan field that stores the same stru
 
 ## Implementation Steps
 
-- [ ] Add `Plan` field to `VersionState` struct in `state.go`
-- [ ] Add `Plan` field to `InstallOptions` struct in `manager.go`
-- [ ] Update `InstallWithOptions` to store plan in version state
-- [ ] Update `installWithDependencies` to generate plan and pass to InstallWithOptions
-- [ ] Add unit tests for plan storage in state
-- [ ] Run `go vet`, `go test`, and `go build` to verify
+- [x] Add `Plan` field to `VersionState` struct in `state.go`
+- [x] Add `Plan` field to `InstallOptions` struct in `manager.go`
+- [x] Update `InstallWithOptions` to store plan in version state
+- [x] Update `installWithDependencies` to generate plan and pass to InstallWithOptions
+- [x] Add unit tests for plan storage in state
+- [x] Run `go vet`, `go test`, and `go build` to verify
 
 ## Testing Strategy
 
