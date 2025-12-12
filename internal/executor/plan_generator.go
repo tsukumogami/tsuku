@@ -188,7 +188,7 @@ func (e *Executor) resolveStep(
 			if err != nil {
 				return nil, fmt.Errorf("failed to download for checksum: %w", err)
 			}
-			defer result.Cleanup()
+			defer func() { _ = result.Cleanup() }()
 
 			resolved.Checksum = result.Checksum
 			resolved.Size = result.Size
@@ -304,16 +304,6 @@ func expandVarsInString(s string, vars map[string]string) string {
 		result = strings.ReplaceAll(result, "{"+k+"}", v)
 	}
 	return result
-}
-
-// downloadActions is the set of actions that involve downloading files.
-var downloadActions = map[string]bool{
-	"download":          true,
-	"download_archive":  true,
-	"github_archive":    true,
-	"github_file":       true,
-	"hashicorp_release": true,
-	"homebrew_bottle":   true,
 }
 
 // GetStandardPlanVars returns the standard variable map for plan generation.

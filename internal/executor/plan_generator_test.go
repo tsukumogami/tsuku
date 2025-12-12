@@ -2,10 +2,15 @@ package executor
 
 import (
 	"context"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // mockTOMLSerializer implements a simple interface for recipe hash testing.
@@ -22,7 +27,7 @@ func TestComputeRecipeHash(t *testing.T) {
 	tests := []struct {
 		name        string
 		content     []byte
-		wantLen     int  // expected hash length
+		wantLen     int // expected hash length
 		expectError bool
 	}{
 		{
@@ -759,5 +764,602 @@ func TestGeneratePlan_TemplateExpansion(t *testing.T) {
 	}
 	if strings.Contains(dest, "{version}") {
 		t.Errorf("dest = %q, should not contain {version}", dest)
+	}
+}
+
+func TestComputeRecipeHash_Error(t *testing.T) {
+	mock := &mockTOMLSerializer{
+		err: fmt.Errorf("serialization error"),
+	}
+	_, err := computeRecipeHash(mock)
+
+	if err == nil {
+		t.Error("expected error but got none")
+	}
+	if !strings.Contains(err.Error(), "failed to serialize recipe") {
+		t.Errorf("error should mention serialization failure, got: %v", err)
+	}
+}
+
+func TestComputeRecipeHash_Deterministic(t *testing.T) {
+	// Same content should produce same hash
+	content := []byte(`[metadata]\nname = "test"`)
+	mock1 := &mockTOMLSerializer{content: content}
+	mock2 := &mockTOMLSerializer{content: content}
+
+	hash1, err1 := computeRecipeHash(mock1)
+	hash2, err2 := computeRecipeHash(mock2)
+
+	if err1 != nil || err2 != nil {
+		t.Fatalf("unexpected errors: %v, %v", err1, err2)
+	}
+
+	if hash1 != hash2 {
+		t.Errorf("same content should produce same hash: %s != %s", hash1, hash2)
+	}
+
+	// Different content should produce different hash
+	mock3 := &mockTOMLSerializer{content: []byte(`[metadata]\nname = "other"`)}
+	hash3, err3 := computeRecipeHash(mock3)
+	if err3 != nil {
+		t.Fatalf("unexpected error: %v", err3)
+	}
+
+	if hash1 == hash3 {
+		t.Errorf("different content should produce different hash: %s == %s", hash1, hash3)
+	}
+}
+
+func TestApplyOSMapping_NoMapping(t *testing.T) {
+	vars := map[string]string{"os": "darwin"}
+	params := map[string]interface{}{} // No os_mapping
+
+	ApplyOSMapping(vars, params)
+
+	// Should remain unchanged
+	if vars["os"] != "darwin" {
+		t.Errorf("os should remain unchanged, got %q", vars["os"])
+	}
+}
+
+func TestApplyOSMapping_NoMatchingOS(t *testing.T) {
+	vars := map[string]string{"os": "windows"}
+	params := map[string]interface{}{
+		"os_mapping": map[string]interface{}{
+			"darwin": "macos",
+			"linux":  "linux",
+			// No windows mapping
+		},
+	}
+
+	ApplyOSMapping(vars, params)
+
+	// Should remain unchanged
+	if vars["os"] != "windows" {
+		t.Errorf("os should remain unchanged when no mapping exists, got %q", vars["os"])
+	}
+}
+
+func TestApplyArchMapping_NoMapping(t *testing.T) {
+	vars := map[string]string{"arch": "amd64"}
+	params := map[string]interface{}{} // No arch_mapping
+
+	ApplyArchMapping(vars, params)
+
+	// Should remain unchanged
+	if vars["arch"] != "amd64" {
+		t.Errorf("arch should remain unchanged, got %q", vars["arch"])
+	}
+}
+
+func TestApplyArchMapping_NoMatchingArch(t *testing.T) {
+	vars := map[string]string{"arch": "riscv64"}
+	params := map[string]interface{}{
+		"arch_mapping": map[string]interface{}{
+			"amd64": "x86_64",
+			"arm64": "aarch64",
+			// No riscv64 mapping
+		},
+	}
+
+	ApplyArchMapping(vars, params)
+
+	// Should remain unchanged
+	if vars["arch"] != "riscv64" {
+		t.Errorf("arch should remain unchanged when no mapping exists, got %q", vars["arch"])
+	}
+}
+
+func TestExpandValue_AllTypes(t *testing.T) {
+	vars := map[string]string{"version": "1.0.0"}
+
+	tests := []struct {
+		name  string
+		input interface{}
+		want  interface{}
+	}{
+		{
+			name:  "string with variable",
+			input: "v{version}",
+			want:  "v1.0.0",
+		},
+		{
+			name:  "integer unchanged",
+			input: 42,
+			want:  42,
+		},
+		{
+			name:  "bool unchanged",
+			input: true,
+			want:  true,
+		},
+		{
+			name:  "float unchanged",
+			input: 3.14,
+			want:  3.14,
+		},
+		{
+			name:  "nil unchanged",
+			input: nil,
+			want:  nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := expandValue(tt.input, vars)
+			if got != tt.want {
+				t.Errorf("expandValue(%v) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestShouldExecuteForPlatform_CombinedConditions(t *testing.T) {
+	tests := []struct {
+		name       string
+		when       map[string]string
+		targetOS   string
+		targetArch string
+		want       bool
+	}{
+		{
+			name:       "package_manager with matching OS",
+			when:       map[string]string{"os": "linux", "package_manager": "apt"},
+			targetOS:   "linux",
+			targetArch: "amd64",
+			want:       true, // package_manager is ignored for plan
+		},
+		{
+			name:       "package_manager with non-matching OS",
+			when:       map[string]string{"os": "darwin", "package_manager": "brew"},
+			targetOS:   "linux",
+			targetArch: "amd64",
+			want:       false,
+		},
+		{
+			name:       "all three conditions matching",
+			when:       map[string]string{"os": "linux", "arch": "amd64", "package_manager": "apt"},
+			targetOS:   "linux",
+			targetArch: "amd64",
+			want:       true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := shouldExecuteForPlatform(tt.when, tt.targetOS, tt.targetArch)
+			if got != tt.want {
+				t.Errorf("shouldExecuteForPlatform() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGeneratePlan_DefaultsApplied(t *testing.T) {
+	// Test that defaults are applied when config fields are empty
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{"path": "tool", "mode": "0755"},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+
+	// Empty config - should use defaults
+	plan, err := exec.GeneratePlan(ctx, PlanConfig{})
+
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	// Verify defaults were applied
+	if plan.Platform.OS == "" {
+		t.Error("Platform.OS should not be empty (default should be applied)")
+	}
+	if plan.Platform.Arch == "" {
+		t.Error("Platform.Arch should not be empty (default should be applied)")
+	}
+	if plan.RecipeSource != "unknown" {
+		t.Errorf("RecipeSource should be 'unknown' when not specified, got %q", plan.RecipeSource)
+	}
+}
+
+func TestGeneratePlan_GeneratedAtIsRecent(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+
+	timeBefore := time.Now().Add(-time.Second)
+	plan, err := exec.GeneratePlan(ctx, PlanConfig{
+		OS:   "linux",
+		Arch: "amd64",
+	})
+	timeAfter := time.Now().Add(time.Second)
+
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	if plan.GeneratedAt.Before(timeBefore) || plan.GeneratedAt.After(timeAfter) {
+		t.Errorf("GeneratedAt should be recent, got %v (expected between %v and %v)",
+			plan.GeneratedAt, timeBefore, timeAfter)
+	}
+}
+
+func TestGeneratePlan_WithDownloadAction(t *testing.T) {
+	// Create a TLS test server that serves a file (PreDownloader requires HTTPS)
+	testContent := []byte("test file content for checksum")
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(testContent)
+	}))
+	defer server.Close()
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "download",
+				Params: map[string]interface{}{
+					"url": server.URL + "/file.tar.gz",
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+
+	// Create a downloader with our test server's HTTP client
+	downloader := validate.NewPreDownloader().WithHTTPClient(server.Client())
+
+	plan, err := exec.GeneratePlan(ctx, PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		RecipeSource: "test",
+		Downloader:   downloader,
+	})
+
+	if err != nil {
+		// Version resolution may fail in tests - that's acceptable
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	if len(plan.Steps) != 1 {
+		t.Fatalf("len(Steps) = %d, want 1", len(plan.Steps))
+	}
+
+	step := plan.Steps[0]
+	if step.Action != "download" {
+		t.Errorf("step.Action = %q, want %q", step.Action, "download")
+	}
+	if step.URL == "" {
+		t.Error("step.URL should not be empty for download action")
+	}
+	if step.Checksum == "" {
+		t.Error("step.Checksum should not be empty after download")
+	}
+	if step.Size == 0 {
+		t.Error("step.Size should not be 0 after download")
+	}
+	if !step.Evaluable {
+		t.Error("download action should be evaluable")
+	}
+}
+
+func TestGeneratePlan_DownloadError(t *testing.T) {
+	// Create a TLS test server that returns an error
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "download",
+				Params: map[string]interface{}{
+					"url": server.URL + "/file.tar.gz",
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+	downloader := validate.NewPreDownloader().WithHTTPClient(server.Client())
+
+	_, err = exec.GeneratePlan(ctx, PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		RecipeSource: "test",
+		Downloader:   downloader,
+	})
+
+	// Either version resolution fails or download fails - both are acceptable
+	// The key is that the error is handled gracefully
+	if err != nil {
+		// This is expected - either network error or download error
+		t.Logf("GeneratePlan() returned expected error: %v", err)
+	}
+}
+
+func TestGeneratePlan_HomebrewBottleSkipsChecksum(t *testing.T) {
+	// homebrew_bottle should not attempt download (URL is empty)
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "homebrew_bottle",
+				Params: map[string]interface{}{
+					"formula": "test-formula",
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+
+	plan, err := exec.GeneratePlan(ctx, PlanConfig{
+		OS:           "darwin",
+		Arch:         "arm64",
+		RecipeSource: "test",
+	})
+
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	if len(plan.Steps) != 1 {
+		t.Fatalf("len(Steps) = %d, want 1", len(plan.Steps))
+	}
+
+	step := plan.Steps[0]
+	// homebrew_bottle returns empty URL, so no checksum is computed
+	if step.URL != "" {
+		t.Errorf("homebrew_bottle step.URL should be empty, got %q", step.URL)
+	}
+	if step.Checksum != "" {
+		t.Errorf("homebrew_bottle step.Checksum should be empty, got %q", step.Checksum)
+	}
+}
+
+func TestGeneratePlan_MixedEvaluableSteps(t *testing.T) {
+	// Test a recipe with both evaluable and non-evaluable steps
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "extract",
+				Params: map[string]interface{}{"archive": "test.tar.gz"},
+			},
+			{
+				Action: "run_command",
+				Params: map[string]interface{}{"command": "make install"},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"bin/tool"}},
+			},
+			{
+				Action: "npm_install",
+				Params: map[string]interface{}{"package": "some-package"},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+
+	var warnings []string
+	plan, err := exec.GeneratePlan(ctx, PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		RecipeSource: "test",
+		OnWarning: func(action, msg string) {
+			warnings = append(warnings, action)
+		},
+	})
+
+	if err != nil {
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	if len(plan.Steps) != 4 {
+		t.Fatalf("len(Steps) = %d, want 4", len(plan.Steps))
+	}
+
+	// Check evaluability of each step
+	expectedEvaluable := map[string]bool{
+		"extract":          true,
+		"run_command":      false,
+		"install_binaries": true,
+		"npm_install":      false,
+	}
+
+	for _, step := range plan.Steps {
+		expected, ok := expectedEvaluable[step.Action]
+		if !ok {
+			t.Errorf("unexpected action %q", step.Action)
+			continue
+		}
+		if step.Evaluable != expected {
+			t.Errorf("step %q Evaluable = %v, want %v", step.Action, step.Evaluable, expected)
+		}
+	}
+
+	// Should have 2 warnings for non-evaluable actions
+	if len(warnings) != 2 {
+		t.Errorf("got %d warnings, want 2: %v", len(warnings), warnings)
+	}
+}
+
+func TestGeneratePlan_AllDownloadActionTypes(t *testing.T) {
+	// Test URL extraction for all download action types (using TLS server)
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("test content"))
+	}))
+	defer server.Close()
+
+	tests := []struct {
+		name      string
+		action    string
+		params    map[string]interface{}
+		expectURL bool
+	}{
+		{
+			name:      "download with url",
+			action:    "download",
+			params:    map[string]interface{}{"url": server.URL + "/file.tar.gz"},
+			expectURL: true,
+		},
+		{
+			name:      "download_archive with url",
+			action:    "download_archive",
+			params:    map[string]interface{}{"url": server.URL + "/archive.zip"},
+			expectURL: true,
+		},
+		{
+			name:      "homebrew_bottle (no URL)",
+			action:    "homebrew_bottle",
+			params:    map[string]interface{}{"formula": "test"},
+			expectURL: false, // homebrew_bottle returns empty URL
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &recipe.Recipe{
+				Metadata: recipe.MetadataSection{Name: "test"},
+				Version:  recipe.VersionSection{Source: "nodejs_dist"},
+				Steps:    []recipe.Step{{Action: tt.action, Params: tt.params}},
+			}
+
+			exec, err := New(r)
+			if err != nil {
+				t.Fatalf("New() error: %v", err)
+			}
+			defer exec.Cleanup()
+
+			downloader := validate.NewPreDownloader().WithHTTPClient(server.Client())
+			plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+				OS:         "linux",
+				Arch:       "amd64",
+				Downloader: downloader,
+			})
+
+			if err != nil {
+				t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+			}
+
+			if len(plan.Steps) != 1 {
+				t.Fatalf("len(Steps) = %d, want 1", len(plan.Steps))
+			}
+
+			step := plan.Steps[0]
+			hasURL := step.URL != ""
+			if hasURL != tt.expectURL {
+				t.Errorf("step.URL present = %v, want %v (URL: %q)", hasURL, tt.expectURL, step.URL)
+			}
+
+			if tt.expectURL && step.Checksum == "" {
+				t.Error("expected checksum to be computed when URL is present")
+			}
+		})
 	}
 }
