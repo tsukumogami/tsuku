@@ -17,6 +17,53 @@ type VersionState struct {
 	Requested   string    `json:"requested"`          // What user asked for ("17", "@lts", "")
 	Binaries    []string  `json:"binaries,omitempty"` // Binary names this version provides
 	InstalledAt time.Time `json:"installed_at"`       // When this version was installed
+	Plan        *Plan     `json:"plan,omitempty"`     // Installation plan (if generated)
+}
+
+// Plan represents a stored installation plan. This is a simplified view of
+// executor.InstallationPlan that can be stored in state.json.
+// The full plan structure is preserved for plan inspection and future replay.
+type Plan struct {
+	FormatVersion int          `json:"format_version"`
+	Tool          string       `json:"tool"`
+	Version       string       `json:"version"`
+	Platform      PlanPlatform `json:"platform"`
+	GeneratedAt   time.Time    `json:"generated_at"`
+	RecipeHash    string       `json:"recipe_hash"`
+	RecipeSource  string       `json:"recipe_source"`
+	Steps         []PlanStep   `json:"steps"`
+}
+
+// PlanPlatform identifies the target OS and architecture for a plan.
+type PlanPlatform struct {
+	OS   string `json:"os"`
+	Arch string `json:"arch"`
+}
+
+// PlanStep represents a resolved installation step.
+type PlanStep struct {
+	Action    string                 `json:"action"`
+	Params    map[string]interface{} `json:"params"`
+	Evaluable bool                   `json:"evaluable"`
+	URL       string                 `json:"url,omitempty"`
+	Checksum  string                 `json:"checksum,omitempty"`
+	Size      int64                  `json:"size,omitempty"`
+}
+
+// NewPlanFromExecutor creates a Plan from executor plan types.
+// This is a conversion helper that preserves all plan data for storage.
+func NewPlanFromExecutor(formatVersion int, tool, version string, platform PlanPlatform,
+	generatedAt time.Time, recipeHash, recipeSource string, steps []PlanStep) *Plan {
+	return &Plan{
+		FormatVersion: formatVersion,
+		Tool:          tool,
+		Version:       version,
+		Platform:      platform,
+		GeneratedAt:   generatedAt,
+		RecipeHash:    recipeHash,
+		RecipeSource:  recipeSource,
+		Steps:         steps,
+	}
 }
 
 // ToolState represents the state of an installed tool

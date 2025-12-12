@@ -316,6 +316,22 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	installOpts.Binaries = binaries
 	installOpts.RequestedVersion = versionConstraint // Record what user asked for ("17", "@lts", "")
 
+	// Generate installation plan for storage
+	// This captures the fully-resolved URLs, checksums, and steps
+	planCfg := executor.PlanConfig{
+		RecipeSource: "registry",
+		OnWarning: func(action, message string) {
+			// Suppress warnings during plan generation - they've already been shown during execution
+		},
+	}
+	executorPlan, planErr := exec.GeneratePlan(globalCtx, planCfg)
+	if planErr != nil {
+		printInfof("Warning: failed to generate installation plan: %v\n", planErr)
+		// Continue without plan - installation still succeeds
+	} else {
+		installOpts.Plan = convertExecutorPlan(executorPlan)
+	}
+
 	// Resolve all dependencies using the central resolution algorithm
 	resolvedDeps := actions.ResolveDependencies(r)
 
@@ -425,4 +441,38 @@ func mapKeys(m map[string]string) []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+// convertExecutorPlan converts an executor.InstallationPlan to install.Plan for storage.
+func convertExecutorPlan(ep *executor.InstallationPlan) *install.Plan {
+	if ep == nil {
+		return nil
+	}
+
+	// Convert steps
+	steps := make([]install.PlanStep, len(ep.Steps))
+	for i, s := range ep.Steps {
+		steps[i] = install.PlanStep{
+			Action:    s.Action,
+			Params:    s.Params,
+			Evaluable: s.Evaluable,
+			URL:       s.URL,
+			Checksum:  s.Checksum,
+			Size:      s.Size,
+		}
+	}
+
+	return &install.Plan{
+		FormatVersion: ep.FormatVersion,
+		Tool:          ep.Tool,
+		Version:       ep.Version,
+		Platform: install.PlanPlatform{
+			OS:   ep.Platform.OS,
+			Arch: ep.Platform.Arch,
+		},
+		GeneratedAt:  ep.GeneratedAt,
+		RecipeHash:   ep.RecipeHash,
+		RecipeSource: ep.RecipeSource,
+		Steps:        steps,
+	}
 }

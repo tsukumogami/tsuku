@@ -1880,3 +1880,186 @@ func TestStateManager_LLMUsage_ConcurrentAccess(t *testing.T) {
 		t.Errorf("DailyCost = %f, want ~%f", state.LLMUsage.DailyCost, expectedCost)
 	}
 }
+
+// TestVersionState_WithPlan tests that plans are stored and retrieved correctly.
+func TestVersionState_WithPlan(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Create a test plan
+	testPlan := &Plan{
+		FormatVersion: 1,
+		Tool:          "gh",
+		Version:       "2.40.0",
+		Platform: PlanPlatform{
+			OS:   "linux",
+			Arch: "amd64",
+		},
+		GeneratedAt:  timeNow(),
+		RecipeHash:   "abc123def456",
+		RecipeSource: "registry",
+		Steps: []PlanStep{
+			{
+				Action:    "download_archive",
+				Params:    map[string]interface{}{"url": "https://example.com/file.tar.gz"},
+				Evaluable: true,
+				URL:       "https://example.com/file.tar.gz",
+				Checksum:  "sha256:deadbeef",
+				Size:      12345,
+			},
+			{
+				Action:    "extract",
+				Params:    map[string]interface{}{"format": "tar.gz"},
+				Evaluable: true,
+			},
+		},
+	}
+
+	// Save state with plan
+	state := &State{
+		Installed: map[string]ToolState{
+			"gh": {
+				ActiveVersion: "2.40.0",
+				Versions: map[string]VersionState{
+					"2.40.0": {
+						Requested:   "",
+						Binaries:    []string{"gh"},
+						InstalledAt: timeNow(),
+						Plan:        testPlan,
+					},
+				},
+				IsExplicit: true,
+			},
+		},
+	}
+
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Load and verify
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	toolState, exists := loaded.Installed["gh"]
+	if !exists {
+		t.Fatal("Tool 'gh' not found in loaded state")
+	}
+
+	versionState, exists := toolState.Versions["2.40.0"]
+	if !exists {
+		t.Fatal("Version '2.40.0' not found in loaded state")
+	}
+
+	if versionState.Plan == nil {
+		t.Fatal("Plan is nil after load")
+	}
+
+	// Verify plan fields
+	if versionState.Plan.FormatVersion != 1 {
+		t.Errorf("Plan.FormatVersion = %d, want 1", versionState.Plan.FormatVersion)
+	}
+	if versionState.Plan.Tool != "gh" {
+		t.Errorf("Plan.Tool = %q, want %q", versionState.Plan.Tool, "gh")
+	}
+	if versionState.Plan.Platform.OS != "linux" {
+		t.Errorf("Plan.Platform.OS = %q, want %q", versionState.Plan.Platform.OS, "linux")
+	}
+	if len(versionState.Plan.Steps) != 2 {
+		t.Errorf("len(Plan.Steps) = %d, want 2", len(versionState.Plan.Steps))
+	}
+	if versionState.Plan.Steps[0].Checksum != "sha256:deadbeef" {
+		t.Errorf("Plan.Steps[0].Checksum = %q, want %q", versionState.Plan.Steps[0].Checksum, "sha256:deadbeef")
+	}
+}
+
+// TestVersionState_WithoutPlan_BackwardCompatible tests that old state files without plans load correctly.
+func TestVersionState_WithoutPlan_BackwardCompatible(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Save state without plan (simulating old state format)
+	state := &State{
+		Installed: map[string]ToolState{
+			"kubectl": {
+				ActiveVersion: "1.29.0",
+				Versions: map[string]VersionState{
+					"1.29.0": {
+						Requested:   "",
+						Binaries:    []string{"kubectl"},
+						InstalledAt: timeNow(),
+						// Plan intentionally nil
+					},
+				},
+				IsExplicit: true,
+			},
+		},
+	}
+
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Load and verify
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	toolState, exists := loaded.Installed["kubectl"]
+	if !exists {
+		t.Fatal("Tool 'kubectl' not found in loaded state")
+	}
+
+	versionState, exists := toolState.Versions["1.29.0"]
+	if !exists {
+		t.Fatal("Version '1.29.0' not found in loaded state")
+	}
+
+	// Plan should be nil (not present in old format)
+	if versionState.Plan != nil {
+		t.Errorf("Plan should be nil for state without plan, got %+v", versionState.Plan)
+	}
+
+	// Other fields should load correctly
+	if len(versionState.Binaries) != 1 || versionState.Binaries[0] != "kubectl" {
+		t.Errorf("Binaries = %v, want [kubectl]", versionState.Binaries)
+	}
+}
+
+// TestNewPlanFromExecutor tests the plan creation helper.
+func TestNewPlanFromExecutor(t *testing.T) {
+	now := timeNow()
+	steps := []PlanStep{
+		{Action: "download", Evaluable: true},
+	}
+
+	plan := NewPlanFromExecutor(
+		1,
+		"mytool",
+		"1.0.0",
+		PlanPlatform{OS: "darwin", Arch: "arm64"},
+		now,
+		"hash123",
+		"registry",
+		steps,
+	)
+
+	if plan == nil {
+		t.Fatal("NewPlanFromExecutor returned nil")
+	}
+	if plan.FormatVersion != 1 {
+		t.Errorf("FormatVersion = %d, want 1", plan.FormatVersion)
+	}
+	if plan.Tool != "mytool" {
+		t.Errorf("Tool = %q, want %q", plan.Tool, "mytool")
+	}
+	if plan.Platform.OS != "darwin" || plan.Platform.Arch != "arm64" {
+		t.Errorf("Platform = %+v, want darwin/arm64", plan.Platform)
+	}
+	if len(plan.Steps) != 1 {
+		t.Errorf("len(Steps) = %d, want 1", len(plan.Steps))
+	}
+}
