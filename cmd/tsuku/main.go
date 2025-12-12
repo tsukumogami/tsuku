@@ -61,6 +61,7 @@ func init() {
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(infoCmd)
 	rootCmd.AddCommand(outdatedCmd)
+	rootCmd.AddCommand(planCmd)
 	rootCmd.AddCommand(verifyCmd)
 	rootCmd.AddCommand(updateRegistryCmd)
 	rootCmd.AddCommand(configCmd)

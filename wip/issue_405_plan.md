@@ -24,17 +24,17 @@ Create a new `plan.go` file with parent `planCmd` and child `planShowCmd`. Follo
 
 ## Implementation Steps
 
-- [ ] Create `cmd/tsuku/plan.go` with:
-  - [ ] Parent `planCmd` (container for subcommands)
-  - [ ] Child `planShowCmd` with tool argument
-  - [ ] Load state via StateManager
-  - [ ] Format plan output (tool, version, platform, steps)
-  - [ ] Highlight non-evaluable steps
-  - [ ] Error handling for: tool not installed, no plan stored
-  - [ ] --json flag for JSON output
-- [ ] Register `planCmd` in `cmd/tsuku/main.go`
-- [ ] Add unit tests
-- [ ] Run `go vet`, `go test`, and `go build` to verify
+- [x] Create `cmd/tsuku/plan.go` with:
+  - [x] Parent `planCmd` (container for subcommands)
+  - [x] Child `planShowCmd` with tool argument
+  - [x] Load state via StateManager
+  - [x] Format plan output (tool, version, platform, steps)
+  - [x] Highlight non-evaluable steps
+  - [x] Error handling for: tool not installed, no plan stored
+  - [x] --json flag for JSON output
+- [x] Register `planCmd` in `cmd/tsuku/main.go`
+- [x] Add unit tests
+- [x] Run `go vet`, `go test`, and `go build` to verify
 
 ## Output Format Design
 
@@ -63,13 +63,13 @@ Steps:
 
 ## Success Criteria
 
-- [ ] `tsuku plan show <tool>` displays formatted plan
-- [ ] Non-evaluable steps clearly marked
-- [ ] Clear error if tool not installed
-- [ ] Clear error if tool has no plan
-- [ ] `--json` flag outputs raw JSON
-- [ ] Help text documents usage
-- [ ] All tests pass, no lint errors
+- [x] `tsuku plan show <tool>` displays formatted plan
+- [x] Non-evaluable steps clearly marked
+- [x] Clear error if tool not installed
+- [x] Clear error if tool has no plan
+- [x] `--json` flag outputs raw JSON
+- [x] Help text documents usage
+- [x] All tests pass, no lint errors
 
 ## Open Questions
 
