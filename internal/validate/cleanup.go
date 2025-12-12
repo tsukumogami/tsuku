@@ -22,7 +22,6 @@ const TempDirPrefix = "tsuku-validate-"
 // DefaultTempDirMaxAge is the maximum age for temp directories before cleanup.
 const DefaultTempDirMaxAge = 1 * time.Hour
 
-
 // Cleaner handles cleanup of orphaned validation artifacts.
 // It removes:
 // - Exited/dead containers with the tsuku-validate label
