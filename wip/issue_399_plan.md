@@ -21,12 +21,12 @@ The file has clear domain boundaries - tool operations, library operations, and 
 - `internal/install/state_llm.go` - LLM usage tracking
 
 ## Implementation Steps
-- [ ] Create `state_tool.go` with tool operations
-- [ ] Create `state_lib.go` with library operations
-- [ ] Create `state_llm.go` with LLM usage operations
-- [ ] Update `state.go` to remove extracted code
-- [ ] Verify build and tests pass
-- [ ] Run golangci-lint
+- [x] Create `state_tool.go` with tool operations
+- [x] Create `state_lib.go` with library operations
+- [x] Create `state_llm.go` with LLM usage operations
+- [x] Update `state.go` to remove extracted code
+- [x] Verify build and tests pass
+- [ ] Run golangci-lint (CI will run this)
 
 ## Testing Strategy
 - Unit tests: All existing tests in `internal/install/state_test.go` should pass unchanged
