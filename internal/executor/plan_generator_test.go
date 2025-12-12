@@ -703,6 +703,75 @@ func TestGeneratePlan_WhenFiltering(t *testing.T) {
 	}
 }
 
+func TestResolveStep_WithDownload(t *testing.T) {
+	// This test exercises the download path in resolveStep, including the defer cleanup
+	// We use a recipe with a download action that references a real URL
+	// The test will be skipped if network access fails, but when it runs it exercises
+	// the download code path including the Cleanup defer
+
+	t.Run("download_action_with_checksum", func(t *testing.T) {
+		// Create a simple recipe with download action
+		// We use nodejs_dist for version resolution and a download action
+		r := &recipe.Recipe{
+			Metadata: recipe.MetadataSection{
+				Name: "test-download-tool",
+			},
+			Version: recipe.VersionSection{
+				Source: "nodejs_dist",
+			},
+			Steps: []recipe.Step{
+				{
+					Action: "download",
+					Params: map[string]interface{}{
+						// Use a small, stable file for testing
+						"url": "https://nodejs.org/dist/v20.10.0/SHASUMS256.txt",
+					},
+				},
+			},
+		}
+
+		exec, err := New(r)
+		if err != nil {
+			t.Fatalf("New() error: %v", err)
+		}
+		defer exec.Cleanup()
+
+		ctx := context.Background()
+
+		plan, err := exec.GeneratePlan(ctx, PlanConfig{
+			OS:           "linux",
+			Arch:         "amd64",
+			RecipeSource: "test",
+		})
+
+		if err != nil {
+			// Network failures are acceptable in tests - the main goal is to exercise
+			// the code path in controlled environments where network is available
+			t.Skipf("GeneratePlan() error (expected in offline/restricted network tests): %v", err)
+		}
+
+		// Verify the download action was processed
+		if len(plan.Steps) != 1 {
+			t.Errorf("len(Steps) = %d, want 1", len(plan.Steps))
+		}
+
+		step := plan.Steps[0]
+		if step.Action != "download" {
+			t.Errorf("step.Action = %q, want %q", step.Action, "download")
+		}
+
+		// If we got here with a successful plan, the checksum should be computed
+		// (and more importantly, the defer cleanup should have been called)
+		if step.Checksum == "" {
+			t.Error("Checksum should be computed for download action")
+		}
+		if step.Size == 0 {
+			t.Error("Size should be computed for download action")
+		}
+		t.Logf("Download completed: checksum=%s, size=%d", step.Checksum, step.Size)
+	})
+}
+
 func TestGeneratePlan_TemplateExpansion(t *testing.T) {
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
