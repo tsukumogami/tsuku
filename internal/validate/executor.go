@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -24,24 +25,12 @@ type ValidationResult struct {
 	Error    error  // Error if validation failed to run
 }
 
-// ExecutorLogger defines the logging interface for executor warnings.
-type ExecutorLogger interface {
-	Warn(msg string, args ...any)
-	Debug(msg string, args ...any)
-}
-
-// noopExecutorLogger is a logger that discards all messages.
-type noopExecutorLogger struct{}
-
-func (noopExecutorLogger) Warn(string, ...any)  {}
-func (noopExecutorLogger) Debug(string, ...any) {}
-
 // Executor orchestrates container-based recipe validation.
 // It combines runtime detection, asset pre-download, and isolated container execution.
 type Executor struct {
 	detector      *RuntimeDetector
 	predownloader *PreDownloader
-	logger        ExecutorLogger
+	logger        log.Logger
 	image         string
 	limits        ResourceLimits
 	tsukuBinary   string // Path to tsuku binary for container execution
@@ -51,7 +40,7 @@ type Executor struct {
 type ExecutorOption func(*Executor)
 
 // WithExecutorLogger sets a logger for executor warnings.
-func WithExecutorLogger(logger ExecutorLogger) ExecutorOption {
+func WithExecutorLogger(logger log.Logger) ExecutorOption {
 	return func(e *Executor) {
 		e.logger = logger
 	}
@@ -86,7 +75,7 @@ func NewExecutor(detector *RuntimeDetector, predownloader *PreDownloader, opts .
 	e := &Executor{
 		detector:      detector,
 		predownloader: predownloader,
-		logger:        noopExecutorLogger{},
+		logger:        log.NewNoop(),
 		image:         DefaultValidationImage,
 		tsukuBinary:   tsukuPath,
 		limits: ResourceLimits{

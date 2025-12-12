@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -34,6 +35,8 @@ func (m *mockRuntime) Run(ctx context.Context, opts RunOptions) (*RunResult, err
 type testLogger struct {
 	warnings []string
 	debugs   []string
+	infos    []string
+	errors   []string
 }
 
 func (l *testLogger) Warn(msg string, args ...any) {
@@ -42,6 +45,18 @@ func (l *testLogger) Warn(msg string, args ...any) {
 
 func (l *testLogger) Debug(msg string, args ...any) {
 	l.debugs = append(l.debugs, msg)
+}
+
+func (l *testLogger) Info(msg string, args ...any) {
+	l.infos = append(l.infos, msg)
+}
+
+func (l *testLogger) Error(msg string, args ...any) {
+	l.errors = append(l.errors, msg)
+}
+
+func (l *testLogger) With(args ...any) log.Logger {
+	return l
 }
 
 func TestExecutor_Validate_NoRuntime(t *testing.T) {
