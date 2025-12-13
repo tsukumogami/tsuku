@@ -57,7 +57,10 @@ type EvalContext struct {
 
 // primitives is the set of primitive action names.
 // These actions execute directly without decomposition.
+// Includes both core primitives (download, extract, etc.) and
+// ecosystem primitives (go_build, cargo_build, etc.).
 var primitives = map[string]bool{
+	// Core primitives
 	"download":          true,
 	"extract":           true,
 	"chmod":             true,
@@ -68,6 +71,7 @@ var primitives = map[string]bool{
 	"install_libraries": true,
 	// Ecosystem primitives achieve determinism through ecosystem-specific configuration
 	"npm_exec": true,
+	"go_build": true,
 }
 
 // IsPrimitive returns true if the action is a primitive.
