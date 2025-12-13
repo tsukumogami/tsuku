@@ -12,84 +12,105 @@ func TestParseFromFlag(t *testing.T) {
 		from          string
 		wantBuilder   string
 		wantSourceArg string
-		wantIsGitHub  bool
+		wantLLMType   LLMBuilderType
 	}{
 		{
 			name:          "ecosystem crates.io",
 			from:          "crates.io",
 			wantBuilder:   "crates.io",
 			wantSourceArg: "",
-			wantIsGitHub:  false,
+			wantLLMType:   LLMBuilderNone,
 		},
 		{
 			name:          "ecosystem pypi",
 			from:          "pypi",
 			wantBuilder:   "pypi",
 			wantSourceArg: "",
-			wantIsGitHub:  false,
+			wantLLMType:   LLMBuilderNone,
 		},
 		{
 			name:          "ecosystem npm",
 			from:          "npm",
 			wantBuilder:   "npm",
 			wantSourceArg: "",
-			wantIsGitHub:  false,
+			wantLLMType:   LLMBuilderNone,
 		},
 		{
 			name:          "ecosystem rubygems",
 			from:          "rubygems",
 			wantBuilder:   "rubygems",
 			wantSourceArg: "",
-			wantIsGitHub:  false,
+			wantLLMType:   LLMBuilderNone,
 		},
 		{
 			name:          "ecosystem cargo alias",
 			from:          "cargo",
 			wantBuilder:   "crates.io",
 			wantSourceArg: "",
-			wantIsGitHub:  false,
+			wantLLMType:   LLMBuilderNone,
 		},
 		{
 			name:          "github with lowercase",
 			from:          "github:cli/cli",
 			wantBuilder:   "github",
 			wantSourceArg: "cli/cli",
-			wantIsGitHub:  true,
+			wantLLMType:   LLMBuilderGitHub,
 		},
 		{
 			name:          "github with uppercase",
 			from:          "GitHub:FiloSottile/age",
 			wantBuilder:   "github",
 			wantSourceArg: "FiloSottile/age",
-			wantIsGitHub:  true,
+			wantLLMType:   LLMBuilderGitHub,
 		},
 		{
 			name:          "github with mixed case",
 			from:          "GITHUB:stern/stern",
 			wantBuilder:   "github",
 			wantSourceArg: "stern/stern",
-			wantIsGitHub:  true,
+			wantLLMType:   LLMBuilderGitHub,
 		},
 		{
 			name:          "github preserves sourceArg case",
 			from:          "github:BurntSushi/ripgrep",
 			wantBuilder:   "github",
 			wantSourceArg: "BurntSushi/ripgrep",
-			wantIsGitHub:  true,
+			wantLLMType:   LLMBuilderGitHub,
+		},
+		{
+			name:          "homebrew with lowercase",
+			from:          "homebrew:jq",
+			wantBuilder:   "homebrew",
+			wantSourceArg: "jq",
+			wantLLMType:   LLMBuilderHomebrew,
+		},
+		{
+			name:          "homebrew with uppercase",
+			from:          "HOMEBREW:ripgrep",
+			wantBuilder:   "homebrew",
+			wantSourceArg: "ripgrep",
+			wantLLMType:   LLMBuilderHomebrew,
+		},
+		{
+			name:          "homebrew preserves sourceArg case",
+			from:          "Homebrew:PostgreSQL",
+			wantBuilder:   "homebrew",
+			wantSourceArg: "PostgreSQL",
+			wantLLMType:   LLMBuilderHomebrew,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			builder, sourceArg, isGitHub := parseFromFlag(tt.from)
+			builder, sourceArg, llmType := parseFromFlag(tt.from)
 			if builder != tt.wantBuilder {
 				t.Errorf("parseFromFlag(%q) builder = %q, want %q", tt.from, builder, tt.wantBuilder)
 			}
 			if sourceArg != tt.wantSourceArg {
 				t.Errorf("parseFromFlag(%q) sourceArg = %q, want %q", tt.from, sourceArg, tt.wantSourceArg)
 			}
-			if isGitHub != tt.wantIsGitHub {
-				t.Errorf("parseFromFlag(%q) isGitHub = %v, want %v", tt.from, isGitHub, tt.wantIsGitHub)
+			if llmType != tt.wantLLMType {
+				t.Errorf("parseFromFlag(%q) llmType = %v, want %v", tt.from, llmType, tt.wantLLMType)
 			}
 		})
 	}
@@ -173,6 +194,24 @@ func TestDescribeStep(t *testing.T) {
 				Action: "github_file",
 			},
 			want: "Download binary from GitHub releases",
+		},
+		{
+			name: "homebrew_bottle with formula",
+			step: recipe.Step{
+				Action: "homebrew_bottle",
+				Params: map[string]interface{}{
+					"formula": "jq",
+				},
+			},
+			want: "Download Homebrew bottle for jq",
+		},
+		{
+			name: "homebrew_bottle without formula",
+			step: recipe.Step{
+				Action: "homebrew_bottle",
+				Params: map[string]interface{}{},
+			},
+			want: "Download Homebrew bottle",
 		},
 		{
 			name: "npm_install",
@@ -271,6 +310,18 @@ func TestExtractDownloadURLs(t *testing.T) {
 				}},
 			},
 			want: []string{"releases.hashicorp.com/terraform/..."},
+		},
+		{
+			name: "homebrew_bottle",
+			recipe: &recipe.Recipe{
+				Steps: []recipe.Step{{
+					Action: "homebrew_bottle",
+					Params: map[string]interface{}{
+						"formula": "jq",
+					},
+				}},
+			},
+			want: []string{"ghcr.io/homebrew/core/jq:..."},
 		},
 		{
 			name: "download",

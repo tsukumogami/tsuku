@@ -51,19 +51,20 @@ func (r *cliProgressReporter) OnStageFailed() {
 
 var createCmd = &cobra.Command{
 	Use:   "create <tool> --from <source>",
-	Short: "Create a recipe from a package ecosystem or GitHub",
-	Long: `Create a recipe by querying a package ecosystem's metadata API or analyzing
-GitHub release assets.
+	Short: "Create a recipe from a package ecosystem, GitHub, or Homebrew",
+	Long: `Create a recipe by querying a package ecosystem's metadata API, analyzing
+GitHub release assets, or inspecting Homebrew bottles.
 
 The generated recipe is written to $TSUKU_HOME/recipes/<tool>.toml and can be
 inspected or edited before running 'tsuku install <tool>'.
 
 Supported sources:
-  crates.io          Rust crates from crates.io
-  rubygems           Ruby gems from rubygems.org
-  pypi               Python packages from pypi.org
-  npm                Node.js packages from npmjs.com
-  github:owner/repo  GitHub releases (uses LLM to analyze assets)
+  crates.io           Rust crates from crates.io
+  rubygems            Ruby gems from rubygems.org
+  pypi                Python packages from pypi.org
+  npm                 Node.js packages from npmjs.com
+  github:owner/repo   GitHub releases (uses LLM to analyze assets)
+  homebrew:formula    Homebrew formulas (uses LLM to generate recipes)
 
 Examples:
   tsuku create ripgrep --from crates.io
@@ -72,7 +73,9 @@ Examples:
   tsuku create ruff --from pypi
   tsuku create prettier --from npm
   tsuku create gh --from github:cli/cli
-  tsuku create age --from github:FiloSottile/age`,
+  tsuku create age --from github:FiloSottile/age
+  tsuku create jq --from homebrew:jq
+  tsuku create ripgrep --from homebrew:ripgrep`,
 	Args: cobra.ExactArgs(1),
 	Run:  runCreate,
 }
@@ -158,17 +161,32 @@ func confirmSkipValidation() bool {
 	return response == "y" || response == "yes"
 }
 
+// LLMBuilderType indicates which LLM-based builder is being used.
+type LLMBuilderType int
+
+const (
+	LLMBuilderNone LLMBuilderType = iota
+	LLMBuilderGitHub
+	LLMBuilderHomebrew
+)
+
 // parseFromFlag parses the --from flag value.
-// Returns (builder, sourceArg, isGitHub).
-// For ecosystem builders: ("crates.io", "", false)
-// For github builder: ("github", "cli/cli", true)
-func parseFromFlag(from string) (builder string, sourceArg string, isGitHub bool) {
+// Returns (builder, sourceArg, llmType).
+// For ecosystem builders: ("crates.io", "", LLMBuilderNone)
+// For github builder: ("github", "cli/cli", LLMBuilderGitHub)
+// For homebrew builder: ("homebrew", "jq", LLMBuilderHomebrew)
+func parseFromFlag(from string) (builder string, sourceArg string, llmType LLMBuilderType) {
+	lower := strings.ToLower(from)
 	// Check for github:owner/repo format
-	if strings.HasPrefix(strings.ToLower(from), "github:") {
-		return "github", from[7:], true
+	if strings.HasPrefix(lower, "github:") {
+		return "github", from[7:], LLMBuilderGitHub
+	}
+	// Check for homebrew:formula format
+	if strings.HasPrefix(lower, "homebrew:") {
+		return "homebrew", from[9:], LLMBuilderHomebrew
 	}
 	// Otherwise, it's an ecosystem name
-	return normalizeEcosystem(from), "", false
+	return normalizeEcosystem(from), "", LLMBuilderNone
 }
 
 // normalizeEcosystem converts user-friendly ecosystem names to internal identifiers
@@ -198,13 +216,14 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Parse the --from flag
-	builderName, sourceArg, isGitHub := parseFromFlag(createFrom)
+	builderName, sourceArg, llmType := parseFromFlag(createFrom)
+	isLLMBuilder := llmType != LLMBuilderNone
 
-	// Handle --skip-validation flag (only applies to GitHub builder)
+	// Handle --skip-validation flag (only applies to LLM builders)
 	skipValidation := false
 	if createSkipValidation {
-		if !isGitHub {
-			fmt.Fprintln(os.Stderr, "Warning: --skip-validation has no effect for non-GitHub sources")
+		if !isLLMBuilder {
+			fmt.Fprintln(os.Stderr, "Warning: --skip-validation has no effect for non-LLM sources")
 		} else {
 			// Require explicit consent for skipping validation
 			if !confirmSkipValidation() {
@@ -222,10 +241,10 @@ func runCreate(cmd *cobra.Command, args []string) {
 	builderRegistry.Register(builders.NewPyPIBuilder(nil))
 	builderRegistry.Register(builders.NewNpmBuilder(nil))
 
-	// For GitHub builder, check LLM budget and rate limits before proceeding
+	// For LLM builders, check LLM budget and rate limits before proceeding
 	var stateManager *install.StateManager
 	var userCfg *userconfig.Config
-	if isGitHub {
+	if isLLMBuilder {
 		// Load user config for settings
 		var err error
 		userCfg, err = userconfig.Load()
@@ -274,8 +293,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// Register GitHub builder (may fail if ANTHROPIC_API_KEY not set)
-	if isGitHub {
+	// Register LLM builders (may fail if ANTHROPIC_API_KEY not set)
+	if llmType == LLMBuilderGitHub {
 		var opts []builders.GitHubReleaseBuilderOption
 
 		// Set up validation executor unless --skip-validation was confirmed
@@ -295,6 +314,26 @@ func runCreate(cmd *cobra.Command, args []string) {
 			exitWithCode(ExitDependencyFailed)
 		}
 		builderRegistry.Register(ghBuilder)
+	} else if llmType == LLMBuilderHomebrew {
+		var opts []builders.HomebrewBuilderOption
+
+		// Set up validation executor unless --skip-validation was confirmed
+		if !skipValidation {
+			detector := validate.NewRuntimeDetector()
+			predownloader := validate.NewPreDownloader()
+			executor := validate.NewExecutor(detector, predownloader)
+			opts = append(opts, builders.WithHomebrewExecutor(executor))
+		}
+
+		if !quietFlag {
+			opts = append(opts, builders.WithHomebrewProgressReporter(&cliProgressReporter{out: os.Stdout}))
+		}
+		hbBuilder, err := builders.NewHomebrewBuilder(context.Background(), opts...)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			exitWithCode(ExitDependencyFailed)
+		}
+		builderRegistry.Register(hbBuilder)
 	}
 
 	// Get the builder
@@ -306,13 +345,14 @@ func runCreate(cmd *cobra.Command, args []string) {
 			fmt.Fprintf(os.Stderr, "  %s\n", name)
 		}
 		fmt.Fprintf(os.Stderr, "  github:owner/repo\n")
+		fmt.Fprintf(os.Stderr, "  homebrew:formula\n")
 		exitWithCode(ExitUsage)
 	}
 
 	ctx := context.Background()
 
 	// For ecosystem builders, check toolchain and package existence
-	if !isGitHub {
+	if !isLLMBuilder {
 		// Check toolchain availability before making API calls
 		if err := toolchain.CheckAvailable(builderName); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -333,9 +373,12 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Build the recipe
 	var sourceDisplay string
-	if isGitHub {
+	switch llmType {
+	case LLMBuilderGitHub:
 		sourceDisplay = fmt.Sprintf("github:%s", sourceArg)
-	} else {
+	case LLMBuilderHomebrew:
+		sourceDisplay = fmt.Sprintf("homebrew:%s", sourceArg)
+	default:
 		sourceDisplay = builderName
 	}
 	printInfof("Creating recipe for %s from %s...\n", toolName, sourceDisplay)
@@ -349,8 +392,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// Record LLM usage for successful GitHub builds (includes cost tracking)
-	if isGitHub && stateManager != nil {
+	// Record LLM usage for successful LLM builds (includes cost tracking)
+	if isLLMBuilder && stateManager != nil {
 		// Use actual cost from build result if available, otherwise fall back to estimate
 		cost := result.Cost
 		if cost == 0 {
@@ -383,8 +426,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// For GitHub builder, show preview and prompt for approval (unless --yes)
-	if isGitHub && !createAutoApprove {
+	// For LLM builders, show preview and prompt for approval (unless --yes)
+	if isLLMBuilder && !createAutoApprove {
 		fmt.Println() // Blank line after "Creating recipe..." message
 		approved, err := previewRecipe(result.Recipe, result)
 		if err != nil {
@@ -411,8 +454,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 	printInfof("\nRecipe created: %s\n", recipePath)
 	printInfof("Source: %s\n", result.Source)
 
-	// Display cost for GitHub (LLM) builds
-	if isGitHub && stateManager != nil && userCfg != nil {
+	// Display cost for LLM builds
+	if isLLMBuilder && stateManager != nil && userCfg != nil {
 		dailySpent := stateManager.DailySpent()
 		dailyBudget := userCfg.LLMDailyBudget()
 
@@ -542,6 +585,10 @@ func extractDownloadURLs(r *recipe.Recipe) []string {
 					urls = append(urls, fmt.Sprintf("github.com/%s/releases/.../%s", repo, pattern))
 				}
 			}
+		case "homebrew_bottle":
+			if formula, ok := step.Params["formula"].(string); ok {
+				urls = append(urls, fmt.Sprintf("ghcr.io/homebrew/core/%s:...", formula))
+			}
 		case "download", "download_archive":
 			if url, ok := step.Params["url"].(string); ok {
 				urls = append(urls, url)
@@ -566,6 +613,11 @@ func describeStep(step recipe.Step) string {
 		return fmt.Sprintf("Download and extract %s archive from GitHub", format)
 	case "github_file":
 		return "Download binary from GitHub releases"
+	case "homebrew_bottle":
+		if formula, ok := step.Params["formula"].(string); ok {
+			return fmt.Sprintf("Download Homebrew bottle for %s", formula)
+		}
+		return "Download Homebrew bottle"
 	case "download":
 		return "Download file"
 	case "download_archive":
