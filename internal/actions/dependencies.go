@@ -28,6 +28,7 @@ var ActionDependencies = map[string]ActionDeps{
 	"cargo_install": {InstallTime: []string{"rust"}, Runtime: nil},
 	"cargo_build":   {InstallTime: []string{"rust"}, Runtime: nil},
 	"nix_install":   {InstallTime: []string{"nix-portable"}, Runtime: nil},
+	"nix_realize":   {InstallTime: []string{"nix-portable"}, Runtime: nil},
 
 	// Download/extract actions: no dependencies
 	// These actions work with files directly using Go's standard library.

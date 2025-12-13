@@ -2,12 +2,15 @@ package actions
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"syscall"
 
 	"github.com/tsukumogami/tsuku/internal/progress"
@@ -226,4 +229,124 @@ func downloadFileWithContext(ctx context.Context, url, destPath string) error {
 // This is exported for use by nix_install action.
 func GetNixInternalDir() (string, error) {
 	return getNixInternalDir()
+}
+
+// FlakeMetadata contains information from `nix flake metadata --json`
+type FlakeMetadata struct {
+	URL         string          `json:"url"`      // Locked URL (e.g., "github:NixOS/nixpkgs/abc123")
+	ResolvedURL string          `json:"resolved"` // Resolved URL
+	Locked      json.RawMessage `json:"locked"`   // Complete locked object
+	Locks       json.RawMessage `json:"locks"`    // Complete flake.lock content
+}
+
+// DerivationInfo contains information from `nix derivation show`
+type DerivationInfo struct {
+	Outputs map[string]struct {
+		Path string `json:"path"`
+	} `json:"outputs"`
+}
+
+// GetNixFlakeMetadata retrieves flake metadata without building.
+// Uses `nix flake metadata --json` to get lock information.
+// This is fast (typically <1 second) as it only evaluates, doesn't build.
+func GetNixFlakeMetadata(ctx context.Context, flakeRef string) (*FlakeMetadata, error) {
+	nixPath := ResolveNixPortable()
+	if nixPath == "" {
+		return nil, fmt.Errorf("nix-portable not available")
+	}
+
+	npLocation, err := GetNixInternalDir()
+	if err != nil {
+		return nil, err
+	}
+
+	cmd := exec.CommandContext(ctx, nixPath, "nix", "flake", "metadata", "--json", flakeRef)
+	cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("nix flake metadata failed: %w\nOutput: %s", err, string(output))
+	}
+
+	var metadata FlakeMetadata
+	if err := json.Unmarshal(output, &metadata); err != nil {
+		return nil, fmt.Errorf("failed to parse flake metadata: %w", err)
+	}
+
+	return &metadata, nil
+}
+
+// GetNixDerivationPath retrieves the derivation and output paths without building.
+// Uses `nix derivation show` which is fast (evaluates but doesn't build).
+// Returns (derivationPath, outputPath, error).
+func GetNixDerivationPath(ctx context.Context, flakeRef string) (string, string, error) {
+	nixPath := ResolveNixPortable()
+	if nixPath == "" {
+		return "", "", fmt.Errorf("nix-portable not available")
+	}
+
+	npLocation, err := GetNixInternalDir()
+	if err != nil {
+		return "", "", err
+	}
+
+	// Use nix derivation show to get paths without building
+	cmd := exec.CommandContext(ctx, nixPath, "nix", "derivation", "show", flakeRef)
+	cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", "", fmt.Errorf("nix derivation show failed: %w\nOutput: %s", err, string(output))
+	}
+
+	// Parse the derivation JSON
+	// Output is: { "/nix/store/...drv": { "outputs": { "out": { "path": "..." } } } }
+	var derivations map[string]DerivationInfo
+	if err := json.Unmarshal(output, &derivations); err != nil {
+		return "", "", fmt.Errorf("failed to parse derivation info: %w", err)
+	}
+
+	// Extract first derivation (typically only one)
+	for drvPath, info := range derivations {
+		// Get the "out" output path (most common), or first available
+		if outInfo, ok := info.Outputs["out"]; ok {
+			return drvPath, outInfo.Path, nil
+		}
+		// Fallback to first output
+		for _, outInfo := range info.Outputs {
+			return drvPath, outInfo.Path, nil
+		}
+	}
+
+	return "", "", fmt.Errorf("no derivation found in output")
+}
+
+// GetNixVersion returns the Nix version from nix-portable.
+// Returns empty string if nix-portable is not available.
+func GetNixVersion() string {
+	nixPath := ResolveNixPortable()
+	if nixPath == "" {
+		return ""
+	}
+
+	npLocation, err := GetNixInternalDir()
+	if err != nil {
+		return ""
+	}
+
+	cmd := exec.Command(nixPath, "nix", "--version")
+	cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	// Output format: "nix (Nix) 2.18.1"
+	parts := strings.Fields(string(output))
+	if len(parts) >= 3 {
+		return parts[len(parts)-1] // Return version number
+	}
+
+	return strings.TrimSpace(string(output))
 }

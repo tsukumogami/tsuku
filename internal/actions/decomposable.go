@@ -74,6 +74,7 @@ var primitives = map[string]bool{
 	"cpan_install": true,
 	"gem_exec":     true,
 	"go_build":     true,
+	"nix_realize":  true,
 	"npm_exec":     true,
 	"pip_install":  true,
 }

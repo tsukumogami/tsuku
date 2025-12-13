@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -27,6 +28,9 @@ import (
 // virtualization layer to resolve /nix/store paths. Wrapper scripts invoke
 // binaries through `nix shell --profile`.
 type NixInstallAction struct{}
+
+// Ensure NixInstallAction implements Decomposable
+var _ Decomposable = (*NixInstallAction)(nil)
 
 // Name returns the action name
 func (a *NixInstallAction) Name() string {
@@ -261,4 +265,124 @@ func detectProotFallback(nixPortablePath, npLocation string) bool {
 	// nix-portable prints messages about runtime selection
 	return strings.Contains(outputStr, "proot") ||
 		strings.Contains(outputStr, "PROOT")
+}
+
+// Decompose converts a nix_install composite action into a nix_realize primitive step.
+// This is called during plan generation to capture lock information at eval time.
+//
+// The decomposition:
+//  1. Validates parameters
+//  2. Calls `nix flake metadata --json` to get lock information
+//  3. Calls `nix derivation show` to get derivation and output paths
+//  4. Returns a nix_realize step with all lock info captured
+func (a *NixInstallAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Check platform first - nix-portable only supports Linux
+	if runtime.GOOS != "linux" {
+		return nil, fmt.Errorf("nix_install action only supports Linux (nix-portable does not support %s)", runtime.GOOS)
+	}
+
+	// Get package name (required)
+	packageName, ok := GetString(params, "package")
+	if !ok {
+		return nil, fmt.Errorf("nix_install action requires 'package' parameter")
+	}
+
+	// Validate package name
+	if !isValidNixPackage(packageName) {
+		return nil, fmt.Errorf("invalid nixpkgs package name '%s': must match nixpkgs attribute path rules", packageName)
+	}
+
+	// Get executables list (required)
+	executables, ok := GetStringSlice(params, "executables")
+	if !ok || len(executables) == 0 {
+		return nil, fmt.Errorf("nix_install action requires 'executables' parameter with at least one executable")
+	}
+
+	// Validate executable names
+	for _, exe := range executables {
+		if err := validateExecutableName(exe); err != nil {
+			return nil, err
+		}
+	}
+
+	// Ensure nix-portable is available for metadata retrieval
+	if ResolveNixPortable() == "" {
+		// nix-portable not yet bootstrapped - we need it for metadata
+		_, err := EnsureNixPortableWithContext(ctx.Context)
+		if err != nil {
+			return nil, fmt.Errorf("failed to ensure nix-portable for metadata: %w", err)
+		}
+	}
+
+	// Build flake reference
+	flakeRef := fmt.Sprintf("nixpkgs#%s", packageName)
+
+	// Get flake metadata (fast, no build)
+	metadata, err := GetNixFlakeMetadata(ctx.Context, flakeRef)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get flake metadata: %w", err)
+	}
+
+	// Get derivation path (fast, no build)
+	drvPath, outputPath, err := GetNixDerivationPath(ctx.Context, flakeRef)
+	if err != nil {
+		// Non-fatal - derivation path is optional optimization
+		drvPath = ""
+		outputPath = ""
+	}
+
+	// Get nix version for informational purposes
+	nixVersion := GetNixVersion()
+
+	// Build system type string (e.g., "x86_64-linux")
+	systemType := fmt.Sprintf("%s-%s", runtime.GOARCH, runtime.GOOS)
+	// Map to Nix naming convention
+	if runtime.GOARCH == "amd64" {
+		systemType = "x86_64-" + runtime.GOOS
+	} else if runtime.GOARCH == "arm64" {
+		systemType = "aarch64-" + runtime.GOOS
+	}
+
+	// Marshal flake.lock to JSON string if present
+	var flakeLockJSON string
+	if metadata.Locks != nil {
+		flakeLockJSON = string(metadata.Locks)
+	}
+
+	// Build locks map
+	locks := map[string]interface{}{
+		"locked_ref":  metadata.URL,
+		"system":      systemType,
+		"nix_version": nixVersion,
+	}
+	if flakeLockJSON != "" {
+		// Store as raw JSON for the locks
+		var lockData interface{}
+		if err := json.Unmarshal([]byte(flakeLockJSON), &lockData); err == nil {
+			locks["flake_lock"] = lockData
+		}
+	}
+
+	// Build nix_realize params
+	nixRealizeParams := map[string]interface{}{
+		"flake_ref":   flakeRef,
+		"package":     packageName,
+		"executables": executables,
+		"locks":       locks,
+	}
+
+	// Add optional paths if available
+	if drvPath != "" {
+		nixRealizeParams["derivation_path"] = drvPath
+	}
+	if outputPath != "" {
+		nixRealizeParams["output_path"] = outputPath
+	}
+
+	return []Step{
+		{
+			Action: "nix_realize",
+			Params: nixRealizeParams,
+		},
+	}, nil
 }
