@@ -18,6 +18,10 @@ type BuildRequest struct {
 	// - github builder: "cli/cli" (owner/repo)
 	// - crates.io builder: unused (Package is the crate name)
 	SourceArg string
+
+	// ForceSource forces source build even if pre-built binaries are available.
+	// Currently only used by the Homebrew builder (homebrew:formula:source syntax).
+	ForceSource bool
 }
 
 // Builder generates recipes for packages from a specific ecosystem.

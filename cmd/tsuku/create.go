@@ -63,8 +63,9 @@ Supported sources:
   rubygems            Ruby gems from rubygems.org
   pypi                Python packages from pypi.org
   npm                 Node.js packages from npmjs.com
-  github:owner/repo   GitHub releases (uses LLM to analyze assets)
-  homebrew:formula    Homebrew formulas (uses LLM to generate recipes)
+  github:owner/repo      GitHub releases (uses LLM to analyze assets)
+  homebrew:formula       Homebrew formulas (uses LLM to generate recipes)
+  homebrew:formula:source  Force source build even if bottles available
 
 Examples:
   tsuku create ripgrep --from crates.io
@@ -171,22 +172,30 @@ const (
 )
 
 // parseFromFlag parses the --from flag value.
-// Returns (builder, sourceArg, llmType).
-// For ecosystem builders: ("crates.io", "", LLMBuilderNone)
-// For github builder: ("github", "cli/cli", LLMBuilderGitHub)
-// For homebrew builder: ("homebrew", "jq", LLMBuilderHomebrew)
-func parseFromFlag(from string) (builder string, sourceArg string, llmType LLMBuilderType) {
+// Returns (builder, sourceArg, llmType, forceSource).
+// For ecosystem builders: ("crates.io", "", LLMBuilderNone, false)
+// For github builder: ("github", "cli/cli", LLMBuilderGitHub, false)
+// For homebrew builder: ("homebrew", "jq", LLMBuilderHomebrew, false)
+// For homebrew source: ("homebrew", "jq", LLMBuilderHomebrew, true)
+func parseFromFlag(from string) (builder string, sourceArg string, llmType LLMBuilderType, forceSource bool) {
 	lower := strings.ToLower(from)
 	// Check for github:owner/repo format
 	if strings.HasPrefix(lower, "github:") {
-		return "github", from[7:], LLMBuilderGitHub
+		return "github", from[7:], LLMBuilderGitHub, false
 	}
-	// Check for homebrew:formula format
+	// Check for homebrew:formula or homebrew:formula:source format
 	if strings.HasPrefix(lower, "homebrew:") {
-		return "homebrew", from[9:], LLMBuilderHomebrew
+		arg := from[9:]
+		// Check for :source suffix
+		if strings.HasSuffix(lower, ":source") {
+			// Strip :source suffix (case-insensitive)
+			arg = arg[:len(arg)-7]
+			return "homebrew", arg, LLMBuilderHomebrew, true
+		}
+		return "homebrew", arg, LLMBuilderHomebrew, false
 	}
 	// Otherwise, it's an ecosystem name
-	return normalizeEcosystem(from), "", LLMBuilderNone
+	return normalizeEcosystem(from), "", LLMBuilderNone, false
 }
 
 // normalizeEcosystem converts user-friendly ecosystem names to internal identifiers
@@ -216,7 +225,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Parse the --from flag
-	builderName, sourceArg, llmType := parseFromFlag(createFrom)
+	builderName, sourceArg, llmType, forceSource := parseFromFlag(createFrom)
 	isLLMBuilder := llmType != LLMBuilderNone
 
 	// Handle --skip-validation flag (only applies to LLM builders)
@@ -377,15 +386,20 @@ func runCreate(cmd *cobra.Command, args []string) {
 	case LLMBuilderGitHub:
 		sourceDisplay = fmt.Sprintf("github:%s", sourceArg)
 	case LLMBuilderHomebrew:
-		sourceDisplay = fmt.Sprintf("homebrew:%s", sourceArg)
+		if forceSource {
+			sourceDisplay = fmt.Sprintf("homebrew:%s:source", sourceArg)
+		} else {
+			sourceDisplay = fmt.Sprintf("homebrew:%s", sourceArg)
+		}
 	default:
 		sourceDisplay = builderName
 	}
 	printInfof("Creating recipe for %s from %s...\n", toolName, sourceDisplay)
 
 	result, err := builder.Build(ctx, builders.BuildRequest{
-		Package:   toolName,
-		SourceArg: sourceArg,
+		Package:     toolName,
+		SourceArg:   sourceArg,
+		ForceSource: forceSource,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)

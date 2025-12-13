@@ -622,9 +622,13 @@ func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildRe
 		return nil, fmt.Errorf("failed to fetch formula: %w", err)
 	}
 
-	// Check for bottles - if not available, switch to source build mode
-	if !formulaInfo.Versions.Bottle {
-		b.reportDone(fmt.Sprintf("v%s (source only)", formulaInfo.Versions.Stable))
+	// Check for bottles - if not available or source forced, switch to source build mode
+	if !formulaInfo.Versions.Bottle || req.ForceSource {
+		suffix := "source only"
+		if req.ForceSource && formulaInfo.Versions.Bottle {
+			suffix = "source requested"
+		}
+		b.reportDone(fmt.Sprintf("v%s (%s)", formulaInfo.Versions.Stable, suffix))
 		return b.buildFromSource(ctx, req, formula, formulaInfo)
 	}
 

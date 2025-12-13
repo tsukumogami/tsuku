@@ -8,11 +8,12 @@ import (
 
 func TestParseFromFlag(t *testing.T) {
 	tests := []struct {
-		name          string
-		from          string
-		wantBuilder   string
-		wantSourceArg string
-		wantLLMType   LLMBuilderType
+		name            string
+		from            string
+		wantBuilder     string
+		wantSourceArg   string
+		wantLLMType     LLMBuilderType
+		wantForceSource bool
 	}{
 		{
 			name:          "ecosystem crates.io",
@@ -98,11 +99,35 @@ func TestParseFromFlag(t *testing.T) {
 			wantSourceArg: "PostgreSQL",
 			wantLLMType:   LLMBuilderHomebrew,
 		},
+		{
+			name:            "homebrew source with lowercase",
+			from:            "homebrew:jq:source",
+			wantBuilder:     "homebrew",
+			wantSourceArg:   "jq",
+			wantLLMType:     LLMBuilderHomebrew,
+			wantForceSource: true,
+		},
+		{
+			name:            "homebrew source with mixed case",
+			from:            "Homebrew:tmux:SOURCE",
+			wantBuilder:     "homebrew",
+			wantSourceArg:   "tmux",
+			wantLLMType:     LLMBuilderHomebrew,
+			wantForceSource: true,
+		},
+		{
+			name:            "homebrew source preserves formula case",
+			from:            "homebrew:PostgreSQL@17:source",
+			wantBuilder:     "homebrew",
+			wantSourceArg:   "PostgreSQL@17",
+			wantLLMType:     LLMBuilderHomebrew,
+			wantForceSource: true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			builder, sourceArg, llmType := parseFromFlag(tt.from)
+			builder, sourceArg, llmType, forceSource := parseFromFlag(tt.from)
 			if builder != tt.wantBuilder {
 				t.Errorf("parseFromFlag(%q) builder = %q, want %q", tt.from, builder, tt.wantBuilder)
 			}
@@ -111,6 +136,9 @@ func TestParseFromFlag(t *testing.T) {
 			}
 			if llmType != tt.wantLLMType {
 				t.Errorf("parseFromFlag(%q) llmType = %v, want %v", tt.from, llmType, tt.wantLLMType)
+			}
+			if forceSource != tt.wantForceSource {
+				t.Errorf("parseFromFlag(%q) forceSource = %v, want %v", tt.from, forceSource, tt.wantForceSource)
 			}
 		})
 	}
