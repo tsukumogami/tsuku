@@ -52,6 +52,33 @@ tsuku update kubectl
 tsuku remove kubectl
 ```
 
+### Verbosity and Debugging
+
+tsuku supports multiple verbosity levels for troubleshooting:
+
+```bash
+# Quiet mode - errors only
+tsuku install kubectl --quiet
+tsuku install kubectl -q
+
+# Verbose mode - show operational details
+tsuku install kubectl --verbose
+tsuku install kubectl -v
+
+# Debug mode - full diagnostic output (includes timestamps and source locations)
+tsuku install kubectl --debug
+```
+
+Verbosity can also be controlled via environment variables:
+
+```bash
+TSUKU_QUIET=1 tsuku install kubectl    # Errors only
+TSUKU_VERBOSE=1 tsuku install kubectl  # Verbose output
+TSUKU_DEBUG=1 tsuku install kubectl    # Debug output
+```
+
+Flags take precedence over environment variables. Debug mode displays a warning banner since output may contain file paths and URLs.
+
 ### Dependency Management
 
 tsuku automatically handles tool dependencies:
