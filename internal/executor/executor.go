@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -100,8 +101,9 @@ func (e *Executor) Execute(ctx context.Context) error {
 		OS:               runtime.GOOS,
 		Arch:             runtime.GOARCH,
 		Recipe:           e.recipe,
-		ExecPaths:        e.execPaths, // Include execution dependency paths
-		Resolver:         resolver,    // Pass resolver for asset resolution
+		ExecPaths:        e.execPaths,   // Include execution dependency paths
+		Resolver:         resolver,      // Pass resolver for asset resolution
+		Logger:           log.Default(), // Use global logger configured at startup
 	}
 
 	fmt.Println()

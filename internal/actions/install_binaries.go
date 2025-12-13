@@ -75,6 +75,12 @@ func (a *InstallBinariesAction) installBinaries(ctx *ExecutionContext, binaries 
 	// Build vars for variable substitution
 	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
 
+	// Log installation details
+	logger := ctx.Log()
+	logger.Debug("install_binaries action starting",
+		"count", len(binaries),
+		"installDir", ctx.InstallDir)
+
 	fmt.Printf("   Installing %d binary(ies)\n", len(binaries))
 
 	for _, binary := range binaries {
@@ -83,6 +89,12 @@ func (a *InstallBinariesAction) installBinaries(ctx *ExecutionContext, binaries 
 
 		srcPath := filepath.Join(ctx.WorkDir, src)
 		destPath := filepath.Join(ctx.InstallDir, dest)
+
+		logger.Debug("installing binary",
+			"src", src,
+			"srcPath", srcPath,
+			"dest", dest,
+			"destPath", destPath)
 
 		// Ensure destination directory exists
 		if err := os.MkdirAll(filepath.Dir(destPath), 0755); err != nil {
@@ -99,6 +111,7 @@ func (a *InstallBinariesAction) installBinaries(ctx *ExecutionContext, binaries 
 			return fmt.Errorf("failed to chmod %s: %w", dest, err)
 		}
 
+		logger.Debug("binary installed successfully", "dest", destPath)
 		fmt.Printf("   ✓ Installed: %s → %s\n", src, dest)
 	}
 
@@ -233,6 +246,13 @@ func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionConte
 			return err
 		}
 	}
+
+	// Log directory installation details
+	logger := ctx.Log()
+	logger.Debug("install_binaries (directory mode) starting",
+		"workDir", ctx.WorkDir,
+		"installDir", ctx.InstallDir,
+		"binaryCount", len(binaries))
 
 	fmt.Printf("   Installing directory tree to: %s\n", ctx.InstallDir)
 
