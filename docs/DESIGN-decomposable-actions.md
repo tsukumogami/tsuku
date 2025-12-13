@@ -1,6 +1,6 @@
 # Design: Decomposable Actions and Primitive Operations
 
-- **Status**: Planned
+- **Status**: Current
 - **Milestone**: Deterministic Recipe Execution
 - **Author**: @dangazineu
 - **Created**: 2025-12-12
