@@ -45,6 +45,15 @@ func (r *Recipe) ToTOML() ([]byte, error) {
 	if r.Version.GitHubRepo != "" {
 		buf.WriteString(fmt.Sprintf("github_repo = %q\n", r.Version.GitHubRepo))
 	}
+	if r.Version.TagPrefix != "" {
+		buf.WriteString(fmt.Sprintf("tag_prefix = %q\n", r.Version.TagPrefix))
+	}
+	if r.Version.Module != "" {
+		buf.WriteString(fmt.Sprintf("module = %q\n", r.Version.Module))
+	}
+	if r.Version.Formula != "" {
+		buf.WriteString(fmt.Sprintf("formula = %q\n", r.Version.Formula))
+	}
 	buf.WriteString("\n")
 
 	// Encode steps - each step as [[steps]] with flattened params

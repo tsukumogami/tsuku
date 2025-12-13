@@ -1480,6 +1480,114 @@ func TestRecipe_ToTOML_EmptyFields(t *testing.T) {
 	}
 }
 
+func TestRecipe_ToTOML_VersionSectionFields(t *testing.T) {
+	// Test that all version section fields are serialized
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name: "test-tool",
+		},
+		Version: VersionSection{
+			Source:     "homebrew",
+			GitHubRepo: "owner/repo",
+			TagPrefix:  "v",
+			Module:     "github.com/owner/repo",
+			Formula:    "test-formula",
+		},
+		Steps: []Step{},
+		Verify: VerifySection{
+			Command: "test --version",
+		},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Check all version fields are present
+	if !contains(tomlStr, `source = "homebrew"`) {
+		t.Error("ToTOML() missing source field")
+	}
+	if !contains(tomlStr, `github_repo = "owner/repo"`) {
+		t.Error("ToTOML() missing github_repo field")
+	}
+	if !contains(tomlStr, `tag_prefix = "v"`) {
+		t.Error("ToTOML() missing tag_prefix field")
+	}
+	if !contains(tomlStr, `module = "github.com/owner/repo"`) {
+		t.Error("ToTOML() missing module field")
+	}
+	if !contains(tomlStr, `formula = "test-formula"`) {
+		t.Error("ToTOML() missing formula field")
+	}
+}
+
+func TestRecipe_ToTOML_HomebrewRecipe(t *testing.T) {
+	// Test a realistic Homebrew-style recipe
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name:        "jq",
+			Description: "Lightweight and flexible command-line JSON processor",
+			Homepage:    "https://jqlang.github.io/jq/",
+		},
+		Version: VersionSection{
+			Source:  "homebrew",
+			Formula: "jq",
+		},
+		Steps: []Step{
+			{
+				Action: "homebrew_bottle",
+				Params: map[string]interface{}{
+					"formula": "jq",
+				},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"binaries": []string{"bin/jq"},
+				},
+			},
+		},
+		Verify: VerifySection{
+			Command: "jq --version",
+		},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Verify homebrew-specific fields
+	if !contains(tomlStr, `source = "homebrew"`) {
+		t.Error("ToTOML() missing homebrew source")
+	}
+	if !contains(tomlStr, `formula = "jq"`) {
+		t.Error("ToTOML() missing formula field")
+	}
+	if !contains(tomlStr, `action = "homebrew_bottle"`) {
+		t.Error("ToTOML() missing homebrew_bottle action")
+	}
+
+	// Verify roundtrip works
+	var parsed Recipe
+	err = toml.Unmarshal(data, &parsed)
+	if err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+
+	if parsed.Version.Source != "homebrew" {
+		t.Errorf("Roundtrip: Version.Source = %q, want %q", parsed.Version.Source, "homebrew")
+	}
+	if parsed.Version.Formula != "jq" {
+		t.Errorf("Roundtrip: Version.Formula = %q, want %q", parsed.Version.Formula, "jq")
+	}
+}
+
 // Helper function to check if string contains substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
