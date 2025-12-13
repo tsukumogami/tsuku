@@ -2,7 +2,6 @@ package main
 
 import (
 	"log/slog"
-	"os"
 	"testing"
 )
 
@@ -124,29 +123,16 @@ func TestDetermineLogLevel(t *testing.T) {
 			verboseFlag = tt.verboseF
 			debugFlag = tt.debugF
 
-			// Set env vars
-			os.Unsetenv("TSUKU_QUIET")
-			os.Unsetenv("TSUKU_VERBOSE")
-			os.Unsetenv("TSUKU_DEBUG")
-			if tt.envQuiet != "" {
-				os.Setenv("TSUKU_QUIET", tt.envQuiet)
-			}
-			if tt.envVerbose != "" {
-				os.Setenv("TSUKU_VERBOSE", tt.envVerbose)
-			}
-			if tt.envDebug != "" {
-				os.Setenv("TSUKU_DEBUG", tt.envDebug)
-			}
+			// Set env vars using t.Setenv (auto-cleanup after test)
+			// Empty string acts as "unset" for isTruthy checks
+			t.Setenv("TSUKU_QUIET", tt.envQuiet)
+			t.Setenv("TSUKU_VERBOSE", tt.envVerbose)
+			t.Setenv("TSUKU_DEBUG", tt.envDebug)
 
 			got := determineLogLevel()
 			if got != tt.want {
 				t.Errorf("determineLogLevel() = %v, want %v", got, tt.want)
 			}
-
-			// Clean up env vars
-			os.Unsetenv("TSUKU_QUIET")
-			os.Unsetenv("TSUKU_VERBOSE")
-			os.Unsetenv("TSUKU_DEBUG")
 		})
 	}
 }
