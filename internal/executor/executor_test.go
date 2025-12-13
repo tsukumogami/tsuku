@@ -1030,14 +1030,14 @@ func TestExecutePlan_ContextCancellation(t *testing.T) {
 		},
 	}
 
-	// Create a cancelled context
+	// Create a canceled context
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel()
 
 	err = exec.ExecutePlan(ctx, plan)
 
 	if err == nil {
-		t.Error("ExecutePlan() with cancelled context should fail")
+		t.Error("ExecutePlan() with canceled context should fail")
 	}
 	if err != nil && err != context.Canceled {
 		t.Errorf("ExecutePlan() error = %v, want context.Canceled", err)
