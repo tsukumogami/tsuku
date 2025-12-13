@@ -14,9 +14,10 @@ import (
 var installDryRun bool
 var installForce bool
 var installFresh bool
+var installPlanPath string
 
 var installCmd = &cobra.Command{
-	Use:   "install <tool>...",
+	Use:   "install [tool]...",
 	Short: "Install a development tool",
 	Long: `Install a development tool from the recipe registry.
 You can specify a version using the @ syntax.
@@ -24,9 +25,46 @@ You can specify a version using the @ syntax.
 Examples:
   tsuku install kubectl
   tsuku install kubectl@v1.29.0
-  tsuku install terraform@latest`,
-	Args: cobra.MinimumNArgs(1),
+  tsuku install terraform@latest
+
+Install from a pre-computed plan:
+  tsuku install --plan plan.json
+  tsuku eval rg | tsuku install --plan -`,
+	Args: cobra.ArbitraryArgs, // Allow zero args when --plan is used
 	Run: func(cmd *cobra.Command, args []string) {
+		// Plan-based installation takes a different path
+		if installPlanPath != "" {
+			// Validate: cannot specify multiple tools with --plan
+			if len(args) > 1 {
+				printError(fmt.Errorf("cannot specify multiple tools with --plan flag"))
+				exitWithCode(ExitUsage)
+			}
+
+			// Dry-run is not supported with --plan (plan already exists)
+			if installDryRun {
+				printError(fmt.Errorf("--dry-run is not supported with --plan (plan already exists)"))
+				exitWithCode(ExitUsage)
+			}
+
+			// Tool name is optional - defaults to plan's tool name
+			var toolName string
+			if len(args) == 1 {
+				toolName = args[0]
+			}
+
+			if err := runPlanBasedInstall(installPlanPath, toolName); err != nil {
+				printError(err)
+				exitWithCode(ExitInstallFailed)
+			}
+			return
+		}
+
+		// Normal installation: require at least one tool
+		if len(args) == 0 {
+			printError(fmt.Errorf("requires at least 1 arg(s), only received 0"))
+			exitWithCode(ExitUsage)
+		}
+
 		// Initialize telemetry
 		telemetryClient := telemetry.NewClient()
 		telemetry.ShowNoticeIfNeeded()
@@ -68,6 +106,7 @@ func init() {
 	installCmd.Flags().BoolVar(&installDryRun, "dry-run", false, "Show what would be installed without making changes")
 	installCmd.Flags().BoolVar(&installForce, "force", false, "Skip security warnings and proceed without prompts")
 	installCmd.Flags().BoolVar(&installFresh, "fresh", false, "Force fresh plan generation, bypassing cached plans")
+	installCmd.Flags().StringVar(&installPlanPath, "plan", "", "Install from a pre-computed plan file (use '-' for stdin)")
 }
 
 // isInteractive returns true if stdin is connected to a terminal

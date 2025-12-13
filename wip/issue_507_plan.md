@@ -24,12 +24,12 @@ The implementation adds a `--plan` flag to `installCmd` and creates a new `runPl
 
 ## Implementation Steps
 
-- [ ] Add `--plan` flag to install command in `install.go`
-- [ ] Modify install command Run function to detect and route plan-based installs
-- [ ] Create `plan_install.go` with `runPlanBasedInstall()` function
-- [ ] Store plan in state.json after successful execution
-- [ ] Add unit tests for CLI flag handling and argument validation
-- [ ] Add integration tests for plan-based installation workflow
+- [x] Add `--plan` flag to install command in `install.go`
+- [x] Modify install command Run function to detect and route plan-based installs
+- [x] Create `plan_install.go` with `runPlanBasedInstall()` function
+- [x] Store plan in state.json after successful execution
+- [x] Add unit tests for CLI flag handling and argument validation
+- [x] Add integration tests for plan-based installation workflow
 
 ## Testing Strategy
 
@@ -47,13 +47,13 @@ The implementation adds a `--plan` flag to `installCmd` and creates a new `runPl
 
 ## Success Criteria
 
-- [ ] `--plan <path>` flag accepts file path or "-" for stdin
-- [ ] Tool name is optional when `--plan` is provided (defaults from plan)
-- [ ] Tool name mismatch with plan produces clear error
-- [ ] Multiple tools with `--plan` flag produces clear error
-- [ ] Plan stored in state.json after successful installation
-- [ ] All existing install tests pass
-- [ ] New tests pass
+- [x] `--plan <path>` flag accepts file path or "-" for stdin
+- [x] Tool name is optional when `--plan` is provided (defaults from plan)
+- [x] Tool name mismatch with plan produces clear error
+- [x] Multiple tools with `--plan` flag produces clear error
+- [x] Plan stored in state.json after successful installation
+- [x] All existing install tests pass
+- [x] New tests pass
 
 ## Open Questions
 

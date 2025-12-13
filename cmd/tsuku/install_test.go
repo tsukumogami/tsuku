@@ -186,8 +186,9 @@ func TestInstallCmdFlags(t *testing.T) {
 }
 
 func TestInstallCmdUsage(t *testing.T) {
-	if installCmd.Use != "install <tool>..." {
-		t.Errorf("installCmd.Use = %q, want %q", installCmd.Use, "install <tool>...")
+	// Use changed from <tool>... to [tool]... to allow --plan without tool arg
+	if installCmd.Use != "install [tool]..." {
+		t.Errorf("installCmd.Use = %q, want %q", installCmd.Use, "install [tool]...")
 	}
 
 	if installCmd.Short != "Install a development tool" {
@@ -200,5 +201,12 @@ func TestInstallCmdUsage(t *testing.T) {
 	}
 	if !strings.Contains(installCmd.Long, "terraform@latest") {
 		t.Error("installCmd.Long should contain @latest example")
+	}
+	// Verify plan-based installation examples
+	if !strings.Contains(installCmd.Long, "--plan plan.json") {
+		t.Error("installCmd.Long should contain --plan file example")
+	}
+	if !strings.Contains(installCmd.Long, "tsuku eval rg | tsuku install --plan -") {
+		t.Error("installCmd.Long should contain --plan stdin example")
 	}
 }
