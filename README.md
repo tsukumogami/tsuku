@@ -158,6 +158,23 @@ Use `--fresh` when:
 - You want to verify the latest artifacts
 - Checksum verification fails (tsuku will suggest using `--fresh`)
 
+#### Plan-Based Installation
+
+For air-gapped environments or CI distribution, use explicit plan-based installation:
+
+```bash
+# Generate a plan
+tsuku eval kubectl > kubectl-plan.json
+
+# Install from the plan (on any machine)
+tsuku install --plan kubectl-plan.json
+
+# Or pipe directly
+tsuku eval kubectl | tsuku install --plan -
+```
+
+See the [Plan-Based Installation Guide](docs/GUIDE-plan-based-installation.md) for air-gapped deployment and CI distribution workflows.
+
 ### Security and Verification
 
 tsuku verifies downloaded files against checksums computed during plan generation:
