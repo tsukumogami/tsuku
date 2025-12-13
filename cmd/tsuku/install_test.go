@@ -178,6 +178,15 @@ func TestInstallCmdFlags(t *testing.T) {
 			t.Errorf("--force default = %q, want %q", forceFlag.DefValue, "false")
 		}
 	}
+
+	freshFlag := installCmd.Flags().Lookup("fresh")
+	if freshFlag == nil {
+		t.Error("--fresh flag not registered")
+	} else {
+		if freshFlag.DefValue != "false" {
+			t.Errorf("--fresh default = %q, want %q", freshFlag.DefValue, "false")
+		}
+	}
 }
 
 func TestInstallCmdUsage(t *testing.T) {
