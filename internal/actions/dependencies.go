@@ -24,6 +24,7 @@ var ActionDependencies = map[string]ActionDeps{
 	"go_install":    {InstallTime: []string{"go"}, Runtime: nil},
 	"go_build":      {InstallTime: []string{"go"}, Runtime: nil},
 	"cargo_install": {InstallTime: []string{"rust"}, Runtime: nil},
+	"cargo_build":   {InstallTime: []string{"rust"}, Runtime: nil},
 	"nix_install":   {InstallTime: []string{"nix-portable"}, Runtime: nil},
 
 	// Download/extract actions: no dependencies

@@ -70,8 +70,9 @@ var primitives = map[string]bool{
 	"link_dependencies": true,
 	"install_libraries": true,
 	// Ecosystem primitives achieve determinism through ecosystem-specific configuration
-	"npm_exec": true,
-	"go_build": true,
+	"cargo_build": true,
+	"go_build":    true,
+	"npm_exec":    true,
 }
 
 // IsPrimitive returns true if the action is a primitive.

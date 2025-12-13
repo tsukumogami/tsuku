@@ -181,10 +181,10 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		if _, err := os.Stat(outputDir); err != nil {
 			return fmt.Errorf("expected output directory not found: %s", outputDir)
 		}
-		fmt.Printf("   ✓ Output directory verified: %s\n", outputDir)
+		fmt.Printf("   Output directory verified: %s\n", outputDir)
 	}
 
-	fmt.Printf("   ✓ npm %s completed successfully\n", command)
+	fmt.Printf("   npm %s completed successfully\n", command)
 
 	return nil
 }
