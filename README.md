@@ -137,6 +137,37 @@ Key behaviors:
 - **Version-specific removal**: Use `tool@version` syntax to remove only that version
 - **Automatic fallback**: If you remove the active version, tsuku switches to the most recently installed remaining version
 
+### Reproducible Installations
+
+tsuku ensures reproducible installations through installation plan caching:
+
+- **First install**: tsuku generates a plan with exact URLs and checksums
+- **Re-install**: Same version reuses the cached plan for identical results
+- **Verification**: Downloaded files are verified against cached checksums
+
+This guarantees that installing `kubectl@1.29.0` produces the same binaries across time and machines.
+
+To force regeneration of a plan (e.g., after upstream changes):
+
+```bash
+tsuku install kubectl --fresh
+```
+
+Use `--fresh` when:
+- Upstream releases are re-tagged with new assets
+- You want to verify the latest artifacts
+- Checksum verification fails (tsuku will suggest using `--fresh`)
+
+### Security and Verification
+
+tsuku verifies downloaded files against checksums computed during plan generation:
+
+- **On install**: Downloaded files are verified against the cached plan's checksums
+- **Mismatch detection**: If upstream assets change, tsuku fails with a checksum mismatch error
+- **Recovery**: Use `--fresh` to acknowledge the change and generate a new plan
+
+This protects against supply chain attacks and detects unauthorized re-tagging of releases.
+
 ## Testing
 
 tsuku has comprehensive test coverage for critical components:
