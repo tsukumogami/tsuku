@@ -671,3 +671,70 @@ func containsString(s, substr string) bool {
 	}
 	return false
 }
+
+func TestHomebrewFormulaNotFoundError(t *testing.T) {
+	err := &HomebrewFormulaNotFoundError{Formula: "nonexistent"}
+	expected := "Homebrew formula 'nonexistent' not found"
+	if err.Error() != expected {
+		t.Errorf("Error() = %v, want %v", err.Error(), expected)
+	}
+}
+
+func TestHomebrewNoBottlesError(t *testing.T) {
+	err := &HomebrewNoBottlesError{Formula: "nobottles"}
+	expected := "Homebrew formula 'nobottles' has no bottles available"
+	if err.Error() != expected {
+		t.Errorf("Error() = %v, want %v", err.Error(), expected)
+	}
+}
+
+func TestHomebrewBuilder_Options(t *testing.T) {
+	// Test the option functions compile and don't panic
+	httpClient := &http.Client{}
+	_ = WithHomebrewHTTPClient(httpClient)
+	_ = WithHomebrewAPIURL("http://example.com")
+}
+
+func TestHomebrewBuilder_reportProgress(t *testing.T) {
+	// Test progress reporting with nil reporter (no-op)
+	b := &HomebrewBuilder{}
+	b.reportStart("test")
+	b.reportDone("detail")
+	b.reportFailed()
+	// Should not panic
+
+	// Test with mock reporter (reuse existing mockProgressReporter from github_release_test.go)
+	mock := &mockProgressReporter{}
+	b.progress = mock
+	b.reportStart("starting")
+	if len(mock.stages) != 1 || mock.stages[0] != "starting" {
+		t.Errorf("reportStart not called correctly")
+	}
+	b.reportDone("done")
+	if len(mock.dones) != 1 || mock.dones[0] != "done" {
+		t.Errorf("reportDone not called correctly")
+	}
+	b.reportFailed()
+	if mock.fails != 1 {
+		t.Errorf("reportFailed not called correctly")
+	}
+}
+
+func TestHomebrewBuilder_fetchFormulaInfo_Error(t *testing.T) {
+	// Test error case with non-200 status
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+	}
+
+	ctx := context.Background()
+	_, err := b.fetchFormulaInfo(ctx, "test")
+	if err == nil {
+		t.Error("expected error for 500 status")
+	}
+}
