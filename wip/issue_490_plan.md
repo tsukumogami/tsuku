@@ -27,7 +27,7 @@ Extend the existing HomebrewBuilder to check bottle availability for all target 
 - [x] Add `checkBottleAvailability` method to query GHCR for all platforms
 - [x] Call availability check in `Build()` and add warnings for missing platforms
 - [x] Add unit tests for bottle availability checking
-- [ ] Create macOS CI workflow for Homebrew builder testing
+- [x] Create macOS CI workflow for Homebrew builder testing
 - [ ] Run tests and verify CI passes
 
 ## Testing Strategy

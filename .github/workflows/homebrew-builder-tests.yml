@@ -1,0 +1,93 @@
+name: Homebrew Builder Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'internal/builders/homebrew*.go'
+      - 'internal/actions/homebrew*.go'
+      - '.github/workflows/homebrew-builder-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/builders/homebrew*.go'
+      - 'internal/actions/homebrew*.go'
+      - '.github/workflows/homebrew-builder-tests.yml'
+
+jobs:
+  # Run Homebrew builder unit tests on macOS
+  macos-unit-tests:
+    name: macOS Unit Tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Run Homebrew builder tests
+        run: go test -v ./internal/builders/ -run TestHomebrew
+
+      - name: Run Homebrew action tests
+        run: go test -v ./internal/actions/ -run TestHomebrewBottle
+
+  # Integration test: install a Homebrew bottle on macOS
+  macos-integration:
+    name: macOS Homebrew Integration
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      # Test installing a tool that uses homebrew_bottle action
+      - name: Install libyaml via Homebrew bottle
+        run: |
+          # Create a minimal recipe that uses homebrew_bottle
+          mkdir -p ~/.tsuku/recipes
+          cat > ~/.tsuku/recipes/libyaml.toml << 'EOF'
+          [metadata]
+          name = "libyaml"
+          description = "YAML Parser"
+          homepage = "https://github.com/yaml/libyaml"
+
+          [version]
+          source = "homebrew"
+          formula = "libyaml"
+
+          [[steps]]
+          action = "homebrew_bottle"
+          [steps.params]
+          formula = "libyaml"
+
+          [verify]
+          command = "test -f $TSUKU_HOME/tools/libyaml/lib/libyaml.dylib || test -f $TSUKU_HOME/tools/libyaml/lib/libyaml.so"
+          EOF
+
+          ./tsuku install --force libyaml
+
+      - name: Verify installation
+        run: |
+          ls -la ~/.tsuku/tools/libyaml/lib/ || true
+          # Check that library files exist
+          if [ -f ~/.tsuku/tools/libyaml/lib/libyaml.dylib ] || [ -f ~/.tsuku/tools/libyaml/lib/libyaml.so ]; then
+            echo "libyaml installed successfully"
+          else
+            echo "libyaml installation verification failed"
+            exit 1
+          fi
