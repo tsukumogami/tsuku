@@ -30,6 +30,53 @@ const (
 	ToolExtractRecipe    = "extract_recipe"
 )
 
+// RegistryChecker checks if a recipe exists in the registry.
+type RegistryChecker interface {
+	HasRecipe(name string) bool
+}
+
+// DependencyNode represents a formula and its dependencies in the tree.
+type DependencyNode struct {
+	Formula       string            // Homebrew formula name
+	Dependencies  []string          // Runtime dependency names from JSON API
+	HasRecipe     bool              // Already exists in tsuku registry
+	NeedsGenerate bool              // Needs LLM generation
+	Children      []*DependencyNode // Resolved child dependency nodes
+}
+
+// ToGenerationOrder returns formulas in topological order (leaves first).
+// Only includes formulas that need generation (NeedsGenerate=true).
+// Diamond dependencies are handled correctly (each formula appears once).
+func (node *DependencyNode) ToGenerationOrder() []string {
+	var result []string
+	visited := make(map[string]bool)
+
+	var visit func(*DependencyNode)
+	visit = func(n *DependencyNode) {
+		if visited[n.Formula] {
+			return
+		}
+		visited[n.Formula] = true
+
+		// Visit children first (leaves before parents)
+		for _, child := range n.Children {
+			visit(child)
+		}
+
+		if n.NeedsGenerate {
+			result = append(result, n.Formula)
+		}
+	}
+
+	visit(node)
+	return result
+}
+
+// CountNeedingGeneration returns the number of formulas that need generation.
+func (node *DependencyNode) CountNeedingGeneration() int {
+	return len(node.ToGenerationOrder())
+}
+
 // HomebrewBuilder generates recipes from Homebrew formulas using LLM analysis.
 type HomebrewBuilder struct {
 	httpClient      *http.Client
@@ -39,6 +86,7 @@ type HomebrewBuilder struct {
 	homebrewAPIURL  string
 	telemetryClient *telemetry.Client
 	progress        ProgressReporter
+	registry        RegistryChecker
 }
 
 // HomebrewBuilderOption configures a HomebrewBuilder.
@@ -90,6 +138,13 @@ func WithHomebrewTelemetryClient(c *telemetry.Client) HomebrewBuilderOption {
 func WithHomebrewProgressReporter(p ProgressReporter) HomebrewBuilderOption {
 	return func(b *HomebrewBuilder) {
 		b.progress = p
+	}
+}
+
+// WithRegistryChecker sets the registry checker for dependency lookups.
+func WithRegistryChecker(r RegistryChecker) HomebrewBuilderOption {
+	return func(b *HomebrewBuilder) {
+		b.registry = r
 	}
 }
 
@@ -238,6 +293,234 @@ func (b *HomebrewBuilder) CanBuild(ctx context.Context, packageName string) (boo
 
 	return true, nil
 }
+
+// DiscoverDependencyTree traverses Homebrew API to build the full dependency tree.
+// It queries each formula's runtime dependencies recursively and checks the registry
+// to determine which formulas already have recipes.
+//
+// The returned tree contains:
+// - Formula name and dependencies
+// - Whether each formula has an existing recipe (HasRecipe)
+// - Whether each formula needs generation (NeedsGenerate = !HasRecipe)
+// - Child nodes for all runtime dependencies
+//
+// Diamond dependencies (shared deps) are handled correctly - each formula is
+// queried once and shared in the tree structure.
+func (b *HomebrewBuilder) DiscoverDependencyTree(ctx context.Context, formula string) (*DependencyNode, error) {
+	visited := make(map[string]*DependencyNode)
+	return b.discoverDependencyTreeRecursive(ctx, formula, visited)
+}
+
+func (b *HomebrewBuilder) discoverDependencyTreeRecursive(
+	ctx context.Context,
+	formula string,
+	visited map[string]*DependencyNode,
+) (*DependencyNode, error) {
+	// Check if already visited (diamond dependency)
+	if node, ok := visited[formula]; ok {
+		return node, nil
+	}
+
+	// Validate formula name
+	if !isValidHomebrewFormula(formula) {
+		return nil, fmt.Errorf("invalid formula name: %s", formula)
+	}
+
+	// Report progress
+	b.reportStart(fmt.Sprintf("Discovering %s", formula))
+
+	// Fetch formula metadata
+	info, err := b.fetchFormulaInfo(ctx, formula)
+	if err != nil {
+		b.reportFailed()
+		return nil, fmt.Errorf("failed to fetch formula %s: %w", formula, err)
+	}
+
+	// Check if recipe exists in registry
+	hasRecipe := false
+	if b.registry != nil {
+		hasRecipe = b.registry.HasRecipe(formula)
+	}
+
+	node := &DependencyNode{
+		Formula:       formula,
+		Dependencies:  info.Dependencies,
+		HasRecipe:     hasRecipe,
+		NeedsGenerate: !hasRecipe,
+	}
+
+	// Mark as visited before recursing (handles cycles, though Homebrew shouldn't have them)
+	visited[formula] = node
+
+	// Recursively resolve children
+	for _, dep := range info.Dependencies {
+		child, err := b.discoverDependencyTreeRecursive(ctx, dep, visited)
+		if err != nil {
+			return nil, err
+		}
+		node.Children = append(node.Children, child)
+	}
+
+	b.reportDone("")
+	return node, nil
+}
+
+// EstimatedCostPerRecipe is the approximate LLM cost for generating one recipe.
+const EstimatedCostPerRecipe = 0.05
+
+// FormatTree returns a human-readable representation of the dependency tree.
+func (node *DependencyNode) FormatTree() string {
+	var sb strings.Builder
+	node.formatTreeRecursive(&sb, "", true, make(map[string]bool))
+	return sb.String()
+}
+
+func (node *DependencyNode) formatTreeRecursive(sb *strings.Builder, prefix string, isLast bool, visited map[string]bool) {
+	// Print connector
+	connector := "├── "
+	if isLast {
+		connector = "└── "
+	}
+	if prefix != "" {
+		sb.WriteString(prefix)
+		sb.WriteString(connector)
+	}
+
+	// Print formula name with status
+	sb.WriteString(node.Formula)
+	if node.HasRecipe {
+		sb.WriteString(" (has recipe)")
+	} else {
+		sb.WriteString(" (needs recipe)")
+	}
+
+	// Mark duplicates in diamond dependencies
+	if visited[node.Formula] {
+		sb.WriteString(" [duplicate]")
+		sb.WriteString("\n")
+		return
+	}
+	visited[node.Formula] = true
+	sb.WriteString("\n")
+
+	// Prepare prefix for children
+	childPrefix := prefix
+	if prefix != "" {
+		if isLast {
+			childPrefix += "    "
+		} else {
+			childPrefix += "│   "
+		}
+	}
+
+	// Recurse to children
+	for i, child := range node.Children {
+		isChildLast := i == len(node.Children)-1
+		child.formatTreeRecursive(sb, childPrefix, isChildLast, visited)
+	}
+}
+
+// EstimatedCost returns the estimated LLM cost for generating all needed recipes.
+func (node *DependencyNode) EstimatedCost() float64 {
+	return float64(node.CountNeedingGeneration()) * EstimatedCostPerRecipe
+}
+
+// ConfirmationRequest holds information for user confirmation before generation.
+type ConfirmationRequest struct {
+	Tree          *DependencyNode
+	ToGenerate    []string
+	AlreadyHave   []string
+	EstimatedCost float64
+	FormattedTree string
+}
+
+// NewConfirmationRequest creates a confirmation request from a dependency tree.
+func NewConfirmationRequest(tree *DependencyNode) *ConfirmationRequest {
+	toGenerate := tree.ToGenerationOrder()
+
+	// Collect formulas that already have recipes
+	var alreadyHave []string
+	var collectExisting func(*DependencyNode, map[string]bool)
+	collectExisting = func(n *DependencyNode, visited map[string]bool) {
+		if visited[n.Formula] {
+			return
+		}
+		visited[n.Formula] = true
+		if n.HasRecipe {
+			alreadyHave = append(alreadyHave, n.Formula)
+		}
+		for _, child := range n.Children {
+			collectExisting(child, visited)
+		}
+	}
+	collectExisting(tree, make(map[string]bool))
+
+	return &ConfirmationRequest{
+		Tree:          tree,
+		ToGenerate:    toGenerate,
+		AlreadyHave:   alreadyHave,
+		EstimatedCost: tree.EstimatedCost(),
+		FormattedTree: tree.FormatTree(),
+	}
+}
+
+// ConfirmFunc is called to get user confirmation before generation.
+// Returns true if the user confirms, false to cancel.
+type ConfirmFunc func(req *ConfirmationRequest) bool
+
+// BuildWithDependencies discovers the dependency tree and generates all needed recipes.
+// It shows the user the full tree and cost estimate, then requires confirmation before
+// proceeding with LLM calls.
+func (b *HomebrewBuilder) BuildWithDependencies(
+	ctx context.Context,
+	req BuildRequest,
+	confirm ConfirmFunc,
+) ([]*BuildResult, error) {
+	// 1. Discover full dependency tree (no LLM, just API calls)
+	b.reportStart("Discovering dependencies")
+	tree, err := b.DiscoverDependencyTree(ctx, req.Package)
+	if err != nil {
+		b.reportFailed()
+		return nil, fmt.Errorf("failed to discover dependencies: %w", err)
+	}
+	b.reportDone("")
+
+	// 2. Get formulas needing generation
+	toGenerate := tree.ToGenerationOrder()
+	if len(toGenerate) == 0 {
+		// All recipes exist - nothing to generate
+		return nil, nil
+	}
+
+	// 3. Request user confirmation
+	confirmReq := NewConfirmationRequest(tree)
+	if confirm != nil && !confirm(confirmReq) {
+		return nil, ErrUserCanceled
+	}
+
+	// 4. Generate in topological order (leaves first)
+	var results []*BuildResult
+	for i, formula := range toGenerate {
+		b.reportStart(fmt.Sprintf("Generating recipe %d/%d: %s", i+1, len(toGenerate), formula))
+
+		result, err := b.Build(ctx, BuildRequest{
+			Package:   formula,
+			SourceArg: formula,
+		})
+		if err != nil {
+			b.reportFailed()
+			return results, fmt.Errorf("failed to generate recipe for %s: %w", formula, err)
+		}
+
+		b.reportDone("")
+		results = append(results, result)
+	}
+
+	return results, nil
+}
+
+// ErrUserCanceled is returned when the user cancels the operation.
+var ErrUserCanceled = fmt.Errorf("operation canceled by user")
 
 // isValidHomebrewFormula validates Homebrew formula names.
 //

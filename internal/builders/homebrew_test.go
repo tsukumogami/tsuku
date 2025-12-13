@@ -1070,3 +1070,829 @@ func TestIsValidHomebrewFormula_TooLong(t *testing.T) {
 		t.Error("expected false for name > 128 chars")
 	}
 }
+
+// mockRegistryChecker implements RegistryChecker for testing
+type mockRegistryChecker struct {
+	recipes map[string]bool
+}
+
+func (m *mockRegistryChecker) HasRecipe(name string) bool {
+	if m.recipes == nil {
+		return false
+	}
+	return m.recipes[name]
+}
+
+func TestDependencyNode_ToGenerationOrder_Empty(t *testing.T) {
+	// Single node with no deps that already has a recipe
+	node := &DependencyNode{
+		Formula:       "existing",
+		HasRecipe:     true,
+		NeedsGenerate: false,
+	}
+
+	order := node.ToGenerationOrder()
+	if len(order) != 0 {
+		t.Errorf("ToGenerationOrder() = %v, want empty slice", order)
+	}
+}
+
+func TestDependencyNode_ToGenerationOrder_Single(t *testing.T) {
+	// Single node that needs generation
+	node := &DependencyNode{
+		Formula:       "new-tool",
+		HasRecipe:     false,
+		NeedsGenerate: true,
+	}
+
+	order := node.ToGenerationOrder()
+	if len(order) != 1 || order[0] != "new-tool" {
+		t.Errorf("ToGenerationOrder() = %v, want [new-tool]", order)
+	}
+}
+
+func TestDependencyNode_ToGenerationOrder_Linear(t *testing.T) {
+	// A -> B -> C (linear chain, all need generation)
+	nodeC := &DependencyNode{
+		Formula:       "c",
+		NeedsGenerate: true,
+	}
+	nodeB := &DependencyNode{
+		Formula:       "b",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{nodeC},
+	}
+	nodeA := &DependencyNode{
+		Formula:       "a",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{nodeB},
+	}
+
+	order := nodeA.ToGenerationOrder()
+	// Should be leaves first: c, b, a
+	expected := []string{"c", "b", "a"}
+	if len(order) != len(expected) {
+		t.Fatalf("ToGenerationOrder() length = %d, want %d", len(order), len(expected))
+	}
+	for i, want := range expected {
+		if order[i] != want {
+			t.Errorf("ToGenerationOrder()[%d] = %v, want %v", i, order[i], want)
+		}
+	}
+}
+
+func TestDependencyNode_ToGenerationOrder_Diamond(t *testing.T) {
+	// Diamond: A -> B, C; B -> D; C -> D (D is shared)
+	nodeD := &DependencyNode{
+		Formula:       "d",
+		NeedsGenerate: true,
+	}
+	nodeB := &DependencyNode{
+		Formula:       "b",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{nodeD},
+	}
+	nodeC := &DependencyNode{
+		Formula:       "c",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{nodeD}, // Same nodeD (diamond)
+	}
+	nodeA := &DependencyNode{
+		Formula:       "a",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{nodeB, nodeC},
+	}
+
+	order := nodeA.ToGenerationOrder()
+
+	// D should appear only once and before B, C, A
+	// Order should be: d, b, c, a (or d, c, b, a depending on traversal)
+	if len(order) != 4 {
+		t.Fatalf("ToGenerationOrder() length = %d, want 4", len(order))
+	}
+
+	// D must be first (leaf), A must be last (root)
+	if order[0] != "d" {
+		t.Errorf("ToGenerationOrder()[0] = %v, want d", order[0])
+	}
+	if order[3] != "a" {
+		t.Errorf("ToGenerationOrder()[3] = %v, want a", order[3])
+	}
+
+	// Check no duplicates
+	seen := make(map[string]bool)
+	for _, f := range order {
+		if seen[f] {
+			t.Errorf("Duplicate formula in order: %s", f)
+		}
+		seen[f] = true
+	}
+}
+
+func TestDependencyNode_ToGenerationOrder_MixedRecipeStatus(t *testing.T) {
+	// A -> B -> C, but B already has a recipe
+	nodeC := &DependencyNode{
+		Formula:       "c",
+		HasRecipe:     false,
+		NeedsGenerate: true,
+	}
+	nodeB := &DependencyNode{
+		Formula:       "b",
+		HasRecipe:     true,
+		NeedsGenerate: false, // Already has recipe
+		Children:      []*DependencyNode{nodeC},
+	}
+	nodeA := &DependencyNode{
+		Formula:       "a",
+		HasRecipe:     false,
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{nodeB},
+	}
+
+	order := nodeA.ToGenerationOrder()
+	// Should only include c and a (b has recipe)
+	expected := []string{"c", "a"}
+	if len(order) != len(expected) {
+		t.Fatalf("ToGenerationOrder() length = %d, want %d", len(order), len(expected))
+	}
+	for i, want := range expected {
+		if order[i] != want {
+			t.Errorf("ToGenerationOrder()[%d] = %v, want %v", i, order[i], want)
+		}
+	}
+}
+
+func TestDependencyNode_CountNeedingGeneration(t *testing.T) {
+	nodeC := &DependencyNode{
+		Formula:       "c",
+		NeedsGenerate: true,
+	}
+	nodeB := &DependencyNode{
+		Formula:       "b",
+		NeedsGenerate: false, // Has recipe
+		Children:      []*DependencyNode{nodeC},
+	}
+	nodeA := &DependencyNode{
+		Formula:       "a",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{nodeB},
+	}
+
+	count := nodeA.CountNeedingGeneration()
+	if count != 2 {
+		t.Errorf("CountNeedingGeneration() = %d, want 2", count)
+	}
+}
+
+func TestHomebrewBuilder_DiscoverDependencyTree_NoDeps(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/formula/simple.json" {
+			formulaInfo := map[string]interface{}{
+				"name":         "simple",
+				"desc":         "A simple tool",
+				"dependencies": []string{},
+				"versions": map[string]interface{}{
+					"stable": "1.0.0",
+					"bottle": true,
+				},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+		registry:       &mockRegistryChecker{recipes: map[string]bool{}},
+	}
+
+	ctx := context.Background()
+	tree, err := b.DiscoverDependencyTree(ctx, "simple")
+	if err != nil {
+		t.Fatalf("DiscoverDependencyTree() error = %v", err)
+	}
+
+	if tree.Formula != "simple" {
+		t.Errorf("Formula = %v, want simple", tree.Formula)
+	}
+	if len(tree.Children) != 0 {
+		t.Errorf("Children length = %d, want 0", len(tree.Children))
+	}
+	if tree.HasRecipe {
+		t.Error("HasRecipe = true, want false")
+	}
+	if !tree.NeedsGenerate {
+		t.Error("NeedsGenerate = false, want true")
+	}
+}
+
+func TestHomebrewBuilder_DiscoverDependencyTree_WithDeps(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/formula/ripgrep.json":
+			formulaInfo := map[string]interface{}{
+				"name":         "ripgrep",
+				"desc":         "Search tool",
+				"dependencies": []string{"pcre2"},
+				"versions": map[string]interface{}{
+					"stable": "14.1.0",
+					"bottle": true,
+				},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+		case "/api/formula/pcre2.json":
+			formulaInfo := map[string]interface{}{
+				"name":         "pcre2",
+				"desc":         "Regex library",
+				"dependencies": []string{},
+				"versions": map[string]interface{}{
+					"stable": "10.42",
+					"bottle": true,
+				},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+		registry:       &mockRegistryChecker{recipes: map[string]bool{}},
+	}
+
+	ctx := context.Background()
+	tree, err := b.DiscoverDependencyTree(ctx, "ripgrep")
+	if err != nil {
+		t.Fatalf("DiscoverDependencyTree() error = %v", err)
+	}
+
+	if tree.Formula != "ripgrep" {
+		t.Errorf("Formula = %v, want ripgrep", tree.Formula)
+	}
+	if len(tree.Children) != 1 {
+		t.Fatalf("Children length = %d, want 1", len(tree.Children))
+	}
+	if tree.Children[0].Formula != "pcre2" {
+		t.Errorf("Child formula = %v, want pcre2", tree.Children[0].Formula)
+	}
+
+	// Check generation order
+	order := tree.ToGenerationOrder()
+	expected := []string{"pcre2", "ripgrep"}
+	if len(order) != len(expected) {
+		t.Fatalf("ToGenerationOrder() length = %d, want %d", len(order), len(expected))
+	}
+	for i, want := range expected {
+		if order[i] != want {
+			t.Errorf("ToGenerationOrder()[%d] = %v, want %v", i, order[i], want)
+		}
+	}
+}
+
+func TestHomebrewBuilder_DiscoverDependencyTree_DiamondDeps(t *testing.T) {
+	// Diamond: app -> lib-a, lib-b; lib-a -> shared; lib-b -> shared
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		formulas := map[string]map[string]interface{}{
+			"/api/formula/app.json": {
+				"name":         "app",
+				"dependencies": []string{"lib-a", "lib-b"},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			},
+			"/api/formula/lib-a.json": {
+				"name":         "lib-a",
+				"dependencies": []string{"shared"},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			},
+			"/api/formula/lib-b.json": {
+				"name":         "lib-b",
+				"dependencies": []string{"shared"},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			},
+			"/api/formula/shared.json": {
+				"name":         "shared",
+				"dependencies": []string{},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			},
+		}
+		if formula, ok := formulas[r.URL.Path]; ok {
+			_ = json.NewEncoder(w).Encode(formula)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+		registry:       &mockRegistryChecker{recipes: map[string]bool{}},
+	}
+
+	ctx := context.Background()
+	tree, err := b.DiscoverDependencyTree(ctx, "app")
+	if err != nil {
+		t.Fatalf("DiscoverDependencyTree() error = %v", err)
+	}
+
+	// Verify structure: app has 2 children (lib-a, lib-b)
+	if len(tree.Children) != 2 {
+		t.Fatalf("app.Children length = %d, want 2", len(tree.Children))
+	}
+
+	// Both lib-a and lib-b should have shared as child
+	// And it should be the SAME node (pointer equality)
+	var sharedFromA, sharedFromB *DependencyNode
+	for _, child := range tree.Children {
+		if len(child.Children) == 1 {
+			if child.Formula == "lib-a" {
+				sharedFromA = child.Children[0]
+			} else if child.Formula == "lib-b" {
+				sharedFromB = child.Children[0]
+			}
+		}
+	}
+
+	if sharedFromA == nil || sharedFromB == nil {
+		t.Fatal("Expected both lib-a and lib-b to have shared as child")
+	}
+
+	if sharedFromA != sharedFromB {
+		t.Error("Diamond dependency 'shared' should be the same node instance")
+	}
+
+	// Check generation order - shared should appear only once
+	order := tree.ToGenerationOrder()
+	if len(order) != 4 {
+		t.Errorf("ToGenerationOrder() length = %d, want 4", len(order))
+	}
+
+	// shared must come before lib-a and lib-b
+	sharedIdx := -1
+	libAIdx := -1
+	libBIdx := -1
+	appIdx := -1
+	for i, f := range order {
+		switch f {
+		case "shared":
+			sharedIdx = i
+		case "lib-a":
+			libAIdx = i
+		case "lib-b":
+			libBIdx = i
+		case "app":
+			appIdx = i
+		}
+	}
+
+	if sharedIdx == -1 || libAIdx == -1 || libBIdx == -1 || appIdx == -1 {
+		t.Errorf("Missing formula in order: %v", order)
+	}
+
+	if sharedIdx > libAIdx || sharedIdx > libBIdx {
+		t.Error("shared should come before lib-a and lib-b")
+	}
+	if appIdx != len(order)-1 {
+		t.Error("app should be last in generation order")
+	}
+}
+
+func TestHomebrewBuilder_DiscoverDependencyTree_WithExistingRecipes(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/formula/app.json":
+			formulaInfo := map[string]interface{}{
+				"name":         "app",
+				"dependencies": []string{"dep1", "dep2"},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+		case "/api/formula/dep1.json":
+			formulaInfo := map[string]interface{}{
+				"name":         "dep1",
+				"dependencies": []string{},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+		case "/api/formula/dep2.json":
+			formulaInfo := map[string]interface{}{
+				"name":         "dep2",
+				"dependencies": []string{},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	// dep1 already has a recipe
+	registry := &mockRegistryChecker{
+		recipes: map[string]bool{
+			"dep1": true,
+		},
+	}
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+		registry:       registry,
+	}
+
+	ctx := context.Background()
+	tree, err := b.DiscoverDependencyTree(ctx, "app")
+	if err != nil {
+		t.Fatalf("DiscoverDependencyTree() error = %v", err)
+	}
+
+	// Find dep1 and dep2 in children
+	var dep1, dep2 *DependencyNode
+	for _, child := range tree.Children {
+		if child.Formula == "dep1" {
+			dep1 = child
+		} else if child.Formula == "dep2" {
+			dep2 = child
+		}
+	}
+
+	if dep1 == nil || dep2 == nil {
+		t.Fatal("Expected dep1 and dep2 as children")
+	}
+
+	if !dep1.HasRecipe {
+		t.Error("dep1.HasRecipe = false, want true")
+	}
+	if dep1.NeedsGenerate {
+		t.Error("dep1.NeedsGenerate = true, want false")
+	}
+	if dep2.HasRecipe {
+		t.Error("dep2.HasRecipe = true, want false")
+	}
+	if !dep2.NeedsGenerate {
+		t.Error("dep2.NeedsGenerate = false, want true")
+	}
+
+	// Generation order should only include dep2 and app (dep1 has recipe)
+	order := tree.ToGenerationOrder()
+	if len(order) != 2 {
+		t.Errorf("ToGenerationOrder() length = %d, want 2", len(order))
+	}
+
+	// Check dep1 is NOT in the order
+	for _, f := range order {
+		if f == "dep1" {
+			t.Error("dep1 should not be in generation order (has recipe)")
+		}
+	}
+}
+
+func TestHomebrewBuilder_DiscoverDependencyTree_NotFound(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+	}
+
+	ctx := context.Background()
+	_, err := b.DiscoverDependencyTree(ctx, "nonexistent")
+	if err == nil {
+		t.Error("Expected error for nonexistent formula")
+	}
+}
+
+func TestHomebrewBuilder_DiscoverDependencyTree_InvalidFormula(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	ctx := context.Background()
+	_, err := b.DiscoverDependencyTree(ctx, "../invalid")
+	if err == nil {
+		t.Error("Expected error for invalid formula name")
+	}
+}
+
+func TestHomebrewBuilder_DiscoverDependencyTree_NoRegistry(t *testing.T) {
+	// When registry is nil, all formulas should be marked as needing generation
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/formula/test.json" {
+			formulaInfo := map[string]interface{}{
+				"name":         "test",
+				"dependencies": []string{},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+		registry:       nil, // No registry
+	}
+
+	ctx := context.Background()
+	tree, err := b.DiscoverDependencyTree(ctx, "test")
+	if err != nil {
+		t.Fatalf("DiscoverDependencyTree() error = %v", err)
+	}
+
+	if tree.HasRecipe {
+		t.Error("HasRecipe = true, want false when registry is nil")
+	}
+	if !tree.NeedsGenerate {
+		t.Error("NeedsGenerate = false, want true when registry is nil")
+	}
+}
+
+func TestWithRegistryChecker(t *testing.T) {
+	registry := &mockRegistryChecker{recipes: map[string]bool{"test": true}}
+	b := &HomebrewBuilder{}
+
+	opt := WithRegistryChecker(registry)
+	opt(b)
+
+	if b.registry != registry {
+		t.Error("WithRegistryChecker did not set registry")
+	}
+}
+
+func TestDependencyNode_FormatTree_Simple(t *testing.T) {
+	node := &DependencyNode{
+		Formula:       "simple",
+		NeedsGenerate: true,
+	}
+
+	output := node.FormatTree()
+	if !containsString(output, "simple") {
+		t.Error("FormatTree should contain formula name")
+	}
+	if !containsString(output, "needs recipe") {
+		t.Error("FormatTree should indicate needs recipe")
+	}
+}
+
+func TestDependencyNode_FormatTree_WithChildren(t *testing.T) {
+	child := &DependencyNode{
+		Formula:       "child",
+		NeedsGenerate: true,
+	}
+	parent := &DependencyNode{
+		Formula:       "parent",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{child},
+	}
+
+	output := parent.FormatTree()
+	if !containsString(output, "parent") {
+		t.Error("FormatTree should contain parent")
+	}
+	if !containsString(output, "child") {
+		t.Error("FormatTree should contain child")
+	}
+}
+
+func TestDependencyNode_FormatTree_WithRecipe(t *testing.T) {
+	node := &DependencyNode{
+		Formula:       "existing",
+		HasRecipe:     true,
+		NeedsGenerate: false,
+	}
+
+	output := node.FormatTree()
+	if !containsString(output, "has recipe") {
+		t.Error("FormatTree should indicate has recipe")
+	}
+}
+
+func TestDependencyNode_FormatTree_Diamond(t *testing.T) {
+	shared := &DependencyNode{
+		Formula:       "shared",
+		NeedsGenerate: true,
+	}
+	childA := &DependencyNode{
+		Formula:       "child-a",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{shared},
+	}
+	childB := &DependencyNode{
+		Formula:       "child-b",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{shared}, // Same shared node
+	}
+	parent := &DependencyNode{
+		Formula:       "parent",
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{childA, childB},
+	}
+
+	output := parent.FormatTree()
+	// Shared should appear with [duplicate] marker on second occurrence
+	if !containsString(output, "[duplicate]") {
+		t.Error("FormatTree should mark duplicate nodes")
+	}
+}
+
+func TestDependencyNode_EstimatedCost(t *testing.T) {
+	node := &DependencyNode{
+		Formula:       "a",
+		NeedsGenerate: true,
+		Children: []*DependencyNode{
+			{Formula: "b", NeedsGenerate: true},
+			{Formula: "c", NeedsGenerate: false, HasRecipe: true},
+		},
+	}
+
+	cost := node.EstimatedCost()
+	expected := 2 * EstimatedCostPerRecipe // a and b need generation, c doesn't
+	if cost != expected {
+		t.Errorf("EstimatedCost() = %v, want %v", cost, expected)
+	}
+}
+
+func TestNewConfirmationRequest(t *testing.T) {
+	existing := &DependencyNode{
+		Formula:       "existing",
+		HasRecipe:     true,
+		NeedsGenerate: false,
+	}
+	newDep := &DependencyNode{
+		Formula:       "new-dep",
+		HasRecipe:     false,
+		NeedsGenerate: true,
+	}
+	root := &DependencyNode{
+		Formula:       "root",
+		HasRecipe:     false,
+		NeedsGenerate: true,
+		Children:      []*DependencyNode{existing, newDep},
+	}
+
+	req := NewConfirmationRequest(root)
+
+	if len(req.ToGenerate) != 2 {
+		t.Errorf("ToGenerate length = %d, want 2", len(req.ToGenerate))
+	}
+	if len(req.AlreadyHave) != 1 || req.AlreadyHave[0] != "existing" {
+		t.Errorf("AlreadyHave = %v, want [existing]", req.AlreadyHave)
+	}
+	if req.EstimatedCost != 2*EstimatedCostPerRecipe {
+		t.Errorf("EstimatedCost = %v, want %v", req.EstimatedCost, 2*EstimatedCostPerRecipe)
+	}
+	if req.FormattedTree == "" {
+		t.Error("FormattedTree should not be empty")
+	}
+	if req.Tree != root {
+		t.Error("Tree should reference original tree")
+	}
+}
+
+func TestHomebrewBuilder_BuildWithDependencies_Canceled(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/formula/test.json" {
+			formulaInfo := map[string]interface{}{
+				"name":         "test",
+				"dependencies": []string{},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+		registry:       &mockRegistryChecker{recipes: map[string]bool{}},
+	}
+
+	ctx := context.Background()
+
+	// User cancels
+	confirmFunc := func(req *ConfirmationRequest) bool {
+		return false
+	}
+
+	_, err := b.BuildWithDependencies(ctx, BuildRequest{Package: "test"}, confirmFunc)
+	if err != ErrUserCanceled {
+		t.Errorf("Expected ErrUserCanceled, got %v", err)
+	}
+}
+
+func TestHomebrewBuilder_BuildWithDependencies_AllRecipesExist(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/formula/existing.json" {
+			formulaInfo := map[string]interface{}{
+				"name":         "existing",
+				"dependencies": []string{},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	// All recipes already exist
+	registry := &mockRegistryChecker{recipes: map[string]bool{"existing": true}}
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+		registry:       registry,
+	}
+
+	ctx := context.Background()
+
+	// Confirm should not be called since nothing needs generation
+	confirmCalled := false
+	confirmFunc := func(req *ConfirmationRequest) bool {
+		confirmCalled = true
+		return true
+	}
+
+	results, err := b.BuildWithDependencies(ctx, BuildRequest{Package: "existing"}, confirmFunc)
+	if err != nil {
+		t.Fatalf("BuildWithDependencies() error = %v", err)
+	}
+	if results != nil {
+		t.Errorf("Expected nil results when all recipes exist, got %v", results)
+	}
+	if confirmCalled {
+		t.Error("Confirm should not be called when nothing needs generation")
+	}
+}
+
+func TestHomebrewBuilder_BuildWithDependencies_ConfirmReceivesCorrectData(t *testing.T) {
+	// Verify that the confirmation function receives the correct data
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/formula/app.json":
+			formulaInfo := map[string]interface{}{
+				"name":         "app",
+				"dependencies": []string{"dep"},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+		case "/api/formula/dep.json":
+			formulaInfo := map[string]interface{}{
+				"name":         "dep",
+				"dependencies": []string{},
+				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+		registry:       &mockRegistryChecker{recipes: map[string]bool{}},
+	}
+
+	ctx := context.Background()
+
+	var receivedReq *ConfirmationRequest
+	confirmFunc := func(req *ConfirmationRequest) bool {
+		receivedReq = req
+		return false // Cancel to avoid needing an LLM factory
+	}
+
+	_, _ = b.BuildWithDependencies(ctx, BuildRequest{Package: "app"}, confirmFunc)
+
+	if receivedReq == nil {
+		t.Fatal("Confirm function should have been called")
+	}
+	if len(receivedReq.ToGenerate) != 2 {
+		t.Errorf("ToGenerate length = %d, want 2", len(receivedReq.ToGenerate))
+	}
+	if receivedReq.EstimatedCost != 2*EstimatedCostPerRecipe {
+		t.Errorf("EstimatedCost = %v, want %v", receivedReq.EstimatedCost, 2*EstimatedCostPerRecipe)
+	}
+	if receivedReq.FormattedTree == "" {
+		t.Error("FormattedTree should not be empty")
+	}
+}
+
+func TestErrUserCanceled(t *testing.T) {
+	if ErrUserCanceled.Error() != "operation canceled by user" {
+		t.Errorf("ErrUserCanceled.Error() = %v", ErrUserCanceled.Error())
+	}
+}
