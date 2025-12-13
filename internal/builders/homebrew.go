@@ -807,14 +807,31 @@ const (
 	BuildSystemCustom    BuildSystem = "custom"    // custom install method
 )
 
+// platformStep represents a platform-conditional step from the LLM.
+type platformStep struct {
+	Action string                 `json:"action"`
+	Params map[string]interface{} `json:"params,omitempty"`
+}
+
 // sourceRecipeData holds the extracted source build recipe information from LLM.
 type sourceRecipeData struct {
-	BuildSystem       BuildSystem `json:"build_system"`
-	ConfigureArgs     []string    `json:"configure_args,omitempty"`
-	CMakeArgs         []string    `json:"cmake_args,omitempty"`
-	BuildDependencies []string    `json:"build_dependencies,omitempty"`
-	Executables       []string    `json:"executables"`
-	VerifyCommand     string      `json:"verify_command"`
+	BuildSystem          BuildSystem               `json:"build_system"`
+	ConfigureArgs        []string                  `json:"configure_args,omitempty"`
+	CMakeArgs            []string                  `json:"cmake_args,omitempty"`
+	BuildDependencies    []string                  `json:"build_dependencies,omitempty"`
+	Executables          []string                  `json:"executables"`
+	VerifyCommand        string                    `json:"verify_command"`
+	PlatformSteps        map[string][]platformStep `json:"platform_steps,omitempty"`
+	PlatformDependencies map[string][]string       `json:"platform_dependencies,omitempty"`
+}
+
+// validPlatformKeys are the valid keys for platform conditionals.
+var validPlatformKeys = map[string]bool{
+	"macos":  true, // maps to os: darwin
+	"linux":  true, // maps to os: linux
+	"arm64":  true, // maps to arch: arm64
+	"amd64":  true, // maps to arch: amd64
+	"x86_64": true, // alias for amd64
 }
 
 // validBuildSystems is the set of supported build systems.
@@ -867,6 +884,25 @@ func validateSourceRecipeData(data *sourceRecipeData) error {
 	for _, arg := range data.CMakeArgs {
 		if !isValidCMakeArg(arg) {
 			return fmt.Errorf("extract_source_recipe: invalid cmake_arg '%s'", arg)
+		}
+	}
+
+	// Validate platform steps
+	for platform, steps := range data.PlatformSteps {
+		if !validPlatformKeys[platform] {
+			return fmt.Errorf("extract_source_recipe: invalid platform key '%s'; must be one of: macos, linux, arm64, amd64", platform)
+		}
+		for i, step := range steps {
+			if step.Action == "" {
+				return fmt.Errorf("extract_source_recipe: platform_steps[%s][%d] missing action", platform, i)
+			}
+		}
+	}
+
+	// Validate platform dependencies
+	for platform := range data.PlatformDependencies {
+		if !validPlatformKeys[platform] {
+			return fmt.Errorf("extract_source_recipe: invalid platform_dependencies key '%s'; must be one of: macos, linux, arm64, amd64", platform)
 		}
 	}
 
@@ -1691,6 +1727,35 @@ func (b *HomebrewBuilder) buildSourceToolDefs() []llm.ToolDef {
 						"type":        "string",
 						"description": "Command to verify installation (e.g., 'jq --version')",
 					},
+					"platform_steps": map[string]any{
+						"type":        "object",
+						"description": "Platform-conditional steps. Keys are platform names (macos, linux, arm64, amd64), values are arrays of step objects.",
+						"additionalProperties": map[string]any{
+							"type": "array",
+							"items": map[string]any{
+								"type": "object",
+								"properties": map[string]any{
+									"action": map[string]any{
+										"type":        "string",
+										"description": "Action name (e.g., run_command, set_rpath)",
+									},
+									"params": map[string]any{
+										"type":        "object",
+										"description": "Action parameters",
+									},
+								},
+								"required": []string{"action"},
+							},
+						},
+					},
+					"platform_dependencies": map[string]any{
+						"type":        "object",
+						"description": "Platform-conditional dependencies. Keys are platform names (macos, linux, arm64, amd64), values are arrays of dependency names.",
+						"additionalProperties": map[string]any{
+							"type":  "array",
+							"items": map[string]any{"type": "string"},
+						},
+					},
 				},
 				"required": []string{"build_system", "executables", "verify_command"},
 			},
@@ -1876,8 +1941,9 @@ Your task is to:
 1. Fetch and analyze the Ruby formula source code
 2. Identify the build system (autotools, cmake, cargo, go, make, or custom)
 3. Extract any configure/cmake arguments needed
-4. Determine the executable names that will be produced
-5. Call extract_source_recipe with the build configuration
+4. Identify platform-specific steps (on_macos, on_linux, on_arm, on_intel blocks)
+5. Determine the executable names that will be produced
+6. Call extract_source_recipe with the build configuration
 
 You have these tools available:
 1. fetch_formula_json: Fetch the formula JSON metadata (version, dependencies, source URL)
@@ -1892,6 +1958,18 @@ Build system detection hints:
 - make: Look for plain "make" without ./configure
 - custom: Other build patterns that don't fit the above
 
+Platform conditional detection:
+Look for these Ruby blocks in the formula source:
+- on_macos do ... end: Steps that only run on macOS
+- on_linux do ... end: Steps that only run on Linux
+- on_arm do ... end: Steps that only run on ARM64 architecture
+- on_intel do ... end: Steps that only run on x86_64 architecture
+
+These blocks may contain:
+- Additional dependencies (depends_on inside the block)
+- Platform-specific build commands or patches
+- Post-install fixups (install_name_tool on macOS, patchelf on Linux)
+
 When calling extract_source_recipe:
 - build_system: One of autotools, cmake, cargo, go, make, custom
 - configure_args: Arguments for ./configure (autotools) - do NOT include --prefix
@@ -1899,6 +1977,11 @@ When calling extract_source_recipe:
 - executables: List of binary names that will be built (e.g., ["jq"])
 - verify_command: Command to verify installation (e.g., "jq --version")
 - build_dependencies: Any build-time dependencies (optional)
+- platform_steps: Object mapping platform keys to arrays of steps, e.g.:
+  {"macos": [{"action": "run_command", "params": {"command": "..."}}]}
+  Valid platform keys: macos, linux, arm64, amd64
+- platform_dependencies: Object mapping platform keys to dependency arrays, e.g.:
+  {"linux": ["libffi", "patchelf"]}
 
 Analyze the formula and call extract_source_recipe with the correct build configuration.`
 }
@@ -2052,5 +2135,34 @@ func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Ste
 		},
 	})
 
+	// Add platform-conditional steps
+	for platform, platformSteps := range data.PlatformSteps {
+		whenClause := platformKeyToWhen(platform)
+		for _, ps := range platformSteps {
+			step := recipe.Step{
+				Action: ps.Action,
+				When:   whenClause,
+				Params: ps.Params,
+			}
+			steps = append(steps, step)
+		}
+	}
+
 	return steps, nil
+}
+
+// platformKeyToWhen converts a platform key to a recipe.Step.When clause.
+func platformKeyToWhen(platform string) map[string]string {
+	switch platform {
+	case "macos":
+		return map[string]string{"os": "darwin"}
+	case "linux":
+		return map[string]string{"os": "linux"}
+	case "arm64":
+		return map[string]string{"arch": "arm64"}
+	case "amd64", "x86_64":
+		return map[string]string{"arch": "amd64"}
+	default:
+		return nil
+	}
 }

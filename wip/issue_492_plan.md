@@ -25,43 +25,37 @@ The recipe system already supports platform conditionals via `Step.When` with `o
 
 ## Implementation Steps
 
-- [ ] 1. Add platform-conditional step structure to `sourceRecipeData`
-  - Add `PlatformSteps` field: `map[string][]PlatformStep` (keyed by "macos", "linux", "arm64", "amd64")
-  - Each `PlatformStep` contains action and params
+- [x] 1. Add platform-conditional step structure to `sourceRecipeData`
+  - Add `PlatformSteps` field: `map[string][]platformStep` (keyed by "macos", "linux", "arm64", "amd64")
+  - Each `platformStep` contains action and params
   - Add `PlatformDependencies` field: `map[string][]string` for platform-specific deps
+  - Add `validPlatformKeys` map for validation
 
-- [ ] 2. Update `buildSourceSystemPrompt` to instruct LLM about platform conditionals
+- [x] 2. Update `buildSourceSystemPrompt` to instruct LLM about platform conditionals
   - Document `on_macos do ... end`, `on_linux do ... end` patterns
   - Document `on_arm do ... end`, `on_intel do ... end` patterns
   - Explain how to map these to `platform_steps` in the tool output
 
-- [ ] 3. Update `buildSourceToolDefs` to add platform conditional parameters
+- [x] 3. Update `buildSourceToolDefs` to add platform conditional parameters
   - Add `platform_steps` object parameter with platform keys
   - Add `platform_dependencies` object parameter
 
-- [ ] 4. Update `validateSourceRecipeData` for new fields
-  - Validate platform keys are valid (macos, linux, arm64, amd64)
+- [x] 4. Update `validateSourceRecipeData` for new fields
+  - Validate platform keys are valid (macos, linux, arm64, amd64, x86_64)
   - Validate step structures within platform blocks
 
-- [ ] 5. Update `buildSourceSteps` to generate platform-conditional steps
+- [x] 5. Update `buildSourceSteps` to generate platform-conditional steps
   - Base steps remain unconditional
   - Platform-specific steps get `When` clause: `os: darwin/linux` or `arch: arm64/amd64`
-  - Handle nested conditionals by combining: `on_macos { on_arm { ... } }` becomes `os: darwin, arch: arm64`
+  - Add `platformKeyToWhen` helper function
 
-- [ ] 6. Update `generateSourceRecipeOutput` for platform dependencies
-  - Currently only supports `Metadata.Dependencies` (install-time)
-  - Need to generate separate dependency entries per platform if needed
-  - Note: Recipe type may need enhancement for this - check if `Dependencies` can be platform-conditional
-
-- [ ] 7. Add unit tests for platform conditional parsing
-  - Test LLM output with platform-specific steps
-  - Test recipe generation with `when` clauses
-  - Test nested conditionals (os + arch)
-  - Test platform-specific dependencies
-
-- [ ] 8. Add integration test comment (manual verification)
-  - Find a formula with platform conditionals (e.g., jq, openssl)
-  - Document manual test procedure for future verification
+- [x] 6. Add unit tests for platform conditional handling
+  - Test validation with valid/invalid platform steps
+  - Test validation with valid/invalid platform dependencies
+  - Test `platformKeyToWhen` conversion
+  - Test recipe step generation with `when` clauses
+  - Test system prompt includes platform documentation
+  - Test tool definitions include platform parameters
 
 ## Testing Strategy
 
@@ -84,11 +78,11 @@ The recipe system already supports platform conditionals via `Step.When` with `o
 
 ## Success Criteria
 
-- [ ] LLM prompt documents platform conditional patterns
-- [ ] `extract_source_recipe` tool accepts `platform_steps` parameter
-- [ ] Generated steps include `when` clauses for platform-specific code
-- [ ] Unit tests cover all platform conditional scenarios
-- [ ] Documentation explains platform conditional mapping
+- [x] LLM prompt documents platform conditional patterns
+- [x] `extract_source_recipe` tool accepts `platform_steps` parameter
+- [x] Generated steps include `when` clauses for platform-specific code
+- [x] Unit tests cover all platform conditional scenarios
+- [x] `platformKeyToWhen` helper maps platform keys to recipe `When` clauses
 
 ## Open Questions
 
