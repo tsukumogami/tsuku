@@ -835,27 +835,78 @@ func (b *GitHubReleaseBuilder) setGitHubHeaders(req *http.Request) {
 	}
 }
 
+// normalizeOS maps common OS identifiers to Go runtime constants.
+func normalizeOS(os string) string {
+	switch strings.ToLower(os) {
+	case "linux", "gnu", "unknown-linux-gnu", "unknown-linux-musl":
+		return "linux"
+	case "darwin", "macos", "apple-darwin", "osx":
+		return "darwin"
+	case "windows", "win", "win32", "win64", "pc-windows-msvc", "pc-windows-gnu":
+		return "windows"
+	default:
+		// Check for target triple patterns
+		lower := strings.ToLower(os)
+		if strings.Contains(lower, "linux") {
+			return "linux"
+		}
+		if strings.Contains(lower, "darwin") || strings.Contains(lower, "apple") || strings.Contains(lower, "macos") {
+			return "darwin"
+		}
+		if strings.Contains(lower, "windows") {
+			return "windows"
+		}
+		return strings.ToLower(os)
+	}
+}
+
+// normalizeArch maps common architecture identifiers to Go runtime constants.
+func normalizeArch(arch string) string {
+	switch strings.ToLower(arch) {
+	case "amd64", "x86_64", "x64", "64bit", "64-bit":
+		return "amd64"
+	case "arm64", "aarch64":
+		return "arm64"
+	case "386", "i386", "i686", "x86", "32bit", "32-bit":
+		return "386"
+	default:
+		return strings.ToLower(arch)
+	}
+}
+
+// normalizeFormat maps archive format aliases to canonical names.
+func normalizeFormat(format string) string {
+	switch strings.ToLower(format) {
+	case "tgz":
+		return "tar.gz"
+	default:
+		return format
+	}
+}
+
 // generateRecipe creates a recipe.Recipe from the LLM pattern response.
 func generateRecipe(packageName, repoPath string, meta *repoMeta, pattern *llm.AssetPattern) (*recipe.Recipe, error) {
 	if len(pattern.Mappings) == 0 {
 		return nil, fmt.Errorf("no platform mappings in pattern")
 	}
 
-	// Build OS and arch mappings from the pattern
+	// Build OS and arch mappings from the pattern, normalizing to Go runtime constants
 	osMapping := make(map[string]string)
 	archMapping := make(map[string]string)
 
 	for _, m := range pattern.Mappings {
-		osMapping[m.OS] = m.OS
-		archMapping[m.Arch] = m.Arch
+		normalizedOS := normalizeOS(m.OS)
+		normalizedArch := normalizeArch(m.Arch)
+		osMapping[normalizedOS] = normalizedOS
+		archMapping[normalizedArch] = normalizedArch
 	}
 
 	// Derive asset pattern from the first mapping
 	// The LLM gives us specific assets; we need to infer the pattern
 	assetPattern := deriveAssetPattern(pattern.Mappings)
 
-	// Determine format from the first mapping
-	format := pattern.Mappings[0].Format
+	// Determine format from the first mapping, normalizing aliases
+	format := normalizeFormat(pattern.Mappings[0].Format)
 
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -951,14 +1002,25 @@ You have three tools available:
 2. inspect_archive: Inspect the contents of an archive to find the executable
 3. extract_pattern: Call this when you've determined the asset-to-platform mappings
 
-Common patterns you should recognize:
-- Rust-style targets: x86_64-unknown-linux-musl, aarch64-apple-darwin
-- Go-style targets: linux_amd64, darwin_arm64
-- Generic: linux-x64, macos-arm64, linux-amd64
+When calling extract_pattern, use these target platforms:
+- os: "linux" or "darwin"
+- arch: "amd64" or "arm64"
+
+Example - k9s_Linux_amd64.tar.gz:
+{
+  "mappings": [
+    {"asset": "k9s_Linux_amd64.tar.gz", "os": "linux", "arch": "amd64", "format": "tar.gz"},
+    {"asset": "k9s_Linux_arm64.tar.gz", "os": "linux", "arch": "arm64", "format": "tar.gz"},
+    {"asset": "k9s_Darwin_amd64.tar.gz", "os": "darwin", "arch": "amd64", "format": "tar.gz"},
+    {"asset": "k9s_Darwin_arm64.tar.gz", "os": "darwin", "arch": "arm64", "format": "tar.gz"}
+  ],
+  "executable": "k9s",
+  "verify_command": "k9s version"
+}
 
 When analyzing assets:
 - Look for patterns in filenames that indicate OS and architecture
-- Identify the archive format (tar.gz, zip, or bare binary)
+- Identify the archive format from the file extension: tar.gz, tar.xz, zip, tbz (bzip2 tar), tgz, or binary (no extension)
 - Determine the executable name inside the archive
 - Consider common verification commands (tool --version, tool version)
 
@@ -1051,8 +1113,8 @@ func buildToolDefs() []llm.ToolDef {
 								},
 								"format": map[string]any{
 									"type":        "string",
-									"description": "Archive format: 'tar.gz', 'zip', or 'binary'",
-									"enum":        []string{"tar.gz", "zip", "binary"},
+									"description": "Archive format detected from file extension",
+									"enum":        []string{"tar.gz", "tar.xz", "zip", "tbz", "tgz", "binary"},
 								},
 							},
 							"required": []string{"os", "arch", "asset", "format"},

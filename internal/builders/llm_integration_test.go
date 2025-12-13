@@ -2,6 +2,8 @@ package builders
 
 import (
 	"context"
+	_ "embed"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"testing"
@@ -11,88 +13,42 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
-// Ground truth test cases from Issue #283
-// Each case has a tool name, GitHub repo, and the expected key fields
-var groundTruthTests = []struct {
-	name          string
-	repo          string
-	groundTruth   string // path relative to internal/recipe/recipes/
-	wantAction    string
-	wantFormat    string // archive_format for archives, empty for binaries
-	wantStripDirs int    // -1 means don't check (varies by LLM)
-}{
-	{
-		name:        "stern",
-		repo:        "stern/stern",
-		groundTruth: "s/stern.toml",
-		wantAction:  "github_archive",
-		wantFormat:  "tar.gz",
-	},
-	{
-		name:        "ast-grep",
-		repo:        "ast-grep/ast-grep",
-		groundTruth: "a/ast-grep.toml",
-		wantAction:  "github_archive",
-		wantFormat:  "zip",
-	},
-	{
-		name:        "trivy",
-		repo:        "aquasecurity/trivy",
-		groundTruth: "t/trivy.toml",
-		wantAction:  "github_archive",
-		wantFormat:  "tar.gz",
-	},
-	{
-		name:        "age",
-		repo:        "FiloSottile/age",
-		groundTruth: "a/age.toml",
-		wantAction:  "github_archive",
-		wantFormat:  "tar.gz",
-	},
-	{
-		name:        "k3d",
-		repo:        "k3d-io/k3d",
-		groundTruth: "k/k3d.toml",
-		wantAction:  "github_file",
-		wantFormat:  "",
-	},
-	{
-		name:        "kind",
-		repo:        "kubernetes-sigs/kind",
-		groundTruth: "k/kind.toml",
-		wantAction:  "github_file",
-		wantFormat:  "",
-	},
-	{
-		name:        "k9s",
-		repo:        "derailed/k9s",
-		groundTruth: "k/k9s.toml",
-		wantAction:  "github_archive",
-		wantFormat:  "tar.gz",
-	},
-	{
-		name:        "tflint",
-		repo:        "terraform-linters/tflint",
-		groundTruth: "t/tflint.toml",
-		wantAction:  "github_archive",
-		wantFormat:  "zip",
-	},
-	{
-		name:        "atlantis",
-		repo:        "runatlantis/atlantis",
-		groundTruth: "a/atlantis.toml",
-		wantAction:  "github_archive",
-		wantFormat:  "zip",
-	},
+//go:embed llm-test-matrix.json
+var llmTestMatrixJSON []byte
+
+// llmTestMatrix represents the structure of llm-test-matrix.json
+type llmTestMatrix struct {
+	Description string                 `json:"description"`
+	Tests       map[string]llmTestCase `json:"tests"`
+}
+
+// llmTestCase represents a single test case in the matrix
+type llmTestCase struct {
+	Tool     string   `json:"tool"`
+	Repo     string   `json:"repo"`
+	Recipe   string   `json:"recipe"`
+	Action   string   `json:"action"`
+	Format   string   `json:"format"`
+	Desc     string   `json:"desc"`
+	Features []string `json:"features"`
 }
 
 // TestLLMGroundTruth validates LLM-generated recipes against ground truth.
 // This test requires ANTHROPIC_API_KEY to be set and makes real API calls.
 // It is skipped when the API key is not available.
+//
+// Test cases are defined in llm-test-matrix.json, with each test validating
+// a specific variation to isolate failures.
 func TestLLMGroundTruth(t *testing.T) {
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 	if apiKey == "" {
 		t.Skip("Skipping LLM integration test: ANTHROPIC_API_KEY not set")
+	}
+
+	// Load test matrix
+	var matrix llmTestMatrix
+	if err := json.Unmarshal(llmTestMatrixJSON, &matrix); err != nil {
+		t.Fatalf("Failed to parse llm-test-matrix.json: %v", err)
 	}
 
 	// Create the builder with default factory (auto-detects from env)
@@ -112,15 +68,28 @@ func TestLLMGroundTruth(t *testing.T) {
 	}
 	t.Logf("Generated recipes will be saved to: %s", outputDir)
 
-	for _, tc := range groundTruthTests {
-		tc := tc // capture range variable
-		t.Run(tc.name, func(t *testing.T) {
+	// Run tests in order (L1, L2, ..., L18)
+	testIDs := []string{
+		"L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9",
+		"L10", "L11", "L12", "L13", "L14", "L15", "L16", "L17", "L18",
+	}
+
+	for _, testID := range testIDs {
+		tc, ok := matrix.Tests[testID]
+		if !ok {
+			t.Errorf("Test case %s not found in matrix", testID)
+			continue
+		}
+
+		t.Run(testID+"_"+tc.Tool, func(t *testing.T) {
+			t.Logf("Testing: %s - %s", tc.Tool, tc.Desc)
+
 			// Use a longer timeout for LLM calls (2 minutes)
 			ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 			defer cancel()
 
 			// Load ground truth recipe
-			groundTruthPath := filepath.Join(recipesDir, tc.groundTruth)
+			groundTruthPath := filepath.Join(recipesDir, tc.Recipe)
 			expected, err := loadRecipe(groundTruthPath)
 			if err != nil {
 				t.Fatalf("Failed to load ground truth recipe: %v", err)
@@ -128,8 +97,8 @@ func TestLLMGroundTruth(t *testing.T) {
 
 			// Generate recipe using LLM
 			result, err := builder.Build(ctx, BuildRequest{
-				Package:   tc.name,
-				SourceArg: tc.repo,
+				Package:   tc.Tool,
+				SourceArg: tc.Repo,
 			})
 			if err != nil {
 				t.Fatalf("LLM recipe generation failed: %v", err)
@@ -138,7 +107,7 @@ func TestLLMGroundTruth(t *testing.T) {
 			generated := result.Recipe
 
 			// Save generated recipe for debugging
-			outputPath := filepath.Join(outputDir, tc.name+".toml")
+			outputPath := filepath.Join(outputDir, tc.Tool+".toml")
 			if err := recipe.WriteRecipe(generated, outputPath); err != nil {
 				t.Logf("Warning: failed to save generated recipe: %v", err)
 			} else {
@@ -153,15 +122,15 @@ func TestLLMGroundTruth(t *testing.T) {
 			step := generated.Steps[0]
 
 			// Check action type
-			if step.Action != tc.wantAction {
-				t.Errorf("Action mismatch:\n  got:  %s\n  want: %s", step.Action, tc.wantAction)
+			if step.Action != tc.Action {
+				t.Errorf("Action mismatch:\n  got:  %s\n  want: %s", step.Action, tc.Action)
 			}
 
 			// Check archive format if applicable
-			if tc.wantFormat != "" {
+			if tc.Format != "" {
 				format, _ := step.Params["archive_format"].(string)
-				if format != tc.wantFormat {
-					t.Errorf("Archive format mismatch:\n  got:  %s\n  want: %s", format, tc.wantFormat)
+				if format != tc.Format {
+					t.Errorf("Archive format mismatch:\n  got:  %s\n  want: %s", format, tc.Format)
 				}
 			}
 
@@ -170,7 +139,7 @@ func TestLLMGroundTruth(t *testing.T) {
 			if osMapping != nil {
 				expectedOSMapping := getOSMapping(expected)
 				checkMappingKeys(t, "os_mapping", osMapping, expectedOSMapping)
-			} else if tc.wantAction == "github_archive" {
+			} else if tc.Action == "github_archive" {
 				// github_archive should have os_mapping
 				t.Errorf("Missing os_mapping in generated recipe (raw type: %T)", step.Params["os_mapping"])
 			}
