@@ -1,23 +1,9 @@
 # Design: Installation Plans and tsuku eval Command
 
-- **Status**: Planned
+- **Status**: Current
 - **Author**: @dangazineu
 - **Created**: 2025-12-10
 - **Scope**: Tactical
-
-## Implementation Issues
-
-Milestone: [Deterministic Recipe Execution](https://github.com/tsukumogami/tsuku/milestone/15)
-
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#401](https://github.com/tsukumogami/tsuku/issues/401) | feat(executor): add installation plan data types | None |
-| [#402](https://github.com/tsukumogami/tsuku/issues/402) | feat(executor): implement plan generator | Blocked by #401 |
-| [#403](https://github.com/tsukumogami/tsuku/issues/403) | feat(cli): add tsuku eval command | Blocked by #402 |
-| [#404](https://github.com/tsukumogami/tsuku/issues/404) | feat(install): store plans in state.json | Blocked by #402 |
-| [#405](https://github.com/tsukumogami/tsuku/issues/405) | feat(cli): add tsuku plan show command | Blocked by #404 |
-| [#406](https://github.com/tsukumogami/tsuku/issues/406) | feat(cli): add tsuku plan export command | Blocked by #404 |
-| [#407](https://github.com/tsukumogami/tsuku/issues/407) | fix(cache): harden download cache security | None (parallel) |
 
 ## Upstream Design Reference
 
