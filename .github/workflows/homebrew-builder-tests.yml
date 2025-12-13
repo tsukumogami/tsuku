@@ -53,7 +53,7 @@ jobs:
         run: go build -o tsuku ./cmd/tsuku
 
       - name: Setup PATH
-        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+        run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
 
       # Create a test recipe that uses homebrew_bottle action
       - name: Create test recipe
@@ -92,12 +92,12 @@ jobs:
       - name: Verify installation
         run: |
           # Check that tree binary exists and is executable
-          if [ -x ~/.tsuku/bin/tree ]; then
+          if [ -x ~/.tsuku/tools/current/bin/tree ]; then
             echo "tree binary installed successfully"
-            ~/.tsuku/bin/tree --version
+            ~/.tsuku/tools/current/bin/tree --version
           else
             echo "tree installation verification failed"
-            ls -la ~/.tsuku/bin/ || true
-            ls -la ~/.tsuku/tools/tree/ || true
+            ls -la ~/.tsuku/tools/current/ || true
+            ls -la ~/.tsuku/tools/ || true
             exit 1
           fi
