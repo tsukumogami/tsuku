@@ -38,7 +38,7 @@ The upstream strategic design mandates that `tsuku install foo` must be function
 **In scope:**
 - Refactor executor to use plan-first installation flow
 - Plan caching and reuse based on version constraints
-- `--refresh` flag to force plan regeneration
+- `--fresh` flag to force plan regeneration
 - Checksum verification during plan execution
 - Clear error messaging for checksum mismatches
 
@@ -60,90 +60,59 @@ The upstream strategic design mandates that `tsuku install foo` must be function
 
 ## Considered Options
 
-### Decision 1: Caching Behavior for `tsuku eval`
+### Decision 1: Two-Phase Evaluation Model
 
-Should `tsuku eval` return cached plans or always generate fresh plans?
+Plan generation has two distinct phases:
+1. **Version Resolution**: Maps user input → resolved version + artifact URLs
+2. **Artifact Verification**: Downloads artifacts and computes checksums
 
-#### Option 1A: Always Fresh Evaluation
+The question is: which phases can be cached, and what should the cache key be?
 
-`tsuku eval` always generates a fresh plan, never using cached plans.
+#### Option 1A: Cache by User Input (Version Constraint)
 
-**Pros:**
-- Matches user expectation: "evaluate" implies computing current state
-- Essential for golden file testing: detects upstream asset changes
-- Simple mental model: eval = fresh, install = may use cache
-- Aligns with Terraform's `terraform plan` (always computes current state)
-
-**Cons:**
-- Slower for repeated evaluation (downloads required)
-- Cannot inspect cached plan via eval output
-
-#### Option 1B: Check Cache First
-
-`tsuku eval` returns cached plan if inputs match, with `--fresh` flag to override.
+Cache key based on what the user typed (e.g., "ripgrep@14.1.0" vs "ripgrep").
 
 **Pros:**
-- Faster repeated evaluation
-- Can inspect what's already stored
+- Simple mental model: exact version = cached, dynamic = fresh
 
 **Cons:**
-- Confuses the purpose of eval (inspection vs computation)
-- Recipe testing requires remembering to use `--fresh`
-- Different semantics from other tools
+- Conflates user input with resolved state
+- `ripgrep@14.1.0` and `ripgrep` might resolve to the same artifacts but have different cache behavior
+- Requires complex version constraint classification logic
 
-### Decision 2: Caching Behavior for `tsuku install`
+#### Option 1B: Cache by Resolution Output
 
-When should `tsuku install` reuse a cached plan vs generate a new one?
+Always run version resolution (Phase 1). Cache artifact verification (Phase 2) based on what resolution produces.
 
-#### Option 2A: Always Generate Fresh Plans
-
-`tsuku install` always generates a fresh plan before execution.
+Cache key = hash of (tool, resolved_version, resolved_URLs, platform, recipe_hash)
 
 **Pros:**
-- Simplest implementation
-- Always gets latest upstream state
-- No cache invalidation complexity
+- Clean separation: resolution always runs, verification is cached
+- Same resolved artifacts → same cache key, regardless of user input
+- Simpler logic: no version constraint classification needed
+- Aligns with Nix model: evaluation always runs, realization is cached
+- `--fresh` flag has clear semantics: bypass artifact cache, re-verify checksums
 
 **Cons:**
-- Violates determinism goal for pinned versions
-- Wastes resources on redundant downloads
-- Cannot detect upstream changes (no baseline to compare)
+- Version resolution always incurs network cost (unless resolution itself is cached separately)
 
-#### Option 2B: Cache by Exact Version Match
+#### Option 1C: Cache Both Phases Separately
 
-Reuse cached plan when version constraint exactly matches resolved version and recipe hash matches.
+Cache version resolution results and artifact verification separately.
 
 **Pros:**
-- Deterministic re-installation for pinned versions
-- Detects upstream changes via checksum mismatch
-- Aligns with Cargo (`--locked`), npm (`npm ci`), Nix (derivation reuse)
-- Performance benefit from cache reuse
+- Maximum performance: can skip both network calls if cached
 
 **Cons:**
-- Cache invalidation logic required
-- Users must understand when cache applies
-- Recipe changes require explicit handling
+- Complex cache invalidation (when does resolution cache expire?)
+- Version resolution caching has different TTL requirements than artifact caching
+- Over-engineered for current needs
 
-#### Option 2C: Cache by Version Constraint Type
-
-Different caching rules based on constraint type:
-- Exact (`foo@1.2.3`): Use cached plan
-- Dynamic (`foo`, `foo@latest`, `foo@1.x`): Always regenerate
-
-**Pros:**
-- Intuitive: "pinned = deterministic, floating = latest"
-- Matches user intent: explicit version = want reproducibility
-- Aligns with upstream strategic design specification
-
-**Cons:**
-- More complex logic than 2A or 2B
-- Edge cases around version constraint parsing
-
-### Decision 3: Plan Cache Invalidation
+### Decision 2: Plan Cache Invalidation
 
 When should a cached plan be considered invalid?
 
-#### Option 3A: Recipe Hash Only
+#### Option 2A: Recipe Hash Only
 
 Invalidate cached plan when recipe file hash changes.
 
@@ -156,7 +125,7 @@ Invalidate cached plan when recipe file hash changes.
 - Doesn't detect format version changes
 - Doesn't detect platform mismatches (if checking wrong cached plan)
 
-#### Option 3B: Multi-Factor Validation
+#### Option 2B: Multi-Factor Validation
 
 Validate recipe hash, plan format version, and platform before reusing cached plan.
 
@@ -169,12 +138,12 @@ Validate recipe hash, plan format version, and platform before reusing cached pl
 - More complex validation logic
 - More fields to track and compare
 
-#### Option 3C: Multi-Factor with Staleness Warning
+#### Option 2C: Multi-Factor with Staleness Warning
 
-Same as 3B, but also warn (don't fail) when plan is stale but still usable.
+Same as 2B, but also warn (don't fail) when plan is stale but still usable.
 
 **Pros:**
-- All benefits of 3B
+- All benefits of 2B
 - Users informed about staleness without blocking
 - Graceful degradation for old state files
 
@@ -182,11 +151,11 @@ Same as 3B, but also warn (don't fail) when plan is stale but still usable.
 - Most complex implementation
 - Users may ignore warnings
 
-### Decision 4: Executor Refactoring Approach
+### Decision 3: Executor Refactoring Approach
 
 How should the executor be refactored to support plan-based execution?
 
-#### Option 4A: Add ExecutePlan Method
+#### Option 3A: Add ExecutePlan Method
 
 Add a new `ExecutePlan(ctx, plan)` method alongside existing `Execute(ctx)`.
 
@@ -199,7 +168,7 @@ Add a new `ExecutePlan(ctx, plan)` method alongside existing `Execute(ctx)`.
 - Two code paths to maintain
 - Risk of divergence between Execute and ExecutePlan
 
-#### Option 4B: Replace Execute with Plan-Based Flow
+#### Option 3B: Replace Execute with Plan-Based Flow
 
 Remove `Execute(ctx)`, replace with `ExecutePlan(ctx, plan)` as the only execution method.
 
@@ -213,11 +182,11 @@ Remove `Execute(ctx)`, replace with `ExecutePlan(ctx, plan)` as the only executi
 - All callers must provide plans
 - Larger refactoring change
 
-### Decision 5: Checksum Mismatch Behavior
+### Decision 4: Checksum Mismatch Behavior
 
 What happens when a download's checksum doesn't match the plan?
 
-#### Option 5A: Hard Failure
+#### Option 4A: Hard Failure
 
 Checksum mismatch is an installation failure with clear error message.
 
@@ -231,7 +200,7 @@ Checksum mismatch is an installation failure with clear error message.
 - Blocks installation until user takes action
 - May frustrate users who just want latest version
 
-#### Option 5B: Warning with Proceed Option
+#### Option 4B: Warning with Proceed Option
 
 Warn about mismatch, ask user whether to proceed.
 
@@ -244,9 +213,9 @@ Warn about mismatch, ask user whether to proceed.
 - Interactive prompts don't work in CI
 - Security risk if users habitually accept
 
-#### Option 5C: Hard Failure with Recovery Path
+#### Option 4C: Hard Failure with Recovery Path
 
-Fail on mismatch, but provide clear recovery command (`--refresh` to regenerate plan).
+Fail on mismatch, but provide clear recovery command (`--fresh` to re-verify artifacts).
 
 **Pros:**
 - Security-first (doesn't proceed with mismatched binary)
@@ -259,37 +228,39 @@ Fail on mismatch, but provide clear recovery command (`--refresh` to regenerate 
 
 ## Decision Outcome
 
-**Chosen: 1A + 2C + 3B + 4B + 5C**
+**Chosen: 1B + 2B + 3B + 4C**
 
 ### Summary
 
-`tsuku eval` always generates fresh plans (1A) while `tsuku install` uses cached plans for exact versions and regenerates for dynamic constraints (2C). Plans are validated against recipe hash, format version, and platform (3B). The executor's `Execute()` method is replaced with `ExecutePlan()` as the only execution path (4B). Checksum mismatches are hard failures with clear recovery instructions (5C).
+Plan generation is split into two phases: version resolution (always runs) and artifact verification (cached by resolution output). Cache key is based on what resolution produces, not what the user typed (1B). Plans are validated against recipe hash, format version, and platform (2B). The executor's `Execute()` method is replaced with `ExecutePlan()` as the only execution path (3B). Checksum mismatches are hard failures with clear recovery via `--fresh` (4C).
 
 ### Rationale
 
-**Fresh evaluation (1A)** is essential because `tsuku eval` is a diagnostic command. Users run eval to see what *would* happen now, not what happened before. Golden file testing depends on this to detect upstream changes. This aligns with Terraform's `terraform plan` which always computes current state.
+**Cache by resolution output (1B)** provides the cleanest model. Version resolution always runs to map user input to concrete artifacts. Artifact verification (downloads, checksums) is cached based on what resolution produces. This means:
+- `tsuku eval ripgrep` and `tsuku eval ripgrep@14.1.0` that resolve to the same version hit the same cache
+- No complex version constraint classification logic needed
+- `--fresh` has clear semantics: bypass artifact cache, re-verify checksums
+- Aligns with Nix: evaluation always runs, realization is cached
 
-**Version-constraint-based caching (2C)** matches user intent. When a user specifies `ripgrep@14.1.0`, they're expressing "I want exactly this version, reproducibly." When they say `ripgrep` or `ripgrep@latest`, they're saying "give me the current latest." The caching behavior should match this intent. This is explicitly specified in the upstream strategic design.
+**Multi-factor validation (2B)** prevents subtle bugs. Recipe hash alone misses format version evolution (plan format v1 vs v2) and platform mismatches. Full validation ensures cached plans are actually compatible.
 
-**Multi-factor validation (3B)** prevents subtle bugs. Recipe hash alone misses format version evolution (plan format v1 vs v2) and platform mismatches. Full validation ensures cached plans are actually compatible.
+**Replace Execute with ExecutePlan (3B)** provides the cleanest architecture. Since we're pre-1.0 with no users, backward compatibility isn't a concern. Removing the old `Execute()` method ensures all execution goes through plans by construction—there's no way to accidentally bypass the plan-based flow. This naturally supports Milestone 3 (`tsuku install --plan <file>`) since `ExecutePlan` is the only entry point.
 
-**Replace Execute with ExecutePlan (4B)** provides the cleanest architecture. Since we're pre-1.0 with no users, backward compatibility isn't a concern. Removing the old `Execute()` method ensures all execution goes through plans by construction—there's no way to accidentally bypass the plan-based flow. This naturally supports Milestone 3 (`tsuku install --plan <file>`) since `ExecutePlan` is the only entry point.
-
-**Hard failure with recovery (5C)** balances security with usability. Checksum mismatches indicate upstream changes—potentially malicious re-tagging. Hard failure prevents silent installation of modified binaries. The `--refresh` flag provides a clear, intentional path forward. This aligns with Cargo's strict `--locked` mode and npm's `npm ci` behavior.
+**Hard failure with recovery (4C)** balances security with usability. Checksum mismatches indicate upstream changes—potentially malicious re-tagging. Hard failure prevents silent installation of modified binaries. The `--fresh` flag provides a clear, intentional path forward. This aligns with Cargo's strict `--locked` mode and npm's `npm ci` behavior.
 
 ### Trade-offs Accepted
 
-By choosing version-constraint-based caching (2C), we accept:
-- More complex version parsing logic
-- Users must understand the version constraint taxonomy
+By choosing cache by resolution output (1B), we accept:
+- Version resolution always incurs network cost (GitHub API calls, etc.)
+- This is acceptable because resolution is fast and the real cost is in downloads
 
-By choosing to replace Execute (4B), we accept:
+By choosing to replace Execute (3B), we accept:
 - All callers must provide plans (no direct recipe execution)
 - Larger initial refactoring effort
 
-By choosing hard failure on checksum mismatch (5C), we accept:
+By choosing hard failure on checksum mismatch (4C), we accept:
 - Blocked installations when upstream changes
-- Users must explicitly opt-in to accepting changes via `--refresh`
+- Users must explicitly opt-in to accepting changes via `--fresh`
 
 These trade-offs favor simplicity, security, and determinism, which aligns with the project's philosophy.
 
@@ -297,136 +268,157 @@ These trade-offs favor simplicity, security, and determinism, which aligns with 
 
 ### Overview
 
-The solution refactors the installation flow to be plan-first. Every installation generates or retrieves a plan, then executes that plan. The plan is the source of truth for what gets installed.
+The solution refactors the installation flow into two distinct phases:
+
+1. **Phase 1 - Version Resolution**: Always runs. Maps user input to a resolved version.
+2. **Phase 2 - Artifact Verification**: Cached by resolution output. Downloads and computes checksums.
+
+The cache key is based on what Phase 1 produces, not what the user typed. This means `tsuku eval ripgrep` and `tsuku eval ripgrep@14.1.0` that resolve to the same version share the same cache.
 
 ### Component Architecture
 
 ```
                            ┌──────────────────┐
                            │   User Command   │
+                           │ (any constraint) │
                            └────────┬─────────┘
                                     │
-              ┌─────────────────────┼─────────────────────┐
-              │                     │                     │
-              ▼                     ▼                     ▼
-    ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
-    │   tsuku eval    │   │  tsuku install  │   │ tsuku install   │
-    │                 │   │                 │   │   --plan <file> │
-    │ (Always fresh)  │   │ (Cache-aware)   │   │   (Milestone 3) │
-    └────────┬────────┘   └────────┬────────┘   └────────┬────────┘
-             │                     │                     │
-             ▼                     ▼                     │
-    ┌─────────────────┐   ┌─────────────────┐            │
-    │ GeneratePlan()  │   │ GetOrGenerate   │            │
-    │                 │   │     Plan()      │            │
-    └────────┬────────┘   └────────┬────────┘            │
-             │                     │                     │
-             │            ┌────────┴────────┐            │
-             │            │                 │            │
-             │            ▼                 ▼            │
-             │   ┌─────────────┐   ┌─────────────┐       │
-             │   │ Cache Hit   │   │ Cache Miss  │       │
-             │   │ (Validate)  │   │ (Generate)  │       │
-             │   └──────┬──────┘   └──────┬──────┘       │
-             │          │                 │              │
-             │          └────────┬────────┘              │
-             │                   │                       │
-             ▼                   ▼                       ▼
-    ┌─────────────────────────────────────────────────────────┐
-    │                    InstallationPlan                     │
-    └─────────────────────────────┬───────────────────────────┘
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  Phase 1: Version Resolution  │
+                    │         (always runs)         │
+                    │                               │
+                    │  "ripgrep" → "14.1.0"         │
+                    │  "ripgrep@14.1.0" → "14.1.0"  │
+                    │  "ripgrep@latest" → "14.1.0"  │
+                    └───────────────┬───────────────┘
+                                    │
+                                    ▼
+                         ┌──────────────────┐
+                         │   Cache Lookup   │
+                         │ key = (tool,     │
+                         │  resolved_ver,   │
+                         │  platform,       │
+                         │  recipe_hash)    │
+                         └────────┬─────────┘
                                   │
-                                  ▼
-                         ┌─────────────────┐
-                         │  ExecutePlan()  │
-                         │                 │
-                         │ - Download      │
-                         │ - Verify chksum │
-                         │ - Extract       │
-                         │ - Install bins  │
-                         └────────┬────────┘
-                                  │
-                                  ▼
-                         ┌─────────────────┐
-                         │ Installed Tool  │
-                         └─────────────────┘
+                    ┌─────────────┴─────────────┐
+                    │                           │
+                    ▼                           ▼
+          ┌─────────────────┐         ┌─────────────────┐
+          │   Cache Hit     │         │   Cache Miss    │
+          │   (or --fresh)  │         │   (Phase 2)     │
+          └────────┬────────┘         └────────┬────────┘
+                   │                           │
+                   │                           ▼
+                   │              ┌─────────────────────────┐
+                   │              │ Phase 2: Artifact       │
+                   │              │ Verification            │
+                   │              │ - Expand URL templates  │
+                   │              │ - Download artifacts    │
+                   │              │ - Compute checksums     │
+                   │              └────────────┬────────────┘
+                   │                           │
+                   └─────────────┬─────────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │ InstallationPlan│
+                        │ (URLs+checksums)│
+                        └────────┬────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │  ExecutePlan()  │
+                        │ - Download      │
+                        │ - Verify chksum │
+                        │ - Extract       │
+                        │ - Install bins  │
+                        └────────┬────────┘
+                                 │
+                                 ▼
+                        ┌─────────────────┐
+                        │ Installed Tool  │
+                        └─────────────────┘
 ```
 
 ### Key Data Structures
 
 #### Plan Cache Key
 
+The cache key is based on the OUTPUT of version resolution, not the user's input:
+
 ```go
 // PlanCacheKey uniquely identifies a cached plan
+// Key insight: based on resolution output, not user input
 type PlanCacheKey struct {
     Tool       string `json:"tool"`
-    Version    string `json:"version"`     // Resolved version (e.g., "14.1.0")
+    Version    string `json:"version"`     // RESOLVED version (e.g., "14.1.0")
     Platform   string `json:"platform"`    // e.g., "linux-amd64"
     RecipeHash string `json:"recipe_hash"` // SHA256 of recipe TOML
 }
 
-// CacheKeyFor generates a cache key for plan lookup
-func CacheKeyFor(tool, version, os, arch string, recipe *recipe.Recipe) PlanCacheKey {
+// CacheKeyFor generates a cache key AFTER version resolution
+func CacheKeyFor(tool, resolvedVersion, os, arch string, recipe *recipe.Recipe) PlanCacheKey {
     return PlanCacheKey{
         Tool:       tool,
-        Version:    version,
+        Version:    resolvedVersion,
         Platform:   fmt.Sprintf("%s-%s", os, arch),
         RecipeHash: computeRecipeHash(recipe),
     }
 }
 ```
 
-#### Version Constraint Classification
-
-```go
-// VersionConstraintType classifies version constraints for caching decisions
-type VersionConstraintType int
-
-const (
-    // DynamicConstraint: "", "latest", "1.x", ">=1.0" - always regenerate
-    DynamicConstraint VersionConstraintType = iota
-    // ExactConstraint: "1.2.3", "v1.2.3" - use cached plan
-    ExactConstraint
-)
-
-// ClassifyConstraint determines the constraint type
-func ClassifyConstraint(constraint string) VersionConstraintType {
-    if constraint == "" || constraint == "latest" {
-        return DynamicConstraint
-    }
-    // Check for version operators or wildcards
-    if strings.ContainsAny(constraint, "^~*xX><|") {
-        return DynamicConstraint
-    }
-    // Exact versions: 1.2.3, v1.2.3
-    return ExactConstraint
-}
-```
-
-### Version Resolution and Cache Lookup Sequence
+### Two-Phase Evaluation Flow
 
 ```
 User: tsuku install ripgrep@14.1.0
+      tsuku install ripgrep          (both may hit same cache!)
+      tsuku eval ripgrep
 
-1. Parse command
-   └─ Tool: "ripgrep", Constraint: "14.1.0"
-
-2. Classify constraint
-   └─ "14.1.0" → ExactConstraint (no wildcards, operators)
-
-3. Resolve version (may require network for non-exact)
-   └─ ResolveVersion("14.1.0") → "14.1.0"
-
-4. Generate cache key
-   └─ {tool: "ripgrep", version: "14.1.0", platform: "linux-amd64", recipe_hash: "abc123"}
-
-5. Query state for cached plan
-   └─ state.Installed["ripgrep"].Versions["14.1.0"].Plan
-
-6a. Cache hit + valid → ExecutePlan(cachedPlan)
-6b. Cache miss/invalid → GeneratePlan() → ExecutePlan(newPlan)
-
-7. Store plan in state (if newly generated)
+┌─────────────────────────────────────────────────────────────────┐
+│ Phase 1: Version Resolution (ALWAYS runs)                       │
+│                                                                 │
+│ Input:  User constraint ("ripgrep", "ripgrep@14.1.0", etc.)     │
+│ Output: VersionInfo { Version: "14.1.0", Tag: "v14.1.0" }       │
+│                                                                 │
+│ - Queries GitHub/PyPI/npm API                                   │
+│ - Resolves "latest", version ranges, exact versions             │
+│ - Fast (API call only, no downloads)                            │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────────┐
+│ Cache Lookup                                                    │
+│                                                                 │
+│ Key = (tool: "ripgrep", version: "14.1.0",                      │
+│        platform: "linux-amd64", recipe_hash: "abc123")          │
+│                                                                 │
+│ - Same key regardless of user input ("ripgrep" or "@14.1.0")    │
+│ - Lookup in state.Installed[tool].Versions[version].Plan       │
+│ - Validate: recipe_hash, format_version, platform match         │
+│ - If --fresh flag: skip cache, force Phase 2                    │
+└─────────────────────────────────────────────────────────────────┘
+                              │
+              ┌───────────────┴───────────────┐
+              │                               │
+         Cache Hit                       Cache Miss
+              │                               │
+              │                               ▼
+              │         ┌─────────────────────────────────────────┐
+              │         │ Phase 2: Artifact Verification          │
+              │         │                                         │
+              │         │ - Expand URL templates with version     │
+              │         │ - Download artifacts to compute SHA256  │
+              │         │ - Build InstallationPlan with checksums │
+              │         │                                         │
+              │         │ Slow (network downloads)                │
+              │         └─────────────────────────────────────────┘
+              │                               │
+              └───────────────┬───────────────┘
+                              │
+                              ▼
+                      InstallationPlan
 ```
 
 ### Plan Retrieval from State
@@ -464,33 +456,30 @@ func (sm *StateManager) GetCachedPlan(tool, version string) (*Plan, error) {
 The orchestration logic lives in `install_deps.go`, not the executor, keeping the executor focused on execution:
 
 ```go
-// GetOrGeneratePlan retrieves a cached plan or generates a new one
-// Note: This is orchestration logic in install_deps.go, not an Executor method
+// getOrGeneratePlan implements the two-phase model
+// Phase 1 (resolution) always runs; Phase 2 (verification) is cached
 func getOrGeneratePlan(
     ctx context.Context,
     exec *executor.Executor,
     stateMgr *install.StateManager,
     cfg planRetrievalConfig,
 ) (*executor.InstallationPlan, error) {
-    // 1. Resolve version from constraint
+    // Phase 1: Version Resolution (ALWAYS runs)
     version, err := exec.ResolveVersion(ctx, cfg.VersionConstraint)
     if err != nil {
         return nil, err
     }
 
-    // 2. Check if we should use cache
-    constraintType := ClassifyConstraint(cfg.VersionConstraint)
-    if constraintType == ExactConstraint && !cfg.ForceRefresh {
-        // 3. Try to load cached plan from state
+    // Generate cache key from resolution output
+    cacheKey := CacheKeyFor(cfg.Tool, version, cfg.OS, cfg.Arch, cfg.RecipeHash)
+
+    // Check cache (unless --fresh)
+    if !cfg.Fresh {
         if cachedPlan, err := stateMgr.GetCachedPlan(cfg.Tool, version); err == nil {
-            // 4. Validate cached plan
-            cacheKey := CacheKeyFor(cfg.Tool, version, cfg.OS, cfg.Arch, cfg.RecipeHash)
             if err := validateCachedPlan(cachedPlan, cacheKey); err == nil {
-                // Cache hit - log for user visibility
                 printInfof("Using cached plan for %s@%s\n", cfg.Tool, version)
                 return convertStoredPlan(cachedPlan), nil
             }
-            // Invalid cache, fall through to regenerate
             printInfof("Cached plan invalid, regenerating...\n")
         }
     }
@@ -626,7 +615,7 @@ This could indicate:
 - A supply chain attack (malicious modification)
 
 To proceed with the new asset, regenerate the plan:
-    tsuku install <tool> --refresh
+    tsuku install <tool> --fresh
 
 To investigate, compare with upstream release notes or checksums.`,
         e.URL, e.ExpectedChecksum, e.ActualChecksum)
@@ -687,37 +676,37 @@ tsuku plan export <tool>              # Export cached plan to file
 tsuku install <tool>[@version]        # Uses plan caching based on constraint
 tsuku install <tool>@1.2.3            # Exact: uses cached plan if valid
 tsuku install <tool>                  # Dynamic: always regenerates
-tsuku install <tool> --refresh        # Force fresh plan generation
+tsuku install <tool> --fresh          # Force fresh plan generation
 ```
 
 ## Implementation Approach
 
 ### Phase 1: Core Infrastructure
 
-1. Add `VersionConstraintType` and `ClassifyConstraint()` function
-2. Add `PlanCacheKey` structure
-3. Implement `validateCachedPlan()` method
+1. Add `PlanCacheKey` structure based on resolution output
+2. Add `StateManager.GetCachedPlan()` method for plan retrieval
+3. Implement `validateCachedPlan()` function
 4. Add `ChecksumMismatchError` type with helpful error message
 
 ### Phase 2: Executor Refactoring
 
-1. Add `ExecutePlan(ctx, plan)` method to executor
-2. Implement checksum verification in `ExecutePlan`
-3. Add `GetOrGeneratePlan(ctx, cfg)` method
-4. Modify `Execute(ctx)` to delegate to `GetOrGeneratePlan` + `ExecutePlan`
+1. Remove `Execute(ctx)` method from executor
+2. Add `ExecutePlan(ctx, plan)` as the only execution entry point
+3. Implement checksum verification in `ExecutePlan`
+4. Add `ResolveVersion()` method to expose Phase 1 resolution
 
 ### Phase 3: Install Command Updates
 
-1. Add `--refresh` flag to install command
-2. Update `installWithDependencies` to use `GetOrGeneratePlan`
-3. Pass `ForceRefresh` from CLI flag through to executor
+1. Add `--fresh` flag to install command
+2. Implement `getOrGeneratePlan()` in install_deps.go
+3. Update `installWithDependencies` to use two-phase flow
 4. Update error handling for `ChecksumMismatchError`
 
 ### Phase 4: Testing and Documentation
 
-1. Unit tests for version constraint classification
+1. Unit tests for plan cache key generation
 2. Unit tests for plan validation
-3. Integration tests for plan caching behavior
+3. Integration tests for two-phase evaluation
 4. Integration tests for checksum verification
 5. Update CLI help text and documentation
 
@@ -741,11 +730,11 @@ tsuku install <tool> --refresh        # Force fresh plan generation
 
 ### Supply Chain Risks
 
-**Analysis**: Cached plans create a window where upstream changes are not immediately reflected. This is intentional (determinism) but means users must explicitly opt-in to changes via `--refresh`. The checksum mismatch error explicitly mentions supply chain attacks as a possibility.
+**Analysis**: Cached plans create a window where upstream changes are not immediately reflected. This is intentional (determinism) but means users must explicitly opt-in to changes via `--fresh`. The checksum mismatch error explicitly mentions supply chain attacks as a possibility.
 
 **Mitigations**:
 - Clear error messaging when checksums mismatch
-- `--refresh` flag is explicit, requiring user intent
+- `--fresh` flag is explicit, requiring user intent
 - Recipe hash validation ensures plans match current recipes
 - Format version validation prevents use of outdated plan structures
 
@@ -781,8 +770,8 @@ The following security improvements are explicitly out of scope for this design 
 
 ### Negative
 
-- **Increased complexity**: Version constraint classification and cache validation add code paths
-- **Blocked installations on upstream changes**: Users must explicitly acknowledge changes via `--refresh`
+- **Increased complexity**: Cache validation and two-phase evaluation add code paths
+- **Blocked installations on upstream changes**: Users must explicitly acknowledge changes via `--fresh`
 - **All callers must provide plans**: Direct recipe execution is no longer possible
 
 ### Neutral
