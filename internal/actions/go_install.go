@@ -292,6 +292,12 @@ func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interfac
 		return nil, fmt.Errorf("go not found: install go first (tsuku install go)")
 	}
 
+	// Capture Go version for reproducibility
+	goVersion := GetGoVersion(goPath)
+	if goVersion == "" {
+		return nil, fmt.Errorf("failed to determine Go version from %s", goPath)
+	}
+
 	// Create temp directory for capturing go.sum
 	tempDir, err := os.MkdirTemp("", "tsuku-go-decompose-*")
 	if err != nil {
@@ -364,6 +370,7 @@ func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interfac
 		"version":     version,
 		"executables": executables,
 		"go_sum":      goSum,
+		"go_version":  goVersion, // Captured for reproducibility
 	}
 
 	// Pass through optional params if set

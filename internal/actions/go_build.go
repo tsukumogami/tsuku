@@ -24,7 +24,9 @@ func (a *GoBuildAction) Name() string {
 //   - version (required): Module version (e.g., "v0.40.2")
 //   - executables (required): List of executable names to verify
 //   - go_sum (required): Complete go.sum content captured at eval time
-//   - go_version (optional): Go version to use (e.g., "1.21.0")
+//   - go_version (required for reproducibility): Go toolchain version (e.g., "1.21.5")
+//     If specified, requires that exact version to be installed. If not found, returns
+//     an error instructing the user to install it (tsuku install go@<version>).
 //   - cgo_enabled (optional): Enable CGO (default: false)
 //   - build_flags (optional): Build flags (default: ["-trimpath", "-buildvcs=false"])
 //
@@ -97,14 +99,29 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		buildFlags = flags
 	}
 
-	// Find Go binary from tsuku's tools directory
-	goPath := ResolveGo()
-	if goPath == "" {
-		return fmt.Errorf("go not found: install go first (tsuku install go)")
+	// Get required Go version (captured at eval time for reproducibility)
+	requiredGoVersion, hasGoVersion := GetString(params, "go_version")
+
+	// Find Go binary - prefer specific version if specified
+	var goPath string
+	if hasGoVersion && requiredGoVersion != "" {
+		goPath = ResolveGoVersion(requiredGoVersion)
+		if goPath == "" {
+			return fmt.Errorf("go %s not found: install it first (tsuku install go@%s)", requiredGoVersion, requiredGoVersion)
+		}
+	} else {
+		// Fallback to any available Go for backwards compatibility
+		goPath = ResolveGo()
+		if goPath == "" {
+			return fmt.Errorf("go not found: install go first (tsuku install go)")
+		}
 	}
 
 	fmt.Printf("   Module: %s@%s\n", module, version)
 	fmt.Printf("   Executables: %v\n", executables)
+	if hasGoVersion && requiredGoVersion != "" {
+		fmt.Printf("   Go version: %s (locked)\n", requiredGoVersion)
+	}
 	fmt.Printf("   Using go: %s\n", goPath)
 	fmt.Printf("   CGO enabled: %v\n", cgoEnabled)
 	fmt.Printf("   Build flags: %v\n", buildFlags)

@@ -451,9 +451,14 @@ func TestGoInstallAction_Decompose_ReturnsGoBuildStep(t *testing.T) {
 		t.Fatalf("Failed to create mod cache: %v", err)
 	}
 
-	// Create mock go executable that creates go.sum
+	// Create mock go executable that handles version and creates go.sum
 	goPath := filepath.Join(goDir, "go")
 	mockScript := `#!/bin/sh
+# Handle version command for go_version capture
+if [ "$1" = "version" ]; then
+    echo "go version go1.21.0 linux/amd64"
+    exit 0
+fi
 # Create go.sum with test content when 'go get' is called
 if [ "$1" = "get" ]; then
     # Write to go.sum in the current directory (set by Dir)
@@ -505,6 +510,10 @@ exit 0
 	if execs, ok := step.Params["executables"].([]string); !ok || len(execs) == 0 {
 		t.Error("Step params should contain executables")
 	}
+	// Verify go_version is captured
+	if goVersion, ok := step.Params["go_version"].(string); !ok || goVersion != "1.21.0" {
+		t.Errorf("Step params go_version = %v, want %q", step.Params["go_version"], "1.21.0")
+	}
 }
 
 // TestGoInstallAction_Decompose_PassesThroughOptionalParams tests optional params passthrough
@@ -527,6 +536,10 @@ func TestGoInstallAction_Decompose_PassesThroughOptionalParams(t *testing.T) {
 
 	goPath := filepath.Join(goDir, "go")
 	mockScript := `#!/bin/sh
+if [ "$1" = "version" ]; then
+    echo "go version go1.21.0 linux/amd64"
+    exit 0
+fi
 if [ "$1" = "get" ]; then
     echo "test h1:abc=" > go.sum
 fi
@@ -698,5 +711,179 @@ exit 0
 	toolPath := filepath.Join(binDir, "tool")
 	if _, err := os.Stat(toolPath); err != nil {
 		t.Errorf("Expected executable should exist at %s", toolPath)
+	}
+}
+
+// TestGoBuildAction_Execute_SpecificGoVersion tests that go_version parameter is respected
+func TestGoBuildAction_Execute_SpecificGoVersion(t *testing.T) {
+	origHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", origHome)
+
+	tmpHome := t.TempDir()
+	os.Setenv("HOME", tmpHome)
+
+	// Create a specific Go version installation
+	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.5", "bin")
+	if err := os.MkdirAll(goDir, 0755); err != nil {
+		t.Fatalf("Failed to create go dir: %v", err)
+	}
+
+	installDir := t.TempDir()
+	workDir := t.TempDir()
+	binDir := filepath.Join(installDir, "bin")
+
+	// Create mock go
+	goPath := filepath.Join(goDir, "go")
+	mockScript := fmt.Sprintf(`#!/bin/sh
+case "$1" in
+    mod)
+        exit 0
+        ;;
+    install)
+        mkdir -p %s
+        touch %s/tool
+        chmod +x %s/tool
+        exit 0
+        ;;
+esac
+exit 0
+`, binDir, binDir, binDir)
+
+	if err := os.WriteFile(goPath, []byte(mockScript), 0755); err != nil {
+		t.Fatalf("Failed to create mock go: %v", err)
+	}
+
+	action := &GoBuildAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		InstallDir: installDir,
+		WorkDir:    workDir,
+	}
+
+	params := map[string]interface{}{
+		"module":      "github.com/user/repo",
+		"version":     "v1.0.0",
+		"executables": []interface{}{"tool"},
+		"go_sum":      "github.com/user/repo v1.0.0 h1:abc123=\n",
+		"go_version":  "1.21.5", // Request specific version
+	}
+
+	err := action.Execute(ctx, params)
+	if err != nil {
+		t.Errorf("Execute() should succeed when specific Go version is installed, got: %v", err)
+	}
+}
+
+// TestGoBuildAction_Execute_SpecificGoVersionNotInstalled tests error when specific version not found
+func TestGoBuildAction_Execute_SpecificGoVersionNotInstalled(t *testing.T) {
+	origHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", origHome)
+
+	tmpHome := t.TempDir()
+	os.Setenv("HOME", tmpHome)
+
+	// Create a DIFFERENT Go version installation (1.22.0 instead of requested 1.21.5)
+	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.22.0", "bin")
+	if err := os.MkdirAll(goDir, 0755); err != nil {
+		t.Fatalf("Failed to create go dir: %v", err)
+	}
+
+	goPath := filepath.Join(goDir, "go")
+	if err := os.WriteFile(goPath, []byte("#!/bin/sh\nexit 0\n"), 0755); err != nil {
+		t.Fatalf("Failed to create mock go: %v", err)
+	}
+
+	action := &GoBuildAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		InstallDir: t.TempDir(),
+		WorkDir:    t.TempDir(),
+	}
+
+	params := map[string]interface{}{
+		"module":      "github.com/user/repo",
+		"version":     "v1.0.0",
+		"executables": []interface{}{"tool"},
+		"go_sum":      "github.com/user/repo v1.0.0 h1:abc123=\n",
+		"go_version":  "1.21.5", // Request version that's NOT installed
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("Execute() should fail when specific Go version is not installed")
+	}
+	if err != nil && !containsStr(err.Error(), "go 1.21.5 not found") {
+		t.Errorf("Error message should mention the specific version, got: %v", err)
+	}
+	if err != nil && !containsStr(err.Error(), "tsuku install go@1.21.5") {
+		t.Errorf("Error message should suggest how to install, got: %v", err)
+	}
+}
+
+// TestGoInstallAction_Decompose_CapturesGoVersion tests that Decompose captures Go version
+func TestGoInstallAction_Decompose_CapturesGoVersion(t *testing.T) {
+	origHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", origHome)
+
+	tmpHome := t.TempDir()
+	os.Setenv("HOME", tmpHome)
+
+	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.5", "bin")
+	if err := os.MkdirAll(goDir, 0755); err != nil {
+		t.Fatalf("Failed to create go dir: %v", err)
+	}
+
+	modCache := filepath.Join(tmpHome, ".tsuku", ".gomodcache")
+	if err := os.MkdirAll(modCache, 0755); err != nil {
+		t.Fatalf("Failed to create mod cache: %v", err)
+	}
+
+	// Create mock go that reports version and creates go.sum
+	goPath := filepath.Join(goDir, "go")
+	mockScript := `#!/bin/sh
+if [ "$1" = "version" ]; then
+    echo "go version go1.21.5 linux/amd64"
+    exit 0
+fi
+if [ "$1" = "get" ]; then
+    echo "github.com/user/repo v1.0.0 h1:abc123=" > go.sum
+    exit 0
+fi
+exit 0
+`
+	if err := os.WriteFile(goPath, []byte(mockScript), 0755); err != nil {
+		t.Fatalf("Failed to create mock go: %v", err)
+	}
+
+	action := &GoInstallAction{}
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+	}
+
+	params := map[string]interface{}{
+		"module":      "github.com/user/repo",
+		"executables": []interface{}{"tool"},
+	}
+
+	steps, err := action.Decompose(ctx, params)
+	if err != nil {
+		t.Fatalf("Decompose() failed: %v", err)
+	}
+
+	if len(steps) != 1 {
+		t.Fatalf("Decompose() should return 1 step, got %d", len(steps))
+	}
+
+	step := steps[0]
+
+	// Verify go_version is captured
+	goVersion, ok := step.Params["go_version"].(string)
+	if !ok {
+		t.Error("Step params should contain go_version string")
+	}
+	if goVersion != "1.21.5" {
+		t.Errorf("go_version = %q, want %q", goVersion, "1.21.5")
 	}
 }
