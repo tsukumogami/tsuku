@@ -147,6 +147,129 @@ func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string
 	return nil
 }
 
+// Decompose returns the primitive steps for download_archive action.
+func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Extract parameters
+	url, ok := GetString(params, "url")
+	if !ok {
+		return nil, fmt.Errorf("url is required")
+	}
+
+	archiveFormat, ok := GetString(params, "archive_format")
+	if !ok {
+		return nil, fmt.Errorf("archive_format is required")
+	}
+
+	binariesRaw, ok := params["binaries"]
+	if !ok {
+		return nil, fmt.Errorf("binaries is required")
+	}
+
+	stripDirs, _ := GetInt(params, "strip_dirs")
+
+	installMode, _ := GetString(params, "install_mode")
+	if installMode == "" {
+		installMode = "binaries"
+	}
+	installMode = strings.ToLower(installMode)
+
+	// Validate install_mode
+	if installMode != "binaries" && installMode != "directory" && installMode != "directory_wrapped" {
+		return nil, fmt.Errorf("invalid install_mode '%s': must be 'binaries', 'directory', or 'directory_wrapped'", installMode)
+	}
+
+	// Build variable map for template expansion
+	vars := map[string]string{
+		"version":     ctx.Version,
+		"version_tag": ctx.VersionTag,
+		"os":          ctx.OS,
+		"arch":        ctx.Arch,
+	}
+
+	// Apply OS mapping if present
+	if osMapping, ok := params["os_mapping"].(map[string]interface{}); ok {
+		if mappedOS, ok := osMapping[ctx.OS].(string); ok {
+			vars["os"] = mappedOS
+		}
+	}
+
+	// Apply arch mapping if present
+	if archMapping, ok := params["arch_mapping"].(map[string]interface{}); ok {
+		if mappedArch, ok := archMapping[ctx.Arch].(string); ok {
+			vars["arch"] = mappedArch
+		}
+	}
+
+	// Expand URL template
+	downloadURL := ExpandVars(url, vars)
+
+	// Extract filename from URL
+	archiveFilename := ExpandVars(archiveFormat, vars)
+	parts := []rune(downloadURL)
+	lastSlash := -1
+	for i := len(parts) - 1; i >= 0; i-- {
+		if parts[i] == '/' {
+			lastSlash = i
+			break
+		}
+	}
+	if lastSlash >= 0 && lastSlash < len(downloadURL)-1 {
+		archiveFilename = downloadURL[lastSlash+1:]
+	}
+
+	// Extract chmod files
+	chmodFiles := extractSourceFiles(binariesRaw)
+
+	// Download to compute checksum if Downloader is available
+	var checksum string
+	var size int64
+
+	if ctx.Downloader != nil {
+		result, err := ctx.Downloader.Download(ctx.Context, downloadURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
+		}
+		checksum = result.Checksum
+		size = result.Size
+	}
+
+	// Build primitive steps
+	steps := []Step{
+		{
+			Action: "download",
+			Params: map[string]interface{}{
+				"url":  downloadURL,
+				"dest": archiveFilename,
+			},
+			Checksum: checksum,
+			Size:     size,
+		},
+		{
+			Action: "extract",
+			Params: map[string]interface{}{
+				"archive":    archiveFilename,
+				"format":     archiveFormat,
+				"strip_dirs": stripDirs,
+			},
+		},
+		{
+			Action: "chmod",
+			Params: map[string]interface{}{
+				"files": chmodFiles,
+			},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{
+				"binaries":     binariesRaw,
+				"install_mode": installMode,
+			},
+		},
+	}
+
+	return steps, nil
+}
+
 // GitHubArchiveAction downloads and extracts archives from GitHub releases
 type GitHubArchiveAction struct{}
 
@@ -560,6 +683,132 @@ func (a *GitHubFileAction) Execute(ctx *ExecutionContext, params map[string]inte
 	return nil
 }
 
+// Decompose returns the primitive steps for github_file action.
+func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Extract parameters
+	repo, ok := GetString(params, "repo")
+	if !ok {
+		return nil, fmt.Errorf("repo is required")
+	}
+
+	assetPattern, ok := GetString(params, "asset_pattern")
+	if !ok {
+		return nil, fmt.Errorf("asset_pattern is required")
+	}
+
+	// Support both 'binary' (backward compat) and 'binaries' (new format)
+	var binaries interface{}
+	var downloadName string
+
+	if binariesParam, ok := params["binaries"]; ok {
+		binaries = binariesParam
+		if arr, ok := binariesParam.([]interface{}); ok && len(arr) > 0 {
+			if m, ok := arr[0].(map[string]interface{}); ok {
+				if src, ok := m["src"].(string); ok {
+					downloadName = src
+				}
+			}
+		}
+		if downloadName == "" {
+			return nil, fmt.Errorf("binaries[0].src is required for download")
+		}
+	} else if binary, ok := GetString(params, "binary"); ok {
+		downloadName = binary
+		binaries = []interface{}{binary}
+	} else {
+		return nil, fmt.Errorf("either 'binary' or 'binaries' is required")
+	}
+
+	// Build variable map
+	vars := map[string]string{
+		"version": ctx.Version,
+		"os":      ctx.OS,
+		"arch":    ctx.Arch,
+	}
+
+	// Apply OS mapping if present
+	if osMapping, ok := params["os_mapping"].(map[string]interface{}); ok {
+		if mappedOS, ok := osMapping[ctx.OS].(string); ok {
+			vars["os"] = mappedOS
+		}
+	}
+
+	// Apply arch mapping if present
+	if archMapping, ok := params["arch_mapping"].(map[string]interface{}); ok {
+		if mappedArch, ok := archMapping[ctx.Arch].(string); ok {
+			vars["arch"] = mappedArch
+		}
+	}
+
+	assetName := ExpandVars(assetPattern, vars)
+
+	// Check if pattern contains wildcards - if so, resolve using GitHub API
+	if version.ContainsWildcards(assetName) {
+		if ctx.Resolver == nil {
+			return nil, fmt.Errorf("resolver not available in context (required for wildcard patterns)")
+		}
+
+		// Fetch assets from GitHub API
+		apiCtx, cancel := context.WithTimeout(ctx.Context, 30*time.Second)
+		defer cancel()
+
+		assets, err := ctx.Resolver.FetchReleaseAssets(apiCtx, repo, ctx.VersionTag)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch release assets: %w", err)
+		}
+
+		// Match pattern against assets
+		matchedAsset, err := version.MatchAssetPattern(assetName, assets)
+		if err != nil {
+			return nil, fmt.Errorf("asset pattern matching failed: %w", err)
+		}
+
+		assetName = matchedAsset
+	}
+
+	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
+	expandedDownloadName := ExpandVars(downloadName, vars)
+
+	// Download to compute checksum if Downloader is available
+	var checksum string
+	var size int64
+
+	if ctx.Downloader != nil {
+		result, err := ctx.Downloader.Download(ctx.Context, url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
+		}
+		checksum = result.Checksum
+		size = result.Size
+	}
+
+	steps := []Step{
+		{
+			Action: "download",
+			Params: map[string]interface{}{
+				"url":  url,
+				"dest": expandedDownloadName,
+			},
+			Checksum: checksum,
+			Size:     size,
+		},
+		{
+			Action: "chmod",
+			Params: map[string]interface{}{
+				"files": []string{expandedDownloadName},
+			},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{
+				"binaries": binaries,
+			},
+		},
+	}
+
+	return steps, nil
+}
+
 // HashiCorpReleaseAction downloads HashiCorp products
 type HashiCorpReleaseAction struct{}
 
@@ -641,6 +890,87 @@ func (a *HashiCorpReleaseAction) Execute(ctx *ExecutionContext, params map[strin
 	}
 
 	return nil
+}
+
+// Decompose returns the primitive steps for a HashiCorp release installation.
+func (a *HashiCorpReleaseAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Extract parameters
+	product, ok := GetString(params, "product")
+	if !ok {
+		return nil, fmt.Errorf("product is required")
+	}
+
+	binary, ok := GetString(params, "binary")
+	if !ok {
+		binary = product // Default to product name
+	}
+
+	// Build HashiCorp release URL
+	// Format: https://releases.hashicorp.com/{product}/{version}/{product}_{version}_{os}_{arch}.zip
+	osName := ctx.OS
+	archName := ctx.Arch
+
+	// HashiCorp uses specific naming conventions
+	if osName == "darwin" {
+		osName = "darwin"
+	} else if osName == "linux" {
+		osName = "linux"
+	}
+
+	if archName == "amd64" {
+		archName = "amd64"
+	} else if archName == "arm64" {
+		archName = "arm64"
+	}
+
+	zipFile := fmt.Sprintf("%s_%s_%s_%s.zip", product, ctx.Version, osName, archName)
+	url := fmt.Sprintf("https://releases.hashicorp.com/%s/%s/%s", product, ctx.Version, zipFile)
+
+	// Download to compute checksum if Downloader is available
+	var checksum string
+	var size int64
+
+	if ctx.Downloader != nil {
+		result, err := ctx.Downloader.Download(ctx.Context, url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
+		}
+		checksum = result.Checksum
+		size = result.Size
+	}
+
+	steps := []Step{
+		{
+			Action: "download",
+			Params: map[string]interface{}{
+				"url":  url,
+				"dest": zipFile,
+			},
+			Checksum: checksum,
+			Size:     size,
+		},
+		{
+			Action: "extract",
+			Params: map[string]interface{}{
+				"archive": zipFile,
+				"format":  "zip",
+			},
+		},
+		{
+			Action: "chmod",
+			Params: map[string]interface{}{
+				"files": []string{binary},
+			},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{
+				"binaries": []interface{}{binary},
+			},
+		},
+	}
+
+	return steps, nil
 }
 
 // extractSourceFiles extracts source files from binaries parameter
