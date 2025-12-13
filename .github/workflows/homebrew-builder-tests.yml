@@ -72,8 +72,7 @@ jobs:
 
           [[steps]]
           action = "homebrew_bottle"
-          [steps.params]
-          formula = "libyaml"
+          params = { formula = "libyaml" }
 
           [verify]
           command = "test -f $TSUKU_HOME/tools/libyaml/lib/libyaml.dylib || test -f $TSUKU_HOME/tools/libyaml/lib/libyaml.so"
