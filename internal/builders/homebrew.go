@@ -759,6 +759,35 @@ func (b *HomebrewBuilder) buildFromSource(ctx context.Context, req BuildRequest,
 		return nil, fmt.Errorf("failed to generate source recipe: %w", err)
 	}
 
+	// Validate source build in container if executor is available
+	validationSkipped := true
+	if b.executor != nil {
+		b.reportStart("Validating source build in container")
+
+		validationResult, err := b.executor.ValidateSourceBuild(ctx, r)
+		if err != nil {
+			b.reportFailed()
+			return nil, fmt.Errorf("source build validation error: %w", err)
+		}
+
+		if validationResult.Skipped {
+			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", 1))
+			b.reportDone("skipped")
+		} else if validationResult.Passed {
+			validationSkipped = false
+			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "", 1))
+			b.reportDone("")
+		} else {
+			validationSkipped = false
+			// Parse error for telemetry
+			parsed := validate.ParseValidationError(validationResult.Stdout, validationResult.Stderr, validationResult.ExitCode)
+			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(false, string(parsed.Category), 1))
+			b.reportFailed()
+			// Don't fail the build - source validation is informational for now
+			// Future: implement repair loop for source builds
+		}
+	}
+
 	result := &BuildResult{
 		Recipe: r,
 		Source: fmt.Sprintf("homebrew-source:%s", formula),
@@ -768,7 +797,7 @@ func (b *HomebrewBuilder) buildFromSource(ctx context.Context, req BuildRequest,
 		},
 		RepairAttempts:    repairAttempts,
 		Provider:          provider.Name(),
-		ValidationSkipped: true, // Source builds cannot be validated in container yet
+		ValidationSkipped: validationSkipped,
 		Cost:              usage.Cost(),
 	}
 
