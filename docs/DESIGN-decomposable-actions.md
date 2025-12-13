@@ -6,6 +6,79 @@
 - **Created**: 2025-12-12
 - **Scope**: Tactical
 
+## Implementation Issues
+
+This design is implemented through the following GitHub issues:
+
+### Core Infrastructure
+- [#436](https://github.com/tsukumogami/tsuku/issues/436): Define Decomposable interface and primitive registry
+- [#437](https://github.com/tsukumogami/tsuku/issues/437): Implement recursive decomposition algorithm
+
+### Composite Action Migration
+- [#438](https://github.com/tsukumogami/tsuku/issues/438): Implement Decompose() for github_archive
+- [#439](https://github.com/tsukumogami/tsuku/issues/439): Implement Decompose() for download_archive, github_file, hashicorp_release
+
+### Plan Generator Updates
+- [#440](https://github.com/tsukumogami/tsuku/issues/440): Update plan generator to decompose composite actions
+- [#441](https://github.com/tsukumogami/tsuku/issues/441): Validate plans contain only primitives
+- [#442](https://github.com/tsukumogami/tsuku/issues/442): Add deterministic flag to plan schema
+
+### Ecosystem Primitives
+- [#443](https://github.com/tsukumogami/tsuku/issues/443): Implement go_build ecosystem primitive
+- [#444](https://github.com/tsukumogami/tsuku/issues/444): Implement cargo_build ecosystem primitive
+- [#445](https://github.com/tsukumogami/tsuku/issues/445): Implement npm_exec ecosystem primitive
+- [#446](https://github.com/tsukumogami/tsuku/issues/446): Implement pip_install ecosystem primitive
+- [#447](https://github.com/tsukumogami/tsuku/issues/447): Implement gem_exec ecosystem primitive
+- [#448](https://github.com/tsukumogami/tsuku/issues/448): Implement nix_realize ecosystem primitive
+- [#449](https://github.com/tsukumogami/tsuku/issues/449): Implement cpan_install ecosystem primitive
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph "Core Infrastructure"
+        A436["#436: Decomposable interface"]
+        A437["#437: Recursive decomposition"]
+    end
+
+    subgraph "Composite Migration"
+        A438["#438: github_archive Decompose"]
+        A439["#439: Other composites Decompose"]
+    end
+
+    subgraph "Plan Generator"
+        A440["#440: Plan generator updates"]
+        A441["#441: Primitive validation"]
+        A442["#442: Deterministic flag"]
+    end
+
+    subgraph "Ecosystem Primitives"
+        A443["#443: go_build"]
+        A444["#444: cargo_build"]
+        A445["#445: npm_exec"]
+        A446["#446: pip_install"]
+        A447["#447: gem_exec"]
+        A448["#448: nix_realize"]
+        A449["#449: cpan_install"]
+    end
+
+    A436 --> A437
+    A436 --> A438
+    A436 --> A439
+    A437 --> A440
+    A438 --> A440
+    A439 --> A440
+    A440 --> A441
+    A441 --> A442
+    A436 --> A443
+    A436 --> A444
+    A436 --> A445
+    A436 --> A446
+    A436 --> A447
+    A436 --> A448
+    A436 --> A449
+```
+
 ## Upstream Design Reference
 
 This design implements part of [DESIGN-deterministic-resolution.md](DESIGN-deterministic-resolution.md).
@@ -746,29 +819,3 @@ Full ecosystem investigation reports with implementation details:
 - `docs/deterministic-builds/ecosystem_cpan.md` - Perl CPAN/Carton
 
 These reports contain detailed API examples, security analysis, and implementation recommendations.
-
-## Implementation Issues
-
-This design is implemented through the following GitHub issues:
-
-### Core Infrastructure
-- #436: Define Decomposable interface and primitive registry
-- #437: Implement recursive decomposition algorithm
-
-### Composite Action Migration
-- #438: Implement Decompose() for github_archive
-- #439: Implement Decompose() for download_archive, github_file, hashicorp_release
-
-### Plan Generator Updates
-- #440: Update plan generator to decompose composite actions
-- #441: Validate plans contain only primitives
-- #442: Add deterministic flag to plan schema
-
-### Ecosystem Primitives
-- #443: Implement go_build ecosystem primitive
-- #444: Implement cargo_build ecosystem primitive
-- #445: Implement npm_exec ecosystem primitive
-- #446: Implement pip_install ecosystem primitive
-- #447: Implement gem_exec ecosystem primitive
-- #448: Implement nix_realize ecosystem primitive
-- #449: Implement cpan_install ecosystem primitive
