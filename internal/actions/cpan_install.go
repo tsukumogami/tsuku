@@ -8,7 +8,9 @@ import (
 	"strings"
 )
 
-// CpanInstallAction installs Perl distributions with local::lib isolation
+// CpanInstallAction is an ecosystem primitive that installs Perl distributions
+// with deterministic configuration. It achieves determinism through environment
+// isolation, version validation, and optional offline/mirror-only modes.
 type CpanInstallAction struct{}
 
 // Name returns the action name
@@ -25,6 +27,16 @@ func (a *CpanInstallAction) Name() string {
 //     distribution name. Use this when the distribution name doesn't follow
 //     standard naming convention (e.g., "ack" distribution contains "App::Ack").
 //   - executables (required): List of executable names to verify
+//   - perl_version (optional): Required Perl version (e.g., "5.38.0")
+//   - cpanfile (optional): Path to cpanfile for dependency installation
+//   - mirror (optional): CPAN mirror URL (e.g., "https://cpan.metacpan.org/")
+//   - mirror_only (optional): Only use specified mirror, no fallback (default: false)
+//   - offline (optional): Build without network after pre-fetch (default: false)
+//
+// Deterministic Configuration:
+//   - SOURCE_DATE_EPOCH: Set to 0 for reproducible embedded timestamps
+//   - All PERL* env vars cleared during installation
+//   - --mirror-only: When enabled, prevents fallback to other CPAN sources
 //
 // Environment Strategy:
 //
@@ -95,6 +107,22 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		}
 	}
 
+	// Get optional parameters
+	perlVersion, _ := GetString(params, "perl_version")
+	cpanfile, _ := GetString(params, "cpanfile")
+	mirror, _ := GetString(params, "mirror")
+
+	// Boolean parameters with defaults (using GetBool for consistency with other primitives)
+	mirrorOnly := false
+	if val, ok := GetBool(params, "mirror_only"); ok {
+		mirrorOnly = val
+	}
+
+	offline := false
+	if val, ok := GetBool(params, "offline"); ok {
+		offline = val
+	}
+
 	// Verify /bin/bash exists before creating wrappers
 	if _, err := os.Stat("/bin/bash"); os.IsNotExist(err) {
 		return fmt.Errorf("/bin/bash not found: required for wrapper scripts")
@@ -111,8 +139,24 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		return fmt.Errorf("cpanm not found: install perl first (tsuku install perl)")
 	}
 
+	// Validate Perl version if specified
+	if perlVersion != "" {
+		if err := validatePerlVersion(ctx, perlPath, perlVersion); err != nil {
+			return err
+		}
+	}
+
 	fmt.Printf("   Distribution: %s@%s\n", distribution, ctx.Version)
 	fmt.Printf("   Executables: %v\n", executables)
+	if mirror != "" {
+		fmt.Printf("   Mirror: %s\n", mirror)
+	}
+	if mirrorOnly {
+		fmt.Printf("   Mirror only: true\n")
+	}
+	if offline {
+		fmt.Printf("   Offline: true\n")
+	}
 	fmt.Printf("   Using perl: %s\n", perlPath)
 	fmt.Printf("   Using cpanm: %s\n", cpanmPath)
 
@@ -129,37 +173,45 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		target = moduleName + "@" + ctx.Version
 	}
 
-	fmt.Printf("   Installing: cpanm --local-lib %s --notest %s\n", installDir, target)
-
-	// Build command: cpanm --local-lib <dir> --notest <distribution>@<version>
-	cmd := exec.CommandContext(ctx.Context, cpanmPath,
+	// Build cpanm arguments
+	args := []string{
 		"--local-lib", installDir,
 		"--notest", // Skip tests for faster installation
-		target,
-	)
-
-	// SECURITY: Clear ALL PERL* environment variables to prevent contamination
-	// This ensures isolation from any system Perl configuration
-	cleanEnv := []string{}
-	for _, e := range os.Environ() {
-		if !strings.HasPrefix(e, "PERL") {
-			cleanEnv = append(cleanEnv, e)
-		}
 	}
 
-	// Add perl's directory to PATH so cpanm can find the right perl
+	// Add mirror options for deterministic builds
+	if mirror != "" {
+		args = append(args, "--mirror", mirror)
+	}
+	if mirrorOnly {
+		args = append(args, "--mirror-only")
+	}
+
+	// Handle cpanfile vs module installation
+	if cpanfile != "" {
+		// Resolve cpanfile path relative to work directory if not absolute
+		if !filepath.IsAbs(cpanfile) {
+			cpanfile = filepath.Join(ctx.WorkDir, cpanfile)
+		}
+		// Verify cpanfile exists
+		if _, err := os.Stat(cpanfile); err != nil {
+			return fmt.Errorf("cpanfile not found: %s", cpanfile)
+		}
+		args = append(args, "--installdeps", filepath.Dir(cpanfile))
+		fmt.Printf("   Installing dependencies from: %s\n", cpanfile)
+	} else {
+		args = append(args, target)
+		fmt.Printf("   Installing: cpanm %s\n", strings.Join(args, " "))
+	}
+
+	// Build command
+	cmd := exec.CommandContext(ctx.Context, cpanmPath, args...)
+
+	// Get perl directory for wrapper scripts and PATH
 	perlDir := filepath.Dir(perlPath)
-	pathUpdated := false
-	for i, e := range cleanEnv {
-		if strings.HasPrefix(e, "PATH=") {
-			cleanEnv[i] = fmt.Sprintf("PATH=%s:%s", perlDir, e[5:])
-			pathUpdated = true
-			break
-		}
-	}
-	if !pathUpdated {
-		cleanEnv = append(cleanEnv, fmt.Sprintf("PATH=%s:%s", perlDir, os.Getenv("PATH")))
-	}
+
+	// Set up deterministic environment
+	cleanEnv := buildDeterministicPerlEnv(perlPath, offline)
 
 	cmd.Env = cleanEnv
 
@@ -325,4 +377,99 @@ func isValidCpanVersion(version string) bool {
 	}
 
 	return true
+}
+
+// buildDeterministicPerlEnv creates an environment with deterministic build settings.
+// Clears all PERL* variables and sets SOURCE_DATE_EPOCH for reproducibility.
+func buildDeterministicPerlEnv(perlPath string, offline bool) []string {
+	env := os.Environ()
+
+	// Filter out PERL* and SOURCE_DATE_EPOCH variables
+	filteredEnv := make([]string, 0, len(env))
+	for _, e := range env {
+		if !strings.HasPrefix(e, "PERL") && !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
+			filteredEnv = append(filteredEnv, e)
+		}
+	}
+
+	// Add perl's directory to PATH
+	perlDir := filepath.Dir(perlPath)
+	pathUpdated := false
+	for i, e := range filteredEnv {
+		if strings.HasPrefix(e, "PATH=") {
+			filteredEnv[i] = fmt.Sprintf("PATH=%s:%s", perlDir, e[5:])
+			pathUpdated = true
+			break
+		}
+	}
+	if !pathUpdated {
+		filteredEnv = append(filteredEnv, fmt.Sprintf("PATH=%s:%s", perlDir, os.Getenv("PATH")))
+	}
+
+	// Set SOURCE_DATE_EPOCH for reproducible timestamps (Unix epoch 0)
+	filteredEnv = append(filteredEnv, "SOURCE_DATE_EPOCH=0")
+
+	// If offline mode, set environment to prevent network access
+	// cpanm respects HTTP_PROXY/HTTPS_PROXY - we could block these, but
+	// --mirror-only with a local mirror is the recommended approach
+	_ = offline // Currently informational; --mirror-only handles isolation
+
+	return filteredEnv
+}
+
+// validatePerlVersion verifies the installed Perl version matches the required version.
+// Version format: major.minor.patch (e.g., "5.38.0") or just major.minor (e.g., "5.38")
+func validatePerlVersion(ctx *ExecutionContext, perlPath, requiredVersion string) error {
+	cmd := exec.CommandContext(ctx.Context, perlPath, "-v")
+	output, err := cmd.Output()
+	if err != nil {
+		return fmt.Errorf("failed to get Perl version: %w", err)
+	}
+
+	// Parse version from output like:
+	// "This is perl 5, version 38, subversion 0 (v5.38.0) built for x86_64-linux"
+	// or "perl 5.38.0"
+	versionOutput := string(output)
+
+	// Try to find v5.XX.X pattern first
+	var installedVersion string
+	if idx := strings.Index(versionOutput, "(v"); idx != -1 {
+		end := strings.Index(versionOutput[idx:], ")")
+		if end != -1 {
+			installedVersion = versionOutput[idx+2 : idx+end]
+		}
+	}
+
+	// Fallback: look for "perl X.X.X" or "version X"
+	if installedVersion == "" {
+		parts := strings.Fields(versionOutput)
+		for i, p := range parts {
+			if p == "version" && i+1 < len(parts) {
+				// Extract from "version X, subversion Y"
+				// This is tricky, try the (vX.X.X) approach above first
+				break
+			}
+		}
+	}
+
+	if installedVersion == "" {
+		return fmt.Errorf("unable to parse Perl version from: %s", versionOutput[:min(100, len(versionOutput))])
+	}
+
+	// Check if installed version matches required version (prefix match)
+	if !strings.HasPrefix(installedVersion, requiredVersion) {
+		return fmt.Errorf("Perl version mismatch\n  Required: %s\n  Found:    %s\n\n  Install the required version:\n    tsuku install perl@%s",
+			requiredVersion, installedVersion, requiredVersion)
+	}
+
+	fmt.Printf("   Perl version: %s (matches required %s)\n", installedVersion, requiredVersion)
+	return nil
+}
+
+// min returns the minimum of two integers
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

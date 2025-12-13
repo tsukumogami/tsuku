@@ -1079,3 +1079,224 @@ exit 0
 		t.Errorf("expected cpanm to use module name not distribution, got: %s", string(logContent))
 	}
 }
+
+func TestBuildDeterministicPerlEnv(t *testing.T) {
+	// Test that SOURCE_DATE_EPOCH is set
+	env := buildDeterministicPerlEnv("/usr/bin/perl", false)
+
+	foundSourceDateEpoch := false
+	foundPerlEnvVar := false
+	for _, e := range env {
+		if strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
+			foundSourceDateEpoch = true
+			if e != "SOURCE_DATE_EPOCH=0" {
+				t.Errorf("expected SOURCE_DATE_EPOCH=0, got %s", e)
+			}
+		}
+		if strings.HasPrefix(e, "PERL5LIB=") || strings.HasPrefix(e, "PERL_LOCAL_LIB_ROOT=") {
+			foundPerlEnvVar = true
+		}
+	}
+
+	if !foundSourceDateEpoch {
+		t.Error("SOURCE_DATE_EPOCH should be set in deterministic environment")
+	}
+	if foundPerlEnvVar {
+		t.Error("PERL* environment variables should be filtered out")
+	}
+}
+
+func TestBuildDeterministicPerlEnv_PathIncludesPerlDir(t *testing.T) {
+	perlPath := "/home/test/.tsuku/tools/perl-5.38.0/bin/perl"
+	env := buildDeterministicPerlEnv(perlPath, false)
+
+	expectedPerlDir := "/home/test/.tsuku/tools/perl-5.38.0/bin"
+	foundPath := false
+	for _, e := range env {
+		if strings.HasPrefix(e, "PATH=") {
+			foundPath = true
+			if !strings.Contains(e, expectedPerlDir) {
+				t.Errorf("PATH should include perl directory %s, got: %s", expectedPerlDir, e)
+			}
+			break
+		}
+	}
+
+	if !foundPath {
+		t.Error("PATH should be set in environment")
+	}
+}
+
+func TestCpanInstallAction_IsPrimitive(t *testing.T) {
+	// Verify that cpan_install is registered as a primitive
+	if !IsPrimitive("cpan_install") {
+		t.Error("cpan_install should be registered as a primitive")
+	}
+}
+
+func TestCpanInstallAction_Execute_MirrorParameter(t *testing.T) {
+	// Test that mirror parameter is handled correctly
+	tmpDir := t.TempDir()
+
+	// Set HOME to temp directory (same pattern as other tests)
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+	os.Setenv("HOME", tmpDir)
+
+	// Create mock perl installation with cpanm that logs arguments
+	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
+	perlBinDir := filepath.Join(toolsDir, "perl-5.38.0", "bin")
+	if err := os.MkdirAll(perlBinDir, 0755); err != nil {
+		t.Fatalf("failed to create perl bin dir: %v", err)
+	}
+
+	logFile := filepath.Join(tmpDir, "cpanm.log")
+	installDir := filepath.Join(tmpDir, "install")
+
+	// Create mock perl
+	perlPath := filepath.Join(perlBinDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho 'perl'"), 0755); err != nil {
+		t.Fatalf("failed to create mock perl: %v", err)
+	}
+
+	// Create mock cpanm that logs arguments and creates the executable
+	cpanmPath := filepath.Join(perlBinDir, "cpanm")
+	cpanmScript := fmt.Sprintf(`#!/bin/sh
+echo "$@" >> %s
+# Create the expected executable in the install dir
+mkdir -p %s/bin
+cat > %s/bin/myapp << 'SCRIPT'
+#!/bin/sh
+echo "myapp - mock"
+SCRIPT
+chmod +x %s/bin/myapp
+`, logFile, installDir, installDir, installDir)
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create mock cpanm: %v", err)
+	}
+
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatalf("failed to create install dir: %v", err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		InstallDir: installDir,
+		WorkDir:    tmpDir,
+		Version:    "1.0.0",
+	}
+
+	params := map[string]interface{}{
+		"distribution": "MyApp",
+		"executables":  []interface{}{"myapp"},
+		"mirror":       "https://cpan.example.com/",
+		"mirror_only":  true,
+	}
+
+	action := &CpanInstallAction{}
+	err := action.Execute(ctx, params)
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	// Verify cpanm was called with mirror options
+	logContent, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatalf("failed to read cpanm log: %v", err)
+	}
+
+	logStr := string(logContent)
+	if !strings.Contains(logStr, "--mirror") {
+		t.Errorf("expected cpanm to be called with --mirror, got: %s", logStr)
+	}
+	if !strings.Contains(logStr, "https://cpan.example.com/") {
+		t.Errorf("expected cpanm to use specified mirror URL, got: %s", logStr)
+	}
+	if !strings.Contains(logStr, "--mirror-only") {
+		t.Errorf("expected cpanm to be called with --mirror-only, got: %s", logStr)
+	}
+}
+
+func TestCpanInstallAction_Execute_CpanfileParameter(t *testing.T) {
+	// Test that cpanfile parameter triggers --installdeps
+	tmpDir := t.TempDir()
+
+	// Set HOME to tmpDir so findPerlInstallation finds our mock perl
+	oldHome := os.Getenv("HOME")
+	defer os.Setenv("HOME", oldHome)
+	os.Setenv("HOME", tmpDir)
+
+	// Create mock perl installation at ~/.tsuku/tools/perl-5.38.0/bin/
+	perlBinDir := filepath.Join(tmpDir, ".tsuku", "tools", "perl-5.38.0", "bin")
+	if err := os.MkdirAll(perlBinDir, 0755); err != nil {
+		t.Fatalf("failed to create perl bin dir: %v", err)
+	}
+
+	logFile := filepath.Join(tmpDir, "cpanm.log")
+
+	// Create mock perl that outputs version
+	perlPath := filepath.Join(perlBinDir, "perl")
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho 'This is perl 5, version 38, subversion 0 (v5.38.0)'"), 0755); err != nil {
+		t.Fatalf("failed to create mock perl: %v", err)
+	}
+
+	installDir := filepath.Join(tmpDir, "install")
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatalf("failed to create install dir: %v", err)
+	}
+
+	// Create mock cpanm that logs args and creates expected executable
+	cpanmPath := filepath.Join(perlBinDir, "cpanm")
+	cpanmScript := fmt.Sprintf(`#!/bin/sh
+echo "$@" >> %s
+# Create the expected executable in the bin dir so wrapper creation succeeds
+# cpanm uses --local-lib which installs to installDir/bin/
+mkdir -p %s/bin
+echo '#!/bin/sh' > %s/bin/myapp
+chmod 755 %s/bin/myapp
+exit 0
+`, logFile, installDir, installDir, installDir)
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create mock cpanm: %v", err)
+	}
+
+	// Create a cpanfile
+	cpanfileDir := filepath.Join(tmpDir, "project")
+	if err := os.MkdirAll(cpanfileDir, 0755); err != nil {
+		t.Fatalf("failed to create cpanfile dir: %v", err)
+	}
+	cpanfilePath := filepath.Join(cpanfileDir, "cpanfile")
+	if err := os.WriteFile(cpanfilePath, []byte("requires 'Plack';\n"), 0644); err != nil {
+		t.Fatalf("failed to create cpanfile: %v", err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		InstallDir: installDir,
+		WorkDir:    tmpDir,
+		Version:    "1.0.0",
+	}
+
+	params := map[string]interface{}{
+		"distribution": "MyApp",
+		"executables":  []interface{}{"myapp"},
+		"cpanfile":     cpanfilePath,
+	}
+
+	action := &CpanInstallAction{}
+	err := action.Execute(ctx, params)
+	if err != nil {
+		t.Fatalf("Execute failed: %v", err)
+	}
+
+	// Verify cpanm was called with --installdeps
+	logContent, err := os.ReadFile(logFile)
+	if err != nil {
+		t.Fatalf("failed to read cpanm log: %v", err)
+	}
+
+	logStr := string(logContent)
+	if !strings.Contains(logStr, "--installdeps") {
+		t.Errorf("expected cpanm to be called with --installdeps, got: %s", logStr)
+	}
+}
