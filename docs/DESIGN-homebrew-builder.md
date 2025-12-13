@@ -2,6 +2,67 @@
 
 **Status**: Approved
 
+## Implementation Plan
+
+**Milestone**: [M17: Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/17)
+
+### Dependency Graph
+
+```mermaid
+flowchart TD
+    subgraph Phase1["Phase 1: Bottles"]
+        style Phase1 fill:#e1f5fe
+        A["#488: Core HomebrewBuilder"]
+        B["#489: Dependency Tree Discovery"]
+        C["#490: Cross-Platform Validation"]
+        A --> B
+        A --> C
+    end
+
+    subgraph Phase2["Phase 2: Source Builds"]
+        style Phase2 fill:#fff3e0
+        D["#491: Ruby Formula Parsing"]
+        E["#492: Platform Conditionals"]
+        F["#493: Resources & Patches"]
+        G["#494: Source Build Validation"]
+        C --> D
+        D --> E
+        D --> F
+        D --> G
+    end
+
+    subgraph Future["Future Work (needs-design)"]
+        style Future fill:#f3e5f5
+        H["#495: Cask Support"]
+        I["#496: Third-Party Taps"]
+        J["#497: Historical Versions"]
+        K["#498: Parallel Generation"]
+    end
+
+    Phase2 -.-> Future
+```
+
+### Implementation Issues
+
+| Issue | Title | Phase | Dependencies |
+|-------|-------|-------|--------------|
+| [#488](https://github.com/tsukumogami/tsuku/issues/488) | Core HomebrewBuilder with LLM bottle inspection | Phase 1 | None |
+| [#489](https://github.com/tsukumogami/tsuku/issues/489) | Dependency tree discovery for Homebrew formulas | Phase 1 | #488 |
+| [#490](https://github.com/tsukumogami/tsuku/issues/490) | Cross-platform validation for Homebrew recipes | Phase 1 | #488 |
+| [#491](https://github.com/tsukumogami/tsuku/issues/491) | Source build support with Ruby formula parsing | Phase 2 | #490 |
+| [#492](https://github.com/tsukumogami/tsuku/issues/492) | Platform conditional handling for source builds | Phase 2 | #491 |
+| [#493](https://github.com/tsukumogami/tsuku/issues/493) | Resource and patch support for source builds | Phase 2 | #491 |
+| [#494](https://github.com/tsukumogami/tsuku/issues/494) | Container-based source build validation | Phase 2 | #491 |
+
+### Future Work Issues (needs-design)
+
+| Issue | Title |
+|-------|-------|
+| [#495](https://github.com/tsukumogami/tsuku/issues/495) | Design cask support for HomebrewBuilder |
+| [#496](https://github.com/tsukumogami/tsuku/issues/496) | Design third-party tap support for HomebrewBuilder |
+| [#497](https://github.com/tsukumogami/tsuku/issues/497) | Design historical version support for HomebrewBuilder |
+| [#498](https://github.com/tsukumogami/tsuku/issues/498) | Design parallel generation for HomebrewBuilder |
+
 ## Context and Problem Statement
 
 Homebrew is the dominant package manager for developer tools on macOS, with over 6,000 formulas in homebrew-core alone. Many valuable developer tools are distributed exclusively through Homebrew, making it an essential source for any comprehensive package manager.
