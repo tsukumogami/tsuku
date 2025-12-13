@@ -28,7 +28,7 @@ Extend the existing HomebrewBuilder with two new LLM tools (`fetch_formula_ruby`
 
 ## Implementation Steps
 
-- [ ] 1. Create `configure_make` action
+- [x] 1. Create `configure_make` action
   - Parameters: source_dir, configure_args, make_targets, executables
   - Run ./configure with args, then make, then make install
   - Copy executables to install_dir/bin

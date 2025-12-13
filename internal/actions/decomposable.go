@@ -70,13 +70,14 @@ var primitives = map[string]bool{
 	"link_dependencies": true,
 	"install_libraries": true,
 	// Ecosystem primitives - have residual non-determinism
-	"cargo_build":  true,
-	"cpan_install": true,
-	"gem_exec":     true,
-	"go_build":     true,
-	"nix_realize":  true,
-	"npm_exec":     true,
-	"pip_install":  true,
+	"cargo_build":    true,
+	"configure_make": true,
+	"cpan_install":   true,
+	"gem_exec":       true,
+	"go_build":       true,
+	"nix_realize":    true,
+	"npm_exec":       true,
+	"pip_install":    true,
 }
 
 // deterministicActions classifies which primitives are fully deterministic.
@@ -95,12 +96,13 @@ var deterministicActions = map[string]bool{
 	"install_libraries": true,
 	// Ecosystem primitives - NOT deterministic due to compiler versions,
 	// native extensions, platform-specific behavior, etc.
-	"cargo_build":  false,
-	"cpan_install": false,
-	"gem_exec":     false,
-	"go_build":     false,
-	"npm_exec":     false,
-	"pip_install":  false,
+	"cargo_build":    false,
+	"configure_make": false,
+	"cpan_install":   false,
+	"gem_exec":       false,
+	"go_build":       false,
+	"npm_exec":       false,
+	"pip_install":    false,
 }
 
 // IsPrimitive returns true if the action is a primitive.
