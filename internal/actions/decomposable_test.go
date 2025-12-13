@@ -54,13 +54,15 @@ func TestIsPrimitive(t *testing.T) {
 		"set_rpath",
 		"link_dependencies",
 		"install_libraries",
-		"cargo_build",  // Ecosystem primitive
-		"cpan_install", // Ecosystem primitive
-		"gem_exec",     // Ecosystem primitive
-		"go_build",     // Ecosystem primitive
-		"nix_realize",  // Ecosystem primitive
-		"npm_exec",     // Ecosystem primitive
-		"pip_install",  // Ecosystem primitive
+		"cargo_build",    // Ecosystem primitive
+		"cmake_build",    // Ecosystem primitive
+		"configure_make", // Ecosystem primitive
+		"cpan_install",   // Ecosystem primitive
+		"gem_exec",       // Ecosystem primitive
+		"go_build",       // Ecosystem primitive
+		"nix_realize",    // Ecosystem primitive
+		"npm_exec",       // Ecosystem primitive
+		"pip_install",    // Ecosystem primitive
 	}
 
 	for _, name := range primitives {
@@ -93,9 +95,9 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 15 primitives (8 core + 7 ecosystem)
-	if len(prims) != 15 {
-		t.Errorf("len(Primitives()) = %d, want 15", len(prims))
+	// Should have exactly 17 primitives (8 core + 9 ecosystem)
+	if len(prims) != 17 {
+		t.Errorf("len(Primitives()) = %d, want 17", len(prims))
 	}
 
 	// Sort for deterministic comparison
@@ -104,6 +106,8 @@ func TestPrimitives(t *testing.T) {
 	expected := []string{
 		"cargo_build",
 		"chmod",
+		"cmake_build",
+		"configure_make",
 		"cpan_install",
 		"download",
 		"extract",
@@ -494,6 +498,8 @@ func TestIsDeterministic(t *testing.T) {
 	nonDeterministicActions := []string{
 		"go_build",
 		"cargo_build",
+		"cmake_build",
+		"configure_make",
 		"npm_exec",
 		"pip_install",
 		"gem_exec",

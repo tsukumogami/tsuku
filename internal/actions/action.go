@@ -88,6 +88,8 @@ func init() {
 	// Ecosystem primitives
 	Register(&GoBuildAction{})
 	Register(&NixRealizeAction{})
+	Register(&ConfigureMakeAction{})
+	Register(&CMakeBuildAction{})
 
 	// Composite actions
 	Register(&DownloadArchiveAction{})
