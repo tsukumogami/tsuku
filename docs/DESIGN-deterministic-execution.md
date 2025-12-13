@@ -33,9 +33,9 @@ graph LR
     I470[#470: plan cache infrastructure]:::done --> I473[#473: ExecutePlan with checksum]:::ready
     I470 --> I475[#475: plan conversion helpers]:::ready
     I470 --> I477[#477: getOrGeneratePlan]:::blocked
-    I471[#471: GetCachedPlan]:::ready --> I477
+    I471[#471: GetCachedPlan]:::done --> I477
     I472[#472: ResolveVersion]:::ready --> I477
-    I474[#474: --fresh flag]:::ready --> I477
+    I474[#474: --fresh flag]:::done --> I477
     I475 --> I477
     I473 --> I478[#478: wire up installation]:::blocked
     I477 --> I478

@@ -13,6 +13,7 @@ import (
 
 var installDryRun bool
 var installForce bool
+var installFresh bool
 
 var installCmd = &cobra.Command{
 	Use:   "install <tool>...",
@@ -66,6 +67,7 @@ Examples:
 func init() {
 	installCmd.Flags().BoolVar(&installDryRun, "dry-run", false, "Show what would be installed without making changes")
 	installCmd.Flags().BoolVar(&installForce, "force", false, "Skip security warnings and proceed without prompts")
+	installCmd.Flags().BoolVar(&installFresh, "fresh", false, "Force fresh plan generation, bypassing cached plans")
 }
 
 // isInteractive returns true if stdin is connected to a terminal
