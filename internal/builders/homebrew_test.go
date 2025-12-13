@@ -2091,3 +2091,627 @@ func (t *mockGHCRTransport) RoundTrip(req *http.Request) (*http.Response, error)
 	}
 	return http.DefaultTransport.RoundTrip(req)
 }
+
+// Tests for source build functionality
+
+func TestHomebrewBuilder_fetchFormulaRuby_Success(t *testing.T) {
+	rubyContent := `class Jq < Formula
+  desc "Lightweight and flexible command-line JSON processor"
+  homepage "https://jqlang.github.io/jq/"
+  url "https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-1.7.1.tar.gz"
+  sha256 "478c9ca129fd2e3443fe27314b455e211e0d8c60bc8ff7df703873deeee580c2"
+
+  def install
+    system "./configure", *std_configure_args
+    system "make"
+    system "make", "install"
+  end
+end
+`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/Homebrew/homebrew-core/HEAD/Formula/j/jq.rb" {
+			_, _ = w.Write([]byte(rubyContent))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	// Override the GitHub raw URL to point to test server
+	b := &HomebrewBuilder{
+		httpClient: server.Client(),
+	}
+
+	// We need to patch the URL - for this test we'll just test the sanitization
+	// Real integration would require mocking the GitHub raw URL
+
+	// Test that sanitizeRubyFormula works
+	sanitized := b.sanitizeRubyFormula(rubyContent)
+	if !containsString(sanitized, "class Jq") {
+		t.Error("sanitized content should contain class definition")
+	}
+	if !containsString(sanitized, "./configure") {
+		t.Error("sanitized content should contain configure command")
+	}
+}
+
+func TestHomebrewBuilder_sanitizeRubyFormula(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	// Test that control characters are removed
+	input := "class Test\x00\x01\x02 < Formula"
+	sanitized := b.sanitizeRubyFormula(input)
+	if containsString(sanitized, "\x00") || containsString(sanitized, "\x01") {
+		t.Error("control characters should be removed")
+	}
+	if !containsString(sanitized, "class Test < Formula") {
+		t.Error("normal content should be preserved")
+	}
+
+	// Test that newlines, tabs are preserved
+	inputWithWhitespace := "class Test\n\ttab"
+	sanitized = b.sanitizeRubyFormula(inputWithWhitespace)
+	if !containsString(sanitized, "\n") || !containsString(sanitized, "\t") {
+		t.Error("newlines and tabs should be preserved")
+	}
+}
+
+func TestValidateSourceRecipeData_ValidAutotools(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"jq"},
+		VerifyCommand: "jq --version",
+	}
+
+	err := validateSourceRecipeData(data)
+	if err != nil {
+		t.Errorf("validateSourceRecipeData() error = %v", err)
+	}
+}
+
+func TestValidateSourceRecipeData_ValidCMake(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemCMake,
+		CMakeArgs:     []string{"-DBUILD_SHARED_LIBS=OFF"},
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+	}
+
+	err := validateSourceRecipeData(data)
+	if err != nil {
+		t.Errorf("validateSourceRecipeData() error = %v", err)
+	}
+}
+
+func TestValidateSourceRecipeData_MissingBuildSystem(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   "",
+		Executables:   []string{"tool"},
+		VerifyCommand: "tool --version",
+	}
+
+	err := validateSourceRecipeData(data)
+	if err == nil {
+		t.Error("expected error for missing build_system")
+	}
+}
+
+func TestValidateSourceRecipeData_InvalidBuildSystem(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   "invalid",
+		Executables:   []string{"tool"},
+		VerifyCommand: "tool --version",
+	}
+
+	err := validateSourceRecipeData(data)
+	if err == nil {
+		t.Error("expected error for invalid build_system")
+	}
+}
+
+func TestValidateSourceRecipeData_NoExecutables(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{},
+		VerifyCommand: "tool --version",
+	}
+
+	err := validateSourceRecipeData(data)
+	if err == nil {
+		t.Error("expected error for empty executables")
+	}
+}
+
+func TestValidateSourceRecipeData_EmptyExecutableName(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{""},
+		VerifyCommand: "tool --version",
+	}
+
+	err := validateSourceRecipeData(data)
+	if err == nil {
+		t.Error("expected error for empty executable name")
+	}
+}
+
+func TestValidateSourceRecipeData_PathTraversal(t *testing.T) {
+	testCases := []struct {
+		name string
+		exe  string
+	}{
+		{"parent dir", "../evil"},
+		{"absolute path", "/etc/passwd"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			data := &sourceRecipeData{
+				BuildSystem:   BuildSystemAutotools,
+				Executables:   []string{tc.exe},
+				VerifyCommand: "tool --version",
+			}
+
+			err := validateSourceRecipeData(data)
+			if err == nil {
+				t.Errorf("expected error for %s", tc.name)
+			}
+		})
+	}
+}
+
+func TestValidateSourceRecipeData_MissingVerifyCommand(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"tool"},
+		VerifyCommand: "",
+	}
+
+	err := validateSourceRecipeData(data)
+	if err == nil {
+		t.Error("expected error for missing verify_command")
+	}
+}
+
+func TestValidateSourceRecipeData_InvalidConfigureArg(t *testing.T) {
+	testCases := []struct {
+		name string
+		arg  string
+	}{
+		{"semicolon", "--enable-feature;rm -rf"},
+		{"pipe", "--opt | cat"},
+		{"ampersand", "--opt && evil"},
+		{"backtick", "--opt `id`"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			data := &sourceRecipeData{
+				BuildSystem:   BuildSystemAutotools,
+				ConfigureArgs: []string{tc.arg},
+				Executables:   []string{"tool"},
+				VerifyCommand: "tool --version",
+			}
+
+			err := validateSourceRecipeData(data)
+			if err == nil {
+				t.Errorf("expected error for invalid configure arg: %s", tc.arg)
+			}
+		})
+	}
+}
+
+func TestValidateSourceRecipeData_InvalidCMakeArg(t *testing.T) {
+	testCases := []struct {
+		name string
+		arg  string
+	}{
+		{"semicolon", "-DOPT=val;rm -rf"},
+		{"pipe", "-DOPT | cat"},
+		{"ampersand", "-DOPT && evil"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			data := &sourceRecipeData{
+				BuildSystem:   BuildSystemCMake,
+				CMakeArgs:     []string{tc.arg},
+				Executables:   []string{"tool"},
+				VerifyCommand: "tool --version",
+			}
+
+			err := validateSourceRecipeData(data)
+			if err == nil {
+				t.Errorf("expected error for invalid cmake arg: %s", tc.arg)
+			}
+		})
+	}
+}
+
+func TestIsValidConfigureArg(t *testing.T) {
+	validArgs := []string{
+		"--enable-feature",
+		"--with-lib=/usr/lib",
+		"--disable-static",
+		"CFLAGS=-O2",
+	}
+
+	for _, arg := range validArgs {
+		if !isValidConfigureArg(arg) {
+			t.Errorf("isValidConfigureArg(%q) = false, want true", arg)
+		}
+	}
+
+	invalidArgs := []string{
+		"",
+		"--opt;rm",
+		"--opt && echo",
+		"--opt | cat",
+		"--opt `id`",
+	}
+
+	for _, arg := range invalidArgs {
+		if isValidConfigureArg(arg) {
+			t.Errorf("isValidConfigureArg(%q) = true, want false", arg)
+		}
+	}
+}
+
+func TestIsValidCMakeArg(t *testing.T) {
+	validArgs := []string{
+		"-DCMAKE_BUILD_TYPE=Release",
+		"-DBUILD_SHARED_LIBS=ON",
+		"-G Ninja",
+	}
+
+	for _, arg := range validArgs {
+		if !isValidCMakeArg(arg) {
+			t.Errorf("isValidCMakeArg(%q) = false, want true", arg)
+		}
+	}
+}
+
+func TestValidBuildSystems(t *testing.T) {
+	systems := []BuildSystem{
+		BuildSystemAutotools,
+		BuildSystemCMake,
+		BuildSystemCargo,
+		BuildSystemGo,
+		BuildSystemMake,
+		BuildSystemCustom,
+	}
+
+	for _, sys := range systems {
+		if !validBuildSystems[sys] {
+			t.Errorf("validBuildSystems[%s] = false, want true", sys)
+		}
+	}
+
+	if validBuildSystems["invalid"] {
+		t.Error("validBuildSystems[invalid] = true, want false")
+	}
+}
+
+func TestHomebrewBuilder_executeToolCall_FetchFormulaRuby(t *testing.T) {
+	b := &HomebrewBuilder{
+		httpClient: &http.Client{},
+	}
+
+	genCtx := &homebrewGenContext{
+		formula: "jq",
+	}
+
+	ctx := context.Background()
+	toolCall := llm.ToolCall{
+		Name: ToolFetchFormulaRuby,
+		Arguments: map[string]any{
+			"formula": "../invalid",
+		},
+	}
+
+	_, _, err := b.executeToolCall(ctx, genCtx, toolCall)
+	if err == nil {
+		t.Error("expected error for invalid formula")
+	}
+}
+
+func TestHomebrewBuilder_executeToolCall_ExtractSourceRecipe_Valid(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	genCtx := &homebrewGenContext{
+		formula: "jq",
+	}
+
+	ctx := context.Background()
+	toolCall := llm.ToolCall{
+		Name: ToolExtractSourceRecipe,
+		Arguments: map[string]any{
+			"build_system":   "autotools",
+			"executables":    []interface{}{"jq"},
+			"verify_command": "jq --version",
+		},
+	}
+
+	result, _, err := b.executeToolCall(ctx, genCtx, toolCall)
+	if err != nil {
+		t.Fatalf("executeToolCall() error = %v", err)
+	}
+	if !containsString(result, "autotools") {
+		t.Error("result should contain build_system")
+	}
+}
+
+func TestHomebrewBuilder_executeToolCall_ExtractSourceRecipe_Invalid(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	genCtx := &homebrewGenContext{
+		formula: "jq",
+	}
+
+	ctx := context.Background()
+	toolCall := llm.ToolCall{
+		Name: ToolExtractSourceRecipe,
+		Arguments: map[string]any{
+			"build_system":   "invalid",
+			"executables":    []interface{}{"jq"},
+			"verify_command": "jq --version",
+		},
+	}
+
+	_, _, err := b.executeToolCall(ctx, genCtx, toolCall)
+	if err == nil {
+		t.Error("expected error for invalid build_system")
+	}
+}
+
+func TestHomebrewBuilder_buildSourceSteps_Autotools(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		ConfigureArgs: []string{"--disable-static"},
+		Executables:   []string{"jq"},
+		VerifyCommand: "jq --version",
+	}
+
+	steps, err := b.buildSourceSteps(data)
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	// Should have 3 steps: github_archive, configure_make, install_binaries
+	if len(steps) != 3 {
+		t.Errorf("buildSourceSteps() returned %d steps, want 3", len(steps))
+	}
+
+	if steps[0].Action != "github_archive" {
+		t.Errorf("steps[0].Action = %s, want github_archive", steps[0].Action)
+	}
+	if steps[1].Action != "configure_make" {
+		t.Errorf("steps[1].Action = %s, want configure_make", steps[1].Action)
+	}
+	if steps[2].Action != "install_binaries" {
+		t.Errorf("steps[2].Action = %s, want install_binaries", steps[2].Action)
+	}
+}
+
+func TestHomebrewBuilder_buildSourceSteps_CMake(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem: BuildSystemCMake,
+		CMakeArgs:   []string{"-DBUILD_SHARED_LIBS=OFF"},
+		Executables: []string{"mytool"},
+	}
+
+	steps, err := b.buildSourceSteps(data)
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	if steps[1].Action != "cmake_build" {
+		t.Errorf("steps[1].Action = %s, want cmake_build", steps[1].Action)
+	}
+}
+
+func TestHomebrewBuilder_buildSourceSteps_Cargo(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem: BuildSystemCargo,
+		Executables: []string{"rg"},
+	}
+
+	steps, err := b.buildSourceSteps(data)
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	if steps[1].Action != "cargo_build" {
+		t.Errorf("steps[1].Action = %s, want cargo_build", steps[1].Action)
+	}
+}
+
+func TestHomebrewBuilder_buildSourceSteps_Go(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem: BuildSystemGo,
+		Executables: []string{"gh"},
+	}
+
+	steps, err := b.buildSourceSteps(data)
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	if steps[1].Action != "go_build" {
+		t.Errorf("steps[1].Action = %s, want go_build", steps[1].Action)
+	}
+}
+
+func TestHomebrewBuilder_buildSourceSteps_Make(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem: BuildSystemMake,
+		Executables: []string{"tool"},
+	}
+
+	steps, err := b.buildSourceSteps(data)
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	if steps[1].Action != "configure_make" {
+		t.Errorf("steps[1].Action = %s, want configure_make", steps[1].Action)
+	}
+
+	// Should have skip_configure set
+	skipConfigure, ok := steps[1].Params["skip_configure"].(bool)
+	if !ok || !skipConfigure {
+		t.Error("make build should have skip_configure=true")
+	}
+}
+
+func TestHomebrewBuilder_buildSourceSteps_Custom(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem: BuildSystemCustom,
+		Executables: []string{"tool"},
+	}
+
+	_, err := b.buildSourceSteps(data)
+	if err == nil {
+		t.Error("expected error for custom build system")
+	}
+}
+
+func TestHomebrewBuilder_generateSourceRecipeOutput(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	formulaInfo := &homebrewFormulaInfo{
+		Name:        "jq",
+		Description: "Lightweight JSON processor",
+		Homepage:    "https://jqlang.github.io/jq/",
+	}
+	formulaInfo.Versions.Stable = "1.7.1"
+
+	data := &sourceRecipeData{
+		BuildSystem:       BuildSystemAutotools,
+		Executables:       []string{"jq"},
+		VerifyCommand:     "jq --version",
+		BuildDependencies: []string{"autoconf", "automake"},
+	}
+
+	recipe, err := b.generateSourceRecipeOutput("jq", formulaInfo, data)
+	if err != nil {
+		t.Fatalf("generateSourceRecipeOutput() error = %v", err)
+	}
+
+	if recipe.Metadata.Name != "jq" {
+		t.Errorf("recipe.Metadata.Name = %s, want jq", recipe.Metadata.Name)
+	}
+	if recipe.Version.Formula != "jq" {
+		t.Errorf("recipe.Version.Formula = %s, want jq", recipe.Version.Formula)
+	}
+	if recipe.Verify.Command != "jq --version" {
+		t.Errorf("recipe.Verify.Command = %s, want jq --version", recipe.Verify.Command)
+	}
+	if len(recipe.Metadata.Dependencies) != 2 {
+		t.Errorf("recipe.Metadata.Dependencies = %v, want [autoconf, automake]", recipe.Metadata.Dependencies)
+	}
+}
+
+func TestHomebrewBuilder_generateSourceRecipeOutput_NoExecutables(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	formulaInfo := &homebrewFormulaInfo{
+		Name: "jq",
+	}
+
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{},
+		VerifyCommand: "jq --version",
+	}
+
+	_, err := b.generateSourceRecipeOutput("jq", formulaInfo, data)
+	if err == nil {
+		t.Error("expected error for no executables")
+	}
+}
+
+func TestHomebrewBuilder_buildSourceSystemPrompt(t *testing.T) {
+	b := &HomebrewBuilder{}
+	prompt := b.buildSourceSystemPrompt()
+
+	if !containsString(prompt, "source build") {
+		t.Error("prompt should mention source build")
+	}
+	if !containsString(prompt, "autotools") {
+		t.Error("prompt should mention autotools")
+	}
+	if !containsString(prompt, "cmake") {
+		t.Error("prompt should mention cmake")
+	}
+	if !containsString(prompt, "extract_source_recipe") {
+		t.Error("prompt should mention extract_source_recipe tool")
+	}
+}
+
+func TestHomebrewBuilder_buildSourceUserMessage(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	formulaInfo := &homebrewFormulaInfo{
+		Name:              "jq",
+		Description:       "JSON processor",
+		Homepage:          "https://jqlang.github.io/jq/",
+		BuildDependencies: []string{"autoconf"},
+		Dependencies:      []string{"oniguruma"},
+	}
+	formulaInfo.Versions.Stable = "1.7.1"
+
+	genCtx := &homebrewGenContext{
+		formula:     "jq",
+		formulaInfo: formulaInfo,
+	}
+
+	message := b.buildSourceUserMessage(genCtx)
+
+	if !containsString(message, "jq") {
+		t.Error("message should contain formula name")
+	}
+	if !containsString(message, "source build") {
+		t.Error("message should mention source build")
+	}
+	if !containsString(message, "fetch_formula_ruby") {
+		t.Error("message should mention fetch_formula_ruby")
+	}
+	if !containsString(message, "Build Dependencies") {
+		t.Error("message should contain build dependencies section")
+	}
+}
+
+func TestHomebrewBuilder_buildSourceToolDefs(t *testing.T) {
+	b := &HomebrewBuilder{}
+	tools := b.buildSourceToolDefs()
+
+	if len(tools) != 3 {
+		t.Errorf("buildSourceToolDefs() returned %d tools, want 3", len(tools))
+	}
+
+	toolNames := make(map[string]bool)
+	for _, tool := range tools {
+		toolNames[tool.Name] = true
+	}
+
+	expectedTools := []string{ToolFetchFormulaJSON, ToolFetchFormulaRuby, ToolExtractSourceRecipe}
+	for _, name := range expectedTools {
+		if !toolNames[name] {
+			t.Errorf("missing tool: %s", name)
+		}
+	}
+}

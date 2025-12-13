@@ -250,12 +250,12 @@ func TestIsValidCMakeArg(t *testing.T) {
 	}
 
 	invalidArgs := []string{
-		"",                         // empty
-		"-DOPT;rm",                 // shell metachar
-		"-DOPT && echo",            // shell metachar
-		"-DOPT | cat",              // shell metachar
-		"-DOPT `id`",               // shell metachar
-		"-DOPT\necho",              // newline
+		"",                        // empty
+		"-DOPT;rm",                // shell metachar
+		"-DOPT && echo",           // shell metachar
+		"-DOPT | cat",             // shell metachar
+		"-DOPT `id`",              // shell metachar
+		"-DOPT\necho",             // newline
 		string(make([]byte, 501)), // too long
 	}
 

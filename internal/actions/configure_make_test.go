@@ -253,13 +253,13 @@ func TestIsValidConfigureArg(t *testing.T) {
 	}
 
 	invalidArgs := []string{
-		"",                      // empty
-		"--opt;rm",              // shell metachar
-		"--opt && echo",         // shell metachar
-		"--opt | cat",           // shell metachar
-		"--opt `id`",            // shell metachar
-		"$(whoami)",             // shell metachar
-		"--opt\necho",           // newline
+		"",                        // empty
+		"--opt;rm",                // shell metachar
+		"--opt && echo",           // shell metachar
+		"--opt | cat",             // shell metachar
+		"--opt `id`",              // shell metachar
+		"$(whoami)",               // shell metachar
+		"--opt\necho",             // newline
 		string(make([]byte, 501)), // too long
 	}
 
