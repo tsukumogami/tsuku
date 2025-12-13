@@ -37,9 +37,9 @@ graph LR
     I472[#472: ResolveVersion]:::done --> I477
     I474[#474: --fresh flag]:::done --> I477
     I475 --> I477
-    I473 --> I478[#478: wire up installation]:::ready
+    I473 --> I478[#478: wire up installation]:::done
     I477 --> I478
-    I478 --> I479[#479: remove legacy Execute]:::blocked
+    I478 --> I479[#479: remove legacy Execute]:::ready
 ```
 
 ## Upstream Design Reference
