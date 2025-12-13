@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -33,9 +34,31 @@ Examples:
 
 var planShowJSON bool
 
+var planExportCmd = &cobra.Command{
+	Use:   "export <tool>",
+	Short: "Export the installation plan for a tool to a file",
+	Long: `Export the stored installation plan for an installed tool as a JSON file.
+
+The exported plan can be shared, version-controlled, or used for offline
+installation (future milestone). The JSON format matches 'tsuku eval' output.
+
+Default output filename: <tool>-<version>-<os>-<arch>.plan.json
+
+Examples:
+  tsuku plan export gh
+  tsuku plan export gh -o my-plan.json
+  tsuku plan export gh -o -              # output to stdout`,
+	Args: cobra.ExactArgs(1),
+	Run:  runPlanExport,
+}
+
+var planExportOutput string
+
 func init() {
 	planCmd.AddCommand(planShowCmd)
+	planCmd.AddCommand(planExportCmd)
 	planShowCmd.Flags().BoolVar(&planShowJSON, "json", false, "Output in JSON format")
+	planExportCmd.Flags().StringVarP(&planExportOutput, "output", "o", "", "Output file path (use '-' for stdout)")
 }
 
 func runPlanShow(cmd *cobra.Command, args []string) {
@@ -199,4 +222,93 @@ func truncateHash(hash string) string {
 		return hash
 	}
 	return hash[:12] + "..."
+}
+
+// getPlanForTool retrieves the installation plan for a tool.
+// Returns the plan or exits with an appropriate error message.
+func getPlanForTool(toolName string) *install.Plan {
+	// Load config
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to load config: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	// Load state
+	mgr := install.New(cfg)
+	toolState, err := mgr.GetState().GetToolState(toolName)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to load state: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	// Check if tool is installed
+	if toolState == nil {
+		fmt.Fprintf(os.Stderr, "Error: tool '%s' is not installed\n", toolName)
+		fmt.Fprintf(os.Stderr, "\nTo install it:\n")
+		fmt.Fprintf(os.Stderr, "  tsuku install %s\n", toolName)
+		exitWithCode(ExitRecipeNotFound)
+	}
+
+	// Get active version
+	version := toolState.ActiveVersion
+	if version == "" {
+		version = toolState.Version // Fallback for legacy state
+	}
+
+	// Get version state
+	versionState, exists := toolState.Versions[version]
+	if !exists {
+		fmt.Fprintf(os.Stderr, "Error: no version state found for %s@%s\n", toolName, version)
+		exitWithCode(ExitGeneral)
+	}
+
+	// Check if plan exists
+	if versionState.Plan == nil {
+		fmt.Fprintf(os.Stderr, "Error: no installation plan stored for %s@%s\n", toolName, version)
+		fmt.Fprintf(os.Stderr, "\nThis tool was installed before plan storage was implemented.\n")
+		fmt.Fprintf(os.Stderr, "To generate a plan, reinstall the tool:\n")
+		fmt.Fprintf(os.Stderr, "  tsuku install %s --force\n", toolName)
+		exitWithCode(ExitGeneral)
+	}
+
+	return versionState.Plan
+}
+
+func runPlanExport(cmd *cobra.Command, args []string) {
+	toolName := args[0]
+	plan := getPlanForTool(toolName)
+
+	// Determine output destination
+	outputPath := planExportOutput
+	if outputPath == "" {
+		// Default filename: <tool>-<version>-<os>-<arch>.plan.json
+		outputPath = defaultPlanFilename(plan)
+	}
+
+	// Handle stdout output
+	if outputPath == "-" {
+		printJSON(plan)
+		return
+	}
+
+	// Write to file
+	data, err := json.MarshalIndent(plan, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to encode plan: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	if err := os.WriteFile(outputPath, data, 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to write file: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	fmt.Printf("Exported plan to %s\n", outputPath)
+}
+
+// defaultPlanFilename generates the default output filename for a plan.
+func defaultPlanFilename(plan *install.Plan) string {
+	return fmt.Sprintf("%s-%s-%s-%s.plan.json",
+		plan.Tool, plan.Version, plan.Platform.OS, plan.Platform.Arch)
 }
