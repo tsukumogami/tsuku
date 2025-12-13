@@ -456,7 +456,7 @@ Based on investigation results, implement each ecosystem primitive:
 
 ## Appendix A: Ecosystem Investigation Results
 
-Detailed research was conducted for each supported ecosystem. Full reports are available in `wip/ecosystem_*.md`. This appendix summarizes key findings.
+Detailed research was conducted for each supported ecosystem. Full reports are available in `docs/deterministic-builds/`. This appendix summarizes key findings.
 
 ### Summary Table
 
@@ -723,12 +723,12 @@ type [Ecosystem]BuildParams struct {
 
 Full ecosystem investigation reports with implementation details:
 
-- `wip/ecosystem_go.md` - Go modules and build system
-- `wip/ecosystem_cargo.md` - Rust Cargo build system
-- `wip/ecosystem_npm.md` - npm package manager
-- `wip/ecosystem_pip.md` - Python pip/pipx
-- `wip/ecosystem_gem.md` - Ruby gem/Bundler
-- `wip/ecosystem_nix.md` - Nix flakes and derivations
-- `wip/ecosystem_cpan.md` - Perl CPAN/Carton
+- `docs/deterministic-builds/ecosystem_go.md` - Go modules and build system
+- `docs/deterministic-builds/ecosystem_cargo.md` - Rust Cargo build system
+- `docs/deterministic-builds/ecosystem_npm.md` - npm package manager
+- `docs/deterministic-builds/ecosystem_pip.md` - Python pip/pipx
+- `docs/deterministic-builds/ecosystem_gem.md` - Ruby gem/Bundler
+- `docs/deterministic-builds/ecosystem_nix.md` - Nix flakes and derivations
+- `docs/deterministic-builds/ecosystem_cpan.md` - Perl CPAN/Carton
 
 These reports contain detailed API examples, security analysis, and implementation recommendations.
