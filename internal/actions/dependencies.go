@@ -15,6 +15,7 @@ var ActionDependencies = map[string]ActionDeps{
 	// These actions install packages that run on an ecosystem runtime.
 	"npm_install":  {InstallTime: []string{"nodejs"}, Runtime: []string{"nodejs"}},
 	"npm_exec":     {InstallTime: []string{"nodejs"}, Runtime: []string{"nodejs"}},
+	"pip_install":  {InstallTime: []string{"python"}, Runtime: []string{"python"}},
 	"pipx_install": {InstallTime: []string{"pipx"}, Runtime: []string{"python"}},
 	"gem_install":  {InstallTime: []string{"ruby"}, Runtime: []string{"ruby"}},
 	"cpan_install": {InstallTime: []string{"perl"}, Runtime: []string{"perl"}},
