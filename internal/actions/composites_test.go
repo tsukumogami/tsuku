@@ -380,6 +380,289 @@ func TestHashiCorpReleaseAction_Execute_MissingParams(t *testing.T) {
 
 // HomebrewBottleAction Execute tests moved to homebrew_bottle_test.go
 
+// TestGitHubArchiveAction_Decompose tests the Decompose method
+func TestGitHubArchiveAction_Decompose(t *testing.T) {
+	action := &GitHubArchiveAction{}
+
+	// Create basic context
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+		Recipe:     nil,
+		Resolver:   nil,
+		Downloader: nil, // No downloader means no checksum computation
+	}
+
+	// Create params
+	params := map[string]interface{}{
+		"repo":           "owner/repo",
+		"asset_pattern":  "tool-{version}-{os}-{arch}.tar.gz",
+		"archive_format": "tar.gz",
+		"binaries":       []interface{}{"tool"},
+		"strip_dirs":     1,
+	}
+
+	steps, err := action.Decompose(ctx, params)
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+
+	// Should return 4 primitive steps
+	if len(steps) != 4 {
+		t.Fatalf("Decompose() returned %d steps, want 4", len(steps))
+	}
+
+	// Step 1: download
+	if steps[0].Action != "download" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	}
+	expectedURL := "https://github.com/owner/repo/releases/download/v1.0.0/tool-1.0.0-linux-amd64.tar.gz"
+	if url, ok := steps[0].Params["url"].(string); !ok || url != expectedURL {
+		t.Errorf("steps[0].Params[url] = %q, want %q", url, expectedURL)
+	}
+	if dest, ok := steps[0].Params["dest"].(string); !ok || dest != "tool-1.0.0-linux-amd64.tar.gz" {
+		t.Errorf("steps[0].Params[dest] = %q, want %q", dest, "tool-1.0.0-linux-amd64.tar.gz")
+	}
+
+	// Step 2: extract
+	if steps[1].Action != "extract" {
+		t.Errorf("steps[1].Action = %q, want %q", steps[1].Action, "extract")
+	}
+	if format, ok := steps[1].Params["format"].(string); !ok || format != "tar.gz" {
+		t.Errorf("steps[1].Params[format] = %q, want %q", format, "tar.gz")
+	}
+	if stripDirs, ok := steps[1].Params["strip_dirs"].(int); !ok || stripDirs != 1 {
+		t.Errorf("steps[1].Params[strip_dirs] = %v, want 1", stripDirs)
+	}
+
+	// Step 3: chmod
+	if steps[2].Action != "chmod" {
+		t.Errorf("steps[2].Action = %q, want %q", steps[2].Action, "chmod")
+	}
+
+	// Step 4: install_binaries
+	if steps[3].Action != "install_binaries" {
+		t.Errorf("steps[3].Action = %q, want %q", steps[3].Action, "install_binaries")
+	}
+}
+
+func TestGitHubArchiveAction_Decompose_MissingParams(t *testing.T) {
+	action := &GitHubArchiveAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+	}{
+		{
+			name:   "missing repo",
+			params: map[string]interface{}{},
+		},
+		{
+			name: "missing asset_pattern",
+			params: map[string]interface{}{
+				"repo": "owner/repo",
+			},
+		},
+		{
+			name: "missing archive_format",
+			params: map[string]interface{}{
+				"repo":          "owner/repo",
+				"asset_pattern": "file-{version}.tar.gz",
+			},
+		},
+		{
+			name: "missing binaries",
+			params: map[string]interface{}{
+				"repo":           "owner/repo",
+				"asset_pattern":  "file-{version}.tar.gz",
+				"archive_format": "tar.gz",
+			},
+		},
+		{
+			name: "invalid install_mode",
+			params: map[string]interface{}{
+				"repo":           "owner/repo",
+				"asset_pattern":  "file-{version}.tar.gz",
+				"archive_format": "tar.gz",
+				"binaries":       []interface{}{"bin"},
+				"install_mode":   "invalid_mode",
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, err := action.Decompose(ctx, tt.params)
+			if err == nil {
+				t.Error("Decompose() should fail with missing/invalid params")
+			}
+		})
+	}
+}
+
+func TestGitHubArchiveAction_Decompose_OSArchMapping(t *testing.T) {
+	action := &GitHubArchiveAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "darwin",
+		Arch:       "arm64",
+	}
+
+	params := map[string]interface{}{
+		"repo":           "owner/repo",
+		"asset_pattern":  "tool-{version}-{os}-{arch}.tar.gz",
+		"archive_format": "tar.gz",
+		"binaries":       []interface{}{"tool"},
+		"os_mapping": map[string]interface{}{
+			"darwin": "macos",
+		},
+		"arch_mapping": map[string]interface{}{
+			"arm64": "aarch64",
+		},
+	}
+
+	steps, err := action.Decompose(ctx, params)
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+
+	// Check that URL uses mapped values
+	expectedURL := "https://github.com/owner/repo/releases/download/v1.0.0/tool-1.0.0-macos-aarch64.tar.gz"
+	if url, ok := steps[0].Params["url"].(string); !ok || url != expectedURL {
+		t.Errorf("steps[0].Params[url] = %q, want %q", url, expectedURL)
+	}
+}
+
+func TestGitHubArchiveAction_Decompose_InstallMode(t *testing.T) {
+	action := &GitHubArchiveAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	params := map[string]interface{}{
+		"repo":           "owner/repo",
+		"asset_pattern":  "tool-{version}.tar.gz",
+		"archive_format": "tar.gz",
+		"binaries":       []interface{}{"tool"},
+		"install_mode":   "directory",
+	}
+
+	steps, err := action.Decompose(ctx, params)
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+
+	// Check that install_mode is passed to install_binaries step
+	if mode, ok := steps[3].Params["install_mode"].(string); !ok || mode != "directory" {
+		t.Errorf("steps[3].Params[install_mode] = %q, want %q", mode, "directory")
+	}
+}
+
+func TestGitHubArchiveAction_Decompose_AllStepsArePrimitives(t *testing.T) {
+	action := &GitHubArchiveAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	params := map[string]interface{}{
+		"repo":           "owner/repo",
+		"asset_pattern":  "tool-{version}.tar.gz",
+		"archive_format": "tar.gz",
+		"binaries":       []interface{}{"tool"},
+	}
+
+	steps, err := action.Decompose(ctx, params)
+	if err != nil {
+		t.Fatalf("Decompose() error = %v", err)
+	}
+
+	// Verify all returned steps are primitives
+	for i, step := range steps {
+		if !IsPrimitive(step.Action) {
+			t.Errorf("steps[%d].Action = %q is not a primitive", i, step.Action)
+		}
+	}
+}
+
+func TestGitHubArchiveAction_Decompose_BinariesFormats(t *testing.T) {
+	action := &GitHubArchiveAction{}
+
+	ctx := &EvalContext{
+		Context:    context.Background(),
+		Version:    "1.0.0",
+		VersionTag: "v1.0.0",
+		OS:         "linux",
+		Arch:       "amd64",
+	}
+
+	t.Run("simple string binaries", func(t *testing.T) {
+		params := map[string]interface{}{
+			"repo":           "owner/repo",
+			"asset_pattern":  "tool.tar.gz",
+			"archive_format": "tar.gz",
+			"binaries":       []interface{}{"bin1", "bin2"},
+		}
+
+		steps, err := action.Decompose(ctx, params)
+		if err != nil {
+			t.Fatalf("Decompose() error = %v", err)
+		}
+
+		// Check chmod step has correct files
+		files, ok := steps[2].Params["files"].([]interface{})
+		if !ok || len(files) != 2 {
+			t.Errorf("chmod files = %v, want 2 files", files)
+		}
+	})
+
+	t.Run("src/dest map binaries", func(t *testing.T) {
+		params := map[string]interface{}{
+			"repo":           "owner/repo",
+			"asset_pattern":  "tool.tar.gz",
+			"archive_format": "tar.gz",
+			"binaries": []interface{}{
+				map[string]interface{}{"src": "source1", "dest": "dest1"},
+				map[string]interface{}{"src": "source2", "dest": "dest2"},
+			},
+		}
+
+		steps, err := action.Decompose(ctx, params)
+		if err != nil {
+			t.Fatalf("Decompose() error = %v", err)
+		}
+
+		// Check chmod step extracts src correctly
+		files, ok := steps[2].Params["files"].([]interface{})
+		if !ok || len(files) != 2 {
+			t.Errorf("chmod files = %v, want 2 files", files)
+		}
+	})
+}
+
 // TestDownloadArchiveAction_VerificationEnforcement tests that directory mode requires verification
 func TestDownloadArchiveAction_VerificationEnforcement(t *testing.T) {
 	action := &DownloadArchiveAction{}

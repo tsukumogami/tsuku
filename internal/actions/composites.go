@@ -10,6 +10,9 @@ import (
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
+// Ensure GitHubArchiveAction implements Decomposable
+var _ Decomposable = (*GitHubArchiveAction)(nil)
+
 // DownloadArchiveAction downloads, extracts, and installs binaries from an archive
 // This is a generic composite action for any URL
 type DownloadArchiveAction struct{}
@@ -288,6 +291,146 @@ func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 	}
 
 	return nil
+}
+
+// Decompose resolves the GitHub release asset and returns primitive steps.
+// This enables deterministic plan generation by performing API calls and
+// checksum computation at evaluation time rather than execution time.
+func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Extract required parameters
+	repo, ok := GetString(params, "repo")
+	if !ok {
+		return nil, fmt.Errorf("repo is required")
+	}
+
+	assetPattern, ok := GetString(params, "asset_pattern")
+	if !ok {
+		return nil, fmt.Errorf("asset_pattern is required")
+	}
+
+	archiveFormat, ok := GetString(params, "archive_format")
+	if !ok {
+		return nil, fmt.Errorf("archive_format is required")
+	}
+
+	binariesRaw, ok := params["binaries"]
+	if !ok {
+		return nil, fmt.Errorf("binaries is required")
+	}
+
+	stripDirs, _ := GetInt(params, "strip_dirs") // Defaults to 0 if not present
+
+	// Parse install_mode parameter (default: "binaries")
+	installMode, _ := GetString(params, "install_mode")
+	if installMode == "" {
+		installMode = "binaries"
+	}
+	installMode = strings.ToLower(installMode)
+
+	// Validate install_mode
+	if installMode != "binaries" && installMode != "directory" && installMode != "directory_wrapped" {
+		return nil, fmt.Errorf("invalid install_mode '%s': must be 'binaries', 'directory', or 'directory_wrapped'", installMode)
+	}
+
+	// Build variable map for template expansion
+	vars := map[string]string{
+		"version": ctx.Version,
+		"os":      ctx.OS,
+		"arch":    ctx.Arch,
+	}
+
+	// Apply OS mapping if present
+	if osMapping, ok := params["os_mapping"].(map[string]interface{}); ok {
+		if mappedOS, ok := osMapping[ctx.OS].(string); ok {
+			vars["os"] = mappedOS
+		}
+	}
+
+	// Apply arch mapping if present
+	if archMapping, ok := params["arch_mapping"].(map[string]interface{}); ok {
+		if mappedArch, ok := archMapping[ctx.Arch].(string); ok {
+			vars["arch"] = mappedArch
+		}
+	}
+
+	assetName := ExpandVars(assetPattern, vars)
+
+	// Check if pattern contains wildcards - if so, resolve using GitHub API
+	if version.ContainsWildcards(assetName) {
+		if ctx.Resolver == nil {
+			return nil, fmt.Errorf("resolver not available in context (required for wildcard patterns)")
+		}
+
+		// Fetch assets from GitHub API
+		apiCtx, cancel := context.WithTimeout(ctx.Context, 30*time.Second)
+		defer cancel()
+
+		assets, err := ctx.Resolver.FetchReleaseAssets(apiCtx, repo, ctx.VersionTag)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch release assets: %w", err)
+		}
+
+		// Match pattern against assets
+		matchedAsset, err := version.MatchAssetPattern(assetName, assets)
+		if err != nil {
+			return nil, fmt.Errorf("asset pattern matching failed: %w", err)
+		}
+
+		assetName = matchedAsset
+	}
+
+	// Construct the download URL
+	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
+
+	// Download the file to compute checksum
+	var checksum string
+	var size int64
+
+	if ctx.Downloader != nil {
+		result, err := ctx.Downloader.Download(ctx.Context, url)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
+		}
+		checksum = result.Checksum
+		size = result.Size
+	}
+
+	// Extract source files for chmod (binaries can be ["file"] or [{src: "file", dest: "..."}])
+	chmodFiles := extractSourceFiles(binariesRaw)
+
+	// Return primitive steps
+	return []Step{
+		{
+			Action: "download",
+			Params: map[string]interface{}{
+				"url":  url,
+				"dest": assetName,
+			},
+			Checksum: checksum,
+			Size:     size,
+		},
+		{
+			Action: "extract",
+			Params: map[string]interface{}{
+				"archive":    assetName,
+				"format":     archiveFormat,
+				"strip_dirs": stripDirs,
+			},
+		},
+		{
+			Action: "chmod",
+			Params: map[string]interface{}{
+				"files": chmodFiles,
+			},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{
+				"binaries":     binariesRaw,
+				"install_mode": installMode,
+			},
+		},
+	}, nil
 }
 
 // GitHubFileAction downloads pre-compiled binary files from GitHub releases
