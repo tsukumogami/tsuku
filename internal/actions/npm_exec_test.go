@@ -61,8 +61,12 @@ func TestNpmExecAction_Execute_MissingParams(t *testing.T) {
 			// Create a package.json for source_dir validation to pass
 			if _, ok := tc.params["source_dir"]; ok {
 				sourceDir := filepath.Join(ctx.WorkDir, tc.params["source_dir"].(string))
-				os.MkdirAll(sourceDir, 0755)
-				os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte("{}"), 0644)
+				if err := os.MkdirAll(sourceDir, 0755); err != nil {
+					t.Fatalf("failed to create source dir: %v", err)
+				}
+				if err := os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte("{}"), 0644); err != nil {
+					t.Fatalf("failed to create package.json: %v", err)
+				}
 			}
 
 			err := action.Execute(ctx, tc.params)
@@ -85,7 +89,9 @@ func TestNpmExecAction_Execute_MissingPackageJSON(t *testing.T) {
 
 	// Create empty source directory (no package.json)
 	sourceDir := filepath.Join(ctx.WorkDir, "project")
-	os.MkdirAll(sourceDir, 0755)
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
 
 	params := map[string]interface{}{
 		"source_dir": "project",
@@ -110,8 +116,12 @@ func TestNpmExecAction_Execute_MissingLockfile(t *testing.T) {
 
 	// Create source directory with package.json but no lockfile
 	sourceDir := filepath.Join(ctx.WorkDir, "project")
-	os.MkdirAll(sourceDir, 0755)
-	os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{"name": "test"}`), 0644)
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{"name": "test"}`), 0644); err != nil {
+		t.Fatalf("failed to create package.json: %v", err)
+	}
 
 	params := map[string]interface{}{
 		"source_dir":   "project",
@@ -169,10 +179,10 @@ func TestParseVersion(t *testing.T) {
 
 func TestVersionGTE(t *testing.T) {
 	tests := []struct {
-		name                        string
-		iMajor, iMinor, iPatch      int
-		rMajor, rMinor, rPatch      int
-		want                        bool
+		name                   string
+		iMajor, iMinor, iPatch int
+		rMajor, rMinor, rPatch int
+		want                   bool
 	}{
 		{"equal", 20, 10, 0, 20, 10, 0, true},
 		{"greater_major", 21, 0, 0, 20, 10, 0, true},
@@ -198,10 +208,10 @@ func TestVersionGTE(t *testing.T) {
 
 func TestVersionGT(t *testing.T) {
 	tests := []struct {
-		name                        string
-		iMajor, iMinor, iPatch      int
-		rMajor, rMinor, rPatch      int
-		want                        bool
+		name                   string
+		iMajor, iMinor, iPatch int
+		rMajor, rMinor, rPatch int
+		want                   bool
 	}{
 		{"equal", 20, 10, 0, 20, 10, 0, false},
 		{"greater_major", 21, 0, 0, 20, 10, 0, true},
@@ -237,8 +247,12 @@ func TestNpmExecAction_DefaultParameters(t *testing.T) {
 
 	// Create source directory with package.json
 	sourceDir := filepath.Join(ctx.WorkDir, "project")
-	os.MkdirAll(sourceDir, 0755)
-	os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{"name": "test"}`), 0644)
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{"name": "test"}`), 0644); err != nil {
+		t.Fatalf("failed to create package.json: %v", err)
+	}
 
 	// Minimal params - should use defaults for use_lockfile and ignore_scripts
 	params := map[string]interface{}{
@@ -267,8 +281,12 @@ func TestNpmExecAction_UseLockfileFalse(t *testing.T) {
 
 	// Create source directory with package.json but no lockfile
 	sourceDir := filepath.Join(ctx.WorkDir, "project")
-	os.MkdirAll(sourceDir, 0755)
-	os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{"name": "test"}`), 0644)
+	if err := os.MkdirAll(sourceDir, 0755); err != nil {
+		t.Fatalf("failed to create source dir: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(sourceDir, "package.json"), []byte(`{"name": "test"}`), 0644); err != nil {
+		t.Fatalf("failed to create package.json: %v", err)
+	}
 
 	params := map[string]interface{}{
 		"source_dir":   "project",
