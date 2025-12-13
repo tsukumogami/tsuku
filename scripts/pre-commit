@@ -1,0 +1,19 @@
+#!/bin/sh
+# A hook script to format Go code before committing.
+# If any Go files are staged, runs gofmt on them and re-stages the changes.
+
+# Get the list of staged Go files
+GO_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.go$')
+
+# Exit if no Go files are staged
+if [ -z "$GO_FILES" ]; then
+    exit 0
+fi
+
+# Format the staged Go files
+echo "$GO_FILES" | xargs gofmt -w
+
+# Re-add the formatted files to the staging area
+echo "$GO_FILES" | xargs git add
+
+exit 0
