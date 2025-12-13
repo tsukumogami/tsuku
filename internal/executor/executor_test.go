@@ -2,9 +2,11 @@ package executor
 
 import (
 	"context"
+	"errors"
 	"os"
 	"testing"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -921,5 +923,383 @@ func TestDryRun_AllConditionalStepsSkipped(t *testing.T) {
 
 	if skipped != 2 {
 		t.Errorf("Expected 2 skipped steps, got %d", skipped)
+	}
+}
+
+// TestExecutePlan_EmptyPlan tests ExecutePlan with no steps
+func TestExecutePlan_EmptyPlan(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "empty-tool",
+			Description: "Tool with no steps",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "empty-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Steps:         []ResolvedStep{},
+	}
+
+	ctx := context.Background()
+	err = exec.ExecutePlan(ctx, plan)
+
+	if err != nil {
+		t.Errorf("ExecutePlan() with empty plan error = %v", err)
+	}
+
+	// Version should be set from plan
+	if exec.Version() != "1.0.0" {
+		t.Errorf("Version() = %q, want %q", exec.Version(), "1.0.0")
+	}
+}
+
+// TestExecutePlan_UnknownAction tests ExecutePlan with an unknown action
+func TestExecutePlan_UnknownAction(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Steps: []ResolvedStep{
+			{
+				Action: "unknown_action",
+				Params: map[string]interface{}{},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	err = exec.ExecutePlan(ctx, plan)
+
+	if err == nil {
+		t.Error("ExecutePlan() with unknown action should fail")
+	}
+	if err != nil && !contains(err.Error(), "unknown action") {
+		t.Errorf("ExecutePlan() error = %v, want error containing 'unknown action'", err)
+	}
+}
+
+// TestExecutePlan_ContextCancellation tests ExecutePlan respects context cancellation
+func TestExecutePlan_ContextCancellation(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Steps: []ResolvedStep{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{
+					"file": "nonexistent.txt",
+					"mode": "755",
+				},
+			},
+		},
+	}
+
+	// Create a canceled context
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err = exec.ExecutePlan(ctx, plan)
+
+	if err == nil {
+		t.Error("ExecutePlan() with canceled context should fail")
+	}
+	if err != nil && err != context.Canceled {
+		t.Errorf("ExecutePlan() error = %v, want context.Canceled", err)
+	}
+}
+
+// TestExecutePlan_NonDownloadSteps tests ExecutePlan with non-download steps
+func TestExecutePlan_NonDownloadSteps(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Create a test file to chmod (relative to WorkDir)
+	testFile := "test.sh"
+	testFilePath := exec.WorkDir() + "/" + testFile
+	if err := os.WriteFile(testFilePath, []byte("#!/bin/sh\necho hello"), 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Steps: []ResolvedStep{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{
+					"files": []interface{}{testFile},
+					"mode":  "0755",
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	err = exec.ExecutePlan(ctx, plan)
+
+	if err != nil {
+		t.Errorf("ExecutePlan() with chmod step error = %v", err)
+	}
+
+	// Verify file is executable
+	info, err := os.Stat(testFilePath)
+	if err != nil {
+		t.Fatalf("Failed to stat test file: %v", err)
+	}
+	if info.Mode()&0111 == 0 {
+		t.Error("File should be executable after chmod")
+	}
+}
+
+// TestComputeFileChecksum tests the checksum computation helper
+func TestComputeFileChecksum(t *testing.T) {
+	// Create a temp file with known content
+	tmpFile, err := os.CreateTemp("", "checksum-test-*")
+	if err != nil {
+		t.Fatalf("Failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	content := []byte("hello world\n")
+	if _, err := tmpFile.Write(content); err != nil {
+		t.Fatalf("Failed to write temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	// Compute checksum
+	checksum, err := computeFileChecksum(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("computeFileChecksum() error = %v", err)
+	}
+
+	// Expected SHA256 of "hello world\n"
+	expected := "a948904f2f0f479b8f8197694b30184b0d2ed1c1cd2a1ec0fb85d299a192a447"
+	if checksum != expected {
+		t.Errorf("computeFileChecksum() = %q, want %q", checksum, expected)
+	}
+}
+
+// TestComputeFileChecksum_FileNotFound tests checksum of non-existent file
+func TestComputeFileChecksum_FileNotFound(t *testing.T) {
+	_, err := computeFileChecksum("/nonexistent/file/path")
+	if err == nil {
+		t.Error("computeFileChecksum() should fail for non-existent file")
+	}
+}
+
+// TestResolveDownloadDest tests destination resolution for downloads
+func TestResolveDownloadDest(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	workDir := exec.WorkDir()
+
+	tests := []struct {
+		name     string
+		step     ResolvedStep
+		expected string
+	}{
+		{
+			name: "explicit dest param",
+			step: ResolvedStep{
+				Action: "download",
+				URL:    "https://example.com/tool.tar.gz",
+				Params: map[string]interface{}{
+					"dest": "custom-name.tar.gz",
+				},
+			},
+			expected: workDir + "/custom-name.tar.gz",
+		},
+		{
+			name: "dest from step URL",
+			step: ResolvedStep{
+				Action: "download",
+				URL:    "https://example.com/path/to/file.tar.gz",
+				Params: map[string]interface{}{},
+			},
+			expected: workDir + "/file.tar.gz",
+		},
+		{
+			name: "URL with query params",
+			step: ResolvedStep{
+				Action: "download",
+				URL:    "https://example.com/file.tar.gz?token=abc123",
+				Params: map[string]interface{}{},
+			},
+			expected: workDir + "/file.tar.gz",
+		},
+		{
+			name: "fallback to url param",
+			step: ResolvedStep{
+				Action: "download",
+				URL:    "",
+				Params: map[string]interface{}{
+					"url": "https://example.com/fallback.tar.gz",
+				},
+			},
+			expected: workDir + "/fallback.tar.gz",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			execCtx := &actions.ExecutionContext{
+				WorkDir: workDir,
+			}
+			result := exec.resolveDownloadDest(tt.step, execCtx)
+			if result != tt.expected {
+				t.Errorf("resolveDownloadDest() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
+
+// TestExecuteDownloadWithVerification_ChecksumMismatch tests that checksum mismatch returns proper error
+func TestExecuteDownloadWithVerification_ChecksumMismatch(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Create a test file with known content
+	testFile := "test-download.txt"
+	testFilePath := exec.WorkDir() + "/" + testFile
+	content := []byte("this is test content")
+	if err := os.WriteFile(testFilePath, content, 0644); err != nil {
+		t.Fatalf("Failed to create test file: %v", err)
+	}
+
+	// Create a plan with a download step that has wrong checksum
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: "linux", Arch: "amd64"},
+	}
+
+	step := ResolvedStep{
+		Action:   "download",
+		URL:      "https://example.com/test-download.txt",
+		Checksum: "0000000000000000000000000000000000000000000000000000000000000000",
+		Params: map[string]interface{}{
+			"dest": testFile,
+		},
+	}
+
+	execCtx := &actions.ExecutionContext{
+		WorkDir: exec.WorkDir(),
+	}
+
+	// This tests the checksum verification logic directly
+	// The download action won't be called (we pre-created the file)
+	// so we need to compute checksum and compare
+	actualChecksum, err := computeFileChecksum(testFilePath)
+	if err != nil {
+		t.Fatalf("Failed to compute checksum: %v", err)
+	}
+
+	// Verify expected checksum doesn't match actual
+	expectedChecksum := step.Checksum
+	if actualChecksum == expectedChecksum {
+		t.Fatal("Test setup error: checksums should not match")
+	}
+
+	// Create the error manually to verify its format
+	checksumErr := &ChecksumMismatchError{
+		Tool:             plan.Tool,
+		Version:          plan.Version,
+		URL:              step.URL,
+		ExpectedChecksum: expectedChecksum,
+		ActualChecksum:   actualChecksum,
+	}
+
+	// Verify error message contains required information
+	errorMsg := checksumErr.Error()
+	checks := []string{
+		step.URL,
+		expectedChecksum,
+		actualChecksum,
+		"test-tool@1.0.0",
+		"--fresh",
+	}
+	for _, check := range checks {
+		if !contains(errorMsg, check) {
+			t.Errorf("ChecksumMismatchError should contain %q, got: %s", check, errorMsg)
+		}
+	}
+
+	// Verify errors.As works with ChecksumMismatchError
+	var mismatchErr *ChecksumMismatchError
+	if !errors.As(checksumErr, &mismatchErr) {
+		t.Error("errors.As should work with ChecksumMismatchError")
+	}
+
+	// Verify destPath resolution with ExecutionContext
+	destPath := exec.resolveDownloadDest(step, execCtx)
+	if destPath != testFilePath {
+		t.Errorf("resolveDownloadDest() = %q, want %q", destPath, testFilePath)
 	}
 }

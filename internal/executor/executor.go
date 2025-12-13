@@ -2,7 +2,10 @@ package executor
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -429,4 +432,151 @@ func formatActionDescription(action string, params map[string]interface{}, vars 
 		}
 	}
 	return ""
+}
+
+// ExecutePlan executes an installation plan, verifying checksums for download steps.
+// This is the plan-based execution path that will eventually replace Execute().
+// All downloads are verified against the checksums recorded in the plan.
+// Returns ChecksumMismatchError if a download's checksum doesn't match the plan.
+func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) error {
+	fmt.Printf("Executing plan: %s@%s\n", plan.Tool, plan.Version)
+	fmt.Printf("   Work directory: %s\n", e.workDir)
+
+	// Store version for later use
+	e.version = plan.Version
+
+	// Create execution context from plan
+	execCtx := &actions.ExecutionContext{
+		Context:          ctx,
+		WorkDir:          e.workDir,
+		InstallDir:       e.installDir,
+		ToolInstallDir:   "",
+		ToolsDir:         e.toolsDir,
+		DownloadCacheDir: e.downloadCacheDir,
+		Version:          plan.Version,
+		VersionTag:       plan.Version, // Plan doesn't track tag separately
+		OS:               plan.Platform.OS,
+		Arch:             plan.Platform.Arch,
+		Recipe:           e.recipe,
+		ExecPaths:        e.execPaths,
+		Logger:           log.Default(),
+	}
+	e.ctx = execCtx
+
+	fmt.Println()
+
+	// Execute each step
+	for i, step := range plan.Steps {
+		// Check for context cancellation
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		fmt.Printf("Step %d/%d: %s\n", i+1, len(plan.Steps), step.Action)
+
+		// Get action
+		action := actions.Get(step.Action)
+		if action == nil {
+			return fmt.Errorf("unknown action: %s", step.Action)
+		}
+
+		// For download steps with checksums, verify after download
+		if step.Action == "download" && step.Checksum != "" {
+			if err := e.executeDownloadWithVerification(ctx, execCtx, step, plan); err != nil {
+				return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
+			}
+		} else {
+			// Execute other steps normally
+			if err := action.Execute(execCtx, step.Params); err != nil {
+				return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
+			}
+		}
+
+		fmt.Println()
+	}
+
+	return nil
+}
+
+// executeDownloadWithVerification downloads a file and verifies its checksum against the plan.
+func (e *Executor) executeDownloadWithVerification(
+	ctx context.Context,
+	execCtx *actions.ExecutionContext,
+	step ResolvedStep,
+	plan *InstallationPlan,
+) error {
+	// Execute the download action
+	action := actions.Get("download")
+	if err := action.Execute(execCtx, step.Params); err != nil {
+		return err
+	}
+
+	// Determine the destination file path
+	destPath := e.resolveDownloadDest(step, execCtx)
+
+	// Compute checksum of downloaded file
+	actualChecksum, err := computeFileChecksum(destPath)
+	if err != nil {
+		return fmt.Errorf("failed to compute checksum: %w", err)
+	}
+
+	// Verify checksum matches plan
+	expectedChecksum := strings.ToLower(strings.TrimSpace(step.Checksum))
+	if actualChecksum != expectedChecksum {
+		return &ChecksumMismatchError{
+			Tool:             plan.Tool,
+			Version:          plan.Version,
+			URL:              step.URL,
+			ExpectedChecksum: expectedChecksum,
+			ActualChecksum:   actualChecksum,
+		}
+	}
+
+	fmt.Printf("   Checksum verified\n")
+	return nil
+}
+
+// resolveDownloadDest determines the destination file path for a download step.
+func (e *Executor) resolveDownloadDest(step ResolvedStep, execCtx *actions.ExecutionContext) string {
+	// Check for explicit dest in params
+	if dest, ok := step.Params["dest"].(string); ok && dest != "" {
+		return filepath.Join(execCtx.WorkDir, dest)
+	}
+
+	// Fall back to basename of URL
+	if step.URL != "" {
+		dest := filepath.Base(step.URL)
+		// Remove query parameters if present
+		if idx := strings.Index(dest, "?"); idx != -1 {
+			dest = dest[:idx]
+		}
+		return filepath.Join(execCtx.WorkDir, dest)
+	}
+
+	// Last resort: check url param
+	if url, ok := step.Params["url"].(string); ok {
+		dest := filepath.Base(url)
+		if idx := strings.Index(dest, "?"); idx != -1 {
+			dest = dest[:idx]
+		}
+		return filepath.Join(execCtx.WorkDir, dest)
+	}
+
+	return ""
+}
+
+// computeFileChecksum computes the SHA256 checksum of a file.
+func computeFileChecksum(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer file.Close()
+
+	h := sha256.New()
+	if _, err := io.Copy(h, file); err != nil {
+		return "", fmt.Errorf("failed to hash file: %w", err)
+	}
+
+	return hex.EncodeToString(h.Sum(nil)), nil
 }
