@@ -626,6 +626,16 @@ func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildRe
 
 	b.reportDone(fmt.Sprintf("v%s", formulaInfo.Versions.Stable))
 
+	// Check bottle availability across platforms
+	b.reportStart("Checking bottle availability")
+	availability, err := b.checkBottleAvailability(ctx, formula, formulaInfo.Versions.Stable)
+	if err != nil {
+		// Non-fatal: continue with generation but log the error
+		b.reportDone("check skipped")
+	} else {
+		b.reportDone(fmt.Sprintf("%d/%d platforms", len(availability.Available), len(targetPlatforms)))
+	}
+
 	// Build generation context
 	genCtx := &homebrewGenContext{
 		formula:     formula,
@@ -681,6 +691,18 @@ func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildRe
 
 	if repairAttempts > 0 {
 		result.Warnings = append(result.Warnings, fmt.Sprintf("Recipe repaired after %d attempt(s)", repairAttempts))
+	}
+
+	// Add warnings for missing platform bottles
+	if availability != nil && len(availability.Unavailable) > 0 {
+		for _, platform := range availability.Unavailable {
+			displayName := platformDisplayNames[platform]
+			if displayName == "" {
+				displayName = platform
+			}
+			result.Warnings = append(result.Warnings,
+				fmt.Sprintf("No bottle available for %s - recipe may not work on this platform", displayName))
+		}
 	}
 
 	return result, nil
@@ -968,6 +990,144 @@ func isValidPlatformTag(tag string) bool {
 		"monterey":       true,
 	}
 	return validTags[tag]
+}
+
+// targetPlatforms lists all platforms tsuku supports for Homebrew bottles.
+var targetPlatforms = []string{
+	"arm64_sonoma", // macOS ARM64
+	"sonoma",       // macOS x86_64
+	"x86_64_linux", // Linux x86_64
+	"arm64_linux",  // Linux ARM64
+}
+
+// platformDisplayNames provides human-readable names for platform tags.
+var platformDisplayNames = map[string]string{
+	"arm64_sonoma": "macOS ARM64",
+	"sonoma":       "macOS x86_64",
+	"x86_64_linux": "Linux x86_64",
+	"arm64_linux":  "Linux ARM64",
+}
+
+// BottleAvailability tracks which platforms have bottles available.
+type BottleAvailability struct {
+	Available   []string // Platforms with bottles
+	Unavailable []string // Platforms without bottles
+}
+
+// checkBottleAvailability queries GHCR to check bottle availability for all platforms.
+// It returns availability info and any platforms that are missing bottles.
+func (b *HomebrewBuilder) checkBottleAvailability(ctx context.Context, formula, version string) (*BottleAvailability, error) {
+	result := &BottleAvailability{
+		Available:   make([]string, 0),
+		Unavailable: make([]string, 0),
+	}
+
+	// Get GHCR token for the formula
+	token, err := b.getGHCRToken(formula)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get GHCR token: %w", err)
+	}
+
+	// Fetch the manifest to check available platforms
+	manifest, err := b.fetchGHCRManifest(ctx, formula, version, token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch manifest: %w", err)
+	}
+
+	// Build a set of available platform tags from manifest
+	availableTags := make(map[string]bool)
+	for _, entry := range manifest.Manifests {
+		if refName, ok := entry.Annotations["org.opencontainers.image.ref.name"]; ok {
+			// ref.name format is "{version}.{platform_tag}" e.g., "1.0.0.arm64_sonoma"
+			// Version may contain dots, so find the platform tag at the end
+			for _, platform := range targetPlatforms {
+				if strings.HasSuffix(refName, "."+platform) {
+					availableTags[platform] = true
+					break
+				}
+			}
+		}
+	}
+
+	// Check each target platform
+	for _, platform := range targetPlatforms {
+		if availableTags[platform] {
+			result.Available = append(result.Available, platform)
+		} else {
+			result.Unavailable = append(result.Unavailable, platform)
+		}
+	}
+
+	return result, nil
+}
+
+// ghcrManifest represents the GHCR manifest index structure.
+type ghcrManifest struct {
+	Manifests []ghcrManifestEntry `json:"manifests"`
+}
+
+// ghcrManifestEntry represents a single manifest entry.
+type ghcrManifestEntry struct {
+	Digest      string            `json:"digest"`
+	Annotations map[string]string `json:"annotations"`
+}
+
+// getGHCRToken obtains an anonymous token for GHCR access.
+func (b *HomebrewBuilder) getGHCRToken(formula string) (string, error) {
+	tokenURL := fmt.Sprintf("https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/%s:pull", formula)
+
+	resp, err := b.httpClient.Get(tokenURL)
+	if err != nil {
+		return "", fmt.Errorf("token request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("token request returned %d", resp.StatusCode)
+	}
+
+	var tokenResp struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return "", fmt.Errorf("failed to parse token response: %w", err)
+	}
+
+	if tokenResp.Token == "" {
+		return "", fmt.Errorf("empty token in response")
+	}
+
+	return tokenResp.Token, nil
+}
+
+// fetchGHCRManifest fetches the GHCR manifest for a formula version.
+func (b *HomebrewBuilder) fetchGHCRManifest(ctx context.Context, formula, version, token string) (*ghcrManifest, error) {
+	manifestURL := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/manifests/%s", formula, version)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", manifestURL, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Accept", "application/vnd.oci.image.index.v1+json")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("manifest request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("manifest request returned %d", resp.StatusCode)
+	}
+
+	var manifest ghcrManifest
+	if err := json.NewDecoder(resp.Body).Decode(&manifest); err != nil {
+		return nil, fmt.Errorf("failed to parse manifest: %w", err)
+	}
+
+	return &manifest, nil
 }
 
 // fetchFormulaJSON fetches formula JSON for the LLM.

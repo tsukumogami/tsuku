@@ -43,9 +43,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class A488,A489 done
-    class A490 ready
-    class A491,A492,A493,A494 blocked
+    class A488,A489,A490 done
+    class A491 ready
+    class A492,A493,A494 blocked
     class A495,A496,A497,A498 needsDesign
 ```
 

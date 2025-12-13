@@ -1,0 +1,103 @@
+name: Homebrew Builder Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'internal/builders/homebrew*.go'
+      - 'internal/actions/homebrew*.go'
+      - '.github/workflows/homebrew-builder-tests.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/builders/homebrew*.go'
+      - 'internal/actions/homebrew*.go'
+      - '.github/workflows/homebrew-builder-tests.yml'
+
+jobs:
+  # Run Homebrew builder unit tests on macOS
+  macos-unit-tests:
+    name: macOS Unit Tests
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Run Homebrew builder tests
+        run: go test -v ./internal/builders/ -run TestHomebrew
+
+      - name: Run Homebrew action tests
+        run: go test -v ./internal/actions/ -run TestHomebrewBottle
+
+  # Integration test: install a Homebrew bottle on macOS
+  macos-integration:
+    name: macOS Homebrew Integration
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
+
+      # Create a test recipe that uses homebrew_bottle action
+      - name: Create test recipe
+        run: |
+          mkdir -p ~/.tsuku/recipes
+          cat > ~/.tsuku/recipes/tree.toml << 'RECIPE_EOF'
+          [metadata]
+          name = "tree"
+          description = "Display directories as trees"
+          homepage = "https://oldmanprogrammer.net/source.php?dir=projects/tree"
+
+          [version]
+          source = "homebrew"
+          formula = "tree"
+
+          [[steps]]
+          action = "homebrew_bottle"
+          formula = "tree"
+
+          [[steps]]
+          action = "install_binaries"
+          binaries = ["bin/tree"]
+
+          [verify]
+          command = "tree --version"
+          RECIPE_EOF
+          # Remove leading whitespace from TOML file (heredoc indentation artifact)
+          sed -i '' 's/^          //' ~/.tsuku/recipes/tree.toml
+          echo "Created recipe:"
+          cat ~/.tsuku/recipes/tree.toml
+
+      # Test installing a tool that uses homebrew_bottle action
+      - name: Install tree via Homebrew bottle
+        run: ./tsuku install --force tree
+
+      - name: Verify installation
+        run: |
+          # Check that tree binary exists and is executable
+          if [ -x ~/.tsuku/tools/current/tree ]; then
+            echo "tree binary installed successfully"
+            ~/.tsuku/tools/current/tree --version
+          else
+            echo "tree installation verification failed"
+            ls -la ~/.tsuku/tools/current/ || true
+            ls -la ~/.tsuku/tools/ || true
+            exit 1
+          fi
