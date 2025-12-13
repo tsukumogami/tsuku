@@ -1,6 +1,12 @@
 package executor
 
-import "time"
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/tsukumogami/tsuku/internal/actions"
+)
 
 // PlanFormatVersion is the current version of the installation plan format.
 // Readers should reject plans with unsupported versions.
@@ -112,4 +118,112 @@ func IsActionEvaluable(action string) bool {
 		return false
 	}
 	return evaluable
+}
+
+// ValidationError describes a plan validation failure.
+type ValidationError struct {
+	Step    int    // 0-indexed step number
+	Action  string // Action name that failed validation
+	Message string // Human-readable error description
+}
+
+// Error implements the error interface for ValidationError.
+func (e *ValidationError) Error() string {
+	return fmt.Sprintf("step %d (%s): %s", e.Step, e.Action, e.Message)
+}
+
+// PlanValidationError wraps multiple validation errors into a single error.
+type PlanValidationError struct {
+	Errors []ValidationError
+}
+
+// Error implements the error interface for PlanValidationError.
+func (e *PlanValidationError) Error() string {
+	if len(e.Errors) == 0 {
+		return "plan validation failed"
+	}
+	if len(e.Errors) == 1 {
+		return fmt.Sprintf("invalid plan: %s", e.Errors[0].Error())
+	}
+	var msgs []string
+	for _, err := range e.Errors {
+		msgs = append(msgs, err.Error())
+	}
+	return fmt.Sprintf("invalid plan: %d errors:\n  - %s", len(e.Errors), strings.Join(msgs, "\n  - "))
+}
+
+// ValidatePlan checks that a plan contains only primitive actions and that
+// download actions have required checksum data. Returns nil if the plan is valid,
+// or a PlanValidationError containing all validation failures.
+//
+// Validation rules:
+//   - All step actions must be primitives (as defined by actions.IsPrimitive)
+//   - Download actions must have a non-empty Checksum field (security requirement)
+//   - Format version must be supported (currently only version 2)
+func ValidatePlan(plan *InstallationPlan) error {
+	var errors []ValidationError
+
+	// Check format version
+	if plan.FormatVersion < 2 {
+		errors = append(errors, ValidationError{
+			Step:    -1,
+			Action:  "",
+			Message: fmt.Sprintf("unsupported plan format version %d (expected >= 2)", plan.FormatVersion),
+		})
+	}
+
+	// Validate each step
+	for i, step := range plan.Steps {
+		// Check if action is a primitive
+		if !actions.IsPrimitive(step.Action) {
+			// Check if it's a known composite action
+			if actions.IsDecomposable(step.Action) {
+				errors = append(errors, ValidationError{
+					Step:    i,
+					Action:  step.Action,
+					Message: fmt.Sprintf("composite action %q should have been decomposed at eval time", step.Action),
+				})
+			} else if actions.Get(step.Action) != nil {
+				errors = append(errors, ValidationError{
+					Step:    i,
+					Action:  step.Action,
+					Message: fmt.Sprintf("action %q is neither primitive nor decomposable", step.Action),
+				})
+			} else {
+				errors = append(errors, ValidationError{
+					Step:    i,
+					Action:  step.Action,
+					Message: fmt.Sprintf("unknown action %q", step.Action),
+				})
+			}
+		}
+
+		// Check checksum for download actions
+		if step.Action == "download" && step.Checksum == "" {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: "download action missing checksum (security requirement)",
+			})
+		}
+	}
+
+	if len(errors) > 0 {
+		return &PlanValidationError{Errors: errors}
+	}
+	return nil
+}
+
+// ValidatePlanStrict is a stricter version of ValidatePlan that returns
+// individual errors for inspection. It returns the same errors as ValidatePlan
+// but in slice form for programmatic access.
+func ValidatePlanStrict(plan *InstallationPlan) []ValidationError {
+	err := ValidatePlan(plan)
+	if err == nil {
+		return nil
+	}
+	if pve, ok := err.(*PlanValidationError); ok {
+		return pve.Errors
+	}
+	return nil
 }
