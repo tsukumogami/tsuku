@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/log"
 )
 
 // ContainerLabelPrefix is the label prefix used to identify tsuku validation containers.
@@ -20,17 +22,6 @@ const TempDirPrefix = "tsuku-validate-"
 // DefaultTempDirMaxAge is the maximum age for temp directories before cleanup.
 const DefaultTempDirMaxAge = 1 * time.Hour
 
-// CleanupLogger defines the logging interface for cleanup operations.
-// This allows integration with different logging backends.
-type CleanupLogger interface {
-	Debug(msg string, args ...any)
-}
-
-// noopLogger is a logger that discards all messages.
-type noopLogger struct{}
-
-func (noopLogger) Debug(string, ...any) {}
-
 // Cleaner handles cleanup of orphaned validation artifacts.
 // It removes:
 // - Exited/dead containers with the tsuku-validate label
@@ -40,7 +31,7 @@ type Cleaner struct {
 	lockManager   *LockManager
 	tempDir       string
 	maxTempDirAge time.Duration
-	logger        CleanupLogger
+	logger        log.Logger
 
 	// For testing: allow overriding command execution
 	execCommand func(ctx context.Context, name string, args ...string) ([]byte, error)
@@ -50,7 +41,7 @@ type Cleaner struct {
 type CleanerOption func(*Cleaner)
 
 // WithLogger sets a logger for cleanup operations.
-func WithLogger(logger CleanupLogger) CleanerOption {
+func WithLogger(logger log.Logger) CleanerOption {
 	return func(c *Cleaner) {
 		c.logger = logger
 	}
@@ -77,7 +68,7 @@ func NewCleaner(detector *RuntimeDetector, lockManager *LockManager, opts ...Cle
 		lockManager:   lockManager,
 		tempDir:       os.TempDir(),
 		maxTempDirAge: DefaultTempDirMaxAge,
-		logger:        noopLogger{},
+		logger:        log.NewNoop(),
 		execCommand:   defaultExecCommand,
 	}
 	for _, opt := range opts {
