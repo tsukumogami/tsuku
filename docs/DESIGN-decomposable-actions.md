@@ -1,6 +1,6 @@
 # Design: Decomposable Actions and Primitive Operations
 
-- **Status**: Proposed
+- **Status**: Approved
 - **Issue**: #368
 - **Author**: @dangazineu
 - **Created**: 2025-12-12
