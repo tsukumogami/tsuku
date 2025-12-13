@@ -6,8 +6,18 @@ import (
 	"testing"
 )
 
+// createSecureCacheDir creates a cache directory with proper 0700 permissions for testing
+func createSecureCacheDir(t *testing.T) string {
+	t.Helper()
+	cacheDir := filepath.Join(t.TempDir(), "cache")
+	if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		t.Fatalf("failed to create secure cache dir: %v", err)
+	}
+	return cacheDir
+}
+
 func TestDownloadCache_CacheMiss(t *testing.T) {
-	cacheDir := t.TempDir()
+	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
 	destPath := filepath.Join(t.TempDir(), "output.txt")
@@ -21,7 +31,7 @@ func TestDownloadCache_CacheMiss(t *testing.T) {
 }
 
 func TestDownloadCache_SaveAndCheck(t *testing.T) {
-	cacheDir := t.TempDir()
+	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
 	// Create a source file to cache
@@ -61,7 +71,7 @@ func TestDownloadCache_SaveAndCheck(t *testing.T) {
 }
 
 func TestDownloadCache_ChecksumVerification(t *testing.T) {
-	cacheDir := t.TempDir()
+	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
 	// Create source file
@@ -117,7 +127,7 @@ func TestDownloadCache_ChecksumVerification(t *testing.T) {
 }
 
 func TestDownloadCache_Clear(t *testing.T) {
-	cacheDir := t.TempDir()
+	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
 	// Create source file and cache it
@@ -162,7 +172,7 @@ func TestDownloadCache_Clear(t *testing.T) {
 }
 
 func TestDownloadCache_Info(t *testing.T) {
-	cacheDir := t.TempDir()
+	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
 	// Empty cache
@@ -202,7 +212,7 @@ func TestDownloadCache_Info(t *testing.T) {
 }
 
 func TestDownloadCache_DifferentURLsDifferentCache(t *testing.T) {
-	cacheDir := t.TempDir()
+	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
 	// Create two source files with different content
@@ -253,7 +263,7 @@ func TestDownloadCache_DifferentURLsDifferentCache(t *testing.T) {
 }
 
 func TestDownloadCache_CorruptedFile(t *testing.T) {
-	cacheDir := t.TempDir()
+	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
 	// Create and cache a file
@@ -287,7 +297,7 @@ func TestDownloadCache_CorruptedFile(t *testing.T) {
 }
 
 func TestDownloadCache_ClearEmpty(t *testing.T) {
-	cacheDir := t.TempDir()
+	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
 	// Clear on empty cache should not error
@@ -302,5 +312,281 @@ func TestDownloadCache_ClearNonexistentDir(t *testing.T) {
 	// Clear on nonexistent directory should not error
 	if err := cache.Clear(); err != nil {
 		t.Fatalf("Clear() on nonexistent dir error = %v", err)
+	}
+}
+
+func TestContainsSymlink(t *testing.T) {
+	tests := []struct {
+		name        string
+		setup       func(t *testing.T) string
+		wantSymlink bool
+		wantErr     bool
+	}{
+		{
+			name: "regular directory",
+			setup: func(t *testing.T) string {
+				return t.TempDir()
+			},
+			wantSymlink: false,
+			wantErr:     false,
+		},
+		{
+			name: "symlink to directory",
+			setup: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				targetDir := filepath.Join(tmpDir, "target")
+				if err := os.MkdirAll(targetDir, 0755); err != nil {
+					t.Fatalf("failed to create target dir: %v", err)
+				}
+				symlinkDir := filepath.Join(tmpDir, "symlink")
+				if err := os.Symlink(targetDir, symlinkDir); err != nil {
+					t.Fatalf("failed to create symlink: %v", err)
+				}
+				return symlinkDir
+			},
+			wantSymlink: true,
+			wantErr:     false,
+		},
+		{
+			name: "nested path with symlink parent",
+			setup: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				targetDir := filepath.Join(tmpDir, "target")
+				if err := os.MkdirAll(targetDir, 0755); err != nil {
+					t.Fatalf("failed to create target dir: %v", err)
+				}
+				symlinkDir := filepath.Join(tmpDir, "symlink")
+				if err := os.Symlink(targetDir, symlinkDir); err != nil {
+					t.Fatalf("failed to create symlink: %v", err)
+				}
+				// Return a nested path under the symlink
+				return filepath.Join(symlinkDir, "nested", "path")
+			},
+			wantSymlink: true,
+			wantErr:     false,
+		},
+		{
+			name: "nonexistent path (no symlink)",
+			setup: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				return filepath.Join(tmpDir, "does", "not", "exist")
+			},
+			wantSymlink: false,
+			wantErr:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := tt.setup(t)
+			gotSymlink, err := containsSymlink(path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("containsSymlink() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if gotSymlink != tt.wantSymlink {
+				t.Errorf("containsSymlink() = %v, want %v", gotSymlink, tt.wantSymlink)
+			}
+		})
+	}
+}
+
+func TestValidateCacheDirPermissions(t *testing.T) {
+	tests := []struct {
+		name    string
+		setup   func(t *testing.T) string
+		wantErr bool
+		errMsg  string
+	}{
+		{
+			name: "nonexistent directory (ok)",
+			setup: func(t *testing.T) string {
+				return filepath.Join(t.TempDir(), "does-not-exist")
+			},
+			wantErr: false,
+		},
+		{
+			name: "directory with 0700 permissions (ok)",
+			setup: func(t *testing.T) string {
+				dir := filepath.Join(t.TempDir(), "secure")
+				if err := os.MkdirAll(dir, 0700); err != nil {
+					t.Fatalf("failed to create dir: %v", err)
+				}
+				return dir
+			},
+			wantErr: false,
+		},
+		{
+			name: "directory with 0755 permissions (insecure)",
+			setup: func(t *testing.T) string {
+				dir := filepath.Join(t.TempDir(), "insecure")
+				if err := os.MkdirAll(dir, 0755); err != nil {
+					t.Fatalf("failed to create dir: %v", err)
+				}
+				return dir
+			},
+			wantErr: true,
+			errMsg:  "insecure permissions",
+		},
+		{
+			name: "directory with 0750 permissions (insecure)",
+			setup: func(t *testing.T) string {
+				dir := filepath.Join(t.TempDir(), "group-readable")
+				if err := os.MkdirAll(dir, 0750); err != nil {
+					t.Fatalf("failed to create dir: %v", err)
+				}
+				return dir
+			},
+			wantErr: true,
+			errMsg:  "insecure permissions",
+		},
+		{
+			name: "symlink instead of directory",
+			setup: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				targetDir := filepath.Join(tmpDir, "target")
+				if err := os.MkdirAll(targetDir, 0700); err != nil {
+					t.Fatalf("failed to create target dir: %v", err)
+				}
+				symlinkDir := filepath.Join(tmpDir, "symlink")
+				if err := os.Symlink(targetDir, symlinkDir); err != nil {
+					t.Fatalf("failed to create symlink: %v", err)
+				}
+				return symlinkDir
+			},
+			wantErr: true,
+			errMsg:  "is a symlink",
+		},
+		{
+			name: "file instead of directory",
+			setup: func(t *testing.T) string {
+				tmpDir := t.TempDir()
+				filePath := filepath.Join(tmpDir, "file")
+				if err := os.WriteFile(filePath, []byte("test"), 0700); err != nil {
+					t.Fatalf("failed to create file: %v", err)
+				}
+				return filePath
+			},
+			wantErr: true,
+			errMsg:  "not a directory",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			path := tt.setup(t)
+			err := validateCacheDirPermissions(path)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateCacheDirPermissions() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.wantErr && tt.errMsg != "" {
+				if err == nil || !containsString(err.Error(), tt.errMsg) {
+					t.Errorf("validateCacheDirPermissions() error = %v, want error containing %q", err, tt.errMsg)
+				}
+			}
+		})
+	}
+}
+
+func TestDownloadCache_SaveRejectsSymlink(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a target directory and a symlink to it
+	targetDir := filepath.Join(tmpDir, "target")
+	if err := os.MkdirAll(targetDir, 0700); err != nil {
+		t.Fatalf("failed to create target dir: %v", err)
+	}
+	symlinkDir := filepath.Join(tmpDir, "symlink")
+	if err := os.Symlink(targetDir, symlinkDir); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	// Create a source file
+	sourcePath := filepath.Join(tmpDir, "source.txt")
+	if err := os.WriteFile(sourcePath, []byte("test"), 0644); err != nil {
+		t.Fatalf("failed to create source file: %v", err)
+	}
+
+	// Try to save to cache with symlink path
+	cache := NewDownloadCache(symlinkDir)
+	err := cache.Save("https://example.com/file.tar.gz", sourcePath, "")
+	if err == nil {
+		t.Error("expected Save() to reject symlink cache path")
+	}
+	if err != nil && !containsString(err.Error(), "symlink") {
+		t.Errorf("expected symlink error, got: %v", err)
+	}
+}
+
+func TestDownloadCache_CheckRejectsSymlink(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create a target directory and a symlink to it
+	targetDir := filepath.Join(tmpDir, "target")
+	if err := os.MkdirAll(targetDir, 0700); err != nil {
+		t.Fatalf("failed to create target dir: %v", err)
+	}
+	symlinkDir := filepath.Join(tmpDir, "symlink")
+	if err := os.Symlink(targetDir, symlinkDir); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	// Try to check cache with symlink path
+	cache := NewDownloadCache(symlinkDir)
+	destPath := filepath.Join(tmpDir, "output.txt")
+	_, err := cache.Check("https://example.com/file.tar.gz", destPath, "", "")
+	if err == nil {
+		t.Error("expected Check() to reject symlink cache path")
+	}
+	if err != nil && !containsString(err.Error(), "symlink") {
+		t.Errorf("expected symlink error, got: %v", err)
+	}
+}
+
+func TestDownloadCache_SaveRejectsInsecurePermissions(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create cache directory with insecure permissions
+	cacheDir := filepath.Join(tmpDir, "cache")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatalf("failed to create cache dir: %v", err)
+	}
+
+	// Create a source file
+	sourcePath := filepath.Join(tmpDir, "source.txt")
+	if err := os.WriteFile(sourcePath, []byte("test"), 0644); err != nil {
+		t.Fatalf("failed to create source file: %v", err)
+	}
+
+	// Try to save to cache with insecure permissions
+	cache := NewDownloadCache(cacheDir)
+	err := cache.Save("https://example.com/file.tar.gz", sourcePath, "")
+	if err == nil {
+		t.Error("expected Save() to reject insecure permissions")
+	}
+	if err != nil && !containsString(err.Error(), "insecure permissions") {
+		t.Errorf("expected insecure permissions error, got: %v", err)
+	}
+}
+
+func TestDownloadCache_CheckRejectsInsecurePermissions(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create cache directory with insecure permissions
+	cacheDir := filepath.Join(tmpDir, "cache")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		t.Fatalf("failed to create cache dir: %v", err)
+	}
+
+	// Try to check cache with insecure permissions
+	cache := NewDownloadCache(cacheDir)
+	destPath := filepath.Join(tmpDir, "output.txt")
+	_, err := cache.Check("https://example.com/file.tar.gz", destPath, "", "")
+	if err == nil {
+		t.Error("expected Check() to reject insecure permissions")
+	}
+	if err != nil && !containsString(err.Error(), "insecure permissions") {
+		t.Errorf("expected insecure permissions error, got: %v", err)
 	}
 }

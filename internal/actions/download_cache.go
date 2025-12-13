@@ -51,6 +51,18 @@ func (c *DownloadCache) cachePaths(url string) (filePath, metaPath string) {
 // If checksum is provided, it verifies the cached file matches before returning.
 // Returns (found, error) where found indicates cache hit.
 func (c *DownloadCache) Check(url, destPath, expectedChecksum, checksumAlgo string) (bool, error) {
+	// Security: Check for symlinks in cache path
+	if hasSymlink, err := containsSymlink(c.cacheDir); err != nil {
+		return false, fmt.Errorf("failed to check cache path for symlinks: %w", err)
+	} else if hasSymlink {
+		return false, fmt.Errorf("refusing to read from cache: path contains symlink: %s", c.cacheDir)
+	}
+
+	// Security: Validate directory permissions
+	if err := validateCacheDirPermissions(c.cacheDir); err != nil {
+		return false, fmt.Errorf("cache directory security check failed: %w", err)
+	}
+
 	filePath, metaPath := c.cachePaths(url)
 
 	// Check if cache entry exists
@@ -99,8 +111,20 @@ func (c *DownloadCache) Check(url, destPath, expectedChecksum, checksumAlgo stri
 // The file at sourcePath is copied to the cache.
 // checksum is optional and stored for reference.
 func (c *DownloadCache) Save(url, sourcePath, checksum string) error {
-	// Ensure cache directory exists
-	if err := os.MkdirAll(c.cacheDir, 0755); err != nil {
+	// Security: Check for symlinks in cache path
+	if hasSymlink, err := containsSymlink(c.cacheDir); err != nil {
+		return fmt.Errorf("failed to check cache path for symlinks: %w", err)
+	} else if hasSymlink {
+		return fmt.Errorf("refusing to write to cache: path contains symlink: %s", c.cacheDir)
+	}
+
+	// Security: Validate existing directory permissions
+	if err := validateCacheDirPermissions(c.cacheDir); err != nil {
+		return fmt.Errorf("cache directory security check failed: %w", err)
+	}
+
+	// Ensure cache directory exists with secure permissions (0700)
+	if err := os.MkdirAll(c.cacheDir, 0700); err != nil {
 		return fmt.Errorf("failed to create cache directory: %w", err)
 	}
 
@@ -282,4 +306,69 @@ func computeSHA256(path string) (string, error) {
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// containsSymlink checks if a path or any of its parent components is a symlink.
+// This prevents symlink attacks where an attacker could redirect cache writes.
+func containsSymlink(path string) (bool, error) {
+	// Clean and make absolute
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return false, err
+	}
+
+	// Check each component of the path
+	current := absPath
+	for current != "/" && current != "." {
+		info, err := os.Lstat(current)
+		if err != nil {
+			if os.IsNotExist(err) {
+				// Path doesn't exist yet, check parent
+				current = filepath.Dir(current)
+				continue
+			}
+			return false, err
+		}
+
+		if info.Mode()&os.ModeSymlink != 0 {
+			return true, nil
+		}
+
+		parent := filepath.Dir(current)
+		if parent == current {
+			break
+		}
+		current = parent
+	}
+
+	return false, nil
+}
+
+// validateCacheDirPermissions ensures the cache directory has secure permissions (0700).
+// Returns an error if the directory exists with insecure permissions.
+func validateCacheDirPermissions(path string) error {
+	info, err := os.Lstat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil // Directory doesn't exist yet, will be created with correct permissions
+		}
+		return err
+	}
+
+	if info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("cache directory is a symlink: %s", path)
+	}
+
+	if !info.IsDir() {
+		return fmt.Errorf("cache path is not a directory: %s", path)
+	}
+
+	// Check permissions (owner-only: 0700)
+	// We only check the permission bits, ignoring file type bits
+	perm := info.Mode().Perm()
+	if perm&0077 != 0 {
+		return fmt.Errorf("cache directory has insecure permissions %o (should be 0700): %s", perm, path)
+	}
+
+	return nil
 }
