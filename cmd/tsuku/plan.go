@@ -128,9 +128,14 @@ func printPlanHuman(plan *install.Plan) {
 	fmt.Println()
 
 	// Metadata
-	fmt.Printf("Platform:  %s/%s\n", plan.Platform.OS, plan.Platform.Arch)
-	fmt.Printf("Generated: %s\n", plan.GeneratedAt.Format("2006-01-02 15:04:05 UTC"))
-	fmt.Printf("Recipe:    %s (hash: %s)\n", plan.RecipeSource, truncateHash(plan.RecipeHash))
+	fmt.Printf("Platform:      %s/%s\n", plan.Platform.OS, plan.Platform.Arch)
+	fmt.Printf("Generated:     %s\n", plan.GeneratedAt.Format("2006-01-02 15:04:05 UTC"))
+	fmt.Printf("Recipe:        %s (hash: %s)\n", plan.RecipeSource, truncateHash(plan.RecipeHash))
+	if plan.Deterministic {
+		fmt.Printf("Deterministic: yes\n")
+	} else {
+		fmt.Printf("Deterministic: no (contains ecosystem primitives with residual non-determinism)\n")
+	}
 	fmt.Println()
 
 	// Steps
@@ -142,12 +147,14 @@ func printPlanHuman(plan *install.Plan) {
 
 // printStep formats and prints a single plan step.
 func printStep(num int, step install.PlanStep) {
-	// Step header with evaluability indicator
-	evalMark := ""
+	// Step header with determinism/evaluability indicator
+	mark := ""
 	if !step.Evaluable {
-		evalMark = " (non-evaluable)"
+		mark = " (non-evaluable)"
+	} else if !step.Deterministic {
+		mark = " (non-deterministic)"
 	}
-	fmt.Printf("  %d. [%s]%s\n", num, step.Action, evalMark)
+	fmt.Printf("  %d. [%s]%s\n", num, step.Action, mark)
 
 	// URL and checksum for download steps
 	if step.URL != "" {

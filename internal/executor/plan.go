@@ -33,6 +33,12 @@ type InstallationPlan struct {
 	RecipeHash   string `json:"recipe_hash"`   // SHA256 of recipe file content
 	RecipeSource string `json:"recipe_source"` // "registry" or file path
 
+	// Deterministic indicates whether the entire plan is deterministic.
+	// A plan is deterministic only if ALL steps are deterministic.
+	// False if any step uses ecosystem primitives (go_build, cargo_build, etc.)
+	// which have residual non-determinism from compiler versions, native extensions, etc.
+	Deterministic bool `json:"deterministic"`
+
 	// Resolved steps
 	Steps []ResolvedStep `json:"steps"`
 }
@@ -55,6 +61,12 @@ type ResolvedStep struct {
 	// Evaluable indicates whether this step can be deterministically reproduced.
 	// False for run_command, ecosystem installs (npm, pip, cargo, etc.)
 	Evaluable bool `json:"evaluable"`
+
+	// Deterministic indicates whether this step produces identical results
+	// given identical inputs. Tier 1 (core) primitives are deterministic.
+	// Tier 2 (ecosystem) primitives like go_build, cargo_build have residual
+	// non-determinism from compiler versions, native extensions, etc.
+	Deterministic bool `json:"deterministic"`
 
 	// For download steps only - these capture the resolved URL and computed checksum
 	URL      string `json:"url,omitempty"`

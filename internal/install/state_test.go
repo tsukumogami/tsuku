@@ -2033,7 +2033,7 @@ func TestVersionState_WithoutPlan_BackwardCompatible(t *testing.T) {
 func TestNewPlanFromExecutor(t *testing.T) {
 	now := timeNow()
 	steps := []PlanStep{
-		{Action: "download", Evaluable: true},
+		{Action: "download", Evaluable: true, Deterministic: true},
 	}
 
 	plan := NewPlanFromExecutor(
@@ -2044,6 +2044,7 @@ func TestNewPlanFromExecutor(t *testing.T) {
 		now,
 		"hash123",
 		"registry",
+		true, // deterministic
 		steps,
 	)
 
@@ -2061,5 +2062,8 @@ func TestNewPlanFromExecutor(t *testing.T) {
 	}
 	if len(plan.Steps) != 1 {
 		t.Errorf("len(Steps) = %d, want 1", len(plan.Steps))
+	}
+	if !plan.Deterministic {
+		t.Error("Deterministic = false, want true")
 	}
 }
