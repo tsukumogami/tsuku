@@ -835,27 +835,78 @@ func (b *GitHubReleaseBuilder) setGitHubHeaders(req *http.Request) {
 	}
 }
 
+// normalizeOS maps common OS identifiers to Go runtime constants.
+func normalizeOS(os string) string {
+	switch strings.ToLower(os) {
+	case "linux", "gnu", "unknown-linux-gnu", "unknown-linux-musl":
+		return "linux"
+	case "darwin", "macos", "apple-darwin", "osx":
+		return "darwin"
+	case "windows", "win", "win32", "win64", "pc-windows-msvc", "pc-windows-gnu":
+		return "windows"
+	default:
+		// Check for target triple patterns
+		lower := strings.ToLower(os)
+		if strings.Contains(lower, "linux") {
+			return "linux"
+		}
+		if strings.Contains(lower, "darwin") || strings.Contains(lower, "apple") || strings.Contains(lower, "macos") {
+			return "darwin"
+		}
+		if strings.Contains(lower, "windows") {
+			return "windows"
+		}
+		return strings.ToLower(os)
+	}
+}
+
+// normalizeArch maps common architecture identifiers to Go runtime constants.
+func normalizeArch(arch string) string {
+	switch strings.ToLower(arch) {
+	case "amd64", "x86_64", "x64", "64bit", "64-bit":
+		return "amd64"
+	case "arm64", "aarch64":
+		return "arm64"
+	case "386", "i386", "i686", "x86", "32bit", "32-bit":
+		return "386"
+	default:
+		return strings.ToLower(arch)
+	}
+}
+
+// normalizeFormat maps archive format aliases to canonical names.
+func normalizeFormat(format string) string {
+	switch strings.ToLower(format) {
+	case "tgz":
+		return "tar.gz"
+	default:
+		return format
+	}
+}
+
 // generateRecipe creates a recipe.Recipe from the LLM pattern response.
 func generateRecipe(packageName, repoPath string, meta *repoMeta, pattern *llm.AssetPattern) (*recipe.Recipe, error) {
 	if len(pattern.Mappings) == 0 {
 		return nil, fmt.Errorf("no platform mappings in pattern")
 	}
 
-	// Build OS and arch mappings from the pattern
+	// Build OS and arch mappings from the pattern, normalizing to Go runtime constants
 	osMapping := make(map[string]string)
 	archMapping := make(map[string]string)
 
 	for _, m := range pattern.Mappings {
-		osMapping[m.OS] = m.OS
-		archMapping[m.Arch] = m.Arch
+		normalizedOS := normalizeOS(m.OS)
+		normalizedArch := normalizeArch(m.Arch)
+		osMapping[normalizedOS] = normalizedOS
+		archMapping[normalizedArch] = normalizedArch
 	}
 
 	// Derive asset pattern from the first mapping
 	// The LLM gives us specific assets; we need to infer the pattern
 	assetPattern := deriveAssetPattern(pattern.Mappings)
 
-	// Determine format from the first mapping
-	format := pattern.Mappings[0].Format
+	// Determine format from the first mapping, normalizing aliases
+	format := normalizeFormat(pattern.Mappings[0].Format)
 
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -951,13 +1002,11 @@ You have three tools available:
 2. inspect_archive: Inspect the contents of an archive to find the executable
 3. extract_pattern: Call this when you've determined the asset-to-platform mappings
 
-CRITICAL: When calling extract_pattern, you MUST use these exact normalized values:
-- os: "linux" or "darwin" (NOT "Linux", "Darwin", "macOS", "macos", or target triples)
-- arch: "amd64" or "arm64" (NOT "x86_64", "aarch64", "64bit", "ARM64", or other variants)
+When calling extract_pattern, use these target platforms:
+- os: "linux" or "darwin"
+- arch: "amd64" or "arm64"
 
-The os and arch values are Go runtime constants (GOOS/GOARCH). The asset filename in the mapping shows what string appears in the actual file.
-
-Example 1 - Go-style naming (k9s_Linux_amd64.tar.gz):
+Example - k9s_Linux_amd64.tar.gz:
 {
   "mappings": [
     {"asset": "k9s_Linux_amd64.tar.gz", "os": "linux", "arch": "amd64", "format": "tar.gz"},
@@ -968,58 +1017,6 @@ Example 1 - Go-style naming (k9s_Linux_amd64.tar.gz):
   "executable": "k9s",
   "verify_command": "k9s version"
 }
-
-Example 2 - Rust-style naming (app-x86_64-unknown-linux-gnu.zip):
-{
-  "mappings": [
-    {"asset": "app-x86_64-unknown-linux-gnu.zip", "os": "linux", "arch": "amd64", "format": "zip"},
-    {"asset": "app-aarch64-unknown-linux-gnu.zip", "os": "linux", "arch": "arm64", "format": "zip"},
-    {"asset": "app-x86_64-apple-darwin.zip", "os": "darwin", "arch": "amd64", "format": "zip"},
-    {"asset": "app-aarch64-apple-darwin.zip", "os": "darwin", "arch": "arm64", "format": "zip"}
-  ],
-  "executable": "app",
-  "verify_command": "app --version"
-}
-
-Example 3 - Custom naming (trivy_0.50.0_macOS-ARM64.tar.gz):
-{
-  "mappings": [
-    {"asset": "trivy_0.50.0_Linux-64bit.tar.gz", "os": "linux", "arch": "amd64", "format": "tar.gz"},
-    {"asset": "trivy_0.50.0_Linux-ARM64.tar.gz", "os": "linux", "arch": "arm64", "format": "tar.gz"},
-    {"asset": "trivy_0.50.0_macOS-64bit.tar.gz", "os": "darwin", "arch": "amd64", "format": "tar.gz"},
-    {"asset": "trivy_0.50.0_macOS-ARM64.tar.gz", "os": "darwin", "arch": "arm64", "format": "tar.gz"}
-  ],
-  "executable": "trivy",
-  "verify_command": "trivy --version"
-}
-
-Example 4 - tar.xz format (helix-24.07-x86_64-linux.tar.xz):
-{
-  "mappings": [
-    {"asset": "helix-24.07-x86_64-linux.tar.xz", "os": "linux", "arch": "amd64", "format": "tar.xz"},
-    {"asset": "helix-24.07-aarch64-linux.tar.xz", "os": "linux", "arch": "arm64", "format": "tar.xz"},
-    {"asset": "helix-24.07-x86_64-macos.tar.xz", "os": "darwin", "arch": "amd64", "format": "tar.xz"},
-    {"asset": "helix-24.07-aarch64-macos.tar.xz", "os": "darwin", "arch": "arm64", "format": "tar.xz"}
-  ],
-  "executable": "hx",
-  "verify_command": "hx --version"
-}
-
-Example 5 - tbz format (btop-x86_64-linux-musl.tbz):
-{
-  "mappings": [
-    {"asset": "btop-x86_64-linux-musl.tbz", "os": "linux", "arch": "amd64", "format": "tbz"},
-    {"asset": "btop-aarch64-linux-musl.tbz", "os": "linux", "arch": "arm64", "format": "tbz"}
-  ],
-  "executable": "btop",
-  "verify_command": "btop --version"
-}
-
-Common filename patterns to recognize:
-- Rust targets: x86_64-unknown-linux-musl, aarch64-apple-darwin -> os: linux/darwin, arch: amd64/arm64
-- Go targets: linux_amd64, darwin_arm64 -> os: linux/darwin, arch: amd64/arm64
-- Capitalized: Linux, Darwin, macOS -> os: linux/darwin
-- Architecture variants: x86_64, amd64, 64bit -> arch: amd64; aarch64, arm64, ARM64 -> arch: arm64
 
 When analyzing assets:
 - Look for patterns in filenames that indicate OS and architecture
@@ -1116,8 +1113,8 @@ func buildToolDefs() []llm.ToolDef {
 								},
 								"format": map[string]any{
 									"type":        "string",
-									"description": "Archive format: 'tar.gz', 'zip', or 'binary'",
-									"enum":        []string{"tar.gz", "zip", "binary"},
+									"description": "Archive format detected from file extension",
+									"enum":        []string{"tar.gz", "tar.xz", "zip", "tbz", "tgz", "binary"},
 								},
 							},
 							"required": []string{"os", "arch", "asset", "format"},
