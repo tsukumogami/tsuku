@@ -1661,9 +1661,6 @@ func TestDependencyNode_FormatTree_WithChildren(t *testing.T) {
 	if !containsString(output, "child") {
 		t.Error("FormatTree should contain child")
 	}
-	if !containsString(output, "└──") || !containsString(output, "├──") {
-		// At least one tree connector should be present
-	}
 }
 
 func TestDependencyNode_FormatTree_WithRecipe(t *testing.T) {
@@ -1761,7 +1758,7 @@ func TestNewConfirmationRequest(t *testing.T) {
 	}
 }
 
-func TestHomebrewBuilder_BuildWithDependencies_Cancelled(t *testing.T) {
+func TestHomebrewBuilder_BuildWithDependencies_Canceled(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/formula/test.json" {
 			formulaInfo := map[string]interface{}{
@@ -1790,8 +1787,8 @@ func TestHomebrewBuilder_BuildWithDependencies_Cancelled(t *testing.T) {
 	}
 
 	_, err := b.BuildWithDependencies(ctx, BuildRequest{Package: "test"}, confirmFunc)
-	if err != ErrUserCancelled {
-		t.Errorf("Expected ErrUserCancelled, got %v", err)
+	if err != ErrUserCanceled {
+		t.Errorf("Expected ErrUserCanceled, got %v", err)
 	}
 }
 
@@ -1894,8 +1891,8 @@ func TestHomebrewBuilder_BuildWithDependencies_ConfirmReceivesCorrectData(t *tes
 	}
 }
 
-func TestErrUserCancelled(t *testing.T) {
-	if ErrUserCancelled.Error() != "operation cancelled by user" {
-		t.Errorf("ErrUserCancelled.Error() = %v", ErrUserCancelled.Error())
+func TestErrUserCanceled(t *testing.T) {
+	if ErrUserCanceled.Error() != "operation canceled by user" {
+		t.Errorf("ErrUserCanceled.Error() = %v", ErrUserCanceled.Error())
 	}
 }

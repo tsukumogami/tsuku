@@ -495,7 +495,7 @@ func (b *HomebrewBuilder) BuildWithDependencies(
 	// 3. Request user confirmation
 	confirmReq := NewConfirmationRequest(tree)
 	if confirm != nil && !confirm(confirmReq) {
-		return nil, ErrUserCancelled
+		return nil, ErrUserCanceled
 	}
 
 	// 4. Generate in topological order (leaves first)
@@ -519,8 +519,8 @@ func (b *HomebrewBuilder) BuildWithDependencies(
 	return results, nil
 }
 
-// ErrUserCancelled is returned when the user cancels the operation.
-var ErrUserCancelled = fmt.Errorf("operation cancelled by user")
+// ErrUserCanceled is returned when the user cancels the operation.
+var ErrUserCanceled = fmt.Errorf("operation canceled by user")
 
 // isValidHomebrewFormula validates Homebrew formula names.
 //
