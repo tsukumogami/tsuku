@@ -1120,6 +1120,76 @@ Implementation is organized into two major phases: Bottles (Phase 1) and Source 
 - **Historical versions**: Homebrew API only exposes stable version
 - **Parallel generation**: Generate independent deps concurrently
 
+### Testing Approach
+
+#### Test Matrix
+
+The test matrix covers the complexity spectrum from the formula structure analysis, ensuring each category is validated:
+
+**Phase 1 (Bottles):**
+
+| Formula | Category | Deps | Binary Name | Ground Truth | Notes |
+|---------|----------|------|-------------|--------------|-------|
+| jq | Simple | 1 | jq | Manual test | Autotools, single binary |
+| fd | Simple | 0 | fd | Manual test | Rust, renamed from fd-find |
+| ripgrep | Medium | 1 | rg | Manual test | Rust, renamed binary |
+| bat | Medium | 0 | bat | Manual test | Rust, shell completions |
+| gh | Medium | 0 | gh | Manual test | Go, multiple subcommands |
+| fzf | Medium | 0 | fzf | Manual test | Go, shell integration |
+| neovim | Complex | 8+ | nvim | Manual test | Many deps, renamed binary |
+| curl | Complex | 5+ | curl | Manual test | Platform conditionals |
+
+**Phase 2 (Source Builds):**
+
+| Formula | Build System | Platform Conditionals | Resources | Ground Truth |
+|---------|--------------|----------------------|-----------|--------------|
+| jq | autotools | No | No | Manual test |
+| tmux | autotools | Yes (on_linux) | No | Manual test |
+| neovim | cmake | Yes | Yes (tree-sitter parsers) | Manual test |
+
+#### Ground Truth Validation
+
+Unlike the GitHub builder which has existing recipes to compare against, Homebrew builder validation is based on:
+
+1. **Functional validation**: Generated recipe installs successfully in container
+2. **Binary discovery**: Correct executables are installed to `$TSUKU_HOME/bin`
+3. **Verification command**: `[verify]` command exits successfully
+4. **Dependency accuracy**: Runtime deps match Homebrew JSON API
+
+**Success criteria per formula:**
+- Container validation passes with `--network=none`
+- All declared binaries exist and are executable
+- Verify command returns exit code 0
+- No missing runtime dependencies
+
+#### Regression Test Artifacts
+
+Generated recipes are saved to `testdata/homebrew/` for regression testing:
+
+```
+testdata/homebrew/
+├── phase1_bottles/
+│   ├── jq.toml
+│   ├── ripgrep.toml
+│   ├── neovim.toml
+│   └── ...
+└── phase2_source/
+    ├── jq_source.toml
+    └── ...
+```
+
+#### Success Rate Measurement
+
+The "70% success rate on top 100 formulas" acceptance criterion is measured by:
+
+1. **Formula selection**: Top 100 by GitHub stars from `formulae.brew.sh/analytics/`
+2. **Automated test run**: CI job generates recipes for all 100
+3. **Container validation**: Each recipe validated in isolated container
+4. **Pass/fail tracking**: Results logged with failure reasons
+5. **Threshold gate**: CI fails if success rate drops below 70%
+
+This provides objective, reproducible measurement of the builder's effectiveness.
+
 ## Security Considerations
 
 Security is important, but we trust Homebrew. For homebrew-core formulas, using tsuku should be equivalent to running `brew install` - we're fetching from the same trusted source (GHCR bottles, Homebrew CI-vetted formulas).
