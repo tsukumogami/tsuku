@@ -454,15 +454,255 @@ Based on investigation results, implement each ecosystem primitive:
 
 4. **Lock storage**: Should ecosystem locks be inline in the plan or referenced files?
 
-## Appendix: Ecosystem Investigation Template
+## Appendix A: Ecosystem Investigation Results
 
-For each ecosystem, the investigation agent should answer:
+Detailed research was conducted for each supported ecosystem. Full reports are available in `wip/ecosystem_*.md`. This appendix summarizes key findings.
+
+### Summary Table
+
+| Ecosystem | Lock File | Deterministic | Key Limitation |
+|-----------|-----------|---------------|----------------|
+| **Nix** | flake.lock + derivation hash | **Yes** | Binary cache trust |
+| **Go** | go.sum (MVS checksums) | Yes (pure Go) | CGO, compiler version |
+| **Cargo** | Cargo.lock (SHA-256) | No | Compiler, build scripts |
+| **npm** | package-lock.json v3 | Partial | Native addons, scripts |
+| **pip** | requirements.txt + hashes | No | Platform wheels, C extensions |
+| **gem** | Gemfile.lock + checksums | No | Native extensions, hooks |
+| **CPAN** | cpanfile.snapshot (Carton) | No | XS modules, Makefile.PL |
+
+### Go
+
+**Lock mechanism**: `go.sum` contains cryptographic checksums for all module dependencies. Go's Minimum Version Selection (MVS) algorithm ensures reproducible dependency resolution.
+
+**Eval-time capture**:
+```bash
+go mod download -json  # Download and hash all dependencies
+go list -m all         # List resolved module versions
+```
+
+**Locked execution**:
+```bash
+CGO_ENABLED=0 \
+GOPROXY=off \
+go build -trimpath -buildvcs=false ./...
+```
+
+**Recommended primitive**:
+```go
+type GoBuildParams struct {
+    Module      string            `json:"module"`       // e.g., "github.com/user/repo"
+    Version     string            `json:"version"`      // e.g., "v1.2.3"
+    Executables []string          `json:"executables"`  // Binary names to install
+    GoSum       string            `json:"go_sum"`       // Complete go.sum content
+    GoVersion   string            `json:"go_version"`   // e.g., "1.21.0"
+    CGOEnabled  bool              `json:"cgo_enabled"`  // Default: false
+    BuildFlags  []string          `json:"build_flags"`  // e.g., ["-trimpath"]
+}
+```
+
+**Residual non-determinism**: Compiler version, CGO dependencies, embedded paths (mitigated with `-trimpath`).
+
+**Security**: Module proxy compromise, typosquatting. Mitigated by go.sum checksum verification.
+
+### Cargo
+
+**Lock mechanism**: `Cargo.lock` contains SHA-256 checksums for all crate dependencies in TOML format.
+
+**Eval-time capture**:
+```bash
+cargo metadata --format-version 1  # Dependency graph (no build)
+cargo fetch                         # Download all crates
+```
+
+**Locked execution**:
+```bash
+cargo build --release --locked --offline
+```
+
+**Recommended primitive**:
+```go
+type CargoBuildParams struct {
+    Crate        string   `json:"crate"`         // e.g., "ripgrep"
+    Version      string   `json:"version"`       // e.g., "14.1.0"
+    Executables  []string `json:"executables"`   // Binary names
+    CargoLock    string   `json:"cargo_lock"`    // Complete Cargo.lock content
+    RustVersion  string   `json:"rust_version"`  // e.g., "1.75.0"
+    TargetTriple string   `json:"target_triple"` // e.g., "x86_64-unknown-linux-gnu"
+}
+```
+
+**Residual non-determinism**: Compiler version, target triple, build scripts (`build.rs`), proc macros.
+
+**Security**: Build scripts execute arbitrary code. Mitigated by sandboxing, checksum verification.
+
+### npm
+
+**Lock mechanism**: `package-lock.json` v2/v3 contains complete dependency tree with SHA-512 integrity hashes.
+
+**Eval-time capture**:
+```bash
+npm install --package-lock-only  # Generate lockfile without installing
+npm ci --dry-run                  # Verify lockfile
+```
+
+**Locked execution**:
+```bash
+npm ci --ignore-scripts --offline
+```
+
+**Recommended primitive**:
+```go
+type NpmExecParams struct {
+    Package      string   `json:"package"`       // e.g., "@angular/cli"
+    Version      string   `json:"version"`       // e.g., "17.0.0"
+    Executables  []string `json:"executables"`   // Binary names
+    PackageLock  string   `json:"package_lock"`  // Complete package-lock.json
+    NodeVersion  string   `json:"node_version"`  // e.g., "20.10.0"
+    IgnoreScripts bool    `json:"ignore_scripts"` // Default: true (security)
+}
+```
+
+**Residual non-determinism**: Native addons (node-gyp), postinstall scripts, Node.js version.
+
+**Security**: Install scripts, typosquatting, supply chain. Mitigated by `--ignore-scripts`, integrity verification.
+
+### pip
+
+**Lock mechanism**: `requirements.txt` with hashes (via pip-tools). Format: `package==version --hash=sha256:...`
+
+**Eval-time capture**:
+```bash
+pip-compile --generate-hashes requirements.in  # Generate locked requirements
+pip download -r requirements.txt               # Download wheels
+```
+
+**Locked execution**:
+```bash
+pip install --require-hashes --no-deps --only-binary :all: -r requirements.txt
+```
+
+**Recommended primitive**:
+```go
+type PipInstallParams struct {
+    Package        string   `json:"package"`         // e.g., "black"
+    Version        string   `json:"version"`         // e.g., "23.12.1"
+    Executables    []string `json:"executables"`     // Binary names
+    Requirements   string   `json:"requirements"`    // requirements.txt with hashes
+    PythonVersion  string   `json:"python_version"`  // e.g., "3.11"
+    OnlyBinary     bool     `json:"only_binary"`     // Default: true (no sdist)
+}
+```
+
+**Residual non-determinism**: Platform wheels, C extensions, Python version ABI.
+
+**Security**: setup.py execution, hash spoofing. Mitigated by `--only-binary`, hash verification.
+
+### gem
+
+**Lock mechanism**: `Gemfile.lock` with SHA-256 checksums (Bundler 2.6+).
+
+**Eval-time capture**:
+```bash
+bundle lock --add-checksums --add-platform x86_64-linux
+```
+
+**Locked execution**:
+```bash
+BUNDLE_FROZEN=true bundle install --no-document --standalone
+```
+
+**Recommended primitive**:
+```go
+type GemExecParams struct {
+    Gem           string            `json:"gem"`            // e.g., "rubocop"
+    Version       string            `json:"version"`        // e.g., "1.50.2"
+    Executables   []string          `json:"executables"`    // Binary names
+    LockData      string            `json:"lock_data"`      // Complete Gemfile.lock
+    RubyVersion   string            `json:"ruby_version"`   // e.g., "3.2.0"
+    Platforms     []string          `json:"platforms"`      // e.g., ["ruby", "x86_64-linux"]
+}
+```
+
+**Residual non-determinism**: Native extensions, Ruby version ABI, pre/post-install hooks.
+
+**Security**: Install hooks execute arbitrary code (no disable mechanism). Platform gems may differ.
+
+### Nix
+
+**Lock mechanism**: `flake.lock` (JSON) pins all flake inputs. Derivation hashes provide content-addressable builds.
+
+**Eval-time capture**:
+```bash
+nix flake metadata --json          # Resolved/locked inputs (fast)
+nix derivation show nixpkgs#hello  # Derivation path without building
+nix-instantiate                    # Create .drv, compute output path
+```
+
+**Locked execution**:
+```bash
+nix build --no-update-lock-file nixpkgs#package
+nix-store --realize /nix/store/abc...xyz.drv
+```
+
+**Recommended primitive**:
+```go
+type NixRealizeParams struct {
+    FlakeRef       string          `json:"flake_ref"`        // e.g., "nixpkgs#hello"
+    Executables    []string        `json:"executables"`      // Binary names
+    DerivationPath string          `json:"derivation_path"`  // Pre-computed .drv path
+    OutputPath     string          `json:"output_path"`      // Expected store path
+    FlakeLock      json.RawMessage `json:"flake_lock"`       // Complete flake.lock
+    LockedRef      string          `json:"locked_ref"`       // Pinned flake reference
+}
+```
+
+**Residual non-determinism**: Minimal. Timestamps, compression non-determinism in upstream packages.
+
+**Security**: Binary cache trust model. Mitigated by signature verification, local builds.
+
+**Note**: Nix provides the strongest reproducibility guarantees of all ecosystems.
+
+### CPAN
+
+**Lock mechanism**: `cpanfile.snapshot` (via Carton) captures distribution versions and dependency graph.
+
+**Eval-time capture**:
+```bash
+carton install   # Resolve dependencies, create snapshot
+carton bundle    # Download tarballs to vendor/cache
+```
+
+**Locked execution**:
+```bash
+cpanm --local-lib ./local --mirror file://vendor/cache --mirror-only Module@version
+```
+
+**Recommended primitive**:
+```go
+type CpanInstallParams struct {
+    Distribution string            `json:"distribution"` // e.g., "App-Ack"
+    Version      string            `json:"version"`      // e.g., "3.7.0"
+    Executables  []string          `json:"executables"`  // Binary names
+    Snapshot     string            `json:"snapshot"`     // Complete cpanfile.snapshot
+    PerlVersion  string            `json:"perl_version"` // e.g., "5.38.0"
+    MirrorOnly   bool              `json:"mirror_only"`  // Default: true
+    CachedBundle bool              `json:"cached_bundle"` // Use vendored tarballs
+}
+```
+
+**Residual non-determinism**: XS module compilation, Perl version core modules, Makefile.PL decisions.
+
+**Security**: Makefile.PL executes arbitrary code (unavoidable). CPAN mirror tampering. Mitigated by bundling, checksum verification.
+
+## Appendix B: Ecosystem Investigation Template
+
+For future ecosystem additions, answer these questions:
 
 ### [Ecosystem Name]
 
 **Lock mechanism**: What file/format captures the dependency graph?
 
-**Eval-time capture**: What commands extract lock information?
+**Eval-time capture**: What commands extract lock information without installing?
 
 **Locked execution**: What flags/env ensure the lock is respected?
 
@@ -478,3 +718,17 @@ type [Ecosystem]BuildParams struct {
 ```
 
 **Security considerations**: Specific risks for this ecosystem.
+
+## Appendix C: Detailed Research References
+
+Full ecosystem investigation reports with implementation details:
+
+- `wip/ecosystem_go.md` - Go modules and build system
+- `wip/ecosystem_cargo.md` - Rust Cargo build system
+- `wip/ecosystem_npm.md` - npm package manager
+- `wip/ecosystem_pip.md` - Python pip/pipx
+- `wip/ecosystem_gem.md` - Ruby gem/Bundler
+- `wip/ecosystem_nix.md` - Nix flakes and derivations
+- `wip/ecosystem_cpan.md` - Perl CPAN/Carton
+
+These reports contain detailed API examples, security analysis, and implementation recommendations.
