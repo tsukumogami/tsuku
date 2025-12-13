@@ -43,8 +43,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class A488,A489,A490,A491,A492 done
-    class A493,A494 ready
+    class A488,A489,A490,A491,A492,A493 done
+    class A494 ready
     class A495,A496,A497,A498 needsDesign
 ```
 

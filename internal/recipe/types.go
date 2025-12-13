@@ -38,9 +38,9 @@ type Patch struct {
 
 // TextReplace represents a text substitution (maps to Homebrew's inreplace).
 type TextReplace struct {
-	File        string `toml:"file"`        // File path relative to source root
-	Pattern     string `toml:"pattern"`     // Pattern to find (literal string or regex)
-	Replacement string `toml:"replacement"` // Replacement text
+	File        string `toml:"file"`            // File path relative to source root
+	Pattern     string `toml:"pattern"`         // Pattern to find (literal string or regex)
+	Replacement string `toml:"replacement"`     // Replacement text
 	IsRegex     bool   `toml:"regex,omitempty"` // If true, treat pattern as regex
 }
 
