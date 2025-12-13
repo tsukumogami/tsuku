@@ -221,55 +221,6 @@ func TestResolveVersion_NoVersionSource(t *testing.T) {
 	}
 }
 
-// TestExecute_FallbackToDev tests that executor falls back to "dev" version on resolution failure
-func TestExecute_FallbackToDev(t *testing.T) {
-	r := &recipe.Recipe{
-		Metadata: recipe.MetadataSection{
-			Name:          "test-tool",
-			Description:   "Test tool",
-			VersionFormat: "semver",
-		},
-		Version: recipe.VersionSection{
-			Source: "nonexistent_source", // Unknown source will fail
-		},
-		Steps: []recipe.Step{
-			{
-				Action: "run_shell",
-				Params: map[string]interface{}{
-					"script": "echo 'test'",
-				},
-			},
-		},
-		Verify: recipe.VerifySection{
-			Command: "echo 'verification'",
-			Pattern: "verification",
-		},
-	}
-
-	exec, err := New(r)
-	if err != nil {
-		t.Fatalf("New() error = %v", err)
-	}
-	defer exec.Cleanup()
-
-	ctx := context.Background()
-	err = exec.Execute(ctx)
-
-	// Should NOT fail - should fall back to "dev" and continue
-	if err != nil {
-		// The error might be from the run_shell action not being registered in tests
-		// That's OK - we just want to verify it didn't fail on version resolution
-		if exec.version != "dev" {
-			t.Errorf("Expected fallback to version 'dev', got '%s'", exec.version)
-		}
-	} else {
-		// Success - verify it used "dev"
-		if exec.version != "dev" {
-			t.Errorf("Expected fallback to version 'dev', got '%s'", exec.version)
-		}
-	}
-}
-
 // TestSetToolsDir tests the SetToolsDir method
 func TestSetToolsDir(t *testing.T) {
 	r := &recipe.Recipe{
@@ -291,49 +242,6 @@ func TestSetToolsDir(t *testing.T) {
 
 	if exec.toolsDir != testToolsDir {
 		t.Errorf("SetToolsDir() = %q, want %q", exec.toolsDir, testToolsDir)
-	}
-}
-
-// TestExecute_NetworkFailureFallback tests fallback on network errors
-func TestExecute_NetworkFailureFallback(t *testing.T) {
-	r := &recipe.Recipe{
-		Metadata: recipe.MetadataSection{
-			Name:          "test-tool",
-			Description:   "Test tool",
-			VersionFormat: "semver",
-		},
-		Version: recipe.VersionSection{
-			Source: "nodejs_dist", // Will fail due to network in test environment
-		},
-		Steps: []recipe.Step{
-			{
-				Action: "run_shell",
-				Params: map[string]interface{}{
-					"script": "echo 'test'",
-				},
-			},
-		},
-		Verify: recipe.VerifySection{
-			Command: "echo 'verification'",
-			Pattern: "verification",
-		},
-	}
-
-	exec, err := New(r)
-	if err != nil {
-		t.Fatalf("New() error = %v", err)
-	}
-	defer exec.Cleanup()
-
-	ctx := context.Background()
-	err = exec.Execute(ctx)
-
-	// In offline environments, should fall back to "dev"
-	// (If network is available and nodejs_dist works, that's OK too)
-	if exec.version != "dev" && err != nil {
-		t.Logf("Network available, version resolved to: %s", exec.version)
-	} else if exec.version == "dev" {
-		t.Logf("Correctly fell back to 'dev' on network failure")
 	}
 }
 

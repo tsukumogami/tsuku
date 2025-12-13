@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -65,83 +64,6 @@ func NewWithVersion(r *recipe.Recipe, version string) (*Executor, error) {
 // SetDownloadCacheDir sets the download cache directory
 func (e *Executor) SetDownloadCacheDir(dir string) {
 	e.downloadCacheDir = dir
-}
-
-// Execute runs the recipe
-func (e *Executor) Execute(ctx context.Context) error {
-	fmt.Printf("📦 Executing action-based recipe: %s\n", e.recipe.Metadata.Name)
-	fmt.Printf("   Work directory: %s\n", e.workDir)
-
-	// Create version resolver (reused across all steps)
-	resolver := version.New()
-
-	// Resolve version from recipe steps
-	versionInfo, err := e.resolveVersionWith(ctx, resolver)
-	if err != nil {
-		fmt.Printf("⚠️  Version resolution failed: %v\n", err)
-		fmt.Printf("   Proceeding with default version 'dev' for local/test recipes\n")
-		versionInfo = &version.VersionInfo{
-			Version: "dev",
-			Tag:     "dev",
-		}
-	}
-
-	fmt.Printf("   Latest version: %s\n", versionInfo.Version)
-
-	// Store version for later use
-	e.version = versionInfo.Version
-
-	// Create execution context
-	e.ctx = &actions.ExecutionContext{
-		Context:          ctx, // Pass context for cancellation and timeouts
-		WorkDir:          e.workDir,
-		InstallDir:       e.installDir,
-		ToolInstallDir:   "", // Set by composite actions when install_mode="directory" is used
-		ToolsDir:         e.toolsDir,
-		DownloadCacheDir: e.downloadCacheDir,
-		Version:          versionInfo.Version,
-		VersionTag:       versionInfo.Tag,
-		OS:               runtime.GOOS,
-		Arch:             runtime.GOARCH,
-		Recipe:           e.recipe,
-		ExecPaths:        e.execPaths,   // Include execution dependency paths
-		Resolver:         resolver,      // Pass resolver for asset resolution
-		Logger:           log.Default(), // Use global logger configured at startup
-	}
-
-	fmt.Println()
-
-	// Execute each step
-	for i, step := range e.recipe.Steps {
-		// Check conditional execution
-		if !e.shouldExecute(step.When) {
-			fmt.Printf("Step %d/%d: %s (skipped - condition not met)\n", i+1, len(e.recipe.Steps), step.Action)
-			continue
-		}
-
-		fmt.Printf("Step %d/%d: %s\n", i+1, len(e.recipe.Steps), step.Action)
-
-		// Get action
-		action := actions.Get(step.Action)
-		if action == nil {
-			return fmt.Errorf("unknown action: %s", step.Action)
-		}
-
-		// Execute action
-		if err := action.Execute(e.ctx, step.Params); err != nil {
-			return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
-		}
-
-		fmt.Println()
-	}
-
-	// Verify installation
-	fmt.Println("🔍 Verifying installation")
-	if err := e.verify(); err != nil {
-		return fmt.Errorf("verification failed: %w", err)
-	}
-
-	return nil
 }
 
 // resolveVersionWith attempts to resolve the latest version for the recipe using the given resolver
@@ -215,116 +137,6 @@ func (e *Executor) shouldExecute(when map[string]string) bool {
 	}
 
 	return true
-}
-
-// verify runs the verification command
-func (e *Executor) verify() error {
-	// Apply version format transform if specified in verify section
-	verifyVersion := e.ctx.Version
-	if e.recipe.Verify.VersionFormat != "" {
-		transformed, err := version.TransformVersion(e.ctx.Version, e.recipe.Verify.VersionFormat)
-		if err != nil {
-			// Log warning but continue with original version
-			fmt.Printf("   Warning: version transform failed: %v\n", err)
-		} else {
-			verifyVersion = transformed
-		}
-	}
-
-	// Expand variables in command
-	vars := map[string]string{
-		"version":     verifyVersion,
-		"install_dir": e.installDir,
-		"binary":      filepath.Join(e.installDir, "bin", e.recipe.Metadata.Name),
-	}
-
-	command := expandVars(e.recipe.Verify.Command, vars)
-	pattern := expandVars(e.recipe.Verify.Pattern, vars)
-
-	fmt.Printf("   Running: %s\n", command)
-
-	// Set up PATH to include install directory and execution dependencies
-	binDir := filepath.Join(e.installDir, "bin")
-	pathDirs := []string{binDir}
-
-	// Add execution paths (e.g., nodejs bin for npm tools)
-	pathDirs = append(pathDirs, e.ctx.ExecPaths...)
-
-	// Build PATH with all directories
-	pathValue := strings.Join(pathDirs, ":") + ":" + os.Getenv("PATH")
-
-	// Build environment with updated PATH (filter out existing PATH to avoid duplicates)
-	env := []string{}
-	for _, e := range os.Environ() {
-		if !strings.HasPrefix(e, "PATH=") {
-			env = append(env, e)
-		}
-	}
-	env = append(env, "PATH="+pathValue)
-
-	// Run command
-	cmd := exec.Command("sh", "-c", command)
-	cmd.Env = env
-	output, err := cmd.CombinedOutput()
-
-	// Check exit code - default expected is 0, but can be overridden
-	expectedExitCode := 0
-	if e.recipe.Verify.ExitCode != nil {
-		expectedExitCode = *e.recipe.Verify.ExitCode
-	}
-
-	if err != nil {
-		// Check if this is an exit error with the expected code
-		if exitErr, ok := err.(*exec.ExitError); ok {
-			actualCode := exitErr.ExitCode()
-			if actualCode != expectedExitCode {
-				return fmt.Errorf("command failed with exit code %d (expected %d): %w\nOutput: %s",
-					actualCode, expectedExitCode, err, string(output))
-			}
-			// Exit code matches expected non-zero code, continue
-		} else {
-			return fmt.Errorf("command failed: %w\nOutput: %s", err, string(output))
-		}
-	} else if expectedExitCode != 0 {
-		// Command succeeded but we expected a non-zero exit code
-		return fmt.Errorf("command succeeded with exit code 0 (expected %d)\nOutput: %s",
-			expectedExitCode, string(output))
-	}
-
-	outputStr := strings.TrimSpace(string(output))
-	fmt.Printf("   Output: %s\n", outputStr)
-
-	// Check pattern
-	if pattern != "" {
-		if !strings.Contains(outputStr, pattern) {
-			return fmt.Errorf("output does not match pattern\n  Expected: %s\n  Got: %s", pattern, outputStr)
-		}
-		fmt.Printf("   Pattern matched: %s ✓\n", pattern)
-	}
-
-	// Run additional verifications
-	for i, additional := range e.recipe.Verify.Additional {
-		additionalCmd := expandVars(additional.Command, vars)
-		additionalPattern := expandVars(additional.Pattern, vars)
-
-		fmt.Printf("   Additional verification %d: %s\n", i+1, additionalCmd)
-
-		cmd := exec.Command("sh", "-c", additionalCmd)
-		cmd.Env = env
-		output, err := cmd.CombinedOutput()
-		if err != nil {
-			return fmt.Errorf("additional verification %d failed: %w\nOutput: %s", i+1, err, string(output))
-		}
-
-		outputStr := strings.TrimSpace(string(output))
-		if additionalPattern != "" && !strings.Contains(outputStr, additionalPattern) {
-			return fmt.Errorf("additional verification %d: output does not match pattern\n  Expected: %s\n  Got: %s",
-				i+1, additionalPattern, outputStr)
-		}
-		fmt.Printf("   ✓ Verification %d passed\n", i+1)
-	}
-
-	return nil
 }
 
 // Cleanup removes temporary directories
@@ -463,7 +275,6 @@ func formatActionDescription(action string, params map[string]interface{}, vars 
 }
 
 // ExecutePlan executes an installation plan, verifying checksums for download steps.
-// This is the plan-based execution path that will eventually replace Execute().
 // All downloads are verified against the checksums recorded in the plan.
 // Returns ChecksumMismatchError if a download's checksum doesn't match the plan.
 func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) error {
