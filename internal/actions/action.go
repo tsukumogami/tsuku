@@ -73,7 +73,7 @@ func init() {
 	Register(&YumInstallAction{})
 	Register(&BrewInstallAction{})
 
-	// Package manager actions
+	// Package manager actions (composite)
 	Register(&NpmInstallAction{})
 	Register(&NpmExecAction{})
 	Register(&PipxInstallAction{})
@@ -82,6 +82,9 @@ func init() {
 	Register(&CpanInstallAction{})
 	Register(&GoInstallAction{})
 	Register(&NixInstallAction{})
+
+	// Ecosystem primitives
+	Register(&GoBuildAction{})
 
 	// Composite actions
 	Register(&DownloadArchiveAction{})

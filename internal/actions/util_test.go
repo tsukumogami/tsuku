@@ -532,3 +532,83 @@ func TestResolveGo_PicksLatestVersion(t *testing.T) {
 		t.Errorf("ResolveGo() picked wrong version: %s, expected go-1.23.4", result)
 	}
 }
+
+func TestResolveGoVersion(t *testing.T) {
+	tmpHome := t.TempDir()
+	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create specific Go version
+	goDir := filepath.Join(toolsDir, "go-1.21.5", "bin")
+	if err := os.MkdirAll(goDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	goExe := filepath.Join(goDir, "go")
+	if err := os.WriteFile(goExe, []byte("#!/bin/sh\necho go"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	oldHome := os.Getenv("HOME")
+	os.Setenv("HOME", tmpHome)
+	defer os.Setenv("HOME", oldHome)
+
+	// Should find the specific version
+	result := ResolveGoVersion("1.21.5")
+	if result == "" {
+		t.Error("ResolveGoVersion(\"1.21.5\") returned empty string")
+	}
+	if result != goExe {
+		t.Errorf("ResolveGoVersion(\"1.21.5\") = %q, want %q", result, goExe)
+	}
+
+	// Should NOT find a different version
+	result = ResolveGoVersion("1.22.0")
+	if result != "" {
+		t.Errorf("ResolveGoVersion(\"1.22.0\") = %q, want empty string", result)
+	}
+}
+
+func TestGetGoVersion(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create mock go that outputs version
+	goExe := filepath.Join(tmpDir, "go")
+	mockScript := `#!/bin/sh
+echo "go version go1.23.4 linux/amd64"
+`
+	if err := os.WriteFile(goExe, []byte(mockScript), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	version := GetGoVersion(goExe)
+	if version != "1.23.4" {
+		t.Errorf("GetGoVersion() = %q, want %q", version, "1.23.4")
+	}
+}
+
+func TestGetGoVersion_InvalidOutput(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create mock go that outputs garbage
+	goExe := filepath.Join(tmpDir, "go")
+	mockScript := `#!/bin/sh
+echo "not a valid version output"
+`
+	if err := os.WriteFile(goExe, []byte(mockScript), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	version := GetGoVersion(goExe)
+	if version != "" {
+		t.Errorf("GetGoVersion() = %q, want empty string", version)
+	}
+}
+
+func TestGetGoVersion_NonExistent(t *testing.T) {
+	version := GetGoVersion("/nonexistent/go")
+	if version != "" {
+		t.Errorf("GetGoVersion() = %q, want empty string", version)
+	}
+}
