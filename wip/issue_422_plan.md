@@ -28,7 +28,7 @@ Add the Logger field to ExecutionContext with a getter method that falls back to
 - [x] Add debug logging to download.go (URL sanitized, cache status, checksum)
 - [x] Add debug logging to extract.go (archive type, destination path)
 - [x] Add debug logging to install_binaries.go (binary paths, symlink creation)
-- [ ] Run tests and validate with --debug flag
+- [x] Run tests and validate with --debug flag
 
 Mark each step [x] after it is implemented and committed. This enables clear resume detection.
 
