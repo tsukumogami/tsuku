@@ -267,13 +267,8 @@ func TestIsActionEvaluable(t *testing.T) {
 		action   string
 		expected bool
 	}{
-		// Evaluable actions
+		// Primitive actions - evaluable
 		{"download", true},
-		{"download_archive", true},
-		{"github_archive", true},
-		{"github_file", true},
-		{"hashicorp_release", true},
-		{"homebrew_bottle", true},
 		{"extract", true},
 		{"install_binaries", true},
 		{"chmod", true},
@@ -282,6 +277,15 @@ func TestIsActionEvaluable(t *testing.T) {
 		{"set_rpath", true},
 		{"link_dependencies", true},
 		{"install_libraries", true},
+		{"npm_exec", true},
+
+		// Composite actions - not in evaluability map (decomposed at plan time)
+		// These return false because they're not in the map (unknown action behavior)
+		{"download_archive", false},
+		{"github_archive", false},
+		{"github_file", false},
+		{"hashicorp_release", false},
+		{"homebrew_bottle", false},
 
 		// Non-evaluable actions
 		{"run_command", false},
@@ -311,7 +315,8 @@ func TestIsActionEvaluable(t *testing.T) {
 }
 
 func TestFormatVersionConstant(t *testing.T) {
-	if PlanFormatVersion != 1 {
-		t.Errorf("PlanFormatVersion: got %d, want 1", PlanFormatVersion)
+	// Version 2 introduced composite action decomposition (issue #440)
+	if PlanFormatVersion != 2 {
+		t.Errorf("PlanFormatVersion: got %d, want 2", PlanFormatVersion)
 	}
 }

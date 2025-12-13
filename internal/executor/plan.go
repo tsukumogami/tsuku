@@ -4,7 +4,10 @@ import "time"
 
 // PlanFormatVersion is the current version of the installation plan format.
 // Readers should reject plans with unsupported versions.
-const PlanFormatVersion = 1
+// Version history:
+//   - Version 1: Original format with composite actions in plans
+//   - Version 2: Composite actions decomposed to primitives (introduced in #440)
+const PlanFormatVersion = 2
 
 // InstallationPlan represents a fully-resolved, deterministic specification
 // for installing a tool. Plans capture the exact URLs, checksums, and steps
@@ -57,6 +60,9 @@ type ResolvedStep struct {
 // evaluated and reproduced. This map is used during plan generation to set
 // the Evaluable field on ResolvedStep.
 //
+// As of format version 2, plans only contain primitive actions. Composite
+// actions are decomposed during plan generation.
+//
 // Evaluable actions have predictable, reproducible outcomes:
 // - Download actions: URL and checksum can be captured
 // - File operations: Parameters are deterministic
@@ -65,23 +71,19 @@ type ResolvedStep struct {
 // - run_command: Arbitrary shell execution
 // - Package manager actions: External dependency resolution
 var ActionEvaluability = map[string]bool{
-	// Download actions - evaluable (URL and checksum captured)
+	// Primitive actions - evaluable (direct execution with deterministic outcomes)
 	"download":          true,
-	"download_archive":  true,
-	"github_archive":    true,
-	"github_file":       true,
-	"hashicorp_release": true,
-	"homebrew_bottle":   true,
-
-	// Extraction and file operations - evaluable (deterministic parameters)
 	"extract":           true,
-	"install_binaries":  true,
 	"chmod":             true,
+	"install_binaries":  true,
 	"set_env":           true,
-	"validate_checksum": true,
 	"set_rpath":         true,
 	"link_dependencies": true,
 	"install_libraries": true,
+	"validate_checksum": true,
+
+	// Ecosystem primitives - evaluable through ecosystem-specific configuration
+	"npm_exec": true,
 
 	// System package actions - not evaluable (external package managers)
 	"apt_install":  false,

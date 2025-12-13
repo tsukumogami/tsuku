@@ -76,6 +76,17 @@ func IsPrimitive(action string) bool {
 	return primitives[action]
 }
 
+// IsDecomposable returns true if the action implements the Decomposable interface.
+// This checks the action registry to determine if the action can be decomposed.
+func IsDecomposable(action string) bool {
+	act := Get(action)
+	if act == nil {
+		return false
+	}
+	_, ok := act.(Decomposable)
+	return ok
+}
+
 // RegisterPrimitive adds an action name to the primitive registry.
 // This is primarily for testing and extending the primitive set.
 func RegisterPrimitive(action string) {

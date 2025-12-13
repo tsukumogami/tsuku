@@ -7,6 +7,42 @@ import (
 	"testing"
 )
 
+func TestIsDecomposable(t *testing.T) {
+	// Composite actions that implement Decomposable should return true
+	compositeActions := []string{
+		"github_archive",
+		"github_file",
+		"download_archive",
+		"hashicorp_release",
+	}
+
+	for _, name := range compositeActions {
+		if !IsDecomposable(name) {
+			t.Errorf("IsDecomposable(%q) = false, want true", name)
+		}
+	}
+
+	// Primitives should return false (they don't implement Decomposable)
+	primitiveNames := []string{
+		"download",
+		"extract",
+		"chmod",
+		"install_binaries",
+		"set_env",
+	}
+
+	for _, name := range primitiveNames {
+		if IsDecomposable(name) {
+			t.Errorf("IsDecomposable(%q) = true, want false", name)
+		}
+	}
+
+	// Unknown actions should return false
+	if IsDecomposable("nonexistent_action") {
+		t.Error("IsDecomposable(\"nonexistent_action\") = true, want false")
+	}
+}
+
 func TestIsPrimitive(t *testing.T) {
 	// Primitives should return true
 	primitives := []string{
