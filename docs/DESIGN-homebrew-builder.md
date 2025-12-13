@@ -38,17 +38,14 @@ graph TD
     A491 --> A494
     Phase2 -.-> Future
 
-    style A488 fill:#bbdefb
-    style A489 fill:#fff9c4
-    style A490 fill:#fff9c4
-    style A491 fill:#fff9c4
-    style A492 fill:#fff9c4
-    style A493 fill:#fff9c4
-    style A494 fill:#fff9c4
-    style A495 fill:#e1bee7
-    style A496 fill:#e1bee7
-    style A497 fill:#e1bee7
-    style A498 fill:#e1bee7
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class A488 ready
+    class A489,A490,A491,A492,A493,A494 blocked
+    class A495,A496,A497,A498 needsDesign
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
