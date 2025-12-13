@@ -71,6 +71,7 @@ var primitives = map[string]bool{
 	"install_libraries": true,
 	// Ecosystem primitives achieve determinism through ecosystem-specific configuration
 	"cargo_build": true,
+	"gem_exec":    true,
 	"go_build":    true,
 	"npm_exec":    true,
 	"pip_install": true,

@@ -18,6 +18,7 @@ var ActionDependencies = map[string]ActionDeps{
 	"pip_install":  {InstallTime: []string{"python"}, Runtime: []string{"python"}},
 	"pipx_install": {InstallTime: []string{"pipx"}, Runtime: []string{"python"}},
 	"gem_install":  {InstallTime: []string{"ruby"}, Runtime: []string{"ruby"}},
+	"gem_exec":     {InstallTime: []string{"ruby"}, Runtime: []string{"ruby"}},
 	"cpan_install": {InstallTime: []string{"perl"}, Runtime: []string{"perl"}},
 
 	// Compiled binary actions: install-time only

@@ -55,6 +55,7 @@ func TestIsPrimitive(t *testing.T) {
 		"link_dependencies",
 		"install_libraries",
 		"cargo_build", // Ecosystem primitive
+		"gem_exec",    // Ecosystem primitive
 		"go_build",    // Ecosystem primitive
 		"npm_exec",    // Ecosystem primitive
 		"pip_install", // Ecosystem primitive
@@ -103,6 +104,7 @@ func TestPrimitives(t *testing.T) {
 		"chmod",
 		"download",
 		"extract",
+		"gem_exec",
 		"go_build",
 		"install_binaries",
 		"install_libraries",
