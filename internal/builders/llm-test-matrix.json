@@ -1,0 +1,167 @@
+{
+  "description": "LLM recipe generation test matrix. Each test validates one specific variation to isolate failures.",
+  "tests": {
+    "L1":  {
+      "tool": "stern",
+      "repo": "stern/stern",
+      "recipe": "s/stern.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Baseline: standard os/arch mapping",
+      "features": ["os:standard", "arch:standard", "version:placeholder"]
+    },
+    "L2":  {
+      "tool": "tflint",
+      "repo": "terraform-linters/tflint",
+      "recipe": "t/tflint.toml",
+      "action": "github_archive",
+      "format": "zip",
+      "desc": "Zip archive format",
+      "features": ["format:zip", "version:none"]
+    },
+    "L3":  {
+      "tool": "helix",
+      "repo": "helix-editor/helix",
+      "recipe": "h/helix.toml",
+      "action": "github_archive",
+      "format": "tar.xz",
+      "desc": "tar.xz archive format",
+      "features": ["format:tar.xz", "strip_dirs:1"]
+    },
+    "L4":  {
+      "tool": "ast-grep",
+      "repo": "ast-grep/ast-grep",
+      "recipe": "a/ast-grep.toml",
+      "action": "github_archive",
+      "format": "zip",
+      "desc": "Rust-style target triples (apple-darwin, unknown-linux-gnu)",
+      "features": ["os:rust_triple", "arch:rust_triple"]
+    },
+    "L5":  {
+      "tool": "k9s",
+      "repo": "derailed/k9s",
+      "recipe": "k/k9s.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Capitalized OS names (Darwin, Linux)",
+      "features": ["os:capitalized"]
+    },
+    "L6":  {
+      "tool": "trivy",
+      "repo": "aquasecurity/trivy",
+      "recipe": "t/trivy.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Custom arch names (64bit, ARM64)",
+      "features": ["os:macOS", "arch:custom"]
+    },
+    "L7":  {
+      "tool": "gitleaks",
+      "repo": "zricethezav/gitleaks",
+      "recipe": "g/gitleaks.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "x64 arch mapping (amd64 -> x64)",
+      "features": ["arch:x64"]
+    },
+    "L8":  {
+      "tool": "gotop",
+      "repo": "xxxserxxx/gotop",
+      "recipe": "g/gotop.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "v{version} pattern prefix",
+      "features": ["version:v_prefix"]
+    },
+    "L9":  {
+      "tool": "gobuster",
+      "repo": "OJ/gobuster",
+      "recipe": "g/gobuster.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "No version in asset pattern",
+      "features": ["version:none", "os:capitalized"]
+    },
+    "L10": {
+      "tool": "age",
+      "repo": "FiloSottile/age",
+      "recipe": "a/age.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "strip_dirs=1 (remove top-level directory)",
+      "features": ["strip_dirs:1", "version:v_prefix"]
+    },
+    "L11": {
+      "tool": "liberica",
+      "repo": "bell-sw/Liberica",
+      "recipe": "l/liberica.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Multi-binary installation (java, javac, jar)",
+      "features": ["binaries:multiple", "install_subpath", "install_mode:directory"]
+    },
+    "L12": {
+      "tool": "btop",
+      "repo": "aristocratos/btop",
+      "recipe": "b/btop.toml",
+      "action": "github_archive",
+      "format": "tbz",
+      "desc": "install_subpath extraction",
+      "features": ["format:tbz", "install_subpath"]
+    },
+    "L13": {
+      "tool": "fly",
+      "repo": "superfly/flyctl",
+      "recipe": "f/fly.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "Binary rename (flyctl -> fly)",
+      "features": ["binary:rename", "os:macOS"]
+    },
+    "L14": {
+      "tool": "k3d",
+      "repo": "k3d-io/k3d",
+      "recipe": "k/k3d.toml",
+      "action": "github_file",
+      "format": "",
+      "desc": "github_file baseline (direct binary)",
+      "features": ["action:github_file", "os:standard", "arch:standard"]
+    },
+    "L15": {
+      "tool": "cosign",
+      "repo": "sigstore/cosign",
+      "recipe": "c/cosign.toml",
+      "action": "github_file",
+      "format": "",
+      "desc": "github_file with binary rename",
+      "features": ["action:github_file", "binary:rename"]
+    },
+    "L16": {
+      "tool": "minikube",
+      "repo": "kubernetes/minikube",
+      "recipe": "m/minikube.toml",
+      "action": "github_file",
+      "format": "",
+      "desc": "github_file with no os/arch mapping",
+      "features": ["action:github_file", "mapping:none"]
+    },
+    "L17": {
+      "tool": "kopia",
+      "repo": "kopia/kopia",
+      "recipe": "k/kopia.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "macOS os mapping (darwin -> macOS)",
+      "features": ["os:macOS", "arch:x64"]
+    },
+    "L18": {
+      "tool": "cargo-deny",
+      "repo": "EmbarkStudios/cargo-deny",
+      "recipe": "c/cargo-deny.toml",
+      "action": "github_archive",
+      "format": "tar.gz",
+      "desc": "musl libc target (unknown-linux-musl)",
+      "features": ["os:rust_triple", "arch:rust_triple", "strip_dirs:1"]
+    }
+  }
+}
