@@ -8,6 +8,8 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/llm"
+	"github.com/tsukumogami/tsuku/internal/telemetry"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 func TestHomebrewBuilder_Name(t *testing.T) {
@@ -689,10 +691,63 @@ func TestHomebrewNoBottlesError(t *testing.T) {
 }
 
 func TestHomebrewBuilder_Options(t *testing.T) {
-	// Test the option functions compile and don't panic
+	// Test all option functions apply correctly
 	httpClient := &http.Client{}
-	_ = WithHomebrewHTTPClient(httpClient)
-	_ = WithHomebrewAPIURL("http://example.com")
+	b := &HomebrewBuilder{}
+
+	// WithHomebrewHTTPClient
+	opt := WithHomebrewHTTPClient(httpClient)
+	opt(b)
+	if b.httpClient != httpClient {
+		t.Error("WithHomebrewHTTPClient did not set httpClient")
+	}
+
+	// WithHomebrewAPIURL
+	opt = WithHomebrewAPIURL("http://example.com")
+	opt(b)
+	if b.homebrewAPIURL != "http://example.com" {
+		t.Error("WithHomebrewAPIURL did not set homebrewAPIURL")
+	}
+
+	// WithHomebrewFactory
+	factory := &llm.Factory{}
+	opt = WithHomebrewFactory(factory)
+	opt(b)
+	if b.factory != factory {
+		t.Error("WithHomebrewFactory did not set factory")
+	}
+
+	// WithHomebrewExecutor
+	executor := &validate.Executor{}
+	opt = WithHomebrewExecutor(executor)
+	opt(b)
+	if b.executor != executor {
+		t.Error("WithHomebrewExecutor did not set executor")
+	}
+
+	// WithHomebrewSanitizer
+	sanitizer := validate.NewSanitizer()
+	opt = WithHomebrewSanitizer(sanitizer)
+	opt(b)
+	if b.sanitizer != sanitizer {
+		t.Error("WithHomebrewSanitizer did not set sanitizer")
+	}
+
+	// WithHomebrewProgressReporter
+	progress := &mockProgressReporter{}
+	opt = WithHomebrewProgressReporter(progress)
+	opt(b)
+	if b.progress != progress {
+		t.Error("WithHomebrewProgressReporter did not set progress")
+	}
+
+	// WithHomebrewTelemetryClient
+	telemetryClient := telemetry.NewClient()
+	opt = WithHomebrewTelemetryClient(telemetryClient)
+	opt(b)
+	if b.telemetryClient != telemetryClient {
+		t.Error("WithHomebrewTelemetryClient did not set telemetryClient")
+	}
 }
 
 func TestHomebrewBuilder_reportProgress(t *testing.T) {
@@ -736,5 +791,282 @@ func TestHomebrewBuilder_fetchFormulaInfo_Error(t *testing.T) {
 	_, err := b.fetchFormulaInfo(ctx, "test")
 	if err == nil {
 		t.Error("expected error for 500 status")
+	}
+}
+
+func TestHomebrewBuilder_inspectBottle(t *testing.T) {
+	b := &HomebrewBuilder{}
+	genCtx := &homebrewGenContext{
+		formula: "jq",
+	}
+
+	ctx := context.Background()
+	result, err := b.inspectBottle(ctx, genCtx, "jq", "x86_64_linux")
+	if err != nil {
+		t.Fatalf("inspectBottle() error = %v", err)
+	}
+	if !containsString(result, "jq") {
+		t.Error("result should contain formula name")
+	}
+	if !containsString(result, "x86_64_linux") {
+		t.Error("result should contain platform")
+	}
+}
+
+func TestHomebrewBuilder_fetchFormulaJSON(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/formula/test.json" {
+			w.Write([]byte(`{"name": "test", "desc": "Test formula"}`))
+			return
+		}
+		if r.URL.Path == "/api/formula/notfound.json" {
+			http.NotFound(w, r)
+			return
+		}
+		if r.URL.Path == "/api/formula/servererror.json" {
+			w.WriteHeader(500)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{}
+	genCtx := &homebrewGenContext{
+		httpClient: server.Client(),
+		apiURL:     server.URL,
+	}
+
+	ctx := context.Background()
+
+	// Test success
+	result, err := b.fetchFormulaJSON(ctx, genCtx, "test")
+	if err != nil {
+		t.Fatalf("fetchFormulaJSON() error = %v", err)
+	}
+	if !containsString(result, "test") {
+		t.Error("result should contain formula name")
+	}
+
+	// Test 404
+	_, err = b.fetchFormulaJSON(ctx, genCtx, "notfound")
+	if err == nil {
+		t.Error("expected error for 404")
+	}
+
+	// Test server error
+	_, err = b.fetchFormulaJSON(ctx, genCtx, "servererror")
+	if err == nil {
+		t.Error("expected error for 500")
+	}
+}
+
+func TestHomebrewBuilder_buildRepairMessage(t *testing.T) {
+	b := &HomebrewBuilder{
+		sanitizer: validate.NewSanitizer(),
+	}
+
+	result := &validate.ValidationResult{
+		Stdout:   "error: command not found",
+		Stderr:   "rg: No such file",
+		ExitCode: 127,
+	}
+
+	message := b.buildRepairMessage(result)
+	if len(message) == 0 {
+		t.Error("buildRepairMessage() returned empty string")
+	}
+	if !containsString(message, "failed validation") {
+		t.Error("message should mention failed validation")
+	}
+	if !containsString(message, "127") {
+		t.Error("message should contain exit code")
+	}
+}
+
+func TestHomebrewBuilder_formatValidationError(t *testing.T) {
+	b := &HomebrewBuilder{
+		sanitizer: validate.NewSanitizer(),
+	}
+
+	result := &validate.ValidationResult{
+		Stdout:   "some output",
+		Stderr:   "some error",
+		ExitCode: 1,
+	}
+
+	formatted := b.formatValidationError(result)
+	if !containsString(formatted, "exit code 1") {
+		t.Error("formatted error should contain exit code")
+	}
+}
+
+func TestHomebrewBuilder_formatValidationError_LongOutput(t *testing.T) {
+	b := &HomebrewBuilder{
+		sanitizer: validate.NewSanitizer(),
+	}
+
+	// Create output longer than 500 chars
+	longOutput := ""
+	for i := 0; i < 100; i++ {
+		longOutput += "error line "
+	}
+
+	result := &validate.ValidationResult{
+		Stdout:   longOutput,
+		Stderr:   "",
+		ExitCode: 1,
+	}
+
+	formatted := b.formatValidationError(result)
+	if !containsString(formatted, "...") {
+		t.Error("long output should be truncated with ...")
+	}
+}
+
+func TestHomebrewBuilder_executeToolCall_DefaultFormula(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/formula/defaultformula.json" {
+			w.Write([]byte(`{"name": "defaultformula"}`))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{}
+	genCtx := &homebrewGenContext{
+		formula:    "defaultformula",
+		httpClient: server.Client(),
+		apiURL:     server.URL,
+	}
+
+	ctx := context.Background()
+
+	// Test fetch_formula_json with empty formula (should use default)
+	toolCall := llm.ToolCall{
+		Name:      ToolFetchFormulaJSON,
+		Arguments: map[string]any{},
+	}
+
+	result, _, err := b.executeToolCall(ctx, genCtx, toolCall)
+	if err != nil {
+		t.Fatalf("executeToolCall() error = %v", err)
+	}
+	if !containsString(result, "defaultformula") {
+		t.Error("should use default formula")
+	}
+
+	// Test inspect_bottle with empty formula and platform (should use defaults)
+	toolCall = llm.ToolCall{
+		Name:      ToolInspectBottle,
+		Arguments: map[string]any{},
+	}
+
+	result, _, err = b.executeToolCall(ctx, genCtx, toolCall)
+	if err != nil {
+		t.Fatalf("executeToolCall() error = %v", err)
+	}
+	if !containsString(result, "defaultformula") {
+		t.Error("should use default formula")
+	}
+}
+
+func TestHomebrewBuilder_executeToolCall_InspectBottle_InvalidFormula(t *testing.T) {
+	b := &HomebrewBuilder{}
+	genCtx := &homebrewGenContext{
+		formula: "valid",
+	}
+
+	ctx := context.Background()
+	toolCall := llm.ToolCall{
+		Name: ToolInspectBottle,
+		Arguments: map[string]any{
+			"formula":  "../invalid",
+			"platform": "x86_64_linux",
+		},
+	}
+
+	_, _, err := b.executeToolCall(ctx, genCtx, toolCall)
+	if err == nil {
+		t.Error("expected error for invalid formula in inspect_bottle")
+	}
+}
+
+func TestHomebrewBuilder_CanBuild_HTTPError(t *testing.T) {
+	// Create mock server that returns server error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(500)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+	}
+
+	ctx := context.Background()
+	_, err := b.CanBuild(ctx, "test")
+	if err == nil {
+		t.Error("expected error for HTTP error")
+	}
+}
+
+func TestHomebrewBuilder_generateRecipe_NoDependencies(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	formulaInfo := &homebrewFormulaInfo{
+		Name:        "simple",
+		Description: "A simple tool",
+		Homepage:    "https://example.com",
+	}
+	formulaInfo.Versions.Stable = "1.0.0"
+
+	recipeData := &homebrewRecipeData{
+		Executables:   []string{"bin/simple"},
+		Dependencies:  nil, // No dependencies
+		VerifyCommand: "simple --version",
+	}
+
+	recipe, err := b.generateRecipe("simple", formulaInfo, recipeData)
+	if err != nil {
+		t.Fatalf("generateRecipe() error = %v", err)
+	}
+
+	if len(recipe.Metadata.RuntimeDependencies) != 0 {
+		t.Errorf("expected no runtime dependencies, got %v", recipe.Metadata.RuntimeDependencies)
+	}
+}
+
+func TestHomebrewBuilder_buildUserMessage_NoDependencies(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	formulaInfo := &homebrewFormulaInfo{
+		Name:        "nodeps",
+		Description: "No dependencies",
+		Homepage:    "https://example.com",
+	}
+	formulaInfo.Versions.Stable = "1.0.0"
+	formulaInfo.Dependencies = nil // No dependencies
+
+	genCtx := &homebrewGenContext{
+		formula:     "nodeps",
+		formulaInfo: formulaInfo,
+	}
+
+	message := b.buildUserMessage(genCtx)
+	if containsString(message, "Runtime Dependencies:") {
+		t.Error("message should not contain dependencies section when there are none")
+	}
+}
+
+func TestIsValidHomebrewFormula_TooLong(t *testing.T) {
+	// Test formula name that's too long (> 128 chars)
+	longName := ""
+	for i := 0; i < 130; i++ {
+		longName += "a"
+	}
+	if isValidHomebrewFormula(longName) {
+		t.Error("expected false for name > 128 chars")
 	}
 }
