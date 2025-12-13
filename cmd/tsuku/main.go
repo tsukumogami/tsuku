@@ -3,18 +3,25 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/buildinfo"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
-var quietFlag bool
+var (
+	quietFlag   bool
+	verboseFlag bool
+	debugFlag   bool
+)
 
 // globalCtx is the application-level context that is canceled on SIGINT/SIGTERM.
 // Commands should use this context for cancellable operations.
@@ -32,8 +39,13 @@ to version-specific directories, with automatic PATH management.`,
 }
 
 func init() {
-	// Global flags
-	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "Suppress informational output")
+	// Global verbosity flags
+	rootCmd.PersistentFlags().BoolVarP(&quietFlag, "quiet", "q", false, "Show errors only")
+	rootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "Show verbose output (INFO level)")
+	rootCmd.PersistentFlags().BoolVar(&debugFlag, "debug", false, "Show debug output (includes timestamps and source locations)")
+
+	// Initialize logger before command execution
+	rootCmd.PersistentPreRun = initLogger
 
 	// Set version from build info (handles tagged releases and dev builds)
 	rootCmd.Version = buildinfo.Version()
@@ -100,4 +112,53 @@ func main() {
 		fmt.Fprintln(os.Stderr, err)
 		exitWithCode(ExitGeneral)
 	}
+}
+
+// initLogger initializes the global logger based on flags and environment variables.
+// Flags take precedence over environment variables.
+func initLogger(cmd *cobra.Command, args []string) {
+	level := determineLogLevel()
+	handler := log.NewCLIHandler(level)
+	logger := log.New(handler)
+	log.SetDefault(logger)
+
+	// Display warning banner when debug mode is enabled
+	if level == slog.LevelDebug {
+		fmt.Fprintln(os.Stderr, "[DEBUG MODE] Output may contain file paths and URLs. Do not share publicly.")
+	}
+}
+
+// determineLogLevel returns the appropriate slog.Level based on flags and environment variables.
+// Priority: flags > environment variables > default (WARN)
+func determineLogLevel() slog.Level {
+	// Flags take precedence
+	if debugFlag {
+		return slog.LevelDebug
+	}
+	if verboseFlag {
+		return slog.LevelInfo
+	}
+	if quietFlag {
+		return slog.LevelError
+	}
+
+	// Check environment variables
+	if isTruthy(os.Getenv("TSUKU_DEBUG")) {
+		return slog.LevelDebug
+	}
+	if isTruthy(os.Getenv("TSUKU_VERBOSE")) {
+		return slog.LevelInfo
+	}
+	if isTruthy(os.Getenv("TSUKU_QUIET")) {
+		return slog.LevelError
+	}
+
+	// Default to WARN level
+	return slog.LevelWarn
+}
+
+// isTruthy returns true if the string represents a truthy value.
+func isTruthy(s string) bool {
+	s = strings.ToLower(s)
+	return s == "1" || s == "true" || s == "yes" || s == "on"
 }
