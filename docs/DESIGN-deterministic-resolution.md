@@ -76,12 +76,15 @@ The installation plan is the key artifact - a fully-resolved, deterministic spec
 
 ### Milestone 2: Deterministic Execution
 
-**Goal**: Make plan replay the default for re-installations when version is pinned.
+**Goal**: Refactor installation to use the two-phase (eval/exec) model, making all installations plan-based.
+
+**Architectural change**: `tsuku install foo` becomes functionally equivalent to `tsuku eval foo | tsuku install --plan -`. Every installation generates a plan (or reuses a cached one), then executes that plan. This single execution path guarantees determinism by architecture rather than careful implementation.
 
 **Deliverables**:
+- Refactor executor so all installations go through plan generation and execution
 - Re-install uses stored plan when version constraint exactly matches resolved version
 - `--refresh` flag to force fresh evaluation
-- Checksum verification during download
+- Checksum verification during plan execution
 - Clear error on checksum mismatch (indicates upstream change)
 
 **Value delivered**:
