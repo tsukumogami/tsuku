@@ -1,10 +1,46 @@
 # Design: Deterministic Execution (Plan-Based Installation)
 
-- **Status**: Accepted
+- **Status**: Planned
 - **Milestone**: Deterministic Recipe Execution
 - **Author**: @dangazineu
 - **Created**: 2025-12-13
 - **Scope**: Tactical
+
+## Implementation Issues
+
+### Milestone: [Deterministic Recipe Execution](https://github.com/tsukumogami/tsuku/milestone/15)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#470](https://github.com/tsukumogami/tsuku/issues/470) | feat(executor): add plan cache infrastructure | None |
+| [#471](https://github.com/tsukumogami/tsuku/issues/471) | feat(install): add GetCachedPlan to StateManager | None |
+| [#472](https://github.com/tsukumogami/tsuku/issues/472) | feat(executor): expose ResolveVersion public method | None |
+| [#473](https://github.com/tsukumogami/tsuku/issues/473) | feat(executor): add ExecutePlan with checksum verification | [#470](https://github.com/tsukumogami/tsuku/issues/470) |
+| [#474](https://github.com/tsukumogami/tsuku/issues/474) | feat(cli): add --fresh flag to install command | None |
+| [#475](https://github.com/tsukumogami/tsuku/issues/475) | feat(executor): add plan conversion helpers | [#470](https://github.com/tsukumogami/tsuku/issues/470) |
+| [#477](https://github.com/tsukumogami/tsuku/issues/477) | feat(cli): implement getOrGeneratePlan orchestration | [#470](https://github.com/tsukumogami/tsuku/issues/470), [#471](https://github.com/tsukumogami/tsuku/issues/471), [#472](https://github.com/tsukumogami/tsuku/issues/472), [#474](https://github.com/tsukumogami/tsuku/issues/474), [#475](https://github.com/tsukumogami/tsuku/issues/475) |
+| [#478](https://github.com/tsukumogami/tsuku/issues/478) | feat(cli): wire up plan-based installation flow | [#473](https://github.com/tsukumogami/tsuku/issues/473), [#477](https://github.com/tsukumogami/tsuku/issues/477) |
+| [#479](https://github.com/tsukumogami/tsuku/issues/479) | refactor(executor): remove legacy Execute method | [#478](https://github.com/tsukumogami/tsuku/issues/478) |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    classDef done fill:#90EE90,stroke:#333
+    classDef ready fill:#87CEEB,stroke:#333
+    classDef blocked fill:#FFB6C1,stroke:#333
+
+    I470[#470: plan cache infrastructure]:::ready --> I473[#473: ExecutePlan with checksum]:::blocked
+    I470 --> I475[#475: plan conversion helpers]:::blocked
+    I470 --> I477[#477: getOrGeneratePlan]:::blocked
+    I471[#471: GetCachedPlan]:::ready --> I477
+    I472[#472: ResolveVersion]:::ready --> I477
+    I474[#474: --fresh flag]:::ready --> I477
+    I475 --> I477
+    I473 --> I478[#478: wire up installation]:::blocked
+    I477 --> I478
+    I478 --> I479[#479: remove legacy Execute]:::blocked
+```
 
 ## Upstream Design Reference
 
