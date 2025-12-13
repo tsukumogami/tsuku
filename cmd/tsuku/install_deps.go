@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -45,10 +46,6 @@ type planCacheReader interface {
 // getOrGeneratePlan implements the two-phase plan retrieval flow:
 // Phase 1 (resolution) always runs, then checks cache, then generates if needed.
 // Returns a plan ready for ExecutePlan().
-//
-// Used by: runInstallWithPlan (wired in #478)
-var _ = getOrGeneratePlan // nolint:unused // infrastructure for #478
-
 func getOrGeneratePlan(
 	ctx context.Context,
 	exec *executor.Executor,
@@ -349,6 +346,13 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 	}
 
+	// Compute recipe hash for cache key
+	recipeHash, err := computeRecipeHashForPlan(r)
+	if err != nil {
+		printInfof("Warning: failed to compute recipe hash: %v\n", err)
+		// Continue without hash - cache lookup will always miss
+	}
+
 	// Create executor
 	var exec *executor.Executor
 	if reqVersion != "" {
@@ -372,16 +376,35 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set download cache directory
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 
-	// Execute recipe with cancellable context
-	if err := exec.Execute(globalCtx); err != nil {
+	// Get or generate installation plan (two-phase flow)
+	planCfg := planRetrievalConfig{
+		Tool:              toolName,
+		VersionConstraint: versionConstraint,
+		Fresh:             installFresh,
+		RecipeHash:        recipeHash,
+	}
+	plan, err := getOrGeneratePlan(globalCtx, exec, mgr.GetState(), planCfg)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to generate plan: %v\n", err)
+		return err
+	}
+
+	// Execute the plan
+	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
+		// Handle ChecksumMismatchError specially - it has a user-friendly message
+		var checksumErr *executor.ChecksumMismatchError
+		if errors.As(err, &checksumErr) {
+			fmt.Fprintf(os.Stderr, "\n%s\n", checksumErr.Error())
+			return err
+		}
 		fmt.Fprintf(os.Stderr, "Installation failed: %v\n", err)
 		return err
 	}
 
-	// Check if version was resolved (structure-only validation doesn't resolve versions)
-	version := exec.Version()
+	// Get version from plan (plan always has resolved version)
+	version := plan.Version
 	if version == "" {
-		// For recipes without dynamic versioning (e.g. local test recipes), use "dev"
+		// Fallback for recipes without dynamic versioning
 		version = "dev"
 	}
 
@@ -423,21 +446,8 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	installOpts.Binaries = binaries
 	installOpts.RequestedVersion = versionConstraint // Record what user asked for ("17", "@lts", "")
 
-	// Generate installation plan for storage
-	// This captures the fully-resolved URLs, checksums, and steps
-	planCfg := executor.PlanConfig{
-		RecipeSource: "registry",
-		OnWarning: func(action, message string) {
-			// Suppress warnings during plan generation - they've already been shown during execution
-		},
-	}
-	executorPlan, planErr := exec.GeneratePlan(globalCtx, planCfg)
-	if planErr != nil {
-		printInfof("Warning: failed to generate installation plan: %v\n", planErr)
-		// Continue without plan - installation still succeeds
-	} else {
-		installOpts.Plan = convertExecutorPlan(executorPlan)
-	}
+	// Store the plan using canonical conversion
+	installOpts.Plan = executor.ToStoragePlan(plan)
 
 	// Resolve all dependencies using the central resolution algorithm
 	resolvedDeps := actions.ResolveDependencies(r)
@@ -548,38 +558,4 @@ func mapKeys(m map[string]string) []string {
 		keys = append(keys, k)
 	}
 	return keys
-}
-
-// convertExecutorPlan converts an executor.InstallationPlan to install.Plan for storage.
-func convertExecutorPlan(ep *executor.InstallationPlan) *install.Plan {
-	if ep == nil {
-		return nil
-	}
-
-	// Convert steps
-	steps := make([]install.PlanStep, len(ep.Steps))
-	for i, s := range ep.Steps {
-		steps[i] = install.PlanStep{
-			Action:    s.Action,
-			Params:    s.Params,
-			Evaluable: s.Evaluable,
-			URL:       s.URL,
-			Checksum:  s.Checksum,
-			Size:      s.Size,
-		}
-	}
-
-	return &install.Plan{
-		FormatVersion: ep.FormatVersion,
-		Tool:          ep.Tool,
-		Version:       ep.Version,
-		Platform: install.PlanPlatform{
-			OS:   ep.Platform.OS,
-			Arch: ep.Platform.Arch,
-		},
-		GeneratedAt:  ep.GeneratedAt,
-		RecipeHash:   ep.RecipeHash,
-		RecipeSource: ep.RecipeSource,
-		Steps:        steps,
-	}
 }

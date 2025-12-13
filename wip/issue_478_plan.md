@@ -23,15 +23,15 @@ Follow the design from `docs/DESIGN-deterministic-execution.md`. The key changes
 - None - all test infrastructure exists
 
 ## Implementation Steps
-- [ ] Update `installWithDependencies()` to compute recipe hash before creating executor
-- [ ] Update `installWithDependencies()` to call `getOrGeneratePlan()` with proper config
-- [ ] Update `installWithDependencies()` to call `exec.ExecutePlan(ctx, plan)` instead of `exec.Execute(ctx)`
-- [ ] Handle `ChecksumMismatchError` from ExecutePlan with user-friendly output
-- [ ] Replace `convertExecutorPlan()` usage with `executor.ToStoragePlan()`
-- [ ] Remove the now-unused `convertExecutorPlan()` function
-- [ ] Remove the nolint directive for `getOrGeneratePlan` (it's now used)
+- [x] Update `installWithDependencies()` to compute recipe hash before creating executor
+- [x] Update `installWithDependencies()` to call `getOrGeneratePlan()` with proper config
+- [x] Update `installWithDependencies()` to call `exec.ExecutePlan(ctx, plan)` instead of `exec.Execute(ctx)`
+- [x] Handle `ChecksumMismatchError` from ExecutePlan with user-friendly output
+- [x] Replace `convertExecutorPlan()` usage with `executor.ToStoragePlan()`
+- [x] Remove the now-unused `convertExecutorPlan()` function
+- [x] Remove the nolint directive for `getOrGeneratePlan` (it's now used)
 - [ ] Update design doc to mark #478 as done and #479 as ready
-- [ ] Verify all tests pass
+- [x] Verify all tests pass
 
 ## Testing Strategy
 - Unit tests: Existing tests in `install_deps_test.go` cover `getOrGeneratePlan()`

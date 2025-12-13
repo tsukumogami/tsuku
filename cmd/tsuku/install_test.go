@@ -3,10 +3,6 @@ package main
 import (
 	"strings"
 	"testing"
-	"time"
-
-	"github.com/tsukumogami/tsuku/internal/executor"
-	"github.com/tsukumogami/tsuku/internal/install"
 )
 
 func TestIsInteractive(t *testing.T) {
@@ -205,105 +201,4 @@ func TestInstallCmdUsage(t *testing.T) {
 	if !strings.Contains(installCmd.Long, "terraform@latest") {
 		t.Error("installCmd.Long should contain @latest example")
 	}
-}
-
-func TestConvertExecutorPlan(t *testing.T) {
-	now := time.Now()
-
-	t.Run("converts nil plan", func(t *testing.T) {
-		result := convertExecutorPlan(nil)
-		if result != nil {
-			t.Errorf("convertExecutorPlan(nil) = %v, want nil", result)
-		}
-	})
-
-	t.Run("converts full plan", func(t *testing.T) {
-		ep := &executor.InstallationPlan{
-			FormatVersion: 1,
-			Tool:          "gh",
-			Version:       "2.40.0",
-			Platform: executor.Platform{
-				OS:   "linux",
-				Arch: "amd64",
-			},
-			GeneratedAt:  now,
-			RecipeHash:   "abc123",
-			RecipeSource: "registry",
-			Steps: []executor.ResolvedStep{
-				{
-					Action:    "download_archive",
-					Params:    map[string]interface{}{"url": "https://example.com/file.tar.gz"},
-					Evaluable: true,
-					URL:       "https://example.com/file.tar.gz",
-					Checksum:  "sha256:deadbeef",
-					Size:      12345,
-				},
-				{
-					Action:    "extract",
-					Params:    map[string]interface{}{"format": "tar.gz"},
-					Evaluable: true,
-				},
-			},
-		}
-
-		result := convertExecutorPlan(ep)
-		if result == nil {
-			t.Fatal("convertExecutorPlan returned nil for non-nil input")
-		}
-
-		// Verify top-level fields
-		if result.FormatVersion != 1 {
-			t.Errorf("FormatVersion = %d, want 1", result.FormatVersion)
-		}
-		if result.Tool != "gh" {
-			t.Errorf("Tool = %q, want %q", result.Tool, "gh")
-		}
-		if result.Version != "2.40.0" {
-			t.Errorf("Version = %q, want %q", result.Version, "2.40.0")
-		}
-		if result.Platform.OS != "linux" || result.Platform.Arch != "amd64" {
-			t.Errorf("Platform = %+v, want linux/amd64", result.Platform)
-		}
-		if result.RecipeHash != "abc123" {
-			t.Errorf("RecipeHash = %q, want %q", result.RecipeHash, "abc123")
-		}
-		if result.RecipeSource != "registry" {
-			t.Errorf("RecipeSource = %q, want %q", result.RecipeSource, "registry")
-		}
-
-		// Verify steps
-		if len(result.Steps) != 2 {
-			t.Fatalf("len(Steps) = %d, want 2", len(result.Steps))
-		}
-
-		step0 := result.Steps[0]
-		if step0.Action != "download_archive" {
-			t.Errorf("Steps[0].Action = %q, want %q", step0.Action, "download_archive")
-		}
-		if !step0.Evaluable {
-			t.Error("Steps[0].Evaluable = false, want true")
-		}
-		if step0.URL != "https://example.com/file.tar.gz" {
-			t.Errorf("Steps[0].URL = %q, want %q", step0.URL, "https://example.com/file.tar.gz")
-		}
-		if step0.Checksum != "sha256:deadbeef" {
-			t.Errorf("Steps[0].Checksum = %q, want %q", step0.Checksum, "sha256:deadbeef")
-		}
-		if step0.Size != 12345 {
-			t.Errorf("Steps[0].Size = %d, want 12345", step0.Size)
-		}
-	})
-
-	t.Run("returns correct type", func(t *testing.T) {
-		ep := &executor.InstallationPlan{
-			FormatVersion: 1,
-			Tool:          "test",
-			Version:       "1.0.0",
-		}
-
-		result := convertExecutorPlan(ep)
-
-		// Verify the result is the correct type for InstallOptions
-		var _ *install.Plan = result
-	})
 }
