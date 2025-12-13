@@ -224,7 +224,7 @@ Build a simple builder using only Homebrew JSON API without LLM involvement.
 - No intelligent dependency analysis
 - Validation failures require manual recipe editing
 
-**Estimated complexity:** Low (2-3 days implementation)
+**Complexity:** Low
 
 ### Option B: LLM-Enhanced Bottle Builder
 
@@ -252,7 +252,7 @@ Use LLM to analyze formula metadata and optionally inspect bottle contents for i
 - Requires LLM API key
 - Prompt injection risk (mitigated by schema enforcement)
 
-**Estimated complexity:** Medium (1-2 weeks implementation)
+**Complexity:** Medium
 
 ### Option C: Full Source Build Support
 
@@ -281,7 +281,7 @@ Extend beyond bottles to generate recipes that build from source using LLM-parse
 - Resource staging, patches, inreplace operations are complex
 - Higher LLM cost (longer prompts, more repair attempts)
 
-**Estimated complexity:** High (3-4 weeks implementation)
+**Complexity:** High (Ruby DSL parsing, build system detection, platform conditionals)
 
 ### Option D: Hybrid Approach (Bottles-First with Source Fallback)
 
@@ -303,7 +303,7 @@ Start with bottle-based generation (Option B), fall back to source builds (Optio
 - Source fallback has lower success rate
 - Higher security surface area
 
-**Estimated complexity:** High (4-6 weeks implementation)
+**Complexity:** High (combines Option B and C complexity)
 
 ### Option Comparison Matrix
 
@@ -340,12 +340,12 @@ Option D provides maximum formula coverage while managing complexity through pha
 **Phase 1: Bottles (Option B)**
 - LLM-generated recipes using `homebrew_bottle` action
 - Target: ~75-85% success rate on formulas with bottles
-- Estimated effort: 1-2 weeks
+- Complexity: Medium (LLM conversation loop, bottle inspection, validation)
 
 **Phase 2: Source Builds (Option C)**
 - LLM-parsed `install` methods translated to tsuku actions
 - Target: ~50-70% success rate on formulas without bottles
-- Estimated effort: 3-4 weeks additional
+- Complexity: High (Ruby DSL analysis, build system mapping, platform conditionals)
 
 ### Rejected Option
 
@@ -954,7 +954,6 @@ Recipes to generate: 8
   9. neovim
 
 Estimated cost: ~$0.45
-Estimated time: ~2-3 minutes
 
 Proceed? [y/N] y
 
