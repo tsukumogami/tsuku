@@ -1,6 +1,6 @@
 # Design: Deterministic Execution (Plan-Based Installation)
 
-- **Status**: Planned
+- **Status**: Current
 - **Milestone**: Deterministic Recipe Execution
 - **Author**: @dangazineu
 - **Created**: 2025-12-13
@@ -39,7 +39,7 @@ graph LR
     I475 --> I477
     I473 --> I478[#478: wire up installation]:::done
     I477 --> I478
-    I478 --> I479[#479: remove legacy Execute]:::ready
+    I478 --> I479[#479: remove legacy Execute]:::done
 ```
 
 ## Upstream Design Reference
