@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
+
+	"github.com/tsukumogami/tsuku/internal/log"
 )
 
 // mockLogger records log messages for testing.
@@ -16,6 +18,22 @@ type mockLogger struct {
 
 func (m *mockLogger) Debug(msg string, args ...any) {
 	m.messages = append(m.messages, msg)
+}
+
+func (m *mockLogger) Info(msg string, args ...any) {
+	m.messages = append(m.messages, msg)
+}
+
+func (m *mockLogger) Warn(msg string, args ...any) {
+	m.messages = append(m.messages, msg)
+}
+
+func (m *mockLogger) Error(msg string, args ...any) {
+	m.messages = append(m.messages, msg)
+}
+
+func (m *mockLogger) With(args ...any) log.Logger {
+	return m
 }
 
 func TestCleaner_CleanupTempDirs(t *testing.T) {
