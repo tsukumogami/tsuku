@@ -15,14 +15,14 @@ Create a new guide document `docs/GUIDE-plan-based-installation.md` with compreh
 
 ## Implementation Steps
 
-- [ ] Create docs/GUIDE-plan-based-installation.md with:
+- [x] Create docs/GUIDE-plan-based-installation.md with:
   - Overview of two-phase installation (eval/exec)
   - Basic usage examples (file and stdin)
   - Air-gapped deployment workflow
   - CI distribution workflow
   - Plan format reference
-- [ ] Update README.md to reference the new guide
-- [ ] Update design doc dependency graph (I508 done)
+- [x] Update README.md to reference the new guide
+- [x] Update design doc dependency graph (I508 done)
 
 ## Content Outline for GUIDE
 
