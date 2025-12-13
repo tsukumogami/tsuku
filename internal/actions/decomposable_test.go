@@ -8,8 +8,8 @@ import (
 )
 
 func TestIsPrimitive(t *testing.T) {
-	// Tier 1 primitives should return true
-	tier1Primitives := []string{
+	// Primitives should return true
+	primitives := []string{
 		"download",
 		"extract",
 		"chmod",
@@ -18,9 +18,10 @@ func TestIsPrimitive(t *testing.T) {
 		"set_rpath",
 		"link_dependencies",
 		"install_libraries",
+		"npm_exec", // Ecosystem primitive
 	}
 
-	for _, name := range tier1Primitives {
+	for _, name := range primitives {
 		if !IsPrimitive(name) {
 			t.Errorf("IsPrimitive(%q) = false, want true", name)
 		}
@@ -50,9 +51,9 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 8 primitives
-	if len(prims) != 8 {
-		t.Errorf("len(Primitives()) = %d, want 8", len(prims))
+	// Should have exactly 9 primitives
+	if len(prims) != 9 {
+		t.Errorf("len(Primitives()) = %d, want 9", len(prims))
 	}
 
 	// Sort for deterministic comparison
@@ -65,6 +66,7 @@ func TestPrimitives(t *testing.T) {
 		"install_binaries",
 		"install_libraries",
 		"link_dependencies",
+		"npm_exec",
 		"set_env",
 		"set_rpath",
 	}

@@ -75,6 +75,7 @@ func init() {
 
 	// Package manager actions
 	Register(&NpmInstallAction{})
+	Register(&NpmExecAction{})
 	Register(&PipxInstallAction{})
 	Register(&CargoInstallAction{})
 	Register(&GemInstallAction{})

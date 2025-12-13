@@ -55,7 +55,7 @@ type EvalContext struct {
 	Downloader Downloader        // For downloading files to compute checksums
 }
 
-// primitives is the set of Tier 1 primitive action names.
+// primitives is the set of primitive action names.
 // These actions execute directly without decomposition.
 var primitives = map[string]bool{
 	"download":          true,
@@ -66,9 +66,11 @@ var primitives = map[string]bool{
 	"set_rpath":         true,
 	"link_dependencies": true,
 	"install_libraries": true,
+	// Ecosystem primitives achieve determinism through ecosystem-specific configuration
+	"npm_exec": true,
 }
 
-// IsPrimitive returns true if the action is a Tier 1 primitive.
+// IsPrimitive returns true if the action is a primitive.
 // Primitives execute directly and cannot be decomposed further.
 func IsPrimitive(action string) bool {
 	return primitives[action]
