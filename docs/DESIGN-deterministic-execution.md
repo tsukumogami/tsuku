@@ -682,34 +682,113 @@ tsuku install <tool> --fresh          # Force fresh plan generation
 
 ## Implementation Approach
 
-### Phase 1: Core Infrastructure
+The implementation is organized into parallel tracks that minimize file conflicts. Each issue is independently testable. The old `Execute()` method remains functional until the new flow is fully wired up, then removed in a cleanup ticket.
 
-1. Add `PlanCacheKey` structure based on resolution output
-2. Add `StateManager.GetCachedPlan()` method for plan retrieval
-3. Implement `validateCachedPlan()` function
-4. Add `ChecksumMismatchError` type with helpful error message
+### File Hotpath Analysis
 
-### Phase 2: Executor Refactoring
+| File | Modifications | Track |
+|------|---------------|-------|
+| `internal/executor/plan_cache.go` (new) | PlanCacheKey, validateCachedPlan, ChecksumMismatchError | A |
+| `internal/install/state.go` | GetCachedPlan() | B |
+| `internal/executor/executor.go` | ResolveVersion(), ExecutePlan() | C |
+| `cmd/tsuku/install.go` | --fresh flag | D |
+| `cmd/tsuku/install_deps.go` | getOrGeneratePlan(), wire up flow | D |
 
-1. Remove `Execute(ctx)` method from executor
-2. Add `ExecutePlan(ctx, plan)` as the only execution entry point
-3. Implement checksum verification in `ExecutePlan`
-4. Add `ResolveVersion()` method to expose Phase 1 resolution
+### Track A: Plan Cache Types (new file, no conflicts)
 
-### Phase 3: Install Command Updates
+**A1: Add plan cache infrastructure**
+- Create `internal/executor/plan_cache.go` with:
+  - `PlanCacheKey` structure
+  - `CacheKeyFor()` helper function
+  - `validateCachedPlan()` function
+  - `ChecksumMismatchError` type with helpful error message
+- Unit tests in `plan_cache_test.go`
+- **Dependencies**: None
+- **Testable**: Yes (pure functions, no integration needed)
 
-1. Add `--fresh` flag to install command
-2. Implement `getOrGeneratePlan()` in install_deps.go
-3. Update `installWithDependencies` to use two-phase flow
-4. Update error handling for `ChecksumMismatchError`
+### Track B: State Manager (isolated file)
 
-### Phase 4: Testing and Documentation
+**B1: Add GetCachedPlan to StateManager**
+- Add `GetCachedPlan(tool, version)` method to `internal/install/state.go`
+- Returns stored plan from `state.Installed[tool].Versions[version].Plan`
+- Unit tests for cache hit/miss scenarios
+- **Dependencies**: None
+- **Testable**: Yes (mock state file)
 
-1. Unit tests for plan cache key generation
-2. Unit tests for plan validation
-3. Integration tests for two-phase evaluation
-4. Integration tests for checksum verification
-5. Update CLI help text and documentation
+### Track C: Executor Methods (sequential within track)
+
+**C1: Add ResolveVersion public method**
+- Expose version resolution as `ResolveVersion(ctx, constraint) (string, error)`
+- Wraps existing internal resolution logic
+- Unit tests
+- **Dependencies**: None
+- **Testable**: Yes (existing version provider mocks)
+
+**C2: Add ExecutePlan method**
+- Add `ExecutePlan(ctx, plan) error` method
+- Implement checksum verification for download steps
+- Use `ChecksumMismatchError` from Track A
+- Keep existing `Execute()` working (no removal yet)
+- Unit tests with mock plans
+- **Dependencies**: A1 (ChecksumMismatchError type)
+- **Testable**: Yes (can test ExecutePlan independently)
+
+### Track D: Install Command (sequential within track)
+
+**D1: Add --fresh flag**
+- Add `--fresh` flag to `cmd/tsuku/install.go`
+- Pass through to install options (no behavior change yet)
+- **Dependencies**: None
+- **Testable**: Yes (flag parsing tests)
+
+**D2: Implement getOrGeneratePlan**
+- Add `getOrGeneratePlan()` function to `cmd/tsuku/install_deps.go`
+- Implements two-phase flow: resolve → cache lookup → generate if needed
+- Uses Track A, B, C components
+- Unit tests with mocked dependencies
+- **Dependencies**: A1, B1, C1
+- **Testable**: Yes (mock executor and state manager)
+
+**D3: Wire up new installation flow**
+- Update `installWithDependencies()` to use `getOrGeneratePlan()` + `ExecutePlan()`
+- Handle `ChecksumMismatchError` with user-friendly output
+- Integration tests for full flow
+- **Dependencies**: C2, D1, D2
+- **Testable**: Yes (integration tests)
+
+### Track E: Cleanup (after D3 verified)
+
+**E1: Remove legacy Execute method**
+- Remove `Execute(ctx)` from executor
+- Remove any code paths that bypass plan generation
+- Update any remaining callers
+- **Dependencies**: D3 fully tested and deployed
+- **Testable**: Yes (ensure no regressions)
+
+### Dependency Graph
+
+```
+A1 ─────────────────────────────┐
+                                │
+B1 ─────────────────────────────┼──→ D2 ──→ D3 ──→ E1
+                                │         ↗
+C1 ─────────────────────────────┤        /
+                                │       /
+C2 (depends on A1) ─────────────┘──────/
+
+D1 ─────────────────────────────────→ D3
+```
+
+### Parallelization Strategy
+
+**Can run in parallel (no file conflicts):**
+- A1, B1, C1, D1 (all touch different files)
+
+**Must be sequential:**
+- C2 after A1 (needs ChecksumMismatchError)
+- D2 after A1, B1, C1 (needs all infrastructure)
+- D3 after C2, D1, D2 (integration point)
+- E1 after D3 (cleanup after verification)
 
 ## Security Considerations
 
