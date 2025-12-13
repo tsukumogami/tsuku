@@ -2067,3 +2067,139 @@ func TestNewPlanFromExecutor(t *testing.T) {
 		t.Error("Deterministic = false, want true")
 	}
 }
+
+// GetCachedPlan tests
+
+func TestStateManager_GetCachedPlan_CacheHit(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Create a test plan
+	testPlan := &Plan{
+		FormatVersion: 2,
+		Tool:          "gh",
+		Version:       "2.40.0",
+		Platform: PlanPlatform{
+			OS:   "linux",
+			Arch: "amd64",
+		},
+		GeneratedAt:  timeNow(),
+		RecipeHash:   "abc123",
+		RecipeSource: "registry",
+		Steps: []PlanStep{
+			{Action: "download", Evaluable: true},
+		},
+	}
+
+	// Save state with plan
+	state := &State{
+		Installed: map[string]ToolState{
+			"gh": {
+				ActiveVersion: "2.40.0",
+				Versions: map[string]VersionState{
+					"2.40.0": {
+						Requested:   "",
+						Binaries:    []string{"gh"},
+						InstalledAt: timeNow(),
+						Plan:        testPlan,
+					},
+				},
+				IsExplicit: true,
+			},
+		},
+	}
+
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Get cached plan
+	plan, err := sm.GetCachedPlan("gh", "2.40.0")
+	if err != nil {
+		t.Fatalf("GetCachedPlan() error = %v", err)
+	}
+
+	if plan == nil {
+		t.Fatal("GetCachedPlan() returned nil, want plan")
+	}
+
+	if plan.Tool != "gh" {
+		t.Errorf("Plan.Tool = %q, want %q", plan.Tool, "gh")
+	}
+	if plan.Version != "2.40.0" {
+		t.Errorf("Plan.Version = %q, want %q", plan.Version, "2.40.0")
+	}
+}
+
+func TestStateManager_GetCachedPlan_ToolNotInstalled(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Get cached plan for non-existent tool
+	plan, err := sm.GetCachedPlan("nonexistent", "1.0.0")
+	if err != nil {
+		t.Fatalf("GetCachedPlan() error = %v", err)
+	}
+
+	if plan != nil {
+		t.Errorf("GetCachedPlan() = %v, want nil for non-existent tool", plan)
+	}
+}
+
+func TestStateManager_GetCachedPlan_VersionNotInstalled(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Add tool with different version
+	err := sm.UpdateTool("gh", func(ts *ToolState) {
+		ts.ActiveVersion = "2.40.0"
+		ts.Versions = map[string]VersionState{
+			"2.40.0": {Requested: "", Binaries: []string{"gh"}},
+		}
+		ts.IsExplicit = true
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Get cached plan for non-existent version
+	plan, err := sm.GetCachedPlan("gh", "1.0.0")
+	if err != nil {
+		t.Fatalf("GetCachedPlan() error = %v", err)
+	}
+
+	if plan != nil {
+		t.Errorf("GetCachedPlan() = %v, want nil for non-existent version", plan)
+	}
+}
+
+func TestStateManager_GetCachedPlan_NoPlanCached(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Add tool without plan
+	err := sm.UpdateTool("kubectl", func(ts *ToolState) {
+		ts.ActiveVersion = "1.29.0"
+		ts.Versions = map[string]VersionState{
+			"1.29.0": {
+				Requested: "",
+				Binaries:  []string{"kubectl"},
+				// Plan intentionally nil
+			},
+		}
+		ts.IsExplicit = true
+	})
+	if err != nil {
+		t.Fatalf("UpdateTool() error = %v", err)
+	}
+
+	// Get cached plan (should return nil since no plan cached)
+	plan, err := sm.GetCachedPlan("kubectl", "1.29.0")
+	if err != nil {
+		t.Fatalf("GetCachedPlan() error = %v", err)
+	}
+
+	if plan != nil {
+		t.Errorf("GetCachedPlan() = %v, want nil when no plan cached", plan)
+	}
+}

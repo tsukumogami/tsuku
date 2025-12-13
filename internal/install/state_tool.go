@@ -97,6 +97,28 @@ func (sm *StateManager) GetToolState(name string) (*ToolState, error) {
 	return &toolState, nil
 }
 
+// GetCachedPlan returns the cached installation plan for a specific tool and version.
+// Returns nil if the tool is not installed, the version is not installed, or no plan
+// was cached for that version.
+func (sm *StateManager) GetCachedPlan(tool, version string) (*Plan, error) {
+	state, err := sm.Load()
+	if err != nil {
+		return nil, err
+	}
+
+	toolState, exists := state.Installed[tool]
+	if !exists {
+		return nil, nil
+	}
+
+	versionState, exists := toolState.Versions[version]
+	if !exists {
+		return nil, nil
+	}
+
+	return versionState.Plan, nil
+}
+
 // migrateToMultiVersion migrates old single-version state entries to the new multi-version format.
 // Old format: ToolState.Version = "1.0.0", ToolState.Binaries = ["foo"]
 // New format: ToolState.ActiveVersion = "1.0.0", ToolState.Versions = {"1.0.0": {Binaries: ["foo"], ...}}
