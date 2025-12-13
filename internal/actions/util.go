@@ -639,3 +639,48 @@ func ResolveGo() string {
 
 	return ""
 }
+
+// ResolveGoVersion finds the path to a specific Go version installed by tsuku.
+// Returns empty string if the specific version is not found.
+// The version should be in format "1.23.4" (without "go" prefix).
+func ResolveGoVersion(version string) string {
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return ""
+	}
+
+	// Look for go-<version> directory in $TSUKU_HOME/tools/
+	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
+	goPath := filepath.Join(toolsDir, "go-"+version, "bin", "go")
+
+	if info, err := os.Stat(goPath); err == nil && info.Mode()&0111 != 0 {
+		return goPath
+	}
+
+	return ""
+}
+
+// GetGoVersion extracts the Go version string from a Go binary path.
+// Returns the version (e.g., "1.23.4") by running `go version`.
+// Returns empty string on error.
+func GetGoVersion(goPath string) string {
+	cmd := exec.Command(goPath, "version")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	// Output format: "go version go1.23.4 linux/amd64"
+	fields := strings.Fields(string(output))
+	if len(fields) < 3 {
+		return ""
+	}
+
+	// Extract version from "go1.23.4"
+	goVersion := fields[2]
+	if strings.HasPrefix(goVersion, "go") {
+		return strings.TrimPrefix(goVersion, "go")
+	}
+
+	return ""
+}

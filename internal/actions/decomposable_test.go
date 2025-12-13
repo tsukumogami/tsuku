@@ -51,9 +51,9 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 9 primitives
-	if len(prims) != 9 {
-		t.Errorf("len(Primitives()) = %d, want 9", len(prims))
+	// Should have exactly 10 primitives (8 core + 2 ecosystem)
+	if len(prims) != 10 {
+		t.Errorf("len(Primitives()) = %d, want 10", len(prims))
 	}
 
 	// Sort for deterministic comparison
@@ -63,6 +63,7 @@ func TestPrimitives(t *testing.T) {
 		"chmod",
 		"download",
 		"extract",
+		"go_build",
 		"install_binaries",
 		"install_libraries",
 		"link_dependencies",

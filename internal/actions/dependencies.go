@@ -22,6 +22,7 @@ var ActionDependencies = map[string]ActionDeps{
 	// Compiled binary actions: install-time only
 	// These actions compile or download standalone binaries that don't need runtime deps.
 	"go_install":    {InstallTime: []string{"go"}, Runtime: nil},
+	"go_build":      {InstallTime: []string{"go"}, Runtime: nil},
 	"cargo_install": {InstallTime: []string{"rust"}, Runtime: nil},
 	"nix_install":   {InstallTime: []string{"nix-portable"}, Runtime: nil},
 

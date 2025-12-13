@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+// Ensure GoInstallAction implements Decomposable
+var _ Decomposable = (*GoInstallAction)(nil)
+
 // GoInstallAction installs Go modules using go install with GOBIN/GOMODCACHE isolation
 type GoInstallAction struct{}
 
@@ -244,4 +247,144 @@ func isValidGoVersion(version string) bool {
 	}
 
 	return true
+}
+
+// Decompose converts a go_install composite action into a go_build primitive step.
+// This is called during plan generation to capture go.sum at eval time.
+//
+// The decomposition:
+//  1. Creates a temporary module context
+//  2. Runs `go get <module>@<version>` to resolve dependencies
+//  3. Captures the complete go.sum content
+//  4. Returns a go_build step with the captured checksums
+func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Get module path (required)
+	module, ok := GetString(params, "module")
+	if !ok {
+		return nil, fmt.Errorf("go_install action requires 'module' parameter")
+	}
+
+	// Validate module path
+	if !isValidGoModule(module) {
+		return nil, fmt.Errorf("invalid module path '%s': must match Go module naming rules", module)
+	}
+
+	// Get executables list (required)
+	executables, ok := GetStringSlice(params, "executables")
+	if !ok || len(executables) == 0 {
+		return nil, fmt.Errorf("go_install action requires 'executables' parameter with at least one executable")
+	}
+
+	// Use VersionTag for Go modules as they require the "v" prefix
+	version := ctx.VersionTag
+	if version == "" {
+		version = ctx.Version
+	}
+
+	// Validate version
+	if !isValidGoVersion(version) {
+		return nil, fmt.Errorf("invalid version format '%s': must match semver format", version)
+	}
+
+	// Find Go binary
+	goPath := ResolveGo()
+	if goPath == "" {
+		return nil, fmt.Errorf("go not found: install go first (tsuku install go)")
+	}
+
+	// Capture Go version for reproducibility
+	goVersion := GetGoVersion(goPath)
+	if goVersion == "" {
+		return nil, fmt.Errorf("failed to determine Go version from %s", goPath)
+	}
+
+	// Create temp directory for capturing go.sum
+	tempDir, err := os.MkdirTemp("", "tsuku-go-decompose-*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Get home directory for GOMODCACHE
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get home directory: %w", err)
+	}
+
+	// Create minimal go.mod
+	goModContent := "module temp\n\ngo 1.21\n"
+	goModPath := filepath.Join(tempDir, "go.mod")
+	if err := os.WriteFile(goModPath, []byte(goModContent), 0644); err != nil {
+		return nil, fmt.Errorf("failed to write go.mod: %w", err)
+	}
+
+	// Set up environment for go get
+	goDir := filepath.Dir(goPath)
+	modCache := filepath.Join(homeDir, ".tsuku", ".gomodcache")
+
+	env := os.Environ()
+	filteredEnv := make([]string, 0, len(env))
+	for _, e := range env {
+		if !strings.HasPrefix(e, "GO") {
+			filteredEnv = append(filteredEnv, e)
+		}
+	}
+
+	// Add Go's bin directory to PATH
+	for i, e := range filteredEnv {
+		if strings.HasPrefix(e, "PATH=") {
+			filteredEnv[i] = fmt.Sprintf("PATH=%s:%s", goDir, e[5:])
+			break
+		}
+	}
+
+	filteredEnv = append(filteredEnv,
+		"GOMODCACHE="+modCache,
+		"CGO_ENABLED=0",
+		"GOPROXY=https://proxy.golang.org,direct",
+		"GOSUMDB=sum.golang.org",
+	)
+
+	// Run go get to populate go.sum
+	target := module + "@" + version
+	getCmd := exec.CommandContext(ctx.Context, goPath, "get", target)
+	getCmd.Dir = tempDir
+	getCmd.Env = filteredEnv
+
+	if output, err := getCmd.CombinedOutput(); err != nil {
+		return nil, fmt.Errorf("go get failed: %w\nOutput: %s", err, string(output))
+	}
+
+	// Read the generated go.sum
+	goSumPath := filepath.Join(tempDir, "go.sum")
+	goSumBytes, err := os.ReadFile(goSumPath)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read go.sum: %w", err)
+	}
+
+	goSum := string(goSumBytes)
+
+	// Build go_build params
+	goBuildParams := map[string]interface{}{
+		"module":      module,
+		"version":     version,
+		"executables": executables,
+		"go_sum":      goSum,
+		"go_version":  goVersion, // Captured for reproducibility
+	}
+
+	// Pass through optional params if set
+	if cgo, ok := GetBool(params, "cgo_enabled"); ok {
+		goBuildParams["cgo_enabled"] = cgo
+	}
+	if flags, ok := GetStringSlice(params, "build_flags"); ok {
+		goBuildParams["build_flags"] = flags
+	}
+
+	return []Step{
+		{
+			Action: "go_build",
+			Params: goBuildParams,
+		},
+	}, nil
 }
