@@ -1,9 +1,13 @@
 package main
 
 import (
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
@@ -12,6 +16,105 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
+
+// planRetrievalConfig configures the plan retrieval flow.
+type planRetrievalConfig struct {
+	Tool              string // Tool name
+	VersionConstraint string // User's version constraint (e.g., "14.1.0", "", "@lts")
+	Fresh             bool   // If true, skip cache and regenerate plan
+	OS                string // Target OS (defaults to runtime.GOOS)
+	Arch              string // Target arch (defaults to runtime.GOARCH)
+	RecipeHash        string // SHA256 hash of recipe TOML
+}
+
+// versionResolver abstracts version resolution for testing.
+type versionResolver interface {
+	ResolveVersion(ctx context.Context, constraint string) (string, error)
+}
+
+// planGenerator abstracts plan generation for testing.
+type planGenerator interface {
+	GeneratePlan(ctx context.Context, cfg executor.PlanConfig) (*executor.InstallationPlan, error)
+}
+
+// planCacheReader abstracts reading cached plans for testing.
+type planCacheReader interface {
+	GetCachedPlan(tool, version string) (*install.Plan, error)
+}
+
+// getOrGeneratePlan implements the two-phase plan retrieval flow:
+// Phase 1 (resolution) always runs, then checks cache, then generates if needed.
+// Returns a plan ready for ExecutePlan().
+func getOrGeneratePlan(
+	ctx context.Context,
+	exec *executor.Executor,
+	stateMgr *install.StateManager,
+	cfg planRetrievalConfig,
+) (*executor.InstallationPlan, error) {
+	return getOrGeneratePlanWith(ctx, exec, exec, stateMgr, cfg)
+}
+
+// getOrGeneratePlanWith is the testable implementation that accepts interfaces.
+func getOrGeneratePlanWith(
+	ctx context.Context,
+	resolver versionResolver,
+	generator planGenerator,
+	cacheReader planCacheReader,
+	cfg planRetrievalConfig,
+) (*executor.InstallationPlan, error) {
+	// Apply defaults
+	targetOS := cfg.OS
+	if targetOS == "" {
+		targetOS = runtime.GOOS
+	}
+	targetArch := cfg.Arch
+	if targetArch == "" {
+		targetArch = runtime.GOARCH
+	}
+
+	// Phase 1: Version Resolution (ALWAYS runs)
+	resolvedVersion, err := resolver.ResolveVersion(ctx, cfg.VersionConstraint)
+	if err != nil {
+		return nil, fmt.Errorf("version resolution failed: %w", err)
+	}
+
+	// Generate cache key from resolution output
+	cacheKey := executor.CacheKeyFor(cfg.Tool, resolvedVersion, targetOS, targetArch, cfg.RecipeHash)
+
+	// Check cache (unless --fresh)
+	if !cfg.Fresh {
+		cachedPlan, err := cacheReader.GetCachedPlan(cfg.Tool, resolvedVersion)
+		if err == nil && cachedPlan != nil {
+			// Convert storage plan to executor plan for validation
+			execPlan := executor.FromStoragePlan(cachedPlan)
+			if execPlan != nil {
+				if err := executor.ValidateCachedPlan(execPlan, cacheKey); err == nil {
+					printInfof("Using cached plan for %s@%s\n", cfg.Tool, resolvedVersion)
+					return execPlan, nil
+				}
+				printInfof("Cached plan invalid, regenerating...\n")
+			}
+		}
+	}
+
+	// Generate fresh plan
+	printInfof("Generating plan for %s@%s\n", cfg.Tool, resolvedVersion)
+	return generator.GeneratePlan(ctx, executor.PlanConfig{
+		OS:           targetOS,
+		Arch:         targetArch,
+		RecipeSource: "registry",
+	})
+}
+
+// computeRecipeHashForPlan computes SHA256 hash of the recipe's TOML content.
+func computeRecipeHashForPlan(r *recipe.Recipe) (string, error) {
+	data, err := r.ToTOML()
+	if err != nil {
+		return "", fmt.Errorf("failed to serialize recipe: %w", err)
+	}
+	hash := sha256.Sum256(data)
+	return hex.EncodeToString(hash[:]), nil
+}
 
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
 	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client)
