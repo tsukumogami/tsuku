@@ -160,3 +160,154 @@ func TestDerivationInfoStruct(t *testing.T) {
 		t.Errorf("info.Outputs[dev].Path = %q, want expected value", info.Outputs["dev"].Path)
 	}
 }
+
+func TestGetNixInternalDir_ReturnsValidPath(t *testing.T) {
+	dir, err := GetNixInternalDir()
+	if err != nil {
+		t.Fatalf("GetNixInternalDir() error = %v", err)
+	}
+
+	// Should not be empty
+	if dir == "" {
+		t.Error("GetNixInternalDir() returned empty string")
+	}
+
+	// Should end with .nix-internal
+	if !filepath.IsAbs(dir) {
+		t.Errorf("GetNixInternalDir() should return absolute path, got: %s", dir)
+	}
+
+	// Should contain the expected suffix
+	if filepath.Base(dir) != ".nix-internal" {
+		t.Errorf("GetNixInternalDir() should end with .nix-internal, got: %s", filepath.Base(dir))
+	}
+}
+
+func TestFlakeMetadata_EmptyFields(t *testing.T) {
+	// Test with nil/empty fields
+	metadata := FlakeMetadata{}
+
+	if metadata.URL != "" {
+		t.Error("empty FlakeMetadata.URL should be empty string")
+	}
+	if metadata.ResolvedURL != "" {
+		t.Error("empty FlakeMetadata.ResolvedURL should be empty string")
+	}
+	if metadata.Locked != nil {
+		t.Error("empty FlakeMetadata.Locked should be nil")
+	}
+	if metadata.Locks != nil {
+		t.Error("empty FlakeMetadata.Locks should be nil")
+	}
+}
+
+func TestDerivationInfo_EmptyOutputs(t *testing.T) {
+	// Test with empty outputs map
+	info := DerivationInfo{
+		Outputs: map[string]struct {
+			Path string `json:"path"`
+		}{},
+	}
+
+	if len(info.Outputs) != 0 {
+		t.Errorf("empty DerivationInfo.Outputs should have length 0, got %d", len(info.Outputs))
+	}
+}
+
+func TestDerivationInfo_SingleOutput(t *testing.T) {
+	// Test with single output (common case)
+	info := DerivationInfo{
+		Outputs: map[string]struct {
+			Path string `json:"path"`
+		}{
+			"out": {Path: "/nix/store/hash-package-1.0"},
+		},
+	}
+
+	if len(info.Outputs) != 1 {
+		t.Errorf("DerivationInfo.Outputs should have length 1, got %d", len(info.Outputs))
+	}
+
+	out, ok := info.Outputs["out"]
+	if !ok {
+		t.Error("DerivationInfo.Outputs should have 'out' key")
+	}
+	if out.Path != "/nix/store/hash-package-1.0" {
+		t.Errorf("output path = %q, want /nix/store/hash-package-1.0", out.Path)
+	}
+}
+
+func TestDownloadFileWithContext_InvalidURL(t *testing.T) {
+	tmpDir := t.TempDir()
+	destPath := filepath.Join(tmpDir, "test.txt")
+
+	// Test with invalid URL
+	err := downloadFileWithContext(context.Background(), "not-a-valid-url", destPath)
+	if err == nil {
+		t.Error("downloadFileWithContext() should fail for invalid URL")
+	}
+}
+
+func TestDownloadFileWithContext_EmptyURL(t *testing.T) {
+	tmpDir := t.TempDir()
+	destPath := filepath.Join(tmpDir, "test.txt")
+
+	// Test with empty URL
+	err := downloadFileWithContext(context.Background(), "", destPath)
+	if err == nil {
+		t.Error("downloadFileWithContext() should fail for empty URL")
+	}
+}
+
+func TestResolveNixPortable_DoesNotPanic(t *testing.T) {
+	// Just verify the function doesn't panic under any circumstances
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("ResolveNixPortable() panicked: %v", r)
+		}
+	}()
+
+	// Call the function - we don't care about the result, just that it doesn't panic
+	_ = ResolveNixPortable()
+}
+
+func TestGetNixVersion_DoesNotPanic(t *testing.T) {
+	// Just verify the function doesn't panic
+	defer func() {
+		if r := recover(); r != nil {
+			t.Errorf("GetNixVersion() panicked: %v", r)
+		}
+	}()
+
+	_ = GetNixVersion()
+}
+
+func TestGetNixFlakeMetadata_ContextCanceled(t *testing.T) {
+	// Skip if nix-portable is not available
+	if ResolveNixPortable() == "" {
+		t.Skip("nix-portable not available")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	_, err := GetNixFlakeMetadata(ctx, "nixpkgs#hello")
+	if err == nil {
+		t.Error("GetNixFlakeMetadata() should fail when context is canceled")
+	}
+}
+
+func TestGetNixDerivationPath_ContextCanceled(t *testing.T) {
+	// Skip if nix-portable is not available
+	if ResolveNixPortable() == "" {
+		t.Skip("nix-portable not available")
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel() // Cancel immediately
+
+	_, _, err := GetNixDerivationPath(ctx, "nixpkgs#hello")
+	if err == nil {
+		t.Error("GetNixDerivationPath() should fail when context is canceled")
+	}
+}

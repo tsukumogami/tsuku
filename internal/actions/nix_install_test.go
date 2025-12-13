@@ -2,6 +2,7 @@ package actions
 
 import (
 	"context"
+	"os"
 	"runtime"
 	"strings"
 	"testing"
@@ -270,4 +271,321 @@ func TestNixInstallAction_Decompose_InvalidExecutable(t *testing.T) {
 func TestNixInstallAction_ImplementsDecomposable(t *testing.T) {
 	// Verify that NixInstallAction implements Decomposable interface
 	var _ Decomposable = (*NixInstallAction)(nil)
+}
+
+func TestNixInstallAction_Name(t *testing.T) {
+	action := &NixInstallAction{}
+	if action.Name() != "nix_install" {
+		t.Errorf("Name() = %q, want %q", action.Name(), "nix_install")
+	}
+}
+
+func TestNixInstallAction_Execute_PlatformCheck(t *testing.T) {
+	// Skip on Linux - the platform check passes there
+	if runtime.GOOS == "linux" {
+		t.Skip("Skipping platform check test on Linux")
+	}
+
+	action := &NixInstallAction{}
+	ctx := &ExecutionContext{}
+	params := map[string]interface{}{
+		"package":     "hello",
+		"executables": []string{"hello"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("Expected platform error on non-Linux")
+	}
+	if err != nil && !strings.Contains(err.Error(), "only supports Linux") {
+		t.Errorf("Expected 'only supports Linux' error, got: %v", err)
+	}
+}
+
+func TestNixInstallAction_Execute_MissingPackage(t *testing.T) {
+	// Skip on non-Linux - will fail at platform check
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping on non-Linux")
+	}
+
+	action := &NixInstallAction{}
+	ctx := &ExecutionContext{}
+	params := map[string]interface{}{
+		"executables": []string{"hello"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("Expected error for missing package")
+	}
+	if err != nil && !strings.Contains(err.Error(), "requires 'package'") {
+		t.Errorf("Expected 'requires package' error, got: %v", err)
+	}
+}
+
+func TestNixInstallAction_Execute_InvalidPackage(t *testing.T) {
+	// Skip on non-Linux - will fail at platform check
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping on non-Linux")
+	}
+
+	action := &NixInstallAction{}
+	ctx := &ExecutionContext{}
+	params := map[string]interface{}{
+		"package":     "hello;rm -rf /",
+		"executables": []string{"hello"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("Expected error for invalid package")
+	}
+	if err != nil && !strings.Contains(err.Error(), "invalid nixpkgs package name") {
+		t.Errorf("Expected 'invalid nixpkgs package name' error, got: %v", err)
+	}
+}
+
+func TestNixInstallAction_Execute_MissingExecutables(t *testing.T) {
+	// Skip on non-Linux - will fail at platform check
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping on non-Linux")
+	}
+
+	action := &NixInstallAction{}
+	ctx := &ExecutionContext{}
+	params := map[string]interface{}{
+		"package": "hello",
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("Expected error for missing executables")
+	}
+	if err != nil && !strings.Contains(err.Error(), "requires 'executables'") {
+		t.Errorf("Expected 'requires executables' error, got: %v", err)
+	}
+}
+
+func TestNixInstallAction_Execute_EmptyExecutables(t *testing.T) {
+	// Skip on non-Linux - will fail at platform check
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping on non-Linux")
+	}
+
+	action := &NixInstallAction{}
+	ctx := &ExecutionContext{}
+	params := map[string]interface{}{
+		"package":     "hello",
+		"executables": []string{},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("Expected error for empty executables")
+	}
+	if err != nil && !strings.Contains(err.Error(), "requires 'executables'") {
+		t.Errorf("Expected 'requires executables' error, got: %v", err)
+	}
+}
+
+func TestNixInstallAction_Execute_InvalidExecutable(t *testing.T) {
+	// Skip on non-Linux - will fail at platform check
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping on non-Linux")
+	}
+
+	action := &NixInstallAction{}
+	ctx := &ExecutionContext{}
+	params := map[string]interface{}{
+		"package":     "hello",
+		"executables": []string{"../evil"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err == nil {
+		t.Error("Expected error for invalid executable")
+	}
+	if err != nil && !strings.Contains(err.Error(), "invalid executable name") {
+		t.Errorf("Expected 'invalid executable name' error, got: %v", err)
+	}
+}
+
+func TestNixInstallAction_Decompose_EmptyExecutables(t *testing.T) {
+	// Skip on non-Linux
+	if runtime.GOOS != "linux" {
+		t.Skip("Skipping on non-Linux")
+	}
+
+	action := &NixInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+	}
+	params := map[string]interface{}{
+		"package":     "hello",
+		"executables": []string{},
+	}
+
+	_, err := action.Decompose(ctx, params)
+	if err == nil {
+		t.Error("Expected error for empty executables")
+	}
+	if err != nil && !strings.Contains(err.Error(), "requires 'executables'") {
+		t.Errorf("Expected 'requires executables' error, got: %v", err)
+	}
+}
+
+func TestCreateNixWrapper(t *testing.T) {
+	// Create a temporary directory for the test
+	tmpDir := t.TempDir()
+	binDir := tmpDir
+
+	// Test creating a wrapper
+	err := createNixWrapper("hello", binDir, "/home/user/.tsuku/.nix-internal", "hello")
+	if err != nil {
+		t.Fatalf("createNixWrapper() error = %v", err)
+	}
+
+	// Verify the wrapper file was created
+	wrapperPath := tmpDir + "/hello"
+	info, err := os.Stat(wrapperPath)
+	if err != nil {
+		t.Fatalf("wrapper file not found: %v", err)
+	}
+
+	// Verify it's executable (mode 0755)
+	if info.Mode().Perm() != 0755 {
+		t.Errorf("wrapper mode = %v, want 0755", info.Mode().Perm())
+	}
+
+	// Read and verify content
+	content, err := os.ReadFile(wrapperPath)
+	if err != nil {
+		t.Fatalf("failed to read wrapper: %v", err)
+	}
+
+	contentStr := string(content)
+
+	// Verify it starts with shebang
+	if !strings.HasPrefix(contentStr, "#!/bin/bash") {
+		t.Error("wrapper should start with #!/bin/bash")
+	}
+
+	// Verify it contains NP_LOCATION
+	if !strings.Contains(contentStr, "NP_LOCATION") {
+		t.Error("wrapper should contain NP_LOCATION")
+	}
+
+	// Verify it references the package
+	if !strings.Contains(contentStr, "nixpkgs#hello") {
+		t.Error("wrapper should contain nixpkgs#package reference")
+	}
+
+	// Verify it uses nix shell
+	if !strings.Contains(contentStr, "nix shell") {
+		t.Error("wrapper should use nix shell")
+	}
+
+	// Verify it mentions nix_install in comments
+	if !strings.Contains(contentStr, "nix_install") {
+		t.Error("wrapper should mention nix_install in comments")
+	}
+}
+
+func TestCreateNixWrapper_MultipleExecutables(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	executables := []string{"foo", "bar", "baz"}
+	for _, exe := range executables {
+		err := createNixWrapper(exe, tmpDir, "/home/user/.tsuku/.nix-internal", "mypackage")
+		if err != nil {
+			t.Fatalf("createNixWrapper(%q) error = %v", exe, err)
+		}
+	}
+
+	// Verify all wrappers were created
+	for _, exe := range executables {
+		wrapperPath := tmpDir + "/" + exe
+		if _, err := os.Stat(wrapperPath); err != nil {
+			t.Errorf("wrapper for %q not found: %v", exe, err)
+		}
+	}
+}
+
+func TestIsValidNixPackage_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		pkg      string
+		expected bool
+	}{
+		// More edge cases
+		{"single char", "a", true},
+		{"single digit", "1", true},
+		{"uppercase only", "GCC", true},
+		{"mixed case", "GnuPG", true},
+		{"multiple dots", "a.b.c.d", true},
+		{"exactly at limit", strings.Repeat("a", 256), true},
+		{"just over limit", strings.Repeat("a", 257), false},
+		{"equals sign", "foo=bar", false},
+		{"colon", "foo:bar", false},
+		{"hash", "foo#bar", false},
+		{"at sign", "foo@bar", false},
+		{"tilde", "foo~bar", false},
+		{"caret", "foo^bar", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isValidNixPackage(tt.pkg)
+			if result != tt.expected {
+				t.Errorf("isValidNixPackage(%q) = %v, expected %v", tt.pkg, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestValidateExecutableName_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name        string
+		exe         string
+		expectError bool
+	}{
+		// More edge cases
+		{"single char", "a", false},
+		{"exactly at limit", strings.Repeat("a", 256), false},
+		{"just over limit", strings.Repeat("a", 257), true},
+		{"multiple dots", "a.b.c", false},
+		{"starts with dot", ".hidden", false},
+		{"ends with dot", "file.", false},
+		{"multiple hyphens", "a--b--c", false},
+		{"multiple underscores", "a__b__c", false},
+		// Note: space is NOT in the shell metacharacter check, so these are valid
+		{"space in middle", "foo bar", false},
+		{"space at start", " foo", false},
+		{"space at end", "foo ", false},
+		{"carriage return", "foo\rbar", true},
+		{"escape char", "foo\x1bbar", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateExecutableName(tt.exe)
+			if tt.expectError && err == nil {
+				t.Errorf("validateExecutableName(%q) expected error, got nil", tt.exe)
+			}
+			if !tt.expectError && err != nil {
+				t.Errorf("validateExecutableName(%q) unexpected error: %v", tt.exe, err)
+			}
+		})
+	}
+}
+
+func TestDetectProotFallback(t *testing.T) {
+	// This function checks for proot indicators in nix-portable output
+	// We can test it with a fake path that doesn't exist - it should return false
+	result := detectProotFallback("/nonexistent/path", "/tmp/test")
+
+	// Should return false since the command will fail
+	if result {
+		t.Error("detectProotFallback() should return false for nonexistent path")
+	}
 }
