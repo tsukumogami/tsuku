@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -1430,5 +1431,144 @@ func TestGeneratePlan_AllDownloadActionTypes(t *testing.T) {
 				t.Error("expected checksum to be computed when URL is present")
 			}
 		})
+	}
+}
+
+func TestGeneratePlan_DecomposesCompositeActions(t *testing.T) {
+	// Test that composite actions are decomposed into primitives
+	// Use hashicorp_release which is a decomposable action
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool for decomposition",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist", // Use a valid source for version resolution
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "hashicorp_release",
+				Params: map[string]interface{}{
+					"product": "terraform",
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+
+	plan, err := exec.GeneratePlan(ctx, PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		RecipeSource: "test",
+	})
+
+	if err != nil {
+		// Network failures are acceptable in unit tests
+		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
+	}
+
+	// Verify the plan contains decomposed primitives, not the composite action
+	if len(plan.Steps) < 2 {
+		t.Errorf("expected multiple decomposed steps, got %d", len(plan.Steps))
+	}
+
+	// All steps should be primitives
+	for _, step := range plan.Steps {
+		if actions.IsDecomposable(step.Action) {
+			t.Errorf("step %q is a composite action, expected primitive", step.Action)
+		}
+	}
+
+	// First step should be download (from hashicorp_release decomposition)
+	if len(plan.Steps) > 0 && plan.Steps[0].Action != "download" {
+		t.Errorf("first step should be 'download', got %q", plan.Steps[0].Action)
+	}
+
+	// Should include extract step
+	hasExtract := false
+	for _, step := range plan.Steps {
+		if step.Action == "extract" {
+			hasExtract = true
+			break
+		}
+	}
+	if !hasExtract {
+		t.Error("expected 'extract' step in decomposed plan")
+	}
+}
+
+func TestGeneratePlan_PreDownloaderAdapter(t *testing.T) {
+	// Test that the preDownloaderAdapter correctly implements actions.Downloader
+	// by verifying decomposition works with checksum computation
+
+	// Create a test server for download
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("test content"))
+	}))
+	defer server.Close()
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "download_archive",
+				Params: map[string]interface{}{
+					"url":            server.URL + "/test.tar.gz",
+					"archive_format": "tar.gz",
+					"binaries":       []interface{}{"test"},
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	downloader := validate.NewPreDownloader().WithHTTPClient(server.Client())
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		RecipeSource: "test",
+		Downloader:   downloader,
+	})
+
+	if err != nil {
+		t.Skipf("GeneratePlan() error: %v", err)
+	}
+
+	// Should have decomposed download_archive into primitives
+	if len(plan.Steps) < 2 {
+		t.Errorf("expected multiple decomposed steps, got %d", len(plan.Steps))
+	}
+
+	// First step should be download with checksum computed
+	if len(plan.Steps) > 0 {
+		step := plan.Steps[0]
+		if step.Action != "download" {
+			t.Errorf("first step should be 'download', got %q", step.Action)
+		}
+		if step.URL == "" {
+			t.Error("download step should have URL")
+		}
+		if step.Checksum == "" {
+			t.Error("download step should have checksum computed")
+		}
 	}
 }

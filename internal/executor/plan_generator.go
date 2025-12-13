@@ -79,6 +79,18 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		"arch":        targetArch,
 	}
 
+	// Create EvalContext for decomposition
+	evalCtx := &actions.EvalContext{
+		Context:    ctx,
+		Version:    versionInfo.Version,
+		VersionTag: versionInfo.Tag,
+		OS:         targetOS,
+		Arch:       targetArch,
+		Recipe:     e.recipe,
+		Resolver:   resolver,
+		Downloader: &preDownloaderAdapter{inner: downloader},
+	}
+
 	// Process each step
 	var steps []ResolvedStep
 	for _, step := range e.recipe.Steps {
@@ -87,13 +99,13 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 			continue
 		}
 
-		// Resolve the step
-		resolved, err := e.resolveStep(ctx, step, vars, downloader, cfg.OnWarning)
+		// Resolve the step (handles decomposition of composites)
+		resolvedSteps, err := e.resolveStep(ctx, step, vars, downloader, cfg.OnWarning, evalCtx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve step %s: %w", step.Action, err)
 		}
 
-		steps = append(steps, *resolved)
+		steps = append(steps, resolvedSteps...)
 	}
 
 	return &InstallationPlan{
@@ -147,15 +159,65 @@ func shouldExecuteForPlatform(when map[string]string, targetOS, targetArch strin
 	return true
 }
 
-// resolveStep resolves a single recipe step into a ResolvedStep.
+// resolveStep resolves a single recipe step into one or more ResolvedSteps.
+// For composite actions, it decomposes them into primitive steps.
 func (e *Executor) resolveStep(
 	ctx context.Context,
 	step recipe.Step,
 	vars map[string]string,
 	downloader *validate.PreDownloader,
 	onWarning func(string, string),
-) (*ResolvedStep, error) {
-	// Check evaluability
+	evalCtx *actions.EvalContext,
+) ([]ResolvedStep, error) {
+	// Expand templates in all string parameters
+	expandedParams := expandParams(step.Params, vars)
+
+	// Check if this is a decomposable action
+	if actions.IsDecomposable(step.Action) {
+		// Decompose to primitives
+		primitiveSteps, err := actions.DecomposeToPrimitives(evalCtx, step.Action, expandedParams)
+		if err != nil {
+			return nil, fmt.Errorf("failed to decompose %s: %w", step.Action, err)
+		}
+
+		// Convert primitive steps to ResolvedSteps
+		var resolved []ResolvedStep
+		for _, pstep := range primitiveSteps {
+			evaluable := IsActionEvaluable(pstep.Action)
+
+			rs := ResolvedStep{
+				Action:    pstep.Action,
+				Params:    pstep.Params,
+				Evaluable: evaluable,
+			}
+
+			// Use checksum/size from decomposition if provided
+			if pstep.Checksum != "" {
+				rs.Checksum = pstep.Checksum
+				rs.Size = pstep.Size
+				if url, ok := pstep.Params["url"].(string); ok {
+					rs.URL = url
+				}
+			} else if pstep.Action == "download" {
+				// Download to compute checksum if not provided by decomposition
+				if url, ok := pstep.Params["url"].(string); ok {
+					rs.URL = url
+					result, err := downloader.Download(ctx, url)
+					if err != nil {
+						return nil, fmt.Errorf("failed to download for checksum: %w", err)
+					}
+					defer func() { _ = result.Cleanup() }()
+					rs.Checksum = result.Checksum
+					rs.Size = result.Size
+				}
+			}
+
+			resolved = append(resolved, rs)
+		}
+		return resolved, nil
+	}
+
+	// Non-decomposable action: process as before
 	evaluable := IsActionEvaluable(step.Action)
 
 	// Emit warning for non-evaluable actions
@@ -163,11 +225,8 @@ func (e *Executor) resolveStep(
 		onWarning(step.Action, fmt.Sprintf("action '%s' cannot be deterministically reproduced", step.Action))
 	}
 
-	// Expand templates in all string parameters
-	expandedParams := expandParams(step.Params, vars)
-
 	// Create resolved step
-	resolved := &ResolvedStep{
+	resolved := ResolvedStep{
 		Action:    step.Action,
 		Params:    expandedParams,
 		Evaluable: evaluable,
@@ -195,7 +254,7 @@ func (e *Executor) resolveStep(
 		}
 	}
 
-	return resolved, nil
+	return []ResolvedStep{resolved}, nil
 }
 
 // isDownloadAction returns true if the action involves downloading files.
@@ -337,3 +396,22 @@ func ApplyArchMapping(vars map[string]string, params map[string]interface{}) {
 
 // Ensure actions package is imported for compatibility
 var _ = actions.GetStandardVars
+
+// preDownloaderAdapter wraps validate.PreDownloader to implement actions.Downloader.
+type preDownloaderAdapter struct {
+	inner *validate.PreDownloader
+}
+
+// Download implements actions.Downloader by delegating to validate.PreDownloader
+// and converting the result type.
+func (a *preDownloaderAdapter) Download(ctx context.Context, url string) (*actions.DownloadResult, error) {
+	result, err := a.inner.Download(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &actions.DownloadResult{
+		AssetPath: result.AssetPath,
+		Checksum:  result.Checksum,
+		Size:      result.Size,
+	}, nil
+}
