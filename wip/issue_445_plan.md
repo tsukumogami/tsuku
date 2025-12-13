@@ -13,7 +13,7 @@ Create a new `npm_exec.go` following the existing action patterns (similar to `n
 4. Validate Node.js version if specified
 5. Use isolated npm cache directory
 
-This is a Tier 2 ecosystem primitive - it cannot be decomposed further within tsuku but achieves determinism through npm-specific configuration.
+This is an ecosystem primitive - it cannot be decomposed further within tsuku but achieves determinism through npm-specific configuration.
 
 ### Alternatives Considered
 
@@ -32,15 +32,15 @@ This is a Tier 2 ecosystem primitive - it cannot be decomposed further within ts
 
 ## Implementation Steps
 
-- [ ] Create `npm_exec.go` with `NpmExecAction` struct and `Name()` method
-- [ ] Implement parameter parsing and validation
-- [ ] Implement Node.js version detection and validation
-- [ ] Implement `Execute()` with `npm ci` and deterministic flags
-- [ ] Register action in `action.go`
-- [ ] Add unit tests for parameter validation
-- [ ] Add unit tests for Node.js version validation
-- [ ] Add unit tests for deterministic flag behavior
-- [ ] Run go vet, go test, go build
+- [x] Create `npm_exec.go` with `NpmExecAction` struct and `Name()` method
+- [x] Implement parameter parsing and validation
+- [x] Implement Node.js version detection and validation
+- [x] Implement `Execute()` with `npm ci` and deterministic flags
+- [x] Register action in `action.go`
+- [x] Add unit tests for parameter validation
+- [x] Add unit tests for Node.js version validation
+- [x] Add unit tests for deterministic flag behavior
+- [x] Run go vet, go test, go build
 
 ## Testing Strategy
 
@@ -55,12 +55,12 @@ This is a Tier 2 ecosystem primitive - it cannot be decomposed further within ts
 
 ## Success Criteria
 
-- [ ] `NpmExecAction` implements `Action` interface
-- [ ] Action registered in action registry
-- [ ] `npm_exec` registered as primitive
-- [ ] All parameter validation working
-- [ ] Node.js version validation working
-- [ ] Tests pass, no lint errors
+- [x] `NpmExecAction` implements `Action` interface
+- [x] Action registered in action registry
+- [x] `npm_exec` registered as primitive
+- [x] All parameter validation working
+- [x] Node.js version validation working
+- [x] Tests pass, no lint errors
 
 ## Open Questions
 
