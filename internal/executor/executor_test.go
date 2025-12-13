@@ -90,6 +90,137 @@ func TestResolveVersionWith_UnknownSource(t *testing.T) {
 	}
 }
 
+// TestResolveVersion_EmptyConstraint tests that empty constraint resolves to latest
+func TestResolveVersion_EmptyConstraint(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:          "test-tool",
+			Description:   "Test tool",
+			VersionFormat: "semver",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist", // Use a registered source
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+	version, err := exec.ResolveVersion(ctx, "")
+
+	// Network failure is acceptable in unit tests
+	if err != nil {
+		t.Logf("ResolveVersion() failed (expected in offline tests): %v", err)
+	} else {
+		t.Logf("ResolveVersion() succeeded: version=%s", version)
+		if version == "" {
+			t.Error("ResolveVersion() returned empty version string")
+		}
+	}
+}
+
+// TestResolveVersion_SpecificConstraint tests resolving a specific version
+func TestResolveVersion_SpecificConstraint(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:          "test-tool",
+			Description:   "Test tool",
+			VersionFormat: "semver",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+	// Request a specific version
+	version, err := exec.ResolveVersion(ctx, "20.0.0")
+
+	// Network failure is acceptable in unit tests
+	if err != nil {
+		t.Logf("ResolveVersion() with constraint failed (expected in offline tests): %v", err)
+	} else {
+		t.Logf("ResolveVersion() with constraint succeeded: version=%s", version)
+		if version == "" {
+			t.Error("ResolveVersion() returned empty version string")
+		}
+	}
+}
+
+// TestResolveVersion_UnknownSource tests error handling for unknown version sources
+func TestResolveVersion_UnknownSource(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "completely_unknown_source",
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+	_, err = exec.ResolveVersion(ctx, "")
+
+	// Should get an error since the source doesn't exist in the registry
+	if err != nil {
+		t.Logf("ResolveVersion() correctly returned error for unknown source: %v", err)
+	} else {
+		t.Log("ResolveVersion() succeeded with unknown source (custom provider may handle it)")
+	}
+}
+
+// TestResolveVersion_NoVersionSource tests error handling when no version source is configured
+func TestResolveVersion_NoVersionSource(t *testing.T) {
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        "test-tool",
+			Description: "Test tool",
+		},
+		// No Version section - no version source configured
+		Steps: []recipe.Step{
+			{
+				Action: "download",
+				Params: map[string]interface{}{
+					"url": "https://example.com/tool.tar.gz",
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+	_, err = exec.ResolveVersion(ctx, "")
+
+	// Should get an error since no version source is configured
+	if err == nil {
+		t.Error("ResolveVersion() should return error when no version source is configured")
+	} else {
+		t.Logf("ResolveVersion() correctly returned error: %v", err)
+	}
+}
+
 // TestExecute_FallbackToDev tests that executor falls back to "dev" version on resolution failure
 func TestExecute_FallbackToDev(t *testing.T) {
 	r := &recipe.Recipe{

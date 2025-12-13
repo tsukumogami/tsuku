@@ -34,7 +34,7 @@ graph LR
     I470 --> I475[#475: plan conversion helpers]:::done
     I470 --> I477[#477: getOrGeneratePlan]:::blocked
     I471[#471: GetCachedPlan]:::done --> I477
-    I472[#472: ResolveVersion]:::ready --> I477
+    I472[#472: ResolveVersion]:::done --> I477
     I474[#474: --fresh flag]:::done --> I477
     I475 --> I477
     I473 --> I478[#478: wire up installation]:::blocked

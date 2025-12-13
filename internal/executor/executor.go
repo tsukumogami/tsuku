@@ -160,6 +160,34 @@ func (e *Executor) resolveVersionWith(ctx context.Context, resolver *version.Res
 	return provider.ResolveLatest(ctx)
 }
 
+// ResolveVersion resolves a version constraint to a concrete version string.
+// This is Phase 1 of the two-phase installation model: version resolution runs
+// before cache lookup to determine the cache key.
+//
+// If constraint is empty, resolves to the latest version.
+// If constraint is specified, attempts to resolve that specific version.
+// Returns the resolved version string (e.g., "14.1.0").
+func (e *Executor) ResolveVersion(ctx context.Context, constraint string) (string, error) {
+	resolver := version.New()
+	factory := version.NewProviderFactory()
+	provider, err := factory.ProviderFromRecipe(resolver, e.recipe)
+	if err != nil {
+		return "", err
+	}
+
+	var versionInfo *version.VersionInfo
+	if constraint == "" {
+		versionInfo, err = provider.ResolveLatest(ctx)
+	} else {
+		versionInfo, err = provider.ResolveVersion(ctx, constraint)
+	}
+	if err != nil {
+		return "", err
+	}
+
+	return versionInfo.Version, nil
+}
+
 // shouldExecute checks if a step should be executed based on 'when' conditions
 func (e *Executor) shouldExecute(when map[string]string) bool {
 	if len(when) == 0 {
