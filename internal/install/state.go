@@ -31,6 +31,7 @@ type Plan struct {
 	GeneratedAt   time.Time    `json:"generated_at"`
 	RecipeHash    string       `json:"recipe_hash"`
 	RecipeSource  string       `json:"recipe_source"`
+	Deterministic bool         `json:"deterministic"`
 	Steps         []PlanStep   `json:"steps"`
 }
 
@@ -42,18 +43,19 @@ type PlanPlatform struct {
 
 // PlanStep represents a resolved installation step.
 type PlanStep struct {
-	Action    string                 `json:"action"`
-	Params    map[string]interface{} `json:"params"`
-	Evaluable bool                   `json:"evaluable"`
-	URL       string                 `json:"url,omitempty"`
-	Checksum  string                 `json:"checksum,omitempty"`
-	Size      int64                  `json:"size,omitempty"`
+	Action        string                 `json:"action"`
+	Params        map[string]interface{} `json:"params"`
+	Evaluable     bool                   `json:"evaluable"`
+	Deterministic bool                   `json:"deterministic"`
+	URL           string                 `json:"url,omitempty"`
+	Checksum      string                 `json:"checksum,omitempty"`
+	Size          int64                  `json:"size,omitempty"`
 }
 
 // NewPlanFromExecutor creates a Plan from executor plan types.
 // This is a conversion helper that preserves all plan data for storage.
 func NewPlanFromExecutor(formatVersion int, tool, version string, platform PlanPlatform,
-	generatedAt time.Time, recipeHash, recipeSource string, steps []PlanStep) *Plan {
+	generatedAt time.Time, recipeHash, recipeSource string, deterministic bool, steps []PlanStep) *Plan {
 	return &Plan{
 		FormatVersion: formatVersion,
 		Tool:          tool,
@@ -62,6 +64,7 @@ func NewPlanFromExecutor(formatVersion int, tool, version string, platform PlanP
 		GeneratedAt:   generatedAt,
 		RecipeHash:    recipeHash,
 		RecipeSource:  recipeSource,
+		Deterministic: deterministic,
 		Steps:         steps,
 	}
 }

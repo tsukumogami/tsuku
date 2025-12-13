@@ -470,3 +470,44 @@ func TestComputeStepHash(t *testing.T) {
 		t.Errorf("different params should produce different hashes")
 	}
 }
+
+func TestIsDeterministic(t *testing.T) {
+	// Core primitives should be deterministic
+	deterministicActions := []string{
+		"download",
+		"extract",
+		"chmod",
+		"install_binaries",
+		"set_env",
+		"set_rpath",
+		"link_dependencies",
+		"install_libraries",
+	}
+
+	for _, name := range deterministicActions {
+		if !IsDeterministic(name) {
+			t.Errorf("IsDeterministic(%q) = false, want true (core primitive)", name)
+		}
+	}
+
+	// Ecosystem primitives should NOT be deterministic
+	nonDeterministicActions := []string{
+		"go_build",
+		"cargo_build",
+		"npm_exec",
+		"pip_install",
+		"gem_exec",
+		"cpan_install",
+	}
+
+	for _, name := range nonDeterministicActions {
+		if IsDeterministic(name) {
+			t.Errorf("IsDeterministic(%q) = true, want false (ecosystem primitive)", name)
+		}
+	}
+
+	// Unknown actions should return false for safety
+	if IsDeterministic("nonexistent_action") {
+		t.Error("IsDeterministic(\"nonexistent_action\") = true, want false")
+	}
+}

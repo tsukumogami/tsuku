@@ -700,3 +700,89 @@ func containsHelper(s, substr string) bool {
 	}
 	return false
 }
+
+// Tests for deterministic flag (issue #442)
+
+func TestDeterministicFieldJSONRoundTrip(t *testing.T) {
+	// Test that deterministic field is correctly serialized/deserialized
+	plan := InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Deterministic: true,
+		Steps: []ResolvedStep{
+			{
+				Action:        "download",
+				Params:        map[string]interface{}{"url": "https://example.com"},
+				Evaluable:     true,
+				Deterministic: true,
+			},
+		},
+	}
+
+	data, err := json.Marshal(plan)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	var roundtrip InstallationPlan
+	if err := json.Unmarshal(data, &roundtrip); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	if !roundtrip.Deterministic {
+		t.Error("plan.Deterministic should be true after roundtrip")
+	}
+	if !roundtrip.Steps[0].Deterministic {
+		t.Error("step.Deterministic should be true after roundtrip")
+	}
+}
+
+func TestDeterministicFieldInJSON(t *testing.T) {
+	// Verify deterministic field appears in JSON output
+	plan := InstallationPlan{
+		FormatVersion: 2,
+		Tool:          "test",
+		Version:       "1.0",
+		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Deterministic: false, // Non-deterministic plan
+		Steps: []ResolvedStep{
+			{
+				Action:        "go_build",
+				Params:        map[string]interface{}{"module": "example.com/tool"},
+				Evaluable:     true,
+				Deterministic: false, // Ecosystem primitive
+			},
+		},
+	}
+
+	data, err := json.Marshal(plan)
+	if err != nil {
+		t.Fatalf("failed to marshal: %v", err)
+	}
+
+	// Parse as generic map to check field presence
+	var m map[string]interface{}
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("failed to unmarshal: %v", err)
+	}
+
+	// Check plan-level deterministic field
+	if _, ok := m["deterministic"]; !ok {
+		t.Error("plan JSON should have 'deterministic' field")
+	}
+	if m["deterministic"] != false {
+		t.Error("plan.deterministic should be false")
+	}
+
+	// Check step-level deterministic field
+	steps := m["steps"].([]interface{})
+	step := steps[0].(map[string]interface{})
+	if _, ok := step["deterministic"]; !ok {
+		t.Error("step JSON should have 'deterministic' field")
+	}
+	if step["deterministic"] != false {
+		t.Error("step.deterministic should be false")
+	}
+}

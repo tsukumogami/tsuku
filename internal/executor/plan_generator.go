@@ -108,6 +108,15 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		steps = append(steps, resolvedSteps...)
 	}
 
+	// Compute plan-level deterministic flag: true only if ALL steps are deterministic
+	planDeterministic := true
+	for _, step := range steps {
+		if !step.Deterministic {
+			planDeterministic = false
+			break
+		}
+	}
+
 	return &InstallationPlan{
 		FormatVersion: PlanFormatVersion,
 		Tool:          e.recipe.Metadata.Name,
@@ -116,10 +125,11 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 			OS:   targetOS,
 			Arch: targetArch,
 		},
-		GeneratedAt:  time.Now().UTC(),
-		RecipeHash:   recipeHash,
-		RecipeSource: recipeSource,
-		Steps:        steps,
+		GeneratedAt:   time.Now().UTC(),
+		RecipeHash:    recipeHash,
+		RecipeSource:  recipeSource,
+		Deterministic: planDeterministic,
+		Steps:         steps,
 	}, nil
 }
 
@@ -184,11 +194,13 @@ func (e *Executor) resolveStep(
 		var resolved []ResolvedStep
 		for _, pstep := range primitiveSteps {
 			evaluable := IsActionEvaluable(pstep.Action)
+			deterministic := actions.IsDeterministic(pstep.Action)
 
 			rs := ResolvedStep{
-				Action:    pstep.Action,
-				Params:    pstep.Params,
-				Evaluable: evaluable,
+				Action:        pstep.Action,
+				Params:        pstep.Params,
+				Evaluable:     evaluable,
+				Deterministic: deterministic,
 			}
 
 			// Use checksum/size from decomposition if provided
@@ -219,6 +231,7 @@ func (e *Executor) resolveStep(
 
 	// Non-decomposable action: process as before
 	evaluable := IsActionEvaluable(step.Action)
+	deterministic := actions.IsDeterministic(step.Action)
 
 	// Emit warning for non-evaluable actions
 	if !evaluable && onWarning != nil {
@@ -227,9 +240,10 @@ func (e *Executor) resolveStep(
 
 	// Create resolved step
 	resolved := ResolvedStep{
-		Action:    step.Action,
-		Params:    expandedParams,
-		Evaluable: evaluable,
+		Action:        step.Action,
+		Params:        expandedParams,
+		Evaluable:     evaluable,
+		Deterministic: deterministic,
 	}
 
 	// For download actions, compute checksum
