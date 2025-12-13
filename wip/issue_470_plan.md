@@ -20,14 +20,14 @@ Follow the design document specification closely since it provides concrete code
 None - this is a new standalone file.
 
 ## Implementation Steps
-- [ ] Create plan_cache.go with PlanCacheKey struct
-- [ ] Add CacheKeyFor() function that generates cache key from resolution output
-- [ ] Add ValidateCachedPlan() function that validates format version, platform, and recipe hash
-- [ ] Add ChecksumMismatchError type with helpful error message (include tool and version)
-- [ ] Add unit tests for PlanCacheKey and CacheKeyFor
-- [ ] Add unit tests for ValidateCachedPlan
-- [ ] Add unit tests for ChecksumMismatchError
-- [ ] Run full test suite and lint checks
+- [x] Create plan_cache.go with PlanCacheKey struct
+- [x] Add CacheKeyFor() function that generates cache key from resolution output
+- [x] Add ValidateCachedPlan() function that validates format version, platform, and recipe hash
+- [x] Add ChecksumMismatchError type with helpful error message (include tool and version)
+- [x] Add unit tests for PlanCacheKey and CacheKeyFor
+- [x] Add unit tests for ValidateCachedPlan
+- [x] Add unit tests for ChecksumMismatchError
+- [x] Run full test suite and lint checks
 
 ## Testing Strategy
 - **Unit tests**:
