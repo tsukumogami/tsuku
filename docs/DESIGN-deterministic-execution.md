@@ -179,8 +179,7 @@ Remove `Execute(ctx)`, replace with `ExecutePlan(ctx, plan)` as the only executi
 - Enables Milestone 3 (`--plan` flag) naturally
 
 **Cons:**
-- All callers must provide plans
-- Larger refactoring change
+- All internal callers must provide plans (larger refactoring)
 
 ### Decision 4: Checksum Mismatch Behavior
 
@@ -255,7 +254,7 @@ By choosing cache by resolution output (1B), we accept:
 - This is acceptable because resolution is fast and the real cost is in downloads
 
 By choosing to replace Execute (3B), we accept:
-- All callers must provide plans (no direct recipe execution)
+- All internal callers must generate plans before execution
 - Larger initial refactoring effort
 
 By choosing hard failure on checksum mismatch (4C), we accept:
@@ -774,7 +773,7 @@ The following security improvements are explicitly out of scope for this design 
 
 - **Increased complexity**: Cache validation and two-phase evaluation add code paths
 - **Blocked installations on upstream changes**: Users must explicitly acknowledge changes via `--fresh`
-- **All callers must provide plans**: Direct recipe execution is no longer possible
+- **Internal refactoring**: All code paths through the executor must go through plan generation first
 
 ### Neutral
 
