@@ -30,7 +30,7 @@ Follow the design from `docs/DESIGN-deterministic-execution.md`. The key changes
 - [x] Replace `convertExecutorPlan()` usage with `executor.ToStoragePlan()`
 - [x] Remove the now-unused `convertExecutorPlan()` function
 - [x] Remove the nolint directive for `getOrGeneratePlan` (it's now used)
-- [ ] Update design doc to mark #478 as done and #479 as ready
+- [x] Update design doc to mark #478 as done and #479 as ready
 - [x] Verify all tests pass
 
 ## Testing Strategy
@@ -48,12 +48,12 @@ Follow the design from `docs/DESIGN-deterministic-execution.md`. The key changes
   - Mitigation: The error type already has user-friendly Error() method with recovery instructions
 
 ## Success Criteria
-- [ ] `installWithDependencies()` uses `getOrGeneratePlan()` + `ExecutePlan()`
-- [ ] `executor.ToStoragePlan()` used for plan storage
-- [ ] `ChecksumMismatchError` handled with user-friendly output
-- [ ] `--fresh` flag propagated through flow
-- [ ] `go test ./cmd/tsuku/...` passes
-- [ ] Design doc updated to mark #478 as done
+- [x] `installWithDependencies()` uses `getOrGeneratePlan()` + `ExecutePlan()`
+- [x] `executor.ToStoragePlan()` used for plan storage
+- [x] `ChecksumMismatchError` handled with user-friendly output
+- [x] `--fresh` flag propagated through flow
+- [x] `go test ./cmd/tsuku/...` passes
+- [x] Design doc updated to mark #478 as done
 
 ## Open Questions
 None - design doc provides clear specification.
