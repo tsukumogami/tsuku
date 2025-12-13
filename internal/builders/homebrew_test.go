@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/llm"
@@ -1895,4 +1896,198 @@ func TestErrUserCanceled(t *testing.T) {
 	if ErrUserCanceled.Error() != "operation canceled by user" {
 		t.Errorf("ErrUserCanceled.Error() = %v", ErrUserCanceled.Error())
 	}
+}
+
+func TestHomebrewBuilder_checkBottleAvailability_AllPlatforms(t *testing.T) {
+	// Create mock server that simulates GHCR token and manifest endpoints
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/token") {
+			// Return mock token
+			_, _ = w.Write([]byte(`{"token": "test-token"}`))
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/v2/homebrew/core/testformula/manifests/") {
+			// Return manifest with all platforms
+			manifest := `{
+				"manifests": [
+					{"annotations": {"org.opencontainers.image.ref.name": "1.0.0.arm64_sonoma"}},
+					{"annotations": {"org.opencontainers.image.ref.name": "1.0.0.sonoma"}},
+					{"annotations": {"org.opencontainers.image.ref.name": "1.0.0.x86_64_linux"}},
+					{"annotations": {"org.opencontainers.image.ref.name": "1.0.0.arm64_linux"}}
+				]
+			}`
+			_, _ = w.Write([]byte(manifest))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	// Create HTTP client that routes to mock server
+	client := server.Client()
+	originalTransport := client.Transport
+	client.Transport = &mockGHCRTransport{
+		serverURL: server.URL,
+		base:      originalTransport,
+	}
+
+	b := &HomebrewBuilder{
+		httpClient: client,
+	}
+
+	ctx := context.Background()
+	availability, err := b.checkBottleAvailability(ctx, "testformula", "1.0.0")
+	if err != nil {
+		t.Fatalf("checkBottleAvailability() error = %v", err)
+	}
+
+	if len(availability.Available) != 4 {
+		t.Errorf("expected 4 available platforms, got %d", len(availability.Available))
+	}
+	if len(availability.Unavailable) != 0 {
+		t.Errorf("expected 0 unavailable platforms, got %d", len(availability.Unavailable))
+	}
+}
+
+func TestHomebrewBuilder_checkBottleAvailability_MissingPlatforms(t *testing.T) {
+	// Create mock server with only some platforms available
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/token") {
+			_, _ = w.Write([]byte(`{"token": "test-token"}`))
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/v2/homebrew/core/partialformula/manifests/") {
+			// Return manifest with only macOS platforms (Linux missing)
+			manifest := `{
+				"manifests": [
+					{"annotations": {"org.opencontainers.image.ref.name": "1.0.0.arm64_sonoma"}},
+					{"annotations": {"org.opencontainers.image.ref.name": "1.0.0.sonoma"}}
+				]
+			}`
+			_, _ = w.Write([]byte(manifest))
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	client := server.Client()
+	client.Transport = &mockGHCRTransport{
+		serverURL: server.URL,
+		base:      client.Transport,
+	}
+
+	b := &HomebrewBuilder{
+		httpClient: client,
+	}
+
+	ctx := context.Background()
+	availability, err := b.checkBottleAvailability(ctx, "partialformula", "1.0.0")
+	if err != nil {
+		t.Fatalf("checkBottleAvailability() error = %v", err)
+	}
+
+	if len(availability.Available) != 2 {
+		t.Errorf("expected 2 available platforms, got %d: %v", len(availability.Available), availability.Available)
+	}
+	if len(availability.Unavailable) != 2 {
+		t.Errorf("expected 2 unavailable platforms, got %d: %v", len(availability.Unavailable), availability.Unavailable)
+	}
+
+	// Check that Linux platforms are in unavailable list
+	unavailableSet := make(map[string]bool)
+	for _, p := range availability.Unavailable {
+		unavailableSet[p] = true
+	}
+	if !unavailableSet["x86_64_linux"] {
+		t.Error("expected x86_64_linux to be unavailable")
+	}
+	if !unavailableSet["arm64_linux"] {
+		t.Error("expected arm64_linux to be unavailable")
+	}
+}
+
+func TestHomebrewBuilder_checkBottleAvailability_TokenError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/token") {
+			w.WriteHeader(500)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	client := server.Client()
+	client.Transport = &mockGHCRTransport{
+		serverURL: server.URL,
+		base:      client.Transport,
+	}
+
+	b := &HomebrewBuilder{
+		httpClient: client,
+	}
+
+	ctx := context.Background()
+	_, err := b.checkBottleAvailability(ctx, "testformula", "1.0.0")
+	if err == nil {
+		t.Error("expected error for token failure")
+	}
+}
+
+func TestHomebrewBuilder_checkBottleAvailability_ManifestError(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasPrefix(r.URL.Path, "/token") {
+			_, _ = w.Write([]byte(`{"token": "test-token"}`))
+			return
+		}
+		if strings.HasPrefix(r.URL.Path, "/v2/homebrew/core/") {
+			w.WriteHeader(404)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	client := server.Client()
+	client.Transport = &mockGHCRTransport{
+		serverURL: server.URL,
+		base:      client.Transport,
+	}
+
+	b := &HomebrewBuilder{
+		httpClient: client,
+	}
+
+	ctx := context.Background()
+	_, err := b.checkBottleAvailability(ctx, "nonexistent", "1.0.0")
+	if err == nil {
+		t.Error("expected error for manifest failure")
+	}
+}
+
+func TestBottleAvailability_PlatformDisplayNames(t *testing.T) {
+	// Verify all target platforms have display names
+	for _, platform := range targetPlatforms {
+		if platformDisplayNames[platform] == "" {
+			t.Errorf("missing display name for platform %s", platform)
+		}
+	}
+}
+
+// mockGHCRTransport redirects GHCR requests to the test server
+type mockGHCRTransport struct {
+	serverURL string
+	base      http.RoundTripper
+}
+
+func (t *mockGHCRTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	// Redirect ghcr.io requests to our test server
+	if req.URL.Host == "ghcr.io" {
+		req.URL.Scheme = "http"
+		req.URL.Host = strings.TrimPrefix(t.serverURL, "http://")
+	}
+	if t.base != nil {
+		return t.base.RoundTrip(req)
+	}
+	return http.DefaultTransport.RoundTrip(req)
 }
