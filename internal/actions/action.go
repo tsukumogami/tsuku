@@ -3,6 +3,7 @@ package actions
 import (
 	"context"
 
+	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -22,6 +23,16 @@ type ExecutionContext struct {
 	Recipe           *recipe.Recipe    // Full recipe (for reference)
 	ExecPaths        []string          // Additional bin paths needed for execution (e.g., nodejs bin for npm tools)
 	Resolver         *version.Resolver // Version resolver (for GitHub API access, asset resolution)
+	Logger           log.Logger        // Logger for structured logging (optional, falls back to log.Default())
+}
+
+// Log returns the logger for this context.
+// If no logger is set, it falls back to log.Default().
+func (ctx *ExecutionContext) Log() log.Logger {
+	if ctx.Logger != nil {
+		return ctx.Logger
+	}
+	return log.Default()
 }
 
 // Action represents an executable action

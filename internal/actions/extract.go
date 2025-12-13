@@ -120,6 +120,14 @@ func (a *ExtractAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	// Get files list (optional)
 	files, _ := GetStringSlice(params, "files")
 
+	// Log extraction details
+	logger := ctx.Log()
+	logger.Debug("extract action starting",
+		"archive", archiveName,
+		"format", format,
+		"destPath", destPath,
+		"stripDirs", stripDirs)
+
 	fmt.Printf("   Extracting: %s\n", archiveName)
 	fmt.Printf("   Format: %s\n", format)
 	if stripDirs > 0 {
