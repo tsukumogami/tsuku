@@ -1,7 +1,7 @@
 # Design: Decomposable Actions and Primitive Operations
 
-- **Status**: Approved
-- **Issue**: #368
+- **Status**: Planned
+- **Milestone**: Deterministic Recipe Execution
 - **Author**: @dangazineu
 - **Created**: 2025-12-12
 - **Scope**: Tactical
@@ -746,3 +746,29 @@ Full ecosystem investigation reports with implementation details:
 - `docs/deterministic-builds/ecosystem_cpan.md` - Perl CPAN/Carton
 
 These reports contain detailed API examples, security analysis, and implementation recommendations.
+
+## Implementation Issues
+
+This design is implemented through the following GitHub issues:
+
+### Core Infrastructure
+- #436: Define Decomposable interface and primitive registry
+- #437: Implement recursive decomposition algorithm
+
+### Composite Action Migration
+- #438: Implement Decompose() for github_archive
+- #439: Implement Decompose() for download_archive, github_file, hashicorp_release
+
+### Plan Generator Updates
+- #440: Update plan generator to decompose composite actions
+- #441: Validate plans contain only primitives
+- #442: Add deterministic flag to plan schema
+
+### Ecosystem Primitives
+- #443: Implement go_build ecosystem primitive
+- #444: Implement cargo_build ecosystem primitive
+- #445: Implement npm_exec ecosystem primitive
+- #446: Implement pip_install ecosystem primitive
+- #447: Implement gem_exec ecosystem primitive
+- #448: Implement nix_realize ecosystem primitive
+- #449: Implement cpan_install ecosystem primitive
