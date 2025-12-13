@@ -1,7 +1,9 @@
 package actions
 
 import (
+	"fmt"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -152,5 +154,269 @@ func TestDownloadResultStruct(t *testing.T) {
 	}
 	if result.Size != 1024 {
 		t.Errorf("result.Size = %d, want %d", result.Size, 1024)
+	}
+}
+
+// mockDecomposableAction is a test helper that implements Decomposable.
+type mockDecomposableAction struct {
+	name   string
+	steps  []Step
+	err    error
+	called bool
+}
+
+func (m *mockDecomposableAction) Name() string { return m.name }
+func (m *mockDecomposableAction) Execute(_ *ExecutionContext, _ map[string]interface{}) error {
+	return nil
+}
+func (m *mockDecomposableAction) Decompose(_ *EvalContext, _ map[string]interface{}) ([]Step, error) {
+	m.called = true
+	return m.steps, m.err
+}
+
+func TestDecomposeToPrimitives_Primitive(t *testing.T) {
+	// Decomposing a primitive should return it unchanged
+	ctx := &EvalContext{}
+	params := map[string]interface{}{"url": "https://example.com/file.tar.gz"}
+
+	steps, err := DecomposeToPrimitives(ctx, "download", params)
+	if err != nil {
+		t.Fatalf("DecomposeToPrimitives() error = %v", err)
+	}
+
+	if len(steps) != 1 {
+		t.Fatalf("len(steps) = %d, want 1", len(steps))
+	}
+	if steps[0].Action != "download" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	}
+	if steps[0].Params["url"] != "https://example.com/file.tar.gz" {
+		t.Errorf("steps[0].Params[url] = %v, want %q", steps[0].Params["url"], "https://example.com/file.tar.gz")
+	}
+}
+
+func TestDecomposeToPrimitives_CompositeReturnsPrimitives(t *testing.T) {
+	// Register a mock decomposable action that returns primitives
+	mock := &mockDecomposableAction{
+		name: "test_composite",
+		steps: []Step{
+			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/a.tar.gz"}},
+			{Action: "extract", Params: map[string]interface{}{"format": "tar.gz"}},
+		},
+	}
+	Register(mock)
+	defer delete(registry, "test_composite")
+
+	ctx := &EvalContext{}
+	params := map[string]interface{}{"repo": "owner/repo"}
+
+	steps, err := DecomposeToPrimitives(ctx, "test_composite", params)
+	if err != nil {
+		t.Fatalf("DecomposeToPrimitives() error = %v", err)
+	}
+
+	if !mock.called {
+		t.Error("Decompose() was not called on mock action")
+	}
+
+	if len(steps) != 2 {
+		t.Fatalf("len(steps) = %d, want 2", len(steps))
+	}
+	if steps[0].Action != "download" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	}
+	if steps[1].Action != "extract" {
+		t.Errorf("steps[1].Action = %q, want %q", steps[1].Action, "extract")
+	}
+}
+
+func TestDecomposeToPrimitives_RecursiveDecomposition(t *testing.T) {
+	// Register a mid-level composite that returns a composite + primitive
+	midLevel := &mockDecomposableAction{
+		name: "mid_level_composite",
+		steps: []Step{
+			{Action: "low_level_composite", Params: map[string]interface{}{}},
+			{Action: "chmod", Params: map[string]interface{}{"mode": "0755"}},
+		},
+	}
+	Register(midLevel)
+	defer delete(registry, "mid_level_composite")
+
+	// Register a low-level composite that returns primitives
+	lowLevel := &mockDecomposableAction{
+		name: "low_level_composite",
+		steps: []Step{
+			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file"}},
+			{Action: "extract", Params: map[string]interface{}{"format": "tar.gz"}},
+		},
+	}
+	Register(lowLevel)
+	defer delete(registry, "low_level_composite")
+
+	ctx := &EvalContext{}
+	params := map[string]interface{}{}
+
+	steps, err := DecomposeToPrimitives(ctx, "mid_level_composite", params)
+	if err != nil {
+		t.Fatalf("DecomposeToPrimitives() error = %v", err)
+	}
+
+	// Should have 3 primitives: download, extract, chmod
+	if len(steps) != 3 {
+		t.Fatalf("len(steps) = %d, want 3", len(steps))
+	}
+	if steps[0].Action != "download" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	}
+	if steps[1].Action != "extract" {
+		t.Errorf("steps[1].Action = %q, want %q", steps[1].Action, "extract")
+	}
+	if steps[2].Action != "chmod" {
+		t.Errorf("steps[2].Action = %q, want %q", steps[2].Action, "chmod")
+	}
+}
+
+func TestDecomposeToPrimitives_CycleDetection(t *testing.T) {
+	// Register action A that returns action B
+	actionA := &mockDecomposableAction{
+		name: "cycle_action_a",
+		steps: []Step{
+			{Action: "cycle_action_b", Params: map[string]interface{}{"key": "value"}},
+		},
+	}
+	Register(actionA)
+	defer delete(registry, "cycle_action_a")
+
+	// Register action B that returns action A (creates cycle)
+	actionB := &mockDecomposableAction{
+		name: "cycle_action_b",
+		steps: []Step{
+			{Action: "cycle_action_a", Params: map[string]interface{}{"key": "value"}},
+		},
+	}
+	Register(actionB)
+	defer delete(registry, "cycle_action_b")
+
+	ctx := &EvalContext{}
+	params := map[string]interface{}{"key": "value"}
+
+	_, err := DecomposeToPrimitives(ctx, "cycle_action_a", params)
+	if err == nil {
+		t.Fatal("DecomposeToPrimitives() should return error for cycle")
+	}
+
+	if !strings.Contains(err.Error(), "cycle detected") {
+		t.Errorf("error should mention cycle detection, got: %v", err)
+	}
+}
+
+func TestDecomposeToPrimitives_ChecksumPropagation(t *testing.T) {
+	// Register a composite that returns a step with checksum
+	mock := &mockDecomposableAction{
+		name: "checksum_composite",
+		steps: []Step{
+			{
+				Action:   "download",
+				Params:   map[string]interface{}{"url": "https://example.com/file"},
+				Checksum: "sha256:abc123",
+				Size:     1024,
+			},
+		},
+	}
+	Register(mock)
+	defer delete(registry, "checksum_composite")
+
+	ctx := &EvalContext{}
+	params := map[string]interface{}{}
+
+	steps, err := DecomposeToPrimitives(ctx, "checksum_composite", params)
+	if err != nil {
+		t.Fatalf("DecomposeToPrimitives() error = %v", err)
+	}
+
+	if len(steps) != 1 {
+		t.Fatalf("len(steps) = %d, want 1", len(steps))
+	}
+	if steps[0].Checksum != "sha256:abc123" {
+		t.Errorf("steps[0].Checksum = %q, want %q", steps[0].Checksum, "sha256:abc123")
+	}
+	if steps[0].Size != 1024 {
+		t.Errorf("steps[0].Size = %d, want %d", steps[0].Size, 1024)
+	}
+}
+
+func TestDecomposeToPrimitives_NonDecomposableAction(t *testing.T) {
+	// run_command is registered but not decomposable (and not primitive)
+	ctx := &EvalContext{}
+	params := map[string]interface{}{}
+
+	_, err := DecomposeToPrimitives(ctx, "run_command", params)
+	if err == nil {
+		t.Fatal("DecomposeToPrimitives() should return error for non-decomposable action")
+	}
+
+	if !strings.Contains(err.Error(), "neither primitive nor decomposable") {
+		t.Errorf("error should mention non-decomposable, got: %v", err)
+	}
+}
+
+func TestDecomposeToPrimitives_UnknownAction(t *testing.T) {
+	ctx := &EvalContext{}
+	params := map[string]interface{}{}
+
+	_, err := DecomposeToPrimitives(ctx, "nonexistent_action", params)
+	if err == nil {
+		t.Fatal("DecomposeToPrimitives() should return error for unknown action")
+	}
+
+	if !strings.Contains(err.Error(), "not found in registry") {
+		t.Errorf("error should mention not found, got: %v", err)
+	}
+}
+
+func TestDecomposeToPrimitives_DecomposeError(t *testing.T) {
+	// Register a composite that returns an error during decomposition
+	mock := &mockDecomposableAction{
+		name:  "error_composite",
+		steps: nil,
+		err:   fmt.Errorf("decomposition failed"),
+	}
+	Register(mock)
+	defer delete(registry, "error_composite")
+
+	ctx := &EvalContext{}
+	params := map[string]interface{}{}
+
+	_, err := DecomposeToPrimitives(ctx, "error_composite", params)
+	if err == nil {
+		t.Fatal("DecomposeToPrimitives() should propagate decomposition error")
+	}
+
+	if !strings.Contains(err.Error(), "decomposition failed") {
+		t.Errorf("error should contain original message, got: %v", err)
+	}
+	if !strings.Contains(err.Error(), "error_composite") {
+		t.Errorf("error should mention action name, got: %v", err)
+	}
+}
+
+func TestComputeStepHash(t *testing.T) {
+	// Same action + params should produce same hash
+	hash1 := computeStepHash("download", map[string]interface{}{"url": "https://example.com"})
+	hash2 := computeStepHash("download", map[string]interface{}{"url": "https://example.com"})
+	if hash1 != hash2 {
+		t.Errorf("same inputs should produce same hash: %q != %q", hash1, hash2)
+	}
+
+	// Different action should produce different hash
+	hash3 := computeStepHash("extract", map[string]interface{}{"url": "https://example.com"})
+	if hash1 == hash3 {
+		t.Errorf("different actions should produce different hashes")
+	}
+
+	// Different params should produce different hash
+	hash4 := computeStepHash("download", map[string]interface{}{"url": "https://other.com"})
+	if hash1 == hash4 {
+		t.Errorf("different params should produce different hashes")
 	}
 }
