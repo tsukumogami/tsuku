@@ -112,12 +112,14 @@ func TestStepStruct(t *testing.T) {
 func TestEvalContextStruct(t *testing.T) {
 	// Verify EvalContext struct can be instantiated with all fields
 	ctx := EvalContext{
+		Context:    nil, // Can be nil for testing
 		Version:    "1.29.3",
 		VersionTag: "v1.29.3",
 		OS:         "linux",
 		Arch:       "amd64",
 		Recipe:     nil, // Can be nil for testing
 		Resolver:   nil, // Can be nil for testing
+		Downloader: nil, // Can be nil for testing
 	}
 
 	if ctx.Version != "1.29.3" {
@@ -131,5 +133,24 @@ func TestEvalContextStruct(t *testing.T) {
 	}
 	if ctx.Arch != "amd64" {
 		t.Errorf("ctx.Arch = %q, want %q", ctx.Arch, "amd64")
+	}
+}
+
+func TestDownloadResultStruct(t *testing.T) {
+	// Verify DownloadResult struct can be instantiated with all fields
+	result := DownloadResult{
+		AssetPath: "/tmp/file.tar.gz",
+		Checksum:  "abc123def456",
+		Size:      1024,
+	}
+
+	if result.AssetPath != "/tmp/file.tar.gz" {
+		t.Errorf("result.AssetPath = %q, want %q", result.AssetPath, "/tmp/file.tar.gz")
+	}
+	if result.Checksum != "abc123def456" {
+		t.Errorf("result.Checksum = %q, want %q", result.Checksum, "abc123def456")
+	}
+	if result.Size != 1024 {
+		t.Errorf("result.Size = %d, want %d", result.Size, 1024)
 	}
 }
