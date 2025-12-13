@@ -2715,3 +2715,288 @@ func TestHomebrewBuilder_buildSourceToolDefs(t *testing.T) {
 		}
 	}
 }
+
+// Test platform conditional validation
+
+func TestValidateSourceRecipeData_ValidPlatformSteps(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+		PlatformSteps: map[string][]platformStep{
+			"macos": {
+				{Action: "run_command", Params: map[string]interface{}{"command": "install_name_tool ..."}},
+			},
+			"linux": {
+				{Action: "set_rpath", Params: map[string]interface{}{"path": "lib/libfoo.so"}},
+			},
+		},
+	}
+
+	err := validateSourceRecipeData(data)
+	if err != nil {
+		t.Errorf("validateSourceRecipeData() error = %v, want nil", err)
+	}
+}
+
+func TestValidateSourceRecipeData_InvalidPlatformKey(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+		PlatformSteps: map[string][]platformStep{
+			"windows": { // invalid platform
+				{Action: "run_command"},
+			},
+		},
+	}
+
+	err := validateSourceRecipeData(data)
+	if err == nil {
+		t.Error("validateSourceRecipeData() expected error for invalid platform key")
+	}
+	if !strings.Contains(err.Error(), "invalid platform key") {
+		t.Errorf("error should mention invalid platform key, got: %v", err)
+	}
+}
+
+func TestValidateSourceRecipeData_MissingActionInPlatformStep(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+		PlatformSteps: map[string][]platformStep{
+			"macos": {
+				{Action: ""}, // missing action
+			},
+		},
+	}
+
+	err := validateSourceRecipeData(data)
+	if err == nil {
+		t.Error("validateSourceRecipeData() expected error for missing action")
+	}
+	if !strings.Contains(err.Error(), "missing action") {
+		t.Errorf("error should mention missing action, got: %v", err)
+	}
+}
+
+func TestValidateSourceRecipeData_ValidPlatformDependencies(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+		PlatformDependencies: map[string][]string{
+			"linux": {"libffi", "patchelf"},
+			"macos": {"libtool"},
+		},
+	}
+
+	err := validateSourceRecipeData(data)
+	if err != nil {
+		t.Errorf("validateSourceRecipeData() error = %v, want nil", err)
+	}
+}
+
+func TestValidateSourceRecipeData_InvalidPlatformDependencyKey(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+		PlatformDependencies: map[string][]string{
+			"freebsd": {"somelib"}, // invalid platform
+		},
+	}
+
+	err := validateSourceRecipeData(data)
+	if err == nil {
+		t.Error("validateSourceRecipeData() expected error for invalid platform dependency key")
+	}
+	if !strings.Contains(err.Error(), "invalid platform_dependencies key") {
+		t.Errorf("error should mention invalid platform_dependencies key, got: %v", err)
+	}
+}
+
+// Test platformKeyToWhen conversion
+
+func TestPlatformKeyToWhen(t *testing.T) {
+	tests := []struct {
+		platform string
+		want     map[string]string
+	}{
+		{"macos", map[string]string{"os": "darwin"}},
+		{"linux", map[string]string{"os": "linux"}},
+		{"arm64", map[string]string{"arch": "arm64"}},
+		{"amd64", map[string]string{"arch": "amd64"}},
+		{"x86_64", map[string]string{"arch": "amd64"}},
+		{"invalid", nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.platform, func(t *testing.T) {
+			got := platformKeyToWhen(tt.platform)
+			if tt.want == nil {
+				if got != nil {
+					t.Errorf("platformKeyToWhen(%q) = %v, want nil", tt.platform, got)
+				}
+				return
+			}
+			if len(got) != len(tt.want) {
+				t.Errorf("platformKeyToWhen(%q) length = %d, want %d", tt.platform, len(got), len(tt.want))
+				return
+			}
+			for k, v := range tt.want {
+				if got[k] != v {
+					t.Errorf("platformKeyToWhen(%q)[%q] = %q, want %q", tt.platform, k, got[k], v)
+				}
+			}
+		})
+	}
+}
+
+// Test buildSourceSteps with platform conditionals
+
+func TestHomebrewBuilder_buildSourceSteps_WithPlatformSteps(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+		PlatformSteps: map[string][]platformStep{
+			"macos": {
+				{Action: "run_command", Params: map[string]interface{}{"command": "install_name_tool -id @rpath/libfoo.dylib lib/libfoo.dylib"}},
+			},
+			"linux": {
+				{Action: "set_rpath", Params: map[string]interface{}{"path": "lib/libfoo.so"}},
+			},
+		},
+	}
+
+	steps, err := b.buildSourceSteps(data)
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	// Count platform-conditional steps
+	macosSteps := 0
+	linuxSteps := 0
+	for _, step := range steps {
+		if step.When != nil {
+			if step.When["os"] == "darwin" {
+				macosSteps++
+			}
+			if step.When["os"] == "linux" {
+				linuxSteps++
+			}
+		}
+	}
+
+	if macosSteps != 1 {
+		t.Errorf("expected 1 macOS conditional step, got %d", macosSteps)
+	}
+	if linuxSteps != 1 {
+		t.Errorf("expected 1 Linux conditional step, got %d", linuxSteps)
+	}
+}
+
+func TestHomebrewBuilder_buildSourceSteps_ArchConditionals(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemCMake,
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+		PlatformSteps: map[string][]platformStep{
+			"arm64": {
+				{Action: "run_command", Params: map[string]interface{}{"command": "echo arm64"}},
+			},
+			"amd64": {
+				{Action: "run_command", Params: map[string]interface{}{"command": "echo amd64"}},
+			},
+		},
+	}
+
+	steps, err := b.buildSourceSteps(data)
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	// Find arch-conditional steps
+	arm64Steps := 0
+	amd64Steps := 0
+	for _, step := range steps {
+		if step.When != nil {
+			if step.When["arch"] == "arm64" {
+				arm64Steps++
+			}
+			if step.When["arch"] == "amd64" {
+				amd64Steps++
+			}
+		}
+	}
+
+	if arm64Steps != 1 {
+		t.Errorf("expected 1 arm64 conditional step, got %d", arm64Steps)
+	}
+	if amd64Steps != 1 {
+		t.Errorf("expected 1 amd64 conditional step, got %d", amd64Steps)
+	}
+}
+
+// Test system prompt includes platform conditional docs
+
+func TestHomebrewBuilder_buildSourceSystemPrompt_IncludesPlatformDocs(t *testing.T) {
+	b := &HomebrewBuilder{}
+	prompt := b.buildSourceSystemPrompt()
+
+	// Check for platform conditional documentation
+	requiredPhrases := []string{
+		"on_macos",
+		"on_linux",
+		"on_arm",
+		"on_intel",
+		"platform_steps",
+		"platform_dependencies",
+	}
+
+	for _, phrase := range requiredPhrases {
+		if !strings.Contains(prompt, phrase) {
+			t.Errorf("buildSourceSystemPrompt() should contain %q", phrase)
+		}
+	}
+}
+
+// Test tool definitions include platform parameters
+
+func TestHomebrewBuilder_buildSourceToolDefs_IncludesPlatformParams(t *testing.T) {
+	b := &HomebrewBuilder{}
+	tools := b.buildSourceToolDefs()
+
+	// Find extract_source_recipe tool
+	var extractTool *llm.ToolDef
+	for i := range tools {
+		if tools[i].Name == ToolExtractSourceRecipe {
+			extractTool = &tools[i]
+			break
+		}
+	}
+
+	if extractTool == nil {
+		t.Fatal("extract_source_recipe tool not found")
+	}
+
+	// Check parameters contain platform_steps and platform_dependencies
+	params, ok := extractTool.Parameters["properties"].(map[string]any)
+	if !ok {
+		t.Fatal("tool parameters not in expected format")
+	}
+
+	if _, ok := params["platform_steps"]; !ok {
+		t.Error("extract_source_recipe should have platform_steps parameter")
+	}
+
+	if _, ok := params["platform_dependencies"]; !ok {
+		t.Error("extract_source_recipe should have platform_dependencies parameter")
+	}
+}
