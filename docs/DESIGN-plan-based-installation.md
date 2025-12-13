@@ -33,8 +33,8 @@ graph LR
     classDef needsDesign fill:#e1bee7
 
     class I506 done
-    class I507 ready
-    class I508 blocked
+    class I507 done
+    class I508 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
