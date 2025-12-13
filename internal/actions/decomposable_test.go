@@ -57,6 +57,7 @@ func TestIsPrimitive(t *testing.T) {
 		"cargo_build", // Ecosystem primitive
 		"go_build",    // Ecosystem primitive
 		"npm_exec",    // Ecosystem primitive
+		"pip_install", // Ecosystem primitive
 	}
 
 	for _, name := range primitives {
@@ -89,9 +90,9 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 11 primitives (8 core + 3 ecosystem)
-	if len(prims) != 11 {
-		t.Errorf("len(Primitives()) = %d, want 11", len(prims))
+	// Should have exactly 12 primitives (8 core + 4 ecosystem)
+	if len(prims) != 12 {
+		t.Errorf("len(Primitives()) = %d, want 12", len(prims))
 	}
 
 	// Sort for deterministic comparison
@@ -107,6 +108,7 @@ func TestPrimitives(t *testing.T) {
 		"install_libraries",
 		"link_dependencies",
 		"npm_exec",
+		"pip_install",
 		"set_env",
 		"set_rpath",
 	}

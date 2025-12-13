@@ -77,6 +77,7 @@ func init() {
 	Register(&NpmInstallAction{})
 	Register(&NpmExecAction{})
 	Register(&PipxInstallAction{})
+	Register(&PipInstallAction{})
 	Register(&CargoInstallAction{})
 	Register(&CargoBuildAction{})
 	Register(&GemInstallAction{})

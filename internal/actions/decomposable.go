@@ -73,6 +73,7 @@ var primitives = map[string]bool{
 	"cargo_build": true,
 	"go_build":    true,
 	"npm_exec":    true,
+	"pip_install": true,
 }
 
 // IsPrimitive returns true if the action is a primitive.
