@@ -31,7 +31,7 @@ graph LR
     classDef blocked fill:#FFB6C1,stroke:#333
 
     I470[#470: plan cache infrastructure]:::done --> I473[#473: ExecutePlan with checksum]:::done
-    I470 --> I475[#475: plan conversion helpers]:::ready
+    I470 --> I475[#475: plan conversion helpers]:::done
     I470 --> I477[#477: getOrGeneratePlan]:::blocked
     I471[#471: GetCachedPlan]:::done --> I477
     I472[#472: ResolveVersion]:::ready --> I477
