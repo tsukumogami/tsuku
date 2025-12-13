@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"runtime"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
@@ -44,12 +45,22 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	exec.SetToolsDir(cfg.ToolsDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 
-	// Execute recipe to download and prepare library
-	if err := exec.Execute(globalCtx); err != nil {
+	// Generate plan for library installation
+	plan, err := exec.GeneratePlan(globalCtx, executor.PlanConfig{
+		OS:           runtime.GOOS,
+		Arch:         runtime.GOARCH,
+		RecipeSource: "registry",
+	})
+	if err != nil {
+		return fmt.Errorf("failed to generate library plan: %w", err)
+	}
+
+	// Execute the plan
+	if err := exec.ExecutePlan(globalCtx, plan); err != nil {
 		return fmt.Errorf("library installation failed: %w", err)
 	}
 
-	version := exec.Version()
+	version := plan.Version
 	if version == "" {
 		version = "dev"
 	}
