@@ -75,7 +75,7 @@ jobs:
 
           [[steps]]
           action = "install_binaries"
-          pattern = "bin/*"
+          binaries = ["bin/tree"]
 
           [verify]
           command = "tree --version"
