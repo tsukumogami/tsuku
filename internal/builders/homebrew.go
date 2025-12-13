@@ -823,6 +823,9 @@ type sourceRecipeData struct {
 	VerifyCommand        string                    `json:"verify_command"`
 	PlatformSteps        map[string][]platformStep `json:"platform_steps,omitempty"`
 	PlatformDependencies map[string][]string       `json:"platform_dependencies,omitempty"`
+	Resources            []sourceResourceData      `json:"resources,omitempty"`
+	Patches              []sourcePatchData         `json:"patches,omitempty"`
+	Inreplace            []sourceInreplaceData     `json:"inreplace,omitempty"`
 }
 
 // validPlatformKeys are the valid keys for platform conditionals.
@@ -832,6 +835,30 @@ var validPlatformKeys = map[string]bool{
 	"arm64":  true, // maps to arch: arm64
 	"amd64":  true, // maps to arch: amd64
 	"x86_64": true, // alias for amd64
+}
+
+// sourceResourceData holds resource information extracted from the formula.
+type sourceResourceData struct {
+	Name     string `json:"name"`     // Resource identifier (e.g., "tree-sitter-c")
+	URL      string `json:"url"`      // Download URL
+	Checksum string `json:"checksum"` // SHA256 checksum
+	Dest     string `json:"dest"`     // Destination directory relative to source root
+}
+
+// sourcePatchData holds patch information extracted from the formula.
+type sourcePatchData struct {
+	URL    string `json:"url,omitempty"`    // URL to download patch (for external patches)
+	Data   string `json:"data,omitempty"`   // Inline patch content (for DATA sections)
+	Strip  int    `json:"strip,omitempty"`  // Strip level for patch -p (default 1)
+	Subdir string `json:"subdir,omitempty"` // Subdirectory to apply patch in
+}
+
+// sourceInreplaceData holds inreplace (text replacement) information.
+type sourceInreplaceData struct {
+	File        string `json:"file"`            // File path relative to source root
+	Pattern     string `json:"pattern"`         // Text to find
+	Replacement string `json:"replacement"`     // Text to replace with
+	IsRegex     bool   `json:"regex,omitempty"` // If true, pattern is a regex
 }
 
 // validBuildSystems is the set of supported build systems.
@@ -906,6 +933,93 @@ func validateSourceRecipeData(data *sourceRecipeData) error {
 		}
 	}
 
+	// Validate resources
+	for i, res := range data.Resources {
+		if err := validateSourceResource(&res, i); err != nil {
+			return err
+		}
+	}
+
+	// Validate patches
+	for i, patch := range data.Patches {
+		if err := validateSourcePatch(&patch, i); err != nil {
+			return err
+		}
+	}
+
+	// Validate inreplace operations
+	for i, ir := range data.Inreplace {
+		if err := validateSourceInreplace(&ir, i); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// validateSourceResource validates a single resource entry.
+func validateSourceResource(res *sourceResourceData, index int) error {
+	if res.Name == "" {
+		return fmt.Errorf("resource[%d]: name is required", index)
+	}
+	if res.URL == "" {
+		return fmt.Errorf("resource[%d]: url is required", index)
+	}
+	// Validate URL (basic sanity check - must be https)
+	if !strings.HasPrefix(res.URL, "https://") {
+		return fmt.Errorf("resource[%d]: url must use https", index)
+	}
+	if res.Dest == "" {
+		return fmt.Errorf("resource[%d]: dest is required", index)
+	}
+	// Security: disallow path traversal
+	if strings.Contains(res.Dest, "..") || strings.HasPrefix(res.Dest, "/") {
+		return fmt.Errorf("resource[%d]: invalid dest path '%s'", index, res.Dest)
+	}
+	return nil
+}
+
+// validateSourcePatch validates a single patch entry.
+func validateSourcePatch(patch *sourcePatchData, index int) error {
+	// Must have either URL or Data, not both
+	hasURL := patch.URL != ""
+	hasData := patch.Data != ""
+	if !hasURL && !hasData {
+		return fmt.Errorf("patch[%d]: either url or data is required", index)
+	}
+	if hasURL && hasData {
+		return fmt.Errorf("patch[%d]: cannot specify both url and data", index)
+	}
+	// Validate URL if present
+	if hasURL && !strings.HasPrefix(patch.URL, "https://") {
+		return fmt.Errorf("patch[%d]: url must use https", index)
+	}
+	// Validate subdir if present
+	if patch.Subdir != "" {
+		if strings.Contains(patch.Subdir, "..") || strings.HasPrefix(patch.Subdir, "/") {
+			return fmt.Errorf("patch[%d]: invalid subdir path '%s'", index, patch.Subdir)
+		}
+	}
+	// Validate strip level (must be non-negative)
+	if patch.Strip < 0 {
+		return fmt.Errorf("patch[%d]: strip must be non-negative", index)
+	}
+	return nil
+}
+
+// validateSourceInreplace validates a single inreplace entry.
+func validateSourceInreplace(ir *sourceInreplaceData, index int) error {
+	if ir.File == "" {
+		return fmt.Errorf("inreplace[%d]: file is required", index)
+	}
+	// Security: disallow path traversal
+	if strings.Contains(ir.File, "..") || strings.HasPrefix(ir.File, "/") {
+		return fmt.Errorf("inreplace[%d]: invalid file path '%s'", index, ir.File)
+	}
+	if ir.Pattern == "" {
+		return fmt.Errorf("inreplace[%d]: pattern is required", index)
+	}
+	// Replacement can be empty (for deletion)
 	return nil
 }
 
@@ -1694,7 +1808,7 @@ func (b *HomebrewBuilder) buildSourceToolDefs() []llm.ToolDef {
 		},
 		{
 			Name:        ToolExtractSourceRecipe,
-			Description: "Signal completion and output the source build recipe structure. Call this when you have analyzed the build system and determined the build configuration.",
+			Description: "Signal completion and output the source build recipe structure. Call this when you have analyzed the build system, resources, patches, and determined the build configuration.",
 			Parameters: map[string]any{
 				"type": "object",
 				"properties": map[string]any{
@@ -1754,6 +1868,47 @@ func (b *HomebrewBuilder) buildSourceToolDefs() []llm.ToolDef {
 						"additionalProperties": map[string]any{
 							"type":  "array",
 							"items": map[string]any{"type": "string"},
+						},
+					},
+					"resources": map[string]any{
+						"type":        "array",
+						"description": "Additional downloads required before building (e.g., tree-sitter grammars for neovim)",
+						"items": map[string]any{
+							"type": "object",
+							"properties": map[string]any{
+								"name":     map[string]any{"type": "string", "description": "Unique resource identifier"},
+								"url":      map[string]any{"type": "string", "description": "Download URL (must be https)"},
+								"checksum": map[string]any{"type": "string", "description": "SHA256 checksum"},
+								"dest":     map[string]any{"type": "string", "description": "Destination directory relative to source root"},
+							},
+							"required": []string{"name", "url", "dest"},
+						},
+					},
+					"patches": map[string]any{
+						"type":        "array",
+						"description": "Patches to apply before building (from Homebrew formula-patches or inline DATA)",
+						"items": map[string]any{
+							"type": "object",
+							"properties": map[string]any{
+								"url":    map[string]any{"type": "string", "description": "URL to download patch (for external patches)"},
+								"data":   map[string]any{"type": "string", "description": "Inline patch content (for __END__ DATA sections)"},
+								"strip":  map[string]any{"type": "integer", "description": "Strip level for patch -p (default 1)"},
+								"subdir": map[string]any{"type": "string", "description": "Subdirectory to apply patch in"},
+							},
+						},
+					},
+					"inreplace": map[string]any{
+						"type":        "array",
+						"description": "Text replacements to apply (from Homebrew inreplace calls)",
+						"items": map[string]any{
+							"type": "object",
+							"properties": map[string]any{
+								"file":        map[string]any{"type": "string", "description": "File path relative to source root"},
+								"pattern":     map[string]any{"type": "string", "description": "Text to find"},
+								"replacement": map[string]any{"type": "string", "description": "Text to replace with"},
+								"regex":       map[string]any{"type": "boolean", "description": "If true, pattern is a regex"},
+							},
+							"required": []string{"file", "pattern", "replacement"},
 						},
 					},
 				},
@@ -1942,8 +2097,9 @@ Your task is to:
 2. Identify the build system (autotools, cmake, cargo, go, make, or custom)
 3. Extract any configure/cmake arguments needed
 4. Identify platform-specific steps (on_macos, on_linux, on_arm, on_intel blocks)
-5. Determine the executable names that will be produced
-6. Call extract_source_recipe with the build configuration
+5. Identify resources (additional downloads), patches, and inreplace operations
+6. Determine the executable names that will be produced
+7. Call extract_source_recipe with the complete build configuration
 
 You have these tools available:
 1. fetch_formula_json: Fetch the formula JSON metadata (version, dependencies, source URL)
@@ -1970,6 +2126,30 @@ These blocks may contain:
 - Platform-specific build commands or patches
 - Post-install fixups (install_name_tool on macOS, patchelf on Linux)
 
+RESOURCES: Look for "resource" blocks in the formula. Each resource has:
+- A name (the string after "resource")
+- A url (in the "url" line)
+- A sha256 checksum (in the "sha256" line)
+- A destination (from "stage" or path in resource.stage block)
+
+Example Ruby:
+  resource "tree-sitter-c" do
+    url "https://github.com/tree-sitter/tree-sitter-c/archive/refs/tags/v0.24.1.tar.gz"
+    sha256 "25dd4bb3..."
+  end
+  # Later in install:
+  resources.each { |r| r.stage(buildpath/"deps"/r.name) }
+
+PATCHES: Look for "patch" blocks or "__END__" DATA sections:
+- URL patches: patch do ... url "https://..." ... end
+- Inline patches: patch :DATA followed by __END__ section
+- For URL patches, extract the URL and strip level (:p1 is default)
+- For DATA patches, extract the content after __END__
+
+INREPLACE: Look for "inreplace" calls that modify files:
+- inreplace "file.txt", "old", "new"
+- inreplace "CMakeLists.txt", "STATIC", "SHARED"
+
 When calling extract_source_recipe:
 - build_system: One of autotools, cmake, cargo, go, make, custom
 - configure_args: Arguments for ./configure (autotools) - do NOT include --prefix
@@ -1982,6 +2162,9 @@ When calling extract_source_recipe:
   Valid platform keys: macos, linux, arm64, amd64
 - platform_dependencies: Object mapping platform keys to dependency arrays, e.g.:
   {"linux": ["libffi", "patchelf"]}
+- resources: Array of resource objects with name, url, checksum, dest
+- patches: Array of patch objects with url OR data, and optional strip/subdir
+- inreplace: Array of text replacement objects with file, pattern, replacement
 
 Analyze the formula and call extract_source_recipe with the correct build configuration.`
 }
@@ -2001,7 +2184,8 @@ func (b *HomebrewBuilder) buildSourceUserMessage(genCtx *homebrewGenContext) str
 	sb.WriteString("1. Fetch the Ruby formula source using fetch_formula_ruby\n")
 	sb.WriteString("2. Analyze the install method to identify the build system\n")
 	sb.WriteString("3. Extract any configure/cmake arguments\n")
-	sb.WriteString("4. Call extract_source_recipe with the build configuration\n")
+	sb.WriteString("4. Look for resources, patches, and inreplace operations\n")
+	sb.WriteString("5. Call extract_source_recipe with the complete build configuration\n")
 
 	if len(info.BuildDependencies) > 0 {
 		sb.WriteString(fmt.Sprintf("\nBuild Dependencies: %s\n", strings.Join(info.BuildDependencies, ", ")))
@@ -2034,7 +2218,27 @@ func (b *HomebrewBuilder) generateSourceRecipeOutput(packageName string, info *h
 		},
 	}
 
-	// Build the steps based on build system
+	// Convert source resources to recipe resources
+	for _, res := range data.Resources {
+		r.Resources = append(r.Resources, recipe.Resource{
+			Name:     res.Name,
+			URL:      res.URL,
+			Checksum: res.Checksum,
+			Dest:     res.Dest,
+		})
+	}
+
+	// Convert source patches to recipe patches
+	for _, patch := range data.Patches {
+		r.Patches = append(r.Patches, recipe.Patch{
+			URL:    patch.URL,
+			Data:   patch.Data,
+			Strip:  patch.Strip,
+			Subdir: patch.Subdir,
+		})
+	}
+
+	// Build the steps based on build system (includes inreplace as text_replace steps)
 	steps, err := b.buildSourceSteps(data)
 	if err != nil {
 		return nil, err
@@ -2050,6 +2254,8 @@ func (b *HomebrewBuilder) generateSourceRecipeOutput(packageName string, info *h
 }
 
 // buildSourceSteps generates the recipe steps for a source build.
+// Resources and patches are stored in the recipe's Resources/Patches fields.
+// Inreplace operations are emitted as text_replace steps before the build.
 func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Step, error) {
 	var steps []recipe.Step
 
@@ -2062,6 +2268,23 @@ func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Ste
 			"repo":  "{{.repo}}",
 		},
 	})
+
+	// Add text_replace steps for inreplace operations (before the build)
+	for i, ir := range data.Inreplace {
+		params := map[string]interface{}{
+			"file":        ir.File,
+			"pattern":     ir.Pattern,
+			"replacement": ir.Replacement,
+		}
+		if ir.IsRegex {
+			params["regex"] = true
+		}
+		steps = append(steps, recipe.Step{
+			Action: "text_replace",
+			Params: params,
+		})
+		_ = i // avoid unused variable warning
+	}
 
 	// Add build step based on build system
 	switch data.BuildSystem {

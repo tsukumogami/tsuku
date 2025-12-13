@@ -10,10 +10,38 @@ import (
 
 // Recipe represents an action-based recipe
 type Recipe struct {
-	Metadata MetadataSection `toml:"metadata"`
-	Version  VersionSection  `toml:"version"`
-	Steps    []Step          `toml:"steps"`
-	Verify   VerifySection   `toml:"verify"`
+	Metadata  MetadataSection `toml:"metadata"`
+	Version   VersionSection  `toml:"version"`
+	Resources []Resource      `toml:"resources,omitempty"`
+	Patches   []Patch         `toml:"patches,omitempty"`
+	Steps     []Step          `toml:"steps"`
+	Verify    VerifySection   `toml:"verify"`
+}
+
+// Resource represents an additional download required for source builds.
+// Resources are staged to specified directories before the build starts.
+type Resource struct {
+	Name     string `toml:"name"`     // Unique identifier for the resource
+	URL      string `toml:"url"`      // Download URL for the resource archive
+	Checksum string `toml:"checksum"` // SHA256 checksum for verification
+	Dest     string `toml:"dest"`     // Destination directory relative to source (e.g., "deps/tree-sitter-c")
+}
+
+// Patch represents a source modification to apply before building.
+// Patches can be URL-based or inline (embedded in the recipe).
+type Patch struct {
+	URL    string `toml:"url,omitempty"`    // URL to download patch file (mutually exclusive with Data)
+	Data   string `toml:"data,omitempty"`   // Inline patch content (mutually exclusive with URL)
+	Strip  int    `toml:"strip,omitempty"`  // Strip level for patch command (-p flag), default 1
+	Subdir string `toml:"subdir,omitempty"` // Subdirectory to apply patch in (relative to source root)
+}
+
+// TextReplace represents a text substitution (maps to Homebrew's inreplace).
+type TextReplace struct {
+	File        string `toml:"file"`            // File path relative to source root
+	Pattern     string `toml:"pattern"`         // Pattern to find (literal string or regex)
+	Replacement string `toml:"replacement"`     // Replacement text
+	IsRegex     bool   `toml:"regex,omitempty"` // If true, treat pattern as regex
 }
 
 // ToTOML serializes the recipe to TOML format.
@@ -55,6 +83,37 @@ func (r *Recipe) ToTOML() ([]byte, error) {
 		buf.WriteString(fmt.Sprintf("formula = %q\n", r.Version.Formula))
 	}
 	buf.WriteString("\n")
+
+	// Encode resources - each resource as [[resources]]
+	for _, res := range r.Resources {
+		buf.WriteString("[[resources]]\n")
+		buf.WriteString(fmt.Sprintf("name = %q\n", res.Name))
+		buf.WriteString(fmt.Sprintf("url = %q\n", res.URL))
+		if res.Checksum != "" {
+			buf.WriteString(fmt.Sprintf("checksum = %q\n", res.Checksum))
+		}
+		buf.WriteString(fmt.Sprintf("dest = %q\n", res.Dest))
+		buf.WriteString("\n")
+	}
+
+	// Encode patches - each patch as [[patches]]
+	for _, patch := range r.Patches {
+		buf.WriteString("[[patches]]\n")
+		if patch.URL != "" {
+			buf.WriteString(fmt.Sprintf("url = %q\n", patch.URL))
+		}
+		if patch.Data != "" {
+			// Use triple-quoted string for multiline patch data
+			buf.WriteString(fmt.Sprintf("data = %q\n", patch.Data))
+		}
+		if patch.Strip != 0 {
+			buf.WriteString(fmt.Sprintf("strip = %d\n", patch.Strip))
+		}
+		if patch.Subdir != "" {
+			buf.WriteString(fmt.Sprintf("subdir = %q\n", patch.Subdir))
+		}
+		buf.WriteString("\n")
+	}
 
 	// Encode steps - each step as [[steps]] with flattened params
 	for _, step := range r.Steps {

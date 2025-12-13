@@ -1613,3 +1613,295 @@ func countOccurrences(s, substr string) int {
 	}
 	return count
 }
+
+func TestRecipe_Resources_UnmarshalTOML(t *testing.T) {
+	tomlData := `
+[metadata]
+name = "neovim"
+description = "Ambitious Vim-fork"
+
+[[resources]]
+name = "tree-sitter-c"
+url = "https://github.com/tree-sitter/tree-sitter-c/archive/refs/tags/v0.24.1.tar.gz"
+checksum = "sha256:25dd4bb3dec770769a407e0fc803f424ce02c494a56ce95fedc525316dcf9b48"
+dest = "deps/tree-sitter-c"
+
+[[resources]]
+name = "tree-sitter-lua"
+url = "https://github.com/tree-sitter-grammars/tree-sitter-lua/archive/refs/tags/v0.4.0.tar.gz"
+checksum = "sha256:b0977aced4a63bb75f26725787e047b8f5f4a092712c840ea7070765d4049559"
+dest = "deps/tree-sitter-lua"
+
+[[steps]]
+action = "cmake_build"
+source_dir = "."
+
+[verify]
+command = "nvim --version"
+`
+
+	var recipe Recipe
+	err := toml.Unmarshal([]byte(tomlData), &recipe)
+	if err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+
+	// Verify resources
+	if len(recipe.Resources) != 2 {
+		t.Fatalf("Resources length = %d, want 2", len(recipe.Resources))
+	}
+
+	res1 := recipe.Resources[0]
+	if res1.Name != "tree-sitter-c" {
+		t.Errorf("Resources[0].Name = %s, want tree-sitter-c", res1.Name)
+	}
+	if res1.Dest != "deps/tree-sitter-c" {
+		t.Errorf("Resources[0].Dest = %s, want deps/tree-sitter-c", res1.Dest)
+	}
+	if res1.Checksum != "sha256:25dd4bb3dec770769a407e0fc803f424ce02c494a56ce95fedc525316dcf9b48" {
+		t.Errorf("Resources[0].Checksum = %s, want sha256:25dd...", res1.Checksum)
+	}
+
+	res2 := recipe.Resources[1]
+	if res2.Name != "tree-sitter-lua" {
+		t.Errorf("Resources[1].Name = %s, want tree-sitter-lua", res2.Name)
+	}
+}
+
+func TestRecipe_Patches_UnmarshalTOML(t *testing.T) {
+	tomlData := `
+[metadata]
+name = "curl"
+description = "Command line tool for URL operations"
+
+[[patches]]
+url = "https://raw.githubusercontent.com/Homebrew/formula-patches/master/curl/fix.patch"
+strip = 1
+
+[[patches]]
+data = "--- a/src/main.c\n+++ b/src/main.c\n@@ -1 +1 @@\n-old\n+new"
+subdir = "src"
+
+[[steps]]
+action = "configure_make"
+
+[verify]
+command = "curl --version"
+`
+
+	var recipe Recipe
+	err := toml.Unmarshal([]byte(tomlData), &recipe)
+	if err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+
+	// Verify patches
+	if len(recipe.Patches) != 2 {
+		t.Fatalf("Patches length = %d, want 2", len(recipe.Patches))
+	}
+
+	patch1 := recipe.Patches[0]
+	if patch1.URL != "https://raw.githubusercontent.com/Homebrew/formula-patches/master/curl/fix.patch" {
+		t.Errorf("Patches[0].URL = %s, want URL-based patch", patch1.URL)
+	}
+	if patch1.Strip != 1 {
+		t.Errorf("Patches[0].Strip = %d, want 1", patch1.Strip)
+	}
+
+	patch2 := recipe.Patches[1]
+	if patch2.Data == "" {
+		t.Error("Patches[1].Data should not be empty for inline patch")
+	}
+	if patch2.Subdir != "src" {
+		t.Errorf("Patches[1].Subdir = %s, want src", patch2.Subdir)
+	}
+}
+
+func TestRecipe_ToTOML_WithResources(t *testing.T) {
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name:        "neovim",
+			Description: "Vim-fork",
+		},
+		Version: VersionSection{
+			Source:  "homebrew",
+			Formula: "neovim",
+		},
+		Resources: []Resource{
+			{
+				Name:     "tree-sitter-c",
+				URL:      "https://github.com/tree-sitter/tree-sitter-c/archive/v0.24.1.tar.gz",
+				Checksum: "sha256:25dd4bb3",
+				Dest:     "deps/tree-sitter-c",
+			},
+			{
+				Name: "tree-sitter-lua",
+				URL:  "https://github.com/tree-sitter-grammars/tree-sitter-lua/archive/v0.4.0.tar.gz",
+				Dest: "deps/tree-sitter-lua",
+			},
+		},
+		Steps: []Step{
+			{Action: "cmake_build", Params: map[string]interface{}{}},
+		},
+		Verify: VerifySection{Command: "nvim --version"},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Verify resources are serialized
+	if !contains(tomlStr, "[[resources]]") {
+		t.Error("ToTOML() missing [[resources]] section")
+	}
+	if !contains(tomlStr, `name = "tree-sitter-c"`) {
+		t.Error("ToTOML() missing resource name")
+	}
+	if !contains(tomlStr, `dest = "deps/tree-sitter-c"`) {
+		t.Error("ToTOML() missing resource dest")
+	}
+	if !contains(tomlStr, `checksum = "sha256:25dd4bb3"`) {
+		t.Error("ToTOML() missing resource checksum")
+	}
+
+	// Count resources - should be 2
+	count := countOccurrences(tomlStr, "[[resources]]")
+	if count != 2 {
+		t.Errorf("ToTOML() has %d [[resources]] sections, want 2", count)
+	}
+
+	// Verify roundtrip
+	var parsed Recipe
+	err = toml.Unmarshal(data, &parsed)
+	if err != nil {
+		t.Fatalf("Unmarshal roundtrip error = %v", err)
+	}
+	if len(parsed.Resources) != 2 {
+		t.Errorf("Roundtrip: Resources length = %d, want 2", len(parsed.Resources))
+	}
+}
+
+func TestRecipe_ToTOML_WithPatches(t *testing.T) {
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name: "curl",
+		},
+		Version: VersionSection{
+			Source: "homebrew",
+		},
+		Patches: []Patch{
+			{
+				URL:   "https://github.com/Homebrew/formula-patches/raw/master/curl/fix.patch",
+				Strip: 1,
+			},
+			{
+				Data:   "--- a/main.c\n+++ b/main.c",
+				Subdir: "src",
+			},
+		},
+		Steps: []Step{
+			{Action: "configure_make", Params: map[string]interface{}{}},
+		},
+		Verify: VerifySection{Command: "curl --version"},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Verify patches are serialized
+	if !contains(tomlStr, "[[patches]]") {
+		t.Error("ToTOML() missing [[patches]] section")
+	}
+	if !contains(tomlStr, "formula-patches") {
+		t.Error("ToTOML() missing patch URL")
+	}
+	if !contains(tomlStr, "strip = 1") {
+		t.Error("ToTOML() missing patch strip level")
+	}
+	if !contains(tomlStr, `subdir = "src"`) {
+		t.Error("ToTOML() missing patch subdir")
+	}
+
+	// Count patches - should be 2
+	count := countOccurrences(tomlStr, "[[patches]]")
+	if count != 2 {
+		t.Errorf("ToTOML() has %d [[patches]] sections, want 2", count)
+	}
+
+	// Verify roundtrip
+	var parsed Recipe
+	err = toml.Unmarshal(data, &parsed)
+	if err != nil {
+		t.Fatalf("Unmarshal roundtrip error = %v", err)
+	}
+	if len(parsed.Patches) != 2 {
+		t.Errorf("Roundtrip: Patches length = %d, want 2", len(parsed.Patches))
+	}
+}
+
+func TestRecipe_ToTOML_ResourcesAndPatches_Combined(t *testing.T) {
+	// Test a recipe with both resources and patches
+	recipe := Recipe{
+		Metadata: MetadataSection{
+			Name:        "neovim",
+			Description: "Vim-fork with resources and patches",
+		},
+		Version: VersionSection{
+			Source:  "homebrew",
+			Formula: "neovim",
+		},
+		Resources: []Resource{
+			{
+				Name:     "tree-sitter-c",
+				URL:      "https://example.com/tree-sitter-c.tar.gz",
+				Checksum: "sha256:abc123",
+				Dest:     "deps/tree-sitter-c",
+			},
+		},
+		Patches: []Patch{
+			{
+				URL:   "https://example.com/fix.patch",
+				Strip: 1,
+			},
+		},
+		Steps: []Step{
+			{Action: "cmake_build", Params: map[string]interface{}{}},
+		},
+		Verify: VerifySection{Command: "nvim --version"},
+	}
+
+	data, err := recipe.ToTOML()
+	if err != nil {
+		t.Fatalf("ToTOML() error = %v", err)
+	}
+
+	tomlStr := string(data)
+
+	// Verify both sections are present
+	if !contains(tomlStr, "[[resources]]") {
+		t.Error("ToTOML() missing [[resources]] section")
+	}
+	if !contains(tomlStr, "[[patches]]") {
+		t.Error("ToTOML() missing [[patches]] section")
+	}
+
+	// Verify roundtrip
+	var parsed Recipe
+	err = toml.Unmarshal(data, &parsed)
+	if err != nil {
+		t.Fatalf("Unmarshal roundtrip error = %v", err)
+	}
+	if len(parsed.Resources) != 1 {
+		t.Errorf("Roundtrip: Resources length = %d, want 1", len(parsed.Resources))
+	}
+	if len(parsed.Patches) != 1 {
+		t.Errorf("Roundtrip: Patches length = %d, want 1", len(parsed.Patches))
+	}
+}

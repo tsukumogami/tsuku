@@ -2854,6 +2854,402 @@ func TestPlatformKeyToWhen(t *testing.T) {
 	}
 }
 
+func TestValidateSourceResource(t *testing.T) {
+	tests := []struct {
+		name    string
+		res     sourceResourceData
+		wantErr bool
+	}{
+		{
+			name: "valid resource",
+			res: sourceResourceData{
+				Name:     "tree-sitter-c",
+				URL:      "https://github.com/tree-sitter/tree-sitter-c/archive/v0.24.1.tar.gz",
+				Checksum: "sha256:abc123",
+				Dest:     "deps/tree-sitter-c",
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing name",
+			res: sourceResourceData{
+				URL:  "https://example.com/file.tar.gz",
+				Dest: "deps/test",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing url",
+			res: sourceResourceData{
+				Name: "test-resource",
+				Dest: "deps/test",
+			},
+			wantErr: true,
+		},
+		{
+			name: "http url (not https)",
+			res: sourceResourceData{
+				Name: "test-resource",
+				URL:  "http://example.com/file.tar.gz",
+				Dest: "deps/test",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing dest",
+			res: sourceResourceData{
+				Name: "test-resource",
+				URL:  "https://example.com/file.tar.gz",
+			},
+			wantErr: true,
+		},
+		{
+			name: "path traversal in dest",
+			res: sourceResourceData{
+				Name: "test-resource",
+				URL:  "https://example.com/file.tar.gz",
+				Dest: "../etc/passwd",
+			},
+			wantErr: true,
+		},
+		{
+			name: "absolute path in dest",
+			res: sourceResourceData{
+				Name: "test-resource",
+				URL:  "https://example.com/file.tar.gz",
+				Dest: "/etc/passwd",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateSourceResource(&tt.res, 0)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateSourceResource() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateSourcePatch(t *testing.T) {
+	tests := []struct {
+		name    string
+		patch   sourcePatchData
+		wantErr bool
+	}{
+		{
+			name: "valid url patch",
+			patch: sourcePatchData{
+				URL:   "https://github.com/Homebrew/formula-patches/raw/master/fix.patch",
+				Strip: 1,
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid data patch",
+			patch: sourcePatchData{
+				Data:   "--- a/main.c\n+++ b/main.c\n@@ -1 +1 @@\n-old\n+new",
+				Strip:  1,
+				Subdir: "src",
+			},
+			wantErr: false,
+		},
+		{
+			name:    "missing url and data",
+			patch:   sourcePatchData{Strip: 1},
+			wantErr: true,
+		},
+		{
+			name: "both url and data",
+			patch: sourcePatchData{
+				URL:  "https://example.com/fix.patch",
+				Data: "some patch data",
+			},
+			wantErr: true,
+		},
+		{
+			name: "http url (not https)",
+			patch: sourcePatchData{
+				URL: "http://example.com/fix.patch",
+			},
+			wantErr: true,
+		},
+		{
+			name: "path traversal in subdir",
+			patch: sourcePatchData{
+				Data:   "some patch",
+				Subdir: "../etc",
+			},
+			wantErr: true,
+		},
+		{
+			name: "absolute path in subdir",
+			patch: sourcePatchData{
+				Data:   "some patch",
+				Subdir: "/etc",
+			},
+			wantErr: true,
+		},
+		{
+			name: "negative strip level",
+			patch: sourcePatchData{
+				Data:  "some patch",
+				Strip: -1,
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateSourcePatch(&tt.patch, 0)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateSourcePatch() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateSourceInreplace(t *testing.T) {
+	tests := []struct {
+		name    string
+		ir      sourceInreplaceData
+		wantErr bool
+	}{
+		{
+			name: "valid inreplace",
+			ir: sourceInreplaceData{
+				File:        "Makefile",
+				Pattern:     "STATIC",
+				Replacement: "SHARED",
+			},
+			wantErr: false,
+		},
+		{
+			name: "valid regex inreplace",
+			ir: sourceInreplaceData{
+				File:        "config.h",
+				Pattern:     "#define VERSION.*",
+				Replacement: "#define VERSION \"1.0.0\"",
+				IsRegex:     true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty replacement (deletion)",
+			ir: sourceInreplaceData{
+				File:        "Makefile",
+				Pattern:     "DEBUG=1",
+				Replacement: "",
+			},
+			wantErr: false,
+		},
+		{
+			name: "missing file",
+			ir: sourceInreplaceData{
+				Pattern:     "old",
+				Replacement: "new",
+			},
+			wantErr: true,
+		},
+		{
+			name: "missing pattern",
+			ir: sourceInreplaceData{
+				File:        "Makefile",
+				Replacement: "new",
+			},
+			wantErr: true,
+		},
+		{
+			name: "path traversal in file",
+			ir: sourceInreplaceData{
+				File:        "../etc/passwd",
+				Pattern:     "old",
+				Replacement: "new",
+			},
+			wantErr: true,
+		},
+		{
+			name: "absolute path in file",
+			ir: sourceInreplaceData{
+				File:        "/etc/passwd",
+				Pattern:     "old",
+				Replacement: "new",
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := validateSourceInreplace(&tt.ir, 0)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateSourceInreplace() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestValidateSourceRecipeData_WithResources(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemCMake,
+		Executables:   []string{"nvim"},
+		VerifyCommand: "nvim --version",
+		Resources: []sourceResourceData{
+			{
+				Name:     "tree-sitter-c",
+				URL:      "https://github.com/tree-sitter/tree-sitter-c/archive/v0.24.1.tar.gz",
+				Checksum: "sha256:abc123",
+				Dest:     "deps/tree-sitter-c",
+			},
+		},
+	}
+
+	if err := validateSourceRecipeData(data); err != nil {
+		t.Errorf("validateSourceRecipeData() error = %v", err)
+	}
+}
+
+func TestValidateSourceRecipeData_WithInvalidResource(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemCMake,
+		Executables:   []string{"nvim"},
+		VerifyCommand: "nvim --version",
+		Resources: []sourceResourceData{
+			{
+				Name: "test-resource",
+				// Missing URL
+				Dest: "deps/test",
+			},
+		},
+	}
+
+	if err := validateSourceRecipeData(data); err == nil {
+		t.Error("validateSourceRecipeData() expected error for missing URL")
+	}
+}
+
+func TestValidateSourceRecipeData_WithPatches(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"curl"},
+		VerifyCommand: "curl --version",
+		Patches: []sourcePatchData{
+			{
+				URL:   "https://github.com/Homebrew/formula-patches/raw/master/curl/fix.patch",
+				Strip: 1,
+			},
+		},
+	}
+
+	if err := validateSourceRecipeData(data); err != nil {
+		t.Errorf("validateSourceRecipeData() error = %v", err)
+	}
+}
+
+func TestValidateSourceRecipeData_WithInvalidPatch(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"curl"},
+		VerifyCommand: "curl --version",
+		Patches: []sourcePatchData{
+			{
+				// Missing both URL and Data
+				Strip: 1,
+			},
+		},
+	}
+
+	if err := validateSourceRecipeData(data); err == nil {
+		t.Error("validateSourceRecipeData() expected error for invalid patch")
+	}
+}
+
+func TestValidateSourceRecipeData_WithInreplace(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"jq"},
+		VerifyCommand: "jq --version",
+		Inreplace: []sourceInreplaceData{
+			{
+				File:        "Makefile",
+				Pattern:     "STATIC",
+				Replacement: "SHARED",
+			},
+		},
+	}
+
+	if err := validateSourceRecipeData(data); err != nil {
+		t.Errorf("validateSourceRecipeData() error = %v", err)
+	}
+}
+
+func TestValidateSourceRecipeData_WithInvalidInreplace(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"jq"},
+		VerifyCommand: "jq --version",
+		Inreplace: []sourceInreplaceData{
+			{
+				// Missing file
+				Pattern:     "old",
+				Replacement: "new",
+			},
+		},
+	}
+
+	if err := validateSourceRecipeData(data); err == nil {
+		t.Error("validateSourceRecipeData() expected error for invalid inreplace")
+	}
+}
+
+func TestBuildSourceSteps_WithInreplace(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"jq"},
+		VerifyCommand: "jq --version",
+		Inreplace: []sourceInreplaceData{
+			{
+				File:        "Makefile",
+				Pattern:     "STATIC",
+				Replacement: "SHARED",
+			},
+			{
+				File:        "config.h",
+				Pattern:     "DEBUG",
+				Replacement: "RELEASE",
+				IsRegex:     true,
+			},
+		},
+	}
+
+	steps, err := b.buildSourceSteps(data)
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	// Should have: github_archive, 2x text_replace, configure_make, install_binaries
+	// = 5 steps total
+	if len(steps) != 5 {
+		t.Errorf("buildSourceSteps() returned %d steps, want 5", len(steps))
+	}
+
+	// Check text_replace steps are present
+	textReplaceCount := 0
+	for _, step := range steps {
+		if step.Action == "text_replace" {
+			textReplaceCount++
+		}
+	}
+	if textReplaceCount != 2 {
+		t.Errorf("buildSourceSteps() has %d text_replace steps, want 2", textReplaceCount)
+	}
+}
+
 // Test buildSourceSteps with platform conditionals
 
 func TestHomebrewBuilder_buildSourceSteps_WithPlatformSteps(t *testing.T) {
@@ -2998,5 +3394,57 @@ func TestHomebrewBuilder_buildSourceToolDefs_IncludesPlatformParams(t *testing.T
 
 	if _, ok := params["platform_dependencies"]; !ok {
 		t.Error("extract_source_recipe should have platform_dependencies parameter")
+	}
+}
+
+func TestGenerateSourceRecipeOutput_WithResourcesAndPatches(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	formulaInfo := &homebrewFormulaInfo{
+		Name:        "neovim",
+		Description: "Vim-fork",
+		Homepage:    "https://neovim.io",
+	}
+	formulaInfo.Versions.Stable = "0.10.0"
+
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemCMake,
+		Executables:   []string{"nvim"},
+		VerifyCommand: "nvim --version",
+		Resources: []sourceResourceData{
+			{
+				Name:     "tree-sitter-c",
+				URL:      "https://github.com/tree-sitter/tree-sitter-c/archive/v0.24.1.tar.gz",
+				Checksum: "sha256:abc123",
+				Dest:     "deps/tree-sitter-c",
+			},
+		},
+		Patches: []sourcePatchData{
+			{
+				URL:   "https://github.com/Homebrew/formula-patches/raw/master/neovim/fix.patch",
+				Strip: 1,
+			},
+		},
+	}
+
+	recipe, err := b.generateSourceRecipeOutput("neovim", formulaInfo, data)
+	if err != nil {
+		t.Fatalf("generateSourceRecipeOutput() error = %v", err)
+	}
+
+	// Check resources were converted
+	if len(recipe.Resources) != 1 {
+		t.Errorf("recipe.Resources has %d entries, want 1", len(recipe.Resources))
+	}
+	if recipe.Resources[0].Name != "tree-sitter-c" {
+		t.Errorf("recipe.Resources[0].Name = %s, want tree-sitter-c", recipe.Resources[0].Name)
+	}
+
+	// Check patches were converted
+	if len(recipe.Patches) != 1 {
+		t.Errorf("recipe.Patches has %d entries, want 1", len(recipe.Patches))
+	}
+	if !containsString(recipe.Patches[0].URL, "formula-patches") {
+		t.Error("recipe.Patches[0].URL should contain formula-patches")
 	}
 }
