@@ -1146,14 +1146,18 @@ func TestCpanInstallAction_Execute_MirrorParameter(t *testing.T) {
 	// Create mock perl installation with cpanm that logs arguments
 	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
 	perlBinDir := filepath.Join(toolsDir, "perl-5.38.0", "bin")
-	os.MkdirAll(perlBinDir, 0755)
+	if err := os.MkdirAll(perlBinDir, 0755); err != nil {
+		t.Fatalf("failed to create perl bin dir: %v", err)
+	}
 
 	logFile := filepath.Join(tmpDir, "cpanm.log")
 	installDir := filepath.Join(tmpDir, "install")
 
 	// Create mock perl
 	perlPath := filepath.Join(perlBinDir, "perl")
-	os.WriteFile(perlPath, []byte("#!/bin/sh\necho 'perl'"), 0755)
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho 'perl'"), 0755); err != nil {
+		t.Fatalf("failed to create mock perl: %v", err)
+	}
 
 	// Create mock cpanm that logs arguments and creates the executable
 	cpanmPath := filepath.Join(perlBinDir, "cpanm")
@@ -1167,9 +1171,13 @@ echo "myapp - mock"
 SCRIPT
 chmod +x %s/bin/myapp
 `, logFile, installDir, installDir, installDir)
-	os.WriteFile(cpanmPath, []byte(cpanmScript), 0755)
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create mock cpanm: %v", err)
+	}
 
-	os.MkdirAll(installDir, 0755)
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatalf("failed to create install dir: %v", err)
+	}
 
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
@@ -1220,16 +1228,22 @@ func TestCpanInstallAction_Execute_CpanfileParameter(t *testing.T) {
 
 	// Create mock perl installation at ~/.tsuku/tools/perl-5.38.0/bin/
 	perlBinDir := filepath.Join(tmpDir, ".tsuku", "tools", "perl-5.38.0", "bin")
-	os.MkdirAll(perlBinDir, 0755)
+	if err := os.MkdirAll(perlBinDir, 0755); err != nil {
+		t.Fatalf("failed to create perl bin dir: %v", err)
+	}
 
 	logFile := filepath.Join(tmpDir, "cpanm.log")
 
 	// Create mock perl that outputs version
 	perlPath := filepath.Join(perlBinDir, "perl")
-	os.WriteFile(perlPath, []byte("#!/bin/sh\necho 'This is perl 5, version 38, subversion 0 (v5.38.0)'"), 0755)
+	if err := os.WriteFile(perlPath, []byte("#!/bin/sh\necho 'This is perl 5, version 38, subversion 0 (v5.38.0)'"), 0755); err != nil {
+		t.Fatalf("failed to create mock perl: %v", err)
+	}
 
 	installDir := filepath.Join(tmpDir, "install")
-	os.MkdirAll(installDir, 0755)
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		t.Fatalf("failed to create install dir: %v", err)
+	}
 
 	// Create mock cpanm that logs args and creates expected executable
 	cpanmPath := filepath.Join(perlBinDir, "cpanm")
@@ -1242,13 +1256,19 @@ echo '#!/bin/sh' > %s/bin/myapp
 chmod 755 %s/bin/myapp
 exit 0
 `, logFile, installDir, installDir, installDir)
-	os.WriteFile(cpanmPath, []byte(cpanmScript), 0755)
+	if err := os.WriteFile(cpanmPath, []byte(cpanmScript), 0755); err != nil {
+		t.Fatalf("failed to create mock cpanm: %v", err)
+	}
 
 	// Create a cpanfile
 	cpanfileDir := filepath.Join(tmpDir, "project")
-	os.MkdirAll(cpanfileDir, 0755)
+	if err := os.MkdirAll(cpanfileDir, 0755); err != nil {
+		t.Fatalf("failed to create cpanfile dir: %v", err)
+	}
 	cpanfilePath := filepath.Join(cpanfileDir, "cpanfile")
-	os.WriteFile(cpanfilePath, []byte("requires 'Plack';\n"), 0644)
+	if err := os.WriteFile(cpanfilePath, []byte("requires 'Plack';\n"), 0644); err != nil {
+		t.Fatalf("failed to create cpanfile: %v", err)
+	}
 
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
