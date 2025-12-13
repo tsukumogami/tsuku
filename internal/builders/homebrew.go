@@ -835,7 +835,7 @@ func (b *HomebrewBuilder) buildUserMessage(genCtx *homebrewGenContext) string {
 
 	// Build a concise summary of the formula
 	var sb strings.Builder
-	sb.WriteString(fmt.Sprintf("Please analyze this Homebrew formula and create a recipe.\n\n"))
+	sb.WriteString("Please analyze this Homebrew formula and create a recipe.\n\n")
 	sb.WriteString(fmt.Sprintf("Formula: %s\n", info.Name))
 	sb.WriteString(fmt.Sprintf("Description: %s\n", info.Description))
 	sb.WriteString(fmt.Sprintf("Homepage: %s\n", info.Homepage))
@@ -921,10 +921,7 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 
 	// Extract just the binary names for install_binaries
 	binaries := make([]string, len(data.Executables))
-	for i, exe := range data.Executables {
-		// Remove bin/ prefix if present for the binary name
-		binaries[i] = exe
-	}
+	copy(binaries, data.Executables)
 
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{

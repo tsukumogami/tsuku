@@ -33,7 +33,7 @@ func TestHomebrewBuilder_CanBuild_Success(t *testing.T) {
 				"deprecated": false,
 				"disabled":   false,
 			}
-			json.NewEncoder(w).Encode(formulaInfo)
+			_ = json.NewEncoder(w).Encode(formulaInfo)
 			return
 		}
 		http.NotFound(w, r)
@@ -93,7 +93,7 @@ func TestHomebrewBuilder_CanBuild_NoBottles(t *testing.T) {
 				"deprecated": false,
 				"disabled":   false,
 			}
-			json.NewEncoder(w).Encode(formulaInfo)
+			_ = json.NewEncoder(w).Encode(formulaInfo)
 			return
 		}
 		http.NotFound(w, r)
@@ -131,7 +131,7 @@ func TestHomebrewBuilder_CanBuild_Disabled(t *testing.T) {
 				"deprecated": false,
 				"disabled":   true, // Disabled
 			}
-			json.NewEncoder(w).Encode(formulaInfo)
+			_ = json.NewEncoder(w).Encode(formulaInfo)
 			return
 		}
 		http.NotFound(w, r)
@@ -226,7 +226,7 @@ func TestHomebrewBuilder_fetchFormulaInfo(t *testing.T) {
 				"disabled":     false,
 				"dependencies": []string{"oniguruma"},
 			}
-			json.NewEncoder(w).Encode(formulaInfo)
+			_ = json.NewEncoder(w).Encode(formulaInfo)
 			return
 		}
 		http.NotFound(w, r)
@@ -534,7 +534,7 @@ func TestHomebrewBuilder_executeToolCall_FetchFormulaJSON(t *testing.T) {
 				"name": "jq",
 				"desc": "JSON processor",
 			}
-			json.NewEncoder(w).Encode(formulaInfo)
+			_ = json.NewEncoder(w).Encode(formulaInfo)
 			return
 		}
 		http.NotFound(w, r)
