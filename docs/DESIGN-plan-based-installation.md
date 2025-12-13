@@ -1,6 +1,6 @@
 # Design: Plan-Based Installation
 
-- **Status**: Planned
+- **Status**: Current
 - **Milestone**: Deterministic Recipe Execution
 - **Author**: @dangazineu
 - **Created**: 2025-12-13
@@ -34,7 +34,7 @@ graph LR
 
     class I506 done
     class I507 done
-    class I508 ready
+    class I508 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
