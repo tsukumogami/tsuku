@@ -11,6 +11,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/httputil"
+	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
@@ -71,6 +72,13 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 
 	destPath := filepath.Join(ctx.WorkDir, dest)
 
+	// Get logger for debug output
+	logger := ctx.Log()
+	logger.Debug("download action starting",
+		"url", log.SanitizeURL(url),
+		"dest", dest,
+		"destPath", destPath)
+
 	// Get checksum info for cache validation
 	inlineChecksum, _ := GetString(params, "checksum")
 	checksumAlgo, _ := GetString(params, "checksum_algo")
@@ -82,11 +90,14 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	var cache *DownloadCache
 	if ctx.DownloadCacheDir != "" {
 		cache = NewDownloadCache(ctx.DownloadCacheDir)
+		logger.Debug("checking download cache", "cacheDir", ctx.DownloadCacheDir)
 		found, err := cache.Check(url, destPath, inlineChecksum, checksumAlgo)
 		if err != nil {
 			// Log warning but continue with download
+			logger.Warn("cache check failed", "error", err)
 			fmt.Printf("   Warning: cache check failed: %v\n", err)
 		} else if found {
+			logger.Debug("cache hit", "dest", dest)
 			fmt.Printf("   Using cached: %s\n", dest)
 			// For cached files, still verify checksum if provided via URL
 			// (inline checksum was already verified by cache.Check)
@@ -94,15 +105,20 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 			if hasChecksumURL {
 				if err := a.verifyChecksumFromURL(ctx.Context, ctx, checksumURL, destPath, checksumAlgo, vars); err != nil {
 					// Cache may be stale, invalidate and re-download
+					logger.Debug("cache checksum mismatch, will re-download")
 					fmt.Printf("   Cache checksum mismatch, re-downloading...\n")
 				} else {
+					logger.Debug("restored from cache with valid checksum")
 					fmt.Printf("   ✓ Restored from cache\n")
 					return nil
 				}
 			} else {
+				logger.Debug("restored from cache (no checksum URL)")
 				fmt.Printf("   ✓ Restored from cache\n")
 				return nil
 			}
+		} else {
+			logger.Debug("cache miss")
 		}
 	}
 
@@ -118,15 +134,20 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	if err := a.verifyChecksum(ctx.Context, ctx, params, destPath, vars); err != nil {
 		return fmt.Errorf("checksum verification failed: %w", err)
 	}
+	logger.Debug("checksum verification passed", "algo", checksumAlgo)
 
 	// Save to cache if available
 	if cache != nil {
 		if err := cache.Save(url, destPath, inlineChecksum); err != nil {
 			// Log warning but don't fail the download
+			logger.Warn("failed to cache download", "error", err)
 			fmt.Printf("   Warning: failed to cache download: %v\n", err)
+		} else {
+			logger.Debug("saved to download cache")
 		}
 	}
 
+	logger.Debug("download completed successfully", "dest", dest)
 	fmt.Printf("   ✓ Downloaded successfully\n")
 	return nil
 }
