@@ -283,27 +283,38 @@ func TestGetOrGeneratePlanWith_InvalidCachedPlan_RecipeHashChanged(t *testing.T)
 	}
 }
 
-func TestGetOrGeneratePlanWith_VersionResolutionError(t *testing.T) {
+func TestGetOrGeneratePlanWith_VersionResolutionFallback(t *testing.T) {
 	ctx := context.Background()
 
+	// When version resolution fails, the function should fall back to "dev" version
+	// and continue with plan generation (matching Execute() behavior)
+	generatedPlan := &executor.InstallationPlan{
+		FormatVersion: executor.PlanFormatVersion,
+		Tool:          "gh",
+		Version:       "dev",
+		Platform: executor.Platform{
+			OS:   "linux",
+			Arch: "amd64",
+		},
+	}
+
 	resolver := &mockVersionResolver{err: errors.New("network error")}
-	generator := &mockPlanGenerator{}
+	generator := &mockPlanGenerator{plan: generatedPlan}
 	cacheReader := &mockPlanCacheReader{}
 
 	cfg := planRetrievalConfig{
 		Tool: "gh",
+		OS:   "linux",
+		Arch: "amd64",
 	}
 
-	_, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
-	if err == nil {
-		t.Fatal("getOrGeneratePlanWith() error = nil, want error")
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	if err != nil {
+		t.Fatalf("getOrGeneratePlanWith() error = %v, want nil (fallback to 'dev')", err)
 	}
 
-	if !errors.Is(err, errors.New("network error")) {
-		// Check that the error message contains the expected content
-		if err.Error() != "version resolution failed: network error" {
-			t.Errorf("error = %q, want %q", err.Error(), "version resolution failed: network error")
-		}
+	if result.Version != "dev" {
+		t.Errorf("result.Version = %q, want %q", result.Version, "dev")
 	}
 }
 

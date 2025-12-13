@@ -76,7 +76,10 @@ func getOrGeneratePlanWith(
 	// Phase 1: Version Resolution (ALWAYS runs)
 	resolvedVersion, err := resolver.ResolveVersion(ctx, cfg.VersionConstraint)
 	if err != nil {
-		return nil, fmt.Errorf("version resolution failed: %w", err)
+		// Fall back to "dev" version for recipes without proper version sources
+		// This matches the behavior in executor.Execute() for backward compatibility
+		printInfof("Warning: version resolution failed: %v, using 'dev'\n", err)
+		resolvedVersion = "dev"
 	}
 
 	// Generate cache key from resolution output
