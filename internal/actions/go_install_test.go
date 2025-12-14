@@ -249,13 +249,9 @@ func TestGoInstallAction_Execute_InvalidExecutableName(t *testing.T) {
 
 // TestGoInstallAction_Execute_GoNotInstalled tests error when Go is not installed
 func TestGoInstallAction_Execute_GoNotInstalled(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME with no Go installed
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create empty .tsuku/tools directory
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
@@ -288,13 +284,9 @@ func TestGoInstallAction_Execute_GoNotInstalled(t *testing.T) {
 
 // TestResolveGo_NoGoInstalled tests ResolveGo when no Go is installed
 func TestResolveGo_NoGoInstalled(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create empty .tsuku/tools directory (no go)
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
@@ -310,13 +302,9 @@ func TestResolveGo_NoGoInstalled(t *testing.T) {
 
 // TestResolveGo_SingleVersion tests ResolveGo with one Go version
 func TestResolveGo_SingleVersion(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -338,13 +326,9 @@ func TestResolveGo_SingleVersion(t *testing.T) {
 
 // TestResolveGo_MultipleVersions tests that ResolveGo selects the latest version
 func TestResolveGo_MultipleVersions(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create multiple Go versions
 	versions := []string{"go-1.19.0", "go-1.21.0", "go-1.20.0"}
@@ -369,13 +353,9 @@ func TestResolveGo_MultipleVersions(t *testing.T) {
 
 // TestResolveGo_NonExecutable tests that non-executable go is skipped
 func TestResolveGo_NonExecutable(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -397,13 +377,9 @@ func TestResolveGo_NonExecutable(t *testing.T) {
 
 // TestGoInstallAction_Execute_GoInstallFails tests that Execute handles go install failure
 func TestGoInstallAction_Execute_GoInstallFails(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure with a mock go that always fails
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -443,13 +419,9 @@ func TestGoInstallAction_Execute_GoInstallFails(t *testing.T) {
 
 // TestGoInstallAction_Execute_ExecutableNotCreated tests verification failure
 func TestGoInstallAction_Execute_ExecutableNotCreated(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure with a mock go that succeeds but creates nothing
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -489,13 +461,9 @@ func TestGoInstallAction_Execute_ExecutableNotCreated(t *testing.T) {
 
 // TestGoInstallAction_Execute_EmptyVersion tests using @latest when version is empty
 func TestGoInstallAction_Execute_EmptyVersion(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure with a mock go that fails (we just want to test the target building)
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -531,13 +499,9 @@ func TestGoInstallAction_Execute_EmptyVersion(t *testing.T) {
 
 // TestGoInstallAction_Execute_Success tests successful installation
 func TestGoInstallAction_Execute_Success(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -583,20 +547,12 @@ func TestGoInstallAction_Execute_Success(t *testing.T) {
 
 // TestGoInstallAction_Execute_SuccessWithDebug tests with TSUKU_DEBUG set
 func TestGoInstallAction_Execute_SuccessWithDebug(t *testing.T) {
-	// Save original HOME and TSUKU_DEBUG, restore after test
-	origHome := os.Getenv("HOME")
-	origDebug := os.Getenv("TSUKU_DEBUG")
-	defer func() {
-		os.Setenv("HOME", origHome)
-		os.Setenv("TSUKU_DEBUG", origDebug)
-	}()
-
-	// Enable debug mode
-	os.Setenv("TSUKU_DEBUG", "1")
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
+
+	// Enable debug mode
+	t.Setenv("TSUKU_DEBUG", "1")
 
 	// Create Go installation structure
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -636,13 +592,9 @@ func TestGoInstallAction_Execute_SuccessWithDebug(t *testing.T) {
 
 // TestGoInstallAction_Execute_MultipleExecutables tests verifying multiple executables
 func TestGoInstallAction_Execute_MultipleExecutables(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -682,13 +634,9 @@ func TestGoInstallAction_Execute_MultipleExecutables(t *testing.T) {
 
 // TestGoInstallAction_Execute_SecondExecutableMissing tests when only first executable is created
 func TestGoInstallAction_Execute_SecondExecutableMissing(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")

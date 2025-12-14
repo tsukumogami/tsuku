@@ -779,10 +779,8 @@ func TestNeedsCodesign(t *testing.T) {
 
 func TestSetRpathLinux_NoPatchelf(t *testing.T) {
 	// This test verifies the error message when patchelf is not available
-	// Save PATH and set it to empty to ensure patchelf isn't found
-	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", "")
-	defer os.Setenv("PATH", origPath)
+	// Set PATH to empty to ensure patchelf isn't found
+	t.Setenv("PATH", "")
 
 	tmpDir := t.TempDir()
 	binaryPath := filepath.Join(tmpDir, "test")
@@ -801,10 +799,8 @@ func TestSetRpathLinux_NoPatchelf(t *testing.T) {
 
 func TestSetRpathMacOS_NoInstallNameTool(t *testing.T) {
 	// This test verifies the error message when install_name_tool is not available
-	// Save PATH and set it to empty
-	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", "")
-	defer os.Setenv("PATH", origPath)
+	// Set PATH to empty
+	t.Setenv("PATH", "")
 
 	tmpDir := t.TempDir()
 	binaryPath := filepath.Join(tmpDir, "test")

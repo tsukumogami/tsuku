@@ -9,6 +9,7 @@ import (
 )
 
 func TestCargoBuildAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 	if action.Name() != "cargo_build" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "cargo_build")
@@ -16,6 +17,7 @@ func TestCargoBuildAction_Name(t *testing.T) {
 }
 
 func TestIsValidTargetTriple(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		target    string
@@ -55,6 +57,7 @@ func TestIsValidTargetTriple(t *testing.T) {
 }
 
 func TestIsValidFeatureName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		feature   string
@@ -90,6 +93,7 @@ func TestIsValidFeatureName(t *testing.T) {
 }
 
 func TestBuildDeterministicCargoEnv(t *testing.T) {
+	t.Parallel()
 	// Create a mock cargo path and work directory
 	tmpDir := t.TempDir()
 	cargoPath := filepath.Join(tmpDir, "cargo")
@@ -136,6 +140,7 @@ func TestBuildDeterministicCargoEnv(t *testing.T) {
 }
 
 func TestBuildDeterministicCargoEnv_PathIncludesCargoDir(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	cargoPath := filepath.Join(tmpDir, "cargo")
 	workDir := t.TempDir()
@@ -157,6 +162,7 @@ func TestBuildDeterministicCargoEnv_PathIncludesCargoDir(t *testing.T) {
 }
 
 func TestBuildDeterministicCargoEnv_IsolatedCargoHome(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	cargoPath := filepath.Join(tmpDir, "cargo")
 	workDir := t.TempDir()
@@ -179,6 +185,7 @@ func TestBuildDeterministicCargoEnv_IsolatedCargoHome(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_MissingSourceDir(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
@@ -201,6 +208,7 @@ func TestCargoBuildAction_Execute_MissingSourceDir(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_MissingExecutables(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 
 	// Create a temp directory with Cargo.toml
@@ -231,6 +239,7 @@ func TestCargoBuildAction_Execute_MissingExecutables(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_EmptyExecutables(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 
 	// Create a temp directory with Cargo.toml
@@ -258,6 +267,7 @@ func TestCargoBuildAction_Execute_EmptyExecutables(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_CargoTomlNotFound(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 
 	workDir := t.TempDir() // Empty directory, no Cargo.toml
@@ -283,6 +293,7 @@ func TestCargoBuildAction_Execute_CargoTomlNotFound(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_CargoLockNotFound(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 
 	// Create a temp directory with Cargo.toml but no Cargo.lock
@@ -314,6 +325,7 @@ func TestCargoBuildAction_Execute_CargoLockNotFound(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_InvalidExecutableName(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 
 	// Create a temp directory with Cargo.toml
@@ -360,6 +372,7 @@ func TestCargoBuildAction_Execute_InvalidExecutableName(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_InvalidTargetTriple(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 
 	// Create a temp directory with Cargo.toml and Cargo.lock
@@ -395,6 +408,7 @@ func TestCargoBuildAction_Execute_InvalidTargetTriple(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_InvalidFeatureName(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 
 	// Create a temp directory with Cargo.toml and Cargo.lock
@@ -430,6 +444,7 @@ func TestCargoBuildAction_Execute_InvalidFeatureName(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_RelativeSourceDir(t *testing.T) {
+	t.Parallel()
 	action := &CargoBuildAction{}
 
 	// Create work directory with a subdirectory containing Cargo.toml and Cargo.lock
@@ -471,6 +486,7 @@ func TestCargoBuildAction_Execute_RelativeSourceDir(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_LockedDefault(t *testing.T) {
+	t.Parallel()
 	// This test verifies that locked defaults to true
 	// We can't easily test the actual cargo invocation without cargo installed,
 	// but we can verify the parameter handling
@@ -505,6 +521,7 @@ func TestCargoBuildAction_Execute_LockedDefault(t *testing.T) {
 }
 
 func TestCargoBuildIsPrimitive(t *testing.T) {
+	t.Parallel()
 	// Verify that cargo_build is registered as a primitive
 	if !IsPrimitive("cargo_build") {
 		t.Error("cargo_build should be registered as a primitive action")
@@ -512,6 +529,7 @@ func TestCargoBuildIsPrimitive(t *testing.T) {
 }
 
 func TestCargoBuildIsRegistered(t *testing.T) {
+	t.Parallel()
 	// Verify that cargo_build is registered in the action registry
 	action := Get("cargo_build")
 	if action == nil {
@@ -523,6 +541,7 @@ func TestCargoBuildIsRegistered(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_OfflineDefault(t *testing.T) {
+	t.Parallel()
 	// This test verifies that offline defaults to true for security
 	action := &CargoBuildAction{}
 
@@ -555,6 +574,7 @@ func TestCargoBuildAction_Execute_OfflineDefault(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_NoDefaultFeatures(t *testing.T) {
+	t.Parallel()
 	// Test that no_default_features parameter is handled
 	action := &CargoBuildAction{}
 
@@ -586,6 +606,7 @@ func TestCargoBuildAction_Execute_NoDefaultFeatures(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_AllFeatures(t *testing.T) {
+	t.Parallel()
 	// Test that all_features parameter is handled
 	action := &CargoBuildAction{}
 
@@ -617,6 +638,7 @@ func TestCargoBuildAction_Execute_AllFeatures(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_OfflineDisabled(t *testing.T) {
+	t.Parallel()
 	// Test that offline can be explicitly disabled
 	action := &CargoBuildAction{}
 
@@ -649,6 +671,7 @@ func TestCargoBuildAction_Execute_OfflineDisabled(t *testing.T) {
 }
 
 func TestCargoBuildAction_Execute_LockedDisabled(t *testing.T) {
+	t.Parallel()
 	// Test that locked can be explicitly disabled (skips Cargo.lock check)
 	action := &CargoBuildAction{}
 

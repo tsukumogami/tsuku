@@ -9,6 +9,7 @@ import (
 )
 
 func TestConfigureMakeAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &ConfigureMakeAction{}
 	if action.Name() != "configure_make" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "configure_make")
@@ -16,6 +17,7 @@ func TestConfigureMakeAction_Name(t *testing.T) {
 }
 
 func TestConfigureMakeAction_Execute_MissingSourceDir(t *testing.T) {
+	t.Parallel()
 	action := &ConfigureMakeAction{}
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
@@ -37,6 +39,7 @@ func TestConfigureMakeAction_Execute_MissingSourceDir(t *testing.T) {
 }
 
 func TestConfigureMakeAction_Execute_MissingExecutables(t *testing.T) {
+	t.Parallel()
 	action := &ConfigureMakeAction{}
 	workDir := t.TempDir()
 
@@ -69,6 +72,7 @@ func TestConfigureMakeAction_Execute_MissingExecutables(t *testing.T) {
 }
 
 func TestConfigureMakeAction_Execute_ConfigureNotFound(t *testing.T) {
+	t.Parallel()
 	action := &ConfigureMakeAction{}
 	workDir := t.TempDir()
 
@@ -99,6 +103,7 @@ func TestConfigureMakeAction_Execute_ConfigureNotFound(t *testing.T) {
 }
 
 func TestConfigureMakeAction_Execute_InvalidExecutableName(t *testing.T) {
+	t.Parallel()
 	action := &ConfigureMakeAction{}
 	workDir := t.TempDir()
 
@@ -140,6 +145,7 @@ func TestConfigureMakeAction_Execute_InvalidExecutableName(t *testing.T) {
 }
 
 func TestConfigureMakeAction_Execute_InvalidConfigureArg(t *testing.T) {
+	t.Parallel()
 	action := &ConfigureMakeAction{}
 	workDir := t.TempDir()
 
@@ -184,6 +190,7 @@ func TestConfigureMakeAction_Execute_InvalidConfigureArg(t *testing.T) {
 }
 
 func TestConfigureMakeAction_Execute_RelativeSourceDir(t *testing.T) {
+	t.Parallel()
 	action := &ConfigureMakeAction{}
 	workDir := t.TempDir()
 
@@ -216,6 +223,7 @@ func TestConfigureMakeAction_Execute_RelativeSourceDir(t *testing.T) {
 }
 
 func TestConfigureMakeAction_Registered(t *testing.T) {
+	t.Parallel()
 	// Verify configure_make is registered as a primitive action
 	if !IsPrimitive("configure_make") {
 		t.Error("configure_make should be registered as a primitive action")
@@ -229,6 +237,7 @@ func TestConfigureMakeAction_Registered(t *testing.T) {
 }
 
 func TestConfigureMakeAction_NotDeterministic(t *testing.T) {
+	t.Parallel()
 	// configure_make uses system compiler, so it's not deterministic
 	if IsDeterministic("configure_make") {
 		t.Error("configure_make should not be deterministic")
@@ -236,6 +245,7 @@ func TestConfigureMakeAction_NotDeterministic(t *testing.T) {
 }
 
 func TestIsValidConfigureArg(t *testing.T) {
+	t.Parallel()
 	validArgs := []string{
 		"--prefix=/usr/local",
 		"--enable-shared",

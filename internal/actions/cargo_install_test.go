@@ -267,13 +267,9 @@ func TestCargoInstallAction_Execute_InvalidExecutableName(t *testing.T) {
 
 // TestResolveCargo_NoRustInstalled tests ResolveCargo when no rust is installed
 func TestResolveCargo_NoRustInstalled(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create empty .tsuku/tools directory (no rust)
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
@@ -289,13 +285,9 @@ func TestResolveCargo_NoRustInstalled(t *testing.T) {
 
 // TestResolveCargo_SingleRustVersion tests ResolveCargo with one rust version
 func TestResolveCargo_SingleRustVersion(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create rust installation structure
 	rustDir := filepath.Join(tmpHome, ".tsuku", "tools", "rust-1.70.0", "bin")
@@ -317,13 +309,9 @@ func TestResolveCargo_SingleRustVersion(t *testing.T) {
 
 // TestResolveCargo_MultipleVersions tests that ResolveCargo selects the latest version
 func TestResolveCargo_MultipleVersions(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create multiple rust versions
 	versions := []string{"rust-1.68.0", "rust-1.70.0", "rust-1.69.0"}
@@ -348,13 +336,9 @@ func TestResolveCargo_MultipleVersions(t *testing.T) {
 
 // TestResolveCargo_LegacyLocation tests ResolveCargo falls back to legacy cargo/bin/cargo
 func TestResolveCargo_LegacyLocation(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create rust installation with legacy structure (cargo/bin/cargo)
 	legacyDir := filepath.Join(tmpHome, ".tsuku", "tools", "rust-1.70.0", "cargo", "bin")
@@ -376,13 +360,9 @@ func TestResolveCargo_LegacyLocation(t *testing.T) {
 
 // TestResolveCargo_NonExecutable tests that non-executable cargo is skipped
 func TestResolveCargo_NonExecutable(t *testing.T) {
-	// Save original HOME and restore after test
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	// Create a temp directory as HOME
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create rust installation structure
 	rustDir := filepath.Join(tmpHome, ".tsuku", "tools", "rust-1.70.0", "bin")

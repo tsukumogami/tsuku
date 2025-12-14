@@ -8,6 +8,7 @@ import (
 )
 
 func TestNpmExecAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &NpmExecAction{}
 	if action.Name() != "npm_exec" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "npm_exec")
@@ -15,6 +16,7 @@ func TestNpmExecAction_Name(t *testing.T) {
 }
 
 func TestNpmExecAction_Registration(t *testing.T) {
+	t.Parallel()
 	action := Get("npm_exec")
 	if action == nil {
 		t.Fatal("npm_exec action not registered")
@@ -25,12 +27,14 @@ func TestNpmExecAction_Registration(t *testing.T) {
 }
 
 func TestNpmExecAction_IsPrimitive(t *testing.T) {
+	t.Parallel()
 	if !IsPrimitive("npm_exec") {
 		t.Error("npm_exec should be registered as a primitive")
 	}
 }
 
 func TestNpmExecAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &NpmExecAction{}
 	ctx := &ExecutionContext{
 		Context: context.Background(),
@@ -81,6 +85,7 @@ func TestNpmExecAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestNpmExecAction_Execute_MissingPackageJSON(t *testing.T) {
+	t.Parallel()
 	action := &NpmExecAction{}
 	ctx := &ExecutionContext{
 		Context: context.Background(),
@@ -108,6 +113,7 @@ func TestNpmExecAction_Execute_MissingPackageJSON(t *testing.T) {
 }
 
 func TestNpmExecAction_Execute_MissingLockfile(t *testing.T) {
+	t.Parallel()
 	action := &NpmExecAction{}
 	ctx := &ExecutionContext{
 		Context: context.Background(),
@@ -140,6 +146,7 @@ func TestNpmExecAction_Execute_MissingLockfile(t *testing.T) {
 }
 
 func TestParseVersion(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input   string
 		major   int
@@ -178,6 +185,7 @@ func TestParseVersion(t *testing.T) {
 }
 
 func TestVersionGTE(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                   string
 		iMajor, iMinor, iPatch int
@@ -207,6 +215,7 @@ func TestVersionGTE(t *testing.T) {
 }
 
 func TestVersionGT(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name                   string
 		iMajor, iMinor, iPatch int
@@ -236,6 +245,7 @@ func TestVersionGT(t *testing.T) {
 }
 
 func TestNpmExecAction_DefaultParameters(t *testing.T) {
+	t.Parallel()
 	// Test that default parameters are applied correctly
 	// This is a parameter extraction test, not an execution test
 
@@ -273,6 +283,7 @@ func TestNpmExecAction_DefaultParameters(t *testing.T) {
 }
 
 func TestNpmExecAction_UseLockfileFalse(t *testing.T) {
+	t.Parallel()
 	action := &NpmExecAction{}
 	ctx := &ExecutionContext{
 		Context: context.Background(),

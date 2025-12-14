@@ -13,6 +13,7 @@ import (
 )
 
 func TestHomebrewBottleAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	if action.Name() != "homebrew_bottle" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "homebrew_bottle")
@@ -20,6 +21,7 @@ func TestHomebrewBottleAction_Name(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -38,6 +40,7 @@ func TestHomebrewBottleAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_ValidateFormulaName(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 
 	tests := []struct {
@@ -73,6 +76,7 @@ func TestHomebrewBottleAction_ValidateFormulaName(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_GetPlatformTag(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 
 	tests := []struct {
@@ -110,6 +114,7 @@ func TestHomebrewBottleAction_GetPlatformTag(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_IsBinaryFile(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 
 	tests := []struct {
@@ -136,6 +141,7 @@ func TestHomebrewBottleAction_IsBinaryFile(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_TextFile(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -165,6 +171,7 @@ func TestHomebrewBottleAction_RelocatePlaceholders_TextFile(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_BinaryFile(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -198,6 +205,7 @@ func TestHomebrewBottleAction_RelocatePlaceholders_BinaryFile(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_SkipsSymlinks(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -220,6 +228,7 @@ func TestHomebrewBottleAction_RelocatePlaceholders_SkipsSymlinks(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_NoPlaceholder(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -247,6 +256,7 @@ func TestHomebrewBottleAction_RelocatePlaceholders_NoPlaceholder(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_VerifySHA256(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -274,6 +284,7 @@ func TestHomebrewBottleAction_VerifySHA256(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_PathLengthValidation(t *testing.T) {
+	t.Parallel()
 	// Test path length validation constraint
 	// @@HOMEBREW_PREFIX@@ is exactly 19 characters
 	placeholder := "@@HOMEBREW_PREFIX@@"
@@ -309,6 +320,7 @@ func TestHomebrewBottleAction_PathLengthValidation(t *testing.T) {
 }
 
 func TestGetCurrentPlatformTag(t *testing.T) {
+	t.Parallel()
 	tag, err := GetCurrentPlatformTag()
 
 	// On supported platforms, this should succeed
@@ -337,6 +349,7 @@ func TestGetCurrentPlatformTag(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_FixBinaryRpath_UnrecognizedFormat(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -355,6 +368,7 @@ func TestHomebrewBottleAction_FixBinaryRpath_UnrecognizedFormat(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_FixBinaryRpath_NonexistentFile(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -366,6 +380,7 @@ func TestHomebrewBottleAction_FixBinaryRpath_NonexistentFile(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_FixBinaryRpath_EmptyFile(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -383,6 +398,7 @@ func TestHomebrewBottleAction_FixBinaryRpath_EmptyFile(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_ReadOnlyTextFile(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -412,6 +428,7 @@ func TestHomebrewBottleAction_RelocatePlaceholders_ReadOnlyTextFile(t *testing.T
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_MultipleFiles(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -454,6 +471,7 @@ func TestHomebrewBottleAction_RelocatePlaceholders_MultipleFiles(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_NestedDirectories(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -486,6 +504,7 @@ func TestHomebrewBottleAction_RelocatePlaceholders_NestedDirectories(t *testing.
 }
 
 func TestHomebrewBottleAction_VerifySHA256_Correct(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -519,6 +538,7 @@ func TestHomebrewBottleAction_VerifySHA256_Correct(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_IsBinaryFile_LargeTextFile(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 
 	// Create content larger than 8KB check window
@@ -545,6 +565,7 @@ func TestHomebrewBottleAction_IsBinaryFile_LargeTextFile(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_FixBinaryRpath_ELFMagic(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -568,6 +589,7 @@ func TestHomebrewBottleAction_FixBinaryRpath_ELFMagic(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_FixBinaryRpath_MachOMagic(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -604,6 +626,7 @@ func TestHomebrewBottleAction_FixBinaryRpath_MachOMagic(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_FixBinaryRpath_ReadOnlyELF(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -622,6 +645,7 @@ func TestHomebrewBottleAction_FixBinaryRpath_ReadOnlyELF(t *testing.T) {
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_BinaryWithELFMagic(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 
@@ -644,6 +668,7 @@ func TestHomebrewBottleAction_RelocatePlaceholders_BinaryWithELFMagic(t *testing
 }
 
 func TestHomebrewBottleAction_RelocatePlaceholders_BothPlaceholders(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewBottleAction{}
 	tmpDir := t.TempDir()
 

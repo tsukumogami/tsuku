@@ -10,6 +10,7 @@ import (
 )
 
 func TestInstallLibrariesAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &InstallLibrariesAction{}
 	if action.Name() != "install_libraries" {
 		t.Errorf("expected 'install_libraries', got '%s'", action.Name())
@@ -17,6 +18,7 @@ func TestInstallLibrariesAction_Name(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_Success(t *testing.T) {
+	t.Parallel()
 	// Create temp directories
 	workDir := t.TempDir()
 	installDir := t.TempDir()
@@ -58,6 +60,7 @@ func TestInstallLibrariesAction_Execute_Success(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_PreservesSymlinks(t *testing.T) {
+	t.Parallel()
 	// Create temp directories
 	workDir := t.TempDir()
 	installDir := t.TempDir()
@@ -119,6 +122,7 @@ func TestInstallLibrariesAction_Execute_PreservesSymlinks(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_MultiplePatterns(t *testing.T) {
+	t.Parallel()
 	// Create temp directories
 	workDir := t.TempDir()
 	installDir := t.TempDir()
@@ -168,6 +172,7 @@ func TestInstallLibrariesAction_Execute_MultiplePatterns(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_MissingPatterns(t *testing.T) {
+	t.Parallel()
 	action := &InstallLibrariesAction{}
 	ctx := &ExecutionContext{
 		Context: context.Background(),
@@ -183,6 +188,7 @@ func TestInstallLibrariesAction_Execute_MissingPatterns(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_EmptyPatterns(t *testing.T) {
+	t.Parallel()
 	action := &InstallLibrariesAction{}
 	ctx := &ExecutionContext{
 		Context: context.Background(),
@@ -200,6 +206,7 @@ func TestInstallLibrariesAction_Execute_EmptyPatterns(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_PathTraversal(t *testing.T) {
+	t.Parallel()
 	action := &InstallLibrariesAction{}
 	ctx := &ExecutionContext{
 		Context: context.Background(),
@@ -217,6 +224,7 @@ func TestInstallLibrariesAction_Execute_PathTraversal(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_AbsolutePath(t *testing.T) {
+	t.Parallel()
 	action := &InstallLibrariesAction{}
 	ctx := &ExecutionContext{
 		Context: context.Background(),
@@ -234,6 +242,7 @@ func TestInstallLibrariesAction_Execute_AbsolutePath(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_NoMatches(t *testing.T) {
+	t.Parallel()
 	workDir := t.TempDir()
 	installDir := t.TempDir()
 
@@ -256,6 +265,7 @@ func TestInstallLibrariesAction_Execute_NoMatches(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_ParsePatterns_InvalidType(t *testing.T) {
+	t.Parallel()
 	action := &InstallLibrariesAction{}
 
 	_, err := action.parsePatterns("not an array")
@@ -265,6 +275,7 @@ func TestInstallLibrariesAction_ParsePatterns_InvalidType(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_ParsePatterns_InvalidElement(t *testing.T) {
+	t.Parallel()
 	action := &InstallLibrariesAction{}
 
 	_, err := action.parsePatterns([]interface{}{123})
@@ -274,6 +285,7 @@ func TestInstallLibrariesAction_ParsePatterns_InvalidElement(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_SymlinkEscapeBlocked(t *testing.T) {
+	t.Parallel()
 	// Create temp directories
 	workDir := t.TempDir()
 	installDir := t.TempDir()
@@ -309,6 +321,7 @@ func TestInstallLibrariesAction_Execute_SymlinkEscapeBlocked(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_AbsoluteSymlinkBlocked(t *testing.T) {
+	t.Parallel()
 	// Create temp directories
 	workDir := t.TempDir()
 	installDir := t.TempDir()
@@ -344,6 +357,7 @@ func TestInstallLibrariesAction_Execute_AbsoluteSymlinkBlocked(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_Execute_DeduplicatesMatches(t *testing.T) {
+	t.Parallel()
 	// Create temp directories
 	workDir := t.TempDir()
 	installDir := t.TempDir()
@@ -386,6 +400,7 @@ func TestInstallLibrariesAction_Execute_DeduplicatesMatches(t *testing.T) {
 }
 
 func TestInstallLibrariesAction_ValidateSymlinkTarget(t *testing.T) {
+	t.Parallel()
 	action := &InstallLibrariesAction{}
 	workDir := t.TempDir()
 	installDir := t.TempDir()

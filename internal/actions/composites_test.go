@@ -9,6 +9,7 @@ import (
 
 // TestGitHubArchiveAction_VerificationEnforcement tests that directory mode requires verification
 func TestGitHubArchiveAction_VerificationEnforcement(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 
 	tests := []struct {
@@ -113,6 +114,7 @@ func TestGitHubArchiveAction_VerificationEnforcement(t *testing.T) {
 }
 
 func TestDownloadArchiveAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &DownloadArchiveAction{}
 	if action.Name() != "download_archive" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "download_archive")
@@ -120,6 +122,7 @@ func TestDownloadArchiveAction_Name(t *testing.T) {
 }
 
 func TestGitHubArchiveAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 	if action.Name() != "github_archive" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "github_archive")
@@ -127,6 +130,7 @@ func TestGitHubArchiveAction_Name(t *testing.T) {
 }
 
 func TestGitHubFileAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &GitHubFileAction{}
 	if action.Name() != "github_file" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "github_file")
@@ -134,6 +138,7 @@ func TestGitHubFileAction_Name(t *testing.T) {
 }
 
 func TestHashiCorpReleaseAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &HashiCorpReleaseAction{}
 	if action.Name() != "hashicorp_release" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "hashicorp_release")
@@ -143,6 +148,7 @@ func TestHashiCorpReleaseAction_Name(t *testing.T) {
 // HomebrewBottleAction tests moved to homebrew_bottle_test.go
 
 func TestExtractSourceFiles(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    interface{}
@@ -204,6 +210,7 @@ func TestExtractSourceFiles(t *testing.T) {
 }
 
 func TestDownloadArchiveAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &DownloadArchiveAction{}
 	tmpDir := t.TempDir()
 
@@ -248,6 +255,7 @@ func TestDownloadArchiveAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestGitHubArchiveAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 	tmpDir := t.TempDir()
 
@@ -310,6 +318,7 @@ func TestGitHubArchiveAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestGitHubFileAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &GitHubFileAction{}
 	tmpDir := t.TempDir()
 
@@ -362,6 +371,7 @@ func TestGitHubFileAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestHashiCorpReleaseAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &HashiCorpReleaseAction{}
 	tmpDir := t.TempDir()
 
@@ -382,6 +392,7 @@ func TestHashiCorpReleaseAction_Execute_MissingParams(t *testing.T) {
 
 // TestGitHubArchiveAction_Decompose tests the Decompose method
 func TestGitHubArchiveAction_Decompose(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 
 	// Create basic context
@@ -450,6 +461,7 @@ func TestGitHubArchiveAction_Decompose(t *testing.T) {
 }
 
 func TestGitHubArchiveAction_Decompose_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 
 	ctx := &EvalContext{
@@ -512,6 +524,7 @@ func TestGitHubArchiveAction_Decompose_MissingParams(t *testing.T) {
 }
 
 func TestGitHubArchiveAction_Decompose_OSArchMapping(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 
 	ctx := &EvalContext{
@@ -548,6 +561,7 @@ func TestGitHubArchiveAction_Decompose_OSArchMapping(t *testing.T) {
 }
 
 func TestGitHubArchiveAction_Decompose_InstallMode(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 
 	ctx := &EvalContext{
@@ -578,6 +592,7 @@ func TestGitHubArchiveAction_Decompose_InstallMode(t *testing.T) {
 }
 
 func TestGitHubArchiveAction_Decompose_AllStepsArePrimitives(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 
 	ctx := &EvalContext{
@@ -609,6 +624,7 @@ func TestGitHubArchiveAction_Decompose_AllStepsArePrimitives(t *testing.T) {
 }
 
 func TestGitHubArchiveAction_Decompose_BinariesFormats(t *testing.T) {
+	t.Parallel()
 	action := &GitHubArchiveAction{}
 
 	ctx := &EvalContext{
@@ -665,6 +681,7 @@ func TestGitHubArchiveAction_Decompose_BinariesFormats(t *testing.T) {
 
 // TestDownloadArchiveAction_VerificationEnforcement tests that directory mode requires verification
 func TestDownloadArchiveAction_VerificationEnforcement(t *testing.T) {
+	t.Parallel()
 	action := &DownloadArchiveAction{}
 
 	tests := []struct {

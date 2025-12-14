@@ -7,6 +7,7 @@ import (
 )
 
 func TestCopyDirectory_PreservesSymlinks(t *testing.T) {
+	t.Parallel()
 	// Create temporary directories
 	tmpDir := t.TempDir()
 	srcDir := filepath.Join(tmpDir, "src")
@@ -121,6 +122,7 @@ func TestCopyDirectory_PreservesSymlinks(t *testing.T) {
 }
 
 func TestCopySymlink(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a target file
@@ -161,6 +163,7 @@ func TestCopySymlink(t *testing.T) {
 }
 
 func TestCopyFile(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	srcFile := filepath.Join(tmpDir, "source.txt")

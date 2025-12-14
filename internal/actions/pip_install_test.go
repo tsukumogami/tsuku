@@ -143,12 +143,8 @@ func TestGetSourceDateEpoch(t *testing.T) {
 }
 
 func TestGetSourceDateEpoch_FromEnv(t *testing.T) {
-	// Save original value
-	origValue := os.Getenv("SOURCE_DATE_EPOCH")
-	defer os.Setenv("SOURCE_DATE_EPOCH", origValue)
-
 	// Set a custom value
-	os.Setenv("SOURCE_DATE_EPOCH", "1234567890")
+	t.Setenv("SOURCE_DATE_EPOCH", "1234567890")
 
 	epoch := getSourceDateEpoch()
 	if epoch != 1234567890 {
@@ -157,12 +153,8 @@ func TestGetSourceDateEpoch_FromEnv(t *testing.T) {
 }
 
 func TestGetSourceDateEpoch_InvalidEnv(t *testing.T) {
-	// Save original value
-	origValue := os.Getenv("SOURCE_DATE_EPOCH")
-	defer os.Setenv("SOURCE_DATE_EPOCH", origValue)
-
 	// Set an invalid value
-	os.Setenv("SOURCE_DATE_EPOCH", "not-a-number")
+	t.Setenv("SOURCE_DATE_EPOCH", "not-a-number")
 
 	// Should fall back to the fixed epoch
 	epoch := getSourceDateEpoch()
@@ -212,12 +204,8 @@ func TestPipInstallAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestPipInstallAction_Execute_PythonNotFound(t *testing.T) {
-	// Save and restore HOME
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create tsuku tools directory without python
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")

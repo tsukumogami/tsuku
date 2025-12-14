@@ -263,9 +263,7 @@ func TestGemExecAction_FindBundler_NotFound(t *testing.T) {
 	}
 
 	// Override PATH to ensure bundle isn't found
-	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", tmpDir)
-	defer os.Setenv("PATH", origPath)
+	t.Setenv("PATH", tmpDir)
 
 	ctx := &ExecutionContext{
 		ToolsDir: toolsDir,
@@ -600,9 +598,7 @@ func TestGemExecAction_BundlerNotFound(t *testing.T) {
 	}
 
 	// Override PATH to ensure bundler isn't found
-	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", workDir)
-	defer os.Setenv("PATH", origPath)
+	t.Setenv("PATH", workDir)
 
 	// Empty tools dir - no ruby installation
 	toolsDir := filepath.Join(workDir, "tools")
@@ -727,8 +723,7 @@ func TestGemExecAction_ValidateRubyVersion_WithMock(t *testing.T) {
 
 	// Override PATH
 	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", workDir+":"+origPath)
-	defer os.Setenv("PATH", origPath)
+	t.Setenv("PATH", workDir+":"+origPath)
 
 	// Test with matching version
 	err := a.validateRubyVersion("3.2")
@@ -756,8 +751,7 @@ func TestGemExecAction_ValidateBundlerVersion_WithMock(t *testing.T) {
 
 	// Override PATH
 	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", workDir+":"+origPath)
-	defer os.Setenv("PATH", origPath)
+	t.Setenv("PATH", workDir+":"+origPath)
 
 	// Test with matching version
 	err := a.validateBundlerVersion("2.4")
@@ -785,8 +779,7 @@ func TestGemExecAction_ValidateRubyVersion_BadOutput(t *testing.T) {
 
 	// Override PATH
 	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", workDir+":"+origPath)
-	defer os.Setenv("PATH", origPath)
+	t.Setenv("PATH", workDir+":"+origPath)
 
 	// Test with unexpected output format
 	err := a.validateRubyVersion("3.2")
@@ -811,8 +804,7 @@ func TestGemExecAction_ValidateBundlerVersion_BadOutput(t *testing.T) {
 
 	// Override PATH
 	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", workDir+":"+origPath)
-	defer os.Setenv("PATH", origPath)
+	t.Setenv("PATH", workDir+":"+origPath)
 
 	// Test with unexpected output format
 	err := a.validateBundlerVersion("2.4")
@@ -861,8 +853,7 @@ func TestGemExecAction_ExecuteWithAllParameters(t *testing.T) {
 
 	// Override PATH
 	origPath := os.Getenv("PATH")
-	os.Setenv("PATH", rubyDir+":"+origPath)
-	defer os.Setenv("PATH", origPath)
+	t.Setenv("PATH", rubyDir+":"+origPath)
 
 	ctx := &ExecutionContext{
 		Context:  context.Background(),

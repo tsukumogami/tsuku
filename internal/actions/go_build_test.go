@@ -189,11 +189,8 @@ func TestGoBuildAction_Execute_InvalidExecutable(t *testing.T) {
 
 // TestGoBuildAction_Execute_GoNotInstalled tests error when Go is not installed
 func TestGoBuildAction_Execute_GoNotInstalled(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
@@ -225,11 +222,8 @@ func TestGoBuildAction_Execute_GoNotInstalled(t *testing.T) {
 
 // TestGoBuildAction_Execute_CGOEnabled tests that cgo_enabled parameter is respected
 func TestGoBuildAction_Execute_CGOEnabled(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure with a mock go that captures env
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -266,11 +260,8 @@ func TestGoBuildAction_Execute_CGOEnabled(t *testing.T) {
 
 // TestGoBuildAction_Execute_BuildFlags tests custom build flags
 func TestGoBuildAction_Execute_BuildFlags(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
 	if err := os.MkdirAll(goDir, 0755); err != nil {
@@ -399,11 +390,8 @@ func TestGoInstallAction_Decompose_InvalidVersion(t *testing.T) {
 
 // TestGoInstallAction_Decompose_GoNotInstalled tests Decompose fails when Go not installed
 func TestGoInstallAction_Decompose_GoNotInstalled(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
@@ -433,11 +421,8 @@ func TestGoInstallAction_Decompose_GoNotInstalled(t *testing.T) {
 
 // TestGoInstallAction_Decompose_ReturnsGoBuildStep tests that Decompose produces go_build step
 func TestGoInstallAction_Decompose_ReturnsGoBuildStep(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create Go installation structure with a mock go that writes go.sum
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
@@ -518,11 +503,8 @@ exit 0
 
 // TestGoInstallAction_Decompose_PassesThroughOptionalParams tests optional params passthrough
 func TestGoInstallAction_Decompose_PassesThroughOptionalParams(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
 	if err := os.MkdirAll(goDir, 0755); err != nil {
@@ -650,11 +632,8 @@ func TestBuildGoEnv(t *testing.T) {
 
 // TestGoBuildAction_Execute_Success tests successful build with mock
 func TestGoBuildAction_Execute_Success(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.0", "bin")
 	if err := os.MkdirAll(goDir, 0755); err != nil {
@@ -716,11 +695,8 @@ exit 0
 
 // TestGoBuildAction_Execute_SpecificGoVersion tests that go_version parameter is respected
 func TestGoBuildAction_Execute_SpecificGoVersion(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create a specific Go version installation
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.5", "bin")
@@ -776,11 +752,8 @@ exit 0
 
 // TestGoBuildAction_Execute_SpecificGoVersionNotInstalled tests error when specific version not found
 func TestGoBuildAction_Execute_SpecificGoVersionNotInstalled(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	// Create a DIFFERENT Go version installation (1.22.0 instead of requested 1.21.5)
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.22.0", "bin")
@@ -822,11 +795,8 @@ func TestGoBuildAction_Execute_SpecificGoVersionNotInstalled(t *testing.T) {
 
 // TestGoInstallAction_Decompose_CapturesGoVersion tests that Decompose captures Go version
 func TestGoInstallAction_Decompose_CapturesGoVersion(t *testing.T) {
-	origHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", origHome)
-
 	tmpHome := t.TempDir()
-	os.Setenv("HOME", tmpHome)
+	t.Setenv("HOME", tmpHome)
 
 	goDir := filepath.Join(tmpHome, ".tsuku", "tools", "go-1.21.5", "bin")
 	if err := os.MkdirAll(goDir, 0755); err != nil {

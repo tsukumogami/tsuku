@@ -9,6 +9,7 @@ import (
 )
 
 func TestNixRealizeAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &NixRealizeAction{}
 	if action.Name() != "nix_realize" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "nix_realize")
@@ -16,6 +17,7 @@ func TestNixRealizeAction_Name(t *testing.T) {
 }
 
 func TestIsValidFlakeRef(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		ref      string
@@ -73,6 +75,7 @@ func TestIsValidFlakeRef(t *testing.T) {
 }
 
 func TestIsValidNixStorePath(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		path     string
@@ -115,6 +118,7 @@ func TestIsValidNixStorePath(t *testing.T) {
 }
 
 func TestGetLocksMap(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		params     map[string]interface{}
@@ -182,6 +186,7 @@ func TestGetLocksMap(t *testing.T) {
 }
 
 func TestNixRealizeAction_Execute_PlatformCheck(t *testing.T) {
+	t.Parallel()
 	// Skip on Linux - the platform check passes there
 	if runtime.GOOS == "linux" {
 		t.Skip("Skipping platform check test on Linux")
@@ -206,6 +211,7 @@ func TestNixRealizeAction_Execute_PlatformCheck(t *testing.T) {
 }
 
 func TestNixRealizeAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -258,6 +264,7 @@ func TestNixRealizeAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestNixRealizeAction_Execute_InvalidInputs(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -332,12 +339,14 @@ func TestNixRealizeAction_Execute_InvalidInputs(t *testing.T) {
 }
 
 func TestNixRealizeIsPrimitive(t *testing.T) {
+	t.Parallel()
 	if !IsPrimitive("nix_realize") {
 		t.Error("nix_realize should be registered as a primitive")
 	}
 }
 
 func TestCreateNixRealizeWrapper(t *testing.T) {
+	t.Parallel()
 	// Create a temporary directory for the test
 	tmpDir := t.TempDir()
 	binDir := tmpDir
@@ -395,6 +404,7 @@ func TestCreateNixRealizeWrapper(t *testing.T) {
 }
 
 func TestCreateNixRealizeWrapper_MultipleExecutables(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	executables := []string{"foo", "bar", "baz"}
@@ -415,6 +425,7 @@ func TestCreateNixRealizeWrapper_MultipleExecutables(t *testing.T) {
 }
 
 func TestIsValidFlakeRef_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		ref      string
@@ -446,6 +457,7 @@ func TestIsValidFlakeRef_EdgeCases(t *testing.T) {
 }
 
 func TestIsValidNixStorePath_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		path     string
@@ -476,6 +488,7 @@ func TestIsValidNixStorePath_EdgeCases(t *testing.T) {
 }
 
 func TestGetLocksMap_InvalidJSON(t *testing.T) {
+	t.Parallel()
 	params := map[string]interface{}{
 		"locks": "{invalid json}",
 	}
@@ -490,6 +503,7 @@ func TestGetLocksMap_InvalidJSON(t *testing.T) {
 }
 
 func TestGetLocksMap_EmptyStringMap(t *testing.T) {
+	t.Parallel()
 	params := map[string]interface{}{
 		"locks": map[string]string{},
 	}
@@ -504,6 +518,7 @@ func TestGetLocksMap_EmptyStringMap(t *testing.T) {
 }
 
 func TestNixRealizeAction_Execute_PackageFallback(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -529,6 +544,7 @@ func TestNixRealizeAction_Execute_PackageFallback(t *testing.T) {
 }
 
 func TestNixRealizeAction_Execute_BothFlakeRefAndPackage(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -555,6 +571,7 @@ func TestNixRealizeAction_Execute_BothFlakeRefAndPackage(t *testing.T) {
 }
 
 func TestNixRealizeAction_Execute_WithLocks(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")

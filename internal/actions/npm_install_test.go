@@ -6,6 +6,7 @@ import (
 )
 
 func TestNpmInstallAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &NpmInstallAction{}
 	if action.Name() != "npm_install" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "npm_install")
@@ -13,6 +14,7 @@ func TestNpmInstallAction_Name(t *testing.T) {
 }
 
 func TestNpmInstallAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &NpmInstallAction{}
 	tmpDir := t.TempDir()
 

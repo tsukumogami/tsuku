@@ -10,6 +10,7 @@ import (
 )
 
 func TestLinkDependenciesAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 	if action.Name() != "link_dependencies" {
 		t.Errorf("expected 'link_dependencies', got '%s'", action.Name())
@@ -17,6 +18,7 @@ func TestLinkDependenciesAction_Name(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_Success(t *testing.T) {
+	t.Parallel()
 	// Create directory structure simulating $TSUKU_HOME
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -82,6 +84,7 @@ func TestLinkDependenciesAction_Execute_Success(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_PreservesSymlinkChain(t *testing.T) {
+	t.Parallel()
 	// Create directory structure
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -140,6 +143,7 @@ func TestLinkDependenciesAction_Execute_PreservesSymlinkChain(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_CollisionError(t *testing.T) {
+	t.Parallel()
 	// Create directory structure
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -188,6 +192,7 @@ func TestLinkDependenciesAction_Execute_CollisionError(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_SkipsExistingCorrectSymlink(t *testing.T) {
+	t.Parallel()
 	// Create directory structure
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -240,6 +245,7 @@ func TestLinkDependenciesAction_Execute_SkipsExistingCorrectSymlink(t *testing.T
 }
 
 func TestLinkDependenciesAction_Execute_MissingLibraryDir(t *testing.T) {
+	t.Parallel()
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
 
@@ -270,6 +276,7 @@ func TestLinkDependenciesAction_Execute_MissingLibraryDir(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_MissingParameters(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 	ctx := &ExecutionContext{
 		Context:  context.Background(),
@@ -303,6 +310,7 @@ func TestLinkDependenciesAction_Execute_MissingParameters(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_ValidateLibraryName(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 
 	tests := []struct {
@@ -333,6 +341,7 @@ func TestLinkDependenciesAction_ValidateLibraryName(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_ValidateVersion(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 
 	tests := []struct {
@@ -362,6 +371,7 @@ func TestLinkDependenciesAction_ValidateVersion(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_ValidateSymlinkTarget(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 
 	tests := []struct {
@@ -391,6 +401,7 @@ func TestLinkDependenciesAction_ValidateSymlinkTarget(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_MaliciousSymlinkBlocked(t *testing.T) {
+	t.Parallel()
 	// Create directory structure
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -432,6 +443,7 @@ func TestLinkDependenciesAction_Execute_MaliciousSymlinkBlocked(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_AbsoluteSymlinkBlocked(t *testing.T) {
+	t.Parallel()
 	// Create directory structure
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -473,6 +485,7 @@ func TestLinkDependenciesAction_Execute_AbsoluteSymlinkBlocked(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_DiscoverLibraryVersion(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -502,6 +515,7 @@ func TestLinkDependenciesAction_DiscoverLibraryVersion(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_DiscoverLibraryVersion_NotFound(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -523,6 +537,7 @@ func TestLinkDependenciesAction_DiscoverLibraryVersion_NotFound(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_DiscoverLibraryVersion_NoLibsDir(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -540,6 +555,7 @@ func TestLinkDependenciesAction_DiscoverLibraryVersion_NoLibsDir(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_DiscoverLibraryVersion_MultipleVersions(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -572,6 +588,7 @@ func TestLinkDependenciesAction_DiscoverLibraryVersion_MultipleVersions(t *testi
 }
 
 func TestLinkDependenciesAction_Execute_NoWorkDirOrToolInstallDir(t *testing.T) {
+	t.Parallel()
 	// Create directory structure
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -612,6 +629,7 @@ func TestLinkDependenciesAction_Execute_NoWorkDirOrToolInstallDir(t *testing.T) 
 }
 
 func TestLinkDependenciesAction_Execute_WithWorkDir(t *testing.T) {
+	t.Parallel()
 	// Create directory structure simulating pre-install scenario
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -670,6 +688,7 @@ func TestLinkDependenciesAction_Execute_WithWorkDir(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_EmptyLibraryDir(t *testing.T) {
+	t.Parallel()
 	// Create directory structure
 	tsukuHome := t.TempDir()
 	toolsDir := filepath.Join(tsukuHome, "tools")
@@ -706,6 +725,7 @@ func TestLinkDependenciesAction_Execute_EmptyLibraryDir(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_InvalidLibraryType(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 	ctx := &ExecutionContext{
 		Context:        context.Background(),
@@ -727,6 +747,7 @@ func TestLinkDependenciesAction_Execute_InvalidLibraryType(t *testing.T) {
 }
 
 func TestLinkDependenciesAction_Execute_InvalidVersionType(t *testing.T) {
+	t.Parallel()
 	action := &LinkDependenciesAction{}
 	ctx := &ExecutionContext{
 		Context:        context.Background(),

@@ -3,6 +3,7 @@ package actions
 import "testing"
 
 func TestIsValidGemName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -45,6 +46,7 @@ func TestIsValidGemName(t *testing.T) {
 }
 
 func TestIsValidGemVersion(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		input    string
@@ -85,6 +87,7 @@ func TestIsValidGemVersion(t *testing.T) {
 }
 
 func TestGemInstallAction_Execute_Validation(t *testing.T) {
+	t.Parallel()
 	action := &GemInstallAction{}
 
 	tests := []struct {
@@ -175,6 +178,7 @@ func TestGemInstallAction_Execute_Validation(t *testing.T) {
 }
 
 func TestGemInstallAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &GemInstallAction{}
 	if action.Name() != "gem_install" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "gem_install")

@@ -456,6 +456,8 @@ func TestReadChecksumFile_NotFound(t *testing.T) {
 func TestResolveGo_IgnoresGoTools(t *testing.T) {
 	// Create a temporary directory structure to simulate $TSUKU_HOME
 	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
@@ -481,11 +483,6 @@ func TestResolveGo_IgnoresGoTools(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// Override HOME for the test
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpHome)
-	defer os.Setenv("HOME", oldHome)
-
 	result := ResolveGo()
 
 	// Should find the Go toolchain, not go-migrate or go-task
@@ -500,6 +497,8 @@ func TestResolveGo_IgnoresGoTools(t *testing.T) {
 func TestResolveGo_PicksLatestVersion(t *testing.T) {
 	// Create a temporary directory structure to simulate $TSUKU_HOME
 	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
@@ -517,11 +516,6 @@ func TestResolveGo_PicksLatestVersion(t *testing.T) {
 		}
 	}
 
-	// Override HOME for the test
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpHome)
-	defer os.Setenv("HOME", oldHome)
-
 	result := ResolveGo()
 
 	// Should pick the latest version (lexicographically)
@@ -535,6 +529,8 @@ func TestResolveGo_PicksLatestVersion(t *testing.T) {
 
 func TestResolveGoVersion(t *testing.T) {
 	tmpHome := t.TempDir()
+	t.Setenv("HOME", tmpHome)
+
 	toolsDir := filepath.Join(tmpHome, ".tsuku", "tools")
 	if err := os.MkdirAll(toolsDir, 0755); err != nil {
 		t.Fatal(err)
@@ -549,10 +545,6 @@ func TestResolveGoVersion(t *testing.T) {
 	if err := os.WriteFile(goExe, []byte("#!/bin/sh\necho go"), 0755); err != nil {
 		t.Fatal(err)
 	}
-
-	oldHome := os.Getenv("HOME")
-	os.Setenv("HOME", tmpHome)
-	defer os.Setenv("HOME", oldHome)
 
 	// Should find the specific version
 	result := ResolveGoVersion("1.21.5")

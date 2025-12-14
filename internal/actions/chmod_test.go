@@ -7,6 +7,7 @@ import (
 )
 
 func TestChmodAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &ChmodAction{}
 	if action.Name() != "chmod" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "chmod")
@@ -14,6 +15,7 @@ func TestChmodAction_Name(t *testing.T) {
 }
 
 func TestChmodAction_Execute(t *testing.T) {
+	t.Parallel()
 	action := &ChmodAction{}
 	tmpDir := t.TempDir()
 
@@ -52,6 +54,7 @@ func TestChmodAction_Execute(t *testing.T) {
 }
 
 func TestChmodAction_Execute_CustomMode(t *testing.T) {
+	t.Parallel()
 	action := &ChmodAction{}
 	tmpDir := t.TempDir()
 
@@ -81,6 +84,7 @@ func TestChmodAction_Execute_CustomMode(t *testing.T) {
 }
 
 func TestChmodAction_Execute_MissingFiles(t *testing.T) {
+	t.Parallel()
 	action := &ChmodAction{}
 	tmpDir := t.TempDir()
 
@@ -97,6 +101,7 @@ func TestChmodAction_Execute_MissingFiles(t *testing.T) {
 }
 
 func TestChmodAction_Execute_InvalidMode(t *testing.T) {
+	t.Parallel()
 	action := &ChmodAction{}
 	tmpDir := t.TempDir()
 
@@ -121,6 +126,7 @@ func TestChmodAction_Execute_InvalidMode(t *testing.T) {
 }
 
 func TestChmodAction_Execute_NonExistentFile(t *testing.T) {
+	t.Parallel()
 	action := &ChmodAction{}
 	tmpDir := t.TempDir()
 
@@ -139,6 +145,7 @@ func TestChmodAction_Execute_NonExistentFile(t *testing.T) {
 }
 
 func TestChmodAction_Execute_VariableExpansion(t *testing.T) {
+	t.Parallel()
 	action := &ChmodAction{}
 	tmpDir := t.TempDir()
 

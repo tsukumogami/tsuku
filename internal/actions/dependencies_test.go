@@ -6,6 +6,7 @@ import (
 )
 
 func TestActionDependencies_EcosystemActions(t *testing.T) {
+	t.Parallel()
 	// Ecosystem actions should have both install-time and runtime dependencies
 	tests := []struct {
 		action          string
@@ -33,6 +34,7 @@ func TestActionDependencies_EcosystemActions(t *testing.T) {
 }
 
 func TestActionDependencies_CompiledBinaryActions(t *testing.T) {
+	t.Parallel()
 	// Compiled binary actions should have install-time deps but no runtime deps
 	tests := []struct {
 		action          string
@@ -58,6 +60,7 @@ func TestActionDependencies_CompiledBinaryActions(t *testing.T) {
 }
 
 func TestActionDependencies_NoDependencyActions(t *testing.T) {
+	t.Parallel()
 	// These actions should have no dependencies
 	actions := []string{
 		// Download/extract
@@ -94,6 +97,7 @@ func TestActionDependencies_NoDependencyActions(t *testing.T) {
 }
 
 func TestActionDependencies_AllRegisteredActionsHaveEntries(t *testing.T) {
+	t.Parallel()
 	// Verify that every registered action has an entry in ActionDependencies
 	// Skip test_ prefixed actions as those are registered by other tests
 	for name := range registry {
@@ -109,6 +113,7 @@ func TestActionDependencies_AllRegisteredActionsHaveEntries(t *testing.T) {
 }
 
 func TestActionDependencies_AllEntriesAreRegisteredActions(t *testing.T) {
+	t.Parallel()
 	// Verify that every entry in ActionDependencies corresponds to a registered action
 	for name := range ActionDependencies {
 		t.Run(name, func(t *testing.T) {
@@ -120,6 +125,7 @@ func TestActionDependencies_AllEntriesAreRegisteredActions(t *testing.T) {
 }
 
 func TestGetActionDeps_UnknownAction(t *testing.T) {
+	t.Parallel()
 	deps := GetActionDeps("nonexistent_action")
 
 	if deps.InstallTime != nil {

@@ -3,6 +3,7 @@ package actions
 import "testing"
 
 func TestIsValidPyPIVersion(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		version  string
@@ -62,6 +63,7 @@ func TestIsValidPyPIVersion(t *testing.T) {
 }
 
 func TestPipxInstallAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &PipxInstallAction{}
 	if action.Name() != "pipx_install" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "pipx_install")

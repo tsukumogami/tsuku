@@ -2,6 +2,7 @@ package actions
 
 import (
 	"context"
+	"sync"
 
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
@@ -45,15 +46,22 @@ type Action interface {
 }
 
 // Registry holds all available actions
-var registry = make(map[string]Action)
+var (
+	registry   = make(map[string]Action)
+	registryMu sync.RWMutex
+)
 
 // Register adds an action to the registry
 func Register(action Action) {
+	registryMu.Lock()
+	defer registryMu.Unlock()
 	registry[action.Name()] = action
 }
 
 // Get retrieves an action by name
 func Get(name string) Action {
+	registryMu.RLock()
+	defer registryMu.RUnlock()
 	return registry[name]
 }
 

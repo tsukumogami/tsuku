@@ -11,6 +11,7 @@ import (
 )
 
 func TestIsPathWithinDirectory(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name       string
 		targetPath string
@@ -67,6 +68,7 @@ func TestIsPathWithinDirectory(t *testing.T) {
 }
 
 func TestValidateSymlinkTarget(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	tests := []struct {
@@ -120,6 +122,7 @@ func TestValidateSymlinkTarget(t *testing.T) {
 }
 
 func TestExtractAction_DetectFormat(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 
 	tests := []struct {
@@ -151,6 +154,7 @@ func TestExtractAction_DetectFormat(t *testing.T) {
 }
 
 func TestExtractAction_Execute_MissingArchive(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 	tmpDir := t.TempDir()
 
@@ -170,6 +174,7 @@ func TestExtractAction_Execute_MissingArchive(t *testing.T) {
 }
 
 func TestExtractAction_Execute_MissingFormat(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 	tmpDir := t.TempDir()
 
@@ -189,6 +194,7 @@ func TestExtractAction_Execute_MissingFormat(t *testing.T) {
 }
 
 func TestExtractAction_Execute_UnsupportedFormat(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 	tmpDir := t.TempDir()
 
@@ -214,6 +220,7 @@ func TestExtractAction_Execute_UnsupportedFormat(t *testing.T) {
 }
 
 func TestExtractAction_ExtractTarGz(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 	tmpDir := t.TempDir()
 
@@ -267,6 +274,7 @@ func TestExtractAction_ExtractTarGz(t *testing.T) {
 }
 
 func TestExtractAction_ExtractTarGz_StripDirs(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 	tmpDir := t.TempDir()
 
@@ -314,6 +322,7 @@ func TestExtractAction_ExtractTarGz_StripDirs(t *testing.T) {
 }
 
 func TestExtractAction_ExtractZip(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 	tmpDir := t.TempDir()
 
@@ -360,6 +369,7 @@ func TestExtractAction_ExtractZip(t *testing.T) {
 }
 
 func TestAtomicSymlink(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a target file
@@ -400,6 +410,7 @@ func TestAtomicSymlink(t *testing.T) {
 
 // TestExtractTar_PathTraversal_SecurityEdgeCases tests comprehensive path traversal attack vectors
 func TestExtractTar_PathTraversal_SecurityEdgeCases(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 
 	tests := []struct {
@@ -480,6 +491,7 @@ func TestExtractTar_PathTraversal_SecurityEdgeCases(t *testing.T) {
 
 // TestExtractZip_PathTraversal_SecurityEdgeCases tests zip-specific path traversal attacks
 func TestExtractZip_PathTraversal_SecurityEdgeCases(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 
 	tests := []struct {
@@ -553,6 +565,7 @@ func TestExtractZip_PathTraversal_SecurityEdgeCases(t *testing.T) {
 
 // TestExtractTar_SymlinkAttacks_SecurityEdgeCases tests extended symlink attack scenarios
 func TestExtractTar_SymlinkAttacks_SecurityEdgeCases(t *testing.T) {
+	t.Parallel()
 	action := &ExtractAction{}
 
 	tests := []struct {

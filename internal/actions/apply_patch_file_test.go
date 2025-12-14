@@ -8,6 +8,7 @@ import (
 )
 
 func TestApplyPatchFileAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchFileAction{}
 	if action.Name() != "apply_patch_file" {
 		t.Errorf("Name() = %s, want apply_patch_file", action.Name())
@@ -15,6 +16,7 @@ func TestApplyPatchFileAction_Name(t *testing.T) {
 }
 
 func TestApplyPatchFileAction_Execute_InlineData(t *testing.T) {
+	t.Parallel()
 	if _, err := exec.LookPath("patch"); err != nil {
 		t.Skip("patch command not available")
 	}
@@ -64,6 +66,7 @@ func TestApplyPatchFileAction_Execute_InlineData(t *testing.T) {
 }
 
 func TestApplyPatchFileAction_Execute_FromFile(t *testing.T) {
+	t.Parallel()
 	if _, err := exec.LookPath("patch"); err != nil {
 		t.Skip("patch command not available")
 	}
@@ -117,6 +120,7 @@ func TestApplyPatchFileAction_Execute_FromFile(t *testing.T) {
 }
 
 func TestApplyPatchFileAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchFileAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -135,6 +139,7 @@ func TestApplyPatchFileAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestApplyPatchFileAction_Execute_BothParams(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchFileAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -155,6 +160,7 @@ func TestApplyPatchFileAction_Execute_BothParams(t *testing.T) {
 }
 
 func TestApplyPatchFileAction_Execute_NonexistentFile(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchFileAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -173,6 +179,7 @@ func TestApplyPatchFileAction_Execute_NonexistentFile(t *testing.T) {
 }
 
 func TestApplyPatchFileAction_Execute_PathTraversalSubdir(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchFileAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -203,12 +210,14 @@ func TestApplyPatchFileAction_Execute_PathTraversalSubdir(t *testing.T) {
 }
 
 func TestApplyPatchFileAction_IsPrimitive(t *testing.T) {
+	t.Parallel()
 	if !IsPrimitive("apply_patch_file") {
 		t.Error("apply_patch_file should be registered as a primitive")
 	}
 }
 
 func TestApplyPatchFileAction_IsDeterministic(t *testing.T) {
+	t.Parallel()
 	if !IsDeterministic("apply_patch_file") {
 		t.Error("apply_patch_file should be deterministic")
 	}

@@ -349,11 +349,7 @@ func TestCpanInstallAction_Execute_PerlNotFound(t *testing.T) {
 	// Test the case where perl is not installed in tsuku's tools directory
 	// We use a temporary HOME to ensure ResolvePerl() returns empty
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory (no .tsuku/tools/perl-*)
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	action := &CpanInstallAction{}
 
@@ -410,11 +406,7 @@ func TestResolveCpanm(t *testing.T) {
 func TestResolvePerl_WithMockDirectory(t *testing.T) {
 	// Create a temporary directory structure mimicking tsuku's tools
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Test 1: No .tsuku directory
 	result := ResolvePerl()
@@ -491,11 +483,7 @@ func TestResolvePerl_WithMockDirectory(t *testing.T) {
 func TestResolveCpanm_WithMockDirectory(t *testing.T) {
 	// Create a temporary directory structure mimicking tsuku's tools
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Test 1: No .tsuku directory
 	result := ResolveCpanm()
@@ -568,11 +556,7 @@ func TestResolveCpanm_WithMockDirectory(t *testing.T) {
 func TestCpanInstallAction_Execute_CpanmNotFound(t *testing.T) {
 	// Test the case where perl is found but cpanm is missing
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Create a mock perl installation WITHOUT cpanm
 	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
@@ -613,11 +597,7 @@ func TestCpanInstallAction_Execute_CpanmNotFound(t *testing.T) {
 func TestCpanInstallAction_Execute_CpanmFails(t *testing.T) {
 	// Test the case where both perl and cpanm exist but cpanm fails
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Create a mock perl installation with a fake cpanm that fails
 	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
@@ -675,11 +655,7 @@ exit 1
 func TestCpanInstallAction_Execute_MissingExecutable(t *testing.T) {
 	// Test the case where cpanm succeeds but the expected executable is not created
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Create a mock perl installation
 	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
@@ -737,11 +713,7 @@ exit 0
 func TestCpanInstallAction_Execute_SuccessfulInstall(t *testing.T) {
 	// Test successful installation with wrapper script creation
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Create a mock perl installation
 	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
@@ -828,11 +800,7 @@ exit 0
 func TestCpanInstallAction_Execute_EmptyVersion(t *testing.T) {
 	// Test installation with empty version (latest)
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Create a mock perl installation
 	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
@@ -997,11 +965,7 @@ func TestCpanInstallAction_Execute_ModuleParameter(t *testing.T) {
 func TestCpanInstallAction_Execute_WithModuleParameter(t *testing.T) {
 	// Test that module parameter is used when provided
 	tmpDir := t.TempDir()
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-
-	// Set HOME to temp directory
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Create a mock perl installation
 	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
@@ -1137,11 +1101,7 @@ func TestCpanInstallAction_IsPrimitive(t *testing.T) {
 func TestCpanInstallAction_Execute_MirrorParameter(t *testing.T) {
 	// Test that mirror parameter is handled correctly
 	tmpDir := t.TempDir()
-
-	// Set HOME to temp directory (same pattern as other tests)
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Create mock perl installation with cpanm that logs arguments
 	toolsDir := filepath.Join(tmpDir, ".tsuku", "tools")
@@ -1220,11 +1180,7 @@ chmod +x %s/bin/myapp
 func TestCpanInstallAction_Execute_CpanfileParameter(t *testing.T) {
 	// Test that cpanfile parameter triggers --installdeps
 	tmpDir := t.TempDir()
-
-	// Set HOME to tmpDir so findPerlInstallation finds our mock perl
-	oldHome := os.Getenv("HOME")
-	defer os.Setenv("HOME", oldHome)
-	os.Setenv("HOME", tmpDir)
+	t.Setenv("HOME", tmpDir)
 
 	// Create mock perl installation at ~/.tsuku/tools/perl-5.38.0/bin/
 	perlBinDir := filepath.Join(tmpDir, ".tsuku", "tools", "perl-5.38.0", "bin")
