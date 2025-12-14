@@ -1,86 +1,120 @@
 {
-  "description": "LLM recipe generation test matrix. Each test validates one specific variation to isolate failures.",
+  "description": "LLM recipe generation test matrix. Each test validates one specific variation to isolate failures. L-prefixed tests use GitHubReleaseBuilder, S-prefixed tests use HomebrewBuilder for source builds.",
   "tests": {
-    "L1":  {
+    "L1": {
+      "builder": "github",
       "tool": "stern",
       "repo": "stern/stern",
       "recipe": "s/stern.toml",
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Baseline: standard os/arch mapping",
-      "features": ["os:standard", "arch:standard", "version:placeholder"]
+      "features": [
+        "os:standard",
+        "arch:standard",
+        "version:placeholder"
+      ]
     },
-    "L2":  {
+    "L2": {
+      "builder": "github",
       "tool": "tflint",
       "repo": "terraform-linters/tflint",
       "recipe": "t/tflint.toml",
       "action": "github_archive",
       "format": "zip",
       "desc": "Zip archive format",
-      "features": ["format:zip", "version:none"]
+      "features": [
+        "format:zip",
+        "version:none"
+      ]
     },
-    "L3":  {
+    "L3": {
       "tool": "helix",
       "repo": "helix-editor/helix",
       "recipe": "h/helix.toml",
       "action": "github_archive",
       "format": "tar.xz",
       "desc": "tar.xz archive format",
-      "features": ["format:tar.xz", "strip_dirs:1"]
+      "features": [
+        "format:tar.xz",
+        "strip_dirs:1"
+      ],
+      "builder": "github"
     },
-    "L4":  {
+    "L4": {
       "tool": "ast-grep",
       "repo": "ast-grep/ast-grep",
       "recipe": "a/ast-grep.toml",
       "action": "github_archive",
       "format": "zip",
       "desc": "Rust-style target triples (apple-darwin, unknown-linux-gnu)",
-      "features": ["os:rust_triple", "arch:rust_triple"]
+      "features": [
+        "os:rust_triple",
+        "arch:rust_triple"
+      ],
+      "builder": "github"
     },
-    "L5":  {
+    "L5": {
       "tool": "k9s",
       "repo": "derailed/k9s",
       "recipe": "k/k9s.toml",
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Capitalized OS names (Darwin, Linux)",
-      "features": ["os:capitalized"]
+      "features": [
+        "os:capitalized"
+      ],
+      "builder": "github"
     },
-    "L6":  {
+    "L6": {
       "tool": "trivy",
       "repo": "aquasecurity/trivy",
       "recipe": "t/trivy.toml",
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Custom arch names (64bit, ARM64)",
-      "features": ["os:macOS", "arch:custom"]
+      "features": [
+        "os:macOS",
+        "arch:custom"
+      ],
+      "builder": "github"
     },
-    "L7":  {
+    "L7": {
       "tool": "gitleaks",
       "repo": "zricethezav/gitleaks",
       "recipe": "g/gitleaks.toml",
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "x64 arch mapping (amd64 -> x64)",
-      "features": ["arch:x64"]
+      "features": [
+        "arch:x64"
+      ],
+      "builder": "github"
     },
-    "L8":  {
+    "L8": {
       "tool": "gotop",
       "repo": "xxxserxxx/gotop",
       "recipe": "g/gotop.toml",
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "v{version} pattern prefix",
-      "features": ["version:v_prefix"]
+      "features": [
+        "version:v_prefix"
+      ],
+      "builder": "github"
     },
-    "L9":  {
+    "L9": {
       "tool": "gobuster",
       "repo": "OJ/gobuster",
       "recipe": "g/gobuster.toml",
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "No version in asset pattern",
-      "features": ["version:none", "os:capitalized"]
+      "features": [
+        "version:none",
+        "os:capitalized"
+      ],
+      "builder": "github"
     },
     "L10": {
       "tool": "age",
@@ -89,7 +123,11 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "strip_dirs=1 (remove top-level directory)",
-      "features": ["strip_dirs:1", "version:v_prefix"]
+      "features": [
+        "strip_dirs:1",
+        "version:v_prefix"
+      ],
+      "builder": "github"
     },
     "L11": {
       "tool": "liberica",
@@ -98,7 +136,12 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Multi-binary installation (java, javac, jar)",
-      "features": ["binaries:multiple", "install_subpath", "install_mode:directory"]
+      "features": [
+        "binaries:multiple",
+        "install_subpath",
+        "install_mode:directory"
+      ],
+      "builder": "github"
     },
     "L12": {
       "tool": "btop",
@@ -107,7 +150,11 @@
       "action": "github_archive",
       "format": "tbz",
       "desc": "install_subpath extraction",
-      "features": ["format:tbz", "install_subpath"]
+      "features": [
+        "format:tbz",
+        "install_subpath"
+      ],
+      "builder": "github"
     },
     "L13": {
       "tool": "fly",
@@ -116,7 +163,11 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "Binary rename (flyctl -> fly)",
-      "features": ["binary:rename", "os:macOS"]
+      "features": [
+        "binary:rename",
+        "os:macOS"
+      ],
+      "builder": "github"
     },
     "L14": {
       "tool": "k3d",
@@ -125,7 +176,12 @@
       "action": "github_file",
       "format": "",
       "desc": "github_file baseline (direct binary)",
-      "features": ["action:github_file", "os:standard", "arch:standard"]
+      "features": [
+        "action:github_file",
+        "os:standard",
+        "arch:standard"
+      ],
+      "builder": "github"
     },
     "L15": {
       "tool": "cosign",
@@ -134,7 +190,11 @@
       "action": "github_file",
       "format": "",
       "desc": "github_file with binary rename",
-      "features": ["action:github_file", "binary:rename"]
+      "features": [
+        "action:github_file",
+        "binary:rename"
+      ],
+      "builder": "github"
     },
     "L16": {
       "tool": "minikube",
@@ -143,7 +203,11 @@
       "action": "github_file",
       "format": "",
       "desc": "github_file with no os/arch mapping",
-      "features": ["action:github_file", "mapping:none"]
+      "features": [
+        "action:github_file",
+        "mapping:none"
+      ],
+      "builder": "github"
     },
     "L17": {
       "tool": "kopia",
@@ -152,7 +216,11 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "macOS os mapping (darwin -> macOS)",
-      "features": ["os:macOS", "arch:x64"]
+      "features": [
+        "os:macOS",
+        "arch:x64"
+      ],
+      "builder": "github"
     },
     "L18": {
       "tool": "cargo-deny",
@@ -161,7 +229,54 @@
       "action": "github_archive",
       "format": "tar.gz",
       "desc": "musl libc target (unknown-linux-musl)",
-      "features": ["os:rust_triple", "arch:rust_triple", "strip_dirs:1"]
+      "features": [
+        "os:rust_triple",
+        "arch:rust_triple",
+        "strip_dirs:1"
+      ],
+      "builder": "github"
+    },
+    "S1": {
+      "builder": "homebrew",
+      "tool": "readline",
+      "formula": "readline",
+      "recipe": "r/readline.toml",
+      "action": "homebrew_source",
+      "build_system": "autotools",
+      "desc": "AP-I1: Multiple URL patches with checksums (p0 strip)",
+      "features": [
+        "patches:url",
+        "patches:multiple",
+        "strip:p0",
+        "checksums"
+      ]
+    },
+    "S2": {
+      "builder": "homebrew",
+      "tool": "python",
+      "formula": "python@3.13",
+      "recipe": "p/python.toml",
+      "action": "homebrew_source",
+      "build_system": "autotools",
+      "desc": "AP-I2: Single URL patch from Homebrew patches repo",
+      "features": [
+        "patches:url",
+        "patches:single"
+      ]
+    },
+    "S3": {
+      "builder": "homebrew",
+      "tool": "bash",
+      "formula": "bash",
+      "recipe": "b/bash.toml",
+      "action": "homebrew_source",
+      "build_system": "autotools",
+      "desc": "AP-I4: Multiple patches ordering (9 sequential patches)",
+      "features": [
+        "patches:url",
+        "patches:multiple",
+        "patches:ordering"
+      ]
     }
   }
 }

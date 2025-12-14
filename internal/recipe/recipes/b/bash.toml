@@ -1,0 +1,55 @@
+# Ground truth recipe for bash (source build with multiple patches)
+# Used by LLM integration tests (S3)
+
+name = "bash"
+description = "Bourne Again SHell"
+homepage = "https://www.gnu.org/software/bash/"
+
+[version]
+provider = "homebrew"
+formula = "bash"
+
+[[steps]]
+action = "homebrew_source"
+
+[steps.params]
+formula = "bash"
+build_system = "autotools"
+executables = ["bash"]
+
+# Multiple patches from GNU FTP (p0 strip level) - order matters
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-001"
+strip = 0
+
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-002"
+strip = 0
+
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-003"
+strip = 0
+
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-004"
+strip = 0
+
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-005"
+strip = 0
+
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-006"
+strip = 0
+
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-007"
+strip = 0
+
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-008"
+strip = 0
+
+[[patches]]
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-009"
+strip = 0
