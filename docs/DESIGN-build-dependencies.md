@@ -16,6 +16,13 @@ When building software from source using Homebrew formulas, builds frequently fa
 
 Additionally, build tools need specific environment setup (PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS) to find headers and libraries from tsuku-managed dependencies. Without this, configure scripts and build systems cannot locate dependencies even when installed.
 
+### Relationship to Homebrew Formulas
+
+Homebrew formulas already categorize dependencies as `dependencies`, `build_dependencies`, and `uses_from_macos`. When tsuku generates recipes from Homebrew formulas (via `homebrew_bottle` or source builds), these categories should map directly to tsuku's recipe fields. This enables:
+- Accurate dependency tracking without manual recipe authoring
+- Consistent behavior between Homebrew-derived and hand-written recipes
+- Better error messages when system dependencies are missing
+
 ### Scope
 
 **In scope:**
@@ -30,6 +37,15 @@ Additionally, build tools need specific environment setup (PKG_CONFIG_PATH, CPPF
 - Cross-compilation support
 - Conditional/optional dependency features (future work)
 - Platform-specific dependency variations beyond existing `[steps.when]` support
+- Version constraints for dependencies (all dependency types use latest available)
+
+### Key Assumptions
+
+1. **No version constraints**: Dependencies reference tools by name only. Version pinning is handled separately via tsuku's existing version resolution.
+2. **No transitive build dependencies**: Build dependencies of build dependencies are not automatically installed. Each recipe explicitly declares what it needs.
+3. **Build dependencies are retained**: Unlike some systems that clean up build deps after installation, tsuku keeps them installed (they may be needed for rebuilds or by other tools).
+4. **System environment is trusted**: Builds may access system libraries and tools. Full hermeticity is only achieved via `nix_realize`.
+5. **Relationship to nix_realize**: For tools using `nix_realize`, build dependencies are handled by Nix itself. The `build_dependencies` field is primarily for `configure_make`, `cmake_build`, and similar ecosystem primitives.
 
 ## Decision Drivers
 
@@ -61,6 +77,7 @@ system_dependencies = ["zlib", "libxml2"]     # NEW
 - Clear, explicit fields for each dependency type
 - Easy to understand and document
 - No changes to existing dependency semantics
+- Zero migration required for existing recipes (new fields are optional)
 
 **Cons:**
 - Four separate dependency fields may be confusing
@@ -83,9 +100,9 @@ system = ["zlib", "libxml2"]
 - Easier to extend with additional metadata (versions, optional flags)
 
 **Cons:**
-- Breaking change to recipe format
+- Breaking change to recipe format requiring migration of all existing recipes
 - More complex parsing logic
-- Harder migration path for existing recipes
+- Would need deprecation period and tooling for migration
 
 #### Option 1C: Annotated Dependencies
 
@@ -174,8 +191,9 @@ custom = { command = "custom-config --version" }  # Custom check
 - Graceful degradation if pkg-config unavailable
 
 **Cons:**
-- More complex recipe syntax
+- More complex recipe syntax for detailed specifications
 - pkg-config not always available or accurate
+- Testing verification across platforms requires CI infrastructure
 
 ### Decision 3: Build Environment Setup
 
