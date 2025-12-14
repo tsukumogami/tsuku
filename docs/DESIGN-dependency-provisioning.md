@@ -6,10 +6,11 @@ Proposed
 
 ## Context and Problem Statement
 
-Tsuku recipes need to declare dependencies on external tools and libraries. These dependencies fall into two categories:
+Tsuku recipes need to declare dependencies on external tools and libraries. These dependencies have different provisioning strategies:
 
-1. **Provisionable dependencies**: Tools tsuku CAN provide (compilers, libraries, build tools)
-2. **System dependencies**: Tools tsuku CANNOT provide (Docker, kernel modules, privileged daemons)
+1. **Downloadable**: Tools tsuku downloads and installs (pre-built binaries, Homebrew bottles)
+2. **Buildable**: Tools tsuku builds from source (using compilers it provides)
+3. **System-required**: Tools that must already exist on the system (Docker, CUDA, kernel modules)
 
 Currently, tsuku has no way to:
 - Declare dependencies on things it cannot provide
@@ -24,10 +25,13 @@ This creates friction:
 
 ### Key Insight
 
-**Tsuku can provide most "system" dependencies** - but not all. The design must handle both cases:
+**All dependencies should be recipes.** The recipe's *actions* determine how to provision:
 
-1. For things tsuku CAN provide (gcc, zlib, openssl): proactively install them
-2. For things tsuku CANNOT provide (Docker, GPU drivers): declare them and fail clearly
+- `homebrew_bottle` → download and install pre-built binary
+- `configure_make` → build from source
+- `require_system` → validate system has it, guide user if missing
+
+This unified model means recipe authors just declare `dependencies = ["docker", "gcc", "zlib"]` - tsuku looks up each recipe and provisions according to its actions.
 
 ### What Tsuku CAN Provide
 
@@ -57,7 +61,7 @@ Some dependencies fundamentally cannot be relocated or installed without system 
 - System service integration (systemd/launchd) - outside tsuku's scope
 - Cannot be "relocated" - it's fundamentally a system-level component
 
-These dependencies must be declared so tsuku can check for them and provide clear installation guidance when missing.
+These dependencies have recipes too - but their recipes use the `require_system` action instead of download/build actions.
 
 ### Relationship to Existing Dependency Model
 
@@ -69,7 +73,8 @@ The existing model (see [DESIGN-dependency-pattern.md](DESIGN-dependency-pattern
 This design extends that model:
 - Build actions (`configure_make`, `cmake_build`) declare implicit dependencies on build tools
 - Tsuku provides all build tools, not just ecosystem runtimes
-- No `system:` annotation needed - if tsuku can provide it, tsuku provides it
+- System-required dependencies are recipes with `require_system` action
+- No special syntax needed - just declare dependencies normally
 
 ### Homebrew Mapping
 
@@ -82,21 +87,21 @@ This design extends that model:
 ### Scope
 
 **In scope:**
-- **Part 1 - Build Essentials**: Proactively provide compilers, build tools, and libraries
-  - Identify all baseline dependencies needed for source builds
-  - Create recipes for each baseline dependency
+- **Unified Recipe Model**: All dependencies are recipes with appropriate actions
+  - Provisionable tools use `homebrew_bottle`, `configure_make`, etc.
+  - System-required tools use new `require_system` action
+  - Recipe authors just declare `dependencies = ["docker", "gcc"]`
+- **Build Essentials**: Proactively provide compilers, build tools, and libraries
+  - Create recipes for baseline dependencies (gcc, make, zlib, etc.)
   - Validate cross-platform functionality via test matrix
-  - Design auto-provisioning mechanism for build actions
-- **Part 2 - System Dependencies**: Declare dependencies tsuku cannot provide
-  - Define `system:` annotation syntax for unprovisionable dependencies
-  - Detection mechanism to check if system deps are present
+- **System-Required Dependencies**: Handle tools tsuku cannot provide
+  - New `require_system` action for detection and guidance
   - Clear error messages with installation guidance
-  - Platform-specific system dependency declarations
+  - Optional assisted installation with user consent
 
 **Out of scope:**
-- Automatic installation of system dependencies (requires root)
-- System dependency version management
-- Fallback mechanisms (if system dep missing, fail clearly)
+- Automatic silent installation of system dependencies
+- System dependency version management (beyond minimum version checks)
 
 ## Decision Drivers
 
@@ -138,19 +143,6 @@ Tsuku proactively provides compilers, build tools, and common libraries via Home
 - More recipes to maintain
 - Bootstrap complexity (need pre-built bottles)
 
-#### Option 1C: Hybrid with System Fallback
-
-Prefer system dependencies when available, install via tsuku if missing.
-
-**Pros:**
-- Smaller footprint when system has deps
-- Still works when system lacks deps
-
-**Cons:**
-- Non-deterministic behavior
-- Different binaries depending on environment
-- Harder to reproduce builds
-
 ### Decision 2: How to handle unprovisionable dependencies (Docker, etc.)
 
 #### Option 2A: No Declaration (Status Quo)
@@ -165,59 +157,80 @@ Don't declare system dependencies; let tools fail with their own error messages.
 - Users don't know what to install
 - No way for recipes to express requirements
 
-#### Option 2B: System Dependency Annotation
+#### Option 2B: Annotation Prefix (`system:docker`)
 
 Add a `system:` prefix to declare dependencies tsuku cannot provide:
 
 ```toml
-[[steps]]
-action = "docker_build"
-dependencies = ["system:docker"]
+dependencies = ["system:docker", "zlib"]
 ```
 
 **Pros:**
-- Explicit declaration of requirements
-- Tsuku can check before running
-- Clear error messages with installation guidance
 - Works with existing dependency model
 
 **Cons:**
-- New syntax to learn
-- Must maintain detection logic per dependency
+- Recipe authors must know tsuku internals to classify correctly
+- Cognitive burden: is it `docker` or `system:docker`?
+- LLMs will frequently misclassify (30-50% error rate per prompt engineer review)
+- No validation feedback if author uses wrong classification
 
-#### Option 2C: Separate System Requirements Section
+#### Option 2C: Unified Recipe Model (All Dependencies Are Recipes)
 
-Add a dedicated section for system requirements:
+Every dependency has a recipe. The recipe's actions determine provisioning strategy:
 
 ```toml
-[system_requirements]
-docker = { min_version = "20.0", install_url = "https://docs.docker.com/install" }
+# gcc.toml - provisionable via Homebrew
+[[steps]]
+action = "homebrew_bottle"
+formula = "gcc"
+
+# docker.toml - system-required
+[[steps]]
+action = "require_system"
+command = "docker"
+install_guide = { darwin = "brew install --cask docker", linux = "..." }
+```
+
+Recipe authors just declare:
+```toml
+dependencies = ["docker", "gcc", "zlib"]  # No prefix needed
 ```
 
 **Pros:**
-- Rich metadata (versions, install URLs)
-- Clear separation from tsuku deps
+- No special syntax for recipe authors to learn
+- Tsuku auto-classifies based on recipe content
+- Adding new system deps = adding a recipe file (not code changes)
+- LLM generation simplified (just list dependencies)
+- Validation: unknown dependency = recipe doesn't exist
+- Enables future assisted installation per-tool
 
 **Cons:**
-- New recipe structure
-- More complex than needed for basic cases
-- Overkill for most recipes
+- Must create recipes for system dependencies (docker.toml, cuda.toml)
+- Recipe lookup adds minor overhead
 
 ## Decision Outcome
 
-**Chosen: 1B + 2B**
+**Chosen: 1B + 2C (Unified Recipe Model)**
 
 ### Summary
 
-Tsuku will provide all provisionable dependencies (gcc, make, zlib) via Homebrew bottles, eliminating the need for `system:` annotations on things tsuku CAN provide. For things tsuku genuinely CANNOT provide (Docker, GPU drivers), recipes use the `system:` annotation to declare them explicitly.
+All dependencies are recipes. Provisionable tools (gcc, zlib) have recipes with `homebrew_bottle` or `configure_make` actions. System-required tools (Docker, CUDA) have recipes with the new `require_system` action. Recipe authors just declare `dependencies = ["docker", "gcc"]` without any special syntax - tsuku looks up each recipe and provisions according to its actions.
 
 ### Rationale
 
-**For Decision 1 (provisionable deps):** Option 1B aligns with tsuku's "self-contained" philosophy. If tsuku can provide something, it should - making users pre-install gcc or zlib creates unnecessary friction. Option 1C was rejected because non-deterministic builds are worse than larger disk footprint.
+**For Decision 1 (provisionable deps):** Option 1B aligns with tsuku's "self-contained" philosophy. If tsuku can provide something, it should.
 
-**For Decision 2 (unprovisionable deps):** Option 2B provides a clean way to declare system requirements without overcomplicating recipes. The `system:` prefix makes intent clear: "this is something tsuku cannot provide, check if it exists." Option 2C was rejected as overkill - version requirements and install URLs can be added later if needed.
+**For Decision 2 (unprovisionable deps):** Option 2C (unified model) was chosen over 2B (annotation prefix) based on expert panel feedback:
 
-**Combined effect:** The `system:` annotation is reserved for things tsuku genuinely cannot provide. If a recipe author writes `system:zlib`, that's likely a mistake - zlib should just be `zlib` and tsuku will provide it. The annotation is for Docker, CUDA, system services, etc.
+- **UX Expert**: The `system:` prefix creates cognitive burden and leaky abstractions
+- **Prompt Engineer**: LLMs will misclassify 30-50% of dependencies without canonical lists
+- **Systems Engineer**: Detection logic belongs in recipes, not hardcoded registry
+
+The unified model solves all these problems:
+- Recipe authors don't need to classify - just list dependencies
+- LLMs generate correct recipes without understanding tsuku internals
+- Adding new system deps is adding a recipe file, not modifying code
+- Each recipe is self-documenting about its provisioning strategy
 
 ## Build Essentials Inventory
 
@@ -340,152 +353,205 @@ func (a *SetupBuildEnvAction) Execute(ctx *ExecutionContext) error {
 }
 ```
 
-### When `system:` Annotation IS Needed
+## System-Required Dependencies (Unified Recipe Model)
 
-The `system:` annotation is reserved for dependencies tsuku genuinely cannot provide:
+### The `require_system` Action
+
+A new primitive action that validates system dependencies and provides installation guidance:
+
+```go
+type RequireSystemParams struct {
+    Command       string            // Command to check (e.g., "docker")
+    VersionFlag   string            // Flag to get version (e.g., "--version")
+    VersionRegex  string            // Regex to extract version
+    MinVersion    string            // Minimum required version (optional)
+    InstallGuide  map[string]string // Platform-specific install instructions
+    AssistedInstall map[string]string // Commands for assisted install (optional)
+}
+
+func (a *RequireSystemAction) Execute(ctx *ExecutionContext) error {
+    // 1. Run detection
+    found, version := detectCommand(ctx.Params.Command, ctx.Params.VersionFlag)
+
+    if found {
+        if ctx.Params.MinVersion != "" && !versionSatisfied(version, ctx.Params.MinVersion) {
+            return &VersionMismatchError{...}
+        }
+        ctx.Log("Found %s version %s", ctx.Params.Command, version)
+        return nil  // Success
+    }
+
+    // 2. Not found - check assisted install option
+    if ctx.Config.AssistedInstall && ctx.Params.AssistedInstall != nil {
+        if userConsents("Install " + ctx.Params.Command + "?") {
+            return runAssistedInstall(ctx.Params.AssistedInstall)
+        }
+    }
+
+    // 3. Show guidance and fail
+    return &SystemDepMissingError{
+        Dependency: ctx.Params.Command,
+        Guide:      getGuideForPlatform(ctx.Params.InstallGuide),
+    }
+}
+```
+
+### Example Recipes
+
+**Docker (system-required):**
+```toml
+# recipes/docker.toml
+[metadata]
+name = "docker"
+description = "Container runtime"
+
+[[steps]]
+action = "require_system"
+command = "docker"
+version_flag = "--version"
+version_regex = "Docker version ([0-9.]+)"
+
+[steps.install_guide]
+darwin = "brew install --cask docker"
+linux.ubuntu = "sudo apt install docker.io && sudo usermod -aG docker $USER"
+linux.fedora = "sudo dnf install docker && sudo systemctl enable docker"
+fallback = "See https://docs.docker.com/engine/install/"
+
+# Future: assisted installation
+# [steps.assisted_install]
+# darwin = "brew install --cask docker"
+# requires_sudo = false
+```
+
+**CUDA (system-required):**
+```toml
+# recipes/cuda.toml
+[metadata]
+name = "cuda"
+description = "NVIDIA CUDA Toolkit"
+
+[[steps]]
+action = "require_system"
+command = "nvcc"
+version_flag = "--version"
+version_regex = "release ([0-9.]+)"
+
+[steps.install_guide]
+darwin = "CUDA is not supported on macOS"
+linux = "See https://developer.nvidia.com/cuda-downloads"
+
+[steps.min_version]
+version = "11.0"
+message = "CUDA 11.0+ required"
+```
+
+**GCC (provisionable - for comparison):**
+```toml
+# recipes/gcc.toml
+[metadata]
+name = "gcc"
+description = "GNU Compiler Collection"
+
+[version]
+source = "homebrew"
+formula = "gcc"
+
+[[steps]]
+action = "homebrew_bottle"
+formula = "gcc"
+
+[[steps]]
+action = "install_binaries"
+binaries = ["bin/gcc", "bin/g++", "bin/cpp"]
+```
+
+### How Recipe Authors Use This
+
+Recipe authors simply declare dependencies - no special syntax:
 
 ```toml
-# Docker-based build - tsuku cannot provide Docker
+# recipes/my-docker-tool.toml
+[metadata]
+name = "my-docker-tool"
+
 [[steps]]
 action = "docker_build"
-dependencies = ["system:docker"]
+dependencies = ["docker"]  # Tsuku looks up docker.toml, sees require_system
 
-# GPU-accelerated tool - tsuku cannot provide CUDA
 [[steps]]
-action = "cmake_build"
-dependencies = ["system:cuda", "zlib"]  # zlib from tsuku, cuda from system
+action = "install_binaries"
+binaries = ["my-tool"]
 ```
-
-For provisionable dependencies (gcc, zlib, openssl), do NOT use the `system:` prefix - just declare them normally and tsuku will provide them.
-
-## System Dependency Declaration
-
-### Syntax
-
-System dependencies use the `system:` prefix in `dependencies` or `runtime_dependencies`:
 
 ```toml
-dependencies = ["system:docker", "system:cuda"]
-runtime_dependencies = ["system:docker"]
-```
+# recipes/gpu-app.toml
+[metadata]
+name = "gpu-app"
 
-### Known System Dependencies
+[[steps]]
+action = "cmake_build"
+dependencies = ["cuda", "zlib"]  # cuda = require_system, zlib = homebrew_bottle
 
-Tsuku maintains a registry of known system dependencies with detection and installation guidance:
-
-```go
-var SystemDependencies = map[string]SystemDep{
-    "docker": {
-        Detection: DetectDocker,  // func() (bool, string)
-        InstallGuide: map[string]string{
-            "darwin": "brew install --cask docker",
-            "linux":  "See https://docs.docker.com/engine/install/",
-        },
-    },
-    "cuda": {
-        Detection: DetectCUDA,
-        InstallGuide: map[string]string{
-            "darwin": "CUDA not available on macOS",
-            "linux":  "See https://developer.nvidia.com/cuda-downloads",
-        },
-    },
-    "systemd": {
-        Detection: DetectSystemd,
-        InstallGuide: map[string]string{
-            "darwin": "Not applicable (macOS uses launchd)",
-            "linux":  "Usually pre-installed; see your distro documentation",
-        },
-    },
-}
-```
-
-### Detection Functions
-
-Each system dependency has a detection function:
-
-```go
-func DetectDocker() (found bool, version string) {
-    cmd := exec.Command("docker", "--version")
-    output, err := cmd.Output()
-    if err != nil {
-        return false, ""
-    }
-    // Parse version from "Docker version 24.0.5, build ..."
-    return true, parseDockerVersion(string(output))
-}
+[[steps]]
+action = "install_binaries"
+binaries = ["gpu-app"]
 ```
 
 ### Error Messages
 
-When a system dependency is missing, tsuku provides clear guidance:
+When a system dependency is missing:
 
 ```
-Error: Missing system dependency: docker
+Error: Missing required dependency: docker
 
-This recipe requires Docker, which tsuku cannot provide.
-Docker requires system-level installation with root privileges.
+Docker is required but not installed on your system.
+Tsuku cannot install Docker because it requires system privileges.
 
 To install Docker:
   macOS: brew install --cask docker
-  Linux: See https://docs.docker.com/engine/install/
+  Ubuntu: sudo apt install docker.io && sudo usermod -aG docker $USER
 
-After installing, run: tsuku install <tool> --retry
+After installing, run: tsuku install my-docker-tool
 ```
 
-### Platform-Specific System Dependencies
-
-Use the `when` clause for platform-specific system requirements:
-
-```toml
-# Only needed on Linux
-[[steps]]
-action = "run_service"
-dependencies = ["system:systemd"]
-[steps.when]
-os = "linux"
-
-# Only needed on macOS
-[[steps]]
-action = "run_service"
-dependencies = ["system:launchd"]
-[steps.when]
-os = "darwin"
-```
-
-### Installation Flow with System Dependencies
+### Installation Flow (Unified Model)
 
 ```
 tsuku install my-docker-tool
         │
         ▼
 ┌─────────────────────────────────────────┐
-│ 1. Load recipe                          │
-│    - Deps: [system:docker, curl]        │
+│ 1. Load recipe (my-docker-tool.toml)    │
+│    - Deps: [docker, curl]               │
 └─────────────────────────────────────────┘
         │
         ▼
 ┌─────────────────────────────────────────┐
-│ 2. Check system dependencies            │
-│    - docker: Run DetectDocker()         │
-│    - Found? Continue                    │
-│    - Missing? Show install guide, FAIL  │
+│ 2. For each dependency, load its recipe │
+│    - docker.toml → has require_system   │
+│    - curl.toml → has homebrew_bottle    │
 └─────────────────────────────────────────┘
         │
         ▼
 ┌─────────────────────────────────────────┐
-│ 3. Install tsuku dependencies           │
-│    - tsuku install curl (if needed)     │
+│ 3. Install dependencies in order        │
+│    - docker: Execute require_system     │
+│      → Check: docker --version          │
+│      → Found? Continue                  │
+│      → Missing? Show guide, FAIL        │
+│    - curl: Execute homebrew_bottle      │
+│      → Download and install             │
 └─────────────────────────────────────────┘
         │
         ▼
 ┌─────────────────────────────────────────┐
-│ 4. Execute build steps                  │
+│ 4. Execute my-docker-tool build steps   │
 └─────────────────────────────────────────┘
 ```
 
 ### Component Changes
 
-#### Part 1: Build Essentials
+#### Build Essentials (Provisionable)
 
 | Component | Change |
 |-----------|--------|
@@ -495,17 +561,16 @@ tsuku install my-docker-tool
 | `recipes/gcc.toml` | NEW: GCC compiler recipe |
 | `recipes/make.toml` | NEW: GNU Make recipe |
 | `recipes/zlib.toml` | NEW: zlib library recipe |
-| ... | Additional build essential recipes |
 
-#### Part 2: System Dependencies
+#### System-Required Dependencies
 
 | Component | Change |
 |-----------|--------|
-| `internal/deps/system.go` | NEW: System dependency registry and detection |
-| `internal/deps/detect_docker.go` | NEW: Docker detection function |
-| `internal/deps/detect_cuda.go` | NEW: CUDA detection function |
-| `internal/executor/resolver.go` | Parse `system:` prefix, check system deps before install |
-| `internal/executor/errors.go` | NEW: User-friendly error messages with install guidance |
+| `internal/actions/require_system.go` | NEW: `require_system` action implementation |
+| `internal/actions/registry.go` | Register `require_system` as primitive action |
+| `recipes/docker.toml` | NEW: Docker system-required recipe |
+| `recipes/cuda.toml` | NEW: CUDA system-required recipe |
+| `recipes/systemd.toml` | NEW: systemd system-required recipe |
 
 ## Validation Plan
 
@@ -729,27 +794,37 @@ jobs:
 4. Expand test matrix
 5. Build python from source as final validation
 
-### Phase 5: System Dependency Infrastructure
+### Phase 5: System-Required Action
 
-**Goal**: Enable declaration of dependencies tsuku cannot provide.
+**Goal**: Implement the `require_system` action for system dependencies.
 
-1. Implement `system:` prefix parsing in dependency resolver
-2. Create `internal/deps/system.go` with registry structure
-3. Implement Docker detection function
-4. Implement CUDA detection function
-5. Add user-friendly error messages with install guidance
-6. **Gate**: Unit tests for system dependency detection
+1. Implement `require_system` action in `internal/actions/require_system.go`
+2. Add command detection with version parsing
+3. Add platform-specific install guide rendering
+4. Add min_version checking support
+5. Register action in action registry
+6. **Gate**: Unit tests for require_system action
 
-### Phase 6: System Dependency Integration
+### Phase 6: System-Required Recipes
 
-**Goal**: Integrate system dependencies into installation flow.
+**Goal**: Create recipes for common system dependencies.
 
-1. Add system dependency check before tsuku dependency installation
-2. Fail fast with clear guidance when system deps missing
-3. Add `tsuku check-deps <recipe>` command to verify prerequisites
-4. Document system dependency declaration in recipe authoring guide
-5. Create example recipe using `system:docker`
-6. **Gate**: Integration test with docker-dependent recipe
+1. Create `recipes/docker.toml` with require_system action
+2. Create `recipes/cuda.toml` with require_system action
+3. Create `recipes/systemd.toml` (Linux-only via `when` clause)
+4. Add `tsuku check-deps <recipe>` command to verify prerequisites
+5. Document system-required recipe authoring in guide
+6. **Gate**: Integration test installing a docker-dependent recipe
+
+### Phase 7: Assisted Installation (Future)
+
+**Goal**: Enable optional assisted installation with user consent.
+
+1. Add `assisted_install` parameter support to require_system
+2. Implement privilege escalation flow with explicit user consent
+3. Add `--assist` flag to `tsuku install` command
+4. Start with macOS brew commands (no sudo required)
+5. **Gate**: User can opt-in to assisted Docker installation on macOS
 
 ## Security Considerations
 
@@ -830,26 +905,31 @@ Hidden dependencies (build tools not shown in `tsuku list`) reduce user awarenes
 
 ### Positive
 
-#### Part 1: Build Essentials
+#### Unified Recipe Model
+- No special syntax for recipe authors - just declare `dependencies = ["docker", "gcc"]`
+- LLMs can generate correct recipes without understanding tsuku internals
+- Adding new system deps = adding a recipe file (no code changes)
+- Each recipe is self-documenting about its provisioning strategy
+- Validation is simple: unknown dependency = recipe doesn't exist
+
+#### Build Essentials
 - Source builds work without manual prerequisite installation
 - Consistent behavior across platforms
 - Clear validation that relocated tools actually work
-- `system:` annotation not needed for things tsuku can provide (gcc, zlib, etc.)
 
-#### Part 2: System Dependencies
+#### System-Required Dependencies
 - Clear declaration of unprovisionable requirements (Docker, CUDA, etc.)
 - User-friendly error messages with installation guidance
-- Platform-specific system requirements supported via `when` clause
-- Recipe authors can express "this needs Docker" without workarounds
+- Platform-specific requirements supported via `when` clause
+- Future: assisted installation with user consent
 
 ### Negative
 
-- More recipes to create and maintain (gcc, make, etc.)
+- More recipes to create and maintain (gcc, make, docker, cuda, etc.)
 - Larger disk footprint (build tools installed even if system has them)
 - Initial setup takes longer (must install build tools)
 - Bootstrap complexity (requires pre-built Homebrew bottles)
 - Elevated security responsibility (compilers are trust anchors)
-- Must maintain detection functions for each system dependency
 
 ### Mitigations
 
@@ -857,10 +937,10 @@ Hidden dependencies (build tools not shown in `tsuku list`) reduce user awarenes
 - Lazy installation (only when a source build is attempted)
 - Share build tools across multiple source builds
 - Use Homebrew bottles (pre-built) to avoid bootstrap problem
-- Start with small set of system dependencies (docker, cuda), expand as needed
+- System-required recipes are simple (just require_system action)
 
 ### Neutral
 
-- `system:` annotation reserved for truly unprovisionable dependencies only
-- Shifts build tool complexity from recipe authors to tsuku maintainers
+- All dependencies are recipes - unified model
+- Shifts complexity from recipe authors to tsuku maintainers
 - Aligns with tsuku's "self-contained" philosophy while acknowledging limits
