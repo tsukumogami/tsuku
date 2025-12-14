@@ -99,6 +99,8 @@ var deterministicActions = map[string]bool{
 	"install_libraries": true,
 	"apply_patch_file":  true,
 	"text_replace":      true,
+	// Composite actions that decompose to only deterministic primitives
+	"apply_patch": true,
 	// Ecosystem primitives - NOT deterministic due to compiler versions,
 	// native extensions, platform-specific behavior, etc.
 	"cargo_build":    false,
