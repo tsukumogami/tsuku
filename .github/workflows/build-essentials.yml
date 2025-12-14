@@ -1,0 +1,117 @@
+name: Build Essentials
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'internal/actions/homebrew_*.go'
+      - 'internal/actions/configure_make.go'
+      - '.github/workflows/build-essentials.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'internal/actions/homebrew_*.go'
+      - 'internal/actions/configure_make.go'
+      - '.github/workflows/build-essentials.yml'
+
+jobs:
+  # Test build essentials on all 4 supported platforms
+  build-essentials:
+    name: "${{ matrix.platform.name }}: ${{ matrix.tool }}"
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
+          - { runner: ubuntu-24.04-arm, name: "Linux arm64", os: linux, arch: arm64 }
+          - { runner: macos-13, name: "macOS Intel", os: macos, arch: x86_64 }
+          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+        tool:
+          - make
+          - gdbm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: "Install ${{ matrix.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force ${{ matrix.tool }}
+
+      - name: "Verify ${{ matrix.tool }}"
+        run: |
+          if [ "${{ matrix.tool }}" = "make" ]; then
+            make --version
+          elif [ "${{ matrix.tool }}" = "gdbm" ]; then
+            gdbmtool --version
+          fi
+
+  # Test in clean container with no system build tools
+  clean-container:
+    name: "Clean Container: ${{ matrix.tool }}"
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        tool:
+          - make
+          - gdbm
+
+    steps:
+      - name: Install minimal dependencies
+        run: |
+          apt-get update
+          apt-get install -y git ca-certificates curl
+
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: Verify no system make
+        if: matrix.tool == 'gdbm'
+        run: |
+          if command -v make &> /dev/null; then
+            echo "::error::System make is installed, but this test requires a clean environment"
+            exit 1
+          fi
+          echo "Confirmed: no system make installed"
+
+      - name: "Install ${{ matrix.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force ${{ matrix.tool }}
+
+      - name: "Verify ${{ matrix.tool }}"
+        run: |
+          if [ "${{ matrix.tool }}" = "make" ]; then
+            make --version
+          elif [ "${{ matrix.tool }}" = "gdbm" ]; then
+            gdbmtool --version
+          fi
