@@ -32,9 +32,9 @@ None required - all infrastructure exists.
 - [x] Add `apply_patch` and `text_replace` to primitives map in decomposable.go
 - [x] Add `apply_patch` and `text_replace` to deterministicActions map (as deterministic)
 - [x] Update decomposable_test.go to expect 19 primitives (was 17) and include new actions in assertions
-- [ ] Add patch processing in plan_generator.go after step resolution setup but before recipe step iteration
-- [ ] Add unit tests for patch step generation in plan_generator_test.go
-- [ ] Run full test suite to verify no regressions
+- [x] Add patch processing in plan_generator.go after step resolution setup but before recipe step iteration
+- [x] Add unit tests for patch step generation in plan_generator_test.go
+- [x] Run full test suite to verify no regressions
 
 Mark each step [x] after it is implemented and committed. This enables clear resume detection.
 
