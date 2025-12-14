@@ -81,6 +81,16 @@ func (b *PyPIBuilder) Name() string {
 	return "pypi"
 }
 
+// Initialize is a no-op for ecosystem builders.
+func (b *PyPIBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	return nil
+}
+
+// RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
+func (b *PyPIBuilder) RequiresLLM() bool {
+	return false
+}
+
 // CanBuild checks if the package exists on PyPI
 func (b *PyPIBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
 	if !isValidPyPIPackageName(packageName) {

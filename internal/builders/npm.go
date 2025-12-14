@@ -76,6 +76,16 @@ func (b *NpmBuilder) Name() string {
 	return "npm"
 }
 
+// Initialize is a no-op for ecosystem builders.
+func (b *NpmBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	return nil
+}
+
+// RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
+func (b *NpmBuilder) RequiresLLM() bool {
+	return false
+}
+
 // CanBuild checks if the package exists on npm registry
 func (b *NpmBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
 	if !isValidNpmPackageNameForBuilder(packageName) {

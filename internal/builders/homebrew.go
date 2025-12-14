@@ -89,6 +89,7 @@ type HomebrewBuilder struct {
 	telemetryClient *telemetry.Client
 	progress        ProgressReporter
 	registry        RegistryChecker
+	llmStateTracker LLMStateTracker
 }
 
 // HomebrewBuilderOption configures a HomebrewBuilder.
@@ -151,13 +152,10 @@ func WithRegistryChecker(r RegistryChecker) HomebrewBuilderOption {
 }
 
 // NewHomebrewBuilder creates a new HomebrewBuilder.
-// If no options are provided, defaults are used:
-// - HTTP client with 60s timeout
-// - Factory auto-detected from environment (ANTHROPIC_API_KEY, GOOGLE_API_KEY)
-// - Sanitizer with default patterns
-// - No executor (validation skipped)
-// - Default telemetry client (respects TSUKU_NO_TELEMETRY)
-func NewHomebrewBuilder(ctx context.Context, opts ...HomebrewBuilderOption) (*HomebrewBuilder, error) {
+// The builder is created in an uninitialized state. Call Initialize() before Build().
+// Options can be passed to pre-configure HTTP client, API URL, etc.
+// LLM factory and executor are set up during Initialize() based on InitOptions.
+func NewHomebrewBuilder(opts ...HomebrewBuilderOption) *HomebrewBuilder {
 	b := &HomebrewBuilder{
 		homebrewAPIURL: defaultHomebrewAPIURL,
 	}
@@ -166,19 +164,11 @@ func NewHomebrewBuilder(ctx context.Context, opts ...HomebrewBuilderOption) (*Ho
 		opt(b)
 	}
 
-	// Set defaults for unset options
+	// Set defaults for unset options (non-LLM dependencies)
 	if b.httpClient == nil {
 		b.httpClient = &http.Client{
 			Timeout: 60 * time.Second,
 		}
-	}
-
-	if b.factory == nil {
-		factory, err := llm.NewFactory(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
-		}
-		b.factory = factory
 	}
 
 	if b.sanitizer == nil {
@@ -189,14 +179,60 @@ func NewHomebrewBuilder(ctx context.Context, opts ...HomebrewBuilderOption) (*Ho
 		b.telemetryClient = telemetry.NewClient()
 	}
 
+	return b
+}
+
+// Initialize sets up the builder for LLM-based recipe generation.
+// This checks LLM configuration and rate limits, creates the LLM factory,
+// and configures validation.
+//
+// Returns ConfirmableError (specifically *RateLimitError) if rate limits are exceeded,
+// allowing the caller to prompt for user confirmation and retry with ForceInit=true.
+func (b *HomebrewBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	if opts == nil {
+		opts = &InitOptions{}
+	}
+
+	// Check LLM prerequisites (enabled, rate limits, budget)
+	if err := CheckLLMPrerequisites(opts); err != nil {
+		return err
+	}
+
+	// Store state tracker for cost recording in Build()
+	b.llmStateTracker = opts.LLMStateTracker
+
+	// Create LLM factory if not already set (may be set via WithHomebrewFactory for testing)
+	if b.factory == nil {
+		factory, err := llm.NewFactory(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create LLM factory: %w", err)
+		}
+		b.factory = factory
+	}
+
 	// Set up factory callback for circuit breaker telemetry
 	b.factory.SetOnBreakerTrip(func(provider string, failures int) {
 		b.telemetryClient.SendLLM(telemetry.NewLLMCircuitBreakerTripEvent(provider, failures))
 	})
 
-	// executor is optional - validation skipped if nil
+	// Set up validation executor unless skipped
+	if !opts.SkipValidation && b.executor == nil {
+		detector := validate.NewRuntimeDetector()
+		predownloader := validate.NewPreDownloader()
+		b.executor = validate.NewExecutor(detector, predownloader)
+	}
 
-	return b, nil
+	// Set progress reporter if provided
+	if opts.ProgressReporter != nil {
+		b.progress = opts.ProgressReporter
+	}
+
+	return nil
+}
+
+// RequiresLLM returns true as this builder uses LLM for recipe generation.
+func (b *HomebrewBuilder) RequiresLLM() bool {
+	return true
 }
 
 // Name returns the builder identifier.
@@ -251,6 +287,13 @@ type homebrewFormulaInfo struct {
 	BuildDependencies    []string `json:"build_dependencies"`
 	TestDependencies     []string `json:"test_dependencies"`
 	OptionalDependencies []string `json:"optional_dependencies"`
+	// Source URLs for building from source
+	URLs struct {
+		Stable struct {
+			URL      string `json:"url"`
+			Checksum string `json:"checksum"`
+		} `json:"stable"`
+	} `json:"urls"`
 }
 
 // HomebrewFormulaNotFoundError indicates a formula doesn't exist.
@@ -478,9 +521,20 @@ func (b *HomebrewBuilder) BuildWithDependencies(
 	req BuildRequest,
 	confirm ConfirmFunc,
 ) ([]*BuildResult, error) {
+	// Parse SourceArg to extract formula name and source build flag
+	// Fall back to Package if SourceArg is empty
+	sourceArg := req.SourceArg
+	if sourceArg == "" {
+		sourceArg = req.Package
+	}
+	formulaName, forceSource, err := parseSourceArg(sourceArg)
+	if err != nil {
+		return nil, fmt.Errorf("invalid source argument: %w", err)
+	}
+
 	// 1. Discover full dependency tree (no LLM, just API calls)
 	b.reportStart("Discovering dependencies")
-	tree, err := b.DiscoverDependencyTree(ctx, req.Package)
+	tree, err := b.DiscoverDependencyTree(ctx, formulaName)
 	if err != nil {
 		b.reportFailed()
 		return nil, fmt.Errorf("failed to discover dependencies: %w", err)
@@ -505,9 +559,15 @@ func (b *HomebrewBuilder) BuildWithDependencies(
 	for i, formula := range toGenerate {
 		b.reportStart(fmt.Sprintf("Generating recipe %d/%d: %s", i+1, len(toGenerate), formula))
 
+		// Only apply forceSource to the root package, not dependencies
+		sourceArg := formula
+		if forceSource && formula == formulaName {
+			sourceArg = formula + ":source"
+		}
+
 		result, err := b.Build(ctx, BuildRequest{
 			Package:   formula,
-			SourceArg: formula,
+			SourceArg: sourceArg,
 		})
 		if err != nil {
 			b.reportFailed()
@@ -552,6 +612,80 @@ func isValidHomebrewFormula(name string) bool {
 	}
 
 	return true
+}
+
+// isValidVerifyCommand checks if a verify command is safe to execute.
+// It rejects commands containing shell metacharacters that could enable injection.
+func isValidVerifyCommand(cmd string) error {
+	if cmd == "" {
+		return fmt.Errorf("verify command cannot be empty")
+	}
+
+	// Reject shell metacharacters that could enable command injection
+	dangerousChars := []string{";", "&&", "||", "|", "`", "$", "(", ")", "{", "}", "<", ">", "\n", "\r"}
+	for _, c := range dangerousChars {
+		if strings.Contains(cmd, c) {
+			return fmt.Errorf("verify command contains dangerous character %q", c)
+		}
+	}
+
+	// Reject commands that don't look like version checks
+	// Valid patterns: "tool --version", "tool -v", "tool -V", "tool version"
+	cmdLower := strings.ToLower(cmd)
+	hasVersionFlag := strings.Contains(cmdLower, "--version") ||
+		strings.Contains(cmdLower, "-v") ||
+		strings.Contains(cmdLower, "version")
+	if !hasVersionFlag {
+		return fmt.Errorf("verify command should check version (use --version, -v, or version subcommand)")
+	}
+
+	return nil
+}
+
+// getStringArg extracts a string argument from LLM tool call arguments.
+// If the key is missing, returns defaultVal. If the value is not a string, returns an error.
+func getStringArg(args map[string]interface{}, key string, defaultVal string) (string, error) {
+	val, ok := args[key]
+	if !ok {
+		return defaultVal, nil
+	}
+	str, ok := val.(string)
+	if !ok {
+		return "", fmt.Errorf("argument %q must be a string, got %T", key, val)
+	}
+	if str == "" {
+		return defaultVal, nil
+	}
+	return str, nil
+}
+
+// parseSourceArg parses the builder-specific SourceArg for Homebrew.
+// It extracts the formula name and whether source build is requested.
+// Examples:
+//   - "jq" → ("jq", false, nil)
+//   - "jq:source" → ("jq", true, nil)
+//   - "openssl@1.1:source" → ("openssl@1.1", true, nil)
+//   - "" → ("", false, error)
+func parseSourceArg(sourceArg string) (formula string, forceSource bool, err error) {
+	if sourceArg == "" {
+		return "", false, fmt.Errorf("source argument is required (use --from homebrew:formula)")
+	}
+
+	// Normalize to lowercase for case-insensitive matching
+	lowerArg := strings.ToLower(sourceArg)
+	if strings.HasSuffix(lowerArg, ":source") {
+		formula = lowerArg[:len(lowerArg)-7]
+		forceSource = true
+	} else {
+		formula = lowerArg
+		forceSource = false
+	}
+
+	if !isValidHomebrewFormula(formula) {
+		return "", false, fmt.Errorf("invalid Homebrew formula name: %s", formula)
+	}
+
+	return formula, forceSource, nil
 }
 
 // fetchFormulaInfo fetches formula metadata from Homebrew API.
@@ -604,14 +738,14 @@ func (b *HomebrewBuilder) fetchFormulaInfo(ctx context.Context, formula string) 
 // It first attempts bottle-based generation, falling back to source-based
 // generation if bottles are not available.
 func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
-	formula := req.SourceArg
-	if formula == "" {
-		formula = req.Package
+	// Parse SourceArg to extract formula name and source build flag
+	sourceArg := req.SourceArg
+	if sourceArg == "" {
+		sourceArg = req.Package
 	}
-
-	// Validate formula name
-	if !isValidHomebrewFormula(formula) {
-		return nil, fmt.Errorf("invalid Homebrew formula name: %s", formula)
+	formula, forceSource, err := parseSourceArg(sourceArg)
+	if err != nil {
+		return nil, fmt.Errorf("invalid source argument: %w", err)
 	}
 
 	// Fetch formula metadata
@@ -622,9 +756,13 @@ func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildRe
 		return nil, fmt.Errorf("failed to fetch formula: %w", err)
 	}
 
-	// Check for bottles - if not available, switch to source build mode
-	if !formulaInfo.Versions.Bottle {
-		b.reportDone(fmt.Sprintf("v%s (source only)", formulaInfo.Versions.Stable))
+	// Check for bottles - if not available or source forced, switch to source build mode
+	if !formulaInfo.Versions.Bottle || forceSource {
+		suffix := "source only"
+		if forceSource && formulaInfo.Versions.Bottle {
+			suffix = "source requested"
+		}
+		b.reportDone(fmt.Sprintf("v%s (%s)", formulaInfo.Versions.Stable, suffix))
 		return b.buildFromSource(ctx, req, formula, formulaInfo)
 	}
 
@@ -707,6 +845,11 @@ func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildRe
 			result.Warnings = append(result.Warnings,
 				fmt.Sprintf("No bottle available for %s - recipe may not work on this platform", displayName))
 		}
+	}
+
+	// Record LLM cost if state tracker is available
+	if err := RecordLLMCost(b.llmStateTracker, result.Cost); err != nil {
+		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to record LLM cost: %v", err))
 	}
 
 	return result, nil
@@ -803,6 +946,11 @@ func (b *HomebrewBuilder) buildFromSource(ctx context.Context, req BuildRequest,
 
 	if repairAttempts > 0 {
 		result.Warnings = append(result.Warnings, fmt.Sprintf("Recipe repaired after %d attempt(s)", repairAttempts))
+	}
+
+	// Record LLM cost if state tracker is available
+	if err := RecordLLMCost(b.llmStateTracker, result.Cost); err != nil {
+		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to record LLM cost: %v", err))
 	}
 
 	return result, nil
@@ -925,8 +1073,8 @@ func validateSourceRecipeData(data *sourceRecipeData) error {
 	}
 
 	// Validate verify command
-	if data.VerifyCommand == "" {
-		return fmt.Errorf("extract_source_recipe requires 'verify_command' parameter")
+	if err := isValidVerifyCommand(data.VerifyCommand); err != nil {
+		return fmt.Errorf("extract_source_recipe: %w", err)
 	}
 
 	// Validate configure args (no shell metacharacters)
@@ -1276,9 +1424,9 @@ func (b *HomebrewBuilder) runConversationLoop(
 func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewGenContext, tc llm.ToolCall) (string, *homebrewRecipeData, error) {
 	switch tc.Name {
 	case ToolFetchFormulaJSON:
-		formula, _ := tc.Arguments["formula"].(string)
-		if formula == "" {
-			formula = genCtx.formula // Default to current formula
+		formula, err := getStringArg(tc.Arguments, "formula", genCtx.formula)
+		if err != nil {
+			return "", nil, fmt.Errorf("fetch_formula_json: %w", err)
 		}
 		// Validate formula name for security
 		if !isValidHomebrewFormula(formula) {
@@ -1291,13 +1439,13 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 		return content, nil, nil
 
 	case ToolInspectBottle:
-		formula, _ := tc.Arguments["formula"].(string)
-		if formula == "" {
-			formula = genCtx.formula
+		formula, err := getStringArg(tc.Arguments, "formula", genCtx.formula)
+		if err != nil {
+			return "", nil, fmt.Errorf("inspect_bottle: %w", err)
 		}
-		platform, _ := tc.Arguments["platform"].(string)
-		if platform == "" {
-			platform = "x86_64_linux" // Default to Linux for inspection
+		platform, err := getStringArg(tc.Arguments, "platform", "x86_64_linux")
+		if err != nil {
+			return "", nil, fmt.Errorf("inspect_bottle: %w", err)
 		}
 		// Validate inputs
 		if !isValidHomebrewFormula(formula) {
@@ -1313,9 +1461,9 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 		return listing, nil, nil
 
 	case ToolFetchFormulaRuby:
-		formula, _ := tc.Arguments["formula"].(string)
-		if formula == "" {
-			formula = genCtx.formula
+		formula, err := getStringArg(tc.Arguments, "formula", genCtx.formula)
+		if err != nil {
+			return "", nil, fmt.Errorf("fetch_formula_ruby: %w", err)
 		}
 		if !isValidHomebrewFormula(formula) {
 			return "", nil, fmt.Errorf("invalid formula name: %s", formula)
@@ -1339,8 +1487,18 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 		if len(recipeData.Executables) == 0 {
 			return "", nil, fmt.Errorf("extract_recipe requires at least one executable")
 		}
-		if recipeData.VerifyCommand == "" {
-			return "", nil, fmt.Errorf("extract_recipe requires verify_command")
+		for i, exe := range recipeData.Executables {
+			if exe == "" {
+				return "", nil, fmt.Errorf("extract_recipe: executable[%d] cannot be empty", i)
+			}
+			// Security: disallow path traversal
+			if strings.Contains(exe, "..") || strings.HasPrefix(exe, "/") {
+				return "", nil, fmt.Errorf("extract_recipe: invalid executable path '%s'", exe)
+			}
+		}
+		// Validate verify command
+		if err := isValidVerifyCommand(recipeData.VerifyCommand); err != nil {
+			return "", nil, fmt.Errorf("extract_recipe: %w", err)
 		}
 		return "", &recipeData, nil
 
@@ -1358,7 +1516,10 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 			return "", nil, err
 		}
 		// Return as JSON string - the caller will need to detect and handle this
-		resultJSON, _ := json.Marshal(srcData)
+		resultJSON, err := json.Marshal(srcData)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to marshal source recipe data: %w", err)
+		}
 		return string(resultJSON), nil, nil
 
 	default:
@@ -1464,7 +1625,7 @@ type ghcrManifestEntry struct {
 
 // getGHCRToken obtains an anonymous token for GHCR access.
 func (b *HomebrewBuilder) getGHCRToken(formula string) (string, error) {
-	tokenURL := fmt.Sprintf("https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/%s:pull", formula)
+	tokenURL := fmt.Sprintf("https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/%s:pull", url.PathEscape(formula))
 
 	resp, err := b.httpClient.Get(tokenURL)
 	if err != nil {
@@ -1479,7 +1640,9 @@ func (b *HomebrewBuilder) getGHCRToken(formula string) (string, error) {
 	var tokenResp struct {
 		Token string `json:"token"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+	// Limit response size to prevent DoS from malicious/misconfigured servers
+	limitedReader := io.LimitReader(resp.Body, 64*1024) // 64KB max for token response
+	if err := json.NewDecoder(limitedReader).Decode(&tokenResp); err != nil {
 		return "", fmt.Errorf("failed to parse token response: %w", err)
 	}
 
@@ -1492,7 +1655,7 @@ func (b *HomebrewBuilder) getGHCRToken(formula string) (string, error) {
 
 // fetchGHCRManifest fetches the GHCR manifest for a formula version.
 func (b *HomebrewBuilder) fetchGHCRManifest(ctx context.Context, formula, version, token string) (*ghcrManifest, error) {
-	manifestURL := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/manifests/%s", formula, version)
+	manifestURL := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/manifests/%s", url.PathEscape(formula), url.PathEscape(version))
 
 	req, err := http.NewRequestWithContext(ctx, "GET", manifestURL, nil)
 	if err != nil {
@@ -1513,7 +1676,9 @@ func (b *HomebrewBuilder) fetchGHCRManifest(ctx context.Context, formula, versio
 	}
 
 	var manifest ghcrManifest
-	if err := json.NewDecoder(resp.Body).Decode(&manifest); err != nil {
+	// Limit response size to prevent DoS from malicious/misconfigured servers
+	limitedReader := io.LimitReader(resp.Body, 10*1024*1024) // 10MB max for manifest
+	if err := json.NewDecoder(limitedReader).Decode(&manifest); err != nil {
 		return nil, fmt.Errorf("failed to parse manifest: %w", err)
 	}
 
@@ -1579,7 +1744,7 @@ func (b *HomebrewBuilder) fetchFormulaRuby(ctx context.Context, formula string) 
 	// Homebrew formulas are organized by first letter:
 	// https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/{first_letter}/{formula}.rb
 	firstLetter := strings.ToLower(string(formula[0]))
-	rubyURL := fmt.Sprintf("https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/%s/%s.rb", firstLetter, formula)
+	rubyURL := fmt.Sprintf("https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/%s/%s.rb", firstLetter, url.PathEscape(formula))
 
 	req, err := http.NewRequestWithContext(ctx, "GET", rubyURL, nil)
 	if err != nil {
@@ -2268,15 +2433,19 @@ func (b *HomebrewBuilder) generateSourceRecipeOutput(packageName string, info *h
 	}
 
 	// Build the steps based on build system (includes inreplace as text_replace steps)
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, info.Name)
 	if err != nil {
 		return nil, err
 	}
 	r.Steps = steps
 
-	// Add build dependencies as install-time dependencies
-	if len(data.BuildDependencies) > 0 {
-		r.Metadata.Dependencies = data.BuildDependencies
+	// Add dependencies from formula info (deterministic, not LLM-derived)
+	// Combine build and runtime dependencies since source builds need both
+	var allDeps []string
+	allDeps = append(allDeps, info.BuildDependencies...)
+	allDeps = append(allDeps, info.Dependencies...)
+	if len(allDeps) > 0 {
+		r.Metadata.Dependencies = allDeps
 	}
 
 	return r, nil
@@ -2285,16 +2454,16 @@ func (b *HomebrewBuilder) generateSourceRecipeOutput(packageName string, info *h
 // buildSourceSteps generates the recipe steps for a source build.
 // Resources and patches are stored in the recipe's Resources/Patches fields.
 // Inreplace operations are emitted as text_replace steps before the build.
-func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Step, error) {
+func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData, formula string) ([]recipe.Step, error) {
 	var steps []recipe.Step
 
-	// All source builds start with download and extract
-	// The version templating will be handled by the recipe system
+	// Use homebrew_source action which fetches URL/checksum from Homebrew API at plan time.
+	// This enables version-aware source builds where the URL and checksum are resolved
+	// dynamically when the recipe is installed, not when it's generated.
 	steps = append(steps, recipe.Step{
-		Action: "github_archive",
+		Action: "homebrew_source",
 		Params: map[string]interface{}{
-			"owner": "{{.owner}}", // Will be filled in from formula
-			"repo":  "{{.repo}}",
+			"formula": formula,
 		},
 	})
 
@@ -2316,10 +2485,11 @@ func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Ste
 	}
 
 	// Add build step based on build system
+	// source_dir is "." because we use strip_dirs=1 during extraction
 	switch data.BuildSystem {
 	case BuildSystemAutotools:
 		params := map[string]interface{}{
-			"source_dir":  "{{.extract_dir}}",
+			"source_dir":  ".",
 			"executables": data.Executables,
 		}
 		if len(data.ConfigureArgs) > 0 {
@@ -2332,7 +2502,7 @@ func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Ste
 
 	case BuildSystemCMake:
 		params := map[string]interface{}{
-			"source_dir":  "{{.extract_dir}}",
+			"source_dir":  ".",
 			"executables": data.Executables,
 		}
 		if len(data.CMakeArgs) > 0 {
@@ -2347,7 +2517,7 @@ func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Ste
 		steps = append(steps, recipe.Step{
 			Action: "cargo_build",
 			Params: map[string]interface{}{
-				"source_dir":  "{{.extract_dir}}",
+				"source_dir":  ".",
 				"executables": data.Executables,
 			},
 		})
@@ -2356,7 +2526,7 @@ func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Ste
 		steps = append(steps, recipe.Step{
 			Action: "go_build",
 			Params: map[string]interface{}{
-				"source_dir":  "{{.extract_dir}}",
+				"source_dir":  ".",
 				"executables": data.Executables,
 			},
 		})
@@ -2366,7 +2536,7 @@ func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData) ([]recipe.Ste
 		steps = append(steps, recipe.Step{
 			Action: "configure_make",
 			Params: map[string]interface{}{
-				"source_dir":     "{{.extract_dir}}",
+				"source_dir":     ".",
 				"executables":    data.Executables,
 				"skip_configure": true,
 			},

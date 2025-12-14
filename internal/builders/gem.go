@@ -66,6 +66,16 @@ func (b *GemBuilder) Name() string {
 	return "rubygems"
 }
 
+// Initialize is a no-op for ecosystem builders.
+func (b *GemBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	return nil
+}
+
+// RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
+func (b *GemBuilder) RequiresLLM() bool {
+	return false
+}
+
 // CanBuild checks if the gem exists on rubygems.org
 func (b *GemBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
 	if !isValidGemName(packageName) {

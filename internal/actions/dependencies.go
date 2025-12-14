@@ -59,6 +59,7 @@ var ActionDependencies = map[string]ActionDeps{
 	"github_file":       {InstallTime: nil, Runtime: nil},
 	"hashicorp_release": {InstallTime: nil, Runtime: nil},
 	"homebrew_bottle":   {InstallTime: nil, Runtime: nil},
+	"homebrew_source":   {InstallTime: nil, Runtime: nil},
 }
 
 // GetActionDeps returns the dependencies for an action by name.

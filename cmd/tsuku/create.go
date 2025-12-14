@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
@@ -19,7 +18,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/toolchain"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
-	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 const (
@@ -63,8 +61,9 @@ Supported sources:
   rubygems            Ruby gems from rubygems.org
   pypi                Python packages from pypi.org
   npm                 Node.js packages from npmjs.com
-  github:owner/repo   GitHub releases (uses LLM to analyze assets)
-  homebrew:formula    Homebrew formulas (uses LLM to generate recipes)
+  github:owner/repo      GitHub releases (uses LLM to analyze assets)
+  homebrew:formula       Homebrew formulas (uses LLM to generate recipes)
+  homebrew:formula:source  Force source build even if bottles available
 
 Examples:
   tsuku create ripgrep --from crates.io
@@ -95,49 +94,6 @@ func init() {
 	_ = createCmd.MarkFlagRequired("from")
 }
 
-// formatWaitTime returns a human-readable string for how long until the rate limit resets.
-// It calculates the time until the oldest generation timestamp expires (1 hour window).
-func formatWaitTime(sm *install.StateManager) string {
-	state, err := sm.Load()
-	if err != nil || state.LLMUsage == nil || len(state.LLMUsage.GenerationTimestamps) == 0 {
-		return "unknown"
-	}
-
-	// Find the oldest timestamp in the rolling window
-	now := time.Now().UTC()
-	oneHourAgo := now.Add(-time.Hour)
-	var oldest time.Time
-
-	for _, ts := range state.LLMUsage.GenerationTimestamps {
-		if ts.After(oneHourAgo) {
-			if oldest.IsZero() || ts.Before(oldest) {
-				oldest = ts
-			}
-		}
-	}
-
-	if oldest.IsZero() {
-		return "unknown"
-	}
-
-	// Time until oldest expires = oldest + 1 hour - now
-	expiresAt := oldest.Add(time.Hour)
-	wait := expiresAt.Sub(now)
-
-	if wait <= 0 {
-		return "less than a minute"
-	}
-
-	minutes := int(wait.Minutes())
-	if minutes < 1 {
-		return "less than a minute"
-	}
-	if minutes == 1 {
-		return "1 minute"
-	}
-	return fmt.Sprintf("%d minutes", minutes)
-}
-
 // confirmSkipValidation prompts the user to confirm skipping validation.
 // Returns true if the user consents, false otherwise.
 func confirmSkipValidation() bool {
@@ -161,32 +117,34 @@ func confirmSkipValidation() bool {
 	return response == "y" || response == "yes"
 }
 
-// LLMBuilderType indicates which LLM-based builder is being used.
-type LLMBuilderType int
+// confirmWithUser prompts the user with a message and waits for y/N response.
+func confirmWithUser(prompt string) bool {
+	if !isInteractive() {
+		return false
+	}
 
-const (
-	LLMBuilderNone LLMBuilderType = iota
-	LLMBuilderGitHub
-	LLMBuilderHomebrew
-)
+	fmt.Fprintf(os.Stderr, "%s (y/N) ", prompt)
+	reader := bufio.NewReader(os.Stdin)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return false
+	}
+	response = strings.TrimSpace(strings.ToLower(response))
+	return response == "y" || response == "yes"
+}
 
 // parseFromFlag parses the --from flag value.
-// Returns (builder, sourceArg, llmType).
-// For ecosystem builders: ("crates.io", "", LLMBuilderNone)
-// For github builder: ("github", "cli/cli", LLMBuilderGitHub)
-// For homebrew builder: ("homebrew", "jq", LLMBuilderHomebrew)
-func parseFromFlag(from string) (builder string, sourceArg string, llmType LLMBuilderType) {
-	lower := strings.ToLower(from)
-	// Check for github:owner/repo format
-	if strings.HasPrefix(lower, "github:") {
-		return "github", from[7:], LLMBuilderGitHub
+// Returns (builder, remainder).
+// Splits on the first ":" - builder name before, remainder after.
+// Examples:
+//   - "homebrew:jq:source" → ("homebrew", "jq:source")
+//   - "github:cli/cli" → ("github", "cli/cli")
+//   - "crates.io" → ("crates.io", "")
+func parseFromFlag(from string) (builder string, remainder string) {
+	if idx := strings.Index(from, ":"); idx != -1 {
+		return strings.ToLower(from[:idx]), from[idx+1:]
 	}
-	// Check for homebrew:formula format
-	if strings.HasPrefix(lower, "homebrew:") {
-		return "homebrew", from[9:], LLMBuilderHomebrew
-	}
-	// Otherwise, it's an ecosystem name
-	return normalizeEcosystem(from), "", LLMBuilderNone
+	return strings.ToLower(from), ""
 }
 
 // normalizeEcosystem converts user-friendly ecosystem names to internal identifiers
@@ -216,125 +174,30 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Parse the --from flag
-	builderName, sourceArg, llmType := parseFromFlag(createFrom)
-	isLLMBuilder := llmType != LLMBuilderNone
+	builderName, sourceArg := parseFromFlag(createFrom)
 
-	// Handle --skip-validation flag (only applies to LLM builders)
+	// Normalize ecosystem names (e.g., "cargo" -> "crates.io", "pip" -> "pypi")
+	builderName = normalizeEcosystem(builderName)
+
+	// Handle --skip-validation flag
 	skipValidation := false
 	if createSkipValidation {
-		if !isLLMBuilder {
-			fmt.Fprintln(os.Stderr, "Warning: --skip-validation has no effect for non-LLM sources")
-		} else {
-			// Require explicit consent for skipping validation
-			if !confirmSkipValidation() {
-				fmt.Fprintln(os.Stderr, "Aborted.")
-				exitWithCode(ExitGeneral)
-			}
-			skipValidation = true
+		// Require explicit consent for skipping validation
+		if !confirmSkipValidation() {
+			fmt.Fprintln(os.Stderr, "Aborted.")
+			exitWithCode(ExitGeneral)
 		}
+		skipValidation = true
 	}
 
-	// Initialize builder registry
+	// Initialize builder registry with all builders
 	builderRegistry := builders.NewRegistry()
 	builderRegistry.Register(builders.NewCargoBuilder(nil))
 	builderRegistry.Register(builders.NewGemBuilder(nil))
 	builderRegistry.Register(builders.NewPyPIBuilder(nil))
 	builderRegistry.Register(builders.NewNpmBuilder(nil))
-
-	// For LLM builders, check LLM budget and rate limits before proceeding
-	var stateManager *install.StateManager
-	var userCfg *userconfig.Config
-	if isLLMBuilder {
-		// Load user config for settings
-		var err error
-		userCfg, err = userconfig.Load()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Warning: failed to load user config: %v\n", err)
-			// Continue with defaults
-			userCfg = userconfig.DefaultConfig()
-		}
-
-		// Check if LLM is enabled
-		if !userCfg.LLMEnabled() {
-			fmt.Fprintln(os.Stderr, "Error: LLM features are disabled")
-			fmt.Fprintln(os.Stderr, "To enable: tsuku config set llm.enabled true")
-			exitWithCode(ExitGeneral)
-		}
-
-		// Initialize state manager
-		cfg, err := config.DefaultConfig()
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
-			exitWithCode(ExitGeneral)
-		}
-		stateManager = install.NewStateManager(cfg)
-
-		// Get limit settings
-		hourlyLimit := userCfg.LLMHourlyRateLimit()
-		dailyBudget := userCfg.LLMDailyBudget()
-
-		// Check budget and rate limits
-		allowed, reason := stateManager.CanGenerate(hourlyLimit, dailyBudget)
-		if !allowed {
-			// Format error message based on the reason
-			if strings.Contains(reason, "budget") {
-				spent := stateManager.DailySpent()
-				fmt.Fprintf(os.Stderr, "Error: daily LLM budget exhausted ($%.2f spent today)\n", spent)
-				fmt.Fprintln(os.Stderr, "Budget resets at midnight. To adjust: tsuku config set llm.daily_budget 10.0")
-			} else {
-				fmt.Fprintf(os.Stderr, "Error: %s\n", reason)
-				fmt.Fprintln(os.Stderr)
-				fmt.Fprintln(os.Stderr, "To increase the limit:")
-				fmt.Fprintln(os.Stderr, "  tsuku config set llm.hourly_rate_limit 20")
-				fmt.Fprintln(os.Stderr)
-				fmt.Fprintf(os.Stderr, "Wait time: %s\n", formatWaitTime(stateManager))
-			}
-			exitWithCode(ExitGeneral)
-		}
-	}
-
-	// Register LLM builders (may fail if ANTHROPIC_API_KEY not set)
-	if llmType == LLMBuilderGitHub {
-		var opts []builders.GitHubReleaseBuilderOption
-
-		// Set up validation executor unless --skip-validation was confirmed
-		if !skipValidation {
-			detector := validate.NewRuntimeDetector()
-			predownloader := validate.NewPreDownloader()
-			executor := validate.NewExecutor(detector, predownloader)
-			opts = append(opts, builders.WithExecutor(executor))
-		}
-
-		if !quietFlag {
-			opts = append(opts, builders.WithProgressReporter(&cliProgressReporter{out: os.Stdout}))
-		}
-		ghBuilder, err := builders.NewGitHubReleaseBuilder(context.Background(), opts...)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			exitWithCode(ExitDependencyFailed)
-		}
-		builderRegistry.Register(ghBuilder)
-	} else if llmType == LLMBuilderHomebrew {
-		var opts []builders.HomebrewBuilderOption
-
-		// Set up validation executor unless --skip-validation was confirmed
-		if !skipValidation {
-			detector := validate.NewRuntimeDetector()
-			predownloader := validate.NewPreDownloader()
-			executor := validate.NewExecutor(detector, predownloader)
-			opts = append(opts, builders.WithHomebrewExecutor(executor))
-		}
-
-		if !quietFlag {
-			opts = append(opts, builders.WithHomebrewProgressReporter(&cliProgressReporter{out: os.Stdout}))
-		}
-		hbBuilder, err := builders.NewHomebrewBuilder(context.Background(), opts...)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			exitWithCode(ExitDependencyFailed)
-		}
-		builderRegistry.Register(hbBuilder)
-	}
+	builderRegistry.Register(builders.NewGitHubReleaseBuilder())
+	builderRegistry.Register(builders.NewHomebrewBuilder())
 
 	// Get the builder
 	builder, ok := builderRegistry.Get(builderName)
@@ -351,8 +214,62 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	ctx := context.Background()
 
+	// For LLM builders, load config and state tracker for initialization
+	var stateManager *install.StateManager
+	var userCfg *userconfig.Config
+	if builder.RequiresLLM() {
+		// Load user config for LLM settings
+		var err error
+		userCfg, err = userconfig.Load()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to load user config: %v\n", err)
+			userCfg = userconfig.DefaultConfig()
+		}
+
+		// Initialize state manager for rate limit tracking
+		cfg, err := config.DefaultConfig()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
+			exitWithCode(ExitGeneral)
+		}
+		stateManager = install.NewStateManager(cfg)
+	}
+
+	// Initialize the builder
+	var progressReporter builders.ProgressReporter
+	if !quietFlag {
+		progressReporter = &cliProgressReporter{out: os.Stdout}
+	}
+
+	initOpts := &builders.InitOptions{
+		SkipValidation:   skipValidation,
+		ProgressReporter: progressReporter,
+		LLMConfig:        userCfg,
+		LLMStateTracker:  stateManager,
+	}
+
+	if err := builder.Initialize(ctx, initOpts); err != nil {
+		// Check if this is a confirmable error (rate limit, budget exceeded)
+		if confirmErr, ok := err.(builders.ConfirmableError); ok {
+			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+			if confirmWithUser(confirmErr.ConfirmationPrompt()) {
+				// Retry with ForceInit to bypass rate limit checks
+				initOpts.ForceInit = true
+				if err := builder.Initialize(ctx, initOpts); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+					exitWithCode(ExitDependencyFailed)
+				}
+			} else {
+				exitWithCode(ExitGeneral)
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			exitWithCode(ExitDependencyFailed)
+		}
+	}
+
 	// For ecosystem builders, check toolchain and package existence
-	if !isLLMBuilder {
+	if !builder.RequiresLLM() {
 		// Check toolchain availability before making API calls
 		if err := toolchain.CheckAvailable(builderName); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -373,16 +290,119 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Build the recipe
 	var sourceDisplay string
-	switch llmType {
-	case LLMBuilderGitHub:
-		sourceDisplay = fmt.Sprintf("github:%s", sourceArg)
-	case LLMBuilderHomebrew:
-		sourceDisplay = fmt.Sprintf("homebrew:%s", sourceArg)
-	default:
+	if sourceArg != "" {
+		sourceDisplay = fmt.Sprintf("%s:%s", builderName, sourceArg)
+	} else {
 		sourceDisplay = builderName
 	}
 	printInfof("Creating recipe for %s from %s...\n", toolName, sourceDisplay)
 
+	// Get recipes directory early (needed for both paths)
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
+	// For Homebrew builder, use BuildWithDependencies to discover and generate all needed recipes
+	if builderName == "homebrew" {
+		hbBuilder, ok := builder.(*builders.HomebrewBuilder)
+		if !ok {
+			fmt.Fprintf(os.Stderr, "Error: unexpected builder type\n")
+			exitWithCode(ExitGeneral)
+		}
+
+		// Create confirmation function that respects --yes flag
+		confirmFunc := func(req *builders.ConfirmationRequest) bool {
+			return confirmDependencyTree(req, createAutoApprove)
+		}
+
+		results, err := hbBuilder.BuildWithDependencies(ctx, builders.BuildRequest{
+			Package:   toolName,
+			SourceArg: sourceArg,
+		}, confirmFunc)
+
+		if err == builders.ErrUserCanceled {
+			printInfo("Canceled.")
+			return
+		}
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error building recipes: %v\n", err)
+			exitWithCode(ExitGeneral)
+		}
+
+		// Handle case where all recipes already exist
+		if len(results) == 0 {
+			printInfo("All recipes already exist. Nothing to generate.")
+			printInfo()
+			printInfo("To install, run:")
+			printInfof("  tsuku install %s\n", toolName)
+			return
+		}
+
+		// Write all generated recipes (costs are recorded by builder internally)
+		var totalCost float64
+		for _, result := range results {
+			// Track cost for display (recording already done by builder)
+			cost := result.Cost
+			if cost == 0 {
+				cost = defaultLLMCostEstimate
+			}
+			totalCost += cost
+
+			// Add validation metadata if skipped
+			if result.ValidationSkipped {
+				result.Recipe.Metadata.LLMValidation = "skipped"
+			}
+
+			// Check if recipe already exists
+			recipePath := filepath.Join(cfg.RecipesDir, result.Recipe.Metadata.Name+".toml")
+			if _, err := os.Stat(recipePath); err == nil && !createForce {
+				fmt.Fprintf(os.Stderr, "Error: recipe already exists at %s\n", recipePath)
+				fmt.Fprintf(os.Stderr, "Use --force to overwrite\n")
+				exitWithCode(ExitGeneral)
+			}
+
+			// Write the recipe
+			if err := recipe.WriteRecipe(result.Recipe, recipePath); err != nil {
+				fmt.Fprintf(os.Stderr, "Error writing recipe: %v\n", err)
+				exitWithCode(ExitGeneral)
+			}
+
+			printInfof("Recipe created: %s\n", recipePath)
+		}
+
+		// Display total cost
+		if stateManager != nil && userCfg != nil {
+			dailySpent := stateManager.DailySpent()
+			dailyBudget := userCfg.LLMDailyBudget()
+
+			if dailyBudget > 0 {
+				printInfof("\nTotal cost: ~$%.2f (today: $%.2f of $%.2f budget)\n",
+					totalCost, dailySpent, dailyBudget)
+			} else {
+				printInfof("\nTotal cost: ~$%.2f (today: $%.2f)\n",
+					totalCost, dailySpent)
+			}
+		}
+
+		// Check for any validation-skipped recipes
+		for _, result := range results {
+			if result.ValidationSkipped {
+				printInfo()
+				fmt.Fprintln(os.Stderr, "WARNING: Some recipes were NOT validated in a container.")
+				fmt.Fprintln(os.Stderr, "The recipes may have errors. Review before installing.")
+				break
+			}
+		}
+
+		printInfo()
+		printInfo("To install, run:")
+		printInfof("  tsuku install %s\n", toolName)
+		return
+	}
+
+	// Non-Homebrew builders: use single Build call
 	result, err := builder.Build(ctx, builders.BuildRequest{
 		Package:   toolName,
 		SourceArg: sourceArg,
@@ -392,29 +412,10 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// Record LLM usage for successful LLM builds (includes cost tracking)
-	if isLLMBuilder && stateManager != nil {
-		// Use actual cost from build result if available, otherwise fall back to estimate
-		cost := result.Cost
-		if cost == 0 {
-			cost = defaultLLMCostEstimate
-		}
-		if err := stateManager.RecordGeneration(cost); err != nil {
-			// Non-fatal: log warning but continue
-			fmt.Fprintf(os.Stderr, "Warning: failed to record LLM usage: %v\n", err)
-		}
-	}
-
 	// Add llm_validation metadata if validation was skipped
+	// (cost recording is handled by builder internally)
 	if result.ValidationSkipped {
 		result.Recipe.Metadata.LLMValidation = "skipped"
-	}
-
-	// Get recipes directory
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
-		exitWithCode(ExitGeneral)
 	}
 
 	recipePath := filepath.Join(cfg.RecipesDir, toolName+".toml")
@@ -427,7 +428,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// For LLM builders, show preview and prompt for approval (unless --yes)
-	if isLLMBuilder && !createAutoApprove {
+	if builder.RequiresLLM() && !createAutoApprove {
 		fmt.Println() // Blank line after "Creating recipe..." message
 		approved, err := previewRecipe(result.Recipe, result)
 		if err != nil {
@@ -455,7 +456,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	printInfof("Source: %s\n", result.Source)
 
 	// Display cost for LLM builds
-	if isLLMBuilder && stateManager != nil && userCfg != nil {
+	if builder.RequiresLLM() && stateManager != nil && userCfg != nil {
 		dailySpent := stateManager.DailySpent()
 		dailyBudget := userCfg.LLMDailyBudget()
 
@@ -572,6 +573,43 @@ func promptForApproval(r *recipe.Recipe) (bool, error) {
 			fmt.Println("Invalid input. Please enter 'v', 'i', or 'c'.")
 		}
 	}
+}
+
+// confirmDependencyTree displays the dependency tree and asks for confirmation.
+// Returns true if the user approves, false if canceled.
+// If autoApprove is true, shows the tree but skips the prompt.
+func confirmDependencyTree(req *builders.ConfirmationRequest, autoApprove bool) bool {
+	fmt.Println()
+	fmt.Println("Dependency tree:")
+	fmt.Println(req.FormattedTree)
+	fmt.Println()
+
+	if len(req.AlreadyHave) > 0 {
+		fmt.Printf("Already have recipes for: %s\n", strings.Join(req.AlreadyHave, ", "))
+	}
+
+	if len(req.ToGenerate) == 0 {
+		fmt.Println("All recipes already exist. Nothing to generate.")
+		return true
+	}
+
+	fmt.Printf("Will generate %d recipe(s): %s\n", len(req.ToGenerate), strings.Join(req.ToGenerate, ", "))
+	fmt.Printf("Estimated cost: $%.2f\n", req.EstimatedCost)
+	fmt.Println()
+
+	if autoApprove {
+		return true
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Proceed? [y/n] ")
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return false
+	}
+
+	input = strings.TrimSpace(strings.ToLower(input))
+	return input == "y" || input == "yes"
 }
 
 // extractDownloadURLs returns download URLs from the recipe.

@@ -97,4 +97,5 @@ func init() {
 	Register(&GitHubFileAction{})
 	Register(&HashiCorpReleaseAction{})
 	Register(&HomebrewBottleAction{})
+	Register(&HomebrewSourceAction{})
 }

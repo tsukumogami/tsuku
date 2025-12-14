@@ -14,6 +14,7 @@ func TestIsDecomposable(t *testing.T) {
 		"github_file",
 		"download_archive",
 		"hashicorp_release",
+		"homebrew_source",
 	}
 
 	for _, name := range compositeActions {

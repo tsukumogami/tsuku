@@ -376,6 +376,17 @@ func isValidFeatureName(feature string) bool {
 		return false
 	}
 
+	// Security: reject path traversal and absolute paths
+	if strings.Contains(feature, "..") || strings.HasPrefix(feature, "/") {
+		return false
+	}
+
+	// Limit slash depth to prevent abuse (namespaced features typically have one slash)
+	slashCount := strings.Count(feature, "/")
+	if slashCount > 2 {
+		return false
+	}
+
 	for _, c := range feature {
 		if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
 			(c >= '0' && c <= '9') || c == '-' || c == '_' || c == '/') {

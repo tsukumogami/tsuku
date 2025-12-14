@@ -2475,24 +2475,34 @@ func TestHomebrewBuilder_buildSourceSteps_Autotools(t *testing.T) {
 		VerifyCommand: "jq --version",
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "jq")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
 
-	// Should have 3 steps: github_archive, configure_make, install_binaries
+	// Should have 3 steps: homebrew_source, configure_make, install_binaries
 	if len(steps) != 3 {
 		t.Errorf("buildSourceSteps() returned %d steps, want 3", len(steps))
 	}
 
-	if steps[0].Action != "github_archive" {
-		t.Errorf("steps[0].Action = %s, want github_archive", steps[0].Action)
+	if steps[0].Action != "homebrew_source" {
+		t.Errorf("steps[0].Action = %s, want homebrew_source", steps[0].Action)
 	}
 	if steps[1].Action != "configure_make" {
 		t.Errorf("steps[1].Action = %s, want configure_make", steps[1].Action)
 	}
 	if steps[2].Action != "install_binaries" {
 		t.Errorf("steps[2].Action = %s, want install_binaries", steps[2].Action)
+	}
+
+	// Verify homebrew_source step has correct formula
+	if formula, ok := steps[0].Params["formula"].(string); !ok || formula != "jq" {
+		t.Errorf("homebrew_source formula = %v, want jq", steps[0].Params["formula"])
+	}
+
+	// Verify source_dir is "." (not a placeholder)
+	if srcDir, ok := steps[1].Params["source_dir"].(string); !ok || srcDir != "." {
+		t.Errorf("configure_make source_dir = %v, want .", steps[1].Params["source_dir"])
 	}
 }
 
@@ -2505,11 +2515,12 @@ func TestHomebrewBuilder_buildSourceSteps_CMake(t *testing.T) {
 		Executables: []string{"mytool"},
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "mytool")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
 
+	// steps[0]=homebrew_source, steps[1]=cmake_build
 	if steps[1].Action != "cmake_build" {
 		t.Errorf("steps[1].Action = %s, want cmake_build", steps[1].Action)
 	}
@@ -2523,11 +2534,12 @@ func TestHomebrewBuilder_buildSourceSteps_Cargo(t *testing.T) {
 		Executables: []string{"rg"},
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "ripgrep")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
 
+	// steps[0]=homebrew_source, steps[1]=cargo_build
 	if steps[1].Action != "cargo_build" {
 		t.Errorf("steps[1].Action = %s, want cargo_build", steps[1].Action)
 	}
@@ -2541,11 +2553,12 @@ func TestHomebrewBuilder_buildSourceSteps_Go(t *testing.T) {
 		Executables: []string{"gh"},
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "gh")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
 
+	// steps[0]=homebrew_source, steps[1]=go_build
 	if steps[1].Action != "go_build" {
 		t.Errorf("steps[1].Action = %s, want go_build", steps[1].Action)
 	}
@@ -2559,11 +2572,12 @@ func TestHomebrewBuilder_buildSourceSteps_Make(t *testing.T) {
 		Executables: []string{"tool"},
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "tool")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
 
+	// steps[0]=homebrew_source, steps[1]=configure_make
 	if steps[1].Action != "configure_make" {
 		t.Errorf("steps[1].Action = %s, want configure_make", steps[1].Action)
 	}
@@ -2583,7 +2597,7 @@ func TestHomebrewBuilder_buildSourceSteps_Custom(t *testing.T) {
 		Executables: []string{"tool"},
 	}
 
-	_, err := b.buildSourceSteps(data)
+	_, err := b.buildSourceSteps(data, "tool")
 	if err == nil {
 		t.Error("expected error for custom build system")
 	}
@@ -2593,17 +2607,21 @@ func TestHomebrewBuilder_generateSourceRecipeOutput(t *testing.T) {
 	b := &HomebrewBuilder{}
 
 	formulaInfo := &homebrewFormulaInfo{
-		Name:        "jq",
-		Description: "Lightweight JSON processor",
-		Homepage:    "https://jqlang.github.io/jq/",
+		Name:              "jq",
+		Description:       "Lightweight JSON processor",
+		Homepage:          "https://jqlang.github.io/jq/",
+		BuildDependencies: []string{"autoconf", "automake"},
+		Dependencies:      []string{"oniguruma"},
 	}
 	formulaInfo.Versions.Stable = "1.7.1"
+	formulaInfo.URLs.Stable.URL = "https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-1.7.1.tar.gz"
+	formulaInfo.URLs.Stable.Checksum = "abc123"
 
 	data := &sourceRecipeData{
-		BuildSystem:       BuildSystemAutotools,
-		Executables:       []string{"jq"},
-		VerifyCommand:     "jq --version",
-		BuildDependencies: []string{"autoconf", "automake"},
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"jq"},
+		VerifyCommand: "jq --version",
+		// Note: BuildDependencies in data is ignored - we use formula info directly
 	}
 
 	recipe, err := b.generateSourceRecipeOutput("jq", formulaInfo, data)
@@ -2620,8 +2638,22 @@ func TestHomebrewBuilder_generateSourceRecipeOutput(t *testing.T) {
 	if recipe.Verify.Command != "jq --version" {
 		t.Errorf("recipe.Verify.Command = %s, want jq --version", recipe.Verify.Command)
 	}
-	if len(recipe.Metadata.Dependencies) != 2 {
-		t.Errorf("recipe.Metadata.Dependencies = %v, want [autoconf, automake]", recipe.Metadata.Dependencies)
+
+	// Dependencies should come from formula info (build + runtime), not LLM
+	// Expected: [autoconf, automake, oniguruma]
+	if len(recipe.Metadata.Dependencies) != 3 {
+		t.Errorf("recipe.Metadata.Dependencies = %v, want 3 deps (build + runtime)", recipe.Metadata.Dependencies)
+	}
+
+	// Verify steps use homebrew_source which fetches URL/checksum at plan time
+	if len(recipe.Steps) < 1 {
+		t.Fatalf("recipe should have at least 1 step, got %d", len(recipe.Steps))
+	}
+	if recipe.Steps[0].Action != "homebrew_source" {
+		t.Errorf("first step should be homebrew_source, got %s", recipe.Steps[0].Action)
+	}
+	if formula, ok := recipe.Steps[0].Params["formula"].(string); !ok || formula != "jq" {
+		t.Errorf("homebrew_source formula = %v, want jq", recipe.Steps[0].Params["formula"])
 	}
 }
 
@@ -2631,6 +2663,7 @@ func TestHomebrewBuilder_generateSourceRecipeOutput_NoExecutables(t *testing.T) 
 	formulaInfo := &homebrewFormulaInfo{
 		Name: "jq",
 	}
+	formulaInfo.URLs.Stable.URL = "https://example.com/jq.tar.gz"
 
 	data := &sourceRecipeData{
 		BuildSystem:   BuildSystemAutotools,
@@ -3227,12 +3260,12 @@ func TestBuildSourceSteps_WithInreplace(t *testing.T) {
 		},
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "jq")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
 
-	// Should have: github_archive, 2x text_replace, configure_make, install_binaries
+	// Should have: homebrew_source, 2x text_replace, configure_make, install_binaries
 	// = 5 steps total
 	if len(steps) != 5 {
 		t.Errorf("buildSourceSteps() returned %d steps, want 5", len(steps))
@@ -3269,7 +3302,7 @@ func TestHomebrewBuilder_buildSourceSteps_WithPlatformSteps(t *testing.T) {
 		},
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "mytool")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
@@ -3313,7 +3346,7 @@ func TestHomebrewBuilder_buildSourceSteps_ArchConditionals(t *testing.T) {
 		},
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "mytool")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
@@ -3406,6 +3439,7 @@ func TestGenerateSourceRecipeOutput_WithResourcesAndPatches(t *testing.T) {
 		Homepage:    "https://neovim.io",
 	}
 	formulaInfo.Versions.Stable = "0.10.0"
+	formulaInfo.URLs.Stable.URL = "https://github.com/neovim/neovim/archive/refs/tags/v0.10.0.tar.gz"
 
 	data := &sourceRecipeData{
 		BuildSystem:   BuildSystemCMake,

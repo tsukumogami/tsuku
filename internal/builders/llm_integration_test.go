@@ -53,9 +53,9 @@ func TestLLMGroundTruth(t *testing.T) {
 
 	// Create the builder with default factory (auto-detects from env)
 	ctx := context.Background()
-	builder, err := NewGitHubReleaseBuilder(ctx)
-	if err != nil {
-		t.Fatalf("Failed to create GitHubReleaseBuilder: %v", err)
+	builder := NewGitHubReleaseBuilder()
+	if err := builder.Initialize(ctx, &InitOptions{SkipValidation: false}); err != nil {
+		t.Fatalf("Failed to initialize GitHubReleaseBuilder: %v", err)
 	}
 
 	// Find the recipes directory (relative to test file)
