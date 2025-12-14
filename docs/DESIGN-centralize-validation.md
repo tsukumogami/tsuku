@@ -134,9 +134,9 @@ var ActionDependencies = map[string]ActionDeps{
 }
 ```
 
-**Key Implication:** The `BuildTools` field proposed in earlier versions of this design is **obsolete**. Build tools are already handled by `ActionDependencies.InstallTime`. When `tsuku install --plan` runs in a container, tsuku's normal dependency resolution installs them.
+Build tools are handled by `ActionDependencies.InstallTime`. When `tsuku install --plan` runs in a container, tsuku's normal dependency resolution installs them.
 
-The only new metadata this design needs to add is **`RequiresNetwork`** - whether the action needs network access during execution. Everything else already exists:
+This design adds **`RequiresNetwork`** - whether the action needs network access during execution. Everything else already exists:
 
 | Need | Source |
 |------|--------|
