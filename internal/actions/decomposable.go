@@ -70,6 +70,7 @@ var primitives = map[string]bool{
 	"link_dependencies": true,
 	"install_libraries": true,
 	"apply_patch_file":  true,
+	"text_replace":      true,
 	// Ecosystem primitives - have residual non-determinism
 	"cargo_build":    true,
 	"cmake_build":    true,
@@ -97,6 +98,9 @@ var deterministicActions = map[string]bool{
 	"link_dependencies": true,
 	"install_libraries": true,
 	"apply_patch_file":  true,
+	"text_replace":      true,
+	// Composite actions that decompose to only deterministic primitives
+	"apply_patch": true,
 	// Ecosystem primitives - NOT deterministic due to compiler versions,
 	// native extensions, platform-specific behavior, etc.
 	"cargo_build":    false,
@@ -105,6 +109,7 @@ var deterministicActions = map[string]bool{
 	"cpan_install":   false,
 	"gem_exec":       false,
 	"go_build":       false,
+	"nix_realize":    false,
 	"npm_exec":       false,
 	"pip_install":    false,
 }

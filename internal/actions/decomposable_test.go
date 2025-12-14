@@ -55,15 +55,17 @@ func TestIsPrimitive(t *testing.T) {
 		"set_rpath",
 		"link_dependencies",
 		"install_libraries",
-		"cargo_build",    // Ecosystem primitive
-		"cmake_build",    // Ecosystem primitive
-		"configure_make", // Ecosystem primitive
-		"cpan_install",   // Ecosystem primitive
-		"gem_exec",       // Ecosystem primitive
-		"go_build",       // Ecosystem primitive
-		"nix_realize",    // Ecosystem primitive
-		"npm_exec",       // Ecosystem primitive
-		"pip_install",    // Ecosystem primitive
+		"apply_patch_file", // Core primitive
+		"text_replace",     // Core primitive
+		"cargo_build",      // Ecosystem primitive
+		"cmake_build",      // Ecosystem primitive
+		"configure_make",   // Ecosystem primitive
+		"cpan_install",     // Ecosystem primitive
+		"gem_exec",         // Ecosystem primitive
+		"go_build",         // Ecosystem primitive
+		"nix_realize",      // Ecosystem primitive
+		"npm_exec",         // Ecosystem primitive
+		"pip_install",      // Ecosystem primitive
 	}
 
 	for _, name := range primitives {
@@ -96,9 +98,9 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 18 primitives (8 core + 10 ecosystem)
-	if len(prims) != 18 {
-		t.Errorf("len(Primitives()) = %d, want 18", len(prims))
+	// Should have exactly 19 primitives (10 core + 9 ecosystem)
+	if len(prims) != 19 {
+		t.Errorf("len(Primitives()) = %d, want 19", len(prims))
 	}
 
 	// Sort for deterministic comparison
@@ -123,6 +125,7 @@ func TestPrimitives(t *testing.T) {
 		"pip_install",
 		"set_env",
 		"set_rpath",
+		"text_replace",
 	}
 
 	for i, name := range expected {
@@ -488,6 +491,8 @@ func TestIsDeterministic(t *testing.T) {
 		"set_rpath",
 		"link_dependencies",
 		"install_libraries",
+		"apply_patch_file",
+		"text_replace",
 	}
 
 	for _, name := range deterministicActions {
