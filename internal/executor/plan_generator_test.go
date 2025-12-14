@@ -1572,3 +1572,241 @@ func TestGeneratePlan_PreDownloaderAdapter(t *testing.T) {
 		}
 	}
 }
+
+func TestInsertPatchSteps(t *testing.T) {
+	tests := []struct {
+		name        string
+		steps       []ResolvedStep
+		patches     []recipe.Patch
+		wantActions []string // Expected action sequence
+	}{
+		{
+			name: "insert single patch after extract",
+			steps: []ResolvedStep{
+				{Action: "download"},
+				{Action: "extract"},
+				{Action: "chmod"},
+				{Action: "install_binaries"},
+			},
+			patches: []recipe.Patch{
+				{URL: "https://example.com/fix.patch", Strip: 1},
+			},
+			wantActions: []string{"download", "extract", "apply_patch", "chmod", "install_binaries"},
+		},
+		{
+			name: "insert multiple patches after extract",
+			steps: []ResolvedStep{
+				{Action: "download"},
+				{Action: "extract"},
+				{Action: "configure_make"},
+			},
+			patches: []recipe.Patch{
+				{URL: "https://example.com/first.patch"},
+				{Data: "--- a/file.c\n+++ b/file.c\n", Strip: 1},
+			},
+			wantActions: []string{"download", "extract", "apply_patch", "apply_patch", "configure_make"},
+		},
+		{
+			name: "insert after last extract when multiple extracts",
+			steps: []ResolvedStep{
+				{Action: "download"},
+				{Action: "extract"},
+				{Action: "download"},
+				{Action: "extract"},
+				{Action: "chmod"},
+			},
+			patches: []recipe.Patch{
+				{URL: "https://example.com/fix.patch"},
+			},
+			wantActions: []string{"download", "extract", "download", "extract", "apply_patch", "chmod"},
+		},
+		{
+			name: "no extract step - insert at beginning",
+			steps: []ResolvedStep{
+				{Action: "download"},
+				{Action: "chmod"},
+			},
+			patches: []recipe.Patch{
+				{URL: "https://example.com/fix.patch"},
+			},
+			wantActions: []string{"apply_patch", "download", "chmod"},
+		},
+		{
+			name:  "empty steps",
+			steps: []ResolvedStep{},
+			patches: []recipe.Patch{
+				{URL: "https://example.com/fix.patch"},
+			},
+			wantActions: []string{"apply_patch"},
+		},
+		{
+			name: "no patches",
+			steps: []ResolvedStep{
+				{Action: "download"},
+				{Action: "extract"},
+			},
+			patches:     []recipe.Patch{},
+			wantActions: []string{"download", "extract"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := insertPatchSteps(tt.steps, tt.patches)
+
+			if len(result) != len(tt.wantActions) {
+				t.Errorf("insertPatchSteps() returned %d steps, want %d", len(result), len(tt.wantActions))
+				return
+			}
+
+			for i, want := range tt.wantActions {
+				if result[i].Action != want {
+					t.Errorf("step[%d].Action = %q, want %q", i, result[i].Action, want)
+				}
+			}
+		})
+	}
+}
+
+func TestInsertPatchSteps_Parameters(t *testing.T) {
+	// Test that patch parameters are correctly converted to step params
+	steps := []ResolvedStep{
+		{Action: "extract"},
+	}
+
+	patches := []recipe.Patch{
+		{
+			URL:    "https://example.com/fix.patch",
+			Strip:  2,
+			Subdir: "src",
+		},
+		{
+			Data:  "--- a/main.c\n+++ b/main.c\n@@ -1 +1 @@\n-old\n+new",
+			Strip: 1,
+		},
+	}
+
+	result := insertPatchSteps(steps, patches)
+
+	if len(result) != 3 {
+		t.Fatalf("expected 3 steps, got %d", len(result))
+	}
+
+	// Check first patch (URL-based)
+	p1 := result[1]
+	if p1.Action != "apply_patch" {
+		t.Errorf("step[1].Action = %q, want %q", p1.Action, "apply_patch")
+	}
+	if url, _ := p1.Params["url"].(string); url != "https://example.com/fix.patch" {
+		t.Errorf("step[1].Params[url] = %q, want %q", url, "https://example.com/fix.patch")
+	}
+	if strip, _ := p1.Params["strip"].(int); strip != 2 {
+		t.Errorf("step[1].Params[strip] = %d, want %d", strip, 2)
+	}
+	if subdir, _ := p1.Params["subdir"].(string); subdir != "src" {
+		t.Errorf("step[1].Params[subdir] = %q, want %q", subdir, "src")
+	}
+	if _, hasData := p1.Params["data"]; hasData {
+		t.Error("step[1] should not have data param")
+	}
+
+	// Check second patch (inline data)
+	p2 := result[2]
+	if p2.Action != "apply_patch" {
+		t.Errorf("step[2].Action = %q, want %q", p2.Action, "apply_patch")
+	}
+	if _, hasURL := p2.Params["url"]; hasURL {
+		t.Error("step[2] should not have url param")
+	}
+	if data, _ := p2.Params["data"].(string); data == "" {
+		t.Error("step[2].Params[data] should not be empty")
+	}
+	if strip, _ := p2.Params["strip"].(int); strip != 1 {
+		t.Errorf("step[2].Params[strip] = %d, want %d", strip, 1)
+	}
+}
+
+func TestInsertPatchSteps_Evaluable(t *testing.T) {
+	// Test that patch steps are marked as evaluable and deterministic
+	steps := []ResolvedStep{
+		{Action: "extract"},
+	}
+
+	patches := []recipe.Patch{
+		{URL: "https://example.com/fix.patch"},
+	}
+
+	result := insertPatchSteps(steps, patches)
+
+	patchStep := result[1]
+	if !patchStep.Evaluable {
+		t.Error("patch step should be evaluable")
+	}
+	if !patchStep.Deterministic {
+		t.Error("patch step should be deterministic")
+	}
+}
+
+func TestGeneratePlan_WithPatches(t *testing.T) {
+	// Test that GeneratePlan correctly processes patches from recipe
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Patches: []recipe.Patch{
+			{
+				URL:   "https://example.com/fix.patch",
+				Strip: 1,
+			},
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "chmod",
+				Params: map[string]interface{}{
+					"files": []interface{}{"test"},
+				},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"binaries": []interface{}{"test"},
+				},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
+		OS:           "linux",
+		Arch:         "amd64",
+		RecipeSource: "test",
+	})
+
+	if err != nil {
+		t.Fatalf("GeneratePlan() error: %v", err)
+	}
+
+	// Find apply_patch step
+	foundPatch := false
+	for _, step := range plan.Steps {
+		if step.Action == "apply_patch" {
+			foundPatch = true
+			if url, _ := step.Params["url"].(string); url != "https://example.com/fix.patch" {
+				t.Errorf("apply_patch url = %q, want %q", url, "https://example.com/fix.patch")
+			}
+			break
+		}
+	}
+
+	if !foundPatch {
+		t.Error("expected apply_patch step in plan")
+	}
+}
