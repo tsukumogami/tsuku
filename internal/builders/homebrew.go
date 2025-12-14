@@ -578,6 +578,34 @@ func isValidHomebrewFormula(name string) bool {
 	return true
 }
 
+// isValidVerifyCommand checks if a verify command is safe to execute.
+// It rejects commands containing shell metacharacters that could enable injection.
+func isValidVerifyCommand(cmd string) error {
+	if cmd == "" {
+		return fmt.Errorf("verify command cannot be empty")
+	}
+
+	// Reject shell metacharacters that could enable command injection
+	dangerousChars := []string{";", "&&", "||", "|", "`", "$", "(", ")", "{", "}", "<", ">", "\n", "\r"}
+	for _, c := range dangerousChars {
+		if strings.Contains(cmd, c) {
+			return fmt.Errorf("verify command contains dangerous character %q", c)
+		}
+	}
+
+	// Reject commands that don't look like version checks
+	// Valid patterns: "tool --version", "tool -v", "tool -V", "tool version"
+	cmdLower := strings.ToLower(cmd)
+	hasVersionFlag := strings.Contains(cmdLower, "--version") ||
+		strings.Contains(cmdLower, "-v") ||
+		strings.Contains(cmdLower, "version")
+	if !hasVersionFlag {
+		return fmt.Errorf("verify command should check version (use --version, -v, or version subcommand)")
+	}
+
+	return nil
+}
+
 // getStringArg extracts a string argument from LLM tool call arguments.
 // If the key is missing, returns defaultVal. If the value is not a string, returns an error.
 func getStringArg(args map[string]interface{}, key string, defaultVal string) (string, error) {
@@ -997,8 +1025,8 @@ func validateSourceRecipeData(data *sourceRecipeData) error {
 	}
 
 	// Validate verify command
-	if data.VerifyCommand == "" {
-		return fmt.Errorf("extract_source_recipe requires 'verify_command' parameter")
+	if err := isValidVerifyCommand(data.VerifyCommand); err != nil {
+		return fmt.Errorf("extract_source_recipe: %w", err)
 	}
 
 	// Validate configure args (no shell metacharacters)
@@ -1411,8 +1439,9 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 		if len(recipeData.Executables) == 0 {
 			return "", nil, fmt.Errorf("extract_recipe requires at least one executable")
 		}
-		if recipeData.VerifyCommand == "" {
-			return "", nil, fmt.Errorf("extract_recipe requires verify_command")
+		// Validate verify command
+		if err := isValidVerifyCommand(recipeData.VerifyCommand); err != nil {
+			return "", nil, fmt.Errorf("extract_recipe: %w", err)
 		}
 		return "", &recipeData, nil
 
