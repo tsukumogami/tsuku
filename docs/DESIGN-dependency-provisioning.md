@@ -237,11 +237,14 @@ The unified model solves these problems:
 
 ### Compilers and Toolchains
 
-| Tool | Purpose | Homebrew Available | Priority |
-|------|---------|-------------------|----------|
-| gcc | C/C++ compiler | Yes | P0 |
-| clang/llvm | C/C++ compiler | Yes | P1 |
-| binutils | Linker, assembler | Yes | P0 |
+| Tool | Purpose | Source | Priority |
+|------|---------|--------|----------|
+| zig | C/C++ compiler (via zig cc) | GitHub release | P0 (default) |
+| gcc | C/C++ compiler | Homebrew bottle | P1 (fallback if zig edge cases) |
+| clang/llvm | C/C++ compiler | Homebrew bottle | P2 |
+| binutils | Linker, assembler | Homebrew bottle | P1 (if needed) |
+
+**Note**: Zig is the default compiler because it's a single relocatable binary. GCC can be added later if specific tools require it.
 
 ### Build Systems
 
@@ -286,21 +289,23 @@ Build actions declare their baseline requirements in the action dependency regis
 ```go
 var ActionDependencies = map[string]ActionDeps{
     "configure_make": {
-        InstallTime: []string{"make", "gcc", "pkg-config", "autoconf"},
+        InstallTime: []string{"make", "zig", "pkg-config"},
         Runtime:     nil,
     },
     "cmake_build": {
-        InstallTime: []string{"cmake", "make", "gcc", "pkg-config"},
+        InstallTime: []string{"cmake", "make", "zig", "pkg-config"},
         Runtime:     nil,
     },
     "meson_build": {
-        InstallTime: []string{"meson", "ninja", "gcc", "pkg-config"},
+        InstallTime: []string{"meson", "ninja", "zig", "pkg-config"},
         Runtime:     nil,
     },
 }
 ```
 
-When a recipe uses `configure_make`, tsuku automatically ensures gcc, make, pkg-config, and autoconf are installed.
+**Note**: `zig` provides the C/C++ compiler via `zig cc`. The existing `buildAutotoolsEnv()` in `util.go` already sets up CC/CXX to use zig when no system compiler is available.
+
+When a recipe uses `configure_make`, tsuku automatically ensures zig, make, and pkg-config are installed.
 
 ### Recipe-Level Library Dependencies
 
@@ -736,44 +741,47 @@ Each build essential must pass these tests on all 4 platforms:
 
 **Gate**: gdbm builds from source using tsuku-provided make on all 4 platforms.
 
-### Phase 3: gcc (Compiler)
+### Phase 3: Compiler Validation (zig)
 
-**Goal**: Validate GCC installation; enable compilation without system compiler.
+**Goal**: Validate compilation works without system compiler using tsuku-provided zig.
 
-**Build Essential**: `gcc` (GNU Compiler Collection)
+**Compiler Strategy**: Tsuku already provides zig as a C/C++ compiler fallback (implemented in `util.go`). We use zig instead of gcc from Homebrew bottles because:
+- Zig is a single binary (~50MB) vs gcc (~150MB+ with dependencies)
+- Zig relocates trivially (no RPATH complexity)
+- Already implemented and working
+- GCC can be added later if edge cases arise (some configure scripts check for "gcc" specifically)
 
 **Test Tool**: `m4` (macro processor, simple C program)
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `recipes/gcc.toml` using `homebrew_bottle` action |
-| 2 | Validate gcc bottle includes bundled deps (gmp, mpfr, libmpc, isl) |
-| 3 | Test relocation: verify gcc works from `$TSUKU_HOME/tools/gcc/bin/gcc` |
-| 4 | Implement `setup_build_env` action (sets CC, CXX, CPPFLAGS, LDFLAGS) |
-| 5 | Update `configure_make` to use tsuku gcc instead of system gcc |
-| 6 | Create `recipes/m4.toml` using `configure_make` with `dependencies = ["gcc", "make"]` |
-| 7 | CI: Build m4 from source using ONLY tsuku gcc/make |
-| 8 | CI: Run in minimal container with NO system gcc |
+| 1 | Verify zig recipe exists and installs correctly on all 4 platforms |
+| 2 | Create `recipes/m4.toml` using `configure_make` action |
+| 3 | CI: Build m4 from source in minimal container with NO system gcc |
+| 4 | Validate zig wrapper scripts work (`cc`, `c++` symlinks) |
+| 5 | Document any configure script edge cases that require real gcc |
 
-**Gate**: m4 compiles and runs on all 4 platforms using only tsuku-provided gcc and make.
+**Gate**: m4 compiles and runs on all 4 platforms using zig (no system compiler).
 
-### Phase 4: pkg-config (Library Discovery)
+**Future**: If edge cases accumulate, add `recipes/gcc.toml` using `homebrew_bottle` as alternative.
 
-**Goal**: Validate pkg-config; enable library detection in configure scripts.
+### Phase 4: pkg-config + Build Environment
 
-**Build Essential**: `pkg-config` (library discovery tool)
+**Goal**: Validate pkg-config and complete build environment setup.
+
+**Build Essentials**: `pkg-config` (library discovery), environment variables
 
 **Test Tool**: `ncurses` (terminal library, uses pkg-config for detection)
 
 | Step | Description |
 |------|-------------|
 | 1 | Create `recipes/pkg-config.toml` using `homebrew_bottle` action |
-| 2 | Validate pkg-config finds `.pc` files in `$TSUKU_HOME/tools/*/lib/pkgconfig` |
-| 3 | Update `setup_build_env` to set `PKG_CONFIG_PATH` |
+| 2 | Update `buildAutotoolsEnv()` to set `PKG_CONFIG_PATH` from tsuku deps |
+| 3 | Update `buildAutotoolsEnv()` to set `CPPFLAGS`, `LDFLAGS` for tsuku deps |
 | 4 | Create `recipes/ncurses.toml` using `configure_make` |
-| 5 | CI: Build ncurses using tsuku gcc/make/pkg-config |
+| 5 | CI: Build ncurses, verify pkg-config finds zlib |
 
-**Gate**: ncurses builds and pkg-config correctly reports its flags on all 4 platforms.
+**Gate**: ncurses builds and pkg-config correctly reports flags on all 4 platforms.
 
 ### Phase 5: openssl (Security Library)
 
@@ -882,13 +890,14 @@ Each build essential must pass these tests on all 4 platforms:
 ```
 Phase 1: zlib ──────────────────────────────────────────┐
 Phase 2: make ──────────────────────────────────────────┤
-Phase 3: gcc ───────────────────────────────────────────┤
+Phase 3: zig (compiler validation) ─────────────────────┤
+         m4 (test) ← zig, make                          │
 Phase 4: pkg-config ────────────────────────────────────┤
-         ncurses (test) ← gcc, make, pkg-config         │
+         ncurses (test) ← zig, make, pkg-config         │
 Phase 5: openssl ← zlib ────────────────────────────────┤
-         curl (test) ← gcc, make, zlib, openssl         │
+         curl (test) ← zig, make, zlib, openssl         │
 Phase 6: cmake ─────────────────────────────────────────┤
-         ninja (test) ← gcc, make, cmake                │
+         ninja (test) ← zig, make, cmake                │
 Phase 7: readline ← ncurses ────────────────────────────┤
          sqlite ← readline                              │
          git ← curl, zlib, openssl, expat ──────────────┘
