@@ -140,7 +140,7 @@ This design adds **`RequiresNetwork`** - whether the action needs network access
 
 | Need | Source |
 |------|--------|
-| Network requirements | **NEW** - `ActionValidationMetadata.RequiresNetwork` |
+| Network requirements | **NEW** - `NetworkValidator.RequiresNetwork()` interface method |
 | Determinism | Already exists - `deterministicActions` map |
 | Build tool dependencies | Already exists - `ActionDependencies.InstallTime` |
 | Runtime dependencies | Already exists - `ActionDependencies.Runtime` |
@@ -414,32 +414,32 @@ The following assumptions inform this design:
 
 ## Decision Outcome
 
-**Chosen: Option 1D (Structured Metadata Registry) + Option 2C (Separate ValidationRequirements Struct)**
+**Chosen: Option 1B (Interface Methods) + Option 2C (Separate ValidationRequirements Struct)**
 
 ### Summary
 
-We use a structured metadata registry to store action validation requirements, combined with a computed `ValidationRequirements` struct that derives container configuration from the plan. This approach follows established codebase patterns, requires no plan format changes, and enables standalone validation through a simple `ComputeValidationRequirements(plan)` function.
+Actions implement a `RequiresNetwork()` method that returns their network requirements. A computed `ValidationRequirements` struct derives container configuration from the plan by querying each action's method. This approach co-locates metadata with action code, provides compile-time enforcement, and aligns with a broader refactor to migrate existing static maps (`ActionDependencies`, `deterministicActions`) to interface methods (see #566).
 
 ### Rationale
 
-**Option 1D (Structured Metadata Registry)** was chosen because:
-- **Follows existing pattern**: The codebase already uses `ActionDependencies` map with a struct type. This is a proven, production-tested approach.
-- **Good migration path**: Can add entries incrementally without touching all actions at once.
-- **Single source of truth**: All validation metadata for an action lives in one place.
-- **Easy to extend**: Future metadata dimensions just add fields to the struct.
-- **Testing simplicity**: Simple map lookups are easy to test without mocking.
+**Option 1B (Interface Methods)** was chosen because:
+- **Single source of truth**: Metadata lives with the action code, not in a separate registry
+- **Compile-time enforcement**: Compiler ensures all actions implement required methods
+- **Self-documenting**: Look at an action to see its requirements
+- **Go-idiomatic**: Interfaces for capabilities is standard Go practice
+- **Consistency**: Aligns with #566 to refactor existing static maps to interfaces
 
 **Option 2C (Separate ValidationRequirements Struct)** was chosen because:
-- **Backwards compatible**: Works with existing plans without regeneration.
-- **Clean separation**: Validator doesn't need to understand plan internals beyond step actions.
-- **Independent invocation**: Any code with a plan can compute requirements.
-- **No plan format changes**: Avoids version bump and migration complexity.
+- **Backwards compatible**: Works with existing plans without regeneration
+- **Clean separation**: Validator doesn't need to understand plan internals beyond step actions
+- **Independent invocation**: Any code with a plan can compute requirements
+- **No plan format changes**: Avoids version bump and migration complexity
 
 **Alternatives rejected:**
 
 - **Option 1A (Separate Static Maps)**: Would scatter metadata across multiple maps, making it harder to ensure completeness and consistency.
-- **Option 1B (Interface Methods)**: Breaking change to Action interface, requires modifying 33+ action files, most returning default values.
 - **Option 1C (Action Struct Registration)**: All-or-nothing migration, larger refactor than necessary.
+- **Option 1D (Structured Metadata Registry)**: Keeps metadata separate from action code; inconsistent with direction established in #566.
 - **Option 2A (Plan Aggregate Fields)**: Requires plan format version bump; loses ability to work with existing plans.
 - **Option 2B (Per-Step Metadata)**: Requires plan format changes; adds complexity to plan generation for marginal benefit.
 
@@ -447,16 +447,16 @@ We use a structured metadata registry to store action validation requirements, c
 
 By choosing this approach, we accept:
 
-1. **Metadata separation from action code**: The validation requirements for an action live in `decomposable.go` rather than the action's own file. This is the same trade-off already made for `ActionDependencies` and `deterministicActions`.
+1. **Modify all action files**: Each action file needs a `RequiresNetwork()` method. Embedding a `BaseAction` with default implementation minimizes boilerplate.
 
-2. **Must remember to update registry**: Adding a new action requires updating the metadata map. However, this is one location rather than multiple scattered maps.
+2. **Need action instance to query**: Must look up action from registry to call method. This is acceptable since the action registry already exists.
 
-3. **Computation at validation time**: Requirements are computed from the plan each time rather than cached. This is acceptable because the computation is trivial (iterate steps, lookup metadata, aggregate).
+3. **Computation at validation time**: Requirements are computed from the plan each time rather than cached. This is acceptable because the computation is trivial (iterate steps, lookup action, call method).
 
 These trade-offs are acceptable because:
-- The existing codebase already uses this pattern successfully
-- The alternative (interface methods) has worse trade-offs (breaking changes, boilerplate)
-- Validation is not performance-critical (runs once per recipe)
+- Metadata co-location is more maintainable long-term
+- Boilerplate is minimal with embedding pattern
+- This aligns with broader refactor direction (#566)
 
 ## Solution Architecture
 
@@ -464,7 +464,7 @@ These trade-offs are acceptable because:
 
 The solution introduces a centralized validation system that derives container configuration from recipe/plan content. The system consists of three layers:
 
-1. **Action Metadata Layer**: Static registry mapping action names to validation requirements
+1. **Action Metadata Layer**: Interface methods on actions returning their requirements
 2. **Requirements Computation Layer**: Function that aggregates metadata from plan steps
 3. **Unified Validator**: Single entry point that consumes requirements and executes validation
 
@@ -481,8 +481,8 @@ The solution introduces a centralized validation system that derives container c
 │                    ┌──────────────────┴──────────────────┐          │
 │                    │                                      │          │
 │                    ▼                                      ▼          │
-│         ActionValidationMetadata              ValidationRequirements │
-│         (static registry)                     (computed struct)      │
+│         action.RequiresNetwork()              ValidationRequirements │
+│         (interface method)                    (computed struct)      │
 │                                                      │               │
 │                                                      ▼               │
 │                                              Validate(plan, reqs)    │
@@ -494,82 +494,63 @@ The solution introduces a centralized validation system that derives container c
 
 ### Components
 
-#### 1. ActionValidationMetadata Registry
+#### 1. NetworkValidator Interface
 
-Location: `internal/actions/validation_metadata.go`
+Location: `internal/actions/action.go`
 
-This registry adds only `RequiresNetwork` - the one piece of metadata not already tracked elsewhere. Build tools are handled by `ActionDependencies.InstallTime` (see [DESIGN-dependency-provisioning.md](DESIGN-dependency-provisioning.md)).
+Actions implement a `RequiresNetwork()` method to declare their network requirements. Build tools are handled by `ActionDependencies.InstallTime` (see [DESIGN-dependency-provisioning.md](DESIGN-dependency-provisioning.md)).
 
 ```go
-// ActionValidationMetadata describes network requirements for an action.
-// Build tools are NOT tracked here - they are handled by ActionDependencies.InstallTime.
-type ActionValidationMetadata struct {
-    // RequiresNetwork indicates whether this action needs network access during execution.
-    // Actions that fetch external dependencies (cargo_build, go_build) need network.
-    // Actions that work with cached/pre-downloaded content do not.
-    RequiresNetwork bool
+// NetworkValidator is implemented by actions that can declare network requirements.
+// Actions that fetch external dependencies (cargo_build, go_build) return true.
+// Actions that work with cached/pre-downloaded content return false.
+type NetworkValidator interface {
+    RequiresNetwork() bool
 }
 
-// actionValidationMetadata maps action names to their network requirements.
-var actionValidationMetadata = map[string]ActionValidationMetadata{
-    // Core primitives - work offline with cached content
-    "download":         {RequiresNetwork: false},
-    "extract":          {RequiresNetwork: false},
-    "chmod":            {RequiresNetwork: false},
-    "install_binaries": {RequiresNetwork: false},
-    "apply_patch_file": {RequiresNetwork: false},
-    "text_replace":     {RequiresNetwork: false},
-    "set_env":          {RequiresNetwork: false},
-    "set_rpath":        {RequiresNetwork: false},
+// BaseAction provides default implementations for optional interfaces.
+// Actions embed this to inherit defaults and override as needed.
+type BaseAction struct{}
 
-    // Build actions - source is cached, network not needed for build itself
-    "configure_make": {RequiresNetwork: false},
-    "cmake_build":    {RequiresNetwork: false},
+// RequiresNetwork returns false by default (most actions work offline).
+func (BaseAction) RequiresNetwork() bool { return false }
+```
 
-    // Ecosystem primitives - need network for dependency resolution
-    "cargo_build":   {RequiresNetwork: true},
-    "cargo_install": {RequiresNetwork: true},
-    "go_build":      {RequiresNetwork: true},
-    "go_install":    {RequiresNetwork: true},
-    "cpan_install":  {RequiresNetwork: true},
-    "npm_install":   {RequiresNetwork: true},
-    "pip_install":   {RequiresNetwork: true},
-    "gem_install":   {RequiresNetwork: true},
+#### 2. Action Implementations
 
-    // npm_exec - modules already installed via npm_install
-    "npm_exec": {RequiresNetwork: false},
-    "gem_exec": {RequiresNetwork: false},
+Each action implements `RequiresNetwork()` directly or inherits the default via embedding:
 
-    // System package managers - always need network
-    "apt_install":  {RequiresNetwork: true},
-    "yum_install":  {RequiresNetwork: true},
-    "brew_install": {RequiresNetwork: true},
-
-    // Run command - conservative default (may need network)
-    "run_command": {RequiresNetwork: true},
+```go
+// internal/actions/download.go
+type DownloadAction struct {
+    BaseAction  // inherits RequiresNetwork() = false
 }
 
-// GetActionValidationMetadata returns validation metadata for an action.
-func GetActionValidationMetadata(action string) ActionValidationMetadata {
-    return actionValidationMetadata[action]
+// internal/actions/cargo_build.go
+type CargoBuildAction struct{}
+
+func (CargoBuildAction) RequiresNetwork() bool { return true }  // needs crates.io
+
+// internal/actions/configure_make.go
+type ConfigureMakeAction struct {
+    BaseAction  // inherits RequiresNetwork() = false (source already extracted)
 }
 ```
 
-**Unknown Action Handling**: Actions not in the registry return the zero value (`RequiresNetwork: false`). This "fail-closed" design means:
+**Network requirements by category:**
 
-1. **Unknown actions run without network**: If validation fails due to missing network, the error clearly indicates the action needs to be added to the registry
-2. **Safe default**: Unknown actions can't unexpectedly get network access
-3. **Clear feedback**: Network timeout errors are obvious ("connection refused", "DNS lookup failed")
+| Category | Actions | RequiresNetwork |
+|----------|---------|-----------------|
+| Core primitives | download, extract, chmod, install_binaries, apply_patch_file, text_replace, set_env, set_rpath | `false` (cached content) |
+| Build actions | configure_make, cmake_build | `false` (source cached) |
+| Ecosystem primitives | cargo_build, cargo_install, go_build, go_install, cpan_install, npm_install, pip_install, gem_install | `true` (fetch dependencies) |
+| Exec actions | npm_exec, gem_exec | `false` (modules installed) |
+| System package managers | apt_install, yum_install, brew_install | `true` (fetch packages) |
+| Run command | run_command | `true` (conservative) |
 
-This is preferable to "fail-open" (defaulting to `RequiresNetwork: true`) which would:
-- Silently grant network to actions that don't need it
-- Mask potential security issues
-- Allow data exfiltration from validation containers
+**Default handling**: Actions that don't implement `NetworkValidator` (or embed `BaseAction`) default to `RequiresNetwork() = false`. This "fail-closed" design means unknown actions run without network - if they actually need network, validation fails with a clear error (timeout/DNS failure), prompting the developer to add the method.
 
-A CI test should verify all registered actions have metadata entries to catch missing entries at PR time rather than runtime.
-
-
-#### 2. ValidationRequirements Struct
+#### 3. ValidationRequirements Struct
 
 Location: `internal/validate/requirements.go`
 
@@ -602,12 +583,18 @@ func ComputeValidationRequirements(plan *executor.InstallationPlan) *ValidationR
         },
     }
 
-    // Check if any step requires network
+    // Check if any step requires network by querying the action
     for _, step := range plan.Steps {
-        metadata := actions.GetActionValidationMetadata(step.Action)
+        action := actions.Get(step.Action)
+        if action == nil {
+            continue  // Unknown action, defaults to no network
+        }
 
-        if metadata.RequiresNetwork {
-            reqs.RequiresNetwork = true
+        // Check if action implements NetworkValidator
+        if nv, ok := action.(actions.NetworkValidator); ok {
+            if nv.RequiresNetwork() {
+                reqs.RequiresNetwork = true
+            }
         }
     }
 
@@ -644,7 +631,7 @@ func hasBuildActions(plan *executor.InstallationPlan) bool {
 }
 ```
 
-#### 3. Unified Validator
+#### 4. Unified Validator
 
 Location: `internal/validate/validator.go`
 
@@ -714,14 +701,16 @@ func (e *Executor) buildValidationScript(
 #### Public API
 
 ```go
+// In internal/actions/action.go
+type NetworkValidator interface {
+    RequiresNetwork() bool
+}
+
 // In internal/validate/requirements.go
 func ComputeValidationRequirements(plan *executor.InstallationPlan) *ValidationRequirements
 
 // In internal/validate/executor.go
 func (e *Executor) Validate(ctx context.Context, plan *executor.InstallationPlan, reqs *ValidationRequirements) (*ValidationResult, error)
-
-// In internal/actions/validation_metadata.go
-func GetActionValidationMetadata(action string) ActionValidationMetadata
 ```
 
 #### CLI Interface
@@ -793,7 +782,7 @@ tsuku install rg --container
         ▼
 ┌─────────────────────────────┐
 │ ComputeValidationRequirements│◄──── Iterates plan.Steps
-│ (internal/validate)         │      Looks up ActionValidationMetadata
+│ (internal/validate)         │      Calls action.RequiresNetwork()
 └────────┬────────────────────┘      Aggregates network/image/resources
         │
         │ ValidationRequirements
@@ -840,38 +829,51 @@ tsuku install rg --container
 
 ## Implementation Approach
 
-### Phase 1: Add Action Metadata Registry
+### Phase 1: Add NetworkValidator Interface
 
-**Goal**: Create the structured metadata registry without changing existing behavior.
+**Goal**: Define the interface and default implementation without changing existing behavior.
 
-- Create `internal/actions/validation_metadata.go` with `ActionValidationMetadata` struct and map
-- Populate metadata for all primitive and ecosystem actions
-- Add `GetActionValidationMetadata()` function
-- Add tests verifying all known actions have entries
+- Add `NetworkValidator` interface to `internal/actions/action.go`
+- Add `BaseAction` struct with default `RequiresNetwork() = false`
+- Add tests for interface behavior
 
 **Deliverables**:
-- New file with metadata registry
-- Tests for registry completeness
+- NetworkValidator interface definition
+- BaseAction with default implementation
+- Unit tests for default behavior
 
-### Phase 2: Add ValidationRequirements Computation
+### Phase 2: Implement RequiresNetwork on Actions
+
+**Goal**: Add `RequiresNetwork()` method to all actions that need network access.
+
+- Update ecosystem actions to return `true`: cargo_build, cargo_install, go_build, go_install, cpan_install, npm_install, pip_install, gem_install
+- Update system package managers to return `true`: apt_install, yum_install, brew_install
+- Update run_command to return `true` (conservative default)
+- Have remaining actions embed `BaseAction` or rely on default `false`
+
+**Deliverables**:
+- Updated action files with RequiresNetwork() methods
+- Tests verifying each action's network requirement
+
+### Phase 3: Add ValidationRequirements Computation
 
 **Goal**: Implement requirements derivation from plans.
 
 - Create `internal/validate/requirements.go` with `ValidationRequirements` struct
-- Implement `ComputeValidationRequirements()` function
+- Implement `ComputeValidationRequirements()` function that queries actions via interface
 - Add tests with various plan configurations
 
 **Deliverables**:
 - ValidationRequirements struct and computation function
 - Unit tests for aggregation logic
 
-### Phase 3: Refactor Executor to Use Requirements
+### Phase 4: Refactor Executor to Use Requirements
 
 **Goal**: Unify `Validate()` and `ValidateSourceBuild()` into single method.
 
 - Modify `Executor.Validate()` to accept `ValidationRequirements`
 - Remove `ValidateSourceBuild()` (functionality absorbed into Validate)
-- Remove `detectRequiredBuildTools()` (replaced by metadata registry)
+- Remove `detectRequiredBuildTools()` (replaced by interface methods)
 - Update script generation to use requirements
 
 **Deliverables**:
@@ -879,7 +881,7 @@ tsuku install rg --container
 - Removal of duplicated logic
 - Updated tests
 
-### Phase 4: Update Builders to Use Centralized Validation
+### Phase 5: Update Builders to Use Centralized Validation
 
 **Goal**: Refactor builders to use the new unified validation.
 
@@ -891,7 +893,7 @@ tsuku install rg --container
 - Updated builders using centralized validation
 - Consistent validation behavior across all builders
 
-### Phase 5: Add --container and --recipe Flags to Install
+### Phase 6: Add --container and --recipe Flags to Install
 
 **Goal**: Enable container-based validation via `tsuku install --container` and direct recipe file testing.
 
@@ -928,7 +930,7 @@ The codebase uses standard Go testing with manual mocking (no external test libr
 
 | Component | Test Focus | Estimated Count |
 |-----------|-----------|-----------------|
-| ActionValidationMetadata registry | Lookup correctness, coverage of all actions, default handling | 8 |
+| NetworkValidator interface | RequiresNetwork() correctness for each action, default handling | 8 |
 | ComputeValidationRequirements | Network aggregation, resource selection, image selection | 10 |
 | Validation script generation | Script content, conditional logic, escaping | 5 |
 | Plan validation | Format version, primitive-only check, checksum presence | 6 |
@@ -1048,7 +1050,7 @@ test-validation:
 
 | Area | Target | Rationale |
 |------|--------|-----------|
-| ActionValidationMetadata | 100% | Critical registry, all actions must be covered |
+| NetworkValidator implementations | 100% | Every action must have correct RequiresNetwork() |
 | ComputeValidationRequirements | 100% | Core logic, all branches must be tested |
 | Validation execution | 80% | Some error paths require container failures |
 | CLI integration | 70% | Mostly integration with existing code |
@@ -1060,7 +1062,7 @@ Before merging each phase:
 
 - [ ] All unit tests pass with `-race` flag
 - [ ] No new golangci-lint warnings
-- [ ] ActionValidationMetadata covers all registered actions (CI check)
+- [ ] All actions implement NetworkValidator correctly (CI check)
 - [ ] Integration tests pass when container runtime available
 - [ ] Integration tests skip gracefully when no runtime
 - [ ] Existing validation tests still pass (no regressions)
@@ -1069,23 +1071,22 @@ Before merging each phase:
 
 ### Positive
 
-- **Single source of truth**: Validation requirements live in one place (metadata registry)
+- **Single source of truth**: Validation requirements live with each action's code
+- **Compile-time enforcement**: Compiler catches missing interface implementations
 - **Independent validation**: Users can run `tsuku install <tool> --container` or pipe from eval
 - **Reduced duplication**: No more `detectRequiredBuildTools()` switch statement
 - **Consistent behavior**: All builders use the same validation logic
-- **Extensible**: Adding new metadata dimensions just adds fields to the struct
+- **Extensible**: Adding new metadata dimensions adds methods to the interface
 - **Backwards compatible**: Existing plans work without regeneration
 
 ### Negative
 
-- **Metadata separation**: Action validation requirements don't live with action code
-- **Manual updates**: New actions require updating the metadata registry
+- **Modify all action files**: Each action needs RequiresNetwork() method (mitigated by embedding)
 - **Runtime computation**: Requirements computed on each validation (not cached)
 
 ### Mitigations
 
-- **Metadata separation**: This is the existing pattern (ActionDependencies). Accept as known trade-off.
-- **Manual updates**: Add test that verifies all registered actions have metadata entries. CI will catch missing entries.
+- **Modify all action files**: Use `BaseAction` embedding to provide defaults. Only actions that need network must explicitly override.
 - **Runtime computation**: Computation is O(n) where n is number of steps. For typical recipes (<10 steps), this is negligible.
 
 ## Security Considerations
@@ -1126,13 +1127,11 @@ This design does not change supply chain trust model:
 
 - **Recipe source trust**: Users must trust recipe sources (registry or local files)
 - **Binary source trust**: Recipes specify upstream sources (GitHub releases, Homebrew, etc.)
-- **Build tool trust**: apt packages are fetched from distribution repositories
+- **Build tool trust**: Handled by ActionDependencies (see DESIGN-dependency-provisioning.md)
 
-**New exposure point**: The `ActionValidationMetadata` registry lists apt packages to install. If this registry is compromised:
-- Malicious package names could be substituted
-- Extra packages could be added to exfiltrate data
+**New exposure point**: The `RequiresNetwork()` method on each action controls network access. If an action incorrectly returns `true`, it gains network access that could be used for data exfiltration.
 
-**Mitigation**: The metadata registry is code-reviewed like any other source file. The package names are well-known standard packages (autoconf, cmake, etc.). Typosquatting risk is low because packages are installed by name from official repositories.
+**Mitigation**: Network requirements are code-reviewed per action. The interface approach makes this visible in each action's file. Most actions default to `false` (no network), and only ecosystem actions that genuinely need network access return `true`.
 
 ### User Data Exposure
 
@@ -1150,16 +1149,14 @@ This design does not change supply chain trust model:
 
 **Container Networking**: The design uses `--network=host` for ecosystem builds. A future improvement could use bridge networking with egress filtering to limit access to known package registries only. This is out of scope for the initial implementation but noted as a security hardening opportunity.
 
-**Metadata Registry Integrity**: The package names in `ActionValidationMetadata` should be verified against known package lists. A CI check could validate that all referenced apt packages exist in the target distribution.
-
-**User Awareness**: The `tsuku validate` command should display what network access will be granted before execution, especially when validating untrusted recipes.
+**User Awareness**: The `tsuku install --container` command should display what network access will be granted before execution, especially when validating untrusted recipes (via `--recipe` flag).
 
 ### Mitigations Summary
 
 | Risk | Mitigation | Residual Risk |
 |------|------------|---------------|
 | Malicious recipe execution | Container isolation, resource limits, user displays network requirements | Recipe could consume allowed resources |
-| Network-enabled builds have broader attack surface | Network enabled only when RequiresNetwork=true; use bridge networking in future | Data exfiltration via network, compromised dependencies |
-| Compromised metadata registry | Code review, well-known package names, CI validation | Insider threat, typosquatting of new packages |
+| Network-enabled builds have broader attack surface | Network enabled only when RequiresNetwork()=true; use bridge networking in future | Data exfiltration via network, compromised dependencies |
+| Incorrect RequiresNetwork() implementation | Code review per action, default to false, interface makes it visible | Malicious or buggy action returns true unnecessarily |
 | Arbitrary user-provided recipes | Container isolation, read-only mounts, clear warnings | Resource exhaustion within limits |
 
