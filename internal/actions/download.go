@@ -16,7 +16,10 @@ import (
 )
 
 // DownloadAction implements file downloading with checksum verification
-type DownloadAction struct{}
+type DownloadAction struct{ BaseAction }
+
+// IsDeterministic returns true because downloads with checksums produce identical results.
+func (DownloadAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *DownloadAction) Name() string {

@@ -9,7 +9,12 @@ import (
 )
 
 // PipxInstallAction installs Python CLI tools using pipx with isolated venvs
-type PipxInstallAction struct{}
+type PipxInstallAction struct{ BaseAction }
+
+// Dependencies returns pipx as install-time and python as runtime dependency.
+func (PipxInstallAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"pipx"}, Runtime: []string{"python"}}
+}
 
 // Name returns the action name
 func (a *PipxInstallAction) Name() string {

@@ -13,7 +13,12 @@ import (
 // PipInstallAction installs Python packages using pip with deterministic configuration.
 // This is an ecosystem primitive that achieves determinism through pip's hash-checking
 // mode and controlled environment variables.
-type PipInstallAction struct{}
+type PipInstallAction struct{ BaseAction }
+
+// Dependencies returns python as both install-time and runtime dependency.
+func (PipInstallAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"python"}, Runtime: []string{"python"}}
+}
 
 // Name returns the action name
 func (a *PipInstallAction) Name() string {

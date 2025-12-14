@@ -15,9 +15,13 @@ import (
 // This is a composite action that resolves the source URL and checksum from the
 // Homebrew API at plan time, enabling version-aware source builds.
 type HomebrewSourceAction struct {
+	BaseAction
 	// HomebrewAPIURL allows overriding the Homebrew API URL for testing
 	HomebrewAPIURL string
 }
+
+// IsDeterministic returns true because homebrew_source decomposes to only deterministic primitives.
+func (HomebrewSourceAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *HomebrewSourceAction) Name() string { return "homebrew_source" }

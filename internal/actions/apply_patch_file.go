@@ -11,7 +11,10 @@ import (
 // ApplyPatchFileAction applies a patch using the system patch command.
 // This is a primitive action that works with local files or inline data.
 // For URL-based patches with checksum validation, use the apply_patch composite.
-type ApplyPatchFileAction struct{}
+type ApplyPatchFileAction struct{ BaseAction }
+
+// IsDeterministic returns true because apply_patch_file produces identical results.
+func (ApplyPatchFileAction) IsDeterministic() bool { return true }
 
 // Name returns the action name.
 func (a *ApplyPatchFileAction) Name() string {

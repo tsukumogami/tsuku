@@ -97,37 +97,6 @@ var primitives = map[string]bool{
 	"pip_install":    true,
 }
 
-// deterministicActions classifies which primitives are fully deterministic.
-// Core primitives are deterministic - they produce identical results given
-// identical inputs. Ecosystem primitives have residual non-determinism due
-// to compiler versions, native extensions, etc.
-var deterministicActions = map[string]bool{
-	// Core primitives - fully deterministic
-	"download":          true,
-	"extract":           true,
-	"chmod":             true,
-	"install_binaries":  true,
-	"set_env":           true,
-	"set_rpath":         true,
-	"link_dependencies": true,
-	"install_libraries": true,
-	"apply_patch_file":  true,
-	"text_replace":      true,
-	// Composite actions that decompose to only deterministic primitives
-	"apply_patch": true,
-	// Ecosystem primitives - NOT deterministic due to compiler versions,
-	// native extensions, platform-specific behavior, etc.
-	"cargo_build":    false,
-	"cmake_build":    false,
-	"configure_make": false,
-	"cpan_install":   false,
-	"gem_exec":       false,
-	"go_build":       false,
-	"nix_realize":    false,
-	"npm_exec":       false,
-	"pip_install":    false,
-}
-
 // IsPrimitive returns true if the action is a primitive.
 // Primitives execute directly and cannot be decomposed further.
 func IsPrimitive(action string) bool {
@@ -165,12 +134,12 @@ func Primitives() []string {
 // have residual non-determinism and return false. Unknown actions return
 // false for safety.
 func IsDeterministic(action string) bool {
-	deterministic, known := deterministicActions[action]
-	if !known {
+	act := Get(action)
+	if act == nil {
 		// Unknown actions are not deterministic for safety
 		return false
 	}
-	return deterministic
+	return act.IsDeterministic()
 }
 
 // DecomposeToPrimitives recursively decomposes an action until all steps are primitives.

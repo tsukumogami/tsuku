@@ -1,7 +1,6 @@
 package actions
 
 import (
-	"strings"
 	"testing"
 )
 
@@ -91,34 +90,6 @@ func TestActionDependencies_NoDependencyActions(t *testing.T) {
 			}
 			if deps.Runtime != nil {
 				t.Errorf("Runtime = %v, want nil", deps.Runtime)
-			}
-		})
-	}
-}
-
-func TestActionDependencies_AllRegisteredActionsHaveEntries(t *testing.T) {
-	t.Parallel()
-	// Verify that every registered action has an entry in ActionDependencies
-	// Skip test_ prefixed actions as those are registered by other tests
-	for name := range registry {
-		if strings.HasPrefix(name, "test_") {
-			continue
-		}
-		t.Run(name, func(t *testing.T) {
-			if _, ok := ActionDependencies[name]; !ok {
-				t.Errorf("action %q is registered but has no entry in ActionDependencies", name)
-			}
-		})
-	}
-}
-
-func TestActionDependencies_AllEntriesAreRegisteredActions(t *testing.T) {
-	t.Parallel()
-	// Verify that every entry in ActionDependencies corresponds to a registered action
-	for name := range ActionDependencies {
-		t.Run(name, func(t *testing.T) {
-			if Get(name) == nil {
-				t.Errorf("ActionDependencies has entry for %q but action is not registered", name)
 			}
 		})
 	}

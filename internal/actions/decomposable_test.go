@@ -218,6 +218,7 @@ func TestDownloadResultStruct(t *testing.T) {
 
 // mockDecomposableAction is a test helper that implements Decomposable.
 type mockDecomposableAction struct {
+	BaseAction
 	name   string
 	steps  []Step
 	err    error

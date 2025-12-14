@@ -14,7 +14,10 @@ import (
 // This is a composite action that decomposes into download + apply_patch_file
 // for URL-based patches (with checksum validation), or directly to apply_patch_file
 // for inline patch data.
-type ApplyPatchAction struct{}
+type ApplyPatchAction struct{ BaseAction }
+
+// IsDeterministic returns true because apply_patch decomposes to only deterministic primitives.
+func (ApplyPatchAction) IsDeterministic() bool { return true }
 
 // Name returns the action name.
 func (a *ApplyPatchAction) Name() string {

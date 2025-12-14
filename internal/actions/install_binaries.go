@@ -11,7 +11,10 @@ import (
 )
 
 // InstallBinariesAction implements binary installation
-type InstallBinariesAction struct{}
+type InstallBinariesAction struct{ BaseAction }
+
+// IsDeterministic returns true because binary installation produces identical results.
+func (InstallBinariesAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *InstallBinariesAction) Name() string {

@@ -11,7 +11,12 @@ import (
 // CargoBuildAction builds Rust crates with deterministic configuration.
 // This is an ecosystem primitive that cannot be decomposed further.
 // It achieves determinism through cargo's --locked --offline flags and environment variables.
-type CargoBuildAction struct{}
+type CargoBuildAction struct{ BaseAction }
+
+// Dependencies returns rust as an install-time dependency.
+func (CargoBuildAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"rust"}}
+}
 
 // Name returns the action name
 func (a *CargoBuildAction) Name() string {

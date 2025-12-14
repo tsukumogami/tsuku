@@ -9,7 +9,12 @@ import (
 )
 
 // GemInstallAction installs Ruby gems with GEM_HOME isolation
-type GemInstallAction struct{}
+type GemInstallAction struct{ BaseAction }
+
+// Dependencies returns ruby as both install-time and runtime dependency.
+func (GemInstallAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"ruby"}, Runtime: []string{"ruby"}}
+}
 
 // Name returns the action name
 func (a *GemInstallAction) Name() string {

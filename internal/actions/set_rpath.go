@@ -12,7 +12,10 @@ import (
 )
 
 // SetRpathAction implements RPATH modification for relocatable library loading
-type SetRpathAction struct{}
+type SetRpathAction struct{ BaseAction }
+
+// IsDeterministic returns true because set_rpath produces identical results.
+func (SetRpathAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *SetRpathAction) Name() string {

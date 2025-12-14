@@ -13,7 +13,12 @@ import (
 // NpmExecAction implements deterministic npm/Node.js build execution.
 // This is an ecosystem primitive that achieves determinism through
 // lockfile enforcement and reproducible build configuration.
-type NpmExecAction struct{}
+type NpmExecAction struct{ BaseAction }
+
+// Dependencies returns nodejs as both install-time and runtime dependency.
+func (NpmExecAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"nodejs"}, Runtime: []string{"nodejs"}}
+}
 
 // Name returns the action name
 func (a *NpmExecAction) Name() string {

@@ -36,14 +36,46 @@ func (ctx *ExecutionContext) Log() log.Logger {
 	return log.Default()
 }
 
-// Action represents an executable action
+// ActionDeps defines what dependencies an action needs.
+// InstallTime deps are needed during `tsuku install`.
+// Runtime deps are needed when the installed tool runs.
+type ActionDeps struct {
+	InstallTime []string // Needed during tsuku install
+	Runtime     []string // Needed when tool runs
+}
+
+// Action represents an executable action with metadata.
 type Action interface {
 	// Name returns the action name (e.g., "download", "extract")
 	Name() string
 
 	// Execute performs the action
 	Execute(ctx *ExecutionContext, params map[string]interface{}) error
+
+	// IsDeterministic returns true if the action produces identical results
+	// given identical inputs. Core primitives are deterministic. Ecosystem
+	// primitives have residual non-determinism and return false.
+	IsDeterministic() bool
+
+	// Dependencies returns the install-time and runtime dependencies for this action.
+	Dependencies() ActionDeps
 }
+
+// BaseAction provides default implementations for Action metadata methods.
+// Embed this in action types to inherit defaults:
+//   - IsDeterministic() returns false (safe default)
+//   - Dependencies() returns empty ActionDeps
+//
+// Actions override these methods when they have non-default values.
+type BaseAction struct{}
+
+// IsDeterministic returns false by default.
+// Actions that produce identical results given identical inputs should override this.
+func (BaseAction) IsDeterministic() bool { return false }
+
+// Dependencies returns empty ActionDeps by default.
+// Actions with install-time or runtime dependencies should override this.
+func (BaseAction) Dependencies() ActionDeps { return ActionDeps{} }
 
 // Registry holds all available actions
 var (

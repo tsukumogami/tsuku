@@ -7,7 +7,10 @@ import (
 )
 
 // ChmodAction implements making files executable
-type ChmodAction struct{}
+type ChmodAction struct{ BaseAction }
+
+// IsDeterministic returns true because chmod produces identical results.
+func (ChmodAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *ChmodAction) Name() string {

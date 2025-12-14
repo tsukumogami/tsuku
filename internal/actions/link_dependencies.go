@@ -8,7 +8,10 @@ import (
 )
 
 // LinkDependenciesAction creates symlinks from a tool's lib/ directory to shared library location
-type LinkDependenciesAction struct{}
+type LinkDependenciesAction struct{ BaseAction }
+
+// IsDeterministic returns true because link_dependencies produces identical results.
+func (LinkDependenciesAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *LinkDependenciesAction) Name() string {

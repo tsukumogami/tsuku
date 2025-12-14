@@ -5,7 +5,7 @@ import (
 )
 
 // AptInstallAction implements apt package installation (stub for validation)
-type AptInstallAction struct{}
+type AptInstallAction struct{ BaseAction }
 
 // Name returns the action name
 func (a *AptInstallAction) Name() string {
@@ -28,7 +28,7 @@ func (a *AptInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 }
 
 // YumInstallAction implements yum package installation (stub for validation)
-type YumInstallAction struct{}
+type YumInstallAction struct{ BaseAction }
 
 // Name returns the action name
 func (a *YumInstallAction) Name() string {
@@ -51,7 +51,7 @@ func (a *YumInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 }
 
 // BrewInstallAction implements Homebrew package installation (stub for validation)
-type BrewInstallAction struct{}
+type BrewInstallAction struct{ BaseAction }
 
 // Name returns the action name
 func (a *BrewInstallAction) Name() string {

@@ -10,7 +10,9 @@ import (
 
 // CMakeBuildAction builds software using CMake.
 // This is an ecosystem primitive that cannot be decomposed further.
-type CMakeBuildAction struct{}
+type CMakeBuildAction struct{ BaseAction }
+
+// IsDeterministic returns false because cmake builds depend on system compilers.
 
 // Name returns the action name
 func (a *CMakeBuildAction) Name() string {
