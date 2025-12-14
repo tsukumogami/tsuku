@@ -116,6 +116,11 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		steps = append(steps, resolvedSteps...)
 	}
 
+	// Convert patches to apply_patch steps and insert after extraction
+	if len(e.recipe.Patches) > 0 {
+		steps = insertPatchSteps(steps, e.recipe.Patches)
+	}
+
 	// Compute plan-level deterministic flag: true only if ALL steps are deterministic
 	planDeterministic := true
 	for _, step := range steps {
@@ -443,4 +448,54 @@ func (a *preDownloaderAdapter) Download(ctx context.Context, url string) (*actio
 		Checksum:  result.Checksum,
 		Size:      result.Size,
 	}, nil
+}
+
+// insertPatchSteps converts recipe patches to apply_patch steps and inserts them
+// after the last extraction step. This ensures patches are applied after source
+// extraction but before build steps.
+func insertPatchSteps(steps []ResolvedStep, patches []recipe.Patch) []ResolvedStep {
+	// Find the position after the last "extract" step
+	insertIdx := 0
+	for i, step := range steps {
+		if step.Action == "extract" {
+			insertIdx = i + 1
+		}
+	}
+
+	// If no extract step found, insert at the beginning (unusual case)
+	// Patches typically need extracted source to apply to
+
+	// Convert patches to resolved steps
+	patchSteps := make([]ResolvedStep, 0, len(patches))
+	for _, patch := range patches {
+		params := make(map[string]interface{})
+
+		if patch.URL != "" {
+			params["url"] = patch.URL
+		}
+		if patch.Data != "" {
+			params["data"] = patch.Data
+		}
+		if patch.Strip != 0 {
+			params["strip"] = patch.Strip
+		}
+		if patch.Subdir != "" {
+			params["subdir"] = patch.Subdir
+		}
+
+		patchSteps = append(patchSteps, ResolvedStep{
+			Action:        "apply_patch",
+			Params:        params,
+			Evaluable:     true,                                   // apply_patch is evaluable
+			Deterministic: actions.IsDeterministic("apply_patch"), // Should be true
+		})
+	}
+
+	// Insert patch steps at the found position
+	result := make([]ResolvedStep, 0, len(steps)+len(patchSteps))
+	result = append(result, steps[:insertIdx]...)
+	result = append(result, patchSteps...)
+	result = append(result, steps[insertIdx:]...)
+
+	return result
 }
