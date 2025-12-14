@@ -25,8 +25,8 @@ jobs:
       - name: Get changed recipes
         id: changed
         run: |
-          # Get list of changed recipe files
-          CHANGED=$(git diff --name-only origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml')
+          # Get list of changed recipe files (exclude deleted files)
+          CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml')
 
           if [ -z "$CHANGED" ]; then
             echo "No recipe files changed"
@@ -41,6 +41,12 @@ jobs:
             JSON="["
             FIRST=true
             for path in $CHANGED; do
+              # Skip if file doesn't exist (deleted in later commit)
+              if [ ! -f "$path" ]; then
+                echo "Skipping deleted recipe: $path"
+                continue
+              fi
+
               # Check if recipe is a library type
               if grep -q 'type = "library"' "$path" 2>/dev/null; then
                 echo "Skipping library recipe: $path"

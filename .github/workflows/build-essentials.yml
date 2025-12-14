@@ -1,0 +1,87 @@
+name: Build Essentials
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'internal/actions/homebrew_*.go'
+      - 'internal/actions/configure_make.go'
+      - 'testdata/recipes/*.toml'
+      - '.github/workflows/build-essentials.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'internal/actions/homebrew_*.go'
+      - 'internal/actions/configure_make.go'
+      - 'testdata/recipes/*.toml'
+      - '.github/workflows/build-essentials.yml'
+
+jobs:
+  # Test homebrew_bottle action with make and gdbm
+  test-homebrew-bottle:
+    name: "${{ matrix.platform.name }}: ${{ matrix.tool }}"
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
+          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
+          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
+          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+        tool:
+          - make
+          - gdbm
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: "Install ${{ matrix.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force ${{ matrix.tool }}
+
+  # Test configure_make action with gdbm-source (source build)
+  test-configure-make:
+    name: "${{ matrix.platform.name }}: gdbm-source"
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
+          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
+          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
+          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      # Copy test recipe BEFORE build so it gets embedded
+      - name: Copy test recipe to registry
+        run: cp testdata/recipes/gdbm-source.toml internal/recipe/recipes/g/
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Install gdbm-source (tests configure_make)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force gdbm-source

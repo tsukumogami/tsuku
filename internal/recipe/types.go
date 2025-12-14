@@ -152,6 +152,7 @@ type MetadataSection struct {
 	Tier                     int      `toml:"tier"`                       // Installation tier: 1=binary, 2=package manager, 3=nix
 	Type                     string   `toml:"type"`                       // Recipe type: "tool" (default) or "library"
 	LLMValidation            string   `toml:"llm_validation,omitempty"`   // LLM validation status: "skipped" or empty
+	Binaries                 []string `toml:"binaries,omitempty"`         // Explicit binary paths for homebrew_bottle recipes
 }
 
 // VersionSection specifies how to resolve versions
@@ -308,8 +309,13 @@ type Replacement struct {
 }
 
 // ExtractBinaries extracts all binary names from a recipe
-// by looking at common action parameters (binaries, executables, etc.)
+// by looking at metadata.binaries first, then action parameters (binaries, executables, etc.)
 func (r *Recipe) ExtractBinaries() []string {
+	// Check metadata.binaries first (explicit declaration for homebrew_bottle recipes)
+	if len(r.Metadata.Binaries) > 0 {
+		return r.Metadata.Binaries
+	}
+
 	var binaries []string
 	seen := make(map[string]bool)
 

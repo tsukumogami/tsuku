@@ -242,6 +242,8 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"github_file":       true,
 		"hashicorp_release": true,
 		"homebrew_bottle":   true,
+		"homebrew_source":   true,
+		"configure_make":    true,
 	}
 
 	for i, step := range r.Steps {
@@ -348,6 +350,24 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 	case "hashicorp_release":
 		if _, ok := step.Params["product"]; !ok {
 			result.addError(stepField, "hashicorp_release action requires 'product' parameter")
+		}
+
+	case "homebrew_bottle":
+		if _, ok := step.Params["formula"]; !ok {
+			result.addError(stepField, "homebrew_bottle action requires 'formula' parameter")
+		}
+
+	case "homebrew_source":
+		if _, ok := step.Params["formula"]; !ok {
+			result.addError(stepField, "homebrew_source action requires 'formula' parameter")
+		}
+
+	case "configure_make":
+		if _, ok := step.Params["source_dir"]; !ok {
+			result.addError(stepField, "configure_make action requires 'source_dir' parameter")
+		}
+		if _, ok := step.Params["executables"]; !ok {
+			result.addError(stepField, "configure_make action requires 'executables' parameter")
 		}
 	}
 

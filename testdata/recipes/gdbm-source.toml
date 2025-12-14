@@ -1,0 +1,27 @@
+# Test recipe for validating configure_make action
+# This builds gdbm from source instead of using pre-built bottles
+# Used by build-essentials CI workflow
+
+[metadata]
+name = "gdbm-source"
+description = "GNU database manager (source build for testing)"
+homepage = "https://www.gnu.org/software/gdbm/"
+dependencies = ["make"]
+
+[version]
+source = "homebrew"
+formula = "gdbm"
+
+[[steps]]
+action = "homebrew_source"
+formula = "gdbm"
+
+[[steps]]
+action = "configure_make"
+source_dir = "."
+executables = ["gdbmtool"]
+configure_args = ["--disable-silent-rules", "--enable-libgdbm-compat", "--without-readline", "--disable-nls"]
+
+[verify]
+command = "gdbmtool --version"
+pattern = "gdbmtool (GDBM) {version}"

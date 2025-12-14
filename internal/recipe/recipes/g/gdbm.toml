@@ -1,0 +1,22 @@
+[metadata]
+name = "gdbm"
+description = "GNU database manager"
+homepage = "https://www.gnu.org/software/gdbm/"
+binaries = ["bin/gdbmtool"]
+
+[version]
+source = "homebrew"
+formula = "gdbm"
+
+[[steps]]
+action = "homebrew_bottle"
+formula = "gdbm"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/gdbmtool"]
+
+[verify]
+command = "gdbmtool --version"
+pattern = "gdbmtool (GDBM) {version}"
