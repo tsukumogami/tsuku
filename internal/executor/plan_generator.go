@@ -218,24 +218,41 @@ func (e *Executor) resolveStep(
 				Deterministic: deterministic,
 			}
 
-			// Use checksum/size from decomposition if provided
-			if pstep.Checksum != "" {
+			// For download actions, always download to cache the file for offline container execution.
+			// If checksum is provided (e.g., from Homebrew API), we still need the file cached.
+			if pstep.Action == "download" {
+				if url, ok := pstep.Params["url"].(string); ok {
+					rs.URL = url
+					if downloader != nil {
+						result, err := downloader.Download(ctx, url)
+						if err != nil {
+							return nil, fmt.Errorf("failed to download for caching: %w", err)
+						}
+						// Save to cache if configured
+						if evalCtx.DownloadCache != nil {
+							_ = evalCtx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
+						}
+						// Use provided checksum if available, otherwise use computed
+						if pstep.Checksum != "" {
+							rs.Checksum = pstep.Checksum
+							rs.Size = pstep.Size
+						} else {
+							rs.Checksum = result.Checksum
+							rs.Size = result.Size
+						}
+						_ = result.Cleanup()
+					} else if pstep.Checksum != "" {
+						// No downloader but checksum provided - use it (won't be cached)
+						rs.Checksum = pstep.Checksum
+						rs.Size = pstep.Size
+					}
+				}
+			} else if pstep.Checksum != "" {
+				// Non-download action with checksum from decomposition
 				rs.Checksum = pstep.Checksum
 				rs.Size = pstep.Size
 				if url, ok := pstep.Params["url"].(string); ok {
 					rs.URL = url
-				}
-			} else if pstep.Action == "download" && downloader != nil {
-				// Download to compute checksum if not provided by decomposition
-				if url, ok := pstep.Params["url"].(string); ok {
-					rs.URL = url
-					result, err := downloader.Download(ctx, url)
-					if err != nil {
-						return nil, fmt.Errorf("failed to download for checksum: %w", err)
-					}
-					defer func() { _ = result.Cleanup() }()
-					rs.Checksum = result.Checksum
-					rs.Size = result.Size
 				}
 			}
 

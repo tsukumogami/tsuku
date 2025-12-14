@@ -142,16 +142,29 @@ func (a *ApplyPatchAction) Decompose(ctx *EvalContext, params map[string]interfa
 		sha256Param, hasSHA := GetString(params, "sha256")
 
 		if hasSHA {
-			// Use provided checksum
+			// Use provided checksum, but still download to cache for offline execution
 			checksum = sha256Param
+			if ctx.Downloader != nil && ctx.DownloadCache != nil {
+				result, err := ctx.Downloader.Download(ctx.Context, url)
+				if err != nil {
+					return nil, fmt.Errorf("failed to download patch for caching: %w", err)
+				}
+				_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
+				_ = result.Cleanup()
+			}
 		} else if ctx.Downloader != nil {
-			// Download to compute checksum
+			// Download to compute checksum and cache
 			result, err := ctx.Downloader.Download(ctx.Context, url)
 			if err != nil {
 				return nil, fmt.Errorf("failed to download patch for checksum computation: %w", err)
 			}
 			checksum = result.Checksum
 			size = result.Size
+			// Save to cache for offline container execution
+			if ctx.DownloadCache != nil {
+				_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
+			}
+			_ = result.Cleanup()
 		}
 
 		// Build steps: download patch file, then apply it
