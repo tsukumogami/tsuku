@@ -391,32 +391,61 @@ action = "link_build_deps"
 |-----------|--------|
 | `internal/recipe/types.go` | Add `BuildDependencies`, `SystemDependencies` fields |
 | `internal/actions/link_build_deps.go` | NEW: Action to set up build environment |
+| `internal/actions/actions.go` | Add `Env map[string]string` to ExecutionContext |
 | `internal/actions/resolver.go` | Handle build_dependencies in resolution |
-| `cmd/tsuku/install_deps.go` | Install build deps before build, verify system deps |
+| `cmd/tsuku/install_deps.go` | Add `ensureBuildDependencies()` function |
 | `internal/builders/homebrew.go` | Map Homebrew build_dependencies to recipe field |
+
+### Environment Propagation
+
+The `link_build_deps` action sets environment variables in `ExecutionContext.Env`. Subsequent actions (`configure_make`, `cmake_build`, etc.) must:
+1. Inherit environment variables from `ExecutionContext.Env`
+2. Merge with any action-specific environment settings
+3. Pass the merged environment to subprocess execution
+
+```go
+// In ExecutionContext
+type ExecutionContext struct {
+    // ... existing fields ...
+    Env map[string]string // Environment variables set by prior actions
+}
+
+// In configure_make, cmake_build, etc.
+func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext) error {
+    cmd := exec.Command("./configure", args...)
+    cmd.Env = mergeEnv(os.Environ(), ctx.Env)
+    // ...
+}
+```
 
 ## Implementation Approach
 
 ### Phase 1: Recipe Schema (Low risk)
 1. Add `BuildDependencies []string` to MetadataSection
 2. Add `SystemDependencies []string` to MetadataSection
-3. Update recipe validation and tests
+3. Add dependency name validation (regex: `^[a-z0-9][a-z0-9-]*$`)
+4. Update recipe validation and tests
 
-### Phase 2: Build Dependency Installation (Medium risk)
-1. Modify install flow to install build deps as hidden
-2. Ensure build deps are installed before build steps execute
-3. Build deps should not appear in installed tool's dependency list
-
-### Phase 3: link_build_deps Action (Medium risk)
-1. Implement action that reads build_dependencies
-2. Resolve each dependency to its install path
-3. Set PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS, CMAKE_PREFIX_PATH
-4. Register as a primitive action
-
-### Phase 4: System Dependency Verification (Low risk)
+### Phase 2: System Dependency Verification (Low risk)
 1. Implement pkg-config based verification
 2. Add platform-specific package name hints
 3. Generate helpful error messages on failure
+4. Collect all missing deps before reporting (don't fail one at a time)
+5. Add 5-second timeout for pkg-config queries
+
+### Phase 3: link_build_deps Action (Medium risk)
+1. Add `Env map[string]string` to ExecutionContext
+2. Implement action that reads build_dependencies from recipe
+3. Resolve each dependency via state manager (not string concatenation)
+4. Set PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS, CMAKE_PREFIX_PATH
+5. Register as a primitive action
+6. Update configure_make, cmake_build to inherit ExecutionContext.Env
+
+### Phase 4: Build Dependency Installation (Medium risk)
+1. Add `ensureBuildDependencies()` function in install_deps.go
+2. Install build deps with `IsHidden=true` flag (installed to bin/, not tracked)
+3. Do not recurse into build deps of build deps (single level only)
+4. Build deps are NOT recorded in parent tool's dependency list
 
 ### Phase 5: Homebrew Builder Integration (Low risk)
 1. Map `build_dependencies` from formula JSON to recipe field
@@ -426,19 +455,46 @@ action = "link_build_deps"
 ## Security Considerations
 
 ### Download Verification
-**Not applicable.** This feature doesn't introduce new download sources. Build dependencies are regular tsuku packages with their own verification.
+**Inherited risk.** Build dependencies use existing tsuku verification (checksums, trusted sources). However, they are auto-installed during build, which elevates their privilege level. Mitigation: Build dependencies are regular recipes with the same verification as user-requested installs.
 
 ### Execution Isolation
-**Low risk.** Build dependencies run in the same environment as other build steps. The new `link_build_deps` action only sets environment variables - it doesn't execute arbitrary code.
+**Medium risk.** The `link_build_deps` action controls `CPPFLAGS` and `LDFLAGS`, which directly influence which headers and libraries are used during compilation. Mitigations:
+- Dependency name validation: must match `^[a-z0-9][a-z0-9-]*$`
+- Path resolution via state manager (no string concatenation with user input)
+- Build dependency count limit (max 30) to prevent resource exhaustion
 
 ### Supply Chain Risks
-**Inherited from existing system.** Build dependencies come from the same sources as other tsuku packages (Homebrew bottles, GitHub releases). No new supply chain vectors introduced.
+**Inherited from existing system.** Build dependencies come from the same sources as other tsuku packages (Homebrew bottles, GitHub releases). No new supply chain vectors introduced. Note: Users implicitly trust auto-installed build dependencies - this should be documented in user-facing security documentation.
 
 ### User Data Exposure
 **Not applicable.** This feature doesn't access or transmit user data.
 
 ### System Dependency Detection
-**Low risk.** The pkg-config verification runs a read-only query (`pkg-config --exists`). Malformed system_dependencies could cause confusing error messages but not security issues.
+**Low risk.** The pkg-config verification runs a read-only query (`pkg-config --exists`). Mitigations:
+- Input validation for pkg-config names
+- Execution timeout (5 seconds) to prevent DoS
+- Collect all missing deps before failing (don't fail one at a time)
+
+### Input Validation Requirements
+
+All dependency names (build and system) must be validated before use:
+
+```go
+var validDepName = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
+
+func validateDependencyName(name string) error {
+    if !validDepName.MatchString(name) {
+        return fmt.Errorf("invalid dependency name: %q", name)
+    }
+    return nil
+}
+```
+
+### Residual Risks
+
+1. **Build-time code execution**: Build dependencies can execute arbitrary code during compilation. For security-critical builds, use `nix_realize` instead for better isolation.
+
+2. **Implicit trust model**: Auto-installed build dependencies receive the same trust level as explicitly requested tools. This is documented but not enforced differently.
 
 ## Consequences
 
