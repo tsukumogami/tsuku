@@ -3494,7 +3494,7 @@ func TestHomebrewBuilder_buildSourceSteps_MultipleExecutables(t *testing.T) {
 		VerifyCommand: "tool1 --version",
 	}
 
-	steps, err := b.buildSourceSteps(data)
+	steps, err := b.buildSourceSteps(data, "test-formula")
 	if err != nil {
 		t.Fatalf("buildSourceSteps() error = %v", err)
 	}
