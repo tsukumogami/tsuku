@@ -74,11 +74,12 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
-
+      # Copy test recipe BEFORE build so it gets embedded
       - name: Copy test recipe to registry
         run: cp testdata/recipes/gdbm-source.toml internal/recipe/recipes/g/
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
 
       - name: Install gdbm-source (tests configure_make)
         env:
