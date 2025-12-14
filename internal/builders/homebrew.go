@@ -1589,7 +1589,9 @@ func (b *HomebrewBuilder) getGHCRToken(formula string) (string, error) {
 	var tokenResp struct {
 		Token string `json:"token"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+	// Limit response size to prevent DoS from malicious/misconfigured servers
+	limitedReader := io.LimitReader(resp.Body, 64*1024) // 64KB max for token response
+	if err := json.NewDecoder(limitedReader).Decode(&tokenResp); err != nil {
 		return "", fmt.Errorf("failed to parse token response: %w", err)
 	}
 
@@ -1623,7 +1625,9 @@ func (b *HomebrewBuilder) fetchGHCRManifest(ctx context.Context, formula, versio
 	}
 
 	var manifest ghcrManifest
-	if err := json.NewDecoder(resp.Body).Decode(&manifest); err != nil {
+	// Limit response size to prevent DoS from malicious/misconfigured servers
+	limitedReader := io.LimitReader(resp.Body, 10*1024*1024) // 10MB max for manifest
+	if err := json.NewDecoder(limitedReader).Decode(&manifest); err != nil {
 		return nil, fmt.Errorf("failed to parse manifest: %w", err)
 	}
 
