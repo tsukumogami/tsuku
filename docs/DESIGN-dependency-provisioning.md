@@ -604,34 +604,23 @@ tsuku install my-docker-tool
 | `recipes/cuda.toml` | NEW: CUDA system-required recipe |
 | `recipes/systemd.toml` | NEW: systemd system-required recipe |
 
-## Validation Plan
+## Validation Tooling
 
-### Phase 0: Bootstrap Validation (Pre-requisite)
+Scripts and criteria used by the implementation phases for validation.
 
-Before creating any recipes, validate that Homebrew bottles exist and can be relocated for all P0 tools on all target platforms.
+### Bottle Availability Check
 
-**Validation script**: `scripts/validate-bottle-availability.sh`
+**Script**: `scripts/validate-bottle-availability.sh`
 ```bash
 #!/bin/bash
-# For each P0 tool and platform combination:
+# For each tool and platform combination:
 # 1. Query Homebrew API for bottle availability
 # 2. Download bottle to temp directory
 # 3. Extract and verify binary can execute from non-standard path
 # 4. Check RPATH/install_name for relocation compatibility
 ```
 
-**Bottle availability matrix** (must pass before Phase 1):
-
-| Tool | Linux x86_64 | Linux arm64 | macOS x86_64 | macOS arm64 |
-|------|--------------|-------------|--------------|-------------|
-| gcc | [ ] | [ ] | [ ] | [ ] |
-| make | [ ] | [ ] | [ ] | [ ] |
-| cmake | [ ] | [ ] | [ ] | [ ] |
-| pkg-config | [ ] | [ ] | [ ] | [ ] |
-| zlib | [ ] | [ ] | [ ] | [ ] |
-| openssl | [ ] | [ ] | [ ] | [ ] |
-
-**Fallback strategy**: If a bottle is unavailable for a platform:
+**Fallback strategy** (if a bottle is unavailable for a platform):
 1. Check if alternative source exists (e.g., linuxbrew vs homebrew)
 2. Consider nix-portable as fallback for that platform
 3. Document the gap and defer that platform/tool combination
@@ -650,7 +639,7 @@ For each tool/library, verify these relocation requirements:
 - No hardcoded `/usr/local` or `/opt/homebrew` paths
 - Verify with: `otool -L <binary>`
 
-**Validation tooling**: `scripts/verify-relocation.sh`
+**Script**: `scripts/verify-relocation.sh`
 ```bash
 #!/bin/bash
 # Usage: verify-relocation.sh <tool-name>
@@ -661,117 +650,28 @@ For each tool/library, verify these relocation requirements:
 # 4. ldd/otool shows only tsuku-provided or system (libc) deps
 ```
 
-### Phase 1: Recipe Creation (P0 Tools)
+### Tool Verification
 
-Create recipes for all P0 build essentials:
+**Script**: `scripts/verify-tool.sh`
+```bash
+#!/bin/bash
+# Usage: verify-tool.sh <tool-name>
+# Runs tool-specific verification:
+# - gcc: compile a simple C program
+# - make: run a simple Makefile
+# - curl: fetch https://example.com
+# - git: clone a repository
+```
 
-| Recipe | Source | Exists? | Notes |
-|--------|--------|---------|-------|
-| gcc | Homebrew bottle | No | Primary C compiler |
-| make | Homebrew bottle | No | GNU Make |
-| cmake | Homebrew bottle | Verify | May already exist |
-| pkg-config | Homebrew bottle | Verify | May already exist |
-| zlib | Homebrew bottle | No | Common compression lib |
-| openssl | Homebrew bottle | Verify | May already exist |
+### No-System-Deps Verification
 
-### Phase 2: Cross-Platform Recipe Validation
-
-Each recipe must be tested on all platforms. Create test matrix:
-
-| Recipe | Linux x86_64 | Linux arm64 | macOS x86_64 | macOS arm64 |
-|--------|--------------|-------------|--------------|-------------|
-| gcc | [ ] | [ ] | [ ] | [ ] |
-| make | [ ] | [ ] | [ ] | [ ] |
-| cmake | [ ] | [ ] | [ ] | [ ] |
-| pkg-config | [ ] | [ ] | [ ] | [ ] |
-| zlib | [ ] | [ ] | [ ] | [ ] |
-| openssl | [ ] | [ ] | [ ] | [ ] |
-
-**Test criteria for each cell:**
-1. Recipe installs successfully
-2. Tool/library is functional (compile test, link test)
-3. Works from tsuku's relocated path
-4. No system dependencies used (except libc)
-
-### Phase 3: Integration Test Matrix
-
-Build real-world tools using ONLY tsuku-provided dependencies. This validates the entire toolchain works together.
-
-| Test Tool | Build Deps | Linux x86_64 | Linux arm64 | macOS x86_64 | macOS arm64 |
-|-----------|------------|--------------|-------------|--------------|-------------|
-| sqlite | gcc, make | [ ] | [ ] | [ ] | [ ] |
-| zlib | gcc, make | [ ] | [ ] | [ ] | [ ] |
-| ncurses | gcc, make | [ ] | [ ] | [ ] | [ ] |
-| readline | gcc, make, ncurses | [ ] | [ ] | [ ] | [ ] |
-| openssl | gcc, make, zlib | [ ] | [ ] | [ ] | [ ] |
-| libxml2 | gcc, make, zlib | [ ] | [ ] | [ ] | [ ] |
-| curl | gcc, make, openssl, zlib, nghttp2 | [ ] | [ ] | [ ] | [ ] |
-| git | gcc, make, openssl, zlib, curl | [ ] | [ ] | [ ] | [ ] |
-| python | gcc, make, openssl, zlib, libffi, readline | [ ] | [ ] | [ ] | [ ] |
-
-**Test criteria for each cell:**
-1. Build completes successfully using only tsuku deps
-2. Resulting binary executes correctly
-3. Works in clean container/VM with NO dev tools pre-installed
-4. All linked libraries come from tsuku (verify with ldd/otool)
-
-### Phase 4: CI Integration
-
-Add test matrix to CI pipeline:
-
-```yaml
-# .github/workflows/build-essentials-test.yml
-name: Build Essentials Validation
-
-on:
-  push:
-    paths:
-      - 'recipes/gcc.toml'
-      - 'recipes/make.toml'
-      - 'recipes/zlib.toml'
-      # ... etc
-
-jobs:
-  recipe-validation:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-14]
-        recipe: [gcc, make, cmake, pkg-config, zlib, openssl]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - name: Bootstrap tsuku
-        run: go build -o tsuku ./cmd/tsuku
-      - name: Install recipe
-        run: ./tsuku install ${{ matrix.recipe }}
-      - name: Validate functionality
-        run: ./scripts/validate-recipe.sh ${{ matrix.recipe }}
-
-  integration-test:
-    needs: recipe-validation
-    strategy:
-      matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, macos-14]
-        test-tool: [sqlite, curl, git, python]
-    runs-on: ${{ matrix.os }}
-    container:
-      image: ${{ matrix.os == 'ubuntu-latest' && 'ubuntu:22.04' || '' }}
-      # Use minimal container with NO dev tools
-    steps:
-      - uses: actions/checkout@v4
-      - name: Verify clean environment
-        run: |
-          ! which gcc  # Should not have system gcc
-          ! which make # Should not have system make
-      - name: Bootstrap tsuku
-        run: # ... bootstrap without system deps
-      - name: Build test tool from source
-        run: ./tsuku install ${{ matrix.test-tool }}
-      - name: Verify tool works
-        run: |
-          ${{ matrix.test-tool }} --version
-      - name: Verify no system deps used
-        run: ./scripts/verify-no-system-deps.sh ${{ matrix.test-tool }}
+**Script**: `scripts/verify-no-system-deps.sh`
+```bash
+#!/bin/bash
+# Usage: verify-no-system-deps.sh <tool-name>
+# Verifies the tool uses only tsuku-provided dependencies:
+# Linux: ldd shows only $TSUKU_HOME paths and libc
+# macOS: otool -L shows only @rpath and system frameworks
 ```
 
 ## Implementation Approach
