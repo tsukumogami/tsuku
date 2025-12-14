@@ -13,7 +13,13 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
+
+// ghcrHTTPClient returns an HTTP client with appropriate timeouts for GHCR requests.
+func ghcrHTTPClient() *http.Client {
+	return &http.Client{Timeout: 30 * time.Second}
+}
 
 // HomebrewBottleAction downloads and extracts Homebrew bottles from GHCR
 type HomebrewBottleAction struct{}
@@ -155,7 +161,7 @@ type ghcrTokenResponse struct {
 func (a *HomebrewBottleAction) getGHCRToken(formula string) (string, error) {
 	url := fmt.Sprintf("https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/%s:pull", formula)
 
-	resp, err := http.Get(url)
+	resp, err := ghcrHTTPClient().Get(url)
 	if err != nil {
 		return "", fmt.Errorf("token request failed: %w", err)
 	}
@@ -209,7 +215,7 @@ func (a *HomebrewBottleAction) getBlobSHA(formula, version, platformTag, token s
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Accept", "application/vnd.oci.image.index.v1+json")
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := ghcrHTTPClient().Do(req)
 	if err != nil {
 		return "", fmt.Errorf("manifest request failed: %w", err)
 	}
@@ -266,7 +272,7 @@ func (a *HomebrewBottleAction) downloadBottle(formula, blobSHA, token, destPath 
 
 	req.Header.Set("Authorization", "Bearer "+token)
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := ghcrHTTPClient().Do(req)
 	if err != nil {
 		return fmt.Errorf("download request failed: %w", err)
 	}
