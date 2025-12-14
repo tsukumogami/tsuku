@@ -49,7 +49,7 @@ Additionally, the codebase has accumulated legacy actions from early experimenta
 - **Accuracy**: Code should reflect reality (bottles are the only practical option)
 - **Maintainability**: Less unused code means less maintenance burden
 - **Test isolation**: Test fixtures should not pollute the production registry
-- **Backwards compatibility**: Existing recipes using `homebrew_bottle` should continue working during transition
+- **Pre-GA freedom**: tsuku has no users yet, so breaking changes have no migration cost
 
 ## Considered Options
 
@@ -105,8 +105,7 @@ Rename `homebrew_bottle` to `homebrew` since bottles are the only option.
 - Matches user mental model ("install from Homebrew")
 
 **Cons:**
-- Breaking change requiring migration
-- Need deprecation period with alias
+- Would be a breaking change if tsuku had users (it doesn't - pre-GA)
 
 ### Decision 3: hashicorp_release Action
 
@@ -176,7 +175,7 @@ Remove all Homebrew source build infrastructure and rename `homebrew_bottle` to 
 
 The research conclusively showed that Homebrew source builds have no practical use case - 99.94% of formulas have bottles, and the remaining 5 are internal bootstrapping formulas. Keeping source build infrastructure creates confusion and maintenance burden for zero benefit.
 
-Renaming `homebrew_bottle` to `homebrew` reflects reality: there's only one way to install from Homebrew, so the qualifier is unnecessary. The alias approach provides a smooth migration path.
+Renaming `homebrew_bottle` to `homebrew` reflects reality: there's only one way to install from Homebrew, so the qualifier is unnecessary. Since tsuku is pre-GA with no external users, we can make this change directly without a deprecation period.
 
 Replacing `hashicorp_release` with explicit primitives aligns with tsuku's transparency philosophy - users should understand what actions do. The 6 affected recipes are a small migration cost for a cleaner, more consistent codebase.
 
@@ -215,16 +214,15 @@ testdata/                          testdata/
                                        └── readline.toml
 ```
 
-### Migration Strategy for homebrew_bottle → homebrew
+### Rename Strategy
 
-To maintain backwards compatibility during transition:
+Since tsuku is pre-GA with no external users, we rename `homebrew_bottle` to `homebrew` directly:
 
-1. **Phase 1**: Add `homebrew` as alias for `homebrew_bottle`
-2. **Phase 2**: Update all recipes to use `homebrew`
-3. **Phase 3**: Deprecate `homebrew_bottle` (log warning when used)
-4. **Phase 4**: Remove `homebrew_bottle` alias (breaking change, major version)
+1. Rename the action in code
+2. Update all recipes to use the new name
+3. Update all tests and documentation
 
-For this design, we implement through Phase 3. Phase 4 can happen in a future major release.
+No alias or deprecation period is needed.
 
 ### HashiCorp Recipe Migration
 
@@ -257,59 +255,84 @@ binaries = ["terraform"]
 
 ## Implementation Approach
 
-### Phase 1: Preparation
+Each phase is self-contained - tsuku should build and pass tests after each phase is complete.
 
-1. Add `homebrew` as action alias for `homebrew_bottle`
-2. Update validator to accept both names
-3. Add deprecation warning for `homebrew_bottle` usage
+### Phase 1: Rename homebrew_bottle to homebrew
 
-### Phase 2: Recipe Migration
+1. Rename `homebrew_bottle.go` → `homebrew.go`
+2. Rename `HomebrewBottleAction` → `HomebrewAction`
+3. Update action name from `"homebrew_bottle"` to `"homebrew"`
+4. Update all code references to the action
+5. Update all recipes using `homebrew_bottle` to use `homebrew`
+6. Update all tests
 
-1. Update libyaml.toml: `homebrew_bottle` → `homebrew`
-2. Migrate 6 HashiCorp recipes to explicit primitives:
-   - terraform.toml
-   - vault.toml
-   - nomad.toml
-   - packer.toml
-   - boundary.toml
-   - waypoint.toml
-3. Move test fixtures to testdata/:
-   - bash.toml → testdata/homebrew-source-fixtures/
-   - python.toml → testdata/homebrew-source-fixtures/
-   - readline.toml → testdata/homebrew-source-fixtures/
+### Phase 2: Migrate HashiCorp Recipes
 
-### Phase 3: Code Removal
+Replace `hashicorp_release` action usage with explicit primitives in all 6 recipes:
+- terraform.toml
+- vault.toml
+- nomad.toml
+- packer.toml
+- boundary.toml
+- waypoint.toml
 
-1. Remove `homebrew_source` action and tests
-2. Remove `HashiCorpReleaseAction` from composites.go
-3. Remove source build code from HomebrewBuilder:
-   - `buildFromSource()` method
-   - `generateSourceRecipe()` method
-   - `sourceRecipeData` struct
-   - `validateSourceRecipeData()` method
-   - `buildSourceToolDefs()` method
-   - `buildSourceSystemPrompt()` method
-   - `generateSourceRecipeOutput()` method
-   - `buildSourceSteps()` method
-   - `ToolFetchFormulaRuby` constant
-   - `ToolExtractSourceRecipe` constant
-4. Update llm-test-matrix.json to remove S1, S2, S3 tests
-5. Rename homebrew_bottle.go → homebrew.go
+### Phase 3: Remove hashicorp_release Action
 
-### Phase 4: Documentation Updates
+1. Remove `HashiCorpReleaseAction` from composites.go
+2. Remove related tests
+3. Update validator to reject `hashicorp_release`
 
-1. Update DESIGN-homebrew-builder.md:
-   - Remove Phase 2 (Source Builds) sections
-   - Update action name references
-   - Mark source-related issues as closed/obsolete
-2. Update other design docs referencing `homebrew_bottle`
-3. Update any user-facing documentation
+### Phase 4: Move Source Build Test Fixtures
 
-### Phase 5: Issue Cleanup
+1. Create `testdata/homebrew-source-fixtures/` directory
+2. Move test fixtures from registry:
+   - `internal/recipe/recipes/b/bash.toml` → `testdata/homebrew-source-fixtures/bash.toml`
+   - `internal/recipe/recipes/p/python.toml` → `testdata/homebrew-source-fixtures/python.toml`
+   - `internal/recipe/recipes/r/readline.toml` → `testdata/homebrew-source-fixtures/readline.toml`
+3. Update `llm-test-matrix.json` to reference new locations
+4. Update any test code referencing these fixtures
 
-1. Close issue #521 (meson_build) with note to re-scope for non-Homebrew use
+### Phase 5: Remove homebrew_source Action
+
+1. Remove `homebrew_source.go` and `homebrew_source_test.go`
+2. Update validator to reject `homebrew_source`
+3. Update action registry
+
+### Phase 6: Remove HomebrewBuilder Source Build Code
+
+Remove all source build code from `internal/builders/homebrew.go`:
+- `buildFromSource()` method
+- `generateSourceRecipe()` method
+- `sourceRecipeData` struct
+- `validateSourceRecipeData()` method
+- `buildSourceToolDefs()` method
+- `buildSourceSystemPrompt()` method
+- `generateSourceRecipeOutput()` method
+- `buildSourceSteps()` method
+- `ToolFetchFormulaRuby` constant
+- `ToolExtractSourceRecipe` constant
+- Related helper methods and types
+
+### Phase 7: Issue Cleanup
+
+1. Close issue #521 (meson_build) with note to re-scope for non-Homebrew use cases
 2. Update Homebrew Builder milestone to reflect reduced scope
 3. Close any open issues related to source builds
+
+### Phase 8: Consolidate Homebrew Design Documentation
+
+Consolidate all Homebrew-related design docs into a single authoritative document:
+
+1. Create new `docs/DESIGN-homebrew.md` describing the current state:
+   - The `homebrew` action (bottles only)
+   - The HomebrewBuilder (LLM-based bottle recipe generation)
+   - How Homebrew integration works in tsuku
+
+2. Delete superseded design docs:
+   - `docs/DESIGN-homebrew-builder.md` (superseded by consolidated doc)
+   - `docs/DESIGN-homebrew-cleanup.md` (this doc - work complete)
+
+3. Update any cross-references in other design docs
 
 ## Security Considerations
 
@@ -342,19 +365,14 @@ binaries = ["terraform"]
 
 ### Negative
 
-1. **Breaking change**: Recipes using `homebrew_bottle` need migration (mitigated by alias)
-2. **Longer HashiCorp recipes**: Explicit primitives are more verbose
-3. **Lost optionality**: If source builds ever become needed, code must be rewritten
+1. **Longer HashiCorp recipes**: Explicit primitives are more verbose
+2. **Lost optionality**: If source builds ever become needed, code must be rewritten
 
 ### Risks
 
 1. **Edge case discovery**: A legitimate source build use case might emerge
    - Mitigation: Build actions remain available; only Homebrew-specific source code is removed
    - Mitigation: The removed code is in git history if needed
-
-2. **Migration friction**: Users with custom recipes using old action names
-   - Mitigation: Deprecation warnings before removal
-   - Mitigation: Clear migration guide in release notes
 
 ## References
 
