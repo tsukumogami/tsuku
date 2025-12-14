@@ -122,7 +122,7 @@ func TestExecutor_Validate_DockerGroupWarning(t *testing.T) {
 	detector.checked = true
 
 	logger := &testLogger{}
-	executor := NewExecutor(detector, NewPreDownloader(), WithExecutorLogger(logger))
+	executor := NewExecutor(detector, NewPreDownloader(), WithExecutorLogger(logger), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Verify: recipe.VerifySection{
@@ -172,7 +172,7 @@ func TestExecutor_Validate_Success(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Verify: recipe.VerifySection{
@@ -210,7 +210,7 @@ func TestExecutor_Validate_VerificationFails(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Verify: recipe.VerifySection{
@@ -248,7 +248,7 @@ func TestExecutor_Validate_PatternMismatch(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Verify: recipe.VerifySection{
@@ -283,7 +283,7 @@ func TestExecutor_Validate_ContainerError(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Verify: recipe.VerifySection{
@@ -320,7 +320,7 @@ func TestExecutor_Validate_CustomExitCode(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	exitCode := 2
 	r := &recipe.Recipe{
@@ -357,7 +357,7 @@ func TestExecutor_Validate_NoPattern(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Verify: recipe.VerifySection{
@@ -392,7 +392,7 @@ func TestExecutor_Validate_MountsAndLabels(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Verify: recipe.VerifySection{

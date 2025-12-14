@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -14,6 +15,30 @@ import (
 // DefaultValidationImage is the container image used for validation.
 // Using Debian because the tsuku binary is dynamically linked against glibc.
 const DefaultValidationImage = "debian:bookworm-slim"
+
+// findTsukuBinary locates a valid tsuku binary for container execution.
+// It first checks os.Executable(), verifying the binary name looks correct.
+// If running in a test context (binary ends in .test), it looks for tsuku in PATH.
+// Returns empty string if no valid binary is found.
+func findTsukuBinary() string {
+	// Try the current executable first
+	if exePath, err := os.Executable(); err == nil {
+		baseName := filepath.Base(exePath)
+		// Check if this looks like the real tsuku binary (not a test binary)
+		if baseName == "tsuku" || baseName == "tsuku.exe" {
+			return exePath
+		}
+	}
+
+	// Current executable is not tsuku (likely a test binary)
+	// Try to find tsuku in PATH
+	if tsukuPath, err := exec.LookPath("tsuku"); err == nil {
+		return tsukuPath
+	}
+
+	// No valid tsuku binary found - validation will skip or fail gracefully
+	return ""
+}
 
 // ValidationResult contains the result of a recipe validation.
 type ValidationResult struct {
@@ -70,7 +95,7 @@ func WithTsukuBinary(path string) ExecutorOption {
 // NewExecutor creates a new Executor with the given dependencies.
 func NewExecutor(detector *RuntimeDetector, predownloader *PreDownloader, opts ...ExecutorOption) *Executor {
 	// Auto-detect tsuku binary path
-	tsukuPath, _ := os.Executable()
+	tsukuPath := findTsukuBinary()
 
 	e := &Executor{
 		detector:      detector,
@@ -113,6 +138,15 @@ func (e *Executor) Validate(ctx context.Context, r *recipe.Recipe, assetURL stri
 			}, nil
 		}
 		return nil, fmt.Errorf("failed to detect container runtime: %w", err)
+	}
+
+	// Check if we have a valid tsuku binary
+	if e.tsukuBinary == "" {
+		e.logger.Warn("Tsuku binary not found. Skipping recipe validation.",
+			"hint", "Ensure tsuku is installed and in PATH, or build with 'go build -o tsuku ./cmd/tsuku'")
+		return &ValidationResult{
+			Skipped: true,
+		}, nil
 	}
 
 	// Emit security warning for Docker with group membership (non-rootless)
@@ -234,9 +268,18 @@ func (e *Executor) buildTsukuInstallScript(r *recipe.Recipe) string {
 	sb.WriteString("# Copy recipe to tsuku recipes\n")
 	sb.WriteString(fmt.Sprintf("cp /workspace/recipe.toml /workspace/tsuku/recipes/%s.toml\n\n", r.Metadata.Name))
 
-	// Run tsuku install (which includes verification)
+	// Run tsuku install
 	sb.WriteString("# Run tsuku install\n")
-	sb.WriteString(fmt.Sprintf("tsuku install %s --force\n", r.Metadata.Name))
+	sb.WriteString(fmt.Sprintf("tsuku install %s --force\n\n", r.Metadata.Name))
+
+	// Run the verify command explicitly to capture its output for pattern matching.
+	// The install command doesn't print verify output, so we need to run it separately.
+	// Binaries are symlinked to $TSUKU_HOME/tools/current (/workspace/tsuku/tools/current).
+	if r.Verify.Command != "" {
+		sb.WriteString("# Run verify command to capture output for pattern matching\n")
+		sb.WriteString("export PATH=\"/workspace/tsuku/tools/current:$PATH\"\n")
+		sb.WriteString(fmt.Sprintf("%s\n", r.Verify.Command))
+	}
 
 	return sb.String()
 }

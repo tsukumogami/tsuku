@@ -54,6 +54,15 @@ func (e *Executor) ValidateSourceBuild(ctx context.Context, r *recipe.Recipe) (*
 		return nil, fmt.Errorf("failed to detect container runtime: %w", err)
 	}
 
+	// Check if we have a valid tsuku binary
+	if e.tsukuBinary == "" {
+		e.logger.Warn("Tsuku binary not found. Skipping source build validation.",
+			"hint", "Ensure tsuku is installed and in PATH, or build with 'go build -o tsuku ./cmd/tsuku'")
+		return &ValidationResult{
+			Skipped: true,
+		}, nil
+	}
+
 	// Emit security warning for Docker with group membership (non-rootless)
 	if runtime.Name() == "docker" && !runtime.IsRootless() {
 		e.logger.Warn("Using Docker with docker group membership.",
