@@ -1,4 +1,4 @@
-# Design: Centralize Validation Logic
+# Design: Centralize Sandbox Testing
 
 ## Status
 
@@ -6,16 +6,16 @@ Planned
 
 ## Implementation Issues
 
-### Milestone: [Centralize Validation Logic](https://github.com/tsukumogami/tsuku/milestone/22)
+### Milestone: [Centralize Sandbox Testing](https://github.com/tsukumogami/tsuku/milestone/22)
 
 | Issue | Title | Dependencies |
 |-------|-------|--------------|
 | [#568](https://github.com/tsukumogami/tsuku/issues/568) | feat(actions): add NetworkValidator interface | None |
 | [#569](https://github.com/tsukumogami/tsuku/issues/569) | feat(actions): implement RequiresNetwork on actions | [#568](https://github.com/tsukumogami/tsuku/issues/568) |
-| [#570](https://github.com/tsukumogami/tsuku/issues/570) | feat(validate): add ValidationRequirements computation | [#569](https://github.com/tsukumogami/tsuku/issues/569) |
-| [#571](https://github.com/tsukumogami/tsuku/issues/571) | refactor(validate): unify Validate and ValidateSourceBuild | [#570](https://github.com/tsukumogami/tsuku/issues/570) |
-| [#572](https://github.com/tsukumogami/tsuku/issues/572) | refactor(builders): use centralized validation | [#571](https://github.com/tsukumogami/tsuku/issues/571) |
-| [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --container and --recipe flags to install | [#571](https://github.com/tsukumogami/tsuku/issues/571) |
+| [#570](https://github.com/tsukumogami/tsuku/issues/570) | feat(sandbox): add SandboxRequirements computation | [#569](https://github.com/tsukumogami/tsuku/issues/569) |
+| [#571](https://github.com/tsukumogami/tsuku/issues/571) | refactor(sandbox): unify Sandbox and SandboxSourceBuild | [#570](https://github.com/tsukumogami/tsuku/issues/570) |
+| [#572](https://github.com/tsukumogami/tsuku/issues/572) | refactor(builders): use centralized sandbox testing | [#571](https://github.com/tsukumogami/tsuku/issues/571) |
+| [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --sandbox and --recipe flags to install | [#571](https://github.com/tsukumogami/tsuku/issues/571) |
 
 ### Dependency Graph
 
@@ -26,25 +26,25 @@ graph LR
     classDef blocked fill:#FFB6C1,stroke:#333
 
     I568[#568: Add NetworkValidator interface]:::ready --> I569[#569: Implement RequiresNetwork]:::blocked
-    I569 --> I570[#570: Add ValidationRequirements]:::blocked
-    I570 --> I571[#571: Unify Validate methods]:::blocked
+    I569 --> I570[#570: Add SandboxRequirements]:::blocked
+    I570 --> I571[#571: Unify Sandbox methods]:::blocked
     I571 --> I572[#572: Update builders]:::blocked
     I571 --> I573[#573: Add CLI flags]:::blocked
 ```
 
 ## Context and Problem Statement
 
-Tsuku's container-based validation ensures recipes work correctly by executing them in isolated containers. The eval+plan architecture (PR #530) enables offline validation by caching downloads during plan generation on the host, then running `tsuku install --plan` in a container with cached assets.
+Tsuku's container-based sandbox testing ensures recipes work correctly by executing them in isolated containers. The eval+plan architecture (PR #530) enables offline sandbox testing by caching downloads during plan generation on the host, then running `tsuku install --plan` in a container with cached assets.
 
-However, validation behavior is currently scattered across individual builders rather than being a unified, recipe-driven operation:
+However, sandbox testing behavior is currently scattered across individual builders rather than being a unified, recipe-driven operation:
 
-- **GitHub Release builder** calls `Validate()` with `Network: none`
-- **Homebrew bottle builder** calls `Validate()` with `Network: none`
-- **Homebrew source builder** calls `ValidateSourceBuild()` with `Network: host`
+- **GitHub Release builder** calls `Sandbox()` with `Network: none`
+- **Homebrew bottle builder** calls `Sandbox()` with `Network: none`
+- **Homebrew source builder** calls `SandboxSourceBuild()` with `Network: host`
 
 Each builder independently decides:
-1. Whether to validate (checks if executor is present)
-2. Which validation method to call
+1. Whether to run sandbox testing (checks if executor is present)
+2. Which sandbox method to call
 3. What container image to use
 4. Whether network access is needed
 5. What resource limits to apply
@@ -52,13 +52,13 @@ Each builder independently decides:
 
 This architecture creates several problems:
 
-**1. Validation cannot be invoked independently**
+**1. Sandbox testing cannot be invoked independently**
 
-There is no way to validate an existing recipe outside the `tsuku create` flow. A user who writes or modifies a recipe cannot run `tsuku validate <recipe>` to test it.
+There is no way to test an existing recipe outside the `tsuku create` flow. A user who writes or modifies a recipe cannot run `tsuku install --sandbox` to test it in isolation.
 
-**2. Validation depends on transient builder context**
+**2. Sandbox testing depends on transient builder context**
 
-The decision of which validation method to use relies on information the builder has at runtime (e.g., "I'm generating a source recipe") rather than information derivable from the recipe itself.
+The decision of which sandbox method to use relies on information the builder has at runtime (e.g., "I'm generating a source recipe") rather than information derivable from the recipe itself.
 
 **3. Duplicated knowledge about action requirements**
 
@@ -74,24 +74,24 @@ case "cargo_build":
 }
 ```
 
-This knowledge should live with the actions themselves, not in the validator. When new actions are added, this switch must be manually updated.
+This knowledge should live with the actions themselves, not in the sandbox executor. When new actions are added, this switch must be manually updated.
 
 **4. Network requirements are implicit**
 
-Some actions require network access (e.g., `cargo_build` fetches crates, `go_build` fetches modules, `apt_install` needs package repositories). This is currently handled by using different validation methods, but the requirement isn't surfaced in the plan or derivable from recipe analysis.
+Some actions require network access (e.g., `cargo_build` fetches crates, `go_build` fetches modules, `apt_install` needs package repositories). This is currently handled by using different sandbox methods, but the requirement isn't surfaced in the plan or derivable from recipe analysis.
 
 **5. Inconsistent failure semantics**
 
-Bottle validation failures trigger the LLM repair loop, but source validation failures are logged as warnings. This inconsistency is builder-specific rather than policy-driven.
+Bottle sandbox failures trigger the LLM repair loop, but source sandbox failures are logged as warnings. This inconsistency is builder-specific rather than policy-driven.
 
 ### Scope
 
 **In scope:**
-- Centralizing validation logic into a single entry point
-- Deriving validation requirements (image, network, resources, build tools) from recipe/plan content
-- Surfacing action metadata (network requirements, build dependencies) for validation decisions
-- Adding `tsuku validate` command for standalone validation
-- Refactoring builders to use the centralized validation
+- Centralizing sandbox testing logic into a single entry point
+- Deriving sandbox requirements (image, network, resources, build tools) from recipe/plan content
+- Surfacing action metadata (network requirements, build dependencies) for sandbox decisions
+- Adding `tsuku install --sandbox` flag for standalone sandbox testing
+- Refactoring builders to use the centralized sandbox testing
 
 **Out of scope:**
 - Removing network access from ecosystem actions (cargo_build, go_build, etc.)
@@ -101,24 +101,24 @@ Bottle validation failures trigger the LLM repair loop, but source validation fa
 
 ## Decision Drivers
 
-- **Single source of truth**: Validation requirements should be derivable from recipe/plan content alone
+- **Single source of truth**: Sandbox requirements should be derivable from recipe/plan content alone
 - **Action encapsulation**: Each action should declare its own requirements (network, build tools)
-- **Independent invocation**: Validation must work outside the `tsuku create` flow
+- **Independent invocation**: Sandbox testing must work outside the `tsuku create` flow
 - **Backwards compatibility**: Existing recipes and plans must continue to work
-- **Minimal duplication**: Knowledge about actions shouldn't be duplicated between action implementations and validators
-- **Plan completeness**: The installation plan should contain enough information to determine validation requirements
+- **Minimal duplication**: Knowledge about actions shouldn't be duplicated between action implementations and sandbox executor
+- **Plan completeness**: The installation plan should contain enough information to determine sandbox requirements
 - **Testing simplicity**: Solutions should be easy to test without complex mocking
 - **Migration path**: Gradual adoption preferred over all-or-nothing changes
 
 ## Success Criteria
 
 A successful solution will:
-1. Enable `tsuku install <tool> --container` to work without any builder context
-2. Derive validation requirements (network, build tools, image) from plan content alone
+1. Enable `tsuku install <tool> --sandbox` to work without any builder context
+2. Derive sandbox requirements (network, build tools, image) from plan content alone
 3. Require updating only one location when adding a new action's requirements
-4. Surface network requirements explicitly so validation can configure containers appropriately
+4. Surface network requirements explicitly so sandbox testing can configure containers appropriately
 5. Work with existing plans (no forced regeneration)
-6. Support `tsuku eval <tool> | tsuku install --plan - --container` workflow
+6. Support `tsuku eval <tool> | tsuku install --plan - --sandbox` workflow
 
 ## Implementation Context
 
@@ -144,7 +144,7 @@ This pattern is extensible - new metadata dimensions can be added as new maps.
 
 ### Relationship to Dependency Provisioning
 
-**Important:** This design must be read alongside [DESIGN-dependency-provisioning.md](DESIGN-dependency-provisioning.md), which fundamentally changes how build tools are handled.
+**Important:** This design should be read alongside [DESIGN-dependency-provisioning.md](DESIGN-dependency-provisioning.md), which fundamentally changes how build tools are handled.
 
 The dependency-provisioning design establishes that **tsuku provides all build tools as recipes** via Homebrew bottles, not apt packages:
 
@@ -173,14 +173,14 @@ This design adds **`RequiresNetwork`** - whether the action needs network access
 | Build tool dependencies | Already exists - `ActionDependencies.InstallTime` |
 | Runtime dependencies | Already exists - `ActionDependencies.Runtime` |
 
-### Current Validation Flow
+### Current Sandbox Testing Flow
 
 ```
 Builder (knows recipe type)
    |
-   +-- Bottle recipe --> Validate() --> Network: none, Debian
+   +-- Bottle recipe --> Sandbox() --> Network: none, Debian
    |
-   +-- Source recipe --> ValidateSourceBuild() --> Network: host, Ubuntu
+   +-- Source recipe --> SandboxSourceBuild() --> Network: host, Ubuntu
                               |
                               v
                     detectRequiredBuildTools() [duplicates action knowledge]
@@ -198,20 +198,20 @@ The `ResolvedStep` struct contains:
 
 - Network requirements per step
 - Build tool requirements per step
-- Aggregate validation configuration (image, resources)
+- Aggregate sandbox configuration (image, resources)
 
 ### Conventions to Follow
 
 - Use static registry maps for action metadata (like `ActionDependencies`)
-- Keep validation logic in `internal/validate/` package
+- Keep sandbox logic in `internal/sandbox/` package
 - Plan generation in `internal/executor/` package
-- Actions define their own metadata, validator consumes it
+- Actions define their own metadata, sandbox executor consumes it
 
 ## Considered Options
 
 This design addresses two independent decisions:
 1. Where to store action metadata (network requirements, build tools)
-2. How to surface validation requirements for use by the validator
+2. How to surface sandbox requirements for use by the sandbox executor
 
 ### Decision 1: Action Metadata Storage
 
@@ -334,7 +334,7 @@ var ActionValidationMetadata = map[string]ActionValidationMetadata{
 - Adding new action requires updating map (but only one place)
 - Can become out of sync if action behavior changes
 
-### Decision 2: Surfacing Validation Requirements
+### Decision 2: Surfacing Sandbox Requirements
 
 #### Option 2A: Plan-Level Aggregate Fields
 
@@ -344,16 +344,16 @@ Add aggregate fields to `InstallationPlan`:
 type InstallationPlan struct {
     // ... existing fields ...
 
-    // Validation requirements (computed from steps)
+    // Sandbox requirements (computed from steps)
     RequiresNetwork bool     // true if any step needs network
     BuildTools      []string // union of all step build tools
 }
 ```
 
 **Pros:**
-- Simple for validator to consume
+- Simple for sandbox executor to consume
 - Pre-computed during plan generation
-- Clear contract between plan generator and validator
+- Clear contract between plan generator and sandbox executor
 
 **Cons:**
 - Loses per-step granularity (can't skip network for specific steps)
@@ -375,38 +375,38 @@ type ResolvedStep struct {
 
 **Pros:**
 - Full granularity preserved
-- Validator can make nuanced decisions
+- Sandbox executor can make nuanced decisions
 - Steps are self-describing
 
 **Cons:**
 - Larger plan JSON
-- Validator must aggregate across steps
-- More complex validation logic
+- Sandbox executor must aggregate across steps
+- More complex sandbox logic
 
-#### Option 2C: Separate ValidationRequirements Struct
+#### Option 2C: Separate SandboxRequirements Struct
 
 Compute requirements as a separate output alongside the plan:
 
 ```go
-type ValidationRequirements struct {
+type SandboxRequirements struct {
     Network    bool
     BuildTools []string
     Image      string  // recommended container image
     Resources  ResourceLimits
 }
 
-func ComputeValidationRequirements(plan *InstallationPlan) *ValidationRequirements
+func ComputeSandboxRequirements(plan *InstallationPlan) *SandboxRequirements
 ```
 
 **Pros:**
 - Clean separation of concerns
 - Requirements can be computed from any plan (including hand-written ones)
-- Validator takes this struct directly
+- Sandbox executor takes this struct directly
 
 **Cons:**
 - Another data structure to maintain
 - Must be recomputed if plan changes
-- Indirection between plan and validation
+- Indirection between plan and sandbox testing
 
 ### Evaluation Against Decision Drivers
 
@@ -442,11 +442,11 @@ The following assumptions inform this design:
 
 ## Decision Outcome
 
-**Chosen: Option 1B (Interface Methods) + Option 2C (Separate ValidationRequirements Struct)**
+**Chosen: Option 1B (Interface Methods) + Option 2C (Separate SandboxRequirements Struct)**
 
 ### Summary
 
-Actions implement a `RequiresNetwork()` method that returns their network requirements. A computed `ValidationRequirements` struct derives container configuration from the plan by querying each action's method. This approach co-locates metadata with action code, provides compile-time enforcement, and aligns with a broader refactor to migrate existing static maps (`ActionDependencies`, `deterministicActions`) to interface methods (see #566).
+Actions implement a `RequiresNetwork()` method that returns their network requirements. A computed `SandboxRequirements` struct derives container configuration from the plan by querying each action's method. This approach co-locates metadata with action code, provides compile-time enforcement, and aligns with a broader refactor to migrate existing static maps (`ActionDependencies`, `deterministicActions`) to interface methods (see #566).
 
 ### Rationale
 
@@ -457,9 +457,9 @@ Actions implement a `RequiresNetwork()` method that returns their network requir
 - **Go-idiomatic**: Interfaces for capabilities is standard Go practice
 - **Consistency**: Aligns with #566 to refactor existing static maps to interfaces
 
-**Option 2C (Separate ValidationRequirements Struct)** was chosen because:
+**Option 2C (Separate SandboxRequirements Struct)** was chosen because:
 - **Backwards compatible**: Works with existing plans without regeneration
-- **Clean separation**: Validator doesn't need to understand plan internals beyond step actions
+- **Clean separation**: Sandbox executor doesn't need to understand plan internals beyond step actions
 - **Independent invocation**: Any code with a plan can compute requirements
 - **No plan format changes**: Avoids version bump and migration complexity
 
@@ -479,7 +479,7 @@ By choosing this approach, we accept:
 
 2. **Need action instance to query**: Must look up action from registry to call method. This is acceptable since the action registry already exists.
 
-3. **Computation at validation time**: Requirements are computed from the plan each time rather than cached. This is acceptable because the computation is trivial (iterate steps, lookup action, call method).
+3. **Computation at sandbox time**: Requirements are computed from the plan each time rather than cached. This is acceptable because the computation is trivial (iterate steps, lookup action, call method).
 
 These trade-offs are acceptable because:
 - Metadata co-location is more maintainable long-term
@@ -490,30 +490,30 @@ These trade-offs are acceptable because:
 
 ### Overview
 
-The solution introduces a centralized validation system that derives container configuration from recipe/plan content. The system consists of three layers:
+The solution introduces a centralized sandbox testing system that derives container configuration from recipe/plan content. The system consists of three layers:
 
 1. **Action Metadata Layer**: Interface methods on actions returning their requirements
 2. **Requirements Computation Layer**: Function that aggregates metadata from plan steps
-3. **Unified Validator**: Single entry point that consumes requirements and executes validation
+3. **Unified Sandbox Executor**: Single entry point that consumes requirements and executes sandbox testing
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        Validation Flow                               │
+│                        Sandbox Testing Flow                          │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                      │
 │  Recipe ──► GeneratePlan() ──► InstallationPlan                     │
 │                                       │                              │
 │                                       ▼                              │
-│                          ComputeValidationRequirements()             │
+│                          ComputeSandboxRequirements()                │
 │                                       │                              │
 │                    ┌──────────────────┴──────────────────┐          │
 │                    │                                      │          │
 │                    ▼                                      ▼          │
-│         action.RequiresNetwork()              ValidationRequirements │
+│         action.RequiresNetwork()              SandboxRequirements    │
 │         (interface method)                    (computed struct)      │
 │                                                      │               │
 │                                                      ▼               │
-│                                              Validate(plan, reqs)    │
+│                                              Sandbox(plan, reqs)     │
 │                                                      │               │
 │                                                      ▼               │
 │                                              Container Execution     │
@@ -578,15 +578,15 @@ type ConfigureMakeAction struct {
 
 **Default handling**: Actions that don't implement `NetworkValidator` (or embed `BaseAction`) default to `RequiresNetwork() = false`. This "fail-closed" design means unknown actions run without network - if they actually need network, validation fails with a clear error (timeout/DNS failure), prompting the developer to add the method.
 
-#### 3. ValidationRequirements Struct
+#### 3. SandboxRequirements Struct
 
-Location: `internal/validate/requirements.go`
+Location: `internal/sandbox/requirements.go`
 
 ```go
-// ValidationRequirements describes what a validation container needs.
+// SandboxRequirements describes what a sandbox container needs.
 // Note: Build tools are NOT tracked here - tsuku's normal dependency resolution
 // handles them via ActionDependencies.InstallTime.
-type ValidationRequirements struct {
+type SandboxRequirements struct {
     // RequiresNetwork is true if any step needs network access.
     RequiresNetwork bool
 
@@ -598,11 +598,11 @@ type ValidationRequirements struct {
     Resources ResourceLimits
 }
 
-// ComputeValidationRequirements derives container requirements from a plan.
-func ComputeValidationRequirements(plan *executor.InstallationPlan) *ValidationRequirements {
-    reqs := &ValidationRequirements{
+// ComputeSandboxRequirements derives container requirements from a plan.
+func ComputeSandboxRequirements(plan *executor.InstallationPlan) *SandboxRequirements {
+    reqs := &SandboxRequirements{
         RequiresNetwork: false,
-        Image:           DefaultValidationImage,  // debian:bookworm-slim
+        Image:           DefaultSandboxImage,  // debian:bookworm-slim
         Resources: ResourceLimits{
             Memory:  "2g",
             CPUs:    "2",
@@ -629,13 +629,13 @@ func ComputeValidationRequirements(plan *executor.InstallationPlan) *ValidationR
     // Upgrade image and resources for network-requiring (ecosystem) builds
     // Network-requiring steps typically involve compilation which needs more resources
     if reqs.RequiresNetwork {
-        reqs.Image = SourceBuildValidationImage  // ubuntu:22.04
-        reqs.Resources = SourceBuildLimits()     // 4g, 4 CPUs, 15min timeout
+        reqs.Image = SourceBuildSandboxImage  // ubuntu:22.04
+        reqs.Resources = SourceBuildLimits()  // 4g, 4 CPUs, 15min timeout
     }
 
     // Also upgrade for plans with known build actions (even if offline)
     if hasBuildActions(plan) {
-        reqs.Image = SourceBuildValidationImage
+        reqs.Image = SourceBuildSandboxImage
         reqs.Resources = SourceBuildLimits()
     }
 
@@ -659,18 +659,18 @@ func hasBuildActions(plan *executor.InstallationPlan) bool {
 }
 ```
 
-#### 4. Unified Validator
+#### 4. Unified Sandbox Executor
 
-Location: `internal/validate/validator.go`
+Location: `internal/sandbox/executor.go`
 
 ```go
-// Validate runs a plan in an isolated container using computed requirements.
-// This is the single entry point for all validation.
-func (e *Executor) Validate(
+// Sandbox runs a plan in an isolated container using computed requirements.
+// This is the single entry point for all sandbox testing.
+func (e *Executor) Sandbox(
     ctx context.Context,
     plan *executor.InstallationPlan,
-    reqs *ValidationRequirements,
-) (*ValidationResult, error) {
+    reqs *SandboxRequirements,
+) (*SandboxResult, error) {
     // Detect container runtime
     runtime, err := e.detector.Detect(ctx)
     if err != nil {
@@ -680,7 +680,7 @@ func (e *Executor) Validate(
     // Build container options from requirements
     opts := RunOptions{
         Image:   reqs.Image,
-        Command: []string{"/bin/bash", "/workspace/validate.sh"},
+        Command: []string{"/bin/bash", "/workspace/sandbox.sh"},
         Network: "none",
         Limits:  reqs.Resources,
         // ... mounts, env, etc.
@@ -691,19 +691,19 @@ func (e *Executor) Validate(
         opts.Network = "host"
     }
 
-    // Generate validation script with build tool installation
-    script := e.buildValidationScript(plan, reqs)
+    // Generate sandbox script with build tool installation
+    script := e.buildSandboxScript(plan, reqs)
 
     // ... write script, run container, check results
 }
 
-// buildValidationScript creates the shell script for validation.
+// buildSandboxScript creates the shell script for sandbox testing.
 // Note: Build tools are NOT installed via apt-get. Instead, tsuku's normal
 // dependency resolution handles them via ActionDependencies.InstallTime.
-// The validation script simply runs tsuku install --plan.
-func (e *Executor) buildValidationScript(
+// The sandbox script simply runs tsuku install --plan.
+func (e *Executor) buildSandboxScript(
     plan *executor.InstallationPlan,
-    reqs *ValidationRequirements,
+    reqs *SandboxRequirements,
 ) string {
     var sb strings.Builder
 
@@ -734,33 +734,33 @@ type NetworkValidator interface {
     RequiresNetwork() bool
 }
 
-// In internal/validate/requirements.go
-func ComputeValidationRequirements(plan *executor.InstallationPlan) *ValidationRequirements
+// In internal/sandbox/requirements.go
+func ComputeSandboxRequirements(plan *executor.InstallationPlan) *SandboxRequirements
 
-// In internal/validate/executor.go
-func (e *Executor) Validate(ctx context.Context, plan *executor.InstallationPlan, reqs *ValidationRequirements) (*ValidationResult, error)
+// In internal/sandbox/executor.go
+func (e *Executor) Sandbox(ctx context.Context, plan *executor.InstallationPlan, reqs *SandboxRequirements) (*SandboxResult, error)
 ```
 
 #### CLI Interface
 
-Rather than creating a new command, container-based validation is integrated into `tsuku install` with a `--container` flag:
+Rather than creating a new command, container-based sandbox testing is integrated into `tsuku install` with a `--sandbox` flag:
 
 ```
-tsuku install <tool> --container                    # Generate plan, run in container
-tsuku install --recipe recipe.toml --container      # Test recipe file in container (new)
-tsuku install --plan plan.json --container          # Execute existing plan in container
-tsuku install --plan - --container                  # Read plan from stdin (pipe from eval)
+tsuku install <tool> --sandbox                    # Generate plan, run in sandbox container
+tsuku install --recipe recipe.toml --sandbox      # Test recipe file in sandbox (new)
+tsuku install --plan plan.json --sandbox          # Execute existing plan in sandbox
+tsuku install --plan - --sandbox                  # Read plan from stdin (pipe from eval)
 ```
 
 This mirrors the existing `tsuku install` interface:
 - Accepts tool name or plan (via `--plan` flag)
-- Works with `tsuku eval <tool> | tsuku install --plan - --container`
+- Works with `tsuku eval <tool> | tsuku install --plan - --sandbox`
 
 **Note:** Currently `tsuku install` only accepts tool names (looked up from registry) or plans. To enable direct recipe file testing, this work should also add `--recipe` flag support:
 
 ```
-tsuku install --recipe path/to/recipe.toml --container
-tsuku eval --recipe path/to/recipe.toml | tsuku install --plan - --container
+tsuku install --recipe path/to/recipe.toml --sandbox
+tsuku eval --recipe path/to/recipe.toml | tsuku install --plan - --sandbox
 ```
 
 This allows recipe authors to test local recipe files before submitting to the registry.
@@ -768,24 +768,24 @@ This allows recipe authors to test local recipe files before submitting to the r
 **User Awareness for Untrusted Recipes**: When using `--recipe` with a local file, the CLI should display what permissions will be granted before execution:
 
 ```
-$ tsuku install --recipe ./my-recipe.toml --container
-Validating recipe: ./my-recipe.toml
+$ tsuku install --recipe ./my-recipe.toml --sandbox
+Sandbox testing recipe: ./my-recipe.toml
   Network access: required (cargo_build action)
   Container image: ubuntu:22.04
   Resource limits: 4GB memory, 4 CPUs, 15m timeout
 
-Proceed with validation? [y/N]
+Proceed with sandbox testing? [y/N]
 ```
 
-This confirmation can be bypassed with `--yes` for CI/automation, but ensures users understand what network-enabled validation entails for untrusted recipes.
+This confirmation can be bypassed with `--yes` for CI/automation, but ensures users understand what network-enabled sandbox testing entails for untrusted recipes.
 
-The `--container` flag:
+The `--sandbox` flag:
 1. Generates plan (if tool name provided) or loads plan (if --plan)
-2. Computes validation requirements from plan
+2. Computes sandbox requirements from plan
 3. Runs `tsuku install --plan` inside an isolated container
 4. Reports success/failure based on exit code and verification
 
-Note: The existing `tsuku validate` command performs static recipe validation (TOML syntax, required fields). Container-based execution testing is a different concern, handled by `tsuku install --container`.
+Note: The existing `tsuku validate` command performs static recipe validation (TOML syntax, required fields). Container-based execution testing is a different concern, handled by `tsuku install --sandbox`.
 
 ### Data Flow
 
@@ -793,7 +793,7 @@ Note: The existing `tsuku validate` command performs static recipe validation (T
 User Input                    Processing                      Output
 ─────────────────────────────────────────────────────────────────────────
 
-tsuku install rg --container
+tsuku install rg --sandbox
         │
         ▼
 ┌─────────────────┐
@@ -809,21 +809,21 @@ tsuku install rg --container
         │ InstallationPlan
         ▼
 ┌─────────────────────────────┐
-│ ComputeValidationRequirements│◄──── Iterates plan.Steps
-│ (internal/validate)         │      Calls action.RequiresNetwork()
+│ ComputeSandboxRequirements  │◄──── Iterates plan.Steps
+│ (internal/sandbox)          │      Calls action.RequiresNetwork()
 └────────┬────────────────────┘      Aggregates network/image/resources
         │
-        │ ValidationRequirements
+        │ SandboxRequirements
         │   .RequiresNetwork: bool
         │   .Image: string
         │   .Resources: ResourceLimits
         ▼
 ┌─────────────────────────────┐
-│ Validator.Validate()        │
-│ (internal/validate)         │
+│ Executor.Sandbox()          │
+│ (internal/sandbox)          │
 │   ├─ Build container opts   │
 │   │    from requirements    │
-│   ├─ Generate validate.sh   │
+│   ├─ Generate sandbox.sh    │
 │   └─ Run container          │────► Container with:
 └────────┬────────────────────┘        - Network: none|host
         │                             - Image: debian|ubuntu
@@ -841,7 +841,7 @@ tsuku install rg --container
         │
         ▼
 ┌─────────────────────────────┐
-│ ValidationResult            │────► Success/Failure + stdout/stderr
+│ SandboxResult               │────► Success/Failure + stdout/stderr
 └─────────────────────────────┘
 ```
 
@@ -851,9 +851,9 @@ tsuku install rg --container
 |------|-----------|---------|----------|
 | 1 | CLI | User args | Tool name or plan path |
 | 2 | GeneratePlan | Recipe | InstallationPlan (with cached downloads) |
-| 3 | ComputeValidationRequirements | InstallationPlan | ValidationRequirements |
-| 4 | Validator.Validate | Plan + Requirements | Container config + script |
-| 5 | Container | validate.sh + plan.json | Exit code + output |
+| 3 | ComputeSandboxRequirements | InstallationPlan | SandboxRequirements |
+| 4 | Executor.Sandbox | Plan + Requirements | Container config + script |
+| 5 | Container | sandbox.sh + plan.json | Exit code + output |
 
 ## Implementation Approach
 
@@ -883,64 +883,64 @@ tsuku install rg --container
 - Updated action files with RequiresNetwork() methods
 - Tests verifying each action's network requirement
 
-### Phase 3: Add ValidationRequirements Computation
+### Phase 3: Add SandboxRequirements Computation
 
 **Goal**: Implement requirements derivation from plans.
 
-- Create `internal/validate/requirements.go` with `ValidationRequirements` struct
-- Implement `ComputeValidationRequirements()` function that queries actions via interface
+- Create `internal/sandbox/requirements.go` with `SandboxRequirements` struct
+- Implement `ComputeSandboxRequirements()` function that queries actions via interface
 - Add tests with various plan configurations
 
 **Deliverables**:
-- ValidationRequirements struct and computation function
+- SandboxRequirements struct and computation function
 - Unit tests for aggregation logic
 
 ### Phase 4: Refactor Executor to Use Requirements
 
-**Goal**: Unify `Validate()` and `ValidateSourceBuild()` into single method.
+**Goal**: Unify `Sandbox()` and `SandboxSourceBuild()` into single method.
 
-- Modify `Executor.Validate()` to accept `ValidationRequirements`
-- Remove `ValidateSourceBuild()` (functionality absorbed into Validate)
+- Modify `Executor.Sandbox()` to accept `SandboxRequirements`
+- Remove `SandboxSourceBuild()` (functionality absorbed into Sandbox)
 - Remove `detectRequiredBuildTools()` (replaced by interface methods)
 - Update script generation to use requirements
 
 **Deliverables**:
-- Unified Validate() method
+- Unified Sandbox() method
 - Removal of duplicated logic
 - Updated tests
 
-### Phase 5: Update Builders to Use Centralized Validation
+### Phase 5: Update Builders to Use Centralized Sandbox Testing
 
-**Goal**: Refactor builders to use the new unified validation.
+**Goal**: Refactor builders to use the new unified sandbox testing.
 
-- Update `github_release.go` to compute requirements and call unified Validate()
+- Update `github_release.go` to compute requirements and call unified Sandbox()
 - Update `homebrew.go` (both bottle and source paths) similarly
-- Remove builder-specific validation decisions
+- Remove builder-specific sandbox decisions
 
 **Deliverables**:
-- Updated builders using centralized validation
-- Consistent validation behavior across all builders
+- Updated builders using centralized sandbox testing
+- Consistent sandbox behavior across all builders
 
-### Phase 6: Add --container and --recipe Flags to Install
+### Phase 6: Add --sandbox and --recipe Flags to Install
 
-**Goal**: Enable container-based validation via `tsuku install --container` and direct recipe file testing.
+**Goal**: Enable container-based sandbox testing via `tsuku install --sandbox` and direct recipe file testing.
 
-- Add `--container` flag to `tsuku install` command
+- Add `--sandbox` flag to `tsuku install` command
 - Add `--recipe` flag to support direct recipe file paths
 - Integrate with existing `--plan` flag flow
-- Compute validation requirements from plan
+- Compute sandbox requirements from plan
 - Run `tsuku install --plan` in container with computed configuration
 - Add `--verbose` flag for detailed container output
 
 **Deliverables**:
-- `--container` flag for `tsuku install`
+- `--sandbox` flag for `tsuku install`
 - `--recipe` flag for direct recipe file testing
-- Integration with `tsuku eval <tool> | tsuku install --plan - --container`
+- Integration with `tsuku eval <tool> | tsuku install --plan - --sandbox`
 - Updated help text
 
 ## Testing Strategy
 
-This section defines testing requirements to ensure comprehensive coverage of the centralized validation design.
+This section defines testing requirements to ensure comprehensive coverage of the centralized sandbox testing design.
 
 ### Testing Tools and Patterns
 
@@ -959,8 +959,8 @@ The codebase uses standard Go testing with manual mocking (no external test libr
 | Component | Test Focus | Estimated Count |
 |-----------|-----------|-----------------|
 | NetworkValidator interface | RequiresNetwork() correctness for each action, default handling | 8 |
-| ComputeValidationRequirements | Network aggregation, resource selection, image selection | 10 |
-| Validation script generation | Script content, conditional logic, escaping | 5 |
+| ComputeSandboxRequirements | Network aggregation, resource selection, image selection | 10 |
+| Sandbox script generation | Script content, conditional logic, escaping | 5 |
 | Plan validation | Format version, primitive-only check, checksum presence | 6 |
 | **Total Unit Tests** | | **~29** |
 
@@ -976,16 +976,16 @@ The codebase uses standard Go testing with manual mocking (no external test libr
 
 | Component | Test Focus | Estimated Count |
 |-----------|-----------|-----------------|
-| Offline validation | Cached downloads work with network=none | 3 |
-| Network validation | Ecosystem builds work with network=host | 3 |
+| Offline sandbox | Cached downloads work with network=none | 3 |
+| Network sandbox | Ecosystem builds work with network=host | 3 |
 | Resource limits | Memory/CPU/timeout applied correctly | 3 |
 | Mount configuration | tsuku binary, workspace, cache mounts work | 3 |
-| End-to-end workflow | Full install --container flow | 4 |
+| End-to-end workflow | Full install --sandbox flow | 4 |
 | **Total Integration Tests** | | **~16** |
 
 **Key integration test scenarios:**
 
-1. **Offline validation**: Generate plan (downloads cached), run container with network=none, verify install succeeds
+1. **Offline sandbox**: Generate plan (downloads cached), run container with network=none, verify install succeeds
 2. **Ecosystem build**: Plan with cargo_build, verify network=host, verify rust installed via ActionDependencies
 3. **Resource limits**: Plan requiring build, verify container has 4g memory, 4 CPUs
 4. **Cache flow**: Verify downloads from plan generation are accessible in container
@@ -1053,7 +1053,7 @@ buildPlan := &executor.InstallationPlan{
 test-unit:
   runs-on: ubuntu-latest
   steps:
-    - run: go test -short ./internal/validate/... ./internal/actions/...
+    - run: go test -short ./internal/sandbox/... ./internal/actions/...
 
 # Integration tests run with containers (slower)
 test-integration:
@@ -1061,17 +1061,17 @@ test-integration:
   services:
     docker: # Docker-in-Docker for container tests
   steps:
-    - run: go test -tags=integration ./internal/validate/...
+    - run: go test -tags=integration ./internal/sandbox/...
 
-# Full validation on schedule (nightly)
-test-validation:
+# Full sandbox testing on schedule (nightly)
+test-sandbox:
   runs-on: ${{ matrix.os }}
   strategy:
     matrix:
       os: [ubuntu-latest, macos-latest]
   steps:
-    - run: ./tsuku install rg --container
-    - run: ./tsuku install jq --container
+    - run: ./tsuku install rg --sandbox
+    - run: ./tsuku install jq --sandbox
 ```
 
 ### Coverage Targets
@@ -1079,7 +1079,7 @@ test-validation:
 | Area | Target | Rationale |
 |------|--------|-----------|
 | NetworkValidator implementations | 100% | Every action must have correct RequiresNetwork() |
-| ComputeValidationRequirements | 100% | Core logic, all branches must be tested |
+| ComputeSandboxRequirements | 100% | Core logic, all branches must be tested |
 | Validation execution | 80% | Some error paths require container failures |
 | CLI integration | 70% | Mostly integration with existing code |
 | **Overall** | **85%** | High for new code, lower for integration |
@@ -1101,7 +1101,7 @@ Before merging each phase:
 
 - **Single source of truth**: Validation requirements live with each action's code
 - **Compile-time enforcement**: Compiler catches missing interface implementations
-- **Independent validation**: Users can run `tsuku install <tool> --container` or pipe from eval
+- **Independent sandbox testing**: Users can run `tsuku install <tool> --sandbox` or pipe from eval
 - **Reduced duplication**: No more `detectRequiredBuildTools()` switch statement
 - **Consistent behavior**: All builders use the same validation logic
 - **Extensible**: Adding new metadata dimensions adds methods to the interface
@@ -1142,7 +1142,7 @@ The centralization refactor preserves all existing checksum verification. No new
 
 3. **Resource limits**: The design continues using resource limits (memory, CPU, pids) to prevent runaway processes.
 
-**New risk introduced**: The `tsuku validate` command allows users to validate arbitrary recipes. A malicious recipe could:
+**New risk introduced**: The `tsuku install --sandbox` command allows users to test arbitrary recipes. A malicious recipe could:
 - Consume resources up to the container limits
 - Attempt network access if RequiresNetwork is true
 - Execute arbitrary commands within the container
@@ -1177,7 +1177,7 @@ This design does not change supply chain trust model:
 
 **Container Networking**: The design uses `--network=host` for ecosystem builds. A future improvement could use bridge networking with egress filtering to limit access to known package registries only. This is out of scope for the initial implementation but noted as a security hardening opportunity.
 
-**User Awareness**: The `tsuku install --container` command should display what network access will be granted before execution, especially when validating untrusted recipes (via `--recipe` flag).
+**User Awareness**: The `tsuku install --sandbox` command should display what network access will be granted before execution, especially when testing untrusted recipes (via `--recipe` flag).
 
 ### Mitigations Summary
 
