@@ -39,6 +39,15 @@ type llmTestCase struct {
 //
 // Test cases are defined in llm-test-matrix.json, with each test validating
 // a specific variation to isolate failures.
+//
+// Container validation requires tsuku to be built and available in PATH.
+// If tsuku is not found, validation is skipped (recipes are still generated
+// and checked against ground truth, but not executed in a container).
+//
+// To run with full validation:
+//
+//	go build -o tsuku ./cmd/tsuku
+//	PATH="$(pwd):$PATH" go test -run TestLLMGroundTruth ./internal/builders/
 func TestLLMGroundTruth(t *testing.T) {
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 	if apiKey == "" {

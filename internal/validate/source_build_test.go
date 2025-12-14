@@ -37,7 +37,7 @@ func TestSourceBuildValidationImage(t *testing.T) {
 
 func TestDetectRequiredBuildTools_ConfigureMake(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -71,7 +71,7 @@ func TestDetectRequiredBuildTools_ConfigureMake(t *testing.T) {
 
 func TestDetectRequiredBuildTools_CMake(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -103,7 +103,7 @@ func TestDetectRequiredBuildTools_CMake(t *testing.T) {
 
 func TestDetectRequiredBuildTools_Cargo(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -134,7 +134,7 @@ func TestDetectRequiredBuildTools_Cargo(t *testing.T) {
 
 func TestDetectRequiredBuildTools_Go(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -165,7 +165,7 @@ func TestDetectRequiredBuildTools_Go(t *testing.T) {
 
 func TestDetectRequiredBuildTools_Patch(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -196,7 +196,7 @@ func TestDetectRequiredBuildTools_Patch(t *testing.T) {
 
 func TestDetectRequiredBuildTools_CPAN(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -228,7 +228,7 @@ func TestDetectRequiredBuildTools_CPAN(t *testing.T) {
 
 func TestDetectRequiredBuildTools_SkipsDarwinOnly(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -269,7 +269,7 @@ func TestDetectRequiredBuildTools_SkipsDarwinOnly(t *testing.T) {
 
 func TestDetectRequiredBuildTools_MultipleActions(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -305,7 +305,7 @@ func TestDetectRequiredBuildTools_MultipleActions(t *testing.T) {
 
 func TestBuildSourceBuildScript_BasicStructure(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -351,7 +351,7 @@ func TestBuildSourceBuildScript_BasicStructure(t *testing.T) {
 
 func TestBuildSourceBuildScript_InstallsBuildTools(t *testing.T) {
 	detector := NewRuntimeDetector()
-	executor := NewExecutor(detector, NewPreDownloader())
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -421,7 +421,8 @@ func TestValidateSourceBuild_Success(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	// Use a mock tsuku binary path to prevent skipping validation
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{Name: "test-tool"},
@@ -480,7 +481,8 @@ func TestValidateSourceBuild_ContainerError(t *testing.T) {
 	detector.detected = mockPodman
 	detector.checked = true
 
-	executor := NewExecutor(detector, NewPreDownloader())
+	// Use a mock tsuku binary path to prevent skipping validation
+	executor := NewExecutor(detector, NewPreDownloader(), WithTsukuBinary("/mock/tsuku"))
 
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{Name: "test-tool"},
