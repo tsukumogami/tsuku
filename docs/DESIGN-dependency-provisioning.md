@@ -41,8 +41,9 @@ graph LR
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I539,I540,I541,I542,I543 ready
-    class I544,I545,I546 blocked
+    class I539,I541,I545 done
+    class I540,I542,I543 ready
+    class I544,I546 blocked
 ```
 
 ### Milestone: [Dependency Provisioning: Build Environment](https://github.com/tsukumogami/tsuku/milestone/19)
