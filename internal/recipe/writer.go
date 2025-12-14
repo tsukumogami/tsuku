@@ -12,10 +12,12 @@ import (
 // It converts []Step to []map[string]interface{} since the Step struct
 // has custom UnmarshalTOML that doesn't work well for encoding.
 type recipeForEncoding struct {
-	Metadata MetadataSection          `toml:"metadata"`
-	Version  VersionSection           `toml:"version"`
-	Steps    []map[string]interface{} `toml:"steps"`
-	Verify   VerifySection            `toml:"verify"`
+	Metadata  MetadataSection          `toml:"metadata"`
+	Version   VersionSection           `toml:"version"`
+	Resources []Resource               `toml:"resources,omitempty"`
+	Patches   []Patch                  `toml:"patches,omitempty"`
+	Steps     []map[string]interface{} `toml:"steps"`
+	Verify    VerifySection            `toml:"verify"`
 }
 
 // toEncodable converts a Recipe to the encoding-friendly structure.
@@ -26,10 +28,12 @@ func toEncodable(r *Recipe) *recipeForEncoding {
 	}
 
 	return &recipeForEncoding{
-		Metadata: r.Metadata,
-		Version:  r.Version,
-		Steps:    steps,
-		Verify:   r.Verify,
+		Metadata:  r.Metadata,
+		Version:   r.Version,
+		Resources: r.Resources,
+		Patches:   r.Patches,
+		Steps:     steps,
+		Verify:    r.Verify,
 	}
 }
 

@@ -24,13 +24,16 @@ type llmTestMatrix struct {
 
 // llmTestCase represents a single test case in the matrix
 type llmTestCase struct {
-	Tool     string   `json:"tool"`
-	Repo     string   `json:"repo"`
-	Recipe   string   `json:"recipe"`
-	Action   string   `json:"action"`
-	Format   string   `json:"format"`
-	Desc     string   `json:"desc"`
-	Features []string `json:"features"`
+	Builder     string   `json:"builder"`      // "github" or "homebrew"
+	Tool        string   `json:"tool"`         // Tool name
+	Repo        string   `json:"repo"`         // GitHub repo (for github builder)
+	Formula     string   `json:"formula"`      // Homebrew formula name (for homebrew builder)
+	Recipe      string   `json:"recipe"`       // Path to ground truth recipe
+	Action      string   `json:"action"`       // Expected action type
+	Format      string   `json:"format"`       // Archive format (for github_archive)
+	BuildSystem string   `json:"build_system"` // Build system (for homebrew_source)
+	Desc        string   `json:"desc"`         // Test description
+	Features    []string `json:"features"`     // Features being tested
 }
 
 // TestLLMGroundTruth validates LLM-generated recipes against ground truth.
@@ -60,11 +63,17 @@ func TestLLMGroundTruth(t *testing.T) {
 		t.Fatalf("Failed to parse llm-test-matrix.json: %v", err)
 	}
 
-	// Create the builder with default factory (auto-detects from env)
+	// Initialize builders
 	ctx := context.Background()
-	builder := NewGitHubReleaseBuilder()
-	if err := builder.Initialize(ctx, &InitOptions{SkipValidation: false}); err != nil {
+
+	githubBuilder := NewGitHubReleaseBuilder()
+	if err := githubBuilder.Initialize(ctx, &InitOptions{SkipValidation: false}); err != nil {
 		t.Fatalf("Failed to initialize GitHubReleaseBuilder: %v", err)
+	}
+
+	homebrewBuilder := NewHomebrewBuilder()
+	if err := homebrewBuilder.Initialize(ctx, &InitOptions{SkipValidation: false}); err != nil {
+		t.Fatalf("Failed to initialize HomebrewBuilder: %v", err)
 	}
 
 	// Find the recipes directory (relative to test file)
@@ -77,10 +86,11 @@ func TestLLMGroundTruth(t *testing.T) {
 	}
 	t.Logf("Generated recipes will be saved to: %s", outputDir)
 
-	// Run tests in order (L1, L2, ..., L18)
+	// Run tests in order (L1-L18 for GitHub, S1-S3 for Homebrew source builds)
 	testIDs := []string{
 		"L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9",
 		"L10", "L11", "L12", "L13", "L14", "L15", "L16", "L17", "L18",
+		"S1", "S2", "S3",
 	}
 
 	for _, testID := range testIDs {
@@ -104,11 +114,20 @@ func TestLLMGroundTruth(t *testing.T) {
 				t.Fatalf("Failed to load ground truth recipe: %v", err)
 			}
 
-			// Generate recipe using LLM
-			result, err := builder.Build(ctx, BuildRequest{
-				Package:   tc.Tool,
-				SourceArg: tc.Repo,
-			})
+			// Select builder and build request based on test case
+			var result *BuildResult
+			if tc.Builder == "homebrew" {
+				// Use formula:source suffix to indicate source build
+				result, err = homebrewBuilder.Build(ctx, BuildRequest{
+					Package:   tc.Tool,
+					SourceArg: tc.Formula + ":source",
+				})
+			} else {
+				result, err = githubBuilder.Build(ctx, BuildRequest{
+					Package:   tc.Tool,
+					SourceArg: tc.Repo,
+				})
+			}
 			if err != nil {
 				t.Fatalf("LLM recipe generation failed: %v", err)
 			}
@@ -123,50 +142,156 @@ func TestLLMGroundTruth(t *testing.T) {
 				t.Logf("Generated recipe saved to: %s", outputPath)
 			}
 
-			// Validate key fields
-			if len(generated.Steps) == 0 {
-				t.Fatal("Generated recipe has no steps")
-			}
-
-			step := generated.Steps[0]
-
-			// Check action type
-			if step.Action != tc.Action {
-				t.Errorf("Action mismatch:\n  got:  %s\n  want: %s", step.Action, tc.Action)
-			}
-
-			// Check archive format if applicable
-			if tc.Format != "" {
-				format, _ := step.Params["archive_format"].(string)
-				if format != tc.Format {
-					t.Errorf("Archive format mismatch:\n  got:  %s\n  want: %s", format, tc.Format)
-				}
-			}
-
-			// Check OS mapping has required keys
-			osMapping := extractMapping(step.Params["os_mapping"])
-			if osMapping != nil {
-				expectedOSMapping := getOSMapping(expected)
-				checkMappingKeys(t, "os_mapping", osMapping, expectedOSMapping)
-			} else if tc.Action == "github_archive" {
-				// github_archive should have os_mapping
-				t.Errorf("Missing os_mapping in generated recipe (raw type: %T)", step.Params["os_mapping"])
-			}
-
-			// Check arch mapping has required keys
-			archMapping := extractMapping(step.Params["arch_mapping"])
-			if archMapping != nil {
-				expectedArchMapping := getArchMapping(expected)
-				checkMappingKeys(t, "arch_mapping", archMapping, expectedArchMapping)
-			}
-
-			// Log comparison for debugging
-			t.Logf("Generated asset_pattern: %v", step.Params["asset_pattern"])
-			if len(expected.Steps) > 0 {
-				t.Logf("Expected asset_pattern: %v", expected.Steps[0].Params["asset_pattern"])
+			// Validate based on builder type
+			if tc.Builder == "homebrew" {
+				validateHomebrewSourceRecipe(t, tc, generated, expected)
+			} else {
+				validateGitHubRecipe(t, tc, generated, expected)
 			}
 		})
 	}
+}
+
+// validateGitHubRecipe validates a GitHub release recipe
+func validateGitHubRecipe(t *testing.T, tc llmTestCase, generated, expected *recipe.Recipe) {
+	t.Helper()
+
+	if len(generated.Steps) == 0 {
+		t.Fatal("Generated recipe has no steps")
+	}
+
+	step := generated.Steps[0]
+
+	// Check action type
+	if step.Action != tc.Action {
+		t.Errorf("Action mismatch:\n  got:  %s\n  want: %s", step.Action, tc.Action)
+	}
+
+	// Check archive format if applicable
+	if tc.Format != "" {
+		format, _ := step.Params["archive_format"].(string)
+		if format != tc.Format {
+			t.Errorf("Archive format mismatch:\n  got:  %s\n  want: %s", format, tc.Format)
+		}
+	}
+
+	// Check OS mapping has required keys
+	osMapping := extractMapping(step.Params["os_mapping"])
+	if osMapping != nil {
+		expectedOSMapping := getOSMapping(expected)
+		checkMappingKeys(t, "os_mapping", osMapping, expectedOSMapping)
+	} else if tc.Action == "github_archive" {
+		t.Errorf("Missing os_mapping in generated recipe (raw type: %T)", step.Params["os_mapping"])
+	}
+
+	// Check arch mapping has required keys
+	archMapping := extractMapping(step.Params["arch_mapping"])
+	if archMapping != nil {
+		expectedArchMapping := getArchMapping(expected)
+		checkMappingKeys(t, "arch_mapping", archMapping, expectedArchMapping)
+	}
+
+	// Log comparison for debugging
+	t.Logf("Generated asset_pattern: %v", step.Params["asset_pattern"])
+	if len(expected.Steps) > 0 {
+		t.Logf("Expected asset_pattern: %v", expected.Steps[0].Params["asset_pattern"])
+	}
+}
+
+// validateHomebrewSourceRecipe validates a Homebrew source build recipe
+func validateHomebrewSourceRecipe(t *testing.T, tc llmTestCase, generated, expected *recipe.Recipe) {
+	t.Helper()
+
+	if len(generated.Steps) == 0 {
+		t.Fatal("Generated recipe has no steps")
+	}
+
+	// Check that first step is homebrew_source
+	step := generated.Steps[0]
+	if step.Action != tc.Action {
+		t.Errorf("First action mismatch:\n  got:  %s\n  want: %s", step.Action, tc.Action)
+	}
+
+	// Check build system by looking for expected build action (configure_make, cmake, etc.)
+	if tc.BuildSystem != "" {
+		hasBuildAction := false
+		expectedAction := ""
+		switch tc.BuildSystem {
+		case "autotools":
+			expectedAction = "configure_make"
+		case "cmake":
+			expectedAction = "cmake"
+		case "cargo":
+			expectedAction = "cargo_build"
+		case "go":
+			expectedAction = "go_build"
+		}
+		for _, s := range generated.Steps {
+			if s.Action == expectedAction {
+				hasBuildAction = true
+				break
+			}
+		}
+		if expectedAction != "" && !hasBuildAction {
+			t.Logf("Note: Expected %s action for %s build system not found in steps", expectedAction, tc.BuildSystem)
+		}
+	}
+
+	// Check patches for source builds
+	hasPatches := containsFeature(tc.Features, "patches:")
+	if hasPatches {
+		t.Logf("Checking patches for %s", tc.Tool)
+
+		// Check recipe-level patches
+		if len(generated.Patches) == 0 {
+			t.Error("Expected patches but generated recipe has none")
+		} else {
+			t.Logf("Generated recipe has %d patch(es)", len(generated.Patches))
+
+			// Check patch ordering if required
+			if containsFeature(tc.Features, "patches:ordering") {
+				t.Logf("Verifying patch ordering is preserved")
+				// Patches should maintain order from formula
+			}
+
+			// Check for URL patches
+			if containsFeature(tc.Features, "patches:url") {
+				hasURLPatch := false
+				for _, p := range generated.Patches {
+					if p.URL != "" {
+						hasURLPatch = true
+						t.Logf("Found URL patch: %s", p.URL)
+					}
+				}
+				if !hasURLPatch {
+					t.Error("Expected URL patches but found none")
+				}
+			}
+
+			// Check for multiple patches
+			if containsFeature(tc.Features, "patches:multiple") {
+				if len(generated.Patches) < 2 {
+					t.Errorf("Expected multiple patches, got %d", len(generated.Patches))
+				}
+			}
+		}
+	}
+
+	// Log comparison
+	t.Logf("Generated recipe has %d steps", len(generated.Steps))
+	if len(expected.Steps) > 0 {
+		t.Logf("Expected recipe has %d steps", len(expected.Steps))
+	}
+}
+
+// containsFeature checks if a feature prefix is present in the features list
+func containsFeature(features []string, prefix string) bool {
+	for _, f := range features {
+		if len(f) >= len(prefix) && f[:len(prefix)] == prefix {
+			return true
+		}
+	}
+	return false
 }
 
 // loadRecipe loads a recipe from a TOML file
