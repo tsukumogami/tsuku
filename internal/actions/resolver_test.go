@@ -30,6 +30,7 @@ func (m *mockLoader) addRecipe(name string, r *recipe.Recipe) {
 }
 
 func TestResolveDependencies_NpmInstall(t *testing.T) {
+	t.Parallel()
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
 			{Action: "npm_install", Params: map[string]interface{}{}},
@@ -48,6 +49,7 @@ func TestResolveDependencies_NpmInstall(t *testing.T) {
 }
 
 func TestResolveDependencies_GoInstall(t *testing.T) {
+	t.Parallel()
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
 			{Action: "go_install", Params: map[string]interface{}{}},
@@ -66,6 +68,7 @@ func TestResolveDependencies_GoInstall(t *testing.T) {
 }
 
 func TestResolveDependencies_Download(t *testing.T) {
+	t.Parallel()
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
 			{Action: "download", Params: map[string]interface{}{}},
@@ -84,6 +87,7 @@ func TestResolveDependencies_Download(t *testing.T) {
 }
 
 func TestResolveDependencies_MultipleSteps(t *testing.T) {
+	t.Parallel()
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
 			{Action: "download", Params: map[string]interface{}{}},
@@ -108,6 +112,7 @@ func TestResolveDependencies_MultipleSteps(t *testing.T) {
 }
 
 func TestResolveDependencies_ExtraDependencies(t *testing.T) {
+	t.Parallel()
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
 			{
@@ -130,6 +135,7 @@ func TestResolveDependencies_ExtraDependencies(t *testing.T) {
 }
 
 func TestResolveDependencies_ExtraRuntimeDependencies(t *testing.T) {
+	t.Parallel()
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
 			{
@@ -154,6 +160,7 @@ func TestResolveDependencies_ExtraRuntimeDependencies(t *testing.T) {
 }
 
 func TestResolveDependencies_CombinedExtras(t *testing.T) {
+	t.Parallel()
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
 			{
@@ -186,6 +193,7 @@ func TestResolveDependencies_CombinedExtras(t *testing.T) {
 }
 
 func TestResolveDependencies_EmptyRecipe(t *testing.T) {
+	t.Parallel()
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{},
 	}
@@ -201,6 +209,7 @@ func TestResolveDependencies_EmptyRecipe(t *testing.T) {
 }
 
 func TestParseDependency(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		input       string
 		wantName    string
@@ -236,6 +245,7 @@ func TestParseDependency(t *testing.T) {
 }
 
 func TestGetStringSliceParam(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name   string
 		params map[string]interface{}
@@ -281,6 +291,7 @@ func TestGetStringSliceParam(t *testing.T) {
 // Tests for step-level replace behavior
 
 func TestResolveDependencies_StepRuntimeDependenciesReplace(t *testing.T) {
+	t.Parallel()
 	// esbuild case: npm_install but compiled binary, no runtime needed
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -306,6 +317,7 @@ func TestResolveDependencies_StepRuntimeDependenciesReplace(t *testing.T) {
 }
 
 func TestResolveDependencies_StepDependenciesReplace(t *testing.T) {
+	t.Parallel()
 	// Replace implicit install deps with custom ones
 	r := &recipe.Recipe{
 		Steps: []recipe.Step{
@@ -336,6 +348,7 @@ func TestResolveDependencies_StepDependenciesReplace(t *testing.T) {
 // Tests for recipe-level replace behavior
 
 func TestResolveDependencies_RecipeDependenciesReplace(t *testing.T) {
+	t.Parallel()
 	// Recipe-level dependencies replaces all install deps
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -370,6 +383,7 @@ func TestResolveDependencies_RecipeDependenciesReplace(t *testing.T) {
 }
 
 func TestResolveDependencies_RecipeRuntimeDependenciesReplace(t *testing.T) {
+	t.Parallel()
 	// Recipe-level runtime_dependencies replaces all runtime deps
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -401,6 +415,7 @@ func TestResolveDependencies_RecipeRuntimeDependenciesReplace(t *testing.T) {
 // Tests for recipe-level extend behavior
 
 func TestResolveDependencies_RecipeExtraDependencies(t *testing.T) {
+	t.Parallel()
 	// Recipe-level extra_dependencies adds to install deps
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -426,6 +441,7 @@ func TestResolveDependencies_RecipeExtraDependencies(t *testing.T) {
 }
 
 func TestResolveDependencies_RecipeExtraRuntimeDependencies(t *testing.T) {
+	t.Parallel()
 	// Recipe-level extra_runtime_dependencies adds to runtime deps
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -448,6 +464,7 @@ func TestResolveDependencies_RecipeExtraRuntimeDependencies(t *testing.T) {
 }
 
 func TestResolveDependencies_RecipeReplaceAndExtend(t *testing.T) {
+	t.Parallel()
 	// Recipe-level replace + extend
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
@@ -481,6 +498,7 @@ func TestResolveDependencies_RecipeReplaceAndExtend(t *testing.T) {
 // Tests for transitive resolution
 
 func TestResolveTransitive_EmptyDeps(t *testing.T) {
+	t.Parallel()
 	loader := newMockLoader()
 	ctx := context.Background()
 
@@ -503,6 +521,7 @@ func TestResolveTransitive_EmptyDeps(t *testing.T) {
 }
 
 func TestResolveTransitive_NoDepsRecipe(t *testing.T) {
+	t.Parallel()
 	// Dependency exists but has no deps of its own
 	loader := newMockLoader()
 	loader.addRecipe("nodejs", &recipe.Recipe{
@@ -531,6 +550,7 @@ func TestResolveTransitive_NoDepsRecipe(t *testing.T) {
 }
 
 func TestResolveTransitive_LinearChain(t *testing.T) {
+	t.Parallel()
 	// A -> B -> C (linear chain)
 	loader := newMockLoader()
 
@@ -571,6 +591,7 @@ func TestResolveTransitive_LinearChain(t *testing.T) {
 }
 
 func TestResolveTransitive_Diamond(t *testing.T) {
+	t.Parallel()
 	// Diamond: A -> B, A -> C, B -> D, C -> D
 	loader := newMockLoader()
 
@@ -620,6 +641,7 @@ func TestResolveTransitive_Diamond(t *testing.T) {
 }
 
 func TestResolveTransitive_CycleDetection(t *testing.T) {
+	t.Parallel()
 	// Cycle: A -> B -> C -> A
 	loader := newMockLoader()
 
@@ -663,6 +685,7 @@ func TestResolveTransitive_CycleDetection(t *testing.T) {
 }
 
 func TestResolveTransitive_SelfCycle(t *testing.T) {
+	t.Parallel()
 	// Self-cycle: A -> A
 	loader := newMockLoader()
 
@@ -690,6 +713,7 @@ func TestResolveTransitive_SelfCycle(t *testing.T) {
 }
 
 func TestResolveTransitive_MaxDepthExceeded(t *testing.T) {
+	t.Parallel()
 	// Create a chain of 15 deps: D0 -> D1 -> D2 -> ... -> D14
 	loader := newMockLoader()
 
@@ -723,6 +747,7 @@ func TestResolveTransitive_MaxDepthExceeded(t *testing.T) {
 }
 
 func TestResolveTransitive_VersionPreservation(t *testing.T) {
+	t.Parallel()
 	// B depends on C@2.0, but root already has C@1.0
 	// First encountered version should win
 	loader := newMockLoader()
@@ -757,6 +782,7 @@ func TestResolveTransitive_VersionPreservation(t *testing.T) {
 }
 
 func TestResolveTransitive_MissingRecipe(t *testing.T) {
+	t.Parallel()
 	// Dependency recipe not in registry should be skipped (not error)
 	loader := newMockLoader()
 	ctx := context.Background()
@@ -778,6 +804,7 @@ func TestResolveTransitive_MissingRecipe(t *testing.T) {
 }
 
 func TestResolveTransitive_RuntimeDeps(t *testing.T) {
+	t.Parallel()
 	// Runtime deps should also be resolved transitively
 	loader := newMockLoader()
 

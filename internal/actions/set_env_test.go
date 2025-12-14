@@ -8,6 +8,7 @@ import (
 )
 
 func TestSetEnvAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &SetEnvAction{}
 	if action.Name() != "set_env" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "set_env")
@@ -15,6 +16,7 @@ func TestSetEnvAction_Name(t *testing.T) {
 }
 
 func TestSetEnvAction_Execute(t *testing.T) {
+	t.Parallel()
 	action := &SetEnvAction{}
 	tmpDir := t.TempDir()
 
@@ -51,6 +53,7 @@ func TestSetEnvAction_Execute(t *testing.T) {
 }
 
 func TestSetEnvAction_Execute_MissingVars(t *testing.T) {
+	t.Parallel()
 	action := &SetEnvAction{}
 	tmpDir := t.TempDir()
 
@@ -67,6 +70,7 @@ func TestSetEnvAction_Execute_MissingVars(t *testing.T) {
 }
 
 func TestSetEnvAction_parseVars(t *testing.T) {
+	t.Parallel()
 	action := &SetEnvAction{}
 
 	// Valid input
@@ -88,6 +92,7 @@ func TestSetEnvAction_parseVars(t *testing.T) {
 }
 
 func TestSetEnvAction_parseVars_InvalidFormat(t *testing.T) {
+	t.Parallel()
 	action := &SetEnvAction{}
 
 	tests := []struct {

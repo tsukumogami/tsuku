@@ -9,6 +9,7 @@ import (
 )
 
 func TestIsValidNixPackage(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		pkg      string
@@ -65,6 +66,7 @@ func TestIsValidNixPackage(t *testing.T) {
 }
 
 func TestValidateExecutableName(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		exe         string
@@ -124,6 +126,7 @@ func TestValidateExecutableName(t *testing.T) {
 }
 
 func TestResolveNixPortable(t *testing.T) {
+	t.Parallel()
 	// ResolveNixPortable should return empty string when not installed
 	// This is a quick sanity check - integration tests will verify actual installation
 	result := ResolveNixPortable()
@@ -134,6 +137,7 @@ func TestResolveNixPortable(t *testing.T) {
 }
 
 func TestGetNixInternalDir(t *testing.T) {
+	t.Parallel()
 	// Should return a path ending with .nix-internal
 	dir, err := GetNixInternalDir()
 	if err != nil {
@@ -151,6 +155,7 @@ func TestGetNixInternalDir(t *testing.T) {
 }
 
 func TestNixInstallAction_Decompose_PlatformCheck(t *testing.T) {
+	t.Parallel()
 	// Skip on Linux - the platform check passes there
 	if runtime.GOOS == "linux" {
 		t.Skip("Skipping platform check test on Linux")
@@ -175,6 +180,7 @@ func TestNixInstallAction_Decompose_PlatformCheck(t *testing.T) {
 }
 
 func TestNixInstallAction_Decompose_MissingPackage(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -198,6 +204,7 @@ func TestNixInstallAction_Decompose_MissingPackage(t *testing.T) {
 }
 
 func TestNixInstallAction_Decompose_InvalidPackage(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -222,6 +229,7 @@ func TestNixInstallAction_Decompose_InvalidPackage(t *testing.T) {
 }
 
 func TestNixInstallAction_Decompose_MissingExecutables(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -245,6 +253,7 @@ func TestNixInstallAction_Decompose_MissingExecutables(t *testing.T) {
 }
 
 func TestNixInstallAction_Decompose_InvalidExecutable(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -269,11 +278,13 @@ func TestNixInstallAction_Decompose_InvalidExecutable(t *testing.T) {
 }
 
 func TestNixInstallAction_ImplementsDecomposable(t *testing.T) {
+	t.Parallel()
 	// Verify that NixInstallAction implements Decomposable interface
 	var _ Decomposable = (*NixInstallAction)(nil)
 }
 
 func TestNixInstallAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &NixInstallAction{}
 	if action.Name() != "nix_install" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "nix_install")
@@ -281,6 +292,7 @@ func TestNixInstallAction_Name(t *testing.T) {
 }
 
 func TestNixInstallAction_Execute_PlatformCheck(t *testing.T) {
+	t.Parallel()
 	// Skip on Linux - the platform check passes there
 	if runtime.GOOS == "linux" {
 		t.Skip("Skipping platform check test on Linux")
@@ -303,6 +315,7 @@ func TestNixInstallAction_Execute_PlatformCheck(t *testing.T) {
 }
 
 func TestNixInstallAction_Execute_MissingPackage(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -324,6 +337,7 @@ func TestNixInstallAction_Execute_MissingPackage(t *testing.T) {
 }
 
 func TestNixInstallAction_Execute_InvalidPackage(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -346,6 +360,7 @@ func TestNixInstallAction_Execute_InvalidPackage(t *testing.T) {
 }
 
 func TestNixInstallAction_Execute_MissingExecutables(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -367,6 +382,7 @@ func TestNixInstallAction_Execute_MissingExecutables(t *testing.T) {
 }
 
 func TestNixInstallAction_Execute_EmptyExecutables(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -389,6 +405,7 @@ func TestNixInstallAction_Execute_EmptyExecutables(t *testing.T) {
 }
 
 func TestNixInstallAction_Execute_InvalidExecutable(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux - will fail at platform check
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -411,6 +428,7 @@ func TestNixInstallAction_Execute_InvalidExecutable(t *testing.T) {
 }
 
 func TestNixInstallAction_Decompose_EmptyExecutables(t *testing.T) {
+	t.Parallel()
 	// Skip on non-Linux
 	if runtime.GOOS != "linux" {
 		t.Skip("Skipping on non-Linux")
@@ -435,6 +453,7 @@ func TestNixInstallAction_Decompose_EmptyExecutables(t *testing.T) {
 }
 
 func TestCreateNixWrapper(t *testing.T) {
+	t.Parallel()
 	// Create a temporary directory for the test
 	tmpDir := t.TempDir()
 	binDir := tmpDir
@@ -492,6 +511,7 @@ func TestCreateNixWrapper(t *testing.T) {
 }
 
 func TestCreateNixWrapper_MultipleExecutables(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	executables := []string{"foo", "bar", "baz"}
@@ -512,6 +532,7 @@ func TestCreateNixWrapper_MultipleExecutables(t *testing.T) {
 }
 
 func TestIsValidNixPackage_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name     string
 		pkg      string
@@ -544,6 +565,7 @@ func TestIsValidNixPackage_EdgeCases(t *testing.T) {
 }
 
 func TestValidateExecutableName_EdgeCases(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		exe         string
@@ -580,6 +602,7 @@ func TestValidateExecutableName_EdgeCases(t *testing.T) {
 }
 
 func TestDetectProotFallback(t *testing.T) {
+	t.Parallel()
 	// This function checks for proot indicators in nix-portable output
 	// We can test it with a fake path that doesn't exist - it should return false
 	result := detectProotFallback("/nonexistent/path", "/tmp/test")

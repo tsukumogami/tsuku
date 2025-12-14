@@ -17,6 +17,7 @@ func createSecureCacheDir(t *testing.T) string {
 }
 
 func TestDownloadCache_CacheMiss(t *testing.T) {
+	t.Parallel()
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
@@ -31,6 +32,7 @@ func TestDownloadCache_CacheMiss(t *testing.T) {
 }
 
 func TestDownloadCache_SaveAndCheck(t *testing.T) {
+	t.Parallel()
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
@@ -71,6 +73,7 @@ func TestDownloadCache_SaveAndCheck(t *testing.T) {
 }
 
 func TestDownloadCache_ChecksumVerification(t *testing.T) {
+	t.Parallel()
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
@@ -127,6 +130,7 @@ func TestDownloadCache_ChecksumVerification(t *testing.T) {
 }
 
 func TestDownloadCache_Clear(t *testing.T) {
+	t.Parallel()
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
@@ -172,6 +176,7 @@ func TestDownloadCache_Clear(t *testing.T) {
 }
 
 func TestDownloadCache_Info(t *testing.T) {
+	t.Parallel()
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
@@ -212,6 +217,7 @@ func TestDownloadCache_Info(t *testing.T) {
 }
 
 func TestDownloadCache_DifferentURLsDifferentCache(t *testing.T) {
+	t.Parallel()
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
@@ -263,6 +269,7 @@ func TestDownloadCache_DifferentURLsDifferentCache(t *testing.T) {
 }
 
 func TestDownloadCache_CorruptedFile(t *testing.T) {
+	t.Parallel()
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
@@ -297,6 +304,7 @@ func TestDownloadCache_CorruptedFile(t *testing.T) {
 }
 
 func TestDownloadCache_ClearEmpty(t *testing.T) {
+	t.Parallel()
 	cacheDir := createSecureCacheDir(t)
 	cache := NewDownloadCache(cacheDir)
 
@@ -307,6 +315,7 @@ func TestDownloadCache_ClearEmpty(t *testing.T) {
 }
 
 func TestDownloadCache_ClearNonexistentDir(t *testing.T) {
+	t.Parallel()
 	cache := NewDownloadCache("/nonexistent/path/cache")
 
 	// Clear on nonexistent directory should not error
@@ -316,6 +325,7 @@ func TestDownloadCache_ClearNonexistentDir(t *testing.T) {
 }
 
 func TestContainsSymlink(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name        string
 		setup       func(t *testing.T) string
@@ -392,6 +402,7 @@ func TestContainsSymlink(t *testing.T) {
 }
 
 func TestValidateCacheDirPermissions(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name    string
 		setup   func(t *testing.T) string
@@ -490,6 +501,7 @@ func TestValidateCacheDirPermissions(t *testing.T) {
 }
 
 func TestDownloadCache_SaveRejectsSymlink(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a target directory and a symlink to it
@@ -520,6 +532,7 @@ func TestDownloadCache_SaveRejectsSymlink(t *testing.T) {
 }
 
 func TestDownloadCache_CheckRejectsSymlink(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create a target directory and a symlink to it
@@ -545,6 +558,7 @@ func TestDownloadCache_CheckRejectsSymlink(t *testing.T) {
 }
 
 func TestDownloadCache_SaveRejectsInsecurePermissions(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create cache directory with insecure permissions
@@ -571,6 +585,7 @@ func TestDownloadCache_SaveRejectsInsecurePermissions(t *testing.T) {
 }
 
 func TestDownloadCache_CheckRejectsInsecurePermissions(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create cache directory with insecure permissions

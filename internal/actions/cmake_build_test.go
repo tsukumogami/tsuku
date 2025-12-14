@@ -9,6 +9,7 @@ import (
 )
 
 func TestCMakeBuildAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &CMakeBuildAction{}
 	if action.Name() != "cmake_build" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "cmake_build")
@@ -16,6 +17,7 @@ func TestCMakeBuildAction_Name(t *testing.T) {
 }
 
 func TestCMakeBuildAction_Execute_MissingSourceDir(t *testing.T) {
+	t.Parallel()
 	action := &CMakeBuildAction{}
 	ctx := &ExecutionContext{
 		Context:    context.Background(),
@@ -37,6 +39,7 @@ func TestCMakeBuildAction_Execute_MissingSourceDir(t *testing.T) {
 }
 
 func TestCMakeBuildAction_Execute_MissingExecutables(t *testing.T) {
+	t.Parallel()
 	action := &CMakeBuildAction{}
 	workDir := t.TempDir()
 
@@ -69,6 +72,7 @@ func TestCMakeBuildAction_Execute_MissingExecutables(t *testing.T) {
 }
 
 func TestCMakeBuildAction_Execute_CMakeListsNotFound(t *testing.T) {
+	t.Parallel()
 	action := &CMakeBuildAction{}
 	workDir := t.TempDir()
 
@@ -99,6 +103,7 @@ func TestCMakeBuildAction_Execute_CMakeListsNotFound(t *testing.T) {
 }
 
 func TestCMakeBuildAction_Execute_InvalidExecutableName(t *testing.T) {
+	t.Parallel()
 	action := &CMakeBuildAction{}
 	workDir := t.TempDir()
 
@@ -140,6 +145,7 @@ func TestCMakeBuildAction_Execute_InvalidExecutableName(t *testing.T) {
 }
 
 func TestCMakeBuildAction_Execute_InvalidCMakeArg(t *testing.T) {
+	t.Parallel()
 	action := &CMakeBuildAction{}
 	workDir := t.TempDir()
 
@@ -183,6 +189,7 @@ func TestCMakeBuildAction_Execute_InvalidCMakeArg(t *testing.T) {
 }
 
 func TestCMakeBuildAction_Execute_RelativeSourceDir(t *testing.T) {
+	t.Parallel()
 	action := &CMakeBuildAction{}
 	workDir := t.TempDir()
 
@@ -215,6 +222,7 @@ func TestCMakeBuildAction_Execute_RelativeSourceDir(t *testing.T) {
 }
 
 func TestCMakeBuildAction_Registered(t *testing.T) {
+	t.Parallel()
 	// Verify cmake_build is registered as a primitive action
 	if !IsPrimitive("cmake_build") {
 		t.Error("cmake_build should be registered as a primitive action")
@@ -228,6 +236,7 @@ func TestCMakeBuildAction_Registered(t *testing.T) {
 }
 
 func TestCMakeBuildAction_NotDeterministic(t *testing.T) {
+	t.Parallel()
 	// cmake_build uses system compiler, so it's not deterministic
 	if IsDeterministic("cmake_build") {
 		t.Error("cmake_build should not be deterministic")
@@ -235,6 +244,7 @@ func TestCMakeBuildAction_NotDeterministic(t *testing.T) {
 }
 
 func TestIsValidCMakeArg(t *testing.T) {
+	t.Parallel()
 	validArgs := []string{
 		"-DCMAKE_BUILD_TYPE=Release",
 		"-DBUILD_SHARED_LIBS=ON",

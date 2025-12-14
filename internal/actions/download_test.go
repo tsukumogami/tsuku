@@ -15,6 +15,7 @@ import (
 )
 
 func TestDownloadAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	if action.Name() != "download" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "download")
@@ -22,6 +23,7 @@ func TestDownloadAction_Name(t *testing.T) {
 }
 
 func TestDownloadAction_Execute_MissingURL(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 
@@ -39,6 +41,7 @@ func TestDownloadAction_Execute_MissingURL(t *testing.T) {
 }
 
 func TestDownloadAction_Execute_NonHTTPS(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 
@@ -58,6 +61,7 @@ func TestDownloadAction_Execute_NonHTTPS(t *testing.T) {
 }
 
 func TestDownloadAction_Execute_WithHTTPSServer(t *testing.T) {
+	t.Parallel()
 	// Create a test HTTPS server
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("test content"))
@@ -90,6 +94,7 @@ func TestDownloadAction_Execute_WithHTTPSServer(t *testing.T) {
 }
 
 func TestDownloadAction_Execute_DestFilename(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 
@@ -117,6 +122,7 @@ func TestDownloadAction_Execute_DestFilename(t *testing.T) {
 }
 
 func TestDownloadAction_downloadFile_HTTPSRequired(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 	destPath := filepath.Join(tmpDir, "test.txt")
@@ -128,6 +134,7 @@ func TestDownloadAction_downloadFile_HTTPSRequired(t *testing.T) {
 }
 
 func TestDownloadAction_verifyChecksum_NoChecksum(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 
@@ -154,6 +161,7 @@ func TestDownloadAction_verifyChecksum_NoChecksum(t *testing.T) {
 }
 
 func TestDownloadAction_verifyChecksum_InlineChecksum(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 
@@ -194,6 +202,7 @@ func TestDownloadAction_verifyChecksum_InlineChecksum(t *testing.T) {
 }
 
 func TestDownloadAction_verifyChecksum_CustomAlgo(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 
@@ -226,6 +235,7 @@ func TestDownloadAction_verifyChecksum_CustomAlgo(t *testing.T) {
 }
 
 func TestDownloadAction_downloadFile_ContextCancellation(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 	destPath := filepath.Join(tmpDir, "test.txt")
@@ -242,6 +252,7 @@ func TestDownloadAction_downloadFile_ContextCancellation(t *testing.T) {
 }
 
 func TestDownloadAction_Execute_ContextCancellation(t *testing.T) {
+	t.Parallel()
 	action := &DownloadAction{}
 	tmpDir := t.TempDir()
 
@@ -267,6 +278,7 @@ func TestDownloadAction_Execute_ContextCancellation(t *testing.T) {
 
 // TestDownloadHTTPClient_DisableCompression tests that download HTTP client has compression disabled
 func TestDownloadHTTPClient_DisableCompression(t *testing.T) {
+	t.Parallel()
 	client := newDownloadHTTPClient()
 
 	// Verify the transport has DisableCompression set
@@ -282,6 +294,7 @@ func TestDownloadHTTPClient_DisableCompression(t *testing.T) {
 
 // TestDownloadAction_RejectsCompressedResponse tests that compressed responses are rejected
 func TestDownloadAction_RejectsCompressedResponse(t *testing.T) {
+	t.Parallel()
 	// Create a TLS server that returns compressed content
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Encoding", "gzip")
@@ -318,6 +331,7 @@ func TestDownloadAction_RejectsCompressedResponse(t *testing.T) {
 
 // TestDownloadAction_ValidateIP tests IP validation for download redirects
 func TestDownloadAction_ValidateIP(t *testing.T) {
+	t.Parallel()
 	tests := []struct {
 		name      string
 		ip        string

@@ -7,6 +7,7 @@ import (
 )
 
 func TestTextReplaceAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &TextReplaceAction{}
 	if action.Name() != "text_replace" {
 		t.Errorf("Name() = %s, want text_replace", action.Name())
@@ -14,6 +15,7 @@ func TestTextReplaceAction_Name(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_LiteralReplace(t *testing.T) {
+	t.Parallel()
 	// Create temp directory
 	tmpDir := t.TempDir()
 
@@ -53,6 +55,7 @@ func TestTextReplaceAction_Execute_LiteralReplace(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_RegexReplace(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create test file
@@ -91,6 +94,7 @@ func TestTextReplaceAction_Execute_RegexReplace(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_Delete(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "Makefile")
@@ -127,6 +131,7 @@ func TestTextReplaceAction_Execute_Delete(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_MultipleOccurrences(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
@@ -163,6 +168,7 @@ func TestTextReplaceAction_Execute_MultipleOccurrences(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_PatternNotFound(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
@@ -200,6 +206,7 @@ func TestTextReplaceAction_Execute_PatternNotFound(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_PreservesPermissions(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "script.sh")
@@ -237,6 +244,7 @@ func TestTextReplaceAction_Execute_PreservesPermissions(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_MissingFile(t *testing.T) {
+	t.Parallel()
 	action := &TextReplaceAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -256,6 +264,7 @@ func TestTextReplaceAction_Execute_MissingFile(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_MissingFileParam(t *testing.T) {
+	t.Parallel()
 	action := &TextReplaceAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -274,6 +283,7 @@ func TestTextReplaceAction_Execute_MissingFileParam(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_MissingPatternParam(t *testing.T) {
+	t.Parallel()
 	action := &TextReplaceAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -292,6 +302,7 @@ func TestTextReplaceAction_Execute_MissingPatternParam(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_PathTraversal(t *testing.T) {
+	t.Parallel()
 	action := &TextReplaceAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -324,6 +335,7 @@ func TestTextReplaceAction_Execute_PathTraversal(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_InvalidRegex(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "test.txt")
@@ -351,6 +363,7 @@ func TestTextReplaceAction_Execute_InvalidRegex(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_VariableSubstitution(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	testFile := filepath.Join(tmpDir, "config.txt")
@@ -387,6 +400,7 @@ func TestTextReplaceAction_Execute_VariableSubstitution(t *testing.T) {
 }
 
 func TestTextReplaceAction_Execute_SubdirectoryFile(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 
 	// Create subdirectory

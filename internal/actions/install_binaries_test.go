@@ -12,6 +12,7 @@ import (
 
 // TestValidateBinaryPath tests path traversal security validation
 func TestValidateBinaryPath(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	tests := []struct {
@@ -61,6 +62,7 @@ func TestValidateBinaryPath(t *testing.T) {
 
 // TestCreateSymlink tests symlink creation with relative paths
 func TestCreateSymlink(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	// Create temp directories
@@ -117,6 +119,7 @@ func TestCreateSymlink(t *testing.T) {
 
 // TestInstallDirectoryWithSymlinks tests the full directory installation flow
 func TestInstallDirectoryWithSymlinks(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	// Create temp directories
@@ -191,6 +194,7 @@ func TestInstallDirectoryWithSymlinks(t *testing.T) {
 
 // TestInstallDirectoryWithSymlinks_AtomicRollback tests cleanup behavior on failure
 func TestInstallDirectoryWithSymlinks_AtomicRollback(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	// Create temp directories
@@ -247,6 +251,7 @@ func TestInstallDirectoryWithSymlinks_AtomicRollback(t *testing.T) {
 // TestInstallBinaries_ModeRouting tests that install_mode parameter routes to correct implementation
 // Note: directory modes require verification to be set
 func TestInstallBinaries_ModeRouting(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	tests := []struct {
@@ -354,6 +359,7 @@ func TestInstallBinaries_ModeRouting(t *testing.T) {
 // TestInstallBinaries_VerificationEnforcement tests that directory mode requires verification
 // This is the defense-in-depth check that prevents bypassing composite action verification
 func TestInstallBinaries_VerificationEnforcement(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	tests := []struct {
@@ -471,6 +477,7 @@ func TestInstallBinaries_VerificationEnforcement(t *testing.T) {
 // TestInstallBinaries_SecurityValidation tests that binaries mode blocks path traversal attacks
 // This test verifies the fix for Issue #90 - security validation must apply to binaries mode
 func TestInstallBinaries_SecurityValidation(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	tests := []struct {
@@ -604,6 +611,7 @@ func findSubstring(s, substr string) bool {
 
 // TestParseBinaries tests the binaries parameter parsing
 func TestParseBinaries(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	tests := []struct {
@@ -667,6 +675,7 @@ func TestParseBinaries(t *testing.T) {
 
 // TestInstallBinariesAction_Name tests the Name method
 func TestInstallBinariesAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 	if action.Name() != "install_binaries" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "install_binaries")
@@ -675,6 +684,7 @@ func TestInstallBinariesAction_Name(t *testing.T) {
 
 // TestInstallBinariesAction_Execute_MissingBinaries tests missing parameter
 func TestInstallBinariesAction_Execute_MissingBinaries(t *testing.T) {
+	t.Parallel()
 	action := &InstallBinariesAction{}
 	tmpDir := t.TempDir()
 

@@ -5,6 +5,7 @@ import (
 )
 
 func TestDownloadArchiveAction_Decompose(t *testing.T) {
+	t.Parallel()
 	action := &DownloadArchiveAction{}
 	ctx := &EvalContext{
 		Version:    "1.2.3",
@@ -123,6 +124,7 @@ func TestDownloadArchiveAction_Decompose(t *testing.T) {
 }
 
 func TestGitHubFileAction_Decompose(t *testing.T) {
+	t.Parallel()
 	action := &GitHubFileAction{}
 	ctx := &EvalContext{
 		Version:    "1.2.3",
@@ -242,6 +244,7 @@ func TestGitHubFileAction_Decompose(t *testing.T) {
 }
 
 func TestHashiCorpReleaseAction_Decompose(t *testing.T) {
+	t.Parallel()
 	action := &HashiCorpReleaseAction{}
 	ctx := &EvalContext{
 		Version:    "1.5.0",
@@ -363,6 +366,7 @@ func TestHashiCorpReleaseAction_Decompose(t *testing.T) {
 }
 
 func TestDecompose_AllReturnPrimitives(t *testing.T) {
+	t.Parallel()
 	// Verify all decompose methods return only primitive actions
 	ctx := &EvalContext{
 		Version:    "1.0.0",

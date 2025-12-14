@@ -10,6 +10,7 @@ import (
 )
 
 func TestDownloadFileWithContext_ContextCancellation(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	destPath := filepath.Join(tmpDir, "test.txt")
 
@@ -25,6 +26,7 @@ func TestDownloadFileWithContext_ContextCancellation(t *testing.T) {
 }
 
 func TestDownloadFileWithContext_Success(t *testing.T) {
+	t.Parallel()
 	// Create a test HTTPS server
 	ts := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("test content"))
@@ -47,6 +49,7 @@ func TestDownloadFileWithContext_Success(t *testing.T) {
 }
 
 func TestDownloadFileWithContext_BadStatus(t *testing.T) {
+	t.Parallel()
 	// Create a test server that returns 404
 	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
@@ -65,6 +68,7 @@ func TestDownloadFileWithContext_BadStatus(t *testing.T) {
 }
 
 func TestResolveNixPortable_NotInstalled(t *testing.T) {
+	t.Parallel()
 	// ResolveNixPortable should return empty string if nix-portable is not installed
 	// This test works because we don't have nix-portable in the test environment
 	// If nix-portable is installed, this test would need to be skipped
@@ -75,6 +79,7 @@ func TestResolveNixPortable_NotInstalled(t *testing.T) {
 }
 
 func TestGetNixFlakeMetadata_NixPortableNotAvailable(t *testing.T) {
+	t.Parallel()
 	// Skip if nix-portable is actually available
 	if ResolveNixPortable() != "" {
 		t.Skip("nix-portable is installed, skipping unavailable test")
@@ -90,6 +95,7 @@ func TestGetNixFlakeMetadata_NixPortableNotAvailable(t *testing.T) {
 }
 
 func TestGetNixDerivationPath_NixPortableNotAvailable(t *testing.T) {
+	t.Parallel()
 	// Skip if nix-portable is actually available
 	if ResolveNixPortable() != "" {
 		t.Skip("nix-portable is installed, skipping unavailable test")
@@ -105,6 +111,7 @@ func TestGetNixDerivationPath_NixPortableNotAvailable(t *testing.T) {
 }
 
 func TestGetNixVersion_NixPortableNotAvailable(t *testing.T) {
+	t.Parallel()
 	// Skip if nix-portable is actually available
 	if ResolveNixPortable() != "" {
 		t.Skip("nix-portable is installed, skipping unavailable test")
@@ -117,6 +124,7 @@ func TestGetNixVersion_NixPortableNotAvailable(t *testing.T) {
 }
 
 func TestFlakeMetadataStruct(t *testing.T) {
+	t.Parallel()
 	// Verify FlakeMetadata struct can be instantiated and holds JSON data
 	metadata := FlakeMetadata{
 		URL:         "github:NixOS/nixpkgs/abc123",
@@ -140,6 +148,7 @@ func TestFlakeMetadataStruct(t *testing.T) {
 }
 
 func TestDerivationInfoStruct(t *testing.T) {
+	t.Parallel()
 	// Verify DerivationInfo struct can be instantiated and holds output paths
 	info := DerivationInfo{
 		Outputs: map[string]struct {
@@ -162,6 +171,7 @@ func TestDerivationInfoStruct(t *testing.T) {
 }
 
 func TestGetNixInternalDir_ReturnsValidPath(t *testing.T) {
+	t.Parallel()
 	dir, err := GetNixInternalDir()
 	if err != nil {
 		t.Fatalf("GetNixInternalDir() error = %v", err)
@@ -184,6 +194,7 @@ func TestGetNixInternalDir_ReturnsValidPath(t *testing.T) {
 }
 
 func TestFlakeMetadata_EmptyFields(t *testing.T) {
+	t.Parallel()
 	// Test with nil/empty fields
 	metadata := FlakeMetadata{}
 
@@ -202,6 +213,7 @@ func TestFlakeMetadata_EmptyFields(t *testing.T) {
 }
 
 func TestDerivationInfo_EmptyOutputs(t *testing.T) {
+	t.Parallel()
 	// Test with empty outputs map
 	info := DerivationInfo{
 		Outputs: map[string]struct {
@@ -215,6 +227,7 @@ func TestDerivationInfo_EmptyOutputs(t *testing.T) {
 }
 
 func TestDerivationInfo_SingleOutput(t *testing.T) {
+	t.Parallel()
 	// Test with single output (common case)
 	info := DerivationInfo{
 		Outputs: map[string]struct {
@@ -238,6 +251,7 @@ func TestDerivationInfo_SingleOutput(t *testing.T) {
 }
 
 func TestDownloadFileWithContext_InvalidURL(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	destPath := filepath.Join(tmpDir, "test.txt")
 
@@ -249,6 +263,7 @@ func TestDownloadFileWithContext_InvalidURL(t *testing.T) {
 }
 
 func TestDownloadFileWithContext_EmptyURL(t *testing.T) {
+	t.Parallel()
 	tmpDir := t.TempDir()
 	destPath := filepath.Join(tmpDir, "test.txt")
 
@@ -260,6 +275,7 @@ func TestDownloadFileWithContext_EmptyURL(t *testing.T) {
 }
 
 func TestResolveNixPortable_DoesNotPanic(t *testing.T) {
+	t.Parallel()
 	// Just verify the function doesn't panic under any circumstances
 	defer func() {
 		if r := recover(); r != nil {
@@ -272,6 +288,7 @@ func TestResolveNixPortable_DoesNotPanic(t *testing.T) {
 }
 
 func TestGetNixVersion_DoesNotPanic(t *testing.T) {
+	t.Parallel()
 	// Just verify the function doesn't panic
 	defer func() {
 		if r := recover(); r != nil {
@@ -283,6 +300,7 @@ func TestGetNixVersion_DoesNotPanic(t *testing.T) {
 }
 
 func TestGetNixFlakeMetadata_ContextCanceled(t *testing.T) {
+	t.Parallel()
 	// Skip if nix-portable is not available
 	if ResolveNixPortable() == "" {
 		t.Skip("nix-portable not available")
@@ -298,6 +316,7 @@ func TestGetNixFlakeMetadata_ContextCanceled(t *testing.T) {
 }
 
 func TestGetNixDerivationPath_ContextCanceled(t *testing.T) {
+	t.Parallel()
 	// Skip if nix-portable is not available
 	if ResolveNixPortable() == "" {
 		t.Skip("nix-portable not available")

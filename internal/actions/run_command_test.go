@@ -8,6 +8,7 @@ import (
 )
 
 func TestRunCommandAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	if action.Name() != "run_command" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "run_command")
@@ -15,6 +16,7 @@ func TestRunCommandAction_Name(t *testing.T) {
 }
 
 func TestRunCommandAction_Execute(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 
@@ -39,6 +41,7 @@ func TestRunCommandAction_Execute(t *testing.T) {
 }
 
 func TestRunCommandAction_Execute_MissingCommand(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 
@@ -61,6 +64,7 @@ func TestRunCommandAction_Execute_MissingCommand(t *testing.T) {
 }
 
 func TestRunCommandAction_Execute_RequiresSudo(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 
@@ -87,6 +91,7 @@ func TestRunCommandAction_Execute_RequiresSudo(t *testing.T) {
 }
 
 func TestRunCommandAction_Execute_WithDescription(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 
@@ -112,6 +117,7 @@ func TestRunCommandAction_Execute_WithDescription(t *testing.T) {
 }
 
 func TestRunCommandAction_Execute_VariableExpansion(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 
@@ -136,6 +142,7 @@ func TestRunCommandAction_Execute_VariableExpansion(t *testing.T) {
 }
 
 func TestRunCommandAction_Execute_FailingCommand(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 
@@ -160,6 +167,7 @@ func TestRunCommandAction_Execute_FailingCommand(t *testing.T) {
 }
 
 func TestRunCommandAction_Execute_CustomWorkDir(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 
@@ -185,6 +193,7 @@ func TestRunCommandAction_Execute_CustomWorkDir(t *testing.T) {
 }
 
 func TestRunCommandAction_Execute_ContextCancellation(t *testing.T) {
+	t.Parallel()
 	action := &RunCommandAction{}
 	tmpDir := t.TempDir()
 

@@ -9,6 +9,7 @@ import (
 )
 
 func TestApplyPatchAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	if action.Name() != "apply_patch" {
 		t.Errorf("Name() = %s, want apply_patch", action.Name())
@@ -16,6 +17,7 @@ func TestApplyPatchAction_Name(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_InlinePatch(t *testing.T) {
+	t.Parallel()
 	// Skip if patch command not available
 	if _, err := checkPatchCommand(); err != nil {
 		t.Skip("patch command not available")
@@ -66,6 +68,7 @@ func TestApplyPatchAction_Execute_InlinePatch(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_MultilinePatch(t *testing.T) {
+	t.Parallel()
 	// Skip if patch command not available
 	if _, err := checkPatchCommand(); err != nil {
 		t.Skip("patch command not available")
@@ -117,6 +120,7 @@ func TestApplyPatchAction_Execute_MultilinePatch(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_StripLevel(t *testing.T) {
+	t.Parallel()
 	// Skip if patch command not available
 	if _, err := checkPatchCommand(); err != nil {
 		t.Skip("patch command not available")
@@ -172,6 +176,7 @@ func TestApplyPatchAction_Execute_StripLevel(t *testing.T) {
 
 // AP-3: Strip level p0 - patch without path prefix stripping
 func TestApplyPatchAction_Execute_StripLevelZero(t *testing.T) {
+	t.Parallel()
 	// Skip if patch command not available
 	if _, err := checkPatchCommand(); err != nil {
 		t.Skip("patch command not available")
@@ -221,6 +226,7 @@ func TestApplyPatchAction_Execute_StripLevelZero(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_Subdir(t *testing.T) {
+	t.Parallel()
 	// Skip if patch command not available
 	if _, err := checkPatchCommand(); err != nil {
 		t.Skip("patch command not available")
@@ -276,6 +282,7 @@ func TestApplyPatchAction_Execute_Subdir(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -294,6 +301,7 @@ func TestApplyPatchAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_BothParams(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -314,6 +322,7 @@ func TestApplyPatchAction_Execute_BothParams(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_InvalidURL(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -334,6 +343,7 @@ func TestApplyPatchAction_Execute_InvalidURL(t *testing.T) {
 
 // AP-5: Missing patch file - URL returns error (connection refused simulates 404-like failure)
 func TestApplyPatchAction_Execute_URLConnectionFailure(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -359,6 +369,7 @@ func TestApplyPatchAction_Execute_URLConnectionFailure(t *testing.T) {
 
 // AP-6: Patch doesn't apply - patch against wrong content should fail
 func TestApplyPatchAction_Execute_PatchDoesNotApply(t *testing.T) {
+	t.Parallel()
 	// Skip if patch command not available
 	if _, err := checkPatchCommand(); err != nil {
 		t.Skip("patch command not available")
@@ -406,6 +417,7 @@ func TestApplyPatchAction_Execute_PatchDoesNotApply(t *testing.T) {
 
 // AP-7: Multiple patches - apply patches in order where second depends on first
 func TestApplyPatchAction_Execute_MultiplePatchesOrdering(t *testing.T) {
+	t.Parallel()
 	// Skip if patch command not available
 	if _, err := checkPatchCommand(); err != nil {
 		t.Skip("patch command not available")
@@ -474,6 +486,7 @@ func TestApplyPatchAction_Execute_MultiplePatchesOrdering(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_PathTraversalSubdir(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -504,6 +517,7 @@ func TestApplyPatchAction_Execute_PathTraversalSubdir(t *testing.T) {
 }
 
 func TestApplyPatchAction_Execute_NonexistentSubdir(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &ExecutionContext{
 		WorkDir: t.TempDir(),
@@ -528,6 +542,7 @@ func checkPatchCommand() (string, error) {
 
 // AP-2: Checksum validation for URL patches
 func TestApplyPatchAction_Execute_ChecksumValidation(t *testing.T) {
+	t.Parallel()
 	// This test verifies that checksum validation works when sha256 param is provided
 	// We test with inline data since we can't easily mock HTTP responses
 	patchData := "test patch content"
@@ -564,6 +579,7 @@ func TestApplyPatchAction_Execute_ChecksumValidation(t *testing.T) {
 
 // Test that apply_patch is decomposable (composite, not primitive)
 func TestApplyPatchAction_IsDecomposable(t *testing.T) {
+	t.Parallel()
 	if IsPrimitive("apply_patch") {
 		t.Error("apply_patch should NOT be a primitive (it's a composite)")
 	}
@@ -575,6 +591,7 @@ func TestApplyPatchAction_IsDecomposable(t *testing.T) {
 
 // Test Decompose with inline data
 func TestApplyPatchAction_Decompose_InlineData(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &EvalContext{
 		Version: "1.0.0",
@@ -614,6 +631,7 @@ func TestApplyPatchAction_Decompose_InlineData(t *testing.T) {
 
 // Test Decompose with URL
 func TestApplyPatchAction_Decompose_URL(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &EvalContext{
 		Version: "1.0.0",
@@ -671,6 +689,7 @@ func TestApplyPatchAction_Decompose_URL(t *testing.T) {
 
 // Test Decompose validation errors
 func TestApplyPatchAction_Decompose_Errors(t *testing.T) {
+	t.Parallel()
 	action := &ApplyPatchAction{}
 	ctx := &EvalContext{
 		Version: "1.0.0",

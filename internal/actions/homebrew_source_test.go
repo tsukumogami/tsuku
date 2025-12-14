@@ -11,6 +11,7 @@ import (
 )
 
 func TestHomebrewSourceAction_Name(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewSourceAction{}
 	if action.Name() != "homebrew_source" {
 		t.Errorf("Name() = %q, want %q", action.Name(), "homebrew_source")
@@ -18,6 +19,7 @@ func TestHomebrewSourceAction_Name(t *testing.T) {
 }
 
 func TestHomebrewSourceAction_Execute_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewSourceAction{}
 	tmpDir := t.TempDir()
 
@@ -36,6 +38,7 @@ func TestHomebrewSourceAction_Execute_MissingParams(t *testing.T) {
 }
 
 func TestHomebrewSourceAction_Decompose_MissingParams(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewSourceAction{}
 
 	evalCtx := &EvalContext{
@@ -49,6 +52,7 @@ func TestHomebrewSourceAction_Decompose_MissingParams(t *testing.T) {
 }
 
 func TestHomebrewSourceAction_Decompose(t *testing.T) {
+	t.Parallel()
 	// Create a mock Homebrew API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
@@ -118,6 +122,7 @@ func TestHomebrewSourceAction_Decompose(t *testing.T) {
 }
 
 func TestHomebrewSourceAction_Decompose_StripDirs(t *testing.T) {
+	t.Parallel()
 	// Create a mock Homebrew API server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
@@ -173,6 +178,7 @@ func TestHomebrewSourceAction_Decompose_StripDirs(t *testing.T) {
 }
 
 func TestHomebrewSourceAction_Decompose_APIError(t *testing.T) {
+	t.Parallel()
 	// Create a mock server that returns an error
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Not Found", http.StatusNotFound)
@@ -198,6 +204,7 @@ func TestHomebrewSourceAction_Decompose_APIError(t *testing.T) {
 }
 
 func TestHomebrewSourceAction_Decompose_NoSourceURL(t *testing.T) {
+	t.Parallel()
 	// Create a mock server that returns formula without source URL
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		response := map[string]interface{}{
@@ -235,6 +242,7 @@ func TestHomebrewSourceAction_Decompose_NoSourceURL(t *testing.T) {
 }
 
 func TestHomebrewSourceAction_DetectArchiveFormat(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewSourceAction{}
 
 	tests := []struct {
@@ -261,6 +269,7 @@ func TestHomebrewSourceAction_DetectArchiveFormat(t *testing.T) {
 }
 
 func TestHomebrewSourceAction_ImplementsDecomposable(t *testing.T) {
+	t.Parallel()
 	action := &HomebrewSourceAction{}
 
 	// Verify action implements Decomposable interface
