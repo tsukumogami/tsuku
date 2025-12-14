@@ -97,7 +97,6 @@ var primitives = map[string]bool{
 	"pip_install":    true,
 }
 
-
 // IsPrimitive returns true if the action is a primitive.
 // Primitives execute directly and cannot be decomposed further.
 func IsPrimitive(action string) bool {
