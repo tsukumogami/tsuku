@@ -2,21 +2,20 @@
 name = "gdbm"
 description = "GNU database manager"
 homepage = "https://www.gnu.org/software/gdbm/"
-dependencies = ["make"]
+binaries = ["bin/gdbmtool"]
 
 [version]
 source = "homebrew"
 formula = "gdbm"
 
 [[steps]]
-action = "homebrew_source"
+action = "homebrew_bottle"
 formula = "gdbm"
 
 [[steps]]
-action = "configure_make"
-source_dir = "."
-executables = ["gdbmtool"]
-configure_args = ["--disable-silent-rules", "--enable-libgdbm-compat", "--without-readline", "--disable-nls"]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/gdbmtool"]
 
 [verify]
 command = "gdbmtool --version"
