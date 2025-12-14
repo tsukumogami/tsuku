@@ -357,7 +357,7 @@ Consolidate all Homebrew-related design docs into a single authoritative documen
 
 ### Supply Chain Risks
 
-**Improved**: Removing source build capability eliminates a potential attack vector where malicious Ruby formula code could be analyzed by the LLM. With bottles only, we trust Homebrew's CI-built binaries exclusively.
+**Improved**: Removing Homebrew source build capability eliminates a potential attack vector where malicious Ruby formula code could be analyzed by the LLM. For Homebrew specifically, we now rely on pre-built bottles from Homebrew's CI. Other backends (GitHub releases, language package managers, etc.) continue to have their own trust models.
 
 ### User Data Exposure
 
