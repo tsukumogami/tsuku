@@ -22,7 +22,10 @@ func ghcrHTTPClient() *http.Client {
 }
 
 // HomebrewBottleAction downloads and extracts Homebrew bottles from GHCR
-type HomebrewBottleAction struct{}
+type HomebrewBottleAction struct{ BaseAction }
+
+// IsDeterministic returns true because homebrew_bottle downloads with checksums.
+func (HomebrewBottleAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *HomebrewBottleAction) Name() string { return "homebrew_bottle" }

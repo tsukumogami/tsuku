@@ -8,7 +8,7 @@ import (
 )
 
 // RunCommandAction implements command execution
-type RunCommandAction struct{}
+type RunCommandAction struct{ BaseAction }
 
 // Name returns the action name
 func (a *RunCommandAction) Name() string {

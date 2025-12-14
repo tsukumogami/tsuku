@@ -27,7 +27,12 @@ import (
 // Binaries from Nix cannot be executed directly - they require nix-portable's
 // virtualization layer to resolve /nix/store paths. Wrapper scripts invoke
 // binaries through `nix shell --profile`.
-type NixInstallAction struct{}
+type NixInstallAction struct{ BaseAction }
+
+// Dependencies returns nix-portable as an install-time dependency.
+func (NixInstallAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"nix-portable"}}
+}
 
 // Ensure NixInstallAction implements Decomposable
 var _ Decomposable = (*NixInstallAction)(nil)

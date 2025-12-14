@@ -10,7 +10,9 @@ import (
 
 // ConfigureMakeAction builds software using autotools (./configure && make install).
 // This is an ecosystem primitive that cannot be decomposed further.
-type ConfigureMakeAction struct{}
+type ConfigureMakeAction struct{ BaseAction }
+
+// IsDeterministic returns false because autotools builds depend on system compilers.
 
 // Name returns the action name
 func (a *ConfigureMakeAction) Name() string {

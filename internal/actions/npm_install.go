@@ -9,7 +9,12 @@ import (
 )
 
 // NpmInstallAction implements npm package installation with --prefix isolation
-type NpmInstallAction struct{}
+type NpmInstallAction struct{ BaseAction }
+
+// Dependencies returns nodejs as both install-time and runtime dependency.
+func (NpmInstallAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"nodejs"}, Runtime: []string{"nodejs"}}
+}
 
 // Name returns the action name
 func (a *NpmInstallAction) Name() string {

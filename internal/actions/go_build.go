@@ -10,7 +10,12 @@ import (
 
 // GoBuildAction is an ecosystem primitive that builds Go modules with locked dependencies.
 // Unlike go_install (composite), go_build receives pre-captured go.sum and builds with isolation.
-type GoBuildAction struct{}
+type GoBuildAction struct{ BaseAction }
+
+// Dependencies returns go as an install-time dependency.
+func (GoBuildAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"go"}}
+}
 
 // Name returns the action name
 func (a *GoBuildAction) Name() string {

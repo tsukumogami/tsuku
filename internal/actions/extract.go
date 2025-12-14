@@ -53,7 +53,10 @@ func validateSymlinkTarget(linkTarget, linkLocation, destPath string) error {
 }
 
 // ExtractAction implements archive extraction
-type ExtractAction struct{}
+type ExtractAction struct{ BaseAction }
+
+// IsDeterministic returns true because extraction produces identical results.
+func (ExtractAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *ExtractAction) Name() string {

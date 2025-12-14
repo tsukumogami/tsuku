@@ -21,7 +21,12 @@ import (
 //   - Optional derivation path for fastest execution
 //
 // IMPORTANT: nix-portable only supports Linux. This action will fail on macOS.
-type NixRealizeAction struct{}
+type NixRealizeAction struct{ BaseAction }
+
+// Dependencies returns nix-portable as an install-time dependency.
+func (NixRealizeAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"nix-portable"}}
+}
 
 // Name returns the action name
 func (a *NixRealizeAction) Name() string {

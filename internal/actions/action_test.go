@@ -50,6 +50,7 @@ func TestGet_NonExistent(t *testing.T) {
 
 // mockAction implements Action for testing Register
 type mockAction struct {
+	BaseAction
 	name string
 }
 

@@ -10,7 +10,10 @@ import (
 
 // TextReplaceAction performs text replacement in a file.
 // This is used to implement Homebrew's inreplace functionality.
-type TextReplaceAction struct{}
+type TextReplaceAction struct{ BaseAction }
+
+// IsDeterministic returns true because text_replace produces identical results.
+func (TextReplaceAction) IsDeterministic() bool { return true }
 
 // Name returns the action name.
 func (a *TextReplaceAction) Name() string {

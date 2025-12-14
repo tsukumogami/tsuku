@@ -9,7 +9,12 @@ import (
 )
 
 // CargoInstallAction installs Rust crates using cargo install with --root isolation
-type CargoInstallAction struct{}
+type CargoInstallAction struct{ BaseAction }
+
+// Dependencies returns rust as an install-time dependency.
+func (CargoInstallAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"rust"}}
+}
 
 // Name returns the action name
 func (a *CargoInstallAction) Name() string {

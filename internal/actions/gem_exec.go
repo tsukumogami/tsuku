@@ -11,7 +11,12 @@ import (
 // GemExecAction implements the gem_exec primitive for deterministic Ruby gem execution.
 // This is an ecosystem primitive that cannot be decomposed further within tsuku.
 // Determinism is achieved through Bundler's frozen lockfile enforcement.
-type GemExecAction struct{}
+type GemExecAction struct{ BaseAction }
+
+// Dependencies returns ruby as both install-time and runtime dependency.
+func (GemExecAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"ruby"}, Runtime: []string{"ruby"}}
+}
 
 // Name returns the action name
 func (a *GemExecAction) Name() string {

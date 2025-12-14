@@ -15,7 +15,10 @@ var _ Decomposable = (*GitHubArchiveAction)(nil)
 
 // DownloadArchiveAction downloads, extracts, and installs binaries from an archive
 // This is a generic composite action for any URL
-type DownloadArchiveAction struct{}
+type DownloadArchiveAction struct{ BaseAction }
+
+// IsDeterministic returns true because download_archive decomposes to only deterministic primitives.
+func (DownloadArchiveAction) IsDeterministic() bool { return true }
 
 func (a *DownloadArchiveAction) Name() string { return "download_archive" }
 
@@ -276,7 +279,10 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 }
 
 // GitHubArchiveAction downloads and extracts archives from GitHub releases
-type GitHubArchiveAction struct{}
+type GitHubArchiveAction struct{ BaseAction }
+
+// IsDeterministic returns true because github_archive decomposes to only deterministic primitives.
+func (GitHubArchiveAction) IsDeterministic() bool { return true }
 
 func (a *GitHubArchiveAction) Name() string { return "github_archive" }
 
@@ -567,7 +573,10 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 }
 
 // GitHubFileAction downloads pre-compiled binary files from GitHub releases
-type GitHubFileAction struct{}
+type GitHubFileAction struct{ BaseAction }
+
+// IsDeterministic returns true because github_file decomposes to only deterministic primitives.
+func (GitHubFileAction) IsDeterministic() bool { return true }
 
 func (a *GitHubFileAction) Name() string { return "github_file" }
 
@@ -825,7 +834,10 @@ func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interfa
 }
 
 // HashiCorpReleaseAction downloads HashiCorp products
-type HashiCorpReleaseAction struct{}
+type HashiCorpReleaseAction struct{ BaseAction }
+
+// IsDeterministic returns true because hashicorp_release decomposes to only deterministic primitives.
+func (HashiCorpReleaseAction) IsDeterministic() bool { return true }
 
 func (a *HashiCorpReleaseAction) Name() string { return "hashicorp_release" }
 

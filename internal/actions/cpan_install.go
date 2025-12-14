@@ -11,7 +11,12 @@ import (
 // CpanInstallAction is an ecosystem primitive that installs Perl distributions
 // with deterministic configuration. It achieves determinism through environment
 // isolation, version validation, and optional offline/mirror-only modes.
-type CpanInstallAction struct{}
+type CpanInstallAction struct{ BaseAction }
+
+// Dependencies returns perl as both install-time and runtime dependency.
+func (CpanInstallAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"perl"}, Runtime: []string{"perl"}}
+}
 
 // Name returns the action name
 func (a *CpanInstallAction) Name() string {

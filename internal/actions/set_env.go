@@ -9,7 +9,10 @@ import (
 )
 
 // SetEnvAction implements environment variable setting
-type SetEnvAction struct{}
+type SetEnvAction struct{ BaseAction }
+
+// IsDeterministic returns true because set_env produces identical results.
+func (SetEnvAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *SetEnvAction) Name() string {

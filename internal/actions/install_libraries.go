@@ -8,7 +8,10 @@ import (
 )
 
 // InstallLibrariesAction implements library file installation with symlink preservation
-type InstallLibrariesAction struct{}
+type InstallLibrariesAction struct{ BaseAction }
+
+// IsDeterministic returns true because install_libraries produces identical results.
+func (InstallLibrariesAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
 func (a *InstallLibrariesAction) Name() string {

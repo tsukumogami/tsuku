@@ -12,7 +12,12 @@ import (
 var _ Decomposable = (*GoInstallAction)(nil)
 
 // GoInstallAction installs Go modules using go install with GOBIN/GOMODCACHE isolation
-type GoInstallAction struct{}
+type GoInstallAction struct{ BaseAction }
+
+// Dependencies returns go as an install-time dependency.
+func (GoInstallAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"go"}}
+}
 
 // Name returns the action name
 func (a *GoInstallAction) Name() string {
