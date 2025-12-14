@@ -1439,6 +1439,15 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 		if len(recipeData.Executables) == 0 {
 			return "", nil, fmt.Errorf("extract_recipe requires at least one executable")
 		}
+		for i, exe := range recipeData.Executables {
+			if exe == "" {
+				return "", nil, fmt.Errorf("extract_recipe: executable[%d] cannot be empty", i)
+			}
+			// Security: disallow path traversal
+			if strings.Contains(exe, "..") || strings.HasPrefix(exe, "/") {
+				return "", nil, fmt.Errorf("extract_recipe: invalid executable path '%s'", exe)
+			}
+		}
 		// Validate verify command
 		if err := isValidVerifyCommand(recipeData.VerifyCommand); err != nil {
 			return "", nil, fmt.Errorf("extract_recipe: %w", err)
