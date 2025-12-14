@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/llm"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -3480,5 +3481,366 @@ func TestGenerateSourceRecipeOutput_WithResourcesAndPatches(t *testing.T) {
 	}
 	if !containsString(recipe.Patches[0].URL, "formula-patches") {
 		t.Error("recipe.Patches[0].URL should contain formula-patches")
+	}
+}
+
+// Test multiple executables handling (EX-2)
+func TestHomebrewBuilder_buildSourceSteps_MultipleExecutables(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"bin/tool1", "bin/tool2", "lib/helper"},
+		VerifyCommand: "tool1 --version",
+	}
+
+	steps, err := b.buildSourceSteps(data, "test-formula")
+	if err != nil {
+		t.Fatalf("buildSourceSteps() error = %v", err)
+	}
+
+	// Find install_binaries step
+	var installStep *recipe.Step
+	for i := range steps {
+		if steps[i].Action == "install_binaries" {
+			installStep = &steps[i]
+			break
+		}
+	}
+
+	if installStep == nil {
+		t.Fatal("install_binaries step not found")
+	}
+
+	// Check binaries parameter contains all executables
+	binaries, ok := installStep.Params["binaries"].([]string)
+	if !ok {
+		t.Fatal("binaries param not a []string")
+	}
+	if len(binaries) != 3 {
+		t.Errorf("binaries has %d entries, want 3", len(binaries))
+	}
+}
+
+// Test versioned executable names (EX-3)
+func TestValidateSourceRecipeData_VersionedExecutables(t *testing.T) {
+	tests := []struct {
+		name        string
+		executables []string
+		wantErr     bool
+	}{
+		{
+			name:        "versioned python",
+			executables: []string{"python3.12"},
+			wantErr:     false,
+		},
+		{
+			name:        "versioned with hyphen",
+			executables: []string{"clang-18"},
+			wantErr:     false,
+		},
+		{
+			name:        "multiple versioned",
+			executables: []string{"llvm-ar-18", "clang-18", "clangd-18"},
+			wantErr:     false,
+		},
+		{
+			name:        "with bin prefix",
+			executables: []string{"bin/python3.12"},
+			wantErr:     false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := &sourceRecipeData{
+				BuildSystem:   BuildSystemAutotools,
+				Executables:   tt.executables,
+				VerifyCommand: tt.executables[0] + " --version",
+			}
+			err := validateSourceRecipeData(data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("validateSourceRecipeData() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+// Test configure argument valid edge cases
+func TestValidateSourceRecipeData_ConfigureArgsValidCases(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{
+			name: "equals sign in value",
+			args: []string{"--with-path=/usr/local"},
+		},
+		{
+			name: "double equals",
+			args: []string{"LDFLAGS=-Wl,-rpath=/opt/lib"},
+		},
+		{
+			name: "multiple flags",
+			args: []string{"--enable-shared", "--disable-static", "--prefix=/usr/local"},
+		},
+		{
+			name: "env variable style",
+			args: []string{"CFLAGS=-O2", "CXXFLAGS=-O2"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := &sourceRecipeData{
+				BuildSystem:   BuildSystemAutotools,
+				ConfigureArgs: tt.args,
+				Executables:   []string{"tool"},
+				VerifyCommand: "tool --version",
+			}
+			err := validateSourceRecipeData(data)
+			if err != nil {
+				t.Errorf("validateSourceRecipeData() unexpected error = %v", err)
+			}
+		})
+	}
+}
+
+// Test CMake argument valid edge cases
+func TestValidateSourceRecipeData_CMakeArgsValidCases(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{
+			name: "standard cmake define",
+			args: []string{"-DCMAKE_BUILD_TYPE=Release"},
+		},
+		{
+			name: "path value",
+			args: []string{"-DCMAKE_INSTALL_PREFIX=/usr/local"},
+		},
+		{
+			name: "multiple defines",
+			args: []string{"-DBUILD_SHARED_LIBS=ON", "-DBUILD_TESTING=OFF"},
+		},
+		{
+			name: "cmake module path",
+			args: []string{"-DCMAKE_MODULE_PATH=/opt/cmake/modules"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			data := &sourceRecipeData{
+				BuildSystem:   BuildSystemCMake,
+				CMakeArgs:     tt.args,
+				Executables:   []string{"tool"},
+				VerifyCommand: "tool --version",
+			}
+			err := validateSourceRecipeData(data)
+			if err != nil {
+				t.Errorf("validateSourceRecipeData() unexpected error = %v", err)
+			}
+		})
+	}
+}
+
+// Test combined os and arch conditionals (PS-5)
+func TestValidateSourceRecipeData_CombinedPlatformConditionals(t *testing.T) {
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"mytool"},
+		VerifyCommand: "mytool --version",
+		PlatformSteps: map[string][]platformStep{
+			"macos": {
+				{Action: "run_command", Params: map[string]interface{}{"command": "echo macos"}},
+			},
+			"arm64": {
+				{Action: "run_command", Params: map[string]interface{}{"command": "echo arm64"}},
+			},
+		},
+		PlatformDependencies: map[string][]string{
+			"linux": {"libssl-dev"},
+			"amd64": {"libc6-dev"},
+		},
+	}
+
+	err := validateSourceRecipeData(data)
+	if err != nil {
+		t.Errorf("validateSourceRecipeData() error = %v, want nil for combined platform conditionals", err)
+	}
+}
+
+// Test versioned formula names (VS-1)
+func TestHomebrewBuilder_CanBuild_VersionedFormula(t *testing.T) {
+	// Create mock server that returns versioned formula
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/formula/postgresql@15.json" {
+			formulaInfo := map[string]interface{}{
+				"name":      "postgresql@15",
+				"full_name": "postgresql@15",
+				"desc":      "Object-relational database system version 15",
+				"homepage":  "https://www.postgresql.org/",
+				"versions": map[string]interface{}{
+					"stable": "15.8",
+					"bottle": true,
+				},
+				"deprecated": false,
+				"disabled":   false,
+			}
+			_ = json.NewEncoder(w).Encode(formulaInfo)
+			return
+		}
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := &HomebrewBuilder{
+		httpClient:     server.Client(),
+		homebrewAPIURL: server.URL,
+	}
+
+	ctx := context.Background()
+	canBuild, err := b.CanBuild(ctx, "postgresql@15")
+	if err != nil {
+		t.Fatalf("CanBuild() error = %v", err)
+	}
+	if !canBuild {
+		t.Errorf("CanBuild() = %v, want true for versioned formula", canBuild)
+	}
+}
+
+// Test tool call type validation (HBR-1)
+func TestHomebrewBuilder_executeToolCall_TypeValidation(t *testing.T) {
+	b := &HomebrewBuilder{}
+	ctx := context.Background()
+
+	genCtx := &homebrewGenContext{
+		formula: "test-formula",
+	}
+
+	tests := []struct {
+		name        string
+		toolCall    llm.ToolCall
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "executables as string instead of array",
+			toolCall: llm.ToolCall{
+				ID:   "test-1",
+				Name: ToolExtractRecipe,
+				Arguments: map[string]any{
+					"executables":    "bin/rg", // Should be []any
+					"verify_command": "rg --version",
+				},
+			},
+			wantErr:     true,
+			errContains: "extract_recipe",
+		},
+		{
+			name: "dependencies as string instead of array",
+			toolCall: llm.ToolCall{
+				ID:   "test-2",
+				Name: ToolExtractRecipe,
+				Arguments: map[string]any{
+					"executables":    []any{"bin/rg"},
+					"verify_command": "rg --version",
+					"dependencies":   "pcre2", // Should be []any
+				},
+			},
+			wantErr:     true,
+			errContains: "extract_recipe",
+		},
+		{
+			name: "verify_command as number instead of string",
+			toolCall: llm.ToolCall{
+				ID:   "test-3",
+				Name: ToolExtractRecipe,
+				Arguments: map[string]any{
+					"executables":    []any{"bin/rg"},
+					"verify_command": 12345, // Should be string
+				},
+			},
+			wantErr:     true,
+			errContains: "extract_recipe",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := b.executeToolCall(ctx, genCtx, tt.toolCall)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("executeToolCall() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if err != nil && tt.errContains != "" {
+				if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("executeToolCall() error = %v, want error containing %q", err, tt.errContains)
+				}
+			}
+		})
+	}
+}
+
+// Test source tool call type validation
+func TestHomebrewBuilder_executeToolCall_SourceTypeValidation(t *testing.T) {
+	b := &HomebrewBuilder{}
+	ctx := context.Background()
+
+	genCtx := &homebrewGenContext{
+		formula:     "test-formula",
+		formulaInfo: &homebrewFormulaInfo{Name: "test-formula"},
+	}
+
+	tests := []struct {
+		name        string
+		toolCall    llm.ToolCall
+		wantErr     bool
+		errContains string
+	}{
+		{
+			name: "build_system as number",
+			toolCall: llm.ToolCall{
+				ID:   "test-1",
+				Name: ToolExtractSourceRecipe,
+				Arguments: map[string]any{
+					"build_system":   123, // Should be string
+					"executables":    []any{"jq"},
+					"verify_command": "jq --version",
+				},
+			},
+			wantErr:     true,
+			errContains: "extract_source_recipe",
+		},
+		{
+			name: "cmake_args as string instead of array",
+			toolCall: llm.ToolCall{
+				ID:   "test-2",
+				Name: ToolExtractSourceRecipe,
+				Arguments: map[string]any{
+					"build_system":   "cmake",
+					"executables":    []any{"tool"},
+					"verify_command": "tool --version",
+					"cmake_args":     "-DFOO=BAR", // Should be []any
+				},
+			},
+			wantErr:     true,
+			errContains: "extract_source_recipe",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, _, err := b.executeToolCall(ctx, genCtx, tt.toolCall)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("executeToolCall() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if err != nil && tt.errContains != "" {
+				if !strings.Contains(err.Error(), tt.errContains) {
+					t.Errorf("executeToolCall() error = %v, want error containing %q", err, tt.errContains)
+				}
+			}
+		})
 	}
 }

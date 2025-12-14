@@ -103,6 +103,49 @@ func TestParseFromFlag(t *testing.T) {
 			wantBuilder:   "homebrew",
 			wantRemainder: "PostgreSQL@17:source",
 		},
+		// Edge cases - PFF-1 through PFF-6
+		{
+			name:          "github trailing colon (empty remainder)",
+			from:          "github:",
+			wantBuilder:   "github",
+			wantRemainder: "",
+		},
+		{
+			name:          "homebrew trailing colon (empty remainder)",
+			from:          "homebrew:",
+			wantBuilder:   "homebrew",
+			wantRemainder: "",
+		},
+		{
+			name:          "colon only returns empty builder",
+			from:          ":",
+			wantBuilder:   "",
+			wantRemainder: "",
+		},
+		{
+			name:          "github double colon",
+			from:          "github::cli",
+			wantBuilder:   "github",
+			wantRemainder: ":cli",
+		},
+		{
+			name:          "homebrew multiple colons",
+			from:          "homebrew:pg@15:source",
+			wantBuilder:   "homebrew",
+			wantRemainder: "pg@15:source",
+		},
+		{
+			name:          "homebrew versioned formula",
+			from:          "homebrew:postgresql@15",
+			wantBuilder:   "homebrew",
+			wantRemainder: "postgresql@15",
+		},
+		{
+			name:          "empty string treated as ecosystem",
+			from:          "",
+			wantBuilder:   "",
+			wantRemainder: "",
+		},
 	}
 
 	for _, tt := range tests {
