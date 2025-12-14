@@ -491,7 +491,10 @@ func (b *HomebrewBuilder) BuildWithDependencies(
 	if sourceArg == "" {
 		sourceArg = req.Package
 	}
-	formulaName, forceSource := parseSourceArg(sourceArg)
+	formulaName, forceSource, err := parseSourceArg(sourceArg)
+	if err != nil {
+		return nil, fmt.Errorf("invalid source argument: %w", err)
+	}
 
 	// 1. Discover full dependency tree (no LLM, just API calls)
 	b.reportStart("Discovering dependencies")
@@ -578,14 +581,28 @@ func isValidHomebrewFormula(name string) bool {
 // parseSourceArg parses the builder-specific SourceArg for Homebrew.
 // It extracts the formula name and whether source build is requested.
 // Examples:
-//   - "jq" → ("jq", false)
-//   - "jq:source" → ("jq", true)
-//   - "openssl@1.1:source" → ("openssl@1.1", true)
-func parseSourceArg(sourceArg string) (formula string, forceSource bool) {
-	if strings.HasSuffix(strings.ToLower(sourceArg), ":source") {
-		return sourceArg[:len(sourceArg)-7], true
+//   - "jq" → ("jq", false, nil)
+//   - "jq:source" → ("jq", true, nil)
+//   - "openssl@1.1:source" → ("openssl@1.1", true, nil)
+//   - "" → ("", false, error)
+func parseSourceArg(sourceArg string) (formula string, forceSource bool, err error) {
+	if sourceArg == "" {
+		return "", false, fmt.Errorf("source argument is required (use --from homebrew:formula)")
 	}
-	return sourceArg, false
+
+	if strings.HasSuffix(strings.ToLower(sourceArg), ":source") {
+		formula = sourceArg[:len(sourceArg)-7]
+		forceSource = true
+	} else {
+		formula = sourceArg
+		forceSource = false
+	}
+
+	if !isValidHomebrewFormula(formula) {
+		return "", false, fmt.Errorf("invalid Homebrew formula name: %s", formula)
+	}
+
+	return formula, forceSource, nil
 }
 
 // fetchFormulaInfo fetches formula metadata from Homebrew API.
@@ -643,11 +660,9 @@ func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildRe
 	if sourceArg == "" {
 		sourceArg = req.Package
 	}
-	formula, forceSource := parseSourceArg(sourceArg)
-
-	// Validate formula name
-	if !isValidHomebrewFormula(formula) {
-		return nil, fmt.Errorf("invalid Homebrew formula name: %s", formula)
+	formula, forceSource, err := parseSourceArg(sourceArg)
+	if err != nil {
+		return nil, fmt.Errorf("invalid source argument: %w", err)
 	}
 
 	// Fetch formula metadata
