@@ -1579,7 +1579,7 @@ type ghcrManifestEntry struct {
 
 // getGHCRToken obtains an anonymous token for GHCR access.
 func (b *HomebrewBuilder) getGHCRToken(formula string) (string, error) {
-	tokenURL := fmt.Sprintf("https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/%s:pull", formula)
+	tokenURL := fmt.Sprintf("https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/%s:pull", url.PathEscape(formula))
 
 	resp, err := b.httpClient.Get(tokenURL)
 	if err != nil {
@@ -1609,7 +1609,7 @@ func (b *HomebrewBuilder) getGHCRToken(formula string) (string, error) {
 
 // fetchGHCRManifest fetches the GHCR manifest for a formula version.
 func (b *HomebrewBuilder) fetchGHCRManifest(ctx context.Context, formula, version, token string) (*ghcrManifest, error) {
-	manifestURL := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/manifests/%s", formula, version)
+	manifestURL := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/manifests/%s", url.PathEscape(formula), url.PathEscape(version))
 
 	req, err := http.NewRequestWithContext(ctx, "GET", manifestURL, nil)
 	if err != nil {
@@ -1698,7 +1698,7 @@ func (b *HomebrewBuilder) fetchFormulaRuby(ctx context.Context, formula string) 
 	// Homebrew formulas are organized by first letter:
 	// https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/{first_letter}/{formula}.rb
 	firstLetter := strings.ToLower(string(formula[0]))
-	rubyURL := fmt.Sprintf("https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/%s/%s.rb", firstLetter, formula)
+	rubyURL := fmt.Sprintf("https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/%s/%s.rb", firstLetter, url.PathEscape(formula))
 
 	req, err := http.NewRequestWithContext(ctx, "GET", rubyURL, nil)
 	if err != nil {
