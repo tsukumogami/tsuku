@@ -5,6 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
@@ -34,6 +36,17 @@ type DownloadResult struct {
 	AssetPath string // Path to the downloaded file
 	Checksum  string // SHA256 checksum (hex encoded)
 	Size      int64  // File size in bytes
+}
+
+// Cleanup removes the downloaded file and its parent directory.
+// This should be called after the download is no longer needed.
+func (r *DownloadResult) Cleanup() error {
+	if r.AssetPath == "" {
+		return nil
+	}
+	// Remove the parent directory (typically created by the downloader)
+	dir := filepath.Dir(r.AssetPath)
+	return os.RemoveAll(dir)
 }
 
 // Downloader provides download functionality for checksum computation during decomposition.

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/httputil"
 )
 
@@ -160,4 +161,29 @@ func newPreDownloadHTTPClient() *http.Client {
 		Timeout:               10 * time.Minute, // Allow longer downloads for large assets
 		ResponseHeaderTimeout: 30 * time.Second,
 	})
+}
+
+// PreDownloaderAdapter wraps PreDownloader to implement actions.Downloader interface.
+// This adapter converts between validate.DownloadResult and actions.DownloadResult.
+type PreDownloaderAdapter struct {
+	inner *PreDownloader
+}
+
+// NewPreDownloaderAdapter creates a new adapter wrapping the given PreDownloader.
+func NewPreDownloaderAdapter(p *PreDownloader) *PreDownloaderAdapter {
+	return &PreDownloaderAdapter{inner: p}
+}
+
+// Download implements actions.Downloader by delegating to PreDownloader
+// and converting the result type.
+func (a *PreDownloaderAdapter) Download(ctx context.Context, url string) (*actions.DownloadResult, error) {
+	result, err := a.inner.Download(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &actions.DownloadResult{
+		AssetPath: result.AssetPath,
+		Checksum:  result.Checksum,
+		Size:      result.Size,
+	}, nil
 }

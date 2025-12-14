@@ -321,7 +321,9 @@ func TestCleaner_CleanupStaleLocks(t *testing.T) {
 	}
 
 	logger := &mockLogger{}
-	cleaner := NewCleaner(nil, lockManager, WithLogger(logger))
+	// Use testDir as temp dir to avoid cleaning up leftover container dirs
+	// from previous runs that may have permission issues
+	cleaner := NewCleaner(nil, lockManager, WithLogger(logger), WithTempDir(testDir))
 
 	// Just verify it doesn't crash with empty lock dir
 	ctx := context.Background()

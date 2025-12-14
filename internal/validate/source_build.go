@@ -2,12 +2,15 @@ package validate
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
+	planexec "github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -35,11 +38,14 @@ func SourceBuildLimits() ResourceLimits {
 //
 // The validation process:
 // 1. Detect available container runtime
-// 2. Serialize recipe to TOML file
-// 3. Mount tsuku binary and recipe into container
+// 2. Generate installation plan on host (downloads cached)
+// 3. Mount tsuku binary, plan, and cache into container
 // 4. Install required build tools based on build system
-// 5. Run tsuku install which executes the build steps
+// 5. Run tsuku install --plan which executes the build steps
 // 6. Verify expected binaries are produced
+//
+// Note: Source builds still require network access for apt-get and build
+// dependencies (cargo, go mod, etc.), but source archives are pre-cached.
 func (e *Executor) ValidateSourceBuild(ctx context.Context, r *recipe.Recipe) (*ValidationResult, error) {
 	// Detect container runtime
 	runtime, err := e.detector.Detect(ctx)
@@ -80,7 +86,44 @@ func (e *Executor) ValidateSourceBuild(ctx context.Context, r *recipe.Recipe) (*
 	}
 	defer os.RemoveAll(workspaceDir)
 
-	// Serialize recipe to TOML
+	// Create download cache directory within workspace
+	cacheDir := filepath.Join(workspaceDir, "cache", "downloads")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create cache directory: %w", err)
+	}
+
+	// Generate installation plan on host
+	// This downloads source archives to compute checksums and caches them
+	exec, err := planexec.New(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create plan executor: %w", err)
+	}
+	defer exec.Cleanup()
+
+	downloadCache := actions.NewDownloadCache(cacheDir)
+	plan, err := exec.GeneratePlan(ctx, planexec.PlanConfig{
+		RecipeSource:  "validation",
+		Downloader:    NewPreDownloaderAdapter(e.predownloader),
+		DownloadCache: downloadCache,
+		OnWarning: func(action, message string) {
+			e.logger.Debug("Plan generation warning", "action", action, "message", message)
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate installation plan: %w", err)
+	}
+
+	// Write plan JSON to workspace
+	planData, err := json.MarshalIndent(plan, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize plan: %w", err)
+	}
+	planPath := filepath.Join(workspaceDir, "plan.json")
+	if err := os.WriteFile(planPath, planData, 0644); err != nil {
+		return nil, fmt.Errorf("failed to write plan file: %w", err)
+	}
+
+	// Serialize recipe to TOML (still needed for verification lookup)
 	recipeData, err := r.ToTOML()
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize recipe: %w", err)
@@ -92,8 +135,8 @@ func (e *Executor) ValidateSourceBuild(ctx context.Context, r *recipe.Recipe) (*
 		return nil, fmt.Errorf("failed to write recipe file: %w", err)
 	}
 
-	// Build the validation script for source builds
-	script := e.buildSourceBuildScript(r)
+	// Build the validation script for source builds with plan support
+	script := e.buildSourceBuildPlanScript(r)
 
 	// Create the install script in workspace
 	scriptPath := filepath.Join(workspaceDir, "validate.sh")
@@ -107,7 +150,7 @@ func (e *Executor) ValidateSourceBuild(ctx context.Context, r *recipe.Recipe) (*
 	opts := RunOptions{
 		Image:   SourceBuildValidationImage,
 		Command: []string{"/bin/bash", "/workspace/validate.sh"},
-		Network: "host", // Need network for downloads and potential dependency fetches
+		Network: "host", // Still need network for apt-get and build dependencies
 		WorkDir: "/workspace",
 		Env: []string{
 			"TSUKU_VALIDATION=1",
@@ -124,6 +167,11 @@ func (e *Executor) ValidateSourceBuild(ctx context.Context, r *recipe.Recipe) (*
 				Source:   workspaceDir,
 				Target:   "/workspace",
 				ReadOnly: false,
+			},
+			{
+				Source:   cacheDir,
+				Target:   "/workspace/tsuku/cache/downloads",
+				ReadOnly: true, // Cache is read-only in container
 			},
 		},
 	}
@@ -160,7 +208,45 @@ func (e *Executor) ValidateSourceBuild(ctx context.Context, r *recipe.Recipe) (*
 	}, nil
 }
 
+// buildSourceBuildPlanScript creates a shell script for source build validation
+// using a pre-generated plan. It installs build tools and runs tsuku install --plan.
+func (e *Executor) buildSourceBuildPlanScript(r *recipe.Recipe) string {
+	var sb strings.Builder
+
+	sb.WriteString("#!/bin/bash\n")
+	sb.WriteString("set -e\n\n")
+
+	// Update package lists and install base requirements
+	sb.WriteString("# Update package lists and install base requirements\n")
+	sb.WriteString("apt-get update -qq\n")
+	sb.WriteString("apt-get install -qq -y ca-certificates curl wget >/dev/null 2>&1\n\n")
+
+	// Install build tools based on recipe actions
+	buildTools := e.detectRequiredBuildTools(r)
+	if len(buildTools) > 0 {
+		sb.WriteString("# Install build tools required by recipe\n")
+		sb.WriteString(fmt.Sprintf("apt-get install -qq -y %s >/dev/null 2>&1\n\n", strings.Join(buildTools, " ")))
+	}
+
+	// Setup tsuku home directory
+	sb.WriteString("# Setup TSUKU_HOME\n")
+	sb.WriteString("mkdir -p /workspace/tsuku/recipes\n")
+	sb.WriteString("mkdir -p /workspace/tsuku/bin\n")
+	sb.WriteString("mkdir -p /workspace/tsuku/tools\n\n")
+
+	// Copy recipe to tsuku recipes directory (needed for verification lookup)
+	sb.WriteString("# Copy recipe to tsuku recipes\n")
+	sb.WriteString(fmt.Sprintf("cp /workspace/recipe.toml /workspace/tsuku/recipes/%s.toml\n\n", r.Metadata.Name))
+
+	// Run tsuku install with pre-generated plan
+	sb.WriteString("# Run tsuku install with pre-generated plan\n")
+	sb.WriteString("tsuku install --plan /workspace/plan.json --force\n")
+
+	return sb.String()
+}
+
 // buildSourceBuildScript creates a shell script for source build validation.
+// This is the legacy method - see buildSourceBuildPlanScript for the preferred approach.
 // It installs build tools based on the actions in the recipe.
 func (e *Executor) buildSourceBuildScript(r *recipe.Recipe) string {
 	var sb strings.Builder

@@ -2,12 +2,15 @@ package validate
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
+	planexec "github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
@@ -121,11 +124,12 @@ func NewExecutor(detector *RuntimeDetector, predownloader *PreDownloader, opts .
 //
 // The validation process:
 // 1. Detect available container runtime
-// 2. Serialize recipe to TOML file
-// 3. Mount tsuku binary and recipe into container
-// 4. Run tsuku install in isolated container
-// 5. Run verification command
-// 6. Check output against expected pattern
+// 2. Generate installation plan on host (downloads cached for checksum computation)
+// 3. Write plan JSON to workspace
+// 4. Mount tsuku binary, plan, and download cache into container
+// 5. Run tsuku install --plan in isolated container (no network access)
+// 6. Run verification command
+// 7. Check output against expected pattern
 func (e *Executor) Validate(ctx context.Context, r *recipe.Recipe, assetURL string) (*ValidationResult, error) {
 	// Detect container runtime
 	runtime, err := e.detector.Detect(ctx)
@@ -166,7 +170,44 @@ func (e *Executor) Validate(ctx context.Context, r *recipe.Recipe, assetURL stri
 	}
 	defer os.RemoveAll(workspaceDir)
 
-	// Serialize recipe to TOML using custom method
+	// Create download cache directory within workspace
+	cacheDir := filepath.Join(workspaceDir, "cache", "downloads")
+	if err := os.MkdirAll(cacheDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create cache directory: %w", err)
+	}
+
+	// Generate installation plan on host
+	// This downloads assets to compute checksums and caches them for container reuse
+	exec, err := planexec.New(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create plan executor: %w", err)
+	}
+	defer exec.Cleanup()
+
+	downloadCache := actions.NewDownloadCache(cacheDir)
+	plan, err := exec.GeneratePlan(ctx, planexec.PlanConfig{
+		RecipeSource:  "validation",
+		Downloader:    NewPreDownloaderAdapter(e.predownloader),
+		DownloadCache: downloadCache,
+		OnWarning: func(action, message string) {
+			e.logger.Debug("Plan generation warning", "action", action, "message", message)
+		},
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate installation plan: %w", err)
+	}
+
+	// Write plan JSON to workspace
+	planData, err := json.MarshalIndent(plan, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("failed to serialize plan: %w", err)
+	}
+	planPath := filepath.Join(workspaceDir, "plan.json")
+	if err := os.WriteFile(planPath, planData, 0644); err != nil {
+		return nil, fmt.Errorf("failed to write plan file: %w", err)
+	}
+
+	// Serialize recipe to TOML (still needed for verification command lookup)
 	recipeData, err := r.ToTOML()
 	if err != nil {
 		return nil, fmt.Errorf("failed to serialize recipe: %w", err)
@@ -178,8 +219,8 @@ func (e *Executor) Validate(ctx context.Context, r *recipe.Recipe, assetURL stri
 		return nil, fmt.Errorf("failed to write recipe file: %w", err)
 	}
 
-	// Build the validation script that runs tsuku install
-	script := e.buildTsukuInstallScript(r)
+	// Build the validation script that runs tsuku install --plan
+	script := e.buildPlanInstallScript(r)
 
 	// Create the install script in workspace
 	scriptPath := filepath.Join(workspaceDir, "validate.sh")
@@ -195,7 +236,7 @@ func (e *Executor) Validate(ctx context.Context, r *recipe.Recipe, assetURL stri
 	opts := RunOptions{
 		Image:   e.image,
 		Command: []string{"/bin/sh", "/workspace/validate.sh"},
-		Network: "host", // Need network for downloads
+		Network: "none", // No network needed - all downloads are cached
 		WorkDir: "/workspace",
 		Env: []string{
 			"TSUKU_VALIDATION=1",
@@ -211,6 +252,11 @@ func (e *Executor) Validate(ctx context.Context, r *recipe.Recipe, assetURL stri
 				Source:   workspaceDir,
 				Target:   "/workspace",
 				ReadOnly: false,
+			},
+			{
+				Source:   cacheDir,
+				Target:   "/workspace/tsuku/cache/downloads",
+				ReadOnly: true, // Cache is read-only in container
 			},
 		},
 	}
@@ -248,6 +294,7 @@ func (e *Executor) Validate(ctx context.Context, r *recipe.Recipe, assetURL stri
 }
 
 // buildTsukuInstallScript creates a shell script that runs tsuku install with the recipe.
+// This is the legacy method - see buildPlanInstallScript for the preferred approach.
 func (e *Executor) buildTsukuInstallScript(r *recipe.Recipe) string {
 	var sb strings.Builder
 
@@ -271,6 +318,42 @@ func (e *Executor) buildTsukuInstallScript(r *recipe.Recipe) string {
 	// Run tsuku install
 	sb.WriteString("# Run tsuku install\n")
 	sb.WriteString(fmt.Sprintf("tsuku install %s --force\n\n", r.Metadata.Name))
+
+	// Run the verify command explicitly to capture its output for pattern matching.
+	// The install command doesn't print verify output, so we need to run it separately.
+	// Binaries are symlinked to $TSUKU_HOME/tools/current (/workspace/tsuku/tools/current).
+	if r.Verify.Command != "" {
+		sb.WriteString("# Run verify command to capture output for pattern matching\n")
+		sb.WriteString("export PATH=\"/workspace/tsuku/tools/current:$PATH\"\n")
+		sb.WriteString(fmt.Sprintf("%s\n", r.Verify.Command))
+	}
+
+	return sb.String()
+}
+
+// buildPlanInstallScript creates a shell script that runs tsuku install --plan.
+// This script is used for offline validation where the plan and cached downloads
+// are pre-generated on the host and mounted into the container.
+func (e *Executor) buildPlanInstallScript(r *recipe.Recipe) string {
+	var sb strings.Builder
+
+	sb.WriteString("#!/bin/sh\n")
+	sb.WriteString("set -e\n\n")
+
+	// Setup tsuku home directory structure
+	sb.WriteString("# Setup TSUKU_HOME\n")
+	sb.WriteString("mkdir -p /workspace/tsuku/recipes\n")
+	sb.WriteString("mkdir -p /workspace/tsuku/bin\n")
+	sb.WriteString("mkdir -p /workspace/tsuku/tools\n\n")
+
+	// Copy recipe to tsuku recipes directory (needed for verification lookup)
+	sb.WriteString("# Copy recipe to tsuku recipes\n")
+	sb.WriteString(fmt.Sprintf("cp /workspace/recipe.toml /workspace/tsuku/recipes/%s.toml\n\n", r.Metadata.Name))
+
+	// Run tsuku install with pre-generated plan
+	// The plan contains resolved URLs and checksums; downloads are served from cache
+	sb.WriteString("# Run tsuku install with pre-generated plan (offline mode)\n")
+	sb.WriteString("tsuku install --plan /workspace/plan.json --force\n\n")
 
 	// Run the verify command explicitly to capture its output for pattern matching.
 	// The install command doesn't print verify output, so we need to run it separately.

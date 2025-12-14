@@ -2,16 +2,20 @@ package executor
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/recipe"
-	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // mockTOMLSerializer implements a simple interface for recipe hash testing.
@@ -22,6 +26,78 @@ type mockTOMLSerializer struct {
 
 func (m *mockTOMLSerializer) ToTOML() ([]byte, error) {
 	return m.content, m.err
+}
+
+// testDownloader implements actions.Downloader for testing plan generation.
+// It downloads files using a custom HTTP client and computes checksums.
+type testDownloader struct {
+	httpClient *http.Client
+}
+
+// newTestDownloader creates a test downloader with the given HTTP client.
+func newTestDownloader(client *http.Client) *testDownloader {
+	return &testDownloader{httpClient: client}
+}
+
+// Download implements actions.Downloader.
+func (d *testDownloader) Download(ctx context.Context, url string) (*actions.DownloadResult, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := d.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to download: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("bad status: %s", resp.Status)
+	}
+
+	// Create temp directory for this download
+	downloadDir, err := os.MkdirTemp("", "test-download-")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp directory: %w", err)
+	}
+
+	// Determine filename from URL
+	filename := filepath.Base(url)
+	if idx := strings.Index(filename, "?"); idx != -1 {
+		filename = filename[:idx]
+	}
+	if filename == "" || filename == "." {
+		filename = "download"
+	}
+	destPath := filepath.Join(downloadDir, filename)
+
+	// Create destination file
+	out, err := os.Create(destPath)
+	if err != nil {
+		os.RemoveAll(downloadDir)
+		return nil, fmt.Errorf("failed to create file: %w", err)
+	}
+	defer out.Close()
+
+	// Use TeeReader to compute hash while writing
+	hash := sha256.New()
+	reader := io.TeeReader(resp.Body, hash)
+
+	size, err := io.Copy(out, reader)
+	if err != nil {
+		out.Close()
+		os.RemoveAll(downloadDir)
+		return nil, fmt.Errorf("failed to write file: %w", err)
+	}
+
+	checksum := hex.EncodeToString(hash.Sum(nil))
+
+	return &actions.DownloadResult{
+		AssetPath: destPath,
+		Checksum:  checksum,
+		Size:      size,
+	}, nil
 }
 
 func TestComputeRecipeHash(t *testing.T) {
@@ -1142,7 +1218,7 @@ func TestGeneratePlan_WithDownloadAction(t *testing.T) {
 	ctx := context.Background()
 
 	// Create a downloader with our test server's HTTP client
-	downloader := validate.NewPreDownloader().WithHTTPClient(server.Client())
+	downloader := newTestDownloader(server.Client())
 
 	plan, err := exec.GeneratePlan(ctx, PlanConfig{
 		OS:           "linux",
@@ -1209,7 +1285,7 @@ func TestGeneratePlan_DownloadError(t *testing.T) {
 	defer exec.Cleanup()
 
 	ctx := context.Background()
-	downloader := validate.NewPreDownloader().WithHTTPClient(server.Client())
+	downloader := newTestDownloader(server.Client())
 
 	_, err = exec.GeneratePlan(ctx, PlanConfig{
 		OS:           "linux",
@@ -1406,7 +1482,7 @@ func TestGeneratePlan_AllDownloadActionTypes(t *testing.T) {
 			}
 			defer exec.Cleanup()
 
-			downloader := validate.NewPreDownloader().WithHTTPClient(server.Client())
+			downloader := newTestDownloader(server.Client())
 			plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
 				OS:         "linux",
 				Arch:       "amd64",
@@ -1540,7 +1616,7 @@ func TestGeneratePlan_PreDownloaderAdapter(t *testing.T) {
 	}
 	defer exec.Cleanup()
 
-	downloader := validate.NewPreDownloader().WithHTTPClient(server.Client())
+	downloader := newTestDownloader(server.Client())
 
 	plan, err := exec.GeneratePlan(context.Background(), PlanConfig{
 		OS:           "linux",

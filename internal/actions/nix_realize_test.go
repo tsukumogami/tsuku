@@ -188,7 +188,9 @@ func TestNixRealizeAction_Execute_PlatformCheck(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{Context: context.Background()}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+	}
 	params := map[string]interface{}{
 		"flake_ref":   "nixpkgs#hello",
 		"executables": []string{"hello"},
@@ -210,7 +212,9 @@ func TestNixRealizeAction_Execute_MissingParams(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{Context: context.Background()}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+	}
 
 	tests := []struct {
 		name           string
@@ -260,7 +264,9 @@ func TestNixRealizeAction_Execute_InvalidInputs(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{Context: context.Background()}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+	}
 
 	tests := []struct {
 		name           string
@@ -504,7 +510,9 @@ func TestNixRealizeAction_Execute_PackageFallback(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{Context: context.Background()}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+	}
 
 	// Test that package parameter works as fallback when flake_ref is missing
 	params := map[string]interface{}{
@@ -512,7 +520,7 @@ func TestNixRealizeAction_Execute_PackageFallback(t *testing.T) {
 		"executables": []string{"hello"},
 	}
 
-	// This will fail later (no nix-portable) but should pass validation
+	// This will fail later (no nix-portable or nix itself) but should pass validation
 	err := action.Execute(ctx, params)
 	// Should NOT fail with "requires 'flake_ref' or 'package'" error
 	if err != nil && strings.Contains(err.Error(), "requires 'flake_ref' or 'package'") {
@@ -527,7 +535,9 @@ func TestNixRealizeAction_Execute_BothFlakeRefAndPackage(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{Context: context.Background()}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+	}
 
 	// Test that flake_ref takes precedence when both are provided
 	params := map[string]interface{}{
@@ -551,7 +561,9 @@ func TestNixRealizeAction_Execute_WithLocks(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{Context: context.Background()}
+	ctx := &ExecutionContext{
+		Context: context.Background(),
+	}
 
 	// Test with locks parameter
 	params := map[string]interface{}{
