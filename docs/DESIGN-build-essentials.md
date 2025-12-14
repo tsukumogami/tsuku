@@ -70,6 +70,93 @@ This design extends that model:
 - **Fail fast**: If something truly can't be provided, error clearly
 - **Reuse existing patterns**: Extend implicit dependency system, don't reinvent
 
+## Considered Options
+
+### Option A: System Dependency Annotation
+
+Add a `system:` prefix annotation to mark dependencies expected from the system:
+
+```toml
+[[steps]]
+action = "configure_make"
+dependencies = ["system:zlib", "system:openssl"]
+```
+
+**Pros:**
+- Explicit about what comes from where
+- Recipe author decides system vs tsuku
+- Works with existing dependency model
+
+**Cons:**
+- Ambiguous behavior when system dep is missing
+- Platform differences require additional complexity
+- Shifts responsibility to recipe authors
+- Doesn't solve the underlying problem (missing deps cause build failures)
+
+### Option B: Tsuku Provides All Build Essentials
+
+Tsuku proactively provides compilers, build tools, and common libraries via Homebrew bottles:
+
+```toml
+[[steps]]
+action = "configure_make"
+# Implicit: tsuku ensures gcc, make, pkg-config are installed
+dependencies = ["openssl", "zlib"]
+# Also provided by tsuku, not system
+```
+
+**Pros:**
+- Zero prerequisites for users
+- Consistent behavior across platforms
+- No annotation needed - everything comes from tsuku
+- Solves the actual problem (missing deps)
+
+**Cons:**
+- Larger disk footprint
+- More recipes to maintain
+- Bootstrap complexity (need pre-built bottles)
+- Elevated security responsibility
+
+### Option C: Hybrid with System Fallback
+
+Prefer system dependencies when available, install via tsuku if missing:
+
+```toml
+[[steps]]
+action = "configure_make"
+dependencies = ["zlib", "openssl"]
+# Tsuku checks: system has it? Use system. Missing? Install via tsuku.
+```
+
+**Pros:**
+- Smaller footprint when system has deps
+- Still works when system lacks deps
+- Flexible
+
+**Cons:**
+- Non-deterministic behavior
+- Different binaries depending on environment
+- Complex detection logic
+- Harder to reproduce builds
+
+## Decision Outcome
+
+**Chosen: Option B (Tsuku Provides All Build Essentials)**
+
+### Summary
+
+Tsuku will provide all build tools (gcc, make, cmake) and common libraries (zlib, openssl) via Homebrew bottles. Build actions declare implicit dependencies on these tools. No `system:` annotation is needed because tsuku provides everything.
+
+### Rationale
+
+The core insight is that tsuku CAN provide most "system" dependencies. Only truly fundamental OS components (libc, kernel interfaces) cannot be relocated. Everything else - compilers, build tools, libraries - can be provided via Homebrew bottles.
+
+Option A (annotation) was rejected because it doesn't solve the problem - if someone lacks zlib, marking it `system:zlib` just makes the build fail with a slightly better error message. Option C (fallback) was rejected because non-deterministic builds are worse than larger disk footprint.
+
+Option B aligns with tsuku's "self-contained" philosophy: users only need tsuku, nothing else. The trade-off is disk space and security responsibility, which are acceptable given the user experience benefits.
+
+**Key assumption requiring validation:** Homebrew bottles are relocatable and work from `$TSUKU_HOME`. The validation plan tests this assumption before implementation.
+
 ## Build Essentials Inventory
 
 ### Compilers and Toolchains
@@ -259,6 +346,61 @@ tsuku install curl (source build)
 
 ## Validation Plan
 
+### Phase 0: Bootstrap Validation (Pre-requisite)
+
+Before creating any recipes, validate that Homebrew bottles exist and can be relocated for all P0 tools on all target platforms.
+
+**Validation script**: `scripts/validate-bottle-availability.sh`
+```bash
+#!/bin/bash
+# For each P0 tool and platform combination:
+# 1. Query Homebrew API for bottle availability
+# 2. Download bottle to temp directory
+# 3. Extract and verify binary can execute from non-standard path
+# 4. Check RPATH/install_name for relocation compatibility
+```
+
+**Bottle availability matrix** (must pass before Phase 1):
+
+| Tool | Linux x86_64 | Linux arm64 | macOS x86_64 | macOS arm64 |
+|------|--------------|-------------|--------------|-------------|
+| gcc | [ ] | [ ] | [ ] | [ ] |
+| make | [ ] | [ ] | [ ] | [ ] |
+| cmake | [ ] | [ ] | [ ] | [ ] |
+| pkg-config | [ ] | [ ] | [ ] | [ ] |
+| zlib | [ ] | [ ] | [ ] | [ ] |
+| openssl | [ ] | [ ] | [ ] | [ ] |
+
+**Fallback strategy**: If a bottle is unavailable for a platform:
+1. Check if alternative source exists (e.g., linuxbrew vs homebrew)
+2. Consider nix-portable as fallback for that platform
+3. Document the gap and defer that platform/tool combination
+
+### Relocation Validation Criteria
+
+For each tool/library, verify these relocation requirements:
+
+**Linux binaries:**
+- RPATH must use `$ORIGIN` relative paths or absolute `$TSUKU_HOME` paths
+- No hardcoded `/usr/local` or `/home/linuxbrew` paths
+- Verify with: `readelf -d <binary> | grep RPATH`
+
+**macOS binaries:**
+- install_name must use `@rpath` or `@loader_path`
+- No hardcoded `/usr/local` or `/opt/homebrew` paths
+- Verify with: `otool -L <binary>`
+
+**Validation tooling**: `scripts/verify-relocation.sh`
+```bash
+#!/bin/bash
+# Usage: verify-relocation.sh <tool-name>
+# Checks:
+# 1. No hardcoded system paths in binary
+# 2. RPATH/install_name uses relocatable references
+# 3. Binary executes successfully from $TSUKU_HOME/tools/<name>/
+# 4. ldd/otool shows only tsuku-provided or system (libc) deps
+```
+
 ### Phase 1: Recipe Creation (P0 Tools)
 
 Create recipes for all P0 build essentials:
@@ -374,57 +516,130 @@ jobs:
 
 ## Implementation Approach
 
-### Phase 1: Build Essentials Recipes (High priority)
+### Phase 0: Bootstrap Validation
 
-1. Create recipes for P0 tools: gcc, make, cmake, pkg-config
-2. Create recipes for P0 libraries: zlib, openssl
-3. Test each on all 4 platform variants
-4. Document any platform-specific issues or limitations
+**Goal**: Prove Homebrew bottles work before building infrastructure.
 
-### Phase 2: Action Implicit Dependencies
+1. Create `scripts/validate-bottle-availability.sh`
+2. Run validation for all P0 tools on all platforms
+3. Document any gaps or fallback requirements
+4. **Gate**: Do not proceed until all P0 tools pass on at least 2 platforms
+
+### Phase 1: Infrastructure (Dependencies and Environment)
+
+**Goal**: Build the infrastructure that recipes depend on.
 
 1. Update `ActionDependencies` registry with build tool requirements
 2. Update resolver to combine action + recipe dependencies
-3. Ensure hidden installation (build tools installed but not shown in `tsuku list`)
-4. Handle circular bootstrap (gcc recipe might need gcc to build?)
+3. Implement `setup_build_env` action
+4. Set CC, CXX, PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS
+5. Add `--build-deps` flag to `tsuku list` for visibility
+6. **Gate**: Unit tests pass for dependency resolution
 
-### Phase 3: Environment Setup
+### Phase 2: P0 Recipes
 
-1. Implement `setup_build_env` action
-2. Set CC, CXX, PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS
-3. Update configure_make, cmake_build to use environment
-4. Test with real builds
+**Goal**: Create and validate P0 build essential recipes.
 
-### Phase 4: Integration Testing
+1. Create recipes for P0 tools: gcc, make, cmake, pkg-config
+2. Create recipes for P0 libraries: zlib, openssl
+3. Run relocation validation on each
+4. Test each on all 4 platform variants
+5. **Gate**: All P0 recipes pass relocation validation
+
+### Phase 3: Integration Testing
+
+**Goal**: Prove the full toolchain works together.
 
 1. Create integration test matrix in CI
-2. Build curl, git, sqlite, python from source
-3. Verify on all platform variants
-4. Ensure clean environment tests (no pre-installed dev tools)
+2. Build sqlite, zlib, ncurses from source (simpler tools first)
+3. Build curl, git with complex dependencies
+4. Verify on all platform variants in clean containers
+5. **Gate**: All integration tests pass
 
-### Phase 5: P1/P2 Tools (Lower priority)
+### Phase 4: P1/P2 Tools
+
+**Goal**: Expand coverage to additional build tools.
 
 1. Add autoconf, automake, libtool recipes
 2. Add ncurses, readline, libffi recipes
-3. Expand test matrix
-4. Add meson, ninja for alternative build systems
+3. Add meson, ninja for alternative build systems
+4. Expand test matrix
+5. Build python from source as final validation
 
 ## Security Considerations
 
+Build tools represent an elevated security concern because compilers and linkers are **trust anchors** - a compromised compiler affects ALL binaries it produces.
+
 ### Download Verification
 
-All build essentials come from Homebrew bottles with checksums. Same verification as other tsuku packages.
+All build essentials come from Homebrew bottles with checksums.
+
+**Current mitigations:**
+- SHA256 checksum verification on every download
+- Only official Homebrew bottles from known URLs
+
+**Future enhancements (recommended):**
+- GPG signature verification where available
+- Reproducible build verification for critical tools (gcc, binutils)
+- Provenance tracking: log exact bottle URLs and checksums used
 
 ### Supply Chain
 
-Build tools (gcc, make) have elevated trust - they process source code. Mitigations:
-- Only official Homebrew bottles
-- Checksum verification on every download
-- Consider reproducible builds verification in future
+Build tools have elevated trust requirements:
+
+| Component | Risk Level | Justification |
+|-----------|------------|---------------|
+| gcc/clang | Critical | Complete control over compiled code |
+| binutils (ld, as) | Critical | Controls linking and final binary |
+| make/cmake/meson | High | Execute arbitrary build scripts |
+| openssl/libffi | High | Runtime security-critical libraries |
+| pkg-config | Medium | Can inject compiler/linker flags |
+
+**Mitigations:**
+- Only official Homebrew bottles (no third-party sources)
+- Version pinning for build essentials (no automatic updates)
+- Explicit user consent before updating build tools
+- Future: SBOM generation for audit trail
 
 ### Execution Isolation
 
-Build tools execute arbitrary code (compiling source). This is inherent to source builds. Users must trust the source being compiled.
+Build tools execute arbitrary code during compilation. While some risk is inherent to source builds, isolation mechanisms can limit damage from compromised tools.
+
+**Current approach:** Build tools run with user permissions in user's environment.
+
+**Recommended enhancements:**
+1. **Environment filtering**: Strip sensitive variables before builds
+   - Filter: `AWS_*`, `GITHUB_TOKEN`, `SSH_AUTH_SOCK`, `GPG_*`
+   - Pass only build-relevant variables (CC, CFLAGS, PATH, etc.)
+
+2. **Filesystem restrictions** (future):
+   - No access to `~/.ssh`, `~/.aws`, `~/.config` during builds
+   - Restrict writes to build directory and `$TSUKU_HOME`
+
+3. **Network isolation** (future):
+   - Block network access during build phase
+   - Only allow downloads during explicit download steps
+
+**Not implemented:** Full container/chroot isolation. This would significantly complicate the user experience and is deferred until demand materializes.
+
+### User Data Exposure
+
+Build tools may access environment variables and files during execution.
+
+**Mitigations:**
+- Environment filtering (see above)
+- Build in isolated directory, not user's project
+- Clear documentation of what data build tools can access
+
+### Visibility
+
+Hidden dependencies (build tools not shown in `tsuku list`) reduce user awareness.
+
+**Mitigations:**
+- `tsuku list --build-deps` shows all build dependencies
+- `tsuku verify gcc` works for build tools
+- Installation logs show all dependencies installed
+- `tsuku audit-log` (future) shows full installation history
 
 ## Consequences
 
@@ -441,7 +656,8 @@ Build tools execute arbitrary code (compiling source). This is inherent to sourc
 - More recipes to create and maintain (gcc, make, etc.)
 - Larger disk footprint (build tools installed even if system has them)
 - Initial setup takes longer (must install build tools)
-- Bootstrap complexity (how to build gcc without gcc?)
+- Bootstrap complexity (requires pre-built Homebrew bottles)
+- Elevated security responsibility (compilers are trust anchors)
 
 ### Mitigations
 
