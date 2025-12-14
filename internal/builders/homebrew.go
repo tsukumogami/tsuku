@@ -1470,7 +1470,10 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 			return "", nil, err
 		}
 		// Return as JSON string - the caller will need to detect and handle this
-		resultJSON, _ := json.Marshal(srcData)
+		resultJSON, err := json.Marshal(srcData)
+		if err != nil {
+			return "", nil, fmt.Errorf("failed to marshal source recipe data: %w", err)
+		}
 		return string(resultJSON), nil, nil
 
 	default:
