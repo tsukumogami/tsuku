@@ -485,11 +485,13 @@ func (b *HomebrewBuilder) BuildWithDependencies(
 	req BuildRequest,
 	confirm ConfirmFunc,
 ) ([]*BuildResult, error) {
-	// Extract formula name (strip :source suffix for API lookups)
-	formulaName := req.Package
-	if strings.HasSuffix(strings.ToLower(req.Package), ":source") {
-		formulaName = req.Package[:len(req.Package)-7]
+	// Parse SourceArg to extract formula name and source build flag
+	// Fall back to Package if SourceArg is empty
+	sourceArg := req.SourceArg
+	if sourceArg == "" {
+		sourceArg = req.Package
 	}
+	formulaName, forceSource := parseSourceArg(sourceArg)
 
 	// 1. Discover full dependency tree (no LLM, just API calls)
 	b.reportStart("Discovering dependencies")
@@ -518,13 +520,15 @@ func (b *HomebrewBuilder) BuildWithDependencies(
 	for i, formula := range toGenerate {
 		b.reportStart(fmt.Sprintf("Generating recipe %d/%d: %s", i+1, len(toGenerate), formula))
 
-		// Only apply ForceSource to the root package, not dependencies
-		forceSource := req.ForceSource && formula == formulaName
+		// Only apply forceSource to the root package, not dependencies
+		sourceArg := formula
+		if forceSource && formula == formulaName {
+			sourceArg = formula + ":source"
+		}
 
 		result, err := b.Build(ctx, BuildRequest{
-			Package:     formula,
-			SourceArg:   formula,
-			ForceSource: forceSource,
+			Package:   formula,
+			SourceArg: sourceArg,
 		})
 		if err != nil {
 			b.reportFailed()
@@ -569,6 +573,19 @@ func isValidHomebrewFormula(name string) bool {
 	}
 
 	return true
+}
+
+// parseSourceArg parses the builder-specific SourceArg for Homebrew.
+// It extracts the formula name and whether source build is requested.
+// Examples:
+//   - "jq" → ("jq", false)
+//   - "jq:source" → ("jq", true)
+//   - "openssl@1.1:source" → ("openssl@1.1", true)
+func parseSourceArg(sourceArg string) (formula string, forceSource bool) {
+	if strings.HasSuffix(strings.ToLower(sourceArg), ":source") {
+		return sourceArg[:len(sourceArg)-7], true
+	}
+	return sourceArg, false
 }
 
 // fetchFormulaInfo fetches formula metadata from Homebrew API.
@@ -621,10 +638,12 @@ func (b *HomebrewBuilder) fetchFormulaInfo(ctx context.Context, formula string) 
 // It first attempts bottle-based generation, falling back to source-based
 // generation if bottles are not available.
 func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
-	formula := req.SourceArg
-	if formula == "" {
-		formula = req.Package
+	// Parse SourceArg to extract formula name and source build flag
+	sourceArg := req.SourceArg
+	if sourceArg == "" {
+		sourceArg = req.Package
 	}
+	formula, forceSource := parseSourceArg(sourceArg)
 
 	// Validate formula name
 	if !isValidHomebrewFormula(formula) {
@@ -640,9 +659,9 @@ func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildRe
 	}
 
 	// Check for bottles - if not available or source forced, switch to source build mode
-	if !formulaInfo.Versions.Bottle || req.ForceSource {
+	if !formulaInfo.Versions.Bottle || forceSource {
 		suffix := "source only"
-		if req.ForceSource && formulaInfo.Versions.Bottle {
+		if forceSource && formulaInfo.Versions.Bottle {
 			suffix = "source requested"
 		}
 		b.reportDone(fmt.Sprintf("v%s (%s)", formulaInfo.Versions.Stable, suffix))

@@ -8,137 +8,111 @@ import (
 
 func TestParseFromFlag(t *testing.T) {
 	tests := []struct {
-		name            string
-		from            string
-		wantBuilder     string
-		wantSourceArg   string
-		wantLLMType     LLMBuilderType
-		wantForceSource bool
+		name          string
+		from          string
+		wantBuilder   string
+		wantRemainder string
 	}{
 		{
 			name:          "ecosystem crates.io",
 			from:          "crates.io",
 			wantBuilder:   "crates.io",
-			wantSourceArg: "",
-			wantLLMType:   LLMBuilderNone,
+			wantRemainder: "",
 		},
 		{
 			name:          "ecosystem pypi",
 			from:          "pypi",
 			wantBuilder:   "pypi",
-			wantSourceArg: "",
-			wantLLMType:   LLMBuilderNone,
+			wantRemainder: "",
 		},
 		{
 			name:          "ecosystem npm",
 			from:          "npm",
 			wantBuilder:   "npm",
-			wantSourceArg: "",
-			wantLLMType:   LLMBuilderNone,
+			wantRemainder: "",
 		},
 		{
 			name:          "ecosystem rubygems",
 			from:          "rubygems",
 			wantBuilder:   "rubygems",
-			wantSourceArg: "",
-			wantLLMType:   LLMBuilderNone,
+			wantRemainder: "",
 		},
 		{
-			name:          "ecosystem cargo alias",
+			name:          "ecosystem cargo (not normalized here)",
 			from:          "cargo",
-			wantBuilder:   "crates.io",
-			wantSourceArg: "",
-			wantLLMType:   LLMBuilderNone,
+			wantBuilder:   "cargo",
+			wantRemainder: "",
 		},
 		{
 			name:          "github with lowercase",
 			from:          "github:cli/cli",
 			wantBuilder:   "github",
-			wantSourceArg: "cli/cli",
-			wantLLMType:   LLMBuilderGitHub,
+			wantRemainder: "cli/cli",
 		},
 		{
 			name:          "github with uppercase",
 			from:          "GitHub:FiloSottile/age",
 			wantBuilder:   "github",
-			wantSourceArg: "FiloSottile/age",
-			wantLLMType:   LLMBuilderGitHub,
+			wantRemainder: "FiloSottile/age",
 		},
 		{
 			name:          "github with mixed case",
 			from:          "GITHUB:stern/stern",
 			wantBuilder:   "github",
-			wantSourceArg: "stern/stern",
-			wantLLMType:   LLMBuilderGitHub,
+			wantRemainder: "stern/stern",
 		},
 		{
-			name:          "github preserves sourceArg case",
+			name:          "github preserves remainder case",
 			from:          "github:BurntSushi/ripgrep",
 			wantBuilder:   "github",
-			wantSourceArg: "BurntSushi/ripgrep",
-			wantLLMType:   LLMBuilderGitHub,
+			wantRemainder: "BurntSushi/ripgrep",
 		},
 		{
 			name:          "homebrew with lowercase",
 			from:          "homebrew:jq",
 			wantBuilder:   "homebrew",
-			wantSourceArg: "jq",
-			wantLLMType:   LLMBuilderHomebrew,
+			wantRemainder: "jq",
 		},
 		{
 			name:          "homebrew with uppercase",
 			from:          "HOMEBREW:ripgrep",
 			wantBuilder:   "homebrew",
-			wantSourceArg: "ripgrep",
-			wantLLMType:   LLMBuilderHomebrew,
+			wantRemainder: "ripgrep",
 		},
 		{
-			name:          "homebrew preserves sourceArg case",
+			name:          "homebrew preserves remainder case",
 			from:          "Homebrew:PostgreSQL",
 			wantBuilder:   "homebrew",
-			wantSourceArg: "PostgreSQL",
-			wantLLMType:   LLMBuilderHomebrew,
+			wantRemainder: "PostgreSQL",
 		},
 		{
-			name:            "homebrew source with lowercase",
-			from:            "homebrew:jq:source",
-			wantBuilder:     "homebrew",
-			wantSourceArg:   "jq",
-			wantLLMType:     LLMBuilderHomebrew,
-			wantForceSource: true,
+			name:          "homebrew source passes full remainder",
+			from:          "homebrew:jq:source",
+			wantBuilder:   "homebrew",
+			wantRemainder: "jq:source",
 		},
 		{
-			name:            "homebrew source with mixed case",
-			from:            "Homebrew:tmux:SOURCE",
-			wantBuilder:     "homebrew",
-			wantSourceArg:   "tmux",
-			wantLLMType:     LLMBuilderHomebrew,
-			wantForceSource: true,
+			name:          "homebrew source with mixed case",
+			from:          "Homebrew:tmux:SOURCE",
+			wantBuilder:   "homebrew",
+			wantRemainder: "tmux:SOURCE",
 		},
 		{
-			name:            "homebrew source preserves formula case",
-			from:            "homebrew:PostgreSQL@17:source",
-			wantBuilder:     "homebrew",
-			wantSourceArg:   "PostgreSQL@17",
-			wantLLMType:     LLMBuilderHomebrew,
-			wantForceSource: true,
+			name:          "homebrew source preserves formula case",
+			from:          "homebrew:PostgreSQL@17:source",
+			wantBuilder:   "homebrew",
+			wantRemainder: "PostgreSQL@17:source",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			builder, sourceArg, llmType, forceSource := parseFromFlag(tt.from)
+			builder, remainder := parseFromFlag(tt.from)
 			if builder != tt.wantBuilder {
 				t.Errorf("parseFromFlag(%q) builder = %q, want %q", tt.from, builder, tt.wantBuilder)
 			}
-			if sourceArg != tt.wantSourceArg {
-				t.Errorf("parseFromFlag(%q) sourceArg = %q, want %q", tt.from, sourceArg, tt.wantSourceArg)
-			}
-			if llmType != tt.wantLLMType {
-				t.Errorf("parseFromFlag(%q) llmType = %v, want %v", tt.from, llmType, tt.wantLLMType)
-			}
-			if forceSource != tt.wantForceSource {
-				t.Errorf("parseFromFlag(%q) forceSource = %v, want %v", tt.from, forceSource, tt.wantForceSource)
+			if remainder != tt.wantRemainder {
+				t.Errorf("parseFromFlag(%q) remainder = %q, want %q", tt.from, remainder, tt.wantRemainder)
 			}
 		})
 	}

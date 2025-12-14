@@ -14,14 +14,13 @@ type BuildRequest struct {
 	// Version is the optional specific version to install (empty = latest)
 	Version string
 
-	// SourceArg is a builder-specific argument. For example:
+	// SourceArg is a builder-specific argument passed from the --from flag.
+	// The builder is responsible for parsing any builder-specific syntax.
+	// Examples:
 	// - github builder: "cli/cli" (owner/repo)
+	// - homebrew builder: "jq" or "jq:source" (formula with optional :source suffix)
 	// - crates.io builder: unused (Package is the crate name)
 	SourceArg string
-
-	// ForceSource forces source build even if pre-built binaries are available.
-	// Currently only used by the Homebrew builder (homebrew:formula:source syntax).
-	ForceSource bool
 }
 
 // Builder generates recipes for packages from a specific ecosystem.

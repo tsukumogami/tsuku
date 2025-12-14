@@ -162,40 +162,18 @@ func confirmSkipValidation() bool {
 	return response == "y" || response == "yes"
 }
 
-// LLMBuilderType indicates which LLM-based builder is being used.
-type LLMBuilderType int
-
-const (
-	LLMBuilderNone LLMBuilderType = iota
-	LLMBuilderGitHub
-	LLMBuilderHomebrew
-)
-
 // parseFromFlag parses the --from flag value.
-// Returns (builder, sourceArg, llmType, forceSource).
-// For ecosystem builders: ("crates.io", "", LLMBuilderNone, false)
-// For github builder: ("github", "cli/cli", LLMBuilderGitHub, false)
-// For homebrew builder: ("homebrew", "jq", LLMBuilderHomebrew, false)
-// For homebrew source: ("homebrew", "jq", LLMBuilderHomebrew, true)
-func parseFromFlag(from string) (builder string, sourceArg string, llmType LLMBuilderType, forceSource bool) {
-	lower := strings.ToLower(from)
-	// Check for github:owner/repo format
-	if strings.HasPrefix(lower, "github:") {
-		return "github", from[7:], LLMBuilderGitHub, false
+// Returns (builder, remainder).
+// Splits on the first ":" - builder name before, remainder after.
+// Examples:
+//   - "homebrew:jq:source" → ("homebrew", "jq:source")
+//   - "github:cli/cli" → ("github", "cli/cli")
+//   - "crates.io" → ("crates.io", "")
+func parseFromFlag(from string) (builder string, remainder string) {
+	if idx := strings.Index(from, ":"); idx != -1 {
+		return strings.ToLower(from[:idx]), from[idx+1:]
 	}
-	// Check for homebrew:formula or homebrew:formula:source format
-	if strings.HasPrefix(lower, "homebrew:") {
-		arg := from[9:]
-		// Check for :source suffix
-		if strings.HasSuffix(lower, ":source") {
-			// Strip :source suffix (case-insensitive)
-			arg = arg[:len(arg)-7]
-			return "homebrew", arg, LLMBuilderHomebrew, true
-		}
-		return "homebrew", arg, LLMBuilderHomebrew, false
-	}
-	// Otherwise, it's an ecosystem name
-	return normalizeEcosystem(from), "", LLMBuilderNone, false
+	return strings.ToLower(from), ""
 }
 
 // normalizeEcosystem converts user-friendly ecosystem names to internal identifiers
@@ -225,8 +203,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Parse the --from flag
-	builderName, sourceArg, llmType, forceSource := parseFromFlag(createFrom)
-	isLLMBuilder := llmType != LLMBuilderNone
+	builderName, sourceArg := parseFromFlag(createFrom)
+	isLLMBuilder := builderName == "github" || builderName == "homebrew"
 
 	// Handle --skip-validation flag (only applies to LLM builders)
 	skipValidation := false
@@ -303,7 +281,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Register LLM builders (may fail if ANTHROPIC_API_KEY not set)
-	if llmType == LLMBuilderGitHub {
+	if builderName == "github" {
 		var opts []builders.GitHubReleaseBuilderOption
 
 		// Set up validation executor unless --skip-validation was confirmed
@@ -323,7 +301,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 			exitWithCode(ExitDependencyFailed)
 		}
 		builderRegistry.Register(ghBuilder)
-	} else if llmType == LLMBuilderHomebrew {
+	} else if builderName == "homebrew" {
 		var opts []builders.HomebrewBuilderOption
 
 		// Set up validation executor unless --skip-validation was confirmed
@@ -382,16 +360,9 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Build the recipe
 	var sourceDisplay string
-	switch llmType {
-	case LLMBuilderGitHub:
-		sourceDisplay = fmt.Sprintf("github:%s", sourceArg)
-	case LLMBuilderHomebrew:
-		if forceSource {
-			sourceDisplay = fmt.Sprintf("homebrew:%s:source", sourceArg)
-		} else {
-			sourceDisplay = fmt.Sprintf("homebrew:%s", sourceArg)
-		}
-	default:
+	if sourceArg != "" {
+		sourceDisplay = fmt.Sprintf("%s:%s", builderName, sourceArg)
+	} else {
 		sourceDisplay = builderName
 	}
 	printInfof("Creating recipe for %s from %s...\n", toolName, sourceDisplay)
@@ -404,7 +375,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// For Homebrew builder, use BuildWithDependencies to discover and generate all needed recipes
-	if llmType == LLMBuilderHomebrew {
+	if builderName == "homebrew" {
 		hbBuilder, ok := builder.(*builders.HomebrewBuilder)
 		if !ok {
 			fmt.Fprintf(os.Stderr, "Error: unexpected builder type\n")
@@ -417,9 +388,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 		}
 
 		results, err := hbBuilder.BuildWithDependencies(ctx, builders.BuildRequest{
-			Package:     toolName,
-			SourceArg:   sourceArg,
-			ForceSource: forceSource,
+			Package:   toolName,
+			SourceArg: sourceArg,
 		}, confirmFunc)
 
 		if err == builders.ErrUserCanceled {
@@ -509,9 +479,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Non-Homebrew builders: use single Build call
 	result, err := builder.Build(ctx, builders.BuildRequest{
-		Package:     toolName,
-		SourceArg:   sourceArg,
-		ForceSource: forceSource,
+		Package:   toolName,
+		SourceArg: sourceArg,
 	})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)
