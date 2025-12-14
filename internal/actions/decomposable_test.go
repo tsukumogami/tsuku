@@ -96,15 +96,16 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 17 primitives (8 core + 9 ecosystem)
-	if len(prims) != 17 {
-		t.Errorf("len(Primitives()) = %d, want 17", len(prims))
+	// Should have exactly 18 primitives (8 core + 10 ecosystem)
+	if len(prims) != 18 {
+		t.Errorf("len(Primitives()) = %d, want 18", len(prims))
 	}
 
 	// Sort for deterministic comparison
 	sort.Strings(prims)
 
 	expected := []string{
+		"apply_patch_file",
 		"cargo_build",
 		"chmod",
 		"cmake_build",

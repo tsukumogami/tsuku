@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"context"
 	"os"
 	"runtime"
 	"strings"
@@ -187,7 +188,7 @@ func TestNixRealizeAction_Execute_PlatformCheck(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{Context: context.Background()}
 	params := map[string]interface{}{
 		"flake_ref":   "nixpkgs#hello",
 		"executables": []string{"hello"},
@@ -209,7 +210,7 @@ func TestNixRealizeAction_Execute_MissingParams(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{Context: context.Background()}
 
 	tests := []struct {
 		name           string
@@ -259,7 +260,7 @@ func TestNixRealizeAction_Execute_InvalidInputs(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{Context: context.Background()}
 
 	tests := []struct {
 		name           string
@@ -503,7 +504,7 @@ func TestNixRealizeAction_Execute_PackageFallback(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{Context: context.Background()}
 
 	// Test that package parameter works as fallback when flake_ref is missing
 	params := map[string]interface{}{
@@ -526,7 +527,7 @@ func TestNixRealizeAction_Execute_BothFlakeRefAndPackage(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{Context: context.Background()}
 
 	// Test that flake_ref takes precedence when both are provided
 	params := map[string]interface{}{
@@ -550,7 +551,7 @@ func TestNixRealizeAction_Execute_WithLocks(t *testing.T) {
 	}
 
 	action := &NixRealizeAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{Context: context.Background()}
 
 	// Test with locks parameter
 	params := map[string]interface{}{

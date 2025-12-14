@@ -45,6 +45,7 @@ var ActionDependencies = map[string]ActionDeps{
 	"run_command":       {InstallTime: nil, Runtime: nil},
 	"text_replace":      {InstallTime: nil, Runtime: nil},
 	"apply_patch":       {InstallTime: nil, Runtime: nil}, // Uses system patch command
+	"apply_patch_file":  {InstallTime: nil, Runtime: nil}, // Primitive for applying local patches
 
 	// System package manager actions: no dependencies
 	// These rely on system package managers being pre-installed.
