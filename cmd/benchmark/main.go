@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/builders"
-	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // BenchmarkResult holds the result of benchmarking a single repository.
@@ -97,15 +96,10 @@ func loadCorpus(path string) ([]string, error) {
 func runBenchmark(repos []string) []BenchmarkResult {
 	ctx := context.Background()
 
-	// Initialize validation executor
-	detector := validate.NewRuntimeDetector()
-	predownloader := validate.NewPreDownloader()
-	executor := validate.NewExecutor(detector, predownloader)
-
-	// Create builder with validation
-	builder, err := builders.NewGitHubReleaseBuilder(ctx, builders.WithExecutor(executor))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error creating builder: %v\n", err)
+	// Create builder and initialize with validation enabled
+	builder := builders.NewGitHubReleaseBuilder()
+	if err := builder.Initialize(ctx, &builders.InitOptions{SkipValidation: false}); err != nil {
+		fmt.Fprintf(os.Stderr, "Error initializing builder: %v\n", err)
 		os.Exit(1)
 	}
 

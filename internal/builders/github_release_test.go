@@ -170,14 +170,10 @@ func TestDeriveAssetPattern(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_Name(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory))
 
 	if b.Name() != "github" {
 		t.Errorf("Name() = %q, want %q", b.Name(), "github")
@@ -185,14 +181,10 @@ func TestGitHubReleaseBuilder_Name(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_CanBuild(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory))
 
 	// CanBuild always returns false because this builder needs SourceArg
 	can, err := b.CanBuild(context.Background(), "some-package")
@@ -205,7 +197,6 @@ func TestGitHubReleaseBuilder_CanBuild(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_FetchReleases(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
@@ -236,10 +227,7 @@ func TestGitHubReleaseBuilder_FetchReleases(t *testing.T) {
 	}))
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory), WithGitHubBaseURL(server.URL))
 
 	releases, err := b.fetchReleases(context.Background(), "cli", "cli")
 	if err != nil {
@@ -260,7 +248,6 @@ func TestGitHubReleaseBuilder_FetchReleases(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_FetchReleases_NotFound(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
@@ -269,19 +256,15 @@ func TestGitHubReleaseBuilder_FetchReleases_NotFound(t *testing.T) {
 	}))
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory), WithGitHubBaseURL(server.URL))
 
-	_, err = b.fetchReleases(context.Background(), "nonexistent", "repo")
+	_, err := b.fetchReleases(context.Background(), "nonexistent", "repo")
 	if err == nil {
 		t.Error("expected error for 404 response")
 	}
 }
 
 func TestGitHubReleaseBuilder_FetchRepoMeta(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
@@ -300,10 +283,7 @@ func TestGitHubReleaseBuilder_FetchRepoMeta(t *testing.T) {
 	}))
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory), WithGitHubBaseURL(server.URL))
 
 	meta, err := b.fetchRepoMeta(context.Background(), "cli", "cli")
 	if err != nil {
@@ -320,7 +300,6 @@ func TestGitHubReleaseBuilder_FetchRepoMeta(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_FetchRepoMeta_FallbackHomepage(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
@@ -335,10 +314,7 @@ func TestGitHubReleaseBuilder_FetchRepoMeta_FallbackHomepage(t *testing.T) {
 	}))
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory), WithGitHubBaseURL(server.URL))
 
 	meta, err := b.fetchRepoMeta(context.Background(), "owner", "repo")
 	if err != nil {
@@ -473,10 +449,7 @@ func TestGitHubReleaseBuilder_Build_ValidationSkipped(t *testing.T) {
 	defer server.Close()
 
 	// Build without executor - validation should be skipped
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithGitHubBaseURL(server.URL))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory), WithGitHubBaseURL(server.URL))
 
 	result, err := b.Build(ctx, BuildRequest{
 		Package:   "gh",
@@ -500,14 +473,10 @@ func TestGitHubReleaseBuilder_Build_ValidationSkipped(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_BuildRepairMessage(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory))
 
 	result := &validate.ValidationResult{
 		Passed:   false,
@@ -535,14 +504,10 @@ func TestGitHubReleaseBuilder_BuildRepairMessage(t *testing.T) {
 }
 
 func TestGitHubReleaseBuilder_FormatValidationError(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory))
 
 	result := &validate.ValidationResult{
 		Passed:   false,
@@ -572,17 +537,13 @@ func containsHelper(s, substr string) bool {
 }
 
 func TestWithTelemetryClient(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
 	// Create a telemetry client (disabled to avoid actual sends)
 	telemetryClient := telemetry.NewClientWithOptions("http://unused", 0, true, false)
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithTelemetryClient(telemetryClient))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory), WithTelemetryClient(telemetryClient))
 
 	// Verify the telemetry client was set correctly
 	if b.telemetryClient != telemetryClient {
@@ -610,16 +571,12 @@ func (m *mockProgressReporter) OnStageFailed() {
 }
 
 func TestWithProgressReporter(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
 	reporter := &mockProgressReporter{}
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithProgressReporter(reporter))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory), WithProgressReporter(reporter))
 
 	// Verify the progress reporter was set correctly
 	if b.progress != reporter {
@@ -628,16 +585,12 @@ func TestWithProgressReporter(t *testing.T) {
 }
 
 func TestProgressReporterHelpers(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
 	reporter := &mockProgressReporter{}
 
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory), WithProgressReporter(reporter))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory), WithProgressReporter(reporter))
 
 	// Test reportStart
 	b.reportStart("Fetching metadata")
@@ -659,15 +612,11 @@ func TestProgressReporterHelpers(t *testing.T) {
 }
 
 func TestProgressReporterNilSafe(t *testing.T) {
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)
 
 	// No progress reporter set
-	b, err := NewGitHubReleaseBuilder(ctx, WithFactory(factory))
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
+	b := NewGitHubReleaseBuilder(WithFactory(factory))
 
 	// These should not panic when progress is nil
 	b.reportStart("test")
@@ -676,6 +625,7 @@ func TestProgressReporterNilSafe(t *testing.T) {
 }
 
 func TestProgressReporterCalledDuringBuild(t *testing.T) {
+	ctx := context.Background()
 	// Set up mock GitHub server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
@@ -702,25 +652,21 @@ func TestProgressReporterCalledDuringBuild(t *testing.T) {
 	}))
 	defer server.Close()
 
-	ctx := context.Background()
 	mockProv := &mockProvider{name: "claude"}
 	factory := createMockFactory(mockProv)
 
 	reporter := &mockProgressReporter{}
 	telemetryClient := telemetry.NewClientWithOptions("http://unused", 0, true, false)
 
-	b, err := NewGitHubReleaseBuilder(ctx,
+	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
 		WithProgressReporter(reporter),
 		WithTelemetryClient(telemetryClient),
 	)
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
 
 	// Run build
-	_, err = b.Build(ctx, BuildRequest{
+	_, err := b.Build(ctx, BuildRequest{
 		Package:   "test",
 		SourceArg: "test/repo",
 	})
@@ -825,13 +771,10 @@ func TestGitHubReleaseBuilder_Build_VersionPlaceholders(t *testing.T) {
 	// Build without executor - the returned recipe retains {version} placeholders
 	// since version substitution only happens internally during validation.
 	// The placeholders are preserved so tsuku install can substitute them at runtime.
-	b, err := NewGitHubReleaseBuilder(ctx,
+	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
 	)
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
 
 	result, err := b.Build(ctx, BuildRequest{
 		Package:   "tool",

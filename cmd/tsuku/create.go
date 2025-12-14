@@ -19,7 +19,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/toolchain"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
-	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 const (
@@ -208,8 +207,6 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Normalize ecosystem names (e.g., "cargo" -> "crates.io", "pip" -> "pypi")
 	builderName = normalizeEcosystem(builderName)
 
-	isLLMBuilder := builderName == "github" || builderName == "homebrew"
-
 	// Handle --skip-validation flag
 	skipValidation := false
 	if createSkipValidation {
@@ -221,17 +218,34 @@ func runCreate(cmd *cobra.Command, args []string) {
 		skipValidation = true
 	}
 
-	// Initialize builder registry
+	// Initialize builder registry with all builders
 	builderRegistry := builders.NewRegistry()
 	builderRegistry.Register(builders.NewCargoBuilder(nil))
 	builderRegistry.Register(builders.NewGemBuilder(nil))
 	builderRegistry.Register(builders.NewPyPIBuilder(nil))
 	builderRegistry.Register(builders.NewNpmBuilder(nil))
+	builderRegistry.Register(builders.NewGitHubReleaseBuilder())
+	builderRegistry.Register(builders.NewHomebrewBuilder())
+
+	// Get the builder
+	builder, ok := builderRegistry.Get(builderName)
+	if !ok {
+		fmt.Fprintf(os.Stderr, "Error: unknown source '%s'\n", createFrom)
+		fmt.Fprintf(os.Stderr, "\nAvailable sources:\n")
+		for _, name := range builderRegistry.List() {
+			fmt.Fprintf(os.Stderr, "  %s\n", name)
+		}
+		fmt.Fprintf(os.Stderr, "  github:owner/repo\n")
+		fmt.Fprintf(os.Stderr, "  homebrew:formula\n")
+		exitWithCode(ExitUsage)
+	}
+
+	ctx := context.Background()
 
 	// For LLM builders, check LLM budget and rate limits before proceeding
 	var stateManager *install.StateManager
 	var userCfg *userconfig.Config
-	if isLLMBuilder {
+	if builder.RequiresLLM() {
 		// Load user config for settings
 		var err error
 		userCfg, err = userconfig.Load()
@@ -280,66 +294,21 @@ func runCreate(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// Register LLM builders (may fail if ANTHROPIC_API_KEY not set)
-	if builderName == "github" {
-		var opts []builders.GitHubReleaseBuilderOption
-
-		// Set up validation executor unless --skip-validation was confirmed
-		if !skipValidation {
-			detector := validate.NewRuntimeDetector()
-			predownloader := validate.NewPreDownloader()
-			executor := validate.NewExecutor(detector, predownloader)
-			opts = append(opts, builders.WithExecutor(executor))
-		}
-
-		if !quietFlag {
-			opts = append(opts, builders.WithProgressReporter(&cliProgressReporter{out: os.Stdout}))
-		}
-		ghBuilder, err := builders.NewGitHubReleaseBuilder(context.Background(), opts...)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			exitWithCode(ExitDependencyFailed)
-		}
-		builderRegistry.Register(ghBuilder)
-	} else if builderName == "homebrew" {
-		var opts []builders.HomebrewBuilderOption
-
-		// Set up validation executor unless --skip-validation was confirmed
-		if !skipValidation {
-			detector := validate.NewRuntimeDetector()
-			predownloader := validate.NewPreDownloader()
-			executor := validate.NewExecutor(detector, predownloader)
-			opts = append(opts, builders.WithHomebrewExecutor(executor))
-		}
-
-		if !quietFlag {
-			opts = append(opts, builders.WithHomebrewProgressReporter(&cliProgressReporter{out: os.Stdout}))
-		}
-		hbBuilder, err := builders.NewHomebrewBuilder(context.Background(), opts...)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			exitWithCode(ExitDependencyFailed)
-		}
-		builderRegistry.Register(hbBuilder)
+	// Initialize the builder (LLM builders create factory, set up validation; ecosystem builders no-op)
+	var progressReporter builders.ProgressReporter
+	if !quietFlag {
+		progressReporter = &cliProgressReporter{out: os.Stdout}
 	}
-
-	// Get the builder
-	builder, ok := builderRegistry.Get(builderName)
-	if !ok {
-		fmt.Fprintf(os.Stderr, "Error: unknown source '%s'\n", createFrom)
-		fmt.Fprintf(os.Stderr, "\nAvailable sources:\n")
-		for _, name := range builderRegistry.List() {
-			fmt.Fprintf(os.Stderr, "  %s\n", name)
-		}
-		fmt.Fprintf(os.Stderr, "  github:owner/repo\n")
-		fmt.Fprintf(os.Stderr, "  homebrew:formula\n")
-		exitWithCode(ExitUsage)
+	if err := builder.Initialize(ctx, &builders.InitOptions{
+		SkipValidation:   skipValidation,
+		ProgressReporter: progressReporter,
+	}); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		exitWithCode(ExitDependencyFailed)
 	}
-
-	ctx := context.Background()
 
 	// For ecosystem builders, check toolchain and package existence
-	if !isLLMBuilder {
+	if !builder.RequiresLLM() {
 		// Check toolchain availability before making API calls
 		if err := toolchain.CheckAvailable(builderName); err != nil {
 			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
@@ -488,7 +457,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Record LLM usage for successful LLM builds (includes cost tracking)
-	if isLLMBuilder && stateManager != nil {
+	if builder.RequiresLLM() && stateManager != nil {
 		// Use actual cost from build result if available, otherwise fall back to estimate
 		cost := result.Cost
 		if cost == 0 {
@@ -515,7 +484,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// For LLM builders, show preview and prompt for approval (unless --yes)
-	if isLLMBuilder && !createAutoApprove {
+	if builder.RequiresLLM() && !createAutoApprove {
 		fmt.Println() // Blank line after "Creating recipe..." message
 		approved, err := previewRecipe(result.Recipe, result)
 		if err != nil {
@@ -543,7 +512,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	printInfof("Source: %s\n", result.Source)
 
 	// Display cost for LLM builds
-	if isLLMBuilder && stateManager != nil && userCfg != nil {
+	if builder.RequiresLLM() && stateManager != nil && userCfg != nil {
 		dailySpent := stateManager.DailySpent()
 		dailyBudget := userCfg.LLMDailyBudget()
 

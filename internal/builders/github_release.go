@@ -107,13 +107,10 @@ func WithProgressReporter(p ProgressReporter) GitHubReleaseBuilderOption {
 }
 
 // NewGitHubReleaseBuilder creates a new GitHubReleaseBuilder.
-// If no options are provided, defaults are used:
-// - HTTP client with 60s timeout
-// - Factory auto-detected from environment (ANTHROPIC_API_KEY, GOOGLE_API_KEY)
-// - Sanitizer with default patterns
-// - No executor (validation skipped)
-// - Default telemetry client (respects TSUKU_NO_TELEMETRY)
-func NewGitHubReleaseBuilder(ctx context.Context, opts ...GitHubReleaseBuilderOption) (*GitHubReleaseBuilder, error) {
+// The builder is created in an uninitialized state. Call Initialize() before Build().
+// Options can be passed to pre-configure HTTP client, GitHub base URL, etc.
+// LLM factory and executor are set up during Initialize() based on InitOptions.
+func NewGitHubReleaseBuilder(opts ...GitHubReleaseBuilderOption) *GitHubReleaseBuilder {
 	b := &GitHubReleaseBuilder{
 		githubBaseURL: "https://api.github.com",
 	}
@@ -122,19 +119,11 @@ func NewGitHubReleaseBuilder(ctx context.Context, opts ...GitHubReleaseBuilderOp
 		opt(b)
 	}
 
-	// Set defaults for unset options
+	// Set defaults for unset options (non-LLM dependencies)
 	if b.httpClient == nil {
 		b.httpClient = &http.Client{
 			Timeout: 60 * time.Second,
 		}
-	}
-
-	if b.factory == nil {
-		factory, err := llm.NewFactory(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
-		}
-		b.factory = factory
 	}
 
 	if b.sanitizer == nil {
@@ -145,14 +134,44 @@ func NewGitHubReleaseBuilder(ctx context.Context, opts ...GitHubReleaseBuilderOp
 		b.telemetryClient = telemetry.NewClient()
 	}
 
+	return b
+}
+
+// Initialize sets up the builder for LLM-based recipe generation.
+// This creates the LLM factory (validates API key) and configures validation.
+func (b *GitHubReleaseBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	// Create LLM factory if not already set (may be set via WithFactory for testing)
+	if b.factory == nil {
+		factory, err := llm.NewFactory(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create LLM factory: %w", err)
+		}
+		b.factory = factory
+	}
+
 	// Set up factory callback for circuit breaker telemetry
 	b.factory.SetOnBreakerTrip(func(provider string, failures int) {
 		b.telemetryClient.SendLLM(telemetry.NewLLMCircuitBreakerTripEvent(provider, failures))
 	})
 
-	// executor is optional - validation skipped if nil
+	// Set up validation executor unless skipped
+	if opts != nil && !opts.SkipValidation && b.executor == nil {
+		detector := validate.NewRuntimeDetector()
+		predownloader := validate.NewPreDownloader()
+		b.executor = validate.NewExecutor(detector, predownloader)
+	}
 
-	return b, nil
+	// Set progress reporter if provided
+	if opts != nil && opts.ProgressReporter != nil {
+		b.progress = opts.ProgressReporter
+	}
+
+	return nil
+}
+
+// RequiresLLM returns true as this builder uses LLM for recipe generation.
+func (b *GitHubReleaseBuilder) RequiresLLM() bool {
+	return true
 }
 
 // Name returns the builder identifier.
@@ -1227,7 +1246,6 @@ func inspectArchive(ctx context.Context, httpClient *http.Client, archiveURL str
 // NewGitHubReleaseBuilderLegacy creates a builder with legacy constructor signature.
 // Deprecated: Use NewGitHubReleaseBuilder instead.
 func NewGitHubReleaseBuilderLegacy(httpClient *http.Client, llmClient *llm.Client) (*GitHubReleaseBuilder, error) {
-	ctx := context.Background()
 	opts := []GitHubReleaseBuilderOption{}
 
 	if httpClient != nil {
@@ -1236,13 +1254,16 @@ func NewGitHubReleaseBuilderLegacy(httpClient *http.Client, llmClient *llm.Clien
 
 	// Note: llmClient is ignored in new implementation - factory is used instead
 
-	return NewGitHubReleaseBuilder(ctx, opts...)
+	b := NewGitHubReleaseBuilder(opts...)
+	if err := b.Initialize(context.Background(), nil); err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 // NewGitHubReleaseBuilderWithBaseURL creates a builder with custom GitHub API URL.
 // Deprecated: Use NewGitHubReleaseBuilder with WithGitHubBaseURL option instead.
 func NewGitHubReleaseBuilderWithBaseURL(httpClient *http.Client, llmClient *llm.Client, githubBaseURL string) (*GitHubReleaseBuilder, error) {
-	ctx := context.Background()
 	opts := []GitHubReleaseBuilderOption{
 		WithGitHubBaseURL(githubBaseURL),
 	}
@@ -1251,5 +1272,9 @@ func NewGitHubReleaseBuilderWithBaseURL(httpClient *http.Client, llmClient *llm.
 		opts = append(opts, WithHTTPClient(httpClient))
 	}
 
-	return NewGitHubReleaseBuilder(ctx, opts...)
+	b := NewGitHubReleaseBuilder(opts...)
+	if err := b.Initialize(context.Background(), nil); err != nil {
+		return nil, err
+	}
+	return b, nil
 }

@@ -83,6 +83,16 @@ func (b *CargoBuilder) Name() string {
 	return "crates.io"
 }
 
+// Initialize is a no-op for ecosystem builders.
+func (b *CargoBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	return nil
+}
+
+// RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
+func (b *CargoBuilder) RequiresLLM() bool {
+	return false
+}
+
 // CanBuild checks if the crate exists on crates.io
 func (b *CargoBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
 	if !isValidCrateName(packageName) {

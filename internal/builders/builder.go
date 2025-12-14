@@ -6,6 +6,16 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
+// InitOptions contains options for builder initialization.
+type InitOptions struct {
+	// SkipValidation disables container validation for LLM-generated recipes.
+	SkipValidation bool
+
+	// ProgressReporter receives progress updates during build operations.
+	// If nil, no progress is reported.
+	ProgressReporter ProgressReporter
+}
+
 // BuildRequest contains builder-specific parameters for recipe generation.
 type BuildRequest struct {
 	// Package is the tool name the user wants (e.g., "gh", "ripgrep")
@@ -29,6 +39,18 @@ type BuildRequest struct {
 type Builder interface {
 	// Name returns the builder identifier (e.g., "crates_io", "rubygems", "github")
 	Name() string
+
+	// Initialize performs builder-specific setup.
+	// For LLM builders, this creates the LLM factory, validates the API key,
+	// and sets up validation executor and progress reporter.
+	// For ecosystem builders, this is a no-op.
+	// Returns error if initialization fails (e.g., missing API key).
+	Initialize(ctx context.Context, opts *InitOptions) error
+
+	// RequiresLLM returns true if this builder uses LLM for recipe generation.
+	// Used by CLI to apply LLM-specific behaviors like budget checks,
+	// preview prompts, and cost tracking.
+	RequiresLLM() bool
 
 	// CanBuild checks if this builder can handle the package.
 	// It typically queries the ecosystem's API to verify the package exists.

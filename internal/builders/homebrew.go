@@ -151,13 +151,10 @@ func WithRegistryChecker(r RegistryChecker) HomebrewBuilderOption {
 }
 
 // NewHomebrewBuilder creates a new HomebrewBuilder.
-// If no options are provided, defaults are used:
-// - HTTP client with 60s timeout
-// - Factory auto-detected from environment (ANTHROPIC_API_KEY, GOOGLE_API_KEY)
-// - Sanitizer with default patterns
-// - No executor (validation skipped)
-// - Default telemetry client (respects TSUKU_NO_TELEMETRY)
-func NewHomebrewBuilder(ctx context.Context, opts ...HomebrewBuilderOption) (*HomebrewBuilder, error) {
+// The builder is created in an uninitialized state. Call Initialize() before Build().
+// Options can be passed to pre-configure HTTP client, API URL, etc.
+// LLM factory and executor are set up during Initialize() based on InitOptions.
+func NewHomebrewBuilder(opts ...HomebrewBuilderOption) *HomebrewBuilder {
 	b := &HomebrewBuilder{
 		homebrewAPIURL: defaultHomebrewAPIURL,
 	}
@@ -166,19 +163,11 @@ func NewHomebrewBuilder(ctx context.Context, opts ...HomebrewBuilderOption) (*Ho
 		opt(b)
 	}
 
-	// Set defaults for unset options
+	// Set defaults for unset options (non-LLM dependencies)
 	if b.httpClient == nil {
 		b.httpClient = &http.Client{
 			Timeout: 60 * time.Second,
 		}
-	}
-
-	if b.factory == nil {
-		factory, err := llm.NewFactory(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
-		}
-		b.factory = factory
 	}
 
 	if b.sanitizer == nil {
@@ -189,14 +178,44 @@ func NewHomebrewBuilder(ctx context.Context, opts ...HomebrewBuilderOption) (*Ho
 		b.telemetryClient = telemetry.NewClient()
 	}
 
+	return b
+}
+
+// Initialize sets up the builder for LLM-based recipe generation.
+// This creates the LLM factory (validates API key) and configures validation.
+func (b *HomebrewBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	// Create LLM factory if not already set (may be set via WithHomebrewFactory for testing)
+	if b.factory == nil {
+		factory, err := llm.NewFactory(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create LLM factory: %w", err)
+		}
+		b.factory = factory
+	}
+
 	// Set up factory callback for circuit breaker telemetry
 	b.factory.SetOnBreakerTrip(func(provider string, failures int) {
 		b.telemetryClient.SendLLM(telemetry.NewLLMCircuitBreakerTripEvent(provider, failures))
 	})
 
-	// executor is optional - validation skipped if nil
+	// Set up validation executor unless skipped
+	if opts != nil && !opts.SkipValidation && b.executor == nil {
+		detector := validate.NewRuntimeDetector()
+		predownloader := validate.NewPreDownloader()
+		b.executor = validate.NewExecutor(detector, predownloader)
+	}
 
-	return b, nil
+	// Set progress reporter if provided
+	if opts != nil && opts.ProgressReporter != nil {
+		b.progress = opts.ProgressReporter
+	}
+
+	return nil
+}
+
+// RequiresLLM returns true as this builder uses LLM for recipe generation.
+func (b *HomebrewBuilder) RequiresLLM() bool {
+	return true
 }
 
 // Name returns the builder identifier.

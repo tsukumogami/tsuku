@@ -144,14 +144,11 @@ func TestRepairLoop_FixesBrokenRecipe(t *testing.T) {
 	telemetryClient := telemetry.NewClientWithOptions("http://unused", 0, true, false)
 
 	// Without executor, validation is skipped
-	b, err := NewGitHubReleaseBuilder(ctx,
+	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
 		WithTelemetryClient(telemetryClient),
 	)
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
 
 	result, err := b.Build(ctx, BuildRequest{
 		Package:   "tool",
@@ -230,13 +227,10 @@ func TestRepairLoop_ValidationSkippedWithoutExecutor(t *testing.T) {
 	defer server.Close()
 
 	// No executor = validation skipped
-	b, err := NewGitHubReleaseBuilder(ctx,
+	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
 	)
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
 
 	result, err := b.Build(ctx, BuildRequest{
 		Package:   "tool",
@@ -300,16 +294,13 @@ func TestRepairLoop_ErrorSanitization(t *testing.T) {
 	server := createMockGitHubServer()
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilder(ctx,
+	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
 		WithExecutor(createTestExecutor(mockExec)),
 	)
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
 
-	_, err = b.Build(ctx, BuildRequest{
+	_, err := b.Build(ctx, BuildRequest{
 		Package:   "tool",
 		SourceArg: "owner/tool",
 	})
@@ -368,13 +359,10 @@ func TestRepairLoop_MultipleToolCalls(t *testing.T) {
 	server := createMockGitHubServer()
 	defer server.Close()
 
-	b, err := NewGitHubReleaseBuilder(ctx,
+	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
 	)
-	if err != nil {
-		t.Fatalf("NewGitHubReleaseBuilder error: %v", err)
-	}
 
 	result, err := b.Build(ctx, BuildRequest{
 		Package:   "tool",
