@@ -59,10 +59,17 @@ jobs:
           fi
 
       - name: Run tests
-        # Run with race detector on push to main, skip on PRs for faster feedback
-        run: go test -short ${{ github.event_name == 'push' && '-race' || '' }} -coverprofile=coverage.out ./...
+        # PRs: fast feedback without race detector or coverage
+        # Push to main: full validation with race detector and coverage
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            go test -short -race -coverprofile=coverage.out ./...
+          else
+            go test -short ./...
+          fi
 
       - name: Upload coverage to Codecov
+        if: github.event_name == 'push'
         uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
