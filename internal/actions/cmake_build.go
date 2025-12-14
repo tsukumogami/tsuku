@@ -201,15 +201,14 @@ func isValidCMakeArg(arg string) bool {
 		return false
 	}
 
-	// Must not contain shell metacharacters
-	shellChars := []string{";", "&", "|", "`", "\n", "\r"}
+	// Must not contain shell metacharacters including command substitution
+	// Note: CMake generator expressions use $<...> not $(), so blocking $() is safe
+	shellChars := []string{";", "&", "|", "`", "$", "(", ")", "\n", "\r"}
 	for _, char := range shellChars {
 		if strings.Contains(arg, char) {
 			return false
 		}
 	}
 
-	// CMake args can contain $() for generator expressions, but we're restrictive here
-	// Allow -D definitions and other common cmake flags
 	return true
 }
