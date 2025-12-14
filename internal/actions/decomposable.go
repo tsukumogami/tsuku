@@ -69,6 +69,7 @@ var primitives = map[string]bool{
 	"set_rpath":         true,
 	"link_dependencies": true,
 	"install_libraries": true,
+	"apply_patch_file":  true,
 	// Ecosystem primitives - have residual non-determinism
 	"cargo_build":    true,
 	"cmake_build":    true,
@@ -95,6 +96,7 @@ var deterministicActions = map[string]bool{
 	"set_rpath":         true,
 	"link_dependencies": true,
 	"install_libraries": true,
+	"apply_patch_file":  true,
 	// Ecosystem primitives - NOT deterministic due to compiler versions,
 	// native extensions, platform-specific behavior, etc.
 	"cargo_build":    false,

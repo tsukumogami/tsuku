@@ -3484,6 +3484,61 @@ func TestGenerateSourceRecipeOutput_WithResourcesAndPatches(t *testing.T) {
 	}
 }
 
+// AP-I4: Multiple patches - verify ordering is preserved
+func TestGenerateSourceRecipeOutput_MultiplePatchesOrdering(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	formulaInfo := &homebrewFormulaInfo{
+		Name:        "curl",
+		Description: "URL transfer tool",
+		Homepage:    "https://curl.se",
+	}
+	formulaInfo.Versions.Stable = "8.5.0"
+	formulaInfo.URLs.Stable.URL = "https://github.com/curl/curl/archive/refs/tags/curl-8_5_0.tar.gz"
+
+	// Multiple patches - ordering should be preserved
+	data := &sourceRecipeData{
+		BuildSystem:   BuildSystemAutotools,
+		Executables:   []string{"curl"},
+		VerifyCommand: "curl --version",
+		Patches: []sourcePatchData{
+			{
+				URL:   "https://example.com/patch-001-first.patch",
+				Strip: 1,
+			},
+			{
+				URL:   "https://example.com/patch-002-second.patch",
+				Strip: 1,
+			},
+			{
+				Data:  "--- a/main.c\n+++ b/main.c\n@@ -1 +1 @@\n-old\n+new",
+				Strip: 1,
+			},
+		},
+	}
+
+	recipe, err := b.generateSourceRecipeOutput("curl", formulaInfo, data)
+	if err != nil {
+		t.Fatalf("generateSourceRecipeOutput() error = %v", err)
+	}
+
+	// Verify all patches are present
+	if len(recipe.Patches) != 3 {
+		t.Fatalf("recipe.Patches has %d entries, want 3", len(recipe.Patches))
+	}
+
+	// Verify ordering is preserved
+	if !containsString(recipe.Patches[0].URL, "patch-001-first") {
+		t.Errorf("First patch should be patch-001-first, got %s", recipe.Patches[0].URL)
+	}
+	if !containsString(recipe.Patches[1].URL, "patch-002-second") {
+		t.Errorf("Second patch should be patch-002-second, got %s", recipe.Patches[1].URL)
+	}
+	if recipe.Patches[2].Data == "" {
+		t.Error("Third patch should be inline data patch")
+	}
+}
+
 // Test multiple executables handling (EX-2)
 func TestHomebrewBuilder_buildSourceSteps_MultipleExecutables(t *testing.T) {
 	b := &HomebrewBuilder{}
