@@ -206,26 +206,19 @@ func runCreate(cmd *cobra.Command, args []string) {
 	builderName, sourceArg := parseFromFlag(createFrom)
 
 	// Normalize ecosystem names (e.g., "cargo" -> "crates.io", "pip" -> "pypi")
-	// Only normalize if not an LLM builder (github/homebrew pass through unchanged)
-	if builderName != "github" && builderName != "homebrew" {
-		builderName = normalizeEcosystem(builderName)
-	}
+	builderName = normalizeEcosystem(builderName)
 
 	isLLMBuilder := builderName == "github" || builderName == "homebrew"
 
-	// Handle --skip-validation flag (only applies to LLM builders)
+	// Handle --skip-validation flag
 	skipValidation := false
 	if createSkipValidation {
-		if !isLLMBuilder {
-			fmt.Fprintln(os.Stderr, "Warning: --skip-validation has no effect for non-LLM sources")
-		} else {
-			// Require explicit consent for skipping validation
-			if !confirmSkipValidation() {
-				fmt.Fprintln(os.Stderr, "Aborted.")
-				exitWithCode(ExitGeneral)
-			}
-			skipValidation = true
+		// Require explicit consent for skipping validation
+		if !confirmSkipValidation() {
+			fmt.Fprintln(os.Stderr, "Aborted.")
+			exitWithCode(ExitGeneral)
 		}
+		skipValidation = true
 	}
 
 	// Initialize builder registry
