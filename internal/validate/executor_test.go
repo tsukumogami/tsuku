@@ -154,9 +154,9 @@ func TestExecutor_Validate_Success(t *testing.T) {
 		name:     "podman",
 		rootless: true,
 		runFunc: func(ctx context.Context, opts RunOptions) (*RunResult, error) {
-			// Verify options - network=host is needed for downloads, ReadOnly=false for package installs
-			if opts.Network != "host" {
-				t.Errorf("expected network=host, got %s", opts.Network)
+			// Verify options - network=none since downloads are cached, ReadOnly=false for package installs
+			if opts.Network != "none" {
+				t.Errorf("expected network=none (offline validation), got %s", opts.Network)
 			}
 			if opts.Limits.ReadOnly {
 				t.Error("expected writable filesystem for tsuku install")

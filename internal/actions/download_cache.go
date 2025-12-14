@@ -346,6 +346,8 @@ func containsSymlink(path string) (bool, error) {
 
 // validateCacheDirPermissions ensures the cache directory has secure permissions (0700).
 // Returns an error if the directory exists with insecure permissions.
+// Exception: read-only directories (e.g., container bind mounts) bypass permission checks
+// since they cannot be used to write malicious content.
 func validateCacheDirPermissions(path string) error {
 	info, err := os.Lstat(path)
 	if err != nil {
@@ -362,6 +364,18 @@ func validateCacheDirPermissions(path string) error {
 	if !info.IsDir() {
 		return fmt.Errorf("cache path is not a directory: %s", path)
 	}
+
+	// Check if directory is writable - if not (read-only mount), skip permission check.
+	// Read-only mounts are secure because they cannot be used to write malicious content.
+	// This is common in container environments where the cache is mounted read-only.
+	testFile := filepath.Join(path, ".tsuku-perm-check")
+	f, err := os.OpenFile(testFile, os.O_CREATE|os.O_WRONLY, 0600)
+	if err != nil {
+		// Directory is read-only, skip permission check
+		return nil
+	}
+	f.Close()
+	os.Remove(testFile)
 
 	// Check permissions (owner-only: 0700)
 	// We only check the permission bits, ignoring file type bits

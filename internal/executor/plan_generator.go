@@ -11,7 +11,6 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/recipe"
-	"github.com/tsukumogami/tsuku/internal/validate"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
@@ -25,8 +24,13 @@ type PlanConfig struct {
 	RecipeSource string
 	// OnWarning is called when a non-evaluable step is encountered
 	OnWarning func(action string, message string)
-	// Downloader is used for checksum computation (if nil, a default is created)
-	Downloader *validate.PreDownloader
+	// Downloader is used for checksum computation during plan generation.
+	// Required: callers must provide a downloader that implements actions.Downloader.
+	// Use validate.NewPreDownloaderAdapter(validate.NewPreDownloader()) to create one.
+	Downloader actions.Downloader
+	// DownloadCache is used to cache downloaded files for later use in container validation.
+	// If nil, downloads are not cached.
+	DownloadCache *actions.DownloadCache
 }
 
 // GeneratePlan evaluates a recipe and produces an installation plan.
@@ -73,11 +77,9 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		return nil, fmt.Errorf("failed to compute recipe hash: %w", err)
 	}
 
-	// Create downloader for checksum computation
+	// Get downloader for checksum computation
+	// Callers must provide a Downloader; if nil, no checksums will be computed
 	downloader := cfg.Downloader
-	if downloader == nil {
-		downloader = validate.NewPreDownloader()
-	}
 
 	// Build variable map for template expansion
 	vars := map[string]string{
@@ -89,14 +91,15 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 
 	// Create EvalContext for decomposition
 	evalCtx := &actions.EvalContext{
-		Context:    ctx,
-		Version:    versionInfo.Version,
-		VersionTag: versionInfo.Tag,
-		OS:         targetOS,
-		Arch:       targetArch,
-		Recipe:     e.recipe,
-		Resolver:   resolver,
-		Downloader: &preDownloaderAdapter{inner: downloader},
+		Context:       ctx,
+		Version:       versionInfo.Version,
+		VersionTag:    versionInfo.Tag,
+		OS:            targetOS,
+		Arch:          targetArch,
+		Recipe:        e.recipe,
+		Resolver:      resolver,
+		Downloader:    downloader,
+		DownloadCache: cfg.DownloadCache,
 	}
 
 	// Process each step
@@ -188,7 +191,7 @@ func (e *Executor) resolveStep(
 	ctx context.Context,
 	step recipe.Step,
 	vars map[string]string,
-	downloader *validate.PreDownloader,
+	downloader actions.Downloader,
 	onWarning func(string, string),
 	evalCtx *actions.EvalContext,
 ) ([]ResolvedStep, error) {
@@ -215,24 +218,41 @@ func (e *Executor) resolveStep(
 				Deterministic: deterministic,
 			}
 
-			// Use checksum/size from decomposition if provided
-			if pstep.Checksum != "" {
+			// For download actions, always download to cache the file for offline container execution.
+			// If checksum is provided (e.g., from Homebrew API), we still need the file cached.
+			if pstep.Action == "download" {
+				if url, ok := pstep.Params["url"].(string); ok {
+					rs.URL = url
+					if downloader != nil {
+						result, err := downloader.Download(ctx, url)
+						if err != nil {
+							return nil, fmt.Errorf("failed to download for caching: %w", err)
+						}
+						// Save to cache if configured
+						if evalCtx.DownloadCache != nil {
+							_ = evalCtx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
+						}
+						// Use provided checksum if available, otherwise use computed
+						if pstep.Checksum != "" {
+							rs.Checksum = pstep.Checksum
+							rs.Size = pstep.Size
+						} else {
+							rs.Checksum = result.Checksum
+							rs.Size = result.Size
+						}
+						_ = result.Cleanup()
+					} else if pstep.Checksum != "" {
+						// No downloader but checksum provided - use it (won't be cached)
+						rs.Checksum = pstep.Checksum
+						rs.Size = pstep.Size
+					}
+				}
+			} else if pstep.Checksum != "" {
+				// Non-download action with checksum from decomposition
 				rs.Checksum = pstep.Checksum
 				rs.Size = pstep.Size
 				if url, ok := pstep.Params["url"].(string); ok {
 					rs.URL = url
-				}
-			} else if pstep.Action == "download" {
-				// Download to compute checksum if not provided by decomposition
-				if url, ok := pstep.Params["url"].(string); ok {
-					rs.URL = url
-					result, err := downloader.Download(ctx, url)
-					if err != nil {
-						return nil, fmt.Errorf("failed to download for checksum: %w", err)
-					}
-					defer func() { _ = result.Cleanup() }()
-					rs.Checksum = result.Checksum
-					rs.Size = result.Size
 				}
 			}
 
@@ -267,7 +287,7 @@ func (e *Executor) resolveStep(
 	}
 
 	// For download actions, compute checksum
-	if isDownloadAction(step.Action) {
+	if isDownloadAction(step.Action) && downloader != nil {
 		url, err := extractDownloadURL(step.Action, expandedParams, mappedVars)
 		if err != nil {
 			return nil, fmt.Errorf("failed to extract download URL: %w", err)
@@ -430,25 +450,6 @@ func ApplyArchMapping(vars map[string]string, params map[string]interface{}) {
 
 // Ensure actions package is imported for compatibility
 var _ = actions.GetStandardVars
-
-// preDownloaderAdapter wraps validate.PreDownloader to implement actions.Downloader.
-type preDownloaderAdapter struct {
-	inner *validate.PreDownloader
-}
-
-// Download implements actions.Downloader by delegating to validate.PreDownloader
-// and converting the result type.
-func (a *preDownloaderAdapter) Download(ctx context.Context, url string) (*actions.DownloadResult, error) {
-	result, err := a.inner.Download(ctx, url)
-	if err != nil {
-		return nil, err
-	}
-	return &actions.DownloadResult{
-		AssetPath: result.AssetPath,
-		Checksum:  result.Checksum,
-		Size:      result.Size,
-	}, nil
-}
 
 // insertPatchSteps converts recipe patches to apply_patch steps and inserts them
 // after the last extraction step. This ensures patches are applied after source

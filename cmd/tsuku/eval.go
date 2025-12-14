@@ -6,7 +6,10 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // Platform flag validation whitelists per DESIGN-installation-plans-eval.md
@@ -113,6 +116,13 @@ func runEval(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitRecipeNotFound)
 	}
 
+	// Load config to get cache directory
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to load config: %v\n", err)
+		exitWithCode(ExitGeneral)
+	}
+
 	// Create executor
 	var exec *executor.Executor
 	if reqVersion != "" {
@@ -126,19 +136,30 @@ func runEval(cmd *cobra.Command, args []string) {
 	}
 	defer exec.Cleanup()
 
+	// Create downloader for checksum computation
+	// This ensures `tsuku eval <tool> | tsuku install --plan -` is equivalent to `tsuku install <tool>`
+	predownloader := validate.NewPreDownloader()
+	downloader := validate.NewPreDownloaderAdapter(predownloader)
+
+	// Create download cache for persisting downloads
+	// Uses the standard cache directory so downloads can be reused by install --plan
+	downloadCache := actions.NewDownloadCache(cfg.DownloadCacheDir)
+
 	// Configure plan generation
-	cfg := executor.PlanConfig{
-		OS:           evalOS,
-		Arch:         evalArch,
-		RecipeSource: "registry",
+	planCfg := executor.PlanConfig{
+		OS:            evalOS,
+		Arch:          evalArch,
+		RecipeSource:  "registry",
+		Downloader:    downloader,
+		DownloadCache: downloadCache,
 		OnWarning: func(action, message string) {
 			// Output warnings to stderr so they don't mix with JSON
 			fmt.Fprintf(os.Stderr, "Warning: %s\n", message)
 		},
 	}
 
-	// Generate plan
-	plan, err := exec.GeneratePlan(globalCtx, cfg)
+	// Generate plan (downloads files to compute checksums and caches them)
+	plan, err := exec.GeneratePlan(globalCtx, planCfg)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error: failed to generate plan: %v\n", err)
 		exitWithCode(ExitGeneral)

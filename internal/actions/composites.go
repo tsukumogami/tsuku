@@ -231,6 +231,11 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 		}
 		checksum = result.Checksum
 		size = result.Size
+		// Save to cache if configured, then cleanup temp file
+		if ctx.DownloadCache != nil {
+			_ = ctx.DownloadCache.Save(downloadURL, result.AssetPath, result.Checksum)
+		}
+		_ = result.Cleanup()
 	}
 
 	// Build primitive steps
@@ -516,6 +521,11 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 		}
 		checksum = result.Checksum
 		size = result.Size
+		// Save to cache if configured, then cleanup temp file
+		if ctx.DownloadCache != nil {
+			_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
+		}
+		_ = result.Cleanup()
 	}
 
 	// Extract source files for chmod (binaries can be ["file"] or [{src: "file", dest: "..."}])
@@ -780,6 +790,11 @@ func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interfa
 		}
 		checksum = result.Checksum
 		size = result.Size
+		// Save to cache if configured, then cleanup temp file
+		if ctx.DownloadCache != nil {
+			_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
+		}
+		_ = result.Cleanup()
 	}
 
 	steps := []Step{
@@ -937,6 +952,11 @@ func (a *HashiCorpReleaseAction) Decompose(ctx *EvalContext, params map[string]i
 		}
 		checksum = result.Checksum
 		size = result.Size
+		// Save to cache if configured, then cleanup temp file
+		if ctx.DownloadCache != nil {
+			_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
+		}
+		_ = result.Cleanup()
 	}
 
 	steps := []Step{

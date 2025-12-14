@@ -5,6 +5,8 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
@@ -36,6 +38,17 @@ type DownloadResult struct {
 	Size      int64  // File size in bytes
 }
 
+// Cleanup removes the downloaded file and its parent directory.
+// This should be called after the download is no longer needed.
+func (r *DownloadResult) Cleanup() error {
+	if r.AssetPath == "" {
+		return nil
+	}
+	// Remove the parent directory (typically created by the downloader)
+	dir := filepath.Dir(r.AssetPath)
+	return os.RemoveAll(dir)
+}
+
 // Downloader provides download functionality for checksum computation during decomposition.
 // This interface is satisfied by validate.PreDownloader.
 type Downloader interface {
@@ -45,14 +58,15 @@ type Downloader interface {
 // EvalContext provides context during decomposition.
 // Used by composite actions to resolve parameters and compute checksums.
 type EvalContext struct {
-	Context    context.Context   // Context for cancellation
-	Version    string            // Resolved version (e.g., "1.29.3")
-	VersionTag string            // Original version tag (e.g., "v1.29.3")
-	OS         string            // Target OS (runtime.GOOS)
-	Arch       string            // Target architecture (runtime.GOARCH)
-	Recipe     *recipe.Recipe    // Full recipe (for reference)
-	Resolver   *version.Resolver // For API calls (asset resolution, etc.)
-	Downloader Downloader        // For downloading files to compute checksums
+	Context       context.Context   // Context for cancellation
+	Version       string            // Resolved version (e.g., "1.29.3")
+	VersionTag    string            // Original version tag (e.g., "v1.29.3")
+	OS            string            // Target OS (runtime.GOOS)
+	Arch          string            // Target architecture (runtime.GOARCH)
+	Recipe        *recipe.Recipe    // Full recipe (for reference)
+	Resolver      *version.Resolver // For API calls (asset resolution, etc.)
+	Downloader    Downloader        // For downloading files to compute checksums
+	DownloadCache *DownloadCache    // For caching downloaded files (optional)
 }
 
 // primitives is the set of primitive action names.
