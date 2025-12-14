@@ -114,6 +114,37 @@ var ActionDependencies = map[string]ActionDeps{
 
 This pattern is extensible - new metadata dimensions can be added as new maps.
 
+### Relationship to Dependency Provisioning
+
+**Important:** This design must be read alongside [DESIGN-dependency-provisioning.md](DESIGN-dependency-provisioning.md), which fundamentally changes how build tools are handled.
+
+The dependency-provisioning design establishes that **tsuku provides all build tools as recipes** via Homebrew bottles, not apt packages:
+
+```go
+// From DESIGN-dependency-provisioning.md
+var ActionDependencies = map[string]ActionDeps{
+    "configure_make": {
+        InstallTime: []string{"make", "zig", "pkg-config"},  // tsuku recipes
+        Runtime:     nil,
+    },
+    "cmake_build": {
+        InstallTime: []string{"cmake", "make", "zig", "pkg-config"},
+        Runtime:     nil,
+    },
+}
+```
+
+**Key Implication:** The `BuildTools` field proposed in earlier versions of this design is **obsolete**. Build tools are already handled by `ActionDependencies.InstallTime`. When `tsuku install --plan` runs in a container, tsuku's normal dependency resolution installs them.
+
+The only new metadata this design needs to add is **`RequiresNetwork`** - whether the action needs network access during execution. Everything else already exists:
+
+| Need | Source |
+|------|--------|
+| Network requirements | **NEW** - `ActionValidationMetadata.RequiresNetwork` |
+| Determinism | Already exists - `deterministicActions` map |
+| Build tool dependencies | Already exists - `ActionDependencies.InstallTime` |
+| Runtime dependencies | Already exists - `ActionDependencies.Runtime` |
+
 ### Current Validation Flow
 
 ```
@@ -467,76 +498,67 @@ The solution introduces a centralized validation system that derives container c
 
 Location: `internal/actions/validation_metadata.go`
 
+This registry adds only `RequiresNetwork` - the one piece of metadata not already tracked elsewhere. Build tools are handled by `ActionDependencies.InstallTime` (see [DESIGN-dependency-provisioning.md](DESIGN-dependency-provisioning.md)).
+
 ```go
-// ActionValidationMetadata describes validation requirements for an action.
+// ActionValidationMetadata describes network requirements for an action.
+// Build tools are NOT tracked here - they are handled by ActionDependencies.InstallTime.
 type ActionValidationMetadata struct {
-    // RequiresNetwork indicates whether this action needs network access.
+    // RequiresNetwork indicates whether this action needs network access during execution.
     // Actions that fetch external dependencies (cargo_build, go_build) need network.
     // Actions that work with cached/pre-downloaded content do not.
     RequiresNetwork bool
-
-    // BuildTools lists apt packages required by this action.
-    // These are installed via apt-get in the validation container.
-    BuildTools []string
 }
 
-// actionValidationMetadata maps action names to their validation requirements.
+// actionValidationMetadata maps action names to their network requirements.
 var actionValidationMetadata = map[string]ActionValidationMetadata{
     // Core primitives - work offline with cached content
-    "download":         {RequiresNetwork: false, BuildTools: nil},
-    "extract":          {RequiresNetwork: false, BuildTools: nil},
-    "chmod":            {RequiresNetwork: false, BuildTools: nil},
-    "install_binaries": {RequiresNetwork: false, BuildTools: nil},
-    "apply_patch_file": {RequiresNetwork: false, BuildTools: []string{"patch"}},
+    "download":         {RequiresNetwork: false},
+    "extract":          {RequiresNetwork: false},
+    "chmod":            {RequiresNetwork: false},
+    "install_binaries": {RequiresNetwork: false},
+    "apply_patch_file": {RequiresNetwork: false},
+    "text_replace":     {RequiresNetwork: false},
+    "set_env":          {RequiresNetwork: false},
+    "set_rpath":        {RequiresNetwork: false},
 
-    // Build actions - source is cached, but need build tools
-    "configure_make": {
-        RequiresNetwork: false,
-        BuildTools:      []string{"build-essential", "autoconf", "automake", "libtool", "pkg-config"},
-    },
-    "cmake_build": {
-        RequiresNetwork: false,
-        BuildTools:      []string{"build-essential", "cmake", "ninja-build"},
-    },
+    // Build actions - source is cached, network not needed for build itself
+    "configure_make": {RequiresNetwork: false},
+    "cmake_build":    {RequiresNetwork: false},
 
     // Ecosystem primitives - need network for dependency resolution
-    "cargo_build": {
-        RequiresNetwork: true,
-        BuildTools:      []string{"curl", "build-essential"},  // curl for rustup
-    },
-    "go_build": {
-        RequiresNetwork: true,
-        BuildTools:      []string{"curl", "build-essential"},  // curl for Go installer
-    },
-    "cpan_install": {
-        RequiresNetwork: true,
-        BuildTools:      []string{"perl", "cpanminus", "build-essential"},
-    },
-    "npm_exec": {
-        RequiresNetwork: false,  // node_modules already installed
-        BuildTools:      nil,
-    },
+    "cargo_build":   {RequiresNetwork: true},
+    "cargo_install": {RequiresNetwork: true},
+    "go_build":      {RequiresNetwork: true},
+    "go_install":    {RequiresNetwork: true},
+    "cpan_install":  {RequiresNetwork: true},
+    "npm_install":   {RequiresNetwork: true},
+    "pip_install":   {RequiresNetwork: true},
+    "gem_install":   {RequiresNetwork: true},
+
+    // npm_exec - modules already installed via npm_install
+    "npm_exec": {RequiresNetwork: false},
+    "gem_exec": {RequiresNetwork: false},
+
+    // System package managers - always need network
+    "apt_install":  {RequiresNetwork: true},
+    "yum_install":  {RequiresNetwork: true},
+    "brew_install": {RequiresNetwork: true},
+
+    // Run command - conservative default (may need network)
+    "run_command": {RequiresNetwork: true},
 }
 
 // GetActionValidationMetadata returns validation metadata for an action.
-// Returns zero value if action is not found (defaults to no network, no build tools).
-// Unknown actions are treated safely: they don't request network and don't require build tools.
-// This allows new actions to work without metadata entries, though they should be added.
+// Returns zero value if action is not found (defaults to no network requirement).
+// Unknown actions default to not requiring network - validation will fail if
+// the action actually needed network, providing clear feedback.
 func GetActionValidationMetadata(action string) ActionValidationMetadata {
     return actionValidationMetadata[action]
 }
-
-// AllActionValidationMetadata returns all registered action metadata.
-// Used by tests to verify completeness.
-func AllActionValidationMetadata() map[string]ActionValidationMetadata {
-    // Return copy to prevent modification
-    result := make(map[string]ActionValidationMetadata, len(actionValidationMetadata))
-    for k, v := range actionValidationMetadata {
-        result[k] = v
-    }
-    return result
-}
 ```
+
+**Note on conservative vs permissive defaults:** Unknown actions default to `RequiresNetwork: false`. This is intentional - if an action actually needs network but isn't registered, validation will fail with a clear error (network timeout/DNS failure), prompting the developer to add the action to the registry. This is better than silently enabling network for all unknown actions.
 
 #### 2. ValidationRequirements Struct
 
@@ -544,15 +566,14 @@ Location: `internal/validate/requirements.go`
 
 ```go
 // ValidationRequirements describes what a validation container needs.
+// Note: Build tools are NOT tracked here - tsuku's normal dependency resolution
+// handles them via ActionDependencies.InstallTime.
 type ValidationRequirements struct {
     // RequiresNetwork is true if any step needs network access.
     RequiresNetwork bool
 
-    // BuildTools is the deduplicated union of all steps' build tool requirements.
-    BuildTools []string
-
     // Image is the recommended container image based on requirements.
-    // Uses debian:bookworm-slim for binary-only, ubuntu:22.04 for builds.
+    // Uses debian:bookworm-slim for binary-only, ubuntu:22.04 for source builds.
     Image string
 
     // Resources are the recommended resource limits.
@@ -563,42 +584,54 @@ type ValidationRequirements struct {
 func ComputeValidationRequirements(plan *executor.InstallationPlan) *ValidationRequirements {
     reqs := &ValidationRequirements{
         RequiresNetwork: false,
-        BuildTools:      nil,
         Image:           DefaultValidationImage,  // debian:bookworm-slim
         Resources: ResourceLimits{
             Memory:  "2g",
             CPUs:    "2",
             PidsMax: 100,
+            Timeout: 2 * time.Minute,
         },
     }
 
-    toolSet := make(map[string]bool)
-
+    // Check if any step requires network
     for _, step := range plan.Steps {
         metadata := actions.GetActionValidationMetadata(step.Action)
 
         if metadata.RequiresNetwork {
             reqs.RequiresNetwork = true
         }
-
-        for _, tool := range metadata.BuildTools {
-            toolSet[tool] = true
-        }
     }
 
-    // Convert toolSet to sorted slice
-    for tool := range toolSet {
-        reqs.BuildTools = append(reqs.BuildTools, tool)
-    }
-    sort.Strings(reqs.BuildTools)
-
-    // Upgrade image and resources if build tools are needed
-    if len(reqs.BuildTools) > 0 {
+    // Upgrade image and resources for network-requiring (ecosystem) builds
+    // Network-requiring steps typically involve compilation which needs more resources
+    if reqs.RequiresNetwork {
         reqs.Image = SourceBuildValidationImage  // ubuntu:22.04
         reqs.Resources = SourceBuildLimits()     // 4g, 4 CPUs, 15min timeout
     }
 
+    // Also upgrade for plans with known build actions (even if offline)
+    if hasBuildActions(plan) {
+        reqs.Image = SourceBuildValidationImage
+        reqs.Resources = SourceBuildLimits()
+    }
+
     return reqs
+}
+
+// hasBuildActions checks if plan contains compilation steps
+func hasBuildActions(plan *executor.InstallationPlan) bool {
+    buildActions := map[string]bool{
+        "configure_make": true,
+        "cmake_build":    true,
+        "cargo_build":    true,
+        "go_build":       true,
+    }
+    for _, step := range plan.Steps {
+        if buildActions[step.Action] {
+            return true
+        }
+    }
+    return false
 }
 ```
 
@@ -641,6 +674,9 @@ func (e *Executor) Validate(
 }
 
 // buildValidationScript creates the shell script for validation.
+// Note: Build tools are NOT installed via apt-get. Instead, tsuku's normal
+// dependency resolution handles them via ActionDependencies.InstallTime.
+// The validation script simply runs tsuku install --plan.
 func (e *Executor) buildValidationScript(
     plan *executor.InstallationPlan,
     reqs *ValidationRequirements,
@@ -650,15 +686,13 @@ func (e *Executor) buildValidationScript(
     sb.WriteString("#!/bin/bash\n")
     sb.WriteString("set -e\n\n")
 
-    // Install build tools if needed
-    if len(reqs.BuildTools) > 0 {
-        sb.WriteString("# Install build tools\n")
-        sb.WriteString("apt-get update -qq\n")
-        sb.WriteString(fmt.Sprintf("apt-get install -qq -y %s >/dev/null 2>&1\n\n",
-            strings.Join(reqs.BuildTools, " ")))
+    // Minimal system setup (ca-certificates for HTTPS)
+    if reqs.RequiresNetwork {
+        sb.WriteString("# Minimal network setup\n")
+        sb.WriteString("apt-get update -qq && apt-get install -qq -y ca-certificates >/dev/null 2>&1\n\n")
     }
 
-    // Setup and install
+    // Setup and install - tsuku handles build tool dependencies automatically
     sb.WriteString("# Setup TSUKU_HOME\n")
     // ... mkdir, cp recipe, tsuku install --plan
 
@@ -811,6 +845,163 @@ Note: The existing `tsuku validate` command performs static recipe validation (T
 - `--recipe` flag for direct recipe file testing
 - Integration with `tsuku eval <tool> | tsuku install --plan - --container`
 - Updated help text
+
+## Testing Strategy
+
+This section defines testing requirements to ensure comprehensive coverage of the centralized validation design.
+
+### Testing Tools and Patterns
+
+The codebase uses standard Go testing with manual mocking (no external test libraries). Key patterns:
+
+- **Mock interfaces**: `Runtime`, `Logger`, `Downloader` interfaces enable unit testing without containers
+- **Function pointer injection**: `RuntimeDetector` accepts `lookPath` and `cmdRun` for mocking subprocess calls
+- **Option pattern**: `ExecutorOption` functions customize test configuration
+- **Parallel tests**: Extensive use of `t.Parallel()` and `t.TempDir()` for isolation
+- **Table-driven tests**: Standard `[]struct{name, input, expected}` pattern
+
+### Test Categories
+
+#### Unit Tests (No Containers Required)
+
+| Component | Test Focus | Estimated Count |
+|-----------|-----------|-----------------|
+| ActionValidationMetadata registry | Lookup correctness, coverage of all actions, default handling | 8 |
+| ComputeValidationRequirements | Network aggregation, resource selection, image selection | 10 |
+| Validation script generation | Script content, conditional logic, escaping | 5 |
+| Plan validation | Format version, primitive-only check, checksum presence | 6 |
+| **Total Unit Tests** | | **~29** |
+
+**Key unit test scenarios:**
+
+1. **Metadata lookup completeness**: Test that every registered action has metadata
+2. **Network aggregation**: Single network-requiring step makes whole plan require network
+3. **Resource escalation**: Build actions trigger upgraded resources (4g, 4 CPUs)
+4. **Image selection**: Binary-only plans use debian, build plans use ubuntu
+5. **Unknown action handling**: Returns safe defaults, validation continues
+
+#### Integration Tests (Container Runtime Required)
+
+| Component | Test Focus | Estimated Count |
+|-----------|-----------|-----------------|
+| Offline validation | Cached downloads work with network=none | 3 |
+| Network validation | Ecosystem builds work with network=host | 3 |
+| Resource limits | Memory/CPU/timeout applied correctly | 3 |
+| Mount configuration | tsuku binary, workspace, cache mounts work | 3 |
+| End-to-end workflow | Full install --container flow | 4 |
+| **Total Integration Tests** | | **~16** |
+
+**Key integration test scenarios:**
+
+1. **Offline validation**: Generate plan (downloads cached), run container with network=none, verify install succeeds
+2. **Ecosystem build**: Plan with cargo_build, verify network=host, verify rust installed via ActionDependencies
+3. **Resource limits**: Plan requiring build, verify container has 4g memory, 4 CPUs
+4. **Cache flow**: Verify downloads from plan generation are accessible in container
+5. **Verification command**: Run verification, check pattern matching and exit codes
+
+#### Edge Case and Security Tests
+
+| Category | Test Focus | Estimated Count |
+|----------|-----------|-----------------|
+| Error handling | Missing runtime, failed execution, verification failure | 5 |
+| Security | Command injection, path traversal, resource exhaustion | 5 |
+| Backward compatibility | Old plan formats, unknown actions | 3 |
+| **Total Edge/Security Tests** | | **~13** |
+
+### Test Infrastructure
+
+#### Mocking Container Runtime
+
+```go
+// mockRuntime implements Runtime interface for testing
+type mockRuntime struct {
+    name     string
+    rootless bool
+    runFunc  func(ctx context.Context, opts RunOptions) (*RunResult, error)
+}
+
+// Test can inject behavior:
+mock := &mockRuntime{
+    name: "podman",
+    runFunc: func(ctx context.Context, opts RunOptions) (*RunResult, error) {
+        // Verify opts.Network, opts.Limits, etc.
+        return &RunResult{ExitCode: 0, Stdout: "expected output"}, nil
+    },
+}
+```
+
+#### Test Fixtures
+
+Minimal test recipes/plans for focused testing:
+
+```go
+// Binary-only plan (no network, no build tools)
+binaryPlan := &executor.InstallationPlan{
+    Steps: []executor.ResolvedStep{
+        {Action: "download", Params: map[string]interface{}{"url": "..."}},
+        {Action: "extract", Params: map[string]interface{}{}},
+        {Action: "install_binaries", Params: map[string]interface{}{}},
+    },
+}
+
+// Build plan (network required, build resources)
+buildPlan := &executor.InstallationPlan{
+    Steps: []executor.ResolvedStep{
+        {Action: "download", Params: map[string]interface{}{}},
+        {Action: "extract", Params: map[string]interface{}{}},
+        {Action: "cargo_build", Params: map[string]interface{}{}},
+    },
+}
+```
+
+### CI Integration
+
+```yaml
+# Unit tests run on every PR (fast, no containers)
+test-unit:
+  runs-on: ubuntu-latest
+  steps:
+    - run: go test -short ./internal/validate/... ./internal/actions/...
+
+# Integration tests run with containers (slower)
+test-integration:
+  runs-on: ubuntu-latest
+  services:
+    docker: # Docker-in-Docker for container tests
+  steps:
+    - run: go test -tags=integration ./internal/validate/...
+
+# Full validation on schedule (nightly)
+test-validation:
+  runs-on: ${{ matrix.os }}
+  strategy:
+    matrix:
+      os: [ubuntu-latest, macos-latest]
+  steps:
+    - run: ./tsuku install rg --container
+    - run: ./tsuku install jq --container
+```
+
+### Coverage Targets
+
+| Area | Target | Rationale |
+|------|--------|-----------|
+| ActionValidationMetadata | 100% | Critical registry, all actions must be covered |
+| ComputeValidationRequirements | 100% | Core logic, all branches must be tested |
+| Validation execution | 80% | Some error paths require container failures |
+| CLI integration | 70% | Mostly integration with existing code |
+| **Overall** | **85%** | High for new code, lower for integration |
+
+### Testing Checklist
+
+Before merging each phase:
+
+- [ ] All unit tests pass with `-race` flag
+- [ ] No new golangci-lint warnings
+- [ ] ActionValidationMetadata covers all registered actions (CI check)
+- [ ] Integration tests pass when container runtime available
+- [ ] Integration tests skip gracefully when no runtime
+- [ ] Existing validation tests still pass (no regressions)
 
 ## Consequences
 
