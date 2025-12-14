@@ -2,9 +2,55 @@ package builders
 
 import (
 	"context"
+	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
+
+// LLMStateTracker provides rate limit checking and cost tracking for LLM operations.
+// This interface decouples builders from the concrete state management implementation.
+type LLMStateTracker interface {
+	// CanGenerate checks if generation is allowed given rate limits and budget.
+	// Returns (allowed, reason) where reason explains why generation was denied.
+	CanGenerate(hourlyLimit int, dailyBudget float64) (bool, string)
+
+	// RecordGeneration records the cost of an LLM generation.
+	RecordGeneration(cost float64) error
+
+	// DailySpent returns the total amount spent today.
+	DailySpent() float64
+
+	// RecentGenerationCount returns the number of generations in the recent period.
+	RecentGenerationCount() int
+}
+
+// LLMConfig provides access to LLM-related user configuration.
+// This interface decouples builders from the concrete config implementation.
+type LLMConfig interface {
+	// LLMEnabled returns whether LLM features are enabled.
+	LLMEnabled() bool
+
+	// LLMDailyBudget returns the daily budget limit in USD.
+	LLMDailyBudget() float64
+
+	// LLMHourlyRateLimit returns the maximum generations per hour.
+	LLMHourlyRateLimit() int
+}
+
+// ConfirmableError is an error that can be bypassed with user confirmation.
+// The CLI checks for this interface to prompt the user before proceeding.
+type ConfirmableError interface {
+	error
+	// ConfirmationPrompt returns the message to display when asking for confirmation.
+	ConfirmationPrompt() string
+}
+
+// LLMDisabledError indicates LLM features are disabled in user config.
+type LLMDisabledError struct{}
+
+func (e *LLMDisabledError) Error() string {
+	return "LLM features are disabled. To enable: tsuku config set llm.enabled true"
+}
 
 // InitOptions contains options for builder initialization.
 type InitOptions struct {
@@ -14,6 +60,66 @@ type InitOptions struct {
 	// ProgressReporter receives progress updates during build operations.
 	// If nil, no progress is reported.
 	ProgressReporter ProgressReporter
+
+	// LLMConfig provides access to LLM-related user settings.
+	// Required for LLM builders; ignored by ecosystem builders.
+	LLMConfig LLMConfig
+
+	// LLMStateTracker provides rate limit checking and cost tracking.
+	// Required for LLM builders; ignored by ecosystem builders.
+	LLMStateTracker LLMStateTracker
+
+	// ForceInit bypasses rate limit and budget checks.
+	// Used when the user confirms they want to proceed despite limits.
+	ForceInit bool
+}
+
+// CheckLLMPrerequisites validates LLM configuration and rate limits.
+// Returns nil if generation is allowed, or an error (possibly ConfirmableError) if not.
+// This is a helper for LLM builders to call in their Initialize() method.
+func CheckLLMPrerequisites(opts *InitOptions) error {
+	if opts == nil || opts.ForceInit {
+		return nil
+	}
+
+	// Check if LLM is enabled
+	if opts.LLMConfig != nil && !opts.LLMConfig.LLMEnabled() {
+		return &LLMDisabledError{}
+	}
+
+	// Check rate limits and budget
+	if opts.LLMConfig != nil && opts.LLMStateTracker != nil {
+		hourlyLimit := opts.LLMConfig.LLMHourlyRateLimit()
+		dailyBudget := opts.LLMConfig.LLMDailyBudget()
+
+		allowed, reason := opts.LLMStateTracker.CanGenerate(hourlyLimit, dailyBudget)
+		if !allowed {
+			// Determine if this is a budget or rate limit error
+			if strings.Contains(reason, "budget") {
+				return &BudgetError{
+					Budget:    dailyBudget,
+					Spent:     opts.LLMStateTracker.DailySpent(),
+					ConfigKey: "llm.daily_budget",
+				}
+			}
+			return &RateLimitError{
+				Limit:     hourlyLimit,
+				Count:     opts.LLMStateTracker.RecentGenerationCount(),
+				ConfigKey: "llm.hourly_rate_limit",
+			}
+		}
+	}
+
+	return nil
+}
+
+// RecordLLMCost records the cost of an LLM generation if a state tracker is available.
+// Returns any error from recording (callers typically log warnings rather than failing).
+func RecordLLMCost(tracker LLMStateTracker, cost float64) error {
+	if tracker == nil || cost <= 0 {
+		return nil
+	}
+	return tracker.RecordGeneration(cost)
 }
 
 // BuildRequest contains builder-specific parameters for recipe generation.

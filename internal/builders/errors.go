@@ -6,6 +6,7 @@ import (
 )
 
 // RateLimitError indicates the hourly LLM generation rate limit was exceeded.
+// Implements ConfirmableError to allow users to bypass the limit with confirmation.
 type RateLimitError struct {
 	Limit      int           // Maximum generations per hour
 	Count      int           // Current count in the last hour
@@ -27,7 +28,13 @@ func (e *RateLimitError) Suggestion() string {
 	return fmt.Sprintf("Next generation available in: %d minutes\nTo adjust: tsuku config set %s <new-limit>", minutes, e.ConfigKey)
 }
 
+// ConfirmationPrompt implements ConfirmableError.
+func (e *RateLimitError) ConfirmationPrompt() string {
+	return "Rate limit exceeded. Continue anyway?"
+}
+
 // BudgetError indicates the daily LLM budget was exhausted.
+// Implements ConfirmableError to allow users to bypass the limit with confirmation.
 type BudgetError struct {
 	Budget    float64 // Daily budget in USD
 	Spent     float64 // Amount spent today in USD
@@ -42,6 +49,11 @@ func (e *BudgetError) Error() string {
 // Suggestion returns actionable steps for the user.
 func (e *BudgetError) Suggestion() string {
 	return fmt.Sprintf("Budget resets at midnight UTC.\nTo adjust: tsuku config set %s <new-budget>", e.ConfigKey)
+}
+
+// ConfirmationPrompt implements ConfirmableError.
+func (e *BudgetError) ConfirmationPrompt() string {
+	return fmt.Sprintf("Daily budget exhausted ($%.2f spent). Continue anyway?", e.Spent)
 }
 
 // GitHubRateLimitError indicates GitHub API rate limit was exceeded.

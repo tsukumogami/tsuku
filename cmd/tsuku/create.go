@@ -9,7 +9,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
@@ -95,49 +94,6 @@ func init() {
 	_ = createCmd.MarkFlagRequired("from")
 }
 
-// formatWaitTime returns a human-readable string for how long until the rate limit resets.
-// It calculates the time until the oldest generation timestamp expires (1 hour window).
-func formatWaitTime(sm *install.StateManager) string {
-	state, err := sm.Load()
-	if err != nil || state.LLMUsage == nil || len(state.LLMUsage.GenerationTimestamps) == 0 {
-		return "unknown"
-	}
-
-	// Find the oldest timestamp in the rolling window
-	now := time.Now().UTC()
-	oneHourAgo := now.Add(-time.Hour)
-	var oldest time.Time
-
-	for _, ts := range state.LLMUsage.GenerationTimestamps {
-		if ts.After(oneHourAgo) {
-			if oldest.IsZero() || ts.Before(oldest) {
-				oldest = ts
-			}
-		}
-	}
-
-	if oldest.IsZero() {
-		return "unknown"
-	}
-
-	// Time until oldest expires = oldest + 1 hour - now
-	expiresAt := oldest.Add(time.Hour)
-	wait := expiresAt.Sub(now)
-
-	if wait <= 0 {
-		return "less than a minute"
-	}
-
-	minutes := int(wait.Minutes())
-	if minutes < 1 {
-		return "less than a minute"
-	}
-	if minutes == 1 {
-		return "1 minute"
-	}
-	return fmt.Sprintf("%d minutes", minutes)
-}
-
 // confirmSkipValidation prompts the user to confirm skipping validation.
 // Returns true if the user consents, false otherwise.
 func confirmSkipValidation() bool {
@@ -152,6 +108,22 @@ func confirmSkipValidation() bool {
 	fmt.Fprintln(os.Stderr, "Risks: Binary path errors, missing extraction steps, failed verification")
 	fmt.Fprint(os.Stderr, "Continue without validation? (y/N) ")
 
+	reader := bufio.NewReader(os.Stdin)
+	response, err := reader.ReadString('\n')
+	if err != nil {
+		return false
+	}
+	response = strings.TrimSpace(strings.ToLower(response))
+	return response == "y" || response == "yes"
+}
+
+// confirmWithUser prompts the user with a message and waits for y/N response.
+func confirmWithUser(prompt string) bool {
+	if !isInteractive() {
+		return false
+	}
+
+	fmt.Fprintf(os.Stderr, "%s (y/N) ", prompt)
 	reader := bufio.NewReader(os.Stdin)
 	response, err := reader.ReadString('\n')
 	if err != nil {
@@ -242,69 +214,58 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	ctx := context.Background()
 
-	// For LLM builders, check LLM budget and rate limits before proceeding
+	// For LLM builders, load config and state tracker for initialization
 	var stateManager *install.StateManager
 	var userCfg *userconfig.Config
 	if builder.RequiresLLM() {
-		// Load user config for settings
+		// Load user config for LLM settings
 		var err error
 		userCfg, err = userconfig.Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to load user config: %v\n", err)
-			// Continue with defaults
 			userCfg = userconfig.DefaultConfig()
 		}
 
-		// Check if LLM is enabled
-		if !userCfg.LLMEnabled() {
-			fmt.Fprintln(os.Stderr, "Error: LLM features are disabled")
-			fmt.Fprintln(os.Stderr, "To enable: tsuku config set llm.enabled true")
-			exitWithCode(ExitGeneral)
-		}
-
-		// Initialize state manager
+		// Initialize state manager for rate limit tracking
 		cfg, err := config.DefaultConfig()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error getting config: %v\n", err)
 			exitWithCode(ExitGeneral)
 		}
 		stateManager = install.NewStateManager(cfg)
-
-		// Get limit settings
-		hourlyLimit := userCfg.LLMHourlyRateLimit()
-		dailyBudget := userCfg.LLMDailyBudget()
-
-		// Check budget and rate limits
-		allowed, reason := stateManager.CanGenerate(hourlyLimit, dailyBudget)
-		if !allowed {
-			// Format error message based on the reason
-			if strings.Contains(reason, "budget") {
-				spent := stateManager.DailySpent()
-				fmt.Fprintf(os.Stderr, "Error: daily LLM budget exhausted ($%.2f spent today)\n", spent)
-				fmt.Fprintln(os.Stderr, "Budget resets at midnight. To adjust: tsuku config set llm.daily_budget 10.0")
-			} else {
-				fmt.Fprintf(os.Stderr, "Error: %s\n", reason)
-				fmt.Fprintln(os.Stderr)
-				fmt.Fprintln(os.Stderr, "To increase the limit:")
-				fmt.Fprintln(os.Stderr, "  tsuku config set llm.hourly_rate_limit 20")
-				fmt.Fprintln(os.Stderr)
-				fmt.Fprintf(os.Stderr, "Wait time: %s\n", formatWaitTime(stateManager))
-			}
-			exitWithCode(ExitGeneral)
-		}
 	}
 
-	// Initialize the builder (LLM builders create factory, set up validation; ecosystem builders no-op)
+	// Initialize the builder
 	var progressReporter builders.ProgressReporter
 	if !quietFlag {
 		progressReporter = &cliProgressReporter{out: os.Stdout}
 	}
-	if err := builder.Initialize(ctx, &builders.InitOptions{
+
+	initOpts := &builders.InitOptions{
 		SkipValidation:   skipValidation,
 		ProgressReporter: progressReporter,
-	}); err != nil {
-		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-		exitWithCode(ExitDependencyFailed)
+		LLMConfig:        userCfg,
+		LLMStateTracker:  stateManager,
+	}
+
+	if err := builder.Initialize(ctx, initOpts); err != nil {
+		// Check if this is a confirmable error (rate limit, budget exceeded)
+		if confirmErr, ok := err.(builders.ConfirmableError); ok {
+			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+			if confirmWithUser(confirmErr.ConfirmationPrompt()) {
+				// Retry with ForceInit to bypass rate limit checks
+				initOpts.ForceInit = true
+				if err := builder.Initialize(ctx, initOpts); err != nil {
+					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+					exitWithCode(ExitDependencyFailed)
+				}
+			} else {
+				exitWithCode(ExitGeneral)
+			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			exitWithCode(ExitDependencyFailed)
+		}
 	}
 
 	// For ecosystem builders, check toolchain and package existence
@@ -379,20 +340,15 @@ func runCreate(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		// Write all generated recipes and track costs
+		// Write all generated recipes (costs are recorded by builder internally)
 		var totalCost float64
 		for _, result := range results {
-			// Record LLM usage
-			if stateManager != nil {
-				cost := result.Cost
-				if cost == 0 {
-					cost = defaultLLMCostEstimate
-				}
-				totalCost += cost
-				if err := stateManager.RecordGeneration(cost); err != nil {
-					fmt.Fprintf(os.Stderr, "Warning: failed to record LLM usage: %v\n", err)
-				}
+			// Track cost for display (recording already done by builder)
+			cost := result.Cost
+			if cost == 0 {
+				cost = defaultLLMCostEstimate
 			}
+			totalCost += cost
 
 			// Add validation metadata if skipped
 			if result.ValidationSkipped {
@@ -456,20 +412,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// Record LLM usage for successful LLM builds (includes cost tracking)
-	if builder.RequiresLLM() && stateManager != nil {
-		// Use actual cost from build result if available, otherwise fall back to estimate
-		cost := result.Cost
-		if cost == 0 {
-			cost = defaultLLMCostEstimate
-		}
-		if err := stateManager.RecordGeneration(cost); err != nil {
-			// Non-fatal: log warning but continue
-			fmt.Fprintf(os.Stderr, "Warning: failed to record LLM usage: %v\n", err)
-		}
-	}
-
 	// Add llm_validation metadata if validation was skipped
+	// (cost recording is handled by builder internally)
 	if result.ValidationSkipped {
 		result.Recipe.Metadata.LLMValidation = "skipped"
 	}

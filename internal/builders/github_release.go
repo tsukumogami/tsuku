@@ -52,6 +52,7 @@ type GitHubReleaseBuilder struct {
 	githubBaseURL   string
 	telemetryClient *telemetry.Client
 	progress        ProgressReporter
+	llmStateTracker LLMStateTracker
 }
 
 // GitHubReleaseBuilderOption configures a GitHubReleaseBuilder.
@@ -138,8 +139,24 @@ func NewGitHubReleaseBuilder(opts ...GitHubReleaseBuilderOption) *GitHubReleaseB
 }
 
 // Initialize sets up the builder for LLM-based recipe generation.
-// This creates the LLM factory (validates API key) and configures validation.
+// This checks LLM configuration and rate limits, creates the LLM factory,
+// and configures validation.
+//
+// Returns ConfirmableError (specifically *RateLimitError) if rate limits are exceeded,
+// allowing the caller to prompt for user confirmation and retry with ForceInit=true.
 func (b *GitHubReleaseBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	if opts == nil {
+		opts = &InitOptions{}
+	}
+
+	// Check LLM prerequisites (enabled, rate limits, budget)
+	if err := CheckLLMPrerequisites(opts); err != nil {
+		return err
+	}
+
+	// Store state tracker for cost recording in Build()
+	b.llmStateTracker = opts.LLMStateTracker
+
 	// Create LLM factory if not already set (may be set via WithFactory for testing)
 	if b.factory == nil {
 		factory, err := llm.NewFactory(ctx)
@@ -155,14 +172,14 @@ func (b *GitHubReleaseBuilder) Initialize(ctx context.Context, opts *InitOptions
 	})
 
 	// Set up validation executor unless skipped
-	if opts != nil && !opts.SkipValidation && b.executor == nil {
+	if !opts.SkipValidation && b.executor == nil {
 		detector := validate.NewRuntimeDetector()
 		predownloader := validate.NewPreDownloader()
 		b.executor = validate.NewExecutor(detector, predownloader)
 	}
 
 	// Set progress reporter if provided
-	if opts != nil && opts.ProgressReporter != nil {
+	if opts.ProgressReporter != nil {
 		b.progress = opts.ProgressReporter
 	}
 
@@ -306,6 +323,12 @@ func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*Bu
 
 	if repairAttempts > 0 {
 		result.Warnings = append(result.Warnings, fmt.Sprintf("Recipe repaired after %d attempt(s)", repairAttempts))
+	}
+
+	// Record LLM cost if state tracker is available
+	if err := RecordLLMCost(b.llmStateTracker, result.Cost); err != nil {
+		// Log warning but don't fail the build
+		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to record LLM cost: %v", err))
 	}
 
 	return result, nil

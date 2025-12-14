@@ -89,6 +89,7 @@ type HomebrewBuilder struct {
 	telemetryClient *telemetry.Client
 	progress        ProgressReporter
 	registry        RegistryChecker
+	llmStateTracker LLMStateTracker
 }
 
 // HomebrewBuilderOption configures a HomebrewBuilder.
@@ -182,8 +183,24 @@ func NewHomebrewBuilder(opts ...HomebrewBuilderOption) *HomebrewBuilder {
 }
 
 // Initialize sets up the builder for LLM-based recipe generation.
-// This creates the LLM factory (validates API key) and configures validation.
+// This checks LLM configuration and rate limits, creates the LLM factory,
+// and configures validation.
+//
+// Returns ConfirmableError (specifically *RateLimitError) if rate limits are exceeded,
+// allowing the caller to prompt for user confirmation and retry with ForceInit=true.
 func (b *HomebrewBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
+	if opts == nil {
+		opts = &InitOptions{}
+	}
+
+	// Check LLM prerequisites (enabled, rate limits, budget)
+	if err := CheckLLMPrerequisites(opts); err != nil {
+		return err
+	}
+
+	// Store state tracker for cost recording in Build()
+	b.llmStateTracker = opts.LLMStateTracker
+
 	// Create LLM factory if not already set (may be set via WithHomebrewFactory for testing)
 	if b.factory == nil {
 		factory, err := llm.NewFactory(ctx)
@@ -199,14 +216,14 @@ func (b *HomebrewBuilder) Initialize(ctx context.Context, opts *InitOptions) err
 	})
 
 	// Set up validation executor unless skipped
-	if opts != nil && !opts.SkipValidation && b.executor == nil {
+	if !opts.SkipValidation && b.executor == nil {
 		detector := validate.NewRuntimeDetector()
 		predownloader := validate.NewPreDownloader()
 		b.executor = validate.NewExecutor(detector, predownloader)
 	}
 
 	// Set progress reporter if provided
-	if opts != nil && opts.ProgressReporter != nil {
+	if opts.ProgressReporter != nil {
 		b.progress = opts.ProgressReporter
 	}
 
@@ -830,6 +847,11 @@ func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildRe
 		}
 	}
 
+	// Record LLM cost if state tracker is available
+	if err := RecordLLMCost(b.llmStateTracker, result.Cost); err != nil {
+		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to record LLM cost: %v", err))
+	}
+
 	return result, nil
 }
 
@@ -924,6 +946,11 @@ func (b *HomebrewBuilder) buildFromSource(ctx context.Context, req BuildRequest,
 
 	if repairAttempts > 0 {
 		result.Warnings = append(result.Warnings, fmt.Sprintf("Recipe repaired after %d attempt(s)", repairAttempts))
+	}
+
+	// Record LLM cost if state tracker is available
+	if err := RecordLLMCost(b.llmStateTracker, result.Cost); err != nil {
+		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to record LLM cost: %v", err))
 	}
 
 	return result, nil
