@@ -12,6 +12,11 @@ formula = "make"
 action = "homebrew_bottle"
 formula = "make"
 
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/gmake", "bin/make"]
+
 [verify]
 command = "make --version"
 pattern = "GNU Make {version}"
