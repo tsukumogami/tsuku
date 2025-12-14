@@ -1,20 +1,24 @@
 # Ground truth recipe for readline (source build with patches)
 # Used by LLM integration tests (S1)
 
+[metadata]
 name = "readline"
 description = "GNU Readline library"
 homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
+type = "library"
+dependencies = ["make"]
 
 [version]
-provider = "homebrew"
+source = "homebrew"
 formula = "readline"
 
 [[steps]]
 action = "homebrew_source"
-
-[steps.params]
 formula = "readline"
-build_system = "autotools"
+
+[[steps]]
+action = "configure_make"
+source_dir = "."
 executables = []
 
 # Patches from GNU FTP (p0 strip level)
@@ -29,3 +33,8 @@ strip = 0
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/readline/readline-8.3-patches/readline83-003"
 strip = 0
+
+[verify]
+command = "ls lib/libreadline.a"
+pattern = "libreadline"
+mode = "output"

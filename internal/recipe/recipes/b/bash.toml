@@ -1,20 +1,23 @@
 # Ground truth recipe for bash (source build with multiple patches)
 # Used by LLM integration tests (S3)
 
+[metadata]
 name = "bash"
 description = "Bourne Again SHell"
 homepage = "https://www.gnu.org/software/bash/"
+dependencies = ["make"]
 
 [version]
-provider = "homebrew"
+source = "homebrew"
 formula = "bash"
 
 [[steps]]
 action = "homebrew_source"
-
-[steps.params]
 formula = "bash"
-build_system = "autotools"
+
+[[steps]]
+action = "configure_make"
+source_dir = "."
 executables = ["bash"]
 
 # Multiple patches from GNU FTP (p0 strip level) - order matters
@@ -53,3 +56,7 @@ strip = 0
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-009"
 strip = 0
+
+[verify]
+command = "bash --version"
+pattern = "GNU bash, version {version}"
