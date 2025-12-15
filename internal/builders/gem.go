@@ -66,18 +66,14 @@ func (b *GemBuilder) Name() string {
 	return "rubygems"
 }
 
-// Initialize is a no-op for ecosystem builders.
-func (b *GemBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
-	return nil
-}
-
 // RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
 func (b *GemBuilder) RequiresLLM() bool {
 	return false
 }
 
 // CanBuild checks if the gem exists on rubygems.org
-func (b *GemBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
+func (b *GemBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
+	packageName := req.Package
 	if !isValidGemName(packageName) {
 		return false, nil
 	}
@@ -93,6 +89,11 @@ func (b *GemBuilder) CanBuild(ctx context.Context, packageName string) (bool, er
 	}
 
 	return true, nil
+}
+
+// NewSession creates a new build session for the given request.
+func (b *GemBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	return NewDeterministicSession(b.Build, req), nil
 }
 
 // Build generates a recipe for the gem

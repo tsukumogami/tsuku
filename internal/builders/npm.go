@@ -76,18 +76,14 @@ func (b *NpmBuilder) Name() string {
 	return "npm"
 }
 
-// Initialize is a no-op for ecosystem builders.
-func (b *NpmBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
-	return nil
-}
-
 // RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
 func (b *NpmBuilder) RequiresLLM() bool {
 	return false
 }
 
 // CanBuild checks if the package exists on npm registry
-func (b *NpmBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
+func (b *NpmBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
+	packageName := req.Package
 	if !isValidNpmPackageNameForBuilder(packageName) {
 		return false, nil
 	}
@@ -103,6 +99,11 @@ func (b *NpmBuilder) CanBuild(ctx context.Context, packageName string) (bool, er
 	}
 
 	return true, nil
+}
+
+// NewSession creates a new build session for the given request.
+func (b *NpmBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	return NewDeterministicSession(b.Build, req), nil
 }
 
 // Build generates a recipe for the package

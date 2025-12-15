@@ -37,7 +37,7 @@ func TestGemBuilder_CanBuild_ValidGem(t *testing.T) {
 	builder := NewGemBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "jekyll")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "jekyll"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -55,7 +55,7 @@ func TestGemBuilder_CanBuild_NotFound(t *testing.T) {
 	builder := NewGemBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "nonexistent-gem")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "nonexistent-gem"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -69,7 +69,7 @@ func TestGemBuilder_CanBuild_InvalidGemName(t *testing.T) {
 	ctx := context.Background()
 
 	// Invalid gem name should return false without making any HTTP requests
-	canBuild, err := builder.CanBuild(ctx, "invalid gem name!")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "invalid gem name!"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/sandbox"
 )
 
 // LLMStateTracker provides rate limit checking and cost tracking for LLM operations.
@@ -52,32 +53,10 @@ func (e *LLMDisabledError) Error() string {
 	return "LLM features are disabled. To enable: tsuku config set llm.enabled true"
 }
 
-// InitOptions contains options for builder initialization.
-type InitOptions struct {
-	// SkipValidation disables container validation for LLM-generated recipes.
-	SkipValidation bool
-
-	// ProgressReporter receives progress updates during build operations.
-	// If nil, no progress is reported.
-	ProgressReporter ProgressReporter
-
-	// LLMConfig provides access to LLM-related user settings.
-	// Required for LLM builders; ignored by ecosystem builders.
-	LLMConfig LLMConfig
-
-	// LLMStateTracker provides rate limit checking and cost tracking.
-	// Required for LLM builders; ignored by ecosystem builders.
-	LLMStateTracker LLMStateTracker
-
-	// ForceInit bypasses rate limit and budget checks.
-	// Used when the user confirms they want to proceed despite limits.
-	ForceInit bool
-}
-
 // CheckLLMPrerequisites validates LLM configuration and rate limits.
 // Returns nil if generation is allowed, or an error (possibly ConfirmableError) if not.
-// This is a helper for LLM builders to call in their Initialize() method.
-func CheckLLMPrerequisites(opts *InitOptions) error {
+// This is a helper for LLM builders to call in their NewSession() method.
+func CheckLLMPrerequisites(opts *SessionOptions) error {
 	if opts == nil || opts.ForceInit {
 		return nil
 	}
@@ -139,34 +118,6 @@ type BuildRequest struct {
 	SourceArg string
 }
 
-// Builder generates recipes for packages from a specific ecosystem.
-// Builders are invoked via "tsuku create" to generate recipes that are
-// written to the user's local recipes directory ($TSUKU_HOME/recipes/).
-type Builder interface {
-	// Name returns the builder identifier (e.g., "crates_io", "rubygems", "github")
-	Name() string
-
-	// Initialize performs builder-specific setup.
-	// For LLM builders, this creates the LLM factory, validates the API key,
-	// and sets up validation executor and progress reporter.
-	// For ecosystem builders, this is a no-op.
-	// Returns error if initialization fails (e.g., missing API key).
-	Initialize(ctx context.Context, opts *InitOptions) error
-
-	// RequiresLLM returns true if this builder uses LLM for recipe generation.
-	// Used by CLI to apply LLM-specific behaviors like budget checks,
-	// preview prompts, and cost tracking.
-	RequiresLLM() bool
-
-	// CanBuild checks if this builder can handle the package.
-	// It typically queries the ecosystem's API to verify the package exists.
-	CanBuild(ctx context.Context, packageName string) (bool, error)
-
-	// Build generates a recipe for the package.
-	// If req.Version is empty, the recipe will use a version provider for dynamic resolution.
-	Build(ctx context.Context, req BuildRequest) (*BuildResult, error)
-}
-
 // BuildResult contains the generated recipe and metadata about the build process.
 type BuildResult struct {
 	// Recipe is the generated recipe struct
@@ -193,4 +144,122 @@ type BuildResult struct {
 	// Cost is the estimated cost in USD for LLM-based generation.
 	// Only populated by LLM-based builders (e.g., GitHubReleaseBuilder).
 	Cost float64
+}
+
+// BuildSession represents an active build session that maintains state across
+// multiple generation and repair attempts. This is particularly important for
+// LLM builders that maintain conversation history for effective repairs.
+//
+// Sessions are created by Builder.NewSession() and should be closed when done.
+// The Orchestrator uses sessions to control the sandbox validation and repair loop
+// externally, rather than having validation embedded in each builder.
+type BuildSession interface {
+	// Generate produces an initial recipe from the build request.
+	// This is the first call after creating a session.
+	Generate(ctx context.Context) (*BuildResult, error)
+
+	// Repair attempts to fix the recipe given sandbox failure feedback.
+	// The session maintains internal state (e.g., LLM conversation history)
+	// so repairs can build on previous context rather than starting fresh.
+	// Can be called multiple times for iterative repairs.
+	Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error)
+
+	// Close releases resources associated with the session.
+	// Should be called when the session is no longer needed.
+	Close() error
+}
+
+// SessionBuilder is the interface for builders that support session-based generation.
+// This extends the basic Builder interface with session creation capabilities.
+//
+// Session-based builders allow the Orchestrator to control the sandbox validation
+// and repair loop externally. This enables:
+// - Centralized validation policy (retry counts, different builders, etc.)
+// - Cross-builder repair strategies
+// - Consistent telemetry and progress reporting
+//
+// For simple ecosystem builders that don't need stateful repairs, use
+// SimpleSessionBuilder which wraps a basic Build() function.
+type SessionBuilder interface {
+	// Name returns the builder identifier (e.g., "github", "homebrew", "crates_io")
+	Name() string
+
+	// RequiresLLM returns true if this builder uses LLM for recipe generation.
+	RequiresLLM() bool
+
+	// CanBuild checks if this builder can handle the package/source combination.
+	CanBuild(ctx context.Context, req BuildRequest) (bool, error)
+
+	// NewSession creates a new build session for the given request.
+	// The session maintains state for iterative generation and repair.
+	NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error)
+}
+
+// SessionOptions contains options for creating a build session.
+type SessionOptions struct {
+	// ProgressReporter receives progress updates during build operations.
+	ProgressReporter ProgressReporter
+
+	// LLMConfig provides access to LLM-related user settings.
+	LLMConfig LLMConfig
+
+	// LLMStateTracker provides rate limit checking and cost tracking.
+	LLMStateTracker LLMStateTracker
+
+	// ForceInit bypasses rate limit and budget checks.
+	ForceInit bool
+}
+
+// BuildFunc is a function that generates a recipe for a package.
+// Used by DeterministicSession to wrap ecosystem builders.
+type BuildFunc func(ctx context.Context, req BuildRequest) (*BuildResult, error)
+
+// DeterministicSession wraps a simple Build() function as a BuildSession.
+// This is for ecosystem builders (Cargo, Go, PyPI, etc.) that generate
+// recipes deterministically from metadata without needing stateful repairs.
+//
+// Since these builders can't use failure feedback to improve their output,
+// Repair() simply returns an error indicating repair is not supported.
+type DeterministicSession struct {
+	buildFunc  BuildFunc
+	req        BuildRequest
+	lastResult *BuildResult
+}
+
+// NewDeterministicSession creates a session that wraps a build function.
+func NewDeterministicSession(buildFunc BuildFunc, req BuildRequest) *DeterministicSession {
+	return &DeterministicSession{
+		buildFunc: buildFunc,
+		req:       req,
+	}
+}
+
+// Generate calls the underlying build function.
+func (s *DeterministicSession) Generate(ctx context.Context) (*BuildResult, error) {
+	result, err := s.buildFunc(ctx, s.req)
+	if err != nil {
+		return nil, err
+	}
+	s.lastResult = result
+	return result, nil
+}
+
+// Repair returns an error because ecosystem builders can't use failure feedback.
+// Their recipes are deterministic - running again would produce the same result.
+func (s *DeterministicSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
+	return nil, &RepairNotSupportedError{BuilderType: "ecosystem"}
+}
+
+// Close is a no-op for deterministic sessions.
+func (s *DeterministicSession) Close() error {
+	return nil
+}
+
+// RepairNotSupportedError indicates a builder cannot repair its recipes.
+type RepairNotSupportedError struct {
+	BuilderType string
+}
+
+func (e *RepairNotSupportedError) Error() string {
+	return e.BuilderType + " builders do not support repair (recipes are deterministic)"
 }

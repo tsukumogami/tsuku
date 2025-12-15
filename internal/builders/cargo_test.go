@@ -39,7 +39,7 @@ func TestCargoBuilder_CanBuild_ValidCrate(t *testing.T) {
 	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "ripgrep")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "ripgrep"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -57,7 +57,7 @@ func TestCargoBuilder_CanBuild_NotFound(t *testing.T) {
 	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "nonexistent-crate")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "nonexistent-crate"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -71,7 +71,7 @@ func TestCargoBuilder_CanBuild_InvalidCrateName(t *testing.T) {
 	ctx := context.Background()
 
 	// Invalid crate name should return false without making any HTTP requests
-	canBuild, err := builder.CanBuild(ctx, "invalid crate name!")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "invalid crate name!"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}

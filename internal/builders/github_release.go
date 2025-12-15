@@ -14,6 +14,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -44,15 +45,40 @@ type ProgressReporter interface {
 }
 
 // GitHubReleaseBuilder generates recipes from GitHub release assets using LLM analysis.
+// It implements SessionBuilder for use with the Orchestrator.
 type GitHubReleaseBuilder struct {
 	httpClient      *http.Client
 	factory         *llm.Factory
-	executor        *validate.Executor
 	sanitizer       *validate.Sanitizer
 	githubBaseURL   string
 	telemetryClient *telemetry.Client
 	progress        ProgressReporter
-	llmStateTracker LLMStateTracker
+}
+
+// GitHubReleaseSession maintains state for an active build session.
+// It preserves LLM conversation history for effective repairs.
+type GitHubReleaseSession struct {
+	builder *GitHubReleaseBuilder
+	req     BuildRequest
+
+	// LLM state
+	provider     llm.Provider
+	messages     []llm.Message
+	systemPrompt string
+	tools        []llm.ToolDef
+	totalUsage   llm.Usage
+
+	// Generation context
+	genCtx   *generationContext
+	repoMeta *repoMeta
+	repoPath string
+
+	// Generated state
+	lastPattern *llm.AssetPattern
+	lastRecipe  *recipe.Recipe
+
+	// Progress reporting
+	progress ProgressReporter
 }
 
 // GitHubReleaseBuilderOption configures a GitHubReleaseBuilder.
@@ -69,13 +95,6 @@ func WithHTTPClient(c *http.Client) GitHubReleaseBuilderOption {
 func WithFactory(f *llm.Factory) GitHubReleaseBuilderOption {
 	return func(b *GitHubReleaseBuilder) {
 		b.factory = f
-	}
-}
-
-// WithExecutor sets the validation executor.
-func WithExecutor(e *validate.Executor) GitHubReleaseBuilderOption {
-	return func(b *GitHubReleaseBuilder) {
-		b.executor = e
 	}
 }
 
@@ -138,54 +157,6 @@ func NewGitHubReleaseBuilder(opts ...GitHubReleaseBuilderOption) *GitHubReleaseB
 	return b
 }
 
-// Initialize sets up the builder for LLM-based recipe generation.
-// This checks LLM configuration and rate limits, creates the LLM factory,
-// and configures validation.
-//
-// Returns ConfirmableError (specifically *RateLimitError) if rate limits are exceeded,
-// allowing the caller to prompt for user confirmation and retry with ForceInit=true.
-func (b *GitHubReleaseBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
-	if opts == nil {
-		opts = &InitOptions{}
-	}
-
-	// Check LLM prerequisites (enabled, rate limits, budget)
-	if err := CheckLLMPrerequisites(opts); err != nil {
-		return err
-	}
-
-	// Store state tracker for cost recording in Build()
-	b.llmStateTracker = opts.LLMStateTracker
-
-	// Create LLM factory if not already set (may be set via WithFactory for testing)
-	if b.factory == nil {
-		factory, err := llm.NewFactory(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to create LLM factory: %w", err)
-		}
-		b.factory = factory
-	}
-
-	// Set up factory callback for circuit breaker telemetry
-	b.factory.SetOnBreakerTrip(func(provider string, failures int) {
-		b.telemetryClient.SendLLM(telemetry.NewLLMCircuitBreakerTripEvent(provider, failures))
-	})
-
-	// Set up validation executor unless skipped
-	if !opts.SkipValidation && b.executor == nil {
-		detector := validate.NewRuntimeDetector()
-		predownloader := validate.NewPreDownloader()
-		b.executor = validate.NewExecutor(detector, predownloader)
-	}
-
-	// Set progress reporter if provided
-	if opts.ProgressReporter != nil {
-		b.progress = opts.ProgressReporter
-	}
-
-	return nil
-}
-
 // RequiresLLM returns true as this builder uses LLM for recipe generation.
 func (b *GitHubReleaseBuilder) RequiresLLM() bool {
 	return true
@@ -217,52 +188,93 @@ func (b *GitHubReleaseBuilder) reportFailed() {
 	}
 }
 
-// CanBuild checks if the SourceArg contains a valid owner/repo format.
-func (b *GitHubReleaseBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
-	// This builder requires SourceArg, not packageName
-	// Return false to indicate this builder cannot auto-detect packages
-	return false, nil
+// CanBuild checks if this builder can handle the given request.
+// Returns true if SourceArg contains a valid owner/repo format.
+func (b *GitHubReleaseBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
+	// Check if SourceArg is a valid owner/repo format
+	_, _, err := parseRepo(req.SourceArg)
+	return err == nil, nil
 }
 
-// Build generates a recipe from GitHub release assets.
-func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
+// NewSession creates a new build session for the given request.
+// The session fetches GitHub metadata and prepares for LLM generation.
+func (b *GitHubReleaseBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	// Check LLM prerequisites
+	if err := CheckLLMPrerequisites(opts); err != nil {
+		return nil, err
+	}
+
 	// Parse owner/repo from SourceArg
 	owner, repo, err := parseRepo(req.SourceArg)
 	if err != nil {
 		return nil, fmt.Errorf("invalid source argument: %w", err)
 	}
-
 	repoPath := fmt.Sprintf("%s/%s", owner, repo)
 
+	// Get or create LLM factory
+	factory := b.factory
+	if factory == nil {
+		factory, err = llm.NewFactory(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
+		}
+	}
+
+	// Get provider from factory
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("no LLM provider available: %w", err)
+	}
+
+	// Set up progress reporter
+	var progress ProgressReporter
+	if opts != nil && opts.ProgressReporter != nil {
+		progress = opts.ProgressReporter
+	} else {
+		progress = b.progress
+	}
+
+	// Report metadata fetch starting
+	if progress != nil {
+		progress.OnStageStart("Fetching release metadata")
+	}
+
 	// Fetch releases
-	b.reportStart("Fetching release metadata")
 	releases, err := b.fetchReleases(ctx, owner, repo)
 	if err != nil {
-		b.reportFailed()
+		if progress != nil {
+			progress.OnStageFailed()
+		}
 		return nil, fmt.Errorf("failed to fetch releases: %w", err)
 	}
 
 	if len(releases) == 0 {
-		b.reportFailed()
+		if progress != nil {
+			progress.OnStageFailed()
+		}
 		return nil, fmt.Errorf("no releases found for %s", repoPath)
 	}
 
 	// Fetch repo metadata
 	repoMeta, err := b.fetchRepoMeta(ctx, owner, repo)
 	if err != nil {
-		b.reportFailed()
+		if progress != nil {
+			progress.OnStageFailed()
+		}
 		return nil, fmt.Errorf("failed to fetch repo metadata: %w", err)
 	}
 
 	// Fetch README (non-fatal if it fails)
 	readme := b.fetchREADME(ctx, owner, repo, releases[0].Tag)
 
-	// Report metadata fetch complete with details
-	assetCount := 0
-	if len(releases) > 0 {
-		assetCount = len(releases[0].Assets)
+	// Report metadata fetch complete
+	if progress != nil {
+		assetCount := 0
+		if len(releases) > 0 {
+			assetCount = len(releases[0].Assets)
+		}
+		progress.OnStageDone(fmt.Sprintf("%s, %d assets", releases[0].Tag, assetCount))
 	}
-	b.reportDone(fmt.Sprintf("%s, %d assets", releases[0].Tag, assetCount))
 
 	// Build generation context
 	genCtx := &generationContext{
@@ -276,62 +288,148 @@ func (b *GitHubReleaseBuilder) Build(ctx context.Context, req BuildRequest) (*Bu
 		genCtx.tag = releases[0].Tag
 	}
 
-	// Get provider from factory
-	provider, err := b.factory.GetProvider(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("no LLM provider available: %w", err)
+	// Build initial messages
+	systemPrompt := buildSystemPrompt()
+	userMessage := buildUserMessage(genCtx)
+	messages := []llm.Message{
+		{Role: llm.RoleUser, Content: userMessage},
 	}
+	tools := buildToolDefs()
 
 	// Emit generation started event
 	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, repoPath))
-	startTime := time.Now()
 
-	// Generate recipe with repair loop
-	pattern, usage, repairAttempts, validationSkipped, err := b.generateWithRepair(ctx, provider, genCtx, req.Package, repoPath, repoMeta)
+	return &GitHubReleaseSession{
+		builder:      b,
+		req:          req,
+		provider:     provider,
+		messages:     messages,
+		systemPrompt: systemPrompt,
+		tools:        tools,
+		genCtx:       genCtx,
+		repoMeta:     repoMeta,
+		repoPath:     repoPath,
+		progress:     progress,
+	}, nil
+}
 
-	// Calculate duration for completed event
-	durationMs := time.Since(startTime).Milliseconds()
+// Generate produces an initial recipe from the build request.
+func (s *GitHubReleaseSession) Generate(ctx context.Context) (*BuildResult, error) {
+	if s.progress != nil {
+		s.progress.OnStageStart(fmt.Sprintf("Analyzing assets with %s", s.provider.Name()))
+	}
 
+	// Run conversation loop to get pattern
+	pattern, turnUsage, err := s.builder.runConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
 	if err != nil {
-		b.factory.ReportFailure(provider.Name())
-		// Emit generation completed (failure) event
-		b.telemetryClient.SendLLM(telemetry.NewLLMGenerationCompletedEvent(provider.Name(), req.Package, false, durationMs, repairAttempts+1))
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
 		return nil, err
 	}
-	b.factory.ReportSuccess(provider.Name())
+	s.totalUsage.Add(*turnUsage)
 
-	// Emit generation completed (success) event
-	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationCompletedEvent(provider.Name(), req.Package, true, durationMs, repairAttempts+1))
+	if s.progress != nil {
+		s.progress.OnStageDone("")
+	}
+
+	// Store pattern for potential repairs
+	s.lastPattern = pattern
 
 	// Generate recipe from pattern
-	r, err := generateRecipe(req.Package, repoPath, repoMeta, pattern)
+	r, err := generateRecipe(s.req.Package, s.repoPath, s.repoMeta, pattern)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate recipe: %w", err)
 	}
 
-	result := &BuildResult{
-		Recipe: r,
-		Source: fmt.Sprintf("github:%s", repoPath),
+	// Substitute {version} in verify command and pattern
+	if s.genCtx.tag != "" {
+		version := strings.TrimPrefix(s.genCtx.tag, "v")
+		if r.Verify.Command != "" {
+			r.Verify.Command = strings.ReplaceAll(r.Verify.Command, "{version}", version)
+		}
+		if r.Verify.Pattern != "" {
+			r.Verify.Pattern = strings.ReplaceAll(r.Verify.Pattern, "{version}", version)
+		}
+	}
+
+	s.lastRecipe = r
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("github:%s", s.repoPath),
+		Provider: s.provider.Name(),
+		Cost:     s.totalUsage.Cost(),
 		Warnings: []string{
-			fmt.Sprintf("LLM usage: %s", usage.String()),
+			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
 		},
-		RepairAttempts:    repairAttempts,
-		Provider:          provider.Name(),
-		ValidationSkipped: validationSkipped,
-		Cost:              usage.Cost(),
+	}, nil
+}
+
+// Repair attempts to fix the recipe given sandbox failure feedback.
+func (s *GitHubReleaseSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
+	if s.progress != nil {
+		s.progress.OnStageStart("Repairing recipe")
 	}
 
-	if repairAttempts > 0 {
-		result.Warnings = append(result.Warnings, fmt.Sprintf("Recipe repaired after %d attempt(s)", repairAttempts))
+	// Build repair message from failure
+	repairMessage := s.builder.buildRepairMessageFromSandbox(failure)
+
+	// Add repair message to conversation
+	s.messages = append(s.messages, llm.Message{Role: llm.RoleUser, Content: repairMessage})
+
+	// Run conversation loop to get new pattern
+	pattern, turnUsage, err := s.builder.runConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
+	if err != nil {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, err
+	}
+	s.totalUsage.Add(*turnUsage)
+
+	if s.progress != nil {
+		s.progress.OnStageDone("")
 	}
 
-	// Record LLM cost if state tracker is available
-	if err := RecordLLMCost(b.llmStateTracker, result.Cost); err != nil {
-		// Log warning but don't fail the build
-		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to record LLM cost: %v", err))
+	// Store new pattern
+	s.lastPattern = pattern
+
+	// Generate recipe from new pattern
+	r, err := generateRecipe(s.req.Package, s.repoPath, s.repoMeta, pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate recipe: %w", err)
 	}
 
-	return result, nil
+	// Substitute {version}
+	if s.genCtx.tag != "" {
+		version := strings.TrimPrefix(s.genCtx.tag, "v")
+		if r.Verify.Command != "" {
+			r.Verify.Command = strings.ReplaceAll(r.Verify.Command, "{version}", version)
+		}
+		if r.Verify.Pattern != "" {
+			r.Verify.Pattern = strings.ReplaceAll(r.Verify.Pattern, "{version}", version)
+		}
+	}
+
+	s.lastRecipe = r
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("github:%s", s.repoPath),
+		Provider: s.provider.Name(),
+		Cost:     s.totalUsage.Cost(),
+		Warnings: []string{
+			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
+		},
+	}, nil
+}
+
+// Close releases resources associated with the session.
+func (s *GitHubReleaseSession) Close() error {
+	// Currently no resources to release
+	// Future: could close LLM connections, cancel pending requests, etc.
+	return nil
 }
 
 // generationContext holds context needed during recipe generation.
@@ -342,129 +440,6 @@ type generationContext struct {
 	description string
 	readme      string
 	httpClient  *http.Client
-}
-
-// generateWithRepair runs the conversation loop with validation and repair.
-func (b *GitHubReleaseBuilder) generateWithRepair(
-	ctx context.Context,
-	provider llm.Provider,
-	genCtx *generationContext,
-	packageName, repoPath string,
-	repoMeta *repoMeta,
-) (*llm.AssetPattern, *llm.Usage, int, bool, error) {
-	// Build initial conversation
-	systemPrompt := buildSystemPrompt()
-	userMessage := buildUserMessage(genCtx)
-	messages := []llm.Message{
-		{Role: llm.RoleUser, Content: userMessage},
-	}
-	tools := buildToolDefs()
-
-	var totalUsage llm.Usage
-	var repairAttempts int
-	var validationSkipped bool
-	var lastErrorCategory string
-
-	for attempt := 0; attempt <= MaxRepairAttempts; attempt++ {
-		// Emit repair attempt event for retries (not the first attempt)
-		if attempt > 0 {
-			b.telemetryClient.SendLLM(telemetry.NewLLMRepairAttemptEvent(provider.Name(), attempt, lastErrorCategory))
-			// Report repair progress
-			b.reportStart(fmt.Sprintf("Repairing recipe (attempt %d/%d)", attempt, MaxRepairAttempts+1))
-		} else {
-			// Report LLM analysis starting (first attempt only)
-			b.reportStart(fmt.Sprintf("Analyzing assets with %s", provider.Name()))
-		}
-
-		// Run conversation loop to get pattern
-		pattern, turnUsage, err := b.runConversationLoop(ctx, provider, systemPrompt, messages, tools, genCtx)
-		if err != nil {
-			b.reportFailed()
-			return nil, &totalUsage, repairAttempts, validationSkipped, err
-		}
-		totalUsage.Add(*turnUsage)
-
-		// Report LLM analysis done
-		b.reportDone("")
-
-		// If no executor, skip validation
-		if b.executor == nil {
-			validationSkipped = true
-			// Emit validation skipped event
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", attempt+1))
-			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
-		}
-
-		// Generate recipe for validation
-		r, err := generateRecipe(packageName, repoPath, repoMeta, pattern)
-		if err != nil {
-			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("failed to generate recipe for validation: %w", err)
-		}
-
-		// Substitute {version} in verify command and pattern with actual version tag
-		// This allows the pattern check to work correctly during validation
-		if genCtx.tag != "" {
-			// Strip 'v' prefix if present for version matching
-			version := strings.TrimPrefix(genCtx.tag, "v")
-			if r.Verify.Command != "" {
-				r.Verify.Command = strings.ReplaceAll(r.Verify.Command, "{version}", version)
-			}
-			if r.Verify.Pattern != "" {
-				r.Verify.Pattern = strings.ReplaceAll(r.Verify.Pattern, "{version}", version)
-			}
-		}
-
-		// Build asset URL for validation
-		assetURL := b.buildAssetURL(genCtx, pattern)
-
-		// Report validation starting
-		b.reportStart("Validating in container")
-
-		// Validate in container
-		result, err := b.executor.Validate(ctx, r, assetURL)
-		if err != nil {
-			b.reportFailed()
-			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("validation error: %w", err)
-		}
-
-		// Check validation result
-		if result.Skipped {
-			validationSkipped = true
-			// Emit validation skipped event
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", attempt+1))
-			b.reportDone("skipped")
-			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
-		}
-
-		if result.Passed {
-			// Emit validation passed event
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "", attempt+1))
-			b.reportDone("")
-			return pattern, &totalUsage, repairAttempts, validationSkipped, nil
-		}
-
-		// Validation failed
-		b.reportFailed()
-
-		// Parse error category for telemetry
-		parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)
-		lastErrorCategory = string(parsed.Category)
-
-		// Emit validation failed event
-		b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(false, lastErrorCategory, attempt+1))
-
-		// Validation failed - prepare repair if we have attempts left
-		if attempt >= MaxRepairAttempts {
-			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("recipe validation failed after %d repair attempts: %s", repairAttempts, b.formatValidationError(result))
-		}
-
-		// Continue conversation with error feedback
-		repairAttempts++
-		repairMessage := b.buildRepairMessage(result)
-		messages = append(messages, llm.Message{Role: llm.RoleUser, Content: repairMessage})
-	}
-
-	return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("unexpected end of repair loop")
 }
 
 // runConversationLoop executes the multi-turn conversation until extract_pattern is called.
@@ -599,23 +574,9 @@ func (b *GitHubReleaseBuilder) executeToolCall(ctx context.Context, genCtx *gene
 	}
 }
 
-// buildAssetURL constructs the download URL for the first matching platform.
-func (b *GitHubReleaseBuilder) buildAssetURL(genCtx *generationContext, pattern *llm.AssetPattern) string {
-	if len(pattern.Mappings) == 0 || len(genCtx.releases) == 0 {
-		return ""
-	}
-
-	// Find asset URL for the first mapping (typically linux/amd64)
-	firstAsset := pattern.Mappings[0].Asset
-	release := genCtx.releases[0]
-
-	// Construct GitHub release download URL
-	return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s",
-		genCtx.repo, release.Tag, firstAsset)
-}
-
-// buildRepairMessage constructs the error feedback message for the LLM.
-func (b *GitHubReleaseBuilder) buildRepairMessage(result *validate.ValidationResult) string {
+// buildRepairMessageFromSandbox constructs error feedback from sandbox results.
+// Used by GitHubReleaseSession.Repair() with sandbox.SandboxResult.
+func (b *GitHubReleaseBuilder) buildRepairMessageFromSandbox(result *sandbox.SandboxResult) string {
 	// Combine stdout and stderr
 	output := result.Stdout + "\n" + result.Stderr
 
@@ -626,7 +587,7 @@ func (b *GitHubReleaseBuilder) buildRepairMessage(result *validate.ValidationRes
 	parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)
 
 	var sb strings.Builder
-	sb.WriteString("The recipe you generated failed validation. Here is the error:\n\n")
+	sb.WriteString("The recipe you generated failed sandbox validation. Here is the error:\n\n")
 	sb.WriteString("---\n")
 	sb.WriteString(sanitizedOutput)
 	sb.WriteString("\n---\n\n")
@@ -640,19 +601,13 @@ func (b *GitHubReleaseBuilder) buildRepairMessage(result *validate.ValidationRes
 		}
 	}
 
+	if result.Error != nil {
+		sb.WriteString(fmt.Sprintf("\nSandbox error: %v\n", result.Error))
+	}
+
 	sb.WriteString("\nPlease analyze what went wrong and call extract_pattern again with a corrected recipe.")
 
 	return sb.String()
-}
-
-// formatValidationError creates a human-readable validation error message.
-func (b *GitHubReleaseBuilder) formatValidationError(result *validate.ValidationResult) string {
-	output := result.Stdout + "\n" + result.Stderr
-	sanitized := b.sanitizer.Sanitize(output)
-	if len(sanitized) > 500 {
-		sanitized = sanitized[:500] + "..."
-	}
-	return fmt.Sprintf("exit code %d: %s", result.ExitCode, sanitized)
 }
 
 // parseRepo parses "owner/repo" into separate components.
@@ -1262,42 +1217,4 @@ func inspectArchive(ctx context.Context, httpClient *http.Client, archiveURL str
 	// For now, return a placeholder - archive inspection requires more complex logic
 	// This is consistent with the existing implementation in client.go
 	return "Archive inspection not fully implemented - please analyze based on filename patterns", nil
-}
-
-// Legacy constructors for backward compatibility
-
-// NewGitHubReleaseBuilderLegacy creates a builder with legacy constructor signature.
-// Deprecated: Use NewGitHubReleaseBuilder instead.
-func NewGitHubReleaseBuilderLegacy(httpClient *http.Client, llmClient *llm.Client) (*GitHubReleaseBuilder, error) {
-	opts := []GitHubReleaseBuilderOption{}
-
-	if httpClient != nil {
-		opts = append(opts, WithHTTPClient(httpClient))
-	}
-
-	// Note: llmClient is ignored in new implementation - factory is used instead
-
-	b := NewGitHubReleaseBuilder(opts...)
-	if err := b.Initialize(context.Background(), nil); err != nil {
-		return nil, err
-	}
-	return b, nil
-}
-
-// NewGitHubReleaseBuilderWithBaseURL creates a builder with custom GitHub API URL.
-// Deprecated: Use NewGitHubReleaseBuilder with WithGitHubBaseURL option instead.
-func NewGitHubReleaseBuilderWithBaseURL(httpClient *http.Client, llmClient *llm.Client, githubBaseURL string) (*GitHubReleaseBuilder, error) {
-	opts := []GitHubReleaseBuilderOption{
-		WithGitHubBaseURL(githubBaseURL),
-	}
-
-	if httpClient != nil {
-		opts = append(opts, WithHTTPClient(httpClient))
-	}
-
-	b := NewGitHubReleaseBuilder(opts...)
-	if err := b.Initialize(context.Background(), nil); err != nil {
-		return nil, err
-	}
-	return b, nil
 }

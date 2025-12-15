@@ -81,18 +81,14 @@ func (b *PyPIBuilder) Name() string {
 	return "pypi"
 }
 
-// Initialize is a no-op for ecosystem builders.
-func (b *PyPIBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
-	return nil
-}
-
 // RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
 func (b *PyPIBuilder) RequiresLLM() bool {
 	return false
 }
 
 // CanBuild checks if the package exists on PyPI
-func (b *PyPIBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
+func (b *PyPIBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
+	packageName := req.Package
 	if !isValidPyPIPackageName(packageName) {
 		return false, nil
 	}
@@ -108,6 +104,11 @@ func (b *PyPIBuilder) CanBuild(ctx context.Context, packageName string) (bool, e
 	}
 
 	return true, nil
+}
+
+// NewSession creates a new build session for the given request.
+func (b *PyPIBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	return NewDeterministicSession(b.Build, req), nil
 }
 
 // Build generates a recipe for the package

@@ -10,7 +10,6 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
-	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // Repair loop integration tests verify:
@@ -84,27 +83,6 @@ func containsRepairKeywords(s string) bool {
 
 // Note: containsSubstr is already defined in go_test.go
 
-// mockValidationExecutor simulates validation results.
-type mockValidationExecutor struct {
-	results []*validate.ValidationResult
-	mu      sync.Mutex
-	idx     int
-}
-
-func (m *mockValidationExecutor) Validate(ctx context.Context, recipe interface{}, assetURL string) (*validate.ValidationResult, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if m.idx < len(m.results) {
-		result := m.results[m.idx]
-		m.idx++
-		return result, nil
-	}
-
-	// Default to pass
-	return &validate.ValidationResult{Passed: true}, nil
-}
-
 // TestRepairLoop_FixesBrokenRecipe tests that the builder would generate
 // a recipe successfully without validation (validation requires a real executor).
 // This test verifies the mock provider integration works correctly.
@@ -143,19 +121,26 @@ func TestRepairLoop_FixesBrokenRecipe(t *testing.T) {
 	// Create telemetry client that tracks events
 	telemetryClient := telemetry.NewClientWithOptions("http://unused", 0, true, false)
 
-	// Without executor, validation is skipped
+	// Generate recipe using session-based API
 	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
 		WithTelemetryClient(telemetryClient),
 	)
 
-	result, err := b.Build(ctx, BuildRequest{
+	req := BuildRequest{
 		Package:   "tool",
 		SourceArg: "owner/tool",
-	})
+	}
+	session, err := b.NewSession(ctx, req, nil)
 	if err != nil {
-		t.Fatalf("Build error: %v", err)
+		t.Fatalf("NewSession error: %v", err)
+	}
+	defer func() { _ = session.Close() }()
+
+	result, err := session.Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate error: %v", err)
 	}
 
 	// Verify result
@@ -173,10 +158,8 @@ func TestRepairLoop_FixesBrokenRecipe(t *testing.T) {
 		t.Errorf("expected 1 provider call, got %d", mockProv.CallCount())
 	}
 
-	// Validation should be skipped
-	if !result.ValidationSkipped {
-		t.Error("expected ValidationSkipped = true without executor")
-	}
+	// Note: ValidationSkipped is no longer set by the builder since
+	// validation is now handled externally by the Orchestrator.
 }
 
 // TestRepairLoop_MaxRetriesRespected verifies the MaxRepairAttempts constant.
@@ -194,9 +177,9 @@ func TestRepairLoop_MaxRetriesRespected(t *testing.T) {
 	}
 }
 
-// TestRepairLoop_ValidationSkippedWithoutExecutor tests that validation
-// is skipped when no executor is configured.
-func TestRepairLoop_ValidationSkippedWithoutExecutor(t *testing.T) {
+// TestRepairLoop_GeneratesRecipeWithoutValidation tests that the session
+// generates a recipe without doing any validation (validation is external).
+func TestRepairLoop_GeneratesRecipeWithoutValidation(t *testing.T) {
 	ctx := context.Background()
 
 	response := &llm.CompletionResponse{
@@ -226,97 +209,35 @@ func TestRepairLoop_ValidationSkippedWithoutExecutor(t *testing.T) {
 	server := createMockGitHubServer()
 	defer server.Close()
 
-	// No executor = validation skipped
+	// Generate recipe using session-based API
 	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
 	)
 
-	result, err := b.Build(ctx, BuildRequest{
+	req := BuildRequest{
 		Package:   "tool",
 		SourceArg: "owner/tool",
-	})
+	}
+	session, err := b.NewSession(ctx, req, nil)
+	if err != nil {
+		t.Fatalf("NewSession error: %v", err)
+	}
+	defer func() { _ = session.Close() }()
+
+	result, err := session.Generate(ctx)
 	if err != nil {
 		t.Fatalf("Build error: %v", err)
 	}
 
-	if !result.ValidationSkipped {
-		t.Error("expected ValidationSkipped = true")
+	// Recipe should be generated
+	if result.Recipe == nil {
+		t.Error("expected recipe to be generated")
 	}
 
+	// No repair attempts since validation is external (Orchestrator's job)
 	if result.RepairAttempts != 0 {
 		t.Errorf("expected 0 repair attempts, got %d", result.RepairAttempts)
-	}
-}
-
-// TestRepairLoop_ErrorSanitization tests that error messages are sanitized
-// before being sent to the LLM.
-func TestRepairLoop_ErrorSanitization(t *testing.T) {
-	ctx := context.Background()
-
-	brokenResponse := &llm.CompletionResponse{
-		ToolCalls: []llm.ToolCall{
-			{
-				ID:   "call_1",
-				Name: llm.ToolExtractPattern,
-				Arguments: map[string]any{
-					"mappings": []map[string]any{
-						{"os": "linux", "arch": "amd64", "asset": "tool_linux_amd64.tar.gz", "format": "tar.gz"},
-					},
-					"executable":     "tool",
-					"verify_command": "tool --version",
-				},
-			},
-		},
-		StopReason: "tool_use",
-		Usage:      llm.Usage{InputTokens: 100, OutputTokens: 50},
-	}
-
-	mockProv := &repairAwareMockProvider{
-		name:             "mock",
-		initialResponse:  brokenResponse,
-		repairedResponse: brokenResponse,
-	}
-	factory := createMockFactory(mockProv)
-
-	// Error message with sensitive data that should be sanitized
-	mockExec := &mockValidationExecutor{
-		results: []*validate.ValidationResult{
-			{
-				Passed:   false,
-				ExitCode: 1,
-				Stderr:   "Error in /home/testuser/secret/path: failed with api_key=sk-12345",
-			},
-			{Passed: true}, // Pass on retry
-		},
-	}
-
-	server := createMockGitHubServer()
-	defer server.Close()
-
-	b := NewGitHubReleaseBuilder(
-		WithFactory(factory),
-		WithGitHubBaseURL(server.URL),
-		WithExecutor(createTestExecutor(mockExec)),
-	)
-
-	_, err := b.Build(ctx, BuildRequest{
-		Package:   "tool",
-		SourceArg: "owner/tool",
-	})
-	if err != nil {
-		t.Fatalf("Build error: %v", err)
-	}
-
-	// Verify sanitization occurred
-	if mockProv.SawRepairFeedback() {
-		// The feedback message should not contain the raw sensitive data
-		if containsSubstr(mockProv.lastMessageContent, "testuser") {
-			t.Error("repair feedback contains unsanitized username")
-		}
-		if containsSubstr(mockProv.lastMessageContent, "sk-12345") {
-			t.Error("repair feedback contains unsanitized API key")
-		}
 	}
 }
 
@@ -364,12 +285,19 @@ func TestRepairLoop_MultipleToolCalls(t *testing.T) {
 		WithGitHubBaseURL(server.URL),
 	)
 
-	result, err := b.Build(ctx, BuildRequest{
+	req := BuildRequest{
 		Package:   "tool",
 		SourceArg: "owner/tool",
-	})
+	}
+	session, err := b.NewSession(ctx, req, nil)
 	if err != nil {
-		t.Fatalf("Build error: %v", err)
+		t.Fatalf("NewSession error: %v", err)
+	}
+	defer func() { _ = session.Close() }()
+
+	result, err := session.Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate error: %v", err)
 	}
 
 	if result.Recipe == nil {
@@ -411,16 +339,6 @@ func createMockGitHubServer() *httptest.Server {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
-}
-
-func createTestExecutor(mock *mockValidationExecutor) *validate.Executor {
-	// For testing, we need to create a real executor but control its behavior
-	// Since we can't easily mock the Executor struct, we test through the builder's
-	// behavior with validation results
-	//
-	// In a real implementation, you might use a interface for the executor
-	// For now, return nil to skip validation in most tests
-	return nil
 }
 
 // For tests that need validation, we need to test the repair message building

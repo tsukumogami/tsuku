@@ -2,20 +2,21 @@
 
 ## Status
 
-Planned
+In Progress - Core infrastructure complete, CLI integration remaining.
 
 ## Implementation Issues
 
 ### Milestone: [Centralize Sandbox Testing](https://github.com/tsukumogami/tsuku/milestone/22)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#568](https://github.com/tsukumogami/tsuku/issues/568) | feat(actions): add NetworkValidator interface | None |
-| [#569](https://github.com/tsukumogami/tsuku/issues/569) | feat(actions): implement RequiresNetwork on actions | [#568](https://github.com/tsukumogami/tsuku/issues/568) |
-| [#570](https://github.com/tsukumogami/tsuku/issues/570) | feat(sandbox): add SandboxRequirements computation | [#569](https://github.com/tsukumogami/tsuku/issues/569) |
-| [#571](https://github.com/tsukumogami/tsuku/issues/571) | refactor(sandbox): unify Sandbox and SandboxSourceBuild | [#570](https://github.com/tsukumogami/tsuku/issues/570) |
-| [#572](https://github.com/tsukumogami/tsuku/issues/572) | refactor(builders): use centralized sandbox testing | [#571](https://github.com/tsukumogami/tsuku/issues/571) |
-| [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --sandbox and --recipe flags to install | [#571](https://github.com/tsukumogami/tsuku/issues/571) |
+| Issue | Title | Status | Dependencies |
+|-------|-------|--------|--------------|
+| [#568](https://github.com/tsukumogami/tsuku/issues/568) | feat(actions): add NetworkValidator interface | Done | None |
+| [#569](https://github.com/tsukumogami/tsuku/issues/569) | feat(actions): implement RequiresNetwork on actions | Done | #568 |
+| [#570](https://github.com/tsukumogami/tsuku/issues/570) | feat(sandbox): add SandboxRequirements computation | Done | #569 |
+| [#571](https://github.com/tsukumogami/tsuku/issues/571) | refactor(sandbox): unify Sandbox and SandboxSourceBuild | Done | #570 |
+| [#572](https://github.com/tsukumogami/tsuku/issues/572) | refactor(builders): use centralized sandbox testing | Done | #571 |
+| [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --sandbox and --recipe flags to install | Open | #571 |
+| [#594](https://github.com/tsukumogami/tsuku/issues/594) | refactor: rename validation terminology to sandbox | Open | None |
 
 ### Dependency Graph
 
@@ -27,9 +28,10 @@ graph LR
 
     I568[#568: Add NetworkValidator interface]:::done --> I569[#569: Implement RequiresNetwork]:::done
     I569 --> I570[#570: Add SandboxRequirements]:::done
-    I570 --> I571[#571: Unify Sandbox methods]:::ready
-    I571 --> I572[#572: Update builders]:::blocked
-    I571 --> I573[#573: Add CLI flags]:::blocked
+    I570 --> I571[#571: Unify Sandbox methods]:::done
+    I571 --> I572[#572: Update builders]:::done
+    I571 --> I573[#573: Add CLI flags]:::ready
+    I594[#594: Rename validation to sandbox]:::ready
 ```
 
 ## Context and Problem Statement
