@@ -466,15 +466,17 @@ func setupZigWrappers(zigPath, wrapperDir string) error {
 	// Create cc wrapper
 	// Add -fPIC by default because zig's lld is stricter about this than GNU ld
 	// This is required for building shared libraries (like Ruby native extensions)
+	// Add -Wno-date-time because zig/clang treats __DATE__/__TIME__ macros as errors
+	// by default (for reproducibility), but many legacy projects use them
 	ccWrapper := filepath.Join(wrapperDir, "cc")
-	ccContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" cc -fPIC \"$@\"\n", zigPath)
+	ccContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" cc -fPIC -Wno-date-time \"$@\"\n", zigPath)
 	if err := os.WriteFile(ccWrapper, []byte(ccContent), 0755); err != nil {
 		return err
 	}
 
 	// Create c++ wrapper
 	cxxWrapper := filepath.Join(wrapperDir, "c++")
-	cxxContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" c++ -fPIC \"$@\"\n", zigPath)
+	cxxContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" c++ -fPIC -Wno-date-time \"$@\"\n", zigPath)
 	if err := os.WriteFile(cxxWrapper, []byte(cxxContent), 0755); err != nil {
 		return err
 	}
