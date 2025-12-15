@@ -191,6 +191,25 @@ gh pr checks --watch
 
 Recipes are embedded in the monorepo at `internal/recipe/recipes/`.
 
+### Using Recipe Builders
+
+For tools from supported package ecosystems, you can generate a recipe automatically:
+
+```bash
+# Generate a recipe from crates.io, rubygems, pypi, npm, GitHub releases, or Homebrew
+tsuku create <tool> --from <ecosystem>
+
+# Example: generate a recipe for a Rust tool
+tsuku create bat --from crates.io
+
+# Example: generate a recipe from Homebrew
+tsuku create jq --from homebrew:jq
+```
+
+Generated recipes are stored in `$TSUKU_HOME/recipes/` and can be used as a starting point. If you want to contribute the recipe to the registry, copy and adapt it to `internal/recipe/recipes/`.
+
+For tools not in supported ecosystems, or when you need more control, create a recipe manually.
+
 ### Recipe Format
 
 Recipes are TOML files with the following structure:
