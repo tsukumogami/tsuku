@@ -194,7 +194,8 @@ func TestNixRealizeAction_Execute_PlatformCheck(t *testing.T) {
 
 	action := &NixRealizeAction{}
 	ctx := &ExecutionContext{
-		Context: context.Background(),
+		Context:    context.Background(),
+		InstallDir: t.TempDir(),
 	}
 	params := map[string]interface{}{
 		"flake_ref":   "nixpkgs#hello",
@@ -219,7 +220,8 @@ func TestNixRealizeAction_Execute_MissingParams(t *testing.T) {
 
 	action := &NixRealizeAction{}
 	ctx := &ExecutionContext{
-		Context: context.Background(),
+		Context:    context.Background(),
+		InstallDir: t.TempDir(),
 	}
 
 	tests := []struct {
@@ -272,7 +274,8 @@ func TestNixRealizeAction_Execute_InvalidInputs(t *testing.T) {
 
 	action := &NixRealizeAction{}
 	ctx := &ExecutionContext{
-		Context: context.Background(),
+		Context:    context.Background(),
+		InstallDir: t.TempDir(),
 	}
 
 	tests := []struct {
@@ -526,7 +529,8 @@ func TestNixRealizeAction_Execute_PackageFallback(t *testing.T) {
 
 	action := &NixRealizeAction{}
 	ctx := &ExecutionContext{
-		Context: context.Background(),
+		Context:    context.Background(),
+		InstallDir: t.TempDir(),
 	}
 
 	// Test that package parameter works as fallback when flake_ref is missing
@@ -552,7 +556,8 @@ func TestNixRealizeAction_Execute_BothFlakeRefAndPackage(t *testing.T) {
 
 	action := &NixRealizeAction{}
 	ctx := &ExecutionContext{
-		Context: context.Background(),
+		Context:    context.Background(),
+		InstallDir: t.TempDir(),
 	}
 
 	// Test that flake_ref takes precedence when both are provided
@@ -579,7 +584,8 @@ func TestNixRealizeAction_Execute_WithLocks(t *testing.T) {
 
 	action := &NixRealizeAction{}
 	ctx := &ExecutionContext{
-		Context: context.Background(),
+		Context:    context.Background(),
+		InstallDir: t.TempDir(),
 	}
 
 	// Test with locks parameter

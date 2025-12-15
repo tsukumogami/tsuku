@@ -68,6 +68,16 @@ jobs:
             go test -short ./...
           fi
 
+      - name: Check for test artifacts
+        run: |
+          # Fail if tests left any files in the source tree
+          if [ -n "$(git status --porcelain)" ]; then
+            echo "::error::Tests left artifacts in the source tree. Tests must clean up after themselves."
+            echo "Changed files:"
+            git status --porcelain
+            exit 1
+          fi
+
       - name: Upload coverage to Codecov
         if: github.event_name == 'push'
         uses: codecov/codecov-action@v5
