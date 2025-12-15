@@ -138,8 +138,8 @@ type BuildResult struct {
 	// Only populated by LLM-based builders.
 	Provider string
 
-	// ValidationSkipped indicates validation was skipped (e.g., no container runtime).
-	ValidationSkipped bool
+	// SandboxSkipped indicates sandbox testing was skipped (e.g., no container runtime).
+	SandboxSkipped bool
 
 	// Cost is the estimated cost in USD for LLM-based generation.
 	// Only populated by LLM-based builders (e.g., GitHubReleaseBuilder).

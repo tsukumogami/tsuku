@@ -175,9 +175,9 @@ func TestLLMAuthError(t *testing.T) {
 	}
 }
 
-func TestValidationError(t *testing.T) {
+func TestSandboxError(t *testing.T) {
 	underlying := errors.New("exit code 1")
-	err := &ValidationError{
+	err := &SandboxError{
 		Tool:           "mytool",
 		RepairAttempts: 3,
 		LastOutput:     "command not found",
@@ -186,8 +186,8 @@ func TestValidationError(t *testing.T) {
 
 	// Test Error()
 	errMsg := err.Error()
-	if !strings.Contains(errMsg, "recipe validation failed") {
-		t.Errorf("Error() should mention validation failed, got: %s", errMsg)
+	if !strings.Contains(errMsg, "recipe sandbox testing failed") {
+		t.Errorf("Error() should mention sandbox testing failed, got: %s", errMsg)
 	}
 	if !strings.Contains(errMsg, "3 repair attempts") {
 		t.Errorf("Error() should contain repair attempts, got: %s", errMsg)
@@ -198,8 +198,8 @@ func TestValidationError(t *testing.T) {
 	if !strings.Contains(suggestion, "could not be automatically fixed") {
 		t.Errorf("Suggestion() should explain the situation, got: %s", suggestion)
 	}
-	if !strings.Contains(suggestion, "--skip-validation") {
-		t.Errorf("Suggestion() should mention --skip-validation, got: %s", suggestion)
+	if !strings.Contains(suggestion, "--skip-sandbox") {
+		t.Errorf("Suggestion() should mention --skip-sandbox, got: %s", suggestion)
 	}
 	if !strings.Contains(suggestion, "mytool") {
 		t.Errorf("Suggestion() should contain tool name, got: %s", suggestion)

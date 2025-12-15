@@ -2,7 +2,7 @@
 
 ## Status
 
-In Progress - Core infrastructure complete, CLI integration remaining.
+Complete - All milestone issues implemented.
 
 ## Implementation Issues
 
@@ -15,8 +15,8 @@ In Progress - Core infrastructure complete, CLI integration remaining.
 | [#570](https://github.com/tsukumogami/tsuku/issues/570) | feat(sandbox): add SandboxRequirements computation | Done | #569 |
 | [#571](https://github.com/tsukumogami/tsuku/issues/571) | refactor(sandbox): unify Sandbox and SandboxSourceBuild | Done | #570 |
 | [#572](https://github.com/tsukumogami/tsuku/issues/572) | refactor(builders): use centralized sandbox testing | Done | #571 |
-| [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --sandbox and --recipe flags to install | Open | #571 |
-| [#594](https://github.com/tsukumogami/tsuku/issues/594) | refactor: rename validation terminology to sandbox | Open | None |
+| [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --sandbox and --recipe flags to install | Done | #571 |
+| [#594](https://github.com/tsukumogami/tsuku/issues/594) | refactor: rename validation terminology to sandbox | Done | None |
 
 ### Dependency Graph
 
@@ -30,8 +30,8 @@ graph LR
     I569 --> I570[#570: Add SandboxRequirements]:::done
     I570 --> I571[#571: Unify Sandbox methods]:::done
     I571 --> I572[#572: Update builders]:::done
-    I571 --> I573[#573: Add CLI flags]:::ready
-    I594[#594: Rename validation to sandbox]:::ready
+    I571 --> I573[#573: Add CLI flags]:::done
+    I594[#594: Rename validation to sandbox]:::done
 ```
 
 ## Context and Problem Statement

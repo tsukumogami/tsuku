@@ -14,7 +14,7 @@
 |-------|-------|--------------|
 | [#371](https://github.com/tsukumogami/tsuku/issues/371) | feat(config): add LLM budget and rate limit settings | - |
 | [#372](https://github.com/tsukumogami/tsuku/issues/372) | feat(state): add LLM usage tracking | - |
-| [#373](https://github.com/tsukumogami/tsuku/issues/373) | feat(create): add --skip-validation flag with consent flow | - |
+| [#373](https://github.com/tsukumogami/tsuku/issues/373) | feat(create): add --skip-sandbox flag with consent flow | - |
 | [#374](https://github.com/tsukumogami/tsuku/issues/374) | feat(create): add --yes flag with warning | - |
 | [#375](https://github.com/tsukumogami/tsuku/issues/375) | feat(create): implement recipe preview flow | - |
 | [#377](https://github.com/tsukumogami/tsuku/issues/377) | feat(create): add progress indicators | - |
@@ -31,7 +31,7 @@
 ```
                     ┌─────────────────────────────────────────┐
                     │           Independent Issues             │
-                    │  #373 --skip-validation                  │
+                    │  #373 --skip-sandbox                  │
                     │  #374 --yes flag                         │
                     │  #375 recipe preview                     │
                     │  #377 progress indicators                │
@@ -125,7 +125,7 @@ From [DESIGN-llm-builder-infrastructure.md](docs/DESIGN-llm-builder-infrastructu
 ### Deliverables
 - Update `tsuku create` to support `--from github`
 - Register GitHub Release Builder in builder registry
-- `--skip-validation` flag for users without Docker
+- `--skip-sandbox` flag for users without Docker
 - Configuration management (4-level: flags → env → file → defaults)
 - `internal/secrets/manager.go` - API key resolution with 0600 permission enforcement
 - Cost display after generation
@@ -170,7 +170,7 @@ From [DESIGN-llm-builder-infrastructure.md](docs/DESIGN-llm-builder-infrastructu
 | Rate limiting | Max 10 generations/hour | State file + enforcement |
 | Daily budget | $5 default, configurable | State tracking + config |
 | Recipe preview | Mandatory before install | New preview flow |
-| Skip validation | `--skip-validation` flag | Add flag to create command |
+| Skip validation | `--skip-sandbox` flag | Add flag to create command |
 | Progress indicators | Show progress during generation | Progress output |
 | Error messages | Actionable with troubleshooting | Error message templates |
 
@@ -387,7 +387,7 @@ Rationale: Balances user fairness (repair loops are automatic, not user-initiate
 |------|--------|
 | `internal/userconfig/` | Add rate limit, budget settings, config validation |
 | `internal/state/` | Add LLM generation tracking with timestamp pruning |
-| `cmd/tsuku/create.go` | Add `--skip-validation`, `--yes`, preview flow, progress |
+| `cmd/tsuku/create.go` | Add `--skip-sandbox`, `--yes`, preview flow, progress |
 | Error templates | New actionable error messages with recovery guidance |
 
 **Deferred**: Secrets manager with config file support (#369) - env vars are sufficient for MVP.
@@ -499,12 +499,12 @@ func (s *State) DailySpent() float64
 var (
     createFrom           string
     createForce          bool
-    createSkipValidation bool  // NEW
+    createSkipSandbox bool  // NEW
     createAutoApprove    bool  // NEW: skip preview confirmation
 )
 
 func init() {
-    createCmd.Flags().BoolVar(&createSkipValidation, "skip-validation", false,
+    createCmd.Flags().BoolVar(&createSkipSandbox, "skip-validation", false,
         "Skip container validation (use when Docker is unavailable)")
     createCmd.Flags().BoolVar(&createAutoApprove, "yes", false,
         "Skip recipe preview confirmation")
@@ -545,8 +545,8 @@ func previewRecipe(recipe *recipe.Recipe, result *BuildResult) (approved bool, e
     }
 
     // Show validation metadata
-    if result.ValidationSkipped {
-        fmt.Println("  Warning: Validation was skipped (--skip-validation)")
+    if result.SandboxSkipped {
+        fmt.Println("  Warning: Validation was skipped (--skip-sandbox)")
     }
     if result.RepairAttempts > 0 {
         fmt.Printf("  Note: Recipe required %d repair attempt(s)\n", result.RepairAttempts)
@@ -699,7 +699,7 @@ var ErrorBudgetExceeded = ErrorTemplate{
 
 ### Phase 2: CLI Enhancements
 
-1. Add `--skip-validation` flag to create command
+1. Add `--skip-sandbox` flag to create command
 2. Implement recipe preview flow
 3. Add progress indicators
 4. Implement cost display after generation
@@ -810,10 +810,10 @@ func RunBenchmark(repos []string) []BenchmarkResult
 
 ### Validation Escape Hatch
 
-**Risk**: Users with `--skip-validation` install untested LLM output.
+**Risk**: Users with `--skip-sandbox` install untested LLM output.
 
 **Mitigations**:
-- Require explicit consent when using `--skip-validation`:
+- Require explicit consent when using `--skip-sandbox`:
   ```
   WARNING: Skipping validation. The recipe has NOT been tested.
   Risks: Binary path errors, missing extraction steps, failed verification
@@ -821,7 +821,7 @@ func RunBenchmark(repos []string) []BenchmarkResult
   ```
 - Add metadata to recipe: `llm_validation = "skipped"`
 - Show warning during installation if recipe was not validated
-- Document `--skip-validation` as debugging-only, not for production use
+- Document `--skip-sandbox` as debugging-only, not for production use
 
 ## Exit Criteria
 
@@ -832,13 +832,13 @@ func RunBenchmark(repos []string) []BenchmarkResult
 - [ ] Rate limiting enforced (10/hour rolling window)
 - [ ] Daily budget enforced ($5 default, resets at UTC midnight)
 - [ ] Recipe preview shown before installation
-- [ ] `--skip-validation` flag works with consent flow
+- [ ] `--skip-sandbox` flag works with consent flow
 - [ ] Error messages are actionable with troubleshooting steps
 - [ ] Progress indicators show during generation
 
 ### Safety Requirements
 - [ ] Rate limiting prevents >10 generations per rolling hour
-- [ ] `--skip-validation` requires explicit y/n consent
+- [ ] `--skip-sandbox` requires explicit y/n consent
 - [ ] `--yes` flag shows warning about skipping review
 - [ ] State file corruption resets with warning (not silent)
 
@@ -860,7 +860,7 @@ func RunBenchmark(repos []string) []BenchmarkResult
 - Additional confirmation steps slow down power users (mitigated by `--yes` flag)
 - File-based rate limiting is per-machine, not per-user
 - Cost estimation may differ from actual (repair loops add cost)
-- `--skip-validation` reduces security guarantees
+- `--skip-sandbox` reduces security guarantees
 
 ### Technical Debt
 - Secrets manager with config file support (#369)

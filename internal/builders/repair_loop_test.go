@@ -158,8 +158,8 @@ func TestRepairLoop_FixesBrokenRecipe(t *testing.T) {
 		t.Errorf("expected 1 provider call, got %d", mockProv.CallCount())
 	}
 
-	// Note: ValidationSkipped is no longer set by the builder since
-	// validation is now handled externally by the Orchestrator.
+	// Note: SandboxSkipped is no longer set by the builder since
+	// sandbox testing is now handled externally by the Orchestrator.
 }
 
 // TestRepairLoop_MaxRetriesRespected verifies the MaxRepairAttempts constant.
@@ -177,9 +177,9 @@ func TestRepairLoop_MaxRetriesRespected(t *testing.T) {
 	}
 }
 
-// TestRepairLoop_GeneratesRecipeWithoutValidation tests that the session
-// generates a recipe without doing any validation (validation is external).
-func TestRepairLoop_GeneratesRecipeWithoutValidation(t *testing.T) {
+// TestRepairLoop_GeneratesRecipeWithoutSandbox tests that the session
+// generates a recipe without doing any sandbox testing (sandbox is external).
+func TestRepairLoop_GeneratesRecipeWithoutSandbox(t *testing.T) {
 	ctx := context.Background()
 
 	response := &llm.CompletionResponse{
@@ -235,7 +235,7 @@ func TestRepairLoop_GeneratesRecipeWithoutValidation(t *testing.T) {
 		t.Error("expected recipe to be generated")
 	}
 
-	// No repair attempts since validation is external (Orchestrator's job)
+	// No repair attempts since sandbox testing is external (Orchestrator's job)
 	if result.RepairAttempts != 0 {
 		t.Errorf("expected 0 repair attempts, got %d", result.RepairAttempts)
 	}
@@ -341,5 +341,5 @@ func createMockGitHubServer() *httptest.Server {
 	}))
 }
 
-// For tests that need validation, we need to test the repair message building
-// and validation result handling separately, which is done in other tests.
+// For tests that need sandbox testing, we need to test the repair message building
+// and sandbox result handling separately, which is done in other tests.

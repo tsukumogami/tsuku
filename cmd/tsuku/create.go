@@ -80,33 +80,33 @@ Examples:
 }
 
 var (
-	createFrom           string
-	createForce          bool
-	createAutoApprove    bool
-	createSkipValidation bool
+	createFrom        string
+	createForce       bool
+	createAutoApprove bool
+	createSkipSandbox bool
 )
 
 func init() {
 	createCmd.Flags().StringVar(&createFrom, "from", "", "Source: ecosystem name or github:owner/repo (required)")
 	createCmd.Flags().BoolVar(&createForce, "force", false, "Overwrite existing local recipe")
 	createCmd.Flags().BoolVar(&createAutoApprove, "yes", false, "Skip recipe preview confirmation")
-	createCmd.Flags().BoolVar(&createSkipValidation, "skip-validation", false, "Skip container validation (use when Docker is unavailable)")
+	createCmd.Flags().BoolVar(&createSkipSandbox, "skip-sandbox", false, "Skip container sandbox testing (use when Docker is unavailable)")
 	_ = createCmd.MarkFlagRequired("from")
 }
 
-// confirmSkipValidation prompts the user to confirm skipping validation.
+// confirmSkipSandbox prompts the user to confirm skipping sandbox testing.
 // Returns true if the user consents, false otherwise.
-func confirmSkipValidation() bool {
+func confirmSkipSandbox() bool {
 	// Check if running interactively
 	if !isInteractive() {
-		fmt.Fprintln(os.Stderr, "Error: --skip-validation requires interactive mode")
+		fmt.Fprintln(os.Stderr, "Error: --skip-sandbox requires interactive mode")
 		fmt.Fprintln(os.Stderr, "Cannot prompt for consent when stdin is not a terminal")
 		return false
 	}
 
-	fmt.Fprintln(os.Stderr, "WARNING: Skipping validation. The recipe has NOT been tested.")
+	fmt.Fprintln(os.Stderr, "WARNING: Skipping sandbox testing. The recipe has NOT been tested.")
 	fmt.Fprintln(os.Stderr, "Risks: Binary path errors, missing extraction steps, failed verification")
-	fmt.Fprint(os.Stderr, "Continue without validation? (y/N) ")
+	fmt.Fprint(os.Stderr, "Continue without sandbox testing? (y/N) ")
 
 	reader := bufio.NewReader(os.Stdin)
 	response, err := reader.ReadString('\n')
@@ -179,15 +179,15 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Normalize ecosystem names (e.g., "cargo" -> "crates.io", "pip" -> "pypi")
 	builderName = normalizeEcosystem(builderName)
 
-	// Handle --skip-validation flag
-	skipValidation := false
-	if createSkipValidation {
-		// Require explicit consent for skipping validation
-		if !confirmSkipValidation() {
+	// Handle --skip-sandbox flag
+	skipSandbox := false
+	if createSkipSandbox {
+		// Require explicit consent for skipping sandbox testing
+		if !confirmSkipSandbox() {
 			fmt.Fprintln(os.Stderr, "Aborted.")
 			exitWithCode(ExitGeneral)
 		}
-		skipValidation = true
+		skipSandbox = true
 	}
 
 	// Initialize builder registry with all builders
@@ -249,8 +249,8 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	// Set up force init flag for later use
 	forceInit := false
-	_ = forceInit      // will be used when creating session
-	_ = skipValidation // TODO: pass to orchestrator when validation is implemented
+	_ = forceInit   // will be used when creating session
+	_ = skipSandbox // TODO: pass to orchestrator when sandbox testing is implemented
 
 	// Build request for use throughout
 	buildReq := builders.BuildRequest{
@@ -325,9 +325,9 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// Add llm_validation metadata if validation was skipped
+	// Add llm_validation metadata if sandbox testing was skipped
 	// (cost recording is handled by builder internally)
-	if result.ValidationSkipped {
+	if result.SandboxSkipped {
 		result.Recipe.Metadata.LLMValidation = "skipped"
 	}
 
@@ -384,10 +384,10 @@ func runCreate(cmd *cobra.Command, args []string) {
 		}
 	}
 
-	// Show validation skipped warning
-	if result.ValidationSkipped {
+	// Show sandbox skipped warning
+	if result.SandboxSkipped {
 		printInfo()
-		fmt.Fprintln(os.Stderr, "WARNING: Recipe was NOT validated in a container.")
+		fmt.Fprintln(os.Stderr, "WARNING: Recipe was NOT tested in a sandbox container.")
 		fmt.Fprintln(os.Stderr, "The recipe may have errors. Review before installing.")
 	}
 
@@ -436,9 +436,9 @@ func previewRecipe(r *recipe.Recipe, result *builders.BuildResult) (bool, error)
 		fmt.Printf("  Note: Recipe required %d repair attempt(s)\n", result.RepairAttempts)
 	}
 
-	// Show validation status
-	if result.ValidationSkipped {
-		fmt.Println("  Warning: Validation was skipped")
+	// Show sandbox status
+	if result.SandboxSkipped {
+		fmt.Println("  Warning: Sandbox testing was skipped")
 	}
 
 	// Show other warnings
