@@ -53,32 +53,10 @@ func (e *LLMDisabledError) Error() string {
 	return "LLM features are disabled. To enable: tsuku config set llm.enabled true"
 }
 
-// InitOptions contains options for builder initialization.
-type InitOptions struct {
-	// SkipValidation disables container validation for LLM-generated recipes.
-	SkipValidation bool
-
-	// ProgressReporter receives progress updates during build operations.
-	// If nil, no progress is reported.
-	ProgressReporter ProgressReporter
-
-	// LLMConfig provides access to LLM-related user settings.
-	// Required for LLM builders; ignored by ecosystem builders.
-	LLMConfig LLMConfig
-
-	// LLMStateTracker provides rate limit checking and cost tracking.
-	// Required for LLM builders; ignored by ecosystem builders.
-	LLMStateTracker LLMStateTracker
-
-	// ForceInit bypasses rate limit and budget checks.
-	// Used when the user confirms they want to proceed despite limits.
-	ForceInit bool
-}
-
 // CheckLLMPrerequisites validates LLM configuration and rate limits.
 // Returns nil if generation is allowed, or an error (possibly ConfirmableError) if not.
-// This is a helper for LLM builders to call in their Initialize() method.
-func CheckLLMPrerequisites(opts *InitOptions) error {
+// This is a helper for LLM builders to call in their NewSession() method.
+func CheckLLMPrerequisites(opts *SessionOptions) error {
 	if opts == nil || opts.ForceInit {
 		return nil
 	}
@@ -138,34 +116,6 @@ type BuildRequest struct {
 	// - homebrew builder: "jq" or "jq:source" (formula with optional :source suffix)
 	// - crates.io builder: unused (Package is the crate name)
 	SourceArg string
-}
-
-// Builder generates recipes for packages from a specific ecosystem.
-// Builders are invoked via "tsuku create" to generate recipes that are
-// written to the user's local recipes directory ($TSUKU_HOME/recipes/).
-type Builder interface {
-	// Name returns the builder identifier (e.g., "crates_io", "rubygems", "github")
-	Name() string
-
-	// Initialize performs builder-specific setup.
-	// For LLM builders, this creates the LLM factory, validates the API key,
-	// and sets up validation executor and progress reporter.
-	// For ecosystem builders, this is a no-op.
-	// Returns error if initialization fails (e.g., missing API key).
-	Initialize(ctx context.Context, opts *InitOptions) error
-
-	// RequiresLLM returns true if this builder uses LLM for recipe generation.
-	// Used by CLI to apply LLM-specific behaviors like budget checks,
-	// preview prompts, and cost tracking.
-	RequiresLLM() bool
-
-	// CanBuild checks if this builder can handle the package.
-	// It typically queries the ecosystem's API to verify the package exists.
-	CanBuild(ctx context.Context, packageName string) (bool, error)
-
-	// Build generates a recipe for the package.
-	// If req.Version is empty, the recipe will use a version provider for dynamic resolution.
-	Build(ctx context.Context, req BuildRequest) (*BuildResult, error)
 }
 
 // BuildResult contains the generated recipe and metadata about the build process.
@@ -260,29 +210,33 @@ type SessionOptions struct {
 	ForceInit bool
 }
 
-// SimpleSession wraps a basic Builder's Build() method as a BuildSession.
-// This allows ecosystem builders (Cargo, Go, PyPI, etc.) that don't need
-// stateful repairs to be used with the Orchestrator.
+// BuildFunc is a function that generates a recipe for a package.
+// Used by DeterministicSession to wrap ecosystem builders.
+type BuildFunc func(ctx context.Context, req BuildRequest) (*BuildResult, error)
+
+// DeterministicSession wraps a simple Build() function as a BuildSession.
+// This is for ecosystem builders (Cargo, Go, PyPI, etc.) that generate
+// recipes deterministically from metadata without needing stateful repairs.
 //
-// Since ecosystem builders generate recipes deterministically from metadata,
-// Repair() simply calls Build() again - there's no conversation state to preserve.
-type SimpleSession struct {
-	builder    Builder
+// Since these builders can't use failure feedback to improve their output,
+// Repair() simply returns an error indicating repair is not supported.
+type DeterministicSession struct {
+	buildFunc  BuildFunc
 	req        BuildRequest
 	lastResult *BuildResult
 }
 
-// NewSimpleSession creates a session wrapper around a basic Builder.
-func NewSimpleSession(builder Builder, req BuildRequest) *SimpleSession {
-	return &SimpleSession{
-		builder: builder,
-		req:     req,
+// NewDeterministicSession creates a session that wraps a build function.
+func NewDeterministicSession(buildFunc BuildFunc, req BuildRequest) *DeterministicSession {
+	return &DeterministicSession{
+		buildFunc: buildFunc,
+		req:       req,
 	}
 }
 
-// Generate calls the underlying builder's Build() method.
-func (s *SimpleSession) Generate(ctx context.Context) (*BuildResult, error) {
-	result, err := s.builder.Build(ctx, s.req)
+// Generate calls the underlying build function.
+func (s *DeterministicSession) Generate(ctx context.Context) (*BuildResult, error) {
+	result, err := s.buildFunc(ctx, s.req)
 	if err != nil {
 		return nil, err
 	}
@@ -290,65 +244,22 @@ func (s *SimpleSession) Generate(ctx context.Context) (*BuildResult, error) {
 	return result, nil
 }
 
-// Repair regenerates the recipe. For ecosystem builders, this just calls Build()
-// again since there's no stateful conversation to leverage for repairs.
-// The failure information is logged but cannot influence deterministic generation.
-func (s *SimpleSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
-	// Ecosystem builders can't use failure feedback - they generate deterministically.
-	// Just try generating again (which will likely produce the same recipe).
-	result, err := s.builder.Build(ctx, s.req)
-	if err != nil {
-		return nil, err
-	}
-	s.lastResult = result
-	return result, nil
+// Repair returns an error because ecosystem builders can't use failure feedback.
+// Their recipes are deterministic - running again would produce the same result.
+func (s *DeterministicSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
+	return nil, &RepairNotSupportedError{BuilderType: "ecosystem"}
 }
 
-// Close is a no-op for simple sessions.
-func (s *SimpleSession) Close() error {
+// Close is a no-op for deterministic sessions.
+func (s *DeterministicSession) Close() error {
 	return nil
 }
 
-// SessionBuilderAdapter adapts a legacy Builder to the SessionBuilder interface.
-// This allows existing ecosystem builders to work with the Orchestrator without
-// modification.
-type SessionBuilderAdapter struct {
-	Builder Builder
+// RepairNotSupportedError indicates a builder cannot repair its recipes.
+type RepairNotSupportedError struct {
+	BuilderType string
 }
 
-// Name returns the builder name.
-func (a *SessionBuilderAdapter) Name() string {
-	return a.Builder.Name()
-}
-
-// RequiresLLM returns whether the builder requires LLM.
-func (a *SessionBuilderAdapter) RequiresLLM() bool {
-	return a.Builder.RequiresLLM()
-}
-
-// CanBuild checks if the builder can handle the request.
-func (a *SessionBuilderAdapter) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
-	return a.Builder.CanBuild(ctx, req.Package)
-}
-
-// NewSession creates a SimpleSession for the builder.
-func (a *SessionBuilderAdapter) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
-	// Initialize the builder if options provided
-	if opts != nil {
-		initOpts := &InitOptions{
-			ProgressReporter: opts.ProgressReporter,
-			LLMConfig:        opts.LLMConfig,
-			LLMStateTracker:  opts.LLMStateTracker,
-			ForceInit:        opts.ForceInit,
-		}
-		if err := a.Builder.Initialize(ctx, initOpts); err != nil {
-			return nil, err
-		}
-	} else {
-		if err := a.Builder.Initialize(ctx, nil); err != nil {
-			return nil, err
-		}
-	}
-
-	return NewSimpleSession(a.Builder, req), nil
+func (e *RepairNotSupportedError) Error() string {
+	return e.BuilderType + " builders do not support repair (recipes are deterministic)"
 }

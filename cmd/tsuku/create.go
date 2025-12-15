@@ -214,7 +214,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 	ctx := context.Background()
 
-	// For LLM builders, load config and state tracker for initialization
+	// For LLM builders, load config and state tracker for session options
 	var stateManager *install.StateManager
 	var userCfg *userconfig.Config
 	if builder.RequiresLLM() {
@@ -235,37 +235,27 @@ func runCreate(cmd *cobra.Command, args []string) {
 		stateManager = install.NewStateManager(cfg)
 	}
 
-	// Initialize the builder
+	// Build session options
 	var progressReporter builders.ProgressReporter
 	if !quietFlag {
 		progressReporter = &cliProgressReporter{out: os.Stdout}
 	}
 
-	initOpts := &builders.InitOptions{
-		SkipValidation:   skipValidation,
+	sessionOpts := &builders.SessionOptions{
 		ProgressReporter: progressReporter,
 		LLMConfig:        userCfg,
 		LLMStateTracker:  stateManager,
 	}
 
-	if err := builder.Initialize(ctx, initOpts); err != nil {
-		// Check if this is a confirmable error (rate limit, budget exceeded)
-		if confirmErr, ok := err.(builders.ConfirmableError); ok {
-			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
-			if confirmWithUser(confirmErr.ConfirmationPrompt()) {
-				// Retry with ForceInit to bypass rate limit checks
-				initOpts.ForceInit = true
-				if err := builder.Initialize(ctx, initOpts); err != nil {
-					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-					exitWithCode(ExitDependencyFailed)
-				}
-			} else {
-				exitWithCode(ExitGeneral)
-			}
-		} else {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			exitWithCode(ExitDependencyFailed)
-		}
+	// Set up force init flag for later use
+	forceInit := false
+	_ = forceInit      // will be used when creating session
+	_ = skipValidation // TODO: pass to orchestrator when validation is implemented
+
+	// Build request for use throughout
+	buildReq := builders.BuildRequest{
+		Package:   toolName,
+		SourceArg: sourceArg,
 	}
 
 	// For ecosystem builders, check toolchain and package existence
@@ -277,7 +267,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 		}
 
 		// Check if builder can handle this package
-		canBuild, err := builder.CanBuild(ctx, toolName)
+		canBuild, err := builder.CanBuild(ctx, buildReq)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error checking package: %v\n", err)
 			exitWithCode(ExitNetwork)
@@ -304,109 +294,32 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// For Homebrew builder, use BuildWithDependencies to discover and generate all needed recipes
-	if builderName == "homebrew" {
-		hbBuilder, ok := builder.(*builders.HomebrewBuilder)
-		if !ok {
-			fmt.Fprintf(os.Stderr, "Error: unexpected builder type\n")
-			exitWithCode(ExitGeneral)
-		}
-
-		// Create confirmation function that respects --yes flag
-		confirmFunc := func(req *builders.ConfirmationRequest) bool {
-			return confirmDependencyTree(req, createAutoApprove)
-		}
-
-		results, err := hbBuilder.BuildWithDependencies(ctx, builders.BuildRequest{
-			Package:   toolName,
-			SourceArg: sourceArg,
-		}, confirmFunc)
-
-		if err == builders.ErrUserCanceled {
-			printInfo("Canceled.")
-			return
-		}
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Error building recipes: %v\n", err)
-			exitWithCode(ExitGeneral)
-		}
-
-		// Handle case where all recipes already exist
-		if len(results) == 0 {
-			printInfo("All recipes already exist. Nothing to generate.")
-			printInfo()
-			printInfo("To install, run:")
-			printInfof("  tsuku install %s\n", toolName)
-			return
-		}
-
-		// Write all generated recipes (costs are recorded by builder internally)
-		var totalCost float64
-		for _, result := range results {
-			// Track cost for display (recording already done by builder)
-			cost := result.Cost
-			if cost == 0 {
-				cost = defaultLLMCostEstimate
-			}
-			totalCost += cost
-
-			// Add validation metadata if skipped
-			if result.ValidationSkipped {
-				result.Recipe.Metadata.LLMValidation = "skipped"
-			}
-
-			// Check if recipe already exists
-			recipePath := filepath.Join(cfg.RecipesDir, result.Recipe.Metadata.Name+".toml")
-			if _, err := os.Stat(recipePath); err == nil && !createForce {
-				fmt.Fprintf(os.Stderr, "Error: recipe already exists at %s\n", recipePath)
-				fmt.Fprintf(os.Stderr, "Use --force to overwrite\n")
-				exitWithCode(ExitGeneral)
-			}
-
-			// Write the recipe
-			if err := recipe.WriteRecipe(result.Recipe, recipePath); err != nil {
-				fmt.Fprintf(os.Stderr, "Error writing recipe: %v\n", err)
-				exitWithCode(ExitGeneral)
-			}
-
-			printInfof("Recipe created: %s\n", recipePath)
-		}
-
-		// Display total cost
-		if stateManager != nil && userCfg != nil {
-			dailySpent := stateManager.DailySpent()
-			dailyBudget := userCfg.LLMDailyBudget()
-
-			if dailyBudget > 0 {
-				printInfof("\nTotal cost: ~$%.2f (today: $%.2f of $%.2f budget)\n",
-					totalCost, dailySpent, dailyBudget)
+	// Create a session and generate the recipe
+	session, err := builder.NewSession(ctx, buildReq, sessionOpts)
+	if err != nil {
+		// Check if this is a confirmable error (rate limit, budget exceeded)
+		if confirmErr, ok := err.(builders.ConfirmableError); ok {
+			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
+			if confirmWithUser(confirmErr.ConfirmationPrompt()) {
+				// Retry with ForceInit to bypass rate limit checks
+				sessionOpts.ForceInit = true
+				session, err = builder.NewSession(ctx, buildReq, sessionOpts)
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+					exitWithCode(ExitDependencyFailed)
+				}
 			} else {
-				printInfof("\nTotal cost: ~$%.2f (today: $%.2f)\n",
-					totalCost, dailySpent)
+				exitWithCode(ExitGeneral)
 			}
+		} else {
+			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+			exitWithCode(ExitDependencyFailed)
 		}
-
-		// Check for any validation-skipped recipes
-		for _, result := range results {
-			if result.ValidationSkipped {
-				printInfo()
-				fmt.Fprintln(os.Stderr, "WARNING: Some recipes were NOT validated in a container.")
-				fmt.Fprintln(os.Stderr, "The recipes may have errors. Review before installing.")
-				break
-			}
-		}
-
-		printInfo()
-		printInfo("To install, run:")
-		printInfof("  tsuku install %s\n", toolName)
-		return
 	}
+	defer session.Close()
 
-	// Non-Homebrew builders: use single Build call
-	result, err := builder.Build(ctx, builders.BuildRequest{
-		Package:   toolName,
-		SourceArg: sourceArg,
-	})
+	// Generate the recipe
+	result, err := session.Generate(ctx)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)
 		exitWithCode(ExitGeneral)

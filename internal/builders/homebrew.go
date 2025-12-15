@@ -81,18 +81,15 @@ func (node *DependencyNode) CountNeedingGeneration() int {
 }
 
 // HomebrewBuilder generates recipes from Homebrew formulas using LLM analysis.
-// It implements SessionBuilder for use with the Orchestrator, and also maintains
-// backward compatibility with the legacy Builder interface.
+// It implements SessionBuilder for use with the Orchestrator.
 type HomebrewBuilder struct {
 	httpClient      *http.Client
 	factory         *llm.Factory
-	executor        *validate.Executor // Legacy: used only by Build() for backward compat
 	sanitizer       *validate.Sanitizer
 	homebrewAPIURL  string
 	telemetryClient *telemetry.Client
 	progress        ProgressReporter
 	registry        RegistryChecker
-	llmStateTracker LLMStateTracker
 }
 
 // HomebrewSession maintains state for an active Homebrew build session.
@@ -142,13 +139,6 @@ func WithHomebrewFactory(f *llm.Factory) HomebrewBuilderOption {
 	}
 }
 
-// WithHomebrewExecutor sets the validation executor.
-func WithHomebrewExecutor(e *validate.Executor) HomebrewBuilderOption {
-	return func(b *HomebrewBuilder) {
-		b.executor = e
-	}
-}
-
 // WithHomebrewSanitizer sets the error sanitizer.
 func WithHomebrewSanitizer(s *validate.Sanitizer) HomebrewBuilderOption {
 	return func(b *HomebrewBuilder) {
@@ -185,9 +175,8 @@ func WithRegistryChecker(r RegistryChecker) HomebrewBuilderOption {
 }
 
 // NewHomebrewBuilder creates a new HomebrewBuilder.
-// The builder is created in an uninitialized state. Call Initialize() before Build().
 // Options can be passed to pre-configure HTTP client, API URL, etc.
-// LLM factory and executor are set up during Initialize() based on InitOptions.
+// LLM factory is created during NewSession().
 func NewHomebrewBuilder(opts ...HomebrewBuilderOption) *HomebrewBuilder {
 	b := &HomebrewBuilder{
 		homebrewAPIURL: defaultHomebrewAPIURL,
@@ -213,54 +202,6 @@ func NewHomebrewBuilder(opts ...HomebrewBuilderOption) *HomebrewBuilder {
 	}
 
 	return b
-}
-
-// Initialize sets up the builder for LLM-based recipe generation.
-// This checks LLM configuration and rate limits, creates the LLM factory,
-// and configures validation.
-//
-// Returns ConfirmableError (specifically *RateLimitError) if rate limits are exceeded,
-// allowing the caller to prompt for user confirmation and retry with ForceInit=true.
-func (b *HomebrewBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
-	if opts == nil {
-		opts = &InitOptions{}
-	}
-
-	// Check LLM prerequisites (enabled, rate limits, budget)
-	if err := CheckLLMPrerequisites(opts); err != nil {
-		return err
-	}
-
-	// Store state tracker for cost recording in Build()
-	b.llmStateTracker = opts.LLMStateTracker
-
-	// Create LLM factory if not already set (may be set via WithHomebrewFactory for testing)
-	if b.factory == nil {
-		factory, err := llm.NewFactory(ctx)
-		if err != nil {
-			return fmt.Errorf("failed to create LLM factory: %w", err)
-		}
-		b.factory = factory
-	}
-
-	// Set up factory callback for circuit breaker telemetry
-	b.factory.SetOnBreakerTrip(func(provider string, failures int) {
-		b.telemetryClient.SendLLM(telemetry.NewLLMCircuitBreakerTripEvent(provider, failures))
-	})
-
-	// Set up validation executor unless skipped
-	if !opts.SkipValidation && b.executor == nil {
-		detector := validate.NewRuntimeDetector()
-		predownloader := validate.NewPreDownloader()
-		b.executor = validate.NewExecutor(detector, predownloader)
-	}
-
-	// Set progress reporter if provided
-	if opts.ProgressReporter != nil {
-		b.progress = opts.ProgressReporter
-	}
-
-	return nil
 }
 
 // RequiresLLM returns true as this builder uses LLM for recipe generation.
@@ -347,34 +288,9 @@ func (e *HomebrewNoBottlesError) Error() string {
 	return fmt.Sprintf("Homebrew formula '%s' has no bottles available", e.Formula)
 }
 
-// CanBuild checks if the formula exists in Homebrew and has bottles available.
-func (b *HomebrewBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
-	// Validate formula name
-	if !isValidHomebrewFormula(packageName) {
-		return false, nil
-	}
-
-	// Query Homebrew API
-	formulaInfo, err := b.fetchFormulaInfo(ctx, packageName)
-	if err != nil {
-		// Not found or disabled means we can't build
-		if _, ok := err.(*HomebrewFormulaNotFoundError); ok {
-			return false, nil
-		}
-		return false, err
-	}
-
-	// Check if formula has bottles
-	if !formulaInfo.Versions.Bottle {
-		return false, nil
-	}
-
-	return true, nil
-}
-
-// CanBuildRequest checks if this builder can handle the given request.
-// Implements SessionBuilder.CanBuild with the full BuildRequest.
-func (b *HomebrewBuilder) CanBuildRequest(ctx context.Context, req BuildRequest) (bool, error) {
+// CanBuild checks if this builder can handle the given request.
+// Returns true if the formula exists in Homebrew (source build is always possible).
+func (b *HomebrewBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
 	// Parse SourceArg to get formula name
 	sourceArg := req.SourceArg
 	if sourceArg == "" {
@@ -407,16 +323,9 @@ func (b *HomebrewBuilder) CanBuildRequest(ctx context.Context, req BuildRequest)
 // NewSession creates a new build session for the given request.
 // The session fetches Homebrew metadata and prepares for LLM generation.
 func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
-	// Check LLM prerequisites if options provided
-	if opts != nil {
-		initOpts := &InitOptions{
-			LLMConfig:       opts.LLMConfig,
-			LLMStateTracker: opts.LLMStateTracker,
-			ForceInit:       opts.ForceInit,
-		}
-		if err := CheckLLMPrerequisites(initOpts); err != nil {
-			return nil, err
-		}
+	// Check LLM prerequisites
+	if err := CheckLLMPrerequisites(opts); err != nil {
+		return nil, err
 	}
 
 	// Parse SourceArg to extract formula name and source build flag
@@ -893,74 +802,6 @@ func NewConfirmationRequest(tree *DependencyNode) *ConfirmationRequest {
 // Returns true if the user confirms, false to cancel.
 type ConfirmFunc func(req *ConfirmationRequest) bool
 
-// BuildWithDependencies discovers the dependency tree and generates all needed recipes.
-// It shows the user the full tree and cost estimate, then requires confirmation before
-// proceeding with LLM calls.
-func (b *HomebrewBuilder) BuildWithDependencies(
-	ctx context.Context,
-	req BuildRequest,
-	confirm ConfirmFunc,
-) ([]*BuildResult, error) {
-	// Parse SourceArg to extract formula name and source build flag
-	// Fall back to Package if SourceArg is empty
-	sourceArg := req.SourceArg
-	if sourceArg == "" {
-		sourceArg = req.Package
-	}
-	formulaName, forceSource, err := parseSourceArg(sourceArg)
-	if err != nil {
-		return nil, fmt.Errorf("invalid source argument: %w", err)
-	}
-
-	// 1. Discover full dependency tree (no LLM, just API calls)
-	b.reportStart("Discovering dependencies")
-	tree, err := b.DiscoverDependencyTree(ctx, formulaName)
-	if err != nil {
-		b.reportFailed()
-		return nil, fmt.Errorf("failed to discover dependencies: %w", err)
-	}
-	b.reportDone("")
-
-	// 2. Get formulas needing generation
-	toGenerate := tree.ToGenerationOrder()
-	if len(toGenerate) == 0 {
-		// All recipes exist - nothing to generate
-		return nil, nil
-	}
-
-	// 3. Request user confirmation
-	confirmReq := NewConfirmationRequest(tree)
-	if confirm != nil && !confirm(confirmReq) {
-		return nil, ErrUserCanceled
-	}
-
-	// 4. Generate in topological order (leaves first)
-	var results []*BuildResult
-	for i, formula := range toGenerate {
-		b.reportStart(fmt.Sprintf("Generating recipe %d/%d: %s", i+1, len(toGenerate), formula))
-
-		// Only apply forceSource to the root package, not dependencies
-		sourceArg := formula
-		if forceSource && formula == formulaName {
-			sourceArg = formula + ":source"
-		}
-
-		result, err := b.Build(ctx, BuildRequest{
-			Package:   formula,
-			SourceArg: sourceArg,
-		})
-		if err != nil {
-			b.reportFailed()
-			return results, fmt.Errorf("failed to generate recipe for %s: %w", formula, err)
-		}
-
-		b.reportDone("")
-		results = append(results, result)
-	}
-
-	return results, nil
-}
-
 // ErrUserCanceled is returned when the user cancels the operation.
 var ErrUserCanceled = fmt.Errorf("operation canceled by user")
 
@@ -1112,228 +953,6 @@ func (b *HomebrewBuilder) fetchFormulaInfo(ctx context.Context, formula string) 
 	}
 
 	return &formulaInfo, nil
-}
-
-// Build generates a recipe from a Homebrew formula.
-// It first attempts bottle-based generation, falling back to source-based
-// generation if bottles are not available.
-func (b *HomebrewBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult, error) {
-	// Parse SourceArg to extract formula name and source build flag
-	sourceArg := req.SourceArg
-	if sourceArg == "" {
-		sourceArg = req.Package
-	}
-	formula, forceSource, err := parseSourceArg(sourceArg)
-	if err != nil {
-		return nil, fmt.Errorf("invalid source argument: %w", err)
-	}
-
-	// Fetch formula metadata
-	b.reportStart("Fetching formula metadata")
-	formulaInfo, err := b.fetchFormulaInfo(ctx, formula)
-	if err != nil {
-		b.reportFailed()
-		return nil, fmt.Errorf("failed to fetch formula: %w", err)
-	}
-
-	// Check for bottles - if not available or source forced, switch to source build mode
-	if !formulaInfo.Versions.Bottle || forceSource {
-		suffix := "source only"
-		if forceSource && formulaInfo.Versions.Bottle {
-			suffix = "source requested"
-		}
-		b.reportDone(fmt.Sprintf("v%s (%s)", formulaInfo.Versions.Stable, suffix))
-		return b.buildFromSource(ctx, req, formula, formulaInfo)
-	}
-
-	b.reportDone(fmt.Sprintf("v%s", formulaInfo.Versions.Stable))
-
-	// Check bottle availability across platforms
-	b.reportStart("Checking bottle availability")
-	availability, err := b.checkBottleAvailability(ctx, formula, formulaInfo.Versions.Stable)
-	if err != nil {
-		// Non-fatal: continue with generation but log the error
-		b.reportDone("check skipped")
-	} else {
-		b.reportDone(fmt.Sprintf("%d/%d platforms", len(availability.Available), len(targetPlatforms)))
-	}
-
-	// Build generation context
-	genCtx := &homebrewGenContext{
-		formula:     formula,
-		formulaInfo: formulaInfo,
-		httpClient:  b.httpClient,
-		apiURL:      b.homebrewAPIURL,
-	}
-
-	// Get provider from factory
-	provider, err := b.factory.GetProvider(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("no LLM provider available: %w", err)
-	}
-
-	// Emit generation started event
-	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, "homebrew:"+formula))
-	startTime := time.Now()
-
-	// Generate recipe with repair loop
-	recipeData, usage, repairAttempts, validationSkipped, err := b.generateWithRepair(ctx, provider, genCtx, req.Package)
-
-	// Calculate duration for completed event
-	durationMs := time.Since(startTime).Milliseconds()
-
-	if err != nil {
-		b.factory.ReportFailure(provider.Name())
-		// Emit generation completed (failure) event
-		b.telemetryClient.SendLLM(telemetry.NewLLMGenerationCompletedEvent(provider.Name(), req.Package, false, durationMs, repairAttempts+1))
-		return nil, err
-	}
-	b.factory.ReportSuccess(provider.Name())
-
-	// Emit generation completed (success) event
-	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationCompletedEvent(provider.Name(), req.Package, true, durationMs, repairAttempts+1))
-
-	// Generate recipe from extracted data
-	r, err := b.generateRecipe(req.Package, formulaInfo, recipeData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate recipe: %w", err)
-	}
-
-	result := &BuildResult{
-		Recipe: r,
-		Source: fmt.Sprintf("homebrew:%s", formula),
-		Warnings: []string{
-			fmt.Sprintf("LLM usage: %s", usage.String()),
-		},
-		RepairAttempts:    repairAttempts,
-		Provider:          provider.Name(),
-		ValidationSkipped: validationSkipped,
-		Cost:              usage.Cost(),
-	}
-
-	if repairAttempts > 0 {
-		result.Warnings = append(result.Warnings, fmt.Sprintf("Recipe repaired after %d attempt(s)", repairAttempts))
-	}
-
-	// Add warnings for missing platform bottles
-	if availability != nil && len(availability.Unavailable) > 0 {
-		for _, platform := range availability.Unavailable {
-			displayName := platformDisplayNames[platform]
-			if displayName == "" {
-				displayName = platform
-			}
-			result.Warnings = append(result.Warnings,
-				fmt.Sprintf("No bottle available for %s - recipe may not work on this platform", displayName))
-		}
-	}
-
-	// Record LLM cost if state tracker is available
-	if err := RecordLLMCost(b.llmStateTracker, result.Cost); err != nil {
-		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to record LLM cost: %v", err))
-	}
-
-	return result, nil
-}
-
-// buildFromSource generates a source-based recipe when bottles are not available.
-func (b *HomebrewBuilder) buildFromSource(ctx context.Context, req BuildRequest, formula string, formulaInfo *homebrewFormulaInfo) (*BuildResult, error) {
-	b.reportStart("Generating source build recipe")
-
-	// Build generation context
-	genCtx := &homebrewGenContext{
-		formula:     formula,
-		formulaInfo: formulaInfo,
-		httpClient:  b.httpClient,
-		apiURL:      b.homebrewAPIURL,
-	}
-
-	// Get provider from factory
-	provider, err := b.factory.GetProvider(ctx)
-	if err != nil {
-		b.reportFailed()
-		return nil, fmt.Errorf("no LLM provider available: %w", err)
-	}
-
-	// Emit generation started event
-	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, "homebrew-source:"+formula))
-	startTime := time.Now()
-
-	// Generate source recipe with LLM
-	srcData, usage, repairAttempts, err := b.generateSourceRecipe(ctx, provider, genCtx)
-
-	// Calculate duration for completed event
-	durationMs := time.Since(startTime).Milliseconds()
-
-	if err != nil {
-		b.factory.ReportFailure(provider.Name())
-		b.reportFailed()
-		b.telemetryClient.SendLLM(telemetry.NewLLMGenerationCompletedEvent(provider.Name(), req.Package, false, durationMs, repairAttempts+1))
-		return nil, err
-	}
-	b.factory.ReportSuccess(provider.Name())
-	b.reportDone("")
-
-	// Emit generation completed (success) event
-	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationCompletedEvent(provider.Name(), req.Package, true, durationMs, repairAttempts+1))
-
-	// Generate recipe from source data
-	r, err := b.generateSourceRecipeOutput(req.Package, formulaInfo, srcData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate source recipe: %w", err)
-	}
-
-	// Validate source build in container if executor is available
-	validationSkipped := true
-	if b.executor != nil {
-		b.reportStart("Validating source build in container")
-
-		validationResult, err := b.executor.ValidateSourceBuild(ctx, r)
-		if err != nil {
-			b.reportFailed()
-			return nil, fmt.Errorf("source build validation error: %w", err)
-		}
-
-		if validationResult.Skipped {
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", 1))
-			b.reportDone("skipped")
-		} else if validationResult.Passed {
-			validationSkipped = false
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "", 1))
-			b.reportDone("")
-		} else {
-			validationSkipped = false
-			// Parse error for telemetry
-			parsed := validate.ParseValidationError(validationResult.Stdout, validationResult.Stderr, validationResult.ExitCode)
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(false, string(parsed.Category), 1))
-			b.reportFailed()
-			// Don't fail the build - source validation is informational for now
-			// Future: implement repair loop for source builds
-		}
-	}
-
-	result := &BuildResult{
-		Recipe: r,
-		Source: fmt.Sprintf("homebrew-source:%s", formula),
-		Warnings: []string{
-			fmt.Sprintf("LLM usage: %s", usage.String()),
-			"Source build recipe - requires build tools on target system",
-		},
-		RepairAttempts:    repairAttempts,
-		Provider:          provider.Name(),
-		ValidationSkipped: validationSkipped,
-		Cost:              usage.Cost(),
-	}
-
-	if repairAttempts > 0 {
-		result.Warnings = append(result.Warnings, fmt.Sprintf("Recipe repaired after %d attempt(s)", repairAttempts))
-	}
-
-	// Record LLM cost if state tracker is available
-	if err := RecordLLMCost(b.llmStateTracker, result.Cost); err != nil {
-		result.Warnings = append(result.Warnings, fmt.Sprintf("failed to record LLM cost: %v", err))
-	}
-
-	return result, nil
 }
 
 // homebrewGenContext holds context needed during recipe generation.
@@ -1608,112 +1227,6 @@ func isValidCMakeArg(arg string) bool {
 		}
 	}
 	return true
-}
-
-// generateWithRepair runs the conversation loop with validation and repair.
-func (b *HomebrewBuilder) generateWithRepair(
-	ctx context.Context,
-	provider llm.Provider,
-	genCtx *homebrewGenContext,
-	packageName string,
-) (*homebrewRecipeData, *llm.Usage, int, bool, error) {
-	// Build initial conversation
-	systemPrompt := b.buildSystemPrompt()
-	userMessage := b.buildUserMessage(genCtx)
-	messages := []llm.Message{
-		{Role: llm.RoleUser, Content: userMessage},
-	}
-	tools := b.buildToolDefs()
-
-	var totalUsage llm.Usage
-	var repairAttempts int
-	var validationSkipped bool
-	var lastErrorCategory string
-
-	for attempt := 0; attempt <= MaxRepairAttempts; attempt++ {
-		// Emit repair attempt event for retries (not the first attempt)
-		if attempt > 0 {
-			b.telemetryClient.SendLLM(telemetry.NewLLMRepairAttemptEvent(provider.Name(), attempt, lastErrorCategory))
-			// Report repair progress
-			b.reportStart(fmt.Sprintf("Repairing recipe (attempt %d/%d)", attempt, MaxRepairAttempts+1))
-		} else {
-			// Report LLM analysis starting (first attempt only)
-			b.reportStart(fmt.Sprintf("Analyzing formula with %s", provider.Name()))
-		}
-
-		// Run conversation loop to get recipe data
-		recipeData, turnUsage, err := b.runConversationLoop(ctx, provider, systemPrompt, messages, tools, genCtx)
-		if err != nil {
-			b.reportFailed()
-			return nil, &totalUsage, repairAttempts, validationSkipped, err
-		}
-		totalUsage.Add(*turnUsage)
-
-		// Report LLM analysis done
-		b.reportDone("")
-
-		// If no executor, skip validation
-		if b.executor == nil {
-			validationSkipped = true
-			// Emit validation skipped event
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", attempt+1))
-			return recipeData, &totalUsage, repairAttempts, validationSkipped, nil
-		}
-
-		// Generate recipe for validation
-		r, err := b.generateRecipe(packageName, genCtx.formulaInfo, recipeData)
-		if err != nil {
-			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("failed to generate recipe for validation: %w", err)
-		}
-
-		// Report validation starting
-		b.reportStart("Validating in container")
-
-		// Validate in container (homebrew_bottle action handles downloads internally)
-		result, err := b.executor.Validate(ctx, r, "")
-		if err != nil {
-			b.reportFailed()
-			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("validation error: %w", err)
-		}
-
-		// Check validation result
-		if result.Skipped {
-			validationSkipped = true
-			// Emit validation skipped event
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "skipped", attempt+1))
-			b.reportDone("skipped")
-			return recipeData, &totalUsage, repairAttempts, validationSkipped, nil
-		}
-
-		if result.Passed {
-			// Emit validation passed event
-			b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(true, "", attempt+1))
-			b.reportDone("")
-			return recipeData, &totalUsage, repairAttempts, validationSkipped, nil
-		}
-
-		// Validation failed
-		b.reportFailed()
-
-		// Parse error category for telemetry
-		parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)
-		lastErrorCategory = string(parsed.Category)
-
-		// Emit validation failed event
-		b.telemetryClient.SendLLM(telemetry.NewLLMValidationResultEvent(false, lastErrorCategory, attempt+1))
-
-		// Validation failed - prepare repair if we have attempts left
-		if attempt >= MaxRepairAttempts {
-			return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("recipe validation failed after %d repair attempts: %s", repairAttempts, b.formatValidationError(result))
-		}
-
-		// Continue conversation with error feedback
-		repairAttempts++
-		repairMessage := b.buildRepairMessage(result)
-		messages = append(messages, llm.Message{Role: llm.RoleUser, Content: repairMessage})
-	}
-
-	return nil, &totalUsage, repairAttempts, validationSkipped, fmt.Errorf("unexpected end of repair loop")
 }
 
 // runConversationLoop executes the multi-turn conversation until extract_recipe is called.
@@ -2296,38 +1809,6 @@ Note: Full bottle inspection is not implemented yet. Please analyze the formula 
 For CLI tools, the executable is usually in bin/<name> where <name> matches the formula name or is derived from it.`, formula, platform), nil
 }
 
-// buildRepairMessage constructs the error feedback message for the LLM.
-// Used by the legacy Build() method with validate.ValidationResult.
-func (b *HomebrewBuilder) buildRepairMessage(result *validate.ValidationResult) string {
-	// Combine stdout and stderr
-	output := result.Stdout + "\n" + result.Stderr
-
-	// Sanitize the output
-	sanitizedOutput := b.sanitizer.Sanitize(output)
-
-	// Parse the error for structured feedback
-	parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)
-
-	var sb strings.Builder
-	sb.WriteString("The recipe you generated failed validation. Here is the error:\n\n")
-	sb.WriteString("---\n")
-	sb.WriteString(sanitizedOutput)
-	sb.WriteString("\n---\n\n")
-	sb.WriteString(fmt.Sprintf("Exit code: %d\n", result.ExitCode))
-	sb.WriteString(fmt.Sprintf("Error category: %s\n", parsed.Category))
-
-	if len(parsed.Suggestions) > 0 {
-		sb.WriteString("\nSuggested fixes:\n")
-		for _, suggestion := range parsed.Suggestions {
-			sb.WriteString(fmt.Sprintf("- %s\n", suggestion))
-		}
-	}
-
-	sb.WriteString("\nPlease analyze what went wrong and call extract_recipe again with corrected values.")
-
-	return sb.String()
-}
-
 // buildRepairMessageFromSandbox constructs error feedback from sandbox results.
 // Used by HomebrewSession.Repair() with sandbox.SandboxResult.
 func (b *HomebrewBuilder) buildRepairMessageFromSandbox(result *sandbox.SandboxResult) string {
@@ -2362,16 +1843,6 @@ func (b *HomebrewBuilder) buildRepairMessageFromSandbox(result *sandbox.SandboxR
 	sb.WriteString("\nPlease analyze what went wrong and call extract_recipe again with corrected values.")
 
 	return sb.String()
-}
-
-// formatValidationError creates a human-readable validation error message.
-func (b *HomebrewBuilder) formatValidationError(result *validate.ValidationResult) string {
-	output := result.Stdout + "\n" + result.Stderr
-	sanitized := b.sanitizer.Sanitize(output)
-	if len(sanitized) > 500 {
-		sanitized = sanitized[:500] + "..."
-	}
-	return fmt.Sprintf("exit code %d: %s", result.ExitCode, sanitized)
 }
 
 // buildSystemPrompt creates the system prompt for Homebrew recipe generation.
@@ -2686,125 +2157,6 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 	}
 
 	return r, nil
-}
-
-// generateSourceRecipe runs the LLM conversation loop for source-based recipe generation.
-func (b *HomebrewBuilder) generateSourceRecipe(
-	ctx context.Context,
-	provider llm.Provider,
-	genCtx *homebrewGenContext,
-) (*sourceRecipeData, *llm.Usage, int, error) {
-	// Build initial conversation
-	systemPrompt := b.buildSourceSystemPrompt()
-	userMessage := b.buildSourceUserMessage(genCtx)
-	messages := []llm.Message{
-		{Role: llm.RoleUser, Content: userMessage},
-	}
-	tools := b.buildSourceToolDefs()
-
-	var totalUsage llm.Usage
-
-	// Report LLM analysis starting
-	b.reportStart(fmt.Sprintf("Analyzing source formula with %s", provider.Name()))
-
-	// Run conversation loop
-	for turn := 0; turn < MaxTurns; turn++ {
-		resp, err := provider.Complete(ctx, &llm.CompletionRequest{
-			SystemPrompt: systemPrompt,
-			Messages:     messages,
-			Tools:        tools,
-			MaxTokens:    4096,
-		})
-		if err != nil {
-			return nil, &totalUsage, 0, err
-		}
-
-		totalUsage.Add(resp.Usage)
-
-		// Add assistant response to conversation
-		messages = append(messages, llm.Message{
-			Role:      llm.RoleAssistant,
-			Content:   resp.Content,
-			ToolCalls: resp.ToolCalls,
-		})
-
-		// Process tool calls
-		var toolResults []llm.Message
-		var srcData *sourceRecipeData
-
-		for _, tc := range resp.ToolCalls {
-			result, extracted, err := b.executeToolCall(ctx, genCtx, tc)
-			if err != nil {
-				// Return error as tool result so LLM can try again
-				toolResults = append(toolResults, llm.Message{
-					Role: llm.RoleUser,
-					ToolResult: &llm.ToolResult{
-						CallID:  tc.ID,
-						Content: fmt.Sprintf("Error: %v", err),
-						IsError: true,
-					},
-				})
-				continue
-			}
-
-			// Check if this is extract_source_recipe
-			if tc.Name == ToolExtractSourceRecipe && result != "" {
-				// Parse the JSON result back into sourceRecipeData
-				var data sourceRecipeData
-				if err := json.Unmarshal([]byte(result), &data); err != nil {
-					toolResults = append(toolResults, llm.Message{
-						Role: llm.RoleUser,
-						ToolResult: &llm.ToolResult{
-							CallID:  tc.ID,
-							Content: fmt.Sprintf("Error parsing source recipe: %v", err),
-							IsError: true,
-						},
-					})
-					continue
-				}
-				srcData = &data
-			} else if extracted != nil {
-				// bottle-based extract_recipe was called - shouldn't happen in source mode
-				toolResults = append(toolResults, llm.Message{
-					Role: llm.RoleUser,
-					ToolResult: &llm.ToolResult{
-						CallID:  tc.ID,
-						Content: "Error: use extract_source_recipe for source builds, not extract_recipe",
-						IsError: true,
-					},
-				})
-				continue
-			} else {
-				toolResults = append(toolResults, llm.Message{
-					Role: llm.RoleUser,
-					ToolResult: &llm.ToolResult{
-						CallID:  tc.ID,
-						Content: result,
-						IsError: false,
-					},
-				})
-			}
-		}
-
-		// If extract_source_recipe was called, return the data
-		if srcData != nil {
-			b.reportDone("")
-			return srcData, &totalUsage, 0, nil
-		}
-
-		// If there were tool calls, add results and continue
-		if len(toolResults) > 0 {
-			messages = append(messages, toolResults...)
-			continue
-		}
-
-		// No tool calls and no extract_source_recipe - LLM is done but didn't call the tool
-		if resp.StopReason == "end_turn" {
-			return nil, &totalUsage, 0, fmt.Errorf("conversation ended without extract_source_recipe being called")
-		}
-	}
-
-	return nil, &totalUsage, 0, fmt.Errorf("max turns (%d) exceeded without completing source recipe generation", MaxTurns)
 }
 
 // buildSourceSystemPrompt creates the system prompt for source-based recipe generation.

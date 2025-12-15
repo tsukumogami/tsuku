@@ -52,7 +52,7 @@ func TestPyPIBuilder_CanBuild(t *testing.T) {
 			if tc.useReal {
 				b = NewPyPIBuilder(nil)
 			}
-			canBuild, err := b.CanBuild(ctx, tc.pkg)
+			canBuild, err := b.CanBuild(ctx, BuildRequest{Package: tc.pkg})
 			if (err != nil) != tc.wantErr {
 				t.Fatalf("CanBuild() error = %v, wantErr %v", err, tc.wantErr)
 			}

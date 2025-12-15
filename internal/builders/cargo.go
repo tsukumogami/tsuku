@@ -83,18 +83,14 @@ func (b *CargoBuilder) Name() string {
 	return "crates.io"
 }
 
-// Initialize is a no-op for ecosystem builders.
-func (b *CargoBuilder) Initialize(ctx context.Context, opts *InitOptions) error {
-	return nil
-}
-
 // RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
 func (b *CargoBuilder) RequiresLLM() bool {
 	return false
 }
 
 // CanBuild checks if the crate exists on crates.io
-func (b *CargoBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
+func (b *CargoBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
+	packageName := req.Package
 	if !isValidCrateName(packageName) {
 		return false, nil
 	}
@@ -110,6 +106,11 @@ func (b *CargoBuilder) CanBuild(ctx context.Context, packageName string) (bool, 
 	}
 
 	return true, nil
+}
+
+// NewSession creates a new build session for the given request.
+func (b *CargoBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	return NewDeterministicSession(b.Build, req), nil
 }
 
 // Build generates a recipe for the crate

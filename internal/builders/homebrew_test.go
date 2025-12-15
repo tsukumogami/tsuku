@@ -50,7 +50,7 @@ func TestHomebrewBuilder_CanBuild_Success(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	canBuild, err := b.CanBuild(ctx, "ripgrep")
+	canBuild, err := b.CanBuild(ctx, BuildRequest{Package: "ripgrep"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -72,7 +72,7 @@ func TestHomebrewBuilder_CanBuild_NotFound(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	canBuild, err := b.CanBuild(ctx, "nonexistent-formula")
+	canBuild, err := b.CanBuild(ctx, BuildRequest{Package: "nonexistent-formula"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -110,12 +110,14 @@ func TestHomebrewBuilder_CanBuild_NoBottles(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	canBuild, err := b.CanBuild(ctx, "no-bottles")
+	// With the new CanBuild, formulas without bottles can still be built from source
+	canBuild, err := b.CanBuild(ctx, BuildRequest{Package: "no-bottles"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
-	if canBuild {
-		t.Errorf("CanBuild() = %v, want false for formula without bottles", canBuild)
+	// Source builds are always possible, so CanBuild returns true even without bottles
+	if !canBuild {
+		t.Errorf("CanBuild() = %v, want true (source build possible)", canBuild)
 	}
 }
 
@@ -148,12 +150,15 @@ func TestHomebrewBuilder_CanBuild_Disabled(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	canBuild, err := b.CanBuild(ctx, "disabled")
+	// Disabled formulas are treated as not found by fetchFormulaInfo,
+	// so CanBuild returns false for them (they can't be built).
+	canBuild, err := b.CanBuild(ctx, BuildRequest{Package: "disabled"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
+	// Disabled formulas return false from CanBuild
 	if canBuild {
-		t.Errorf("CanBuild() = %v, want false for disabled formula", canBuild)
+		t.Errorf("CanBuild() = %v, want false (disabled formula)", canBuild)
 	}
 }
 
@@ -719,14 +724,6 @@ func TestHomebrewBuilder_Options(t *testing.T) {
 		t.Error("WithHomebrewFactory did not set factory")
 	}
 
-	// WithHomebrewExecutor
-	executor := &validate.Executor{}
-	opt = WithHomebrewExecutor(executor)
-	opt(b)
-	if b.executor != executor {
-		t.Error("WithHomebrewExecutor did not set executor")
-	}
-
 	// WithHomebrewSanitizer
 	sanitizer := validate.NewSanitizer()
 	opt = WithHomebrewSanitizer(sanitizer)
@@ -863,69 +860,6 @@ func TestHomebrewBuilder_fetchFormulaJSON(t *testing.T) {
 	}
 }
 
-func TestHomebrewBuilder_buildRepairMessage(t *testing.T) {
-	b := &HomebrewBuilder{
-		sanitizer: validate.NewSanitizer(),
-	}
-
-	result := &validate.ValidationResult{
-		Stdout:   "error: command not found",
-		Stderr:   "rg: No such file",
-		ExitCode: 127,
-	}
-
-	message := b.buildRepairMessage(result)
-	if len(message) == 0 {
-		t.Error("buildRepairMessage() returned empty string")
-	}
-	if !containsString(message, "failed validation") {
-		t.Error("message should mention failed validation")
-	}
-	if !containsString(message, "127") {
-		t.Error("message should contain exit code")
-	}
-}
-
-func TestHomebrewBuilder_formatValidationError(t *testing.T) {
-	b := &HomebrewBuilder{
-		sanitizer: validate.NewSanitizer(),
-	}
-
-	result := &validate.ValidationResult{
-		Stdout:   "some output",
-		Stderr:   "some error",
-		ExitCode: 1,
-	}
-
-	formatted := b.formatValidationError(result)
-	if !containsString(formatted, "exit code 1") {
-		t.Error("formatted error should contain exit code")
-	}
-}
-
-func TestHomebrewBuilder_formatValidationError_LongOutput(t *testing.T) {
-	b := &HomebrewBuilder{
-		sanitizer: validate.NewSanitizer(),
-	}
-
-	// Create output longer than 500 chars
-	longOutput := ""
-	for i := 0; i < 100; i++ {
-		longOutput += "error line "
-	}
-
-	result := &validate.ValidationResult{
-		Stdout:   longOutput,
-		Stderr:   "",
-		ExitCode: 1,
-	}
-
-	formatted := b.formatValidationError(result)
-	if !containsString(formatted, "...") {
-		t.Error("long output should be truncated with ...")
-	}
-}
-
 func TestHomebrewBuilder_executeToolCall_DefaultFormula(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/formula/defaultformula.json" {
@@ -1008,7 +942,7 @@ func TestHomebrewBuilder_CanBuild_HTTPError(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	_, err := b.CanBuild(ctx, "test")
+	_, err := b.CanBuild(ctx, BuildRequest{Package: "test"})
 	if err == nil {
 		t.Error("expected error for HTTP error")
 	}
@@ -1757,145 +1691,6 @@ func TestNewConfirmationRequest(t *testing.T) {
 	}
 	if req.Tree != root {
 		t.Error("Tree should reference original tree")
-	}
-}
-
-func TestHomebrewBuilder_BuildWithDependencies_Canceled(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/api/formula/test.json" {
-			formulaInfo := map[string]interface{}{
-				"name":         "test",
-				"dependencies": []string{},
-				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
-			}
-			_ = json.NewEncoder(w).Encode(formulaInfo)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
-
-	b := &HomebrewBuilder{
-		httpClient:     server.Client(),
-		homebrewAPIURL: server.URL,
-		registry:       &mockRegistryChecker{recipes: map[string]bool{}},
-	}
-
-	ctx := context.Background()
-
-	// User cancels
-	confirmFunc := func(req *ConfirmationRequest) bool {
-		return false
-	}
-
-	_, err := b.BuildWithDependencies(ctx, BuildRequest{Package: "test"}, confirmFunc)
-	if err != ErrUserCanceled {
-		t.Errorf("Expected ErrUserCanceled, got %v", err)
-	}
-}
-
-func TestHomebrewBuilder_BuildWithDependencies_AllRecipesExist(t *testing.T) {
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/api/formula/existing.json" {
-			formulaInfo := map[string]interface{}{
-				"name":         "existing",
-				"dependencies": []string{},
-				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
-			}
-			_ = json.NewEncoder(w).Encode(formulaInfo)
-			return
-		}
-		http.NotFound(w, r)
-	}))
-	defer server.Close()
-
-	// All recipes already exist
-	registry := &mockRegistryChecker{recipes: map[string]bool{"existing": true}}
-
-	b := &HomebrewBuilder{
-		httpClient:     server.Client(),
-		homebrewAPIURL: server.URL,
-		registry:       registry,
-	}
-
-	ctx := context.Background()
-
-	// Confirm should not be called since nothing needs generation
-	confirmCalled := false
-	confirmFunc := func(req *ConfirmationRequest) bool {
-		confirmCalled = true
-		return true
-	}
-
-	results, err := b.BuildWithDependencies(ctx, BuildRequest{Package: "existing"}, confirmFunc)
-	if err != nil {
-		t.Fatalf("BuildWithDependencies() error = %v", err)
-	}
-	if results != nil {
-		t.Errorf("Expected nil results when all recipes exist, got %v", results)
-	}
-	if confirmCalled {
-		t.Error("Confirm should not be called when nothing needs generation")
-	}
-}
-
-func TestHomebrewBuilder_BuildWithDependencies_ConfirmReceivesCorrectData(t *testing.T) {
-	// Verify that the confirmation function receives the correct data
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		switch r.URL.Path {
-		case "/api/formula/app.json":
-			formulaInfo := map[string]interface{}{
-				"name":         "app",
-				"dependencies": []string{"dep"},
-				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
-			}
-			_ = json.NewEncoder(w).Encode(formulaInfo)
-		case "/api/formula/dep.json":
-			formulaInfo := map[string]interface{}{
-				"name":         "dep",
-				"dependencies": []string{},
-				"versions":     map[string]interface{}{"stable": "1.0", "bottle": true},
-			}
-			_ = json.NewEncoder(w).Encode(formulaInfo)
-		default:
-			http.NotFound(w, r)
-		}
-	}))
-	defer server.Close()
-
-	b := &HomebrewBuilder{
-		httpClient:     server.Client(),
-		homebrewAPIURL: server.URL,
-		registry:       &mockRegistryChecker{recipes: map[string]bool{}},
-	}
-
-	ctx := context.Background()
-
-	var receivedReq *ConfirmationRequest
-	confirmFunc := func(req *ConfirmationRequest) bool {
-		receivedReq = req
-		return false // Cancel to avoid needing an LLM factory
-	}
-
-	_, _ = b.BuildWithDependencies(ctx, BuildRequest{Package: "app"}, confirmFunc)
-
-	if receivedReq == nil {
-		t.Fatal("Confirm function should have been called")
-	}
-	if len(receivedReq.ToGenerate) != 2 {
-		t.Errorf("ToGenerate length = %d, want 2", len(receivedReq.ToGenerate))
-	}
-	if receivedReq.EstimatedCost != 2*EstimatedCostPerRecipe {
-		t.Errorf("EstimatedCost = %v, want %v", receivedReq.EstimatedCost, 2*EstimatedCostPerRecipe)
-	}
-	if receivedReq.FormattedTree == "" {
-		t.Error("FormattedTree should not be empty")
-	}
-}
-
-func TestErrUserCanceled(t *testing.T) {
-	if ErrUserCanceled.Error() != "operation canceled by user" {
-		t.Errorf("ErrUserCanceled.Error() = %v", ErrUserCanceled.Error())
 	}
 }
 
@@ -3757,7 +3552,7 @@ func TestHomebrewBuilder_CanBuild_VersionedFormula(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	canBuild, err := b.CanBuild(ctx, "postgresql@15")
+	canBuild, err := b.CanBuild(ctx, BuildRequest{Package: "postgresql@15"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}

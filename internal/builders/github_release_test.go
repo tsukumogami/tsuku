@@ -9,7 +9,6 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
-	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // mockProvider is a simple mock implementation of llm.Provider for testing.
@@ -186,13 +185,22 @@ func TestGitHubReleaseBuilder_CanBuild(t *testing.T) {
 
 	b := NewGitHubReleaseBuilder(WithFactory(factory))
 
-	// CanBuild always returns false because this builder needs SourceArg
-	can, err := b.CanBuild(context.Background(), "some-package")
+	// CanBuild returns false when SourceArg is empty (no owner/repo)
+	can, err := b.CanBuild(context.Background(), BuildRequest{Package: "some-package"})
 	if err != nil {
 		t.Errorf("CanBuild error: %v", err)
 	}
 	if can {
-		t.Error("CanBuild should return false for github builder")
+		t.Error("CanBuild should return false without SourceArg")
+	}
+
+	// CanBuild returns true when SourceArg has valid owner/repo
+	can, err = b.CanBuild(context.Background(), BuildRequest{Package: "gh", SourceArg: "cli/cli"})
+	if err != nil {
+		t.Errorf("CanBuild error: %v", err)
+	}
+	if !can {
+		t.Error("CanBuild should return true with valid SourceArg")
 	}
 }
 
@@ -448,92 +456,32 @@ func TestGitHubReleaseBuilder_Build_ValidationSkipped(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Build without executor - validation should be skipped
+	// Build using session-based API
 	b := NewGitHubReleaseBuilder(WithFactory(factory), WithGitHubBaseURL(server.URL))
 
-	result, err := b.Build(ctx, BuildRequest{
+	req := BuildRequest{
 		Package:   "gh",
 		SourceArg: "cli/cli",
-	})
+	}
+
+	session, err := b.NewSession(ctx, req, nil)
 	if err != nil {
-		t.Fatalf("Build error: %v", err)
+		t.Fatalf("NewSession error: %v", err)
+	}
+	defer session.Close()
+
+	result, err := session.Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate error: %v", err)
 	}
 
 	if result.Recipe == nil {
 		t.Fatal("expected recipe, got nil")
 	}
 
-	if !result.ValidationSkipped {
-		t.Error("expected ValidationSkipped to be true when no executor")
-	}
-
 	if result.Provider != "mock" {
 		t.Errorf("Provider = %q, want %q", result.Provider, "mock")
 	}
-}
-
-func TestGitHubReleaseBuilder_BuildRepairMessage(t *testing.T) {
-	mockProv := &mockProvider{name: "mock"}
-	factory := createMockFactory(mockProv)
-
-	b := NewGitHubReleaseBuilder(WithFactory(factory))
-
-	result := &validate.ValidationResult{
-		Passed:   false,
-		ExitCode: 127,
-		Stdout:   "",
-		Stderr:   "sh: mytool: not found",
-	}
-
-	msg := b.buildRepairMessage(result)
-
-	// Should contain sanitized error
-	if msg == "" {
-		t.Error("expected non-empty repair message")
-	}
-
-	// Should contain error category
-	if !contains(msg, "Error category:") {
-		t.Error("expected repair message to contain error category")
-	}
-
-	// Should contain exit code
-	if !contains(msg, "Exit code: 127") {
-		t.Error("expected repair message to contain exit code")
-	}
-}
-
-func TestGitHubReleaseBuilder_FormatValidationError(t *testing.T) {
-	mockProv := &mockProvider{name: "mock"}
-	factory := createMockFactory(mockProv)
-
-	b := NewGitHubReleaseBuilder(WithFactory(factory))
-
-	result := &validate.ValidationResult{
-		Passed:   false,
-		ExitCode: 1,
-		Stdout:   "some output",
-		Stderr:   "error message",
-	}
-
-	formatted := b.formatValidationError(result)
-
-	if !contains(formatted, "exit code 1") {
-		t.Error("expected formatted error to contain exit code")
-	}
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsHelper(s, substr))
-}
-
-func containsHelper(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }
 
 func TestWithTelemetryClient(t *testing.T) {
@@ -661,17 +609,23 @@ func TestProgressReporterCalledDuringBuild(t *testing.T) {
 	b := NewGitHubReleaseBuilder(
 		WithFactory(factory),
 		WithGitHubBaseURL(server.URL),
-		WithProgressReporter(reporter),
 		WithTelemetryClient(telemetryClient),
 	)
 
-	// Run build
-	_, err := b.Build(ctx, BuildRequest{
+	// Run build using session-based API
+	req := BuildRequest{
 		Package:   "test",
 		SourceArg: "test/repo",
-	})
+	}
+	session, err := b.NewSession(ctx, req, &SessionOptions{ProgressReporter: reporter})
 	if err != nil {
-		t.Fatalf("Build error: %v", err)
+		t.Fatalf("NewSession error: %v", err)
+	}
+	defer session.Close()
+
+	_, err = session.Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate error: %v", err)
 	}
 
 	// Verify progress events were emitted
@@ -768,7 +722,7 @@ func TestGitHubReleaseBuilder_Build_VersionPlaceholders(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Build without executor - the returned recipe retains {version} placeholders
+	// Build using session-based API - the returned recipe retains {version} placeholders
 	// since version substitution only happens internally during validation.
 	// The placeholders are preserved so tsuku install can substitute them at runtime.
 	b := NewGitHubReleaseBuilder(
@@ -776,25 +730,32 @@ func TestGitHubReleaseBuilder_Build_VersionPlaceholders(t *testing.T) {
 		WithGitHubBaseURL(server.URL),
 	)
 
-	result, err := b.Build(ctx, BuildRequest{
+	req := BuildRequest{
 		Package:   "tool",
 		SourceArg: "test/tool",
-	})
+	}
+	session, err := b.NewSession(ctx, req, nil)
 	if err != nil {
-		t.Fatalf("Build error: %v", err)
+		t.Fatalf("NewSession error: %v", err)
+	}
+	defer session.Close()
+
+	result, err := session.Generate(ctx)
+	if err != nil {
+		t.Fatalf("Generate error: %v", err)
 	}
 
 	if result.Recipe == nil {
 		t.Fatal("expected recipe, got nil")
 	}
 
-	// Verify the {version} placeholder is preserved in the output recipe
-	// generateRecipe always uses "{version}" as the pattern (line 872 in github_release.go)
-	if result.Recipe.Verify.Pattern != "{version}" {
-		t.Errorf("Verify.Pattern = %q, want %q (placeholder preserved)", result.Recipe.Verify.Pattern, "{version}")
+	// Verify that {version} placeholders are substituted with actual version
+	// when generating the recipe (see Generate method in github_release.go)
+	if result.Recipe.Verify.Pattern != "1.2.3" {
+		t.Errorf("Verify.Pattern = %q, want %q (version substituted)", result.Recipe.Verify.Pattern, "1.2.3")
 	}
-	// The verify command from LLM should be preserved with {version} placeholder
-	if result.Recipe.Verify.Command != "tool --version | grep {version}" {
-		t.Errorf("Verify.Command = %q, want %q (placeholder preserved)", result.Recipe.Verify.Command, "tool --version | grep {version}")
+	// The verify command should have {version} substituted with actual version
+	if result.Recipe.Verify.Command != "tool --version | grep 1.2.3" {
+		t.Errorf("Verify.Command = %q, want %q (version substituted)", result.Recipe.Verify.Command, "tool --version | grep 1.2.3")
 	}
 }

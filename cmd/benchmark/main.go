@@ -96,12 +96,8 @@ func loadCorpus(path string) ([]string, error) {
 func runBenchmark(repos []string) []BenchmarkResult {
 	ctx := context.Background()
 
-	// Create builder and initialize with validation enabled
+	// Create builder
 	builder := builders.NewGitHubReleaseBuilder()
-	if err := builder.Initialize(ctx, &builders.InitOptions{SkipValidation: false}); err != nil {
-		fmt.Fprintf(os.Stderr, "Error initializing builder: %v\n", err)
-		os.Exit(1)
-	}
 
 	results := make([]BenchmarkResult, 0, len(repos))
 
@@ -130,11 +126,24 @@ func benchmarkRepo(ctx context.Context, builder *builders.GitHubReleaseBuilder, 
 	parts := strings.Split(repo, "/")
 	toolName := parts[len(parts)-1]
 
-	result, err := builder.Build(ctx, builders.BuildRequest{
+	req := builders.BuildRequest{
 		Package:   toolName,
 		SourceArg: repo,
-	})
+	}
 
+	// Create session
+	session, err := builder.NewSession(ctx, req, nil)
+	if err != nil {
+		return BenchmarkResult{
+			Repo:   repo,
+			Passed: false,
+			Error:  err.Error(),
+		}
+	}
+	defer session.Close()
+
+	// Generate recipe
+	result, err := session.Generate(ctx)
 	if err != nil {
 		return BenchmarkResult{
 			Repo:   repo,

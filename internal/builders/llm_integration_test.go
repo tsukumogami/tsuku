@@ -64,17 +64,8 @@ func TestLLMGroundTruth(t *testing.T) {
 	}
 
 	// Initialize builders
-	ctx := context.Background()
-
 	githubBuilder := NewGitHubReleaseBuilder()
-	if err := githubBuilder.Initialize(ctx, &InitOptions{SkipValidation: false}); err != nil {
-		t.Fatalf("Failed to initialize GitHubReleaseBuilder: %v", err)
-	}
-
 	homebrewBuilder := NewHomebrewBuilder()
-	if err := homebrewBuilder.Initialize(ctx, &InitOptions{SkipValidation: false}); err != nil {
-		t.Fatalf("Failed to initialize HomebrewBuilder: %v", err)
-	}
 
 	// Find the recipes directory (relative to test file)
 	recipesDir := findRecipesDir(t)
@@ -116,18 +107,27 @@ func TestLLMGroundTruth(t *testing.T) {
 
 			// Select builder and build request based on test case
 			var result *BuildResult
+			var session BuildSession
 			if tc.Builder == "homebrew" {
 				// Use formula:source suffix to indicate source build
-				result, err = homebrewBuilder.Build(ctx, BuildRequest{
+				req := BuildRequest{
 					Package:   tc.Tool,
 					SourceArg: tc.Formula + ":source",
-				})
+				}
+				session, err = homebrewBuilder.NewSession(ctx, req, nil)
 			} else {
-				result, err = githubBuilder.Build(ctx, BuildRequest{
+				req := BuildRequest{
 					Package:   tc.Tool,
 					SourceArg: tc.Repo,
-				})
+				}
+				session, err = githubBuilder.NewSession(ctx, req, nil)
 			}
+			if err != nil {
+				t.Fatalf("Failed to create session: %v", err)
+			}
+			defer session.Close()
+
+			result, err = session.Generate(ctx)
 			if err != nil {
 				t.Fatalf("LLM recipe generation failed: %v", err)
 			}
