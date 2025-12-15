@@ -1859,7 +1859,7 @@ You have three tools available:
 2. inspect_bottle: Inspect the contents of a Homebrew bottle (limited)
 3. extract_recipe: Call this when you've determined the executables and verification command
 
-IMPORTANT: The generated recipe uses the homebrew_bottle action, which:
+IMPORTANT: The generated recipe uses the homebrew action, which:
 - Handles platform detection automatically (macOS ARM64/x86_64, Linux ARM64/x86_64)
 - Downloads bottles from GHCR with SHA256 verification
 - Does NOT require checksums in the recipe (they come from GHCR manifests)
@@ -2135,10 +2135,10 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 		},
 	}
 
-	// Add homebrew_bottle action
+	// Add homebrew action
 	r.Steps = []recipe.Step{
 		{
-			Action: "homebrew_bottle",
+			Action: "homebrew",
 			Params: map[string]interface{}{
 				"formula": info.Name,
 			},

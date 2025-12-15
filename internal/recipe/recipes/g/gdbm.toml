@@ -9,7 +9,7 @@ source = "homebrew"
 formula = "gdbm"
 
 [[steps]]
-action = "homebrew_bottle"
+action = "homebrew"
 formula = "gdbm"
 
 [[steps]]

@@ -78,7 +78,7 @@ func TestIsPrimitive(t *testing.T) {
 		"github_archive",
 		"github_file",
 		"download_archive",
-		"homebrew_bottle",
+		"homebrew",
 	}
 
 	for _, name := range compositeActions {

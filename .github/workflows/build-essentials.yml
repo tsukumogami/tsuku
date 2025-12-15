@@ -21,7 +21,7 @@ on:
       - '.github/workflows/build-essentials.yml'
 
 jobs:
-  # Test homebrew_bottle action with make and gdbm
+  # Test homebrew action with make and gdbm
   test-homebrew-bottle:
     name: "${{ matrix.platform.name }}: ${{ matrix.tool }}"
     runs-on: ${{ matrix.platform.runner }}

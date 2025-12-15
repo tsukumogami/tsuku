@@ -1053,7 +1053,7 @@ source = "homebrew"
 formula = "libyaml"
 
 [[steps]]
-action = "homebrew_bottle"
+action = "homebrew"
 formula = "libyaml"
 
 [[steps]]

@@ -284,7 +284,7 @@ func TestIsActionEvaluable(t *testing.T) {
 		{"download_archive", false},
 		{"github_archive", false},
 		{"github_file", false},
-		{"homebrew_bottle", false},
+		{"homebrew", false},
 
 		// Non-evaluable actions
 		{"run_command", false},

@@ -1537,7 +1537,7 @@ func TestRecipe_ToTOML_HomebrewRecipe(t *testing.T) {
 		},
 		Steps: []Step{
 			{
-				Action: "homebrew_bottle",
+				Action: "homebrew",
 				Params: map[string]interface{}{
 					"formula": "jq",
 				},
@@ -1568,8 +1568,8 @@ func TestRecipe_ToTOML_HomebrewRecipe(t *testing.T) {
 	if !contains(tomlStr, `formula = "jq"`) {
 		t.Error("ToTOML() missing formula field")
 	}
-	if !contains(tomlStr, `action = "homebrew_bottle"`) {
-		t.Error("ToTOML() missing homebrew_bottle action")
+	if !contains(tomlStr, `action = "homebrew"`) {
+		t.Error("ToTOML() missing homebrew action")
 	}
 
 	// Verify roundtrip works

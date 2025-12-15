@@ -303,8 +303,8 @@ func TestHomebrewBuilder_generateRecipe(t *testing.T) {
 	if len(recipe.Steps) != 2 {
 		t.Fatalf("len(Steps) = %v, want 2", len(recipe.Steps))
 	}
-	if recipe.Steps[0].Action != "homebrew_bottle" {
-		t.Errorf("Steps[0].Action = %v, want homebrew_bottle", recipe.Steps[0].Action)
+	if recipe.Steps[0].Action != "homebrew" {
+		t.Errorf("Steps[0].Action = %v, want homebrew", recipe.Steps[0].Action)
 	}
 	if recipe.Steps[1].Action != "install_binaries" {
 		t.Errorf("Steps[1].Action = %v, want install_binaries", recipe.Steps[1].Action)
@@ -386,7 +386,7 @@ func TestHomebrewBuilder_buildSystemPrompt(t *testing.T) {
 		"Homebrew",
 		"executable",
 		"extract_recipe",
-		"homebrew_bottle",
+		"homebrew",
 		"verify",
 	}
 

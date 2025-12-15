@@ -499,7 +499,7 @@ func extractDownloadURLs(r *recipe.Recipe) []string {
 					urls = append(urls, fmt.Sprintf("github.com/%s/releases/.../%s", repo, pattern))
 				}
 			}
-		case "homebrew_bottle":
+		case "homebrew":
 			if formula, ok := step.Params["formula"].(string); ok {
 				urls = append(urls, fmt.Sprintf("ghcr.io/homebrew/core/%s:...", formula))
 			}
@@ -523,7 +523,7 @@ func describeStep(step recipe.Step) string {
 		return fmt.Sprintf("Download and extract %s archive from GitHub", format)
 	case "github_file":
 		return "Download binary from GitHub releases"
-	case "homebrew_bottle":
+	case "homebrew":
 		if formula, ok := step.Params["formula"].(string); ok {
 			return fmt.Sprintf("Download Homebrew bottle for %s", formula)
 		}

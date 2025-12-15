@@ -235,7 +235,7 @@ func TestIsDownloadAction(t *testing.T) {
 		{"download_archive", true},
 		{"github_archive", true},
 		{"github_file", true},
-		{"homebrew_bottle", true},
+		{"homebrew", true},
 		{"extract", false},
 		{"install_binaries", false},
 		{"run_command", false},
@@ -320,8 +320,8 @@ func TestExtractDownloadURL(t *testing.T) {
 			expectError: true,
 		},
 		{
-			name:    "homebrew_bottle returns empty",
-			action:  "homebrew_bottle",
+			name:    "homebrew returns empty",
+			action:  "homebrew",
 			params:  map[string]interface{}{"formula": "test"},
 			wantURL: "", // homebrew bottles skip checksum
 		},
@@ -1291,8 +1291,8 @@ func TestGeneratePlan_DownloadError(t *testing.T) {
 	}
 }
 
-func TestGeneratePlan_HomebrewBottleSkipsChecksum(t *testing.T) {
-	// homebrew_bottle should not attempt download (URL is empty)
+func TestGeneratePlan_HomebrewSkipsChecksum(t *testing.T) {
+	// homebrew should not attempt download (URL is empty)
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
 			Name: "test-tool",
@@ -1302,7 +1302,7 @@ func TestGeneratePlan_HomebrewBottleSkipsChecksum(t *testing.T) {
 		},
 		Steps: []recipe.Step{
 			{
-				Action: "homebrew_bottle",
+				Action: "homebrew",
 				Params: map[string]interface{}{
 					"formula": "test-formula",
 				},
@@ -1333,12 +1333,12 @@ func TestGeneratePlan_HomebrewBottleSkipsChecksum(t *testing.T) {
 	}
 
 	step := plan.Steps[0]
-	// homebrew_bottle returns empty URL, so no checksum is computed
+	// homebrew returns empty URL, so no checksum is computed
 	if step.URL != "" {
-		t.Errorf("homebrew_bottle step.URL should be empty, got %q", step.URL)
+		t.Errorf("homebrew step.URL should be empty, got %q", step.URL)
 	}
 	if step.Checksum != "" {
-		t.Errorf("homebrew_bottle step.Checksum should be empty, got %q", step.Checksum)
+		t.Errorf("homebrew step.Checksum should be empty, got %q", step.Checksum)
 	}
 }
 
@@ -1450,10 +1450,10 @@ func TestGeneratePlan_AllDownloadActionTypes(t *testing.T) {
 			expectURL: true,
 		},
 		{
-			name:      "homebrew_bottle (no URL)",
-			action:    "homebrew_bottle",
+			name:      "homebrew (no URL)",
+			action:    "homebrew",
 			params:    map[string]interface{}{"formula": "test"},
-			expectURL: false, // homebrew_bottle returns empty URL
+			expectURL: false, // homebrew returns empty URL
 		},
 	}
 

@@ -9,7 +9,7 @@ source = "homebrew"
 formula = "zlib"
 
 [[steps]]
-action = "homebrew_bottle"
+action = "homebrew"
 formula = "zlib"
 
 [[steps]]

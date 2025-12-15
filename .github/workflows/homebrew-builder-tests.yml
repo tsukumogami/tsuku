@@ -55,7 +55,7 @@ jobs:
       - name: Setup PATH
         run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
 
-      # Create a test recipe that uses homebrew_bottle action
+      # Create a test recipe that uses homebrew action
       - name: Create test recipe
         run: |
           mkdir -p ~/.tsuku/recipes
@@ -70,7 +70,7 @@ jobs:
           formula = "tree"
 
           [[steps]]
-          action = "homebrew_bottle"
+          action = "homebrew"
           formula = "tree"
 
           [[steps]]
@@ -85,7 +85,7 @@ jobs:
           echo "Created recipe:"
           cat ~/.tsuku/recipes/tree.toml
 
-      # Test installing a tool that uses homebrew_bottle action
+      # Test installing a tool that uses homebrew action
       - name: Install tree via Homebrew bottle
         run: ./tsuku install --force tree
 

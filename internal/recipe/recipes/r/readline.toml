@@ -9,7 +9,7 @@ source = "homebrew"
 formula = "readline"
 
 [[steps]]
-action = "homebrew_bottle"
+action = "homebrew"
 formula = "readline"
 
 [[steps]]
