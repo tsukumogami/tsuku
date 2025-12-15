@@ -12,6 +12,11 @@ formula = "m4"
 action = "homebrew_source"
 formula = "m4"
 
+# Fix autotools timestamp issue - source tarballs have timestamps that trigger regeneration
+[[steps]]
+action = "run_command"
+command = "find . -name '*.in' -exec touch {} + && touch configure aclocal.m4 config.h.in"
+
 [[steps]]
 action = "configure_make"
 source_dir = "."
