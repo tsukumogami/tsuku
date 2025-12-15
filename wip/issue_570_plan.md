@@ -17,13 +17,13 @@ Follow the design in `docs/DESIGN-install-sandbox.md`. The implementation querie
 - `internal/sandbox/requirements_test.go` - Unit tests for requirements computation
 
 ## Implementation Steps
-- [ ] Create `internal/sandbox/` package directory
-- [ ] Implement `SandboxRequirements` struct with fields: RequiresNetwork, Image, Resources
-- [ ] Implement `ComputeSandboxRequirements()` function that iterates plan steps and queries NetworkValidator
-- [ ] Implement `hasBuildActions()` helper for detecting build-intensive plans
-- [ ] Define constants for default images (DefaultSandboxImage, SourceBuildSandboxImage)
-- [ ] Define `SourceBuildLimits()` function for build resource limits
-- [ ] Write comprehensive unit tests covering offline plans, network plans, and build plans
+- [x] Create `internal/sandbox/` package directory
+- [x] Implement `SandboxRequirements` struct with fields: RequiresNetwork, Image, Resources
+- [x] Implement `ComputeSandboxRequirements()` function that iterates plan steps and queries NetworkValidator
+- [x] Implement `hasBuildActions()` helper for detecting build-intensive plans
+- [x] Define constants for default images (DefaultSandboxImage, SourceBuildSandboxImage)
+- [x] Define `SourceBuildLimits()` function for build resource limits
+- [x] Write comprehensive unit tests covering offline plans, network plans, and build plans
 
 ## Testing Strategy
 - Unit tests: Test computation with various plan configurations
@@ -38,15 +38,15 @@ Follow the design in `docs/DESIGN-install-sandbox.md`. The implementation querie
 - Future actions added without RequiresNetwork: Fail-closed design - unknown actions default to no network
 
 ## Success Criteria
-- [ ] `SandboxRequirements` struct created in `internal/sandbox/requirements.go`
-- [ ] `ComputeSandboxRequirements(plan)` function implemented
-- [ ] Function queries actions via NetworkValidator interface
-- [ ] Network requirement aggregated correctly (any true = plan needs network)
-- [ ] Image selection: debian:bookworm-slim for offline, ubuntu:22.04 for network/build
-- [ ] Resource limits selected based on plan complexity
-- [ ] Unit tests cover offline, network, and build plan configurations
-- [ ] All tests pass
-- [ ] No lint warnings
+- [x] `SandboxRequirements` struct created in `internal/sandbox/requirements.go`
+- [x] `ComputeSandboxRequirements(plan)` function implemented
+- [x] Function queries actions via NetworkValidator interface
+- [x] Network requirement aggregated correctly (any true = plan needs network)
+- [x] Image selection: debian:bookworm-slim for offline, ubuntu:22.04 for network/build
+- [x] Resource limits selected based on plan complexity
+- [x] Unit tests cover offline, network, and build plan configurations
+- [x] All tests pass
+- [x] No lint warnings (go vet passed; golangci-lint runs in CI)
 
 ## Open Questions
 None - design is clear and dependencies (#568, #569) are already implemented.
