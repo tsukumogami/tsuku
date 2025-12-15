@@ -26,8 +26,8 @@ graph LR
     classDef blocked fill:#FFB6C1,stroke:#333
 
     I568[#568: Add NetworkValidator interface]:::done --> I569[#569: Implement RequiresNetwork]:::done
-    I569 --> I570[#570: Add SandboxRequirements]:::ready
-    I570 --> I571[#571: Unify Sandbox methods]:::blocked
+    I569 --> I570[#570: Add SandboxRequirements]:::done
+    I570 --> I571[#571: Unify Sandbox methods]:::ready
     I571 --> I572[#572: Update builders]:::blocked
     I571 --> I573[#573: Add CLI flags]:::blocked
 ```
