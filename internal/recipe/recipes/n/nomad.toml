@@ -10,6 +10,7 @@ github_repo = "hashicorp/nomad"
 [[steps]]
 action = "download"
 url = "https://releases.hashicorp.com/nomad/{version}/nomad_{version}_{os}_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/nomad/{version}/nomad_{version}_SHA256SUMS"
 
 [[steps]]
 action = "extract"

@@ -10,6 +10,7 @@ github_repo = "hashicorp/terraform"
 [[steps]]
 action = "download"
 url = "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_{os}_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/terraform/{version}/terraform_{version}_SHA256SUMS"
 
 [[steps]]
 action = "extract"

@@ -10,6 +10,7 @@ github_repo = "hashicorp/boundary"
 [[steps]]
 action = "download"
 url = "https://releases.hashicorp.com/boundary/{version}/boundary_{version}_{os}_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/boundary/{version}/boundary_{version}_SHA256SUMS"
 
 [[steps]]
 action = "extract"
