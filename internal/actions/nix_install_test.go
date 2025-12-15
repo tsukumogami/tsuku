@@ -299,7 +299,9 @@ func TestNixInstallAction_Execute_PlatformCheck(t *testing.T) {
 	}
 
 	action := &NixInstallAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{
+		InstallDir: t.TempDir(),
+	}
 	params := map[string]interface{}{
 		"package":     "hello",
 		"executables": []string{"hello"},
@@ -322,7 +324,9 @@ func TestNixInstallAction_Execute_MissingPackage(t *testing.T) {
 	}
 
 	action := &NixInstallAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{
+		InstallDir: t.TempDir(),
+	}
 	params := map[string]interface{}{
 		"executables": []string{"hello"},
 	}
@@ -344,7 +348,9 @@ func TestNixInstallAction_Execute_InvalidPackage(t *testing.T) {
 	}
 
 	action := &NixInstallAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{
+		InstallDir: t.TempDir(),
+	}
 	params := map[string]interface{}{
 		"package":     "hello;rm -rf /",
 		"executables": []string{"hello"},
@@ -367,7 +373,9 @@ func TestNixInstallAction_Execute_MissingExecutables(t *testing.T) {
 	}
 
 	action := &NixInstallAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{
+		InstallDir: t.TempDir(),
+	}
 	params := map[string]interface{}{
 		"package": "hello",
 	}
@@ -389,7 +397,9 @@ func TestNixInstallAction_Execute_EmptyExecutables(t *testing.T) {
 	}
 
 	action := &NixInstallAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{
+		InstallDir: t.TempDir(),
+	}
 	params := map[string]interface{}{
 		"package":     "hello",
 		"executables": []string{},
@@ -412,7 +422,9 @@ func TestNixInstallAction_Execute_InvalidExecutable(t *testing.T) {
 	}
 
 	action := &NixInstallAction{}
-	ctx := &ExecutionContext{}
+	ctx := &ExecutionContext{
+		InstallDir: t.TempDir(),
+	}
 	params := map[string]interface{}{
 		"package":     "hello",
 		"executables": []string{"../evil"},
