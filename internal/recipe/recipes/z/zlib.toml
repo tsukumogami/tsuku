@@ -1,0 +1,23 @@
+[metadata]
+name = "zlib"
+description = "General-purpose lossless data-compression library"
+homepage = "https://zlib.net/"
+type = "library"
+
+[version]
+source = "homebrew"
+formula = "zlib"
+
+[[steps]]
+action = "homebrew_bottle"
+formula = "zlib"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["lib/libz.a", "lib/libz.dylib", "lib/libz.so", "include/zlib.h", "include/zconf.h"]
+
+[verify]
+command = "ls lib/libz.a"
+pattern = "libz"
+mode = "output"

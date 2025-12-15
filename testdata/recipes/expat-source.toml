@@ -1,0 +1,27 @@
+# Test recipe for validating zlib dependency linking
+# This builds expat from source to validate that configure_make can
+# link against tsuku-provided libraries (zlib)
+# Used by build-essentials CI workflow
+
+[metadata]
+name = "expat-source"
+description = "XML 1.0 parser (source build for testing)"
+homepage = "https://libexpat.github.io/"
+dependencies = ["make", "zlib"]
+
+[version]
+source = "homebrew"
+formula = "expat"
+
+[[steps]]
+action = "homebrew_source"
+formula = "expat"
+
+[[steps]]
+action = "configure_make"
+source_dir = "."
+executables = ["xmlwf"]
+
+[verify]
+command = "xmlwf -v"
+pattern = "expat library version {version}"

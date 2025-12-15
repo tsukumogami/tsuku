@@ -1,0 +1,22 @@
+[metadata]
+name = "expat"
+description = "XML 1.0 parser"
+homepage = "https://libexpat.github.io/"
+binaries = ["bin/xmlwf"]
+
+[version]
+source = "homebrew"
+formula = "expat"
+
+[[steps]]
+action = "homebrew_bottle"
+formula = "expat"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/xmlwf"]
+
+[verify]
+command = "xmlwf -v"
+pattern = "expat library version {version}"
