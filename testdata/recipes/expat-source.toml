@@ -16,6 +16,7 @@ formula = "expat"
 
 [[steps]]
 action = "configure_make"
+source_dir = "."
 executables = ["xmlwf"]
 
 [verify]

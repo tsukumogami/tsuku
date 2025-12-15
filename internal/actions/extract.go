@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/klauspost/compress/zstd"
+	lzip "github.com/sorairolake/lzip-go"
 	"github.com/ulikunitz/xz"
 )
 
@@ -148,6 +149,8 @@ func (a *ExtractAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		return a.extractTarBz2(archivePath, destPath, stripDirs, files)
 	case "tar.zst", "tzst":
 		return a.extractTarZst(archivePath, destPath, stripDirs, files)
+	case "tar.lz", "tlz":
+		return a.extractTarLz(archivePath, destPath, stripDirs, files)
 	case "tar":
 		return a.extractTar(archivePath, destPath, stripDirs, files)
 	case "zip":
@@ -169,6 +172,8 @@ func (a *ExtractAction) detectFormat(filename string) string {
 		return "tar.bz2"
 	case strings.HasSuffix(lower, ".tar.zst"), strings.HasSuffix(lower, ".tzst"):
 		return "tar.zst"
+	case strings.HasSuffix(lower, ".tar.lz"), strings.HasSuffix(lower, ".tlz"):
+		return "tar.lz"
 	case strings.HasSuffix(lower, ".tar"):
 		return "tar"
 	case strings.HasSuffix(lower, ".zip"):
@@ -238,6 +243,22 @@ func (a *ExtractAction) extractTarZst(archivePath, destPath string, stripDirs in
 	defer zr.Close()
 
 	return a.extractTarReader(tar.NewReader(zr), destPath, stripDirs, files)
+}
+
+// extractTarLz extracts a tar.lz archive
+func (a *ExtractAction) extractTarLz(archivePath, destPath string, stripDirs int, files []string) error {
+	file, err := os.Open(archivePath)
+	if err != nil {
+		return fmt.Errorf("failed to open archive: %w", err)
+	}
+	defer file.Close()
+
+	lr, err := lzip.NewReader(file)
+	if err != nil {
+		return fmt.Errorf("failed to create lzip reader: %w", err)
+	}
+
+	return a.extractTarReader(tar.NewReader(lr), destPath, stripDirs, files)
 }
 
 // extractTar extracts a plain tar archive

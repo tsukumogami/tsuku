@@ -9,6 +9,7 @@ require (
 	github.com/google/generative-ai-go v0.20.1
 	github.com/google/go-github/v57 v57.0.0
 	github.com/klauspost/compress v1.18.2
+	github.com/sorairolake/lzip-go v0.3.8
 	github.com/spf13/cobra v1.10.1
 	github.com/ulikunitz/xz v0.5.15
 	golang.org/x/oauth2 v0.33.0
