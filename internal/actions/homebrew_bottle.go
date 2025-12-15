@@ -499,6 +499,44 @@ func (a *HomebrewBottleAction) fixElfRpath(binaryPath, installPath string) error
 		return fmt.Errorf("patchelf --set-rpath failed: %s: %w", strings.TrimSpace(string(output)), err)
 	}
 
+	// Fix the ELF interpreter if it contains Homebrew placeholders
+	// Homebrew bottles on Linux have interpreter set to @@HOMEBREW_PREFIX@@/lib/ld.so
+	// which needs to be changed to the system loader
+	if err := a.fixElfInterpreter(patchelf, binaryPath); err != nil {
+		// Log but don't fail - some binaries (shared libs) don't have interpreters
+		fmt.Printf("   Note: Could not fix interpreter for %s: %v\n", filepath.Base(binaryPath), err)
+	}
+
+	return nil
+}
+
+// fixElfInterpreter fixes the ELF interpreter path if it contains Homebrew placeholders
+func (a *HomebrewBottleAction) fixElfInterpreter(patchelf, binaryPath string) error {
+	// Read current interpreter
+	printCmd := exec.Command(patchelf, "--print-interpreter", binaryPath)
+	output, err := printCmd.CombinedOutput()
+	if err != nil {
+		// Shared libraries don't have interpreters, this is expected
+		return nil
+	}
+
+	currentInterp := strings.TrimSpace(string(output))
+	if !strings.Contains(currentInterp, "@@HOMEBREW") && !strings.Contains(currentInterp, "HOMEBREW_PREFIX") {
+		// Interpreter doesn't contain placeholders, no fix needed
+		return nil
+	}
+
+	// Determine system interpreter based on architecture
+	systemInterp := "/lib64/ld-linux-x86-64.so.2"
+	if runtime.GOARCH == "arm64" {
+		systemInterp = "/lib/ld-linux-aarch64.so.1"
+	}
+
+	setCmd := exec.Command(patchelf, "--set-interpreter", systemInterp, binaryPath)
+	if output, err := setCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("patchelf --set-interpreter failed: %s: %w", strings.TrimSpace(string(output)), err)
+	}
+
 	return nil
 }
 
