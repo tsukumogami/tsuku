@@ -78,7 +78,7 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 	// For local recipe files, show confirmation prompt (unless --force or --yes)
 	if recipePath != "" && !installForce {
 		if !confirmSandboxExecution(recipePath, reqs) {
-			return fmt.Errorf("sandbox testing cancelled")
+			return fmt.Errorf("sandbox testing canceled")
 		}
 	}
 
