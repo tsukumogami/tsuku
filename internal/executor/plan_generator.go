@@ -284,8 +284,9 @@ func (e *Executor) resolveStep(
 		Deterministic: deterministic,
 	}
 
-	// For download actions, compute checksum
-	if isDownloadAction(step.Action) && downloader != nil {
+	// For download actions, extract checksum from params or compute via download
+	// Always download when a downloader is available to cache the file for offline execution
+	if isDownloadAction(step.Action) {
 		url, err := extractDownloadURL(step.Action, expandedParams, mappedVars)
 		if err != nil {
 			return nil, fmt.Errorf("failed to extract download URL: %w", err)
@@ -294,15 +295,41 @@ func (e *Executor) resolveStep(
 		if url != "" {
 			resolved.URL = url
 
-			// Download to compute checksum
-			result, err := downloader.Download(ctx, url)
-			if err != nil {
-				return nil, fmt.Errorf("failed to download for checksum: %w", err)
+			// Check if checksum is provided in params (e.g., "sha256:...")
+			checksumParam, hasChecksumParam := expandedParams["checksum"].(string)
+			if hasChecksumParam && checksumParam != "" {
+				resolved.Checksum = checksumParam
 			}
-			defer func() { _ = result.Cleanup() }()
 
-			resolved.Checksum = result.Checksum
-			resolved.Size = result.Size
+			// Always download to cache the file for offline execution (e.g., sandbox mode)
+			// Even if checksum is provided in params, we need the file cached
+			if downloader != nil {
+				result, err := downloader.Download(ctx, url)
+				if err != nil {
+					return nil, fmt.Errorf("failed to download for caching: %w", err)
+				}
+
+				// Save to cache if configured
+				if evalCtx != nil && evalCtx.DownloadCache != nil {
+					checksum := resolved.Checksum
+					if checksum == "" {
+						checksum = result.Checksum
+					}
+					if err := evalCtx.DownloadCache.Save(url, result.AssetPath, checksum); err != nil {
+						return nil, fmt.Errorf("failed to save to cache: %w", err)
+					}
+				}
+
+				// Use computed checksum/size if not provided in params
+				if resolved.Checksum == "" {
+					resolved.Checksum = result.Checksum
+				}
+				if resolved.Size == 0 {
+					resolved.Size = result.Size
+				}
+
+				_ = result.Cleanup()
+			}
 		}
 	}
 

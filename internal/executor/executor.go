@@ -361,6 +361,10 @@ func (e *Executor) executeDownloadWithVerification(
 
 	// Verify checksum matches plan
 	expectedChecksum := strings.ToLower(strings.TrimSpace(step.Checksum))
+	// Strip algorithm prefix if present (e.g., "sha256:abc123" -> "abc123")
+	if idx := strings.Index(expectedChecksum, ":"); idx != -1 {
+		expectedChecksum = expectedChecksum[idx+1:]
+	}
 	if actualChecksum != expectedChecksum {
 		return &ChecksumMismatchError{
 			Tool:             plan.Tool,

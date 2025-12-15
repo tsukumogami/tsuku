@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/BurntSushi/toml"
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
@@ -93,9 +94,10 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 		reqs.Resources.Memory, reqs.Resources.CPUs, reqs.Resources.Timeout)
 	printInfo()
 
-	// Create sandbox executor
+	// Create sandbox executor with download cache directory
+	// This allows the sandbox to use pre-downloaded files from plan generation
 	detector := validate.NewRuntimeDetector()
-	sandboxExec := sandbox.NewExecutor(detector)
+	sandboxExec := sandbox.NewExecutor(detector, sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir))
 
 	// Run sandbox test
 	result, err := sandboxExec.Sandbox(globalCtx, plan, reqs)
@@ -153,6 +155,7 @@ func loadLocalRecipe(path string) (*recipe.Recipe, error) {
 }
 
 // generatePlanFromRecipe generates an installation plan from a recipe.
+// It pre-downloads files and caches them for offline sandbox execution.
 func generatePlanFromRecipe(r *recipe.Recipe, toolName string, cfg *config.Config) (*executor.InstallationPlan, error) {
 	exec, err := executor.New(r)
 	if err != nil {
@@ -163,10 +166,20 @@ func generatePlanFromRecipe(r *recipe.Recipe, toolName string, cfg *config.Confi
 	exec.SetToolsDir(cfg.ToolsDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 
+	// Create downloader for checksum computation and pre-downloading
+	predownloader := validate.NewPreDownloader()
+	downloader := validate.NewPreDownloaderAdapter(predownloader)
+
+	// Create download cache for persisting downloads
+	// Downloaded files are cached so they can be mounted into the sandbox container
+	downloadCache := actions.NewDownloadCache(cfg.DownloadCacheDir)
+
 	plan, err := exec.GeneratePlan(globalCtx, executor.PlanConfig{
-		OS:           runtime.GOOS,
-		Arch:         runtime.GOARCH,
-		RecipeSource: "local",
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		RecipeSource:  "local",
+		Downloader:    downloader,
+		DownloadCache: downloadCache,
 	})
 	if err != nil {
 		return nil, err

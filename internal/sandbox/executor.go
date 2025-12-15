@@ -34,9 +34,10 @@ type SandboxResult struct {
 // It uses SandboxRequirements to configure containers appropriately
 // for different types of installations (binary, source build, ecosystem).
 type Executor struct {
-	detector    *validate.RuntimeDetector
-	logger      log.Logger
-	tsukuBinary string // Path to tsuku binary for container execution
+	detector         *validate.RuntimeDetector
+	logger           log.Logger
+	tsukuBinary      string // Path to tsuku binary for container execution
+	downloadCacheDir string // External download cache directory to mount
 }
 
 // ExecutorOption configures an Executor.
@@ -53,6 +54,14 @@ func WithLogger(logger log.Logger) ExecutorOption {
 func WithTsukuBinary(path string) ExecutorOption {
 	return func(e *Executor) {
 		e.tsukuBinary = path
+	}
+}
+
+// WithDownloadCacheDir sets the download cache directory to mount into containers.
+// This directory should contain pre-downloaded files from plan generation.
+func WithDownloadCacheDir(path string) ExecutorOption {
+	return func(e *Executor) {
+		e.downloadCacheDir = path
 	}
 }
 
@@ -149,10 +158,14 @@ func (e *Executor) Sandbox(
 	}
 	defer func() { _ = os.RemoveAll(workspaceDir) }()
 
-	// Create download cache directory within workspace
-	cacheDir := filepath.Join(workspaceDir, "cache", "downloads")
-	if err := os.MkdirAll(cacheDir, 0700); err != nil {
-		return nil, fmt.Errorf("failed to create cache directory: %w", err)
+	// Use external download cache if provided, otherwise create empty one
+	// External cache should contain pre-downloaded files from plan generation
+	cacheDir := e.downloadCacheDir
+	if cacheDir == "" {
+		cacheDir = filepath.Join(workspaceDir, "cache", "downloads")
+		if err := os.MkdirAll(cacheDir, 0700); err != nil {
+			return nil, fmt.Errorf("failed to create cache directory: %w", err)
+		}
 	}
 
 	// Write plan JSON to workspace

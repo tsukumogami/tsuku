@@ -100,6 +100,11 @@ func VerifyChecksum(filePath, expectedChecksum, algo string) error {
 	actualChecksum := hex.EncodeToString(hash)
 	expectedChecksum = strings.TrimSpace(strings.ToLower(expectedChecksum))
 
+	// Strip algorithm prefix if present (e.g., "sha256:abc123" -> "abc123")
+	if idx := strings.Index(expectedChecksum, ":"); idx != -1 {
+		expectedChecksum = expectedChecksum[idx+1:]
+	}
+
 	if actualChecksum != expectedChecksum {
 		return fmt.Errorf("checksum mismatch:\n  expected: %s\n  actual:   %s", expectedChecksum, actualChecksum)
 	}
