@@ -17,7 +17,7 @@ Planned
 | [#541](https://github.com/tsukumogami/tsuku/issues/541) | feat(recipes): add make recipe using homebrew_bottle | None |
 | [#542](https://github.com/tsukumogami/tsuku/issues/542) | feat(recipes): add zig recipe and validate cc wrapper | None |
 | [#543](https://github.com/tsukumogami/tsuku/issues/543) | feat(scripts): add build essential validation scripts | None |
-| [#544](https://github.com/tsukumogami/tsuku/issues/544) | feat(recipes): add expat recipe to validate zlib dependency | [#540](https://github.com/tsukumogami/tsuku/issues/540) |
+| [#544](https://github.com/tsukumogami/tsuku/issues/544) | feat(recipes): add pngcrush recipe to validate zlib dependency | [#540](https://github.com/tsukumogami/tsuku/issues/540) |
 | [#545](https://github.com/tsukumogami/tsuku/issues/545) | feat(recipes): add gdbm recipe to validate configure_make | [#541](https://github.com/tsukumogami/tsuku/issues/541) |
 | [#546](https://github.com/tsukumogami/tsuku/issues/546) | feat(recipes): add m4 recipe to validate compilation | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542) |
 
@@ -28,7 +28,7 @@ graph LR
     I541["#541: make recipe"]
     I542["#542: zig recipe"]
     I543["#543: validation scripts"]
-    I544["#544: expat recipe"]
+    I544["#544: pngcrush recipe"]
     I545["#545: gdbm recipe"]
     I546["#546: m4 recipe"]
 
@@ -41,9 +41,9 @@ graph LR
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I539,I541,I545 done
-    class I540,I542,I543 ready
-    class I544,I546 blocked
+    class I539,I540,I541,I544,I545 done
+    class I542,I543 ready
+    class I546 blocked
 ```
 
 ### Milestone: [Dependency Provisioning: Build Environment](https://github.com/tsukumogami/tsuku/milestone/19)

@@ -84,6 +84,8 @@ func (a *HomebrewSourceAction) detectArchiveFormat(url string) string {
 		return "tar.xz"
 	case strings.HasSuffix(lower, ".tar.bz2"):
 		return "tar.bz2"
+	case strings.HasSuffix(lower, ".tar.lz"):
+		return "tar.lz"
 	case strings.HasSuffix(lower, ".zip"):
 		return "zip"
 	default:
