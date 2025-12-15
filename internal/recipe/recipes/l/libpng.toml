@@ -1,0 +1,24 @@
+[metadata]
+name = "libpng"
+description = "Library for manipulating PNG images"
+homepage = "http://www.libpng.org/pub/png/libpng.html"
+type = "library"
+dependencies = ["zlib"]
+
+[version]
+source = "homebrew"
+formula = "libpng"
+
+[[steps]]
+action = "homebrew_bottle"
+formula = "libpng"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["lib/libpng.a", "lib/libpng16.a", "include/png.h", "include/pngconf.h"]
+
+[verify]
+command = "ls lib/libpng.a"
+pattern = "libpng"
+mode = "output"

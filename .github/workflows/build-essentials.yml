@@ -36,6 +36,7 @@ jobs:
         tool:
           - make
           - gdbm
+          - pngcrush  # Tests dependency chain: pngcrush -> libpng -> zlib
 
     steps:
       - uses: actions/checkout@v4

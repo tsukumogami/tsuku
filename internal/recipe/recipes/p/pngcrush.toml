@@ -1,0 +1,22 @@
+[metadata]
+name = "pngcrush"
+description = "Optimizer for PNG files"
+homepage = "https://pmt.sourceforge.io/pngcrush/"
+dependencies = ["libpng"]
+
+[version]
+source = "homebrew"
+formula = "pngcrush"
+
+[[steps]]
+action = "homebrew_bottle"
+formula = "pngcrush"
+
+[[steps]]
+action = "install_binaries"
+binaries = ["bin/pngcrush"]
+
+[verify]
+command = "ls bin/pngcrush"
+pattern = "pngcrush"
+mode = "output"
