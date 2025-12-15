@@ -9,11 +9,11 @@ github_repo = "hashicorp/packer"
 
 [[steps]]
 action = "download"
-url = "https://releases.hashicorp.com/packer/{{.Version}}/packer_{{.Version}}_{{.OS}}_{{.Arch}}.zip"
+url = "https://releases.hashicorp.com/packer/{version}/packer_{version}_{os}_{arch}.zip"
 
 [[steps]]
 action = "extract"
-archive = "packer_{{.Version}}_{{.OS}}_{{.Arch}}.zip"
+archive = "packer_{version}_{os}_{arch}.zip"
 format = "zip"
 
 [[steps]]

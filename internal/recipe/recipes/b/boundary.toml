@@ -9,11 +9,11 @@ github_repo = "hashicorp/boundary"
 
 [[steps]]
 action = "download"
-url = "https://releases.hashicorp.com/boundary/{{.Version}}/boundary_{{.Version}}_{{.OS}}_{{.Arch}}.zip"
+url = "https://releases.hashicorp.com/boundary/{version}/boundary_{version}_{os}_{arch}.zip"
 
 [[steps]]
 action = "extract"
-archive = "boundary_{{.Version}}_{{.OS}}_{{.Arch}}.zip"
+archive = "boundary_{version}_{os}_{arch}.zip"
 format = "zip"
 
 [[steps]]

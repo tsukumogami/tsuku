@@ -9,11 +9,11 @@ github_repo = "hashicorp/waypoint"
 
 [[steps]]
 action = "download"
-url = "https://releases.hashicorp.com/waypoint/{{.Version}}/waypoint_{{.Version}}_{{.OS}}_{{.Arch}}.zip"
+url = "https://releases.hashicorp.com/waypoint/{version}/waypoint_{version}_{os}_{arch}.zip"
 
 [[steps]]
 action = "extract"
-archive = "waypoint_{{.Version}}_{{.OS}}_{{.Arch}}.zip"
+archive = "waypoint_{version}_{os}_{arch}.zip"
 format = "zip"
 
 [[steps]]

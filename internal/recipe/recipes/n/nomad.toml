@@ -9,11 +9,11 @@ github_repo = "hashicorp/nomad"
 
 [[steps]]
 action = "download"
-url = "https://releases.hashicorp.com/nomad/{{.Version}}/nomad_{{.Version}}_{{.OS}}_{{.Arch}}.zip"
+url = "https://releases.hashicorp.com/nomad/{version}/nomad_{version}_{os}_{arch}.zip"
 
 [[steps]]
 action = "extract"
-archive = "nomad_{{.Version}}_{{.OS}}_{{.Arch}}.zip"
+archive = "nomad_{version}_{os}_{arch}.zip"
 format = "zip"
 
 [[steps]]
