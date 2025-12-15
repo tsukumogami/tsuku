@@ -8,10 +8,22 @@ version_format = "semver"
 github_repo = "hashicorp/waypoint"
 
 [[steps]]
-action = "hashicorp_release"
-product = "waypoint"
-binary = "waypoint"
-verify_signature = false
+action = "download"
+url = "https://releases.hashicorp.com/waypoint/{version}/waypoint_{version}_{os}_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/waypoint/{version}/waypoint_{version}_SHA256SUMS"
+
+[[steps]]
+action = "extract"
+archive = "waypoint_{version}_{os}_{arch}.zip"
+format = "zip"
+
+[[steps]]
+action = "chmod"
+files = ["waypoint"]
+
+[[steps]]
+action = "install_binaries"
+binaries = ["waypoint"]
 
 [verify]
 command = "waypoint version"

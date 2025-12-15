@@ -150,7 +150,6 @@ func init() {
 	Register(&DownloadArchiveAction{})
 	Register(&GitHubArchiveAction{})
 	Register(&GitHubFileAction{})
-	Register(&HashiCorpReleaseAction{})
 	Register(&HomebrewBottleAction{})
 	Register(&HomebrewSourceAction{})
 }

@@ -235,7 +235,6 @@ func TestIsDownloadAction(t *testing.T) {
 		{"download_archive", true},
 		{"github_archive", true},
 		{"github_file", true},
-		{"hashicorp_release", true},
 		{"homebrew_bottle", true},
 		{"extract", false},
 		{"install_binaries", false},
@@ -318,20 +317,6 @@ func TestExtractDownloadURL(t *testing.T) {
 			name:        "github_archive missing asset",
 			action:      "github_archive",
 			params:      map[string]interface{}{"repo": "owner/repo"},
-			expectError: true,
-		},
-		{
-			name:   "hashicorp_release",
-			action: "hashicorp_release",
-			params: map[string]interface{}{
-				"product": "terraform",
-			},
-			wantURL: "https://releases.hashicorp.com/terraform/1.2.3/terraform_1.2.3_linux_amd64.zip",
-		},
-		{
-			name:        "hashicorp_release missing product",
-			action:      "hashicorp_release",
-			params:      map[string]interface{}{},
 			expectError: true,
 		},
 		{
@@ -1516,7 +1501,7 @@ func TestGeneratePlan_AllDownloadActionTypes(t *testing.T) {
 
 func TestGeneratePlan_DecomposesCompositeActions(t *testing.T) {
 	// Test that composite actions are decomposed into primitives
-	// Use hashicorp_release which is a decomposable action
+	// Use download_archive which is a decomposable action
 	r := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
 			Name:        "test-tool",
@@ -1527,9 +1512,10 @@ func TestGeneratePlan_DecomposesCompositeActions(t *testing.T) {
 		},
 		Steps: []recipe.Step{
 			{
-				Action: "hashicorp_release",
+				Action: "download_archive",
 				Params: map[string]interface{}{
-					"product": "terraform",
+					"url":    "https://example.com/tool-{{.Version}}-{{.OS}}-{{.Arch}}.tar.gz",
+					"format": "tar.gz",
 				},
 			},
 		},
@@ -1566,7 +1552,7 @@ func TestGeneratePlan_DecomposesCompositeActions(t *testing.T) {
 		}
 	}
 
-	// First step should be download (from hashicorp_release decomposition)
+	// First step should be download (from download_archive decomposition)
 	if len(plan.Steps) > 0 && plan.Steps[0].Action != "download" {
 		t.Errorf("first step should be 'download', got %q", plan.Steps[0].Action)
 	}

@@ -240,7 +240,6 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"nix_install":       true,
 		"github_archive":    true,
 		"github_file":       true,
-		"hashicorp_release": true,
 		"homebrew_bottle":   true,
 		"homebrew_source":   true,
 		"configure_make":    true,
@@ -345,11 +344,6 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 	case "run_command":
 		if _, ok := step.Params["command"]; !ok {
 			result.addError(stepField, "run_command action requires 'command' parameter")
-		}
-
-	case "hashicorp_release":
-		if _, ok := step.Params["product"]; !ok {
-			result.addError(stepField, "hashicorp_release action requires 'product' parameter")
 		}
 
 	case "homebrew_bottle":

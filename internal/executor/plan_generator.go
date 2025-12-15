@@ -314,7 +314,7 @@ func (e *Executor) resolveStep(
 // isDownloadAction returns true if the action involves downloading files.
 func isDownloadAction(action string) bool {
 	switch action {
-	case "download", "download_archive", "github_archive", "github_file", "hashicorp_release", "homebrew_bottle":
+	case "download", "download_archive", "github_archive", "github_file", "homebrew_bottle":
 		return true
 	default:
 		return false
@@ -355,22 +355,6 @@ func extractDownloadURL(action string, params map[string]interface{}, vars map[s
 		// Build GitHub release download URL
 		// Format: https://github.com/{repo}/releases/download/{tag}/{asset}
 		url := fmt.Sprintf("https://github.com/%s/releases/download/v%s/%s", repo, ver, assetName)
-		return url, nil
-
-	case "hashicorp_release":
-		// Construct HashiCorp release URL
-		product, ok := params["product"].(string)
-		if !ok {
-			return "", fmt.Errorf("missing 'product' parameter")
-		}
-
-		ver := vars["version"]
-		os := vars["os"]
-		arch := vars["arch"]
-
-		// Format: https://releases.hashicorp.com/{product}/{version}/{product}_{version}_{os}_{arch}.zip
-		url := fmt.Sprintf("https://releases.hashicorp.com/%s/%s/%s_%s_%s_%s.zip",
-			product, ver, product, ver, os, arch)
 		return url, nil
 
 	case "homebrew_bottle":

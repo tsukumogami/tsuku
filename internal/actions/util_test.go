@@ -453,6 +453,81 @@ func TestReadChecksumFile_NotFound(t *testing.T) {
 	}
 }
 
+func TestReadChecksumFile_MultiLine(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Multi-line checksum file like HashiCorp SHA256SUMS
+	multiLineContent := `62fca69aa1fc3093a522182ab86ed0c5095fafc146b432cd52dca861c0a3545b  terraform_1.14.2_darwin_amd64.zip
+c81719634fc5f325b3711e8b9c5444bd0d7b8590b0b9aa2ff8f00ff50a9d60c8  terraform_1.14.2_darwin_arm64.zip
+8314673d57e9fb8e01bfc98d074f51f7efb6e55484cfb2b10baed686de2190da  terraform_1.14.2_linux_amd64.zip
+01e5a239ad96bc40f37d6eca8cd8b6b0a72ffb227162574c0144a7d0e0741f86  terraform_1.14.2_linux_arm.zip
+`
+
+	tests := []struct {
+		name           string
+		targetFilename string
+		expected       string
+		wantErr        bool
+	}{
+		{
+			name:           "find linux_amd64",
+			targetFilename: "terraform_1.14.2_linux_amd64.zip",
+			expected:       "8314673d57e9fb8e01bfc98d074f51f7efb6e55484cfb2b10baed686de2190da",
+		},
+		{
+			name:           "find darwin_amd64",
+			targetFilename: "terraform_1.14.2_darwin_amd64.zip",
+			expected:       "62fca69aa1fc3093a522182ab86ed0c5095fafc146b432cd52dca861c0a3545b",
+		},
+		{
+			name:           "find darwin_arm64",
+			targetFilename: "terraform_1.14.2_darwin_arm64.zip",
+			expected:       "c81719634fc5f325b3711e8b9c5444bd0d7b8590b0b9aa2ff8f00ff50a9d60c8",
+		},
+		{
+			name:           "not found",
+			targetFilename: "terraform_1.14.2_windows_amd64.zip",
+			wantErr:        true,
+		},
+		{
+			name:           "no target falls back to first line",
+			targetFilename: "",
+			expected:       "62fca69aa1fc3093a522182ab86ed0c5095fafc146b432cd52dca861c0a3545b",
+		},
+	}
+
+	checksumFile := filepath.Join(tmpDir, "SHA256SUMS")
+	if err := os.WriteFile(checksumFile, []byte(multiLineContent), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var result string
+			var err error
+			if tt.targetFilename == "" {
+				result, err = ReadChecksumFile(checksumFile)
+			} else {
+				result, err = ReadChecksumFile(checksumFile, tt.targetFilename)
+			}
+
+			if tt.wantErr {
+				if err == nil {
+					t.Error("ReadChecksumFile should have failed")
+				}
+				return
+			}
+
+			if err != nil {
+				t.Fatalf("ReadChecksumFile failed: %v", err)
+			}
+			if result != tt.expected {
+				t.Errorf("ReadChecksumFile() = %q, want %q", result, tt.expected)
+			}
+		})
+	}
+}
+
 func TestResolveGo_IgnoresGoTools(t *testing.T) {
 	// Create a temporary directory structure to simulate $TSUKU_HOME
 	tmpHome := t.TempDir()

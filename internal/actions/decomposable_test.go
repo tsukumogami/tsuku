@@ -13,7 +13,6 @@ func TestIsDecomposable(t *testing.T) {
 		"github_archive",
 		"github_file",
 		"download_archive",
-		"hashicorp_release",
 		"homebrew_source",
 	}
 
@@ -79,7 +78,6 @@ func TestIsPrimitive(t *testing.T) {
 		"github_archive",
 		"github_file",
 		"download_archive",
-		"hashicorp_release",
 		"homebrew_bottle",
 	}
 

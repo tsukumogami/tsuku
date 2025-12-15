@@ -345,18 +345,6 @@ func TestExtractDownloadURLs(t *testing.T) {
 			want: []string{"github.com/FiloSottile/age/releases/.../age-{version}-{os}-{arch}.tar.gz"},
 		},
 		{
-			name: "hashicorp_release",
-			recipe: &recipe.Recipe{
-				Steps: []recipe.Step{{
-					Action: "hashicorp_release",
-					Params: map[string]interface{}{
-						"product": "terraform",
-					},
-				}},
-			},
-			want: []string{"releases.hashicorp.com/terraform/..."},
-		},
-		{
 			name: "homebrew_bottle",
 			recipe: &recipe.Recipe{
 				Steps: []recipe.Step{{

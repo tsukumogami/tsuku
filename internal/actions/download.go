@@ -249,8 +249,9 @@ func (a *DownloadAction) verifyChecksum(ctx context.Context, execCtx *ExecutionC
 			return fmt.Errorf("failed to download checksum: %w", err)
 		}
 
-		// Read checksum from file
-		checksum, err := ReadChecksumFile(checksumPath)
+		// Read checksum from file (pass target filename for multi-line checksum files)
+		targetFilename := filepath.Base(filePath)
+		checksum, err := ReadChecksumFile(checksumPath, targetFilename)
 		if err != nil {
 			return err
 		}
@@ -283,8 +284,9 @@ func (a *DownloadAction) verifyChecksumFromURL(ctx context.Context, execCtx *Exe
 		return fmt.Errorf("failed to download checksum: %w", err)
 	}
 
-	// Read checksum from file
-	checksum, err := ReadChecksumFile(checksumPath)
+	// Read checksum from file (pass target filename for multi-line checksum files)
+	targetFilename := filepath.Base(filePath)
+	checksum, err := ReadChecksumFile(checksumPath, targetFilename)
 	if err != nil {
 		return err
 	}
