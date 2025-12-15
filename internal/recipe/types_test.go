@@ -476,7 +476,7 @@ pattern = "Config OK"
 }
 
 func TestRecipe_ExtractBinaries_SingularBinary(t *testing.T) {
-	// Test that singular 'binary' parameter gets "bin/" prefix (github_file, hashicorp_release)
+	// Test that singular 'binary' parameter gets "bin/" prefix (github_file)
 	tomlData := `
 [metadata]
 name = "test-tool"
@@ -891,7 +891,6 @@ func TestRecipe_HasChecksumVerification_AllDownloadActions(t *testing.T) {
 		"download_archive",
 		"github_archive",
 		"github_file",
-		"hashicorp_release",
 	}
 
 	for _, action := range downloadActions {

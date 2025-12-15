@@ -137,14 +137,6 @@ func TestGitHubFileAction_Name(t *testing.T) {
 	}
 }
 
-func TestHashiCorpReleaseAction_Name(t *testing.T) {
-	t.Parallel()
-	action := &HashiCorpReleaseAction{}
-	if action.Name() != "hashicorp_release" {
-		t.Errorf("Name() = %q, want %q", action.Name(), "hashicorp_release")
-	}
-}
-
 // HomebrewBottleAction tests moved to homebrew_bottle_test.go
 
 func TestExtractSourceFiles(t *testing.T) {
@@ -367,24 +359,6 @@ func TestGitHubFileAction_Execute_MissingParams(t *testing.T) {
 				t.Error("Execute() should fail with missing required params")
 			}
 		})
-	}
-}
-
-func TestHashiCorpReleaseAction_Execute_MissingParams(t *testing.T) {
-	t.Parallel()
-	action := &HashiCorpReleaseAction{}
-	tmpDir := t.TempDir()
-
-	ctx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    tmpDir,
-		InstallDir: tmpDir,
-		Version:    "1.0.0",
-	}
-
-	err := action.Execute(ctx, map[string]interface{}{})
-	if err == nil {
-		t.Error("Execute() should fail when 'product' parameter is missing")
 	}
 }
 

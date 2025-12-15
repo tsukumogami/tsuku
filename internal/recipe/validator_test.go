@@ -589,19 +589,6 @@ command = "test"
 			expectedMsg:   "requires 'command'",
 		},
 		{
-			name: "hashicorp_release missing product",
-			recipe: `
-[metadata]
-name = "test"
-[[steps]]
-action = "hashicorp_release"
-[verify]
-command = "test"
-`,
-			expectedField: "steps[0]",
-			expectedMsg:   "requires 'product'",
-		},
-		{
 			name: "github_file missing asset_pattern",
 			recipe: `
 [metadata]

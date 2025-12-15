@@ -631,10 +631,6 @@ func extractDownloadURLs(r *recipe.Recipe) []string {
 			if url, ok := step.Params["url"].(string); ok {
 				urls = append(urls, url)
 			}
-		case "hashicorp_release":
-			if product, ok := step.Params["product"].(string); ok {
-				urls = append(urls, fmt.Sprintf("releases.hashicorp.com/%s/...", product))
-			}
 		}
 	}
 	return urls
@@ -660,8 +656,6 @@ func describeStep(step recipe.Step) string {
 		return "Download file"
 	case "download_archive":
 		return "Download and extract archive"
-	case "hashicorp_release":
-		return "Download from HashiCorp releases"
 	case "chmod":
 		return "Set file permissions"
 	case "npm_install":

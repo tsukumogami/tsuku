@@ -24,7 +24,6 @@ func TestRegister_And_Get(t *testing.T) {
 		"download_archive",
 		"github_archive",
 		"github_file",
-		"hashicorp_release",
 		"homebrew_bottle",
 	}
 
@@ -128,7 +127,6 @@ func TestNetworkValidator_AllActions(t *testing.T) {
 		"download_archive",
 		"github_archive",
 		"github_file",
-		"hashicorp_release",
 		"homebrew_bottle",
 		"homebrew_source",
 	}

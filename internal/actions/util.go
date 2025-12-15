@@ -111,20 +111,49 @@ func VerifyChecksum(filePath, expectedChecksum, algo string) error {
 // Supports formats:
 //   - Just the checksum: "abc123..."
 //   - Checksum + filename: "abc123... filename.tar.gz"
-func ReadChecksumFile(path string) (string, error) {
+//   - Multi-line with filenames (like SHA256SUMS):
+//     "abc123...  file1.tar.gz"
+//     "def456...  file2.tar.gz"
+//
+// If targetFilename is provided and the file has multiple lines,
+// it searches for the line matching the target filename.
+func ReadChecksumFile(path string, targetFilename ...string) (string, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return "", fmt.Errorf("failed to read checksum file: %w", err)
 	}
 
 	content := strings.TrimSpace(string(data))
+	lines := strings.Split(content, "\n")
 
-	// If content contains spaces, take first field (checksum)
-	if idx := strings.Index(content, " "); idx != -1 {
-		content = content[:idx]
+	// If we have a target filename and multiple lines, search for matching line
+	if len(targetFilename) > 0 && targetFilename[0] != "" && len(lines) > 1 {
+		target := targetFilename[0]
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			// Check if this line contains the target filename
+			// Format: "checksum  filename" or "checksum filename"
+			if strings.HasSuffix(line, target) || strings.Contains(line, " "+target) || strings.Contains(line, "\t"+target) {
+				// Extract checksum (first field)
+				fields := strings.Fields(line)
+				if len(fields) >= 1 {
+					return fields[0], nil
+				}
+			}
+		}
+		return "", fmt.Errorf("checksum not found for file %q in checksum file", target)
 	}
 
-	return content, nil
+	// Single line or no target: use first line, take first field
+	firstLine := lines[0]
+	if idx := strings.Index(firstLine, " "); idx != -1 {
+		firstLine = firstLine[:idx]
+	}
+
+	return strings.TrimSpace(firstLine), nil
 }
 
 // GetString safely gets a string value from params map

@@ -404,11 +404,10 @@ func (r *Recipe) IsLibrary() bool {
 func (r *Recipe) HasChecksumVerification() bool {
 	// Actions that download external files and can verify checksums
 	downloadActions := map[string]bool{
-		"download":          true,
-		"download_archive":  true,
-		"github_archive":    true,
-		"github_file":       true,
-		"hashicorp_release": true,
+		"download":         true,
+		"download_archive": true,
+		"github_archive":   true,
+		"github_file":      true,
 	}
 
 	hasDownloadStep := false
