@@ -1,12 +1,18 @@
 package builders
 
 import (
+	"archive/tar"
+	"compress/gzip"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"os"
+	"runtime"
 	"strings"
 	"time"
 
@@ -117,6 +123,9 @@ type HomebrewSession struct {
 	// Generated state (for source mode)
 	lastSourceData *sourceRecipeData
 	isSourceMode   bool
+
+	// Deterministic generation state
+	usedDeterministic bool // True if the last recipe was generated deterministically
 
 	// Progress reporting
 	progress ProgressReporter
@@ -442,18 +451,60 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 
 // Generate produces an initial recipe from the build request.
 func (s *HomebrewSession) Generate(ctx context.Context) (*BuildResult, error) {
+	if s.isSourceMode {
+		if s.progress != nil {
+			s.progress.OnStageStart(fmt.Sprintf("Analyzing formula with %s", s.provider.Name()))
+		}
+		return s.generateSource(ctx)
+	}
+
+	// For bottle mode, try deterministic generation first
 	if s.progress != nil {
+		s.progress.OnStageStart("Inspecting bottle contents")
+	}
+
+	result, err := s.generateDeterministic(ctx)
+	if err == nil {
+		// Deterministic generation succeeded
+		if s.progress != nil {
+			s.progress.OnStageDone("deterministic")
+		}
+		return result, nil
+	}
+
+	// Deterministic failed, fall back to LLM
+	if s.progress != nil {
+		s.progress.OnStageDone("falling back to LLM")
 		s.progress.OnStageStart(fmt.Sprintf("Analyzing formula with %s", s.provider.Name()))
 	}
 
-	if s.isSourceMode {
-		return s.generateSource(ctx)
-	}
 	return s.generateBottle(ctx)
+}
+
+// generateDeterministic attempts to generate a recipe without LLM using bottle inspection.
+func (s *HomebrewSession) generateDeterministic(ctx context.Context) (*BuildResult, error) {
+	r, err := s.builder.generateDeterministicRecipe(ctx, s.req.Package, s.genCtx)
+	if err != nil {
+		return nil, err
+	}
+
+	s.lastRecipe = r
+	s.usedDeterministic = true
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("homebrew:%s", s.formula),
+		Provider: "deterministic", // No LLM used
+		Cost:     0,               // No cost for deterministic
+		Warnings: []string{
+			"Generated deterministically from bottle inspection",
+		},
+	}, nil
 }
 
 // generateBottle generates a bottle-based recipe.
 func (s *HomebrewSession) generateBottle(ctx context.Context) (*BuildResult, error) {
+	s.usedDeterministic = false
 	// Run conversation loop to get recipe data
 	recipeData, turnUsage, err := s.builder.runConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
 	if err != nil {
@@ -530,6 +581,22 @@ func (s *HomebrewSession) generateSource(ctx context.Context) (*BuildResult, err
 
 // Repair attempts to fix the recipe given sandbox failure feedback.
 func (s *HomebrewSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
+	// If the failed recipe was generated deterministically, use LLM to generate a new one
+	if s.usedDeterministic && !s.isSourceMode {
+		if s.progress != nil {
+			s.progress.OnStageStart(fmt.Sprintf("Generating recipe with %s (deterministic failed)", s.provider.Name()))
+		}
+
+		// Include the failure context in the initial message to help LLM avoid same mistake
+		failureContext := s.builder.buildRepairMessageFromSandbox(failure)
+		s.messages = append(s.messages, llm.Message{
+			Role:    llm.RoleUser,
+			Content: "The deterministic generation produced a recipe that failed validation:\n\n" + failureContext + "\n\nPlease analyze the formula and generate a correct recipe.",
+		})
+
+		return s.generateBottle(ctx)
+	}
+
 	if s.progress != nil {
 		s.progress.OnStageStart("Repairing recipe")
 	}
@@ -1796,17 +1863,210 @@ func (b *HomebrewBuilder) sanitizeRubyFormula(content string) string {
 
 // inspectBottle downloads and lists bottle contents.
 func (b *HomebrewBuilder) inspectBottle(ctx context.Context, genCtx *homebrewGenContext, formula, platform string) (string, error) {
-	// For now, return a placeholder - actual bottle inspection requires downloading
-	// and extracting the bottle, which is complex and potentially slow.
-	// The LLM should be able to make reasonable guesses from the formula JSON.
-	return fmt.Sprintf(`Bottle inspection for %s (%s):
+	// Check if we have formula info with version
+	if genCtx.formulaInfo == nil || genCtx.formulaInfo.Versions.Stable == "" {
+		// Fall back to placeholder if no version info (e.g., in tests)
+		return fmt.Sprintf(`Bottle inspection for %s (%s):
 
-Note: Full bottle inspection is not implemented yet. Please analyze the formula JSON to determine:
+Note: Full bottle inspection requires version information. Please analyze the formula JSON to determine:
 1. The main executable name (often matches formula name, but check for aliases like ripgrep->rg, fd-find->fd)
 2. Look at the formula name and description for hints about the executable
 3. Common patterns: CLI tools typically install to bin/
 
 For CLI tools, the executable is usually in bin/<name> where <name> matches the formula name or is derived from it.`, formula, platform), nil
+	}
+
+	version := genCtx.formulaInfo.Versions.Stable
+
+	// Download and inspect the bottle
+	binaries, err := b.listBottleBinaries(ctx, formula, version, platform)
+	if err != nil {
+		// Fall back to placeholder if inspection fails
+		return fmt.Sprintf(`Bottle inspection for %s (%s) failed: %v
+
+Please analyze the formula JSON to determine the main executable name.
+Common patterns: CLI tools typically install to bin/<formula-name>.`, formula, platform, err), nil
+	}
+
+	if len(binaries) == 0 {
+		return fmt.Sprintf(`Bottle inspection for %s (%s):
+
+No binaries found in bin/ directory. Please analyze the formula JSON to determine the main executable name.`, formula, platform), nil
+	}
+
+	var sb strings.Builder
+	sb.WriteString(fmt.Sprintf("Bottle inspection for %s (%s):\n\n", formula, platform))
+	sb.WriteString("Binaries found in bin/ directory:\n")
+	for _, bin := range binaries {
+		sb.WriteString(fmt.Sprintf("  - %s\n", bin))
+	}
+	return sb.String(), nil
+}
+
+// listBottleBinaries downloads a bottle and returns the list of binaries in bin/.
+func (b *HomebrewBuilder) listBottleBinaries(ctx context.Context, formula, version, platformTag string) ([]string, error) {
+	// Get anonymous GHCR token
+	token, err := b.getGHCRToken(formula)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get GHCR token: %w", err)
+	}
+
+	// Get manifest and find blob SHA for the platform
+	manifest, err := b.fetchGHCRManifest(ctx, formula, version, token)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch GHCR manifest: %w", err)
+	}
+
+	blobSHA, err := b.getBlobSHAFromManifest(manifest, version, platformTag)
+	if err != nil {
+		return nil, err
+	}
+
+	// Download bottle to temp file
+	tempFile, err := os.CreateTemp("", fmt.Sprintf("tsuku-bottle-%s-*.tar.gz", formula))
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp file: %w", err)
+	}
+	tempPath := tempFile.Name()
+	tempFile.Close()
+	defer os.Remove(tempPath)
+
+	if err := b.downloadBottleBlob(ctx, formula, blobSHA, token, tempPath); err != nil {
+		return nil, fmt.Errorf("failed to download bottle: %w", err)
+	}
+
+	// Extract and list binaries
+	return b.extractBottleBinaries(tempPath)
+}
+
+// getBlobSHAFromManifest extracts the blob SHA for a platform from a manifest.
+func (b *HomebrewBuilder) getBlobSHAFromManifest(manifest *ghcrManifest, version, platformTag string) (string, error) {
+	// The expected ref name format is "{version}.{platform_tag}"
+	expectedRefName := fmt.Sprintf("%s.%s", version, platformTag)
+
+	for _, entry := range manifest.Manifests {
+		if refName, ok := entry.Annotations["org.opencontainers.image.ref.name"]; ok {
+			if refName == expectedRefName {
+				if digest, ok := entry.Annotations["sh.brew.bottle.digest"]; ok {
+					if strings.HasPrefix(digest, "sha256:") {
+						return strings.TrimPrefix(digest, "sha256:"), nil
+					}
+					return digest, nil
+				}
+				if strings.HasPrefix(entry.Digest, "sha256:") {
+					return strings.TrimPrefix(entry.Digest, "sha256:"), nil
+				}
+				return entry.Digest, nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no bottle found for platform tag: %s", platformTag)
+}
+
+// downloadBottleBlob downloads a bottle blob from GHCR to a local file.
+func (b *HomebrewBuilder) downloadBottleBlob(ctx context.Context, formula, blobSHA, token, destPath string) error {
+	blobURL := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/blobs/sha256:%s", formula, blobSHA)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", blobURL, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("Authorization", "Bearer "+token)
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("download request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("download request returned %d", resp.StatusCode)
+	}
+
+	out, err := os.Create(destPath)
+	if err != nil {
+		return fmt.Errorf("failed to create file: %w", err)
+	}
+	defer out.Close()
+
+	// Also compute SHA256 while downloading
+	hasher := sha256.New()
+	writer := io.MultiWriter(out, hasher)
+
+	_, err = io.Copy(writer, resp.Body)
+	if err != nil {
+		return fmt.Errorf("failed to write file: %w", err)
+	}
+
+	// Verify SHA256
+	actualSHA := hex.EncodeToString(hasher.Sum(nil))
+	if actualSHA != blobSHA {
+		return fmt.Errorf("SHA256 mismatch: expected %s, got %s", blobSHA, actualSHA)
+	}
+
+	return nil
+}
+
+// extractBottleBinaries extracts a bottle tarball and returns binaries in bin/.
+func (b *HomebrewBuilder) extractBottleBinaries(tarballPath string) ([]string, error) {
+	f, err := os.Open(tarballPath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	gzr, err := gzip.NewReader(f)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create gzip reader: %w", err)
+	}
+	defer gzr.Close()
+
+	tr := tar.NewReader(gzr)
+
+	var binaries []string
+	for {
+		header, err := tr.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return nil, fmt.Errorf("failed to read tarball: %w", err)
+		}
+
+		// Homebrew bottles have structure: formula/version/bin/...
+		// We're looking for entries like: jq/1.7.1/bin/jq
+		parts := strings.Split(header.Name, "/")
+		if len(parts) >= 4 && parts[2] == "bin" && header.Typeflag == tar.TypeReg {
+			// Get just the binary name
+			binName := parts[3]
+			// Skip any deeper paths (shouldn't happen in bin/)
+			if len(parts) == 4 && binName != "" {
+				binaries = append(binaries, binName)
+			}
+		}
+	}
+
+	return binaries, nil
+}
+
+// getCurrentPlatformTag returns the platform tag for the current runtime.
+func getCurrentPlatformTag() (string, error) {
+	os := runtime.GOOS
+	arch := runtime.GOARCH
+	switch {
+	case os == "darwin" && arch == "arm64":
+		return "arm64_sonoma", nil
+	case os == "darwin" && arch == "amd64":
+		return "sonoma", nil
+	case os == "linux" && arch == "arm64":
+		return "arm64_linux", nil
+	case os == "linux" && arch == "amd64":
+		return "x86_64_linux", nil
+	default:
+		return "", fmt.Errorf("unsupported platform: %s/%s", os, arch)
+	}
 }
 
 // buildRepairMessageFromSandbox constructs error feedback from sandbox results.
@@ -2154,6 +2414,77 @@ func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormu
 	// Add runtime dependencies if present
 	if len(data.Dependencies) > 0 {
 		r.Metadata.RuntimeDependencies = data.Dependencies
+	}
+
+	return r, nil
+}
+
+// generateDeterministicRecipe attempts to generate a recipe without LLM by inspecting the bottle.
+// Returns the recipe and nil error on success, or nil and an error if deterministic generation fails.
+func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packageName string, genCtx *homebrewGenContext) (*recipe.Recipe, error) {
+	info := genCtx.formulaInfo
+	if info == nil {
+		return nil, fmt.Errorf("formula info not available")
+	}
+	if info.Versions.Stable == "" {
+		return nil, fmt.Errorf("no stable version for formula")
+	}
+
+	// Get the current platform tag
+	platformTag, err := getCurrentPlatformTag()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get platform tag: %w", err)
+	}
+
+	// Inspect the bottle to get binary names
+	binaries, err := b.listBottleBinaries(ctx, info.Name, info.Versions.Stable, platformTag)
+	if err != nil {
+		return nil, fmt.Errorf("failed to inspect bottle: %w", err)
+	}
+
+	if len(binaries) == 0 {
+		return nil, fmt.Errorf("no binaries found in bottle")
+	}
+
+	// Use the first binary for verification (most common pattern)
+	verifyBinary := binaries[0]
+	verifyCommand := fmt.Sprintf("%s --version", verifyBinary)
+
+	// Build the recipe
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name:        packageName,
+			Description: info.Description,
+			Homepage:    info.Homepage,
+		},
+		Version: recipe.VersionSection{
+			Source:  "homebrew",
+			Formula: info.Name,
+		},
+		Verify: recipe.VerifySection{
+			Command: verifyCommand,
+		},
+	}
+
+	// Add homebrew action and install_binaries
+	r.Steps = []recipe.Step{
+		{
+			Action: "homebrew",
+			Params: map[string]interface{}{
+				"formula": info.Name,
+			},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{
+				"binaries": binaries,
+			},
+		},
+	}
+
+	// Add runtime dependencies from formula info
+	if len(info.Dependencies) > 0 {
+		r.Metadata.RuntimeDependencies = info.Dependencies
 	}
 
 	return r, nil

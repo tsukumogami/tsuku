@@ -1,12 +1,17 @@
 package builders
 
 import (
+	"archive/tar"
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
@@ -3692,5 +3697,215 @@ func TestHomebrewBuilder_executeToolCall_SourceTypeValidation(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestHomebrewBuilder_getBlobSHAFromManifest(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	tests := []struct {
+		name        string
+		manifest    *ghcrManifest
+		version     string
+		platformTag string
+		wantSHA     string
+		wantErr     bool
+	}{
+		{
+			name: "valid manifest with bottle digest",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{
+					{
+						Digest: "sha256:other123",
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.arm64_sonoma",
+						},
+					},
+					{
+						Digest: "sha256:manifest456",
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.x86_64_linux",
+							"sh.brew.bottle.digest":             "sha256:bottle789",
+						},
+					},
+				},
+			},
+			version:     "1.0.0",
+			platformTag: "x86_64_linux",
+			wantSHA:     "bottle789",
+			wantErr:     false,
+		},
+		{
+			name: "fallback to manifest digest",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{
+					{
+						Digest: "sha256:manifest123",
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.x86_64_linux",
+						},
+					},
+				},
+			},
+			version:     "1.0.0",
+			platformTag: "x86_64_linux",
+			wantSHA:     "manifest123",
+			wantErr:     false,
+		},
+		{
+			name: "platform not found",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{
+					{
+						Digest: "sha256:other123",
+						Annotations: map[string]string{
+							"org.opencontainers.image.ref.name": "1.0.0.arm64_linux",
+						},
+					},
+				},
+			},
+			version:     "1.0.0",
+			platformTag: "x86_64_linux",
+			wantErr:     true,
+		},
+		{
+			name: "empty manifest",
+			manifest: &ghcrManifest{
+				Manifests: []ghcrManifestEntry{},
+			},
+			version:     "1.0.0",
+			platformTag: "x86_64_linux",
+			wantErr:     true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			sha, err := b.getBlobSHAFromManifest(tt.manifest, tt.version, tt.platformTag)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getBlobSHAFromManifest() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && sha != tt.wantSHA {
+				t.Errorf("getBlobSHAFromManifest() = %v, want %v", sha, tt.wantSHA)
+			}
+		})
+	}
+}
+
+func TestHomebrewBuilder_extractBottleBinaries(t *testing.T) {
+	b := &HomebrewBuilder{}
+
+	// Create a test tarball in memory
+	var buf bytes.Buffer
+	gzw := gzip.NewWriter(&buf)
+	tw := tar.NewWriter(gzw)
+
+	// Add some files mimicking Homebrew bottle structure
+	files := []struct {
+		name string
+		body string
+	}{
+		{"jq/1.7.1/bin/jq", "#!/bin/bash\necho jq"},
+		{"jq/1.7.1/share/man/man1/jq.1", "man page content"},
+		{"jq/1.7.1/lib/libjq.so", "library content"},
+		{"jq/1.7.1/bin/jqp", "#!/bin/bash\necho jqp"},
+	}
+
+	for _, file := range files {
+		hdr := &tar.Header{
+			Name:     file.name,
+			Mode:     0755,
+			Size:     int64(len(file.body)),
+			Typeflag: tar.TypeReg,
+		}
+		if err := tw.WriteHeader(hdr); err != nil {
+			t.Fatalf("failed to write tar header: %v", err)
+		}
+		if _, err := tw.Write([]byte(file.body)); err != nil {
+			t.Fatalf("failed to write tar content: %v", err)
+		}
+	}
+
+	if err := tw.Close(); err != nil {
+		t.Fatalf("failed to close tar writer: %v", err)
+	}
+	if err := gzw.Close(); err != nil {
+		t.Fatalf("failed to close gzip writer: %v", err)
+	}
+
+	// Write to temp file
+	tmpFile, err := os.CreateTemp("", "test-bottle-*.tar.gz")
+	if err != nil {
+		t.Fatalf("failed to create temp file: %v", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.Write(buf.Bytes()); err != nil {
+		t.Fatalf("failed to write temp file: %v", err)
+	}
+	tmpFile.Close()
+
+	// Test extraction
+	binaries, err := b.extractBottleBinaries(tmpFile.Name())
+	if err != nil {
+		t.Fatalf("extractBottleBinaries() error = %v", err)
+	}
+
+	// Should find jq and jqp binaries
+	if len(binaries) != 2 {
+		t.Errorf("extractBottleBinaries() got %d binaries, want 2", len(binaries))
+	}
+
+	expected := map[string]bool{"jq": true, "jqp": true}
+	for _, bin := range binaries {
+		if !expected[bin] {
+			t.Errorf("unexpected binary: %s", bin)
+		}
+	}
+}
+
+func TestHomebrewBuilder_generateDeterministicRecipe(t *testing.T) {
+	b := &HomebrewBuilder{
+		httpClient: &http.Client{Timeout: 60 * time.Second},
+	}
+
+	// Test with nil formula info
+	genCtx := &homebrewGenContext{
+		formula:     "jq",
+		formulaInfo: nil,
+	}
+
+	ctx := context.Background()
+	_, err := b.generateDeterministicRecipe(ctx, "jq", genCtx)
+	if err == nil {
+		t.Error("expected error for nil formulaInfo")
+	}
+
+	// Test with empty version
+	genCtx.formulaInfo = &homebrewFormulaInfo{
+		Name: "jq",
+	}
+	_, err = b.generateDeterministicRecipe(ctx, "jq", genCtx)
+	if err == nil {
+		t.Error("expected error for empty version")
+	}
+}
+
+func TestHomebrewBuilder_getCurrentPlatformTag(t *testing.T) {
+	tag, err := getCurrentPlatformTag()
+	if err != nil {
+		t.Fatalf("getCurrentPlatformTag() error = %v", err)
+	}
+
+	validTags := map[string]bool{
+		"arm64_sonoma": true,
+		"sonoma":       true,
+		"arm64_linux":  true,
+		"x86_64_linux": true,
+	}
+
+	if !validTags[tag] {
+		t.Errorf("getCurrentPlatformTag() = %q, not a valid tag", tag)
 	}
 }
