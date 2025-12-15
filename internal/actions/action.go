@@ -146,10 +146,13 @@ func init() {
 	Register(&ConfigureMakeAction{})
 	Register(&CMakeBuildAction{})
 
+	// Homebrew actions
+	Register(&HomebrewAction{})
+	Register(&HomebrewSourceAction{})
+	Register(&HomebrewRelocateAction{})
+
 	// Composite actions
 	Register(&DownloadArchiveAction{})
 	Register(&GitHubArchiveAction{})
 	Register(&GitHubFileAction{})
-	Register(&HomebrewAction{})
-	Register(&HomebrewSourceAction{})
 }
