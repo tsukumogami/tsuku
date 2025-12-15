@@ -52,6 +52,45 @@ tsuku update kubectl
 tsuku remove kubectl
 ```
 
+### Create recipes from package ecosystems
+
+Generate recipes automatically from package registry metadata:
+
+```bash
+# From crates.io (Rust)
+tsuku create ripgrep --from crates.io
+
+# From RubyGems
+tsuku create jekyll --from rubygems
+
+# From PyPI (Python)
+tsuku create ruff --from pypi
+
+# From npm (Node.js)
+tsuku create prettier --from npm
+
+# From GitHub releases (uses LLM)
+tsuku create gh --from github:cli/cli
+
+# From Homebrew bottles (uses LLM)
+tsuku create jq --from homebrew:jq
+```
+
+Generated recipes are stored in `$TSUKU_HOME/recipes/` and take precedence over registry recipes. You can inspect and edit them before installation:
+
+```bash
+# View generated recipe
+cat ~/.tsuku/recipes/ripgrep.toml
+
+# Install the tool
+tsuku install ripgrep
+
+# List local recipes
+tsuku recipes --local
+```
+
+Use `--force` to overwrite an existing local recipe.
+
 ### Verbosity and Debugging
 
 tsuku supports multiple verbosity levels for troubleshooting:

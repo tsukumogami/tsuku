@@ -1,6 +1,6 @@
 # Design Document: Ecosystem-Specific Recipe Builders
 
-**Status**: Planned
+**Status**: Implemented
 
 ## Context and Problem Statement
 
@@ -548,8 +548,7 @@ Key characteristics:
 - Modify `Loader.Get()` to check `~/.tsuku/recipes/` before registry
 - `internal/builders/builder.go` - Interface and BuildResult types
 - `internal/builders/registry.go` - Builder registry
-- `internal/builders/cargo.go` - CargoBuilder implementation (crate name as executable initially)
-- `internal/builders/cargo_parser.go` - Cargo.toml `[[bin]]` parsing for executable discovery
+- `internal/builders/cargo.go` - CargoBuilder implementation with Cargo.toml `[[bin]]` parsing for executable discovery
 - `tsuku create <tool> --from crates.io` command
 
 **Validation**: `tsuku create ripgrep --from crates.io` generates valid recipe, `tsuku install ripgrep` works.
