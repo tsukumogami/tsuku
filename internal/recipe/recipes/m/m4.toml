@@ -1,0 +1,23 @@
+[metadata]
+name = "m4"
+description = "GNU macro processor"
+homepage = "https://www.gnu.org/software/m4/"
+dependencies = ["make", "zig"]
+
+[version]
+source = "homebrew"
+formula = "m4"
+
+[[steps]]
+action = "homebrew_source"
+formula = "m4"
+
+[[steps]]
+action = "configure_make"
+source_dir = "."
+executables = ["m4"]
+configure_args = ["--disable-silent-rules"]
+
+[verify]
+command = "m4 --version"
+pattern = "m4 (GNU M4) {version}"
