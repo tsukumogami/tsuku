@@ -11,35 +11,6 @@ import (
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
-// mockRuntime implements validate.Runtime for testing.
-type mockRuntime struct {
-	name     string
-	rootless bool
-	runFunc  func(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error)
-}
-
-func (m *mockRuntime) Name() string     { return m.name }
-func (m *mockRuntime) IsRootless() bool { return m.rootless }
-func (m *mockRuntime) Run(ctx context.Context, opts validate.RunOptions) (*validate.RunResult, error) {
-	if m.runFunc != nil {
-		return m.runFunc(ctx, opts)
-	}
-	return &validate.RunResult{ExitCode: 0}, nil
-}
-
-// mockRuntimeDetector returns a mock runtime for testing.
-type mockRuntimeDetector struct {
-	runtime validate.Runtime
-	err     error
-}
-
-func newMockDetector(runtime validate.Runtime, err error) *validate.RuntimeDetector {
-	d := validate.NewRuntimeDetector()
-	// Override the detect function via the test hooks
-	// Since RuntimeDetector doesn't expose test hooks, we'll use a different approach
-	return d
-}
-
 func TestNewExecutor(t *testing.T) {
 	t.Parallel()
 
