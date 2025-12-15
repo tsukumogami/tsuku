@@ -13,9 +13,10 @@ action = "homebrew_source"
 formula = "m4"
 
 # Fix autotools timestamp issue - source tarballs have timestamps that trigger regeneration
+# Touch ALL files to normalize timestamps and prevent autotools from regenerating anything
 [[steps]]
 action = "run_command"
-command = "find . -name '*.in' -exec touch {} + && touch configure aclocal.m4 config.h.in"
+command = "find . -type f -exec touch {} +"
 
 [[steps]]
 action = "configure_make"
