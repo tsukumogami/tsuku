@@ -61,10 +61,21 @@ type Action interface {
 	Dependencies() ActionDeps
 }
 
+// NetworkValidator is implemented by actions that can declare network requirements.
+// Actions that fetch external dependencies (cargo_build, go_build, npm_install, etc.)
+// return true. Actions that work with cached or pre-downloaded content return false.
+//
+// This interface enables sandbox testing to configure container network access
+// appropriately - offline for binary installations, network-enabled for ecosystem builds.
+type NetworkValidator interface {
+	RequiresNetwork() bool
+}
+
 // BaseAction provides default implementations for Action metadata methods.
 // Embed this in action types to inherit defaults:
 //   - IsDeterministic() returns false (safe default)
 //   - Dependencies() returns empty ActionDeps
+//   - RequiresNetwork() returns false (most actions work offline)
 //
 // Actions override these methods when they have non-default values.
 type BaseAction struct{}
@@ -76,6 +87,10 @@ func (BaseAction) IsDeterministic() bool { return false }
 // Dependencies returns empty ActionDeps by default.
 // Actions with install-time or runtime dependencies should override this.
 func (BaseAction) Dependencies() ActionDeps { return ActionDeps{} }
+
+// RequiresNetwork returns false by default.
+// Actions that fetch external dependencies should override this to return true.
+func (BaseAction) RequiresNetwork() bool { return false }
 
 // Registry holds all available actions
 var (

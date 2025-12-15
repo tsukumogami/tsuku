@@ -34,6 +34,9 @@ func (NixInstallAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"nix-portable"}}
 }
 
+// RequiresNetwork returns true because nix_install fetches packages from nix cache.
+func (NixInstallAction) RequiresNetwork() bool { return true }
+
 // Ensure NixInstallAction implements Decomposable
 var _ Decomposable = (*NixInstallAction)(nil)
 

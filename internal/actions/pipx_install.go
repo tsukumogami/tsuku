@@ -16,6 +16,9 @@ func (PipxInstallAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"pipx"}, Runtime: []string{"python"}}
 }
 
+// RequiresNetwork returns true because pipx_install fetches packages from PyPI.
+func (PipxInstallAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *PipxInstallAction) Name() string {
 	return "pipx_install"

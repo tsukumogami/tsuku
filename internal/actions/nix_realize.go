@@ -28,6 +28,9 @@ func (NixRealizeAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"nix-portable"}}
 }
 
+// RequiresNetwork returns true because nix_realize fetches packages from nix cache.
+func (NixRealizeAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *NixRealizeAction) Name() string {
 	return "nix_realize"

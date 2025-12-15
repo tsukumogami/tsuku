@@ -17,6 +17,9 @@ func (GoBuildAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"go"}}
 }
 
+// RequiresNetwork returns true because go_build fetches modules from the Go proxy.
+func (GoBuildAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *GoBuildAction) Name() string {
 	return "go_build"

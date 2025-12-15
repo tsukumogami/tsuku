@@ -16,6 +16,9 @@ func (GemInstallAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"ruby"}, Runtime: []string{"ruby"}}
 }
 
+// RequiresNetwork returns true because gem_install fetches gems from RubyGems.org.
+func (GemInstallAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *GemInstallAction) Name() string {
 	return "gem_install"

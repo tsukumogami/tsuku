@@ -18,6 +18,9 @@ func (CpanInstallAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"perl"}, Runtime: []string{"perl"}}
 }
 
+// RequiresNetwork returns true because cpan_install fetches distributions from CPAN.
+func (CpanInstallAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *CpanInstallAction) Name() string {
 	return "cpan_install"

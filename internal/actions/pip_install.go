@@ -20,6 +20,9 @@ func (PipInstallAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"python"}, Runtime: []string{"python"}}
 }
 
+// RequiresNetwork returns true because pip_install fetches packages from PyPI.
+func (PipInstallAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *PipInstallAction) Name() string {
 	return "pip_install"

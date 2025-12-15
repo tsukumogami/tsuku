@@ -16,6 +16,9 @@ func (CargoInstallAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"rust"}}
 }
 
+// RequiresNetwork returns true because cargo_install fetches crates from crates.io.
+func (CargoInstallAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *CargoInstallAction) Name() string {
 	return "cargo_install"

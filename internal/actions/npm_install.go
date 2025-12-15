@@ -16,6 +16,9 @@ func (NpmInstallAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"nodejs"}, Runtime: []string{"nodejs"}}
 }
 
+// RequiresNetwork returns true because npm_install fetches packages from npm registry.
+func (NpmInstallAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *NpmInstallAction) Name() string {
 	return "npm_install"

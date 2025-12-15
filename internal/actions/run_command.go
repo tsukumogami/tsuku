@@ -10,6 +10,10 @@ import (
 // RunCommandAction implements command execution
 type RunCommandAction struct{ BaseAction }
 
+// RequiresNetwork returns true as a conservative default since arbitrary commands
+// may need network access. Sandbox testing uses network=host for recipes with run_command.
+func (RunCommandAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *RunCommandAction) Name() string {
 	return "run_command"

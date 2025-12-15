@@ -7,6 +7,9 @@ import (
 // AptInstallAction implements apt package installation (stub for validation)
 type AptInstallAction struct{ BaseAction }
 
+// RequiresNetwork returns true because apt_install fetches packages from repositories.
+func (AptInstallAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *AptInstallAction) Name() string {
 	return "apt_install"
@@ -30,6 +33,9 @@ func (a *AptInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 // YumInstallAction implements yum package installation (stub for validation)
 type YumInstallAction struct{ BaseAction }
 
+// RequiresNetwork returns true because yum_install fetches packages from repositories.
+func (YumInstallAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *YumInstallAction) Name() string {
 	return "yum_install"
@@ -52,6 +58,9 @@ func (a *YumInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 // BrewInstallAction implements Homebrew package installation (stub for validation)
 type BrewInstallAction struct{ BaseAction }
+
+// RequiresNetwork returns true because brew_install fetches packages from Homebrew.
+func (BrewInstallAction) RequiresNetwork() bool { return true }
 
 // Name returns the action name
 func (a *BrewInstallAction) Name() string {
