@@ -21,11 +21,11 @@ Create portable shell scripts that use platform-specific tools (readelf/ldd on L
 
 ## Implementation Steps
 
-- [ ] Create verify-relocation.sh with Linux (readelf) and macOS (otool) support
-- [ ] Create verify-tool.sh with tool-specific test cases
-- [ ] Create verify-no-system-deps.sh to check library dependencies
-- [ ] Update build-essentials.yml to use the new scripts
-- [ ] Update design doc to mark issues 542, 546, 543 as complete
+- [x] Create verify-relocation.sh with Linux (readelf) and macOS (otool) support
+- [x] Create verify-tool.sh with tool-specific test cases
+- [x] Create verify-no-system-deps.sh to check library dependencies
+- [x] Update build-essentials.yml to use the new scripts
+- [x] Update design doc to mark issues 542, 546, 543 as complete
 
 ## Testing Strategy
 
