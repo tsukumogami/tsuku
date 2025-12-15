@@ -12,17 +12,17 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
-func TestHomebrewBottleAction_Name(t *testing.T) {
+func TestHomebrewAction_Name(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
-	if action.Name() != "homebrew_bottle" {
-		t.Errorf("Name() = %q, want %q", action.Name(), "homebrew_bottle")
+	action := &HomebrewAction{}
+	if action.Name() != "homebrew" {
+		t.Errorf("Name() = %q, want %q", action.Name(), "homebrew")
 	}
 }
 
-func TestHomebrewBottleAction_Execute_MissingParams(t *testing.T) {
+func TestHomebrewAction_Execute_MissingParams(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	ctx := &ExecutionContext{
@@ -39,9 +39,9 @@ func TestHomebrewBottleAction_Execute_MissingParams(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_ValidateFormulaName(t *testing.T) {
+func TestHomebrewAction_ValidateFormulaName(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 
 	tests := []struct {
 		name        string
@@ -75,9 +75,9 @@ func TestHomebrewBottleAction_ValidateFormulaName(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_GetPlatformTag(t *testing.T) {
+func TestHomebrewAction_GetPlatformTag(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 
 	tests := []struct {
 		name        string
@@ -113,9 +113,9 @@ func TestHomebrewBottleAction_GetPlatformTag(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_IsBinaryFile(t *testing.T) {
+func TestHomebrewAction_IsBinaryFile(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 
 	tests := []struct {
 		name     string
@@ -140,9 +140,9 @@ func TestHomebrewBottleAction_IsBinaryFile(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_TextFile(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_TextFile(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a text file with placeholder
@@ -170,9 +170,9 @@ func TestHomebrewBottleAction_RelocatePlaceholders_TextFile(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_BinaryFile(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_BinaryFile(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a binary file with placeholder (contains null byte)
@@ -204,9 +204,9 @@ func TestHomebrewBottleAction_RelocatePlaceholders_BinaryFile(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_SkipsSymlinks(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_SkipsSymlinks(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a regular file
@@ -227,9 +227,9 @@ func TestHomebrewBottleAction_RelocatePlaceholders_SkipsSymlinks(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_NoPlaceholder(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_NoPlaceholder(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a file without placeholder
@@ -255,9 +255,9 @@ func TestHomebrewBottleAction_RelocatePlaceholders_NoPlaceholder(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_VerifySHA256(t *testing.T) {
+func TestHomebrewAction_VerifySHA256(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a test file
@@ -283,7 +283,7 @@ func TestHomebrewBottleAction_VerifySHA256(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_PathLengthValidation(t *testing.T) {
+func TestHomebrewAction_PathLengthValidation(t *testing.T) {
 	t.Parallel()
 	// Test path length validation constraint
 	// @@HOMEBREW_PREFIX@@ is exactly 19 characters
@@ -348,9 +348,9 @@ func TestGetCurrentPlatformTag(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_FixBinaryRpath_UnrecognizedFormat(t *testing.T) {
+func TestHomebrewAction_FixBinaryRpath_UnrecognizedFormat(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a file with unrecognized magic bytes
@@ -367,9 +367,9 @@ func TestHomebrewBottleAction_FixBinaryRpath_UnrecognizedFormat(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_FixBinaryRpath_NonexistentFile(t *testing.T) {
+func TestHomebrewAction_FixBinaryRpath_NonexistentFile(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Try to fix RPATH on non-existent file
@@ -379,9 +379,9 @@ func TestHomebrewBottleAction_FixBinaryRpath_NonexistentFile(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_FixBinaryRpath_EmptyFile(t *testing.T) {
+func TestHomebrewAction_FixBinaryRpath_EmptyFile(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create an empty file
@@ -397,9 +397,9 @@ func TestHomebrewBottleAction_FixBinaryRpath_EmptyFile(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_ReadOnlyTextFile(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_ReadOnlyTextFile(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a read-only text file with placeholder
@@ -427,9 +427,9 @@ func TestHomebrewBottleAction_RelocatePlaceholders_ReadOnlyTextFile(t *testing.T
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_MultipleFiles(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_MultipleFiles(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create multiple files with placeholders
@@ -470,9 +470,9 @@ func TestHomebrewBottleAction_RelocatePlaceholders_MultipleFiles(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_NestedDirectories(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_NestedDirectories(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create nested directory structure
@@ -503,9 +503,9 @@ func TestHomebrewBottleAction_RelocatePlaceholders_NestedDirectories(t *testing.
 	}
 }
 
-func TestHomebrewBottleAction_VerifySHA256_Correct(t *testing.T) {
+func TestHomebrewAction_VerifySHA256_Correct(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a test file with known content
@@ -537,9 +537,9 @@ func TestHomebrewBottleAction_VerifySHA256_Correct(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_IsBinaryFile_LargeTextFile(t *testing.T) {
+func TestHomebrewAction_IsBinaryFile_LargeTextFile(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 
 	// Create content larger than 8KB check window
 	content := make([]byte, 10000)
@@ -564,9 +564,9 @@ func TestHomebrewBottleAction_IsBinaryFile_LargeTextFile(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_FixBinaryRpath_ELFMagic(t *testing.T) {
+func TestHomebrewAction_FixBinaryRpath_ELFMagic(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a file with ELF magic bytes
@@ -588,9 +588,9 @@ func TestHomebrewBottleAction_FixBinaryRpath_ELFMagic(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_FixBinaryRpath_MachOMagic(t *testing.T) {
+func TestHomebrewAction_FixBinaryRpath_MachOMagic(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create files with various Mach-O magic bytes
@@ -625,9 +625,9 @@ func TestHomebrewBottleAction_FixBinaryRpath_MachOMagic(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_FixBinaryRpath_ReadOnlyELF(t *testing.T) {
+func TestHomebrewAction_FixBinaryRpath_ReadOnlyELF(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a read-only file with ELF magic bytes
@@ -644,9 +644,9 @@ func TestHomebrewBottleAction_FixBinaryRpath_ReadOnlyELF(t *testing.T) {
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_BinaryWithELFMagic(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_BinaryWithELFMagic(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create an ELF-like file with placeholder
@@ -667,9 +667,9 @@ func TestHomebrewBottleAction_RelocatePlaceholders_BinaryWithELFMagic(t *testing
 	}
 }
 
-func TestHomebrewBottleAction_RelocatePlaceholders_BothPlaceholders(t *testing.T) {
+func TestHomebrewAction_RelocatePlaceholders_BothPlaceholders(t *testing.T) {
 	t.Parallel()
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	tmpDir := t.TempDir()
 
 	// Create a text file with both placeholders

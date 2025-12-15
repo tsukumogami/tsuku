@@ -9,7 +9,7 @@ source = "homebrew"
 formula = "bash"
 
 [[steps]]
-action = "homebrew_bottle"
+action = "homebrew"
 formula = "bash"
 
 [[steps]]

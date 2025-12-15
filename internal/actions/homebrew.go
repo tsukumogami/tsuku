@@ -21,14 +21,14 @@ func ghcrHTTPClient() *http.Client {
 	return &http.Client{Timeout: 30 * time.Second}
 }
 
-// HomebrewBottleAction downloads and extracts Homebrew bottles from GHCR
-type HomebrewBottleAction struct{ BaseAction }
+// HomebrewAction downloads and extracts Homebrew bottles from GHCR
+type HomebrewAction struct{ BaseAction }
 
-// IsDeterministic returns true because homebrew_bottle downloads with checksums.
-func (HomebrewBottleAction) IsDeterministic() bool { return true }
+// IsDeterministic returns true because homebrew downloads with checksums.
+func (HomebrewAction) IsDeterministic() bool { return true }
 
 // Name returns the action name
-func (a *HomebrewBottleAction) Name() string { return "homebrew_bottle" }
+func (a *HomebrewAction) Name() string { return "homebrew" }
 
 // Execute downloads a Homebrew bottle and extracts it to the install directory
 //
@@ -41,11 +41,11 @@ func (a *HomebrewBottleAction) Name() string { return "homebrew_bottle" }
 // 3. Downloads and verifies bottle SHA256
 // 4. Extracts tarball to install directory
 // 5. Relocates @@HOMEBREW_PREFIX@@ placeholders
-func (a *HomebrewBottleAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+func (a *HomebrewAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Get formula name (required)
 	formula, ok := GetString(params, "formula")
 	if !ok {
-		return fmt.Errorf("homebrew_bottle action requires 'formula' parameter")
+		return fmt.Errorf("homebrew action requires 'formula' parameter")
 	}
 
 	// Validate formula name for security
@@ -118,7 +118,7 @@ func (a *HomebrewBottleAction) Execute(ctx *ExecutionContext, params map[string]
 }
 
 // validateFormulaName ensures the formula name is safe
-func (a *HomebrewBottleAction) validateFormulaName(name string) error {
+func (a *HomebrewAction) validateFormulaName(name string) error {
 	if name == "" {
 		return fmt.Errorf("formula name cannot be empty")
 	}
@@ -138,7 +138,7 @@ func (a *HomebrewBottleAction) validateFormulaName(name string) error {
 }
 
 // getPlatformTag returns the Homebrew platform tag for the current OS/arch
-func (a *HomebrewBottleAction) getPlatformTag(os, arch string) (string, error) {
+func (a *HomebrewAction) getPlatformTag(os, arch string) (string, error) {
 	// Homebrew uses specific platform tags in manifests
 	// Format: {os}.{codename/version}
 	switch {
@@ -161,7 +161,7 @@ type ghcrTokenResponse struct {
 }
 
 // getGHCRToken obtains an anonymous token for GHCR access
-func (a *HomebrewBottleAction) getGHCRToken(formula string) (string, error) {
+func (a *HomebrewAction) getGHCRToken(formula string) (string, error) {
 	url := fmt.Sprintf("https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/%s:pull", formula)
 
 	resp, err := ghcrHTTPClient().Get(url)
@@ -206,7 +206,7 @@ type ghcrPlatform struct {
 }
 
 // getBlobSHA queries the GHCR manifest to find the platform-specific blob SHA
-func (a *HomebrewBottleAction) getBlobSHA(formula, version, platformTag, token string) (string, error) {
+func (a *HomebrewAction) getBlobSHA(formula, version, platformTag, token string) (string, error) {
 	// Query the manifest index
 	url := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/manifests/%s", formula, version)
 
@@ -265,7 +265,7 @@ func (a *HomebrewBottleAction) getBlobSHA(formula, version, platformTag, token s
 }
 
 // downloadBottle downloads a bottle blob from GHCR
-func (a *HomebrewBottleAction) downloadBottle(formula, blobSHA, token, destPath string) error {
+func (a *HomebrewAction) downloadBottle(formula, blobSHA, token, destPath string) error {
 	url := fmt.Sprintf("https://ghcr.io/v2/homebrew/core/%s/blobs/sha256:%s", formula, blobSHA)
 
 	req, err := http.NewRequest("GET", url, nil)
@@ -303,7 +303,7 @@ func (a *HomebrewBottleAction) downloadBottle(formula, blobSHA, token, destPath 
 }
 
 // verifySHA256 verifies the SHA256 checksum of a file
-func (a *HomebrewBottleAction) verifySHA256(filePath, expectedSHA string) error {
+func (a *HomebrewAction) verifySHA256(filePath, expectedSHA string) error {
 	file, err := os.Open(filePath)
 	if err != nil {
 		return fmt.Errorf("failed to open file: %w", err)
@@ -332,7 +332,7 @@ var homebrewPlaceholders = [][]byte{
 // relocatePlaceholders replaces Homebrew placeholders in all files
 // For text files: direct replacement with install path
 // For binary files: use patchelf/install_name_tool to reset RPATH
-func (a *HomebrewBottleAction) relocatePlaceholders(dir, installPath string) error {
+func (a *HomebrewAction) relocatePlaceholders(dir, installPath string) error {
 	replacement := []byte(installPath)
 
 	// Collect binaries that need RPATH fixup
@@ -412,7 +412,7 @@ func (a *HomebrewBottleAction) relocatePlaceholders(dir, installPath string) err
 
 // fixBinaryRpath uses patchelf or install_name_tool to set a proper RPATH
 // This replaces the Homebrew placeholder RPATH with a working path
-func (a *HomebrewBottleAction) fixBinaryRpath(binaryPath, installPath string) error {
+func (a *HomebrewAction) fixBinaryRpath(binaryPath, installPath string) error {
 	// Detect binary format
 	f, err := os.Open(binaryPath)
 	if err != nil {
@@ -446,7 +446,7 @@ func (a *HomebrewBottleAction) fixBinaryRpath(binaryPath, installPath string) er
 }
 
 // fixElfRpath uses patchelf to set RPATH on Linux ELF binaries
-func (a *HomebrewBottleAction) fixElfRpath(binaryPath, installPath string) error {
+func (a *HomebrewAction) fixElfRpath(binaryPath, installPath string) error {
 	patchelf, err := exec.LookPath("patchelf")
 	if err != nil {
 		// patchelf not available - try to proceed without it
@@ -511,7 +511,7 @@ func (a *HomebrewBottleAction) fixElfRpath(binaryPath, installPath string) error
 }
 
 // fixElfInterpreter fixes the ELF interpreter path if it contains Homebrew placeholders
-func (a *HomebrewBottleAction) fixElfInterpreter(patchelf, binaryPath string) error {
+func (a *HomebrewAction) fixElfInterpreter(patchelf, binaryPath string) error {
 	// Read current interpreter
 	printCmd := exec.Command(patchelf, "--print-interpreter", binaryPath)
 	output, err := printCmd.CombinedOutput()
@@ -541,7 +541,7 @@ func (a *HomebrewBottleAction) fixElfInterpreter(patchelf, binaryPath string) er
 }
 
 // fixMachoRpath uses install_name_tool to fix RPATH on macOS Mach-O binaries
-func (a *HomebrewBottleAction) fixMachoRpath(binaryPath, installPath string) error {
+func (a *HomebrewAction) fixMachoRpath(binaryPath, installPath string) error {
 	installNameTool, err := exec.LookPath("install_name_tool")
 	if err != nil {
 		fmt.Printf("   Warning: install_name_tool not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
@@ -621,7 +621,7 @@ func (a *HomebrewBottleAction) fixMachoRpath(binaryPath, installPath string) err
 }
 
 // isBinaryFile detects if content is binary (contains null bytes in first 8KB)
-func (a *HomebrewBottleAction) isBinaryFile(content []byte) bool {
+func (a *HomebrewAction) isBinaryFile(content []byte) bool {
 	// Check first 8KB for null bytes
 	checkLen := 8192
 	if len(content) < checkLen {
@@ -640,6 +640,6 @@ func (a *HomebrewBottleAction) isBinaryFile(content []byte) bool {
 // GetCurrentPlatformTag returns the platform tag for the current runtime
 // This is useful for testing and standalone usage
 func GetCurrentPlatformTag() (string, error) {
-	action := &HomebrewBottleAction{}
+	action := &HomebrewAction{}
 	return action.getPlatformTag(runtime.GOOS, runtime.GOARCH)
 }

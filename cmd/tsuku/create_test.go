@@ -241,9 +241,9 @@ func TestDescribeStep(t *testing.T) {
 			want: "Download binary from GitHub releases",
 		},
 		{
-			name: "homebrew_bottle with formula",
+			name: "homebrew with formula",
 			step: recipe.Step{
-				Action: "homebrew_bottle",
+				Action: "homebrew",
 				Params: map[string]interface{}{
 					"formula": "jq",
 				},
@@ -251,9 +251,9 @@ func TestDescribeStep(t *testing.T) {
 			want: "Download Homebrew bottle for jq",
 		},
 		{
-			name: "homebrew_bottle without formula",
+			name: "homebrew without formula",
 			step: recipe.Step{
-				Action: "homebrew_bottle",
+				Action: "homebrew",
 				Params: map[string]interface{}{},
 			},
 			want: "Download Homebrew bottle",
@@ -345,10 +345,10 @@ func TestExtractDownloadURLs(t *testing.T) {
 			want: []string{"github.com/FiloSottile/age/releases/.../age-{version}-{os}-{arch}.tar.gz"},
 		},
 		{
-			name: "homebrew_bottle",
+			name: "homebrew",
 			recipe: &recipe.Recipe{
 				Steps: []recipe.Step{{
-					Action: "homebrew_bottle",
+					Action: "homebrew",
 					Params: map[string]interface{}{
 						"formula": "jq",
 					},

@@ -240,7 +240,7 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"nix_install":       true,
 		"github_archive":    true,
 		"github_file":       true,
-		"homebrew_bottle":   true,
+		"homebrew":          true,
 		"homebrew_source":   true,
 		"configure_make":    true,
 	}
@@ -346,9 +346,9 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 			result.addError(stepField, "run_command action requires 'command' parameter")
 		}
 
-	case "homebrew_bottle":
+	case "homebrew":
 		if _, ok := step.Params["formula"]; !ok {
-			result.addError(stepField, "homebrew_bottle action requires 'formula' parameter")
+			result.addError(stepField, "homebrew action requires 'formula' parameter")
 		}
 
 	case "homebrew_source":

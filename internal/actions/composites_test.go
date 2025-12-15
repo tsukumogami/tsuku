@@ -137,7 +137,7 @@ func TestGitHubFileAction_Name(t *testing.T) {
 	}
 }
 
-// HomebrewBottleAction tests moved to homebrew_bottle_test.go
+// HomebrewAction tests moved to homebrew_test.go
 
 func TestExtractSourceFiles(t *testing.T) {
 	t.Parallel()
@@ -362,7 +362,7 @@ func TestGitHubFileAction_Execute_MissingParams(t *testing.T) {
 	}
 }
 
-// HomebrewBottleAction Execute tests moved to homebrew_bottle_test.go
+// HomebrewAction Execute tests moved to homebrew_test.go
 
 // TestGitHubArchiveAction_Decompose tests the Decompose method
 func TestGitHubArchiveAction_Decompose(t *testing.T) {

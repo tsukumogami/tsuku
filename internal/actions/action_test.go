@@ -24,7 +24,7 @@ func TestRegister_And_Get(t *testing.T) {
 		"download_archive",
 		"github_archive",
 		"github_file",
-		"homebrew_bottle",
+		"homebrew",
 	}
 
 	for _, name := range coreActions {
@@ -127,7 +127,7 @@ func TestNetworkValidator_AllActions(t *testing.T) {
 		"download_archive",
 		"github_archive",
 		"github_file",
-		"homebrew_bottle",
+		"homebrew",
 		"homebrew_source",
 	}
 

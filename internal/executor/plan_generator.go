@@ -314,7 +314,7 @@ func (e *Executor) resolveStep(
 // isDownloadAction returns true if the action involves downloading files.
 func isDownloadAction(action string) bool {
 	switch action {
-	case "download", "download_archive", "github_archive", "github_file", "homebrew_bottle":
+	case "download", "download_archive", "github_archive", "github_file", "homebrew":
 		return true
 	default:
 		return false
@@ -357,9 +357,9 @@ func extractDownloadURL(action string, params map[string]interface{}, vars map[s
 		url := fmt.Sprintf("https://github.com/%s/releases/download/v%s/%s", repo, ver, assetName)
 		return url, nil
 
-	case "homebrew_bottle":
-		// Homebrew bottle URLs are complex and depend on formula
-		// For now, return empty to skip checksum (bottles often have upstream checksums)
+	case "homebrew":
+		// Homebrew URLs are complex and depend on formula
+		// For now, return empty to skip checksum (bottles have upstream checksums)
 		return "", nil
 
 	default:
