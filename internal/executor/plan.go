@@ -189,8 +189,8 @@ func ValidatePlan(plan *InstallationPlan) error {
 	// Check platform compatibility
 	if plan.Platform.OS != runtime.GOOS || plan.Platform.Arch != runtime.GOARCH {
 		errors = append(errors, ValidationError{
-			Step:    -1,
-			Action:  "",
+			Step:   -1,
+			Action: "",
 			Message: fmt.Sprintf("plan is for %s-%s, but this system is %s-%s",
 				plan.Platform.OS, plan.Platform.Arch, runtime.GOOS, runtime.GOARCH),
 		})
