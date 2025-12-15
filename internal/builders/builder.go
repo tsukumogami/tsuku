@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/sandbox"
 )
 
 // LLMStateTracker provides rate limit checking and cost tracking for LLM operations.
@@ -193,4 +194,161 @@ type BuildResult struct {
 	// Cost is the estimated cost in USD for LLM-based generation.
 	// Only populated by LLM-based builders (e.g., GitHubReleaseBuilder).
 	Cost float64
+}
+
+// BuildSession represents an active build session that maintains state across
+// multiple generation and repair attempts. This is particularly important for
+// LLM builders that maintain conversation history for effective repairs.
+//
+// Sessions are created by Builder.NewSession() and should be closed when done.
+// The Orchestrator uses sessions to control the sandbox validation and repair loop
+// externally, rather than having validation embedded in each builder.
+type BuildSession interface {
+	// Generate produces an initial recipe from the build request.
+	// This is the first call after creating a session.
+	Generate(ctx context.Context) (*BuildResult, error)
+
+	// Repair attempts to fix the recipe given sandbox failure feedback.
+	// The session maintains internal state (e.g., LLM conversation history)
+	// so repairs can build on previous context rather than starting fresh.
+	// Can be called multiple times for iterative repairs.
+	Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error)
+
+	// Close releases resources associated with the session.
+	// Should be called when the session is no longer needed.
+	Close() error
+}
+
+// SessionBuilder is the interface for builders that support session-based generation.
+// This extends the basic Builder interface with session creation capabilities.
+//
+// Session-based builders allow the Orchestrator to control the sandbox validation
+// and repair loop externally. This enables:
+// - Centralized validation policy (retry counts, different builders, etc.)
+// - Cross-builder repair strategies
+// - Consistent telemetry and progress reporting
+//
+// For simple ecosystem builders that don't need stateful repairs, use
+// SimpleSessionBuilder which wraps a basic Build() function.
+type SessionBuilder interface {
+	// Name returns the builder identifier (e.g., "github", "homebrew", "crates_io")
+	Name() string
+
+	// RequiresLLM returns true if this builder uses LLM for recipe generation.
+	RequiresLLM() bool
+
+	// CanBuild checks if this builder can handle the package/source combination.
+	CanBuild(ctx context.Context, req BuildRequest) (bool, error)
+
+	// NewSession creates a new build session for the given request.
+	// The session maintains state for iterative generation and repair.
+	NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error)
+}
+
+// SessionOptions contains options for creating a build session.
+type SessionOptions struct {
+	// ProgressReporter receives progress updates during build operations.
+	ProgressReporter ProgressReporter
+
+	// LLMConfig provides access to LLM-related user settings.
+	LLMConfig LLMConfig
+
+	// LLMStateTracker provides rate limit checking and cost tracking.
+	LLMStateTracker LLMStateTracker
+
+	// ForceInit bypasses rate limit and budget checks.
+	ForceInit bool
+}
+
+// SimpleSession wraps a basic Builder's Build() method as a BuildSession.
+// This allows ecosystem builders (Cargo, Go, PyPI, etc.) that don't need
+// stateful repairs to be used with the Orchestrator.
+//
+// Since ecosystem builders generate recipes deterministically from metadata,
+// Repair() simply calls Build() again - there's no conversation state to preserve.
+type SimpleSession struct {
+	builder    Builder
+	req        BuildRequest
+	lastResult *BuildResult
+}
+
+// NewSimpleSession creates a session wrapper around a basic Builder.
+func NewSimpleSession(builder Builder, req BuildRequest) *SimpleSession {
+	return &SimpleSession{
+		builder: builder,
+		req:     req,
+	}
+}
+
+// Generate calls the underlying builder's Build() method.
+func (s *SimpleSession) Generate(ctx context.Context) (*BuildResult, error) {
+	result, err := s.builder.Build(ctx, s.req)
+	if err != nil {
+		return nil, err
+	}
+	s.lastResult = result
+	return result, nil
+}
+
+// Repair regenerates the recipe. For ecosystem builders, this just calls Build()
+// again since there's no stateful conversation to leverage for repairs.
+// The failure information is logged but cannot influence deterministic generation.
+func (s *SimpleSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
+	// Ecosystem builders can't use failure feedback - they generate deterministically.
+	// Just try generating again (which will likely produce the same recipe).
+	result, err := s.builder.Build(ctx, s.req)
+	if err != nil {
+		return nil, err
+	}
+	s.lastResult = result
+	return result, nil
+}
+
+// Close is a no-op for simple sessions.
+func (s *SimpleSession) Close() error {
+	return nil
+}
+
+// SessionBuilderAdapter adapts a legacy Builder to the SessionBuilder interface.
+// This allows existing ecosystem builders to work with the Orchestrator without
+// modification.
+type SessionBuilderAdapter struct {
+	Builder Builder
+}
+
+// Name returns the builder name.
+func (a *SessionBuilderAdapter) Name() string {
+	return a.Builder.Name()
+}
+
+// RequiresLLM returns whether the builder requires LLM.
+func (a *SessionBuilderAdapter) RequiresLLM() bool {
+	return a.Builder.RequiresLLM()
+}
+
+// CanBuild checks if the builder can handle the request.
+func (a *SessionBuilderAdapter) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
+	return a.Builder.CanBuild(ctx, req.Package)
+}
+
+// NewSession creates a SimpleSession for the builder.
+func (a *SessionBuilderAdapter) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	// Initialize the builder if options provided
+	if opts != nil {
+		initOpts := &InitOptions{
+			ProgressReporter: opts.ProgressReporter,
+			LLMConfig:        opts.LLMConfig,
+			LLMStateTracker:  opts.LLMStateTracker,
+			ForceInit:        opts.ForceInit,
+		}
+		if err := a.Builder.Initialize(ctx, initOpts); err != nil {
+			return nil, err
+		}
+	} else {
+		if err := a.Builder.Initialize(ctx, nil); err != nil {
+			return nil, err
+		}
+	}
+
+	return NewSimpleSession(a.Builder, req), nil
 }

@@ -12,6 +12,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -80,16 +81,48 @@ func (node *DependencyNode) CountNeedingGeneration() int {
 }
 
 // HomebrewBuilder generates recipes from Homebrew formulas using LLM analysis.
+// It implements SessionBuilder for use with the Orchestrator, and also maintains
+// backward compatibility with the legacy Builder interface.
 type HomebrewBuilder struct {
 	httpClient      *http.Client
 	factory         *llm.Factory
-	executor        *validate.Executor
+	executor        *validate.Executor // Legacy: used only by Build() for backward compat
 	sanitizer       *validate.Sanitizer
 	homebrewAPIURL  string
 	telemetryClient *telemetry.Client
 	progress        ProgressReporter
 	registry        RegistryChecker
 	llmStateTracker LLMStateTracker
+}
+
+// HomebrewSession maintains state for an active Homebrew build session.
+// It preserves LLM conversation history for effective repairs.
+type HomebrewSession struct {
+	builder *HomebrewBuilder
+	req     BuildRequest
+
+	// LLM state
+	provider     llm.Provider
+	messages     []llm.Message
+	systemPrompt string
+	tools        []llm.ToolDef
+	totalUsage   llm.Usage
+
+	// Generation context
+	genCtx      *homebrewGenContext
+	formula     string
+	forceSource bool
+
+	// Generated state (for bottle mode)
+	lastRecipeData *homebrewRecipeData
+	lastRecipe     *recipe.Recipe
+
+	// Generated state (for source mode)
+	lastSourceData *sourceRecipeData
+	isSourceMode   bool
+
+	// Progress reporting
+	progress ProgressReporter
 }
 
 // HomebrewBuilderOption configures a HomebrewBuilder.
@@ -337,6 +370,353 @@ func (b *HomebrewBuilder) CanBuild(ctx context.Context, packageName string) (boo
 	}
 
 	return true, nil
+}
+
+// CanBuildRequest checks if this builder can handle the given request.
+// Implements SessionBuilder.CanBuild with the full BuildRequest.
+func (b *HomebrewBuilder) CanBuildRequest(ctx context.Context, req BuildRequest) (bool, error) {
+	// Parse SourceArg to get formula name
+	sourceArg := req.SourceArg
+	if sourceArg == "" {
+		sourceArg = req.Package
+	}
+	formula, _, err := parseSourceArg(sourceArg)
+	if err != nil {
+		return false, nil
+	}
+
+	// Validate formula name
+	if !isValidHomebrewFormula(formula) {
+		return false, nil
+	}
+
+	// Query Homebrew API
+	formulaInfo, err := b.fetchFormulaInfo(ctx, formula)
+	if err != nil {
+		if _, ok := err.(*HomebrewFormulaNotFoundError); ok {
+			return false, nil
+		}
+		return false, err
+	}
+
+	// Formula exists (source build is always possible even without bottles)
+	_ = formulaInfo
+	return true, nil
+}
+
+// NewSession creates a new build session for the given request.
+// The session fetches Homebrew metadata and prepares for LLM generation.
+func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	// Check LLM prerequisites if options provided
+	if opts != nil {
+		initOpts := &InitOptions{
+			LLMConfig:       opts.LLMConfig,
+			LLMStateTracker: opts.LLMStateTracker,
+			ForceInit:       opts.ForceInit,
+		}
+		if err := CheckLLMPrerequisites(initOpts); err != nil {
+			return nil, err
+		}
+	}
+
+	// Parse SourceArg to extract formula name and source build flag
+	sourceArg := req.SourceArg
+	if sourceArg == "" {
+		sourceArg = req.Package
+	}
+	formula, forceSource, err := parseSourceArg(sourceArg)
+	if err != nil {
+		return nil, fmt.Errorf("invalid source argument: %w", err)
+	}
+
+	// Get or create LLM factory
+	factory := b.factory
+	if factory == nil {
+		factory, err = llm.NewFactory(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
+		}
+	}
+
+	// Get provider from factory
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("no LLM provider available: %w", err)
+	}
+
+	// Set up progress reporter
+	var progress ProgressReporter
+	if opts != nil && opts.ProgressReporter != nil {
+		progress = opts.ProgressReporter
+	} else {
+		progress = b.progress
+	}
+
+	// Report metadata fetch starting
+	if progress != nil {
+		progress.OnStageStart("Fetching formula metadata")
+	}
+
+	// Fetch formula metadata
+	formulaInfo, err := b.fetchFormulaInfo(ctx, formula)
+	if err != nil {
+		if progress != nil {
+			progress.OnStageFailed()
+		}
+		return nil, fmt.Errorf("failed to fetch formula: %w", err)
+	}
+
+	// Determine build mode
+	isSourceMode := !formulaInfo.Versions.Bottle || forceSource
+
+	// Report metadata fetch complete
+	if progress != nil {
+		suffix := ""
+		if isSourceMode {
+			if forceSource && formulaInfo.Versions.Bottle {
+				suffix = " (source requested)"
+			} else {
+				suffix = " (source only)"
+			}
+		}
+		progress.OnStageDone(fmt.Sprintf("v%s%s", formulaInfo.Versions.Stable, suffix))
+	}
+
+	// Build generation context
+	genCtx := &homebrewGenContext{
+		formula:     formula,
+		formulaInfo: formulaInfo,
+		httpClient:  b.httpClient,
+		apiURL:      b.homebrewAPIURL,
+	}
+
+	// Build initial messages and tools based on mode
+	var systemPrompt string
+	var tools []llm.ToolDef
+	var userMessage string
+
+	if isSourceMode {
+		systemPrompt = b.buildSourceSystemPrompt()
+		userMessage = b.buildSourceUserMessage(genCtx)
+		tools = b.buildSourceToolDefs()
+	} else {
+		systemPrompt = b.buildSystemPrompt()
+		userMessage = b.buildUserMessage(genCtx)
+		tools = b.buildToolDefs()
+	}
+
+	messages := []llm.Message{
+		{Role: llm.RoleUser, Content: userMessage},
+	}
+
+	// Emit generation started event
+	sourceType := "homebrew:"
+	if isSourceMode {
+		sourceType = "homebrew-source:"
+	}
+	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, sourceType+formula))
+
+	return &HomebrewSession{
+		builder:      b,
+		req:          req,
+		provider:     provider,
+		messages:     messages,
+		systemPrompt: systemPrompt,
+		tools:        tools,
+		genCtx:       genCtx,
+		formula:      formula,
+		forceSource:  forceSource,
+		isSourceMode: isSourceMode,
+		progress:     progress,
+	}, nil
+}
+
+// Generate produces an initial recipe from the build request.
+func (s *HomebrewSession) Generate(ctx context.Context) (*BuildResult, error) {
+	if s.progress != nil {
+		s.progress.OnStageStart(fmt.Sprintf("Analyzing formula with %s", s.provider.Name()))
+	}
+
+	if s.isSourceMode {
+		return s.generateSource(ctx)
+	}
+	return s.generateBottle(ctx)
+}
+
+// generateBottle generates a bottle-based recipe.
+func (s *HomebrewSession) generateBottle(ctx context.Context) (*BuildResult, error) {
+	// Run conversation loop to get recipe data
+	recipeData, turnUsage, err := s.builder.runConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
+	if err != nil {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, err
+	}
+	s.totalUsage.Add(*turnUsage)
+
+	if s.progress != nil {
+		s.progress.OnStageDone("")
+	}
+
+	// Store for potential repairs
+	s.lastRecipeData = recipeData
+
+	// Generate recipe from extracted data
+	r, err := s.builder.generateRecipe(s.req.Package, s.genCtx.formulaInfo, recipeData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate recipe: %w", err)
+	}
+
+	s.lastRecipe = r
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("homebrew:%s", s.formula),
+		Provider: s.provider.Name(),
+		Cost:     s.totalUsage.Cost(),
+		Warnings: []string{
+			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
+		},
+	}, nil
+}
+
+// generateSource generates a source-based recipe.
+func (s *HomebrewSession) generateSource(ctx context.Context) (*BuildResult, error) {
+	// Run source conversation loop
+	srcData, turnUsage, err := s.builder.runSourceConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
+	if err != nil {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, err
+	}
+	s.totalUsage.Add(*turnUsage)
+
+	if s.progress != nil {
+		s.progress.OnStageDone("")
+	}
+
+	// Store for potential repairs
+	s.lastSourceData = srcData
+
+	// Generate recipe from source data
+	r, err := s.builder.generateSourceRecipeOutput(s.req.Package, s.genCtx.formulaInfo, srcData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate source recipe: %w", err)
+	}
+
+	s.lastRecipe = r
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("homebrew-source:%s", s.formula),
+		Provider: s.provider.Name(),
+		Cost:     s.totalUsage.Cost(),
+		Warnings: []string{
+			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
+		},
+	}, nil
+}
+
+// Repair attempts to fix the recipe given sandbox failure feedback.
+func (s *HomebrewSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
+	if s.progress != nil {
+		s.progress.OnStageStart("Repairing recipe")
+	}
+
+	// Build repair message from failure
+	repairMessage := s.builder.buildRepairMessageFromSandbox(failure)
+
+	// Add repair message to conversation
+	s.messages = append(s.messages, llm.Message{Role: llm.RoleUser, Content: repairMessage})
+
+	if s.isSourceMode {
+		return s.repairSource(ctx)
+	}
+	return s.repairBottle(ctx)
+}
+
+// repairBottle repairs a bottle-based recipe.
+func (s *HomebrewSession) repairBottle(ctx context.Context) (*BuildResult, error) {
+	// Run conversation loop to get new recipe data
+	recipeData, turnUsage, err := s.builder.runConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
+	if err != nil {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, err
+	}
+	s.totalUsage.Add(*turnUsage)
+
+	if s.progress != nil {
+		s.progress.OnStageDone("")
+	}
+
+	// Store new data
+	s.lastRecipeData = recipeData
+
+	// Generate recipe from new data
+	r, err := s.builder.generateRecipe(s.req.Package, s.genCtx.formulaInfo, recipeData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate recipe: %w", err)
+	}
+
+	s.lastRecipe = r
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("homebrew:%s", s.formula),
+		Provider: s.provider.Name(),
+		Cost:     s.totalUsage.Cost(),
+		Warnings: []string{
+			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
+		},
+	}, nil
+}
+
+// repairSource repairs a source-based recipe.
+func (s *HomebrewSession) repairSource(ctx context.Context) (*BuildResult, error) {
+	// Run source conversation loop to get new data
+	srcData, turnUsage, err := s.builder.runSourceConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
+	if err != nil {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, err
+	}
+	s.totalUsage.Add(*turnUsage)
+
+	if s.progress != nil {
+		s.progress.OnStageDone("")
+	}
+
+	// Store new data
+	s.lastSourceData = srcData
+
+	// Generate recipe from new data
+	r, err := s.builder.generateSourceRecipeOutput(s.req.Package, s.genCtx.formulaInfo, srcData)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate source recipe: %w", err)
+	}
+
+	s.lastRecipe = r
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("homebrew-source:%s", s.formula),
+		Provider: s.provider.Name(),
+		Cost:     s.totalUsage.Cost(),
+		Warnings: []string{
+			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
+		},
+	}, nil
+}
+
+// Close releases resources associated with the session.
+func (s *HomebrewSession) Close() error {
+	// Currently no resources to release
+	return nil
 }
 
 // DiscoverDependencyTree traverses Homebrew API to build the full dependency tree.
@@ -1420,6 +1800,116 @@ func (b *HomebrewBuilder) runConversationLoop(
 	return nil, &totalUsage, fmt.Errorf("max turns (%d) exceeded without completing recipe generation", MaxTurns)
 }
 
+// runSourceConversationLoop executes the multi-turn conversation for source builds.
+// Similar to runConversationLoop but handles extract_source_recipe instead of extract_recipe.
+func (b *HomebrewBuilder) runSourceConversationLoop(
+	ctx context.Context,
+	provider llm.Provider,
+	systemPrompt string,
+	messages []llm.Message,
+	tools []llm.ToolDef,
+	genCtx *homebrewGenContext,
+) (*sourceRecipeData, *llm.Usage, error) {
+	var totalUsage llm.Usage
+
+	for turn := 0; turn < MaxTurns; turn++ {
+		resp, err := provider.Complete(ctx, &llm.CompletionRequest{
+			SystemPrompt: systemPrompt,
+			Messages:     messages,
+			Tools:        tools,
+			MaxTokens:    4096,
+		})
+		if err != nil {
+			return nil, &totalUsage, err
+		}
+
+		totalUsage.Add(resp.Usage)
+
+		// Add assistant response to conversation
+		messages = append(messages, llm.Message{
+			Role:      llm.RoleAssistant,
+			Content:   resp.Content,
+			ToolCalls: resp.ToolCalls,
+		})
+
+		// Process tool calls
+		var toolResults []llm.Message
+		var srcData *sourceRecipeData
+
+		for _, tc := range resp.ToolCalls {
+			result, extracted, err := b.executeToolCall(ctx, genCtx, tc)
+			if err != nil {
+				// Return error as tool result so LLM can try again
+				toolResults = append(toolResults, llm.Message{
+					Role: llm.RoleUser,
+					ToolResult: &llm.ToolResult{
+						CallID:  tc.ID,
+						Content: fmt.Sprintf("Error: %v", err),
+						IsError: true,
+					},
+				})
+				continue
+			}
+
+			// Check if this is extract_source_recipe
+			if tc.Name == ToolExtractSourceRecipe && result != "" {
+				// Parse the JSON result back into sourceRecipeData
+				var data sourceRecipeData
+				if err := json.Unmarshal([]byte(result), &data); err != nil {
+					toolResults = append(toolResults, llm.Message{
+						Role: llm.RoleUser,
+						ToolResult: &llm.ToolResult{
+							CallID:  tc.ID,
+							Content: fmt.Sprintf("Error parsing source recipe: %v", err),
+							IsError: true,
+						},
+					})
+					continue
+				}
+				srcData = &data
+			} else if extracted != nil {
+				// bottle-based extract_recipe was called - shouldn't happen in source mode
+				toolResults = append(toolResults, llm.Message{
+					Role: llm.RoleUser,
+					ToolResult: &llm.ToolResult{
+						CallID:  tc.ID,
+						Content: "Error: use extract_source_recipe for source builds, not extract_recipe",
+						IsError: true,
+					},
+				})
+				continue
+			} else {
+				toolResults = append(toolResults, llm.Message{
+					Role: llm.RoleUser,
+					ToolResult: &llm.ToolResult{
+						CallID:  tc.ID,
+						Content: result,
+						IsError: false,
+					},
+				})
+			}
+		}
+
+		// If extract_source_recipe was called, return the data
+		if srcData != nil {
+			return srcData, &totalUsage, nil
+		}
+
+		// If there were tool calls, add results and continue
+		if len(toolResults) > 0 {
+			messages = append(messages, toolResults...)
+			continue
+		}
+
+		// No tool calls and no extract_source_recipe - LLM is done but didn't call the tool
+		if resp.StopReason == "end_turn" {
+			return nil, &totalUsage, fmt.Errorf("conversation ended without extract_source_recipe being called")
+		}
+	}
+
+	return nil, &totalUsage, fmt.Errorf("max turns (%d) exceeded without completing source recipe generation", MaxTurns)
+}
+
 // executeToolCall executes a tool call and returns the result.
 func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewGenContext, tc llm.ToolCall) (string, *homebrewRecipeData, error) {
 	switch tc.Name {
@@ -1807,6 +2297,7 @@ For CLI tools, the executable is usually in bin/<name> where <name> matches the 
 }
 
 // buildRepairMessage constructs the error feedback message for the LLM.
+// Used by the legacy Build() method with validate.ValidationResult.
 func (b *HomebrewBuilder) buildRepairMessage(result *validate.ValidationResult) string {
 	// Combine stdout and stderr
 	output := result.Stdout + "\n" + result.Stderr
@@ -1830,6 +2321,42 @@ func (b *HomebrewBuilder) buildRepairMessage(result *validate.ValidationResult) 
 		for _, suggestion := range parsed.Suggestions {
 			sb.WriteString(fmt.Sprintf("- %s\n", suggestion))
 		}
+	}
+
+	sb.WriteString("\nPlease analyze what went wrong and call extract_recipe again with corrected values.")
+
+	return sb.String()
+}
+
+// buildRepairMessageFromSandbox constructs error feedback from sandbox results.
+// Used by HomebrewSession.Repair() with sandbox.SandboxResult.
+func (b *HomebrewBuilder) buildRepairMessageFromSandbox(result *sandbox.SandboxResult) string {
+	// Combine stdout and stderr
+	output := result.Stdout + "\n" + result.Stderr
+
+	// Sanitize the output
+	sanitizedOutput := b.sanitizer.Sanitize(output)
+
+	// Parse the error for structured feedback
+	parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)
+
+	var sb strings.Builder
+	sb.WriteString("The recipe you generated failed sandbox validation. Here is the error:\n\n")
+	sb.WriteString("---\n")
+	sb.WriteString(sanitizedOutput)
+	sb.WriteString("\n---\n\n")
+	sb.WriteString(fmt.Sprintf("Exit code: %d\n", result.ExitCode))
+	sb.WriteString(fmt.Sprintf("Error category: %s\n", parsed.Category))
+
+	if len(parsed.Suggestions) > 0 {
+		sb.WriteString("\nSuggested fixes:\n")
+		for _, suggestion := range parsed.Suggestions {
+			sb.WriteString(fmt.Sprintf("- %s\n", suggestion))
+		}
+	}
+
+	if result.Error != nil {
+		sb.WriteString(fmt.Sprintf("\nSandbox error: %v\n", result.Error))
 	}
 
 	sb.WriteString("\nPlease analyze what went wrong and call extract_recipe again with corrected values.")

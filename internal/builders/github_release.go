@@ -14,6 +14,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -44,15 +45,43 @@ type ProgressReporter interface {
 }
 
 // GitHubReleaseBuilder generates recipes from GitHub release assets using LLM analysis.
+// It implements SessionBuilder for use with the Orchestrator, and also maintains
+// backward compatibility with the legacy Builder interface.
 type GitHubReleaseBuilder struct {
 	httpClient      *http.Client
 	factory         *llm.Factory
-	executor        *validate.Executor
+	executor        *validate.Executor // Legacy: used only by Build() for backward compat
 	sanitizer       *validate.Sanitizer
 	githubBaseURL   string
 	telemetryClient *telemetry.Client
 	progress        ProgressReporter
 	llmStateTracker LLMStateTracker
+}
+
+// GitHubReleaseSession maintains state for an active build session.
+// It preserves LLM conversation history for effective repairs.
+type GitHubReleaseSession struct {
+	builder *GitHubReleaseBuilder
+	req     BuildRequest
+
+	// LLM state
+	provider     llm.Provider
+	messages     []llm.Message
+	systemPrompt string
+	tools        []llm.ToolDef
+	totalUsage   llm.Usage
+
+	// Generation context
+	genCtx   *generationContext
+	repoMeta *repoMeta
+	repoPath string
+
+	// Generated state
+	lastPattern *llm.AssetPattern
+	lastRecipe  *recipe.Recipe
+
+	// Progress reporting
+	progress ProgressReporter
 }
 
 // GitHubReleaseBuilderOption configures a GitHubReleaseBuilder.
@@ -218,10 +247,262 @@ func (b *GitHubReleaseBuilder) reportFailed() {
 }
 
 // CanBuild checks if the SourceArg contains a valid owner/repo format.
+// This is the legacy interface method - prefer CanBuildRequest for SessionBuilder.
 func (b *GitHubReleaseBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
 	// This builder requires SourceArg, not packageName
 	// Return false to indicate this builder cannot auto-detect packages
 	return false, nil
+}
+
+// CanBuildRequest checks if this builder can handle the given request.
+// Implements SessionBuilder.CanBuild with the full BuildRequest for source argument access.
+func (b *GitHubReleaseBuilder) CanBuildRequest(ctx context.Context, req BuildRequest) (bool, error) {
+	// Check if SourceArg is a valid owner/repo format
+	_, _, err := parseRepo(req.SourceArg)
+	return err == nil, nil
+}
+
+// NewSession creates a new build session for the given request.
+// The session fetches GitHub metadata and prepares for LLM generation.
+func (b *GitHubReleaseBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	// Check LLM prerequisites if options provided
+	if opts != nil {
+		initOpts := &InitOptions{
+			LLMConfig:       opts.LLMConfig,
+			LLMStateTracker: opts.LLMStateTracker,
+			ForceInit:       opts.ForceInit,
+		}
+		if err := CheckLLMPrerequisites(initOpts); err != nil {
+			return nil, err
+		}
+	}
+
+	// Parse owner/repo from SourceArg
+	owner, repo, err := parseRepo(req.SourceArg)
+	if err != nil {
+		return nil, fmt.Errorf("invalid source argument: %w", err)
+	}
+	repoPath := fmt.Sprintf("%s/%s", owner, repo)
+
+	// Get or create LLM factory
+	factory := b.factory
+	if factory == nil {
+		factory, err = llm.NewFactory(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
+		}
+	}
+
+	// Get provider from factory
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("no LLM provider available: %w", err)
+	}
+
+	// Set up progress reporter
+	var progress ProgressReporter
+	if opts != nil && opts.ProgressReporter != nil {
+		progress = opts.ProgressReporter
+	} else {
+		progress = b.progress
+	}
+
+	// Report metadata fetch starting
+	if progress != nil {
+		progress.OnStageStart("Fetching release metadata")
+	}
+
+	// Fetch releases
+	releases, err := b.fetchReleases(ctx, owner, repo)
+	if err != nil {
+		if progress != nil {
+			progress.OnStageFailed()
+		}
+		return nil, fmt.Errorf("failed to fetch releases: %w", err)
+	}
+
+	if len(releases) == 0 {
+		if progress != nil {
+			progress.OnStageFailed()
+		}
+		return nil, fmt.Errorf("no releases found for %s", repoPath)
+	}
+
+	// Fetch repo metadata
+	repoMeta, err := b.fetchRepoMeta(ctx, owner, repo)
+	if err != nil {
+		if progress != nil {
+			progress.OnStageFailed()
+		}
+		return nil, fmt.Errorf("failed to fetch repo metadata: %w", err)
+	}
+
+	// Fetch README (non-fatal if it fails)
+	readme := b.fetchREADME(ctx, owner, repo, releases[0].Tag)
+
+	// Report metadata fetch complete
+	if progress != nil {
+		assetCount := 0
+		if len(releases) > 0 {
+			assetCount = len(releases[0].Assets)
+		}
+		progress.OnStageDone(fmt.Sprintf("%s, %d assets", releases[0].Tag, assetCount))
+	}
+
+	// Build generation context
+	genCtx := &generationContext{
+		repo:        repoPath,
+		releases:    releases,
+		description: repoMeta.Description,
+		readme:      readme,
+		httpClient:  b.httpClient,
+	}
+	if len(releases) > 0 {
+		genCtx.tag = releases[0].Tag
+	}
+
+	// Build initial messages
+	systemPrompt := buildSystemPrompt()
+	userMessage := buildUserMessage(genCtx)
+	messages := []llm.Message{
+		{Role: llm.RoleUser, Content: userMessage},
+	}
+	tools := buildToolDefs()
+
+	// Emit generation started event
+	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, repoPath))
+
+	return &GitHubReleaseSession{
+		builder:      b,
+		req:          req,
+		provider:     provider,
+		messages:     messages,
+		systemPrompt: systemPrompt,
+		tools:        tools,
+		genCtx:       genCtx,
+		repoMeta:     repoMeta,
+		repoPath:     repoPath,
+		progress:     progress,
+	}, nil
+}
+
+// Generate produces an initial recipe from the build request.
+func (s *GitHubReleaseSession) Generate(ctx context.Context) (*BuildResult, error) {
+	if s.progress != nil {
+		s.progress.OnStageStart(fmt.Sprintf("Analyzing assets with %s", s.provider.Name()))
+	}
+
+	// Run conversation loop to get pattern
+	pattern, turnUsage, err := s.builder.runConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
+	if err != nil {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, err
+	}
+	s.totalUsage.Add(*turnUsage)
+
+	if s.progress != nil {
+		s.progress.OnStageDone("")
+	}
+
+	// Store pattern for potential repairs
+	s.lastPattern = pattern
+
+	// Generate recipe from pattern
+	r, err := generateRecipe(s.req.Package, s.repoPath, s.repoMeta, pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate recipe: %w", err)
+	}
+
+	// Substitute {version} in verify command and pattern
+	if s.genCtx.tag != "" {
+		version := strings.TrimPrefix(s.genCtx.tag, "v")
+		if r.Verify.Command != "" {
+			r.Verify.Command = strings.ReplaceAll(r.Verify.Command, "{version}", version)
+		}
+		if r.Verify.Pattern != "" {
+			r.Verify.Pattern = strings.ReplaceAll(r.Verify.Pattern, "{version}", version)
+		}
+	}
+
+	s.lastRecipe = r
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("github:%s", s.repoPath),
+		Provider: s.provider.Name(),
+		Cost:     s.totalUsage.Cost(),
+		Warnings: []string{
+			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
+		},
+	}, nil
+}
+
+// Repair attempts to fix the recipe given sandbox failure feedback.
+func (s *GitHubReleaseSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
+	if s.progress != nil {
+		s.progress.OnStageStart("Repairing recipe")
+	}
+
+	// Build repair message from failure
+	repairMessage := s.builder.buildRepairMessageFromSandbox(failure)
+
+	// Add repair message to conversation
+	s.messages = append(s.messages, llm.Message{Role: llm.RoleUser, Content: repairMessage})
+
+	// Run conversation loop to get new pattern
+	pattern, turnUsage, err := s.builder.runConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
+	if err != nil {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, err
+	}
+	s.totalUsage.Add(*turnUsage)
+
+	if s.progress != nil {
+		s.progress.OnStageDone("")
+	}
+
+	// Store new pattern
+	s.lastPattern = pattern
+
+	// Generate recipe from new pattern
+	r, err := generateRecipe(s.req.Package, s.repoPath, s.repoMeta, pattern)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate recipe: %w", err)
+	}
+
+	// Substitute {version}
+	if s.genCtx.tag != "" {
+		version := strings.TrimPrefix(s.genCtx.tag, "v")
+		if r.Verify.Command != "" {
+			r.Verify.Command = strings.ReplaceAll(r.Verify.Command, "{version}", version)
+		}
+		if r.Verify.Pattern != "" {
+			r.Verify.Pattern = strings.ReplaceAll(r.Verify.Pattern, "{version}", version)
+		}
+	}
+
+	s.lastRecipe = r
+
+	return &BuildResult{
+		Recipe:   r,
+		Source:   fmt.Sprintf("github:%s", s.repoPath),
+		Provider: s.provider.Name(),
+		Cost:     s.totalUsage.Cost(),
+		Warnings: []string{
+			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
+		},
+	}, nil
+}
+
+// Close releases resources associated with the session.
+func (s *GitHubReleaseSession) Close() error {
+	// Currently no resources to release
+	// Future: could close LLM connections, cancel pending requests, etc.
+	return nil
 }
 
 // Build generates a recipe from GitHub release assets.
@@ -615,6 +896,7 @@ func (b *GitHubReleaseBuilder) buildAssetURL(genCtx *generationContext, pattern 
 }
 
 // buildRepairMessage constructs the error feedback message for the LLM.
+// Used by the legacy Build() method with validate.ValidationResult.
 func (b *GitHubReleaseBuilder) buildRepairMessage(result *validate.ValidationResult) string {
 	// Combine stdout and stderr
 	output := result.Stdout + "\n" + result.Stderr
@@ -638,6 +920,42 @@ func (b *GitHubReleaseBuilder) buildRepairMessage(result *validate.ValidationRes
 		for _, suggestion := range parsed.Suggestions {
 			sb.WriteString(fmt.Sprintf("- %s\n", suggestion))
 		}
+	}
+
+	sb.WriteString("\nPlease analyze what went wrong and call extract_pattern again with a corrected recipe.")
+
+	return sb.String()
+}
+
+// buildRepairMessageFromSandbox constructs error feedback from sandbox results.
+// Used by GitHubReleaseSession.Repair() with sandbox.SandboxResult.
+func (b *GitHubReleaseBuilder) buildRepairMessageFromSandbox(result *sandbox.SandboxResult) string {
+	// Combine stdout and stderr
+	output := result.Stdout + "\n" + result.Stderr
+
+	// Sanitize the output
+	sanitizedOutput := b.sanitizer.Sanitize(output)
+
+	// Parse the error for structured feedback
+	parsed := validate.ParseValidationError(result.Stdout, result.Stderr, result.ExitCode)
+
+	var sb strings.Builder
+	sb.WriteString("The recipe you generated failed sandbox validation. Here is the error:\n\n")
+	sb.WriteString("---\n")
+	sb.WriteString(sanitizedOutput)
+	sb.WriteString("\n---\n\n")
+	sb.WriteString(fmt.Sprintf("Exit code: %d\n", result.ExitCode))
+	sb.WriteString(fmt.Sprintf("Error category: %s\n", parsed.Category))
+
+	if len(parsed.Suggestions) > 0 {
+		sb.WriteString("\nSuggested fixes:\n")
+		for _, suggestion := range parsed.Suggestions {
+			sb.WriteString(fmt.Sprintf("- %s\n", suggestion))
+		}
+	}
+
+	if result.Error != nil {
+		sb.WriteString(fmt.Sprintf("\nSandbox error: %v\n", result.Error))
 	}
 
 	sb.WriteString("\nPlease analyze what went wrong and call extract_pattern again with a corrected recipe.")
