@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - 'internal/recipe/recipes/**/*.toml'
-      - 'internal/actions/homebrew_*.go'
+      - 'internal/actions/homebrew*.go'
       - 'internal/actions/configure_make.go'
       - 'internal/actions/extract.go'
       - 'testdata/recipes/*.toml'
@@ -15,7 +15,7 @@ on:
     branches: [main]
     paths:
       - 'internal/recipe/recipes/**/*.toml'
-      - 'internal/actions/homebrew_*.go'
+      - 'internal/actions/homebrew*.go'
       - 'internal/actions/configure_make.go'
       - 'internal/actions/extract.go'
       - 'testdata/recipes/*.toml'
@@ -23,8 +23,8 @@ on:
       - '.github/workflows/build-essentials.yml'
 
 jobs:
-  # Test homebrew action with make and gdbm
-  test-homebrew-bottle:
+  # Test homebrew action with make, gdbm, and pngcrush
+  test-homebrew:
     name: "${{ matrix.platform.name }}: ${{ matrix.tool }}"
     runs-on: ${{ matrix.platform.runner }}
     strategy:
