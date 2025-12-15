@@ -488,43 +488,6 @@ func promptForApproval(r *recipe.Recipe) (bool, error) {
 	}
 }
 
-// confirmDependencyTree displays the dependency tree and asks for confirmation.
-// Returns true if the user approves, false if canceled.
-// If autoApprove is true, shows the tree but skips the prompt.
-func confirmDependencyTree(req *builders.ConfirmationRequest, autoApprove bool) bool {
-	fmt.Println()
-	fmt.Println("Dependency tree:")
-	fmt.Println(req.FormattedTree)
-	fmt.Println()
-
-	if len(req.AlreadyHave) > 0 {
-		fmt.Printf("Already have recipes for: %s\n", strings.Join(req.AlreadyHave, ", "))
-	}
-
-	if len(req.ToGenerate) == 0 {
-		fmt.Println("All recipes already exist. Nothing to generate.")
-		return true
-	}
-
-	fmt.Printf("Will generate %d recipe(s): %s\n", len(req.ToGenerate), strings.Join(req.ToGenerate, ", "))
-	fmt.Printf("Estimated cost: $%.2f\n", req.EstimatedCost)
-	fmt.Println()
-
-	if autoApprove {
-		return true
-	}
-
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Print("Proceed? [y/n] ")
-	input, err := reader.ReadString('\n')
-	if err != nil {
-		return false
-	}
-
-	input = strings.TrimSpace(strings.ToLower(input))
-	return input == "y" || input == "yes"
-}
-
 // extractDownloadURLs returns download URLs from the recipe.
 func extractDownloadURLs(r *recipe.Recipe) []string {
 	var urls []string

@@ -10,7 +10,6 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/llm"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
-	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // Repair loop integration tests verify:
@@ -83,27 +82,6 @@ func containsRepairKeywords(s string) bool {
 }
 
 // Note: containsSubstr is already defined in go_test.go
-
-// mockValidationExecutor simulates validation results.
-type mockValidationExecutor struct {
-	results []*validate.ValidationResult
-	mu      sync.Mutex
-	idx     int
-}
-
-func (m *mockValidationExecutor) Validate(ctx context.Context, recipe interface{}, assetURL string) (*validate.ValidationResult, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if m.idx < len(m.results) {
-		result := m.results[m.idx]
-		m.idx++
-		return result, nil
-	}
-
-	// Default to pass
-	return &validate.ValidationResult{Passed: true}, nil
-}
 
 // TestRepairLoop_FixesBrokenRecipe tests that the builder would generate
 // a recipe successfully without validation (validation requires a real executor).
@@ -361,16 +339,6 @@ func createMockGitHubServer() *httptest.Server {
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
-}
-
-func createTestExecutor(mock *mockValidationExecutor) *validate.Executor {
-	// For testing, we need to create a real executor but control its behavior
-	// Since we can't easily mock the Executor struct, we test through the builder's
-	// behavior with validation results
-	//
-	// In a real implementation, you might use a interface for the executor
-	// For now, return nil to skip validation in most tests
-	return nil
 }
 
 // For tests that need validation, we need to test the repair message building

@@ -468,7 +468,7 @@ func TestGitHubReleaseBuilder_Build_ValidationSkipped(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewSession error: %v", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	result, err := session.Generate(ctx)
 	if err != nil {
@@ -621,7 +621,7 @@ func TestProgressReporterCalledDuringBuild(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewSession error: %v", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	_, err = session.Generate(ctx)
 	if err != nil {
@@ -738,7 +738,7 @@ func TestGitHubReleaseBuilder_Build_VersionPlaceholders(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewSession error: %v", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	result, err := session.Generate(ctx)
 	if err != nil {

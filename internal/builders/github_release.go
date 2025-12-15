@@ -574,21 +574,6 @@ func (b *GitHubReleaseBuilder) executeToolCall(ctx context.Context, genCtx *gene
 	}
 }
 
-// buildAssetURL constructs the download URL for the first matching platform.
-func (b *GitHubReleaseBuilder) buildAssetURL(genCtx *generationContext, pattern *llm.AssetPattern) string {
-	if len(pattern.Mappings) == 0 || len(genCtx.releases) == 0 {
-		return ""
-	}
-
-	// Find asset URL for the first mapping (typically linux/amd64)
-	firstAsset := pattern.Mappings[0].Asset
-	release := genCtx.releases[0]
-
-	// Construct GitHub release download URL
-	return fmt.Sprintf("https://github.com/%s/releases/download/%s/%s",
-		genCtx.repo, release.Tag, firstAsset)
-}
-
 // buildRepairMessageFromSandbox constructs error feedback from sandbox results.
 // Used by GitHubReleaseSession.Repair() with sandbox.SandboxResult.
 func (b *GitHubReleaseBuilder) buildRepairMessageFromSandbox(result *sandbox.SandboxResult) string {
