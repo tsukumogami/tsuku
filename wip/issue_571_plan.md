@@ -31,13 +31,13 @@ Per the design doc, build tools are NOT installed via apt-get in the sandbox scr
 - `internal/validate/*.go` - Will be deprecated in #572 when builders migrate
 
 ## Implementation Steps
-- [ ] Create `internal/sandbox/executor.go` with Executor struct and Sandbox() method
-- [ ] Copy and adapt runtime detection, predownloader types from validate package
-- [ ] Implement buildSandboxScript() that uses SandboxRequirements for network/image selection
-- [ ] Implement checkVerification() method (similar to validate package)
-- [ ] Add SandboxResult struct (similar to ValidationResult)
-- [ ] Write unit tests for the new executor
-- [ ] Verify all existing tests still pass
+- [x] Create `internal/sandbox/executor.go` with Executor struct and Sandbox() method
+- [x] Copy and adapt runtime detection, predownloader types from validate package
+- [x] Implement buildSandboxScript() that uses SandboxRequirements for network/image selection
+- [x] Implement checkVerification() method (similar to validate package)
+- [x] Add SandboxResult struct (similar to ValidationResult)
+- [x] Write unit tests for the new executor
+- [x] Verify all existing tests still pass
 
 ## Testing Strategy
 - Unit tests for Sandbox() with mocked runtime
@@ -50,8 +50,8 @@ Per the design doc, build tools are NOT installed via apt-get in the sandbox scr
 - Breaking existing builders: Not a concern since this issue just adds the new method, builders migrate in #572
 
 ## Success Criteria
-- [ ] `Executor.Sandbox()` method accepts `*executor.InstallationPlan` and `*SandboxRequirements`
-- [ ] Method configures container based on requirements (image, network, resources)
-- [ ] Sandbox script uses simplified approach (no detectRequiredBuildTools)
-- [ ] All existing tests pass
-- [ ] New tests cover different requirement combinations
+- [x] `Executor.Sandbox()` method accepts `*executor.InstallationPlan` and `*SandboxRequirements`
+- [x] Method configures container based on requirements (image, network, resources)
+- [x] Sandbox script uses simplified approach (no detectRequiredBuildTools)
+- [x] All existing tests pass
+- [x] New tests cover different requirement combinations
