@@ -511,7 +511,7 @@ func (a *HomebrewAction) fixElfRpath(binaryPath, installPath string) error {
 }
 
 // fixElfInterpreter fixes the ELF interpreter path if it contains Homebrew placeholders
-func (a *HomebrewBottleAction) fixElfInterpreter(patchelf, binaryPath string) error {
+func (a *HomebrewAction) fixElfInterpreter(patchelf, binaryPath string) error {
 	// Read current interpreter
 	printCmd := exec.Command(patchelf, "--print-interpreter", binaryPath)
 	output, err := printCmd.CombinedOutput()
