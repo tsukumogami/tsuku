@@ -30,10 +30,11 @@
     "T53": { "tool": "gofumpt",      "tier": 5, "desc": "go_install with dependency", "features": ["action:go_install", "version_detection:goproxy", "dependency:go"] }
   },
   "ci": {
-    "linux": ["T1", "T2", "T3", "T5", "T16", "T19", "T23", "T50"],
-    "macos": ["T1", "T3", "T16", "T19", "T23"],
+    "linux": ["T1", "T2", "T3", "T5", "T16", "T19", "T50"],
+    "macos": ["T1", "T3", "T16", "T19"],
     "scheduled": ["T18", "T27", "T51", "T52", "T53"],
     "blocked": {
+      "T23": { "arrays": ["linux", "macos"], "issue": "https://github.com/tsukumogami/tsuku/issues/621", "reason": "decompose requires npm at eval time" },
       "T25": { "arrays": ["linux", "macos"], "issue": "https://github.com/tsukumogami/tsuku/issues/609" },
       "T30": { "arrays": ["linux", "macos"], "issue": "https://github.com/tsukumogami/tsuku/issues/610" }
     }
