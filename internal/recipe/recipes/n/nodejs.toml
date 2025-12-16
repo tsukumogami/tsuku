@@ -1,11 +1,13 @@
 # Node.js - JavaScript runtime built on Chrome's V8 JavaScript engine
 # Official site: https://nodejs.org/
+# Depends on gcc-libs for libstdc++ and libgcc_s on Linux
 
 [metadata]
 name = "nodejs"
 description = "JavaScript runtime built on Chrome's V8 (LTS version)"
 homepage = "https://nodejs.org/"
 version_format = "semver"
+runtime_dependencies = ["gcc-libs"]
 
 [version]
 source = "nodejs_dist"  # Uses custom resolver for nodejs.org/dist
@@ -20,6 +22,33 @@ binaries = ["bin/node", "bin/npm"]
 install_mode = "directory"
 os_mapping = { linux = "linux", darwin = "darwin" }
 arch_mapping = { amd64 = "x64", arm64 = "arm64" }
+
+# Link gcc-libs (libstdc++, libgcc_s) on Linux
+[[steps]]
+action = "link_dependencies"
+library = "gcc-libs"
+dependencies = ["gcc-libs"]
+[steps.when]
+os = "linux"
+
+# Create wrapper script to set LD_LIBRARY_PATH on Linux
+[[steps]]
+action = "run_command"
+command = '''
+mv bin/node bin/node.real
+cat > bin/node << 'WRAPPER'
+#!/bin/sh
+# Get the directory where this script is located
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+INSTALL_DIR="$(dirname "$SCRIPT_DIR")"
+export LD_LIBRARY_PATH="$INSTALL_DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+exec "$INSTALL_DIR/bin/node.real" "$@"
+WRAPPER
+chmod +x bin/node
+'''
+description = "Creating wrapper for node to set LD_LIBRARY_PATH"
+[steps.when]
+os = "linux"
 
 [verify]
 command = "{install_dir}/bin/node --version"

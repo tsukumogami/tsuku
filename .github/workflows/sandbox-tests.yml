@@ -33,8 +33,6 @@ jobs:
           - test: { id: "T16" }  # golang
           - test: { id: "T19" }  # nodejs
           - test: { id: "T50" }  # perl
-          # npm_install decompose requires npm at eval time - see #621
-          - test: { id: "T23" }
           # pipx_install not yet evaluable - see #609
           - test: { id: "T25" }
           # gem_install not yet evaluable - see #610
@@ -55,7 +53,7 @@ jobs:
       - name: "Generate plan: ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku eval ${{ matrix.test.tool }} > plan.json
+        run: ./tsuku eval ${{ matrix.test.tool }} --yes > plan.json
 
       - name: "Run sandbox: ${{ matrix.test.tool }}"
         run: ./tsuku install --plan plan.json --sandbox --force

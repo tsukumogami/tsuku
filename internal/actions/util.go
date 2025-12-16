@@ -178,11 +178,13 @@ func GetInt(params map[string]interface{}, key string) (int, bool) {
 		return 0, false
 	}
 
-	// Handle both int and int64 from TOML
+	// Handle int, int64, and float64 (JSON unmarshals numbers as float64)
 	switch v := val.(type) {
 	case int:
 		return v, true
 	case int64:
+		return int(v), true
+	case float64:
 		return int(v), true
 	default:
 		return 0, false

@@ -291,6 +291,11 @@ func (e *Executor) buildSandboxScript(
 	sb.WriteString("mkdir -p /workspace/tsuku/bin\n")
 	sb.WriteString("mkdir -p /workspace/tsuku/tools\n\n")
 
+	// Add $TSUKU_HOME/bin to PATH so dependency binaries are available
+	// This is needed when plans include dependency steps (e.g., nodejs for npm_exec)
+	sb.WriteString("# Add TSUKU_HOME/bin to PATH for dependency binaries\n")
+	sb.WriteString("export PATH=/workspace/tsuku/bin:$PATH\n\n")
+
 	// Run tsuku install with pre-generated plan
 	// tsuku handles build tool dependencies automatically via ActionDependencies
 	sb.WriteString("# Run tsuku install with pre-generated plan\n")

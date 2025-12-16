@@ -15,9 +15,14 @@ var _ Decomposable = (*NpmInstallAction)(nil)
 // NpmInstallAction implements npm package installation with --prefix isolation
 type NpmInstallAction struct{ BaseAction }
 
-// Dependencies returns nodejs as both install-time and runtime dependency.
+// Dependencies returns nodejs as install-time, runtime, and eval-time dependency.
+// EvalTime is needed because Decompose() runs npm to generate package-lock.json.
 func (NpmInstallAction) Dependencies() ActionDeps {
-	return ActionDeps{InstallTime: []string{"nodejs"}, Runtime: []string{"nodejs"}}
+	return ActionDeps{
+		InstallTime: []string{"nodejs"},
+		Runtime:     []string{"nodejs"},
+		EvalTime:    []string{"nodejs"},
+	}
 }
 
 // RequiresNetwork returns true because npm_install fetches packages from npm registry.
