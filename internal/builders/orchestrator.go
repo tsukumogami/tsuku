@@ -20,9 +20,9 @@ type OrchestratorConfig struct {
 	// Default is DefaultMaxRepairs (2).
 	MaxRepairs int
 
-	// SkipValidation disables sandbox validation entirely.
+	// SkipSandbox disables sandbox testing entirely.
 	// When true, recipes are returned immediately after generation.
-	SkipValidation bool
+	SkipSandbox bool
 }
 
 // Orchestrator coordinates the build → sandbox → repair cycle.
@@ -93,8 +93,8 @@ type OrchestratorResult struct {
 	// RepairAttempts is the number of repair attempts made.
 	RepairAttempts int
 
-	// ValidationSkipped indicates validation was skipped.
-	ValidationSkipped bool
+	// SandboxSkipped indicates sandbox testing was skipped.
+	SandboxSkipped bool
 }
 
 // Create generates a recipe using the given builder with sandbox validation.
@@ -118,12 +118,12 @@ func (o *Orchestrator) Create(
 		return nil, fmt.Errorf("generation failed: %w", err)
 	}
 
-	// If validation is skipped, return immediately
-	if o.config.SkipValidation || o.sandbox == nil {
+	// If sandbox testing is skipped, return immediately
+	if o.config.SkipSandbox || o.sandbox == nil {
 		return &OrchestratorResult{
-			Recipe:            result.Recipe,
-			BuildResult:       result,
-			ValidationSkipped: true,
+			Recipe:         result.Recipe,
+			BuildResult:    result,
+			SandboxSkipped: true,
 		}, nil
 	}
 
@@ -136,13 +136,13 @@ func (o *Orchestrator) Create(
 			return nil, fmt.Errorf("sandbox validation error: %w", err)
 		}
 
-		// Check if validation was skipped (no runtime available)
+		// Check if sandbox testing was skipped (no runtime available)
 		if sandboxResult.Skipped {
 			return &OrchestratorResult{
-				Recipe:            result.Recipe,
-				BuildResult:       result,
-				RepairAttempts:    repairAttempts,
-				ValidationSkipped: true,
+				Recipe:         result.Recipe,
+				BuildResult:    result,
+				RepairAttempts: repairAttempts,
+				SandboxSkipped: true,
 			}, nil
 		}
 

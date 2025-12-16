@@ -187,7 +187,7 @@ Warning: Container runtime not available. Skipping recipe validation.
 **Pros:**
 - Doesn't block users without containers
 - Clear communication of risk
-- Matches `--skip-validation` flag behavior
+- Matches `--skip-sandbox` flag behavior
 
 **Cons:**
 - Users may ignore warnings
@@ -195,7 +195,7 @@ Warning: Container runtime not available. Skipping recipe validation.
 
 #### Option 2B: Require Explicit Opt-Out
 
-Require `--skip-validation` flag when no runtime is available.
+Require `--skip-sandbox` flag when no runtime is available.
 
 **Pros:**
 - Forces user acknowledgment
@@ -333,7 +333,7 @@ Tsuku will auto-detect available container runtimes in preference order (Podman 
 
 1. **Auto-detection (1A)** respects tsuku's philosophy of working with existing system configuration rather than requiring installation.
 
-2. **Skip with warning (2A)** provides the best user experience - users aren't blocked, but are informed of the risk. This matches the existing `--skip-validation` flag semantics.
+2. **Skip with warning (2A)** provides the best user experience - users aren't blocked, but are informed of the risk. This matches the existing `--skip-sandbox` flag semantics.
 
 3. **Hybrid detection (3C)** balances speed with accuracy. Fast rejection of obviously-broken configurations, definitive verification when config looks good.
 

@@ -280,7 +280,7 @@ Extend existing recipe validator with LLM-specific checks. No execution.
 
 #### Option 2C: Optional Container Validation
 
-Container validation is available but optional via `--skip-validation` flag. Default to validating.
+Container validation is available but optional via `--skip-sandbox` flag. Default to validating.
 
 **Pros:**
 - Best of both: security by default, flexibility when needed
@@ -437,7 +437,7 @@ Gemini Pro is approximately 60% cheaper ($1.25/$5 per 1M tokens).
 
 ### Summary
 
-LLM providers implement a unified interface with factory-based selection. Container validation runs by default with `--skip-validation` escape hatch. Comprehensive prompts minimize LLM calls while limited repair loops (2 retries max) handle edge cases. Per-request cost tracking provides user transparency.
+LLM providers implement a unified interface with factory-based selection. Container validation runs by default with `--skip-sandbox` escape hatch. Comprehensive prompts minimize LLM calls while limited repair loops (2 retries max) handle edge cases. Per-request cost tracking provides user transparency.
 
 ### Rationale
 
@@ -445,7 +445,7 @@ This combination was chosen because:
 
 1. **Provider Factory (1B)** ensures we can add providers without architectural changes. The abstraction cost is low since tool use patterns are similar across providers.
 
-2. **Optional Container Validation (2C)** balances security (validation by default) with accessibility (no Docker requirement). The `--skip-validation` flag is explicit opt-out.
+2. **Optional Container Validation (2C)** balances security (validation by default) with accessibility (no Docker requirement). The `--skip-sandbox` flag is explicit opt-out.
 
 3. **Hybrid Repair (3C)** maximizes success rate while controlling costs. Enhanced prompts reduce retry frequency; limited retries catch edge cases.
 
@@ -462,7 +462,7 @@ These choices reinforce each other: the unified interface enables consolidated c
 
 ### Trade-offs Accepted
 
-1. **Docker dependency for full functionality**: Users without Docker can use `--skip-validation` but should be aware of risks
+1. **Docker dependency for full functionality**: Users without Docker can use `--skip-sandbox` but should be aware of risks
 2. **Retry cost overhead**: Failed generations with repairs may cost 2-3x single-shot; acceptable given improved success rate
 3. **Provider lowest common denominator**: Some provider-specific features won't be exposed through interface
 
@@ -824,7 +824,7 @@ Before sending error output to LLM for repair:
 - Configuration management (4-level: flags → env → file → defaults)
 - `internal/secrets/manager.go` - API key resolution with 0600 permission enforcement
 - Cost display after generation with confirmation for operations >$0.50
-- `--skip-validation` flag
+- `--skip-sandbox` flag
 - Recipe preview before installation (mandatory for LLM-generated recipes)
 - Actionable error messages
 - Progress indicators during generation
@@ -950,7 +950,7 @@ Binaries are NOT downloaded during recipe generation. Binary downloads happen at
 **What permissions does this feature require?**
 
 - **Network access**: Required to query GitHub API and LLM APIs
-- **Docker socket access**: Required for container validation (optional with `--skip-validation`)
+- **Docker socket access**: Required for container validation (optional with `--skip-sandbox`)
 - **File system access**: Write to `$TSUKU_HOME/recipes/` and `$TSUKU_HOME/config.toml`
 - **No elevated privileges**: All operations run as current user
 
@@ -1074,7 +1074,7 @@ Generated recipes undergo additional validation beyond standard registry recipes
 
 ### Mitigations
 
-1. **Docker dependency**: `--skip-validation` flag for users without Docker; static validation still runs
+1. **Docker dependency**: `--skip-sandbox` flag for users without Docker; static validation still runs
 2. **API key requirement**: Clear error messages guide users to get API keys
 3. **Latency**: Progress indicators during generation; caching for repeated tool attempts
 4. **Cost**: Display costs after operation; users can track spending

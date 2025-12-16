@@ -423,7 +423,7 @@ func TestGenerateRecipe_EmptyMappings(t *testing.T) {
 	}
 }
 
-func TestGitHubReleaseBuilder_Build_ValidationSkipped(t *testing.T) {
+func TestGitHubReleaseBuilder_Build_SandboxSkipped(t *testing.T) {
 	ctx := context.Background()
 	mockProv := &mockProvider{name: "mock"}
 	factory := createMockFactory(mockProv)

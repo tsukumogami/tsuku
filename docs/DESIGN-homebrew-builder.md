@@ -152,7 +152,7 @@ The LLM generates a recipe without platform-specific details; the action resolve
 
 ## Decision Drivers
 
-- **Security by default**: Validation enabled by default, but users can opt-out with `--skip-validation`
+- **Security by default**: Validation enabled by default, but users can opt-out with `--skip-sandbox`
 - **Leverage existing infrastructure**: Reuse `homebrew_bottle` action, LLM client, container validator
 - **Incremental complexity**: Start with bottles (simpler), extend to source builds (harder)
 - **Predictable success rate**: Target ~75% success rate for bottle-based formulas
@@ -175,7 +175,7 @@ type Builder interface {
 }
 ```
 
-`BuildResult` includes: Recipe, Warnings, Source, RepairAttempts, Provider, Cost, ValidationSkipped.
+`BuildResult` includes: Recipe, Warnings, Source, RepairAttempts, Provider, Cost, SandboxSkipped.
 
 **homebrew_bottle Action** (`internal/actions/homebrew_bottle.go`):
 
@@ -271,7 +271,7 @@ Casks are simpler (declarative, no build logic) but:
 3. **homebrew-core only**: Third-party taps require explicit opt-in
 4. **LLM output schema excludes checksums**: Obtained from GHCR at runtime
 5. **URL allowlist**: Only `ghcr.io`, `github.com`, `formulae.brew.sh`
-6. **Container validation by default**: Users can pass `--skip-validation` to trust Homebrew directly
+6. **Container validation by default**: Users can pass `--skip-sandbox` to trust Homebrew directly
 
 **Prompt injection risk**: Formula descriptions are user-controlled content. Mitigations:
 - Structured prompts with JSON code blocks
@@ -1192,7 +1192,7 @@ This provides objective, reproducible measurement of the builder's effectiveness
 
 Security is important, but we trust Homebrew. For homebrew-core formulas, using tsuku should be equivalent to running `brew install` - we're fetching from the same trusted source (GHCR bottles, Homebrew CI-vetted formulas).
 
-Validation catches LLM mistakes (wrong binary names, missing deps), not Homebrew supply chain attacks. Users can skip validation with `--skip-validation` when they trust the formula.
+Validation catches LLM mistakes (wrong binary names, missing deps), not Homebrew supply chain attacks. Users can skip validation with `--skip-sandbox` when they trust the formula.
 
 ### Threat Model
 

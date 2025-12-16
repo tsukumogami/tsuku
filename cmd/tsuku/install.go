@@ -15,6 +15,8 @@ var installDryRun bool
 var installForce bool
 var installFresh bool
 var installPlanPath string
+var installSandbox bool
+var installRecipePath string
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -29,9 +31,53 @@ Examples:
 
 Install from a pre-computed plan:
   tsuku install --plan plan.json
-  tsuku eval rg | tsuku install --plan -`,
-	Args: cobra.ArbitraryArgs, // Allow zero args when --plan is used
+  tsuku eval rg | tsuku install --plan -
+
+Test installation in a sandbox container:
+  tsuku install kubectl --sandbox
+  tsuku install --recipe ./my-recipe.toml --sandbox
+  tsuku eval rg | tsuku install --plan - --sandbox`,
+	Args: cobra.ArbitraryArgs, // Allow zero args when --plan or --recipe is used
 	Run: func(cmd *cobra.Command, args []string) {
+		// Sandbox installation mode
+		if installSandbox {
+			// Validate: cannot specify multiple tools with --sandbox
+			if len(args) > 1 {
+				printError(fmt.Errorf("cannot specify multiple tools with --sandbox flag"))
+				exitWithCode(ExitUsage)
+			}
+
+			// Dry-run is not supported with --sandbox
+			if installDryRun {
+				printError(fmt.Errorf("--dry-run is not supported with --sandbox"))
+				exitWithCode(ExitUsage)
+			}
+
+			// Determine tool name
+			var toolName string
+			if len(args) == 1 {
+				toolName = args[0]
+			}
+
+			// Require either tool name, --plan, or --recipe
+			if toolName == "" && installPlanPath == "" && installRecipePath == "" {
+				printError(fmt.Errorf("--sandbox requires a tool name, --plan, or --recipe"))
+				exitWithCode(ExitUsage)
+			}
+
+			if err := runSandboxInstall(toolName, installPlanPath, installRecipePath); err != nil {
+				printError(err)
+				exitWithCode(ExitInstallFailed)
+			}
+			return
+		}
+
+		// Recipe-based installation (without sandbox) - just validate it exists for now
+		if installRecipePath != "" {
+			printError(fmt.Errorf("--recipe requires --sandbox flag (recipe testing must run in sandbox)"))
+			exitWithCode(ExitUsage)
+		}
+
 		// Plan-based installation takes a different path
 		if installPlanPath != "" {
 			// Validate: cannot specify multiple tools with --plan
@@ -107,6 +153,8 @@ func init() {
 	installCmd.Flags().BoolVar(&installForce, "force", false, "Skip security warnings and proceed without prompts")
 	installCmd.Flags().BoolVar(&installFresh, "fresh", false, "Force fresh plan generation, bypassing cached plans")
 	installCmd.Flags().StringVar(&installPlanPath, "plan", "", "Install from a pre-computed plan file (use '-' for stdin)")
+	installCmd.Flags().BoolVar(&installSandbox, "sandbox", false, "Run installation in an isolated container for testing")
+	installCmd.Flags().StringVar(&installRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 }
 
 // isInteractive returns true if stdin is connected to a terminal
