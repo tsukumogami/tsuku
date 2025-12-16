@@ -49,7 +49,7 @@ func TestNpmExecAction_Execute_MissingParams(t *testing.T) {
 		{
 			name:   "missing source_dir",
 			params: map[string]interface{}{},
-			errMsg: "npm_exec action requires 'source_dir' parameter",
+			errMsg: "npm_exec action requires 'source_dir' parameter (or 'package_lock' for package install mode)",
 		},
 		{
 			name: "missing command",
@@ -313,5 +313,59 @@ func TestNpmExecAction_UseLockfileFalse(t *testing.T) {
 	// Error should be about npm install failing, not missing lockfile
 	if err.Error() == "use_lockfile is true but package-lock.json not found in "+sourceDir {
 		t.Error("use_lockfile=false should not require lockfile")
+	}
+}
+
+func TestNpmExecAction_PackageInstallMode_MissingParams(t *testing.T) {
+	t.Parallel()
+	action := &NpmExecAction{}
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    t.TempDir(),
+		InstallDir: t.TempDir(),
+		Version:    "1.0.0",
+	}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		errMsg string
+	}{
+		{
+			name: "missing package",
+			params: map[string]interface{}{
+				"package_lock": "{}",
+			},
+			errMsg: "npm_exec package install mode requires 'package' parameter",
+		},
+		{
+			name: "missing version",
+			params: map[string]interface{}{
+				"package":      "serve",
+				"package_lock": "{}",
+			},
+			errMsg: "npm_exec package install mode requires 'version' parameter",
+		},
+		{
+			name: "missing executables",
+			params: map[string]interface{}{
+				"package":      "serve",
+				"version":      "1.0.0",
+				"package_lock": "{}",
+			},
+			errMsg: "npm_exec package install mode requires 'executables' parameter",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			err := action.Execute(ctx, tc.params)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+			if err.Error() != tc.errMsg {
+				t.Errorf("error = %q, want %q", err.Error(), tc.errMsg)
+			}
+		})
 	}
 }

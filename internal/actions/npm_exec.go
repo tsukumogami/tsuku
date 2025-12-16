@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -27,6 +28,10 @@ func (a *NpmExecAction) Name() string {
 
 // Execute runs an npm command with deterministic configuration.
 //
+// This action supports two modes:
+//
+// Mode 1: Source build (with source_dir + command)
+//
 // Parameters:
 //   - source_dir (required): Directory containing package.json
 //   - command (required): npm command to run (e.g., "build", "run build")
@@ -36,16 +41,33 @@ func (a *NpmExecAction) Name() string {
 //   - npm_path (optional): Path to npm executable (defaults to system npm)
 //   - ignore_scripts (optional): Skip lifecycle scripts for security (default: true)
 //
+// Mode 2: Package install (with package + version + package_lock)
+//
+// Parameters:
+//   - package (required): npm package name
+//   - version (required): exact package version
+//   - executables (required): list of executable names to verify
+//   - package_lock (required): full package-lock.json content from eval time
+//   - node_version (optional): Node.js version constraint
+//   - npm_path (optional): Path to npm executable
+//   - ignore_scripts (optional): Skip lifecycle scripts (default: true)
+//
 // This action:
 //   - Sets SOURCE_DATE_EPOCH for reproducible timestamps
 //   - Uses npm ci instead of npm install when use_lockfile is true
 //   - Validates Node.js version if constraint is specified
 //   - Uses isolated npm cache to prevent cross-contamination
 func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	// Check which mode we're in: source build or package install
+	if _, hasPackageLock := GetString(params, "package_lock"); hasPackageLock {
+		return a.executePackageInstall(ctx, params)
+	}
+
+	// Mode 1: Source build (original behavior)
 	// Get source_dir (required)
 	sourceDir, ok := GetString(params, "source_dir")
 	if !ok {
-		return fmt.Errorf("npm_exec action requires 'source_dir' parameter")
+		return fmt.Errorf("npm_exec action requires 'source_dir' parameter (or 'package_lock' for package install mode)")
 	}
 
 	// Resolve source_dir relative to work directory if not absolute
@@ -325,4 +347,154 @@ func versionGT(iMajor, iMinor, iPatch, rMajor, rMinor, rPatch int) bool {
 	}
 	// Minor equal
 	return iPatch > rPatch
+}
+
+// executePackageInstall implements Mode 2: package installation from lockfile
+// This mode is used when npm_install decomposes into npm_exec with a captured lockfile.
+func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[string]interface{}) error {
+	// Get required parameters
+	packageName, ok := GetString(params, "package")
+	if !ok {
+		return fmt.Errorf("npm_exec package install mode requires 'package' parameter")
+	}
+
+	version, ok := GetString(params, "version")
+	if !ok {
+		return fmt.Errorf("npm_exec package install mode requires 'version' parameter")
+	}
+
+	packageLock, ok := GetString(params, "package_lock")
+	if !ok {
+		return fmt.Errorf("npm_exec package install mode requires 'package_lock' parameter")
+	}
+
+	executables, ok := GetStringSlice(params, "executables")
+	if !ok || len(executables) == 0 {
+		return fmt.Errorf("npm_exec package install mode requires 'executables' parameter")
+	}
+
+	// Get optional parameters
+	nodeVersion, _ := GetString(params, "node_version")
+	npmPath, _ := GetString(params, "npm_path")
+	if npmPath == "" {
+		npmPath = ResolveNpm()
+		if npmPath == "" {
+			npmPath = "npm"
+		}
+	}
+
+	ignoreScripts := true
+	if val, ok := params["ignore_scripts"].(bool); ok {
+		ignoreScripts = val
+	}
+
+	// Validate Node.js version if constraint specified
+	if nodeVersion != "" {
+		// Strip the "v" prefix if present for validation
+		constraint := strings.TrimPrefix(nodeVersion, "v")
+		if err := validateNodeVersion(constraint); err != nil {
+			return fmt.Errorf("node version validation failed: %w", err)
+		}
+	}
+
+	fmt.Printf("   Package: %s@%s\n", packageName, version)
+	fmt.Printf("   Executables: %v\n", executables)
+	fmt.Printf("   Using npm: %s\n", npmPath)
+
+	// Create temporary directory for installation
+	tempDir, err := os.MkdirTemp("", "tsuku-npm-exec-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create package.json with the dependency
+	packageJSON := map[string]interface{}{
+		"name":    "tsuku-npm-install",
+		"version": "0.0.0",
+		"dependencies": map[string]string{
+			packageName: version,
+		},
+	}
+
+	packageJSONBytes, err := json.MarshalIndent(packageJSON, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal package.json: %w", err)
+	}
+
+	packageJSONPath := filepath.Join(tempDir, "package.json")
+	if err := os.WriteFile(packageJSONPath, packageJSONBytes, 0644); err != nil {
+		return fmt.Errorf("failed to write package.json: %w", err)
+	}
+
+	// Write the lockfile captured at eval time
+	lockfilePath := filepath.Join(tempDir, "package-lock.json")
+	if err := os.WriteFile(lockfilePath, []byte(packageLock), 0644); err != nil {
+		return fmt.Errorf("failed to write package-lock.json: %w", err)
+	}
+
+	// Set up environment
+	env := os.Environ()
+
+	// SOURCE_DATE_EPOCH for reproducible timestamps
+	if os.Getenv("SOURCE_DATE_EPOCH") == "" {
+		env = append(env, "SOURCE_DATE_EPOCH=0")
+	}
+
+	// Set isolated npm cache directory
+	cacheDir := filepath.Join(ctx.WorkDir, ".npm-cache")
+	env = append(env, fmt.Sprintf("npm_config_cache=%s", cacheDir))
+
+	// Add npm's bin directory to PATH
+	npmDir := filepath.Dir(npmPath)
+	if npmDir != "." {
+		pathUpdated := false
+		for i, e := range env {
+			if strings.HasPrefix(e, "PATH=") {
+				env[i] = fmt.Sprintf("PATH=%s:%s", npmDir, e[5:])
+				pathUpdated = true
+				break
+			}
+		}
+		if !pathUpdated {
+			env = append(env, fmt.Sprintf("PATH=%s:%s", npmDir, os.Getenv("PATH")))
+		}
+	}
+
+	// Run npm ci with security hardening flags
+	fmt.Printf("   Installing: npm ci --prefix=%s\n", ctx.InstallDir)
+
+	ciArgs := []string{"ci", "--no-audit", "--no-fund", "--prefer-offline"}
+	if ignoreScripts {
+		ciArgs = append(ciArgs, "--ignore-scripts")
+	}
+	// Install to the target directory
+	ciArgs = append(ciArgs, fmt.Sprintf("--prefix=%s", ctx.InstallDir))
+
+	ciCmd := exec.CommandContext(ctx.Context, npmPath, ciArgs...)
+	ciCmd.Dir = tempDir
+	ciCmd.Env = env
+
+	output, err := ciCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("npm ci failed: %w\nOutput: %s", err, string(output))
+	}
+
+	// Verify executables exist
+	binDir := filepath.Join(ctx.InstallDir, "bin")
+	for _, exe := range executables {
+		exePath := filepath.Join(binDir, exe)
+		if _, err := os.Stat(exePath); err != nil {
+			// Also check in node_modules/.bin (some packages install there)
+			altPath := filepath.Join(ctx.InstallDir, "lib", "node_modules", ".bin", exe)
+			if _, err := os.Stat(altPath); err != nil {
+				return fmt.Errorf("expected executable %s not found at %s", exe, exePath)
+			}
+		}
+	}
+
+	fmt.Printf("   Package installed successfully\n")
+	fmt.Printf("   Verified %d executable(s)\n", len(executables))
+
+	return nil
 }
