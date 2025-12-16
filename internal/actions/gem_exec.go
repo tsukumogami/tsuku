@@ -154,8 +154,7 @@ func (a *GemExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 	// Add flags for install commands as per ecosystem_gem.md spec
 	if args[0] == "install" {
-		args = append(args, "--no-document") // Skip documentation generation
-		args = append(args, "--standalone")  // Self-contained installation
+		args = append(args, "--standalone") // Self-contained installation
 		if outputDir != "" {
 			args = append(args, "--path", outputDir)
 		}
@@ -402,7 +401,6 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 	// Build install command with flags for deterministic installation
 	args := []string{
 		"install",
-		"--no-document",      // Skip documentation generation
 		"--path", installDir, // Install to isolated directory
 	}
 
