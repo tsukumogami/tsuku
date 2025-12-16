@@ -20,8 +20,28 @@ formula = "gcc"
 [steps.when]
 os = "linux"
 
+# Flatten library files to lib/ directory for easy linking
+# The homebrew bottle has libs in lib/gcc/{version}/ subdirectories
+[[steps]]
+action = "run_command"
+command = '''
+mkdir -p lib
+# Copy the actual library files (find the real files, not symlinks)
+cp lib/gcc/current/libstdc++.so.6.0.* lib/
+cp lib/gcc/current/libgcc_s.so.1 lib/
+# Create standard symlinks with explicit targets
+cd lib
+STDCXX=$(ls libstdc++.so.6.0.* 2>/dev/null | head -1)
+ln -sf "$STDCXX" libstdc++.so.6
+ln -sf libstdc++.so.6 libstdc++.so
+ln -sf libgcc_s.so.1 libgcc_s.so
+'''
+description = "Flattening library files to lib/"
+[steps.when]
+os = "linux"
+
 [[steps]]
 action = "install_libraries"
-patterns = ["lib/gcc/*/libstdc++.so*", "lib/gcc/*/libgcc_s.so*", "lib64/libstdc++.so*", "lib64/libgcc_s.so*"]
+patterns = ["lib/libstdc++.so*", "lib/libgcc_s.so*"]
 [steps.when]
 os = "linux"

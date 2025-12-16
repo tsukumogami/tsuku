@@ -287,11 +287,18 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	fmt.Printf("Executing plan: %s@%s\n", plan.Tool, plan.Version)
 	fmt.Printf("   Work directory: %s\n", e.workDir)
 
-	// Flatten dependency steps into a single list (depth-first order)
-	// This ensures dependencies are installed before the tools that need them
-	allSteps := flattenPlanSteps(plan)
+	// Count total steps including dependencies
+	totalDepSteps := countDependencySteps(plan.Dependencies)
 	fmt.Printf("   Total steps: %d (including %d from dependencies)\n",
-		len(allSteps), len(allSteps)-len(plan.Steps))
+		len(plan.Steps)+totalDepSteps, totalDepSteps)
+
+	// Install dependencies first (depth-first, each in its own work directory)
+	if err := e.installDependencies(ctx, plan.Dependencies, plan.Platform); err != nil {
+		return fmt.Errorf("failed to install dependencies: %w", err)
+	}
+
+	// Now execute main tool's steps (original flattening approach but only for main tool)
+	allSteps := plan.Steps
 
 	// Store version for later use
 	e.version = plan.Version
@@ -386,40 +393,6 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	return nil
 }
 
-// flattenPlanSteps collects all steps from a plan and its dependencies into a single list.
-// Steps are collected in depth-first order: dependency steps come before the steps
-// that depend on them. This ensures proper installation order.
-func flattenPlanSteps(plan *InstallationPlan) []ResolvedStep {
-	var allSteps []ResolvedStep
-
-	// First, collect steps from all dependencies (depth-first)
-	for _, dep := range plan.Dependencies {
-		depSteps := flattenDependencySteps(&dep)
-		allSteps = append(allSteps, depSteps...)
-	}
-
-	// Then add the main tool's steps
-	allSteps = append(allSteps, plan.Steps...)
-
-	return allSteps
-}
-
-// flattenDependencySteps recursively collects steps from a dependency and its nested dependencies.
-func flattenDependencySteps(dep *DependencyPlan) []ResolvedStep {
-	var allSteps []ResolvedStep
-
-	// First, collect steps from nested dependencies (depth-first)
-	for _, nestedDep := range dep.Dependencies {
-		nestedSteps := flattenDependencySteps(&nestedDep)
-		allSteps = append(allSteps, nestedSteps...)
-	}
-
-	// Then add this dependency's steps
-	allSteps = append(allSteps, dep.Steps...)
-
-	return allSteps
-}
-
 // executeDownloadWithVerification downloads a file and verifies its checksum against the plan.
 func (e *Executor) executeDownloadWithVerification(
 	ctx context.Context,
@@ -505,4 +478,180 @@ func computeFileChecksum(path string) (string, error) {
 	}
 
 	return hex.EncodeToString(h.Sum(nil)), nil
+}
+
+// countDependencySteps counts total steps in all dependencies recursively.
+func countDependencySteps(deps []DependencyPlan) int {
+	count := 0
+	for _, dep := range deps {
+		count += len(dep.Steps)
+		count += countDependencySteps(dep.Dependencies)
+	}
+	return count
+}
+
+// installDependencies installs all dependencies in depth-first order.
+// Each dependency is installed in its own work directory and copied to the final location.
+func (e *Executor) installDependencies(ctx context.Context, deps []DependencyPlan, platform Platform) error {
+	for _, dep := range deps {
+		// First install nested dependencies (depth-first)
+		if err := e.installDependencies(ctx, dep.Dependencies, platform); err != nil {
+			return err
+		}
+
+		// Then install this dependency
+		if err := e.installSingleDependency(ctx, &dep, platform); err != nil {
+			return fmt.Errorf("failed to install dependency %s: %w", dep.Tool, err)
+		}
+	}
+	return nil
+}
+
+// installSingleDependency installs a single dependency to its final location.
+func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyPlan, platform Platform) error {
+	fmt.Printf("\nInstalling dependency: %s@%s\n", dep.Tool, dep.Version)
+
+	// Create temporary work directory for this dependency
+	depWorkDir, err := os.MkdirTemp("", fmt.Sprintf("dep-%s-*", dep.Tool))
+	if err != nil {
+		return fmt.Errorf("failed to create work dir: %w", err)
+	}
+	defer os.RemoveAll(depWorkDir)
+
+	// Create install directory within work directory
+	depInstallDir := filepath.Join(depWorkDir, ".install")
+	if err := os.MkdirAll(depInstallDir, 0755); err != nil {
+		return fmt.Errorf("failed to create install dir: %w", err)
+	}
+
+	// Build recipe with verify section if available
+	depRecipe := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: dep.Tool,
+			Type: dep.RecipeType,
+		},
+	}
+	if dep.Verify != nil {
+		depRecipe.Verify = recipe.VerifySection{
+			Command: dep.Verify.Command,
+			Pattern: dep.Verify.Pattern,
+		}
+	}
+
+	// Create execution context for this dependency
+	execCtx := &actions.ExecutionContext{
+		Context:          ctx,
+		WorkDir:          depWorkDir,
+		InstallDir:       depInstallDir,
+		ToolInstallDir:   "",
+		ToolsDir:         e.toolsDir,
+		DownloadCacheDir: e.downloadCacheDir,
+		Version:          dep.Version,
+		VersionTag:       dep.Version,
+		OS:               platform.OS,
+		Arch:             platform.Arch,
+		Recipe:           depRecipe,
+		ExecPaths:        e.execPaths,
+		Logger:           log.Default(),
+	}
+
+	// Execute each step for this dependency
+	for i, step := range dep.Steps {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+
+		fmt.Printf("   Step %d/%d: %s\n", i+1, len(dep.Steps), step.Action)
+
+		action := actions.Get(step.Action)
+		if action == nil {
+			return fmt.Errorf("unknown action: %s", step.Action)
+		}
+
+		if err := action.Execute(execCtx, step.Params); err != nil {
+			return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
+		}
+	}
+
+	// Determine final destination based on recipe type
+	var finalDir string
+	if dep.RecipeType == "library" {
+		// Libraries go to $TSUKU_HOME/libs/{name}-{version}/
+		tsukuHome := filepath.Dir(e.toolsDir)
+		libsDir := filepath.Join(tsukuHome, "libs")
+		finalDir = filepath.Join(libsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
+	} else {
+		// Tools go to $TSUKU_HOME/tools/{name}-{version}/
+		finalDir = filepath.Join(e.toolsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
+	}
+
+	// Create final directory
+	if err := os.MkdirAll(finalDir, 0755); err != nil {
+		return fmt.Errorf("failed to create final dir: %w", err)
+	}
+
+	// Copy contents from install directory to final location
+	fmt.Printf("   Installing to: %s\n", finalDir)
+	if err := copyDir(depInstallDir, finalDir); err != nil {
+		return fmt.Errorf("failed to copy to final location: %w", err)
+	}
+
+	// For tools, add bin directory to exec paths
+	if dep.RecipeType != "library" {
+		binDir := filepath.Join(finalDir, "bin")
+		if _, err := os.Stat(binDir); err == nil {
+			e.execPaths = append(e.execPaths, binDir)
+		}
+	}
+
+	fmt.Printf("   ✓ Installed %s@%s\n", dep.Tool, dep.Version)
+	return nil
+}
+
+// copyDir recursively copies a directory from src to dst.
+func copyDir(src, dst string) error {
+	return filepath.Walk(src, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Get relative path
+		relPath, err := filepath.Rel(src, path)
+		if err != nil {
+			return err
+		}
+
+		dstPath := filepath.Join(dst, relPath)
+
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, info.Mode())
+		}
+
+		// Handle symlinks
+		if info.Mode()&os.ModeSymlink != 0 {
+			target, err := os.Readlink(path)
+			if err != nil {
+				return err
+			}
+			// Remove existing if present
+			os.Remove(dstPath)
+			return os.Symlink(target, dstPath)
+		}
+
+		// Copy regular file
+		srcFile, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer srcFile.Close()
+
+		dstFile, err := os.OpenFile(dstPath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, info.Mode())
+		if err != nil {
+			return err
+		}
+		defer dstFile.Close()
+
+		_, err = io.Copy(dstFile, srcFile)
+		return err
+	})
 }
