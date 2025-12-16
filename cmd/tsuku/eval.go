@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"strings"
@@ -29,6 +30,7 @@ var validArchValues = map[string]bool{
 
 var evalOS string
 var evalArch string
+var evalYes bool
 
 var evalCmd = &cobra.Command{
 	Use:   "eval <tool>[@version]",
@@ -44,10 +46,15 @@ needed to reproduce the installation. This enables:
 By default, plans are generated for the current platform. Use --os and --arch
 to generate plans for other platforms.
 
+Some tools require dependencies at eval time (e.g., npm packages need nodejs
+to generate package-lock.json). If these dependencies are missing, you will
+be prompted to install them. Use --yes to auto-accept.
+
 Examples:
   tsuku eval kubectl
   tsuku eval kubectl@v1.29.0
-  tsuku eval ripgrep --os linux --arch arm64`,
+  tsuku eval ripgrep --os linux --arch arm64
+  tsuku eval netlify-cli --yes`,
 	Args: cobra.ExactArgs(1),
 	Run:  runEval,
 }
@@ -55,6 +62,7 @@ Examples:
 func init() {
 	evalCmd.Flags().StringVar(&evalOS, "os", "", "Target operating system (linux, darwin, windows, freebsd)")
 	evalCmd.Flags().StringVar(&evalArch, "arch", "", "Target architecture (amd64, arm64, 386, arm)")
+	evalCmd.Flags().BoolVar(&evalYes, "yes", false, "Auto-accept installation of eval-time dependencies")
 }
 
 // ValidateOS validates an OS value against the whitelist.
@@ -147,14 +155,18 @@ func runEval(cmd *cobra.Command, args []string) {
 
 	// Configure plan generation
 	planCfg := executor.PlanConfig{
-		OS:            evalOS,
-		Arch:          evalArch,
-		RecipeSource:  "registry",
-		Downloader:    downloader,
-		DownloadCache: downloadCache,
+		OS:                 evalOS,
+		Arch:               evalArch,
+		RecipeSource:       "registry",
+		Downloader:         downloader,
+		DownloadCache:      downloadCache,
+		AutoAcceptEvalDeps: evalYes,
 		OnWarning: func(action, message string) {
 			// Output warnings to stderr so they don't mix with JSON
 			fmt.Fprintf(os.Stderr, "Warning: %s\n", message)
+		},
+		OnEvalDepsNeeded: func(deps []string, autoAccept bool) error {
+			return installEvalDeps(deps, autoAccept)
 		},
 	}
 
@@ -167,4 +179,45 @@ func runEval(cmd *cobra.Command, args []string) {
 
 	// Output JSON to stdout
 	printJSON(plan)
+}
+
+// installEvalDeps prompts the user to install eval-time dependencies.
+// If autoAccept is true, dependencies are installed without prompting.
+func installEvalDeps(deps []string, autoAccept bool) error {
+	if !autoAccept {
+		fmt.Fprintf(os.Stderr, "The following tools are required for evaluation:\n")
+		for _, dep := range deps {
+			fmt.Fprintf(os.Stderr, "  - %s\n", dep)
+		}
+		fmt.Fprintf(os.Stderr, "\nInstall now? [y/N]: ")
+
+		reader := bufio.NewReader(os.Stdin)
+		answer, err := reader.ReadString('\n')
+		if err != nil {
+			return fmt.Errorf("failed to read input: %w", err)
+		}
+		answer = strings.TrimSpace(strings.ToLower(answer))
+		if answer != "y" && answer != "yes" {
+			return fmt.Errorf("user declined to install dependencies")
+		}
+	} else {
+		fmt.Fprintf(os.Stderr, "Installing eval-time dependencies: %v\n", deps)
+	}
+
+	// Install each dependency
+	for _, dep := range deps {
+		fmt.Fprintf(os.Stderr, "Installing %s...\n", dep)
+		if err := runInstallTool(dep); err != nil {
+			return fmt.Errorf("failed to install %s: %w", dep, err)
+		}
+		fmt.Fprintf(os.Stderr, "Installed %s\n", dep)
+	}
+	return nil
+}
+
+// runInstallTool installs a tool using the existing install infrastructure.
+func runInstallTool(toolName string) error {
+	// Use the same install mechanism as the install command
+	// Pass nil for telemetry client since this is an internal operation
+	return runInstallWithTelemetry(toolName, "", "", false, "", nil)
 }

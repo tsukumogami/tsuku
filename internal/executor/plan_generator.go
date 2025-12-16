@@ -31,6 +31,14 @@ type PlanConfig struct {
 	// DownloadCache is used to cache downloaded files for later use in container validation.
 	// If nil, downloads are not cached.
 	DownloadCache *actions.DownloadCache
+	// AutoAcceptEvalDeps controls whether eval-time dependencies are installed automatically.
+	// When true, missing deps are installed without prompting (equivalent to --yes flag).
+	AutoAcceptEvalDeps bool
+	// OnEvalDepsNeeded is called when eval-time dependencies are missing.
+	// The callback receives the list of missing dependencies and the auto-accept flag.
+	// It should install the dependencies and return nil on success.
+	// If nil and deps are missing, plan generation fails with an error.
+	OnEvalDepsNeeded func(deps []string, autoAccept bool) error
 }
 
 // GeneratePlan evaluates a recipe and produces an installation plan.
@@ -111,7 +119,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		}
 
 		// Resolve the step (handles decomposition of composites)
-		resolvedSteps, err := e.resolveStep(ctx, step, vars, downloader, cfg.OnWarning, evalCtx)
+		resolvedSteps, err := e.resolveStep(ctx, step, vars, downloader, cfg, evalCtx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve step %s: %w", step.Action, err)
 		}
@@ -203,11 +211,25 @@ func (e *Executor) resolveStep(
 	step recipe.Step,
 	vars map[string]string,
 	downloader actions.Downloader,
-	onWarning func(string, string),
+	cfg PlanConfig,
 	evalCtx *actions.EvalContext,
 ) ([]ResolvedStep, error) {
 	// Check if this is a decomposable action
 	if actions.IsDecomposable(step.Action) {
+		// Check eval-time dependencies before decomposition
+		if evalDeps := actions.GetEvalDeps(step.Action); len(evalDeps) > 0 {
+			missing := actions.CheckEvalDeps(evalDeps)
+			if len(missing) > 0 {
+				if cfg.OnEvalDepsNeeded != nil {
+					if err := cfg.OnEvalDepsNeeded(missing, cfg.AutoAcceptEvalDeps); err != nil {
+						return nil, fmt.Errorf("eval-time dependencies not satisfied: %w", err)
+					}
+				} else {
+					return nil, fmt.Errorf("missing eval-time dependencies: %v (install with: tsuku install %s)", missing, missing[0])
+				}
+			}
+		}
+
 		// For decomposable actions, pass raw params - the Decompose method
 		// handles template expansion with proper os_mapping/arch_mapping support.
 		// Expanding here would bake in raw GOOS/GOARCH values before mappings apply.
@@ -284,8 +306,8 @@ func (e *Executor) resolveStep(
 	deterministic := actions.IsDeterministic(step.Action)
 
 	// Emit warning for non-evaluable actions
-	if !evaluable && onWarning != nil {
-		onWarning(step.Action, fmt.Sprintf("action '%s' cannot be deterministically reproduced", step.Action))
+	if !evaluable && cfg.OnWarning != nil {
+		cfg.OnWarning(step.Action, fmt.Sprintf("action '%s' cannot be deterministically reproduced", step.Action))
 	}
 
 	// Create resolved step
