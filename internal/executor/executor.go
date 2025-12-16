@@ -355,6 +355,15 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 			}
 		}
 
+		// After install_binaries completes, add the bin directory to ExecPaths
+		// so subsequent steps (like npm_exec) can find the installed binaries
+		if step.Action == "install_binaries" {
+			binDir := filepath.Join(execCtx.InstallDir, "bin")
+			if _, err := os.Stat(binDir); err == nil {
+				execCtx.ExecPaths = append(execCtx.ExecPaths, binDir)
+			}
+		}
+
 		fmt.Println()
 	}
 

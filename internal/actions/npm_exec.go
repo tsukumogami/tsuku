@@ -107,7 +107,7 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 	// Validate Node.js version if constraint specified
 	if nodeVersion != "" {
-		if err := validateNodeVersion(nodeVersion); err != nil {
+		if err := validateNodeVersion(nodeVersion, ctx.ExecPaths...); err != nil {
 			return fmt.Errorf("node version validation failed: %w", err)
 		}
 	}
@@ -218,9 +218,33 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 // validateNodeVersion checks if the installed Node.js version satisfies the constraint.
 // Supports simple constraints like ">=18.0.0", "18.x", or exact versions like "20.10.0".
-func validateNodeVersion(constraint string) error {
+// If execPaths is provided, those paths are prepended to PATH when looking for node.
+func validateNodeVersion(constraint string, execPaths ...string) error {
 	// Get installed Node.js version
 	cmd := exec.Command("node", "--version")
+
+	// If extra exec paths are provided, prepend them to PATH
+	if len(execPaths) > 0 {
+		env := os.Environ()
+		pathVal := os.Getenv("PATH")
+		for _, p := range execPaths {
+			pathVal = p + ":" + pathVal
+		}
+		// Update PATH in environment
+		pathUpdated := false
+		for i, e := range env {
+			if strings.HasPrefix(e, "PATH=") {
+				env[i] = "PATH=" + pathVal
+				pathUpdated = true
+				break
+			}
+		}
+		if !pathUpdated {
+			env = append(env, "PATH="+pathVal)
+		}
+		cmd.Env = env
+	}
+
 	output, err := cmd.Output()
 	if err != nil {
 		return fmt.Errorf("node.js not found: %w", err)
@@ -392,7 +416,7 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 	if nodeVersion != "" {
 		// Strip the "v" prefix if present for validation
 		constraint := strings.TrimPrefix(nodeVersion, "v")
-		if err := validateNodeVersion(constraint); err != nil {
+		if err := validateNodeVersion(constraint, ctx.ExecPaths...); err != nil {
 			return fmt.Errorf("node version validation failed: %w", err)
 		}
 	}
