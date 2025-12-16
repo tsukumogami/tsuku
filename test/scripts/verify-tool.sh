@@ -131,6 +131,16 @@ verify_libpng() {
     fi
 }
 
+verify_m4() {
+    echo "Testing: m4 --version"
+    m4 --version
+
+    echo ""
+    echo "Testing: Process a simple macro"
+    cd "$TEMP_DIR"
+    echo 'define(GREETING, Hello World)GREETING' | m4
+}
+
 verify_generic() {
     echo "Testing: $TOOL_NAME --version (generic check)"
     if "$TOOL_NAME" --version 2>&1; then
@@ -157,6 +167,9 @@ case "$TOOL_NAME" in
         ;;
     pngcrush)
         verify_pngcrush
+        ;;
+    m4)
+        verify_m4
         ;;
     zlib)
         verify_zlib

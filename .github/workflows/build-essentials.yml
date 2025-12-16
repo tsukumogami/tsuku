@@ -146,3 +146,73 @@ jobs:
 
       - name: "Verify no system deps"
         run: ./test/scripts/verify-no-system-deps.sh zig
+
+  # Test source build with zig cc in container without system gcc
+  # This validates that configure_make falls back to zig when no gcc exists
+  test-no-gcc:
+    name: "No-GCC Container: gdbm-source"
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:22.04
+      options: --user root
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Install minimal deps: NO gcc, but YES make (from apt, not Homebrew)
+      # The test validates zig cc as compiler fallback, not tsuku make installation
+      - name: Install minimal dependencies
+        run: |
+          apt-get update
+          apt-get install -y wget curl ca-certificates git make
+          # Some apt packages may pull in gcc as a dependency
+          # Find and remove any system compilers to ensure zig is used
+          echo "Checking for system compilers..."
+          echo "which gcc: $(which gcc 2>/dev/null || echo 'not found')"
+          echo "type gcc: $(type gcc 2>/dev/null || echo 'not found')"
+          # Remove gcc/cc from standard locations and alternatives
+          apt-get remove -y gcc gcc-* g++ 2>/dev/null || true
+          rm -f /usr/bin/gcc* /usr/bin/cc /usr/bin/g++* /usr/bin/c++ 2>/dev/null || true
+          update-alternatives --remove-all gcc 2>/dev/null || true
+          update-alternatives --remove-all cc 2>/dev/null || true
+          # Clear shell command hash table
+          hash -r 2>/dev/null || true
+          # Verify no system compiler binary exists (not functions/aliases)
+          if [ -x /usr/bin/gcc ] || [ -x /usr/bin/cc ]; then
+            echo "ERROR: gcc binary still found!"
+            ls -la /usr/bin/gcc* /usr/bin/cc 2>/dev/null || true
+            exit 1
+          fi
+          echo "Verified: No system compiler binary present"
+          echo "System make: $(which make)"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      # Copy test recipe BEFORE build so it gets embedded
+      - name: Copy test recipe to registry
+        run: cp testdata/recipes/gdbm-source.toml internal/recipe/recipes/g/
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Install zig (provides compiler)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force zig
+
+      - name: Build gdbm from source (uses zig cc)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Don't add tsuku tools to PATH - the Go code handles zig setup internally
+          # and we want configure to detect system make, not the Homebrew make
+          echo "Building gdbm-source - should use zig cc since no gcc exists"
+          echo "System make: $(which make)"
+          ./tsuku install --force gdbm-source
+
+      - name: "Verify gdbm-source functionality"
+        run: ./test/scripts/verify-tool.sh gdbm-source
