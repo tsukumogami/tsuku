@@ -41,10 +41,8 @@ jobs:
       - name: Setup PATH
         run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      # Note: No setup-node step - tsuku installs nodejs as a dependency
+      # when needed by npm_install recipes
 
       - name: Create recipe for prettier
         run: ./tsuku create prettier --from npm
@@ -86,10 +84,8 @@ jobs:
       - name: Setup PATH
         run: echo "$HOME/.tsuku/tools/current" >> $GITHUB_PATH
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+      # Note: No setup-node step - tsuku installs nodejs as a dependency
+      # when needed by npm_install recipes
 
       - name: Create recipe for prettier
         run: ./tsuku create prettier --from npm
