@@ -7,22 +7,34 @@ on:
     branches: [main]
 
 jobs:
+  matrix:
+    name: Matrix
+    runs-on: ubuntu-latest
+    outputs:
+      linux: ${{ steps.matrix.outputs.linux }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate test matrix
+        id: matrix
+        run: |
+          LINUX=$(jq -c '[.ci.linux[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc}]' test-matrix.json)
+          echo "linux=$LINUX" >> $GITHUB_OUTPUT
+
   sandbox-tests:
-    name: "Sandbox: ${{ matrix.tool }}"
+    name: "Sandbox: ${{ matrix.test.tool }}"
+    needs: matrix
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # Test recipes that use evaluable actions (github_archive, github_file, homebrew)
-        # These can run offline in the sandbox using pre-cached downloads
-        tool:
-          - actionlint   # T1: github_archive with version pattern
-          - btop         # T2: github_archive without version pattern
-          - argo-cd      # T3: github_file with binary field
-          - duf          # github_archive simple
-          - bash         # homebrew bottle
-          - make         # homebrew bottle
-          - readline     # homebrew bottle (library)
+        test: ${{ fromJson(needs.matrix.outputs.linux) }}
+        exclude:
+          # npm_install not yet evaluable - see #608
+          - test: { id: "T23" }
+          # pipx_install not yet evaluable - see #609
+          - test: { id: "T25" }
+          # gem_install not yet evaluable - see #610
+          - test: { id: "T30" }
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -36,10 +48,10 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: "Generate plan: ${{ matrix.tool }}"
+      - name: "Generate plan: ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku eval ${{ matrix.tool }} > plan.json
+        run: ./tsuku eval ${{ matrix.test.tool }} > plan.json
 
-      - name: "Run sandbox: ${{ matrix.tool }}"
+      - name: "Run sandbox: ${{ matrix.test.tool }}"
         run: ./tsuku install --plan plan.json --sandbox --force
