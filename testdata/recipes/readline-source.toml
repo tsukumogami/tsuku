@@ -1,5 +1,6 @@
 # Ground truth recipe for readline (source build with patches)
 # Used by LLM integration tests (S1)
+# Tests: download_file + extract + configure_make with multiple p0 patches
 
 [metadata]
 name = "readline-source"
@@ -13,8 +14,16 @@ source = "homebrew"
 formula = "readline"
 
 [[steps]]
-action = "homebrew_source"
-formula = "readline"
+action = "download_file"
+url = "https://ftpmirror.gnu.org/gnu/readline/readline-8.3.tar.gz"
+dest = "readline-8.3.tar.gz"
+checksum = "fe5383204467828cd495ee8d1d3c037a7eba1389c22bc6a041f627976f9061cc"
+
+[[steps]]
+action = "extract"
+archive = "readline-8.3.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
 
 [[steps]]
 action = "configure_make"

@@ -1,5 +1,6 @@
 # Ground truth recipe for bash (source build with multiple patches)
 # Used by LLM integration tests (S3)
+# Tests: download_file + extract + configure_make with multiple patches
 
 [metadata]
 name = "bash-source"
@@ -12,8 +13,16 @@ source = "homebrew"
 formula = "bash"
 
 [[steps]]
-action = "homebrew_source"
-formula = "bash"
+action = "download_file"
+url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3.tar.gz"
+dest = "bash-5.3.tar.gz"
+checksum = "0d5cd86965f869a26cf64f4b71be7b96f90a3ba8b3d74e27e8e9d9d5550f31ba"
+
+[[steps]]
+action = "extract"
+archive = "bash-5.3.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
 
 [[steps]]
 action = "configure_make"

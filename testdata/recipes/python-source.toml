@@ -1,5 +1,6 @@
 # Ground truth recipe for python (source build with patch)
 # Used by LLM integration tests (S2)
+# Tests: download_file + extract + configure_make with single patch
 
 [metadata]
 name = "python-source"
@@ -12,8 +13,16 @@ source = "homebrew"
 formula = "python@3.13"
 
 [[steps]]
-action = "homebrew_source"
-formula = "python@3.13"
+action = "download_file"
+url = "https://www.python.org/ftp/python/3.13.11/Python-3.13.11.tgz"
+dest = "Python-3.13.11.tgz"
+checksum = "03cfedbe06ce21bc44ce09245e091a77f2fee9ec9be5c52069048a181300b202"
+
+[[steps]]
+action = "extract"
+archive = "Python-3.13.11.tgz"
+format = "tar.gz"
+strip_dirs = 1
 
 [[steps]]
 action = "configure_make"
