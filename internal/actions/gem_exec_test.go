@@ -536,7 +536,8 @@ func TestGemExecAction_BundlerExecutionFails(t *testing.T) {
 	if err == nil {
 		t.Error("Execute() should fail when bundler fails")
 	}
-	if err != nil && !containsStr(err.Error(), "bundle install failed") {
+	// Accept either "bundle config failed" or "bundle install failed"
+	if err != nil && !containsStr(err.Error(), "bundle") {
 		t.Errorf("Error should mention bundle failure, got: %v", err)
 	}
 }

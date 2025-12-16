@@ -152,16 +152,22 @@ func (a *GemExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	// Build command arguments
 	args := strings.Fields(command)
 
+	// Build environment
+	env := a.buildEnvironment(sourceDir, outputDir, useLockfile, environmentVars)
+
 	// Add flags for install commands as per ecosystem_gem.md spec
 	if args[0] == "install" {
 		args = append(args, "--standalone") // Self-contained installation
 		if outputDir != "" {
-			args = append(args, "--path", outputDir)
+			// Use bundle config instead of --path flag (compatible with bundler 3.x+)
+			configCmd := exec.CommandContext(ctx.Context, bundlerPath, "config", "set", "--local", "path", outputDir)
+			configCmd.Dir = sourceDir
+			configCmd.Env = env
+			if output, err := configCmd.CombinedOutput(); err != nil {
+				return fmt.Errorf("bundle config failed: %w\nOutput: %s", err, string(output))
+			}
 		}
 	}
-
-	// Build environment
-	env := a.buildEnvironment(sourceDir, outputDir, useLockfile, environmentVars)
 
 	// Create and execute command
 	cmd := exec.CommandContext(ctx.Context, bundlerPath, args...)
@@ -398,18 +404,24 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 	// Build environment
 	env := a.buildEnvironment(installDir, installDir, true, environmentVars)
 
-	// Build install command with flags for deterministic installation
-	args := []string{
-		"install",
-		"--path", installDir, // Install to isolated directory
+	// Configure path using bundle config (compatible with bundler 3.x+)
+	// The --path flag was removed in bundler 3.0+
+	configCmd := exec.CommandContext(ctx.Context, bundlerPath, "config", "set", "--local", "path", installDir)
+	configCmd.Dir = installDir
+	configCmd.Env = env
+	if output, err := configCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("bundle config failed: %w\nOutput: %s", err, string(output))
 	}
+
+	// Build install command with flags for deterministic installation
+	args := []string{"install"}
 
 	// Create and execute command
 	cmd := exec.CommandContext(ctx.Context, bundlerPath, args...)
 	cmd.Dir = installDir
 	cmd.Env = env
 
-	fmt.Printf("   Running: bundle %s\n", strings.Join(args, " "))
+	fmt.Printf("   Running: bundle config set --local path %s && bundle %s\n", installDir, strings.Join(args, " "))
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
