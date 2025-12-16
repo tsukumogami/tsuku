@@ -169,68 +169,6 @@ func TestValidateExternalPlan_Valid(t *testing.T) {
 	}
 }
 
-func TestValidateExternalPlan_PlatformMismatch_OS(t *testing.T) {
-	wrongOS := "some-other-os"
-	if runtime.GOOS == wrongOS {
-		wrongOS = "different-os"
-	}
-
-	plan := &executor.InstallationPlan{
-		FormatVersion: 2,
-		Tool:          "test-tool",
-		Version:       "1.0.0",
-		Platform: executor.Platform{
-			OS:   wrongOS,
-			Arch: runtime.GOARCH,
-		},
-		Steps: []executor.ResolvedStep{
-			{Action: "chmod", Params: map[string]interface{}{"mode": "755"}},
-		},
-	}
-
-	err := validateExternalPlan(plan, "")
-	if err == nil {
-		t.Fatal("expected error for OS mismatch")
-	}
-	if !strings.Contains(err.Error(), wrongOS) {
-		t.Errorf("error = %q, want to contain %q", err.Error(), wrongOS)
-	}
-	if !strings.Contains(err.Error(), runtime.GOOS) {
-		t.Errorf("error = %q, want to contain current OS %q", err.Error(), runtime.GOOS)
-	}
-}
-
-func TestValidateExternalPlan_PlatformMismatch_Arch(t *testing.T) {
-	wrongArch := "some-other-arch"
-	if runtime.GOARCH == wrongArch {
-		wrongArch = "different-arch"
-	}
-
-	plan := &executor.InstallationPlan{
-		FormatVersion: 2,
-		Tool:          "test-tool",
-		Version:       "1.0.0",
-		Platform: executor.Platform{
-			OS:   runtime.GOOS,
-			Arch: wrongArch,
-		},
-		Steps: []executor.ResolvedStep{
-			{Action: "chmod", Params: map[string]interface{}{"mode": "755"}},
-		},
-	}
-
-	err := validateExternalPlan(plan, "")
-	if err == nil {
-		t.Fatal("expected error for arch mismatch")
-	}
-	if !strings.Contains(err.Error(), wrongArch) {
-		t.Errorf("error = %q, want to contain %q", err.Error(), wrongArch)
-	}
-	if !strings.Contains(err.Error(), runtime.GOARCH) {
-		t.Errorf("error = %q, want to contain current arch %q", err.Error(), runtime.GOARCH)
-	}
-}
-
 func TestValidateExternalPlan_ToolNameMismatch(t *testing.T) {
 	plan := &executor.InstallationPlan{
 		FormatVersion: 2,
@@ -257,52 +195,6 @@ func TestValidateExternalPlan_ToolNameMismatch(t *testing.T) {
 	}
 }
 
-func TestValidateExternalPlan_StructuralValidationFailure(t *testing.T) {
-	// Plan with invalid format version
-	plan := &executor.InstallationPlan{
-		FormatVersion: 1, // Too old
-		Tool:          "test-tool",
-		Version:       "1.0.0",
-		Platform: executor.Platform{
-			OS:   runtime.GOOS,
-			Arch: runtime.GOARCH,
-		},
-		Steps: []executor.ResolvedStep{},
-	}
-
-	err := validateExternalPlan(plan, "")
-	if err == nil {
-		t.Fatal("expected error for structural validation failure")
-	}
-	if !strings.Contains(err.Error(), "plan validation failed") {
-		t.Errorf("error = %q, want to contain %q", err.Error(), "plan validation failed")
-	}
-}
-
-func TestValidateExternalPlan_MissingChecksum(t *testing.T) {
-	// Plan with download action missing checksum
-	plan := &executor.InstallationPlan{
-		FormatVersion: 2,
-		Tool:          "test-tool",
-		Version:       "1.0.0",
-		Platform: executor.Platform{
-			OS:   runtime.GOOS,
-			Arch: runtime.GOARCH,
-		},
-		Steps: []executor.ResolvedStep{
-			{
-				Action: "download",
-				Params: map[string]interface{}{"url": "https://example.com/file.tar.gz"},
-				// No checksum - should fail validation
-			},
-		},
-	}
-
-	err := validateExternalPlan(plan, "")
-	if err == nil {
-		t.Fatal("expected error for missing checksum")
-	}
-	if !strings.Contains(err.Error(), "checksum") {
-		t.Errorf("error = %q, want to contain %q", err.Error(), "checksum")
-	}
-}
+// Note: Structural validation tests (format version, missing checksum, platform mismatch)
+// have been removed. validateExternalPlan now only handles external-plan-specific checks
+// (tool name). Structural validation is handled by executor.ExecutePlan via executor.ValidatePlan.
