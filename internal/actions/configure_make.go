@@ -129,10 +129,15 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 	// in minimal containers where Homebrew bottles may have dynamic linking issues
 	makePath := findMake()
 
+	// Common make arguments to prevent documentation regeneration
+	// MAKEINFO=true prevents makeinfo invocation (for .texi -> .info)
+	commonMakeArgs := []string{"MAKEINFO=true"}
+
 	for _, target := range makeTargets {
 		var makeArgs []string
+		makeArgs = append(makeArgs, commonMakeArgs...)
 		if target != "" {
-			makeArgs = []string{target}
+			makeArgs = append(makeArgs, target)
 			fmt.Printf("   Running: make %s\n", target)
 		} else {
 			fmt.Printf("   Running: make\n")
