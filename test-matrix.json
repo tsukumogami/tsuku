@@ -34,9 +34,9 @@
     "macos": ["T1", "T3", "T16", "T19"],
     "scheduled": ["T18", "T27", "T51", "T52", "T53"],
     "blocked": {
-      "T23": "https://github.com/tsukumogami/tsuku/issues/608",
-      "T25": "https://github.com/tsukumogami/tsuku/issues/609",
-      "T30": "https://github.com/tsukumogami/tsuku/issues/610"
+      "T23": { "arrays": ["linux", "macos"], "issue": "https://github.com/tsukumogami/tsuku/issues/608" },
+      "T25": { "arrays": ["linux", "macos"], "issue": "https://github.com/tsukumogami/tsuku/issues/609" },
+      "T30": { "arrays": ["linux", "macos"], "issue": "https://github.com/tsukumogami/tsuku/issues/610" }
     }
   }
 }
