@@ -875,3 +875,255 @@ func TestGemExecAction_ExecuteWithAllParameters(t *testing.T) {
 }
 
 // Note: containsStr helper is defined in go_install_test.go
+
+func TestGemExecAction_LockDataMode_Validation(t *testing.T) {
+	a := &GemExecAction{}
+	workDir := t.TempDir()
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: workDir,
+	}
+
+	tests := []struct {
+		name        string
+		params      map[string]interface{}
+		expectError string
+	}{
+		{
+			name: "missing gem parameter",
+			params: map[string]interface{}{
+				"lock_data":   "GEM\n  specs:\n",
+				"version":     "1.0.0",
+				"executables": []interface{}{"bundle"},
+			},
+			expectError: "requires 'gem' parameter",
+		},
+		{
+			name: "invalid gem name",
+			params: map[string]interface{}{
+				"gem":         "invalid;gem",
+				"lock_data":   "GEM\n  specs:\n",
+				"version":     "1.0.0",
+				"executables": []interface{}{"bundle"},
+			},
+			expectError: "invalid gem name",
+		},
+		{
+			name: "missing executables",
+			params: map[string]interface{}{
+				"gem":       "bundler",
+				"lock_data": "GEM\n  specs:\n",
+				"version":   "1.0.0",
+			},
+			expectError: "requires 'executables' parameter",
+		},
+		{
+			name: "invalid executable with path",
+			params: map[string]interface{}{
+				"gem":         "bundler",
+				"lock_data":   "GEM\n  specs:\n",
+				"version":     "1.0.0",
+				"executables": []interface{}{"../bin/exe"},
+			},
+			expectError: "must not contain path separators",
+		},
+		{
+			name: "invalid version",
+			params: map[string]interface{}{
+				"gem":         "bundler",
+				"lock_data":   "GEM\n  specs:\n",
+				"version":     ";echo hack",
+				"executables": []interface{}{"bundle"},
+			},
+			expectError: "invalid gem version",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := a.Execute(ctx, tt.params)
+			if err == nil {
+				t.Errorf("expected error containing %q, got nil", tt.expectError)
+				return
+			}
+
+			if !containsStr(err.Error(), tt.expectError) {
+				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
+			}
+		})
+	}
+}
+
+func TestGemExecAction_LockDataMode_BundlerNotFound(t *testing.T) {
+	a := &GemExecAction{}
+	workDir := t.TempDir()
+
+	// Override PATH to ensure bundler isn't found
+	t.Setenv("PATH", workDir)
+
+	// Empty tools dir - no ruby installation
+	toolsDir := filepath.Join(workDir, "tools")
+	if err := os.MkdirAll(toolsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: workDir,
+		ToolsDir:   toolsDir,
+		Version:    "2.4.0",
+	}
+
+	err := a.Execute(ctx, map[string]interface{}{
+		"gem":         "bundler",
+		"lock_data":   "GEM\n  specs:\n    bundler (2.4.0)\n",
+		"version":     "2.4.0",
+		"executables": []interface{}{"bundle"},
+	})
+	if err == nil {
+		t.Error("Execute() should fail when bundler not found")
+	}
+	if err != nil && !containsStr(err.Error(), "bundler not found") {
+		t.Errorf("Error should mention bundler not found, got: %v", err)
+	}
+}
+
+func TestGemExecAction_LockDataMode_WithMockBundler(t *testing.T) {
+	a := &GemExecAction{}
+	workDir := t.TempDir()
+
+	// Create mock bundler and ruby
+	toolsDir := filepath.Join(workDir, "tools")
+	rubyDir := filepath.Join(toolsDir, "ruby-3.2.0", "bin")
+	if err := os.MkdirAll(rubyDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create mock bundle that succeeds and creates expected files
+	bundlePath := filepath.Join(rubyDir, "bundle")
+	mockScript := `#!/bin/sh
+# Create bin directory with executable
+mkdir -p "$GEM_HOME/bin"
+echo '#!/bin/sh' > "$GEM_HOME/bin/bundle"
+chmod +x "$GEM_HOME/bin/bundle"
+exit 0
+`
+	if err := os.WriteFile(bundlePath, []byte(mockScript), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: workDir,
+		ToolsDir:   toolsDir,
+		Version:    "2.4.0",
+	}
+
+	lockData := `GEM
+  remote: https://rubygems.org/
+  specs:
+    bundler (2.4.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (= 2.4.0)
+`
+
+	err := a.Execute(ctx, map[string]interface{}{
+		"gem":         "bundler",
+		"lock_data":   lockData,
+		"version":     "2.4.0",
+		"executables": []interface{}{"bundle"},
+	})
+	if err != nil {
+		t.Errorf("Execute() with mock bundler should succeed, got: %v", err)
+	}
+
+	// Verify Gemfile was created
+	gemfilePath := filepath.Join(workDir, "Gemfile")
+	content, err := os.ReadFile(gemfilePath)
+	if err != nil {
+		t.Errorf("Gemfile should be created: %v", err)
+	}
+	if !containsStr(string(content), "gem 'bundler'") {
+		t.Error("Gemfile should contain gem specification")
+	}
+
+	// Verify Gemfile.lock was created
+	lockPath := filepath.Join(workDir, "Gemfile.lock")
+	content, err = os.ReadFile(lockPath)
+	if err != nil {
+		t.Errorf("Gemfile.lock should be created: %v", err)
+	}
+	if !containsStr(string(content), "bundler (2.4.0)") {
+		t.Error("Gemfile.lock should contain lock data")
+	}
+}
+
+func TestGemExecAction_IsDeterministic(t *testing.T) {
+	a := &GemExecAction{}
+	if a.IsDeterministic() {
+		t.Error("gem_exec should not be deterministic (has residual non-determinism)")
+	}
+}
+
+func TestGemExecAction_RequiresNetwork(t *testing.T) {
+	// Check that gem_exec implements NetworkValidator
+	var action Action = &GemExecAction{}
+	networkValidator, ok := action.(interface{ RequiresNetwork() bool })
+	if !ok {
+		t.Fatal("gem_exec should implement NetworkValidator")
+	}
+	if !networkValidator.RequiresNetwork() {
+		t.Error("gem_exec should require network")
+	}
+}
+
+func TestCountLockfileGems_EdgeCases(t *testing.T) {
+	tests := []struct {
+		name     string
+		lockData string
+		expected int
+	}{
+		{
+			name:     "no specs section",
+			lockData: "GEM\n  remote: https://rubygems.org/\n",
+			expected: 0,
+		},
+		{
+			name:     "empty specs",
+			lockData: "GEM\n  specs:\nPLATFORMS\n",
+			expected: 0,
+		},
+		{
+			name: "with checksums section",
+			lockData: `GEM
+  remote: https://rubygems.org/
+  specs:
+    bundler (2.4.0)
+
+PLATFORMS
+  ruby
+
+CHECKSUMS
+  bundler (2.4.0) sha256:abc123
+`,
+			expected: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := countLockfileGems(tt.lockData)
+			if result != tt.expected {
+				t.Errorf("countLockfileGems() = %d, want %d", result, tt.expected)
+			}
+		})
+	}
+}

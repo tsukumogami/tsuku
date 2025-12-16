@@ -198,3 +198,166 @@ func containsSubstring(s, substr string) bool {
 	}
 	return false
 }
+
+func TestGemInstallAction_Decompose_Validation(t *testing.T) {
+	t.Parallel()
+	action := &GemInstallAction{}
+
+	tests := []struct {
+		name        string
+		params      map[string]interface{}
+		version     string
+		expectError string
+	}{
+		{
+			name:        "missing gem parameter",
+			params:      map[string]interface{}{},
+			version:     "1.0.0",
+			expectError: "requires 'gem' parameter",
+		},
+		{
+			name: "invalid gem name",
+			params: map[string]interface{}{
+				"gem":         "invalid;gem",
+				"executables": []interface{}{"exe"},
+			},
+			version:     "1.0.0",
+			expectError: "invalid gem name",
+		},
+		{
+			name: "missing executables",
+			params: map[string]interface{}{
+				"gem": "bundler",
+			},
+			version:     "1.0.0",
+			expectError: "requires 'executables' parameter",
+		},
+		{
+			name: "missing version",
+			params: map[string]interface{}{
+				"gem":         "bundler",
+				"executables": []interface{}{"bundle"},
+			},
+			version:     "",
+			expectError: "requires a resolved version",
+		},
+		{
+			name: "invalid version",
+			params: map[string]interface{}{
+				"gem":         "bundler",
+				"executables": []interface{}{"bundle"},
+			},
+			version:     ";echo hack",
+			expectError: "invalid version format",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := &EvalContext{
+				Version: tt.version,
+			}
+
+			_, err := action.Decompose(ctx, tt.params)
+			if err == nil {
+				t.Errorf("expected error containing %q, got nil", tt.expectError)
+				return
+			}
+
+			if !containsString(err.Error(), tt.expectError) {
+				t.Errorf("expected error containing %q, got %q", tt.expectError, err.Error())
+			}
+		})
+	}
+}
+
+func TestGemInstallAction_ImplementsDecomposable(t *testing.T) {
+	// Verify GemInstallAction implements Decomposable interface
+	var _ Decomposable = (*GemInstallAction)(nil)
+}
+
+func TestGemInstallAction_Dependencies(t *testing.T) {
+	action := &GemInstallAction{}
+	deps := action.Dependencies()
+
+	// Check EvalTime dependency (needed for bundle lock)
+	if len(deps.EvalTime) != 1 || deps.EvalTime[0] != "ruby" {
+		t.Errorf("EvalTime dependencies = %v, want [ruby]", deps.EvalTime)
+	}
+
+	// Check InstallTime dependency
+	if len(deps.InstallTime) != 1 || deps.InstallTime[0] != "ruby" {
+		t.Errorf("InstallTime dependencies = %v, want [ruby]", deps.InstallTime)
+	}
+
+	// Check Runtime dependency
+	if len(deps.Runtime) != 1 || deps.Runtime[0] != "ruby" {
+		t.Errorf("Runtime dependencies = %v, want [ruby]", deps.Runtime)
+	}
+}
+
+func TestCountLockfileGems(t *testing.T) {
+	tests := []struct {
+		name     string
+		lockData string
+		expected int
+	}{
+		{
+			name:     "empty",
+			lockData: "",
+			expected: 0,
+		},
+		{
+			name: "single gem",
+			lockData: `GEM
+  remote: https://rubygems.org/
+  specs:
+    bundler (2.4.0)
+
+PLATFORMS
+  ruby
+`,
+			expected: 1,
+		},
+		{
+			name: "multiple gems",
+			lockData: `GEM
+  remote: https://rubygems.org/
+  specs:
+    bundler (2.4.0)
+    rake (13.0.6)
+    rspec (3.12.0)
+      rspec-core (~> 3.12.0)
+
+PLATFORMS
+  ruby
+`,
+			expected: 3,
+		},
+		{
+			name: "gems with dependencies",
+			lockData: `GEM
+  remote: https://rubygems.org/
+  specs:
+    nokogiri (1.13.10)
+      mini_portile2 (~> 2.8.0)
+      racc (~> 1.4)
+    racc (1.6.2)
+    mini_portile2 (2.8.5)
+
+PLATFORMS
+  ruby
+`,
+			expected: 3,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := countLockfileGems(tt.lockData)
+			if result != tt.expected {
+				t.Errorf("countLockfileGems() = %d, want %d", result, tt.expected)
+			}
+		})
+	}
+}
