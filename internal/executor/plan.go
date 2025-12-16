@@ -2,6 +2,7 @@ package executor
 
 import (
 	"fmt"
+	"runtime"
 	"strings"
 	"time"
 
@@ -182,6 +183,7 @@ func (e *PlanValidationError) Error() string {
 // or a PlanValidationError containing all validation failures.
 //
 // Validation rules:
+//   - Platform must match the current OS and architecture
 //   - All step actions must be primitives (as defined by actions.IsPrimitive)
 //   - Download actions must have a non-empty Checksum field (security requirement)
 //   - Format version must be supported (currently only version 2)
@@ -194,6 +196,16 @@ func ValidatePlan(plan *InstallationPlan) error {
 			Step:    -1,
 			Action:  "",
 			Message: fmt.Sprintf("unsupported plan format version %d (expected >= 2)", plan.FormatVersion),
+		})
+	}
+
+	// Check platform compatibility
+	if plan.Platform.OS != runtime.GOOS || plan.Platform.Arch != runtime.GOARCH {
+		errors = append(errors, ValidationError{
+			Step:   -1,
+			Action: "",
+			Message: fmt.Sprintf("plan is for %s-%s, but this system is %s-%s",
+				plan.Platform.OS, plan.Platform.Arch, runtime.GOOS, runtime.GOARCH),
 		})
 	}
 

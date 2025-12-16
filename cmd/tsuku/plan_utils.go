@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"runtime"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
 )
@@ -43,20 +42,10 @@ func loadPlanFromSourceWithReader(path string, stdin io.Reader) (*executor.Insta
 	return &plan, nil
 }
 
-// validateExternalPlan performs comprehensive validation of an external plan.
-// Reuses existing ValidatePlan for structural checks, adds external-plan-specific checks.
+// validateExternalPlan performs validation specific to externally-provided plans.
+// Structural validation (format version, primitives, checksums, platform) is handled
+// by executor.ExecutePlan, so this function only checks external-plan-specific concerns.
 func validateExternalPlan(plan *executor.InstallationPlan, toolName string) error {
-	// First, run existing structural validation (format version, primitives, checksums)
-	if err := executor.ValidatePlan(plan); err != nil {
-		return fmt.Errorf("plan validation failed: %w", err)
-	}
-
-	// Check platform compatibility (external-plan-specific)
-	if plan.Platform.OS != runtime.GOOS || plan.Platform.Arch != runtime.GOARCH {
-		return fmt.Errorf("plan is for %s-%s, but this system is %s-%s",
-			plan.Platform.OS, plan.Platform.Arch, runtime.GOOS, runtime.GOARCH)
-	}
-
 	// Check tool name if provided on command line (external-plan-specific)
 	if toolName != "" && toolName != plan.Tool {
 		return fmt.Errorf("plan is for tool '%s', but '%s' was specified",

@@ -2,6 +2,7 @@ package executor
 
 import (
 	"encoding/json"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -173,7 +174,7 @@ func TestJSONFieldNames(t *testing.T) {
 		FormatVersion: 1,
 		Tool:          "test",
 		Version:       "1.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		GeneratedAt:   time.Now(),
 		RecipeHash:    "hash",
 		RecipeSource:  "source",
@@ -328,7 +329,7 @@ func TestValidatePlan_AllPrimitives(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "download",
@@ -368,7 +369,7 @@ func TestValidatePlan_CompositeAction(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "github_archive",
@@ -399,7 +400,7 @@ func TestValidatePlan_UnknownAction(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "nonexistent_action",
@@ -429,7 +430,7 @@ func TestValidatePlan_MissingChecksum(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "download",
@@ -461,7 +462,7 @@ func TestValidatePlan_EmptyPlan(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps:         []ResolvedStep{},
 	}
 
@@ -477,7 +478,7 @@ func TestValidatePlan_OldFormatVersion(t *testing.T) {
 		FormatVersion: 1, // Old format that may contain composites
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps:         []ResolvedStep{},
 	}
 
@@ -492,13 +493,46 @@ func TestValidatePlan_OldFormatVersion(t *testing.T) {
 	}
 }
 
+func TestValidatePlan_PlatformMismatch(t *testing.T) {
+	// Plan with wrong platform should fail
+	wrongOS := "some-other-os"
+	wrongArch := "some-other-arch"
+
+	plan := &InstallationPlan{
+		FormatVersion: 2,
+		Tool:          "test-tool",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: wrongOS, Arch: wrongArch},
+		Steps: []ResolvedStep{
+			{
+				Action:    "chmod",
+				Params:    map[string]interface{}{"files": []interface{}{"binary"}},
+				Evaluable: true,
+			},
+		},
+	}
+
+	err := ValidatePlan(plan)
+	if err == nil {
+		t.Fatal("ValidatePlan() should return error for platform mismatch")
+	}
+
+	errMsg := err.Error()
+	if !contains(errMsg, wrongOS) {
+		t.Errorf("error message should mention wrong OS %q, got: %s", wrongOS, errMsg)
+	}
+	if !contains(errMsg, runtime.GOOS) {
+		t.Errorf("error message should mention current OS %q, got: %s", runtime.GOOS, errMsg)
+	}
+}
+
 func TestValidatePlan_MultipleErrors(t *testing.T) {
 	// Plan with multiple issues should report all errors
 	plan := &InstallationPlan{
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "github_archive", // Composite action
@@ -536,7 +570,7 @@ func TestValidatePlan_EcosystemPrimitives(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "go_build",
@@ -568,7 +602,7 @@ func TestValidatePlan_NonDecomposableAction(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "run_command", // Known but not primitive and not decomposable
@@ -590,7 +624,7 @@ func TestValidatePlanStrict(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "github_archive",
@@ -620,7 +654,7 @@ func TestValidatePlanStrict_ValidPlan(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action:    "extract",
@@ -708,7 +742,7 @@ func TestDeterministicFieldJSONRoundTrip(t *testing.T) {
 		FormatVersion: PlanFormatVersion,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Deterministic: true,
 		Steps: []ResolvedStep{
 			{
@@ -744,7 +778,7 @@ func TestDeterministicFieldInJSON(t *testing.T) {
 		FormatVersion: 2,
 		Tool:          "test",
 		Version:       "1.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Deterministic: false, // Non-deterministic plan
 		Steps: []ResolvedStep{
 			{

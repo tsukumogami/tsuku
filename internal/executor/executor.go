@@ -277,7 +277,13 @@ func formatActionDescription(action string, params map[string]interface{}, vars 
 // ExecutePlan executes an installation plan, verifying checksums for download steps.
 // All downloads are verified against the checksums recorded in the plan.
 // Returns ChecksumMismatchError if a download's checksum doesn't match the plan.
+// Returns PlanValidationError if the plan contains invalid actions or missing checksums.
 func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) error {
+	// Validate plan before execution (ensures primitives-only, checksums present, etc.)
+	if err := ValidatePlan(plan); err != nil {
+		return fmt.Errorf("plan validation failed: %w", err)
+	}
+
 	fmt.Printf("Executing plan: %s@%s\n", plan.Tool, plan.Version)
 	fmt.Printf("   Work directory: %s\n", e.workDir)
 
