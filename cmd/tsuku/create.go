@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -16,8 +17,10 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/toolchain"
 	"github.com/tsukumogami/tsuku/internal/userconfig"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 const (
@@ -247,11 +250,6 @@ func runCreate(cmd *cobra.Command, args []string) {
 		LLMStateTracker:  stateManager,
 	}
 
-	// Set up force init flag for later use
-	forceInit := false
-	_ = forceInit   // will be used when creating session
-	_ = skipSandbox // skipSandbox is passed through session options
-
 	// Build request for use throughout
 	buildReq := builders.BuildRequest{
 		Package:   toolName,
@@ -294,16 +292,66 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// Create a session and generate the recipe
-	session, err := builder.NewSession(ctx, buildReq, sessionOpts)
+	// Determine if sandbox testing should be skipped
+	// - Explicitly requested via --skip-sandbox
+	// - Ecosystem builders (non-LLM) don't benefit from sandbox testing since:
+	//   1. Their recipes are deterministic (can't be repaired)
+	//   2. They require toolchains (cargo, pip, etc.) not available in base container
+	effectiveSkipSandbox := skipSandbox || !builder.RequiresLLM()
+
+	// Create sandbox executor (if not skipping sandbox)
+	var sandboxExec *sandbox.Executor
+	if !effectiveSkipSandbox {
+		// Ensure cache directories exist (needed for mounting into container)
+		if err := cfg.EnsureDirectories(); err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating directories: %v\n", err)
+			exitWithCode(ExitGeneral)
+		}
+		detector := validate.NewRuntimeDetector()
+		sandboxExec = sandbox.NewExecutor(detector,
+			sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir))
+	}
+
+	// Create orchestrator for generate → sandbox → repair cycle
+	orchestrator := builders.NewOrchestrator(
+		builders.WithSandboxExecutor(sandboxExec),
+		builders.WithOrchestratorConfig(builders.OrchestratorConfig{
+			SkipSandbox:      effectiveSkipSandbox,
+			MaxRepairs:       builders.DefaultMaxRepairs,
+			ToolsDir:         cfg.ToolsDir,
+			DownloadCacheDir: cfg.DownloadCacheDir,
+		}),
+	)
+
+	// Generate recipe using orchestrator (handles sandbox validation and repair)
+	orchResult, err := orchestrator.Create(ctx, builder, buildReq, sessionOpts)
 	if err != nil {
+		// Handle ValidationFailedError with detailed output
+		var valErr *builders.ValidationFailedError
+		if errors.As(err, &valErr) {
+			fmt.Fprintln(os.Stderr, "Error: recipe validation failed in sandbox")
+			fmt.Fprintf(os.Stderr, "Exit code: %d\n", valErr.SandboxResult.ExitCode)
+			if valErr.RepairAttempts > 0 {
+				fmt.Fprintf(os.Stderr, "Repair attempts: %d\n", valErr.RepairAttempts)
+			}
+			if valErr.SandboxResult.Stderr != "" {
+				fmt.Fprintln(os.Stderr, "\nError output:")
+				fmt.Fprintln(os.Stderr, valErr.SandboxResult.Stderr)
+			}
+			if valErr.SandboxResult.Stdout != "" {
+				fmt.Fprintln(os.Stderr, "\nContainer output:")
+				fmt.Fprintln(os.Stderr, valErr.SandboxResult.Stdout)
+			}
+			exitWithCode(ExitGeneral)
+		}
+
 		// Check if this is a confirmable error (rate limit, budget exceeded)
 		if confirmErr, ok := err.(builders.ConfirmableError); ok {
 			fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
 			if confirmWithUser(confirmErr.ConfirmationPrompt()) {
 				// Retry with ForceInit to bypass rate limit checks
 				sessionOpts.ForceInit = true
-				session, err = builder.NewSession(ctx, buildReq, sessionOpts)
+				orchResult, err = orchestrator.Create(ctx, builder, buildReq, sessionOpts)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 					exitWithCode(ExitDependencyFailed)
@@ -312,22 +360,16 @@ func runCreate(cmd *cobra.Command, args []string) {
 				exitWithCode(ExitGeneral)
 			}
 		} else {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			exitWithCode(ExitDependencyFailed)
+			fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)
+			exitWithCode(ExitGeneral)
 		}
 	}
-	defer func() { _ = session.Close() }()
 
-	// Generate the recipe
-	result, err := session.Generate(ctx)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error building recipe: %v\n", err)
-		exitWithCode(ExitGeneral)
-	}
+	result := orchResult.BuildResult
 
 	// Add llm_validation metadata if sandbox testing was skipped
 	// (cost recording is handled by builder internally)
-	if result.SandboxSkipped {
+	if orchResult.SandboxSkipped {
 		result.Recipe.Metadata.LLMValidation = "skipped"
 	}
 
@@ -385,7 +427,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	// Show sandbox skipped warning
-	if result.SandboxSkipped {
+	if orchResult.SandboxSkipped {
 		printInfo()
 		fmt.Fprintln(os.Stderr, "WARNING: Recipe was NOT tested in a sandbox container.")
 		fmt.Fprintln(os.Stderr, "The recipe may have errors. Review before installing.")

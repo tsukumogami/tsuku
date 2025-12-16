@@ -263,3 +263,9 @@ type RepairNotSupportedError struct {
 func (e *RepairNotSupportedError) Error() string {
 	return e.BuilderType + " builders do not support repair (recipes are deterministic)"
 }
+
+// Is enables errors.Is() matching for RepairNotSupportedError.
+func (e *RepairNotSupportedError) Is(target error) bool {
+	_, ok := target.(*RepairNotSupportedError)
+	return ok
+}
