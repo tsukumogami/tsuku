@@ -400,9 +400,9 @@ func TestGitHubArchiveAction_Decompose(t *testing.T) {
 		t.Fatalf("Decompose() returned %d steps, want 4", len(steps))
 	}
 
-	// Step 1: download
-	if steps[0].Action != "download" {
-		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	// Step 1: download_file
+	if steps[0].Action != "download_file" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download_file")
 	}
 	expectedURL := "https://github.com/owner/repo/releases/download/v1.0.0/tool-1.0.0-linux-amd64.tar.gz"
 	if url, ok := steps[0].Params["url"].(string); !ok || url != expectedURL {

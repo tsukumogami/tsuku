@@ -822,8 +822,8 @@ func TestResolveStep_WithDownload(t *testing.T) {
 		}
 
 		step := plan.Steps[0]
-		if step.Action != "download" {
-			t.Errorf("step.Action = %q, want %q", step.Action, "download")
+		if step.Action != "download_file" {
+			t.Errorf("step.Action = %q, want %q", step.Action, "download_file")
 		}
 
 		// If we got here with a successful plan, the checksum should be computed
@@ -1190,9 +1190,13 @@ func TestGeneratePlan_WithDownloadAction(t *testing.T) {
 		},
 		Steps: []recipe.Step{
 			{
-				Action: "download",
+				// Use download_archive which decomposes to download_file
+				// This tests that checksums are computed during decomposition
+				Action: "download_archive",
 				Params: map[string]interface{}{
-					"url": server.URL + "/file.tar.gz",
+					"url":            server.URL + "/file.tar.gz",
+					"archive_format": "tar.gz",
+					"binaries":       []interface{}{"tool"},
 				},
 			},
 		},
@@ -1221,16 +1225,17 @@ func TestGeneratePlan_WithDownloadAction(t *testing.T) {
 		t.Skipf("GeneratePlan() error (expected in offline tests): %v", err)
 	}
 
-	if len(plan.Steps) != 1 {
-		t.Fatalf("len(Steps) = %d, want 1", len(plan.Steps))
+	// download_archive decomposes to: download_file, extract, chmod, install_binaries
+	if len(plan.Steps) != 4 {
+		t.Fatalf("len(Steps) = %d, want 4", len(plan.Steps))
 	}
 
 	step := plan.Steps[0]
-	if step.Action != "download" {
-		t.Errorf("step.Action = %q, want %q", step.Action, "download")
+	if step.Action != "download_file" {
+		t.Errorf("step.Action = %q, want %q", step.Action, "download_file")
 	}
 	if step.URL == "" {
-		t.Error("step.URL should not be empty for download action")
+		t.Error("step.URL should not be empty for download_file action")
 	}
 	if step.Checksum == "" {
 		t.Error("step.Checksum should not be empty after download")
@@ -1239,7 +1244,7 @@ func TestGeneratePlan_WithDownloadAction(t *testing.T) {
 		t.Error("step.Size should not be 0 after download")
 	}
 	if !step.Evaluable {
-		t.Error("download action should be evaluable")
+		t.Error("download_file action should be evaluable")
 	}
 }
 
@@ -1624,17 +1629,17 @@ func TestGeneratePlan_PreDownloaderAdapter(t *testing.T) {
 		t.Errorf("expected multiple decomposed steps, got %d", len(plan.Steps))
 	}
 
-	// First step should be download with checksum computed
+	// First step should be download_file with checksum computed
 	if len(plan.Steps) > 0 {
 		step := plan.Steps[0]
-		if step.Action != "download" {
-			t.Errorf("first step should be 'download', got %q", step.Action)
+		if step.Action != "download_file" {
+			t.Errorf("first step should be 'download_file', got %q", step.Action)
 		}
 		if step.URL == "" {
-			t.Error("download step should have URL")
+			t.Error("download_file step should have URL")
 		}
 		if step.Checksum == "" {
-			t.Error("download step should have checksum computed")
+			t.Error("download_file step should have checksum computed")
 		}
 	}
 }

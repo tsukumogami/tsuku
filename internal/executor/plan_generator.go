@@ -31,6 +31,18 @@ type PlanConfig struct {
 	// DownloadCache is used to cache downloaded files for later use in container validation.
 	// If nil, downloads are not cached.
 	DownloadCache *actions.DownloadCache
+	// AutoAcceptEvalDeps controls whether eval-time dependencies are installed automatically.
+	// When true, missing deps are installed without prompting (equivalent to --yes flag).
+	AutoAcceptEvalDeps bool
+	// OnEvalDepsNeeded is called when eval-time dependencies are missing.
+	// The callback receives the list of missing dependencies and the auto-accept flag.
+	// It should install the dependencies and return nil on success.
+	// If nil and deps are missing, plan generation fails with an error.
+	OnEvalDepsNeeded func(deps []string, autoAccept bool) error
+	// RecipeLoader loads recipes for dependency resolution.
+	// If nil, plans will not include dependency installation steps.
+	// When set, plans become self-contained by including steps for all dependencies.
+	RecipeLoader actions.RecipeLoader
 }
 
 // GeneratePlan evaluates a recipe and produces an installation plan.
@@ -111,7 +123,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		}
 
 		// Resolve the step (handles decomposition of composites)
-		resolvedSteps, err := e.resolveStep(ctx, step, vars, downloader, cfg.OnWarning, evalCtx)
+		resolvedSteps, err := e.resolveStep(ctx, step, vars, downloader, cfg, evalCtx)
 		if err != nil {
 			return nil, fmt.Errorf("failed to resolve step %s: %w", step.Action, err)
 		}
@@ -124,14 +136,23 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		steps = insertPatchSteps(steps, e.recipe.Patches)
 	}
 
-	// Compute plan-level deterministic flag: true only if ALL steps are deterministic
-	planDeterministic := true
-	for _, step := range steps {
-		if !step.Deterministic {
-			planDeterministic = false
-			break
+	// Generate nested dependency plans
+	// This makes plans self-contained - they include all steps needed to install
+	// the tool and its dependencies. Dependencies form a tree structure.
+	var dependencies []DependencyPlan
+	if cfg.RecipeLoader != nil {
+		processed := make(map[string]bool)
+		processed[e.recipe.Metadata.Name] = true // Avoid cycles back to root
+		deps, err := generateDependencyPlans(ctx, e.recipe, cfg, processed)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate dependency plans: %w", err)
 		}
+		dependencies = deps
 	}
+
+	// Compute plan-level deterministic flag: true only if ALL steps are deterministic
+	// (including all dependency steps recursively)
+	planDeterministic := computeDeterministic(steps, dependencies)
 
 	// Capture verify section from recipe for plan execution
 	var verify *PlanVerify
@@ -154,10 +175,26 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		RecipeHash:    recipeHash,
 		RecipeSource:  recipeSource,
 		Deterministic: planDeterministic,
+		Dependencies:  dependencies,
 		Steps:         steps,
 		Verify:        verify,
 		RecipeType:    string(e.recipe.Metadata.Type),
 	}, nil
+}
+
+// computeDeterministic checks if all steps (including nested dependencies) are deterministic.
+func computeDeterministic(steps []ResolvedStep, deps []DependencyPlan) bool {
+	for _, step := range steps {
+		if !step.Deterministic {
+			return false
+		}
+	}
+	for _, dep := range deps {
+		if !computeDeterministic(dep.Steps, dep.Dependencies) {
+			return false
+		}
+	}
+	return true
 }
 
 // computeRecipeHash computes SHA256 hash of the recipe's TOML content.
@@ -203,11 +240,25 @@ func (e *Executor) resolveStep(
 	step recipe.Step,
 	vars map[string]string,
 	downloader actions.Downloader,
-	onWarning func(string, string),
+	cfg PlanConfig,
 	evalCtx *actions.EvalContext,
 ) ([]ResolvedStep, error) {
 	// Check if this is a decomposable action
 	if actions.IsDecomposable(step.Action) {
+		// Check eval-time dependencies before decomposition
+		if evalDeps := actions.GetEvalDeps(step.Action); len(evalDeps) > 0 {
+			missing := actions.CheckEvalDeps(evalDeps)
+			if len(missing) > 0 {
+				if cfg.OnEvalDepsNeeded != nil {
+					if err := cfg.OnEvalDepsNeeded(missing, cfg.AutoAcceptEvalDeps); err != nil {
+						return nil, fmt.Errorf("eval-time dependencies not satisfied: %w", err)
+					}
+				} else {
+					return nil, fmt.Errorf("missing eval-time dependencies: %v (install with: tsuku install %s)", missing, missing[0])
+				}
+			}
+		}
+
 		// For decomposable actions, pass raw params - the Decompose method
 		// handles template expansion with proper os_mapping/arch_mapping support.
 		// Expanding here would bake in raw GOOS/GOARCH values before mappings apply.
@@ -232,7 +283,8 @@ func (e *Executor) resolveStep(
 			// For download actions, cache the file for offline container execution.
 			// If Decompose already provided a checksum, it verified the download.
 			// Skip re-downloading for URLs that require special auth (e.g., GHCR).
-			if pstep.Action == "download" {
+			// Handle both legacy "download" and new "download_file" actions.
+			if pstep.Action == "download" || pstep.Action == "download_file" {
 				if url, ok := pstep.Params["url"].(string); ok {
 					rs.URL = url
 
@@ -283,8 +335,8 @@ func (e *Executor) resolveStep(
 	deterministic := actions.IsDeterministic(step.Action)
 
 	// Emit warning for non-evaluable actions
-	if !evaluable && onWarning != nil {
-		onWarning(step.Action, fmt.Sprintf("action '%s' cannot be deterministically reproduced", step.Action))
+	if !evaluable && cfg.OnWarning != nil {
+		cfg.OnWarning(step.Action, fmt.Sprintf("action '%s' cannot be deterministically reproduced", step.Action))
 	}
 
 	// Create resolved step
@@ -519,4 +571,124 @@ func insertPatchSteps(steps []ResolvedStep, patches []recipe.Patch) []ResolvedSt
 	result = append(result, steps[insertIdx:]...)
 
 	return result
+}
+
+// generateDependencyPlans generates nested dependency plans for all install-time dependencies.
+// Each dependency is represented as a DependencyPlan with its own nested dependencies,
+// forming a tree structure. This allows the executor to skip already-installed dependencies.
+func generateDependencyPlans(
+	ctx context.Context,
+	r *recipe.Recipe,
+	cfg PlanConfig,
+	processed map[string]bool,
+) ([]DependencyPlan, error) {
+	// Resolve direct dependencies from recipe
+	deps := actions.ResolveDependencies(r)
+
+	if len(deps.InstallTime) == 0 {
+		return nil, nil
+	}
+
+	var plans []DependencyPlan
+
+	// Process dependencies in deterministic order
+	depNames := make([]string, 0, len(deps.InstallTime))
+	for name := range deps.InstallTime {
+		depNames = append(depNames, name)
+	}
+	sortStrings(depNames)
+
+	for _, depName := range depNames {
+		// Skip if already processed (handles cycles and de-duplication)
+		if processed[depName] {
+			continue
+		}
+		processed[depName] = true
+
+		depPlan, err := generateSingleDependencyPlan(ctx, depName, cfg, processed)
+		if err != nil {
+			return nil, fmt.Errorf("failed to generate plan for dependency %s: %w", depName, err)
+		}
+		if depPlan != nil {
+			plans = append(plans, *depPlan)
+		}
+	}
+
+	return plans, nil
+}
+
+// generateSingleDependencyPlan generates a DependencyPlan for a single dependency,
+// including its own nested dependencies recursively.
+func generateSingleDependencyPlan(
+	ctx context.Context,
+	depName string,
+	cfg PlanConfig,
+	processed map[string]bool,
+) (*DependencyPlan, error) {
+	// Load the dependency recipe
+	depRecipe, err := cfg.RecipeLoader.GetWithContext(ctx, depName)
+	if err != nil {
+		// Dependency recipe not found - skip
+		// This could be a system dependency or something not in the registry
+		return nil, nil
+	}
+
+	// Recursively generate plans for this dependency's own dependencies
+	nestedDeps, err := generateDependencyPlans(ctx, depRecipe, cfg, processed)
+	if err != nil {
+		return nil, err
+	}
+
+	// Generate the plan for this dependency (without further recursion)
+	exec, err := New(depRecipe)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create executor for %s: %w", depName, err)
+	}
+	defer exec.Cleanup()
+
+	// Generate plan without RecipeLoader to get just this tool's steps
+	depCfg := PlanConfig{
+		OS:                 cfg.OS,
+		Arch:               cfg.Arch,
+		RecipeSource:       "dependency",
+		OnWarning:          cfg.OnWarning,
+		Downloader:         cfg.Downloader,
+		DownloadCache:      cfg.DownloadCache,
+		AutoAcceptEvalDeps: cfg.AutoAcceptEvalDeps,
+		OnEvalDepsNeeded:   cfg.OnEvalDepsNeeded,
+		RecipeLoader:       nil, // Don't recurse here - we handle it above
+	}
+
+	plan, err := exec.GeneratePlan(ctx, depCfg)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate plan for %s: %w", depName, err)
+	}
+
+	// Build verify info if present
+	var verify *PlanVerify
+	if depRecipe.Verify.Command != "" {
+		verify = &PlanVerify{
+			Command: depRecipe.Verify.Command,
+			Pattern: depRecipe.Verify.Pattern,
+		}
+	}
+
+	return &DependencyPlan{
+		Tool:         depName,
+		Version:      plan.Version,
+		RecipeHash:   plan.RecipeHash,
+		Dependencies: nestedDeps,
+		Steps:        plan.Steps,
+		Verify:       verify,
+		RecipeType:   plan.RecipeType,
+	}, nil
+}
+
+// sortStrings sorts a slice of strings in place.
+func sortStrings(s []string) {
+	for i := 1; i < len(s); i++ {
+		for j := i; j > 0 && s[j] < s[j-1]; j-- {
+			s[j], s[j-1] = s[j-1], s[j]
+		}
+	}
 }

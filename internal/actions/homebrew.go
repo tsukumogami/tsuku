@@ -398,10 +398,11 @@ func (a *HomebrewAction) Decompose(ctx *EvalContext, params map[string]interface
 	// Return primitive steps
 	return []Step{
 		{
-			Action: "download",
+			Action: "download_file",
 			Params: map[string]interface{}{
-				"url":  url,
-				"dest": destFile,
+				"url":      url,
+				"dest":     destFile,
+				"checksum": blobSHA,
 			},
 			Checksum: blobSHA,
 			Size:     size,

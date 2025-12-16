@@ -39,9 +39,11 @@ func (ctx *ExecutionContext) Log() log.Logger {
 // ActionDeps defines what dependencies an action needs.
 // InstallTime deps are needed during `tsuku install`.
 // Runtime deps are needed when the installed tool runs.
+// EvalTime deps are needed during `tsuku eval` for actions that implement Decomposable.
 type ActionDeps struct {
 	InstallTime []string // Needed during tsuku install
 	Runtime     []string // Needed when tool runs
+	EvalTime    []string // Needed during tsuku eval (for Decompose)
 }
 
 // Action represents an executable action with metadata.
@@ -116,6 +118,7 @@ func Get(name string) Action {
 func init() {
 	// Core actions
 	Register(&DownloadAction{})
+	Register(&DownloadFileAction{})
 	Register(&ExtractAction{})
 	Register(&ChmodAction{})
 	Register(&InstallBinariesAction{})

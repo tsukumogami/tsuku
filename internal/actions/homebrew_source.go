@@ -191,10 +191,11 @@ func (a *HomebrewSourceAction) Decompose(ctx *EvalContext, params map[string]int
 	// Return primitive steps
 	steps := []Step{
 		{
-			Action: "download",
+			Action: "download_file",
 			Params: map[string]interface{}{
-				"url":  sourceURL,
-				"dest": archiveFilename,
+				"url":      sourceURL,
+				"dest":     archiveFilename,
+				"checksum": checksum,
 			},
 			Checksum: checksum,
 		},

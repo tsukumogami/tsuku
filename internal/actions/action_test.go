@@ -94,6 +94,7 @@ func TestNetworkValidator_AllActions(t *testing.T) {
 		"go_install":    true,
 		"cpan_install":  true,
 		"npm_install":   true,
+		"npm_exec":      true, // Downloads packages from npm registry
 		"pip_install":   true,
 		"pipx_install":  true,
 		"gem_install":   true,
@@ -120,7 +121,6 @@ func TestNetworkValidator_AllActions(t *testing.T) {
 		"link_dependencies",
 		"configure_make",
 		"cmake_build",
-		"npm_exec",
 		"apply_patch_file",
 		"text_replace",
 		// Composite actions (inherit from BaseAction)

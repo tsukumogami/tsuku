@@ -14,9 +14,13 @@ var _ Decomposable = (*GoInstallAction)(nil)
 // GoInstallAction installs Go modules using go install with GOBIN/GOMODCACHE isolation
 type GoInstallAction struct{ BaseAction }
 
-// Dependencies returns go as an install-time dependency.
+// Dependencies returns go as install-time and eval-time dependency.
+// EvalTime is needed because Decompose() runs `go get` to generate go.sum.
 func (GoInstallAction) Dependencies() ActionDeps {
-	return ActionDeps{InstallTime: []string{"go"}}
+	return ActionDeps{
+		InstallTime: []string{"go"},
+		EvalTime:    []string{"go"},
+	}
 }
 
 // RequiresNetwork returns true because go_install fetches modules from the Go proxy.

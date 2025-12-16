@@ -557,49 +557,47 @@ func TestEnsurePackageManagersForRecipe_AlreadyInstalled(t *testing.T) {
 	t.Logf("ensurePackageManagersForRecipe() returned %d paths", len(execPaths))
 }
 
-func TestLibraryInstallPrevention(t *testing.T) {
-	// Test the logic for preventing direct library installation
-	// The check in installWithDependencies is:
-	// if isExplicit && parent == "" { return error }
+func TestLibraryInstallAllowed(t *testing.T) {
+	// Test that library installation is allowed in all cases
+	// Direct library installation was previously blocked but is now allowed
+	// to support runtime dependencies like gcc-libs for nodejs.
+	// Library verification is a future concern tracked separately.
 
 	tests := []struct {
 		name       string
 		isExplicit bool
 		parent     string
-		wantError  bool
 	}{
 		{
-			name:       "direct user install should be blocked",
+			name:       "direct user install should be allowed",
 			isExplicit: true,
 			parent:     "",
-			wantError:  true,
 		},
 		{
 			name:       "dependency install should be allowed",
 			isExplicit: false,
 			parent:     "ruby",
-			wantError:  false,
 		},
 		{
 			name:       "explicit with parent should be allowed",
 			isExplicit: true,
 			parent:     "ruby",
-			wantError:  false,
 		},
 		{
 			name:       "implicit without parent should be allowed",
 			isExplicit: false,
 			parent:     "",
-			wantError:  false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Simulate the check from installWithDependencies
-			shouldBlock := tt.isExplicit && tt.parent == ""
-			if shouldBlock != tt.wantError {
-				t.Errorf("library install check: got shouldBlock=%v, want %v", shouldBlock, tt.wantError)
+			// Libraries are now installable in all cases
+			// The code path proceeds to installLibrary() without blocking
+			// This test documents that the blocking check was removed
+			shouldBlock := false // No longer blocking any library installs
+			if shouldBlock {
+				t.Errorf("library install should be allowed for isExplicit=%v, parent=%q", tt.isExplicit, tt.parent)
 			}
 		})
 	}

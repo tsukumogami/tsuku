@@ -25,7 +25,7 @@ func TestIsDecomposable(t *testing.T) {
 
 	// Primitives should return false (they don't implement Decomposable)
 	primitiveNames := []string{
-		"download",
+		"download_file",
 		"extract",
 		"chmod",
 		"install_binaries",
@@ -47,7 +47,7 @@ func TestIsDecomposable(t *testing.T) {
 func TestIsPrimitive(t *testing.T) {
 	// Primitives should return true
 	primitives := []string{
-		"download",
+		"download_file",
 		"extract",
 		"chmod",
 		"install_binaries",
@@ -77,6 +77,7 @@ func TestIsPrimitive(t *testing.T) {
 
 	// Composite actions should return false
 	compositeActions := []string{
+		"download",
 		"github_archive",
 		"github_file",
 		"download_archive",
@@ -113,7 +114,7 @@ func TestPrimitives(t *testing.T) {
 		"cmake_build",
 		"configure_make",
 		"cpan_install",
-		"download",
+		"download_file",
 		"extract",
 		"gem_exec",
 		"go_build",
@@ -240,7 +241,7 @@ func TestDecomposeToPrimitives_Primitive(t *testing.T) {
 	ctx := &EvalContext{}
 	params := map[string]interface{}{"url": "https://example.com/file.tar.gz"}
 
-	steps, err := DecomposeToPrimitives(ctx, "download", params)
+	steps, err := DecomposeToPrimitives(ctx, "download_file", params)
 	if err != nil {
 		t.Fatalf("DecomposeToPrimitives() error = %v", err)
 	}
@@ -248,8 +249,8 @@ func TestDecomposeToPrimitives_Primitive(t *testing.T) {
 	if len(steps) != 1 {
 		t.Fatalf("len(steps) = %d, want 1", len(steps))
 	}
-	if steps[0].Action != "download" {
-		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	if steps[0].Action != "download_file" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download_file")
 	}
 	if steps[0].Params["url"] != "https://example.com/file.tar.gz" {
 		t.Errorf("steps[0].Params[url] = %v, want %q", steps[0].Params["url"], "https://example.com/file.tar.gz")
@@ -261,7 +262,7 @@ func TestDecomposeToPrimitives_CompositeReturnsPrimitives(t *testing.T) {
 	mock := &mockDecomposableAction{
 		name: "test_composite",
 		steps: []Step{
-			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/a.tar.gz"}},
+			{Action: "download_file", Params: map[string]interface{}{"url": "https://example.com/a.tar.gz"}},
 			{Action: "extract", Params: map[string]interface{}{"format": "tar.gz"}},
 		},
 	}
@@ -283,8 +284,8 @@ func TestDecomposeToPrimitives_CompositeReturnsPrimitives(t *testing.T) {
 	if len(steps) != 2 {
 		t.Fatalf("len(steps) = %d, want 2", len(steps))
 	}
-	if steps[0].Action != "download" {
-		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	if steps[0].Action != "download_file" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download_file")
 	}
 	if steps[1].Action != "extract" {
 		t.Errorf("steps[1].Action = %q, want %q", steps[1].Action, "extract")
@@ -307,7 +308,7 @@ func TestDecomposeToPrimitives_RecursiveDecomposition(t *testing.T) {
 	lowLevel := &mockDecomposableAction{
 		name: "low_level_composite",
 		steps: []Step{
-			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file"}},
+			{Action: "download_file", Params: map[string]interface{}{"url": "https://example.com/file"}},
 			{Action: "extract", Params: map[string]interface{}{"format": "tar.gz"}},
 		},
 	}
@@ -322,12 +323,12 @@ func TestDecomposeToPrimitives_RecursiveDecomposition(t *testing.T) {
 		t.Fatalf("DecomposeToPrimitives() error = %v", err)
 	}
 
-	// Should have 3 primitives: download, extract, chmod
+	// Should have 3 primitives: download_file, extract, chmod
 	if len(steps) != 3 {
 		t.Fatalf("len(steps) = %d, want 3", len(steps))
 	}
-	if steps[0].Action != "download" {
-		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	if steps[0].Action != "download_file" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download_file")
 	}
 	if steps[1].Action != "extract" {
 		t.Errorf("steps[1].Action = %q, want %q", steps[1].Action, "extract")
@@ -377,7 +378,7 @@ func TestDecomposeToPrimitives_ChecksumPropagation(t *testing.T) {
 		name: "checksum_composite",
 		steps: []Step{
 			{
-				Action:   "download",
+				Action:   "download_file",
 				Params:   map[string]interface{}{"url": "https://example.com/file"},
 				Checksum: "sha256:abc123",
 				Size:     1024,
@@ -485,7 +486,7 @@ func TestComputeStepHash(t *testing.T) {
 func TestIsDeterministic(t *testing.T) {
 	// Core primitives should be deterministic
 	deterministicActions := []string{
-		"download",
+		"download_file",
 		"extract",
 		"chmod",
 		"install_binaries",

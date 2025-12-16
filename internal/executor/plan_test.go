@@ -269,7 +269,7 @@ func TestIsActionEvaluable(t *testing.T) {
 		expected bool
 	}{
 		// Primitive actions - evaluable
-		{"download", true},
+		{"download_file", true}, // Primitive download action (requires checksum)
 		{"extract", true},
 		{"install_binaries", true},
 		{"chmod", true},
@@ -282,6 +282,7 @@ func TestIsActionEvaluable(t *testing.T) {
 
 		// Composite actions - not in evaluability map (decomposed at plan time)
 		// These return false because they're not in the map (unknown action behavior)
+		{"download", false}, // Composite download (decomposes to download_file)
 		{"download_archive", false},
 		{"github_archive", false},
 		{"github_file", false},
@@ -316,8 +317,9 @@ func TestIsActionEvaluable(t *testing.T) {
 
 func TestFormatVersionConstant(t *testing.T) {
 	// Version 2 introduced composite action decomposition (issue #440)
-	if PlanFormatVersion != 2 {
-		t.Errorf("PlanFormatVersion: got %d, want 2", PlanFormatVersion)
+	// Version 3 introduced nested dependency plans (issue #621)
+	if PlanFormatVersion != 3 {
+		t.Errorf("PlanFormatVersion: got %d, want 3", PlanFormatVersion)
 	}
 }
 
@@ -332,8 +334,8 @@ func TestValidatePlan_AllPrimitives(t *testing.T) {
 		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
-				Action:    "download",
-				Params:    map[string]interface{}{"url": "https://example.com/file.tar.gz"},
+				Action:    "download_file",
+				Params:    map[string]interface{}{"url": "https://example.com/file.tar.gz", "checksum": "abc123"},
 				Evaluable: true,
 				URL:       "https://example.com/file.tar.gz",
 				Checksum:  "sha256:abc123",
@@ -425,7 +427,7 @@ func TestValidatePlan_UnknownAction(t *testing.T) {
 }
 
 func TestValidatePlan_MissingChecksum(t *testing.T) {
-	// Download action without checksum should fail (security requirement)
+	// download_file action without checksum should fail (security requirement)
 	plan := &InstallationPlan{
 		FormatVersion: 2,
 		Tool:          "test-tool",
@@ -433,18 +435,18 @@ func TestValidatePlan_MissingChecksum(t *testing.T) {
 		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
-				Action:    "download",
+				Action:    "download_file",
 				Params:    map[string]interface{}{"url": "https://example.com/file.tar.gz"},
 				Evaluable: true,
 				URL:       "https://example.com/file.tar.gz",
-				// Missing Checksum field - should fail
+				// Missing Checksum field and no checksum in params - should fail
 			},
 		},
 	}
 
 	err := ValidatePlan(plan)
 	if err == nil {
-		t.Error("ValidatePlan() should return error for download without checksum")
+		t.Error("ValidatePlan() should return error for download_file without checksum")
 	}
 
 	errMsg := err.Error()
@@ -596,8 +598,9 @@ func TestValidatePlan_EcosystemPrimitives(t *testing.T) {
 	}
 }
 
-func TestValidatePlan_NonDecomposableAction(t *testing.T) {
-	// Actions that are registered but not primitive and not decomposable should fail
+func TestValidatePlan_NonEvaluableActionsAllowed(t *testing.T) {
+	// Non-evaluable actions like run_command, npm_install, etc. are allowed in plans
+	// They're not primitives but they execute as-is without decomposition
 	plan := &InstallationPlan{
 		FormatVersion: 2,
 		Tool:          "test-tool",
@@ -605,7 +608,7 @@ func TestValidatePlan_NonDecomposableAction(t *testing.T) {
 		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
-				Action:    "run_command", // Known but not primitive and not decomposable
+				Action:    "run_command", // Known, not primitive, not decomposable - but valid
 				Params:    map[string]interface{}{"command": "echo test"},
 				Evaluable: false,
 			},
@@ -613,8 +616,8 @@ func TestValidatePlan_NonDecomposableAction(t *testing.T) {
 	}
 
 	err := ValidatePlan(plan)
-	if err == nil {
-		t.Error("ValidatePlan() should return error for non-primitive non-decomposable action")
+	if err != nil {
+		t.Errorf("ValidatePlan() should allow non-evaluable actions like run_command, got error: %v", err)
 	}
 }
 

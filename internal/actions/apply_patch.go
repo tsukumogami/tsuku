@@ -173,10 +173,11 @@ func (a *ApplyPatchAction) Decompose(ctx *EvalContext, params map[string]interfa
 		// Build steps: download patch file, then apply it
 		steps := []Step{
 			{
-				Action: "download",
+				Action: "download_file",
 				Params: map[string]interface{}{
-					"url":  url,
-					"dest": patchFilename,
+					"url":      url,
+					"dest":     patchFilename,
+					"checksum": checksum,
 				},
 				Checksum: checksum,
 				Size:     size,

@@ -75,7 +75,7 @@ type EvalContext struct {
 // ecosystem primitives (go_build, cargo_build, etc.).
 var primitives = map[string]bool{
 	// Core primitives - fully deterministic
-	"download":          true,
+	"download_file":     true,
 	"extract":           true,
 	"chmod":             true,
 	"install_binaries":  true,

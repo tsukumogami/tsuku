@@ -14,14 +14,15 @@ import (
 // Version history:
 //   - Version 1: Original format with composite actions in plans
 //   - Version 2: Composite actions decomposed to primitives (introduced in #440)
-const PlanFormatVersion = 2
+//   - Version 3: Nested dependencies for self-contained plans (introduced in #621)
+const PlanFormatVersion = 3
 
 // InstallationPlan represents a fully-resolved, deterministic specification
 // for installing a tool. Plans capture the exact URLs, checksums, and steps
 // needed to reproduce an installation.
 type InstallationPlan struct {
 	// FormatVersion enables future evolution of the plan format.
-	// Currently 1.
+	// Currently 3.
 	FormatVersion int `json:"format_version"`
 
 	// Metadata
@@ -40,7 +41,13 @@ type InstallationPlan struct {
 	// which have residual non-determinism from compiler versions, native extensions, etc.
 	Deterministic bool `json:"deterministic"`
 
-	// Resolved steps
+	// Dependencies contains nested plans for install-time dependencies.
+	// Each dependency may have its own dependencies, forming a tree.
+	// Dependencies are installed in order before the main tool's steps.
+	// The executor can skip dependencies that are already installed.
+	Dependencies []DependencyPlan `json:"dependencies,omitempty"`
+
+	// Resolved steps for this tool (not including dependency steps)
 	Steps []ResolvedStep `json:"steps"`
 
 	// Verify contains the verification command and pattern from the recipe.
@@ -49,6 +56,26 @@ type InstallationPlan struct {
 
 	// Metadata from the recipe (needed for install_binaries directory mode checks)
 	RecipeType string `json:"recipe_type,omitempty"` // "tool" or "library"
+}
+
+// DependencyPlan represents a nested installation plan for a dependency.
+// It contains the same structure as InstallationPlan but is used for
+// dependencies to enable recursive dependency trees.
+type DependencyPlan struct {
+	// Tool name
+	Tool string `json:"tool"`
+	// Resolved version
+	Version string `json:"version"`
+	// Recipe hash for cache validation
+	RecipeHash string `json:"recipe_hash"`
+	// Nested dependencies (recursive)
+	Dependencies []DependencyPlan `json:"dependencies,omitempty"`
+	// Steps for this dependency
+	Steps []ResolvedStep `json:"steps"`
+	// Verify command for this dependency
+	Verify *PlanVerify `json:"verify,omitempty"`
+	// Recipe type
+	RecipeType string `json:"recipe_type,omitempty"`
 }
 
 // PlanVerify captures verification information from the recipe.
@@ -104,7 +131,7 @@ type ResolvedStep struct {
 // - Package manager actions: External dependency resolution
 var ActionEvaluability = map[string]bool{
 	// Primitive actions - evaluable (direct execution with deterministic outcomes)
-	"download":          true,
+	"download_file":     true, // Primitive: requires checksum, used in plans
 	"extract":           true,
 	"chmod":             true,
 	"install_binaries":  true,
@@ -178,19 +205,26 @@ func (e *PlanValidationError) Error() string {
 	return fmt.Sprintf("invalid plan: %d errors:\n  - %s", len(e.Errors), strings.Join(msgs, "\n  - "))
 }
 
-// ValidatePlan checks that a plan contains only primitive actions and that
+// ValidatePlan checks that a plan contains valid actions and that
 // download actions have required checksum data. Returns nil if the plan is valid,
 // or a PlanValidationError containing all validation failures.
 //
 // Validation rules:
 //   - Platform must match the current OS and architecture
-//   - All step actions must be primitives (as defined by actions.IsPrimitive)
-//   - Download actions must have a non-empty Checksum field (security requirement)
-//   - Format version must be supported (currently only version 2)
+//   - Decomposable (composite) actions must be decomposed at eval time
+//   - Unknown actions are rejected
+//   - The composite "download" action is rejected (use download_file primitive)
+//   - download_file actions must have a non-empty Checksum field (security requirement)
+//   - Format version must be supported (version 2 or 3)
+//   - All nested dependencies are validated recursively
+//
+// Note: Non-evaluable actions like npm_install, run_command, etc. are allowed
+// in plans even though they're not primitives - they execute as-is without
+// decomposition.
 func ValidatePlan(plan *InstallationPlan) error {
 	var errors []ValidationError
 
-	// Check format version
+	// Check format version (version 2 for legacy, version 3 for nested deps)
 	if plan.FormatVersion < 2 {
 		errors = append(errors, ValidationError{
 			Step:    -1,
@@ -211,44 +245,134 @@ func ValidatePlan(plan *InstallationPlan) error {
 
 	// Validate each step
 	for i, step := range plan.Steps {
-		// Check if action is a primitive
-		if !actions.IsPrimitive(step.Action) {
-			// Check if it's a known composite action
-			if actions.IsDecomposable(step.Action) {
-				errors = append(errors, ValidationError{
-					Step:    i,
-					Action:  step.Action,
-					Message: fmt.Sprintf("composite action %q should have been decomposed at eval time", step.Action),
-				})
-			} else if actions.Get(step.Action) != nil {
-				errors = append(errors, ValidationError{
-					Step:    i,
-					Action:  step.Action,
-					Message: fmt.Sprintf("action %q is neither primitive nor decomposable", step.Action),
-				})
-			} else {
-				errors = append(errors, ValidationError{
-					Step:    i,
-					Action:  step.Action,
-					Message: fmt.Sprintf("unknown action %q", step.Action),
-				})
-			}
-		}
-
-		// Check checksum for download actions
-		if step.Action == "download" && step.Checksum == "" {
+		// Reject composite download action - should be decomposed to download_file
+		if step.Action == "download" {
 			errors = append(errors, ValidationError{
 				Step:    i,
 				Action:  step.Action,
-				Message: "download action missing checksum (security requirement)",
+				Message: "download action should not appear in plans (use download_file primitive)",
 			})
+			continue
 		}
+
+		// Check if action is decomposable (composite) - these should have been decomposed
+		if actions.IsDecomposable(step.Action) {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: fmt.Sprintf("composite action %q should have been decomposed at eval time", step.Action),
+			})
+			continue
+		}
+
+		// Check if action is unknown
+		if actions.Get(step.Action) == nil {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: fmt.Sprintf("unknown action %q", step.Action),
+			})
+			continue
+		}
+
+		// Check checksum for download_file actions
+		if step.Action == "download_file" {
+			hasChecksum := step.Checksum != ""
+			if !hasChecksum {
+				// Also check params for checksum
+				if params := step.Params; params != nil {
+					if cs, ok := params["checksum"].(string); ok && cs != "" {
+						hasChecksum = true
+					}
+				}
+			}
+			if !hasChecksum {
+				errors = append(errors, ValidationError{
+					Step:    i,
+					Action:  step.Action,
+					Message: "download_file action missing checksum (security requirement)",
+				})
+			}
+		}
+	}
+
+	// Validate nested dependencies recursively
+	for _, dep := range plan.Dependencies {
+		depErrors := validateDependencyPlan(&dep, plan.Tool)
+		errors = append(errors, depErrors...)
 	}
 
 	if len(errors) > 0 {
 		return &PlanValidationError{Errors: errors}
 	}
 	return nil
+}
+
+// validateDependencyPlan validates a nested dependency plan recursively.
+// The parentTool parameter is used for error context.
+func validateDependencyPlan(dep *DependencyPlan, parentTool string) []ValidationError {
+	var errors []ValidationError
+	prefix := fmt.Sprintf("dependency %s (of %s)", dep.Tool, parentTool)
+
+	// Validate each step in the dependency
+	for i, step := range dep.Steps {
+		// Reject composite download action
+		if step.Action == "download" {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: fmt.Sprintf("%s: download action should not appear in plans", prefix),
+			})
+			continue
+		}
+
+		// Check if action is decomposable
+		if actions.IsDecomposable(step.Action) {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: fmt.Sprintf("%s: composite action %q should have been decomposed", prefix, step.Action),
+			})
+			continue
+		}
+
+		// Check if action is unknown
+		if actions.Get(step.Action) == nil {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: fmt.Sprintf("%s: unknown action %q", prefix, step.Action),
+			})
+			continue
+		}
+
+		// Check checksum for download_file actions
+		if step.Action == "download_file" {
+			hasChecksum := step.Checksum != ""
+			if !hasChecksum {
+				if params := step.Params; params != nil {
+					if cs, ok := params["checksum"].(string); ok && cs != "" {
+						hasChecksum = true
+					}
+				}
+			}
+			if !hasChecksum {
+				errors = append(errors, ValidationError{
+					Step:    i,
+					Action:  step.Action,
+					Message: fmt.Sprintf("%s: download_file action missing checksum", prefix),
+				})
+			}
+		}
+	}
+
+	// Recursively validate nested dependencies
+	for _, nestedDep := range dep.Dependencies {
+		nestedErrors := validateDependencyPlan(&nestedDep, dep.Tool)
+		errors = append(errors, nestedErrors...)
+	}
+
+	return errors
 }
 
 // ValidatePlanStrict is a stricter version of ValidatePlan that returns

@@ -21,6 +21,11 @@ func (NpmExecAction) Dependencies() ActionDeps {
 	return ActionDeps{InstallTime: []string{"nodejs"}, Runtime: []string{"nodejs"}}
 }
 
+// RequiresNetwork returns true because npm ci needs to download packages from npm registry.
+func (NpmExecAction) RequiresNetwork() bool {
+	return true
+}
+
 // Name returns the action name
 func (a *NpmExecAction) Name() string {
 	return "npm_exec"
@@ -107,7 +112,7 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 	// Validate Node.js version if constraint specified
 	if nodeVersion != "" {
-		if err := validateNodeVersion(nodeVersion); err != nil {
+		if err := validateNodeVersion(nodeVersion, ctx.ExecPaths...); err != nil {
 			return fmt.Errorf("node version validation failed: %w", err)
 		}
 	}
@@ -218,12 +223,45 @@ func (a *NpmExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 // validateNodeVersion checks if the installed Node.js version satisfies the constraint.
 // Supports simple constraints like ">=18.0.0", "18.x", or exact versions like "20.10.0".
-func validateNodeVersion(constraint string) error {
-	// Get installed Node.js version
-	cmd := exec.Command("node", "--version")
-	output, err := cmd.Output()
+// If execPaths is provided, those paths are searched first when looking for node.
+func validateNodeVersion(constraint string, execPaths ...string) error {
+	// Find node binary - check exec paths first, then fall back to system PATH
+	nodeBin := "node"
+	for _, p := range execPaths {
+		nodePath := filepath.Join(p, "node")
+		if _, err := os.Stat(nodePath); err == nil {
+			nodeBin = nodePath
+			break
+		}
+	}
+
+	fmt.Printf("   Validating node version using: %s\n", nodeBin)
+
+	// Build PATH with exec paths prepended for the wrapper script
+	env := os.Environ()
+	if len(execPaths) > 0 {
+		pathVal := os.Getenv("PATH")
+		for _, p := range execPaths {
+			pathVal = p + ":" + pathVal
+		}
+		// Update PATH in environment
+		for i, e := range env {
+			if strings.HasPrefix(e, "PATH=") {
+				env[i] = "PATH=" + pathVal
+				break
+			}
+		}
+	}
+
+	// Run node --version
+	cmd := exec.Command(nodeBin, "--version")
+	cmd.Env = env
+
+	output, err := cmd.CombinedOutput()
 	if err != nil {
-		return fmt.Errorf("node.js not found: %w", err)
+		fmt.Printf("   Debug: node exec failed: %v\n", err)
+		fmt.Printf("   Debug: output: %s\n", string(output))
+		return fmt.Errorf("node.js not found or failed to execute: %w", err)
 	}
 
 	// Parse version (format: v20.10.0)
@@ -377,7 +415,19 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 	nodeVersion, _ := GetString(params, "node_version")
 	npmPath, _ := GetString(params, "npm_path")
 	if npmPath == "" {
-		npmPath = ResolveNpm()
+		// First check ExecPaths for npm
+		for _, p := range ctx.ExecPaths {
+			candidatePath := filepath.Join(p, "npm")
+			if _, err := os.Stat(candidatePath); err == nil {
+				npmPath = candidatePath
+				break
+			}
+		}
+		// Then try ResolveNpm (looks in ~/.tsuku)
+		if npmPath == "" {
+			npmPath = ResolveNpm()
+		}
+		// Fall back to "npm" in PATH
 		if npmPath == "" {
 			npmPath = "npm"
 		}
@@ -392,7 +442,7 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 	if nodeVersion != "" {
 		// Strip the "v" prefix if present for validation
 		constraint := strings.TrimPrefix(nodeVersion, "v")
-		if err := validateNodeVersion(constraint); err != nil {
+		if err := validateNodeVersion(constraint, ctx.ExecPaths...); err != nil {
 			return fmt.Errorf("node version validation failed: %w", err)
 		}
 	}
@@ -401,14 +451,13 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 	fmt.Printf("   Executables: %v\n", executables)
 	fmt.Printf("   Using npm: %s\n", npmPath)
 
-	// Write package.json and package-lock.json to the install directory.
-	// npm ci with --prefix looks for these files in the prefix directory,
-	// not the current working directory.
+	// Ensure install directory exists
 	if err := os.MkdirAll(ctx.InstallDir, 0755); err != nil {
 		return fmt.Errorf("failed to create install directory: %w", err)
 	}
 
-	// Create package.json with the dependency
+	// Create package.json with the dependency in the install directory
+	// npm ci --prefix expects package.json and package-lock.json in the prefix directory
 	packageJSON := map[string]interface{}{
 		"name":    "tsuku-npm-install",
 		"version": "0.0.0",
@@ -462,14 +511,12 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 	}
 
 	// Run npm ci with security hardening flags
-	fmt.Printf("   Installing: npm ci --prefix=%s\n", ctx.InstallDir)
+	fmt.Printf("   Installing: npm ci in %s\n", ctx.InstallDir)
 
 	ciArgs := []string{"ci", "--no-audit", "--no-fund", "--prefer-offline"}
 	if ignoreScripts {
 		ciArgs = append(ciArgs, "--ignore-scripts")
 	}
-	// Install to the target directory (package.json and lockfile are already there)
-	ciArgs = append(ciArgs, fmt.Sprintf("--prefix=%s", ctx.InstallDir))
 
 	ciCmd := exec.CommandContext(ctx.Context, npmPath, ciArgs...)
 	ciCmd.Dir = ctx.InstallDir
@@ -480,16 +527,28 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 		return fmt.Errorf("npm ci failed: %w\nOutput: %s", err, string(output))
 	}
 
-	// Verify executables exist
+	// npm ci installs executables to node_modules/.bin/
+	nodeModulesBin := filepath.Join(ctx.InstallDir, "node_modules", ".bin")
+
+	// Create bin/ directory and symlinks to node_modules/.bin/ executables
 	binDir := filepath.Join(ctx.InstallDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		return fmt.Errorf("failed to create bin directory: %w", err)
+	}
+
+	// Verify executables exist and create symlinks
 	for _, exe := range executables {
-		exePath := filepath.Join(binDir, exe)
-		if _, err := os.Stat(exePath); err != nil {
-			// Also check in node_modules/.bin (some packages install there)
-			altPath := filepath.Join(ctx.InstallDir, "lib", "node_modules", ".bin", exe)
-			if _, err := os.Stat(altPath); err != nil {
-				return fmt.Errorf("expected executable %s not found at %s", exe, exePath)
-			}
+		srcPath := filepath.Join(nodeModulesBin, exe)
+		if _, err := os.Stat(srcPath); err != nil {
+			return fmt.Errorf("expected executable %s not found at %s", exe, srcPath)
+		}
+
+		// Create symlink in bin/ pointing to node_modules/.bin/
+		dstPath := filepath.Join(binDir, exe)
+		// Use relative path for the symlink target
+		relPath := filepath.Join("..", "node_modules", ".bin", exe)
+		if err := os.Symlink(relPath, dstPath); err != nil && !os.IsExist(err) {
+			return fmt.Errorf("failed to create symlink for %s: %w", exe, err)
 		}
 	}
 

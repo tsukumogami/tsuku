@@ -20,7 +20,7 @@ formula = "gdbm"
 action = "configure_make"
 source_dir = "."
 executables = ["gdbmtool"]
-configure_args = ["--disable-silent-rules", "--enable-libgdbm-compat", "--without-readline", "--disable-nls", "--disable-dependency-tracking"]
+configure_args = ["--disable-silent-rules", "--enable-libgdbm-compat", "--without-readline", "--disable-nls", "--disable-dependency-tracking", "MAKEINFO=true"]
 
 [verify]
 command = "gdbmtool --version"

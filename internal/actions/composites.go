@@ -246,10 +246,11 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 	// Build primitive steps
 	steps := []Step{
 		{
-			Action: "download",
+			Action: "download_file",
 			Params: map[string]interface{}{
-				"url":  downloadURL,
-				"dest": archiveFilename,
+				"url":      downloadURL,
+				"dest":     archiveFilename,
+				"checksum": checksum,
 			},
 			Checksum: checksum,
 			Size:     size,
@@ -544,10 +545,11 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 	// Return primitive steps
 	return []Step{
 		{
-			Action: "download",
+			Action: "download_file",
 			Params: map[string]interface{}{
-				"url":  url,
-				"dest": assetName,
+				"url":      url,
+				"dest":     assetName,
+				"checksum": checksum,
 			},
 			Checksum: checksum,
 			Size:     size,
@@ -812,10 +814,11 @@ func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interfa
 
 	steps := []Step{
 		{
-			Action: "download",
+			Action: "download_file",
 			Params: map[string]interface{}{
-				"url":  url,
-				"dest": expandedDownloadName,
+				"url":      url,
+				"dest":     expandedDownloadName,
+				"checksum": checksum,
 			},
 			Checksum: checksum,
 			Size:     size,
