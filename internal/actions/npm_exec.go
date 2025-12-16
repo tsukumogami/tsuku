@@ -243,6 +243,9 @@ func validateNodeVersion(constraint string, execPaths ...string) error {
 			env = append(env, "PATH="+pathVal)
 		}
 		cmd.Env = env
+		fmt.Printf("   Validating node version with PATH including: %v\n", execPaths)
+	} else {
+		fmt.Printf("   Validating node version with system PATH\n")
 	}
 
 	output, err := cmd.Output()

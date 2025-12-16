@@ -361,6 +361,9 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 			binDir := filepath.Join(execCtx.InstallDir, "bin")
 			if _, err := os.Stat(binDir); err == nil {
 				execCtx.ExecPaths = append(execCtx.ExecPaths, binDir)
+				fmt.Printf("   Added %s to ExecPaths\n", binDir)
+			} else {
+				fmt.Printf("   Warning: bin dir %s does not exist: %v\n", binDir, err)
 			}
 		}
 
