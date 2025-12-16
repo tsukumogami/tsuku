@@ -250,7 +250,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Set up force init flag for later use
 	forceInit := false
 	_ = forceInit   // will be used when creating session
-	_ = skipSandbox // TODO: pass to orchestrator when sandbox testing is implemented
+	_ = skipSandbox // skipSandbox is passed through session options
 
 	// Build request for use throughout
 	buildReq := builders.BuildRequest{
