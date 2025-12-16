@@ -218,12 +218,20 @@ func (e *Executor) resolveStep(
 				Deterministic: deterministic,
 			}
 
-			// For download actions, always download to cache the file for offline container execution.
-			// If checksum is provided (e.g., from Homebrew API), we still need the file cached.
+			// For download actions, cache the file for offline container execution.
+			// If Decompose already provided a checksum, it verified the download.
+			// Skip re-downloading for URLs that require special auth (e.g., GHCR).
 			if pstep.Action == "download" {
 				if url, ok := pstep.Params["url"].(string); ok {
 					rs.URL = url
-					if downloader != nil {
+
+					if pstep.Checksum != "" {
+						// Checksum provided by Decompose - it already verified the download
+						// This handles URLs requiring special auth (e.g., GHCR)
+						rs.Checksum = pstep.Checksum
+						rs.Size = pstep.Size
+					} else if downloader != nil {
+						// No checksum provided, need to download to compute it
 						result, err := downloader.Download(ctx, url)
 						if err != nil {
 							return nil, fmt.Errorf("failed to download for caching: %w", err)
@@ -232,19 +240,9 @@ func (e *Executor) resolveStep(
 						if evalCtx.DownloadCache != nil {
 							_ = evalCtx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
 						}
-						// Use provided checksum if available, otherwise use computed
-						if pstep.Checksum != "" {
-							rs.Checksum = pstep.Checksum
-							rs.Size = pstep.Size
-						} else {
-							rs.Checksum = result.Checksum
-							rs.Size = result.Size
-						}
+						rs.Checksum = result.Checksum
+						rs.Size = result.Size
 						_ = result.Cleanup()
-					} else if pstep.Checksum != "" {
-						// No downloader but checksum provided - use it (won't be cached)
-						rs.Checksum = pstep.Checksum
-						rs.Size = pstep.Size
 					}
 				}
 			} else if pstep.Checksum != "" {
