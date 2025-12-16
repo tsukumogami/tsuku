@@ -165,15 +165,22 @@ jobs:
           apt-get update
           apt-get install -y wget curl ca-certificates git
           # Some apt packages may pull in gcc as a dependency
-          # Remove or mask any system compilers to ensure zig is used
-          rm -f /usr/bin/gcc /usr/bin/cc /usr/bin/g++ /usr/bin/c++ 2>/dev/null || true
+          # Find and remove any system compilers to ensure zig is used
+          echo "Checking for system compilers..."
+          which gcc 2>/dev/null && echo "Found gcc at: $(which gcc)"
+          which cc 2>/dev/null && echo "Found cc at: $(which cc)"
+          # Remove gcc/cc from standard locations and alternatives
+          apt-get remove -y gcc gcc-* g++ 2>/dev/null || true
+          rm -f /usr/bin/gcc* /usr/bin/cc /usr/bin/g++* /usr/bin/c++ 2>/dev/null || true
+          update-alternatives --remove-all gcc 2>/dev/null || true
+          update-alternatives --remove-all cc 2>/dev/null || true
           # Verify no system compiler
           if command -v gcc &> /dev/null; then
-            echo "ERROR: gcc found in container!"
+            echo "ERROR: gcc still found at: $(which gcc)"
             exit 1
           fi
           if command -v cc &> /dev/null; then
-            echo "ERROR: cc found in container!"
+            echo "ERROR: cc still found at: $(which cc)"
             exit 1
           fi
           echo "Verified: No system compiler present"
