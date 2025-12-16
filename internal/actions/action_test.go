@@ -128,7 +128,6 @@ func TestNetworkValidator_AllActions(t *testing.T) {
 		"github_archive",
 		"github_file",
 		"homebrew",
-		"homebrew_source",
 	}
 
 	// Test actions that require network

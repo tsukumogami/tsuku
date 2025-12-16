@@ -233,6 +233,7 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"brew_install":      true,
 		"npm_install":       true,
 		"pipx_install":      true,
+		"pip_exec":          true,
 		"cargo_install":     true,
 		"go_install":        true,
 		"gem_install":       true,
@@ -241,7 +242,6 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"github_archive":    true,
 		"github_file":       true,
 		"homebrew":          true,
-		"homebrew_source":   true,
 		"configure_make":    true,
 	}
 
@@ -349,11 +349,6 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 	case "homebrew":
 		if _, ok := step.Params["formula"]; !ok {
 			result.addError(stepField, "homebrew action requires 'formula' parameter")
-		}
-
-	case "homebrew_source":
-		if _, ok := step.Params["formula"]; !ok {
-			result.addError(stepField, "homebrew_source action requires 'formula' parameter")
 		}
 
 	case "configure_make":
