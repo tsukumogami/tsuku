@@ -167,23 +167,23 @@ jobs:
           # Some apt packages may pull in gcc as a dependency
           # Find and remove any system compilers to ensure zig is used
           echo "Checking for system compilers..."
-          which gcc 2>/dev/null && echo "Found gcc at: $(which gcc)"
-          which cc 2>/dev/null && echo "Found cc at: $(which cc)"
+          echo "which gcc: $(which gcc 2>/dev/null || echo 'not found')"
+          echo "type gcc: $(type gcc 2>/dev/null || echo 'not found')"
+          echo "ls /usr/bin/gcc: $(ls -la /usr/bin/gcc* 2>/dev/null || echo 'not found')"
           # Remove gcc/cc from standard locations and alternatives
           apt-get remove -y gcc gcc-* g++ 2>/dev/null || true
           rm -f /usr/bin/gcc* /usr/bin/cc /usr/bin/g++* /usr/bin/c++ 2>/dev/null || true
           update-alternatives --remove-all gcc 2>/dev/null || true
           update-alternatives --remove-all cc 2>/dev/null || true
-          # Verify no system compiler
-          if command -v gcc &> /dev/null; then
-            echo "ERROR: gcc still found at: $(which gcc)"
+          # Clear shell command hash table
+          hash -r 2>/dev/null || true
+          # Verify no system compiler binary exists (not functions/aliases)
+          if [ -x /usr/bin/gcc ] || [ -x /usr/bin/cc ]; then
+            echo "ERROR: gcc binary still found!"
+            ls -la /usr/bin/gcc* /usr/bin/cc 2>/dev/null || true
             exit 1
           fi
-          if command -v cc &> /dev/null; then
-            echo "ERROR: cc still found at: $(which cc)"
-            exit 1
-          fi
-          echo "Verified: No system compiler present"
+          echo "Verified: No system compiler binary present"
 
       - name: Set up Go
         uses: actions/setup-go@v5
