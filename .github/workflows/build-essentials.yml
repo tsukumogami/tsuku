@@ -5,24 +5,26 @@ on:
     branches: [main]
     paths:
       - 'internal/recipe/recipes/**/*.toml'
-      - 'internal/actions/homebrew_*.go'
+      - 'internal/actions/homebrew*.go'
       - 'internal/actions/configure_make.go'
       - 'internal/actions/extract.go'
       - 'testdata/recipes/*.toml'
+      - 'test/scripts/verify-*.sh'
       - '.github/workflows/build-essentials.yml'
   pull_request:
     branches: [main]
     paths:
       - 'internal/recipe/recipes/**/*.toml'
-      - 'internal/actions/homebrew_*.go'
+      - 'internal/actions/homebrew*.go'
       - 'internal/actions/configure_make.go'
       - 'internal/actions/extract.go'
       - 'testdata/recipes/*.toml'
+      - 'test/scripts/verify-*.sh'
       - '.github/workflows/build-essentials.yml'
 
 jobs:
-  # Test homebrew action with make and gdbm
-  test-homebrew-bottle:
+  # Test homebrew action with make, gdbm, and pngcrush
+  test-homebrew:
     name: "${{ matrix.platform.name }}: ${{ matrix.tool }}"
     runs-on: ${{ matrix.platform.runner }}
     strategy:
@@ -37,6 +39,11 @@ jobs:
           - make
           - gdbm
           - pngcrush  # Tests dependency chain: pngcrush -> libpng -> zlib
+        exclude:
+          # gdbm bottles on macOS have unrelocated paths and gdbmtool crashes
+          # See: https://github.com/tsukumogami/tsuku/issues/605
+          - platform: { os: macos }
+            tool: gdbm
 
     steps:
       - uses: actions/checkout@v4
@@ -54,6 +61,15 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force ${{ matrix.tool }}
+
+      - name: "Verify tool functionality"
+        run: ./test/scripts/verify-tool.sh ${{ matrix.tool }}
+
+      - name: "Verify relocation"
+        run: ./test/scripts/verify-relocation.sh ${{ matrix.tool }}
+
+      - name: "Verify no system deps"
+        run: ./test/scripts/verify-no-system-deps.sh ${{ matrix.tool }}
 
   # Test configure_make action with gdbm-source (source build)
   test-configure-make:
@@ -89,6 +105,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force gdbm-source
 
+      - name: "Verify tool functionality"
+        run: ./test/scripts/verify-tool.sh gdbm-source
+
   # Test zig installation
   test-zig:
     name: "${{ matrix.platform.name }}: zig"
@@ -119,9 +138,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force zig
 
-      - name: Verify zig cc works
-        run: |
-          echo '#include <stdio.h>
-          int main() { printf("Hello from zig cc!\n"); return 0; }' > /tmp/test.c
-          ~/.tsuku/tools/current/zig cc /tmp/test.c -o /tmp/test
-          /tmp/test
+      - name: "Verify tool functionality"
+        run: ./test/scripts/verify-tool.sh zig
+
+      - name: "Verify relocation"
+        run: ./test/scripts/verify-relocation.sh zig
+
+      - name: "Verify no system deps"
+        run: ./test/scripts/verify-no-system-deps.sh zig
