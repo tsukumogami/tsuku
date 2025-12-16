@@ -166,6 +166,45 @@ jobs:
 - **Reliable**: No external API calls during builds
 - **Auditable**: Plans document exactly what was installed
 
+## Sandbox Testing with Plans
+
+Combine plan-based installation with sandbox testing to validate installations in isolation.
+
+### Testing Plans in Containers
+
+```bash
+# Generate and test a plan in a sandbox
+tsuku eval kubectl > kubectl-plan.json
+tsuku install --plan kubectl-plan.json --sandbox
+
+# Or pipe directly
+tsuku eval kubectl | tsuku install --plan - --sandbox
+```
+
+This is useful for:
+- **Pre-production validation**: Test plans before distributing to production
+- **Recipe development**: Verify local recipe changes in isolation
+- **CI/CD pipelines**: Validate installations without affecting the host
+
+### CI Integration with Sandbox Testing
+
+```yaml
+# .github/workflows/build.yml
+jobs:
+  test-tools:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate and test plan
+        run: |
+          ./tsuku eval kubectl > kubectl-plan.json
+          ./tsuku install --plan kubectl-plan.json --sandbox
+
+      - name: Install for real (after sandbox validation)
+        run: ./tsuku install --plan kubectl-plan.json
+```
+
+The sandbox step ensures the plan is valid before actual installation.
+
 ## Plan Format Reference
 
 Installation plans are JSON files with this structure:
