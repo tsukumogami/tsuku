@@ -401,12 +401,12 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 	fmt.Printf("   Executables: %v\n", executables)
 	fmt.Printf("   Using npm: %s\n", npmPath)
 
-	// Create temporary directory for installation
-	tempDir, err := os.MkdirTemp("", "tsuku-npm-exec-*")
-	if err != nil {
-		return fmt.Errorf("failed to create temp directory: %w", err)
+	// Write package.json and package-lock.json to the install directory.
+	// npm ci with --prefix looks for these files in the prefix directory,
+	// not the current working directory.
+	if err := os.MkdirAll(ctx.InstallDir, 0755); err != nil {
+		return fmt.Errorf("failed to create install directory: %w", err)
 	}
-	defer os.RemoveAll(tempDir)
 
 	// Create package.json with the dependency
 	packageJSON := map[string]interface{}{
@@ -422,13 +422,13 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 		return fmt.Errorf("failed to marshal package.json: %w", err)
 	}
 
-	packageJSONPath := filepath.Join(tempDir, "package.json")
+	packageJSONPath := filepath.Join(ctx.InstallDir, "package.json")
 	if err := os.WriteFile(packageJSONPath, packageJSONBytes, 0644); err != nil {
 		return fmt.Errorf("failed to write package.json: %w", err)
 	}
 
 	// Write the lockfile captured at eval time
-	lockfilePath := filepath.Join(tempDir, "package-lock.json")
+	lockfilePath := filepath.Join(ctx.InstallDir, "package-lock.json")
 	if err := os.WriteFile(lockfilePath, []byte(packageLock), 0644); err != nil {
 		return fmt.Errorf("failed to write package-lock.json: %w", err)
 	}
@@ -468,11 +468,11 @@ func (a *NpmExecAction) executePackageInstall(ctx *ExecutionContext, params map[
 	if ignoreScripts {
 		ciArgs = append(ciArgs, "--ignore-scripts")
 	}
-	// Install to the target directory
+	// Install to the target directory (package.json and lockfile are already there)
 	ciArgs = append(ciArgs, fmt.Sprintf("--prefix=%s", ctx.InstallDir))
 
 	ciCmd := exec.CommandContext(ctx.Context, npmPath, ciArgs...)
-	ciCmd.Dir = tempDir
+	ciCmd.Dir = ctx.InstallDir
 	ciCmd.Env = env
 
 	output, err := ciCmd.CombinedOutput()
