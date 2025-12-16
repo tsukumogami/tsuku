@@ -41,6 +41,19 @@ type InstallationPlan struct {
 
 	// Resolved steps
 	Steps []ResolvedStep `json:"steps"`
+
+	// Verify contains the verification command and pattern from the recipe.
+	// This is needed when executing from a plan file without the original recipe.
+	Verify *PlanVerify `json:"verify,omitempty"`
+
+	// Metadata from the recipe (needed for install_binaries directory mode checks)
+	RecipeType string `json:"recipe_type,omitempty"` // "tool" or "library"
+}
+
+// PlanVerify captures verification information from the recipe.
+type PlanVerify struct {
+	Command string `json:"command,omitempty"`
+	Pattern string `json:"pattern,omitempty"`
 }
 
 // Platform identifies the target operating system and architecture.

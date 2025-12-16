@@ -131,25 +131,25 @@ func (e *LLMAuthError) Suggestion() string {
 	return fmt.Sprintf("Verify %s is set correctly\nDocs: %s", e.EnvVar, e.DocsURL)
 }
 
-// ValidationError indicates recipe validation failed after repair attempts.
-type ValidationError struct {
+// SandboxError indicates recipe sandbox testing failed after repair attempts.
+type SandboxError struct {
 	Tool           string // Tool name being created
 	RepairAttempts int    // Number of repair attempts made
-	LastOutput     string // Last validation output (truncated)
+	LastOutput     string // Last sandbox output (truncated)
 	Err            error  // Underlying error
 }
 
 // Error implements the error interface.
-func (e *ValidationError) Error() string {
-	return fmt.Sprintf("recipe validation failed after %d repair attempts", e.RepairAttempts)
+func (e *SandboxError) Error() string {
+	return fmt.Sprintf("recipe sandbox testing failed after %d repair attempts", e.RepairAttempts)
 }
 
 // Unwrap returns the underlying error.
-func (e *ValidationError) Unwrap() error {
+func (e *SandboxError) Unwrap() error {
 	return e.Err
 }
 
 // Suggestion returns actionable steps for the user.
-func (e *ValidationError) Suggestion() string {
-	return fmt.Sprintf("The generated recipe could not be automatically fixed.\n\nTo skip validation (use with caution):\n  tsuku create %s --from github:<owner>/<repo> --skip-validation\n\nTo report this issue:\n  https://github.com/tsukumogami/tsuku/issues/new", e.Tool)
+func (e *SandboxError) Suggestion() string {
+	return fmt.Sprintf("The generated recipe could not be automatically fixed.\n\nTo skip sandbox testing (use with caution):\n  tsuku create %s --from github:<owner>/<repo> --skip-sandbox\n\nTo report this issue:\n  https://github.com/tsukumogami/tsuku/issues/new", e.Tool)
 }
