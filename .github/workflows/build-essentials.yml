@@ -208,11 +208,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Add tsuku tools to PATH so zig is available for the compiler fallback
-          export PATH="$HOME/.tsuku/tools/current:$HOME/.tsuku/bin:$PATH"
+          # Don't add tsuku tools to PATH - the Go code handles zig setup internally
+          # and we want configure to detect system make, not the Homebrew make
           echo "Building gdbm-source - should use zig cc since no gcc exists"
-          echo "make location: $(which make)"
-          echo "zig location: $(which zig 2>/dev/null || echo 'not in PATH directly')"
+          echo "System make: $(which make)"
           ./tsuku install --force gdbm-source
 
       - name: "Verify gdbm-source functionality"
