@@ -33,8 +33,6 @@ jobs:
           - test: { id: "T16" }  # golang
           - test: { id: "T19" }  # nodejs
           - test: { id: "T50" }  # perl
-          # npm_install not yet evaluable - see #608
-          - test: { id: "T23" }
           # pipx_install not yet evaluable - see #609
           - test: { id: "T25" }
           # gem_install not yet evaluable - see #610
