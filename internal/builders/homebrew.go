@@ -104,8 +104,9 @@ type HomebrewSession struct {
 	builder *HomebrewBuilder
 	req     BuildRequest
 
-	// LLM state
+	// LLM state (provider may be nil for bottle mode until needed)
 	provider     llm.Provider
+	factory      *llm.Factory // For deferred LLM initialization in bottle mode
 	messages     []llm.Message
 	systemPrompt string
 	tools        []llm.ToolDef
@@ -330,13 +331,9 @@ func (b *HomebrewBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool,
 }
 
 // NewSession creates a new build session for the given request.
-// The session fetches Homebrew metadata and prepares for LLM generation.
+// The session fetches Homebrew metadata and prepares for generation.
+// For bottle mode, LLM is only initialized if deterministic generation fails.
 func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
-	// Check LLM prerequisites
-	if err := CheckLLMPrerequisites(opts); err != nil {
-		return nil, err
-	}
-
 	// Parse SourceArg to extract formula name and source build flag
 	sourceArg := req.SourceArg
 	if sourceArg == "" {
@@ -345,21 +342,6 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 	formula, forceSource, err := parseSourceArg(sourceArg)
 	if err != nil {
 		return nil, fmt.Errorf("invalid source argument: %w", err)
-	}
-
-	// Get or create LLM factory
-	factory := b.factory
-	if factory == nil {
-		factory, err = llm.NewFactory(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("failed to create LLM factory: %w", err)
-		}
-	}
-
-	// Get provider from factory
-	provider, err := factory.GetProvider(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("no LLM provider available: %w", err)
 	}
 
 	// Set up progress reporter
@@ -400,6 +382,36 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 		progress.OnStageDone(fmt.Sprintf("v%s%s", formulaInfo.Versions.Stable, suffix))
 	}
 
+	// For source mode, we require LLM upfront (no deterministic path)
+	// For bottle mode, we defer LLM initialization until needed
+	var provider llm.Provider
+	var factory *llm.Factory
+	if isSourceMode {
+		// Source mode requires LLM - check prerequisites and initialize
+		if err := CheckLLMPrerequisites(opts); err != nil {
+			return nil, err
+		}
+
+		factory = b.factory
+		if factory == nil {
+			factory, err = llm.NewFactory(ctx)
+			if err != nil {
+				return nil, fmt.Errorf("failed to create LLM factory: %w", err)
+			}
+		}
+
+		provider, err = factory.GetProvider(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("no LLM provider available: %w", err)
+		}
+
+		// Emit generation started event for source mode
+		b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, "homebrew-source:"+formula))
+	} else {
+		// Bottle mode - store factory for deferred initialization
+		factory = b.factory
+	}
+
 	// Build generation context
 	genCtx := &homebrewGenContext{
 		formula:     formula,
@@ -427,17 +439,11 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 		{Role: llm.RoleUser, Content: userMessage},
 	}
 
-	// Emit generation started event
-	sourceType := "homebrew:"
-	if isSourceMode {
-		sourceType = "homebrew-source:"
-	}
-	b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, sourceType+formula))
-
 	return &HomebrewSession{
 		builder:      b,
 		req:          req,
-		provider:     provider,
+		provider:     provider, // May be nil for bottle mode (initialized lazily)
+		factory:      factory,  // For deferred LLM initialization
 		messages:     messages,
 		systemPrompt: systemPrompt,
 		tools:        tools,
@@ -502,9 +508,49 @@ func (s *HomebrewSession) generateDeterministic(ctx context.Context) (*BuildResu
 	}, nil
 }
 
+// ensureLLMProvider initializes the LLM provider if not already done.
+// This is called lazily when we need to fall back to LLM after deterministic fails.
+func (s *HomebrewSession) ensureLLMProvider(ctx context.Context) error {
+	if s.provider != nil {
+		return nil // Already initialized
+	}
+
+	// Initialize factory if needed
+	factory := s.factory
+	if factory == nil {
+		var err error
+		factory, err = llm.NewFactory(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to create LLM factory: %w", err)
+		}
+		s.factory = factory
+	}
+
+	// Get provider
+	provider, err := factory.GetProvider(ctx)
+	if err != nil {
+		return fmt.Errorf("no LLM provider available: %w", err)
+	}
+	s.provider = provider
+
+	// Emit generation started event now that we're using LLM
+	s.builder.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), s.req.Package, "homebrew:"+s.formula))
+
+	return nil
+}
+
 // generateBottle generates a bottle-based recipe.
 func (s *HomebrewSession) generateBottle(ctx context.Context) (*BuildResult, error) {
 	s.usedDeterministic = false
+
+	// Ensure LLM provider is initialized (may have been deferred)
+	if err := s.ensureLLMProvider(ctx); err != nil {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, err
+	}
+
 	// Run conversation loop to get recipe data
 	recipeData, turnUsage, err := s.builder.runConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
 	if err != nil {
