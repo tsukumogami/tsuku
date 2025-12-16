@@ -597,8 +597,9 @@ func TestValidatePlan_EcosystemPrimitives(t *testing.T) {
 	}
 }
 
-func TestValidatePlan_NonDecomposableAction(t *testing.T) {
-	// Actions that are registered but not primitive and not decomposable should fail
+func TestValidatePlan_NonEvaluableActionsAllowed(t *testing.T) {
+	// Non-evaluable actions like run_command, npm_install, etc. are allowed in plans
+	// They're not primitives but they execute as-is without decomposition
 	plan := &InstallationPlan{
 		FormatVersion: 2,
 		Tool:          "test-tool",
@@ -606,7 +607,7 @@ func TestValidatePlan_NonDecomposableAction(t *testing.T) {
 		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
-				Action:    "run_command", // Known but not primitive and not decomposable
+				Action:    "run_command", // Known, not primitive, not decomposable - but valid
 				Params:    map[string]interface{}{"command": "echo test"},
 				Evaluable: false,
 			},
@@ -614,8 +615,8 @@ func TestValidatePlan_NonDecomposableAction(t *testing.T) {
 	}
 
 	err := ValidatePlan(plan)
-	if err == nil {
-		t.Error("ValidatePlan() should return error for non-primitive non-decomposable action")
+	if err != nil {
+		t.Errorf("ValidatePlan() should allow non-evaluable actions like run_command, got error: %v", err)
 	}
 }
 

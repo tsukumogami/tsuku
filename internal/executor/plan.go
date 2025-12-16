@@ -178,15 +178,21 @@ func (e *PlanValidationError) Error() string {
 	return fmt.Sprintf("invalid plan: %d errors:\n  - %s", len(e.Errors), strings.Join(msgs, "\n  - "))
 }
 
-// ValidatePlan checks that a plan contains only primitive actions and that
+// ValidatePlan checks that a plan contains valid actions and that
 // download actions have required checksum data. Returns nil if the plan is valid,
 // or a PlanValidationError containing all validation failures.
 //
 // Validation rules:
 //   - Platform must match the current OS and architecture
-//   - All step actions must be primitives (as defined by actions.IsPrimitive)
-//   - Download actions must have a non-empty Checksum field (security requirement)
+//   - Decomposable (composite) actions must be decomposed at eval time
+//   - Unknown actions are rejected
+//   - The composite "download" action is rejected (use download_file primitive)
+//   - download_file actions must have a non-empty Checksum field (security requirement)
 //   - Format version must be supported (currently only version 2)
+//
+// Note: Non-evaluable actions like npm_install, run_command, etc. are allowed
+// in plans even though they're not primitives - they execute as-is without
+// decomposition.
 func ValidatePlan(plan *InstallationPlan) error {
 	var errors []ValidationError
 
@@ -211,37 +217,34 @@ func ValidatePlan(plan *InstallationPlan) error {
 
 	// Validate each step
 	for i, step := range plan.Steps {
-		// Check if action is a primitive
-		if !actions.IsPrimitive(step.Action) {
-			// Check if it's a known composite action
-			if actions.IsDecomposable(step.Action) {
-				errors = append(errors, ValidationError{
-					Step:    i,
-					Action:  step.Action,
-					Message: fmt.Sprintf("composite action %q should have been decomposed at eval time", step.Action),
-				})
-			} else if actions.Get(step.Action) != nil {
-				errors = append(errors, ValidationError{
-					Step:    i,
-					Action:  step.Action,
-					Message: fmt.Sprintf("action %q is neither primitive nor decomposable", step.Action),
-				})
-			} else {
-				errors = append(errors, ValidationError{
-					Step:    i,
-					Action:  step.Action,
-					Message: fmt.Sprintf("unknown action %q", step.Action),
-				})
-			}
-		}
-
-		// Reject composite download action in plans - should be decomposed to download_file
+		// Reject composite download action - should be decomposed to download_file
 		if step.Action == "download" {
 			errors = append(errors, ValidationError{
 				Step:    i,
 				Action:  step.Action,
 				Message: "download action should not appear in plans (use download_file primitive)",
 			})
+			continue
+		}
+
+		// Check if action is decomposable (composite) - these should have been decomposed
+		if actions.IsDecomposable(step.Action) {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: fmt.Sprintf("composite action %q should have been decomposed at eval time", step.Action),
+			})
+			continue
+		}
+
+		// Check if action is unknown
+		if actions.Get(step.Action) == nil {
+			errors = append(errors, ValidationError{
+				Step:    i,
+				Action:  step.Action,
+				Message: fmt.Sprintf("unknown action %q", step.Action),
+			})
+			continue
 		}
 
 		// Check checksum for download_file actions
