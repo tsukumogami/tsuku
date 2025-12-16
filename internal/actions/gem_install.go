@@ -8,12 +8,20 @@ import (
 	"strings"
 )
 
+// Ensure GemInstallAction implements Decomposable
+var _ Decomposable = (*GemInstallAction)(nil)
+
 // GemInstallAction installs Ruby gems with GEM_HOME isolation
 type GemInstallAction struct{ BaseAction }
 
-// Dependencies returns ruby as both install-time and runtime dependency.
+// Dependencies returns ruby as eval-time, install-time, and runtime dependency.
+// EvalTime is needed because Decompose() runs bundler to generate Gemfile.lock.
 func (GemInstallAction) Dependencies() ActionDeps {
-	return ActionDeps{InstallTime: []string{"ruby"}, Runtime: []string{"ruby"}}
+	return ActionDeps{
+		InstallTime: []string{"ruby"},
+		Runtime:     []string{"ruby"},
+		EvalTime:    []string{"ruby"}, // bundler comes with ruby
+	}
 }
 
 // RequiresNetwork returns true because gem_install fetches gems from RubyGems.org.
@@ -279,4 +287,305 @@ func isValidGemVersion(version string) bool {
 	}
 
 	return true
+}
+
+// Decompose converts a gem_install composite action into a gem_exec primitive step.
+// This is called during plan generation to capture the Gemfile.lock at eval time.
+//
+// The decomposition:
+//  1. Creates a temporary directory with a minimal Gemfile
+//  2. Runs `bundle lock --add-checksums` to generate Gemfile.lock
+//  3. Returns a gem_exec step with the captured lock_data
+func (a *GemInstallAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Get gem name (required)
+	gemName, ok := GetString(params, "gem")
+	if !ok {
+		return nil, fmt.Errorf("gem_install action requires 'gem' parameter")
+	}
+
+	// Validate gem name
+	if !isValidGemName(gemName) {
+		return nil, fmt.Errorf("invalid gem name '%s'", gemName)
+	}
+
+	// Get executables list (required)
+	executables, ok := GetStringSlice(params, "executables")
+	if !ok || len(executables) == 0 {
+		return nil, fmt.Errorf("gem_install action requires 'executables' parameter with at least one executable")
+	}
+
+	// Use Version from context
+	version := ctx.Version
+	if version == "" {
+		return nil, fmt.Errorf("gem_install decomposition requires a resolved version")
+	}
+
+	// Validate version format
+	if !isValidGemVersion(version) {
+		return nil, fmt.Errorf("invalid version format '%s'", version)
+	}
+
+	// Special case: bundler cannot install itself via bundle install
+	// Use direct gem install instead. This is a known architectural limitation
+	// where bundler's self-referential nature prevents decomposition.
+	// See issue #XXX for further investigation.
+	if gemName == "bundler" {
+		return a.decomposeBundlerDirectInstall(ctx, version, executables)
+	}
+
+	// Find bundler from ruby installation
+	bundlerPath := findBundlerForEval()
+	if bundlerPath == "" {
+		return nil, fmt.Errorf("bundler not found: install Ruby with bundler first (tsuku install ruby)")
+	}
+
+	// Create temp directory for lockfile generation
+	tempDir, err := os.MkdirTemp("", "tsuku-gem-decompose-*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Generate Gemfile.lock using bundle lock
+	lockData, err := generateGemfileLock(ctx, bundlerPath, gemName, version, tempDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate Gemfile.lock: %w", err)
+	}
+
+	// Get Ruby version for metadata (optional)
+	rubyVersion := getRubyVersionForGem()
+
+	// Build gem_exec params
+	gemExecParams := map[string]interface{}{
+		"gem":         gemName,
+		"version":     version,
+		"executables": executables,
+		"lock_data":   lockData,
+	}
+
+	// Add Ruby version info if available
+	if rubyVersion != "" {
+		gemExecParams["ruby_version"] = rubyVersion
+	}
+
+	return []Step{
+		{
+			Action: "gem_exec",
+			Params: gemExecParams,
+		},
+	}, nil
+}
+
+// findBundlerForEval finds the bundler executable for eval-time decomposition.
+func findBundlerForEval() string {
+	// Try tsuku's installed Ruby first
+	tsukuHome := os.Getenv("TSUKU_HOME")
+	if tsukuHome == "" {
+		homeDir, err := os.UserHomeDir()
+		if err == nil {
+			tsukuHome = filepath.Join(homeDir, ".tsuku")
+		}
+	}
+
+	if tsukuHome != "" {
+		// Look for ruby installation with bundler
+		patterns := []string{
+			filepath.Join(tsukuHome, "tools", "ruby-*", "bin", "bundle"),
+			filepath.Join(tsukuHome, "tools", "current", "bin", "bundle"),
+		}
+		for _, pattern := range patterns {
+			matches, _ := filepath.Glob(pattern)
+			if len(matches) > 0 {
+				return matches[0]
+			}
+		}
+
+		// Check if bundler symlink exists in bin
+		bundlerBin := filepath.Join(tsukuHome, "bin", "bundle")
+		if _, err := os.Stat(bundlerBin); err == nil {
+			return bundlerBin
+		}
+	}
+
+	// Try system bundler
+	path, err := exec.LookPath("bundle")
+	if err == nil {
+		return path
+	}
+
+	return ""
+}
+
+// generateGemfileLock generates a Gemfile.lock using bundle lock.
+// For bundler itself, ensures the target version is available since bundler uses
+// itself to generate lockfiles and older versions may not support newer versions.
+func generateGemfileLock(ctx *EvalContext, bundlerPath, gemName, version, tempDir string) (string, error) {
+	// Write minimal Gemfile
+	gemfilePath := filepath.Join(tempDir, "Gemfile")
+	gemfileContent := fmt.Sprintf("source 'https://rubygems.org'\ngem '%s', '= %s'\n", gemName, version)
+	if err := os.WriteFile(gemfilePath, []byte(gemfileContent), 0644); err != nil {
+		return "", fmt.Errorf("failed to write Gemfile: %w", err)
+	}
+
+	// When generating lockfile for bundler itself, ensure the target version is available.
+	// Bundler uses itself to generate lockfiles, and older bundler versions may not
+	// support resolving dependencies for newer bundler versions. This follows bundler's
+	// documented pattern: "gem install bundler:VERSION && bundle.rb _VERSION_ lock"
+	var bundlerCmd string
+	var args []string
+	var evalGemHome string
+
+	if gemName == "bundler" {
+		// Find gem command to install specific bundler version
+		gemPath, err := exec.LookPath("gem")
+		if err != nil {
+			// Try tsuku's ruby
+			tsukuHome := os.Getenv("TSUKU_HOME")
+			if tsukuHome == "" {
+				homeDir, _ := os.UserHomeDir()
+				tsukuHome = filepath.Join(homeDir, ".tsuku")
+			}
+			rubyGemPath := filepath.Join(tsukuHome, "tools", "ruby-*", "bin", "gem")
+			matches, _ := filepath.Glob(rubyGemPath)
+			if len(matches) > 0 {
+				gemPath = matches[0]
+			} else {
+				return "", fmt.Errorf("gem command not found, needed to install bundler %s", version)
+			}
+		}
+
+		// Install bundler to tsuku's eval-deps directory for reuse
+		// This keeps it self-contained but persistent across evaluations
+		tsukuHome := os.Getenv("TSUKU_HOME")
+		if tsukuHome == "" {
+			homeDir, _ := os.UserHomeDir()
+			tsukuHome = filepath.Join(homeDir, ".tsuku")
+		}
+		evalGemHome = filepath.Join(tsukuHome, "eval-deps", "ruby-gems")
+		if err := os.MkdirAll(evalGemHome, 0755); err != nil {
+			return "", fmt.Errorf("failed to create eval gem home: %w", err)
+		}
+
+		// Check if bundler is already installed to avoid reinstalling
+		bundlerGemDir := filepath.Join(evalGemHome, "gems", "bundler-"+version)
+		if _, err := os.Stat(bundlerGemDir); err == nil {
+			// Already installed, skip
+		} else {
+			// Install bundler (omit --no-document for compatibility with older gem)
+			installCmd := exec.CommandContext(ctx.Context, gemPath, "install", "bundler", "--version", version)
+			installCmd.Dir = tempDir
+			installCmd.Env = append(os.Environ(),
+				"GEM_HOME="+evalGemHome,
+				"GEM_PATH="+evalGemHome,
+			)
+			installOutput, installErr := installCmd.CombinedOutput()
+			if installErr != nil {
+				return "", fmt.Errorf("failed to install bundler %s: %w\nOutput: %s", version, installErr, string(installOutput))
+			}
+		}
+
+		// Use bundler with _version_ syntax, pointing to the eval gem home
+		bundlerCmd = bundlerPath
+		args = []string{"_" + version + "_", "lock", "--add-checksums"}
+	} else {
+		// Normal case: use bundler directly for non-bundler gems
+		bundlerCmd = bundlerPath
+		args = []string{"lock", "--add-checksums"}
+	}
+
+	cmd := exec.CommandContext(ctx.Context, bundlerCmd, args...)
+	cmd.Dir = tempDir
+	if evalGemHome != "" {
+		// When we installed bundler for evaluation, point to that gem home
+		cmd.Env = append(os.Environ(),
+			"GEM_HOME="+evalGemHome,
+			"GEM_PATH="+evalGemHome,
+		)
+	} else {
+		cmd.Env = os.Environ()
+	}
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("bundle lock failed: %w\nOutput: %s", err, string(output))
+	}
+
+	// Read generated Gemfile.lock
+	lockPath := filepath.Join(tempDir, "Gemfile.lock")
+	lockData, err := os.ReadFile(lockPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read Gemfile.lock: %w", err)
+	}
+
+	return string(lockData), nil
+}
+
+// decomposeBundlerDirectInstall handles bundler self-installation using gem install.
+// Bundler cannot install itself via bundle install, so we use gem install directly.
+func (a *GemInstallAction) decomposeBundlerDirectInstall(ctx *EvalContext, version string, executables []string) ([]Step, error) {
+	// Use install_gem_direct primitive which runs: gem install bundler -v VERSION
+	// Then creates symlinks for the executables
+	return []Step{
+		{
+			Action: "install_gem_direct",
+			Params: map[string]interface{}{
+				"gem":         "bundler",
+				"version":     version,
+				"executables": executables,
+			},
+		},
+	}, nil
+}
+
+// getRubyVersionForGem returns the Ruby version for metadata.
+func getRubyVersionForGem() string {
+	rubyPath, err := exec.LookPath("ruby")
+	if err != nil {
+		// Try tsuku's ruby
+		tsukuHome := os.Getenv("TSUKU_HOME")
+		if tsukuHome == "" {
+			homeDir, err := os.UserHomeDir()
+			if err == nil {
+				tsukuHome = filepath.Join(homeDir, ".tsuku")
+			}
+		}
+		if tsukuHome != "" {
+			patterns := []string{
+				filepath.Join(tsukuHome, "tools", "ruby-*", "bin", "ruby"),
+				filepath.Join(tsukuHome, "bin", "ruby"),
+			}
+			for _, pattern := range patterns {
+				matches, _ := filepath.Glob(pattern)
+				if len(matches) > 0 {
+					rubyPath = matches[0]
+					break
+				}
+			}
+		}
+	}
+
+	if rubyPath == "" {
+		return ""
+	}
+
+	cmd := exec.Command(rubyPath, "--version")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	// Parse "ruby X.Y.Z..." format
+	outputStr := string(output)
+	parts := strings.Fields(outputStr)
+	if len(parts) >= 2 && parts[0] == "ruby" {
+		// Extract just the version number (before any suffix)
+		version := parts[1]
+		// Remove suffix like "p123"
+		if idx := strings.Index(version, "p"); idx > 0 {
+			version = version[:idx]
+		}
+		return version
+	}
+
+	return ""
 }

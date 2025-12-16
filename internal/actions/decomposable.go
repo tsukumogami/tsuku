@@ -87,16 +87,17 @@ var primitives = map[string]bool{
 	"text_replace":      true,
 	"homebrew_relocate": true,
 	// Ecosystem primitives - have residual non-determinism
-	"cargo_build":    true,
-	"cmake_build":    true,
-	"configure_make": true,
-	"cpan_install":   true,
-	"gem_exec":       true,
-	"go_build":       true,
-	"nix_realize":    true,
-	"npm_exec":       true,
-	"pip_exec":       true,
-	"pip_install":    true,
+	"cargo_build":        true,
+	"cmake_build":        true,
+	"configure_make":     true,
+	"cpan_install":       true,
+	"gem_exec":           true,
+	"go_build":           true,
+	"install_gem_direct": true, // Direct gem install for bundler self-installation
+	"nix_realize":        true,
+	"npm_exec":           true,
+	"pip_exec":           true,
+	"pip_install":        true,
 }
 
 // IsPrimitive returns true if the action is a primitive.

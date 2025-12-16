@@ -55,18 +55,19 @@ func TestIsPrimitive(t *testing.T) {
 		"set_rpath",
 		"link_dependencies",
 		"install_libraries",
-		"apply_patch_file",  // Core primitive
-		"text_replace",      // Core primitive
-		"homebrew_relocate", // Core primitive
-		"cargo_build",       // Ecosystem primitive
-		"cmake_build",       // Ecosystem primitive
-		"configure_make",    // Ecosystem primitive
-		"cpan_install",      // Ecosystem primitive
-		"gem_exec",          // Ecosystem primitive
-		"go_build",          // Ecosystem primitive
-		"nix_realize",       // Ecosystem primitive
-		"npm_exec",          // Ecosystem primitive
-		"pip_install",       // Ecosystem primitive
+		"apply_patch_file",   // Core primitive
+		"text_replace",       // Core primitive
+		"homebrew_relocate",  // Core primitive
+		"cargo_build",        // Ecosystem primitive
+		"cmake_build",        // Ecosystem primitive
+		"configure_make",     // Ecosystem primitive
+		"cpan_install",       // Ecosystem primitive
+		"gem_exec",           // Ecosystem primitive
+		"go_build",           // Ecosystem primitive
+		"install_gem_direct", // Ecosystem primitive
+		"nix_realize",        // Ecosystem primitive
+		"npm_exec",           // Ecosystem primitive
+		"pip_install",        // Ecosystem primitive
 	}
 
 	for _, name := range primitives {
@@ -99,9 +100,9 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 21 primitives (11 core + 10 ecosystem)
-	if len(prims) != 21 {
-		t.Errorf("len(Primitives()) = %d, want 21", len(prims))
+	// Should have exactly 22 primitives (11 core + 11 ecosystem)
+	if len(prims) != 22 {
+		t.Errorf("len(Primitives()) = %d, want 22", len(prims))
 	}
 
 	// Sort for deterministic comparison
@@ -120,6 +121,7 @@ func TestPrimitives(t *testing.T) {
 		"go_build",
 		"homebrew_relocate",
 		"install_binaries",
+		"install_gem_direct",
 		"install_libraries",
 		"link_dependencies",
 		"nix_realize",
@@ -515,6 +517,7 @@ func TestIsDeterministic(t *testing.T) {
 		"npm_exec",
 		"pip_install",
 		"gem_exec",
+		"install_gem_direct",
 		"cpan_install",
 	}
 
