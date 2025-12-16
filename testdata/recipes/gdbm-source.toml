@@ -13,8 +13,16 @@ source = "homebrew"
 formula = "gdbm"
 
 [[steps]]
-action = "homebrew_source"
-formula = "gdbm"
+action = "download_file"
+url = "https://ftpmirror.gnu.org/gnu/gdbm/gdbm-1.26.tar.gz"
+dest = "gdbm-1.26.tar.gz"
+checksum = "6a24504a14de4a744103dcb936be976df6fbe88ccff26065e54c1c47946f4a5e"
+
+[[steps]]
+action = "extract"
+archive = "gdbm-1.26.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
 
 [[steps]]
 action = "configure_make"

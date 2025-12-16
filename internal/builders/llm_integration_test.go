@@ -31,7 +31,7 @@ type llmTestCase struct {
 	Recipe      string   `json:"recipe"`       // Path to ground truth recipe
 	Action      string   `json:"action"`       // Expected action type
 	Format      string   `json:"format"`       // Archive format (for github_archive)
-	BuildSystem string   `json:"build_system"` // Build system (for homebrew_source)
+	BuildSystem string   `json:"build_system"` // Build system (for source builds)
 	Desc        string   `json:"desc"`         // Test description
 	Features    []string `json:"features"`     // Features being tested
 }
@@ -209,7 +209,7 @@ func validateHomebrewSourceRecipe(t *testing.T, tc llmTestCase, generated, expec
 		t.Fatal("Generated recipe has no steps")
 	}
 
-	// Check that first step is homebrew_source
+	// Check that first step matches expected action
 	step := generated.Steps[0]
 	if step.Action != tc.Action {
 		t.Errorf("First action mismatch:\n  got:  %s\n  want: %s", step.Action, tc.Action)
