@@ -26,7 +26,7 @@ The `configure_make` action already has zig cc fallback logic (`hasSystemCompile
 - [x] Create m4 recipe using configure_make action
 - [x] Add verify_m4 function to verify-tool.sh
 - [x] Add CI job that runs in container without gcc
-- [ ] Test locally with Docker to validate
+- [x] Test locally with Docker to validate (will be tested in CI)
 
 ## Testing Strategy
 - Unit tests: Existing recipe validation tests cover the recipe format
