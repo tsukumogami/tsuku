@@ -237,6 +237,34 @@ command = "{binary} --version"
 pattern = "{version}"
 ```
 
+### Testing Recipes
+
+Before submitting a recipe, test it both locally and in a sandbox container:
+
+```bash
+# Build tsuku
+go build -o tsuku ./cmd/tsuku
+
+# Test local installation
+./tsuku install <tool-name>
+
+# Test in isolated container (requires Docker or Podman)
+./tsuku install <tool-name> --sandbox
+```
+
+The `--sandbox` flag runs the installation in an isolated container to verify:
+- The recipe works in a clean environment
+- Dependencies are correctly declared
+- Verification commands work as expected
+
+If Docker/Podman is unavailable (e.g., in some CI environments), you can skip sandbox testing:
+
+```bash
+tsuku create <tool> --from <source> --skip-sandbox
+```
+
+**Note:** Always test with sandbox when possible, as it catches environment-specific issues.
+
 ### Submitting Recipes
 
 1. Create your recipe in `internal/recipe/recipes/<first-letter>/<tool-name>.toml`
@@ -244,6 +272,7 @@ pattern = "{version}"
    ```bash
    go build -o tsuku ./cmd/tsuku
    ./tsuku install <tool-name>
+   ./tsuku install <tool-name> --sandbox  # Test in isolated container
    ```
 3. Submit a PR to this repository
 

@@ -224,6 +224,29 @@ tsuku verifies downloaded files against checksums computed during plan generatio
 
 This protects against supply chain attacks and detects unauthorized re-tagging of releases.
 
+### Sandbox Testing
+
+Test installations in isolated containers to verify recipes work correctly:
+
+```bash
+# Test an installation in a sandbox container
+tsuku install kubectl --sandbox
+
+# Test a local recipe file
+tsuku install --recipe ./my-recipe.toml --sandbox
+
+# Combine with plan-based workflow
+tsuku eval rg | tsuku install --plan - --sandbox
+```
+
+Sandbox testing:
+- Runs installation in an isolated Docker/Podman container
+- Verifies the tool installs and runs correctly
+- Automatically configures network access based on recipe requirements
+- Useful for testing recipes before submission or production deployment
+
+For technical details, see [DESIGN-install-sandbox.md](docs/DESIGN-install-sandbox.md).
+
 ## Testing
 
 tsuku has comprehensive test coverage for critical components:
