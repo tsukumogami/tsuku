@@ -13,7 +13,7 @@ func TestActionDependencies_EcosystemActions(t *testing.T) {
 		wantRuntime     []string
 	}{
 		{"npm_install", []string{"nodejs"}, []string{"nodejs"}},
-		{"pipx_install", []string{"pipx"}, []string{"python"}},
+		{"pipx_install", []string{"python-standalone"}, []string{"python-standalone"}},
 		{"gem_install", []string{"ruby"}, []string{"ruby"}},
 		{"cpan_install", []string{"perl"}, []string{"perl"}},
 	}
