@@ -490,6 +490,28 @@ func setupZigWrappers(zigPath, wrapperDir string) error {
 	_ = os.Remove(gxxWrapper)
 	_ = os.Symlink(cxxWrapper, gxxWrapper) // Ignore error - symlink is best-effort
 
+	// Create ar wrapper (zig ar)
+	arWrapper := filepath.Join(wrapperDir, "ar")
+	arContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" ar \"$@\"\n", zigPath)
+	if err := os.WriteFile(arWrapper, []byte(arContent), 0755); err != nil {
+		return err
+	}
+
+	// Create ranlib wrapper (zig ranlib)
+	ranlibWrapper := filepath.Join(wrapperDir, "ranlib")
+	ranlibContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" ranlib \"$@\"\n", zigPath)
+	if err := os.WriteFile(ranlibWrapper, []byte(ranlibContent), 0755); err != nil {
+		return err
+	}
+
+	// Create ld wrapper using zig's bundled lld
+	// zig ld.lld is a drop-in replacement for GNU ld
+	ldWrapper := filepath.Join(wrapperDir, "ld")
+	ldContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" ld.lld \"$@\"\n", zigPath)
+	if err := os.WriteFile(ldWrapper, []byte(ldContent), 0755); err != nil {
+		return err
+	}
+
 	return nil
 }
 
