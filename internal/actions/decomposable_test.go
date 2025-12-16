@@ -13,7 +13,6 @@ func TestIsDecomposable(t *testing.T) {
 		"github_archive",
 		"github_file",
 		"download_archive",
-		"homebrew_source",
 		"homebrew",
 	}
 

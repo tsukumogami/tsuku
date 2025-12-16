@@ -32,11 +32,9 @@ const (
 
 // Tool names for Homebrew builder conversation
 const (
-	ToolFetchFormulaJSON    = "fetch_formula_json"
-	ToolFetchFormulaRuby    = "fetch_formula_ruby"
-	ToolInspectBottle       = "inspect_bottle"
-	ToolExtractRecipe       = "extract_recipe"
-	ToolExtractSourceRecipe = "extract_source_recipe"
+	ToolFetchFormulaJSON = "fetch_formula_json"
+	ToolInspectBottle    = "inspect_bottle"
+	ToolExtractRecipe    = "extract_recipe"
 )
 
 // RegistryChecker checks if a recipe exists in the registry.
@@ -113,17 +111,12 @@ type HomebrewSession struct {
 	totalUsage   llm.Usage
 
 	// Generation context
-	genCtx      *homebrewGenContext
-	formula     string
-	forceSource bool
+	genCtx  *homebrewGenContext
+	formula string
 
-	// Generated state (for bottle mode)
+	// Generated state
 	lastRecipeData *homebrewRecipeData
 	lastRecipe     *recipe.Recipe
-
-	// Generated state (for source mode)
-	lastSourceData *sourceRecipeData
-	isSourceMode   bool
 
 	// Deterministic generation state
 	usedDeterministic bool // True if the last recipe was generated deterministically
@@ -306,7 +299,7 @@ func (b *HomebrewBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool,
 	if sourceArg == "" {
 		sourceArg = req.Package
 	}
-	formula, _, err := parseSourceArg(sourceArg)
+	formula, err := parseSourceArg(sourceArg)
 	if err != nil {
 		return false, nil
 	}
@@ -332,14 +325,14 @@ func (b *HomebrewBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool,
 
 // NewSession creates a new build session for the given request.
 // The session fetches Homebrew metadata and prepares for generation.
-// For bottle mode, LLM is only initialized if deterministic generation fails.
+// LLM is only initialized if deterministic generation fails.
 func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
-	// Parse SourceArg to extract formula name and source build flag
+	// Parse SourceArg to extract formula name
 	sourceArg := req.SourceArg
 	if sourceArg == "" {
 		sourceArg = req.Package
 	}
-	formula, forceSource, err := parseSourceArg(sourceArg)
+	formula, err := parseSourceArg(sourceArg)
 	if err != nil {
 		return nil, fmt.Errorf("invalid source argument: %w", err)
 	}
@@ -366,51 +359,21 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 		return nil, fmt.Errorf("failed to fetch formula: %w", err)
 	}
 
-	// Determine build mode
-	isSourceMode := !formulaInfo.Versions.Bottle || forceSource
+	// Require bottles (source builds no longer supported)
+	if !formulaInfo.Versions.Bottle {
+		if progress != nil {
+			progress.OnStageFailed()
+		}
+		return nil, fmt.Errorf("formula %q has no bottles available; source builds are no longer supported", formula)
+	}
 
 	// Report metadata fetch complete
 	if progress != nil {
-		suffix := ""
-		if isSourceMode {
-			if forceSource && formulaInfo.Versions.Bottle {
-				suffix = " (source requested)"
-			} else {
-				suffix = " (source only)"
-			}
-		}
-		progress.OnStageDone(fmt.Sprintf("v%s%s", formulaInfo.Versions.Stable, suffix))
+		progress.OnStageDone(fmt.Sprintf("v%s", formulaInfo.Versions.Stable))
 	}
 
-	// For source mode, we require LLM upfront (no deterministic path)
-	// For bottle mode, we defer LLM initialization until needed
-	var provider llm.Provider
-	var factory *llm.Factory
-	if isSourceMode {
-		// Source mode requires LLM - check prerequisites and initialize
-		if err := CheckLLMPrerequisites(opts); err != nil {
-			return nil, err
-		}
-
-		factory = b.factory
-		if factory == nil {
-			factory, err = llm.NewFactory(ctx)
-			if err != nil {
-				return nil, fmt.Errorf("failed to create LLM factory: %w", err)
-			}
-		}
-
-		provider, err = factory.GetProvider(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("no LLM provider available: %w", err)
-		}
-
-		// Emit generation started event for source mode
-		b.telemetryClient.SendLLM(telemetry.NewLLMGenerationStartedEvent(provider.Name(), req.Package, "homebrew-source:"+formula))
-	} else {
-		// Bottle mode - store factory for deferred initialization
-		factory = b.factory
-	}
+	// Store factory for deferred LLM initialization (only used if deterministic fails)
+	factory := b.factory
 
 	// Build generation context
 	genCtx := &homebrewGenContext{
@@ -420,20 +383,10 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 		apiURL:      b.homebrewAPIURL,
 	}
 
-	// Build initial messages and tools based on mode
-	var systemPrompt string
-	var tools []llm.ToolDef
-	var userMessage string
-
-	if isSourceMode {
-		systemPrompt = b.buildSourceSystemPrompt()
-		userMessage = b.buildSourceUserMessage(genCtx)
-		tools = b.buildSourceToolDefs()
-	} else {
-		systemPrompt = b.buildSystemPrompt()
-		userMessage = b.buildUserMessage(genCtx)
-		tools = b.buildToolDefs()
-	}
+	// Build initial messages and tools
+	systemPrompt := b.buildSystemPrompt()
+	userMessage := b.buildUserMessage(genCtx)
+	tools := b.buildToolDefs()
 
 	messages := []llm.Message{
 		{Role: llm.RoleUser, Content: userMessage},
@@ -442,29 +395,22 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 	return &HomebrewSession{
 		builder:      b,
 		req:          req,
-		provider:     provider, // May be nil for bottle mode (initialized lazily)
-		factory:      factory,  // For deferred LLM initialization
+		provider:     nil, // Initialized lazily if deterministic generation fails
+		factory:      factory,
 		messages:     messages,
 		systemPrompt: systemPrompt,
 		tools:        tools,
 		genCtx:       genCtx,
 		formula:      formula,
-		forceSource:  forceSource,
-		isSourceMode: isSourceMode,
 		progress:     progress,
 	}, nil
 }
 
 // Generate produces an initial recipe from the build request.
+// It first tries deterministic generation from bottle inspection,
+// falling back to LLM if that fails.
 func (s *HomebrewSession) Generate(ctx context.Context) (*BuildResult, error) {
-	if s.isSourceMode {
-		if s.progress != nil {
-			s.progress.OnStageStart(fmt.Sprintf("Analyzing formula with %s", s.provider.Name()))
-		}
-		return s.generateSource(ctx)
-	}
-
-	// For bottle mode, try deterministic generation first
+	// Try deterministic generation first
 	if s.progress != nil {
 		s.progress.OnStageStart("Inspecting bottle contents")
 	}
@@ -587,48 +533,10 @@ func (s *HomebrewSession) generateBottle(ctx context.Context) (*BuildResult, err
 	}, nil
 }
 
-// generateSource generates a source-based recipe.
-func (s *HomebrewSession) generateSource(ctx context.Context) (*BuildResult, error) {
-	// Run source conversation loop
-	srcData, turnUsage, err := s.builder.runSourceConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
-	if err != nil {
-		if s.progress != nil {
-			s.progress.OnStageFailed()
-		}
-		return nil, err
-	}
-	s.totalUsage.Add(*turnUsage)
-
-	if s.progress != nil {
-		s.progress.OnStageDone("")
-	}
-
-	// Store for potential repairs
-	s.lastSourceData = srcData
-
-	// Generate recipe from source data
-	r, err := s.builder.generateSourceRecipeOutput(s.req.Package, s.genCtx.formulaInfo, srcData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate source recipe: %w", err)
-	}
-
-	s.lastRecipe = r
-
-	return &BuildResult{
-		Recipe:   r,
-		Source:   fmt.Sprintf("homebrew-source:%s", s.formula),
-		Provider: s.provider.Name(),
-		Cost:     s.totalUsage.Cost(),
-		Warnings: []string{
-			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
-		},
-	}, nil
-}
-
 // Repair attempts to fix the recipe given sandbox failure feedback.
 func (s *HomebrewSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
 	// If the failed recipe was generated deterministically, use LLM to generate a new one
-	if s.usedDeterministic && !s.isSourceMode {
+	if s.usedDeterministic {
 		if s.progress != nil {
 			s.progress.OnStageStart(fmt.Sprintf("Generating recipe with %s (deterministic failed)", s.provider.Name()))
 		}
@@ -653,9 +561,6 @@ func (s *HomebrewSession) Repair(ctx context.Context, failure *sandbox.SandboxRe
 	// Add repair message to conversation
 	s.messages = append(s.messages, llm.Message{Role: llm.RoleUser, Content: repairMessage})
 
-	if s.isSourceMode {
-		return s.repairSource(ctx)
-	}
 	return s.repairBottle(ctx)
 }
 
@@ -689,44 +594,6 @@ func (s *HomebrewSession) repairBottle(ctx context.Context) (*BuildResult, error
 	return &BuildResult{
 		Recipe:   r,
 		Source:   fmt.Sprintf("homebrew:%s", s.formula),
-		Provider: s.provider.Name(),
-		Cost:     s.totalUsage.Cost(),
-		Warnings: []string{
-			fmt.Sprintf("LLM usage: %s", s.totalUsage.String()),
-		},
-	}, nil
-}
-
-// repairSource repairs a source-based recipe.
-func (s *HomebrewSession) repairSource(ctx context.Context) (*BuildResult, error) {
-	// Run source conversation loop to get new data
-	srcData, turnUsage, err := s.builder.runSourceConversationLoop(ctx, s.provider, s.systemPrompt, s.messages, s.tools, s.genCtx)
-	if err != nil {
-		if s.progress != nil {
-			s.progress.OnStageFailed()
-		}
-		return nil, err
-	}
-	s.totalUsage.Add(*turnUsage)
-
-	if s.progress != nil {
-		s.progress.OnStageDone("")
-	}
-
-	// Store new data
-	s.lastSourceData = srcData
-
-	// Generate recipe from new data
-	r, err := s.builder.generateSourceRecipeOutput(s.req.Package, s.genCtx.formulaInfo, srcData)
-	if err != nil {
-		return nil, fmt.Errorf("failed to generate source recipe: %w", err)
-	}
-
-	s.lastRecipe = r
-
-	return &BuildResult{
-		Recipe:   r,
-		Source:   fmt.Sprintf("homebrew-source:%s", s.formula),
 		Provider: s.provider.Name(),
 		Cost:     s.totalUsage.Cost(),
 		Warnings: []string{
@@ -997,29 +864,26 @@ func getStringArg(args map[string]interface{}, key string, defaultVal string) (s
 // It extracts the formula name and whether source build is requested.
 // Examples:
 //   - "jq" → ("jq", false, nil)
-//   - "jq:source" → ("jq", true, nil)
-//   - "openssl@1.1:source" → ("openssl@1.1", true, nil)
-//   - "" → ("", false, error)
-func parseSourceArg(sourceArg string) (formula string, forceSource bool, err error) {
+//   - "jq:source" → error (source builds no longer supported)
+//   - "" → error
+func parseSourceArg(sourceArg string) (formula string, err error) {
 	if sourceArg == "" {
-		return "", false, fmt.Errorf("source argument is required (use --from homebrew:formula)")
+		return "", fmt.Errorf("source argument is required (use --from homebrew:formula)")
 	}
 
-	// Normalize to lowercase for case-insensitive matching
-	lowerArg := strings.ToLower(sourceArg)
-	if strings.HasSuffix(lowerArg, ":source") {
-		formula = lowerArg[:len(lowerArg)-7]
-		forceSource = true
-	} else {
-		formula = lowerArg
-		forceSource = false
+	// Normalize to lowercase
+	formula = strings.ToLower(sourceArg)
+
+	// Reject source builds (no longer supported)
+	if strings.HasSuffix(formula, ":source") {
+		return "", fmt.Errorf("source builds are no longer supported; use primitive actions (download_file, extract, configure_make) instead")
 	}
 
 	if !isValidHomebrewFormula(formula) {
-		return "", false, fmt.Errorf("invalid Homebrew formula name: %s", formula)
+		return "", fmt.Errorf("invalid Homebrew formula name: %s", formula)
 	}
 
-	return formula, forceSource, nil
+	return formula, nil
 }
 
 // fetchFormulaInfo fetches formula metadata from Homebrew API.
@@ -1081,265 +945,6 @@ type homebrewRecipeData struct {
 	Executables   []string `json:"executables"`
 	Dependencies  []string `json:"dependencies,omitempty"`
 	VerifyCommand string   `json:"verify_command"`
-}
-
-// BuildSystem represents the detected build system from a formula.
-type BuildSystem string
-
-// Supported build systems
-const (
-	BuildSystemAutotools BuildSystem = "autotools" // ./configure && make install
-	BuildSystemCMake     BuildSystem = "cmake"     // cmake && make
-	BuildSystemCargo     BuildSystem = "cargo"     // cargo build
-	BuildSystemGo        BuildSystem = "go"        // go build
-	BuildSystemMake      BuildSystem = "make"      // make only (no configure)
-	BuildSystemCustom    BuildSystem = "custom"    // custom install method
-)
-
-// platformStep represents a platform-conditional step from the LLM.
-type platformStep struct {
-	Action string                 `json:"action"`
-	Params map[string]interface{} `json:"params,omitempty"`
-}
-
-// sourceRecipeData holds the extracted source build recipe information from LLM.
-type sourceRecipeData struct {
-	BuildSystem          BuildSystem               `json:"build_system"`
-	ConfigureArgs        []string                  `json:"configure_args,omitempty"`
-	CMakeArgs            []string                  `json:"cmake_args,omitempty"`
-	BuildDependencies    []string                  `json:"build_dependencies,omitempty"`
-	Executables          []string                  `json:"executables"`
-	VerifyCommand        string                    `json:"verify_command"`
-	PlatformSteps        map[string][]platformStep `json:"platform_steps,omitempty"`
-	PlatformDependencies map[string][]string       `json:"platform_dependencies,omitempty"`
-	Resources            []sourceResourceData      `json:"resources,omitempty"`
-	Patches              []sourcePatchData         `json:"patches,omitempty"`
-	Inreplace            []sourceInreplaceData     `json:"inreplace,omitempty"`
-}
-
-// validPlatformKeys are the valid keys for platform conditionals.
-var validPlatformKeys = map[string]bool{
-	"macos":  true, // maps to os: darwin
-	"linux":  true, // maps to os: linux
-	"arm64":  true, // maps to arch: arm64
-	"amd64":  true, // maps to arch: amd64
-	"x86_64": true, // alias for amd64
-}
-
-// sourceResourceData holds resource information extracted from the formula.
-type sourceResourceData struct {
-	Name     string `json:"name"`     // Resource identifier (e.g., "tree-sitter-c")
-	URL      string `json:"url"`      // Download URL
-	Checksum string `json:"checksum"` // SHA256 checksum
-	Dest     string `json:"dest"`     // Destination directory relative to source root
-}
-
-// sourcePatchData holds patch information extracted from the formula.
-type sourcePatchData struct {
-	URL    string `json:"url,omitempty"`    // URL to download patch (for external patches)
-	Data   string `json:"data,omitempty"`   // Inline patch content (for DATA sections)
-	Strip  int    `json:"strip,omitempty"`  // Strip level for patch -p (default 1)
-	Subdir string `json:"subdir,omitempty"` // Subdirectory to apply patch in
-}
-
-// sourceInreplaceData holds inreplace (text replacement) information.
-type sourceInreplaceData struct {
-	File        string `json:"file"`            // File path relative to source root
-	Pattern     string `json:"pattern"`         // Text to find
-	Replacement string `json:"replacement"`     // Text to replace with
-	IsRegex     bool   `json:"regex,omitempty"` // If true, pattern is a regex
-}
-
-// validBuildSystems is the set of supported build systems.
-var validBuildSystems = map[BuildSystem]bool{
-	BuildSystemAutotools: true,
-	BuildSystemCMake:     true,
-	BuildSystemCargo:     true,
-	BuildSystemGo:        true,
-	BuildSystemMake:      true,
-	BuildSystemCustom:    true,
-}
-
-// validateSourceRecipeData validates the source recipe data from the LLM.
-func validateSourceRecipeData(data *sourceRecipeData) error {
-	// Validate build system
-	if data.BuildSystem == "" {
-		return fmt.Errorf("extract_source_recipe requires 'build_system' parameter")
-	}
-	if !validBuildSystems[data.BuildSystem] {
-		return fmt.Errorf("extract_source_recipe: invalid build_system '%s'; must be one of: autotools, cmake, cargo, go, make, custom", data.BuildSystem)
-	}
-
-	// Validate executables
-	if len(data.Executables) == 0 {
-		return fmt.Errorf("extract_source_recipe requires at least one executable")
-	}
-	for _, exe := range data.Executables {
-		if exe == "" {
-			return fmt.Errorf("extract_source_recipe: executable name cannot be empty")
-		}
-		// Security: disallow path traversal
-		if strings.Contains(exe, "..") || strings.HasPrefix(exe, "/") {
-			return fmt.Errorf("extract_source_recipe: invalid executable path '%s'", exe)
-		}
-	}
-
-	// Validate verify command
-	if err := isValidVerifyCommand(data.VerifyCommand); err != nil {
-		return fmt.Errorf("extract_source_recipe: %w", err)
-	}
-
-	// Validate configure args (no shell metacharacters)
-	for _, arg := range data.ConfigureArgs {
-		if !isValidConfigureArg(arg) {
-			return fmt.Errorf("extract_source_recipe: invalid configure_arg '%s'", arg)
-		}
-	}
-
-	// Validate cmake args (reuse existing validation)
-	for _, arg := range data.CMakeArgs {
-		if !isValidCMakeArg(arg) {
-			return fmt.Errorf("extract_source_recipe: invalid cmake_arg '%s'", arg)
-		}
-	}
-
-	// Validate platform steps
-	for platform, steps := range data.PlatformSteps {
-		if !validPlatformKeys[platform] {
-			return fmt.Errorf("extract_source_recipe: invalid platform key '%s'; must be one of: macos, linux, arm64, amd64", platform)
-		}
-		for i, step := range steps {
-			if step.Action == "" {
-				return fmt.Errorf("extract_source_recipe: platform_steps[%s][%d] missing action", platform, i)
-			}
-		}
-	}
-
-	// Validate platform dependencies
-	for platform := range data.PlatformDependencies {
-		if !validPlatformKeys[platform] {
-			return fmt.Errorf("extract_source_recipe: invalid platform_dependencies key '%s'; must be one of: macos, linux, arm64, amd64", platform)
-		}
-	}
-
-	// Validate resources
-	for i, res := range data.Resources {
-		if err := validateSourceResource(&res, i); err != nil {
-			return err
-		}
-	}
-
-	// Validate patches
-	for i, patch := range data.Patches {
-		if err := validateSourcePatch(&patch, i); err != nil {
-			return err
-		}
-	}
-
-	// Validate inreplace operations
-	for i, ir := range data.Inreplace {
-		if err := validateSourceInreplace(&ir, i); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-// validateSourceResource validates a single resource entry.
-func validateSourceResource(res *sourceResourceData, index int) error {
-	if res.Name == "" {
-		return fmt.Errorf("resource[%d]: name is required", index)
-	}
-	if res.URL == "" {
-		return fmt.Errorf("resource[%d]: url is required", index)
-	}
-	// Validate URL (basic sanity check - must be https)
-	if !strings.HasPrefix(res.URL, "https://") {
-		return fmt.Errorf("resource[%d]: url must use https", index)
-	}
-	if res.Dest == "" {
-		return fmt.Errorf("resource[%d]: dest is required", index)
-	}
-	// Security: disallow path traversal
-	if strings.Contains(res.Dest, "..") || strings.HasPrefix(res.Dest, "/") {
-		return fmt.Errorf("resource[%d]: invalid dest path '%s'", index, res.Dest)
-	}
-	return nil
-}
-
-// validateSourcePatch validates a single patch entry.
-func validateSourcePatch(patch *sourcePatchData, index int) error {
-	// Must have either URL or Data, not both
-	hasURL := patch.URL != ""
-	hasData := patch.Data != ""
-	if !hasURL && !hasData {
-		return fmt.Errorf("patch[%d]: either url or data is required", index)
-	}
-	if hasURL && hasData {
-		return fmt.Errorf("patch[%d]: cannot specify both url and data", index)
-	}
-	// Validate URL if present
-	if hasURL && !strings.HasPrefix(patch.URL, "https://") {
-		return fmt.Errorf("patch[%d]: url must use https", index)
-	}
-	// Validate subdir if present
-	if patch.Subdir != "" {
-		if strings.Contains(patch.Subdir, "..") || strings.HasPrefix(patch.Subdir, "/") {
-			return fmt.Errorf("patch[%d]: invalid subdir path '%s'", index, patch.Subdir)
-		}
-	}
-	// Validate strip level (must be non-negative)
-	if patch.Strip < 0 {
-		return fmt.Errorf("patch[%d]: strip must be non-negative", index)
-	}
-	return nil
-}
-
-// validateSourceInreplace validates a single inreplace entry.
-func validateSourceInreplace(ir *sourceInreplaceData, index int) error {
-	if ir.File == "" {
-		return fmt.Errorf("inreplace[%d]: file is required", index)
-	}
-	// Security: disallow path traversal
-	if strings.Contains(ir.File, "..") || strings.HasPrefix(ir.File, "/") {
-		return fmt.Errorf("inreplace[%d]: invalid file path '%s'", index, ir.File)
-	}
-	if ir.Pattern == "" {
-		return fmt.Errorf("inreplace[%d]: pattern is required", index)
-	}
-	// Replacement can be empty (for deletion)
-	return nil
-}
-
-// isValidConfigureArg validates configure arguments for security.
-func isValidConfigureArg(arg string) bool {
-	if arg == "" || len(arg) > 500 {
-		return false
-	}
-	// Disallow shell metacharacters
-	dangerousChars := []string{";", "&&", "||", "|", "`", "$", "\n", "\r"}
-	for _, c := range dangerousChars {
-		if strings.Contains(arg, c) {
-			return false
-		}
-	}
-	return true
-}
-
-// isValidCMakeArg validates CMake arguments for security.
-func isValidCMakeArg(arg string) bool {
-	if arg == "" || len(arg) > 500 {
-		return false
-	}
-	// Disallow shell metacharacters
-	dangerousChars := []string{";", "&&", "||", "|", "`", "$", "\n", "\r"}
-	for _, c := range dangerousChars {
-		if strings.Contains(arg, c) {
-			return false
-		}
-	}
-	return true
 }
 
 // runConversationLoop executes the multi-turn conversation until extract_recipe is called.
@@ -1426,116 +1031,6 @@ func (b *HomebrewBuilder) runConversationLoop(
 	return nil, &totalUsage, fmt.Errorf("max turns (%d) exceeded without completing recipe generation", MaxTurns)
 }
 
-// runSourceConversationLoop executes the multi-turn conversation for source builds.
-// Similar to runConversationLoop but handles extract_source_recipe instead of extract_recipe.
-func (b *HomebrewBuilder) runSourceConversationLoop(
-	ctx context.Context,
-	provider llm.Provider,
-	systemPrompt string,
-	messages []llm.Message,
-	tools []llm.ToolDef,
-	genCtx *homebrewGenContext,
-) (*sourceRecipeData, *llm.Usage, error) {
-	var totalUsage llm.Usage
-
-	for turn := 0; turn < MaxTurns; turn++ {
-		resp, err := provider.Complete(ctx, &llm.CompletionRequest{
-			SystemPrompt: systemPrompt,
-			Messages:     messages,
-			Tools:        tools,
-			MaxTokens:    4096,
-		})
-		if err != nil {
-			return nil, &totalUsage, err
-		}
-
-		totalUsage.Add(resp.Usage)
-
-		// Add assistant response to conversation
-		messages = append(messages, llm.Message{
-			Role:      llm.RoleAssistant,
-			Content:   resp.Content,
-			ToolCalls: resp.ToolCalls,
-		})
-
-		// Process tool calls
-		var toolResults []llm.Message
-		var srcData *sourceRecipeData
-
-		for _, tc := range resp.ToolCalls {
-			result, extracted, err := b.executeToolCall(ctx, genCtx, tc)
-			if err != nil {
-				// Return error as tool result so LLM can try again
-				toolResults = append(toolResults, llm.Message{
-					Role: llm.RoleUser,
-					ToolResult: &llm.ToolResult{
-						CallID:  tc.ID,
-						Content: fmt.Sprintf("Error: %v", err),
-						IsError: true,
-					},
-				})
-				continue
-			}
-
-			// Check if this is extract_source_recipe
-			if tc.Name == ToolExtractSourceRecipe && result != "" {
-				// Parse the JSON result back into sourceRecipeData
-				var data sourceRecipeData
-				if err := json.Unmarshal([]byte(result), &data); err != nil {
-					toolResults = append(toolResults, llm.Message{
-						Role: llm.RoleUser,
-						ToolResult: &llm.ToolResult{
-							CallID:  tc.ID,
-							Content: fmt.Sprintf("Error parsing source recipe: %v", err),
-							IsError: true,
-						},
-					})
-					continue
-				}
-				srcData = &data
-			} else if extracted != nil {
-				// bottle-based extract_recipe was called - shouldn't happen in source mode
-				toolResults = append(toolResults, llm.Message{
-					Role: llm.RoleUser,
-					ToolResult: &llm.ToolResult{
-						CallID:  tc.ID,
-						Content: "Error: use extract_source_recipe for source builds, not extract_recipe",
-						IsError: true,
-					},
-				})
-				continue
-			} else {
-				toolResults = append(toolResults, llm.Message{
-					Role: llm.RoleUser,
-					ToolResult: &llm.ToolResult{
-						CallID:  tc.ID,
-						Content: result,
-						IsError: false,
-					},
-				})
-			}
-		}
-
-		// If extract_source_recipe was called, return the data
-		if srcData != nil {
-			return srcData, &totalUsage, nil
-		}
-
-		// If there were tool calls, add results and continue
-		if len(toolResults) > 0 {
-			messages = append(messages, toolResults...)
-			continue
-		}
-
-		// No tool calls and no extract_source_recipe - LLM is done but didn't call the tool
-		if resp.StopReason == "end_turn" {
-			return nil, &totalUsage, fmt.Errorf("conversation ended without extract_source_recipe being called")
-		}
-	}
-
-	return nil, &totalUsage, fmt.Errorf("max turns (%d) exceeded without completing source recipe generation", MaxTurns)
-}
-
 // executeToolCall executes a tool call and returns the result.
 func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewGenContext, tc llm.ToolCall) (string, *homebrewRecipeData, error) {
 	switch tc.Name {
@@ -1576,20 +1071,6 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 		}
 		return listing, nil, nil
 
-	case ToolFetchFormulaRuby:
-		formula, err := getStringArg(tc.Arguments, "formula", genCtx.formula)
-		if err != nil {
-			return "", nil, fmt.Errorf("fetch_formula_ruby: %w", err)
-		}
-		if !isValidHomebrewFormula(formula) {
-			return "", nil, fmt.Errorf("invalid formula name: %s", formula)
-		}
-		content, err := b.fetchFormulaRuby(ctx, formula)
-		if err != nil {
-			return "", nil, err
-		}
-		return content, nil, nil
-
 	case ToolExtractRecipe:
 		argsJSON, err := json.Marshal(tc.Arguments)
 		if err != nil {
@@ -1617,26 +1098,6 @@ func (b *HomebrewBuilder) executeToolCall(ctx context.Context, genCtx *homebrewG
 			return "", nil, fmt.Errorf("extract_recipe: %w", err)
 		}
 		return "", &recipeData, nil
-
-	case ToolExtractSourceRecipe:
-		argsJSON, err := json.Marshal(tc.Arguments)
-		if err != nil {
-			return "", nil, fmt.Errorf("invalid extract_source_recipe input: %w", err)
-		}
-		var srcData sourceRecipeData
-		if err := json.Unmarshal(argsJSON, &srcData); err != nil {
-			return "", nil, fmt.Errorf("invalid extract_source_recipe input: %w", err)
-		}
-		// Validate required fields
-		if err := validateSourceRecipeData(&srcData); err != nil {
-			return "", nil, err
-		}
-		// Return as JSON string - the caller will need to detect and handle this
-		resultJSON, err := json.Marshal(srcData)
-		if err != nil {
-			return "", nil, fmt.Errorf("failed to marshal source recipe data: %w", err)
-		}
-		return string(resultJSON), nil, nil
 
 	default:
 		return "", nil, fmt.Errorf("unknown tool: %s", tc.Name)
@@ -1847,59 +1308,6 @@ func (b *HomebrewBuilder) sanitizeFormulaJSON(jsonStr string) string {
 	// Remove any embedded control characters
 	var sanitized strings.Builder
 	for _, r := range jsonStr {
-		if r >= 32 || r == '\n' || r == '\r' || r == '\t' {
-			sanitized.WriteRune(r)
-		}
-	}
-	return sanitized.String()
-}
-
-// fetchFormulaRuby fetches the raw Ruby formula source from GitHub.
-// This allows the LLM to analyze the install method for source-based builds.
-func (b *HomebrewBuilder) fetchFormulaRuby(ctx context.Context, formula string) (string, error) {
-	// Homebrew formulas are organized by first letter:
-	// https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/{first_letter}/{formula}.rb
-	firstLetter := strings.ToLower(string(formula[0]))
-	rubyURL := fmt.Sprintf("https://raw.githubusercontent.com/Homebrew/homebrew-core/HEAD/Formula/%s/%s.rb", firstLetter, url.PathEscape(formula))
-
-	req, err := http.NewRequestWithContext(ctx, "GET", rubyURL, nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to create request: %w", err)
-	}
-
-	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
-
-	resp, err := b.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("failed to fetch Ruby formula: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode == 404 {
-		return "", fmt.Errorf("Ruby formula '%s' not found at %s", formula, rubyURL)
-	}
-
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("HTTP %d fetching Ruby formula", resp.StatusCode)
-	}
-
-	// Limit response size (Ruby formulas are typically small, but cap at 256KB)
-	const maxRubyFormulaSize = 256 * 1024
-	limitedReader := io.LimitReader(resp.Body, maxRubyFormulaSize)
-	content, err := io.ReadAll(limitedReader)
-	if err != nil {
-		return "", fmt.Errorf("failed to read Ruby formula: %w", err)
-	}
-
-	// Sanitize content (remove control characters)
-	return b.sanitizeRubyFormula(string(content)), nil
-}
-
-// sanitizeRubyFormula removes control characters from Ruby formula content.
-func (b *HomebrewBuilder) sanitizeRubyFormula(content string) string {
-	var sanitized strings.Builder
-	for _, r := range content {
-		// Allow printable characters, newlines, tabs
 		if r >= 32 || r == '\n' || r == '\r' || r == '\t' {
 			sanitized.WriteRune(r)
 		}
@@ -2273,149 +1681,6 @@ func (b *HomebrewBuilder) buildBottleToolDefs() []llm.ToolDef {
 	}
 }
 
-// buildSourceToolDefs returns tools for source-based recipe generation.
-func (b *HomebrewBuilder) buildSourceToolDefs() []llm.ToolDef {
-	return []llm.ToolDef{
-		{
-			Name:        ToolFetchFormulaJSON,
-			Description: "Fetch the Homebrew formula JSON metadata including version, dependencies, and source URL.",
-			Parameters: map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"formula": map[string]any{
-						"type":        "string",
-						"description": "Formula name (e.g., 'jq', 'ripgrep'). Defaults to the current formula if not specified.",
-					},
-				},
-				"required": []string{},
-			},
-		},
-		{
-			Name:        ToolFetchFormulaRuby,
-			Description: "Fetch the raw Ruby formula source to analyze the install method and build system.",
-			Parameters: map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"formula": map[string]any{
-						"type":        "string",
-						"description": "Formula name. Defaults to current formula if not specified.",
-					},
-				},
-				"required": []string{},
-			},
-		},
-		{
-			Name:        ToolExtractSourceRecipe,
-			Description: "Signal completion and output the source build recipe structure. Call this when you have analyzed the build system, resources, patches, and determined the build configuration.",
-			Parameters: map[string]any{
-				"type": "object",
-				"properties": map[string]any{
-					"build_system": map[string]any{
-						"type":        "string",
-						"enum":        []string{"autotools", "cmake", "cargo", "go", "make", "custom"},
-						"description": "The build system used by the formula (autotools for ./configure && make, cmake for CMake, cargo for Rust, go for Go, make for plain Makefile, custom for other)",
-					},
-					"configure_args": map[string]any{
-						"type":        "array",
-						"items":       map[string]any{"type": "string"},
-						"description": "Arguments to pass to ./configure (for autotools) or cmake (as -D flags). Do not include --prefix as it's set automatically.",
-					},
-					"cmake_args": map[string]any{
-						"type":        "array",
-						"items":       map[string]any{"type": "string"},
-						"description": "CMake arguments (e.g., ['-DBUILD_SHARED_LIBS=OFF']). Only for cmake build system.",
-					},
-					"build_dependencies": map[string]any{
-						"type":        "array",
-						"items":       map[string]any{"type": "string"},
-						"description": "Build-time dependencies that must be installed before building (e.g., ['autoconf', 'automake'])",
-					},
-					"executables": map[string]any{
-						"type":        "array",
-						"items":       map[string]any{"type": "string"},
-						"description": "Names of the executable binaries that will be produced (e.g., ['jq'])",
-					},
-					"verify_command": map[string]any{
-						"type":        "string",
-						"description": "Command to verify installation (e.g., 'jq --version')",
-					},
-					"platform_steps": map[string]any{
-						"type":        "object",
-						"description": "Platform-conditional steps. Keys are platform names (macos, linux, arm64, amd64), values are arrays of step objects.",
-						"additionalProperties": map[string]any{
-							"type": "array",
-							"items": map[string]any{
-								"type": "object",
-								"properties": map[string]any{
-									"action": map[string]any{
-										"type":        "string",
-										"description": "Action name (e.g., run_command, set_rpath)",
-									},
-									"params": map[string]any{
-										"type":        "object",
-										"description": "Action parameters",
-									},
-								},
-								"required": []string{"action"},
-							},
-						},
-					},
-					"platform_dependencies": map[string]any{
-						"type":        "object",
-						"description": "Platform-conditional dependencies. Keys are platform names (macos, linux, arm64, amd64), values are arrays of dependency names.",
-						"additionalProperties": map[string]any{
-							"type":  "array",
-							"items": map[string]any{"type": "string"},
-						},
-					},
-					"resources": map[string]any{
-						"type":        "array",
-						"description": "Additional downloads required before building (e.g., tree-sitter grammars for neovim)",
-						"items": map[string]any{
-							"type": "object",
-							"properties": map[string]any{
-								"name":     map[string]any{"type": "string", "description": "Unique resource identifier"},
-								"url":      map[string]any{"type": "string", "description": "Download URL (must be https)"},
-								"checksum": map[string]any{"type": "string", "description": "SHA256 checksum"},
-								"dest":     map[string]any{"type": "string", "description": "Destination directory relative to source root"},
-							},
-							"required": []string{"name", "url", "dest"},
-						},
-					},
-					"patches": map[string]any{
-						"type":        "array",
-						"description": "Patches to apply before building (from Homebrew formula-patches or inline DATA)",
-						"items": map[string]any{
-							"type": "object",
-							"properties": map[string]any{
-								"url":    map[string]any{"type": "string", "description": "URL to download patch (for external patches)"},
-								"data":   map[string]any{"type": "string", "description": "Inline patch content (for __END__ DATA sections)"},
-								"strip":  map[string]any{"type": "integer", "description": "Strip level for patch -p (default 1)"},
-								"subdir": map[string]any{"type": "string", "description": "Subdirectory to apply patch in"},
-							},
-						},
-					},
-					"inreplace": map[string]any{
-						"type":        "array",
-						"description": "Text replacements to apply (from Homebrew inreplace calls)",
-						"items": map[string]any{
-							"type": "object",
-							"properties": map[string]any{
-								"file":        map[string]any{"type": "string", "description": "File path relative to source root"},
-								"pattern":     map[string]any{"type": "string", "description": "Text to find"},
-								"replacement": map[string]any{"type": "string", "description": "Text to replace with"},
-								"regex":       map[string]any{"type": "boolean", "description": "If true, pattern is a regex"},
-							},
-							"required": []string{"file", "pattern", "replacement"},
-						},
-					},
-				},
-				"required": []string{"build_system", "executables", "verify_command"},
-			},
-		},
-	}
-}
-
 // generateRecipe creates a recipe.Recipe from the extracted data.
 func (b *HomebrewBuilder) generateRecipe(packageName string, info *homebrewFormulaInfo, data *homebrewRecipeData) (*recipe.Recipe, error) {
 	if len(data.Executables) == 0 {
@@ -2534,313 +1799,4 @@ func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packa
 	}
 
 	return r, nil
-}
-
-// buildSourceSystemPrompt creates the system prompt for source-based recipe generation.
-func (b *HomebrewBuilder) buildSourceSystemPrompt() string {
-	return `You are an expert at analyzing Homebrew Ruby formulas to create source build recipes for tsuku, a package manager.
-
-This formula does NOT have pre-built bottles available, so you need to analyze the Ruby source code to understand how to build it from source.
-
-Your task is to:
-1. Fetch and analyze the Ruby formula source code
-2. Identify the build system (autotools, cmake, cargo, go, make, or custom)
-3. Extract any configure/cmake arguments needed
-4. Identify platform-specific steps (on_macos, on_linux, on_arm, on_intel blocks)
-5. Identify resources (additional downloads), patches, and inreplace operations
-6. Determine the executable names that will be produced
-7. Call extract_source_recipe with the complete build configuration
-
-You have these tools available:
-1. fetch_formula_json: Fetch the formula JSON metadata (version, dependencies, source URL)
-2. fetch_formula_ruby: Fetch the raw Ruby formula source to analyze the install method
-3. extract_source_recipe: Call this when you've determined the build system and configuration
-
-Build system detection hints:
-- autotools: Look for "system "./configure"" or "./autogen.sh" in the install method
-- cmake: Look for "cmake" calls or "std_cmake_args"
-- cargo: Look for "cargo" calls or Rust-related build commands
-- go: Look for "go build" or Go-related commands
-- make: Look for plain "make" without ./configure
-- custom: Other build patterns that don't fit the above
-
-Platform conditional detection:
-Look for these Ruby blocks in the formula source:
-- on_macos do ... end: Steps that only run on macOS
-- on_linux do ... end: Steps that only run on Linux
-- on_arm do ... end: Steps that only run on ARM64 architecture
-- on_intel do ... end: Steps that only run on x86_64 architecture
-
-These blocks may contain:
-- Additional dependencies (depends_on inside the block)
-- Platform-specific build commands or patches
-- Post-install fixups (install_name_tool on macOS, patchelf on Linux)
-
-RESOURCES: Look for "resource" blocks in the formula. Each resource has:
-- A name (the string after "resource")
-- A url (in the "url" line)
-- A sha256 checksum (in the "sha256" line)
-- A destination (from "stage" or path in resource.stage block)
-
-Example Ruby:
-  resource "tree-sitter-c" do
-    url "https://github.com/tree-sitter/tree-sitter-c/archive/refs/tags/v0.24.1.tar.gz"
-    sha256 "25dd4bb3..."
-  end
-  # Later in install:
-  resources.each { |r| r.stage(buildpath/"deps"/r.name) }
-
-PATCHES: Look for "patch" blocks or "__END__" DATA sections:
-- URL patches: patch do ... url "https://..." ... end
-- Inline patches: patch :DATA followed by __END__ section
-- For URL patches, extract the URL and strip level (:p1 is default)
-- For DATA patches, extract the content after __END__
-
-INREPLACE: Look for "inreplace" calls that modify files:
-- inreplace "file.txt", "old", "new"
-- inreplace "CMakeLists.txt", "STATIC", "SHARED"
-
-When calling extract_source_recipe:
-- build_system: One of autotools, cmake, cargo, go, make, custom
-- configure_args: Arguments for ./configure (autotools) - do NOT include --prefix
-- cmake_args: CMake definition flags like -DBUILD_SHARED_LIBS=OFF
-- executables: List of binary names that will be built (e.g., ["jq"])
-- verify_command: Command to verify installation (e.g., "jq --version")
-- build_dependencies: Any build-time dependencies (optional)
-- platform_steps: Object mapping platform keys to arrays of steps, e.g.:
-  {"macos": [{"action": "run_command", "params": {"command": "..."}}]}
-  Valid platform keys: macos, linux, arm64, amd64
-- platform_dependencies: Object mapping platform keys to dependency arrays, e.g.:
-  {"linux": ["libffi", "patchelf"]}
-- resources: Array of resource objects with name, url, checksum, dest
-- patches: Array of patch objects with url OR data, and optional strip/subdir
-- inreplace: Array of text replacement objects with file, pattern, replacement
-
-Analyze the formula and call extract_source_recipe with the correct build configuration.`
-}
-
-// buildSourceUserMessage creates the initial user message for source-based generation.
-func (b *HomebrewBuilder) buildSourceUserMessage(genCtx *homebrewGenContext) string {
-	info := genCtx.formulaInfo
-
-	var sb strings.Builder
-	sb.WriteString("Please analyze this Homebrew formula and create a source build recipe.\n\n")
-	sb.WriteString(fmt.Sprintf("Formula: %s\n", info.Name))
-	sb.WriteString(fmt.Sprintf("Description: %s\n", info.Description))
-	sb.WriteString(fmt.Sprintf("Homepage: %s\n", info.Homepage))
-	sb.WriteString(fmt.Sprintf("Version: %s\n", info.Versions.Stable))
-	sb.WriteString("\nThis formula does NOT have pre-built bottles, so we need to build from source.\n")
-	sb.WriteString("\nPlease:\n")
-	sb.WriteString("1. Fetch the Ruby formula source using fetch_formula_ruby\n")
-	sb.WriteString("2. Analyze the install method to identify the build system\n")
-	sb.WriteString("3. Extract any configure/cmake arguments\n")
-	sb.WriteString("4. Look for resources, patches, and inreplace operations\n")
-	sb.WriteString("5. Call extract_source_recipe with the complete build configuration\n")
-
-	if len(info.BuildDependencies) > 0 {
-		sb.WriteString(fmt.Sprintf("\nBuild Dependencies: %s\n", strings.Join(info.BuildDependencies, ", ")))
-	}
-	if len(info.Dependencies) > 0 {
-		sb.WriteString(fmt.Sprintf("Runtime Dependencies: %s\n", strings.Join(info.Dependencies, ", ")))
-	}
-
-	return sb.String()
-}
-
-// generateSourceRecipeOutput creates a recipe.Recipe from the source build data.
-func (b *HomebrewBuilder) generateSourceRecipeOutput(packageName string, info *homebrewFormulaInfo, data *sourceRecipeData) (*recipe.Recipe, error) {
-	if len(data.Executables) == 0 {
-		return nil, fmt.Errorf("no executables specified")
-	}
-
-	r := &recipe.Recipe{
-		Metadata: recipe.MetadataSection{
-			Name:        packageName,
-			Description: info.Description,
-			Homepage:    info.Homepage,
-		},
-		Version: recipe.VersionSection{
-			Source:  "homebrew",
-			Formula: info.Name,
-		},
-		Verify: recipe.VerifySection{
-			Command: data.VerifyCommand,
-		},
-	}
-
-	// Convert source resources to recipe resources
-	for _, res := range data.Resources {
-		r.Resources = append(r.Resources, recipe.Resource{
-			Name:     res.Name,
-			URL:      res.URL,
-			Checksum: res.Checksum,
-			Dest:     res.Dest,
-		})
-	}
-
-	// Convert source patches to recipe patches
-	for _, patch := range data.Patches {
-		r.Patches = append(r.Patches, recipe.Patch{
-			URL:    patch.URL,
-			Data:   patch.Data,
-			Strip:  patch.Strip,
-			Subdir: patch.Subdir,
-		})
-	}
-
-	// Build the steps based on build system (includes inreplace as text_replace steps)
-	steps, err := b.buildSourceSteps(data, info.Name)
-	if err != nil {
-		return nil, err
-	}
-	r.Steps = steps
-
-	// Add dependencies from formula info (deterministic, not LLM-derived)
-	// Combine build and runtime dependencies since source builds need both
-	var allDeps []string
-	allDeps = append(allDeps, info.BuildDependencies...)
-	allDeps = append(allDeps, info.Dependencies...)
-	if len(allDeps) > 0 {
-		r.Metadata.Dependencies = allDeps
-	}
-
-	return r, nil
-}
-
-// buildSourceSteps generates the recipe steps for a source build.
-// Resources and patches are stored in the recipe's Resources/Patches fields.
-// Inreplace operations are emitted as text_replace steps before the build.
-func (b *HomebrewBuilder) buildSourceSteps(data *sourceRecipeData, formula string) ([]recipe.Step, error) {
-	var steps []recipe.Step
-
-	// Use homebrew_source action which fetches URL/checksum from Homebrew API at plan time.
-	// This enables version-aware source builds where the URL and checksum are resolved
-	// dynamically when the recipe is installed, not when it's generated.
-	steps = append(steps, recipe.Step{
-		Action: "homebrew_source",
-		Params: map[string]interface{}{
-			"formula": formula,
-		},
-	})
-
-	// Add text_replace steps for inreplace operations (before the build)
-	for i, ir := range data.Inreplace {
-		params := map[string]interface{}{
-			"file":        ir.File,
-			"pattern":     ir.Pattern,
-			"replacement": ir.Replacement,
-		}
-		if ir.IsRegex {
-			params["regex"] = true
-		}
-		steps = append(steps, recipe.Step{
-			Action: "text_replace",
-			Params: params,
-		})
-		_ = i // avoid unused variable warning
-	}
-
-	// Add build step based on build system
-	// source_dir is "." because we use strip_dirs=1 during extraction
-	switch data.BuildSystem {
-	case BuildSystemAutotools:
-		params := map[string]interface{}{
-			"source_dir":  ".",
-			"executables": data.Executables,
-		}
-		if len(data.ConfigureArgs) > 0 {
-			params["configure_args"] = data.ConfigureArgs
-		}
-		steps = append(steps, recipe.Step{
-			Action: "configure_make",
-			Params: params,
-		})
-
-	case BuildSystemCMake:
-		params := map[string]interface{}{
-			"source_dir":  ".",
-			"executables": data.Executables,
-		}
-		if len(data.CMakeArgs) > 0 {
-			params["cmake_args"] = data.CMakeArgs
-		}
-		steps = append(steps, recipe.Step{
-			Action: "cmake_build",
-			Params: params,
-		})
-
-	case BuildSystemCargo:
-		steps = append(steps, recipe.Step{
-			Action: "cargo_build",
-			Params: map[string]interface{}{
-				"source_dir":  ".",
-				"executables": data.Executables,
-			},
-		})
-
-	case BuildSystemGo:
-		steps = append(steps, recipe.Step{
-			Action: "go_build",
-			Params: map[string]interface{}{
-				"source_dir":  ".",
-				"executables": data.Executables,
-			},
-		})
-
-	case BuildSystemMake:
-		// Plain make without configure - use configure_make with empty configure_args
-		steps = append(steps, recipe.Step{
-			Action: "configure_make",
-			Params: map[string]interface{}{
-				"source_dir":     ".",
-				"executables":    data.Executables,
-				"skip_configure": true,
-			},
-		})
-
-	case BuildSystemCustom:
-		return nil, fmt.Errorf("custom build systems are not yet supported; formula requires manual recipe creation")
-
-	default:
-		return nil, fmt.Errorf("unknown build system: %s", data.BuildSystem)
-	}
-
-	// Add install_binaries step
-	steps = append(steps, recipe.Step{
-		Action: "install_binaries",
-		Params: map[string]interface{}{
-			"binaries": data.Executables,
-		},
-	})
-
-	// Add platform-conditional steps
-	for platform, platformSteps := range data.PlatformSteps {
-		whenClause := platformKeyToWhen(platform)
-		for _, ps := range platformSteps {
-			step := recipe.Step{
-				Action: ps.Action,
-				When:   whenClause,
-				Params: ps.Params,
-			}
-			steps = append(steps, step)
-		}
-	}
-
-	return steps, nil
-}
-
-// platformKeyToWhen converts a platform key to a recipe.Step.When clause.
-func platformKeyToWhen(platform string) map[string]string {
-	switch platform {
-	case "macos":
-		return map[string]string{"os": "darwin"}
-	case "linux":
-		return map[string]string{"os": "linux"}
-	case "arm64":
-		return map[string]string{"arch": "arm64"}
-	case "amd64", "x86_64":
-		return map[string]string{"arch": "amd64"}
-	default:
-		return nil
-	}
 }

@@ -152,7 +152,6 @@ func init() {
 
 	// Homebrew actions
 	Register(&HomebrewAction{})
-	Register(&HomebrewSourceAction{})
 	Register(&HomebrewRelocateAction{})
 
 	// Composite actions

@@ -183,11 +183,16 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		}
 	}
 
-	// Step 6: Create symlinks at root level (where executor expects them)
+	// Step 6: Create symlinks in bin/ directory (where executor expects them)
+	binDir := filepath.Join(ctx.InstallDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		return fmt.Errorf("failed to create bin directory: %w", err)
+	}
+
 	for _, exe := range executables {
-		// Create relative symlink: <exe> -> venvs/<package>/bin/<exe>
-		srcPath := filepath.Join("venvs", packageName, "bin", exe)
-		dstPath := filepath.Join(ctx.InstallDir, exe)
+		// Create relative symlink: bin/<exe> -> ../venvs/<package>/bin/<exe>
+		srcPath := filepath.Join("..", "venvs", packageName, "bin", exe)
+		dstPath := filepath.Join(binDir, exe)
 
 		// Remove existing symlink if present
 		os.Remove(dstPath)
