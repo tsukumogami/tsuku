@@ -317,8 +317,9 @@ func TestIsActionEvaluable(t *testing.T) {
 
 func TestFormatVersionConstant(t *testing.T) {
 	// Version 2 introduced composite action decomposition (issue #440)
-	if PlanFormatVersion != 2 {
-		t.Errorf("PlanFormatVersion: got %d, want 2", PlanFormatVersion)
+	// Version 3 introduced nested dependency plans (issue #621)
+	if PlanFormatVersion != 3 {
+		t.Errorf("PlanFormatVersion: got %d, want 3", PlanFormatVersion)
 	}
 }
 

@@ -136,28 +136,23 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		steps = insertPatchSteps(steps, e.recipe.Patches)
 	}
 
-	// Generate dependency plans and prepend them
+	// Generate nested dependency plans
 	// This makes plans self-contained - they include all steps needed to install
-	// the tool and its dependencies in the correct order.
+	// the tool and its dependencies. Dependencies form a tree structure.
+	var dependencies []DependencyPlan
 	if cfg.RecipeLoader != nil {
-		depSteps, err := generateDependencySteps(ctx, e.recipe, cfg)
+		processed := make(map[string]bool)
+		processed[e.recipe.Metadata.Name] = true // Avoid cycles back to root
+		deps, err := generateDependencyPlans(ctx, e.recipe, cfg, processed)
 		if err != nil {
-			return nil, fmt.Errorf("failed to generate dependency steps: %w", err)
+			return nil, fmt.Errorf("failed to generate dependency plans: %w", err)
 		}
-		if len(depSteps) > 0 {
-			// Prepend dependency steps - they must run before the main tool
-			steps = append(depSteps, steps...)
-		}
+		dependencies = deps
 	}
 
 	// Compute plan-level deterministic flag: true only if ALL steps are deterministic
-	planDeterministic := true
-	for _, step := range steps {
-		if !step.Deterministic {
-			planDeterministic = false
-			break
-		}
-	}
+	// (including all dependency steps recursively)
+	planDeterministic := computeDeterministic(steps, dependencies)
 
 	// Capture verify section from recipe for plan execution
 	var verify *PlanVerify
@@ -180,10 +175,26 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		RecipeHash:    recipeHash,
 		RecipeSource:  recipeSource,
 		Deterministic: planDeterministic,
+		Dependencies:  dependencies,
 		Steps:         steps,
 		Verify:        verify,
 		RecipeType:    string(e.recipe.Metadata.Type),
 	}, nil
+}
+
+// computeDeterministic checks if all steps (including nested dependencies) are deterministic.
+func computeDeterministic(steps []ResolvedStep, deps []DependencyPlan) bool {
+	for _, step := range steps {
+		if !step.Deterministic {
+			return false
+		}
+	}
+	for _, dep := range deps {
+		if !computeDeterministic(dep.Steps, dep.Dependencies) {
+			return false
+		}
+	}
+	return true
 }
 
 // computeRecipeHash computes SHA256 hash of the recipe's TOML content.
@@ -562,18 +573,15 @@ func insertPatchSteps(steps []ResolvedStep, patches []recipe.Patch) []ResolvedSt
 	return result
 }
 
-// generateDependencySteps generates installation steps for all install-time dependencies.
-// Dependencies are resolved from the recipe, then each dependency's plan is generated
-// in topological order (dependencies before dependents). Steps are collected and
-// de-duplicated to avoid installing the same dependency twice.
-//
-// The function recursively resolves transitive dependencies, so if A depends on B
-// and B depends on C, the returned steps will include C, then B (in that order).
-func generateDependencySteps(
+// generateDependencyPlans generates nested dependency plans for all install-time dependencies.
+// Each dependency is represented as a DependencyPlan with its own nested dependencies,
+// forming a tree structure. This allows the executor to skip already-installed dependencies.
+func generateDependencyPlans(
 	ctx context.Context,
 	r *recipe.Recipe,
 	cfg PlanConfig,
-) ([]ResolvedStep, error) {
+	processed map[string]bool,
+) ([]DependencyPlan, error) {
 	// Resolve direct dependencies from recipe
 	deps := actions.ResolveDependencies(r)
 
@@ -581,47 +589,42 @@ func generateDependencySteps(
 		return nil, nil
 	}
 
-	// Collect all steps from dependencies in correct order
-	// Using a map to track which tools we've already processed (de-duplication)
-	processed := make(map[string]bool)
-	// Mark the root recipe as processed to avoid cycles
-	processed[r.Metadata.Name] = true
+	var plans []DependencyPlan
 
-	var allSteps []ResolvedStep
-
-	// Process dependencies in a deterministic order
+	// Process dependencies in deterministic order
 	depNames := make([]string, 0, len(deps.InstallTime))
 	for name := range deps.InstallTime {
 		depNames = append(depNames, name)
 	}
-	// Sort for deterministic ordering
 	sortStrings(depNames)
 
 	for _, depName := range depNames {
-		depSteps, err := generateStepsForDependency(ctx, depName, cfg, processed)
+		// Skip if already processed (handles cycles and de-duplication)
+		if processed[depName] {
+			continue
+		}
+		processed[depName] = true
+
+		depPlan, err := generateSingleDependencyPlan(ctx, depName, cfg, processed)
 		if err != nil {
 			return nil, fmt.Errorf("failed to generate plan for dependency %s: %w", depName, err)
 		}
-		allSteps = append(allSteps, depSteps...)
+		if depPlan != nil {
+			plans = append(plans, *depPlan)
+		}
 	}
 
-	return allSteps, nil
+	return plans, nil
 }
 
-// generateStepsForDependency generates installation steps for a single dependency
-// and its transitive dependencies. It handles cycle detection and de-duplication.
-func generateStepsForDependency(
+// generateSingleDependencyPlan generates a DependencyPlan for a single dependency,
+// including its own nested dependencies recursively.
+func generateSingleDependencyPlan(
 	ctx context.Context,
 	depName string,
 	cfg PlanConfig,
 	processed map[string]bool,
-) ([]ResolvedStep, error) {
-	// Skip if already processed (handles both cycles and de-duplication)
-	if processed[depName] {
-		return nil, nil
-	}
-	processed[depName] = true
-
+) (*DependencyPlan, error) {
 	// Load the dependency recipe
 	depRecipe, err := cfg.RecipeLoader.GetWithContext(ctx, depName)
 	if err != nil {
@@ -630,35 +633,20 @@ func generateStepsForDependency(
 		return nil, nil
 	}
 
-	// First, recursively process this dependency's own dependencies
-	// This ensures proper ordering: C before B before A
-	var transSteps []ResolvedStep
-	depDeps := actions.ResolveDependencies(depRecipe)
-	if len(depDeps.InstallTime) > 0 {
-		transDepNames := make([]string, 0, len(depDeps.InstallTime))
-		for name := range depDeps.InstallTime {
-			transDepNames = append(transDepNames, name)
-		}
-		sortStrings(transDepNames)
-
-		for _, transDepName := range transDepNames {
-			steps, err := generateStepsForDependency(ctx, transDepName, cfg, processed)
-			if err != nil {
-				return nil, err
-			}
-			transSteps = append(transSteps, steps...)
-		}
+	// Recursively generate plans for this dependency's own dependencies
+	nestedDeps, err := generateDependencyPlans(ctx, depRecipe, cfg, processed)
+	if err != nil {
+		return nil, err
 	}
 
-	// Now generate steps for this dependency
+	// Generate the plan for this dependency (without further recursion)
 	exec, err := New(depRecipe)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create executor for %s: %w", depName, err)
 	}
 	defer exec.Cleanup()
 
-	// Generate plan for the dependency with the same config
-	// Use "dependency" as recipe source to distinguish from main tool
+	// Generate plan without RecipeLoader to get just this tool's steps
 	depCfg := PlanConfig{
 		OS:                 cfg.OS,
 		Arch:               cfg.Arch,
@@ -668,9 +656,7 @@ func generateStepsForDependency(
 		DownloadCache:      cfg.DownloadCache,
 		AutoAcceptEvalDeps: cfg.AutoAcceptEvalDeps,
 		OnEvalDepsNeeded:   cfg.OnEvalDepsNeeded,
-		// Don't pass RecipeLoader to avoid infinite recursion
-		// We handle transitive deps explicitly above
-		RecipeLoader: nil,
+		RecipeLoader:       nil, // Don't recurse here - we handle it above
 	}
 
 	plan, err := exec.GeneratePlan(ctx, depCfg)
@@ -678,9 +664,24 @@ func generateStepsForDependency(
 		return nil, fmt.Errorf("failed to generate plan for %s: %w", depName, err)
 	}
 
-	// Combine: transitive dependency steps first, then this dependency's steps
-	result := append(transSteps, plan.Steps...)
-	return result, nil
+	// Build verify info if present
+	var verify *PlanVerify
+	if depRecipe.Verify.Command != "" {
+		verify = &PlanVerify{
+			Command: depRecipe.Verify.Command,
+			Pattern: depRecipe.Verify.Pattern,
+		}
+	}
+
+	return &DependencyPlan{
+		Tool:         depName,
+		Version:      plan.Version,
+		RecipeHash:   plan.RecipeHash,
+		Dependencies: nestedDeps,
+		Steps:        plan.Steps,
+		Verify:       verify,
+		RecipeType:   plan.RecipeType,
+	}, nil
 }
 
 // sortStrings sorts a slice of strings in place.

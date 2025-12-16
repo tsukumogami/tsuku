@@ -110,7 +110,7 @@ func TestValidateCachedPlan(t *testing.T) {
 				RecipeHash:    "abc123def456",
 			},
 			key:     validKey,
-			wantErr: "plan format version 1 is outdated (current: 2)",
+			wantErr: "plan format version 1 is outdated (current: 3)",
 		},
 		{
 			name: "platform OS mismatch",

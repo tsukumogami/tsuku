@@ -287,6 +287,12 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	fmt.Printf("Executing plan: %s@%s\n", plan.Tool, plan.Version)
 	fmt.Printf("   Work directory: %s\n", e.workDir)
 
+	// Flatten dependency steps into a single list (depth-first order)
+	// This ensures dependencies are installed before the tools that need them
+	allSteps := flattenPlanSteps(plan)
+	fmt.Printf("   Total steps: %d (including %d from dependencies)\n",
+		len(allSteps), len(allSteps)-len(plan.Steps))
+
 	// Store version for later use
 	e.version = plan.Version
 
@@ -328,14 +334,14 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 
 	fmt.Println()
 
-	// Execute each step
-	for i, step := range plan.Steps {
+	// Execute each step (including flattened dependency steps)
+	for i, step := range allSteps {
 		// Check for context cancellation
 		if err := ctx.Err(); err != nil {
 			return err
 		}
 
-		fmt.Printf("Step %d/%d: %s\n", i+1, len(plan.Steps), step.Action)
+		fmt.Printf("Step %d/%d: %s\n", i+1, len(allSteps), step.Action)
 
 		// Get action
 		action := actions.Get(step.Action)
@@ -378,6 +384,40 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	}
 
 	return nil
+}
+
+// flattenPlanSteps collects all steps from a plan and its dependencies into a single list.
+// Steps are collected in depth-first order: dependency steps come before the steps
+// that depend on them. This ensures proper installation order.
+func flattenPlanSteps(plan *InstallationPlan) []ResolvedStep {
+	var allSteps []ResolvedStep
+
+	// First, collect steps from all dependencies (depth-first)
+	for _, dep := range plan.Dependencies {
+		depSteps := flattenDependencySteps(&dep)
+		allSteps = append(allSteps, depSteps...)
+	}
+
+	// Then add the main tool's steps
+	allSteps = append(allSteps, plan.Steps...)
+
+	return allSteps
+}
+
+// flattenDependencySteps recursively collects steps from a dependency and its nested dependencies.
+func flattenDependencySteps(dep *DependencyPlan) []ResolvedStep {
+	var allSteps []ResolvedStep
+
+	// First, collect steps from nested dependencies (depth-first)
+	for _, nestedDep := range dep.Dependencies {
+		nestedSteps := flattenDependencySteps(&nestedDep)
+		allSteps = append(allSteps, nestedSteps...)
+	}
+
+	// Then add this dependency's steps
+	allSteps = append(allSteps, dep.Steps...)
+
+	return allSteps
 }
 
 // executeDownloadWithVerification downloads a file and verifies its checksum against the plan.
