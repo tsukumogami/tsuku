@@ -22,8 +22,8 @@ func TestLoadPlanFromSource_File(t *testing.T) {
 		},
 		Steps: []executor.ResolvedStep{
 			{
-				Action:    "download",
-				Params:    map[string]interface{}{"url": "https://example.com/file.tar.gz"},
+				Action:    "download_file",
+				Params:    map[string]interface{}{"url": "https://example.com/file.tar.gz", "checksum": "abc123"},
 				Checksum:  "abc123",
 				Evaluable: true,
 			},
@@ -44,7 +44,7 @@ func TestLoadPlanFromSource_File(t *testing.T) {
 		"tool": "test-tool",
 		"version": "1.0.0",
 		"platform": {"os": "` + plan.Platform.OS + `", "arch": "` + plan.Platform.Arch + `"},
-		"steps": [{"action": "download", "params": {"url": "https://example.com/file.tar.gz"}, "checksum": "abc123", "evaluable": true}]
+		"steps": [{"action": "download_file", "params": {"url": "https://example.com/file.tar.gz", "checksum": "abc123"}, "checksum": "abc123", "evaluable": true}]
 	}`
 	if _, err := f.WriteString(planJSON); err != nil {
 		t.Fatalf("failed to write plan: %v", err)
@@ -147,8 +147,8 @@ func TestValidateExternalPlan_Valid(t *testing.T) {
 		},
 		Steps: []executor.ResolvedStep{
 			{
-				Action:   "download",
-				Params:   map[string]interface{}{"url": "https://example.com/file.tar.gz"},
+				Action:   "download_file",
+				Params:   map[string]interface{}{"url": "https://example.com/file.tar.gz", "checksum": "abc123"},
 				Checksum: "abc123",
 			},
 			{

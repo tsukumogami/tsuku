@@ -15,7 +15,9 @@ import (
 	"github.com/tsukumogami/tsuku/internal/progress"
 )
 
-// DownloadAction implements file downloading with checksum verification
+// DownloadAction implements file downloading with checksum verification.
+// This is a composite action that decomposes to download_file primitive during
+// plan generation.
 type DownloadAction struct{ BaseAction }
 
 // IsDeterministic returns true because downloads with checksums produce identical results.
@@ -24,6 +26,100 @@ func (DownloadAction) IsDeterministic() bool { return true }
 // Name returns the action name
 func (a *DownloadAction) Name() string {
 	return "download"
+}
+
+// Decompose converts the download composite action to a download_file primitive.
+// It downloads the file to compute checksum if not provided inline.
+func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Get URL (required)
+	urlPattern, ok := GetString(params, "url")
+	if !ok {
+		return nil, fmt.Errorf("download action requires 'url' parameter")
+	}
+
+	// Apply custom mappings if provided
+	osMapping, _ := GetMapStringString(params, "os_mapping")
+	archMapping, _ := GetMapStringString(params, "arch_mapping")
+
+	// Build vars for expansion
+	vars := map[string]string{
+		"version":     ctx.Version,
+		"version_tag": ctx.VersionTag,
+		"os":          ctx.OS,
+		"arch":        ctx.Arch,
+	}
+	if len(osMapping) > 0 {
+		vars["os"] = ApplyMapping(vars["os"], osMapping)
+	}
+	if len(archMapping) > 0 {
+		vars["arch"] = ApplyMapping(vars["arch"], archMapping)
+	}
+
+	// Expand variables in URL
+	downloadURL := ExpandVars(urlPattern, vars)
+
+	// Get destination filename
+	dest, _ := GetString(params, "dest")
+	if dest == "" {
+		// Default to basename of URL
+		dest = filepath.Base(downloadURL)
+		// Remove query parameters if present
+		if idx := strings.Index(dest, "?"); idx != -1 {
+			dest = dest[:idx]
+		}
+	} else {
+		dest = ExpandVars(dest, vars)
+	}
+
+	// Get checksum algorithm (default to sha256)
+	checksumAlgo, _ := GetString(params, "checksum_algo")
+	if checksumAlgo == "" {
+		checksumAlgo = "sha256"
+	}
+
+	// Resolve checksum
+	var checksum string
+	var size int64
+
+	// First check inline checksum
+	inlineChecksum, hasInline := GetString(params, "checksum")
+	if hasInline && inlineChecksum != "" {
+		checksum = inlineChecksum
+	}
+
+	// If no inline checksum, download file to compute checksum if Downloader is available
+	if checksum == "" && ctx.Downloader != nil {
+		result, err := ctx.Downloader.Download(ctx.Context, downloadURL)
+		if err != nil {
+			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
+		}
+		checksum = result.Checksum
+		size = result.Size
+		// Save to cache if configured, then cleanup temp file
+		if ctx.DownloadCache != nil {
+			_ = ctx.DownloadCache.Save(downloadURL, result.AssetPath, result.Checksum)
+		}
+		_ = result.Cleanup()
+	}
+
+	// Build download_file step
+	downloadParams := map[string]interface{}{
+		"url":  downloadURL,
+		"dest": dest,
+	}
+	if checksum != "" {
+		downloadParams["checksum"] = checksum
+		downloadParams["checksum_algo"] = checksumAlgo
+	}
+
+	step := Step{
+		Action:   "download_file",
+		Params:   downloadParams,
+		Checksum: checksum,
+		Size:     size,
+	}
+
+	return []Step{step}, nil
 }
 
 // Execute downloads a file with optional checksum verification

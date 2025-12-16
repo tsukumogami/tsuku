@@ -651,15 +651,15 @@ func TestApplyPatchAction_Decompose_URL(t *testing.T) {
 		t.Fatalf("Decompose() error = %v", err)
 	}
 
-	// Should decompose to download + apply_patch_file
+	// Should decompose to download_file + apply_patch_file
 	if len(steps) != 2 {
 		t.Fatalf("Expected 2 steps, got %d", len(steps))
 	}
 
-	// First step: download
+	// First step: download_file
 	downloadStep := steps[0]
-	if downloadStep.Action != "download" {
-		t.Errorf("First step should be 'download', got %q", downloadStep.Action)
+	if downloadStep.Action != "download_file" {
+		t.Errorf("First step should be 'download_file', got %q", downloadStep.Action)
 	}
 	if downloadStep.Params["url"] != "https://example.com/patches/fix-bug.patch" {
 		t.Errorf("Download URL mismatch")

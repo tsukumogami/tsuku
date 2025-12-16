@@ -514,6 +514,9 @@ func TestBuildUserMessage_LongREADME(t *testing.T) {
 // TestGenerateRecipe_Integration is skipped unless ANTHROPIC_API_KEY is set.
 // This test makes real API calls and incurs costs.
 func TestGenerateRecipe_Integration(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping integration test in short mode")
+	}
 	if os.Getenv("ANTHROPIC_API_KEY") == "" {
 		t.Skip("ANTHROPIC_API_KEY not set, skipping integration test")
 	}

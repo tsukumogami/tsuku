@@ -88,14 +88,14 @@ func TestHomebrewSourceAction_Decompose(t *testing.T) {
 		t.Fatalf("Decompose() error = %v", err)
 	}
 
-	// Should return 2 steps: download and extract
+	// Should return 2 steps: download_file and extract
 	if len(steps) != 2 {
 		t.Fatalf("Decompose() returned %d steps, want 2", len(steps))
 	}
 
-	// First step should be download
-	if steps[0].Action != "download" {
-		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download")
+	// First step should be download_file
+	if steps[0].Action != "download_file" {
+		t.Errorf("steps[0].Action = %q, want %q", steps[0].Action, "download_file")
 	}
 
 	// Verify download URL

@@ -116,6 +116,7 @@ func Get(name string) Action {
 func init() {
 	// Core actions
 	Register(&DownloadAction{})
+	Register(&DownloadFileAction{})
 	Register(&ExtractAction{})
 	Register(&ChmodAction{})
 	Register(&InstallBinariesAction{})

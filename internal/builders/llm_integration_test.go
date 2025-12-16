@@ -52,6 +52,9 @@ type llmTestCase struct {
 //	go build -o tsuku ./cmd/tsuku
 //	PATH="$(pwd):$PATH" go test -run TestLLMGroundTruth ./internal/builders/
 func TestLLMGroundTruth(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping LLM integration test in short mode")
+	}
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
 	if apiKey == "" {
 		t.Skip("Skipping LLM integration test: ANTHROPIC_API_KEY not set")

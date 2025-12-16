@@ -31,7 +31,7 @@ func TestDownloadArchiveAction_Decompose(t *testing.T) {
 				"binaries":       []interface{}{"tool"},
 			},
 			wantSteps:   4,
-			wantActions: []string{"download", "extract", "chmod", "install_binaries"},
+			wantActions: []string{"download_file", "extract", "chmod", "install_binaries"},
 			checkDownload: func(t *testing.T, params map[string]interface{}) {
 				url := params["url"].(string)
 				if url != "https://example.com/tool-1.2.3-linux-amd64.tar.gz" {
@@ -48,7 +48,7 @@ func TestDownloadArchiveAction_Decompose(t *testing.T) {
 				"binaries":       []interface{}{"bin/tool"},
 			},
 			wantSteps:   4,
-			wantActions: []string{"download", "extract", "chmod", "install_binaries"},
+			wantActions: []string{"download_file", "extract", "chmod", "install_binaries"},
 		},
 		{
 			name: "with version_tag variable",
@@ -58,7 +58,7 @@ func TestDownloadArchiveAction_Decompose(t *testing.T) {
 				"binaries":       []interface{}{"tool"},
 			},
 			wantSteps:   4,
-			wantActions: []string{"download", "extract", "chmod", "install_binaries"},
+			wantActions: []string{"download_file", "extract", "chmod", "install_binaries"},
 			checkDownload: func(t *testing.T, params map[string]interface{}) {
 				url := params["url"].(string)
 				if url != "https://example.com/v1.2.3/tool.tar.gz" {
@@ -149,7 +149,7 @@ func TestGitHubFileAction_Decompose(t *testing.T) {
 				"binary":        "tool",
 			},
 			wantSteps:   3,
-			wantActions: []string{"download", "chmod", "install_binaries"},
+			wantActions: []string{"download_file", "chmod", "install_binaries"},
 			checkDownload: func(t *testing.T, params map[string]interface{}) {
 				url := params["url"].(string)
 				expected := "https://github.com/owner/repo/releases/download/v1.2.3/tool-linux-amd64"
@@ -171,7 +171,7 @@ func TestGitHubFileAction_Decompose(t *testing.T) {
 				},
 			},
 			wantSteps:   3,
-			wantActions: []string{"download", "chmod", "install_binaries"},
+			wantActions: []string{"download_file", "chmod", "install_binaries"},
 			checkDownload: func(t *testing.T, params map[string]interface{}) {
 				url := params["url"].(string)
 				expected := "https://github.com/owner/repo/releases/download/v1.2.3/tool-1.2.3"

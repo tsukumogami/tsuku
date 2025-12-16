@@ -232,7 +232,8 @@ func (e *Executor) resolveStep(
 			// For download actions, cache the file for offline container execution.
 			// If Decompose already provided a checksum, it verified the download.
 			// Skip re-downloading for URLs that require special auth (e.g., GHCR).
-			if pstep.Action == "download" {
+			// Handle both legacy "download" and new "download_file" actions.
+			if pstep.Action == "download" || pstep.Action == "download_file" {
 				if url, ok := pstep.Params["url"].(string); ok {
 					rs.URL = url
 
