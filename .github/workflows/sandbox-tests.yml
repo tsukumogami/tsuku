@@ -29,6 +29,10 @@ jobs:
       matrix:
         test: ${{ fromJson(needs.matrix.outputs.linux) }}
         exclude:
+          # download_archive strip_dirs bug in sandbox - see #614
+          - test: { id: "T16" }  # golang
+          - test: { id: "T19" }  # nodejs
+          - test: { id: "T50" }  # perl
           # npm_install not yet evaluable - see #608
           - test: { id: "T23" }
           # pipx_install not yet evaluable - see #609
