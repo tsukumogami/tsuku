@@ -212,7 +212,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Add tsuku tools to PATH so make and zig are available
+          export PATH="$HOME/.tsuku/tools/current:$HOME/.tsuku/bin:$PATH"
           echo "Building gdbm-source - should use zig cc since no gcc exists"
+          echo "PATH contains: $(echo $PATH | tr ':' '\n' | head -5)"
+          echo "make location: $(which make)"
           ./tsuku install --force gdbm-source
 
       - name: "Verify gdbm-source functionality"
