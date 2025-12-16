@@ -500,9 +500,12 @@ func (a *GemExecAction) executeLockDataMode(ctx *ExecutionContext, params map[st
 // findBundlerBinDir finds the bin directory where bundler installed executables.
 func (a *GemExecAction) findBundlerBinDir(installDir string) string {
 	// Check common bundler installation paths
+	// bundler installs gems differently when using --path
 	patterns := []string{
-		filepath.Join(installDir, "ruby", "*", "bin"),
-		filepath.Join(installDir, "bin"),
+		filepath.Join(installDir, "ruby", "*", "bin"),              // Standard --path location
+		filepath.Join(installDir, "bin"),                           // Direct bin
+		filepath.Join(installDir, "ruby", "*", "gems", "*", "exe"), // Gem exe directory
+		filepath.Join(installDir, "gems", "*", "exe"),              // Alternative gem exe
 	}
 
 	for _, pattern := range patterns {
