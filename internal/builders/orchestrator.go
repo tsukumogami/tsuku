@@ -4,11 +4,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // DefaultMaxRepairs is the default number of repair attempts before giving up.
@@ -23,6 +26,14 @@ type OrchestratorConfig struct {
 	// SkipSandbox disables sandbox testing entirely.
 	// When true, recipes are returned immediately after generation.
 	SkipSandbox bool
+
+	// ToolsDir is the directory containing installed tools ($TSUKU_HOME/tools).
+	// Required for plan generation if sandbox testing is enabled.
+	ToolsDir string
+
+	// DownloadCacheDir is the directory for caching downloads ($TSUKU_HOME/cache/downloads).
+	// Required for plan generation if sandbox testing is enabled.
+	DownloadCacheDir string
 }
 
 // Orchestrator coordinates the build → sandbox → repair cycle.
@@ -186,7 +197,7 @@ func (o *Orchestrator) Create(
 // validate runs sandbox validation on the given recipe.
 func (o *Orchestrator) validate(ctx context.Context, r *recipe.Recipe) (*sandbox.SandboxResult, error) {
 	// Generate installation plan from recipe
-	plan, err := o.generatePlan(r)
+	plan, err := o.generatePlan(ctx, r)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate installation plan: %w", err)
 	}
@@ -198,24 +209,39 @@ func (o *Orchestrator) validate(ctx context.Context, r *recipe.Recipe) (*sandbox
 	return o.sandbox.Sandbox(ctx, plan, reqs)
 }
 
-// generatePlan creates an installation plan from a recipe for sandbox testing.
-func (o *Orchestrator) generatePlan(r *recipe.Recipe) (*executor.InstallationPlan, error) {
-	// For sandbox testing, we generate a minimal plan that exercises the recipe
-	// The actual version will be resolved at install time
-	plan := &executor.InstallationPlan{
-		FormatVersion: executor.PlanFormatVersion,
-		Tool:          r.Metadata.Name,
-		Version:       "latest", // Will be resolved by sandbox
-		Steps:         make([]executor.ResolvedStep, 0),
+// generatePlan creates a fully resolved installation plan from a recipe.
+// This uses the executor to properly decompose composite actions and set platform info.
+func (o *Orchestrator) generatePlan(ctx context.Context, r *recipe.Recipe) (*executor.InstallationPlan, error) {
+	exec, err := executor.New(r)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create executor: %w", err)
+	}
+	defer exec.Cleanup()
+
+	// Configure executor with paths
+	exec.SetToolsDir(o.config.ToolsDir)
+	exec.SetDownloadCacheDir(o.config.DownloadCacheDir)
+
+	// Create downloader and cache for plan generation
+	// These enable action decomposition and pre-downloading for sandbox
+	var downloader actions.Downloader
+	var downloadCache *actions.DownloadCache
+	if o.config.DownloadCacheDir != "" {
+		predownloader := validate.NewPreDownloader()
+		downloader = validate.NewPreDownloaderAdapter(predownloader)
+		downloadCache = actions.NewDownloadCache(o.config.DownloadCacheDir)
 	}
 
-	// Convert recipe steps to resolved steps
-	for _, step := range r.Steps {
-		resolved := executor.ResolvedStep{
-			Action: step.Action,
-			Params: step.Params,
-		}
-		plan.Steps = append(plan.Steps, resolved)
+	// Generate a fully resolved plan
+	plan, err := exec.GeneratePlan(ctx, executor.PlanConfig{
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		RecipeSource:  "create",
+		Downloader:    downloader,
+		DownloadCache: downloadCache,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate plan: %w", err)
 	}
 
 	return plan, nil

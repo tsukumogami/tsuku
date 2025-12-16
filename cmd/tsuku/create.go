@@ -309,8 +309,10 @@ func runCreate(cmd *cobra.Command, args []string) {
 	orchestrator := builders.NewOrchestrator(
 		builders.WithSandboxExecutor(sandboxExec),
 		builders.WithOrchestratorConfig(builders.OrchestratorConfig{
-			SkipSandbox: skipSandbox,
-			MaxRepairs:  builders.DefaultMaxRepairs,
+			SkipSandbox:      skipSandbox,
+			MaxRepairs:       builders.DefaultMaxRepairs,
+			ToolsDir:         cfg.ToolsDir,
+			DownloadCacheDir: cfg.DownloadCacheDir,
 		}),
 	)
 
