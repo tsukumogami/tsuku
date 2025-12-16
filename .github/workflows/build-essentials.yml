@@ -150,7 +150,7 @@ jobs:
   # Test source build with zig cc in container without system gcc
   # This validates that configure_make falls back to zig when no gcc exists
   test-no-gcc:
-    name: "No-GCC Container: m4"
+    name: "No-GCC Container: gdbm-source"
     runs-on: ubuntu-latest
     container:
       image: ubuntu:22.04
@@ -181,6 +181,10 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
+      # Copy test recipe BEFORE build so it gets embedded
+      - name: Copy test recipe to registry
+        run: cp testdata/recipes/gdbm-source.toml internal/recipe/recipes/g/
+
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
@@ -194,12 +198,12 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force make
 
-      - name: Build m4 from source (uses zig cc)
+      - name: Build gdbm from source (uses zig cc)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Building m4 - should use zig cc since no gcc exists"
-          ./tsuku install --force m4
+          echo "Building gdbm-source - should use zig cc since no gcc exists"
+          ./tsuku install --force gdbm-source
 
-      - name: "Verify m4 functionality"
-        run: ./test/scripts/verify-tool.sh m4
+      - name: "Verify gdbm-source functionality"
+        run: ./test/scripts/verify-tool.sh gdbm-source
