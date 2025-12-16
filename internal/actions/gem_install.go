@@ -445,8 +445,8 @@ func generateGemfileLock(ctx *EvalContext, bundlerPath, gemName, version, tempDi
 			}
 		}
 
-		// Install the specific bundler version
-		installCmd := exec.CommandContext(ctx.Context, gemPath, "install", "bundler", "--version", version, "--no-document")
+		// Install the specific bundler version to user directory to avoid permission issues
+		installCmd := exec.CommandContext(ctx.Context, gemPath, "install", "bundler", "--version", version, "--user-install", "--no-document")
 		installCmd.Dir = tempDir
 		installCmd.Env = os.Environ()
 		installOutput, installErr := installCmd.CombinedOutput()
@@ -457,20 +457,10 @@ func generateGemfileLock(ctx *EvalContext, bundlerPath, gemName, version, tempDi
 			}
 		}
 
-		// Use bundle.rb with version selector to run the specific bundler version
-		rubyPath, err := exec.LookPath("ruby")
-		if err != nil {
-			return "", fmt.Errorf("ruby command not found")
-		}
-		bundleRbPath := filepath.Join(filepath.Dir(bundlerPath), "bundle.rb")
-		if _, err := os.Stat(bundleRbPath); err != nil {
-			// bundle.rb not found, try using bundler with _version_ prefix
-			bundlerCmd = bundlerPath
-			args = []string{"_" + version + "_", "lock", "--add-checksums"}
-		} else {
-			bundlerCmd = rubyPath
-			args = []string{bundleRbPath, "_" + version + "_", "lock", "--add-checksums"}
-		}
+		// Use bundler with _version_ syntax to run the specific version
+		// This works with any bundler executable as long as the gem is installed
+		bundlerCmd = bundlerPath
+		args = []string{"_" + version + "_", "lock", "--add-checksums"}
 	} else {
 		// Normal case: use bundler directly for non-bundler gems
 		bundlerCmd = bundlerPath
