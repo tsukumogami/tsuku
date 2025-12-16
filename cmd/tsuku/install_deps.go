@@ -16,6 +16,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // planRetrievalConfig configures the plan retrieval flow.
@@ -26,6 +27,7 @@ type planRetrievalConfig struct {
 	OS                string // Target OS (defaults to runtime.GOOS)
 	Arch              string // Target arch (defaults to runtime.GOARCH)
 	RecipeHash        string // SHA256 hash of recipe TOML
+	DownloadCacheDir  string // Directory for download cache (enables caching during Decompose)
 }
 
 // versionResolver abstracts version resolution for testing.
@@ -103,10 +105,24 @@ func getOrGeneratePlanWith(
 
 	// Generate fresh plan
 	printInfof("Generating plan for %s@%s\n", cfg.Tool, resolvedVersion)
+
+	// Create downloader and cache for plan generation
+	// Downloader enables Decompose to download files (e.g., GHCR bottles with auth)
+	// DownloadCache persists downloads for reuse during plan execution
+	var downloadCache *actions.DownloadCache
+	var downloader actions.Downloader
+	if cfg.DownloadCacheDir != "" {
+		downloadCache = actions.NewDownloadCache(cfg.DownloadCacheDir)
+		predownloader := validate.NewPreDownloader()
+		downloader = validate.NewPreDownloaderAdapter(predownloader)
+	}
+
 	return generator.GeneratePlan(ctx, executor.PlanConfig{
-		OS:           targetOS,
-		Arch:         targetArch,
-		RecipeSource: "registry",
+		OS:            targetOS,
+		Arch:          targetArch,
+		RecipeSource:  "registry",
+		Downloader:    downloader,
+		DownloadCache: downloadCache,
 	})
 }
 
@@ -385,6 +401,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		VersionConstraint: versionConstraint,
 		Fresh:             installFresh,
 		RecipeHash:        recipeHash,
+		DownloadCacheDir:  cfg.DownloadCacheDir,
 	}
 	plan, err := getOrGeneratePlan(globalCtx, exec, mgr.GetState(), planCfg)
 	if err != nil {

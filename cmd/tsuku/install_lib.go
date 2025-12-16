@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
+	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // installLibrary handles installation of library recipes
@@ -45,11 +47,24 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	exec.SetToolsDir(cfg.ToolsDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 
+	// Create downloader and cache for plan generation
+	// Downloader enables Decompose to download files (e.g., GHCR bottles with auth)
+	// DownloadCache persists downloads for reuse during plan execution
+	var downloadCache *actions.DownloadCache
+	var downloader actions.Downloader
+	if cfg.DownloadCacheDir != "" {
+		downloadCache = actions.NewDownloadCache(cfg.DownloadCacheDir)
+		predownloader := validate.NewPreDownloader()
+		downloader = validate.NewPreDownloaderAdapter(predownloader)
+	}
+
 	// Generate plan for library installation
 	plan, err := exec.GeneratePlan(globalCtx, executor.PlanConfig{
-		OS:           runtime.GOOS,
-		Arch:         runtime.GOARCH,
-		RecipeSource: "registry",
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		RecipeSource:  "registry",
+		Downloader:    downloader,
+		DownloadCache: downloadCache,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to generate library plan: %w", err)

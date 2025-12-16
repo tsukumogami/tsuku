@@ -85,6 +85,7 @@ var primitives = map[string]bool{
 	"install_libraries": true,
 	"apply_patch_file":  true,
 	"text_replace":      true,
+	"homebrew_relocate": true,
 	// Ecosystem primitives - have residual non-determinism
 	"cargo_build":    true,
 	"cmake_build":    true,

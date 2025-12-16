@@ -14,6 +14,7 @@ func TestIsDecomposable(t *testing.T) {
 		"github_file",
 		"download_archive",
 		"homebrew_source",
+		"homebrew",
 	}
 
 	for _, name := range compositeActions {
@@ -54,17 +55,18 @@ func TestIsPrimitive(t *testing.T) {
 		"set_rpath",
 		"link_dependencies",
 		"install_libraries",
-		"apply_patch_file", // Core primitive
-		"text_replace",     // Core primitive
-		"cargo_build",      // Ecosystem primitive
-		"cmake_build",      // Ecosystem primitive
-		"configure_make",   // Ecosystem primitive
-		"cpan_install",     // Ecosystem primitive
-		"gem_exec",         // Ecosystem primitive
-		"go_build",         // Ecosystem primitive
-		"nix_realize",      // Ecosystem primitive
-		"npm_exec",         // Ecosystem primitive
-		"pip_install",      // Ecosystem primitive
+		"apply_patch_file",  // Core primitive
+		"text_replace",      // Core primitive
+		"homebrew_relocate", // Core primitive
+		"cargo_build",       // Ecosystem primitive
+		"cmake_build",       // Ecosystem primitive
+		"configure_make",    // Ecosystem primitive
+		"cpan_install",      // Ecosystem primitive
+		"gem_exec",          // Ecosystem primitive
+		"go_build",          // Ecosystem primitive
+		"nix_realize",       // Ecosystem primitive
+		"npm_exec",          // Ecosystem primitive
+		"pip_install",       // Ecosystem primitive
 	}
 
 	for _, name := range primitives {
@@ -96,9 +98,9 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 19 primitives (10 core + 9 ecosystem)
-	if len(prims) != 19 {
-		t.Errorf("len(Primitives()) = %d, want 19", len(prims))
+	// Should have exactly 20 primitives (11 core + 9 ecosystem)
+	if len(prims) != 20 {
+		t.Errorf("len(Primitives()) = %d, want 20", len(prims))
 	}
 
 	// Sort for deterministic comparison
@@ -115,6 +117,7 @@ func TestPrimitives(t *testing.T) {
 		"extract",
 		"gem_exec",
 		"go_build",
+		"homebrew_relocate",
 		"install_binaries",
 		"install_libraries",
 		"link_dependencies",
@@ -492,6 +495,7 @@ func TestIsDeterministic(t *testing.T) {
 		"install_libraries",
 		"apply_patch_file",
 		"text_replace",
+		"homebrew_relocate",
 	}
 
 	for _, name := range deterministicActions {
