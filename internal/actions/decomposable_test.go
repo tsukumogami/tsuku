@@ -99,9 +99,9 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Should have exactly 20 primitives (11 core + 9 ecosystem)
-	if len(prims) != 20 {
-		t.Errorf("len(Primitives()) = %d, want 20", len(prims))
+	// Should have exactly 21 primitives (11 core + 10 ecosystem)
+	if len(prims) != 21 {
+		t.Errorf("len(Primitives()) = %d, want 21", len(prims))
 	}
 
 	// Sort for deterministic comparison
@@ -124,6 +124,7 @@ func TestPrimitives(t *testing.T) {
 		"link_dependencies",
 		"nix_realize",
 		"npm_exec",
+		"pip_exec",
 		"pip_install",
 		"set_env",
 		"set_rpath",

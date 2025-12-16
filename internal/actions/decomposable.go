@@ -95,6 +95,7 @@ var primitives = map[string]bool{
 	"go_build":       true,
 	"nix_realize":    true,
 	"npm_exec":       true,
+	"pip_exec":       true,
 	"pip_install":    true,
 }
 
