@@ -40,6 +40,7 @@ func TestGemExecAction_RequiresCommand(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Context: context.Background(),
 		WorkDir: workDir,
 	}
 
@@ -57,6 +58,7 @@ func TestGemExecAction_ValidatesGemfileExists(t *testing.T) {
 	workDir := t.TempDir()
 
 	ctx := &ExecutionContext{
+		Context: context.Background(),
 		WorkDir: workDir,
 	}
 
@@ -81,6 +83,7 @@ func TestGemExecAction_ValidatesLockfileWhenRequired(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Context: context.Background(),
 		WorkDir: workDir,
 	}
 
@@ -120,6 +123,7 @@ func TestGemExecAction_RejectsShellMetacharacters(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Context: context.Background(),
 		WorkDir: workDir,
 	}
 
@@ -294,6 +298,7 @@ func TestGemExecAction_RelativeSourceDir(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Context: context.Background(),
 		WorkDir: workDir,
 	}
 
@@ -323,6 +328,7 @@ func TestGemExecAction_RelativeOutputDir(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Context: context.Background(),
 		WorkDir: workDir,
 	}
 
@@ -640,6 +646,7 @@ func TestGemExecAction_WithRubyVersionValidation(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Context: context.Background(),
 		WorkDir: workDir,
 	}
 
@@ -676,6 +683,7 @@ func TestGemExecAction_WithBundlerVersionValidation(t *testing.T) {
 	}
 
 	ctx := &ExecutionContext{
+		Context: context.Background(),
 		WorkDir: workDir,
 	}
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"runtime"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
@@ -984,7 +985,7 @@ func TestExecutePlan_EmptyPlan(t *testing.T) {
 		FormatVersion: PlanFormatVersion,
 		Tool:          "empty-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps:         []ResolvedStep{},
 	}
 
@@ -1057,7 +1058,7 @@ func TestExecutePlan_ContextCancellation(t *testing.T) {
 		FormatVersion: PlanFormatVersion,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action: "chmod",
@@ -1108,7 +1109,7 @@ func TestExecutePlan_NonDownloadSteps(t *testing.T) {
 		FormatVersion: PlanFormatVersion,
 		Tool:          "test-tool",
 		Version:       "1.0.0",
-		Platform:      Platform{OS: "linux", Arch: "amd64"},
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
 		Steps: []ResolvedStep{
 			{
 				Action: "chmod",
