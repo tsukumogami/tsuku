@@ -378,10 +378,20 @@ func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map
 	crateTarball := filepath.Join(tempDir, fmt.Sprintf("%s-%s.crate", crateName, version))
 
 	fmt.Printf("   Downloading crate from crates.io...\n")
-	downloadCmd := exec.CommandContext(ctx.Context, "curl", "-L", "-o", crateTarball, crateURL)
+	// Use -f to fail on HTTP errors, -L to follow redirects, -S to show errors
+	downloadCmd := exec.CommandContext(ctx.Context, "curl", "-fsSL", "-o", crateTarball, crateURL)
 	downloadOutput, err := downloadCmd.CombinedOutput()
 	if err != nil {
 		return fmt.Errorf("failed to download crate from %s: %w\nOutput: %s", crateURL, err, string(downloadOutput))
+	}
+
+	// Verify the downloaded file exists and is not empty
+	fileInfo, err := os.Stat(crateTarball)
+	if err != nil {
+		return fmt.Errorf("downloaded crate file not found: %w", err)
+	}
+	if fileInfo.Size() == 0 {
+		return fmt.Errorf("downloaded crate file is empty")
 	}
 
 	// Extract the .crate file (it's a gzipped tar archive)
