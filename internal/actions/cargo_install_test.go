@@ -381,3 +381,152 @@ func TestResolveCargo_NonExecutable(t *testing.T) {
 		t.Errorf("ResolveCargo() should skip non-executable cargo, got: %s", result)
 	}
 }
+
+// TestCargoInstallAction_Decompose tests the Decompose method
+func TestCargoInstallAction_Decompose(t *testing.T) {
+	action := &CargoInstallAction{}
+
+	// Create eval context
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "14.1.0",
+		OS:      "linux",
+		Arch:    "amd64",
+	}
+
+	params := map[string]interface{}{
+		"crate":       "ripgrep",
+		"executables": []interface{}{"rg"},
+	}
+
+	steps, err := action.Decompose(ctx, params)
+	if err != nil {
+		t.Fatalf("Decompose() failed: %v", err)
+	}
+
+	// Verify we got exactly one step
+	if len(steps) != 1 {
+		t.Fatalf("Decompose() should return 1 step, got %d", len(steps))
+	}
+
+	step := steps[0]
+
+	// Verify the action is cargo_build
+	if step.Action != "cargo_build" {
+		t.Errorf("Decompose() action = %q, want %q", step.Action, "cargo_build")
+	}
+
+	// Verify required parameters are present
+	requiredParams := []string{"crate", "version", "executables", "lock_data", "lock_checksum"}
+	for _, param := range requiredParams {
+		if _, ok := step.Params[param]; !ok {
+			t.Errorf("Decompose() step missing required parameter: %q", param)
+		}
+	}
+
+	// Verify crate name is correct
+	if crate, ok := GetString(step.Params, "crate"); !ok || crate != "ripgrep" {
+		t.Errorf("Decompose() crate = %q, want %q", crate, "ripgrep")
+	}
+
+	// Verify version is correct
+	if version, ok := GetString(step.Params, "version"); !ok || version != "14.1.0" {
+		t.Errorf("Decompose() version = %q, want %q", version, "14.1.0")
+	}
+
+	// Verify executables are correct
+	executables, ok := GetStringSlice(step.Params, "executables")
+	if !ok || len(executables) != 1 || executables[0] != "rg" {
+		t.Errorf("Decompose() executables = %v, want [%q]", executables, "rg")
+	}
+
+	// Verify lock_data is not empty
+	lockData, ok := GetString(step.Params, "lock_data")
+	if !ok || lockData == "" {
+		t.Error("Decompose() lock_data should not be empty")
+	}
+
+	// Verify lock_checksum is not empty and is a valid hex string
+	lockChecksum, ok := GetString(step.Params, "lock_checksum")
+	if !ok || lockChecksum == "" {
+		t.Error("Decompose() lock_checksum should not be empty")
+	}
+	if len(lockChecksum) != 64 { // SHA256 hex is 64 characters
+		t.Errorf("Decompose() lock_checksum length = %d, want 64 (SHA256)", len(lockChecksum))
+	}
+}
+
+// TestCargoInstallAction_Decompose_MissingCrate tests Decompose with missing crate
+func TestCargoInstallAction_Decompose_MissingCrate(t *testing.T) {
+	action := &CargoInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "1.0.0",
+	}
+
+	params := map[string]interface{}{
+		"executables": []interface{}{"test"},
+		// Missing "crate"
+	}
+
+	_, err := action.Decompose(ctx, params)
+	if err == nil {
+		t.Error("Decompose() should fail when crate parameter is missing")
+	}
+	if err != nil && !containsSubstr(err.Error(), "crate") {
+		t.Errorf("Error message should mention 'crate', got: %v", err)
+	}
+}
+
+// TestCargoInstallAction_Decompose_MissingVersion tests Decompose with missing version
+func TestCargoInstallAction_Decompose_MissingVersion(t *testing.T) {
+	action := &CargoInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		// Missing Version
+	}
+
+	params := map[string]interface{}{
+		"crate":       "ripgrep",
+		"executables": []interface{}{"rg"},
+	}
+
+	_, err := action.Decompose(ctx, params)
+	if err == nil {
+		t.Error("Decompose() should fail when version is not provided in context")
+	}
+	if err != nil && !containsSubstr(err.Error(), "version") {
+		t.Errorf("Error message should mention 'version', got: %v", err)
+	}
+}
+
+// TestCargoInstallAction_Decompose_InvalidCrateName tests Decompose with invalid crate name
+func TestCargoInstallAction_Decompose_InvalidCrateName(t *testing.T) {
+	action := &CargoInstallAction{}
+	ctx := &EvalContext{
+		Context: context.Background(),
+		Version: "1.0.0",
+	}
+
+	params := map[string]interface{}{
+		"crate":       "cargo;rm -rf /", // Injection attempt
+		"executables": []interface{}{"test"},
+	}
+
+	_, err := action.Decompose(ctx, params)
+	if err == nil {
+		t.Error("Decompose() should fail with invalid crate name")
+	}
+	if err != nil && !containsSubstr(err.Error(), "invalid crate name") {
+		t.Errorf("Error message should mention 'invalid crate name', got: %v", err)
+	}
+}
+
+// TestCargoInstallIsDecomposable tests that cargo_install implements Decomposable
+func TestCargoInstallIsDecomposable(t *testing.T) {
+	action := &CargoInstallAction{}
+	_, ok := interface{}(action).(Decomposable)
+	if !ok {
+		t.Error("CargoInstallAction should implement Decomposable interface")
+	}
+}
