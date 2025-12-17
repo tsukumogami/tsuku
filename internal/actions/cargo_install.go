@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"os/exec"
@@ -8,12 +9,19 @@ import (
 	"strings"
 )
 
+// Ensure CargoInstallAction implements Decomposable
+var _ Decomposable = (*CargoInstallAction)(nil)
+
 // CargoInstallAction installs Rust crates using cargo install with --root isolation
 type CargoInstallAction struct{ BaseAction }
 
-// Dependencies returns rust as an install-time dependency.
+// Dependencies returns rust as eval-time, install-time, and runtime dependency.
+// EvalTime is needed because Decompose() runs cargo to generate Cargo.lock.
 func (CargoInstallAction) Dependencies() ActionDeps {
-	return ActionDeps{InstallTime: []string{"rust"}}
+	return ActionDeps{
+		InstallTime: []string{"rust"},
+		EvalTime:    []string{"rust"},
+	}
 }
 
 // RequiresNetwork returns true because cargo_install fetches crates from crates.io.
@@ -137,6 +145,235 @@ func (a *CargoInstallAction) Execute(ctx *ExecutionContext, params map[string]in
 	fmt.Printf("   ✓ Verified %d executable(s)\n", len(executables))
 
 	return nil
+}
+
+// Decompose converts a cargo_install composite action into a cargo_build primitive step.
+// This is called during plan generation to capture the Cargo.lock at eval time.
+//
+// The decomposition:
+//  1. Creates a temporary directory with a minimal Cargo.toml
+//  2. Runs `cargo generate-lockfile` to create Cargo.lock
+//  3. Optionally runs `cargo fetch --locked` to verify checksums
+//  4. Returns a cargo_build step with the captured lock_data
+func (a *CargoInstallAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
+	// Get crate name (required)
+	crateName, ok := GetString(params, "crate")
+	if !ok {
+		return nil, fmt.Errorf("cargo_install action requires 'crate' parameter")
+	}
+
+	// Validate crate name
+	if !isValidCrateName(crateName) {
+		return nil, fmt.Errorf("invalid crate name '%s'", crateName)
+	}
+
+	// Get executables list (required)
+	executables, ok := GetStringSlice(params, "executables")
+	if !ok || len(executables) == 0 {
+		return nil, fmt.Errorf("cargo_install action requires 'executables' parameter with at least one executable")
+	}
+
+	// Use Version from context
+	version := ctx.Version
+	if version == "" {
+		return nil, fmt.Errorf("cargo_install decomposition requires a resolved version")
+	}
+
+	// Validate version format
+	if !isValidCargoVersion(version) {
+		return nil, fmt.Errorf("invalid version format '%s'", version)
+	}
+
+	// Find cargo command
+	cargoPath := findCargoForEval()
+	if cargoPath == "" {
+		return nil, fmt.Errorf("cargo not found: install Rust first (tsuku install rust)")
+	}
+
+	// Create temp directory for lockfile generation
+	tempDir, err := os.MkdirTemp("", "tsuku-cargo-decompose-*")
+	if err != nil {
+		return nil, fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Generate Cargo.lock
+	lockData, err := generateCargoLock(ctx, cargoPath, crateName, version, tempDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate Cargo.lock: %w", err)
+	}
+
+	// Compute Cargo.lock checksum
+	lockSHA := fmt.Sprintf("%x", sha256.Sum256([]byte(lockData)))
+
+	// Get Rust version for metadata
+	rustVersion := getRustVersionForCargo(cargoPath)
+
+	// Build cargo_build params
+	cargoBuildParams := map[string]interface{}{
+		"crate":         crateName,
+		"version":       version,
+		"executables":   executables,
+		"lock_data":     lockData,
+		"lock_checksum": lockSHA,
+	}
+
+	// Add Rust version info if available
+	if rustVersion != "" {
+		cargoBuildParams["rust_version"] = rustVersion
+	}
+
+	return []Step{
+		{
+			Action: "cargo_build",
+			Params: cargoBuildParams,
+		},
+	}, nil
+}
+
+// findCargoForEval finds the cargo executable for eval-time decomposition.
+func findCargoForEval() string {
+	// Try tsuku's installed Rust first
+	tsukuHome := os.Getenv("TSUKU_HOME")
+	if tsukuHome == "" {
+		homeDir, err := os.UserHomeDir()
+		if err == nil {
+			tsukuHome = filepath.Join(homeDir, ".tsuku")
+		}
+	}
+
+	if tsukuHome != "" {
+		// Look for rust installation with cargo
+		patterns := []string{
+			filepath.Join(tsukuHome, "tools", "rust-*", "bin", "cargo"),
+			filepath.Join(tsukuHome, "tools", "current", "bin", "cargo"),
+		}
+		for _, pattern := range patterns {
+			matches, _ := filepath.Glob(pattern)
+			if len(matches) > 0 {
+				return matches[0]
+			}
+		}
+
+		// Check if cargo symlink exists in bin
+		cargoBin := filepath.Join(tsukuHome, "bin", "cargo")
+		if _, err := os.Stat(cargoBin); err == nil {
+			return cargoBin
+		}
+	}
+
+	// Try system cargo
+	path, err := exec.LookPath("cargo")
+	if err == nil {
+		return path
+	}
+
+	return ""
+}
+
+// generateCargoLock downloads the crate source and reads/generates its Cargo.lock.
+func generateCargoLock(ctx *EvalContext, cargoPath, crateName, version, tempDir string) (string, error) {
+	// Download the crate source from crates.io
+	// Format: https://crates.io/api/v1/crates/{crate}/{version}/download
+	crateURL := fmt.Sprintf("https://crates.io/api/v1/crates/%s/%s/download", crateName, version)
+	crateTarball := filepath.Join(tempDir, fmt.Sprintf("%s-%s.crate", crateName, version))
+
+	// Download the .crate file
+	// Use -f to fail on HTTP errors, -L to follow redirects, -S to show errors
+	// Add User-Agent to avoid rate limiting
+	downloadCmd := exec.CommandContext(ctx.Context, "curl", "-fsSL", "-A", "tsuku", "-o", crateTarball, crateURL)
+	downloadOutput, err := downloadCmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to download crate from %s: %w\nOutput: %s", crateURL, err, string(downloadOutput))
+	}
+
+	// Verify the downloaded file exists and is not empty
+	fileInfo, err := os.Stat(crateTarball)
+	if err != nil {
+		return "", fmt.Errorf("downloaded crate file not found: %w", err)
+	}
+	if fileInfo.Size() == 0 {
+		return "", fmt.Errorf("downloaded crate file is empty")
+	}
+
+	// Extract the .crate file (it's a gzipped tar archive)
+	extractDir := filepath.Join(tempDir, "extracted")
+	if err := os.MkdirAll(extractDir, 0755); err != nil {
+		return "", fmt.Errorf("failed to create extraction directory: %w", err)
+	}
+
+	tarCmd := exec.CommandContext(ctx.Context, "tar", "xzf", crateTarball, "-C", extractDir)
+	tarOutput, err := tarCmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("failed to extract crate tarball: %w\nOutput: %s", err, string(tarOutput))
+	}
+
+	// The extracted crate is in a subdirectory named {crate}-{version}
+	crateDir := filepath.Join(extractDir, fmt.Sprintf("%s-%s", crateName, version))
+	cargoTomlPath := filepath.Join(crateDir, "Cargo.toml")
+
+	// Check if Cargo.toml exists
+	if _, err := os.Stat(cargoTomlPath); err != nil {
+		return "", fmt.Errorf("Cargo.toml not found in extracted crate at %s", cargoTomlPath)
+	}
+
+	// Check if Cargo.lock already exists in the crate
+	lockPath := filepath.Join(crateDir, "Cargo.lock")
+	if _, err := os.Stat(lockPath); err == nil {
+		// Cargo.lock exists, read it
+		lockData, err := os.ReadFile(lockPath)
+		if err != nil {
+			return "", fmt.Errorf("failed to read existing Cargo.lock: %w", err)
+		}
+		return string(lockData), nil
+	}
+
+	// Cargo.lock doesn't exist, generate it
+	genLockCmd := exec.CommandContext(ctx.Context, cargoPath, "generate-lockfile", "--manifest-path", cargoTomlPath)
+	genLockCmd.Dir = crateDir
+	genLockCmd.Env = os.Environ()
+
+	genLockOutput, err := genLockCmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("cargo generate-lockfile failed: %w\nOutput: %s", err, string(genLockOutput))
+	}
+
+	// Read the generated Cargo.lock
+	lockData, err := os.ReadFile(lockPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read generated Cargo.lock: %w", err)
+	}
+
+	return string(lockData), nil
+}
+
+// getRustVersionForCargo returns the Rust compiler version for metadata.
+func getRustVersionForCargo(cargoPath string) string {
+	// Get rustc from same directory as cargo
+	rustcPath := filepath.Join(filepath.Dir(cargoPath), "rustc")
+	if _, err := os.Stat(rustcPath); err != nil {
+		// Try system rustc
+		var lookupErr error
+		rustcPath, lookupErr = exec.LookPath("rustc")
+		if lookupErr != nil {
+			return ""
+		}
+	}
+
+	cmd := exec.Command(rustcPath, "--version")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+
+	// Parse "rustc 1.76.0 (07dca489a 2024-02-04)"
+	outputStr := string(output)
+	parts := strings.Fields(outputStr)
+	if len(parts) >= 2 && parts[0] == "rustc" {
+		return parts[1]
+	}
+
+	return ""
 }
 
 // isValidCrateName validates crate names to prevent command injection
