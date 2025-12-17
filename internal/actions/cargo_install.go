@@ -280,7 +280,8 @@ func generateCargoLock(ctx *EvalContext, cargoPath, crateName, version, tempDir 
 
 	// Download the .crate file
 	// Use -f to fail on HTTP errors, -L to follow redirects, -S to show errors
-	downloadCmd := exec.CommandContext(ctx.Context, "curl", "-fsSL", "-o", crateTarball, crateURL)
+	// Add User-Agent to avoid rate limiting
+	downloadCmd := exec.CommandContext(ctx.Context, "curl", "-fsSL", "-A", "tsuku", "-o", crateTarball, crateURL)
 	downloadOutput, err := downloadCmd.CombinedOutput()
 	if err != nil {
 		return "", fmt.Errorf("failed to download crate from %s: %w\nOutput: %s", crateURL, err, string(downloadOutput))
