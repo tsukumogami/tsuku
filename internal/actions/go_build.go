@@ -171,10 +171,8 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	goDir := filepath.Dir(goPath)
 	modCache := filepath.Join(homeDir, ".tsuku", ".gomodcache")
 
-	env := buildGoEnv(goDir, binDir, modCache, cgoEnabled, true)
-
-	// First, download modules to populate the cache
-	// We use GOPROXY to allow downloading, then switch to offline mode for install
+	// Build environment with GOPROXY enabled for module downloads and installation
+	// Checksums are verified via go mod verify for deterministic builds
 	downloadEnv := buildGoEnv(goDir, binDir, modCache, cgoEnabled, false)
 
 	downloadCmd := exec.CommandContext(ctx.Context, goPath, "mod", "download", "-x")
@@ -205,10 +203,11 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 	fmt.Printf("   Installing: go %s\n", strings.Join(installArgs, " "))
 
-	// Use offline mode for the actual install (GOPROXY=off)
+	// Use online mode for install since go install module@version requires network
+	// even when modules are cached. Checksums are already verified by go mod verify.
 	installCmd := exec.CommandContext(ctx.Context, goPath, installArgs...)
 	installCmd.Dir = tempDir
-	installCmd.Env = env
+	installCmd.Env = downloadEnv
 
 	output, err := installCmd.CombinedOutput()
 	if err != nil {
