@@ -1,6 +1,7 @@
 package actions
 
 import (
+	"crypto/sha256"
 	"fmt"
 	"os"
 	"os/exec"
@@ -56,10 +57,17 @@ func (a *CargoBuildAction) Name() string {
 //	<install_dir>/
 //	  bin/<executable>     - Compiled binary
 func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	// Check for lock_data mode (decomposed cargo_install)
+	lockData, hasLockData := GetString(params, "lock_data")
+	if hasLockData && lockData != "" {
+		return a.executeLockDataMode(ctx, params)
+	}
+
+	// Fall back to source_dir mode
 	// Get source directory (required)
 	sourceDir, ok := GetString(params, "source_dir")
-	if !ok {
-		return fmt.Errorf("cargo_build action requires 'source_dir' parameter")
+	if !ok || sourceDir == "" {
+		return fmt.Errorf("cargo_build requires 'source_dir' parameter")
 	}
 
 	// Resolve source directory relative to work directory if not absolute
@@ -268,6 +276,201 @@ func (a *CargoBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 	fmt.Printf("   Crate built successfully\n")
 	fmt.Printf("   Installed %d executable(s)\n", len(executables))
+
+	return nil
+}
+
+// executeLockDataMode handles building from lock_data parameter.
+// This is the mode used when cargo_install is decomposed.
+func (a *CargoBuildAction) executeLockDataMode(ctx *ExecutionContext, params map[string]interface{}) error {
+	// Get crate name (required)
+	crateName, ok := GetString(params, "crate")
+	if !ok || crateName == "" {
+		return fmt.Errorf("cargo_build lock_data mode requires 'crate' parameter")
+	}
+
+	// SECURITY: Validate crate name
+	if !isValidCrateName(crateName) {
+		return fmt.Errorf("invalid crate name '%s': must match crates.io naming rules", crateName)
+	}
+
+	// Get version (required)
+	version, ok := GetString(params, "version")
+	if !ok || version == "" {
+		version = ctx.Version
+	}
+	if version == "" {
+		return fmt.Errorf("cargo_build lock_data mode requires 'version' parameter")
+	}
+
+	// SECURITY: Validate version
+	if !isValidCargoVersion(version) {
+		return fmt.Errorf("invalid cargo version '%s'", version)
+	}
+
+	// Get lock_data (required - already validated in Execute)
+	lockData, _ := GetString(params, "lock_data")
+
+	// Get lock checksum (required for verification)
+	lockChecksum, ok := GetString(params, "lock_checksum")
+	if !ok || lockChecksum == "" {
+		return fmt.Errorf("cargo_build lock_data mode requires 'lock_checksum' parameter")
+	}
+
+	// Get executables (required for verification)
+	executables, ok := GetStringSlice(params, "executables")
+	if !ok || len(executables) == 0 {
+		return fmt.Errorf("cargo_build lock_data mode requires 'executables' parameter")
+	}
+
+	// SECURITY: Validate executable names
+	for _, exe := range executables {
+		if len(exe) == 0 || len(exe) > 256 {
+			return fmt.Errorf("invalid executable name length: %s", exe)
+		}
+		if strings.Contains(exe, "/") || strings.Contains(exe, "\\") ||
+			strings.Contains(exe, "..") || exe == "." {
+			return fmt.Errorf("invalid executable name '%s': must not contain path separators", exe)
+		}
+	}
+
+	// Get optional parameters
+	rustVersion, _ := GetString(params, "rust_version")
+
+	fmt.Printf("   Crate: %s@%s\n", crateName, version)
+	fmt.Printf("   Executables: %v\n", executables)
+
+	// Get cargo path
+	cargoPath := ResolveCargo()
+	if cargoPath == "" {
+		cargoPath = "cargo"
+	}
+
+	// Validate Rust version if specified
+	if rustVersion != "" {
+		// Build temporary environment for version check
+		tempEnv := buildDeterministicCargoEnv(cargoPath, ctx.WorkDir)
+		if err := validateRustVersion(ctx, cargoPath, rustVersion, tempEnv); err != nil {
+			fmt.Printf("   Warning: Rust version validation failed: %v\n", err)
+		}
+	}
+
+	fmt.Printf("   Using cargo: %s\n", cargoPath)
+
+	// Create temporary workspace for building
+	tempDir, err := os.MkdirTemp("", "tsuku-cargo-build-*")
+	if err != nil {
+		return fmt.Errorf("failed to create temp directory: %w", err)
+	}
+	defer os.RemoveAll(tempDir)
+
+	// Create src directory and minimal main.rs (required for valid Cargo package)
+	srcDir := filepath.Join(tempDir, "src")
+	if err := os.MkdirAll(srcDir, 0755); err != nil {
+		return fmt.Errorf("failed to create src directory: %w", err)
+	}
+
+	mainRsPath := filepath.Join(srcDir, "main.rs")
+	mainRsContent := "fn main() {}\n"
+	if err := os.WriteFile(mainRsPath, []byte(mainRsContent), 0644); err != nil {
+		return fmt.Errorf("failed to write main.rs: %w", err)
+	}
+
+	// Write minimal Cargo.toml
+	cargoTomlPath := filepath.Join(tempDir, "Cargo.toml")
+	cargoTomlContent := fmt.Sprintf(`[package]
+name = "tsuku-temp"
+version = "0.0.0"
+edition = "2021"
+
+[dependencies]
+%s = "=%s"
+`, crateName, version)
+
+	if err := os.WriteFile(cargoTomlPath, []byte(cargoTomlContent), 0644); err != nil {
+		return fmt.Errorf("failed to write Cargo.toml: %w", err)
+	}
+
+	// Write Cargo.lock
+	lockPath := filepath.Join(tempDir, "Cargo.lock")
+	if err := os.WriteFile(lockPath, []byte(lockData), 0644); err != nil {
+		return fmt.Errorf("failed to write Cargo.lock: %w", err)
+	}
+
+	// Verify Cargo.lock checksum
+	computedChecksum := fmt.Sprintf("%x", sha256.Sum256([]byte(lockData)))
+	if computedChecksum != lockChecksum {
+		return fmt.Errorf("Cargo.lock checksum mismatch\n  Expected: %s\n  Got:      %s\n\nThis may indicate plan file tampering",
+			lockChecksum, computedChecksum)
+	}
+
+	fmt.Printf("   Building crate with lockfile enforcement\n")
+
+	// Build deterministic environment
+	env := buildDeterministicCargoEnv(cargoPath, tempDir)
+
+	// Pre-fetch dependencies to populate CARGO_HOME
+	fmt.Printf("   Pre-fetching dependencies...\n")
+	fetchArgs := []string{"fetch", "--locked", "--manifest-path", cargoTomlPath}
+	fetchCmd := exec.CommandContext(ctx.Context, cargoPath, fetchArgs...)
+	fetchCmd.Dir = tempDir
+	fetchCmd.Env = env
+	fetchOutput, err := fetchCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("cargo fetch failed: %w\nOutput: %s", err, string(fetchOutput))
+	}
+
+	// Build with --locked --offline
+	buildArgs := []string{"build", "--release", "--locked", "--offline", "--manifest-path", cargoTomlPath}
+	fmt.Printf("   Running: cargo %s\n", strings.Join(buildArgs, " "))
+
+	buildCmd := exec.CommandContext(ctx.Context, cargoPath, buildArgs...)
+	buildCmd.Dir = tempDir
+	buildCmd.Env = env
+
+	buildOutput, err := buildCmd.CombinedOutput()
+	if err != nil {
+		return fmt.Errorf("cargo build failed: %w\nOutput: %s", err, string(buildOutput))
+	}
+
+	// Show output if debugging
+	outputStr := strings.TrimSpace(string(buildOutput))
+	if outputStr != "" && os.Getenv("TSUKU_DEBUG") != "" {
+		fmt.Printf("   cargo output:\n%s\n", outputStr)
+	}
+
+	// Find built executables in target/release
+	releaseDir := filepath.Join(tempDir, "target", "release")
+
+	// Create bin directory in install dir
+	binDir := filepath.Join(ctx.InstallDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		return fmt.Errorf("failed to create bin directory: %w", err)
+	}
+
+	// Copy executables to install directory
+	for _, exe := range executables {
+		srcPath := filepath.Join(releaseDir, exe)
+		dstPath := filepath.Join(binDir, exe)
+
+		// Check if executable exists
+		if _, err := os.Stat(srcPath); err != nil {
+			return fmt.Errorf("expected executable %s not found at %s", exe, srcPath)
+		}
+
+		// Copy the executable
+		if err := copyFile(srcPath, dstPath); err != nil {
+			return fmt.Errorf("failed to copy executable %s: %w", exe, err)
+		}
+
+		// Make executable
+		if err := os.Chmod(dstPath, 0755); err != nil {
+			return fmt.Errorf("failed to chmod executable %s: %w", exe, err)
+		}
+	}
+
+	fmt.Printf("   Crate built successfully\n")
+	fmt.Printf("   Verified %d executable(s)\n", len(executables))
 
 	return nil
 }
