@@ -1,0 +1,20 @@
+[metadata]
+name = "ack"
+description = "A grep-like program for searching source code"
+homepage = "https://beyondgrep.com/"
+version_format = "semver"
+dependencies = ["perl"]
+
+[version]
+source = "metacpan"
+distribution = "ack"
+
+[[steps]]
+action = "cpan_install"
+distribution = "ack"
+module = "App::Ack"
+executables = ["ack"]
+
+[verify]
+command = "ack --version"
+pattern = "{version}"
