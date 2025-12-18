@@ -132,10 +132,11 @@ func TestBuildDeterministicCargoEnv(t *testing.T) {
 		t.Errorf("SOURCE_DATE_EPOCH = %q, want %q", sourceDateEpochValue, "0")
 	}
 
-	if !hasRustflags {
-		t.Error("RUSTFLAGS should be set")
-	} else if !strings.Contains(rustflagsValue, "-C embed-bitcode=no") {
-		t.Errorf("RUSTFLAGS should contain '-C embed-bitcode=no', got %q", rustflagsValue)
+	// RUSTFLAGS is no longer unconditionally set since we removed -C embed-bitcode=no
+	// to fix compatibility with crates that enable LTO in their Cargo.toml.
+	// RUSTFLAGS may still be present if inherited from the environment.
+	if hasRustflags && strings.Contains(rustflagsValue, "-C embed-bitcode=no") {
+		t.Errorf("RUSTFLAGS should not contain '-C embed-bitcode=no' (conflicts with LTO), got %q", rustflagsValue)
 	}
 }
 
