@@ -80,11 +80,15 @@ func TestLLMGroundTruth(t *testing.T) {
 	}
 	t.Logf("Generated recipes will be saved to: %s", outputDir)
 
-	// Run tests in order (L1-L18 for GitHub, S1-S3 for Homebrew source builds)
+	// Run tests in order (GitHub release tests, then Homebrew source builds)
 	testIDs := []string{
-		"L1", "L2", "L3", "L4", "L5", "L6", "L7", "L8", "L9",
-		"L10", "L11", "L12", "L13", "L14", "L15", "L16", "L17", "L18",
-		"S1", "S2", "S3",
+		"llm_github_stern_baseline", "llm_github_tflint_zip", "llm_github_helix_tar_xz",
+		"llm_github_ast-grep_rust_triple", "llm_github_k9s_capitalized_os", "llm_github_trivy_custom_arch",
+		"llm_github_gitleaks_x64", "llm_github_gotop_v_prefix", "llm_github_gobuster_no_version",
+		"llm_github_age_strip_dirs", "llm_github_liberica_multi_binary", "llm_github_btop_install_subpath",
+		"llm_github_fly_binary_rename", "llm_github_k3d_file_baseline", "llm_github_cosign_file_rename",
+		"llm_github_minikube_file_no_mapping", "llm_github_kopia_macos_mapping", "llm_github_cargo-deny_musl",
+		"llm_homebrew_readline_multi_patches", "llm_homebrew_python_single_patch", "llm_homebrew_bash_patch_ordering",
 	}
 
 	for _, testID := range testIDs {

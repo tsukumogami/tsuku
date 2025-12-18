@@ -1,5 +1,5 @@
 # Ground truth recipe for python (source build with patch)
-# Used by LLM integration tests (S2)
+# Used by LLM integration tests (llm_homebrew_python_single_patch)
 # Tests: download_file + extract + configure_make with single patch
 
 [metadata]

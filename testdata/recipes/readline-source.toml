@@ -1,5 +1,5 @@
 # Ground truth recipe for readline (source build with patches)
-# Used by LLM integration tests (S1)
+# Used by LLM integration tests (llm_homebrew_readline_multi_patches)
 # Tests: download_file + extract + configure_make with multiple p0 patches
 
 [metadata]

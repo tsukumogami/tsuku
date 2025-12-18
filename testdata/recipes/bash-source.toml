@@ -1,5 +1,5 @@
 # Ground truth recipe for bash (source build with multiple patches)
-# Used by LLM integration tests (S3)
+# Used by LLM integration tests (llm_homebrew_bash_patch_ordering)
 # Tests: download_file + extract + configure_make with multiple patches
 
 [metadata]

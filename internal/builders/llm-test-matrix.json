@@ -1,7 +1,7 @@
 {
-  "description": "LLM recipe generation test matrix. Each test validates one specific variation to isolate failures. L-prefixed tests use GitHubReleaseBuilder, S-prefixed tests use HomebrewBuilder for source builds.",
+  "description": "LLM recipe generation test matrix. Each test validates one specific variation to isolate failures. Tests prefixed with llm_github use GitHubReleaseBuilder, tests prefixed with llm_homebrew use HomebrewBuilder for source builds.",
   "tests": {
-    "L1": {
+    "llm_github_stern_baseline": {
       "builder": "github",
       "tool": "stern",
       "repo": "stern/stern",
@@ -15,7 +15,7 @@
         "version:placeholder"
       ]
     },
-    "L2": {
+    "llm_github_tflint_zip": {
       "builder": "github",
       "tool": "tflint",
       "repo": "terraform-linters/tflint",
@@ -28,7 +28,7 @@
         "version:none"
       ]
     },
-    "L3": {
+    "llm_github_helix_tar_xz": {
       "tool": "helix",
       "repo": "helix-editor/helix",
       "recipe": "h/helix.toml",
@@ -41,7 +41,7 @@
       ],
       "builder": "github"
     },
-    "L4": {
+    "llm_github_ast-grep_rust_triple": {
       "tool": "ast-grep",
       "repo": "ast-grep/ast-grep",
       "recipe": "a/ast-grep.toml",
@@ -54,7 +54,7 @@
       ],
       "builder": "github"
     },
-    "L5": {
+    "llm_github_k9s_capitalized_os": {
       "tool": "k9s",
       "repo": "derailed/k9s",
       "recipe": "k/k9s.toml",
@@ -66,7 +66,7 @@
       ],
       "builder": "github"
     },
-    "L6": {
+    "llm_github_trivy_custom_arch": {
       "tool": "trivy",
       "repo": "aquasecurity/trivy",
       "recipe": "t/trivy.toml",
@@ -79,7 +79,7 @@
       ],
       "builder": "github"
     },
-    "L7": {
+    "llm_github_gitleaks_x64": {
       "tool": "gitleaks",
       "repo": "zricethezav/gitleaks",
       "recipe": "g/gitleaks.toml",
@@ -91,7 +91,7 @@
       ],
       "builder": "github"
     },
-    "L8": {
+    "llm_github_gotop_v_prefix": {
       "tool": "gotop",
       "repo": "xxxserxxx/gotop",
       "recipe": "g/gotop.toml",
@@ -103,7 +103,7 @@
       ],
       "builder": "github"
     },
-    "L9": {
+    "llm_github_gobuster_no_version": {
       "tool": "gobuster",
       "repo": "OJ/gobuster",
       "recipe": "g/gobuster.toml",
@@ -116,7 +116,7 @@
       ],
       "builder": "github"
     },
-    "L10": {
+    "llm_github_age_strip_dirs": {
       "tool": "age",
       "repo": "FiloSottile/age",
       "recipe": "a/age.toml",
@@ -129,7 +129,7 @@
       ],
       "builder": "github"
     },
-    "L11": {
+    "llm_github_liberica_multi_binary": {
       "tool": "liberica",
       "repo": "bell-sw/Liberica",
       "recipe": "l/liberica.toml",
@@ -143,7 +143,7 @@
       ],
       "builder": "github"
     },
-    "L12": {
+    "llm_github_btop_install_subpath": {
       "tool": "btop",
       "repo": "aristocratos/btop",
       "recipe": "b/btop.toml",
@@ -156,7 +156,7 @@
       ],
       "builder": "github"
     },
-    "L13": {
+    "llm_github_fly_binary_rename": {
       "tool": "fly",
       "repo": "superfly/flyctl",
       "recipe": "f/fly.toml",
@@ -169,7 +169,7 @@
       ],
       "builder": "github"
     },
-    "L14": {
+    "llm_github_k3d_file_baseline": {
       "tool": "k3d",
       "repo": "k3d-io/k3d",
       "recipe": "k/k3d.toml",
@@ -183,7 +183,7 @@
       ],
       "builder": "github"
     },
-    "L15": {
+    "llm_github_cosign_file_rename": {
       "tool": "cosign",
       "repo": "sigstore/cosign",
       "recipe": "c/cosign.toml",
@@ -196,7 +196,7 @@
       ],
       "builder": "github"
     },
-    "L16": {
+    "llm_github_minikube_file_no_mapping": {
       "tool": "minikube",
       "repo": "kubernetes/minikube",
       "recipe": "m/minikube.toml",
@@ -209,7 +209,7 @@
       ],
       "builder": "github"
     },
-    "L17": {
+    "llm_github_kopia_macos_mapping": {
       "tool": "kopia",
       "repo": "kopia/kopia",
       "recipe": "k/kopia.toml",
@@ -222,7 +222,7 @@
       ],
       "builder": "github"
     },
-    "L18": {
+    "llm_github_cargo-deny_musl": {
       "tool": "cargo-deny",
       "repo": "EmbarkStudios/cargo-deny",
       "recipe": "c/cargo-deny.toml",
@@ -236,7 +236,7 @@
       ],
       "builder": "github"
     },
-    "S1": {
+    "llm_homebrew_readline_multi_patches": {
       "builder": "homebrew",
       "tool": "readline-source",
       "formula": "readline",
@@ -253,7 +253,7 @@
         "strip:p0"
       ]
     },
-    "S2": {
+    "llm_homebrew_python_single_patch": {
       "builder": "homebrew",
       "tool": "python-source",
       "formula": "python@3.13",
@@ -269,7 +269,7 @@
         "patches:single"
       ]
     },
-    "S3": {
+    "llm_homebrew_bash_patch_ordering": {
       "builder": "homebrew",
       "tool": "bash-source",
       "formula": "bash",
