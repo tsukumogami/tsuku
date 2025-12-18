@@ -28,11 +28,6 @@ jobs:
       fail-fast: false
       matrix:
         test: ${{ fromJson(needs.matrix.outputs.linux) }}
-        exclude:
-          # download_archive strip_dirs bug in sandbox - see #614
-          - test: { id: "archive_golang_directory" }  # golang
-          - test: { id: "archive_nodejs_checksum" }  # nodejs
-          - test: { id: "archive_perl_relocatable" }  # perl
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
