@@ -43,7 +43,6 @@ func (a *CargoBuildAction) Name() string {
 // Deterministic Configuration:
 //   - SOURCE_DATE_EPOCH: Set to Unix epoch (0) for reproducible embedded timestamps
 //   - CARGO_INCREMENTAL=0: Disable incremental compilation for deterministic builds
-//   - RUSTFLAGS="-C embed-bitcode=no": Smaller, more reproducible builds
 //   - --locked: Require Cargo.lock to exist and be up-to-date
 //   - --offline: Prevent network access during build (after pre-fetch)
 //
@@ -537,33 +536,12 @@ func buildDeterministicCargoEnv(cargoPath, workDir string) []string {
 		"SOURCE_DATE_EPOCH=0",
 	)
 
-	// Set RUSTFLAGS for more reproducible builds
-	// -C embed-bitcode=no: Don't embed LLVM bitcode (smaller, more reproducible)
-	existingRustflags := ""
-	for _, e := range filteredEnv {
-		if strings.HasPrefix(e, "RUSTFLAGS=") {
-			existingRustflags = e[10:]
-			break
-		}
-	}
-
-	rustflags := "-C embed-bitcode=no"
-	if existingRustflags != "" {
-		rustflags = existingRustflags + " " + rustflags
-	}
-
-	// Update or add RUSTFLAGS
-	rustflagsSet := false
-	for i, e := range filteredEnv {
-		if strings.HasPrefix(e, "RUSTFLAGS=") {
-			filteredEnv[i] = "RUSTFLAGS=" + rustflags
-			rustflagsSet = true
-			break
-		}
-	}
-	if !rustflagsSet {
-		filteredEnv = append(filteredEnv, "RUSTFLAGS="+rustflags)
-	}
+	// Preserve existing RUSTFLAGS from environment
+	// Note: We previously added "-C embed-bitcode=no" here, but this conflicts
+	// with crates that enable LTO in their Cargo.toml [profile.release] section.
+	// Since LTO requires bitcode embedding, we skip this flag to maintain
+	// compatibility with all crates. The flag was intended for smaller binaries,
+	// but build compatibility is more important.
 
 	// Set up C compiler for crates with native dependencies
 	if !hasSystemCompiler() {
