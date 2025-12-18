@@ -162,13 +162,27 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 	// Build command based on available information
 	var args []string
+	var output []byte
 
+	// Try derivation path first if available (fastest path)
 	if derivationPath != "" {
-		// Fastest path: realize from pre-computed derivation
 		fmt.Printf("   Realizing from derivation: %s\n", derivationPath)
 		args = []string{"nix-store", "--realize", derivationPath}
-	} else {
-		// Build from flake reference with locked flags
+
+		cmd := exec.CommandContext(ctx.Context, nixPortablePath, args...)
+		cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			// Derivation may not exist in this nix store (e.g., in sandbox)
+			// Fall back to building from locked reference
+			fmt.Printf("   Derivation not available in this nix store, using locked reference\n")
+			derivationPath = "" // Clear to trigger fallback
+		}
+	}
+
+	// Build from flake reference with locked flags (fallback or primary method)
+	if derivationPath == "" {
 		args = []string{"nix", "profile", "install",
 			"--profile", profilePath,
 			"--no-update-lock-file", // Critical: do not modify lock file
@@ -176,7 +190,13 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 		// Use locked reference if available, otherwise use original
 		if lockedRef != "" {
-			args = append(args, lockedRef)
+			// locked_ref is the locked nixpkgs URL, append package name
+			if hasPackage {
+				args = append(args, fmt.Sprintf("%s#%s", lockedRef, packageName))
+			} else {
+				// Extract package from flake_ref if present
+				args = append(args, lockedRef)
+			}
 		} else if hasFlakeRef {
 			args = append(args, flakeRef)
 		} else {
@@ -184,15 +204,15 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 		}
 
 		fmt.Printf("   Installing: nix profile install %s\n", args[len(args)-1])
-	}
 
-	// Execute with isolation
-	cmd := exec.CommandContext(ctx.Context, nixPortablePath, args...)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+		// Execute with isolation
+		cmd := exec.CommandContext(ctx.Context, nixPortablePath, args...)
+		cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
 
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("nix realize failed: %w\nOutput: %s", err, string(output))
+		output, err = cmd.CombinedOutput()
+		if err != nil {
+			return fmt.Errorf("nix realize failed: %w\nOutput: %s", err, string(output))
+		}
 	}
 
 	// Show output in debug mode

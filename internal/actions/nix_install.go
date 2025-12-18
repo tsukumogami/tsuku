@@ -326,7 +326,8 @@ func (a *NixInstallAction) Decompose(ctx *EvalContext, params map[string]interfa
 	flakeRef := fmt.Sprintf("nixpkgs#%s", packageName)
 
 	// Get flake metadata (fast, no build)
-	metadata, err := GetNixFlakeMetadata(ctx.Context, flakeRef)
+	// Note: nix flake metadata doesn't accept the #package fragment, so use just "nixpkgs"
+	metadata, err := GetNixFlakeMetadata(ctx.Context, "nixpkgs")
 	if err != nil {
 		return nil, fmt.Errorf("failed to get flake metadata: %w", err)
 	}
