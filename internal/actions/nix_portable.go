@@ -233,10 +233,10 @@ func GetNixInternalDir() (string, error) {
 
 // FlakeMetadata contains information from `nix flake metadata --json`
 type FlakeMetadata struct {
-	URL         string          `json:"url"`      // Locked URL (e.g., "github:NixOS/nixpkgs/abc123")
-	ResolvedURL string          `json:"resolved"` // Resolved URL
-	Locked      json.RawMessage `json:"locked"`   // Complete locked object
-	Locks       json.RawMessage `json:"locks"`    // Complete flake.lock content
+	URL      string          `json:"url"`      // Locked URL (e.g., "github:NixOS/nixpkgs/abc123")
+	Resolved json.RawMessage `json:"resolved"` // Resolved object (contains URL)
+	Locked   json.RawMessage `json:"locked"`   // Complete locked object
+	Locks    json.RawMessage `json:"locks"`    // Complete flake.lock content
 }
 
 // DerivationInfo contains information from `nix derivation show`
