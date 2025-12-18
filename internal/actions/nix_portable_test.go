@@ -127,17 +127,17 @@ func TestFlakeMetadataStruct(t *testing.T) {
 	t.Parallel()
 	// Verify FlakeMetadata struct can be instantiated and holds JSON data
 	metadata := FlakeMetadata{
-		URL:         "github:NixOS/nixpkgs/abc123",
-		ResolvedURL: "https://github.com/NixOS/nixpkgs/archive/abc123.tar.gz",
-		Locked:      []byte(`{"type": "github", "rev": "abc123"}`),
-		Locks:       []byte(`{"version": 7, "root": "root"}`),
+		URL:      "github:NixOS/nixpkgs/abc123",
+		Resolved: []byte(`{"type": "github", "owner": "NixOS", "repo": "nixpkgs", "rev": "abc123"}`),
+		Locked:   []byte(`{"type": "github", "rev": "abc123"}`),
+		Locks:    []byte(`{"version": 7, "root": "root"}`),
 	}
 
 	if metadata.URL != "github:NixOS/nixpkgs/abc123" {
 		t.Errorf("metadata.URL = %q, want %q", metadata.URL, "github:NixOS/nixpkgs/abc123")
 	}
-	if metadata.ResolvedURL != "https://github.com/NixOS/nixpkgs/archive/abc123.tar.gz" {
-		t.Errorf("metadata.ResolvedURL = %q, want expected value", metadata.ResolvedURL)
+	if string(metadata.Resolved) == "" {
+		t.Error("metadata.Resolved should not be empty")
 	}
 	if len(metadata.Locked) == 0 {
 		t.Error("metadata.Locked should not be empty")
@@ -201,8 +201,8 @@ func TestFlakeMetadata_EmptyFields(t *testing.T) {
 	if metadata.URL != "" {
 		t.Error("empty FlakeMetadata.URL should be empty string")
 	}
-	if metadata.ResolvedURL != "" {
-		t.Error("empty FlakeMetadata.ResolvedURL should be empty string")
+	if len(metadata.Resolved) != 0 {
+		t.Error("empty FlakeMetadata.Resolved should be nil/empty")
 	}
 	if metadata.Locked != nil {
 		t.Error("empty FlakeMetadata.Locked should be nil")
