@@ -6,7 +6,6 @@
 name = "scdoc-source"
 description = "Tool for generating roff manual pages (source build for testing)"
 homepage = "https://git.sr.ht/~sircmpwn/scdoc"
-dependencies = ["meson"]
 
 [version]
 source = "static"
