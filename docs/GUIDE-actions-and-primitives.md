@@ -12,7 +12,7 @@ When you run `tsuku eval`, the tool analyzes the recipe and generates an **insta
 
 tsuku has two categories of actions, distinguished by how they execute and their determinism guarantees:
 
-### Tier 1: File Operation Primitives
+### File Operation Primitives
 
 File operation primitives are the atomic building blocks of installation. They perform simple, fully deterministic operations on files and don't invoke external tools.
 
@@ -29,7 +29,7 @@ File operation primitives are the atomic building blocks of installation. They p
 
 **Key property**: All file operation primitives are fully reproducible. Running the same primitive twice produces identical results.
 
-### Tier 2: Ecosystem Primitives
+### Ecosystem Primitives
 
 Ecosystem primitives delegate to external package managers and build systems (Go, Rust, Node.js, Python, Ruby, Perl, Nix). These capture maximum constraint at evaluation time but may have residual non-determinism due to compiler versions and platform differences.
 
