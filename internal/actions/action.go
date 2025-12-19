@@ -148,6 +148,7 @@ func init() {
 	Register(&NixRealizeAction{})
 	Register(&ConfigureMakeAction{})
 	Register(&CMakeBuildAction{})
+	Register(&MesonBuildAction{})
 	Register(&PipExecAction{})
 
 	// Homebrew actions

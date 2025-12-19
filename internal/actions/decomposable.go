@@ -94,6 +94,7 @@ var primitives = map[string]bool{
 	"gem_exec":           true,
 	"go_build":           true,
 	"install_gem_direct": true, // Direct gem install for bundler self-installation
+	"meson_build":        true,
 	"nix_realize":        true,
 	"npm_exec":           true,
 	"pip_exec":           true,

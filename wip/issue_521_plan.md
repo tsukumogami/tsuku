@@ -23,14 +23,14 @@ The implementation will closely mirror the `cmake_build` action structure, as bo
 - `internal/actions/meson_build_test.go` - Unit tests
 
 ## Implementation Steps
-- [ ] Create `internal/actions/meson_build.go` with MesonBuildAction struct and Execute method
-- [ ] Implement parameter validation (source_dir, executables, meson_args, buildtype, wrap_mode)
-- [ ] Implement security validation for meson_args (block shell metacharacters)
-- [ ] Implement three-phase build: meson setup, meson compile, meson install
-- [ ] Implement executable verification after install
-- [ ] Create `internal/actions/meson_build_test.go` with all unit tests from issue requirements
-- [ ] Register action in `internal/actions/action.go` init function
-- [ ] Add "meson_build" to primitives map in `internal/actions/decomposable.go`
+- [x] Create `internal/actions/meson_build.go` with MesonBuildAction struct and Execute method
+- [x] Implement parameter validation (source_dir, executables, meson_args, buildtype, wrap_mode)
+- [x] Implement security validation for meson_args (block shell metacharacters)
+- [x] Implement three-phase build: meson setup, meson compile, meson install
+- [x] Implement executable verification after install
+- [x] Create `internal/actions/meson_build_test.go` with all unit tests from issue requirements
+- [x] Register action in `internal/actions/action.go` init function
+- [x] Add "meson_build" to primitives map in `internal/actions/decomposable.go`
 - [ ] Add integration test entries to test-matrix.json for json-glib (simple Meson project)
 - [ ] Create recipe for json-glib in recipes/ directory
 - [ ] Run full test suite and verify all tests pass
@@ -75,13 +75,13 @@ After implementation:
 **Mitigation**: Use same security validation pattern as cmake_build, blocking shell metacharacters. Validate buildtype against known values (release, debug, plain, debugoptimized).
 
 ## Success Criteria
-- [ ] All unit tests pass (go test ./internal/actions)
+- [x] All unit tests pass (go test ./internal/actions)
 - [ ] Integration test builds json-glib successfully
-- [ ] meson_build action is registered as primitive
-- [ ] meson_build action returns IsDeterministic() = false
-- [ ] Security validation blocks malicious meson_args
-- [ ] Executables are verified after installation
-- [ ] No regressions in existing tests
+- [x] meson_build action is registered as primitive
+- [x] meson_build action returns IsDeterministic() = false
+- [x] Security validation blocks malicious meson_args
+- [x] Executables are verified after installation
+- [x] No regressions in existing tests
 
 ## Open Questions
 None - implementation path is clear based on existing cmake_build and configure_make patterns.
