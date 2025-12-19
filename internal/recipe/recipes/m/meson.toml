@@ -1,0 +1,22 @@
+[metadata]
+name = "meson"
+description = "Fast and user-friendly build system"
+homepage = "https://mesonbuild.com"
+binaries = ["bin/meson"]
+
+[version]
+source = "homebrew"
+formula = "meson"
+
+[[steps]]
+action = "homebrew"
+formula = "meson"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/meson"]
+
+[verify]
+command = "meson --version"
+pattern = "{version}"
