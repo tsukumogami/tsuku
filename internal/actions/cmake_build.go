@@ -19,6 +19,12 @@ func (a *CMakeBuildAction) Name() string {
 	return "cmake_build"
 }
 
+// Dependencies returns the dependencies needed for cmake builds.
+// Install-time dependencies are cmake (build system), make (for building), zig (as C compiler), and pkg-config (for library discovery).
+func (CMakeBuildAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"cmake", "make", "zig", "pkg-config"}}
+}
+
 // Execute builds software using CMake
 //
 // Parameters:

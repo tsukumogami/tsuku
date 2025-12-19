@@ -20,6 +20,12 @@ func (a *ConfigureMakeAction) Name() string {
 	return "configure_make"
 }
 
+// Dependencies returns the dependencies needed for configure_make builds.
+// Install-time dependencies are make (for building), zig (as C compiler), and pkg-config (for library discovery).
+func (ConfigureMakeAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"make", "zig", "pkg-config"}}
+}
+
 // Execute builds software using autotools
 //
 // Parameters:

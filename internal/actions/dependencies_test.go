@@ -32,6 +32,31 @@ func TestActionDependencies_EcosystemActions(t *testing.T) {
 	}
 }
 
+func TestActionDependencies_BuildActions(t *testing.T) {
+	t.Parallel()
+	// Build actions should have install-time deps for build tools
+	tests := []struct {
+		action          string
+		wantInstallTime []string
+	}{
+		{"configure_make", []string{"make", "zig", "pkg-config"}},
+		{"cmake_build", []string{"cmake", "make", "zig", "pkg-config"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.action, func(t *testing.T) {
+			deps := GetActionDeps(tt.action)
+
+			if !slicesEqual(deps.InstallTime, tt.wantInstallTime) {
+				t.Errorf("InstallTime = %v, want %v", deps.InstallTime, tt.wantInstallTime)
+			}
+			if deps.Runtime != nil {
+				t.Errorf("Runtime = %v, want nil", deps.Runtime)
+			}
+		})
+	}
+}
+
 func TestActionDependencies_CompiledBinaryActions(t *testing.T) {
 	t.Parallel()
 	// Compiled binary actions should have install-time deps but no runtime deps
