@@ -218,6 +218,7 @@ Installation plans are JSON files with this structure:
     "os": "linux",
     "arch": "amd64"
   },
+  "deterministic": true,
   "steps": [
     {
       "action": "download",
@@ -247,11 +248,74 @@ Installation plans are JSON files with this structure:
 | `version` | Resolved version string |
 | `platform.os` | Target operating system |
 | `platform.arch` | Target architecture |
+| `deterministic` | Whether this plan is fully reproducible (see Determinism section below) |
 | `steps` | Ordered list of installation actions |
 | `steps[].action` | Action type (download, extract, chmod, etc.) |
 | `steps[].params` | Action-specific parameters |
 | `steps[].checksum` | SHA256 checksum for download verification |
 | `steps[].evaluable` | Whether this step can be pre-computed |
+
+## Understanding Determinism in Plans
+
+The `deterministic` field indicates whether an installation plan will produce byte-for-byte identical results across different machines and at different times.
+
+### Fully Deterministic Plans (`deterministic: true`)
+
+Plans marked as deterministic use only **file operation primitives**:
+
+- `download`: Fetch files with checksums
+- `extract`: Decompress archives
+- `chmod`: Set file permissions
+- `install_binaries`: Copy binaries and create symlinks
+
+These operations are fully reproducible because they:
+- Don't depend on system compilers or build toolchains
+- Download pre-built binaries with verified checksums
+- Perform only file operations that produce identical results every time
+
+**Example:** Tools like `kubectl`, `ripgrep`, `terraform` (when pre-built binaries are available) produce deterministic plans.
+
+### Non-Deterministic Plans (`deterministic: false`)
+
+Plans marked as non-deterministic contain **ecosystem primitives** that delegate to external package managers or compilers:
+
+- `go_build`: Builds from Go source code
+- `cargo_build`: Builds from Rust source code
+- `npm_exec`: Runs npm commands
+- `pip_install`: Installs Python packages
+- `gem_exec`: Runs Ruby bundler
+- `nix_realize`: Uses Nix for builds
+- `cpan_install`: Installs Perl modules
+
+While these actions capture maximum constraint at eval time (through lockfiles and dependency snapshots), they may still have residual non-determinism due to:
+
+- **Compiler version differences**: Different C/C++ compiler versions may produce different machine code, even with identical source
+- **Native code generation**: LLVM and other code generators can produce platform-specific variations
+- **Runtime environment**: System libraries and tools may affect compilation output
+- **Floating-point precision**: Some calculations may vary slightly across platforms
+
+### When to Use Non-Deterministic Plans
+
+Non-deterministic plans are still highly reproducible and suitable for:
+
+- **CI/CD pipelines**: Ensures consistent tool versions across builds
+- **Development environments**: Guarantees team members have matching toolchain versions
+- **Air-gapped deployments**: Pre-computes everything needed without network access
+- **Supply chain control**: Captures exact dependencies at plan generation time
+
+The key difference from fully deterministic plans is that byte-for-byte identical binaries are not guaranteed, but the captured constraints ensure version consistency.
+
+### Checking Plan Determinism
+
+When you run `tsuku eval`, the output plan includes the `deterministic` field. Inspect it to understand what guarantees the plan provides:
+
+```bash
+# Generate a plan and check determinism
+tsuku eval myool > plan.json
+
+# View the deterministic flag
+jq '.deterministic' plan.json
+```
 
 ### Checksum Verification
 
@@ -270,6 +334,92 @@ tsuku eval rg > rg-plan.json
 # Review changes before re-installing
 diff old-plan.json rg-plan.json
 ```
+
+## Security Model
+
+Plan-based installation has important security implications. Understanding the trust boundaries helps you use plans safely.
+
+### Plans as Trusted Inputs
+
+When you execute a plan with `tsuku install --plan <file>`, tsuku treats the plan as a trusted input:
+
+- tsuku **trusts the URLs** listed in the plan
+- tsuku **verifies checksums** match what's in the plan
+- tsuku **does NOT** re-validate URLs or checksums against external sources
+- tsuku **does NOT** connect to version providers during execution
+
+This design enables offline execution in air-gapped environments but means the plan itself must be trustworthy.
+
+### Checksum Verification
+
+During plan execution, downloaded files are verified against the checksums embedded in the plan. This protects against:
+
+| Threat | Protected Against? | Notes |
+|--------|-------------------|-------|
+| **File corruption during download** | ✅ Yes | Checksums catch accidental corruption |
+| **Upstream file modifications** | ✅ Yes | If files are re-released, checksums change and installation fails |
+| **Man-in-the-middle (MITM) attacks** | ✅ Yes | Attacker would need to control original source AND bypass HTTPS |
+| **Malicious URLs in the plan** | ❌ No | Plans must be trusted; checksums verify content of URLs in the plan |
+| **Compromised sources at eval time** | ❌ No | Checksums capture state at plan generation time only |
+| **Supply chain attacks pre-eval** | ❌ No | If sources are compromised before `tsuku eval`, the plan reflects that |
+
+### Best Practices for Plan Security
+
+**Generate plans yourself:**
+
+```bash
+# Recommended: Generate plans in-house
+tsuku eval kubectl > our-kubectl-plan.json
+tsuku install --plan our-kubectl-plan.json
+```
+
+**Review plans before using them in production:**
+
+```bash
+# Inspect plan content for unexpected URLs
+jq '.steps[] | select(.params.url) | .params.url' plan.json
+
+# Compare against expected checksums
+jq '.steps[] | select(.checksum) | .checksum' plan.json
+```
+
+**Only use plans from trusted sources:**
+
+- Plans from your organization's release process: ✅ Safe
+- Plans from official project releases: ✅ Generally safe (but verify checksums are listed on their website)
+- Plans from untrusted third parties: ⚠️ Risky (could contain malicious URLs)
+- Plans from the internet without verification: ❌ Not recommended
+
+**Version control your plans:**
+
+```bash
+# Store generated plans in version control
+git add kubectl-plan.json
+git commit -m "update kubectl plan to 1.29.0"
+
+# This creates an audit trail of what was installed
+```
+
+### Regenerating Plans with Updated Constraints
+
+If you need to update a tool version or re-validate checksums:
+
+```bash
+# Regenerate the plan
+tsuku eval kubectl@1.30.0 > kubectl-plan-new.json
+
+# Review changes
+diff kubectl-plan.json kubectl-plan-new.json
+
+# Once satisfied, replace the plan
+mv kubectl-plan-new.json kubectl-plan.json
+
+# Commit the update
+git add kubectl-plan.json
+git commit -m "update kubectl plan to 1.30.0"
+```
+
+This workflow ensures that every plan change is reviewed and tracked before deployment.
 
 ## Troubleshooting
 

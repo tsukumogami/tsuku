@@ -1,0 +1,41 @@
+{
+  "milestone": 15,
+  "milestone_title": "Deterministic Recipe Execution",
+  "started_at": "2025-12-18T20:23:00Z",
+  "phase": "apply",
+  "head_commit": "01a7a3a4a43f89dab2f57d3c1f78c9ffdb93b6c9",
+  "design_doc": "docs/DESIGN-deterministic-resolution.md",
+  "pre_flight_completed_at": "2025-12-18T20:24:00Z",
+  "synthesize_completed_at": "2025-12-18T20:45:00Z",
+  "validators": {
+    "metadata": {
+      "status": "completed",
+      "findings": 0,
+      "summary": "All metadata quality checks pass. The milestone description is concise and release-notes-ready, the design document status is correctly set to \"Planned\", and the milestone state is \"open\" with all 46 issues closed as expected.",
+      "completed_at": "2025-12-18T20:36:00Z"
+    },
+    "design-goals": {
+      "status": "completed",
+      "findings": 2,
+      "summary": "Milestone 15 successfully delivered all three strategic milestones from the design document. The implementation achieved the core vision of deterministic recipe execution through a two-phase architecture (eval/exec), with plans stored in state.json and full checksum verification. Two enhancements beyond the design scope were implemented: action decomposition to primitives and nested dependency plans for self-contained installations.",
+      "completed_at": "2025-12-18T20:36:00Z"
+    },
+    "documentation": {
+      "status": "completed",
+      "findings": 10,
+      "summary": "Milestone M15 documentation is partially complete with significant gaps. Basic plan-based installation is well-documented, but 14 new ecosystem primitives are completely undocumented for users. Critical missing content includes: ecosystem primitive explanation, determinism guarantees, lockfile capture mechanism, and updated ecosystem support claims in README.md. Design docs are excellent but user-facing documentation needs Priority 1 additions before milestone can be considered fully complete.",
+      "completed_at": "2025-12-18T20:36:00Z"
+    },
+    "dead-code": {
+      "status": "completed",
+      "findings": 2,
+      "summary": "Found 2 low-severity dead code artifacts: debug print statements in npm_exec.go (lines 262-263) and a placeholder issue reference (#XXX) in gem_install.go (line 331). Neither blocks milestone completion but both should be addressed for code quality.",
+      "completed_at": "2025-12-18T20:36:00Z"
+    }
+  },
+  "batches": {
+    "documentation": {"approved": true, "applied": false},
+    "code": {"approved": true, "applied": false},
+    "metadata": {"approved": false, "applied": false}
+  }
+}
