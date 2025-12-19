@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -10,15 +10,15 @@ Planned
 
 ### Milestone: [Dependency Provisioning: Build Foundation](https://github.com/tsukumogami/tsuku/milestone/18)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#539](https://github.com/tsukumogami/tsuku/issues/539) | ci(build): add 4-platform test matrix for build essentials | None |
-| [#540](https://github.com/tsukumogami/tsuku/issues/540) | feat(recipes): add zlib recipe using homebrew_bottle | None |
-| [#541](https://github.com/tsukumogami/tsuku/issues/541) | feat(recipes): add make recipe using homebrew_bottle | None |
+| Issue | Title | Dependencies | Status |
+|-------|-------|--------------|--------|
+| [#539](https://github.com/tsukumogami/tsuku/issues/539) | ci(build): add 4-platform test matrix for build essentials | None | Done |
+| [#540](https://github.com/tsukumogami/tsuku/issues/540) | feat(recipes): add zlib recipe using homebrew_bottle | None | Done |
+| [#541](https://github.com/tsukumogami/tsuku/issues/541) | feat(recipes): add make recipe using homebrew_bottle | None | Done |
 | [#542](https://github.com/tsukumogami/tsuku/issues/542) | feat(recipes): add zig recipe and validate cc wrapper | None | Done |
 | [#543](https://github.com/tsukumogami/tsuku/issues/543) | feat(scripts): add build essential validation scripts | None | Done |
-| [#544](https://github.com/tsukumogami/tsuku/issues/544) | feat(recipes): add pngcrush recipe to validate zlib dependency | [#540](https://github.com/tsukumogami/tsuku/issues/540) |
-| [#545](https://github.com/tsukumogami/tsuku/issues/545) | feat(recipes): add gdbm recipe to validate configure_make | [#541](https://github.com/tsukumogami/tsuku/issues/541) |
+| [#544](https://github.com/tsukumogami/tsuku/issues/544) | feat(recipes): add pngcrush recipe to validate zlib dependency | [#540](https://github.com/tsukumogami/tsuku/issues/540) | Done |
+| [#545](https://github.com/tsukumogami/tsuku/issues/545) | feat(recipes): add gdbm recipe to validate configure_make | [#541](https://github.com/tsukumogami/tsuku/issues/541) | Done |
 | [#546](https://github.com/tsukumogami/tsuku/issues/546) | feat(recipes): add m4 recipe to validate compilation | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542) | Done |
 
 ```mermaid
