@@ -18,14 +18,17 @@ File operation primitives are the atomic building blocks of installation. They p
 
 | Action | Purpose | Determinism |
 |--------|---------|-------------|
-| `download` | Fetch a URL to a file | Fully deterministic (checksums verified) |
-| `extract` | Decompress an archive (tar, zip, gzip) | Fully deterministic |
+| `download_file` | Fetch a URL to a file with checksum verification | Fully deterministic |
+| `extract` | Decompress archives (tar, zip, gzip, etc.) | Fully deterministic |
 | `chmod` | Set file permissions | Fully deterministic |
 | `install_binaries` | Copy binaries to install directory and create symlinks | Fully deterministic |
 | `set_env` | Set environment variables in shell profiles | Fully deterministic |
 | `set_rpath` | Modify binary rpath for dependency resolution | Fully deterministic |
 | `link_dependencies` | Create symlinks to library dependencies | Fully deterministic |
 | `install_libraries` | Install shared libraries to system locations | Fully deterministic |
+| `apply_patch_file` | Apply patch file using system patch command | Fully deterministic |
+| `text_replace` | Text replacement in files (Homebrew inreplace equivalent) | Fully deterministic |
+| `homebrew_relocate` | Relocate Homebrew placeholder paths in binaries | Fully deterministic |
 
 **Key property**: All file operation primitives are fully reproducible. Running the same primitive twice produces identical results.
 
@@ -35,13 +38,17 @@ Ecosystem primitives delegate to external package managers and build systems (Go
 
 | Action | Ecosystem | Locked At Eval | Residual Non-Determinism |
 |--------|-----------|----------------|--------------------------|
-| `go_build` | Go | go.sum, module versions | Compiler version, CGO |
 | `cargo_build` | Rust | Cargo.lock | Compiler version, build scripts |
-| `npm_exec` | Node.js | package-lock.json | Native addons, Node.js version |
-| `pip_install` | Python | requirements.txt with hashes | Platform wheels, Python version |
-| `gem_exec` | Ruby | Gemfile.lock | Native extensions, Ruby version |
-| `nix_realize` | Nix | flake.lock + derivation hash | Binary cache (fully deterministic if built locally) |
+| `cmake_build` | CMake | CMakeLists.txt | Compiler version, platform differences |
+| `configure_make` | Autotools | configure script | Compiler version, platform detection |
 | `cpan_install` | Perl | cpanfile.snapshot | XS modules, Perl version |
+| `gem_exec` | Ruby | Gemfile.lock | Native extensions, Ruby version |
+| `go_build` | Go | go.sum, module versions | Compiler version, CGO |
+| `install_gem_direct` | Ruby | Exact version | Native extensions, Ruby version |
+| `nix_realize` | Nix | flake.lock + derivation hash | Binary cache (fully deterministic if built locally) |
+| `npm_exec` | Node.js | package-lock.json | Native addons, Node.js version |
+| `pip_exec` | Python | requirements.txt with hashes | Platform wheels, Python version |
+| `pip_install` | Python | Version only (legacy) | Platform wheels, Python version, transitive deps |
 
 **Key property**: Ecosystem primitives capture dependency versions during evaluation but cannot guarantee bit-for-bit reproducibility due to compiler and platform variations.
 
@@ -49,12 +56,32 @@ Ecosystem primitives delegate to external package managers and build systems (Go
 
 Composite actions are shortcuts for recipe authors. They decompose into primitives during the eval phase:
 
+#### Standard Download Composites
+
 | Composite | Decomposes To | Example Recipe Use |
 |-----------|---------------|--------------------|
-| `github_archive` | download + extract + chmod + install_binaries | Download release asset from GitHub |
-| `download_archive` | download + extract | Download and extract a tarball from any URL |
-| `github_file` | download + install_binaries | Download a single binary from GitHub |
-| `hashicorp_release` | download + extract + install_binaries | Install HashiCorp tools (terraform, consul, etc.) |
+| `download` | download_file | Download with automatic checksum computation |
+| `download_archive` | download_file + extract + chmod + install_binaries | Download and extract a tarball from any URL |
+| `github_archive` | download_file + extract + chmod + install_binaries | Download release asset from GitHub |
+| `github_file` | download_file + chmod + install_binaries | Download a single binary from GitHub |
+
+#### Specialized Composites
+
+| Composite | Decomposes To | Example Recipe Use |
+|-----------|---------------|--------------------|
+| `apply_patch` | download_file + apply_patch_file (or just apply_patch_file) | Apply patch from URL or inline data |
+| `homebrew` | download_file + extract + homebrew_relocate | Install Homebrew GHCR bottles |
+
+#### Ecosystem Install Composites
+
+| Composite | Decomposes To | Example Recipe Use |
+|-----------|---------------|--------------------|
+| `cargo_install` | download + extract + cargo_build | Install Rust crate from source |
+| `gem_install` | download + extract + gem_exec | Install Ruby gem from source |
+| `go_install` | download + extract + go_build | Install Go module from source |
+| `nix_install` | nix_realize | Install from Nix flake |
+| `npm_install` | download + extract + npm_exec | Install Node.js package from source |
+| `pipx_install` | download + extract + pip_exec | Install Python package from source |
 
 **Important**: Composite actions exist only in recipes, never in plans. When you run `tsuku eval`, composites decompose into their primitive components.
 
@@ -105,7 +132,7 @@ After `tsuku eval`, the plan contains:
 {
   "steps": [
     {
-      "action": "download",
+      "action": "download_file",
       "params": {
         "url": "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/rg-14.1.0-x86_64-unknown-linux-musl.tar.gz",
         "dest": "rg-14.1.0-x86_64-unknown-linux-musl.tar.gz"
@@ -144,7 +171,7 @@ Plans containing only file operation primitives are guaranteed to produce identi
   "format_version": 2,
   "deterministic": true,
   "steps": [
-    {"action": "download", "checksum": "sha256:..."},
+    {"action": "download_file", "checksum": "sha256:..."},
     {"action": "extract"},
     {"action": "chmod"},
     {"action": "install_binaries"}
@@ -244,7 +271,7 @@ tsuku eval rg > rg-plan.json
 
 # Inspect to see only primitives
 cat rg-plan.json | jq '.steps[].action'
-# Output: download, extract, chmod, install_binaries
+# Output: download_file, extract, chmod, install_binaries
 
 # Install from plan (executor runs primitives)
 tsuku install --plan rg-plan.json
@@ -310,7 +337,7 @@ Result: Reproducible Rust builds with locked crates.
 
 Your recipe uses ecosystem primitives (go_build, cargo_build, etc.). This is expected. The flag indicates that while the plan is reproducible, binaries may vary slightly due to compiler versions.
 
-To make a plan fully deterministic, use only file operation primitives (download, extract, chmod, install_binaries).
+To make a plan fully deterministic, use only file operation primitives (download_file, extract, chmod, install_binaries).
 
 ### What if I need bit-for-bit reproducibility?
 
