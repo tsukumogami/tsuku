@@ -41,6 +41,7 @@ func TestActionDependencies_BuildActions(t *testing.T) {
 	}{
 		{"configure_make", []string{"make", "zig", "pkg-config"}},
 		{"cmake_build", []string{"cmake", "make", "zig", "pkg-config"}},
+		{"meson_build", []string{"meson", "make", "zig", "pkg-config"}},
 	}
 
 	for _, tt := range tests {

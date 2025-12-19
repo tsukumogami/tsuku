@@ -14,6 +14,11 @@ type MesonBuildAction struct{ BaseAction }
 
 // IsDeterministic returns false because meson builds depend on system compilers.
 
+// Dependencies declares the install-time dependencies for this action.
+func (MesonBuildAction) Dependencies() ActionDeps {
+	return ActionDeps{InstallTime: []string{"meson", "make", "zig", "pkg-config"}}
+}
+
 // Name returns the action name
 func (a *MesonBuildAction) Name() string {
 	return "meson_build"
