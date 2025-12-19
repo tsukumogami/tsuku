@@ -92,8 +92,8 @@ graph LR
     classDef external fill:#e0e0e0
 
     class I540,I541,I542 external
-    class I547 done
-    class I548,I549 ready
+    class I547,I548 done
+    class I549 ready
     class I550,I551,I552,I553,I554,I555,I556 blocked
 ```
 
