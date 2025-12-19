@@ -259,8 +259,6 @@ func validateNodeVersion(constraint string, execPaths ...string) error {
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Printf("   Debug: node exec failed: %v\n", err)
-		fmt.Printf("   Debug: output: %s\n", string(output))
 		return fmt.Errorf("node.js not found or failed to execute: %w", err)
 	}
 

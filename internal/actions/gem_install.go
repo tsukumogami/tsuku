@@ -328,7 +328,6 @@ func (a *GemInstallAction) Decompose(ctx *EvalContext, params map[string]interfa
 	// Special case: bundler cannot install itself via bundle install
 	// Use direct gem install instead. This is a known architectural limitation
 	// where bundler's self-referential nature prevents decomposition.
-	// See issue #XXX for further investigation.
 	if gemName == "bundler" {
 		return a.decomposeBundlerDirectInstall(ctx, version, executables)
 	}

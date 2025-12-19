@@ -15,7 +15,7 @@ tsuku is a package manager that makes it easy to install and manage development 
 - **Version management**: Tools installed in version-specific directories
 - **Automatic PATH management**: Shell integration for easy access
 - **Dependency management**: Automatic installation and cleanup of tool dependencies
-- **Package manager integration**: npm_install action for npm tools (pip/cargo pending)
+- **Ecosystem integration**: Full support for npm, cargo, go, pip, gem, nix, and cpan with lockfile-based reproducibility
 - **No dependencies**: Single binary, no system prerequisites
 
 ## Installation
@@ -213,6 +213,20 @@ tsuku eval kubectl | tsuku install --plan -
 ```
 
 See the [Plan-Based Installation Guide](docs/GUIDE-plan-based-installation.md) for air-gapped deployment and CI distribution workflows.
+
+### Ecosystem-Native Installation
+
+tsuku integrates with multiple package ecosystems to capture dependencies and ensure reproducible builds:
+
+- **npm** (Node.js): Captures package.json and package-lock.json for deterministic dependency resolution
+- **cargo** (Rust): Captures Cargo.lock for bit-for-bit reproducible builds
+- **go** (Go): Captures go.mod and go.sum for exact version pinning
+- **pip** (Python): Captures requirements.txt or pip-lock files for consistent environments
+- **gem** (Ruby): Captures Gemfile.lock for reproducible Ruby tool installations
+- **nix** (Nix): Leverages Nix's hermetic environment system for complex tooling
+- **cpan** (Perl): Captures dependency specifications for Perl module installation
+
+Each ecosystem integration ensures that lockfiles are captured during the plan phase, guaranteeing that subsequent installations produce identical binaries and dependencies across different machines and time.
 
 ### Security and Verification
 

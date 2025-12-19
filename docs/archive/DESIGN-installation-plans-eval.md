@@ -1,9 +1,11 @@
 # Design: Installation Plans and tsuku eval Command
 
-- **Status**: Current
+- **Status**: Implemented (Milestone M15)
 - **Author**: @dangazineu
 - **Created**: 2025-12-10
 - **Scope**: Tactical
+- **Archived**: 2025-12-19
+- **See Also**: docs/GUIDE-plan-based-installation.md (user guide)
 
 ## Upstream Design Reference
 
