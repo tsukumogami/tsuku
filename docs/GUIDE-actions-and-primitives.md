@@ -356,6 +356,33 @@ action = "nix_realize"
 flake_ref = "nixpkgs#ripgrep"
 ```
 
+## Build Environment Configuration
+
+When executing source builds (`configure_make`, `cmake_build`), tsuku automatically configures the build environment to use tsuku-provided dependencies:
+
+- **CC/CXX**: Set to `zig cc`/`zig c++` when system compiler unavailable (or use system compiler if present)
+- **PKG_CONFIG_PATH**: Includes all dependency `lib/pkgconfig` directories
+- **CPPFLAGS**: Includes `-I` flags for all dependency include directories
+- **LDFLAGS**: Includes `-L` flags for all dependency lib directories
+- **CMAKE_PREFIX_PATH**: Semicolon-separated list of dependency installation paths
+
+This ensures autotools and cmake can find tsuku-provided dependencies without manual configuration. Build essentials (compilers, make, libraries) are installed automatically as implicit dependencies when needed.
+
+Example:
+```toml
+# This recipe depends on zlib
+[[recipe.actions]]
+action = "configure_make"
+url = "https://ftp.gnu.org/gnu/gdbm/gdbm-1.23.tar.gz"
+configure_flags = ["--disable-shared"]
+
+# During build, tsuku automatically:
+# 1. Installs make and zig as implicit dependencies
+# 2. Sets CC=zig cc (if no system compiler)
+# 3. Sets CPPFLAGS=-I$TSUKU_HOME/tools/zlib-x.y.z/include
+# 4. Sets LDFLAGS=-L$TSUKU_HOME/tools/zlib-x.y.z/lib
+```
+
 ### How do I inspect captured lockfiles in a plan?
 
 Extract lockfiles from the plan:

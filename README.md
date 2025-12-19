@@ -72,7 +72,8 @@ tsuku create prettier --from npm
 # From GitHub releases (uses LLM)
 tsuku create gh --from github:cli/cli
 
-# From Homebrew bottles (uses LLM)
+# From Homebrew bottles (pre-built binaries for Linux/macOS)
+tsuku create zlib --from homebrew:zlib
 tsuku create jq --from homebrew:jq
 ```
 
@@ -145,6 +146,24 @@ tsuku install tool-b  # Explicitly installed
 tsuku install tool-a  # tool-b already present
 tsuku remove tool-a   # tool-b remains (it was explicit)
 ```
+
+### Build Dependency Provisioning
+
+tsuku automatically provides build tools and libraries needed for source builds, eliminating the need for system dependencies:
+
+- **Compilers**: zig (C/C++ via zig cc fallback when system compiler unavailable)
+- **Build tools**: make, pkg-config, cmake, autoconf, automake
+- **Common libraries**: zlib, openssl, ncurses, readline
+
+When you install a tool that requires compilation, tsuku automatically installs the necessary build dependencies. No manual setup required.
+
+Example:
+```bash
+# Build gdbm from source - tsuku provides make and zig automatically
+tsuku install gdbm-source
+```
+
+Build essentials are installed to `$TSUKU_HOME/tools/` just like any other tool and are subject to the same dependency management rules.
 
 ### Multi-Version Support
 

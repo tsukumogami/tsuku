@@ -85,6 +85,47 @@ export PATH="$HOME/.tsuku/bin:$PATH"
 gh --version
 ```
 
+### Testing Build Essentials
+
+Build essential recipes (compilers, libraries) require additional validation beyond standard tests. Three validation scripts ensure build essentials work correctly across platforms:
+
+**verify-tool.sh** - Functional verification
+```bash
+# Ensures the tool runs correctly
+./test/scripts/verify-tool.sh zlib
+./test/scripts/verify-tool.sh make
+```
+
+**verify-relocation.sh** - Relocation verification
+```bash
+# Ensures no hardcoded paths in binaries
+# Linux: RPATH uses $ORIGIN, no /usr/local or /home/linuxbrew
+# macOS: install_name uses @rpath, no /opt/homebrew hardcoding
+./test/scripts/verify-relocation.sh zlib
+```
+
+**verify-no-system-deps.sh** - Self-containment verification
+```bash
+# Ensures tool uses only tsuku-provided deps
+# Linux: ldd shows only $TSUKU_HOME paths and libc
+# macOS: otool -L shows only @rpath and system frameworks
+./test/scripts/verify-no-system-deps.sh zlib
+```
+
+Example workflow for testing a build essential recipe:
+```bash
+# Build and install
+go build -o tsuku ./cmd/tsuku
+./tsuku install zlib
+
+# Run all three validation scripts
+./test/scripts/verify-tool.sh zlib
+./test/scripts/verify-relocation.sh zlib
+./test/scripts/verify-no-system-deps.sh zlib
+```
+
+See `.github/workflows/build-essentials.yml` for the complete validation matrix (3 platforms: Linux x86_64, macOS Intel, macOS ARM).
+
 ## Code Style
 
 ### Formatting
