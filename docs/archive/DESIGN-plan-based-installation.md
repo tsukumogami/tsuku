@@ -1,10 +1,12 @@
 # Design: Plan-Based Installation
 
-- **Status**: Current
+- **Status**: Implemented (Milestone M15)
 - **Milestone**: Deterministic Recipe Execution
 - **Author**: @dangazineu
 - **Created**: 2025-12-13
 - **Scope**: Tactical
+- **Archived**: 2025-12-19
+- **See Also**: docs/GUIDE-plan-based-installation.md (user guide)
 
 ## Implementation Issues
 

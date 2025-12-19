@@ -1,10 +1,13 @@
 # Design: Decomposable Actions and Primitive Operations
 
-- **Status**: Current
+- **Status**: Implemented (Milestone M15)
+- **Archived**: 2025-12-19
 - **Milestone**: Deterministic Recipe Execution
 - **Author**: @dangazineu
 - **Created**: 2025-12-12
 - **Scope**: Tactical
+
+> **Note**: Architecture evolved during implementation. Ecosystem actions use a two-layer design: evaluable composite actions (go_install, cargo_install, etc.) decompose to ecosystem primitives (go_build, cargo_build, etc.) that appear in plans.
 
 ## Implementation Issues
 
@@ -164,7 +167,7 @@ This option provides the cleanest architectural separation. The plan generator p
 
 ### Primitive Action Classification
 
-Actions are classified into two tiers based on their decomposition barrier:
+Actions are classified into tiers based on their decomposition barrier:
 
 #### Tier 1: File Operation Primitives
 
@@ -172,7 +175,7 @@ These are fully atomic operations with deterministic, reproducible behavior:
 
 | Primitive | Purpose | Key Parameters |
 |-----------|---------|----------------|
-| `download` | Fetch URL to file | `url`, `dest`, `checksum` |
+| `download_file` | Fetch URL to file | `url`, `dest`, `checksum` |
 | `extract` | Decompress archive | `archive`, `format`, `strip_dirs` |
 | `chmod` | Set file permissions | `files`, `mode` |
 | `install_binaries` | Copy to install dir, create symlinks | `binaries`, `install_mode` |
@@ -190,15 +193,34 @@ These represent the **decomposition barrier** for ecosystem-specific operations.
 | `go_build` | Go | go.sum, module versions | Compiler version, CGO |
 | `cargo_build` | Rust | Cargo.lock | Compiler version |
 | `npm_exec` | Node.js | package-lock.json | Native addon builds |
-| `pip_install` | Python | requirements.txt with hashes | Native extensions |
+| `pip_exec` | Python | requirements.txt with hashes | Native extensions |
 | `gem_exec` | Ruby | Gemfile.lock | Native extensions |
 | `nix_realize` | Nix | Derivation hash | None (fully deterministic) |
+| `cpan_install` | Perl | cpanfile.snapshot | XS modules, Makefile.PL |
 
 Each ecosystem primitive requires dedicated investigation to determine:
 1. What can be locked at eval time
 2. What reproducibility guarantees the ecosystem provides
 3. Minimal invocation that respects locks
 4. Residual non-determinism that must be accepted
+
+#### Ecosystem Composite Actions
+
+In addition to primitives, tsuku provides **evaluable composite actions** for ecosystem installers. These are recipe-authoring conveniences that decompose to ecosystem primitives during plan generation:
+
+| Composite | Decomposes To | Purpose |
+|-----------|---------------|---------|
+| `go_install` | `go_build` | Install Go module from source |
+| `cargo_install` | `cargo_build` | Install Rust crate from source |
+| `npm_install` | `npm_exec` | Install npm package |
+| `gem_install` | `gem_exec` | Install Ruby gem |
+| `pipx_install` | `pip_exec` | Install Python package with pipx |
+| `nix_install` | `nix_realize` | Install package via Nix |
+| `cpan_install` | `cpan_install` | Install Perl module (composite and primitive share name) |
+
+**Key distinction**: These composites are **evaluable** - they resolve versions, capture lock files, and compute checksums during evaluation, then emit the corresponding primitive action in the plan. The primitive action appears in the plan, not the composite.
+
+**Example**: A recipe using `go_install` will decompose to a `go_build` primitive in the plan, with captured `go.sum` and resolved module versions.
 
 ### Composite Action Decomposition
 
@@ -309,7 +331,7 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
     // 4. Return primitive steps
     return []PrimitiveStep{
         {
-            Action:   "download",
+            Action:   "download_file",
             Params:   map[string]interface{}{"url": url, "dest": assetName},
             Checksum: result.Checksum,
             Size:     result.Size,
@@ -337,6 +359,58 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 }
 ```
 
+#### Example: go_install Decomposition
+
+Ecosystem composites follow a similar pattern but capture lock information:
+
+```go
+func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]PrimitiveStep, error) {
+    module := params["module"].(string)
+    version := ctx.Version
+
+    // 1. Clone repository to temporary directory
+    tmpDir, err := cloneModuleSource(ctx.Context, module, version)
+    if err != nil {
+        return nil, err
+    }
+    defer os.RemoveAll(tmpDir)
+
+    // 2. Download dependencies and capture go.sum
+    goSum, err := downloadDependencies(ctx.Context, tmpDir)
+    if err != nil {
+        return nil, err
+    }
+
+    // 3. Resolve module versions
+    moduleVersions, err := listModuleVersions(ctx.Context, tmpDir)
+    if err != nil {
+        return nil, err
+    }
+
+    // 4. Return ecosystem primitive with locked dependencies
+    return []PrimitiveStep{
+        {
+            Action: "go_build",
+            Params: map[string]interface{}{
+                "module":      module,
+                "version":     version,
+                "executables": params["executables"],
+                "go_sum":      goSum,              // Captured lock file
+                "go_version":  detectGoVersion(),   // Lock compiler version
+                "modules":     moduleVersions,      // Resolved dependency graph
+            },
+        },
+    }, nil
+}
+```
+
+**Key differences from file-based composites**:
+
+1. **Lock capture**: The composite resolves and downloads dependencies to capture `go.sum` during evaluation
+2. **Single primitive**: Ecosystem composites typically decompose to a single ecosystem primitive (not multiple file operations)
+3. **Locked parameters**: The resulting primitive contains all lock information needed for deterministic execution
+4. **Evaluation cost**: May involve network calls and dependency resolution, but guarantees reproducibility
+
 ### Plan Structure
 
 Plans contain only primitive operations:
@@ -351,7 +425,7 @@ Plans contain only primitive operations:
   "recipe_hash": "sha256:abc...",
   "steps": [
     {
-      "action": "download",
+      "action": "download_file",
       "params": {
         "url": "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz",
         "dest": "ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz"

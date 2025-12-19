@@ -1,10 +1,12 @@
 # Design: Deterministic Recipe Resolution and Installation Plans
 
-- **Status**: Planned
+- **Status**: Implemented (Milestone M15)
 - **Issue**: #227
 - **Author**: @dangazineu
 - **Created**: 2025-12-09
 - **Scope**: Strategic
+- **Archived**: 2025-12-19
+- **See Also**: docs/GUIDE-plan-based-installation.md (user guide)
 
 ## Vision
 
