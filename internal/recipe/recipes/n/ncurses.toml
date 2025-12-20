@@ -1,0 +1,66 @@
+[metadata]
+name = "ncurses"
+description = "Text-based UI library"
+homepage = "https://invisible-island.net/ncurses/"
+binaries = ["bin/ncursesw6-config"]
+
+[version]
+source = "homebrew"
+formula = "ncurses"
+
+[[steps]]
+action = "download_file"
+url = "https://ftpmirror.gnu.org/gnu/ncurses/ncurses-{version}.tar.gz"
+checksum = "136d91bc269a9a5785e5f9e980bc76ab57428f604ce3e5a5a90cebc767971cc6"
+
+[[steps]]
+action = "extract"
+archive = "ncurses-{version}.tar.gz"
+format = "tar.gz"
+
+[[steps]]
+action = "setup_build_env"
+
+[[steps]]
+action = "configure_make"
+source_dir = "ncurses-{version}"
+configure_args = ["--with-shared", "--enable-pc-files", "--with-pkg-config-libdir=libdir"]
+executables = ["ncursesw6-config"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "bin/ncursesw6-config",
+    "bin/clear",
+    "bin/infocmp",
+    "bin/tabs",
+    "bin/tic",
+    "bin/toe",
+    "bin/tput",
+    "bin/tset",
+    "lib/libncurses.so",
+    "lib/libncurses.so.6",
+    "lib/libncurses.so.6.5",
+    "lib/libncurses.dylib",
+    "lib/libncurses.6.dylib",
+    "lib/libform.so",
+    "lib/libform.so.6",
+    "lib/libform.so.6.5",
+    "lib/libform.dylib",
+    "lib/libform.6.dylib",
+    "lib/libmenu.so",
+    "lib/libmenu.so.6",
+    "lib/libmenu.so.6.5",
+    "lib/libmenu.dylib",
+    "lib/libmenu.6.dylib",
+    "lib/libpanel.so",
+    "lib/libpanel.so.6",
+    "lib/libpanel.so.6.5",
+    "lib/libpanel.dylib",
+    "lib/libpanel.6.dylib",
+]
+
+[verify]
+command = "ncursesw6-config --version"
+pattern = "{version}"
