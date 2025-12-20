@@ -76,9 +76,9 @@ This enables:
 - **macOS CI validation** - GitHub Actions runners test macOS-specific behavior
 - **Single recipe per formula** - No platform-specific recipe variants needed
 
-### HomebrewBuilder (LLM-Based Recipe Generation)
+### HomebrewBuilder (Deterministic + LLM Recipe Generation)
 
-The HomebrewBuilder uses LLM analysis to generate tsuku recipes from Homebrew formulas. This eliminates manual recipe authoring for Homebrew-only tools.
+The HomebrewBuilder generates tsuku recipes from Homebrew formulas, eliminating manual recipe authoring for Homebrew-only tools. It uses a deterministic-first approach for speed and cost efficiency, falling back to LLM analysis only when needed.
 
 **Implementation milestone:** [M17: Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/17)
 
@@ -96,42 +96,14 @@ User: tsuku create mylib --from homebrew:libyaml
             └───────┬───────┘
                     │ Formula exists, has bottles
                     ▼
-            ┌───────────────┐
-            │   Build()     │
-            │               │
-            │ LLM convo:    │
-            │ - System prompt│
-            │ - Formula JSON │
-            │ - Tool defs   │
-            └───────┬───────┘
-                    │
-        ┌───────────┴───────────┐
-        ▼                       ▼
-┌───────────────┐       ┌───────────────┐
-│fetch_formula  │       │inspect_bottle │
-│               │       │               │
-│ Returns full  │       │ Download,     │
-│ JSON metadata │       │ list contents │
-└───────┬───────┘       └───────┬───────┘
-        │                       │
-        └───────────┬───────────┘
-                    ▼
-            ┌───────────────┐
-            │extract_recipe │
-            │               │
-            │ LLM outputs:  │
-            │ - executables │
-            │ - deps        │
-            │ - verify cmd  │
-            └───────┬───────┘
-                    │
-                    ▼
-            ┌───────────────┐
-            │generateRecipe │
-            │               │
-            │ TOML recipe   │
-            │ with actions  │
-            └───────┬───────┘
+            ┌───────────────────────┐
+            │ generateDeterministic │
+            │                       │
+            │ Inspect bottle:       │
+            │ - Download bottle     │
+            │ - List executables    │
+            │ - Infer verify cmd    │
+            └───────┬───────────────┘
                     │
                     ▼
             ┌───────────────┐
@@ -145,12 +117,41 @@ User: tsuku create mylib --from homebrew:libyaml
             ▼               ▼
         [PASS]          [FAIL]
             │               │
-            │       ┌───────┴───────┐
-            │       │ Repair Loop   │
-            │       │ (max 2)       │
+            │               ▼
+            │       ┌───────────────┐
+            │       │ Start LLM     │
+            │       │               │
+            │       │ LLM convo:    │
+            │       │ - Formula JSON│
+            │       │ - Failure ctx │
             │       └───────┬───────┘
             │               │
-            └───────┬───────┘
+            │       ┌───────┴───────────┐
+            │       ▼                   ▼
+            │  ┌─────────────┐   ┌─────────────┐
+            │  │fetch_formula│   │inspect_bottle│
+            │  └─────┬───────┘   └─────┬───────┘
+            │        └───────┬───────────┘
+            │                ▼
+            │        ┌───────────────┐
+            │        │extract_recipe │
+            │        └───────┬───────┘
+            │                │
+            │                ▼
+            │        ┌───────────────┐
+            │        │  Validate()   │
+            │        └───────┬───────┘
+            │                │
+            │        ┌───────┴───────┐
+            │        ▼               ▼
+            │    [PASS]          [FAIL]
+            │        │               │
+            │        │       ┌───────┴───────┐
+            │        │       │ Repair Loop   │
+            │        │       │ (max 2)       │
+            │        │       └───────┬───────┘
+            │        │               │
+            └────────┴───────────────┘
                     ▼
             ┌───────────────┐
             │ Return Result │
@@ -161,19 +162,26 @@ User: tsuku create mylib --from homebrew:libyaml
             └───────────────┘
 ```
 
-**LLM Tools:**
-- `fetch_formula_json`: Get metadata from Homebrew API
-- `inspect_bottle`: Download bottle, list contents
-- `extract_recipe`: Output final recipe structure
+**Generation approaches:**
+
+1. **Deterministic (fast path):**
+   - Inspects bottle contents directly
+   - Infers executables and verify command
+   - No LLM cost, ~1-2 second generation
+   - Success rate: ~85-90% for simple formulas
+
+2. **LLM fallback (when deterministic fails validation):**
+   - LLM analyzes formula metadata
+   - Uses tools: `fetch_formula_json`, `inspect_bottle`, `extract_recipe`
+   - Costs ~$0.02-0.10 per recipe
+   - Success rate: ~75-85% with repair loop (max 2 attempts)
 
 **Container validation:**
-All generated recipes are validated in isolated containers with `--network=none`, resource limits (2GB RAM, 2 CPU, 5min timeout), and repair loops (max 2 attempts) for common mistakes.
-
-**Success rate:** Target ~75-85% for bottle-based formulas
+All generated recipes are validated in isolated containers with `--network=none` and resource limits (2GB RAM, 2 CPU, 5min timeout)
 
 ### Dependency Discovery
 
-Before invoking the LLM, the builder traverses the dependency tree using Homebrew's JSON API. This provides full visibility before committing to LLM costs.
+Before generating recipes, the builder traverses the dependency tree using Homebrew's JSON API. This provides full visibility of what needs to be generated and estimated costs.
 
 **User confirmation flow:**
 
