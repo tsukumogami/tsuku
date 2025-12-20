@@ -60,6 +60,10 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 	// Phase 1: Collect from steps
 	for _, step := range r.Steps {
 		actionDeps := GetActionDeps(step.Action)
+		// TODO(#644): Aggregate dependencies from primitive actions when step.Action is decomposable.
+		// Currently only collects dependencies declared directly on the composite action.
+		// Should check if action implements Decomposable, decompose it, and recursively
+		// collect dependencies from all primitive actions in the decomposition tree.
 
 		// Install-time: step replace OR (action implicit + step extend)
 		if stepDeps := getStringSliceParam(step.Params, "dependencies"); stepDeps != nil {
