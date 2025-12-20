@@ -24,14 +24,14 @@ Add ResolvedDeps to ExecutionContext, then update buildAutotoolsEnv() to iterate
 - `internal/actions/configure_make_test.go` - Add unit tests for path construction
 
 ## Implementation Steps
-- [ ] Add `Dependencies ResolvedDeps` field to ExecutionContext struct
-- [ ] Update buildAutotoolsEnv() signature to use ctx parameter
-- [ ] Implement PKG_CONFIG_PATH construction from dependencies
-- [ ] Implement CPPFLAGS construction from dependencies
-- [ ] Implement LDFLAGS construction from dependencies
-- [ ] Update executor.go to resolve and pass dependencies
-- [ ] Add unit tests for buildAutotoolsEnv() path construction
-- [ ] Verify existing configure_make tests still pass
+- [x] Add `Dependencies ResolvedDeps` field to ExecutionContext struct
+- [x] Update buildAutotoolsEnv() signature to use ctx parameter
+- [x] Implement PKG_CONFIG_PATH construction from dependencies
+- [x] Implement CPPFLAGS construction from dependencies
+- [x] Implement LDFLAGS construction from dependencies
+- [x] Update executor.go to resolve and pass dependencies
+- [x] Add unit tests for buildAutotoolsEnv() path construction
+- [x] Verify existing configure_make tests still pass
 
 ## Testing Strategy
 - Unit tests: Test buildAutotoolsEnv() with mock dependencies to verify correct path construction
