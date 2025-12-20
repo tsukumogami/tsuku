@@ -42,6 +42,7 @@ Ecosystem primitives delegate to external package managers and build systems (Go
 | `cmake_build` | CMake | CMakeLists.txt | Compiler version, platform differences |
 | `configure_make` | Autotools | configure script | Compiler version, platform detection |
 | `cpan_install` | Perl | cpanfile.snapshot | XS modules, Perl version |
+| `meson_build` | Meson | meson.build | Compiler version, build scripts |
 | `gem_exec` | Ruby | Gemfile.lock | Native extensions, Ruby version |
 | `go_build` | Go | go.sum, module versions | Compiler version, CGO |
 | `install_gem_direct` | Ruby | Exact version | Native extensions, Ruby version |
@@ -51,6 +52,18 @@ Ecosystem primitives delegate to external package managers and build systems (Go
 | `pip_install` | Python | Version only (legacy) | Platform wheels, Python version, transitive deps |
 
 **Key property**: Ecosystem primitives capture dependency versions during evaluation but cannot guarantee bit-for-bit reproducibility due to compiler and platform variations.
+
+#### Build System Primitives
+
+Build system primitives handle source compilation using standard build tools. These are used when tools need to be built from source:
+
+- `configure_make` - Autotools builds (`./configure && make && make install`)
+- `cmake_build` - CMake projects
+- `meson_build` - Meson build system (common in GNOME/GTK projects)
+
+Build system primitives are ecosystem primitives that depend on system compilers. They capture build configuration but have residual non-determinism from compiler versions and platform detection.
+
+**Example use case**: Manual recipe authoring for tools distributed as source tarballs, or when Homebrew formulas lack pre-built bottles.
 
 ### Composite Actions (Recipe Authoring)
 
@@ -71,6 +84,25 @@ Composite actions are shortcuts for recipe authors. They decompose into primitiv
 |-----------|---------------|--------------------|
 | `apply_patch` | download_file + apply_patch_file (or just apply_patch_file) | Apply patch from URL or inline data |
 | `homebrew` | download_file + extract + homebrew_relocate | Install Homebrew GHCR bottles |
+
+##### Patch Application
+
+Patches are used to modify source code before building, common in Homebrew formulas and source-based installs:
+
+```toml
+[[steps]]
+action = "apply_patch"
+url = "https://raw.githubusercontent.com/Homebrew/formula-patches/master/example/fix.patch"
+checksum = "sha256:abc123..."
+strip = 1  # Strip leading path components (-p1)
+```
+
+The `apply_patch` composite:
+1. Downloads patch file with checksum verification (if URL provided)
+2. Applies patch using `apply_patch_file` primitive
+3. Validates patch application succeeded
+
+For inline patches, omit the `url` parameter and provide patch data directly.
 
 #### Ecosystem Install Composites
 

@@ -77,6 +77,82 @@ tsuku create zlib --from homebrew:zlib
 tsuku create jq --from homebrew:jq
 ```
 
+#### LLM-Powered Recipe Generation
+
+Some recipe builders use LLM analysis to generate recipes from complex sources. These require an API key:
+
+**Builders requiring LLM**:
+- `--from github:owner/repo` - Analyzes GitHub releases
+- `--from homebrew:formula` - Analyzes Homebrew formulas
+
+**Builders NOT requiring LLM** (deterministic):
+- `--from crates.io` - Uses crates.io API
+- `--from npm` - Uses npm registry
+- `--from pypi` - Uses PyPI API
+- `--from rubygems` - Uses RubyGems API
+
+To use LLM-powered builders, export an API key for Claude or Gemini:
+
+```bash
+# Claude (Anthropic)
+export ANTHROPIC_API_KEY="sk-ant-..."
+
+# Or Gemini (Google)
+export GOOGLE_API_KEY="AIza..."
+```
+
+Cost per recipe generation: ~$0.02-0.15 depending on complexity.
+
+#### Dependency Discovery
+
+When you request a Homebrew formula, tsuku automatically discovers all dependencies and estimates generation cost:
+
+```bash
+$ tsuku create neovim --from homebrew:neovim
+
+Discovering dependencies...
+
+Dependency tree for neovim:
+  neovim (needs recipe)
+  ├── gettext (needs recipe)
+  ├── libuv (has recipe ✓)
+  ├── lpeg (needs recipe)
+  │   └── lua (needs recipe)
+  ...
+
+Recipes to generate: 8
+Estimated cost: ~$0.40
+
+Proceed? [y/N]
+```
+
+Recipes are generated in dependency order (leaves first) to ensure validation succeeds.
+
+#### Platform Support
+
+Homebrew recipes are platform-agnostic - a single recipe works on:
+- macOS ARM64 (Apple Silicon)
+- macOS x86_64 (Intel)
+- Linux ARM64
+- Linux x86_64
+
+The `homebrew_bottle` action automatically selects the correct bottle for your platform at install time.
+
+#### Recipe Validation
+
+Generated recipes are automatically validated in isolated containers with a repair loop:
+
+```bash
+# Validation happens automatically during tsuku create
+tsuku create jq --from homebrew:jq
+# Downloads bottle, validates in container, repairs if needed (max 2 attempts)
+
+# Skip validation if you trust the source
+tsuku create jq --from homebrew:jq --skip-sandbox
+```
+
+Validation catches issues like wrong executable names, missing dependencies, incorrect verification commands, and platform-specific problems. If validation fails, the LLM attempts repairs before returning an error.
+
 Generated recipes are stored in `$TSUKU_HOME/recipes/` and take precedence over registry recipes. You can inspect and edit them before installation:
 
 ```bash

@@ -1,6 +1,6 @@
 # Design: Homebrew Builder
 
-**Status**: Approved
+**Status**: Current
 
 ## Implementation Plan
 
@@ -69,6 +69,49 @@ graph TD
 | [#496](https://github.com/tsukumogami/tsuku/issues/496) | Design third-party tap support for HomebrewBuilder |
 | [#497](https://github.com/tsukumogami/tsuku/issues/497) | Design historical version support for HomebrewBuilder |
 | [#498](https://github.com/tsukumogami/tsuku/issues/498) | Design parallel generation for HomebrewBuilder |
+
+## Post-Implementation Decision
+
+**Date**: December 16, 2025
+**Commit**: [5e02645](https://github.com/tsukumogami/tsuku/commit/5e02645)
+
+After completing Phase 1 and Phase 2 implementation (all 12 milestone issues closed), we made a scope reduction decision: **remove LLM-generated source builds from HomebrewBuilder**.
+
+### Rationale
+
+The design document describes a hybrid approach (Option D) where HomebrewBuilder generates recipes for both bottles (Phase 1) and source builds (Phase 2). While both phases were successfully implemented and tested, production experience revealed:
+
+1. **Bottle coverage is sufficient**: Most commonly requested Homebrew formulas have bottles. Formulas without bottles represent ~10-20% of homebrew-core.
+2. **Source build complexity**: LLM-generated source builds had lower success rates (~50-70%) compared to bottles (~75-85%), requiring more repair iterations.
+3. **Alternative path exists**: Source builds can be accomplished using primitive actions (`configure_make`, `cmake_build`, `meson_build`, `apply_patch`) through manual recipe authoring.
+4. **Focus on reliability**: Bottle-only recipes have higher quality and simpler validation.
+
+### Current Scope
+
+**HomebrewBuilder now generates recipes only for formulas with bottles.** For formulas without bottles, the builder returns an error directing users to manual recipe authoring.
+
+The source build infrastructure was removed (~3,400 lines) including:
+- `ToolFetchFormulaRuby` and `ToolExtractSourceRecipe` LLM tools
+- Ruby formula parsing and sanitization
+- Source build prompt construction
+- Source-specific validation logic
+- `homebrew_source` action
+
+### What Remains
+
+Build system primitives implemented during Phase 2 remain available for manual recipe authoring:
+- `configure_make` - Autotools builds
+- `cmake_build` - CMake projects
+- `meson_build` - Meson build system
+- `apply_patch` - Patch application
+
+These actions are ecosystem primitives that can be composed in manually authored recipes for complex source builds.
+
+### Design Document Status
+
+This design document retains the original Phase 2 architecture and decision analysis for historical context. Sections describing source build features reflect the implementation that existed from commit [51df99a](https://github.com/tsukumogami/tsuku/commit/51df99a) through commit [924b38b](https://github.com/tsukumogami/tsuku/commit/924b38b) before removal in [5e02645](https://github.com/tsukumogami/tsuku/commit/5e02645).
+
+The bottle-only approach represents a strategic focus on high-quality automated generation where success rates are highest, while preserving manual recipe authoring as the path for edge cases.
 
 ## Context and Problem Statement
 
