@@ -389,7 +389,7 @@ func findLibraryDirectories(libDir string) []string {
 	seen := make(map[string]bool)
 
 	// Walk the lib directory tree
-	filepath.Walk(libDir, func(path string, info os.FileInfo, err error) error {
+	_ = filepath.Walk(libDir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return nil // Continue on errors
 		}
