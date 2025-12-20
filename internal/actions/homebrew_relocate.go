@@ -359,6 +359,50 @@ func (a *HomebrewRelocateAction) fixMachoRpath(binaryPath, installPath string) e
 		}
 	}
 
+	// Fix install_name for shared libraries
+	// Shared libraries have an embedded install_name that homebrew sets to the cellar path
+	// We need to change it to @rpath/libname.dylib so it can be found via RPATH
+	if strings.HasSuffix(binaryPath, ".dylib") || strings.Contains(binaryPath, ".dylib.") {
+		basename := filepath.Base(binaryPath)
+		newInstallName := "@rpath/" + basename
+
+		idCmd := exec.Command(installNameTool, "-id", newInstallName, binaryPath)
+		if output, err := idCmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("install_name_tool -id failed: %s: %w", strings.TrimSpace(string(output)), err)
+		}
+	}
+
+	// Fix library references in binaries
+	// Binaries have explicit references to libraries that need to be updated
+	// to use @rpath instead of absolute homebrew paths
+	otoolLibCmd := exec.Command(otool, "-L", binaryPath)
+	libOutput, err := otoolLibCmd.Output()
+	if err == nil {
+		libLines := strings.Split(string(libOutput), "\n")
+		for _, line := range libLines[1:] { // Skip first line (the binary itself)
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			// Extract library path (format: "	/path/to/lib.dylib (compatibility version...)")
+			parts := strings.Fields(line)
+			if len(parts) < 2 {
+				continue
+			}
+			libPath := parts[0]
+
+			// Change library references that contain HOMEBREW placeholders
+			if strings.Contains(libPath, "HOMEBREW") || strings.Contains(libPath, "@@") {
+				// Extract basename and use @rpath
+				libBasename := filepath.Base(libPath)
+				newLibRef := "@rpath/" + libBasename
+
+				changeCmd := exec.Command(installNameTool, "-change", libPath, newLibRef, binaryPath)
+				_ = changeCmd.Run() // Ignore errors - not all references need changing
+			}
+		}
+	}
+
 	// Re-sign the binary (required on Apple Silicon)
 	if runtime.GOARCH == "arm64" {
 		codesign, err := exec.LookPath("codesign")
