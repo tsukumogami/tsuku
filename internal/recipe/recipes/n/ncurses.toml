@@ -24,7 +24,7 @@ action = "setup_build_env"
 [[steps]]
 action = "configure_make"
 source_dir = "ncurses-{version}"
-configure_args = ["--with-shared", "--enable-pc-files", "--with-pkg-config-libdir=${libdir}/pkgconfig"]
+configure_args = ["--with-shared", "--enable-pc-files", "--with-pkg-config-libdir=libdir"]
 executables = ["ncursesw6-config"]
 
 [[steps]]
