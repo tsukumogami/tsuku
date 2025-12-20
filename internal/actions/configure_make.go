@@ -194,6 +194,12 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 	// Set SOURCE_DATE_EPOCH for reproducible builds
 	filteredEnv = append(filteredEnv, "SOURCE_DATE_EPOCH=0")
 
+	// Override libtool's system library path detection to prevent RPATH stripping
+	// Libtool filters out RPATH for paths it considers "system defaults", but our
+	// tsuku-provided libraries are NOT system libraries. Setting this to empty
+	// forces libtool to preserve RPATH for all dependency paths.
+	filteredEnv = append(filteredEnv, "lt_cv_sys_lib_dlsearch_path_spec=")
+
 	// Build paths from dependencies
 	var pkgConfigPaths []string
 	var cppFlags []string
@@ -201,8 +207,21 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 
 	// Iterate over install-time dependencies to build paths
 	for depName, depVersion := range ctx.Dependencies.InstallTime {
-		// Construct dependency directory: $TSUKU_HOME/tools/{name}-{version}
-		depDir := filepath.Join(ctx.ToolsDir, depName+"-"+depVersion)
+		// Check both tools and libs directories for the dependency
+		// Libraries are installed to ~/.tsuku/libs/, tools to ~/.tsuku/tools/
+		var depDir string
+		toolsDepDir := filepath.Join(ctx.ToolsDir, depName+"-"+depVersion)
+		libsDepDir := filepath.Join(ctx.LibsDir, depName+"-"+depVersion)
+
+		// Check which directory exists
+		if _, err := os.Stat(libsDepDir); err == nil {
+			depDir = libsDepDir
+		} else if _, err := os.Stat(toolsDepDir); err == nil {
+			depDir = toolsDepDir
+		} else {
+			// Dependency not found, skip
+			continue
+		}
 
 		// PKG_CONFIG_PATH: check for lib/pkgconfig directory
 		pkgConfigDir := filepath.Join(depDir, "lib", "pkgconfig")
@@ -220,6 +239,8 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 		libDir := filepath.Join(depDir, "lib")
 		if _, err := os.Stat(libDir); err == nil {
 			ldFlags = append(ldFlags, "-L"+libDir)
+			// Add RPATH for runtime library resolution
+			ldFlags = append(ldFlags, "-Wl,-rpath,"+libDir)
 		}
 	}
 

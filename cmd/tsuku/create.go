@@ -319,6 +319,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 			SkipSandbox:      effectiveSkipSandbox,
 			MaxRepairs:       builders.DefaultMaxRepairs,
 			ToolsDir:         cfg.ToolsDir,
+			LibsDir:          cfg.LibsDir,
 			DownloadCacheDir: cfg.DownloadCacheDir,
 		}),
 	)

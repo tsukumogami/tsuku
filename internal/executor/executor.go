@@ -28,6 +28,7 @@ type Executor struct {
 	reqVersion       string   // Requested version (optional)
 	execPaths        []string // Additional bin paths for execution (e.g., nodejs for npm tools)
 	toolsDir         string   // Tools directory (~/.tsuku/tools/) for finding other installed tools
+	libsDir          string   // Libraries directory (~/.tsuku/libs/) for finding installed libraries
 }
 
 // New creates a new executor
@@ -166,6 +167,11 @@ func (e *Executor) SetToolsDir(dir string) {
 	e.toolsDir = dir
 }
 
+// SetLibsDir sets the libraries directory for finding installed libraries
+func (e *Executor) SetLibsDir(dir string) {
+	e.libsDir = dir
+}
+
 // expandVars replaces {var} placeholders in a string
 func expandVars(s string, vars map[string]string) string {
 	result := s
@@ -203,7 +209,7 @@ func (e *Executor) DryRun(ctx context.Context) error {
 	fmt.Printf("  Actions:\n")
 
 	// Build variable map for expansion
-	vars := actions.GetStandardVars(versionInfo.Version, "", "")
+	vars := actions.GetStandardVars(versionInfo.Version, "", "", "")
 
 	stepNum := 0
 	for _, step := range e.recipe.Steps {
@@ -331,6 +337,7 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		InstallDir:       e.installDir,
 		ToolInstallDir:   "",
 		ToolsDir:         e.toolsDir,
+		LibsDir:          e.libsDir,
 		DownloadCacheDir: e.downloadCacheDir,
 		Version:          plan.Version,
 		VersionTag:       plan.Version, // Plan doesn't track tag separately
@@ -552,6 +559,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		InstallDir:       depInstallDir,
 		ToolInstallDir:   "",
 		ToolsDir:         e.toolsDir,
+		LibsDir:          e.libsDir,
 		DownloadCacheDir: e.downloadCacheDir,
 		Version:          dep.Version,
 		VersionTag:       dep.Version,

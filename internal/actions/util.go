@@ -15,7 +15,7 @@ import (
 )
 
 // ExpandVars replaces variables in a string with their values
-// Supported variables: {version}, {os}, {arch}, {install_dir}, {work_dir}
+// Supported variables: {version}, {os}, {arch}, {install_dir}, {work_dir}, {libs_dir}
 func ExpandVars(s string, vars map[string]string) string {
 	result := s
 	for k, v := range vars {
@@ -25,13 +25,14 @@ func ExpandVars(s string, vars map[string]string) string {
 }
 
 // GetStandardVars returns standard variable mappings
-func GetStandardVars(version, installDir, workDir string) map[string]string {
+func GetStandardVars(version, installDir, workDir, libsDir string) map[string]string {
 	return map[string]string{
 		"version":     version,
 		"os":          MapOS(runtime.GOOS),
 		"arch":        MapArch(runtime.GOARCH),
 		"install_dir": installDir,
 		"work_dir":    workDir,
+		"libs_dir":    libsDir,
 	}
 }
 
