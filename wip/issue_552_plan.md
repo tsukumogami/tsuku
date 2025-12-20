@@ -15,13 +15,14 @@ Use Homebrew's `openssl@3` formula which provides pre-built bottles for all plat
 - `internal/recipe/recipes/o/openssl.toml` - Recipe defining OpenSSL installation
 
 ## Implementation Steps
-- [ ] Create openssl.toml recipe with homebrew action
-- [ ] Declare zlib dependency
-- [ ] Test local installation and verify binary works
-- [ ] Verify RPATH relocation for libraries
-- [ ] Verify pkg-config integration
-- [ ] Run full test suite locally
-- [ ] Commit changes
+- [x] Create openssl.toml recipe with homebrew action
+- [x] Declare zlib dependency
+- [x] Fix homebrew action to support versioned formulas (@3 → /3)
+- [x] Test local installation and verify binary works
+- [x] Verify RPATH relocation for libraries
+- [ ] Verify pkg-config integration (NOTE: pre-existing issue with .pc file relocation)
+- [x] Run full test suite locally
+- [x] Commit changes
 
 ## Testing Strategy
 - Local testing: `./tsuku install openssl && openssl version`
