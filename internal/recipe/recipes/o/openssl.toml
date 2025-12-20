@@ -1,0 +1,34 @@
+[metadata]
+name = "openssl"
+description = "Cryptography and SSL/TLS Toolkit"
+homepage = "https://openssl-library.org/"
+type = "library"
+dependencies = ["zlib"]
+binaries = ["bin/openssl"]
+
+[version]
+source = "homebrew"
+formula = "openssl@3"
+
+[[steps]]
+action = "homebrew"
+formula = "openssl@3"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "bin/openssl",
+    "lib/libssl.so",
+    "lib/libssl.so.3",
+    "lib/libssl.dylib",
+    "lib/libssl.3.dylib",
+    "lib/libcrypto.so",
+    "lib/libcrypto.so.3",
+    "lib/libcrypto.dylib",
+    "lib/libcrypto.3.dylib",
+]
+
+[verify]
+command = "openssl version"
+pattern = "OpenSSL {version}"
