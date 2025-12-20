@@ -75,7 +75,11 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 		} else {
 			// Action implicit
 			for _, dep := range actionDeps.InstallTime {
-				result.InstallTime[dep] = "latest"
+				// Skip self-dependencies to prevent circular loops
+				// (e.g., patchelf uses homebrew which depends on patchelf)
+				if dep != r.Metadata.Name {
+					result.InstallTime[dep] = "latest"
+				}
 			}
 			// Step-level extend
 			if extraDeps := getStringSliceParam(step.Params, "extra_dependencies"); extraDeps != nil {
@@ -96,7 +100,10 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 		} else {
 			// Action implicit
 			for _, dep := range actionDeps.Runtime {
-				result.Runtime[dep] = "latest"
+				// Skip self-dependencies to prevent circular loops
+				if dep != r.Metadata.Name {
+					result.Runtime[dep] = "latest"
+				}
 			}
 			// Step-level extend
 			if extraRuntimeDeps := getStringSliceParam(step.Params, "extra_runtime_dependencies"); extraRuntimeDeps != nil {
