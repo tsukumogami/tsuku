@@ -25,6 +25,7 @@ type ExecutionContext struct {
 	ExecPaths        []string          // Additional bin paths needed for execution (e.g., nodejs bin for npm tools)
 	Resolver         *version.Resolver // Version resolver (for GitHub API access, asset resolution)
 	Logger           log.Logger        // Logger for structured logging (optional, falls back to log.Default())
+	Dependencies     ResolvedDeps      // Resolved dependencies with their versions
 }
 
 // Log returns the logger for this context.
@@ -150,6 +151,7 @@ func init() {
 	Register(&CMakeBuildAction{})
 	Register(&MesonBuildAction{})
 	Register(&PipExecAction{})
+	Register(&SetupBuildEnvAction{})
 
 	// Homebrew actions
 	Register(&HomebrewAction{})

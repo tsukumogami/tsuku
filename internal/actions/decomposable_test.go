@@ -99,21 +99,14 @@ func TestIsPrimitive(t *testing.T) {
 func TestPrimitives(t *testing.T) {
 	prims := Primitives()
 
-	// Debug: print all primitives to identify the extra one
+	// Should have exactly 24 primitives (11 core + 13 ecosystem)
+	// Updated from 23 to 24 after setup_build_env was added to main
+	if len(prims) != 24 {
+		t.Errorf("len(Primitives()) = %d, want 24", len(prims))
+	}
+
+	// Sort for deterministic comparison
 	sort.Strings(prims)
-	if len(prims) != 23 {
-		t.Logf("Got %d primitives (want 23):", len(prims))
-		for i, p := range prims {
-			t.Logf("  %d: %s", i+1, p)
-		}
-	}
-
-	// Should have exactly 23 primitives (11 core + 12 ecosystem)
-	if len(prims) != 23 {
-		t.Errorf("len(Primitives()) = %d, want 23", len(prims))
-	}
-
-	// Sort for deterministic comparison (already sorted above)
 
 	expected := []string{
 		"apply_patch_file",
@@ -138,6 +131,7 @@ func TestPrimitives(t *testing.T) {
 		"pip_install",
 		"set_env",
 		"set_rpath",
+		"setup_build_env",
 		"text_replace",
 	}
 
