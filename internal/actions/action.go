@@ -149,6 +149,7 @@ func init() {
 	Register(&NixRealizeAction{})
 	Register(&ConfigureMakeAction{})
 	Register(&CMakeBuildAction{})
+	Register(&MesonBuildAction{})
 	Register(&PipExecAction{})
 	Register(&SetupBuildEnvAction{})
 

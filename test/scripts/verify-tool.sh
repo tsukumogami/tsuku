@@ -156,6 +156,15 @@ verify_pkg_config() {
     fi
 }
 
+verify_libsixel-source() {
+    echo "Testing: img2sixel --version"
+    img2sixel --version
+
+    echo ""
+    echo "Testing: sixel2png --help"
+    sixel2png --help 2>&1 | head -5 || true
+}
+
 verify_generic() {
     echo "Testing: $TOOL_NAME --version (generic check)"
     if "$TOOL_NAME" --version 2>&1; then
@@ -194,6 +203,9 @@ case "$TOOL_NAME" in
         ;;
     libpng)
         verify_libpng
+        ;;
+    libsixel-source)
+        verify_libsixel-source
         ;;
     *)
         echo "No specific test for '$TOOL_NAME', running generic check"

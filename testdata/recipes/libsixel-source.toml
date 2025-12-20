@@ -1,0 +1,34 @@
+# Ground truth recipe for libsixel (source build with meson)
+# Tests: download_file + extract + meson_build
+# libsixel is a library for displaying images in SIXEL format
+
+[metadata]
+name = "libsixel-source"
+description = "SIXEL encoder/decoder library (source build for testing)"
+homepage = "https://github.com/libsixel/libsixel"
+
+[version]
+source = "static"
+value = "1.10.3"
+
+[[steps]]
+action = "download_file"
+url = "https://github.com/libsixel/libsixel/archive/refs/tags/v1.10.3.tar.gz"
+dest = "libsixel-1.10.3.tar.gz"
+checksum = "028552eb8f2a37c6effda88ee5e8f6d87b5d9601182ddec784a9728865f821e0"
+
+[[steps]]
+action = "extract"
+archive = "libsixel-1.10.3.tar.gz"
+format = "tar.gz"
+strip_dirs = 1
+
+[[steps]]
+action = "meson_build"
+source_dir = "."
+executables = ["img2sixel", "sixel2png"]
+buildtype = "release"
+
+[verify]
+command = "img2sixel --version"
+pattern = "img2sixel {version}"

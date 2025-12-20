@@ -1,0 +1,17 @@
+[metadata]
+name = "meson"
+description = "Fast and user-friendly build system"
+homepage = "https://mesonbuild.com"
+
+[version]
+source = "pypi"
+package = "meson"
+
+[[steps]]
+action = "pipx_install"
+package = "meson"
+executables = ["meson"]
+
+[verify]
+command = "meson --version"
+pattern = "{version}"
