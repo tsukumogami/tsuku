@@ -102,7 +102,6 @@ func TestActionDependencies_NoDependencyActions(t *testing.T) {
 		"download_archive",
 		"github_archive",
 		"github_file",
-		"homebrew",
 	}
 
 	for _, action := range actions {

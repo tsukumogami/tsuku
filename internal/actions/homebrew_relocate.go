@@ -17,6 +17,17 @@ type HomebrewRelocateAction struct{ BaseAction }
 // IsDeterministic returns true because homebrew_relocate produces identical results.
 func (HomebrewRelocateAction) IsDeterministic() bool { return true }
 
+// Dependencies returns patchelf as an install-time dependency (needed for Linux ELF RPATH fixup).
+// TODO(#644): This dependency should be automatically inherited by composite actions like homebrew.
+// Currently duplicated in HomebrewAction due to dependency resolution happening before decomposition.
+// TODO(#643): Use platform-conditional dependencies to only install patchelf on Linux.
+// Currently installed on all platforms for consistency, but only used on Linux.
+func (HomebrewRelocateAction) Dependencies() ActionDeps {
+	return ActionDeps{
+		InstallTime: []string{"patchelf"},
+	}
+}
+
 // Name returns the action name
 func (a *HomebrewRelocateAction) Name() string { return "homebrew_relocate" }
 
@@ -176,8 +187,10 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(binaryPath, installPath string) 
 func (a *HomebrewRelocateAction) fixElfRpath(binaryPath, installPath string) error {
 	patchelf, err := exec.LookPath("patchelf")
 	if err != nil {
-		// patchelf not available - try to proceed without it
-		// The binary may still work if its dependencies are system libraries
+		// Patchelf is declared as a dependency but may not be in PATH yet during bootstrap.
+		// Gracefully degrade - the dependency declaration ensures it gets installed for future use.
+		// TODO(#643): Once platform-conditional dependencies are available, patchelf will only be
+		// installed on Linux, eliminating this bootstrap issue.
 		fmt.Printf("   Warning: patchelf not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
 		return nil
 	}
@@ -211,8 +224,15 @@ func (a *HomebrewRelocateAction) fixElfRpath(binaryPath, installPath string) err
 	// Since Homebrew bottles are libraries, use $ORIGIN
 	newRpath := "$ORIGIN"
 
-	// Check if there's a lib subdirectory (common pattern)
+	// Check if there's a lib subdirectory (common patterns for homebrew bottles):
+	// 1. lib/ as sibling to binary (e.g., bin/tool and bin/lib/)
+	// 2. lib/ one level up from binary (e.g., bin/tool and lib/)
 	libDir := filepath.Join(filepath.Dir(binaryPath), "lib")
+	if _, err := os.Stat(libDir); err != nil {
+		// Try one level up (common for bin/tool + lib/ structure)
+		libDir = filepath.Join(filepath.Dir(filepath.Dir(binaryPath)), "lib")
+	}
+
 	if _, err := os.Stat(libDir); err == nil {
 		// Binary is not in lib/, might need to point to lib/
 		relPath, _ := filepath.Rel(filepath.Dir(binaryPath), libDir)
@@ -326,12 +346,73 @@ func (a *HomebrewRelocateAction) fixMachoRpath(binaryPath, installPath string) e
 	}
 
 	// Add new RPATH
+	// Check if there's a lib subdirectory (common patterns for homebrew bottles):
+	// 1. lib/ as sibling to binary (e.g., bin/tool and bin/lib/)
+	// 2. lib/ one level up from binary (e.g., bin/tool and lib/)
 	newRpath := "@loader_path"
+	libDir := filepath.Join(filepath.Dir(binaryPath), "lib")
+	if _, err := os.Stat(libDir); err != nil {
+		// Try one level up (common for bin/tool + lib/ structure)
+		libDir = filepath.Join(filepath.Dir(filepath.Dir(binaryPath)), "lib")
+	}
+
+	if _, err := os.Stat(libDir); err == nil {
+		// Binary is not in lib/, might need to point to lib/
+		relPath, _ := filepath.Rel(filepath.Dir(binaryPath), libDir)
+		if relPath != "" && relPath != "." {
+			newRpath = "@loader_path/" + relPath
+		}
+	}
+
 	addCmd := exec.Command(installNameTool, "-add_rpath", newRpath, binaryPath)
 	if output, err := addCmd.CombinedOutput(); err != nil {
 		// Ignore "would duplicate" errors
 		if !strings.Contains(string(output), "would duplicate") {
 			return fmt.Errorf("install_name_tool -add_rpath failed: %s: %w", strings.TrimSpace(string(output)), err)
+		}
+	}
+
+	// Fix install_name for shared libraries
+	// Shared libraries have an embedded install_name that homebrew sets to the cellar path
+	// We need to change it to @rpath/libname.dylib so it can be found via RPATH
+	if strings.HasSuffix(binaryPath, ".dylib") || strings.Contains(binaryPath, ".dylib.") {
+		basename := filepath.Base(binaryPath)
+		newInstallName := "@rpath/" + basename
+
+		idCmd := exec.Command(installNameTool, "-id", newInstallName, binaryPath)
+		if output, err := idCmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("install_name_tool -id failed: %s: %w", strings.TrimSpace(string(output)), err)
+		}
+	}
+
+	// Fix library references in binaries
+	// Binaries have explicit references to libraries that need to be updated
+	// to use @rpath instead of absolute homebrew paths
+	otoolLibCmd := exec.Command(otool, "-L", binaryPath)
+	libOutput, err := otoolLibCmd.Output()
+	if err == nil {
+		libLines := strings.Split(string(libOutput), "\n")
+		for _, line := range libLines[1:] { // Skip first line (the binary itself)
+			line = strings.TrimSpace(line)
+			if line == "" {
+				continue
+			}
+			// Extract library path (format: "	/path/to/lib.dylib (compatibility version...)")
+			parts := strings.Fields(line)
+			if len(parts) < 2 {
+				continue
+			}
+			libPath := parts[0]
+
+			// Change library references that contain HOMEBREW placeholders
+			if strings.Contains(libPath, "HOMEBREW") || strings.Contains(libPath, "@@") {
+				// Extract basename and use @rpath
+				libBasename := filepath.Base(libPath)
+				newLibRef := "@rpath/" + libBasename
+
+				changeCmd := exec.Command(installNameTool, "-change", libPath, newLibRef, binaryPath)
+				_ = changeCmd.Run() // Ignore errors - not all references need changing
+			}
 		}
 	}
 

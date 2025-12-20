@@ -60,6 +60,10 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 	// Phase 1: Collect from steps
 	for _, step := range r.Steps {
 		actionDeps := GetActionDeps(step.Action)
+		// TODO(#644): Aggregate dependencies from primitive actions when step.Action is decomposable.
+		// Currently only collects dependencies declared directly on the composite action.
+		// Should check if action implements Decomposable, decompose it, and recursively
+		// collect dependencies from all primitive actions in the decomposition tree.
 
 		// Install-time: step replace OR (action implicit + step extend)
 		if stepDeps := getStringSliceParam(step.Params, "dependencies"); stepDeps != nil {
@@ -71,7 +75,11 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 		} else {
 			// Action implicit
 			for _, dep := range actionDeps.InstallTime {
-				result.InstallTime[dep] = "latest"
+				// Skip self-dependencies to prevent circular loops
+				// (e.g., patchelf uses homebrew which depends on patchelf)
+				if dep != r.Metadata.Name {
+					result.InstallTime[dep] = "latest"
+				}
 			}
 			// Step-level extend
 			if extraDeps := getStringSliceParam(step.Params, "extra_dependencies"); extraDeps != nil {
@@ -92,7 +100,10 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 		} else {
 			// Action implicit
 			for _, dep := range actionDeps.Runtime {
-				result.Runtime[dep] = "latest"
+				// Skip self-dependencies to prevent circular loops
+				if dep != r.Metadata.Name {
+					result.Runtime[dep] = "latest"
+				}
 			}
 			// Step-level extend
 			if extraRuntimeDeps := getStringSliceParam(step.Params, "extra_runtime_dependencies"); extraRuntimeDeps != nil {
