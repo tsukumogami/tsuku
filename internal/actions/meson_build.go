@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -208,6 +209,10 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 			case "macho":
 				fmt.Printf("   Setting RPATH with install_name_tool\n")
 				rpathErr = setRpathMacOS(exePath, "$ORIGIN/../lib")
+				if rpathErr == nil {
+					// Also fix library load commands to use @rpath
+					rpathErr = fixMachoLibraryPaths(exePath, ctx.InstallDir)
+				}
 			default:
 				// Unknown format, skip RPATH fix
 				fmt.Printf("   Skipping RPATH fix (unknown format)\n")
@@ -292,4 +297,70 @@ func isValidBuildtype(buildtype string) bool {
 		"debugoptimized": true,
 	}
 	return validTypes[buildtype]
+}
+
+// fixMachoLibraryPaths fixes library load commands in macOS executables.
+// Meson builds on macOS link executables with absolute library paths that point
+// to the staging directory. This function changes those paths to use @rpath.
+func fixMachoLibraryPaths(binaryPath, installDir string) error {
+	// Check if install_name_tool and otool are available
+	installNameTool, err := exec.LookPath("install_name_tool")
+	if err != nil {
+		return fmt.Errorf("install_name_tool not found")
+	}
+
+	otool, err := exec.LookPath("otool")
+	if err != nil {
+		return fmt.Errorf("otool not found")
+	}
+
+	// List library dependencies
+	otoolCmd := exec.Command(otool, "-L", binaryPath)
+	output, err := otoolCmd.Output()
+	if err != nil {
+		return fmt.Errorf("otool -L failed: %w", err)
+	}
+
+	// Parse library paths and fix those pointing to staging directory
+	lines := strings.Split(string(output), "\n")
+	for _, line := range lines[1:] { // Skip first line (the binary itself)
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		// Extract library path (format: "/path/to/lib.dylib (compatibility version...)")
+		parts := strings.Fields(line)
+		if len(parts) < 2 {
+			continue
+		}
+		libPath := parts[0]
+
+		// Change library references that point to the staging directory
+		if strings.Contains(libPath, installDir) {
+			// Extract basename and use @rpath
+			libBasename := filepath.Base(libPath)
+			newLibRef := "@rpath/" + libBasename
+
+			fmt.Printf("   Changing %s -> %s\n", libBasename, newLibRef)
+			changeCmd := exec.Command(installNameTool, "-change", libPath, newLibRef, binaryPath)
+			if output, err := changeCmd.CombinedOutput(); err != nil {
+				return fmt.Errorf("install_name_tool -change failed for %s: %s: %w",
+					libBasename, strings.TrimSpace(string(output)), err)
+			}
+		}
+	}
+
+	// Re-sign the binary (required on Apple Silicon)
+	if runtime.GOARCH == "arm64" {
+		codesign, err := exec.LookPath("codesign")
+		if err == nil {
+			signCmd := exec.Command(codesign, "-f", "-s", "-", binaryPath)
+			if err := signCmd.Run(); err != nil {
+				fmt.Printf("   Warning: codesign failed for %s: %v\n", filepath.Base(binaryPath), err)
+			}
+		}
+	}
+
+	return nil
 }
