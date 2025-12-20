@@ -15,7 +15,7 @@ value = "1.11.3"
 action = "download_file"
 url = "https://git.sr.ht/~sircmpwn/scdoc/archive/1.11.3.tar.gz"
 dest = "scdoc-1.11.3.tar.gz"
-checksum = "4c5c6136540384e5455b250f768e7ca11b03fdba1a8efc2341ee0f1111b57612"
+checksum = "4c5c6136540384e5455b250f768e7ca11b03fdba1a8efc2341ee0f1111e57612"
 
 [[steps]]
 action = "extract"
