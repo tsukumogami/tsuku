@@ -14,8 +14,8 @@
 | [#584](https://github.com/tsukumogami/tsuku/issues/584) | Remove hashicorp_release action | [#582](https://github.com/tsukumogami/tsuku/issues/582) | Done |
 | [#586](https://github.com/tsukumogami/tsuku/issues/586) | Remove homebrew_source action | [#583](https://github.com/tsukumogami/tsuku/issues/583) | Blocked |
 | [#587](https://github.com/tsukumogami/tsuku/issues/587) | Remove HomebrewBuilder source build code | [#586](https://github.com/tsukumogami/tsuku/issues/586) | Blocked |
-| [#588](https://github.com/tsukumogami/tsuku/issues/588) | Close obsolete source build issues | [#587](https://github.com/tsukumogami/tsuku/issues/587) | Blocked |
-| [#589](https://github.com/tsukumogami/tsuku/issues/589) | Consolidate Homebrew design documentation | [#588](https://github.com/tsukumogami/tsuku/issues/588) | Blocked |
+| [#588](https://github.com/tsukumogami/tsuku/issues/588) | Close obsolete source build issues | [#587](https://github.com/tsukumogami/tsuku/issues/587) | Done |
+| [#589](https://github.com/tsukumogami/tsuku/issues/589) | Consolidate Homebrew design documentation | [#588](https://github.com/tsukumogami/tsuku/issues/588) | Ready |
 | [#590](https://github.com/tsukumogami/tsuku/issues/590) | Deterministic bottle inspection with LLM fallback | None | Ready |
 
 ### Dependency Graph
@@ -57,9 +57,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I580,I582,I584 done
-    class I583,I590 ready
-    class I586,I587,I588,I589 blocked
+    class I580,I582,I584,I588 done
+    class I583,I589,I590 ready
+    class I586,I587 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
