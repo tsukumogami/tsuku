@@ -220,6 +220,7 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 	knownActions := map[string]bool{
 		"download":          true,
 		"download_archive":  true,
+		"download_file":     true,
 		"extract":           true,
 		"chmod":             true,
 		"install_binaries":  true,
@@ -242,6 +243,7 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"github_archive":    true,
 		"github_file":       true,
 		"homebrew":          true,
+		"setup_build_env":   true,
 		"configure_make":    true,
 	}
 
