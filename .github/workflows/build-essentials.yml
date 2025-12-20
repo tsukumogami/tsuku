@@ -111,9 +111,9 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh gdbm-source
 
-  # Test meson_build action with scdoc-source (source build)
+  # Test meson_build action with libsixel-source (source build)
   test-meson-build:
-    name: "${{ matrix.platform.name }}: scdoc-source"
+    name: "${{ matrix.platform.name }}: libsixel-source"
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
@@ -135,18 +135,18 @@ jobs:
 
       # Copy test recipe BEFORE build so it gets embedded
       - name: Copy test recipe to registry
-        run: cp testdata/recipes/scdoc-source.toml internal/recipe/recipes/s/
+        run: cp testdata/recipes/libsixel-source.toml internal/recipe/recipes/l/
 
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Install scdoc-source (tests meson_build)
+      - name: Install libsixel-source (tests meson_build)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --force scdoc-source
+        run: ./tsuku install --force libsixel-source
 
       - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh scdoc-source
+        run: ./test/scripts/verify-tool.sh libsixel-source
 
   # Test zig installation
   test-zig:

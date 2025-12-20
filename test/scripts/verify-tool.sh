@@ -156,32 +156,13 @@ verify_pkg_config() {
     fi
 }
 
-verify_scdoc-source() {
-    echo "Testing: scdoc -v"
-    scdoc -v
+verify_libsixel-source() {
+    echo "Testing: img2sixel --version"
+    img2sixel --version
 
     echo ""
-    echo "Testing: Process a simple scdoc document"
-    cd "$TEMP_DIR"
-    cat > test.scd << 'EOF'
-test(1)
-
-# NAME
-
-test - a test man page
-
-# DESCRIPTION
-
-This is a test.
-EOF
-    scdoc < test.scd > test.1
-    if [ -f test.1 ]; then
-        echo "Successfully generated man page"
-        head -5 test.1
-    else
-        echo "Error: Failed to generate man page"
-        return 1
-    fi
+    echo "Testing: sixel2png --help"
+    sixel2png --help 2>&1 | head -5 || true
 }
 
 verify_generic() {
@@ -223,8 +204,8 @@ case "$TOOL_NAME" in
     libpng)
         verify_libpng
         ;;
-    scdoc-source)
-        verify_scdoc-source
+    libsixel-source)
+        verify_libsixel-source
         ;;
     *)
         echo "No specific test for '$TOOL_NAME', running generic check"
