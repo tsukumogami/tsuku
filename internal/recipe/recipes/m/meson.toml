@@ -10,6 +10,7 @@ package = "meson"
 [[steps]]
 action = "pipx_install"
 package = "meson"
+executables = ["meson"]
 
 [verify]
 command = "meson --version"
