@@ -183,6 +183,14 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(binaryPath, installPath string) 
 
 // fixElfRpath uses patchelf to set RPATH on Linux ELF binaries
 func (a *HomebrewRelocateAction) fixElfRpath(binaryPath, installPath string) error {
+	// Special case: Skip RPATH fixing for patchelf itself to avoid circular dependency.
+	// Patchelf is a simple binary without complex library dependencies, so it doesn't need RPATH fixing.
+	// TODO(#643): Remove this special case once platform-conditional dependencies are available.
+	if filepath.Base(binaryPath) == "patchelf" {
+		fmt.Printf("   Skipping RPATH fix for patchelf (avoiding circular dependency)\n")
+		return nil
+	}
+
 	patchelf, err := exec.LookPath("patchelf")
 	if err != nil {
 		// Patchelf is declared as a dependency, so this indicates a bug in dependency resolution
