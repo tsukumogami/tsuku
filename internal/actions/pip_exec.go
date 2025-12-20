@@ -183,7 +183,19 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		}
 	}
 
-	// Step 6: Create symlinks in bin/ directory (where executor expects them)
+	// Step 6: Fix shebangs in entry point scripts
+	// Entry point scripts created by pip have shebangs with absolute paths to the venv's python.
+	// These paths become invalid after the executor moves the directory to its final location.
+	// Rewrite them to use relative paths to ./python3 in the same directory.
+	for _, exe := range executables {
+		exePath := filepath.Join(venvBinDir, exe)
+		if err := fixPythonShebang(exePath); err != nil {
+			// Log warning but don't fail - the script might still work
+			fmt.Printf("   Warning: failed to fix shebang in %s: %v\n", exe, err)
+		}
+	}
+
+	// Step 7: Create symlinks in bin/ directory (where executor expects them)
 	binDir := filepath.Join(ctx.InstallDir, "bin")
 	if err := os.MkdirAll(binDir, 0755); err != nil {
 		return fmt.Errorf("failed to create bin directory: %w", err)
@@ -204,6 +216,49 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 	fmt.Printf("   Package installed successfully\n")
 	fmt.Printf("   Verified %d executable(s)\n", len(executables))
+
+	return nil
+}
+
+// fixPythonShebang rewrites Python entry point scripts to use relative shebangs.
+// This fixes the issue where pip creates scripts with absolute paths to the venv's python,
+// which become invalid when the executor moves the directory to its final location.
+func fixPythonShebang(scriptPath string) error {
+	// Read the file
+	content, err := os.ReadFile(scriptPath)
+	if err != nil {
+		return fmt.Errorf("failed to read script: %w", err)
+	}
+
+	// Check if it starts with a shebang
+	if len(content) < 2 || content[0] != '#' || content[1] != '!' {
+		return nil // Not a script with shebang, nothing to fix
+	}
+
+	// Find the end of the first line (shebang line)
+	newlineIdx := strings.IndexByte(string(content), '\n')
+	if newlineIdx == -1 {
+		return nil // No newline found, file might be malformed
+	}
+
+	shebang := string(content[:newlineIdx])
+	rest := content[newlineIdx:]
+
+	// Check if the shebang points to python/python3
+	if !strings.Contains(shebang, "python") {
+		return nil // Not a Python script
+	}
+
+	// Replace with relative shebang
+	// Use #!/bin/sh with exec to find python3 in the same directory
+	// This works even after directory moves because it's relative to the script location
+	newShebang := "#!/bin/sh\n\"exec\" \"$(dirname $0)/python3\" \"$0\" \"$@\""
+
+	// Write back the file
+	newContent := []byte(newShebang + string(rest))
+	if err := os.WriteFile(scriptPath, newContent, 0755); err != nil {
+		return fmt.Errorf("failed to write fixed script: %w", err)
+	}
 
 	return nil
 }
