@@ -55,10 +55,6 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Install patchelf (Linux only, for homebrew RPATH fixup)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y patchelf
-
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
@@ -97,10 +93,6 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
-
-      - name: Install patchelf (Linux only, for homebrew RPATH fixup)
-        if: runner.os == 'Linux'
-        run: sudo apt-get update && sudo apt-get install -y patchelf
 
       # Copy test recipe BEFORE build so it gets embedded
       - name: Copy test recipe to registry
@@ -170,11 +162,10 @@ jobs:
 
       # Install minimal deps: NO gcc, but YES make (from apt, not Homebrew)
       # The test validates zig cc as compiler fallback, not tsuku make installation
-      # Also install patchelf for homebrew RPATH fixup
       - name: Install minimal dependencies
         run: |
           apt-get update
-          apt-get install -y wget curl ca-certificates git make patchelf
+          apt-get install -y wget curl ca-certificates git make
           # Some apt packages may pull in gcc as a dependency
           # Find and remove any system compilers to ensure zig is used
           echo "Checking for system compilers..."

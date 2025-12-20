@@ -17,6 +17,14 @@ type HomebrewRelocateAction struct{ BaseAction }
 // IsDeterministic returns true because homebrew_relocate produces identical results.
 func (HomebrewRelocateAction) IsDeterministic() bool { return true }
 
+// Dependencies returns patchelf as an install-time dependency (needed for Linux ELF RPATH fixup).
+// Patchelf is installed on all platforms for consistency, but only used on Linux.
+func (HomebrewRelocateAction) Dependencies() ActionDeps {
+	return ActionDeps{
+		InstallTime: []string{"patchelf"},
+	}
+}
+
 // Name returns the action name
 func (a *HomebrewRelocateAction) Name() string { return "homebrew_relocate" }
 
