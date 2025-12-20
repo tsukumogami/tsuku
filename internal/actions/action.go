@@ -150,6 +150,7 @@ func init() {
 	Register(&ConfigureMakeAction{})
 	Register(&CMakeBuildAction{})
 	Register(&PipExecAction{})
+	Register(&SetupBuildEnvAction{})
 
 	// Homebrew actions
 	Register(&HomebrewAction{})
