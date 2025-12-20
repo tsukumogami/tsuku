@@ -333,7 +333,24 @@ func (a *HomebrewRelocateAction) fixMachoRpath(binaryPath, installPath string) e
 	}
 
 	// Add new RPATH
+	// Check if there's a lib subdirectory (common patterns for homebrew bottles):
+	// 1. lib/ as sibling to binary (e.g., bin/tool and bin/lib/)
+	// 2. lib/ one level up from binary (e.g., bin/tool and lib/)
 	newRpath := "@loader_path"
+	libDir := filepath.Join(filepath.Dir(binaryPath), "lib")
+	if _, err := os.Stat(libDir); err != nil {
+		// Try one level up (common for bin/tool + lib/ structure)
+		libDir = filepath.Join(filepath.Dir(filepath.Dir(binaryPath)), "lib")
+	}
+
+	if _, err := os.Stat(libDir); err == nil {
+		// Binary is not in lib/, might need to point to lib/
+		relPath, _ := filepath.Rel(filepath.Dir(binaryPath), libDir)
+		if relPath != "" && relPath != "." {
+			newRpath = "@loader_path/" + relPath
+		}
+	}
+
 	addCmd := exec.Command(installNameTool, "-add_rpath", newRpath, binaryPath)
 	if output, err := addCmd.CombinedOutput(); err != nil {
 		// Ignore "would duplicate" errors
