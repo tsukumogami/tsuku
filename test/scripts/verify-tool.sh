@@ -141,6 +141,21 @@ verify_m4() {
     echo 'define(GREETING, Hello World)GREETING' | m4
 }
 
+verify_pkg_config() {
+    echo "Testing: pkg-config --version"
+    pkg-config --version
+
+    echo ""
+    echo "Testing: pkg-config basic functionality"
+    # Test that it can at least query its own library path setting
+    if pkg-config --variable=pc_path pkg-config 2>/dev/null; then
+        echo "pkg-config can query variables"
+    else
+        echo "Testing: pkg-config --help (verify it runs)"
+        pkg-config --help | head -5
+    fi
+}
+
 verify_generic() {
     echo "Testing: $TOOL_NAME --version (generic check)"
     if "$TOOL_NAME" --version 2>&1; then
@@ -170,6 +185,9 @@ case "$TOOL_NAME" in
         ;;
     m4)
         verify_m4
+        ;;
+    pkg-config)
+        verify_pkg_config
         ;;
     zlib)
         verify_zlib

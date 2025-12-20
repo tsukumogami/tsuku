@@ -37,6 +37,7 @@ jobs:
           - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
         tool:
           - make
+          - pkg-config
           - gdbm
           - pngcrush  # Tests dependency chain: pngcrush -> libpng -> zlib
         exclude:

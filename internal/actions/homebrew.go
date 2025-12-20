@@ -26,6 +26,18 @@ type HomebrewAction struct{ BaseAction }
 // IsDeterministic returns true because homebrew downloads with checksums.
 func (HomebrewAction) IsDeterministic() bool { return true }
 
+// Dependencies returns patchelf as an install-time dependency (needed for homebrew_relocate on Linux).
+// The homebrew action decomposes to homebrew_relocate which requires patchelf for RPATH fixup.
+// TODO(#644): Remove this method once composite actions automatically aggregate primitive dependencies.
+// This is a workaround because dependency resolution happens before decomposition.
+// TODO(#643): Use platform-conditional dependencies to only install patchelf on Linux.
+// Currently installed on all platforms for consistency, but only used on Linux.
+func (HomebrewAction) Dependencies() ActionDeps {
+	return ActionDeps{
+		InstallTime: []string{"patchelf"},
+	}
+}
+
 // Name returns the action name
 func (a *HomebrewAction) Name() string { return "homebrew" }
 

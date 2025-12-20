@@ -1,0 +1,21 @@
+[metadata]
+name = "patchelf"
+description = "Utility to modify the dynamic linker and RPATH of ELF executables"
+homepage = "https://github.com/NixOS/patchelf"
+binaries = ["bin/patchelf"]
+
+[version]
+source = "homebrew"
+formula = "patchelf"
+
+[[steps]]
+action = "homebrew"
+formula = "patchelf"
+
+[[steps]]
+action = "install_binaries"
+binaries = ["bin/patchelf"]
+
+[verify]
+command = "patchelf --version"
+pattern = "patchelf {version}"
