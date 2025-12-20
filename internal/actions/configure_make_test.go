@@ -283,3 +283,167 @@ func TestIsValidConfigureArg(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildAutotoolsEnv_NoDependencies(t *testing.T) {
+	t.Parallel()
+	ctx := &ExecutionContext{
+		Context:      context.Background(),
+		ToolsDir:     t.TempDir(),
+		Dependencies: ResolvedDeps{InstallTime: make(map[string]string)},
+	}
+
+	env := buildAutotoolsEnv(ctx)
+
+	// Verify SOURCE_DATE_EPOCH is set
+	found := false
+	for _, e := range env {
+		if strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
+			found = true
+			break
+		}
+	}
+	if !found {
+		t.Error("SOURCE_DATE_EPOCH not set in environment")
+	}
+
+	// Verify no PKG_CONFIG_PATH, CPPFLAGS, or LDFLAGS when no dependencies
+	for _, e := range env {
+		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
+			t.Error("PKG_CONFIG_PATH should not be set with no dependencies")
+		}
+		if strings.HasPrefix(e, "CPPFLAGS=") {
+			t.Error("CPPFLAGS should not be set with no dependencies")
+		}
+		if strings.HasPrefix(e, "LDFLAGS=") {
+			t.Error("LDFLAGS should not be set with no dependencies")
+		}
+	}
+}
+
+func TestBuildAutotoolsEnv_WithDependencies(t *testing.T) {
+	t.Parallel()
+	toolsDir := t.TempDir()
+
+	// Create mock dependency directories
+	dep1Dir := filepath.Join(toolsDir, "zlib-1.2.11")
+	dep2Dir := filepath.Join(toolsDir, "openssl-3.0.0")
+
+	// Create directory structure for dep1 (has all: include, lib, lib/pkgconfig)
+	if err := os.MkdirAll(filepath.Join(dep1Dir, "include"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(dep1Dir, "lib", "pkgconfig"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create directory structure for dep2 (only has include and lib, no pkgconfig)
+	if err := os.MkdirAll(filepath.Join(dep2Dir, "include"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(filepath.Join(dep2Dir, "lib"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:  context.Background(),
+		ToolsDir: toolsDir,
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{
+				"zlib":    "1.2.11",
+				"openssl": "3.0.0",
+			},
+		},
+	}
+
+	env := buildAutotoolsEnv(ctx)
+
+	// Verify PKG_CONFIG_PATH contains only zlib (openssl doesn't have pkgconfig)
+	var pkgConfigPath string
+	for _, e := range env {
+		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
+			pkgConfigPath = strings.TrimPrefix(e, "PKG_CONFIG_PATH=")
+			break
+		}
+	}
+	if pkgConfigPath == "" {
+		t.Error("PKG_CONFIG_PATH not set with dependencies")
+	}
+	zlibPkgConfig := filepath.Join(dep1Dir, "lib", "pkgconfig")
+	if !strings.Contains(pkgConfigPath, zlibPkgConfig) {
+		t.Errorf("PKG_CONFIG_PATH missing zlib: got %q, want to contain %q", pkgConfigPath, zlibPkgConfig)
+	}
+
+	// Verify CPPFLAGS contains both dependencies
+	var cppFlags string
+	for _, e := range env {
+		if strings.HasPrefix(e, "CPPFLAGS=") {
+			cppFlags = strings.TrimPrefix(e, "CPPFLAGS=")
+			break
+		}
+	}
+	if cppFlags == "" {
+		t.Error("CPPFLAGS not set with dependencies")
+	}
+	zlibInclude := filepath.Join(dep1Dir, "include")
+	opensslInclude := filepath.Join(dep2Dir, "include")
+	if !strings.Contains(cppFlags, "-I"+zlibInclude) {
+		t.Errorf("CPPFLAGS missing zlib: got %q, want to contain -I%s", cppFlags, zlibInclude)
+	}
+	if !strings.Contains(cppFlags, "-I"+opensslInclude) {
+		t.Errorf("CPPFLAGS missing openssl: got %q, want to contain -I%s", cppFlags, opensslInclude)
+	}
+
+	// Verify LDFLAGS contains both dependencies
+	var ldFlags string
+	for _, e := range env {
+		if strings.HasPrefix(e, "LDFLAGS=") {
+			ldFlags = strings.TrimPrefix(e, "LDFLAGS=")
+			break
+		}
+	}
+	if ldFlags == "" {
+		t.Error("LDFLAGS not set with dependencies")
+	}
+	zlibLib := filepath.Join(dep1Dir, "lib")
+	opensslLib := filepath.Join(dep2Dir, "lib")
+	if !strings.Contains(ldFlags, "-L"+zlibLib) {
+		t.Errorf("LDFLAGS missing zlib: got %q, want to contain -L%s", ldFlags, zlibLib)
+	}
+	if !strings.Contains(ldFlags, "-L"+opensslLib) {
+		t.Errorf("LDFLAGS missing openssl: got %q, want to contain -L%s", ldFlags, opensslLib)
+	}
+}
+
+func TestBuildAutotoolsEnv_MissingDirectories(t *testing.T) {
+	t.Parallel()
+	toolsDir := t.TempDir()
+
+	// Create mock dependency directory without standard subdirectories
+	depDir := filepath.Join(toolsDir, "custom-1.0.0")
+	if err := os.MkdirAll(depDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:  context.Background(),
+		ToolsDir: toolsDir,
+		Dependencies: ResolvedDeps{
+			InstallTime: map[string]string{"custom": "1.0.0"},
+		},
+	}
+
+	env := buildAutotoolsEnv(ctx)
+
+	// Verify environment variables are not set when directories don't exist
+	for _, e := range env {
+		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
+			t.Error("PKG_CONFIG_PATH should not be set when lib/pkgconfig doesn't exist")
+		}
+		if strings.HasPrefix(e, "CPPFLAGS=") {
+			t.Error("CPPFLAGS should not be set when include doesn't exist")
+		}
+		if strings.HasPrefix(e, "LDFLAGS=") {
+			t.Error("LDFLAGS should not be set when lib doesn't exist")
+		}
+	}
+}

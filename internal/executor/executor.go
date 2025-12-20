@@ -321,6 +321,9 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		}
 	}
 
+	// Resolve dependencies for build environment setup
+	resolvedDeps := actions.ResolveDependencies(recipeForContext)
+
 	// Create execution context from plan
 	execCtx := &actions.ExecutionContext{
 		Context:          ctx,
@@ -336,6 +339,7 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		Recipe:           recipeForContext,
 		ExecPaths:        e.execPaths,
 		Logger:           log.Default(),
+		Dependencies:     resolvedDeps,
 	}
 	e.ctx = execCtx
 
@@ -538,6 +542,9 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		}
 	}
 
+	// Resolve dependencies for this dependency's build environment
+	depResolvedDeps := actions.ResolveDependencies(depRecipe)
+
 	// Create execution context for this dependency
 	execCtx := &actions.ExecutionContext{
 		Context:          ctx,
@@ -553,6 +560,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		Recipe:           depRecipe,
 		ExecPaths:        e.execPaths,
 		Logger:           log.Default(),
+		Dependencies:     depResolvedDeps,
 	}
 
 	// Execute each step for this dependency
