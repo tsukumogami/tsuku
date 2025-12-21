@@ -397,56 +397,91 @@ func TestValidatePathWithinDir(t *testing.T) {
 }
 
 func TestValidateRpath(t *testing.T) {
+	libsDir := "/home/user/.tsuku/libs"
+
 	tests := []struct {
 		name      string
 		rpath     string
+		libsDir   string
 		wantError bool
 	}{
 		{
 			name:      "empty rpath (uses default)",
 			rpath:     "",
+			libsDir:   libsDir,
 			wantError: false,
 		},
 		{
 			name:      "valid $ORIGIN relative",
 			rpath:     "$ORIGIN/../lib",
+			libsDir:   libsDir,
 			wantError: false,
 		},
 		{
 			name:      "valid @executable_path",
 			rpath:     "@executable_path/../lib",
+			libsDir:   libsDir,
 			wantError: false,
 		},
 		{
 			name:      "valid @loader_path",
 			rpath:     "@loader_path/../lib",
+			libsDir:   libsDir,
 			wantError: false,
 		},
 		{
 			name:      "valid @rpath",
 			rpath:     "@rpath/lib",
+			libsDir:   libsDir,
 			wantError: false,
 		},
 		{
-			name:      "colon injection attack",
-			rpath:     "$ORIGIN/../lib:/tmp/evil",
+			name:      "valid colon-separated with $ORIGIN",
+			rpath:     "$ORIGIN/../lib:$ORIGIN/../../../../libs/openssl-3.0.0/lib",
+			libsDir:   libsDir,
+			wantError: false,
+		},
+		{
+			name:      "valid absolute path within libsDir",
+			rpath:     "/home/user/.tsuku/libs/openssl-3.0.0/lib",
+			libsDir:   libsDir,
+			wantError: false,
+		},
+		{
+			name:      "valid colon-separated absolute paths within libsDir",
+			rpath:     "/home/user/.tsuku/libs/openssl-3.0.0/lib:/home/user/.tsuku/libs/zlib-1.3.1/lib",
+			libsDir:   libsDir,
+			wantError: false,
+		},
+		{
+			name:      "invalid absolute path outside libsDir",
+			rpath:     "/tmp/evil/lib",
+			libsDir:   libsDir,
 			wantError: true,
 		},
 		{
-			name:      "absolute path attack",
-			rpath:     "/tmp/evil/lib",
+			name:      "invalid colon-separated with one evil path",
+			rpath:     "/home/user/.tsuku/libs/openssl-3.0.0/lib:/tmp/evil",
+			libsDir:   libsDir,
 			wantError: true,
 		},
 		{
 			name:      "missing valid prefix",
 			rpath:     "../lib",
+			libsDir:   libsDir,
+			wantError: true,
+		},
+		{
+			name:      "absolute path without libsDir set",
+			rpath:     "/home/user/.tsuku/libs/openssl-3.0.0/lib",
+			libsDir:   "",
 			wantError: true,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validateRpath(tt.rpath)
+			err := validateRpath(tt.rpath, tt.libsDir)
 			if (err != nil) != tt.wantError {
 				t.Errorf("validateRpath() error = %v, wantError %v", err, tt.wantError)
 			}
@@ -1035,7 +1070,7 @@ func TestValidateRpath_EdgeCases(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			err := validateRpath(tt.rpath)
+			err := validateRpath(tt.rpath, "")
 			if (err != nil) != tt.wantError {
 				t.Errorf("validateRpath(%q) error = %v, wantError %v", tt.rpath, err, tt.wantError)
 			}

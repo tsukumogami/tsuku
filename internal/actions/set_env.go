@@ -37,7 +37,7 @@ func (a *SetEnvAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	}
 
 	// Build standard vars for substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
+	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 
 	fmt.Printf("   Setting %d environment variable(s)\n", len(envVars))
 

@@ -1,0 +1,46 @@
+[metadata]
+name = "curl"
+description = "Command line tool for transferring data with URLs"
+homepage = "https://curl.se/"
+dependencies = ["openssl", "zlib"]
+binaries = ["bin/curl"]
+
+[version]
+source = "homebrew"
+formula = "curl"
+
+[[steps]]
+action = "download_file"
+url = "https://curl.se/download/curl-8.11.1.tar.gz"
+checksum = "a889ac9dbba3644271bd9d1302b5c22a088893719b72be3487bc3d401e5c4e80"
+
+[[steps]]
+action = "extract"
+archive = "curl-8.11.1.tar.gz"
+format = "tar.gz"
+
+[[steps]]
+action = "setup_build_env"
+
+[[steps]]
+action = "configure_make"
+source_dir = "curl-8.11.1"
+configure_args = ["--with-openssl", "--with-zlib", "--disable-silent-rules", "--without-libpsl"]
+executables = ["curl"]
+
+# NOTE: set_rpath only targets the binary, not the shared library, for cross-platform
+# compatibility. macOS uses .dylib while Linux uses .so for library naming.
+# See issue #653 for future improvement of cross-platform library RPATH support.
+[[steps]]
+action = "set_rpath"
+binaries = [".install/bin/curl"]
+rpath = "$ORIGIN/../lib:{libs_dir}/openssl-3.6.0/lib:{libs_dir}/zlib-1.3.1/lib"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/curl"]
+
+[verify]
+command = "curl --version"
+pattern = "curl {version}"

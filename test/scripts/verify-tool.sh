@@ -165,6 +165,36 @@ verify_libsixel-source() {
     sixel2png --help 2>&1 | head -5 || true
 }
 
+verify_curl() {
+    echo "Testing: curl --version"
+    curl --version
+
+    echo ""
+    echo "Verifying: curl uses tsuku-provided OpenSSL and zlib"
+    if curl --version | grep -q "OpenSSL"; then
+        echo "✓ curl linked with OpenSSL"
+    else
+        echo "✗ ERROR: curl not linked with OpenSSL"
+        exit 1
+    fi
+
+    if curl --version | grep -q "zlib"; then
+        echo "✓ curl linked with zlib"
+    else
+        echo "✗ ERROR: curl not linked with zlib"
+        exit 1
+    fi
+
+    echo ""
+    echo "Testing: HTTPS request to example.com"
+    if curl -sI https://example.com | head -1 | grep -q "200 OK"; then
+        echo "✓ HTTPS request successful"
+    else
+        echo "✗ ERROR: HTTPS request failed"
+        exit 1
+    fi
+}
+
 verify_generic() {
     echo "Testing: $TOOL_NAME --version (generic check)"
     if "$TOOL_NAME" --version 2>&1; then
@@ -206,6 +236,9 @@ case "$TOOL_NAME" in
         ;;
     libsixel-source)
         verify_libsixel-source
+        ;;
+    curl)
+        verify_curl
         ;;
     *)
         echo "No specific test for '$TOOL_NAME', running generic check"

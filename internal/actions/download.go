@@ -144,7 +144,7 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	archMapping, _ := GetMapStringString(params, "arch_mapping")
 
 	// Build vars with custom mappings
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
+	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 	if len(osMapping) > 0 {
 		vars["os"] = ApplyMapping(vars["os"], osMapping)
 	}

@@ -62,7 +62,7 @@ func TestExpandVars(t *testing.T) {
 }
 
 func TestGetStandardVars(t *testing.T) {
-	vars := GetStandardVars("1.2.3", "/install/dir", "/work/dir")
+	vars := GetStandardVars("1.2.3", "/install/dir", "/work/dir", "/libs/dir")
 
 	if vars["version"] != "1.2.3" {
 		t.Errorf("version = %q, want %q", vars["version"], "1.2.3")
@@ -72,6 +72,9 @@ func TestGetStandardVars(t *testing.T) {
 	}
 	if vars["work_dir"] != "/work/dir" {
 		t.Errorf("work_dir = %q, want %q", vars["work_dir"], "/work/dir")
+	}
+	if vars["libs_dir"] != "/libs/dir" {
+		t.Errorf("libs_dir = %q, want %q", vars["libs_dir"], "/libs/dir")
 	}
 	// os and arch should be mapped from runtime values
 	if vars["os"] == "" {

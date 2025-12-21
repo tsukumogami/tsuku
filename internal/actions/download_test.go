@@ -151,7 +151,7 @@ func TestDownloadAction_verifyChecksum_NoChecksum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	vars := GetStandardVars("1.0.0", tmpDir, tmpDir)
+	vars := GetStandardVars("1.0.0", tmpDir, tmpDir, "")
 
 	// No checksum parameters - should pass
 	err := action.verifyChecksum(context.Background(), execCtx, map[string]interface{}{}, testFile, vars)
@@ -179,7 +179,7 @@ func TestDownloadAction_verifyChecksum_InlineChecksum(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	vars := GetStandardVars("1.0.0", tmpDir, tmpDir)
+	vars := GetStandardVars("1.0.0", tmpDir, tmpDir, "")
 
 	// SHA256 of "hello world"
 	correctChecksum := "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
@@ -220,7 +220,7 @@ func TestDownloadAction_verifyChecksum_CustomAlgo(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	vars := GetStandardVars("1.0.0", tmpDir, tmpDir)
+	vars := GetStandardVars("1.0.0", tmpDir, tmpDir, "")
 
 	// SHA512 of "hello world"
 	sha512Checksum := "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f"

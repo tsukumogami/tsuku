@@ -386,6 +386,9 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set tools directory for finding other installed tools
 	exec.SetToolsDir(cfg.ToolsDir)
 
+	// Set libraries directory for finding installed libraries
+	exec.SetLibsDir(cfg.LibsDir)
+
 	// Set download cache directory
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 

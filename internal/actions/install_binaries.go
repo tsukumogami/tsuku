@@ -78,7 +78,7 @@ func (a *InstallBinariesAction) installBinaries(ctx *ExecutionContext, binaries 
 	}
 
 	// Build vars for variable substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
+	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 
 	// Log installation details
 	logger := ctx.Log()

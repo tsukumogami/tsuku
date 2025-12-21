@@ -230,17 +230,38 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 
 	for _, exe := range executables {
 		wrapperPath := filepath.Join(binDir, exe)
+		venvExePath := filepath.Join(venvBinDir, exe)
 
-		// Create a wrapper script that executes the venv's python with the real script
-		// Relative paths work after directory relocation
-		// Add venv bin to PATH so dependencies like ninja can be found
-		wrapperScript := fmt.Sprintf(`#!/bin/sh
-# Wrapper for %s from pip venv
+		// Detect if the venv executable is a Python script or a compiled binary
+		// by checking for a shebang
+		isPythonScript := false
+		if content, err := os.ReadFile(venvExePath); err == nil {
+			if len(content) >= 2 && content[0] == '#' && content[1] == '!' {
+				isPythonScript = true
+			}
+		}
+
+		var wrapperScript string
+		if isPythonScript {
+			// Python script: execute through python3 to use correct interpreter
+			// Add venv bin to PATH so dependencies like ninja can be found
+			wrapperScript = fmt.Sprintf(`#!/bin/sh
+# Wrapper for %s from pip venv (Python script)
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 VENV_DIR="$SCRIPT_DIR/../venvs/%s"
 export PATH="$VENV_DIR/bin:$PATH"
 exec "$VENV_DIR/bin/python3" "$VENV_DIR/bin/%s" "$@"
 `, exe, packageName, exe)
+		} else {
+			// Compiled binary: execute directly with venv bin in PATH
+			wrapperScript = fmt.Sprintf(`#!/bin/sh
+# Wrapper for %s from pip venv (binary)
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+VENV_DIR="$SCRIPT_DIR/../venvs/%s"
+export PATH="$VENV_DIR/bin:$PATH"
+exec "$VENV_DIR/bin/%s" "$@"
+`, exe, packageName, exe)
+		}
 
 		// Remove existing file if present
 		os.Remove(wrapperPath)

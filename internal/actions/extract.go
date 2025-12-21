@@ -81,7 +81,7 @@ func (a *ExtractAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	}
 
 	// Build vars for variable substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
+	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 
 	// Apply OS mapping if present
 	if osMapping, ok := GetMapStringString(params, "os_mapping"); ok {

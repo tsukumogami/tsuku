@@ -35,14 +35,20 @@ func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interf
 		return fmt.Errorf("set_rpath action requires 'binaries' parameter")
 	}
 
+	// Build vars for variable substitution
+	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
+
 	// Get rpath (defaults to $ORIGIN/../lib per design doc)
 	rpath, _ := GetString(params, "rpath")
 	if rpath == "" {
 		rpath = "$ORIGIN/../lib"
 	}
 
+	// Expand variables in rpath
+	rpath = ExpandVars(rpath, vars)
+
 	// Validate RPATH value for security
-	if err := validateRpath(rpath); err != nil {
+	if err := validateRpath(rpath, ctx.LibsDir); err != nil {
 		return fmt.Errorf("invalid rpath value: %w", err)
 	}
 
@@ -51,9 +57,6 @@ func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interf
 	if val, ok := GetBool(params, "create_wrapper"); ok {
 		createWrapper = val
 	}
-
-	// Build vars for variable substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
 
 	fmt.Printf("   Setting RPATH: %s\n", rpath)
 
@@ -355,36 +358,58 @@ func validatePathWithinDir(targetPath, baseDir string) error {
 }
 
 // validateRpath validates that an RPATH value is safe
-// This prevents RPATH injection attacks
-func validateRpath(rpath string) error {
+// This prevents RPATH injection attacks while allowing tsuku dependency paths
+func validateRpath(rpath string, libsDir string) error {
 	// Allow empty rpath (will use default)
 	if rpath == "" {
 		return nil
 	}
 
-	// Check for dangerous patterns
-	// Reject colons which could add multiple paths
-	if strings.Contains(rpath, ":") {
-		return fmt.Errorf("RPATH cannot contain ':' (multiple paths)")
-	}
+	// Split colon-separated paths for validation
+	paths := strings.Split(rpath, ":")
 
-	// Reject absolute paths that don't use $ORIGIN/@executable_path
-	// These could point to attacker-controlled directories
-	if filepath.IsAbs(rpath) {
-		return fmt.Errorf("RPATH must be relative using $ORIGIN or @executable_path")
-	}
-
-	// Allow relative paths with $ORIGIN or @executable_path/@loader_path prefix
-	validPrefixes := []string{"$ORIGIN", "@executable_path", "@loader_path", "@rpath"}
-	hasValidPrefix := false
-	for _, prefix := range validPrefixes {
-		if strings.HasPrefix(rpath, prefix) {
-			hasValidPrefix = true
-			break
+	for _, path := range paths {
+		path = strings.TrimSpace(path)
+		if path == "" {
+			continue
 		}
-	}
-	if !hasValidPrefix {
-		return fmt.Errorf("RPATH must start with $ORIGIN, @executable_path, @loader_path, or @rpath")
+
+		// Note: We don't block ".." in paths because it's commonly used in RPATH
+		// (e.g., "$ORIGIN/../lib"). The real security check is ensuring absolute
+		// paths stay within $TSUKU_HOME/libs/.
+
+		// Check if it's an absolute path
+		if filepath.IsAbs(path) {
+			// Absolute paths are only allowed within $TSUKU_HOME/libs/
+			// This allows dependency libraries while preventing arbitrary system paths
+			if libsDir != "" {
+				// Clean paths for comparison
+				cleanPath := filepath.Clean(path)
+				cleanLibsDir := filepath.Clean(libsDir)
+
+				// Check if path is within libsDir
+				if !strings.HasPrefix(cleanPath, cleanLibsDir+string(filepath.Separator)) &&
+					cleanPath != cleanLibsDir {
+					return fmt.Errorf("absolute RPATH must be within tsuku libs directory (%s): %s", cleanLibsDir, path)
+				}
+			} else {
+				// If libsDir is not set, reject absolute paths for safety
+				return fmt.Errorf("RPATH must be relative using $ORIGIN or @executable_path: %s", path)
+			}
+		} else {
+			// Relative paths must use platform-specific prefixes
+			validPrefixes := []string{"$ORIGIN", "@executable_path", "@loader_path", "@rpath"}
+			hasValidPrefix := false
+			for _, prefix := range validPrefixes {
+				if strings.HasPrefix(path, prefix) {
+					hasValidPrefix = true
+					break
+				}
+			}
+			if !hasValidPrefix {
+				return fmt.Errorf("relative RPATH must start with $ORIGIN, @executable_path, @loader_path, or @rpath: %s", path)
+			}
+		}
 	}
 
 	return nil

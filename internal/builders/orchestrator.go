@@ -31,6 +31,10 @@ type OrchestratorConfig struct {
 	// Required for plan generation if sandbox testing is enabled.
 	ToolsDir string
 
+	// LibsDir is the directory containing installed libraries ($TSUKU_HOME/libs).
+	// Required for finding dependencies during build environment setup.
+	LibsDir string
+
 	// DownloadCacheDir is the directory for caching downloads ($TSUKU_HOME/cache/downloads).
 	// Required for plan generation if sandbox testing is enabled.
 	DownloadCacheDir string
@@ -220,6 +224,7 @@ func (o *Orchestrator) generatePlan(ctx context.Context, r *recipe.Recipe) (*exe
 
 	// Configure executor with paths
 	exec.SetToolsDir(o.config.ToolsDir)
+	exec.SetLibsDir(o.config.LibsDir)
 	exec.SetDownloadCacheDir(o.config.DownloadCacheDir)
 
 	// Create downloader and cache for plan generation
