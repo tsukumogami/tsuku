@@ -55,7 +55,7 @@ func (a *TextReplaceAction) Execute(ctx *ExecutionContext, params map[string]int
 	}
 
 	// Build vars for variable substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
+	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 	file = ExpandVars(file, vars)
 	pattern = ExpandVars(pattern, vars)
 	replacement = ExpandVars(replacement, vars)

@@ -42,7 +42,7 @@ func (a *ChmodAction) Execute(ctx *ExecutionContext, params map[string]interface
 	}
 
 	// Build vars for variable substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
+	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 
 	fmt.Printf("   Making executable: %v\n", files)
 

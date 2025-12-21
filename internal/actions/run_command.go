@@ -53,7 +53,7 @@ func (a *RunCommandAction) Execute(ctx *ExecutionContext, params map[string]inte
 	}
 
 	// Build vars for substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir)
+	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
 	vars["binary"] = filepath.Join(ctx.InstallDir, "bin", ctx.Recipe.Metadata.Name)
 
 	// Add {PYTHON} variable if python-standalone is installed (for pipx bootstrap)
