@@ -13,8 +13,8 @@ Current
 | Issue | Title | Dependencies | Status |
 |-------|-------|--------------|--------|
 | [#539](https://github.com/tsukumogami/tsuku/issues/539) | ci(build): add 4-platform test matrix for build essentials | None | Done |
-| [#540](https://github.com/tsukumogami/tsuku/issues/540) | feat(recipes): add zlib recipe using homebrew_bottle | None | Done |
-| [#541](https://github.com/tsukumogami/tsuku/issues/541) | feat(recipes): add make recipe using homebrew_bottle | None | Done |
+| [#540](https://github.com/tsukumogami/tsuku/issues/540) | feat(recipes): add zlib recipe using homebrew | None | Done |
+| [#541](https://github.com/tsukumogami/tsuku/issues/541) | feat(recipes): add make recipe using homebrew | None | Done |
 | [#542](https://github.com/tsukumogami/tsuku/issues/542) | feat(recipes): add zig recipe and validate cc wrapper | None | Done |
 | [#543](https://github.com/tsukumogami/tsuku/issues/543) | feat(scripts): add build essential validation scripts | None | Done |
 | [#544](https://github.com/tsukumogami/tsuku/issues/544) | feat(recipes): add pngcrush recipe to validate zlib dependency | [#540](https://github.com/tsukumogami/tsuku/issues/540) | Done |
@@ -49,11 +49,11 @@ graph LR
 | Issue | Title | Dependencies |
 |-------|-------|--------------|
 | [#547](https://github.com/tsukumogami/tsuku/issues/547) | feat(actions): declare implicit dependencies for build actions | None |
-| [#548](https://github.com/tsukumogami/tsuku/issues/548) | feat(recipes): add pkg-config recipe using homebrew_bottle | None |
-| [#549](https://github.com/tsukumogami/tsuku/issues/549) | feat(recipes): add cmake recipe using homebrew_bottle | None |
+| [#548](https://github.com/tsukumogami/tsuku/issues/548) | feat(recipes): add pkg-config recipe using homebrew | None |
+| [#549](https://github.com/tsukumogami/tsuku/issues/549) | feat(recipes): add cmake recipe using homebrew | None |
 | [#550](https://github.com/tsukumogami/tsuku/issues/550) | feat(actions): enhance buildAutotoolsEnv with dependency paths | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542), [#548](https://github.com/tsukumogami/tsuku/issues/548) |
 | [#551](https://github.com/tsukumogami/tsuku/issues/551) | feat(actions): implement setup_build_env action | [#550](https://github.com/tsukumogami/tsuku/issues/550) |
-| [#552](https://github.com/tsukumogami/tsuku/issues/552) | feat(recipes): add openssl recipe using homebrew_bottle | [#540](https://github.com/tsukumogami/tsuku/issues/540) |
+| [#552](https://github.com/tsukumogami/tsuku/issues/552) | feat(recipes): add openssl recipe using homebrew | [#540](https://github.com/tsukumogami/tsuku/issues/540) |
 | [#553](https://github.com/tsukumogami/tsuku/issues/553) | feat(recipes): add ncurses recipe to validate pkg-config | [#551](https://github.com/tsukumogami/tsuku/issues/551) |
 | [#554](https://github.com/tsukumogami/tsuku/issues/554) | feat(recipes): add curl recipe to validate openssl | [#551](https://github.com/tsukumogami/tsuku/issues/551), [#552](https://github.com/tsukumogami/tsuku/issues/552) |
 | [#555](https://github.com/tsukumogami/tsuku/issues/555) | feat(actions): implement cmake_build action | [#549](https://github.com/tsukumogami/tsuku/issues/549) |
@@ -100,7 +100,7 @@ graph LR
 
 | Issue | Title | Dependencies |
 |-------|-------|--------------|
-| [#557](https://github.com/tsukumogami/tsuku/issues/557) | feat(recipes): add readline recipe using homebrew_bottle | [#553](https://github.com/tsukumogami/tsuku/issues/553) |
+| [#557](https://github.com/tsukumogami/tsuku/issues/557) | feat(recipes): add readline recipe using homebrew | [#553](https://github.com/tsukumogami/tsuku/issues/553) |
 | [#558](https://github.com/tsukumogami/tsuku/issues/558) | feat(recipes): add sqlite recipe to validate readline | [#557](https://github.com/tsukumogami/tsuku/issues/557) |
 | [#559](https://github.com/tsukumogami/tsuku/issues/559) | feat(recipes): add git recipe to validate complete toolchain | [#554](https://github.com/tsukumogami/tsuku/issues/554) |
 
@@ -335,7 +335,7 @@ Every dependency has a recipe. The recipe's actions determine provisioning strat
 ```toml
 # gcc.toml - provisionable via Homebrew
 [[steps]]
-action = "homebrew_bottle"
+action = "homebrew"
 formula = "gcc"
 
 # docker.toml - system-required
@@ -394,9 +394,9 @@ The unified model solves these problems:
 | Tool | Purpose | Source | Priority |
 |------|---------|--------|----------|
 | zig | C/C++ compiler (via zig cc) | GitHub release | P0 (default) |
-| gcc | C/C++ compiler | Homebrew bottle | P1 (fallback if zig edge cases) |
-| clang/llvm | C/C++ compiler | Homebrew bottle | P2 |
-| binutils | Linker, assembler | Homebrew bottle | P1 (if needed) |
+| gcc | C/C++ compiler | Homebrew | P1 (fallback if zig edge cases) |
+| clang/llvm | C/C++ compiler | Homebrew | P2 |
+| binutils | Linker, assembler | Homebrew | P1 (if needed) |
 
 **Note**: Zig is the default compiler because it's a single relocatable binary. GCC can be added later if specific tools require it.
 
@@ -617,7 +617,7 @@ source = "homebrew"
 formula = "gcc"
 
 [[steps]]
-action = "homebrew_bottle"
+action = "homebrew"
 formula = "gcc"
 
 [[steps]]
