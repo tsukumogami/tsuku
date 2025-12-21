@@ -5,6 +5,10 @@ homepage = "https://curl.se/"
 dependencies = ["openssl", "zlib"]
 binaries = ["bin/curl"]
 
+[version]
+source = "homebrew"
+formula = "curl"
+
 [[steps]]
 action = "download_file"
 url = "https://curl.se/download/curl-8.11.1.tar.gz"
@@ -39,4 +43,4 @@ binaries = ["bin/curl"]
 
 [verify]
 command = "curl --version"
-pattern = "curl 8.11.1"
+pattern = "curl {version}"
