@@ -1,0 +1,23 @@
+[metadata]
+name = "git"
+description = "Distributed revision control system"
+homepage = "https://git-scm.com/"
+dependencies = ["curl"]
+binaries = ["bin/git"]
+
+[version]
+source = "homebrew"
+formula = "git"
+
+[[steps]]
+action = "homebrew"
+formula = "git"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/git"]
+
+[verify]
+command = "git --version"
+pattern = "git version {version}"

@@ -119,8 +119,7 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef external fill:#e0e0e0
 
-    class I553,I554,I557,I558 done
-    class I559 blocked
+    class I553,I554,I557,I558,I559 done
 ```
 
 ### Milestone: [Dependency Provisioning: System-Required](https://github.com/tsukumogami/tsuku/milestone/21)
