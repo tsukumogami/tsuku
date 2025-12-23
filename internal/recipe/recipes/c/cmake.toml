@@ -2,6 +2,7 @@
 name = "cmake"
 description = "Cross-platform build system generator"
 homepage = "https://cmake.org/"
+dependencies = ["openssl"]
 binaries = ["bin/cmake", "bin/ctest", "bin/cpack"]
 
 [version]
