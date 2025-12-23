@@ -823,7 +823,10 @@ func TestSetRpathLinux_NoPatchelf(t *testing.T) {
 		t.Fatalf("failed to create test binary: %v", err)
 	}
 
-	err := setRpathLinux(binaryPath, "$ORIGIN/../lib")
+	ctx := &ExecutionContext{
+		ExecPaths: []string{}, // Empty ExecPaths to force PATH lookup
+	}
+	err := setRpathLinux(ctx, binaryPath, "$ORIGIN/../lib")
 	if err == nil {
 		t.Error("expected error when patchelf not found")
 	}

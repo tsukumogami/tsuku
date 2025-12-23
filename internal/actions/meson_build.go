@@ -222,7 +222,7 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 			switch format {
 			case "elf":
 				fmt.Printf("   Setting RPATH with patchelf\n")
-				rpathErr = setRpathLinux(exePath, rpath)
+				rpathErr = setRpathLinux(ctx, exePath, rpath)
 			case "macho":
 				fmt.Printf("   Setting RPATH with install_name_tool\n")
 				rpathErr = setRpathMacOS(exePath, rpath)

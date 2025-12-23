@@ -245,6 +245,9 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"homebrew":          true,
 		"setup_build_env":   true,
 		"configure_make":    true,
+		"cmake_build":       true,
+		"meson_build":       true,
+		"cargo_build":       true,
 	}
 
 	for i, step := range r.Steps {

@@ -91,9 +91,7 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef external fill:#e0e0e0
 
-    class I540,I541,I542,I547,I548,I550,I551,I553 done
-    class I549,I552 ready
-    class I554,I555,I556 blocked
+    class I540,I541,I542,I547,I548,I549,I550,I551,I552,I553,I554,I555,I556 done
 ```
 
 ### Milestone: [Dependency Provisioning: Full Integration](https://github.com/tsukumogami/tsuku/milestone/20)
@@ -121,8 +119,7 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef external fill:#e0e0e0
 
-    class I553 done
-    class I554 ready
+    class I553,I554 done
     class I557,I558,I559 blocked
 ```
 

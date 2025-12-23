@@ -56,7 +56,7 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 	fmt.Printf("   Relocating placeholders: %s\n", formula)
 
 	// Relocate placeholders in files
-	if err := a.relocatePlaceholders(ctx.WorkDir, installPath); err != nil {
+	if err := a.relocatePlaceholders(ctx, installPath); err != nil {
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
 
@@ -70,7 +70,8 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 // relocatePlaceholders replaces Homebrew placeholders in all files
 // For text files: direct replacement with install path
 // For binary files: use patchelf/install_name_tool to reset RPATH
-func (a *HomebrewRelocateAction) relocatePlaceholders(dir, installPath string) error {
+func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, installPath string) error {
+	dir := ctx.WorkDir
 	replacement := []byte(installPath)
 
 	// Collect binaries that need RPATH fixup
@@ -140,7 +141,7 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(dir, installPath string) e
 
 	// Fix RPATH on binary files using patchelf/install_name_tool
 	for _, binaryPath := range binariesToFix {
-		if err := a.fixBinaryRpath(binaryPath, installPath); err != nil {
+		if err := a.fixBinaryRpath(ctx, binaryPath, installPath); err != nil {
 			return fmt.Errorf("failed to fix RPATH for %s: %w", binaryPath, err)
 		}
 	}
@@ -150,7 +151,7 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(dir, installPath string) e
 
 // fixBinaryRpath uses patchelf or install_name_tool to set a proper RPATH
 // This replaces the Homebrew placeholder RPATH with a working path
-func (a *HomebrewRelocateAction) fixBinaryRpath(binaryPath, installPath string) error {
+func (a *HomebrewRelocateAction) fixBinaryRpath(ctx *ExecutionContext, binaryPath, installPath string) error {
 	// Detect binary format
 	f, err := os.Open(binaryPath)
 	if err != nil {
@@ -166,7 +167,7 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(binaryPath, installPath string) 
 
 	// Check if it's an ELF binary
 	if bytes.Equal(magic, []byte{0x7f, 'E', 'L', 'F'}) {
-		return a.fixElfRpath(binaryPath, installPath)
+		return a.fixElfRpath(ctx, binaryPath, installPath)
 	}
 
 	// Check if it's a Mach-O binary
@@ -184,15 +185,26 @@ func (a *HomebrewRelocateAction) fixBinaryRpath(binaryPath, installPath string) 
 }
 
 // fixElfRpath uses patchelf to set RPATH on Linux ELF binaries
-func (a *HomebrewRelocateAction) fixElfRpath(binaryPath, installPath string) error {
-	patchelf, err := exec.LookPath("patchelf")
-	if err != nil {
-		// Patchelf is declared as a dependency but may not be in PATH yet during bootstrap.
-		// Gracefully degrade - the dependency declaration ensures it gets installed for future use.
-		// TODO(#643): Once platform-conditional dependencies are available, patchelf will only be
-		// installed on Linux, eliminating this bootstrap issue.
-		fmt.Printf("   Warning: patchelf not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
-		return nil
+func (a *HomebrewRelocateAction) fixElfRpath(ctx *ExecutionContext, binaryPath, installPath string) error {
+	// Find patchelf - check ExecPaths first (for installed dependencies), then fall back to PATH
+	patchelfPath := ""
+	for _, p := range ctx.ExecPaths {
+		candidatePath := filepath.Join(p, "patchelf")
+		if _, err := os.Stat(candidatePath); err == nil {
+			patchelfPath = candidatePath
+			break
+		}
+	}
+	if patchelfPath == "" {
+		// Fall back to system PATH
+		var err error
+		patchelfPath, err = exec.LookPath("patchelf")
+		if err != nil {
+			// Patchelf is declared as a dependency but may not be in PATH yet during bootstrap.
+			// Gracefully degrade - the dependency declaration ensures it gets installed for future use.
+			fmt.Printf("   Warning: patchelf not found, skipping RPATH fix for %s\n", filepath.Base(binaryPath))
+			return nil
+		}
 	}
 
 	// Homebrew bottles often have read-only files; make writable before patching
@@ -210,7 +222,7 @@ func (a *HomebrewRelocateAction) fixElfRpath(binaryPath, installPath string) err
 	}
 
 	// Remove existing RPATH first (contains placeholders)
-	removeCmd := exec.Command(patchelf, "--remove-rpath", binaryPath)
+	removeCmd := exec.Command(patchelfPath, "--remove-rpath", binaryPath)
 	if output, err := removeCmd.CombinedOutput(); err != nil {
 		// Some binaries might not have RPATH, which is fine
 		if !strings.Contains(string(output), "cannot find") {
@@ -241,7 +253,7 @@ func (a *HomebrewRelocateAction) fixElfRpath(binaryPath, installPath string) err
 		}
 	}
 
-	setCmd := exec.Command(patchelf, "--force-rpath", "--set-rpath", newRpath, binaryPath)
+	setCmd := exec.Command(patchelfPath, "--force-rpath", "--set-rpath", newRpath, binaryPath)
 	if output, err := setCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("patchelf --set-rpath failed: %s: %w", strings.TrimSpace(string(output)), err)
 	}
@@ -249,7 +261,7 @@ func (a *HomebrewRelocateAction) fixElfRpath(binaryPath, installPath string) err
 	// Fix the ELF interpreter if it contains Homebrew placeholders
 	// Homebrew bottles on Linux have interpreter set to @@HOMEBREW_PREFIX@@/lib/ld.so
 	// which needs to be changed to the system loader
-	if err := a.fixElfInterpreter(patchelf, binaryPath); err != nil {
+	if err := a.fixElfInterpreter(patchelfPath, binaryPath); err != nil {
 		// Log but don't fail - some binaries (shared libs) don't have interpreters
 		fmt.Printf("   Note: Could not fix interpreter for %s: %v\n", filepath.Base(binaryPath), err)
 	}

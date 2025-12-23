@@ -1,0 +1,28 @@
+[metadata]
+name = "cmake"
+description = "Cross-platform build system generator"
+homepage = "https://cmake.org/"
+dependencies = ["openssl", "patchelf"]
+binaries = ["bin/cmake", "bin/ctest", "bin/cpack"]
+
+[version]
+source = "homebrew"
+formula = "cmake"
+
+[[steps]]
+action = "homebrew"
+formula = "cmake"
+
+[[steps]]
+action = "set_rpath"
+binaries = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
+rpath = "$ORIGIN/../lib:{libs_dir}/openssl-3.6.0/lib"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
+
+[verify]
+command = "cmake --version"
+pattern = "cmake version {version}"
