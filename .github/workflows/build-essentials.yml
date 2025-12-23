@@ -184,6 +184,39 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh ninja
 
+  # Test configure_make with library dependencies (sqlite → readline → ncurses)
+  test-sqlite:
+    name: "${{ matrix.platform.name }}: sqlite"
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
+          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
+          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
+          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Install sqlite (tests dependency chain: sqlite → readline → ncurses)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force sqlite
+
+      - name: "Verify tool functionality"
+        run: ./test/scripts/verify-tool.sh sqlite
+
   # Test zig installation
   test-zig:
     name: "${{ matrix.platform.name }}: zig"
