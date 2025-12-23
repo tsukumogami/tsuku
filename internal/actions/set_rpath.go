@@ -83,7 +83,7 @@ func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interf
 		var setErr error
 		switch format {
 		case "elf":
-			setErr = setRpathLinux(binaryPath, rpath)
+			setErr = setRpathLinux(ctx, binaryPath, rpath)
 		case "macho":
 			setErr = setRpathMacOS(binaryPath, rpath)
 		default:
@@ -143,16 +143,42 @@ func detectBinaryFormat(path string) (string, error) {
 }
 
 // setRpathLinux uses patchelf to modify RPATH on Linux binaries
-func setRpathLinux(binaryPath, rpath string) error {
-	// Check if patchelf is available
-	patchelf, err := exec.LookPath("patchelf")
+func setRpathLinux(ctx *ExecutionContext, binaryPath, rpath string) error {
+	// Find patchelf - check ExecPaths first (for installed dependencies), then fall back to PATH
+	patchelfPath := ""
+	for _, p := range ctx.ExecPaths {
+		candidatePath := filepath.Join(p, "patchelf")
+		if _, err := os.Stat(candidatePath); err == nil {
+			patchelfPath = candidatePath
+			break
+		}
+	}
+	if patchelfPath == "" {
+		// Fall back to system PATH
+		var err error
+		patchelfPath, err = exec.LookPath("patchelf")
+		if err != nil {
+			return fmt.Errorf("patchelf not found: install with 'apt install patchelf' or 'yum install patchelf'")
+		}
+	}
+
+	// Homebrew bottles often have read-only files; make writable before patching
+	info, err := os.Stat(binaryPath)
 	if err != nil {
-		return fmt.Errorf("patchelf not found: install with 'apt install patchelf' or 'yum install patchelf'")
+		return fmt.Errorf("failed to stat binary: %w", err)
+	}
+	originalMode := info.Mode()
+	if originalMode&0200 == 0 {
+		if err := os.Chmod(binaryPath, originalMode|0200); err != nil {
+			return fmt.Errorf("failed to make binary writable: %w", err)
+		}
+		// Restore original mode after patching (best-effort cleanup)
+		defer func() { _ = os.Chmod(binaryPath, originalMode) }()
 	}
 
 	// First, remove existing RPATH/RUNPATH (security requirement)
 	// Using --remove-rpath removes both RPATH and RUNPATH
-	removeCmd := exec.Command(patchelf, "--remove-rpath", binaryPath)
+	removeCmd := exec.Command(patchelfPath, "--remove-rpath", binaryPath)
 	if output, err := removeCmd.CombinedOutput(); err != nil {
 		// Some binaries don't have RPATH, which is fine
 		if !strings.Contains(string(output), "cannot find") {
@@ -164,7 +190,7 @@ func setRpathLinux(binaryPath, rpath string) error {
 	// Set new RPATH using --force-rpath to set DT_RPATH instead of DT_RUNPATH
 	// DT_RPATH takes precedence over LD_LIBRARY_PATH, providing better security
 	// DT_RUNPATH (patchelf default) is overridden by LD_LIBRARY_PATH
-	setCmd := exec.Command(patchelf, "--force-rpath", "--set-rpath", rpath, binaryPath)
+	setCmd := exec.Command(patchelfPath, "--force-rpath", "--set-rpath", rpath, binaryPath)
 	if output, err := setCmd.CombinedOutput(); err != nil {
 		return fmt.Errorf("patchelf --set-rpath failed: %s: %w", strings.TrimSpace(string(output)), err)
 	}

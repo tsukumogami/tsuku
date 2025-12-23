@@ -1,0 +1,34 @@
+[metadata]
+name = "ninja"
+description = "Small build system with a focus on speed"
+homepage = "https://ninja-build.org/"
+binaries = ["bin/ninja"]
+
+[version]
+source = "homebrew"
+formula = "ninja"
+
+# NOTE: GitHub doesn't provide SHA256SUMS; checksum computed during plan generation
+[[steps]]
+action = "download"
+url = "https://github.com/ninja-build/ninja/archive/v{version}.tar.gz"
+
+[[steps]]
+action = "extract"
+archive = "v{version}.tar.gz"
+format = "tar.gz"
+
+[[steps]]
+action = "cmake_build"
+source_dir = "ninja-{version}"
+executables = ["ninja"]
+cmake_args = ["-DBUILD_TESTING=OFF"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/ninja"]
+
+[verify]
+command = "ninja --version"
+pattern = "{version}"
