@@ -1,0 +1,23 @@
+[metadata]
+name = "sqlite"
+description = "Command-line interface for SQLite"
+homepage = "https://sqlite.org/"
+dependencies = ["readline"]
+binaries = ["bin/sqlite3"]
+
+[version]
+source = "homebrew"
+formula = "sqlite"
+
+[[steps]]
+action = "homebrew"
+formula = "sqlite"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/sqlite3"]
+
+[verify]
+command = "sqlite3 --version"
+pattern = "{version}"

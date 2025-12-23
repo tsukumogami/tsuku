@@ -3,6 +3,7 @@ name = "readline"
 description = "GNU Readline library"
 homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
 type = "library"
+dependencies = ["ncurses"]
 
 [version]
 source = "homebrew"
@@ -15,7 +16,21 @@ formula = "readline"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["lib/libreadline.a", "lib/libreadline.dylib", "lib/libhistory.a", "lib/libhistory.dylib", "include/readline"]
+binaries = [
+    "lib/libreadline.a",
+    "lib/libreadline.so",
+    "lib/libreadline.so.8",
+    "lib/libreadline.so.8.2",
+    "lib/libreadline.dylib",
+    "lib/libreadline.8.dylib",
+    "lib/libhistory.a",
+    "lib/libhistory.so",
+    "lib/libhistory.so.8",
+    "lib/libhistory.so.8.2",
+    "lib/libhistory.dylib",
+    "lib/libhistory.8.dylib",
+    "include/readline"
+]
 
 [verify]
 command = "ls lib/libreadline.a"
