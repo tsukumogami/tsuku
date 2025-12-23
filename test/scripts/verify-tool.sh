@@ -290,7 +290,7 @@ case "$TOOL_NAME" in
     readline)
         verify_readline
         ;;
-    sqlite)
+    sqlite|sqlite-source)
         verify_sqlite
         ;;
     *)

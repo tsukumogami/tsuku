@@ -184,9 +184,9 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh ninja
 
-  # Test configure_make with library dependencies (sqlite → readline → ncurses)
-  test-sqlite:
-    name: "${{ matrix.platform.name }}: sqlite"
+  # Test configure_make with library dependencies (sqlite-source → readline → ncurses)
+  test-sqlite-source:
+    name: "${{ matrix.platform.name }}: sqlite-source"
     runs-on: ${{ matrix.platform.runner }}
     strategy:
       fail-fast: false
@@ -206,16 +206,20 @@ jobs:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
+      # Copy test recipe BEFORE build so it gets embedded
+      - name: Copy test recipe to registry
+        run: cp testdata/recipes/sqlite-source.toml internal/recipe/recipes/s/
+
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Install sqlite (tests dependency chain: sqlite → readline → ncurses)
+      - name: Install sqlite-source (tests dependency chain: sqlite → readline → ncurses)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --force sqlite
+        run: ./tsuku install --force sqlite-source
 
       - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh sqlite
+        run: ./test/scripts/verify-tool.sh sqlite-source
 
   # Test zig installation
   test-zig:

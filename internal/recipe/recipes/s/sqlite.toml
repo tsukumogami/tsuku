@@ -9,29 +9,9 @@ binaries = ["bin/sqlite3"]
 source = "homebrew"
 formula = "sqlite"
 
-# TODO(#660): SQLite uses non-standard version format (3.51.1 -> 3510100) requiring manual URL updates
 [[steps]]
-action = "download"
-url = "https://sqlite.org/2025/sqlite-autoconf-3510100.tar.gz"
-
-[[steps]]
-action = "extract"
-archive = "sqlite-autoconf-3510100.tar.gz"
-format = "tar.gz"
-
-[[steps]]
-action = "setup_build_env"
-
-[[steps]]
-action = "configure_make"
-source_dir = "sqlite-autoconf-3510100"
-configure_args = ["--enable-readline"]
-executables = ["sqlite3"]
-
-[[steps]]
-action = "set_rpath"
-binaries = [".install/bin/sqlite3"]
-rpath = "$ORIGIN/../lib:{libs_dir}/readline-8.3.3/lib:{libs_dir}/ncurses-6.5/lib"
+action = "homebrew"
+formula = "sqlite"
 
 [[steps]]
 action = "install_binaries"

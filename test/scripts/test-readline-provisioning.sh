@@ -71,7 +71,7 @@ export LD_LIBRARY_PATH="$HOME/.tsuku/libs/readline-8.3.3/lib:$HOME/.tsuku/libs/n
 
 echo ""
 echo "=== Test 1: Install sqlite via tsuku ==="
-# sqlite depends on readline, which depends on ncurses
+# sqlite (production recipe uses homebrew bottle) depends on readline, which depends on ncurses
 # All three should be auto-provisioned
 ./tsuku install sqlite
 echo "✓ sqlite installed successfully (with readline and ncurses dependencies)"
