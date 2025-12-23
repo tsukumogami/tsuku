@@ -242,6 +242,30 @@ verify_curl() {
     fi
 }
 
+verify_git() {
+    echo "Testing: git --version"
+    git --version
+
+    echo ""
+    echo "Testing: git clone small repository"
+    cd "$TEMP_DIR"
+    # Clone a small, stable public repo (git's own test repo is tiny)
+    if git clone --depth 1 https://github.com/git/git-manpages.git test-clone 2>&1 | grep -q "Cloning into"; then
+        echo "✓ git clone works (curl integration validated)"
+
+        # Verify the clone worked
+        if [ -d "test-clone/.git" ]; then
+            echo "✓ Repository cloned successfully"
+        else
+            echo "✗ ERROR: Clone directory exists but .git missing"
+            return 1
+        fi
+    else
+        echo "✗ ERROR: git clone failed"
+        return 1
+    fi
+}
+
 verify_generic() {
     echo "Testing: $TOOL_NAME --version (generic check)"
     if "$TOOL_NAME" --version 2>&1; then
@@ -292,6 +316,9 @@ case "$TOOL_NAME" in
         ;;
     sqlite|sqlite-source)
         verify_sqlite
+        ;;
+    git|git-source)
+        verify_git
         ;;
     *)
         echo "No specific test for '$TOOL_NAME', running generic check"
