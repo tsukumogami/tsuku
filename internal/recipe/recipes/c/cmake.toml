@@ -14,6 +14,11 @@ action = "homebrew"
 formula = "cmake"
 
 [[steps]]
+action = "set_rpath"
+binaries = [".install/bin/cmake", ".install/bin/ctest", ".install/bin/cpack", ".install/bin/ccmake"]
+rpath = "$ORIGIN/../lib:{libs_dir}/openssl-3.6.0/lib"
+
+[[steps]]
 action = "install_binaries"
 install_mode = "directory"
 binaries = ["bin/cmake", "bin/ctest", "bin/cpack", "bin/ccmake"]
