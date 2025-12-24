@@ -158,7 +158,7 @@ graph LR
 
 Tsuku recipes need to declare dependencies on external tools and libraries. These dependencies have different provisioning strategies:
 
-1. **Downloadable**: Tools tsuku downloads and installs (pre-built binaries, Homebrew bottles)
+1. **Downloadable**: Tools tsuku downloads and installs (pre-built binaries, Homebrew)
 2. **Buildable**: Tools tsuku builds from source (using compilers it provides)
 3. **System-required**: Tools that must already exist on the system (Docker, CUDA, kernel modules)
 
@@ -177,7 +177,7 @@ This creates friction:
 
 **All dependencies should be recipes.** The recipe's *actions* determine how to provision:
 
-- `homebrew_bottle` → download and install pre-built binary
+- `homebrew` → download and install pre-built binary
 - `configure_make` → build from source
 - `require_system` → validate system has it, guide user if missing
 
@@ -238,7 +238,7 @@ This design extends that model:
 
 **In scope:**
 - **Unified Recipe Model**: All dependencies are recipes with appropriate actions
-  - Provisionable tools use `homebrew_bottle`, `configure_make`, etc.
+  - Provisionable tools use `homebrew`, `configure_make`, etc.
   - System-required tools use new `require_system` action
   - Recipe authors just declare `dependencies = ["docker", "gcc"]`
 - **Build Essentials**: Proactively provide compilers, build tools, and libraries
@@ -364,7 +364,7 @@ dependencies = ["docker", "gcc", "zlib"]  # No prefix needed
 
 ### Summary
 
-All dependencies are recipes. Provisionable tools (gcc, zlib) have recipes with `homebrew_bottle` or `configure_make` actions. System-required tools (Docker, CUDA) have recipes with the new `require_system` action. Recipe authors just declare `dependencies = ["docker", "gcc"]` without any special syntax - tsuku looks up each recipe and provisions according to its actions.
+All dependencies are recipes. Provisionable tools (gcc, zlib) have recipes with `homebrew` or `configure_make` actions. System-required tools (Docker, CUDA) have recipes with the new `require_system` action. Recipe authors just declare `dependencies = ["docker", "gcc"]` without any special syntax - tsuku looks up each recipe and provisions according to its actions.
 
 ### Rationale
 
@@ -646,7 +646,7 @@ name = "gpu-app"
 
 [[steps]]
 action = "cmake_build"
-dependencies = ["cuda", "zlib"]  # cuda = require_system, zlib = homebrew_bottle
+dependencies = ["cuda", "zlib"]  # cuda = require_system, zlib = homebrew
 
 [[steps]]
 action = "install_binaries"
@@ -716,7 +716,7 @@ tsuku install my-docker-tool
 ┌─────────────────────────────────────────┐
 │ 2. For each dependency, load its recipe │
 │    - docker.toml → has require_system   │
-│    - curl.toml → has homebrew_bottle    │
+│    - curl.toml → has homebrew           │
 └─────────────────────────────────────────┘
         │
         ▼
@@ -726,7 +726,7 @@ tsuku install my-docker-tool
 │      → Check: docker --version          │
 │      → Found? Continue                  │
 │      → Missing? Show guide, FAIL        │
-│    - curl: Execute homebrew_bottle      │
+│    - curl: Execute homebrew             │
 │      → Download and install             │
 └─────────────────────────────────────────┘
         │
@@ -864,7 +864,7 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `internal/recipe/recipes/z/zlib.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/z/zlib.toml` using `homebrew` action |
 | 2 | Validate bottle availability on all 4 platforms |
 | 3 | Test relocation: verify no hardcoded paths in `libz.so`/`libz.dylib` |
 | 4 | Create `internal/recipe/recipes/e/expat.toml` that declares `dependencies = ["zlib"]` |
@@ -883,7 +883,7 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `internal/recipe/recipes/m/make.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/m/make.toml` using `homebrew` action |
 | 2 | Validate make executable works from relocated path |
 | 3 | Create `internal/recipe/recipes/g/gdbm.toml` using `configure_make` action |
 | 4 | Implement basic `configure_make` action (uses system gcc temporarily) |
@@ -913,7 +913,7 @@ Each build essential must pass these tests on all 4 platforms:
 
 **Gate**: m4 compiles and runs on all 4 platforms using zig (no system compiler).
 
-**Future**: If edge cases accumulate, add `internal/recipe/recipes/g/gcc.toml` using `homebrew_bottle` as alternative.
+**Future**: If edge cases accumulate, add `internal/recipe/recipes/g/gcc.toml` using `homebrew` as alternative.
 
 ### Phase 4: pkg-config + Build Environment
 
@@ -925,7 +925,7 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `internal/recipe/recipes/p/pkg-config.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/p/pkg-config.toml` using `homebrew` action |
 | 2 | Update `buildAutotoolsEnv()` to set `PKG_CONFIG_PATH` from tsuku deps |
 | 3 | Update `buildAutotoolsEnv()` to set `CPPFLAGS`, `LDFLAGS` for tsuku deps |
 | 4 | Create `internal/recipe/recipes/n/ncurses.toml` using `configure_make` |
@@ -943,7 +943,7 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `internal/recipe/recipes/o/openssl.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/o/openssl.toml` using `homebrew` action |
 | 2 | Validate openssl libraries relocate correctly (complex RPATH) |
 | 3 | Create `internal/recipe/recipes/c/curl.toml` with `dependencies = ["openssl", "zlib"]` |
 | 4 | CI: Build curl from source, verify `curl --version` shows OpenSSL |
@@ -961,7 +961,7 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `internal/recipe/recipes/c/cmake.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/c/cmake.toml` using `homebrew` action |
 | 2 | Implement `cmake_build` action |
 | 3 | Create `internal/recipe/recipes/n/ninja.toml` using `cmake_build` action |
 | 4 | CI: Build ninja from source using tsuku cmake/gcc/make |

@@ -33,7 +33,7 @@ jobs:
         run: go test -v ./internal/builders/ -run TestHomebrew
 
       - name: Run Homebrew action tests
-        run: go test -v ./internal/actions/ -run TestHomebrewBottle
+        run: go test -v ./internal/actions/ -run TestHomebrew
 
   # Integration test: install a Homebrew bottle on macOS
   macos-integration:

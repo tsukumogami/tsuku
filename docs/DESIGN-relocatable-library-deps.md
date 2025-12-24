@@ -449,7 +449,7 @@ Security best practices for RPATH:
 - `set_rpath` action implementation
 - Platform-specific: patchelf for Linux, install_name_tool for macOS
 
-**Rationale:** RPATH utilities are foundational for both library installation and homebrew_bottle. Moving them earlier reduces rework.
+**Rationale:** RPATH utilities are foundational for both library installation and homebrew. Moving them earlier reduces rework.
 
 ### Phase 3: Library Installation Actions
 
@@ -459,7 +459,7 @@ Security best practices for RPATH:
 ### Phase 4: Homebrew Integration
 
 - Homebrew version provider for `source = "homebrew"`
-- `homebrew_bottle` action: GHCR auth, download, extract, placeholder relocation
+- `homebrew` action: GHCR auth, download, extract, placeholder relocation
 
 ### Phase 5: Ruby Recipe Migration
 
@@ -519,7 +519,7 @@ Security best practices for RPATH:
 - [#219](https://github.com/tsukumogami/tsuku/issues/219): feat(action): implement install_libraries action
 - [#220](https://github.com/tsukumogami/tsuku/issues/220): feat(action): implement link_dependencies action
 - [#221](https://github.com/tsukumogami/tsuku/issues/221): feat(install): resolve library dependencies during tool installation
-- [#222](https://github.com/tsukumogami/tsuku/issues/222): feat(action): implement homebrew_bottle action
+- [#222](https://github.com/tsukumogami/tsuku/issues/222): feat(action): implement homebrew action
 
 **Migration (blocked by actions):**
 - [#223](https://github.com/tsukumogami/tsuku/issues/223): feat(recipe): add libyaml library recipe
