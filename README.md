@@ -136,7 +136,7 @@ Homebrew recipes are platform-agnostic - a single recipe works on:
 - Linux ARM64
 - Linux x86_64
 
-The `homebrew_bottle` action automatically selects the correct bottle for your platform at install time.
+The `homebrew` action automatically selects the correct bottle for your platform at install time.
 
 #### Recipe Validation
 
