@@ -27,7 +27,7 @@ This implementation follows Option 1 from the issue description: implement full 
 None - all changes are modifications to existing files.
 
 ## Implementation Steps
-- [ ] Add `Env []string` field to `ExecutionContext` struct in `internal/actions/action.go`
+- [x] Add `Env []string` field to `ExecutionContext` struct in `internal/actions/action.go`
 - [ ] Modify `SetupBuildEnvAction.Execute()` to populate `ctx.Env` using `buildAutotoolsEnv(ctx)`
 - [ ] Update `ConfigureMakeAction.Execute()` to check for `ctx.Env` and use it if available, otherwise call `buildAutotoolsEnv(ctx)` directly
 - [ ] Update `CMakeBuildAction.Execute()` to check for `ctx.Env` and use it if available, otherwise call `buildCMakeEnv()` directly
