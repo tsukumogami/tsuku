@@ -72,9 +72,9 @@ func TestCompareVersions(t *testing.T) {
 	for _, tt := range tests {
 		name := tt.v1 + "_vs_" + tt.v2
 		t.Run(name, func(t *testing.T) {
-			result := compareVersions(tt.v1, tt.v2)
+			result := CompareVersions(tt.v1, tt.v2)
 			if result != tt.expected {
-				t.Errorf("compareVersions(%q, %q) = %d, want %d", tt.v1, tt.v2, result, tt.expected)
+				t.Errorf("CompareVersions(%q, %q) = %d, want %d", tt.v1, tt.v2, result, tt.expected)
 			}
 		})
 	}

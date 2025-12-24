@@ -235,7 +235,7 @@ func (r *Resolver) resolveFromTags(ctx context.Context, owner, repoName string) 
 			continue
 		}
 
-		if latestVersion == "" || compareVersions(normalized, latestVersion) > 0 {
+		if latestVersion == "" || CompareVersions(normalized, latestVersion) > 0 {
 			latestVersion = normalized
 			latestTag = tagName
 		}

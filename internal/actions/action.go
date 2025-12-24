@@ -133,6 +133,7 @@ func init() {
 	Register(&AptInstallAction{})
 	Register(&YumInstallAction{})
 	Register(&BrewInstallAction{})
+	Register(&RequireSystemAction{})
 
 	// Package manager actions (composite)
 	Register(&NpmInstallAction{})

@@ -46,9 +46,9 @@ func isValidVersion(v string) bool {
 	return hasDigit
 }
 
-// compareVersions compares two semantic versions
+// CompareVersions compares two semantic versions
 // Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
-func compareVersions(v1, v2 string) int {
+func CompareVersions(v1, v2 string) int {
 	// Simple lexicographic comparison works for most semver strings
 	// This handles cases like "1.21.5" vs "1.20.1"
 	parts1 := strings.Split(v1, ".")
