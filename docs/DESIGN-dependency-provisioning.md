@@ -556,7 +556,7 @@ func (a *RequireSystemAction) Execute(ctx *ExecutionContext) error {
 
 **Docker (system-required):**
 ```toml
-# recipes/docker.toml
+# internal/recipe/recipes/d/docker.toml
 [metadata]
 name = "docker"
 description = "Container runtime"
@@ -581,7 +581,7 @@ fallback = "See https://docs.docker.com/engine/install/"
 
 **CUDA (system-required):**
 ```toml
-# recipes/cuda.toml
+# internal/recipe/recipes/c/cuda.toml
 [metadata]
 name = "cuda"
 description = "NVIDIA CUDA Toolkit"
@@ -603,7 +603,7 @@ message = "CUDA 11.0+ required"
 
 **GCC (provisionable - for comparison):**
 ```toml
-# recipes/gcc.toml
+# internal/recipe/recipes/g/gcc.toml
 [metadata]
 name = "gcc"
 description = "GNU Compiler Collection"
@@ -626,7 +626,7 @@ binaries = ["bin/gcc", "bin/g++", "bin/cpp"]
 Recipe authors simply declare dependencies - no special syntax:
 
 ```toml
-# recipes/my-docker-tool.toml
+# internal/recipe/recipes/m/my-docker-tool.toml
 [metadata]
 name = "my-docker-tool"
 
@@ -640,7 +640,7 @@ binaries = ["my-tool"]
 ```
 
 ```toml
-# recipes/gpu-app.toml
+# internal/recipe/recipes/g/gpu-app.toml
 [metadata]
 name = "gpu-app"
 
@@ -745,9 +745,9 @@ tsuku install my-docker-tool
 | `internal/actions/dependencies.go` | Add build tools to action implicit deps |
 | `internal/actions/setup_build_env.go` | NEW: Action to configure build environment |
 | `internal/executor/executor.go` | Ensure implicit deps installed before build |
-| `recipes/gcc.toml` | NEW: GCC compiler recipe |
-| `recipes/make.toml` | NEW: GNU Make recipe |
-| `recipes/zlib.toml` | NEW: zlib library recipe |
+| `internal/recipe/recipes/g/gcc.toml` | NEW: GCC compiler recipe |
+| `internal/recipe/recipes/m/make.toml` | NEW: GNU Make recipe |
+| `internal/recipe/recipes/z/zlib.toml` | NEW: zlib library recipe |
 
 #### System-Required Dependencies
 
@@ -755,9 +755,9 @@ tsuku install my-docker-tool
 |-----------|--------|
 | `internal/actions/require_system.go` | NEW: `require_system` action implementation |
 | `internal/actions/registry.go` | Register `require_system` as primitive action |
-| `recipes/docker.toml` | NEW: Docker system-required recipe |
-| `recipes/cuda.toml` | NEW: CUDA system-required recipe |
-| `recipes/systemd.toml` | NEW: systemd system-required recipe |
+| `internal/recipe/recipes/d/docker.toml` | NEW: Docker system-required recipe |
+| `internal/recipe/recipes/c/cuda.toml` | NEW: CUDA system-required recipe |
+| `internal/recipe/recipes/s/systemd.toml` | NEW: systemd system-required recipe |
 
 ## Validation Tooling
 
@@ -864,10 +864,10 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `recipes/zlib.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/z/zlib.toml` using `homebrew_bottle` action |
 | 2 | Validate bottle availability on all 4 platforms |
 | 3 | Test relocation: verify no hardcoded paths in `libz.so`/`libz.dylib` |
-| 4 | Create `recipes/expat.toml` that declares `dependencies = ["zlib"]` |
+| 4 | Create `internal/recipe/recipes/e/expat.toml` that declares `dependencies = ["zlib"]` |
 | 5 | CI: Install zlib, build expat, verify `xmlwf --version` works |
 | 6 | CI: Run in minimal container (ubuntu:22.04) with no system zlib |
 
@@ -883,9 +883,9 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `recipes/make.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/m/make.toml` using `homebrew_bottle` action |
 | 2 | Validate make executable works from relocated path |
-| 3 | Create `recipes/gdbm.toml` using `configure_make` action |
+| 3 | Create `internal/recipe/recipes/g/gdbm.toml` using `configure_make` action |
 | 4 | Implement basic `configure_make` action (uses system gcc temporarily) |
 | 5 | CI: Install make, build gdbm from source, verify `gdbmtool --version` |
 
@@ -906,14 +906,14 @@ Each build essential must pass these tests on all 4 platforms:
 | Step | Description |
 |------|-------------|
 | 1 | Verify zig recipe exists and installs correctly on all 4 platforms |
-| 2 | Create `recipes/m4.toml` using `configure_make` action |
+| 2 | Create `internal/recipe/recipes/m/m4.toml` using `configure_make` action |
 | 3 | CI: Build m4 from source in minimal container with NO system gcc |
 | 4 | Validate zig wrapper scripts work (`cc`, `c++` symlinks) |
 | 5 | Document any configure script edge cases that require real gcc |
 
 **Gate**: m4 compiles and runs on all 4 platforms using zig (no system compiler).
 
-**Future**: If edge cases accumulate, add `recipes/gcc.toml` using `homebrew_bottle` as alternative.
+**Future**: If edge cases accumulate, add `internal/recipe/recipes/g/gcc.toml` using `homebrew_bottle` as alternative.
 
 ### Phase 4: pkg-config + Build Environment
 
@@ -925,10 +925,10 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `recipes/pkg-config.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/p/pkg-config.toml` using `homebrew_bottle` action |
 | 2 | Update `buildAutotoolsEnv()` to set `PKG_CONFIG_PATH` from tsuku deps |
 | 3 | Update `buildAutotoolsEnv()` to set `CPPFLAGS`, `LDFLAGS` for tsuku deps |
-| 4 | Create `recipes/ncurses.toml` using `configure_make` |
+| 4 | Create `internal/recipe/recipes/n/ncurses.toml` using `configure_make` |
 | 5 | CI: Build ncurses, verify pkg-config finds zlib |
 
 **Gate**: ncurses builds and pkg-config correctly reports flags on all 4 platforms.
@@ -943,9 +943,9 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `recipes/openssl.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/o/openssl.toml` using `homebrew_bottle` action |
 | 2 | Validate openssl libraries relocate correctly (complex RPATH) |
-| 3 | Create `recipes/curl.toml` with `dependencies = ["openssl", "zlib"]` |
+| 3 | Create `internal/recipe/recipes/c/curl.toml` with `dependencies = ["openssl", "zlib"]` |
 | 4 | CI: Build curl from source, verify `curl --version` shows OpenSSL |
 | 5 | CI: Verify `curl https://example.com` works (TLS functional) |
 
@@ -961,9 +961,9 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `recipes/cmake.toml` using `homebrew_bottle` action |
+| 1 | Create `internal/recipe/recipes/c/cmake.toml` using `homebrew_bottle` action |
 | 2 | Implement `cmake_build` action |
-| 3 | Create `recipes/ninja.toml` using `cmake_build` action |
+| 3 | Create `internal/recipe/recipes/n/ninja.toml` using `cmake_build` action |
 | 4 | CI: Build ninja from source using tsuku cmake/gcc/make |
 
 **Gate**: ninja builds using cmake on all 4 platforms.
@@ -976,9 +976,9 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `recipes/readline.toml` (depends on ncurses) |
-| 2 | Create `recipes/sqlite.toml` (depends on readline) |
-| 3 | Create `recipes/git.toml` (depends on curl, openssl, zlib, expat) |
+| 1 | Create `internal/recipe/recipes/r/readline.toml` (depends on ncurses) |
+| 2 | Create `internal/recipe/recipes/s/sqlite.toml` (depends on readline) |
+| 3 | Create `internal/recipe/recipes/g/git.toml` (depends on curl, openssl, zlib, expat) |
 | 4 | CI: Build git from source, verify `git --version` |
 | 5 | CI: Verify git can clone a repository (full functional test) |
 | 6 | CI: Build sqlite, verify `sqlite3 --version` |
@@ -1006,8 +1006,8 @@ Each build essential must pass these tests on all 4 platforms:
 
 | Step | Description |
 |------|-------------|
-| 1 | Create `recipes/docker.toml` with `require_system` action |
-| 2 | Create `recipes/cuda.toml` with `require_system` action |
+| 1 | Create `internal/recipe/recipes/d/docker.toml` with `require_system` action |
+| 2 | Create `internal/recipe/recipes/c/cuda.toml` with `require_system` action |
 | 3 | Add `tsuku check-deps <recipe>` command |
 | 4 | CI: Test error messages when docker is missing |
 | 5 | CI: Test success path when docker is present (use docker runner) |
@@ -1063,7 +1063,7 @@ name: Build Essentials
 
 on:
   push:
-    paths: ['recipes/gcc.toml', 'recipes/make.toml', ...]
+    paths: ['internal/recipe/recipes/**/*.toml']
   schedule:
     - cron: '0 4 * * *'  # Nightly full validation
 

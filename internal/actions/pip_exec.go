@@ -215,8 +215,8 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		}
 		scriptPath := filepath.Join(venvBinDir, file.Name())
 		if err := fixPythonShebang(scriptPath); err != nil {
-			// Log warning but don't fail - some files might not be Python scripts
-			fmt.Printf("   Debug: skipped shebang fix for %s: %v\n", file.Name(), err)
+			// Silently skip files that aren't Python scripts
+			continue
 		}
 	}
 

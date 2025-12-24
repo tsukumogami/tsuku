@@ -225,21 +225,32 @@ tsuku remove tool-a   # tool-b remains (it was explicit)
 
 ### Build Dependency Provisioning
 
-tsuku automatically provides build tools and libraries needed for source builds, eliminating the need for system dependencies:
+tsuku automatically provides build tools needed for source builds, eliminating the need for system dependencies.
 
-- **Compilers**: zig (C/C++ via zig cc fallback when system compiler unavailable)
-- **Build tools**: make, pkg-config, cmake, autoconf, automake
-- **Common libraries**: zlib, openssl, ncurses, readline
+#### Build System Actions
 
-When you install a tool that requires compilation, tsuku automatically installs the necessary build dependencies. No manual setup required.
+- **cmake_build** - CMake-based builds (auto-provisions cmake, make, zig, pkg-config)
+- **configure_make** - Autotools builds (auto-provisions make, zig, pkg-config)
+- **setup_build_env** - Configures build environment (PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS)
 
-Example:
+#### Core Build Tools
+
+- **zig** - C/C++ compiler fallback via `zig cc` when no system compiler exists
+- **cmake** - Modern build system with dedicated cmake_build action
+- **pkg-config** - Library discovery tool with automatic path configuration
+- **make** - Build automation
+
+#### Automatic Dependency Provisioning
+
+When you install a tool that requires libraries, tsuku automatically provisions all dependencies:
+
 ```bash
-# Build gdbm from source - tsuku provides make and zig automatically
-tsuku install gdbm-source
+tsuku install sqlite
+# Automatically installs: sqlite → readline → ncurses
+# No apt-get or brew needed
 ```
 
-Build essentials are installed to `$TSUKU_HOME/tools/` just like any other tool and are subject to the same dependency management rules.
+All dependencies are isolated to `$TSUKU_HOME` - no system modifications required.
 
 ### Multi-Version Support
 

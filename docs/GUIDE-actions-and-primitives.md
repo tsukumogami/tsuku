@@ -63,6 +63,28 @@ Build system primitives handle source compilation using standard build tools. Th
 
 Build system primitives are ecosystem primitives that depend on system compilers. They capture build configuration but have residual non-determinism from compiler versions and platform detection.
 
+#### setup_build_env
+
+Configures build environment from dependency graph. Sets environment variables for all declared dependencies:
+- PKG_CONFIG_PATH - lib/pkgconfig paths from dependencies
+- CPPFLAGS - -I flags for include directories
+- LDFLAGS - -L flags for library directories
+- CMAKE_PREFIX_PATH - for CMake builds
+- CC/CXX - compiler paths (zig cc if no system compiler)
+
+Example:
+```toml
+[[steps]]
+action = "setup_build_env"
+
+[[steps]]
+action = "configure_make"
+source_dir = "curl-{version}"
+configure_args = ["--with-openssl", "--with-zlib"]
+```
+
+The setup_build_env action validates that dependencies can be discovered by the build system.
+
 **Example use case**: Manual recipe authoring for tools distributed as source tarballs, or when Homebrew formulas lack pre-built bottles.
 
 ### Composite Actions (Recipe Authoring)
