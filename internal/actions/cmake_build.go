@@ -102,8 +102,13 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		fmt.Printf("   CMake args: %v\n", cmakeArgs)
 	}
 
-	// Build environment
-	env := buildCMakeEnv()
+	// Build environment - use shared environment from setup_build_env if available
+	var env []string
+	if len(ctx.Env) > 0 {
+		env = ctx.Env
+	} else {
+		env = buildCMakeEnv()
+	}
 
 	// Create build directory
 	if err := os.MkdirAll(buildDir, 0755); err != nil {

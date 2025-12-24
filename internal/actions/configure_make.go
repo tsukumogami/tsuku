@@ -107,8 +107,13 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 		fmt.Printf("   Configure args: %v\n", configureArgs)
 	}
 
-	// Build environment
-	env := buildAutotoolsEnv(ctx)
+	// Build environment - use shared environment from setup_build_env if available
+	var env []string
+	if len(ctx.Env) > 0 {
+		env = ctx.Env
+	} else {
+		env = buildAutotoolsEnv(ctx)
+	}
 
 	// Step 1: Run ./configure
 	fmt.Printf("   Running: ./configure --prefix=%s\n", prefix)

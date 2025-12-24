@@ -27,6 +27,7 @@ type ExecutionContext struct {
 	Resolver         *version.Resolver // Version resolver (for GitHub API access, asset resolution)
 	Logger           log.Logger        // Logger for structured logging (optional, falls back to log.Default())
 	Dependencies     ResolvedDeps      // Resolved dependencies with their versions
+	Env              []string          // Shared environment variables set by setup_build_env, used by build actions
 }
 
 // Log returns the logger for this context.

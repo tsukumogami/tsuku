@@ -19,19 +19,21 @@ func (a *SetupBuildEnvAction) Name() string {
 }
 
 // Execute configures the build environment from dependencies.
-// This action doesn't modify files or state - it validates that the environment
-// can be configured and provides informative output about what will be available.
+// This action populates ctx.Env with environment variables that subsequent
+// build actions (configure_make, cmake_build) can use. The environment includes
+// PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS, CC, CXX, and other variables needed for
+// building with tsuku-provided dependencies.
 //
 // No parameters required - uses ctx.Dependencies automatically.
 func (a *SetupBuildEnvAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	fmt.Printf("   Configuring build environment from %d dependencies\n", len(ctx.Dependencies.InstallTime))
 
-	// Get configured environment (validates it can be built)
-	env := buildAutotoolsEnv(ctx)
+	// Build environment from dependencies and set it on the context
+	ctx.Env = buildAutotoolsEnv(ctx)
 
 	// Extract and display the configured environment variables
 	var pkgConfigPath, cppFlags, ldFlags, cc, cxx string
-	for _, e := range env {
+	for _, e := range ctx.Env {
 		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
 			pkgConfigPath = strings.TrimPrefix(e, "PKG_CONFIG_PATH=")
 		} else if strings.HasPrefix(e, "CPPFLAGS=") {
