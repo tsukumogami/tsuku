@@ -148,7 +148,7 @@ func (r *Resolver) ListNpmVersions(ctx context.Context, packageName string) ([]s
 
 	// Sort versions in descending order (newest first)
 	sort.Slice(versions, func(i, j int) bool {
-		return compareVersions(versions[i], versions[j]) > 0
+		return CompareVersions(versions[i], versions[j]) > 0
 	})
 
 	return versions, nil

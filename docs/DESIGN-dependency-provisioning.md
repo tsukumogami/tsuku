@@ -150,8 +150,8 @@ graph LR
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I560,I643,I644 ready
-    class I561,I562,I563 blocked
+    class I560 done
+    class I643,I644,I561,I562,I563 ready
 ```
 
 ## Context and Problem Statement
