@@ -18,14 +18,14 @@ This approach adds security validation at the recipe parsing level, ensuring pat
 None
 
 ## Implementation Steps
-- [ ] Add `Checksum string` field to `Patch` struct in types.go
-- [ ] Add `validatePatches()` function in validator.go that:
+- [x] Add `Checksum string` field to `Patch` struct in types.go
+- [x] Add `validatePatches()` function in validator.go that:
   - Iterates through all patches
   - For patches with `url` field set, requires non-empty `checksum`
   - For patches with `data` field (inline), allows empty checksum
   - Returns clear error messages indicating which patch index is missing checksum
-- [ ] Call `validatePatches()` from `ValidateBytes()` function
-- [ ] Update ToTOML() method in types.go to serialize checksum field
+- [x] Call `validatePatches()` from `ValidateBytes()` function
+- [x] Update ToTOML() method in types.go to serialize checksum field
 - [ ] Update test recipes in testdata/ that use URL patches to include checksums:
   - bash-source.toml (9 patches)
   - readline-source.toml (if applicable)

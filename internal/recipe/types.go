@@ -30,10 +30,11 @@ type Resource struct {
 // Patch represents a source modification to apply before building.
 // Patches can be URL-based or inline (embedded in the recipe).
 type Patch struct {
-	URL    string `toml:"url,omitempty"`    // URL to download patch file (mutually exclusive with Data)
-	Data   string `toml:"data,omitempty"`   // Inline patch content (mutually exclusive with URL)
-	Strip  int    `toml:"strip,omitempty"`  // Strip level for patch command (-p flag), default 1
-	Subdir string `toml:"subdir,omitempty"` // Subdirectory to apply patch in (relative to source root)
+	URL      string `toml:"url,omitempty"`      // URL to download patch file (mutually exclusive with Data)
+	Data     string `toml:"data,omitempty"`     // Inline patch content (mutually exclusive with URL)
+	Checksum string `toml:"checksum,omitempty"` // SHA256 checksum for URL-based patches (required for url, optional for data)
+	Strip    int    `toml:"strip,omitempty"`    // Strip level for patch command (-p flag), default 1
+	Subdir   string `toml:"subdir,omitempty"`   // Subdirectory to apply patch in (relative to source root)
 }
 
 // TextReplace represents a text substitution (maps to Homebrew's inreplace).
@@ -105,6 +106,9 @@ func (r *Recipe) ToTOML() ([]byte, error) {
 		if patch.Data != "" {
 			// Use triple-quoted string for multiline patch data
 			buf.WriteString(fmt.Sprintf("data = %q\n", patch.Data))
+		}
+		if patch.Checksum != "" {
+			buf.WriteString(fmt.Sprintf("checksum = %q\n", patch.Checksum))
 		}
 		if patch.Strip != 0 {
 			buf.WriteString(fmt.Sprintf("strip = %d\n", patch.Strip))

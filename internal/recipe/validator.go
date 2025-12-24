@@ -84,6 +84,7 @@ func ValidateBytes(data []byte) *ValidationResult {
 	// Run all validations
 	validateMetadata(result, &recipe)
 	validateVersion(result, &recipe)
+	validatePatches(result, &recipe)
 	validateSteps(result, &recipe)
 	validateVerify(result, &recipe)
 
@@ -207,6 +208,45 @@ func canInferVersionFromActions(r *Recipe) bool {
 		}
 	}
 	return false
+}
+
+// validatePatches checks patch configuration
+func validatePatches(result *ValidationResult, r *Recipe) {
+	for i, patch := range r.Patches {
+		patchField := fmt.Sprintf("patches[%d]", i)
+
+		// Check mutual exclusivity of url and data
+		if patch.URL != "" && patch.Data != "" {
+			result.addError(patchField, "cannot specify both 'url' and 'data' (must be mutually exclusive)")
+			continue
+		}
+		if patch.URL == "" && patch.Data == "" {
+			result.addError(patchField, "must specify either 'url' or 'data'")
+			continue
+		}
+
+		// URL-based patches require checksum for integrity verification
+		if patch.URL != "" {
+			if patch.Checksum == "" {
+				result.addError(patchField+".checksum", "checksum is required for url-based patches")
+			} else {
+				// Validate checksum format (SHA256 is 64 hex characters)
+				if len(patch.Checksum) != 64 {
+					result.addError(patchField+".checksum", "checksum must be 64 characters (SHA256 hex)")
+				} else {
+					// Check if all characters are hex
+					for _, c := range patch.Checksum {
+						if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+							result.addError(patchField+".checksum", "checksum must be hexadecimal (0-9, a-f)")
+							break
+						}
+					}
+				}
+			}
+		}
+
+		// Inline patches (data field) don't require checksums since they're embedded in the recipe
+	}
 }
 
 // validateSteps checks all steps
