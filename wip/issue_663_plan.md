@@ -31,8 +31,8 @@ None - all changes are modifications to existing files.
 - [x] Modify `SetupBuildEnvAction.Execute()` to populate `ctx.Env` using `buildAutotoolsEnv(ctx)`
 - [x] Update `ConfigureMakeAction.Execute()` to check for `ctx.Env` and use it if available, otherwise call `buildAutotoolsEnv(ctx)` directly
 - [x] Update `CMakeBuildAction.Execute()` to check for `ctx.Env` and use it if available, otherwise call `buildCMakeEnv()` directly
-- [ ] Add unit tests in `setup_build_env_test.go` verifying that `ctx.Env` is populated with expected environment variables
-- [ ] Add integration tests verifying that build actions can use environment from `setup_build_env`
+- [x] Add unit tests in `setup_build_env_test.go` verifying that `ctx.Env` is populated with expected environment variables
+- [x] Add integration tests verifying that build actions can use environment from `setup_build_env`
 - [ ] Run full test suite to ensure no regressions
 
 ## Testing Strategy
