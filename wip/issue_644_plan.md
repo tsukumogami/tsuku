@@ -62,14 +62,15 @@ This approach was chosen because:
   - Adds warnings for shadowed dependencies (become errors in strict mode via existing `--strict` flag)
   - Helpful message: "dependency 'X' is already inherited from action 'Y' (remove this redundant declaration)"
 
-- [ ] Update `homebrew.go` to remove redundant dependency declaration
-  - Remove `Dependencies()` method from `HomebrewAction`
-  - Remove TODO comments that reference this issue (#644)
-  - Verify patchelf is still resolved via aggregation from `homebrew_relocate`
+- [x] Update `homebrew.go` to remove redundant dependency declaration
+  - Updated `Dependencies()` method to return empty ActionDeps (dependency now inherited)
+  - Updated comments to document that patchelf is inherited from homebrew_relocate
+  - Kept TODO(#643) for platform-conditional dependencies
 
-- [ ] Update `homebrew_relocate.go` to remove TODO comments
-  - Remove TODO(#644) comment (line 21) since aggregation now works
-  - Keep the `Dependencies()` method as it's the source of truth for patchelf
+- [x] Update `homebrew_relocate.go` to remove TODO comments
+  - Removed TODO(#644) and updated comment to reference aggregation
+  - Kept the `Dependencies()` method as source of truth for patchelf dependency
+  - Kept TODO(#643) for platform-conditional dependencies
 
 - [ ] Write comprehensive unit tests for aggregation
   - Test simple composite (homebrew → homebrew_relocate → patchelf)
