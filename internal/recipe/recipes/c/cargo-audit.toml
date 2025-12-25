@@ -3,7 +3,7 @@ name = "cargo-audit"
 description = "Security audit for Cargo.lock"
 homepage = "https://crates.io/crates/cargo-audit"
 version_format = "semver"
-dependencies = ["rust", "zig"]  # zig needed for native C dependencies
+dependencies = ["zig"]  # zig needed for native C dependencies
 
 [version]
 source = "crates_io"

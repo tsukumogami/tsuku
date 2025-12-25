@@ -3,7 +3,6 @@ name = "gofumpt"
 description = "A stricter gofmt"
 homepage = "https://github.com/mvdan/gofumpt"
 version_format = "semver"
-dependencies = ["go"]
 
 [version]
 source = "goproxy"
