@@ -225,27 +225,20 @@ func validatePatches(result *ValidationResult, r *Recipe) {
 			continue
 		}
 
-		// URL-based patches require checksum for integrity verification
-		if patch.URL != "" {
-			if patch.Checksum == "" {
-				result.addError(patchField+".checksum", "checksum is required for url-based patches")
+		// Validate checksum format if provided (will be passed to apply_patch action)
+		if patch.Checksum != "" {
+			if len(patch.Checksum) != 64 {
+				result.addError(patchField+".checksum", "checksum must be 64 characters (SHA256 hex)")
 			} else {
-				// Validate checksum format (SHA256 is 64 hex characters)
-				if len(patch.Checksum) != 64 {
-					result.addError(patchField+".checksum", "checksum must be 64 characters (SHA256 hex)")
-				} else {
-					// Check if all characters are hex
-					for _, c := range patch.Checksum {
-						if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
-							result.addError(patchField+".checksum", "checksum must be hexadecimal (0-9, a-f)")
-							break
-						}
+				// Check if all characters are hex
+				for _, c := range patch.Checksum {
+					if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+						result.addError(patchField+".checksum", "checksum must be hexadecimal (0-9, a-f)")
+						break
 					}
 				}
 			}
 		}
-
-		// Inline patches (data field) don't require checksums since they're embedded in the recipe
 	}
 }
 
@@ -262,6 +255,7 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"download_archive":  true,
 		"download_file":     true,
 		"extract":           true,
+		"apply_patch":       true,
 		"chmod":             true,
 		"install_binaries":  true,
 		"install_libraries": true,
@@ -402,6 +396,44 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 		}
 		if _, ok := step.Params["executables"]; !ok {
 			result.addError(stepField, "configure_make action requires 'executables' parameter")
+		}
+
+	case "apply_patch":
+		// Check that either url or data is provided
+		urlParam, hasURL := step.Params["url"]
+		_, hasData := step.Params["data"]
+
+		if !hasURL && !hasData {
+			result.addError(stepField, "apply_patch action requires either 'url' or 'data' parameter")
+		}
+		if hasURL && hasData {
+			result.addError(stepField, "apply_patch action cannot have both 'url' and 'data' parameters")
+		}
+
+		// URL-based patches require sha256 checksum for integrity verification
+		if hasURL {
+			sha256Param, hasSHA256 := step.Params["sha256"]
+			if !hasSHA256 {
+				result.addError(stepField+".sha256", "sha256 checksum is required for url-based patches")
+			} else if sha256Str, ok := sha256Param.(string); ok {
+				// Validate checksum format (SHA256 is 64 hex characters)
+				if len(sha256Str) != 64 {
+					result.addError(stepField+".sha256", "sha256 must be 64 characters (SHA256 hex)")
+				} else {
+					// Check if all characters are hex
+					for _, c := range sha256Str {
+						if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+							result.addError(stepField+".sha256", "sha256 must be hexadecimal (0-9, a-f)")
+							break
+						}
+					}
+				}
+			}
+
+			// Validate URL parameter
+			if urlParam != nil {
+				validateURLParam(result, stepField+".url", urlParam)
+			}
 		}
 	}
 

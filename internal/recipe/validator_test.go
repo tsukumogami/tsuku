@@ -1085,7 +1085,7 @@ patterns = ["lib/*.so*"]
 	}
 }
 
-func TestValidateBytes_PatchWithURLMissingChecksum(t *testing.T) {
+func TestValidateBytes_ApplyPatchWithURLMissingChecksum(t *testing.T) {
 	recipe := `
 [metadata]
 name = "test-tool"
@@ -1094,7 +1094,8 @@ name = "test-tool"
 action = "download"
 url = "https://example.com/test.tar.gz"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 url = "https://example.com/fix.patch"
 
 [verify]
@@ -1103,7 +1104,7 @@ command = "test-tool --version"
 	result := ValidateBytes([]byte(recipe))
 
 	if result.Valid {
-		t.Error("expected validation error for URL patch without checksum")
+		t.Error("expected validation error for apply_patch with url but no sha256")
 	}
 
 	if len(result.Errors) == 0 {
@@ -1112,18 +1113,18 @@ command = "test-tool --version"
 
 	foundError := false
 	for _, err := range result.Errors {
-		if err.Field == "patches[0].checksum" && err.Message == "checksum is required for url-based patches" {
+		if err.Field == "steps[1].sha256" && err.Message == "sha256 checksum is required for url-based patches" {
 			foundError = true
 			break
 		}
 	}
 
 	if !foundError {
-		t.Errorf("expected error for missing checksum, got errors: %v", result.Errors)
+		t.Errorf("expected error for missing sha256, got errors: %v", result.Errors)
 	}
 }
 
-func TestValidateBytes_PatchWithURLAndChecksum(t *testing.T) {
+func TestValidateBytes_ApplyPatchWithURLAndChecksum(t *testing.T) {
 	recipe := `
 [metadata]
 name = "test-tool"
@@ -1132,9 +1133,10 @@ name = "test-tool"
 action = "download"
 url = "https://example.com/test.tar.gz"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 url = "https://example.com/fix.patch"
-checksum = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+sha256 = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 
 [verify]
 command = "test-tool --version"
@@ -1146,7 +1148,7 @@ command = "test-tool --version"
 	}
 }
 
-func TestValidateBytes_PatchWithInlineData(t *testing.T) {
+func TestValidateBytes_ApplyPatchWithInlineData(t *testing.T) {
 	recipe := `
 [metadata]
 name = "test-tool"
@@ -1155,7 +1157,8 @@ name = "test-tool"
 action = "download"
 url = "https://example.com/test.tar.gz"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 data = "--- a/file.c\n+++ b/file.c\n@@ -1 +1 @@\n-old\n+new"
 
 [verify]
@@ -1168,7 +1171,7 @@ command = "test-tool --version"
 	}
 }
 
-func TestValidateBytes_PatchWithInvalidChecksum(t *testing.T) {
+func TestValidateBytes_ApplyPatchWithInvalidChecksum(t *testing.T) {
 	recipe := `
 [metadata]
 name = "test-tool"
@@ -1177,9 +1180,10 @@ name = "test-tool"
 action = "download"
 url = "https://example.com/test.tar.gz"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 url = "https://example.com/fix.patch"
-checksum = "invalid"
+sha256 = "invalid"
 
 [verify]
 command = "test-tool --version"
@@ -1187,23 +1191,23 @@ command = "test-tool --version"
 	result := ValidateBytes([]byte(recipe))
 
 	if result.Valid {
-		t.Error("expected validation error for invalid checksum")
+		t.Error("expected validation error for invalid sha256")
 	}
 
 	foundError := false
 	for _, err := range result.Errors {
-		if err.Field == "patches[0].checksum" && err.Message == "checksum must be 64 characters (SHA256 hex)" {
+		if err.Field == "steps[1].sha256" && err.Message == "sha256 must be 64 characters (SHA256 hex)" {
 			foundError = true
 			break
 		}
 	}
 
 	if !foundError {
-		t.Errorf("expected error for invalid checksum length, got errors: %v", result.Errors)
+		t.Errorf("expected error for invalid sha256 length, got errors: %v", result.Errors)
 	}
 }
 
-func TestValidateBytes_PatchWithNonHexChecksum(t *testing.T) {
+func TestValidateBytes_ApplyPatchWithNonHexChecksum(t *testing.T) {
 	recipe := `
 [metadata]
 name = "test-tool"
@@ -1212,9 +1216,10 @@ name = "test-tool"
 action = "download"
 url = "https://example.com/test.tar.gz"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 url = "https://example.com/fix.patch"
-checksum = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+sha256 = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
 
 [verify]
 command = "test-tool --version"
@@ -1222,23 +1227,23 @@ command = "test-tool --version"
 	result := ValidateBytes([]byte(recipe))
 
 	if result.Valid {
-		t.Error("expected validation error for non-hex checksum")
+		t.Error("expected validation error for non-hex sha256")
 	}
 
 	foundError := false
 	for _, err := range result.Errors {
-		if err.Field == "patches[0].checksum" && err.Message == "checksum must be hexadecimal (0-9, a-f)" {
+		if err.Field == "steps[1].sha256" && err.Message == "sha256 must be hexadecimal (0-9, a-f)" {
 			foundError = true
 			break
 		}
 	}
 
 	if !foundError {
-		t.Errorf("expected error for non-hex checksum, got errors: %v", result.Errors)
+		t.Errorf("expected error for non-hex sha256, got errors: %v", result.Errors)
 	}
 }
 
-func TestValidateBytes_PatchWithBothURLAndData(t *testing.T) {
+func TestValidateBytes_ApplyPatchWithBothURLAndData(t *testing.T) {
 	recipe := `
 [metadata]
 name = "test-tool"
@@ -1247,7 +1252,8 @@ name = "test-tool"
 action = "download"
 url = "https://example.com/test.tar.gz"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 url = "https://example.com/fix.patch"
 data = "some patch data"
 
@@ -1257,12 +1263,12 @@ command = "test-tool --version"
 	result := ValidateBytes([]byte(recipe))
 
 	if result.Valid {
-		t.Error("expected validation error for patch with both url and data")
+		t.Error("expected validation error for apply_patch with both url and data")
 	}
 
 	foundError := false
 	for _, err := range result.Errors {
-		if err.Field == "patches[0]" && err.Message == "cannot specify both 'url' and 'data' (must be mutually exclusive)" {
+		if err.Field == "steps[1]" && err.Message == "apply_patch action cannot have both 'url' and 'data' parameters" {
 			foundError = true
 			break
 		}
@@ -1273,7 +1279,7 @@ command = "test-tool --version"
 	}
 }
 
-func TestValidateBytes_PatchWithNeitherURLNorData(t *testing.T) {
+func TestValidateBytes_ApplyPatchWithNeitherURLNorData(t *testing.T) {
 	recipe := `
 [metadata]
 name = "test-tool"
@@ -1282,7 +1288,8 @@ name = "test-tool"
 action = "download"
 url = "https://example.com/test.tar.gz"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 strip = 1
 
 [verify]
@@ -1291,12 +1298,12 @@ command = "test-tool --version"
 	result := ValidateBytes([]byte(recipe))
 
 	if result.Valid {
-		t.Error("expected validation error for patch without url or data")
+		t.Error("expected validation error for apply_patch without url or data")
 	}
 
 	foundError := false
 	for _, err := range result.Errors {
-		if err.Field == "patches[0]" && err.Message == "must specify either 'url' or 'data'" {
+		if err.Field == "steps[1]" && err.Message == "apply_patch action requires either 'url' or 'data' parameter" {
 			foundError = true
 			break
 		}
@@ -1307,7 +1314,7 @@ command = "test-tool --version"
 	}
 }
 
-func TestValidateBytes_MultiplePatches(t *testing.T) {
+func TestValidateBytes_MultipleApplyPatchActions(t *testing.T) {
 	recipe := `
 [metadata]
 name = "test-tool"
@@ -1316,14 +1323,17 @@ name = "test-tool"
 action = "download"
 url = "https://example.com/test.tar.gz"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 url = "https://example.com/fix1.patch"
-checksum = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+sha256 = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 url = "https://example.com/fix2.patch"
 
-[[patches]]
+[[steps]]
+action = "apply_patch"
 data = "inline patch"
 
 [verify]
@@ -1332,27 +1342,27 @@ command = "test-tool --version"
 	result := ValidateBytes([]byte(recipe))
 
 	if result.Valid {
-		t.Error("expected validation error for second patch missing checksum")
+		t.Error("expected validation error for second apply_patch missing sha256")
 	}
 
-	// Should have exactly one error for patches[1]
+	// Should have exactly one error for steps[2]
 	foundError := false
 	for _, err := range result.Errors {
-		if err.Field == "patches[1].checksum" && err.Message == "checksum is required for url-based patches" {
+		if err.Field == "steps[2].sha256" && err.Message == "sha256 checksum is required for url-based patches" {
 			foundError = true
 			break
 		}
 	}
 
 	if !foundError {
-		t.Errorf("expected error for patches[1] missing checksum, got errors: %v", result.Errors)
+		t.Errorf("expected error for steps[2] missing sha256, got errors: %v", result.Errors)
 	}
 
-	// patches[0] should be valid (has checksum)
-	// patches[2] should be valid (inline data, no checksum required)
+	// steps[1] should be valid (has sha256)
+	// steps[3] should be valid (inline data, no sha256 required)
 	for _, err := range result.Errors {
-		if err.Field == "patches[0].checksum" || err.Field == "patches[2].checksum" {
-			t.Errorf("unexpected error for valid patches: %v", err)
+		if err.Field == "steps[1].sha256" || err.Field == "steps[3].sha256" {
+			t.Errorf("unexpected error for valid apply_patch actions: %v", err)
 		}
 	}
 }
