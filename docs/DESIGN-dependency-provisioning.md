@@ -124,13 +124,13 @@ graph LR
 
 ### Milestone: [Dependency Provisioning: System-Required](https://github.com/tsukumogami/tsuku/milestone/21)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#560](https://github.com/tsukumogami/tsuku/issues/560) | feat(actions): implement require_system action with detection | None |
-| [#561](https://github.com/tsukumogami/tsuku/issues/561) | feat(recipes): add docker recipe using require_system | [#560](https://github.com/tsukumogami/tsuku/issues/560) |
-| [#562](https://github.com/tsukumogami/tsuku/issues/562) | feat(recipes): add cuda recipe using require_system | [#560](https://github.com/tsukumogami/tsuku/issues/560) |
-| [#563](https://github.com/tsukumogami/tsuku/issues/563) | feat(cli): add tsuku check-deps command | [#560](https://github.com/tsukumogami/tsuku/issues/560) |
-| [#643](https://github.com/tsukumogami/tsuku/issues/643) | feat(actions): add platform-conditional dependencies | None |
+| Issue | Title | Dependencies | Status |
+|-------|-------|--------------|--------|
+| [#560](https://github.com/tsukumogami/tsuku/issues/560) | feat(actions): implement require_system action with detection | None | Done |
+| [#561](https://github.com/tsukumogami/tsuku/issues/561) | feat(recipes): add docker recipe using require_system | [#560](https://github.com/tsukumogami/tsuku/issues/560) | Done |
+| [#562](https://github.com/tsukumogami/tsuku/issues/562) | feat(recipes): add cuda recipe using require_system | [#560](https://github.com/tsukumogami/tsuku/issues/560) | Done |
+| [#563](https://github.com/tsukumogami/tsuku/issues/563) | feat(cli): add tsuku check-deps command | [#560](https://github.com/tsukumogami/tsuku/issues/560) | Done |
+| [#643](https://github.com/tsukumogami/tsuku/issues/643) | feat(actions): add platform-conditional dependencies | None | Done |
 | [#644](https://github.com/tsukumogami/tsuku/issues/644) | feat(actions): aggregate primitive action dependencies in composites | None |
 
 ```mermaid
@@ -150,8 +150,8 @@ graph LR
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I560 done
-    class I643,I644,I561,I562,I563 ready
+    class I560,I561,I562,I563,I643 done
+    class I644 ready
 ```
 
 ## Context and Problem Statement
