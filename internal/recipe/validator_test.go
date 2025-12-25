@@ -423,6 +423,139 @@ func hasWarning(result *ValidationResult, field, msgSubstring string) bool {
 	return false
 }
 
+// TestRequireSystemRecipes validates that recipes using require_system action
+// pass validation and have the correct structure
+func TestRequireSystemRecipes(t *testing.T) {
+	tests := []struct {
+		name               string
+		recipeToml         string
+		expectedCommand    string
+		expectedVersionRe  string
+		expectedMinVersion string
+	}{
+		{
+			name: "docker recipe",
+			recipeToml: `
+[metadata]
+name = "docker"
+description = "Container runtime platform"
+homepage = "https://www.docker.com"
+version_format = "semver"
+
+[[steps]]
+action = "require_system"
+command = "docker"
+version_flag = "--version"
+version_regex = "Docker version ([0-9.]+)"
+
+[steps.install_guide]
+darwin = "brew install --cask docker"
+linux = "See https://docs.docker.com/engine/install/"
+fallback = "Visit https://docs.docker.com/get-docker/"
+
+[verify]
+command = "docker --version"
+pattern = "Docker version {version}"
+`,
+			expectedCommand:   "docker",
+			expectedVersionRe: "Docker version ([0-9.]+)",
+		},
+		{
+			name: "cuda recipe",
+			recipeToml: `
+[metadata]
+name = "cuda"
+description = "NVIDIA CUDA Toolkit"
+homepage = "https://developer.nvidia.com/cuda-toolkit"
+version_format = "semver"
+
+[[steps]]
+action = "require_system"
+command = "nvcc"
+version_flag = "--version"
+version_regex = "release ([0-9.]+)"
+min_version = "11.0"
+
+[steps.install_guide]
+darwin = "CUDA is not supported on macOS"
+linux = "Visit https://developer.nvidia.com/cuda-downloads"
+
+[verify]
+command = "nvcc --version"
+pattern = "release {version}"
+`,
+			expectedCommand:    "nvcc",
+			expectedVersionRe:  "release ([0-9.]+)",
+			expectedMinVersion: "11.0",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ValidateBytes([]byte(tt.recipeToml))
+
+			// Check validation passes
+			if !result.Valid {
+				t.Fatalf("recipe validation failed:\nErrors: %v\nWarnings: %v", result.Errors, result.Warnings)
+			}
+
+			// Check recipe was parsed
+			if result.Recipe == nil {
+				t.Fatal("recipe was not parsed")
+			}
+
+			// Check has require_system step
+			if len(result.Recipe.Steps) == 0 {
+				t.Fatal("recipe has no steps")
+			}
+
+			step := result.Recipe.Steps[0]
+			if step.Action != "require_system" {
+				t.Errorf("expected action 'require_system', got %q", step.Action)
+			}
+
+			// Check command parameter
+			command, ok := step.Params["command"].(string)
+			if !ok || command != tt.expectedCommand {
+				t.Errorf("expected command %q, got %v", tt.expectedCommand, command)
+			}
+
+			// Check version_regex if specified
+			if tt.expectedVersionRe != "" {
+				versionRe, ok := step.Params["version_regex"].(string)
+				if !ok || versionRe != tt.expectedVersionRe {
+					t.Errorf("expected version_regex %q, got %v", tt.expectedVersionRe, versionRe)
+				}
+			}
+
+			// Check min_version if specified
+			if tt.expectedMinVersion != "" {
+				minVer, ok := step.Params["min_version"].(string)
+				if !ok || minVer != tt.expectedMinVersion {
+					t.Errorf("expected min_version %q, got %v", tt.expectedMinVersion, minVer)
+				}
+			}
+
+			// Check install_guide exists
+			installGuide, ok := step.Params["install_guide"]
+			if !ok {
+				t.Error("expected install_guide parameter")
+			} else {
+				// Verify it's a map
+				guideMap, ok := installGuide.(map[string]interface{})
+				if !ok {
+					t.Errorf("expected install_guide to be a map, got %T", installGuide)
+				} else {
+					// Check it has at least one platform
+					if len(guideMap) == 0 {
+						t.Error("install_guide should have at least one platform")
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestValidateFile(t *testing.T) {
 	// Test with non-existent file
 	result := ValidateFile("/nonexistent/path/recipe.toml")

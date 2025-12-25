@@ -72,28 +72,55 @@ func runPlanBasedInstall(planPath, toolName string) error {
 		return fmt.Errorf("plan execution failed: %w", err)
 	}
 
-	// Prepare install options
-	installOpts := install.DefaultInstallOptions()
-	installOpts.Plan = executor.ToStoragePlan(plan)
+	// Check if this is a system dependency recipe (only require_system steps)
+	// System dependencies are validated but not tracked in state or installed
+	isSystemDep := isSystemDependencyRecipe(plan)
 
-	// Install to permanent location
-	if err := mgr.InstallWithOptions(effectiveToolName, plan.Version, exec.WorkDir(), installOpts); err != nil {
-		return fmt.Errorf("failed to install to permanent location: %w", err)
+	if !isSystemDep {
+		// Prepare install options
+		installOpts := install.DefaultInstallOptions()
+		installOpts.Plan = executor.ToStoragePlan(plan)
+
+		// Install to permanent location
+		if err := mgr.InstallWithOptions(effectiveToolName, plan.Version, exec.WorkDir(), installOpts); err != nil {
+			return fmt.Errorf("failed to install to permanent location: %w", err)
+		}
+
+		// Update state to mark as explicit installation
+		err = mgr.GetState().UpdateTool(effectiveToolName, func(ts *install.ToolState) {
+			ts.IsExplicit = true
+		})
+		if err != nil {
+			printInfof("Warning: failed to update state: %v\n", err)
+		}
+
+		printInfo()
+		printInfo("Installation successful!")
+		printInfo()
+		printInfof("To use the installed tool, add this to your shell profile:\n")
+		printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
+	} else {
+		// System dependency validated successfully - no installation needed
+		printInfo()
+		printInfof("✓ %s is available on your system\n", effectiveToolName)
+		printInfo()
+		printInfo("Note: tsuku doesn't manage this dependency. It validated that it's installed.")
 	}
-
-	// Update state to mark as explicit installation
-	err = mgr.GetState().UpdateTool(effectiveToolName, func(ts *install.ToolState) {
-		ts.IsExplicit = true
-	})
-	if err != nil {
-		printInfof("Warning: failed to update state: %v\n", err)
-	}
-
-	printInfo()
-	printInfo("Installation successful!")
-	printInfo()
-	printInfof("To use the installed tool, add this to your shell profile:\n")
-	printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
 
 	return nil
+}
+
+// isSystemDependencyRecipe returns true if the plan only contains require_system steps.
+// System dependency recipes validate that external tools are installed but don't
+// actually install anything, so they shouldn't create state entries or directories.
+func isSystemDependencyRecipe(plan *executor.InstallationPlan) bool {
+	if len(plan.Steps) == 0 {
+		return false
+	}
+	for _, step := range plan.Steps {
+		if step.Action != "require_system" {
+			return false
+		}
+	}
+	return true
 }

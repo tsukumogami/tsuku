@@ -839,6 +839,290 @@ func TestResolveTransitive_RuntimeDeps(t *testing.T) {
 	}
 }
 
+// Tests for platform-conditional dependencies
+
+// testPlatformAction is a mock action with platform-specific dependencies for testing.
+type testPlatformAction struct{ BaseAction }
+
+func (testPlatformAction) Name() string { return "test_platform" }
+func (testPlatformAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+	return nil
+}
+func (testPlatformAction) Dependencies() ActionDeps {
+	return ActionDeps{
+		InstallTime:       []string{"common-tool"},
+		LinuxInstallTime:  []string{"patchelf"},
+		DarwinInstallTime: []string{"macos-tool"},
+		LinuxRuntime:      []string{"linux-runtime"},
+		DarwinRuntime:     []string{"darwin-runtime"},
+	}
+}
+
+func init() {
+	Register(&testPlatformAction{})
+}
+
+func TestResolveDependenciesForPlatform_LinuxInstallDeps(t *testing.T) {
+	t.Parallel()
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "test_platform", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependenciesForPlatform(r, "linux")
+
+	// Should have common-tool (cross-platform) and patchelf (linux-specific)
+	if deps.InstallTime["common-tool"] != "latest" {
+		t.Errorf("InstallTime[common-tool] = %q, want %q", deps.InstallTime["common-tool"], "latest")
+	}
+	if deps.InstallTime["patchelf"] != "latest" {
+		t.Errorf("InstallTime[patchelf] = %q, want %q", deps.InstallTime["patchelf"], "latest")
+	}
+	// Should NOT have darwin-specific deps
+	if _, has := deps.InstallTime["macos-tool"]; has {
+		t.Errorf("InstallTime should not contain macos-tool on Linux, got %v", deps.InstallTime)
+	}
+	if len(deps.InstallTime) != 2 {
+		t.Errorf("InstallTime has %d deps, want 2: %v", len(deps.InstallTime), deps.InstallTime)
+	}
+}
+
+func TestResolveDependenciesForPlatform_DarwinInstallDeps(t *testing.T) {
+	t.Parallel()
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "test_platform", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependenciesForPlatform(r, "darwin")
+
+	// Should have common-tool (cross-platform) and macos-tool (darwin-specific)
+	if deps.InstallTime["common-tool"] != "latest" {
+		t.Errorf("InstallTime[common-tool] = %q, want %q", deps.InstallTime["common-tool"], "latest")
+	}
+	if deps.InstallTime["macos-tool"] != "latest" {
+		t.Errorf("InstallTime[macos-tool] = %q, want %q", deps.InstallTime["macos-tool"], "latest")
+	}
+	// Should NOT have linux-specific deps
+	if _, has := deps.InstallTime["patchelf"]; has {
+		t.Errorf("InstallTime should not contain patchelf on Darwin, got %v", deps.InstallTime)
+	}
+	if len(deps.InstallTime) != 2 {
+		t.Errorf("InstallTime has %d deps, want 2: %v", len(deps.InstallTime), deps.InstallTime)
+	}
+}
+
+func TestResolveDependenciesForPlatform_LinuxRuntimeDeps(t *testing.T) {
+	t.Parallel()
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "test_platform", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependenciesForPlatform(r, "linux")
+
+	// Should have linux-specific runtime dep
+	if deps.Runtime["linux-runtime"] != "latest" {
+		t.Errorf("Runtime[linux-runtime] = %q, want %q", deps.Runtime["linux-runtime"], "latest")
+	}
+	// Should NOT have darwin-specific runtime deps
+	if _, has := deps.Runtime["darwin-runtime"]; has {
+		t.Errorf("Runtime should not contain darwin-runtime on Linux, got %v", deps.Runtime)
+	}
+}
+
+func TestResolveDependenciesForPlatform_DarwinRuntimeDeps(t *testing.T) {
+	t.Parallel()
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "test_platform", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependenciesForPlatform(r, "darwin")
+
+	// Should have darwin-specific runtime dep
+	if deps.Runtime["darwin-runtime"] != "latest" {
+		t.Errorf("Runtime[darwin-runtime] = %q, want %q", deps.Runtime["darwin-runtime"], "latest")
+	}
+	// Should NOT have linux-specific runtime deps
+	if _, has := deps.Runtime["linux-runtime"]; has {
+		t.Errorf("Runtime should not contain linux-runtime on Darwin, got %v", deps.Runtime)
+	}
+}
+
+func TestResolveDependenciesForPlatform_UnknownOSExcludesPlatformDeps(t *testing.T) {
+	t.Parallel()
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "test_platform", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependenciesForPlatform(r, "windows")
+
+	// Should have only common-tool (cross-platform)
+	if deps.InstallTime["common-tool"] != "latest" {
+		t.Errorf("InstallTime[common-tool] = %q, want %q", deps.InstallTime["common-tool"], "latest")
+	}
+	// Should NOT have any platform-specific deps
+	if _, has := deps.InstallTime["patchelf"]; has {
+		t.Errorf("InstallTime should not contain patchelf on Windows, got %v", deps.InstallTime)
+	}
+	if _, has := deps.InstallTime["macos-tool"]; has {
+		t.Errorf("InstallTime should not contain macos-tool on Windows, got %v", deps.InstallTime)
+	}
+	if len(deps.InstallTime) != 1 {
+		t.Errorf("InstallTime has %d deps, want 1: %v", len(deps.InstallTime), deps.InstallTime)
+	}
+	if len(deps.Runtime) != 0 {
+		t.Errorf("Runtime has %d deps, want 0: %v", len(deps.Runtime), deps.Runtime)
+	}
+}
+
+func TestResolveDependenciesForPlatform_StepReplaceOverridesPlatformDeps(t *testing.T) {
+	t.Parallel()
+	// When step-level "dependencies" is set, it replaces everything including platform deps
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action: "test_platform",
+				Params: map[string]interface{}{
+					"dependencies": []interface{}{"custom-tool"},
+				},
+			},
+		},
+	}
+
+	deps := ResolveDependenciesForPlatform(r, "linux")
+
+	// Should have only custom-tool (step replace overrides all)
+	if deps.InstallTime["custom-tool"] != "latest" {
+		t.Errorf("InstallTime[custom-tool] = %q, want %q", deps.InstallTime["custom-tool"], "latest")
+	}
+	// Should NOT have action deps (replaced)
+	if _, has := deps.InstallTime["common-tool"]; has {
+		t.Errorf("InstallTime should not contain common-tool (replaced), got %v", deps.InstallTime)
+	}
+	if _, has := deps.InstallTime["patchelf"]; has {
+		t.Errorf("InstallTime should not contain patchelf (replaced), got %v", deps.InstallTime)
+	}
+	if len(deps.InstallTime) != 1 {
+		t.Errorf("InstallTime has %d deps, want 1: %v", len(deps.InstallTime), deps.InstallTime)
+	}
+}
+
+func TestResolveDependenciesForPlatform_ExtraDepsWithPlatformDeps(t *testing.T) {
+	t.Parallel()
+	// Extra deps should be added alongside platform deps
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action: "test_platform",
+				Params: map[string]interface{}{
+					"extra_dependencies": []interface{}{"extra-tool"},
+				},
+			},
+		},
+	}
+
+	deps := ResolveDependenciesForPlatform(r, "linux")
+
+	// Should have common-tool, patchelf (linux), and extra-tool
+	if deps.InstallTime["common-tool"] != "latest" {
+		t.Errorf("InstallTime[common-tool] = %q, want %q", deps.InstallTime["common-tool"], "latest")
+	}
+	if deps.InstallTime["patchelf"] != "latest" {
+		t.Errorf("InstallTime[patchelf] = %q, want %q", deps.InstallTime["patchelf"], "latest")
+	}
+	if deps.InstallTime["extra-tool"] != "latest" {
+		t.Errorf("InstallTime[extra-tool] = %q, want %q", deps.InstallTime["extra-tool"], "latest")
+	}
+	if len(deps.InstallTime) != 3 {
+		t.Errorf("InstallTime has %d deps, want 3: %v", len(deps.InstallTime), deps.InstallTime)
+	}
+}
+
+func TestResolveDependenciesForPlatform_RecipeReplaceOverridesPlatformDeps(t *testing.T) {
+	t.Parallel()
+	// Recipe-level Dependencies replaces all install deps including platform-specific
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Dependencies: []string{"recipe-dep"},
+		},
+		Steps: []recipe.Step{
+			{Action: "test_platform", Params: map[string]interface{}{}},
+		},
+	}
+
+	deps := ResolveDependenciesForPlatform(r, "linux")
+
+	// Should have only recipe-dep (recipe replace overrides all)
+	if deps.InstallTime["recipe-dep"] != "latest" {
+		t.Errorf("InstallTime[recipe-dep] = %q, want %q", deps.InstallTime["recipe-dep"], "latest")
+	}
+	if len(deps.InstallTime) != 1 {
+		t.Errorf("InstallTime has %d deps, want 1: %v", len(deps.InstallTime), deps.InstallTime)
+	}
+}
+
+func TestGetPlatformInstallDeps(t *testing.T) {
+	t.Parallel()
+	deps := ActionDeps{
+		LinuxInstallTime:  []string{"linux-dep"},
+		DarwinInstallTime: []string{"darwin-dep"},
+	}
+
+	tests := []struct {
+		os   string
+		want []string
+	}{
+		{"linux", []string{"linux-dep"}},
+		{"darwin", []string{"darwin-dep"}},
+		{"windows", nil},
+		{"freebsd", nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.os, func(t *testing.T) {
+			got := getPlatformInstallDeps(deps, tt.os)
+			if !slicesEqual(got, tt.want) {
+				t.Errorf("getPlatformInstallDeps(%q) = %v, want %v", tt.os, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetPlatformRuntimeDeps(t *testing.T) {
+	t.Parallel()
+	deps := ActionDeps{
+		LinuxRuntime:  []string{"linux-rt"},
+		DarwinRuntime: []string{"darwin-rt"},
+	}
+
+	tests := []struct {
+		os   string
+		want []string
+	}{
+		{"linux", []string{"linux-rt"}},
+		{"darwin", []string{"darwin-rt"}},
+		{"windows", nil},
+		{"freebsd", nil},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.os, func(t *testing.T) {
+			got := getPlatformRuntimeDeps(deps, tt.os)
+			if !slicesEqual(got, tt.want) {
+				t.Errorf("getPlatformRuntimeDeps(%q) = %v, want %v", tt.os, got, tt.want)
+			}
+		})
+	}
+}
+
 // Helper functions for tests
 
 func depName(i int) string {

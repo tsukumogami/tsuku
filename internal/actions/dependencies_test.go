@@ -41,7 +41,8 @@ func TestActionDependencies_BuildActions(t *testing.T) {
 	}{
 		{"configure_make", []string{"make", "zig", "pkg-config"}},
 		{"cmake_build", []string{"cmake", "make", "zig", "pkg-config"}},
-		{"meson_build", []string{"meson", "make", "zig", "patchelf"}},
+		// meson_build has cross-platform deps; patchelf is Linux-only
+		{"meson_build", []string{"meson", "make", "zig"}},
 	}
 
 	for _, tt := range tests {
@@ -53,6 +54,29 @@ func TestActionDependencies_BuildActions(t *testing.T) {
 			}
 			if deps.Runtime != nil {
 				t.Errorf("Runtime = %v, want nil", deps.Runtime)
+			}
+		})
+	}
+}
+
+func TestActionDependencies_PlatformSpecific(t *testing.T) {
+	t.Parallel()
+	// Actions with platform-specific dependencies
+	tests := []struct {
+		action               string
+		wantLinuxInstallTime []string
+	}{
+		{"meson_build", []string{"patchelf"}},
+		{"homebrew", []string{"patchelf"}},
+		{"homebrew_relocate", []string{"patchelf"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.action, func(t *testing.T) {
+			deps := GetActionDeps(tt.action)
+
+			if !slicesEqual(deps.LinuxInstallTime, tt.wantLinuxInstallTime) {
+				t.Errorf("LinuxInstallTime = %v, want %v", deps.LinuxInstallTime, tt.wantLinuxInstallTime)
 			}
 		})
 	}

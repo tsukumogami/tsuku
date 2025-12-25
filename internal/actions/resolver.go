@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
 	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
@@ -34,13 +35,14 @@ type ResolvedDeps struct {
 
 // ResolveDependencies collects dependencies from a recipe by examining
 // each step's action and merging with step-level and recipe-level overrides.
+// Uses runtime.GOOS for platform-specific dependency resolution.
 //
 // The resolution process follows precedence rules:
 // 1. For each step:
 //   - If step has "dependencies", use those (replaces action implicit)
-//   - Otherwise, use action's InstallTime deps + step's extra_dependencies
+//   - Otherwise, use action's InstallTime deps + platform-specific deps + step's extra_dependencies
 //   - If step has "runtime_dependencies", use those (replaces action implicit)
-//   - Otherwise, use action's Runtime deps + step's extra_runtime_dependencies
+//   - Otherwise, use action's Runtime deps + platform-specific deps + step's extra_runtime_dependencies
 //
 // 2. Recipe-level replace (if set, overrides everything from steps):
 //   - Dependencies replaces all install deps
@@ -52,6 +54,12 @@ type ResolvedDeps struct {
 //
 // Note: Transitive resolution is handled separately.
 func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
+	return ResolveDependenciesForPlatform(r, runtime.GOOS)
+}
+
+// ResolveDependenciesForPlatform resolves dependencies for a specific target OS.
+// This allows testing platform-specific behavior without mocking runtime.GOOS.
+func ResolveDependenciesForPlatform(r *recipe.Recipe, targetOS string) ResolvedDeps {
 	result := ResolvedDeps{
 		InstallTime: make(map[string]string),
 		Runtime:     make(map[string]string),
@@ -73,7 +81,7 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 		}
 		actionDeps = combinedDeps
 
-		// Install-time: step replace OR (action implicit + step extend)
+		// Install-time: step replace OR (action implicit + platform-specific + step extend)
 		if stepDeps := getStringSliceParam(step.Params, "dependencies"); stepDeps != nil {
 			// Step-level replace: use only what's declared
 			for _, dep := range stepDeps {
@@ -81,10 +89,16 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 				result.InstallTime[name] = version
 			}
 		} else {
-			// Action implicit
+			// Action implicit (cross-platform)
 			for _, dep := range actionDeps.InstallTime {
 				// Skip self-dependencies to prevent circular loops
 				// (e.g., patchelf uses homebrew which depends on patchelf)
+				if dep != r.Metadata.Name {
+					result.InstallTime[dep] = "latest"
+				}
+			}
+			// Platform-specific install deps
+			for _, dep := range getPlatformInstallDeps(actionDeps, targetOS) {
 				if dep != r.Metadata.Name {
 					result.InstallTime[dep] = "latest"
 				}
@@ -98,7 +112,7 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 			}
 		}
 
-		// Runtime: step replace OR (action implicit + step extend)
+		// Runtime: step replace OR (action implicit + platform-specific + step extend)
 		if stepRuntimeDeps := getStringSliceParam(step.Params, "runtime_dependencies"); stepRuntimeDeps != nil {
 			// Step-level replace: use only what's declared
 			for _, dep := range stepRuntimeDeps {
@@ -106,9 +120,15 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 				result.Runtime[name] = version
 			}
 		} else {
-			// Action implicit
+			// Action implicit (cross-platform)
 			for _, dep := range actionDeps.Runtime {
 				// Skip self-dependencies to prevent circular loops
+				if dep != r.Metadata.Name {
+					result.Runtime[dep] = "latest"
+				}
+			}
+			// Platform-specific runtime deps
+			for _, dep := range getPlatformRuntimeDeps(actionDeps, targetOS) {
 				if dep != r.Metadata.Name {
 					result.Runtime[dep] = "latest"
 				}
@@ -152,6 +172,32 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 	}
 
 	return result
+}
+
+// getPlatformInstallDeps returns platform-specific install-time dependencies
+// for the given target OS.
+func getPlatformInstallDeps(deps ActionDeps, targetOS string) []string {
+	switch targetOS {
+	case "linux":
+		return deps.LinuxInstallTime
+	case "darwin":
+		return deps.DarwinInstallTime
+	default:
+		return nil
+	}
+}
+
+// getPlatformRuntimeDeps returns platform-specific runtime dependencies
+// for the given target OS.
+func getPlatformRuntimeDeps(deps ActionDeps, targetOS string) []string {
+	switch targetOS {
+	case "linux":
+		return deps.LinuxRuntime
+	case "darwin":
+		return deps.DarwinRuntime
+	default:
+		return nil
+	}
 }
 
 // getStringSliceParam extracts a []string from step params.

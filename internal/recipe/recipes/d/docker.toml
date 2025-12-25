@@ -1,0 +1,20 @@
+[metadata]
+name = "docker"
+description = "Container runtime platform"
+homepage = "https://www.docker.com"
+version_format = "semver"
+
+[[steps]]
+action = "require_system"
+command = "docker"
+version_flag = "--version"
+version_regex = "Docker version ([0-9.]+)"
+
+[steps.install_guide]
+darwin = "brew install --cask docker"
+linux = "See https://docs.docker.com/engine/install/ for platform-specific installation"
+fallback = "Visit https://docs.docker.com/get-docker/ for installation instructions"
+
+[verify]
+command = "docker --version"
+pattern = "Docker version {version}"

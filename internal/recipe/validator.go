@@ -207,6 +207,9 @@ func canInferVersionFromActions(r *Recipe) bool {
 			if _, ok := step.Params["repo"].(string); ok {
 				return true // InferredGitHubStrategy
 			}
+		case "require_system":
+			// System dependencies don't use version providers - version is detected directly
+			return true
 		}
 	}
 	return false
@@ -279,6 +282,7 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 		"github_archive":    true,
 		"github_file":       true,
 		"homebrew":          true,
+		"require_system":    true,
 		"setup_build_env":   true,
 		"configure_make":    true,
 		"cmake_build":       true,
@@ -437,8 +441,12 @@ func validateActionParams(result *ValidationResult, stepField string, step *Step
 				validateURLParam(result, stepField+".url", urlParam)
 			}
 		}
-	}
 
+	case "require_system":
+		if _, ok := step.Params["command"]; !ok {
+			result.addError(stepField, "require_system action requires 'command' parameter")
+		}
+	}
 	// Check for path traversal in any path-like parameters
 	pathParams := []string{"dest", "archive", "binary", "src", "path"}
 	for _, param := range pathParams {
