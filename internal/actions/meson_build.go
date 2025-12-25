@@ -16,8 +16,12 @@ type MesonBuildAction struct{ BaseAction }
 // IsDeterministic returns false because meson builds depend on system compilers.
 
 // Dependencies declares the install-time dependencies for this action.
+// Patchelf is only needed on Linux for RPATH fixup; macOS uses install_name_tool (system-provided).
 func (MesonBuildAction) Dependencies() ActionDeps {
-	return ActionDeps{InstallTime: []string{"meson", "make", "zig", "patchelf"}}
+	return ActionDeps{
+		InstallTime:      []string{"meson", "make", "zig"},
+		LinuxInstallTime: []string{"patchelf"},
+	}
 }
 
 // Name returns the action name
