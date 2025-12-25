@@ -32,38 +32,47 @@ executables = ["bash"]
 # Multiple patches from GNU FTP (p0 strip level) - order matters
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-001"
+checksum = "1f608434364af86b9b45c8b0ea3fb3b165fb830d27697e6cdfc7ac17dee3287f"
 strip = 0
 
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-002"
+checksum = "e385548a00130765ec7938a56fbdca52447ab41fabc95a25f19ade527e282001"
 strip = 0
 
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-003"
+checksum = "f245d9c7dc3f5a20d84b53d249334747940936f09dc97e1dcb89fc3ab37d60ed"
 strip = 0
 
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-004"
+checksum = "9591d245045529f32f0812f94180b9d9ce9023f5a765c039b852e5dfc99747d0"
 strip = 0
 
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-005"
+checksum = "cca1ef52dbbf433bc98e33269b64b2c814028efe2538be1e2c9a377da90bc99d"
 strip = 0
 
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-006"
+checksum = "29119addefed8eff91ae37fd51822c31780ee30d4a28376e96002706c995ff10"
 strip = 0
 
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-007"
+checksum = "c0976bbfffa1453c7cfdd62058f206a318568ff2d690f5d4fa048793fa3eb299"
 strip = 0
 
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-008"
+checksum = "097cd723cbfb8907674ac32214063a3fd85282657ec5b4e544d2c0f719653fb4"
 strip = 0
 
 [[patches]]
 url = "https://ftpmirror.gnu.org/gnu/bash/bash-5.3-patches/bash53-009"
+checksum = "eee30fe78a4b0cb2fe20e010e00308899cfc613e0774ebb3c8557a1552f24f8c"
 strip = 0
 
 [verify]

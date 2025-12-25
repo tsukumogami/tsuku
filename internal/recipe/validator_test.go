@@ -1084,3 +1084,285 @@ patterns = ["lib/*.so*"]
 		t.Errorf("expected valid recipe with install_libraries action, got errors: %v", result.Errors)
 	}
 }
+
+func TestValidateBytes_ApplyPatchWithURLMissingChecksum(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[[steps]]
+action = "apply_patch"
+url = "https://example.com/fix.patch"
+
+[verify]
+command = "test-tool --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected validation error for apply_patch with url but no sha256")
+	}
+
+	if len(result.Errors) == 0 {
+		t.Fatal("expected at least one error")
+	}
+
+	foundError := false
+	for _, err := range result.Errors {
+		if err.Field == "steps[1].sha256" && err.Message == "sha256 checksum is required for url-based patches" {
+			foundError = true
+			break
+		}
+	}
+
+	if !foundError {
+		t.Errorf("expected error for missing sha256, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_ApplyPatchWithURLAndChecksum(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[[steps]]
+action = "apply_patch"
+url = "https://example.com/fix.patch"
+sha256 = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+
+[verify]
+command = "test-tool --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected valid recipe, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_ApplyPatchWithInlineData(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[[steps]]
+action = "apply_patch"
+data = "--- a/file.c\n+++ b/file.c\n@@ -1 +1 @@\n-old\n+new"
+
+[verify]
+command = "test-tool --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if !result.Valid {
+		t.Errorf("expected valid recipe for inline patch without checksum, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_ApplyPatchWithInvalidChecksum(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[[steps]]
+action = "apply_patch"
+url = "https://example.com/fix.patch"
+sha256 = "invalid"
+
+[verify]
+command = "test-tool --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected validation error for invalid sha256")
+	}
+
+	foundError := false
+	for _, err := range result.Errors {
+		if err.Field == "steps[1].sha256" && err.Message == "sha256 must be 64 characters (SHA256 hex)" {
+			foundError = true
+			break
+		}
+	}
+
+	if !foundError {
+		t.Errorf("expected error for invalid sha256 length, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_ApplyPatchWithNonHexChecksum(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[[steps]]
+action = "apply_patch"
+url = "https://example.com/fix.patch"
+sha256 = "zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz"
+
+[verify]
+command = "test-tool --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected validation error for non-hex sha256")
+	}
+
+	foundError := false
+	for _, err := range result.Errors {
+		if err.Field == "steps[1].sha256" && err.Message == "sha256 must be hexadecimal (0-9, a-f)" {
+			foundError = true
+			break
+		}
+	}
+
+	if !foundError {
+		t.Errorf("expected error for non-hex sha256, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_ApplyPatchWithBothURLAndData(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[[steps]]
+action = "apply_patch"
+url = "https://example.com/fix.patch"
+data = "some patch data"
+
+[verify]
+command = "test-tool --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected validation error for apply_patch with both url and data")
+	}
+
+	foundError := false
+	for _, err := range result.Errors {
+		if err.Field == "steps[1]" && err.Message == "apply_patch action cannot have both 'url' and 'data' parameters" {
+			foundError = true
+			break
+		}
+	}
+
+	if !foundError {
+		t.Errorf("expected error for mutual exclusivity, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_ApplyPatchWithNeitherURLNorData(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[[steps]]
+action = "apply_patch"
+strip = 1
+
+[verify]
+command = "test-tool --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected validation error for apply_patch without url or data")
+	}
+
+	foundError := false
+	for _, err := range result.Errors {
+		if err.Field == "steps[1]" && err.Message == "apply_patch action requires either 'url' or 'data' parameter" {
+			foundError = true
+			break
+		}
+	}
+
+	if !foundError {
+		t.Errorf("expected error for missing url/data, got errors: %v", result.Errors)
+	}
+}
+
+func TestValidateBytes_MultipleApplyPatchActions(t *testing.T) {
+	recipe := `
+[metadata]
+name = "test-tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[[steps]]
+action = "apply_patch"
+url = "https://example.com/fix1.patch"
+sha256 = "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+
+[[steps]]
+action = "apply_patch"
+url = "https://example.com/fix2.patch"
+
+[[steps]]
+action = "apply_patch"
+data = "inline patch"
+
+[verify]
+command = "test-tool --version"
+`
+	result := ValidateBytes([]byte(recipe))
+
+	if result.Valid {
+		t.Error("expected validation error for second apply_patch missing sha256")
+	}
+
+	// Should have exactly one error for steps[2]
+	foundError := false
+	for _, err := range result.Errors {
+		if err.Field == "steps[2].sha256" && err.Message == "sha256 checksum is required for url-based patches" {
+			foundError = true
+			break
+		}
+	}
+
+	if !foundError {
+		t.Errorf("expected error for steps[2] missing sha256, got errors: %v", result.Errors)
+	}
+
+	// steps[1] should be valid (has sha256)
+	// steps[3] should be valid (inline data, no sha256 required)
+	for _, err := range result.Errors {
+		if err.Field == "steps[1].sha256" || err.Field == "steps[3].sha256" {
+			t.Errorf("unexpected error for valid apply_patch actions: %v", err)
+		}
+	}
+}
