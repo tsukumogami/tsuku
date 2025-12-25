@@ -43,10 +43,24 @@ func (ctx *ExecutionContext) Log() log.Logger {
 // InstallTime deps are needed during `tsuku install`.
 // Runtime deps are needed when the installed tool runs.
 // EvalTime deps are needed during `tsuku eval` for actions that implement Decomposable.
+//
+// Platform-specific fields (LinuxInstallTime, DarwinInstallTime, etc.) are only
+// applied when the target OS matches. This allows actions to declare dependencies
+// that are only needed on certain platforms, reducing unnecessary installations.
 type ActionDeps struct {
-	InstallTime []string // Needed during tsuku install
-	Runtime     []string // Needed when tool runs
+	InstallTime []string // Needed during tsuku install (all platforms)
+	Runtime     []string // Needed when tool runs (all platforms)
 	EvalTime    []string // Needed during tsuku eval (for Decompose)
+
+	// Platform-specific install-time dependencies.
+	// Only applied when runtime.GOOS matches the platform.
+	LinuxInstallTime  []string // Linux-only install deps
+	DarwinInstallTime []string // macOS-only install deps
+
+	// Platform-specific runtime dependencies.
+	// Only applied when runtime.GOOS matches the platform.
+	LinuxRuntime  []string // Linux-only runtime deps
+	DarwinRuntime []string // macOS-only runtime deps
 }
 
 // Action represents an executable action with metadata.
