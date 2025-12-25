@@ -38,13 +38,13 @@ This approach was chosen because:
 
 ## Implementation Steps
 
-- [ ] Implement core aggregation logic in `resolver.go`
+- [x] Implement core aggregation logic in `resolver.go`
   - Add `aggregatePrimitiveDeps()` that decomposes an action and recursively collects all primitive dependencies
   - Handle actions that aren't decomposable (return empty deps)
   - Detect and prevent infinite recursion/cycles during aggregation
   - Merge aggregated deps with explicitly declared deps (explicit takes precedence for version constraints)
 
-- [ ] Integrate aggregation into `ResolveDependencies()`
+- [x] Integrate aggregation into `ResolveDependencies()`
   - After calling `GetActionDeps(step.Action)`, check if action is decomposable
   - If decomposable, call `aggregatePrimitiveDeps()` and merge results
   - Ensure self-dependency filtering still works (skip if dep == recipe name)

@@ -60,10 +60,18 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 	// Phase 1: Collect from steps
 	for _, step := range r.Steps {
 		actionDeps := GetActionDeps(step.Action)
-		// TODO(#644): Aggregate dependencies from primitive actions when step.Action is decomposable.
-		// Currently only collects dependencies declared directly on the composite action.
-		// Should check if action implements Decomposable, decompose it, and recursively
-		// collect dependencies from all primitive actions in the decomposition tree.
+
+		// Aggregate dependencies from primitive actions if this is a composite action
+		// This ensures composite actions automatically inherit dependencies from their primitives
+		aggregatedDeps := aggregatePrimitiveDeps(step.Action, step.Params)
+
+		// Merge aggregated deps with explicit action deps
+		// Explicit deps take precedence for version constraints
+		combinedDeps := ActionDeps{
+			InstallTime: append(append([]string{}, actionDeps.InstallTime...), aggregatedDeps.InstallTime...),
+			Runtime:     append(append([]string{}, actionDeps.Runtime...), aggregatedDeps.Runtime...),
+		}
+		actionDeps = combinedDeps
 
 		// Install-time: step replace OR (action implicit + step extend)
 		if stepDeps := getStringSliceParam(step.Params, "dependencies"); stepDeps != nil {
@@ -183,6 +191,87 @@ func parseDependency(dep string) (name, version string) {
 		}
 	}
 	return dep, "latest"
+}
+
+// aggregatePrimitiveDeps recursively decomposes an action and collects dependencies
+// from all primitive actions in the decomposition tree.
+// Returns ActionDeps containing aggregated install-time and runtime dependencies.
+// Returns empty ActionDeps if the action is not decomposable or doesn't exist.
+func aggregatePrimitiveDeps(action string, params map[string]interface{}) ActionDeps {
+	// If action is not decomposable, return empty deps
+	if !IsDecomposable(action) {
+		return ActionDeps{}
+	}
+
+	// Create minimal eval context for decomposition
+	// We don't need full eval context here since we're only collecting deps,
+	// not actually evaluating the decomposition fully
+	ctx := &EvalContext{
+		Context: context.Background(),
+	}
+
+	// Track visited actions to prevent infinite recursion
+	visited := make(map[string]bool)
+	aggregated := ActionDeps{
+		InstallTime: []string{},
+		Runtime:     []string{},
+	}
+
+	// Recursively collect deps
+	collectPrimitiveDeps(ctx, action, params, visited, &aggregated)
+
+	return aggregated
+}
+
+// collectPrimitiveDeps is the recursive implementation that accumulates dependencies.
+// It decomposes the action and recursively processes each step, collecting dependencies
+// from all primitive actions encountered.
+func collectPrimitiveDeps(ctx *EvalContext, action string, params map[string]interface{}, visited map[string]bool, aggregated *ActionDeps) {
+	// Check for cycles using action name as key
+	// (params don't matter for dependency collection, only action identity)
+	if visited[action] {
+		return
+	}
+	visited[action] = true
+
+	// Get the action from registry
+	act := Get(action)
+	if act == nil {
+		return
+	}
+
+	// If it's a primitive, collect its dependencies
+	if IsPrimitive(action) {
+		deps := act.Dependencies()
+		aggregated.InstallTime = append(aggregated.InstallTime, deps.InstallTime...)
+		aggregated.Runtime = append(aggregated.Runtime, deps.Runtime...)
+		return
+	}
+
+	// If it's decomposable, decompose and recurse
+	decomposable, ok := act.(Decomposable)
+	if !ok {
+		// Not primitive and not decomposable, just collect direct deps
+		deps := act.Dependencies()
+		aggregated.InstallTime = append(aggregated.InstallTime, deps.InstallTime...)
+		aggregated.Runtime = append(aggregated.Runtime, deps.Runtime...)
+		return
+	}
+
+	// Decompose the action
+	steps, err := decomposable.Decompose(ctx, params)
+	if err != nil {
+		// If decomposition fails, fall back to direct dependencies
+		deps := act.Dependencies()
+		aggregated.InstallTime = append(aggregated.InstallTime, deps.InstallTime...)
+		aggregated.Runtime = append(aggregated.Runtime, deps.Runtime...)
+		return
+	}
+
+	// Recursively process each step
+	for _, step := range steps {
+		collectPrimitiveDeps(ctx, step.Action, step.Params, visited, aggregated)
+	}
 }
 
 // ResolveTransitive expands dependencies transitively by loading each dependency's
