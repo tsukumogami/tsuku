@@ -549,6 +549,9 @@ func insertPatchSteps(steps []ResolvedStep, patches []recipe.Patch) []ResolvedSt
 		if patch.Data != "" {
 			params["data"] = patch.Data
 		}
+		if patch.Checksum != "" {
+			params["sha256"] = patch.Checksum
+		}
 		if patch.Strip != 0 {
 			params["strip"] = patch.Strip
 		}
