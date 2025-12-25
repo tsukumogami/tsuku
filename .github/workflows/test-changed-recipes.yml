@@ -53,6 +53,12 @@ jobs:
                 continue
               fi
 
+              # Check if recipe uses require_system (system dependencies can't be installed)
+              if grep -q 'action = "require_system"' "$path" 2>/dev/null; then
+                echo "Skipping system dependency recipe: $path"
+                continue
+              fi
+
               tool=$(basename "$path" .toml)
               if [ "$FIRST" = true ]; then
                 FIRST=false

@@ -457,54 +457,60 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// cfg is already loaded
 	// mgr is already initialized
 
-	// Extract binaries from recipe to store in state
-	binaries := r.ExtractBinaries()
-	installOpts := install.DefaultInstallOptions()
-	installOpts.Binaries = binaries
-	installOpts.RequestedVersion = versionConstraint // Record what user asked for ("17", "@lts", "")
+	// Check if this is a system dependency recipe (only require_system steps)
+	// System dependencies are validated but not managed by tsuku
+	isSystemDep := isSystemDependencyPlan(plan)
 
-	// Store the plan using canonical conversion
-	installOpts.Plan = executor.ToStoragePlan(plan)
+	if !isSystemDep {
+		// Extract binaries from recipe to store in state
+		binaries := r.ExtractBinaries()
+		installOpts := install.DefaultInstallOptions()
+		installOpts.Binaries = binaries
+		installOpts.RequestedVersion = versionConstraint // Record what user asked for ("17", "@lts", "")
 
-	// Resolve all dependencies using the central resolution algorithm
-	resolvedDeps := actions.ResolveDependencies(r)
+		// Store the plan using canonical conversion
+		installOpts.Plan = executor.ToStoragePlan(plan)
 
-	// Resolve runtime dependencies for wrapper generation (with versions)
-	runtimeDeps := resolveRuntimeDeps(r, mgr)
-	if len(runtimeDeps) > 0 {
-		installOpts.RuntimeDependencies = runtimeDeps
-		printInfof("Runtime dependencies: %v\n", mapKeys(runtimeDeps))
-	}
+		// Resolve all dependencies using the central resolution algorithm
+		resolvedDeps := actions.ResolveDependencies(r)
 
-	if err := mgr.InstallWithOptions(toolName, version, exec.WorkDir(), installOpts); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to install to permanent location: %v\n", err)
-		return err
-	}
-
-	// Update state with explicit flag, parent, and dependencies
-	err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
-		if isExplicit {
-			ts.IsExplicit = true
+		// Resolve runtime dependencies for wrapper generation (with versions)
+		runtimeDeps := resolveRuntimeDeps(r, mgr)
+		if len(runtimeDeps) > 0 {
+			installOpts.RuntimeDependencies = runtimeDeps
+			printInfof("Runtime dependencies: %v\n", mapKeys(runtimeDeps))
 		}
-		if parent != "" {
-			// Add parent to RequiredBy if not present
-			found := false
-			for _, r := range ts.RequiredBy {
-				if r == parent {
-					found = true
-					break
+
+		if err := mgr.InstallWithOptions(toolName, version, exec.WorkDir(), installOpts); err != nil {
+			fmt.Fprintf(os.Stderr, "Failed to install to permanent location: %v\n", err)
+			return err
+		}
+
+		// Update state with explicit flag, parent, and dependencies
+		err = mgr.GetState().UpdateTool(toolName, func(ts *install.ToolState) {
+			if isExplicit {
+				ts.IsExplicit = true
+			}
+			if parent != "" {
+				// Add parent to RequiredBy if not present
+				found := false
+				for _, r := range ts.RequiredBy {
+					if r == parent {
+						found = true
+						break
+					}
+				}
+				if !found {
+					ts.RequiredBy = append(ts.RequiredBy, parent)
 				}
 			}
-			if !found {
-				ts.RequiredBy = append(ts.RequiredBy, parent)
-			}
+			// Record dependencies in state for dependency tree display and uninstall warnings
+			ts.InstallDependencies = mapKeys(resolvedDeps.InstallTime)
+			ts.RuntimeDependencies = mapKeys(resolvedDeps.Runtime)
+		})
+		if err != nil {
+			printInfof("Warning: failed to update state: %v\n", err)
 		}
-		// Record dependencies in state for dependency tree display and uninstall warnings
-		ts.InstallDependencies = mapKeys(resolvedDeps.InstallTime)
-		ts.RuntimeDependencies = mapKeys(resolvedDeps.Runtime)
-	})
-	if err != nil {
-		printInfof("Warning: failed to update state: %v\n", err)
 	}
 
 	// Update used_by for any library dependencies now that we know the tool version
@@ -534,10 +540,16 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	}
 
 	printInfo()
-	printInfo("Installation successful!")
-	printInfo()
-	printInfo("To use the installed tool, add this to your shell profile:")
-	printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
+	if isSystemDep {
+		printInfof("✓ %s is available on your system\n", toolName)
+		printInfo()
+		printInfo("Note: tsuku doesn't manage this dependency. It validated that it's installed.")
+	} else {
+		printInfo("Installation successful!")
+		printInfo()
+		printInfo("To use the installed tool, add this to your shell profile:")
+		printInfof("  export PATH=\"%s:$PATH\"\n", cfg.CurrentDir)
+	}
 
 	return nil
 }
@@ -575,4 +587,19 @@ func mapKeys(m map[string]string) []string {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+// isSystemDependencyPlan returns true if the plan only contains require_system steps.
+// System dependency recipes validate that external tools are installed but don't
+// actually install anything, so they shouldn't create state entries or directories.
+func isSystemDependencyPlan(plan *executor.InstallationPlan) bool {
+	if plan == nil || len(plan.Steps) == 0 {
+		return false
+	}
+	for _, step := range plan.Steps {
+		if step.Action != "require_system" {
+			return false
+		}
+	}
+	return true
 }
