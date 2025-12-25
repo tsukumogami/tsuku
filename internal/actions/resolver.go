@@ -193,10 +193,9 @@ func parseDependency(dep string) (name, version string) {
 	return dep, "latest"
 }
 
-// aggregatePrimitiveDeps recursively decomposes an action and collects dependencies
-// from all primitive actions in the decomposition tree.
-// Returns ActionDeps containing aggregated install-time and runtime dependencies.
-// For primitive actions, returns their own dependencies directly.
+// aggregatePrimitiveDeps returns the dependencies declared by an action.
+// This allows composite actions (like cargo_install, go_install) to automatically
+// provide their dependencies (rust, go) without recipes needing to declare them.
 // Returns empty ActionDeps if the action doesn't exist.
 func aggregatePrimitiveDeps(action string, params map[string]interface{}) ActionDeps {
 	// Get the action from registry
@@ -210,80 +209,11 @@ func aggregatePrimitiveDeps(action string, params map[string]interface{}) Action
 		return act.Dependencies()
 	}
 
-	// If action is not decomposable (and not primitive), return its own deps
-	if !IsDecomposable(action) {
-		return act.Dependencies()
-	}
-
-	// Create minimal eval context for decomposition
-	// We don't need full eval context here since we're only collecting deps,
-	// not actually evaluating the decomposition fully
-	ctx := &EvalContext{
-		Context: context.Background(),
-	}
-
-	// Track visited actions to prevent infinite recursion
-	visited := make(map[string]bool)
-	aggregated := ActionDeps{
-		InstallTime: []string{},
-		Runtime:     []string{},
-	}
-
-	// Recursively collect deps
-	collectPrimitiveDeps(ctx, action, params, visited, &aggregated)
-
-	return aggregated
-}
-
-// collectPrimitiveDeps is the recursive implementation that accumulates dependencies.
-// It decomposes the action and recursively processes each step, collecting dependencies
-// from all primitive actions encountered.
-func collectPrimitiveDeps(ctx *EvalContext, action string, params map[string]interface{}, visited map[string]bool, aggregated *ActionDeps) {
-	// Check for cycles using action name as key
-	// (params don't matter for dependency collection, only action identity)
-	if visited[action] {
-		return
-	}
-	visited[action] = true
-
-	// Get the action from registry
-	act := Get(action)
-	if act == nil {
-		return
-	}
-
-	// If it's a primitive, collect its dependencies
-	if IsPrimitive(action) {
-		deps := act.Dependencies()
-		aggregated.InstallTime = append(aggregated.InstallTime, deps.InstallTime...)
-		aggregated.Runtime = append(aggregated.Runtime, deps.Runtime...)
-		return
-	}
-
-	// If it's decomposable, decompose and recurse
-	decomposable, ok := act.(Decomposable)
-	if !ok {
-		// Not primitive and not decomposable, just collect direct deps
-		deps := act.Dependencies()
-		aggregated.InstallTime = append(aggregated.InstallTime, deps.InstallTime...)
-		aggregated.Runtime = append(aggregated.Runtime, deps.Runtime...)
-		return
-	}
-
-	// Decompose the action
-	steps, err := decomposable.Decompose(ctx, params)
-	if err != nil {
-		// If decomposition fails, fall back to direct dependencies
-		deps := act.Dependencies()
-		aggregated.InstallTime = append(aggregated.InstallTime, deps.InstallTime...)
-		aggregated.Runtime = append(aggregated.Runtime, deps.Runtime...)
-		return
-	}
-
-	// Recursively process each step
-	for _, step := range steps {
-		collectPrimitiveDeps(ctx, step.Action, step.Params, visited, aggregated)
-	}
+	// For non-primitive actions (composite/decomposable), return their own declared deps
+	// Don't try to decompose here to avoid chicken-and-egg problem with EvalTime dependencies
+	// (e.g., cargo_install needs rust at EvalTime to decompose, but we're trying to figure out
+	// what dependencies to install)
+	return act.Dependencies()
 }
 
 // ResolveTransitive expands dependencies transitively by loading each dependency's

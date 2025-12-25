@@ -3,7 +3,7 @@ name = "cargo-watch"
 description = "Watch for file changes and run cargo commands"
 homepage = "https://crates.io/crates/cargo-watch"
 version_format = "semver"
-dependencies = ["zig"]  # zig needed for native C dependencies
+extra_dependencies = ["zig"]  # zig needed for native C dependencies
 
 [version]
 source = "crates_io"
