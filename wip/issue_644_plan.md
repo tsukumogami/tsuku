@@ -55,11 +55,12 @@ This approach was chosen because:
   - Return list of shadowed dependency names with source information (which primitive provides it)
   - Handle both install-time and runtime dependencies
 
-- [ ] Add shadowed dependency validation to recipe validator
-  - Add `validateShadowedDependencies()` function in `validator.go`
-  - Call it from `ValidateBytes()` after structural validation
-  - Add warnings for shadowed dependencies (will become errors in strict mode via existing mechanism)
-  - Include helpful message: "dependency 'X' is already inherited from action 'Y'"
+- [x] Add shadowed dependency validation to recipe validator
+  - Integrated shadowed dependency checking into `cmd/tsuku/validate.go` (CLI layer)
+  - Avoids circular dependency between recipe and actions packages
+  - Calls `actions.DetectShadowedDeps()` after recipe validation
+  - Adds warnings for shadowed dependencies (become errors in strict mode via existing `--strict` flag)
+  - Helpful message: "dependency 'X' is already inherited from action 'Y' (remove this redundant declaration)"
 
 - [ ] Update `homebrew.go` to remove redundant dependency declaration
   - Remove `Dependencies()` method from `HomebrewAction`
