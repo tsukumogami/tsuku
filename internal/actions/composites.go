@@ -317,8 +317,14 @@ func (a *GitHubArchiveAction) Name() string { return "github_archive" }
 // Preflight validates parameters without side effects.
 func (a *GitHubArchiveAction) Preflight(params map[string]interface{}) *PreflightResult {
 	result := &PreflightResult{}
-	if _, ok := GetString(params, "repo"); !ok {
+	repo, hasRepo := GetString(params, "repo")
+	if !hasRepo {
 		result.AddError("github_archive action requires 'repo' parameter")
+	} else {
+		// Validate repo format (must be owner/repo)
+		if !strings.Contains(repo, "/") || strings.Count(repo, "/") != 1 {
+			result.AddError("repo should be in 'owner/repository' format (e.g., 'cli/cli')")
+		}
 	}
 	assetPattern, ok := GetString(params, "asset_pattern")
 	if !ok {
@@ -642,8 +648,14 @@ func (a *GitHubFileAction) Name() string { return "github_file" }
 // Preflight validates parameters without side effects.
 func (a *GitHubFileAction) Preflight(params map[string]interface{}) *PreflightResult {
 	result := &PreflightResult{}
-	if _, ok := GetString(params, "repo"); !ok {
+	repo, hasRepo := GetString(params, "repo")
+	if !hasRepo {
 		result.AddError("github_file action requires 'repo' parameter")
+	} else {
+		// Validate repo format (must be owner/repo)
+		if !strings.Contains(repo, "/") || strings.Count(repo, "/") != 1 {
+			result.AddError("repo should be in 'owner/repository' format (e.g., 'cli/cli')")
+		}
 	}
 	assetPattern, ok := GetString(params, "asset_pattern")
 	if !ok {

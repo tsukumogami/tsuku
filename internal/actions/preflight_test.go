@@ -428,6 +428,70 @@ func TestGitHubFileAction_UsedMappingsNoWarning(t *testing.T) {
 	}
 }
 
+func TestInstallBinariesAction_EmptyBinaries(t *testing.T) {
+	result := ValidateAction("install_binaries", map[string]interface{}{
+		"binaries": []interface{}{},
+	})
+	if !result.HasErrors() {
+		t.Error("expected error for empty binaries array")
+	}
+}
+
+func TestGitHubArchiveAction_InvalidRepoFormat(t *testing.T) {
+	tests := []struct {
+		name    string
+		repo    string
+		wantErr bool
+	}{
+		{"valid", "cli/cli", false},
+		{"no slash", "cli", true},
+		{"too many slashes", "org/repo/extra", true},
+		{"empty", "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ValidateAction("github_archive", map[string]interface{}{
+				"repo":          tt.repo,
+				"asset_pattern": "test-{os}.tar.gz",
+				"binaries":      []interface{}{"test"},
+			})
+			if tt.wantErr && !result.HasErrors() {
+				t.Errorf("expected error for repo %q", tt.repo)
+			}
+			if !tt.wantErr && result.HasErrors() {
+				t.Errorf("unexpected error for repo %q: %v", tt.repo, result.Errors)
+			}
+		})
+	}
+}
+
+func TestGitHubFileAction_InvalidRepoFormat(t *testing.T) {
+	tests := []struct {
+		name    string
+		repo    string
+		wantErr bool
+	}{
+		{"valid", "cli/cli", false},
+		{"no slash", "cli", true},
+		{"too many slashes", "org/repo/extra", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ValidateAction("github_file", map[string]interface{}{
+				"repo":          tt.repo,
+				"asset_pattern": "test-{os}",
+				"binary_name":   "test",
+			})
+			if tt.wantErr && !result.HasErrors() {
+				t.Errorf("expected error for repo %q", tt.repo)
+			}
+			if !tt.wantErr && result.HasErrors() {
+				t.Errorf("unexpected error for repo %q: %v", tt.repo, result.Errors)
+			}
+		})
+	}
+}
+
 func TestContainsPlaceholder(t *testing.T) {
 	tests := []struct {
 		input       string

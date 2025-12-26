@@ -31,6 +31,11 @@ func (a *InstallBinariesAction) Preflight(params map[string]interface{}) *Prefli
 	if _, hasBinary := params["binary"]; hasBinary {
 		result.AddError("'binary' parameter is not supported; use 'binaries' array instead")
 	}
+	// ERROR: Empty binaries array
+	binaries, hasBinaries := GetStringSlice(params, "binaries")
+	if hasBinaries && len(binaries) == 0 {
+		result.AddError("binaries array is empty; no files will be installed")
+	}
 	return result
 }
 
