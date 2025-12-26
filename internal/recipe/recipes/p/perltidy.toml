@@ -3,7 +3,6 @@ name = "perltidy"
 description = "Indent and reformat Perl scripts"
 homepage = "https://metacpan.org/pod/Perl::Tidy"
 version_format = "calver"
-dependencies = ["perl"]
 
 [version]
 source = "metacpan"

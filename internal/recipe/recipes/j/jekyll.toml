@@ -3,7 +3,7 @@ name = "jekyll"
 description = "Static site generator for personal, project, or organization sites"
 homepage = "https://jekyllrb.com/"
 version_format = "semver"
-dependencies = ["ruby", "zig"]  # zig needed for compiling native extensions (json gem)
+extra_dependencies = ["zig"]  # zig needed for compiling native extensions (json gem)
 
 [version]
 source = "rubygems"

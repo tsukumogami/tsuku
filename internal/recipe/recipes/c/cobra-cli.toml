@@ -3,7 +3,6 @@ name = "cobra-cli"
 description = "CLI scaffolding tool for Cobra applications"
 homepage = "https://github.com/spf13/cobra-cli"
 version_format = "semver"
-dependencies = ["go"]
 
 [version]
 source = "goproxy"

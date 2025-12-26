@@ -3,7 +3,6 @@ name = "ack"
 description = "A grep-like program for searching source code"
 homepage = "https://beyondgrep.com/"
 version_format = "semver"
-dependencies = ["perl"]
 
 [version]
 source = "metacpan"

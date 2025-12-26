@@ -3,7 +3,6 @@ name = "fpm"
 description = "Packaging made simple - build packages for multiple platforms"
 homepage = "https://fpm.readthedocs.io/"
 version_format = "semver"
-dependencies = ["ruby"]
 
 [version]
 source = "rubygems"

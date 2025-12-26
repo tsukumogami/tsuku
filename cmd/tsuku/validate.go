@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
@@ -49,6 +50,19 @@ Examples:
 
 		// Validate the recipe
 		result := recipe.ValidateFile(filePath)
+
+		// Check for shadowed dependencies
+		if result.Recipe != nil {
+			shadowed := actions.DetectShadowedDeps(result.Recipe)
+			for _, dep := range shadowed {
+				msg := fmt.Sprintf("dependency '%s' is already inherited from action '%s' (remove this redundant declaration)",
+					dep.Name, dep.Source)
+				result.Warnings = append(result.Warnings, recipe.ValidationWarning{
+					Field:   "dependencies",
+					Message: msg,
+				})
+			}
+		}
 
 		// In strict mode, warnings are treated as errors
 		if strictMode && len(result.Warnings) > 0 {

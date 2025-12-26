@@ -87,6 +87,8 @@ func ValidateBytes(data []byte) *ValidationResult {
 	validatePatches(result, &recipe)
 	validateSteps(result, &recipe)
 	validateVerify(result, &recipe)
+	// Note: Shadowed dependency validation is done at the CLI layer
+	// to avoid circular dependencies between recipe and actions packages
 
 	return result
 }

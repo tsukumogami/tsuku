@@ -3,7 +3,6 @@ name = "staticcheck"
 description = "Go static analysis tool"
 homepage = "https://staticcheck.dev/"
 version_format = "semver"
-dependencies = ["go"]
 
 [version]
 source = "goproxy"

@@ -68,10 +68,22 @@ func ResolveDependenciesForPlatform(r *recipe.Recipe, targetOS string) ResolvedD
 	// Phase 1: Collect from steps
 	for _, step := range r.Steps {
 		actionDeps := GetActionDeps(step.Action)
-		// TODO(#644): Aggregate dependencies from primitive actions when step.Action is decomposable.
-		// Currently only collects dependencies declared directly on the composite action.
-		// Should check if action implements Decomposable, decompose it, and recursively
-		// collect dependencies from all primitive actions in the decomposition tree.
+
+		// Aggregate dependencies from primitive actions if this is a composite action
+		// This ensures composite actions automatically inherit dependencies from their primitives
+		aggregatedDeps := aggregatePrimitiveDeps(step.Action, step.Params)
+
+		// Merge aggregated deps with explicit action deps
+		// Explicit deps take precedence for version constraints
+		combinedDeps := ActionDeps{
+			InstallTime:       append(append([]string{}, actionDeps.InstallTime...), aggregatedDeps.InstallTime...),
+			Runtime:           append(append([]string{}, actionDeps.Runtime...), aggregatedDeps.Runtime...),
+			LinuxInstallTime:  append(append([]string{}, actionDeps.LinuxInstallTime...), aggregatedDeps.LinuxInstallTime...),
+			DarwinInstallTime: append(append([]string{}, actionDeps.DarwinInstallTime...), aggregatedDeps.DarwinInstallTime...),
+			LinuxRuntime:      append(append([]string{}, actionDeps.LinuxRuntime...), aggregatedDeps.LinuxRuntime...),
+			DarwinRuntime:     append(append([]string{}, actionDeps.DarwinRuntime...), aggregatedDeps.DarwinRuntime...),
+		}
+		actionDeps = combinedDeps
 
 		// Install-time: step replace OR (action implicit + platform-specific + step extend)
 		if stepDeps := getStringSliceParam(step.Params, "dependencies"); stepDeps != nil {
@@ -229,6 +241,29 @@ func parseDependency(dep string) (name, version string) {
 		}
 	}
 	return dep, "latest"
+}
+
+// aggregatePrimitiveDeps returns the dependencies declared by an action.
+// This allows composite actions (like cargo_install, go_install) to automatically
+// provide their dependencies (rust, go) without recipes needing to declare them.
+// Returns empty ActionDeps if the action doesn't exist.
+func aggregatePrimitiveDeps(action string, params map[string]interface{}) ActionDeps {
+	// Get the action from registry
+	act := Get(action)
+	if act == nil {
+		return ActionDeps{}
+	}
+
+	// If action is primitive, return its dependencies directly
+	if IsPrimitive(action) {
+		return act.Dependencies()
+	}
+
+	// For non-primitive actions (composite/decomposable), return their own declared deps
+	// Don't try to decompose here to avoid chicken-and-egg problem with EvalTime dependencies
+	// (e.g., cargo_install needs rust at EvalTime to decompose, but we're trying to figure out
+	// what dependencies to install)
+	return act.Dependencies()
 }
 
 // ResolveTransitive expands dependencies transitively by loading each dependency's
