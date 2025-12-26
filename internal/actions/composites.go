@@ -13,6 +13,52 @@ import (
 // Ensure GitHubArchiveAction implements Decomposable
 var _ Decomposable = (*GitHubArchiveAction)(nil)
 
+// decomposeDownload delegates to DownloadAction.Decompose() to get a download_file step.
+// This centralizes URL resolution, OS/arch mapping, and checksum computation.
+//
+// Parameters:
+//   - ctx: evaluation context with version, OS, arch info
+//   - url: URL pattern with optional {version}, {os}, {arch} placeholders
+//   - dest: destination filename (can contain placeholders)
+//   - osMapping: optional OS name mapping (e.g., darwin -> macos)
+//   - archMapping: optional architecture mapping (e.g., amd64 -> x64)
+//
+// Returns the download_file step produced by DownloadAction.Decompose().
+func decomposeDownload(ctx *EvalContext, url, dest string, osMapping, archMapping map[string]string) (Step, error) {
+	downloadParams := map[string]interface{}{
+		"url": url,
+	}
+	if dest != "" {
+		downloadParams["dest"] = dest
+	}
+	if len(osMapping) > 0 {
+		// Convert to map[string]interface{} for compatibility
+		m := make(map[string]interface{}, len(osMapping))
+		for k, v := range osMapping {
+			m[k] = v
+		}
+		downloadParams["os_mapping"] = m
+	}
+	if len(archMapping) > 0 {
+		// Convert to map[string]interface{} for compatibility
+		m := make(map[string]interface{}, len(archMapping))
+		for k, v := range archMapping {
+			m[k] = v
+		}
+		downloadParams["arch_mapping"] = m
+	}
+
+	downloadAction := &DownloadAction{}
+	steps, err := downloadAction.Decompose(ctx, downloadParams)
+	if err != nil {
+		return Step{}, err
+	}
+	if len(steps) != 1 {
+		return Step{}, fmt.Errorf("expected 1 step from download.Decompose, got %d", len(steps))
+	}
+	return steps[0], nil
+}
+
 // DownloadArchiveAction downloads, extracts, and installs binaries from an archive
 // This is a generic composite action for any URL
 type DownloadArchiveAction struct{ BaseAction }
@@ -190,6 +236,7 @@ func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string
 }
 
 // Decompose returns the primitive steps for download_archive action.
+// Delegates to download action for URL resolution and checksum computation.
 func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
 	// Extract parameters
 	url, ok := GetString(params, "url")
@@ -199,7 +246,6 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 
 	archiveFormat, _ := GetString(params, "archive_format")
 	if archiveFormat == "" {
-		// Auto-detect from URL
 		archiveFormat = DetectArchiveFormat(url)
 		if archiveFormat == "" {
 			return nil, fmt.Errorf("could not detect archive format from URL; please specify 'archive_format'")
@@ -219,83 +265,29 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 	}
 	installMode = strings.ToLower(installMode)
 
-	// Validate install_mode
 	if installMode != "binaries" && installMode != "directory" && installMode != "directory_wrapped" {
 		return nil, fmt.Errorf("invalid install_mode '%s': must be 'binaries', 'directory', or 'directory_wrapped'", installMode)
 	}
 
-	// Build variable map for template expansion
-	vars := map[string]string{
-		"version":     ctx.Version,
-		"version_tag": ctx.VersionTag,
-		"os":          ctx.OS,
-		"arch":        ctx.Arch,
+	// Get mappings for delegation
+	osMapping, _ := GetMapStringString(params, "os_mapping")
+	archMapping, _ := GetMapStringString(params, "arch_mapping")
+
+	// Delegate to download action for URL resolution and checksum computation
+	downloadStep, err := decomposeDownload(ctx, url, "", osMapping, archMapping)
+	if err != nil {
+		return nil, err
 	}
 
-	// Apply OS mapping if present
-	if osMapping, ok := params["os_mapping"].(map[string]interface{}); ok {
-		if mappedOS, ok := osMapping[ctx.OS].(string); ok {
-			vars["os"] = mappedOS
-		}
-	}
-
-	// Apply arch mapping if present
-	if archMapping, ok := params["arch_mapping"].(map[string]interface{}); ok {
-		if mappedArch, ok := archMapping[ctx.Arch].(string); ok {
-			vars["arch"] = mappedArch
-		}
-	}
-
-	// Expand URL template
-	downloadURL := ExpandVars(url, vars)
-
-	// Extract filename from URL
-	archiveFilename := ExpandVars(archiveFormat, vars)
-	parts := []rune(downloadURL)
-	lastSlash := -1
-	for i := len(parts) - 1; i >= 0; i-- {
-		if parts[i] == '/' {
-			lastSlash = i
-			break
-		}
-	}
-	if lastSlash >= 0 && lastSlash < len(downloadURL)-1 {
-		archiveFilename = downloadURL[lastSlash+1:]
-	}
+	// Get the resolved filename from download step
+	archiveFilename, _ := GetString(downloadStep.Params, "dest")
 
 	// Extract chmod files
 	chmodFiles := extractSourceFiles(binariesRaw)
 
-	// Download to compute checksum if Downloader is available
-	var checksum string
-	var size int64
-
-	if ctx.Downloader != nil {
-		result, err := ctx.Downloader.Download(ctx.Context, downloadURL)
-		if err != nil {
-			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
-		}
-		checksum = result.Checksum
-		size = result.Size
-		// Save to cache if configured, then cleanup temp file
-		if ctx.DownloadCache != nil {
-			_ = ctx.DownloadCache.Save(downloadURL, result.AssetPath, result.Checksum)
-		}
-		_ = result.Cleanup()
-	}
-
-	// Build primitive steps
+	// Build steps using the download step from delegation
 	steps := []Step{
-		{
-			Action: "download_file",
-			Params: map[string]interface{}{
-				"url":      downloadURL,
-				"dest":     archiveFilename,
-				"checksum": checksum,
-			},
-			Checksum: checksum,
-			Size:     size,
-		},
+		downloadStep,
 		{
 			Action: "extract",
 			Params: map[string]interface{}{
@@ -522,6 +514,7 @@ func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 // Decompose resolves the GitHub release asset and returns primitive steps.
 // This enables deterministic plan generation by performing API calls and
 // checksum computation at evaluation time rather than execution time.
+// Delegates to download action for checksum computation.
 func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
 	// Extract required parameters
 	repo, ok := GetString(params, "repo")
@@ -536,7 +529,6 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 
 	archiveFormat, _ := GetString(params, "archive_format")
 	if archiveFormat == "" {
-		// Auto-detect from asset_pattern
 		archiveFormat = DetectArchiveFormat(assetPattern)
 		if archiveFormat == "" {
 			return nil, fmt.Errorf("could not detect archive format from asset_pattern; please specify 'archive_format'")
@@ -548,20 +540,66 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 		return nil, fmt.Errorf("binaries is required")
 	}
 
-	stripDirs, _ := GetInt(params, "strip_dirs") // Defaults to 0 if not present
+	stripDirs, _ := GetInt(params, "strip_dirs")
 
-	// Parse install_mode parameter (default: "binaries")
 	installMode, _ := GetString(params, "install_mode")
 	if installMode == "" {
 		installMode = "binaries"
 	}
 	installMode = strings.ToLower(installMode)
 
-	// Validate install_mode
 	if installMode != "binaries" && installMode != "directory" && installMode != "directory_wrapped" {
 		return nil, fmt.Errorf("invalid install_mode '%s': must be 'binaries', 'directory', or 'directory_wrapped'", installMode)
 	}
 
+	// Resolve asset name with mappings applied
+	assetName, err := a.resolveAssetName(ctx, params, assetPattern, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	// Construct the fully-resolved download URL
+	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
+
+	// Delegate to download action for checksum computation
+	// URL is already fully resolved, so no mappings needed
+	downloadStep, err := decomposeDownload(ctx, url, assetName, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	// Extract source files for chmod
+	chmodFiles := extractSourceFiles(binariesRaw)
+
+	// Return primitive steps using the download step from delegation
+	return []Step{
+		downloadStep,
+		{
+			Action: "extract",
+			Params: map[string]interface{}{
+				"archive":    assetName,
+				"format":     archiveFormat,
+				"strip_dirs": stripDirs,
+			},
+		},
+		{
+			Action: "chmod",
+			Params: map[string]interface{}{
+				"files": chmodFiles,
+			},
+		},
+		{
+			Action: "install_binaries",
+			Params: map[string]interface{}{
+				"binaries":     binariesRaw,
+				"install_mode": installMode,
+			},
+		},
+	}, nil
+}
+
+// resolveAssetName expands the asset pattern with variables and resolves wildcards.
+func (a *GitHubArchiveAction) resolveAssetName(ctx *EvalContext, params map[string]interface{}, assetPattern, repo string) (string, error) {
 	// Build variable map for template expansion
 	vars := map[string]string{
 		"version": ctx.Version,
@@ -588,85 +626,26 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 	// Check if pattern contains wildcards - if so, resolve using GitHub API
 	if version.ContainsWildcards(assetName) {
 		if ctx.Resolver == nil {
-			return nil, fmt.Errorf("resolver not available in context (required for wildcard patterns)")
+			return "", fmt.Errorf("resolver not available in context (required for wildcard patterns)")
 		}
 
-		// Fetch assets from GitHub API
 		apiCtx, cancel := context.WithTimeout(ctx.Context, 30*time.Second)
 		defer cancel()
 
 		assets, err := ctx.Resolver.FetchReleaseAssets(apiCtx, repo, ctx.VersionTag)
 		if err != nil {
-			return nil, fmt.Errorf("failed to fetch release assets: %w", err)
+			return "", fmt.Errorf("failed to fetch release assets: %w", err)
 		}
 
-		// Match pattern against assets
 		matchedAsset, err := version.MatchAssetPattern(assetName, assets)
 		if err != nil {
-			return nil, fmt.Errorf("asset pattern matching failed: %w", err)
+			return "", fmt.Errorf("asset pattern matching failed: %w", err)
 		}
 
 		assetName = matchedAsset
 	}
 
-	// Construct the download URL
-	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
-
-	// Download the file to compute checksum
-	var checksum string
-	var size int64
-
-	if ctx.Downloader != nil {
-		result, err := ctx.Downloader.Download(ctx.Context, url)
-		if err != nil {
-			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
-		}
-		checksum = result.Checksum
-		size = result.Size
-		// Save to cache if configured, then cleanup temp file
-		if ctx.DownloadCache != nil {
-			_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
-		}
-		_ = result.Cleanup()
-	}
-
-	// Extract source files for chmod (binaries can be ["file"] or [{src: "file", dest: "..."}])
-	chmodFiles := extractSourceFiles(binariesRaw)
-
-	// Return primitive steps
-	return []Step{
-		{
-			Action: "download_file",
-			Params: map[string]interface{}{
-				"url":      url,
-				"dest":     assetName,
-				"checksum": checksum,
-			},
-			Checksum: checksum,
-			Size:     size,
-		},
-		{
-			Action: "extract",
-			Params: map[string]interface{}{
-				"archive":    assetName,
-				"format":     archiveFormat,
-				"strip_dirs": stripDirs,
-			},
-		},
-		{
-			Action: "chmod",
-			Params: map[string]interface{}{
-				"files": chmodFiles,
-			},
-		},
-		{
-			Action: "install_binaries",
-			Params: map[string]interface{}{
-				"binaries":     binariesRaw,
-				"install_mode": installMode,
-			},
-		},
-	}, nil
+	return assetName, nil
 }
 
 // GitHubFileAction downloads pre-compiled binary files from GitHub releases
@@ -846,6 +825,7 @@ func (a *GitHubFileAction) Execute(ctx *ExecutionContext, params map[string]inte
 }
 
 // Decompose returns the primitive steps for github_file action.
+// Delegates to download action for checksum computation.
 func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
 	// Extract parameters
 	repo, ok := GetString(params, "repo")
@@ -881,85 +861,42 @@ func (a *GitHubFileAction) Decompose(ctx *EvalContext, params map[string]interfa
 		return nil, fmt.Errorf("either 'binary' or 'binaries' is required")
 	}
 
-	// Build variable map
+	// Resolve asset name with mappings applied (reuses GitHubArchiveAction helper)
+	ghArchive := &GitHubArchiveAction{}
+	assetName, err := ghArchive.resolveAssetName(ctx, params, assetPattern, repo)
+	if err != nil {
+		return nil, err
+	}
+
+	// Expand download name with vars (need to apply mappings for expansion)
 	vars := map[string]string{
 		"version": ctx.Version,
 		"os":      ctx.OS,
 		"arch":    ctx.Arch,
 	}
-
-	// Apply OS mapping if present
 	if osMapping, ok := params["os_mapping"].(map[string]interface{}); ok {
 		if mappedOS, ok := osMapping[ctx.OS].(string); ok {
 			vars["os"] = mappedOS
 		}
 	}
-
-	// Apply arch mapping if present
 	if archMapping, ok := params["arch_mapping"].(map[string]interface{}); ok {
 		if mappedArch, ok := archMapping[ctx.Arch].(string); ok {
 			vars["arch"] = mappedArch
 		}
 	}
-
-	assetName := ExpandVars(assetPattern, vars)
-
-	// Check if pattern contains wildcards - if so, resolve using GitHub API
-	if version.ContainsWildcards(assetName) {
-		if ctx.Resolver == nil {
-			return nil, fmt.Errorf("resolver not available in context (required for wildcard patterns)")
-		}
-
-		// Fetch assets from GitHub API
-		apiCtx, cancel := context.WithTimeout(ctx.Context, 30*time.Second)
-		defer cancel()
-
-		assets, err := ctx.Resolver.FetchReleaseAssets(apiCtx, repo, ctx.VersionTag)
-		if err != nil {
-			return nil, fmt.Errorf("failed to fetch release assets: %w", err)
-		}
-
-		// Match pattern against assets
-		matchedAsset, err := version.MatchAssetPattern(assetName, assets)
-		if err != nil {
-			return nil, fmt.Errorf("asset pattern matching failed: %w", err)
-		}
-
-		assetName = matchedAsset
-	}
-
-	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
 	expandedDownloadName := ExpandVars(downloadName, vars)
 
-	// Download to compute checksum if Downloader is available
-	var checksum string
-	var size int64
+	// Construct the fully-resolved download URL
+	url := fmt.Sprintf("https://github.com/%s/releases/download/%s/%s", repo, ctx.VersionTag, assetName)
 
-	if ctx.Downloader != nil {
-		result, err := ctx.Downloader.Download(ctx.Context, url)
-		if err != nil {
-			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
-		}
-		checksum = result.Checksum
-		size = result.Size
-		// Save to cache if configured, then cleanup temp file
-		if ctx.DownloadCache != nil {
-			_ = ctx.DownloadCache.Save(url, result.AssetPath, result.Checksum)
-		}
-		_ = result.Cleanup()
+	// Delegate to download action for checksum computation
+	downloadStep, err := decomposeDownload(ctx, url, expandedDownloadName, nil, nil)
+	if err != nil {
+		return nil, err
 	}
 
 	steps := []Step{
-		{
-			Action: "download_file",
-			Params: map[string]interface{}{
-				"url":      url,
-				"dest":     expandedDownloadName,
-				"checksum": checksum,
-			},
-			Checksum: checksum,
-			Size:     size,
-		},
+		downloadStep,
 		{
 			Action: "chmod",
 			Params: map[string]interface{}{
