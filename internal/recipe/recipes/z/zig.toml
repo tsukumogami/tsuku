@@ -10,7 +10,6 @@ github_repo = "ziglang/zig"
 [[steps]]
 action = "download_archive"
 url = "https://ziglang.org/download/{version}/zig-{arch}-{os}-{version}.tar.xz"
-archive_format = "tar.xz"
 strip_dirs = 1
 binaries = ["zig"]
 install_mode = "directory"

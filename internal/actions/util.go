@@ -228,6 +228,29 @@ func GetStringSlice(params map[string]interface{}, key string) ([]string, bool) 
 	}
 }
 
+// DetectArchiveFormat auto-detects archive format from URL or filename
+func DetectArchiveFormat(urlOrFilename string) string {
+	lower := strings.ToLower(urlOrFilename)
+	switch {
+	case strings.HasSuffix(lower, ".tar.gz"), strings.HasSuffix(lower, ".tgz"):
+		return "tar.gz"
+	case strings.HasSuffix(lower, ".tar.xz"), strings.HasSuffix(lower, ".txz"):
+		return "tar.xz"
+	case strings.HasSuffix(lower, ".tar.bz2"), strings.HasSuffix(lower, ".tbz2"), strings.HasSuffix(lower, ".tbz"):
+		return "tar.bz2"
+	case strings.HasSuffix(lower, ".tar.zst"), strings.HasSuffix(lower, ".tzst"):
+		return "tar.zst"
+	case strings.HasSuffix(lower, ".tar.lz"), strings.HasSuffix(lower, ".tlz"):
+		return "tar.lz"
+	case strings.HasSuffix(lower, ".tar"):
+		return "tar"
+	case strings.HasSuffix(lower, ".zip"):
+		return "zip"
+	default:
+		return ""
+	}
+}
+
 // GetMapStringString safely gets a map[string]string from params map
 func GetMapStringString(params map[string]interface{}, key string) (map[string]string, bool) {
 	val, ok := params[key]

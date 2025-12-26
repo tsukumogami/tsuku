@@ -222,9 +222,9 @@ func TestDownloadArchiveAction_Execute_MissingParams(t *testing.T) {
 			params: map[string]interface{}{},
 		},
 		{
-			name: "missing archive_format",
+			name: "missing archive_format with undetectable URL",
 			params: map[string]interface{}{
-				"url": "https://example.com/file.tar.gz",
+				"url": "https://example.com/download?file=tool",
 			},
 		},
 		{
@@ -273,10 +273,10 @@ func TestGitHubArchiveAction_Execute_MissingParams(t *testing.T) {
 			},
 		},
 		{
-			name: "missing archive_format",
+			name: "missing archive_format with undetectable pattern",
 			params: map[string]interface{}{
 				"repo":          "owner/repo",
-				"asset_pattern": "file-{version}.tar.gz",
+				"asset_pattern": "file-{version}",
 			},
 		},
 		{
@@ -461,10 +461,10 @@ func TestGitHubArchiveAction_Decompose_MissingParams(t *testing.T) {
 			},
 		},
 		{
-			name: "missing archive_format",
+			name: "missing archive_format with undetectable pattern",
 			params: map[string]interface{}{
 				"repo":          "owner/repo",
-				"asset_pattern": "file-{version}.tar.gz",
+				"asset_pattern": "file-{version}",
 			},
 		},
 		{

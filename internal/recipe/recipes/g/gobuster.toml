@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "OJ/gobuster"
 asset_pattern = "gobuster_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["gobuster"]
 os_mapping = { linux = "Linux", darwin = "Darwin" }

@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "terraform-linters/tflint"
 asset_pattern = "tflint_{os}_{arch}.zip"
-archive_format = "zip"
 strip_dirs = 0
 binaries = ["tflint"]
 os_mapping = { darwin = "darwin", linux = "linux" }

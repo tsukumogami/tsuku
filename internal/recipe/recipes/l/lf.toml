@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "gokcehan/lf"
 asset_pattern = "lf-{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["lf"]
 os_mapping = { linux = "linux", darwin = "darwin" }

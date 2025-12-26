@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "aquasecurity/tfsec"
 asset_pattern = "tfsec_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["tfsec"]
 os_mapping = { darwin = "darwin", linux = "linux" }

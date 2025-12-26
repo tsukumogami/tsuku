@@ -16,7 +16,6 @@ source = "nodejs_dist"  # Uses custom resolver for nodejs.org/dist
 action = "download_archive"
 url = "https://nodejs.org/dist/{version_tag}/node-{version_tag}-{os}-{arch}.tar.gz"
 checksum_url = "https://nodejs.org/dist/{version_tag}/SHASUMS256.txt"
-archive_format = "tar.gz"
 strip_dirs = 1
 binaries = ["bin/node", "bin/npm"]
 install_mode = "directory"

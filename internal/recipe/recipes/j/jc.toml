@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "kellyjonbrazil/jc"
 asset_pattern = "jc-{version}-{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["jc"]
 os_mapping = { linux = "linux", darwin = "darwin" }

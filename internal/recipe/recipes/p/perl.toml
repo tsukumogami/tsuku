@@ -10,7 +10,6 @@ github_repo = "skaji/relocatable-perl"
 [[steps]]
 action = "download_archive"
 url = "https://github.com/skaji/relocatable-perl/releases/download/{version}/perl-{os}-{arch}.tar.xz"
-archive_format = "tar.xz"
 strip_dirs = 1
 binaries = ["bin/perl", "bin/cpanm"]
 install_mode = "directory"

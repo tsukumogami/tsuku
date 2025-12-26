@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "digitalocean/doctl"
 asset_pattern = "doctl-{version}-{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["doctl"]
 os_mapping = { darwin = "darwin", linux = "linux" }

@@ -14,7 +14,6 @@ github_repo = "golang/go"  # Detect version from GitHub releases
 [[steps]]
 action = "download_archive"
 url = "https://go.dev/dl/go{version}.{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 1
 binaries = ["bin/go", "bin/gofmt"]
 install_mode = "directory"

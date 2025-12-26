@@ -65,6 +65,15 @@ func (a *ExtractAction) Name() string {
 	return "extract"
 }
 
+// Preflight validates parameters without side effects.
+func (a *ExtractAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+	if _, ok := GetString(params, "archive"); !ok {
+		result.AddError("extract action requires 'archive' parameter")
+	}
+	return result
+}
+
 // Execute extracts an archive
 //
 // Parameters:

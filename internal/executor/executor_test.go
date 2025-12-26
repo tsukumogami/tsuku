@@ -1063,8 +1063,8 @@ func TestExecutePlan_ContextCancellation(t *testing.T) {
 			{
 				Action: "chmod",
 				Params: map[string]interface{}{
-					"file": "nonexistent.txt",
-					"mode": "755",
+					"files": []interface{}{"nonexistent.txt"},
+					"mode":  "755",
 				},
 			},
 		},

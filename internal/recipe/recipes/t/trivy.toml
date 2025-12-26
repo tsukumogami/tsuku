@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "aquasecurity/trivy"
 asset_pattern = "trivy_{version}_{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["trivy"]
 os_mapping = { darwin = "macOS", linux = "Linux" }

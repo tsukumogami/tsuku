@@ -23,6 +23,29 @@ func (a *RequireSystemAction) Name() string {
 	return "require_system"
 }
 
+// Preflight validates parameters without side effects.
+func (a *RequireSystemAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+	if _, ok := GetString(params, "command"); !ok {
+		result.AddError("require_system action requires 'command' parameter")
+	}
+
+	// WARNING: Missing install_guide
+	if _, hasGuide := params["install_guide"]; !hasGuide {
+		result.AddWarning("consider adding 'install_guide' with platform-specific installation instructions")
+	}
+
+	// ERROR: min_version without version detection
+	if _, hasMinVersion := GetString(params, "min_version"); hasMinVersion {
+		_, hasVersionFlag := GetString(params, "version_flag")
+		_, hasVersionRegex := GetString(params, "version_regex")
+		if !hasVersionFlag || !hasVersionRegex {
+			result.AddError("min_version specified but version detection incomplete; add version_flag and version_regex")
+		}
+	}
+	return result
+}
+
 // Execute validates a system dependency is installed and meets version requirements.
 //
 // Parameters:

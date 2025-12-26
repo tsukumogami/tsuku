@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "terraform-docs/terraform-docs"
 asset_pattern = "terraform-docs-v{version}-{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["terraform-docs"]
 os_mapping = { darwin = "darwin", linux = "linux" }

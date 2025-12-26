@@ -352,6 +352,17 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 
 	fmt.Println()
 
+	// Validate all steps before execution (fail fast)
+	for i, step := range allSteps {
+		action := actions.Get(step.Action)
+		if action == nil {
+			return fmt.Errorf("step %d: unknown action '%s'", i+1, step.Action)
+		}
+		if result := actions.ValidateAction(step.Action, step.Params); result.HasErrors() {
+			return fmt.Errorf("step %d (%s): %s", i+1, step.Action, result.ToError())
+		}
+	}
+
 	// Execute each step (including flattened dependency steps)
 	for i, step := range allSteps {
 		// Check for context cancellation
@@ -373,7 +384,7 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 				return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
 			}
 		} else {
-			// Execute other steps normally
+			// Execute (validation already done upfront)
 			if err := action.Execute(execCtx, step.Params); err != nil {
 				return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
 			}
@@ -411,7 +422,7 @@ func (e *Executor) executeDownloadWithVerification(
 	step ResolvedStep,
 	plan *InstallationPlan,
 ) error {
-	// Execute the download action
+	// Execute the download action (validation already done upfront)
 	action := actions.Get("download")
 	if err := action.Execute(execCtx, step.Params); err != nil {
 		return err
@@ -571,6 +582,17 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		Dependencies:     depResolvedDeps,
 	}
 
+	// Validate all steps before execution (fail fast)
+	for i, step := range dep.Steps {
+		action := actions.Get(step.Action)
+		if action == nil {
+			return fmt.Errorf("dependency %s step %d: unknown action '%s'", dep.Tool, i+1, step.Action)
+		}
+		if result := actions.ValidateAction(step.Action, step.Params); result.HasErrors() {
+			return fmt.Errorf("dependency %s step %d (%s): %s", dep.Tool, i+1, step.Action, result.ToError())
+		}
+	}
+
 	// Execute each step for this dependency
 	for i, step := range dep.Steps {
 		if err := ctx.Err(); err != nil {
@@ -584,6 +606,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 			return fmt.Errorf("unknown action: %s", step.Action)
 		}
 
+		// Execute (validation already done upfront)
 		if err := action.Execute(execCtx, step.Params); err != nil {
 			return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
 		}

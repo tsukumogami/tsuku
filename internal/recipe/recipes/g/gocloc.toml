@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "hhatto/gocloc"
 asset_pattern = "gocloc_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["gocloc"]
 os_mapping = { linux = "Linux", darwin = "Darwin" }

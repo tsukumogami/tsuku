@@ -15,6 +15,7 @@ github_repo = "rust-lang/rust"  # Detect version from GitHub releases
 [[steps]]
 action = "download"
 url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz"
+checksum_url = "https://static.rust-lang.org/dist/rust-{version}-{arch}-{os}.tar.gz.sha256"
 os_mapping = { linux = "unknown-linux-gnu", darwin = "apple-darwin" }
 arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
 

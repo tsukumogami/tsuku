@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "golang-migrate/migrate"
 asset_pattern = "migrate.{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["migrate"]
 os_mapping = { linux = "linux", darwin = "darwin" }

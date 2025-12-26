@@ -75,9 +75,9 @@ func TestDownloadArchiveAction_Decompose(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name: "missing format",
+			name: "missing format with undetectable URL",
 			params: map[string]interface{}{
-				"url":      "https://example.com/tool.tar.gz",
+				"url":      "https://example.com/download?file=tool",
 				"binaries": []interface{}{"tool"},
 			},
 			wantErr: true,

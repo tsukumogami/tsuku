@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "rhysd/actionlint"
 asset_pattern = "actionlint_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["actionlint"]
 os_mapping = { darwin = "darwin", linux = "linux" }

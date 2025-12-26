@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "trufflesecurity/trufflehog"
 asset_pattern = "trufflehog_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["trufflehog"]
 os_mapping = { darwin = "darwin", linux = "linux" }

@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "tilt-dev/tilt"
 asset_pattern = "tilt.{version}.{os}.{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["tilt"]
 os_mapping = { darwin = "mac", linux = "linux" }

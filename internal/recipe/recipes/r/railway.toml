@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "railwayapp/cli"
 asset_pattern = "railway-v{version}-{arch}-{os}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["railway"]
 os_mapping = { darwin = "apple-darwin", linux = "unknown-linux-gnu" }

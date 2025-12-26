@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "zricethezav/gitleaks"
 asset_pattern = "gitleaks_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["gitleaks"]
 os_mapping = { darwin = "darwin", linux = "linux" }

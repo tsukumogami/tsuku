@@ -8,9 +8,8 @@ version_format = "semver"
 action = "github_archive"
 repo = "render-oss/cli"
 asset_pattern = "cli_{version}_{os}_{arch}.zip"
-archive_format = "zip"
 strip_dirs = 0
-binaries = [{src = "cli_v2.5.0", dest = "bin/render"}]
+binaries = [{src = "cli_v{version}", dest = "bin/render"}]
 os_mapping = { darwin = "darwin", linux = "linux" }
 arch_mapping = { amd64 = "amd64", arm64 = "arm64" }
 

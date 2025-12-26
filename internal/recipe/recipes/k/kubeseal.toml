@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "bitnami-labs/sealed-secrets"
 asset_pattern = "kubeseal-{version}-{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["kubeseal"]
 os_mapping = { darwin = "darwin", linux = "linux" }

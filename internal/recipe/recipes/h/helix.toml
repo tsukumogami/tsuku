@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "helix-editor/helix"
 asset_pattern = "helix-{version}-{arch}-{os}.tar.xz"
-archive_format = "tar.xz"
 strip_dirs = 1
 binaries = ["hx"]
 os_mapping = { linux = "linux", darwin = "macos" }

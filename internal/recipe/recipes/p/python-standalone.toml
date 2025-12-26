@@ -8,7 +8,6 @@ version_format = "custom"
 action = "github_archive"
 repo = "indygreg/python-build-standalone"
 asset_pattern = "cpython-*+{version}-{arch}-{os}-install_only.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 1
 install_mode = "directory"
 binaries = ["bin/python3", "bin/pip3"]
