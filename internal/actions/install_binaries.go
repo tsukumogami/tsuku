@@ -25,9 +25,11 @@ func (a *InstallBinariesAction) Name() string {
 func (a *InstallBinariesAction) Preflight(params map[string]interface{}) *PreflightResult {
 	result := &PreflightResult{}
 	_, hasBinaries := params["binaries"]
-	_, hasBinary := params["binary"]
-	if !hasBinaries && !hasBinary {
-		result.AddError("install_binaries action requires 'binaries' or 'binary' parameter")
+	if !hasBinaries {
+		result.AddError("install_binaries action requires 'binaries' parameter")
+	}
+	if _, hasBinary := params["binary"]; hasBinary {
+		result.AddError("'binary' parameter is not supported; use 'binaries' array instead")
 	}
 	return result
 }
