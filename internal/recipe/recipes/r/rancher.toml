@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "rancher/cli"
 asset_pattern = "rancher-{os}-{arch}-v{version}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 1
 binaries = ["rancher"]
 os_mapping = { darwin = "darwin", linux = "linux" }

@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "iawia002/lux"
 asset_pattern = "lux_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["lux"]
 os_mapping = { darwin = "Darwin", linux = "Linux" }

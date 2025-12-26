@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "lsd-rs/lsd"
 asset_pattern = "lsd-v{version}-{arch}-{os}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 1
 binaries = ["lsd"]
 os_mapping = { linux = "unknown-linux-musl", darwin = "apple-darwin" }

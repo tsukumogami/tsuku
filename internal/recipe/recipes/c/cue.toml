@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "cue-lang/cue"
 asset_pattern = "cue_v{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["cue"]
 os_mapping = { darwin = "darwin", linux = "linux" }

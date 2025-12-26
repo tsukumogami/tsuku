@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "caddyserver/caddy"
 asset_pattern = "caddy_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["caddy"]
 os_mapping = { darwin = "mac", linux = "linux" }

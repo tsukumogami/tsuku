@@ -22,6 +22,39 @@ func (DownloadArchiveAction) IsDeterministic() bool { return true }
 
 func (a *DownloadArchiveAction) Name() string { return "download_archive" }
 
+// Preflight validates parameters without side effects.
+func (a *DownloadArchiveAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+	url, ok := GetString(params, "url")
+	if !ok {
+		result.AddError("download_archive action requires 'url' parameter")
+	}
+
+	// WARNING: Unused os_mapping
+	if _, hasOSMapping := GetMapStringString(params, "os_mapping"); hasOSMapping {
+		if !containsPlaceholder(url, "os") {
+			result.AddWarning("os_mapping provided but URL does not contain {os} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Unused arch_mapping
+	if _, hasArchMapping := GetMapStringString(params, "arch_mapping"); hasArchMapping {
+		if !containsPlaceholder(url, "arch") {
+			result.AddWarning("arch_mapping provided but URL does not contain {arch} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Redundant archive_format when it can be inferred from URL
+	if archiveFormat, hasFormat := GetString(params, "archive_format"); hasFormat {
+		detectedFormat := DetectArchiveFormat(url)
+		if detectedFormat != "" && detectedFormat == archiveFormat {
+			result.AddWarning("archive_format can be inferred from URL; consider removing redundant parameter")
+		}
+	}
+
+	return result
+}
+
 func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Extract parameters
 	url, ok := GetString(params, "url")
@@ -29,9 +62,13 @@ func (a *DownloadArchiveAction) Execute(ctx *ExecutionContext, params map[string
 		return fmt.Errorf("url is required")
 	}
 
-	archiveFormat, ok := GetString(params, "archive_format")
-	if !ok {
-		return fmt.Errorf("archive_format is required")
+	archiveFormat, _ := GetString(params, "archive_format")
+	if archiveFormat == "" {
+		// Auto-detect from URL
+		archiveFormat = DetectArchiveFormat(url)
+		if archiveFormat == "" {
+			return fmt.Errorf("could not detect archive format from URL; please specify 'archive_format'")
+		}
 	}
 
 	binariesRaw, ok := params["binaries"]
@@ -160,9 +197,13 @@ func (a *DownloadArchiveAction) Decompose(ctx *EvalContext, params map[string]in
 		return nil, fmt.Errorf("url is required")
 	}
 
-	archiveFormat, ok := GetString(params, "archive_format")
-	if !ok {
-		return nil, fmt.Errorf("archive_format is required")
+	archiveFormat, _ := GetString(params, "archive_format")
+	if archiveFormat == "" {
+		// Auto-detect from URL
+		archiveFormat = DetectArchiveFormat(url)
+		if archiveFormat == "" {
+			return nil, fmt.Errorf("could not detect archive format from URL; please specify 'archive_format'")
+		}
 	}
 
 	binariesRaw, ok := params["binaries"]
@@ -289,6 +330,48 @@ func (GitHubArchiveAction) IsDeterministic() bool { return true }
 
 func (a *GitHubArchiveAction) Name() string { return "github_archive" }
 
+// Preflight validates parameters without side effects.
+func (a *GitHubArchiveAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+	repo, hasRepo := GetString(params, "repo")
+	if !hasRepo {
+		result.AddError("github_archive action requires 'repo' parameter")
+	} else {
+		// Validate repo format (must be owner/repo)
+		if !strings.Contains(repo, "/") || strings.Count(repo, "/") != 1 {
+			result.AddError("repo should be in 'owner/repository' format (e.g., 'cli/cli')")
+		}
+	}
+	assetPattern, ok := GetString(params, "asset_pattern")
+	if !ok {
+		result.AddError("github_archive action requires 'asset_pattern' parameter")
+	}
+
+	// WARNING: Unused os_mapping
+	if _, hasOSMapping := GetMapStringString(params, "os_mapping"); hasOSMapping {
+		if !containsPlaceholder(assetPattern, "os") {
+			result.AddWarning("os_mapping provided but asset_pattern does not contain {os} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Unused arch_mapping
+	if _, hasArchMapping := GetMapStringString(params, "arch_mapping"); hasArchMapping {
+		if !containsPlaceholder(assetPattern, "arch") {
+			result.AddWarning("arch_mapping provided but asset_pattern does not contain {arch} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Redundant archive_format when it can be inferred from asset_pattern
+	if archiveFormat, hasFormat := GetString(params, "archive_format"); hasFormat {
+		detectedFormat := DetectArchiveFormat(assetPattern)
+		if detectedFormat != "" && detectedFormat == archiveFormat {
+			result.AddWarning("archive_format can be inferred from asset_pattern; consider removing redundant parameter")
+		}
+	}
+
+	return result
+}
+
 func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Extract parameters
 	repo, ok := GetString(params, "repo")
@@ -301,9 +384,13 @@ func (a *GitHubArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 		return fmt.Errorf("asset_pattern is required")
 	}
 
-	archiveFormat, ok := GetString(params, "archive_format")
-	if !ok {
-		return fmt.Errorf("archive_format is required")
+	archiveFormat, _ := GetString(params, "archive_format")
+	if archiveFormat == "" {
+		// Auto-detect from asset_pattern
+		archiveFormat = DetectArchiveFormat(assetPattern)
+		if archiveFormat == "" {
+			return fmt.Errorf("could not detect archive format from asset_pattern; please specify 'archive_format'")
+		}
 	}
 
 	stripDirs, _ := GetInt(params, "strip_dirs") // Defaults to 0 if not present
@@ -447,9 +534,13 @@ func (a *GitHubArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 		return nil, fmt.Errorf("asset_pattern is required")
 	}
 
-	archiveFormat, ok := GetString(params, "archive_format")
-	if !ok {
-		return nil, fmt.Errorf("archive_format is required")
+	archiveFormat, _ := GetString(params, "archive_format")
+	if archiveFormat == "" {
+		// Auto-detect from asset_pattern
+		archiveFormat = DetectArchiveFormat(assetPattern)
+		if archiveFormat == "" {
+			return nil, fmt.Errorf("could not detect archive format from asset_pattern; please specify 'archive_format'")
+		}
 	}
 
 	binariesRaw, ok := params["binaries"]
@@ -585,6 +676,52 @@ type GitHubFileAction struct{ BaseAction }
 func (GitHubFileAction) IsDeterministic() bool { return true }
 
 func (a *GitHubFileAction) Name() string { return "github_file" }
+
+// Preflight validates parameters without side effects.
+func (a *GitHubFileAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+	repo, hasRepo := GetString(params, "repo")
+	if !hasRepo {
+		result.AddError("github_file action requires 'repo' parameter")
+	} else {
+		// Validate repo format (must be owner/repo)
+		if !strings.Contains(repo, "/") || strings.Count(repo, "/") != 1 {
+			result.AddError("repo should be in 'owner/repository' format (e.g., 'cli/cli')")
+		}
+	}
+	assetPattern, ok := GetString(params, "asset_pattern")
+	if !ok {
+		result.AddError("github_file action requires 'asset_pattern' parameter")
+	}
+
+	// WARNING: Unused os_mapping
+	if _, hasOSMapping := GetMapStringString(params, "os_mapping"); hasOSMapping {
+		if !containsPlaceholder(assetPattern, "os") {
+			result.AddWarning("os_mapping provided but asset_pattern does not contain {os} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Unused arch_mapping
+	if _, hasArchMapping := GetMapStringString(params, "arch_mapping"); hasArchMapping {
+		if !containsPlaceholder(assetPattern, "arch") {
+			result.AddWarning("arch_mapping provided but asset_pattern does not contain {arch} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Archive extension in asset_pattern
+	if assetPattern, hasPattern := GetString(params, "asset_pattern"); hasPattern {
+		archiveExts := []string{".tar.gz", ".tgz", ".tar.xz", ".tar.bz2", ".zip", ".tar"}
+		lowerPattern := strings.ToLower(assetPattern)
+		for _, ext := range archiveExts {
+			if strings.HasSuffix(lowerPattern, ext) {
+				result.AddWarning("asset_pattern ends with archive extension; consider using 'github_archive' action instead")
+				break
+			}
+		}
+	}
+
+	return result
+}
 
 func (a *GitHubFileAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Extract parameters

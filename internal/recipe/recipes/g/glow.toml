@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "charmbracelet/glow"
 asset_pattern = "glow_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 1
 binaries = ["glow"]
 os_mapping = { linux = "Linux", darwin = "Darwin" }

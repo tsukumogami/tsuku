@@ -9,10 +9,12 @@ binaries = ["bin/curl"]
 source = "homebrew"
 formula = "curl"
 
-# NOTE: curl.se provides PGP signatures but not SHA256SUMS; checksum computed during plan generation
+# TODO(#682): Replace skip_verification_reason with signature_url when PGP support is implemented
 [[steps]]
 action = "download"
 url = "https://curl.se/download/curl-{version}.tar.gz"
+skip_verification_reason = "curl.se provides PGP signatures but not checksums; see #682"
+# signature_url = "https://curl.se/download/curl-{version}.tar.gz.asc"
 
 [[steps]]
 action = "extract"

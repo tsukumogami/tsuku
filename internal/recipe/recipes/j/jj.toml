@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "jj-vcs/jj"
 asset_pattern = "jj-v{version}-{arch}-{os}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["jj"]
 os_mapping = { linux = "unknown-linux-musl", darwin = "apple-darwin" }

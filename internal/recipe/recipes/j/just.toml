@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "casey/just"
 asset_pattern = "just-{version}-{arch}-{os}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["just"]
 os_mapping = { linux = "unknown-linux-musl", darwin = "apple-darwin" }

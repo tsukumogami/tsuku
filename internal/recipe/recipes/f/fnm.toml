@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "Schniz/fnm"
 asset_pattern = "fnm-{os}.zip"
-archive_format = "zip"
 strip_dirs = 0
 binaries = ["fnm"]
 os_mapping = { darwin = "macos", linux = "linux" }

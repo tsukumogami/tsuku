@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "ekristen/azure-nuke"
 asset_pattern = "azure-nuke-v{version}-{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["azure-nuke"]
 os_mapping = { darwin = "darwin", linux = "linux" }

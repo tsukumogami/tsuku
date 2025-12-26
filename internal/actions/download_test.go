@@ -160,79 +160,10 @@ func TestDownloadAction_verifyChecksum_NoChecksum(t *testing.T) {
 	}
 }
 
-func TestDownloadAction_verifyChecksum_InlineChecksum(t *testing.T) {
-	t.Parallel()
-	action := &DownloadAction{}
-	tmpDir := t.TempDir()
-
-	execCtx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    tmpDir,
-		InstallDir: tmpDir,
-		Version:    "1.0.0",
-	}
-
-	// Create a test file
-	testFile := filepath.Join(tmpDir, "test.txt")
-	content := []byte("hello world")
-	if err := os.WriteFile(testFile, content, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	vars := GetStandardVars("1.0.0", tmpDir, tmpDir, "")
-
-	// SHA256 of "hello world"
-	correctChecksum := "b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9"
-
-	// Test with correct checksum
-	err := action.verifyChecksum(context.Background(), execCtx, map[string]interface{}{
-		"checksum": correctChecksum,
-	}, testFile, vars)
-	if err != nil {
-		t.Errorf("verifyChecksum() with correct checksum failed: %v", err)
-	}
-
-	// Test with incorrect checksum
-	err = action.verifyChecksum(context.Background(), execCtx, map[string]interface{}{
-		"checksum": "wrongchecksum",
-	}, testFile, vars)
-	if err == nil {
-		t.Error("verifyChecksum() with incorrect checksum should fail")
-	}
-}
-
-func TestDownloadAction_verifyChecksum_CustomAlgo(t *testing.T) {
-	t.Parallel()
-	action := &DownloadAction{}
-	tmpDir := t.TempDir()
-
-	execCtx := &ExecutionContext{
-		Context:    context.Background(),
-		WorkDir:    tmpDir,
-		InstallDir: tmpDir,
-		Version:    "1.0.0",
-	}
-
-	// Create a test file
-	testFile := filepath.Join(tmpDir, "test.txt")
-	content := []byte("hello world")
-	if err := os.WriteFile(testFile, content, 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	vars := GetStandardVars("1.0.0", tmpDir, tmpDir, "")
-
-	// SHA512 of "hello world"
-	sha512Checksum := "309ecc489c12d6eb4cc40f50c902f2b4d0ed77ee511a7c7a9bcd3ca86d4cd86f989dd35bc5ff499670da34255b45b0cfd830e81f605dcf7dc5542e93ae9cd76f"
-
-	err := action.verifyChecksum(context.Background(), execCtx, map[string]interface{}{
-		"checksum":      sha512Checksum,
-		"checksum_algo": "sha512",
-	}, testFile, vars)
-	if err != nil {
-		t.Errorf("verifyChecksum() with SHA512 failed: %v", err)
-	}
-}
+// Note: TestDownloadAction_verifyChecksum_InlineChecksum and TestDownloadAction_verifyChecksum_CustomAlgo
+// were removed because the download action no longer supports inline checksum parameter.
+// Inline checksums only work with the download_file action for static URLs.
+// The download action now only supports checksum_url for dynamic verification.
 
 func TestDownloadAction_downloadFile_ContextCancellation(t *testing.T) {
 	t.Parallel()

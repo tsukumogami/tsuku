@@ -300,6 +300,38 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		return err
 	}
 
+	// Validate the recipe before attempting installation
+	// This runs the same validation as `tsuku validate` to catch issues early
+	validationResult := recipe.ValidateRecipe(r)
+
+	// Check for shadowed dependencies (declared deps already inherited from actions)
+	shadowed := actions.DetectShadowedDeps(r)
+	for _, dep := range shadowed {
+		msg := fmt.Sprintf("dependency '%s' is already inherited from action '%s' (remove this redundant declaration)",
+			dep.Name, dep.Source)
+		validationResult.Warnings = append(validationResult.Warnings, recipe.ValidationWarning{
+			Field:   "dependencies",
+			Message: msg,
+		})
+	}
+
+	// Fail on validation errors
+	if !validationResult.Valid {
+		printError(fmt.Errorf("recipe validation failed for '%s'", toolName))
+		for _, e := range validationResult.Errors {
+			fmt.Fprintf(os.Stderr, "  - %s\n", e)
+		}
+		return fmt.Errorf("recipe validation failed")
+	}
+
+	// Show warnings (non-fatal)
+	if len(validationResult.Warnings) > 0 {
+		printInfof("Warnings for %s:\n", toolName)
+		for _, w := range validationResult.Warnings {
+			printInfof("  - %s\n", w)
+		}
+	}
+
 	// Check if this is a library recipe
 	if r.IsLibrary() {
 		return installLibrary(toolName, reqVersion, parent, mgr, telemetryClient)

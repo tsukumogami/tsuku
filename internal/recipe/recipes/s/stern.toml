@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "stern/stern"
 asset_pattern = "stern_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["stern"]
 os_mapping = { darwin = "darwin", linux = "linux" }

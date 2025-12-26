@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "kopia/kopia"
 asset_pattern = "kopia-{version}-{os}-{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 1
 binaries = ["kopia"]
 os_mapping = { linux = "linux", darwin = "macOS" }

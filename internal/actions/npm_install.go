@@ -33,6 +33,18 @@ func (a *NpmInstallAction) Name() string {
 	return "npm_install"
 }
 
+// Preflight validates parameters without side effects.
+func (a *NpmInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+	if _, ok := GetString(params, "package"); !ok {
+		result.AddError("npm_install action requires 'package' parameter")
+	}
+	if _, hasExecutables := params["executables"]; !hasExecutables {
+		result.AddError("npm_install action requires 'executables' parameter")
+	}
+	return result
+}
+
 // Execute installs an npm package to the install directory
 //
 // Parameters:

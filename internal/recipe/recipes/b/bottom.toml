@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "ClementTsang/bottom"
 asset_pattern = "bottom_{arch}-{os}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = ["btm"]
 os_mapping = { darwin = "apple-darwin", linux = "unknown-linux-gnu" }

@@ -32,6 +32,18 @@ func (a *CargoInstallAction) Name() string {
 	return "cargo_install"
 }
 
+// Preflight validates parameters without side effects.
+func (a *CargoInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+	if _, ok := GetString(params, "crate"); !ok {
+		result.AddError("cargo_install action requires 'crate' parameter")
+	}
+	if _, hasExecutables := params["executables"]; !hasExecutables {
+		result.AddError("cargo_install action requires 'executables' parameter")
+	}
+	return result
+}
+
 // Execute installs a Rust crate to the install directory
 //
 // Parameters:

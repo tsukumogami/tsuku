@@ -8,7 +8,6 @@ version_format = "semver"
 action = "github_archive"
 repo = "superfly/flyctl"
 asset_pattern = "flyctl_{version}_{os}_{arch}.tar.gz"
-archive_format = "tar.gz"
 strip_dirs = 0
 binaries = [{src = "flyctl", dest = "bin/fly"}]
 os_mapping = { darwin = "macOS", linux = "Linux" }
