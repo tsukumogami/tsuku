@@ -714,3 +714,38 @@ func TestRequireSystemAction_CompleteVersionDetection(t *testing.T) {
 		}
 	}
 }
+
+func TestRunCommandAction_HardcodedPathsWarning(t *testing.T) {
+	tests := []struct {
+		name        string
+		command     string
+		wantWarning bool
+	}{
+		{"tsuku home tilde", "cp ~/.tsuku/bin/tool /dest", true},
+		{"tsuku home env", "ls $HOME/.tsuku/tools/", true},
+		{"tsuku tools path", "chmod +x .tsuku/tools/foo/bin/bar", true},
+		{"system path", "/usr/bin/make install", false},
+		{"tmp path", "cp /tmp/file dest", false},
+		{"variable used", "cp {install_dir}/bin/tool /dest", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ValidateAction("run_command", map[string]interface{}{
+				"command": tt.command,
+			})
+			hasPathWarning := false
+			for _, w := range result.Warnings {
+				if strings.Contains(w, "hardcoded") {
+					hasPathWarning = true
+					break
+				}
+			}
+			if tt.wantWarning && !hasPathWarning {
+				t.Errorf("expected hardcoded path warning for command %q", tt.command)
+			}
+			if !tt.wantWarning && hasPathWarning {
+				t.Errorf("unexpected hardcoded path warning for command %q", tt.command)
+			}
+		})
+	}
+}

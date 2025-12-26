@@ -22,9 +22,27 @@ func (a *RunCommandAction) Name() string {
 // Preflight validates parameters without side effects.
 func (a *RunCommandAction) Preflight(params map[string]interface{}) *PreflightResult {
 	result := &PreflightResult{}
-	if _, ok := GetString(params, "command"); !ok {
+	command, ok := GetString(params, "command")
+	if !ok {
 		result.AddError("run_command action requires 'command' parameter")
+		return result
 	}
+
+	// WARNING: Hardcoded paths that should use variables
+	tsukuPathPatterns := []string{
+		"~/.tsuku",
+		"$HOME/.tsuku",
+		"${HOME}/.tsuku",
+		".tsuku/tools/",
+		".tsuku/bin/",
+	}
+	for _, pattern := range tsukuPathPatterns {
+		if strings.Contains(command, pattern) {
+			result.AddWarning("command contains hardcoded tsuku paths; consider using {install_dir}, {work_dir} variables")
+			break
+		}
+	}
+
 	return result
 }
 
