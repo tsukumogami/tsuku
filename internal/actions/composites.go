@@ -25,9 +25,25 @@ func (a *DownloadArchiveAction) Name() string { return "download_archive" }
 // Preflight validates parameters without side effects.
 func (a *DownloadArchiveAction) Preflight(params map[string]interface{}) *PreflightResult {
 	result := &PreflightResult{}
-	if _, ok := GetString(params, "url"); !ok {
+	url, ok := GetString(params, "url")
+	if !ok {
 		result.AddError("download_archive action requires 'url' parameter")
 	}
+
+	// WARNING: Unused os_mapping
+	if _, hasOSMapping := GetMapStringString(params, "os_mapping"); hasOSMapping {
+		if !containsPlaceholder(url, "os") {
+			result.AddWarning("os_mapping provided but URL does not contain {os} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Unused arch_mapping
+	if _, hasArchMapping := GetMapStringString(params, "arch_mapping"); hasArchMapping {
+		if !containsPlaceholder(url, "arch") {
+			result.AddWarning("arch_mapping provided but URL does not contain {arch} placeholder; mapping will have no effect")
+		}
+	}
+
 	return result
 }
 
@@ -304,9 +320,25 @@ func (a *GitHubArchiveAction) Preflight(params map[string]interface{}) *Prefligh
 	if _, ok := GetString(params, "repo"); !ok {
 		result.AddError("github_archive action requires 'repo' parameter")
 	}
-	if _, ok := GetString(params, "asset_pattern"); !ok {
+	assetPattern, ok := GetString(params, "asset_pattern")
+	if !ok {
 		result.AddError("github_archive action requires 'asset_pattern' parameter")
 	}
+
+	// WARNING: Unused os_mapping
+	if _, hasOSMapping := GetMapStringString(params, "os_mapping"); hasOSMapping {
+		if !containsPlaceholder(assetPattern, "os") {
+			result.AddWarning("os_mapping provided but asset_pattern does not contain {os} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Unused arch_mapping
+	if _, hasArchMapping := GetMapStringString(params, "arch_mapping"); hasArchMapping {
+		if !containsPlaceholder(assetPattern, "arch") {
+			result.AddWarning("arch_mapping provided but asset_pattern does not contain {arch} placeholder; mapping will have no effect")
+		}
+	}
+
 	return result
 }
 
@@ -613,9 +645,25 @@ func (a *GitHubFileAction) Preflight(params map[string]interface{}) *PreflightRe
 	if _, ok := GetString(params, "repo"); !ok {
 		result.AddError("github_file action requires 'repo' parameter")
 	}
-	if _, ok := GetString(params, "asset_pattern"); !ok {
+	assetPattern, ok := GetString(params, "asset_pattern")
+	if !ok {
 		result.AddError("github_file action requires 'asset_pattern' parameter")
 	}
+
+	// WARNING: Unused os_mapping
+	if _, hasOSMapping := GetMapStringString(params, "os_mapping"); hasOSMapping {
+		if !containsPlaceholder(assetPattern, "os") {
+			result.AddWarning("os_mapping provided but asset_pattern does not contain {os} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Unused arch_mapping
+	if _, hasArchMapping := GetMapStringString(params, "arch_mapping"); hasArchMapping {
+		if !containsPlaceholder(assetPattern, "arch") {
+			result.AddWarning("arch_mapping provided but asset_pattern does not contain {arch} placeholder; mapping will have no effect")
+		}
+	}
+
 	return result
 }
 

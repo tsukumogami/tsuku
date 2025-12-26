@@ -3,6 +3,7 @@ package actions
 import (
 	"fmt"
 	"sort"
+	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
@@ -129,4 +130,9 @@ func (v *registryValidator) ValidateAction(name string, params map[string]interf
 
 func init() {
 	recipe.SetActionValidator(&registryValidator{})
+}
+
+// containsPlaceholder checks if a string contains a {placeholder} variable
+func containsPlaceholder(s, placeholder string) bool {
+	return strings.Contains(s, "{"+placeholder+"}")
 }

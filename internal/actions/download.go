@@ -31,9 +31,42 @@ func (a *DownloadAction) Name() string {
 // Preflight validates parameters without side effects.
 func (a *DownloadAction) Preflight(params map[string]interface{}) *PreflightResult {
 	result := &PreflightResult{}
-	if _, ok := GetString(params, "url"); !ok {
+
+	// Validate required URL parameter
+	url, hasURL := GetString(params, "url")
+	if !hasURL {
 		result.AddError("download action requires 'url' parameter")
 	}
+
+	// ERROR: Static checksum not supported - use checksum_url or download_file
+	if _, hasChecksum := GetString(params, "checksum"); hasChecksum {
+		result.AddError("download action does not support static 'checksum'; use 'checksum_url' for dynamic verification or 'download_file' for static URLs")
+	}
+
+	// WARNING: Missing checksum_url
+	if _, hasChecksumURL := GetString(params, "checksum_url"); !hasChecksumURL {
+		result.AddWarning("no 'checksum_url' configured; downloaded files will not be verified for integrity")
+	}
+
+	// ERROR: URL without variables - should use download_file instead
+	if hasURL && url != "" && !strings.Contains(url, "{") {
+		result.AddError("download URL contains no variables; use 'download_file' action for static URLs")
+	}
+
+	// WARNING: Unused os_mapping
+	if _, hasOSMapping := GetMapStringString(params, "os_mapping"); hasOSMapping {
+		if !containsPlaceholder(url, "os") {
+			result.AddWarning("os_mapping provided but URL does not contain {os} placeholder; mapping will have no effect")
+		}
+	}
+
+	// WARNING: Unused arch_mapping
+	if _, hasArchMapping := GetMapStringString(params, "arch_mapping"); hasArchMapping {
+		if !containsPlaceholder(url, "arch") {
+			result.AddWarning("arch_mapping provided but URL does not contain {arch} placeholder; mapping will have no effect")
+		}
+	}
+
 	return result
 }
 
@@ -86,18 +119,11 @@ func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface
 		checksumAlgo = "sha256"
 	}
 
-	// Resolve checksum
+	// Resolve checksum by downloading file if Downloader is available
 	var checksum string
 	var size int64
 
-	// First check inline checksum
-	inlineChecksum, hasInline := GetString(params, "checksum")
-	if hasInline && inlineChecksum != "" {
-		checksum = inlineChecksum
-	}
-
-	// If no inline checksum, download file to compute checksum if Downloader is available
-	if checksum == "" && ctx.Downloader != nil {
+	if ctx.Downloader != nil {
 		result, err := ctx.Downloader.Download(ctx.Context, downloadURL)
 		if err != nil {
 			return nil, fmt.Errorf("failed to download for checksum computation: %w", err)
@@ -131,16 +157,18 @@ func (a *DownloadAction) Decompose(ctx *EvalContext, params map[string]interface
 	return []Step{step}, nil
 }
 
-// Execute downloads a file with optional checksum verification
+// Execute downloads a file with optional checksum verification via URL
 //
 // Parameters:
-//   - url (required): URL to download from
+//   - url (required): URL to download from (must contain variables like {version})
 //   - dest (optional): Destination filename (defaults to basename of URL)
-//   - checksum_url (optional): URL to checksum file
-//   - checksum (optional): Inline checksum value
+//   - checksum_url (optional): URL to checksum file for verification
 //   - checksum_algo (optional): Hash algorithm (sha256, sha512), defaults to sha256
 //   - os_mapping (optional): Map Go GOOS to URL patterns (e.g., {darwin: "macos"})
 //   - arch_mapping (optional): Map Go GOARCH to URL patterns (e.g., {amd64: "x64"})
+//
+// Note: This action does not support inline checksum parameter. Use download_file
+// action for static URLs with inline checksums.
 func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Get URL (required)
 	urlPattern, ok := GetString(params, "url")
@@ -187,8 +215,7 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 		"dest", dest,
 		"destPath", destPath)
 
-	// Get checksum info for cache validation
-	inlineChecksum, _ := GetString(params, "checksum")
+	// Get checksum algorithm for cache validation
 	checksumAlgo, _ := GetString(params, "checksum_algo")
 	if checksumAlgo == "" {
 		checksumAlgo = "sha256"
@@ -199,7 +226,8 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	if ctx.DownloadCacheDir != "" {
 		cache = NewDownloadCache(ctx.DownloadCacheDir)
 		logger.Debug("checking download cache", "cacheDir", ctx.DownloadCacheDir)
-		found, err := cache.Check(url, destPath, inlineChecksum, checksumAlgo)
+		// download action does not support inline checksum, pass empty string
+		found, err := cache.Check(url, destPath, "", checksumAlgo)
 		if err != nil {
 			// Log warning but continue with download
 			logger.Warn("cache check failed", "error", err)
@@ -207,8 +235,7 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 		} else if found {
 			logger.Debug("cache hit", "dest", dest)
 			fmt.Printf("   Using cached: %s\n", dest)
-			// For cached files, still verify checksum if provided via URL
-			// (inline checksum was already verified by cache.Check)
+			// For cached files, verify checksum via URL if available
 			checksumURL, hasChecksumURL := GetString(params, "checksum_url")
 			if hasChecksumURL {
 				if err := a.verifyChecksumFromURL(ctx.Context, ctx, checksumURL, destPath, checksumAlgo, vars); err != nil {
@@ -244,9 +271,9 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	}
 	logger.Debug("checksum verification passed", "algo", checksumAlgo)
 
-	// Save to cache if available
+	// Save to cache if available (no inline checksum for download action)
 	if cache != nil {
-		if err := cache.Save(url, destPath, inlineChecksum); err != nil {
+		if err := cache.Save(url, destPath, ""); err != nil {
 			// Log warning but don't fail the download
 			logger.Warn("failed to cache download", "error", err)
 			fmt.Printf("   Warning: failed to cache download: %v\n", err)
@@ -325,13 +352,12 @@ func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string)
 	return nil
 }
 
-// verifyChecksum verifies the downloaded file's checksum
+// verifyChecksum verifies the downloaded file's checksum using checksum_url
 func (a *DownloadAction) verifyChecksum(ctx context.Context, execCtx *ExecutionContext, params map[string]interface{}, filePath string, vars map[string]string) error {
-	// Check if checksum verification is requested
+	// Check if checksum verification is requested via URL
 	checksumURL, hasChecksumURL := GetString(params, "checksum_url")
-	inlineChecksum, hasInlineChecksum := GetString(params, "checksum")
 
-	if !hasChecksumURL && !hasInlineChecksum {
+	if !hasChecksumURL {
 		// No checksum verification requested
 		return nil
 	}
@@ -342,32 +368,24 @@ func (a *DownloadAction) verifyChecksum(ctx context.Context, execCtx *ExecutionC
 		algo = "sha256"
 	}
 
-	var expectedChecksum string
+	// Download checksum file with context for cancellation
+	checksumURL = ExpandVars(checksumURL, vars)
+	checksumPath := filepath.Join(execCtx.WorkDir, "checksum.tmp")
 
-	if hasChecksumURL {
-		// Download checksum file with context for cancellation
-		checksumURL = ExpandVars(checksumURL, vars)
-		checksumPath := filepath.Join(execCtx.WorkDir, "checksum.tmp")
-
-		fmt.Printf("   Downloading checksum: %s\n", checksumURL)
-		if err := a.downloadFile(ctx, checksumURL, checksumPath); err != nil {
-			return fmt.Errorf("failed to download checksum: %w", err)
-		}
-
-		// Read checksum from file (pass target filename for multi-line checksum files)
-		targetFilename := filepath.Base(filePath)
-		checksum, err := ReadChecksumFile(checksumPath, targetFilename)
-		if err != nil {
-			return err
-		}
-		expectedChecksum = checksum
-
-		// Clean up checksum file
-		os.Remove(checksumPath)
-	} else {
-		// Use inline checksum
-		expectedChecksum = inlineChecksum
+	fmt.Printf("   Downloading checksum: %s\n", checksumURL)
+	if err := a.downloadFile(ctx, checksumURL, checksumPath); err != nil {
+		return fmt.Errorf("failed to download checksum: %w", err)
 	}
+
+	// Read checksum from file (pass target filename for multi-line checksum files)
+	targetFilename := filepath.Base(filePath)
+	expectedChecksum, err := ReadChecksumFile(checksumPath, targetFilename)
+	if err != nil {
+		return err
+	}
+
+	// Clean up checksum file
+	os.Remove(checksumPath)
 
 	// Verify checksum
 	fmt.Printf("   Verifying %s checksum...\n", algo)
