@@ -28,13 +28,15 @@ func (a *GoBuildAction) Name() string {
 // Execute builds a Go module with locked dependencies using the captured go.sum.
 //
 // Parameters:
-//   - module (required): Go module path (e.g., "github.com/jesseduffield/lazygit")
+//   - module (required): Go module path for go.mod require (e.g., "github.com/jesseduffield/lazygit")
 //   - version (required): Module version (e.g., "v0.40.2")
 //   - executables (required): List of executable names to verify
 //   - go_sum (required): Complete go.sum content captured at eval time
 //   - go_version (required for reproducibility): Go toolchain version (e.g., "1.21.5")
 //     If specified, requires that exact version to be installed. If not found, returns
 //     an error instructing the user to install it (tsuku install go@<version>).
+//   - install_module (optional): Package path for go install (e.g., "github.com/jesseduffield/lazygit/cmd/tool")
+//     If not specified, defaults to module. Use for subpackages that aren't the root module.
 //   - cgo_enabled (optional): Enable CGO (default: false)
 //   - build_flags (optional): Build flags (default: ["-trimpath", "-buildvcs=false"])
 //
@@ -194,7 +196,12 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	}
 
 	// Build install target
-	target := module + "@" + version
+	// Use install_module if provided (for subpackages), otherwise use module
+	installModule := module
+	if installMod, ok := GetString(params, "install_module"); ok {
+		installModule = installMod
+	}
+	target := installModule + "@" + version
 
 	// Build install command with flags
 	installArgs := []string{"install"}

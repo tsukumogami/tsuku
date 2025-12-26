@@ -358,7 +358,12 @@ func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interfac
 	)
 
 	// Run go get to populate go.sum
-	target := module + "@" + version
+	// Use version module if recipe specifies one (for subpackages like golang.org/x/tools/cmd/goimports)
+	moduleForVersioning := module
+	if ctx.Recipe != nil && ctx.Recipe.Version.Module != "" {
+		moduleForVersioning = ctx.Recipe.Version.Module
+	}
+	target := moduleForVersioning + "@" + version
 	getCmd := exec.CommandContext(ctx.Context, goPath, "get", target)
 	getCmd.Dir = tempDir
 	getCmd.Env = filteredEnv
@@ -377,12 +382,15 @@ func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interfac
 	goSum := string(goSumBytes)
 
 	// Build go_build params
+	// Use moduleForVersioning for go.mod require (parent module)
+	// Pass original module as install_module for go install (subpackage path)
 	goBuildParams := map[string]interface{}{
-		"module":      module,
-		"version":     version,
-		"executables": executables,
-		"go_sum":      goSum,
-		"go_version":  goVersion, // Captured for reproducibility
+		"module":         moduleForVersioning,
+		"install_module": module, // Subpackage path for go install
+		"version":        version,
+		"executables":    executables,
+		"go_sum":         goSum,
+		"go_version":     goVersion, // Captured for reproducibility
 	}
 
 	// Pass through optional params if set

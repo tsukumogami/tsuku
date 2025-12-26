@@ -3,7 +3,6 @@ name = "perlcritic"
 description = "Critique Perl source code for best-practices"
 homepage = "https://metacpan.org/pod/Perl::Critic"
 version_format = "semver"
-dependencies = ["perl"]
 
 [version]
 source = "metacpan"

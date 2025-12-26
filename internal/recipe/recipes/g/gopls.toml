@@ -3,7 +3,6 @@ name = "gopls"
 description = "Official Go language server"
 homepage = "https://pkg.go.dev/golang.org/x/tools/gopls"
 version_format = "semver"
-dependencies = ["go"]
 
 [version]
 source = "goproxy"

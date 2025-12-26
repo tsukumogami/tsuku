@@ -3,7 +3,6 @@ name = "goimports"
 description = "Updates Go import lines and formats code"
 homepage = "https://pkg.go.dev/golang.org/x/tools/cmd/goimports"
 version_format = "semver"
-dependencies = ["go"]
 
 [version]
 source = "goproxy"
