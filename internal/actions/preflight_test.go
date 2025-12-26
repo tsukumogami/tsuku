@@ -35,8 +35,8 @@ func TestValidateAction_ActionWithPreflight(t *testing.T) {
 
 func TestValidateAction_ActionWithoutPreflight(t *testing.T) {
 	// Actions that don't implement Preflight pass validation
-	// chmod is an example that doesn't require specific params in Preflight
-	result := ValidateAction("chmod", nil)
+	// set_env is an example that doesn't require specific params in Preflight
+	result := ValidateAction("set_env", nil)
 	if result.HasErrors() {
 		t.Errorf("expected no errors for action that passes Preflight validation, got: %v", result.Errors)
 	}
@@ -745,6 +745,66 @@ func TestRunCommandAction_HardcodedPathsWarning(t *testing.T) {
 			}
 			if !tt.wantWarning && hasPathWarning {
 				t.Errorf("unexpected hardcoded path warning for command %q", tt.command)
+			}
+		})
+	}
+}
+
+func TestChmodAction_Preflight(t *testing.T) {
+	// Missing files parameter
+	result := ValidateAction("chmod", map[string]interface{}{})
+	if !result.HasErrors() {
+		t.Error("expected error for missing files parameter")
+	}
+
+	// Empty files array
+	result = ValidateAction("chmod", map[string]interface{}{
+		"files": []interface{}{},
+	})
+	if !result.HasErrors() {
+		t.Error("expected error for empty files array")
+	}
+
+	// Valid files
+	result = ValidateAction("chmod", map[string]interface{}{
+		"files": []interface{}{"bin/tool"},
+	})
+	if result.HasErrors() {
+		t.Errorf("unexpected error for valid files: %v", result.Errors)
+	}
+}
+
+func TestChmodAction_OverlyPermissiveMode(t *testing.T) {
+	tests := []struct {
+		name        string
+		mode        string
+		wantWarning bool
+	}{
+		{"standard executable", "0755", false},
+		{"readable only", "0644", false},
+		{"world writable file", "0666", true},
+		{"world writable executable", "0777", true},
+		{"world writable dir", "0757", true},
+		{"group writable only", "0775", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := ValidateAction("chmod", map[string]interface{}{
+				"files": []interface{}{"bin/tool"},
+				"mode":  tt.mode,
+			})
+			hasPermWarning := false
+			for _, w := range result.Warnings {
+				if strings.Contains(w, "world-write") {
+					hasPermWarning = true
+					break
+				}
+			}
+			if tt.wantWarning && !hasPermWarning {
+				t.Errorf("expected world-write warning for mode %s", tt.mode)
+			}
+			if !tt.wantWarning && hasPermWarning {
+				t.Errorf("unexpected world-write warning for mode %s", tt.mode)
 			}
 		})
 	}
