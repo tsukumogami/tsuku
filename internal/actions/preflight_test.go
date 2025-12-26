@@ -675,3 +675,42 @@ func TestRequireSystemAction_WithInstallGuide(t *testing.T) {
 		}
 	}
 }
+
+func TestRequireSystemAction_MinVersionWithoutDetection(t *testing.T) {
+	// min_version without version_flag
+	result := ValidateAction("require_system", map[string]interface{}{
+		"command":       "gcc",
+		"min_version":   "10.0",
+		"install_guide": map[string]interface{}{"linux": "apt install gcc"},
+	})
+	if !result.HasErrors() {
+		t.Error("expected error for min_version without version detection")
+	}
+
+	// min_version with only version_flag (missing regex)
+	result = ValidateAction("require_system", map[string]interface{}{
+		"command":       "gcc",
+		"min_version":   "10.0",
+		"version_flag":  "--version",
+		"install_guide": map[string]interface{}{"linux": "apt install gcc"},
+	})
+	if !result.HasErrors() {
+		t.Error("expected error for min_version without version_regex")
+	}
+}
+
+func TestRequireSystemAction_CompleteVersionDetection(t *testing.T) {
+	result := ValidateAction("require_system", map[string]interface{}{
+		"command":       "gcc",
+		"min_version":   "10.0",
+		"version_flag":  "--version",
+		"version_regex": `gcc \(.*\) (\d+\.\d+)`,
+		"install_guide": map[string]interface{}{"linux": "apt install gcc"},
+	})
+	// Should not have version detection error
+	for _, err := range result.Errors {
+		if strings.Contains(err, "version detection") {
+			t.Errorf("unexpected version detection error: %s", err)
+		}
+	}
+}

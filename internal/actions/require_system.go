@@ -34,6 +34,15 @@ func (a *RequireSystemAction) Preflight(params map[string]interface{}) *Prefligh
 	if _, hasGuide := params["install_guide"]; !hasGuide {
 		result.AddWarning("consider adding 'install_guide' with platform-specific installation instructions")
 	}
+
+	// ERROR: min_version without version detection
+	if _, hasMinVersion := GetString(params, "min_version"); hasMinVersion {
+		_, hasVersionFlag := GetString(params, "version_flag")
+		_, hasVersionRegex := GetString(params, "version_regex")
+		if !hasVersionFlag || !hasVersionRegex {
+			result.AddError("min_version specified but version detection incomplete; add version_flag and version_regex")
+		}
+	}
 	return result
 }
 
