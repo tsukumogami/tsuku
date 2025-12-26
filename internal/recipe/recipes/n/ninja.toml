@@ -10,8 +10,13 @@ formula = "ninja"
 
 # NOTE: GitHub source archives don't include checksums; checksum computed during plan generation
 [[steps]]
-action = "download_archive"
+action = "download"
 url = "https://github.com/ninja-build/ninja/archive/v{version}.tar.gz"
+
+[[steps]]
+action = "extract"
+archive = "v{version}.tar.gz"
+format = "tar.gz"
 
 [[steps]]
 action = "cmake_build"
