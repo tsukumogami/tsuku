@@ -200,10 +200,21 @@ Golden files are generated at pinned versions to ensure determinism:
 
 1. **Version selection**: Use the latest stable version at time of initial golden file creation
 2. **Version storage**: The version is encoded in the filename and plan content
-3. **Version manifest**: A `testdata/golden/versions.json` file tracks pinned versions as source of truth
-4. **Version updates**: A separate workflow can propose version bumps with new golden files
+3. **Multi-version support**: Each recipe directory can contain golden files for multiple versions
+4. **Version updates**: A separate workflow can propose version bumps by adding new golden files
 
-Example: `fzf/v0.46.0-linux-amd64.json` always produces the same plan regardless of when generated.
+Example structure supporting multiple versions:
+```
+testdata/golden/plans/f/fzf/
+├── v0.45.0-linux-amd64.json    # Previous version (kept for regression testing)
+├── v0.45.0-linux-arm64.json
+├── v0.46.0-linux-amd64.json    # Current version
+├── v0.46.0-linux-arm64.json
+├── v0.46.0-darwin-amd64.json
+└── v0.46.0-darwin-arm64.json
+```
+
+The regeneration script reads existing versions from the directory to determine which versions to regenerate.
 
 ### Trust Boundaries
 
@@ -282,7 +293,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.tsuku/cache/downloads
-          key: golden-downloads-${{ hashFiles('testdata/golden/versions.json') }}
+          key: golden-downloads-${{ hashFiles('testdata/golden/plans/**/*.json') }}
           restore-keys: |
             golden-downloads-
 
@@ -391,29 +402,37 @@ if [[ ! -f "$RECIPE_PATH" ]]; then
     exit 1
 fi
 
-# Get pinned version from existing golden files or use latest
-if [[ -d "$GOLDEN_DIR" ]]; then
-    VERSION=$(ls "$GOLDEN_DIR"/*.json 2>/dev/null | head -1 | sed 's/.*\/v\([^-]*\)-.*/\1/')
-else
-    VERSION=$(./tsuku info "$RECIPE" --json | jq -r '.latest_version')
-fi
-
 mkdir -p "$GOLDEN_DIR"
 
-# Generate for each supported platform
-for os in linux darwin; do
-    for arch in amd64 arm64; do
-        OUTPUT="$GOLDEN_DIR/v${VERSION}-${os}-${arch}.json"
+# Get all versions from existing golden files, or use latest if none exist
+if [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
+    # Extract unique versions from existing files
+    VERSIONS=$(ls "$GOLDEN_DIR"/*.json | sed 's/.*\/v\([^-]*\)-.*/\1/' | sort -u)
+else
+    # No existing files - use latest version
+    VERSIONS=$(./tsuku info "$RECIPE" --json | jq -r '.latest_version')
+fi
 
-        # Check if recipe supports this platform
-        if ./tsuku eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" 2>/dev/null > "$OUTPUT.tmp"; then
-            mv "$OUTPUT.tmp" "$OUTPUT"
-            echo "Generated: $OUTPUT"
-        else
-            rm -f "$OUTPUT.tmp"
-            # Remove existing file if platform no longer supported
-            rm -f "$OUTPUT"
-        fi
+# Regenerate for each version
+for VERSION in $VERSIONS; do
+    echo "Regenerating $RECIPE@$VERSION..."
+
+    # Generate for each supported platform
+    for os in linux darwin; do
+        for arch in amd64 arm64; do
+            OUTPUT="$GOLDEN_DIR/v${VERSION}-${os}-${arch}.json"
+
+            # Check if recipe supports this platform
+            if ./tsuku eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
+                "$RECIPE@$VERSION" 2>/dev/null > "$OUTPUT.tmp"; then
+                mv "$OUTPUT.tmp" "$OUTPUT"
+                echo "  Generated: $OUTPUT"
+            else
+                rm -f "$OUTPUT.tmp"
+                # Remove existing file if platform no longer supported
+                rm -f "$OUTPUT"
+            fi
+        done
     done
 done
 ```
@@ -462,7 +481,6 @@ func ComparePlanToGolden(t *testing.T, actual *executor.InstallationPlan, golden
 2. Create `scripts/regenerate-all-golden.sh` for full regeneration
 3. Add `internal/testutil/golden.go` with comparison utilities
 4. Add `internal/testutil/mock_downloader.go` for unit tests
-5. Create `testdata/golden/versions.json` manifest
 
 ### Phase 2: CI Workflows (Before Bulk Generation)
 
