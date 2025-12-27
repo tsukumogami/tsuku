@@ -1,0 +1,32 @@
+# nix-portable - Self-contained, portable Nix binary
+#
+# This is a dependency for recipes using the nix_install action.
+# nix-portable provides a self-contained Nix package manager that works
+# without system dependencies or sudo access.
+#
+# Note: Only supports Linux (nix-portable upstream limitation)
+
+[metadata]
+name = "nix-portable"
+description = "Self-contained, portable Nix package manager"
+homepage = "https://github.com/DavHau/nix-portable"
+version_format = "custom"
+tier = 3
+supported_os = ["linux"]
+
+[version]
+source = "github_releases"
+github_repo = "DavHau/nix-portable"
+
+[[steps]]
+action = "github_file"
+repo = "DavHau/nix-portable"
+asset_pattern = "nix-portable-{arch}"
+binary = "nix-portable"
+arch_mapping = { amd64 = "x86_64", arm64 = "aarch64" }
+
+[verify]
+command = "{install_dir}/bin/nix-portable --version"
+mode = "output"
+pattern = "nix-portable"
+reason = "nix-portable version output differs from release tag"

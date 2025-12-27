@@ -3,6 +3,7 @@ name = "btop"
 description = "Resource monitor that shows usage and stats"
 homepage = "https://github.com/aristocratos/btop"
 version_format = "semver"
+supported_os = ["linux"]
 
 [[steps]]
 action = "github_archive"

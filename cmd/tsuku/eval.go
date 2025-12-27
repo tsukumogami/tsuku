@@ -10,22 +10,22 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
 // Platform flag validation whitelists per DESIGN-installation-plans-eval.md
-var validOSValues = map[string]bool{
-	"linux":   true,
-	"darwin":  true,
-	"windows": true,
-	"freebsd": true,
-}
+// Uses tsuku's supported platforms as the source of truth
+var validOSValues = makeSet(recipe.TsukuSupportedOS())
+var validArchValues = makeSet(recipe.TsukuSupportedArch())
 
-var validArchValues = map[string]bool{
-	"amd64": true,
-	"arm64": true,
-	"386":   true,
-	"arm":   true,
+// makeSet converts a slice to a map[string]bool for O(1) lookups
+func makeSet(items []string) map[string]bool {
+	set := make(map[string]bool, len(items))
+	for _, item := range items {
+		set[item] = true
+	}
+	return set
 }
 
 var evalOS string
@@ -60,8 +60,8 @@ Examples:
 }
 
 func init() {
-	evalCmd.Flags().StringVar(&evalOS, "os", "", "Target operating system (linux, darwin, windows, freebsd)")
-	evalCmd.Flags().StringVar(&evalArch, "arch", "", "Target architecture (amd64, arm64, 386, arm)")
+	evalCmd.Flags().StringVar(&evalOS, "os", "", "Target operating system (linux, darwin)")
+	evalCmd.Flags().StringVar(&evalArch, "arch", "", "Target architecture (amd64, arm64)")
 	evalCmd.Flags().BoolVar(&evalYes, "yes", false, "Auto-accept installation of eval-time dependencies")
 }
 
@@ -72,7 +72,7 @@ func ValidateOS(os string) error {
 		return nil // Empty is valid (uses runtime default)
 	}
 	if !validOSValues[os] {
-		return fmt.Errorf("invalid OS value %q: must be one of linux, darwin, windows, freebsd", os)
+		return fmt.Errorf("invalid OS value %q: must be one of linux, darwin", os)
 	}
 	return nil
 }
@@ -84,7 +84,7 @@ func ValidateArch(arch string) error {
 		return nil // Empty is valid (uses runtime default)
 	}
 	if !validArchValues[arch] {
-		return fmt.Errorf("invalid arch value %q: must be one of amd64, arm64, 386, arm", arch)
+		return fmt.Errorf("invalid arch value %q: must be one of amd64, arm64", arch)
 	}
 	return nil
 }
@@ -122,6 +122,12 @@ func runEval(cmd *cobra.Command, args []string) {
 		fmt.Fprintf(os.Stderr, "  tsuku create %s --from <ecosystem>\n", toolName)
 		fmt.Fprintf(os.Stderr, "\nAvailable ecosystems: crates.io, rubygems, pypi, npm\n")
 		exitWithCode(ExitRecipeNotFound)
+	}
+
+	// Check platform support before installation
+	if !r.SupportsPlatformRuntime() {
+		printError(r.NewUnsupportedPlatformError())
+		exitWithCode(ExitGeneral)
 	}
 
 	// Load config to get cache directory

@@ -104,6 +104,7 @@ func runRecipeValidations(result *ValidationResult, r *Recipe) {
 	validatePatches(result, r)
 	validateSteps(result, r)
 	validateVerify(result, r)
+	validatePlatformConstraints(result, r)
 	// Note: Shadowed dependency validation is done at the CLI layer
 	// to avoid circular dependencies between recipe and actions packages
 }
@@ -607,4 +608,22 @@ func levenshteinDistance(s1, s2 string) int {
 	}
 
 	return matrix[len(s1)][len(s2)]
+}
+
+// validatePlatformConstraints checks platform-related constraints
+func validatePlatformConstraints(result *ValidationResult, r *Recipe) {
+	// Validate platform constraint configuration
+	warnings, err := r.ValidatePlatformConstraints()
+	if err != nil {
+		result.addError("metadata.platform_constraints", err.Error())
+	}
+	for _, w := range warnings {
+		result.addWarning("metadata.platform_constraints", w.Message)
+	}
+
+	// Validate steps against platform constraints
+	stepErrors := r.ValidateStepsAgainstPlatforms()
+	for _, stepErr := range stepErrors {
+		result.addError("steps", stepErr.Error())
+	}
 }
