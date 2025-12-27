@@ -5,7 +5,6 @@ homepage = "https://github.com/uber-go/mock"
 version_format = "semver"
 
 [version]
-source = "goproxy"
 module = "go.uber.org/mock"
 
 [[steps]]
