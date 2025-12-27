@@ -280,7 +280,7 @@ func TestPGPKeyCache_FetchKey(t *testing.T) {
 	// Set up test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(armoredKey))
+		_, _ = w.Write([]byte(armoredKey))
 	}))
 	defer server.Close()
 
@@ -319,7 +319,7 @@ func TestPGPKeyCache_FetchKeyWrongFingerprint(t *testing.T) {
 	// Set up test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(armoredKey))
+		_, _ = w.Write([]byte(armoredKey))
 	}))
 	defer server.Close()
 
@@ -349,7 +349,7 @@ func TestPGPKeyCache_Get(t *testing.T) {
 	// Set up test server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(armoredKey))
+		_, _ = w.Write([]byte(armoredKey))
 	}))
 	defer server.Close()
 
@@ -479,7 +479,7 @@ func TestFetchSignature(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write(testSig)
+		_, _ = w.Write(testSig)
 	}))
 	defer server.Close()
 
