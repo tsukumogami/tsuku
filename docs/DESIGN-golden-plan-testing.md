@@ -14,474 +14,575 @@ Tsuku's test suite relies heavily on integration tests that execute full install
 
 3. **Limited platform coverage**: Only 4 tools are tested on macOS versus 10 on Linux. arm64 Linux has no coverage due to Homebrew limitations.
 
-4. **Flakiness without recourse**: When tests fail due to transient network issues or external service problems, the only option is manual re-run. There is no retry mechanism for rate limit errors or transient failures.
+4. **No recipe regression safety net**: Recipe changes can silently alter plan generation in unexpected ways. There is no mechanism to preview what a recipe change will produce across all supported platforms.
 
-The `tsuku eval` command now supports generating deterministic installation plans from local recipe files (`--recipe`) with cross-platform targeting (`--os`, `--arch`). This creates an opportunity to test plan generation separately from plan execution, enabling:
+The `tsuku eval` command now supports generating deterministic installation plans from local recipe files (`--recipe`) with cross-platform targeting (`--os`, `--arch`). This creates an opportunity for a comprehensive golden plan testing system that validates **every recipe** across **all supported platforms** on **every PR**.
 
-- Fast, deterministic testing of the planning phase
-- Cross-platform plan validation without requiring those platforms
-- Separation of "what will be installed" from "can we install it"
+### Vision
+
+Every recipe in the tsuku registry should have golden plans generated for all its supported platforms. These golden plans serve as:
+
+1. **Regression detection** - Any code change that affects plan generation is immediately visible
+2. **Recipe validation** - Recipe authors see exactly what their recipe produces before merging
+3. **Execution gatekeeping** - Changed golden files must pass installation tests before merge
 
 ### Scope
 
 **In scope:**
-- Using golden files to test installation plan generation
-- Testing plan structure, step sequences, template expansion
-- Cross-platform plan validation (all 4 platform combinations)
-- Recipe validation at plan time
+- Generating golden plans for every recipe at pinned versions
+- Cross-platform plan generation (all 4 platform combinations per recipe)
+- CI workflow to detect recipe changes and require golden file updates
+- Execution validation when golden files change
 
 **Out of scope:**
 - Replacing execution tests entirely (some execution testing remains valuable)
-- Mocking external services (adds complexity with diminishing returns)
 - Version resolution testing (inherently dynamic)
+- Testing "latest" version plans (non-deterministic)
 
 ## Decision Drivers
 
-1. **Determinism**: Tests should produce the same result given the same inputs, regardless of network conditions or external service state.
+1. **Comprehensive coverage**: Every recipe should be validated, not just a representative sample.
 
-2. **Speed**: Tests should complete in seconds, not minutes, to enable running on every PR.
+2. **Change visibility**: Recipe and code changes should produce visible diffs in golden files, enabling meaningful code review.
 
-3. **Coverage breadth**: Testing should cover all 4 platform combinations (linux/darwin x amd64/arm64) without requiring those platforms.
+3. **Execution validation**: Changed golden plans should be proven executable before merge.
 
-4. **Maintainability**: Golden files must be easy to update when recipes change intentionally.
+4. **Determinism**: Golden file generation must be reproducible across environments.
 
-5. **Confidence**: Tests should catch real regressions in plan generation logic, not just structural changes.
+5. **Maintainability**: The system should be self-maintaining - recipe changes naturally flow to golden file updates.
 
 ## Considered Options
 
-### Option 1: Full Golden File Testing
+### Option 1: Selective Golden Files (3-5 Reference Recipes)
 
-Store complete installation plans as golden files. Tests generate plans from recipes and compare the entire JSON output against stored expectations.
-
-**Approach:**
-- Generate plans with `tsuku eval --recipe <recipe> --os <os> --arch <arch>`
-- Store complete plan JSON in `testdata/golden/plans/<tool>-<os>-<arch>.json`
-- Tests regenerate plans and compare byte-for-byte (after masking unstable fields)
+Store golden plans only for a small set of representative recipes.
 
 **Pros:**
-- Maximum coverage - any change in plan output is detected
-- Simple conceptually - compare actual vs expected
-- Catches subtle bugs in template expansion, step ordering, dependency resolution
+- Low maintenance burden
+- Small fixture footprint
 
 **Cons:**
-- High maintenance burden - any intentional recipe change requires golden file updates
-- Brittle to format changes - adding new fields breaks all golden files
-- Large test fixtures - complete plans can be 100+ KB each
-- **Checksum volatility (critical)**: Plan generation requires downloading files to compute checksums. If upstream files change (new releases, republished artifacts), golden file checksums become stale. This is the fundamental tension: checksums are a security feature we want to test, but they make tests non-deterministic.
+- Most recipes have no regression protection
+- Recipe authors don't see plan output before merge
+- Silent regressions possible for untested recipes
 
-### Option 2: Structural Assertion Testing
+### Option 2: Comprehensive Golden Files (All Recipes)
 
-Instead of comparing entire plans, assert specific structural properties: field presence, step sequences, URL patterns, and dependency relationships.
-
-**Approach:**
-- Generate plans programmatically in tests
-- Assert structural invariants rather than exact values
-- Use pattern matching for URLs (contains version, platform variables)
+Generate and store golden plans for every recipe across all supported platforms.
 
 **Pros:**
-- Resilient to format evolution - new fields don't break tests
-- Focused on behavior - tests what matters rather than everything
-- Smaller test code - no external fixture files to manage
-- Handles checksum changes gracefully
+- Complete regression coverage
+- Recipe authors see exactly what changes
+- Visible diffs for code review
+- Catches edge cases in non-representative recipes
 
 **Cons:**
-- May miss subtle regressions that structural checks don't cover ("unknown unknowns" problem)
-- Requires writing specific assertions for each behavior
-- Test code is more complex than simple comparison
-- Must explicitly enumerate all behaviors worth testing - implicit coverage is lost
+- Large file count (~600 golden files for 155 recipes × 4 platforms)
+- Requires automated regeneration workflow
+- Storage overhead (~50-100 MB)
 
-### Option 3: Hybrid Approach - Selective Golden Files with Structural Assertions
+### Option 3: Hash-Only Validation
 
-Use golden files for a small set of representative recipes where complete plan validation is valuable, combined with structural assertions for specific behaviors.
-
-**Approach:**
-- Golden files for 3-5 reference recipes (one per major recipe pattern)
-- Structural tests for specific behaviors (platform filtering, dependency ordering, URL expansion)
-- Scripts to regenerate golden files when intentional changes occur
+Store only checksums of expected plans, not full plan content.
 
 **Pros:**
-- Balance of coverage and maintainability
-- Golden files catch unexpected changes in representative cases
-- Structural tests cover specific behaviors without brittleness
-- Update burden is bounded to a small set of golden files
+- Minimal storage
+- Fast comparison
 
 **Cons:**
-- More complex test organization
-- Must decide which recipes merit golden files
-- Two testing patterns to maintain
+- No visibility into what changed
+- Debugging regressions requires regeneration
+- Cannot review plan changes in PRs
 
 ## Decision Outcome
 
-**Chosen: Option 3 - Hybrid Approach**
+**Chosen: Option 2 - Comprehensive Golden Files**
 
-This option provides the best balance of coverage, maintainability, and confidence. The bounded set of golden files catches broad regressions while structural assertions cover specific behaviors without excessive brittleness.
+The comprehensive approach provides the safety net needed for a growing recipe registry. While the file count is significant, the benefits outweigh the costs:
 
-### Rationale
-
-- **Determinism**: Both golden files and structural tests are fully deterministic when using `--recipe` with local files and pinned versions.
-- **Speed**: Plan generation takes milliseconds; the test suite will complete in seconds.
-- **Coverage breadth**: Cross-platform plans can be generated and validated without those platforms.
-- **Maintainability**: Only 3-5 golden files need updating when recipes change, not hundreds.
-- **Confidence**: The combination catches both broad regressions (golden files) and specific behavior bugs (structural tests).
+- Recipe authors see complete plan output in PR diffs
+- Silent regressions are eliminated
+- Code review becomes meaningful for recipe changes
+- The pattern mirrors `test-changed-recipes.yml` which is already proven
 
 ### Trade-offs Accepted
 
-- Golden files require manual updates when representative recipes change intentionally
-- Structural tests require explicit assertions for each behavior we want to verify
-- Some corner cases may only be caught by one testing approach, not both
+- ~600 golden files to maintain in version control
+- Storage overhead of ~50-100 MB
+- Initial generation effort for all existing recipes
 
 ## Solution Architecture
 
 ### Overview
 
-The testing infrastructure adds three components:
+The golden plan system consists of four components:
 
-1. **Golden file fixtures** in `testdata/golden/plans/` for reference recipes
-2. **Plan comparison utilities** in `internal/testutil/` for deterministic comparison
-3. **Structural test helpers** for common plan assertions
+1. **Golden file storage** in `testdata/golden/plans/` organized by recipe
+2. **Plan generation tooling** using `tsuku eval --recipe`
+3. **CI workflow** to enforce golden file updates on recipe changes
+4. **Execution validation** for changed golden files
 
 ### Directory Structure
 
 ```
 testdata/
-├── recipes/                    # Existing test recipes
-│   ├── tool-a.toml
-│   ├── fzf.toml                # New: reference recipe
-│   ├── terraform.toml          # New: reference recipe
-│   ├── sqlite-source.toml      # Existing: dependency test
-│   └── ...
 ├── golden/
-│   └── plans/                  # New: golden plan files
-│       ├── fzf-0.46.0-linux-amd64.json
-│       ├── fzf-0.46.0-linux-arm64.json
-│       ├── fzf-0.46.0-darwin-amd64.json
-│       ├── fzf-0.46.0-darwin-arm64.json
+│   └── plans/                          # Golden plan files
+│       ├── fzf/                        # Per-recipe directories
+│       │   ├── v0.46.0-linux-amd64.json
+│       │   ├── v0.46.0-linux-arm64.json
+│       │   ├── v0.46.0-darwin-amd64.json
+│       │   └── v0.46.0-darwin-arm64.json
+│       ├── terraform/
+│       │   └── ...
+│       ├── btop/                       # Linux-only recipe
+│       │   ├── v1.3.0-linux-amd64.json
+│       │   └── v1.3.0-linux-arm64.json
 │       └── ...
-└── states/                     # Existing state fixtures
+├── recipes/                            # Test recipe copies (version-pinned)
+│   └── ...
+└── states/                             # Existing state fixtures
 ```
 
-### Reference Recipe Selection
+### Naming Convention
 
-Golden files will be created for recipes representing distinct patterns. Selection criteria:
+Golden files follow the pattern: `{recipe}/{version}-{os}-{arch}.json`
 
-1. **Pattern coverage**: Each golden file should test a distinct recipe pattern
-2. **Version stability**: Recipes should use versions unlikely to be re-released
-3. **Low churn**: Avoid recipes that change frequently in the registry
-4. **Meaningful complexity**: Include at least one recipe with dependencies
+- `{recipe}` - Recipe name matching the TOML filename (kebab-case)
+- `{version}` - Pinned version with `v` prefix (e.g., `v0.46.0`)
+- `{os}` - Target OS (`linux` or `darwin`)
+- `{arch}` - Target architecture (`amd64` or `arm64`)
 
-| Recipe | Pattern | Why Selected |
-|--------|---------|--------------|
-| `fzf` | GitHub archive download | Clean GitHub archive pattern; tests download_file, extract, chmod, install_binaries. Stable releases. |
-| `terraform` | Direct URL with checksum URL | Tests version template expansion in URLs and checksum URL resolution. |
-| `sqlite-source` | Library with dependencies | Tests dependency tree generation (readline -> ncurses). Already exists in testdata. |
+### Platform Filtering
 
-### Checksum Handling Strategy
+Not all recipes support all platforms. Golden files are generated only for supported platforms:
 
-Checksums present a fundamental tension: they are a security feature we want to test (plans must have valid checksums), but computing real checksums requires network access and makes tests non-deterministic.
+| Recipe Type | Platforms | Example |
+|-------------|-----------|---------|
+| Cross-platform | All 4 | fzf, terraform, ripgrep |
+| Linux-only | linux-amd64, linux-arm64 | btop, nix-portable |
+| Darwin-only | darwin-amd64, darwin-arm64 | (rare) |
+| System requirement | None | docker, cuda |
 
-**Solution: Deterministic mock downloader using URL hashing.**
+Recipes using `require_system` action cannot have plans generated and are excluded.
 
-For golden file tests, we use a mock downloader that generates deterministic checksums from URLs:
+### Checksum Handling
 
-```go
-// internal/testutil/mock_downloader.go - deterministic mock for testing
-type DeterministicMockDownloader struct{}
+Plan generation requires downloading files to compute SHA256 checksums. For golden file generation:
 
-func (d *DeterministicMockDownloader) Download(ctx context.Context, url string) (*actions.DownloadResult, error) {
-    // Hash URL to generate deterministic checksum
-    hash := sha256.Sum256([]byte(url))
-    return &actions.DownloadResult{
-        AssetPath: filepath.Join(os.TempDir(), "mock-download"),
-        Checksum:  hex.EncodeToString(hash[:]),
-        Size:      int64(len(url) * 100), // Deterministic size
-    }, nil
-}
+**Option A: Real downloads with caching**
+- Generate plans with real network access
+- Cache downloads to avoid re-downloading on regeneration
+- Checksums reflect actual file content
+
+**Option B: Deterministic mock downloader**
+- Generate checksums from URL hashing
+- No network access required
+- Checksums are deterministic but don't reflect actual content
+
+**Chosen: Option A for CI, Option B for unit tests.**
+
+- CI golden file generation uses real downloads (validates actual checksums)
+- Unit tests use mock downloader (fast, deterministic, offline)
+- Both approaches produce consistent plans given the same version
+
+### Version Pinning Strategy
+
+Golden files are generated at pinned versions to ensure determinism:
+
+1. **Version selection**: Use the latest stable version at time of initial golden file creation
+2. **Version storage**: The version is encoded in the filename and plan content
+3. **Version manifest**: A `testdata/golden/versions.json` file tracks pinned versions as source of truth
+4. **Version updates**: A separate workflow can propose version bumps with new golden files
+
+Example: `fzf/v0.46.0-linux-amd64.json` always produces the same plan regardless of when generated.
+
+### Trust Boundaries
+
+The golden plan system relies on the following trust assumptions:
+
+| Trusted | What It Means |
+|---------|--------------|
+| CI infrastructure | GitHub Actions runners are uncompromised |
+| TLS/PKI | HTTPS connections to upstream registries are secure |
+| Upstream registries | GitHub, npm, PyPI, crates.io serve authentic content |
+| Reviewers | Humans reviewing PRs detect malicious changes |
+
+| Verified (Not Trusted) |  |
+|------------------------|--|
+| Checksums | SHA256 computed during download and stored in plans |
+| Plan structure | Validated against format version and invariants |
+| Platform support | Recipes generate plans only for supported platforms |
+
+**Important**: Initial golden file generation MUST occur in CI, not on developer machines. A compromised developer workstation could inject malicious checksums.
+
+### Residual Risks
+
+1. **Network-enabled sandbox tests**: When `RequiresNetwork=true`, sandbox containers have full network access (`--network=host`). This is necessary for ecosystem builds (cargo, npm, pip) but means a compromised dependency could exfiltrate data. Future improvement: egress filtering to known registries only.
+
+2. **No upstream signature verification**: Tsuku relies on HTTPS + SHA256 checksums without verifying GPG/Sigstore signatures. This is acceptable for the current threat model but could be enhanced for high-security deployments.
+
+3. **Version bump trust window**: When versions are bumped, new checksums are computed from upstream. Reviewers must verify version bumps are legitimate.
+
+### CI Workflow: Recipe Changes
+
+The workflow mirrors `test-changed-recipes.yml`:
+
+```yaml
+name: Validate Golden Plans
+
+on:
+  pull_request:
+    paths:
+      - 'internal/recipe/recipes/**/*.toml'
+      - 'testdata/golden/plans/**/*.json'
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      recipes: ${{ steps.changed.outputs.recipes }}
+      golden-changed: ${{ steps.changed.outputs.golden }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: changed
+        run: |
+          # Detect changed recipes
+          RECIPES=$(git diff --name-only origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml' | \
+            xargs -I {} basename {} .toml | sort -u | jq -R -s -c 'split("\n")[:-1]')
+          echo "recipes=$RECIPES" >> $GITHUB_OUTPUT
+
+          # Detect changed golden files
+          GOLDEN=$(git diff --name-only origin/main...HEAD -- 'testdata/golden/plans/**/*.json' | wc -l)
+          echo "golden=$GOLDEN" >> $GITHUB_OUTPUT
+
+  regenerate-golden:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.recipes != '[]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.tsuku/cache/downloads
+          key: golden-downloads-${{ hashFiles('testdata/golden/versions.json') }}
+          restore-keys: |
+            golden-downloads-
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Regenerate golden files for changed recipes
+        run: |
+          for recipe in $(echo '${{ needs.detect-changes.outputs.recipes }}' | jq -r '.[]'); do
+            ./scripts/regenerate-golden.sh "$recipe"
+          done
+
+      - name: Check for uncommitted golden file changes
+        run: |
+          if ! git diff --exit-code testdata/golden/plans/; then
+            echo "::error::Golden files are out of date. Please run './scripts/regenerate-golden.sh <recipe>' and commit the changes."
+            git diff testdata/golden/plans/
+            exit 1
+          fi
+
+  validate-execution:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.golden > 0
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Install changed golden plans
+        run: |
+          # Find golden files changed in this PR that match current platform
+          PLATFORM="${{ runner.os == 'Linux' && 'linux' || 'darwin' }}-${{ runner.arch == 'X64' && 'amd64' || 'arm64' }}"
+          git diff --name-only origin/main...HEAD -- 'testdata/golden/plans/**/*.json' | \
+            grep "$PLATFORM" | while read plan; do
+              echo "Testing: $plan"
+              ./tsuku install --plan "$plan" --sandbox
+            done
 ```
 
-This approach is simpler than fixture-based mocking because:
-- **No fixture files needed**: Checksums are derived from URLs
-- **Deterministic**: Same URL = same checksum every time
-- **Testing checksum presence**: Plans still have the Checksum field populated
-- **Offline testing**: No network access required
-- **Fast execution**: No actual downloads
+### CI Workflow: Code Changes
 
-For structural tests, checksums are simply asserted to be non-empty rather than checking specific values.
+When tsuku code changes (plan generation logic), all golden files must be validated:
 
-**Note**: The mock downloader is internal to the test package and must not be exported for use outside tests.
+```yaml
+name: Validate All Golden Plans
 
-### Plan Comparison
+on:
+  pull_request:
+    paths:
+      - 'internal/executor/**'
+      - 'internal/actions/**'
+      - 'internal/recipe/**'
+      - 'internal/validate/**'
+      - 'cmd/tsuku/eval.go'
+      - 'cmd/tsuku/plan*.go'
 
-Plans are compared with unstable fields masked:
+jobs:
+  regenerate-all:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Regenerate all golden files
+        run: ./scripts/regenerate-all-golden.sh
+
+      - name: Check for uncommitted changes
+        run: |
+          if ! git diff --exit-code testdata/golden/plans/; then
+            echo "::error::Code changes affect golden plan output. Please regenerate golden files and commit the changes."
+            git diff --stat testdata/golden/plans/
+            exit 1
+          fi
+```
+
+### Golden File Generation Script
+
+```bash
+#!/bin/bash
+# scripts/regenerate-golden.sh - Regenerate golden files for a recipe
+
+set -euo pipefail
+
+RECIPE="$1"
+RECIPE_PATH="internal/recipe/recipes/${RECIPE:0:1}/${RECIPE}.toml"
+GOLDEN_DIR="testdata/golden/plans/${RECIPE}"
+
+if [[ ! -f "$RECIPE_PATH" ]]; then
+    echo "Recipe not found: $RECIPE_PATH"
+    exit 1
+fi
+
+# Get pinned version from existing golden files or use latest
+if [[ -d "$GOLDEN_DIR" ]]; then
+    VERSION=$(ls "$GOLDEN_DIR"/*.json 2>/dev/null | head -1 | sed 's/.*\/v\([^-]*\)-.*/\1/')
+else
+    VERSION=$(./tsuku info "$RECIPE" --json | jq -r '.latest_version')
+fi
+
+mkdir -p "$GOLDEN_DIR"
+
+# Generate for each supported platform
+for os in linux darwin; do
+    for arch in amd64 arm64; do
+        OUTPUT="$GOLDEN_DIR/v${VERSION}-${os}-${arch}.json"
+
+        # Check if recipe supports this platform
+        if ./tsuku eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" 2>/dev/null > "$OUTPUT.tmp"; then
+            mv "$OUTPUT.tmp" "$OUTPUT"
+            echo "Generated: $OUTPUT"
+        else
+            rm -f "$OUTPUT.tmp"
+            # Remove existing file if platform no longer supported
+            rm -f "$OUTPUT"
+        fi
+    done
+done
+```
+
+### Plan Comparison for Tests
+
+Unit tests use a comparison utility that handles unstable fields:
 
 ```go
 // internal/testutil/golden.go
-type GoldenComparison struct {
-    IgnoreFields []string // e.g., "generated_at"
-    IgnoreChecksums bool  // For tests where checksums may change
+
+type GoldenOptions struct {
+    IgnoreFields    []string // Fields to mask before comparison
+    UpdateOnFailure bool     // Write actual output as new golden file
 }
 
-func ComparePlanToGolden(t *testing.T, actual *executor.InstallationPlan, goldenPath string, opts GoldenComparison) {
-    // Load golden file
-    // Mask unstable fields in both actual and expected
-    // Compare and report differences
-}
-```
-
-Fields always masked:
-- `generated_at` - timestamp changes each run
-- `recipe_source` - absolute path differs between machines
-
-Fields optionally masked:
-- `checksum`, `size` - if source files change upstream
-
-### Structural Test Helpers
-
-```go
-// internal/testutil/plan_assertions.go
-
-// AssertStepSequence verifies actions appear in expected order
-func AssertStepSequence(t *testing.T, plan *executor.InstallationPlan, expected []string)
-
-// AssertPlatformFiltering verifies steps are filtered correctly
-func AssertPlatformFiltering(t *testing.T, plan *executor.InstallationPlan, os, arch string)
-
-// AssertURLContains verifies URL template expansion
-func AssertURLContains(t *testing.T, plan *executor.InstallationPlan, stepIndex int, substrings ...string)
-
-// AssertDependencyOrder verifies dependencies are sorted alphabetically
-func AssertDependencyOrder(t *testing.T, plan *executor.InstallationPlan)
-
-// AssertPlanInvariants verifies properties that must hold for all valid plans
-func AssertPlanInvariants(t *testing.T, plan *executor.InstallationPlan)
-// - All download_file steps have non-empty Checksum
-// - All steps are primitive actions (no composites)
-// - FormatVersion is current
-// - Platform matches generation parameters
-```
-
-### Test Organization
-
-```go
-// internal/executor/plan_golden_test.go
-
-func TestPlanGolden_FZF(t *testing.T) {
-    platforms := []struct{ os, arch string }{
-        {"linux", "amd64"}, {"linux", "arm64"},
-        {"darwin", "amd64"}, {"darwin", "arm64"},
-    }
-    for _, p := range platforms {
-        t.Run(fmt.Sprintf("%s-%s", p.os, p.arch), func(t *testing.T) {
-            plan := generatePlanFromRecipe(t, "testdata/recipes/fzf.toml", p.os, p.arch, "0.46.0")
-            goldenPath := fmt.Sprintf("testdata/golden/plans/fzf-0.46.0-%s-%s.json", p.os, p.arch)
-            testutil.ComparePlanToGolden(t, plan, goldenPath, testutil.GoldenComparison{
-                IgnoreFields: []string{"generated_at", "recipe_source"},
-            })
-        })
-    }
+var DefaultGoldenOptions = GoldenOptions{
+    IgnoreFields: []string{"generated_at", "recipe_source"},
 }
 
-// internal/executor/plan_structural_test.go
+func ComparePlanToGolden(t *testing.T, actual *executor.InstallationPlan, goldenPath string, opts GoldenOptions) {
+    t.Helper()
 
-func TestPlanStructure_StepSequence(t *testing.T) {
-    plan := generatePlanFromRecipe(t, "testdata/recipes/simple-binary.toml", "linux", "amd64", "1.0.0")
-    testutil.AssertStepSequence(t, plan, []string{
-        "download_file", "extract", "chmod", "install_binaries",
-    })
-}
+    actualJSON := marshalWithMasking(actual, opts.IgnoreFields)
 
-func TestPlanStructure_PlatformFiltering(t *testing.T) {
-    // Recipe has linux-only and darwin-only steps
-    recipe := "testdata/recipes/platform-conditional.toml"
-
-    linuxPlan := generatePlanFromRecipe(t, recipe, "linux", "amd64", "1.0.0")
-    testutil.AssertPlatformFiltering(t, linuxPlan, "linux", "amd64")
-
-    darwinPlan := generatePlanFromRecipe(t, recipe, "darwin", "arm64", "1.0.0")
-    testutil.AssertPlatformFiltering(t, darwinPlan, "darwin", "arm64")
-}
-```
-
-### Golden File Update Workflow
-
-```bash
-# Regenerate all golden files (run when recipes change intentionally)
-go test -v ./internal/executor -run TestPlanGolden -update
-
-# The -update flag writes actual output as new golden file
-```
-
-Implementation in test:
-
-```go
-var updateGolden = flag.Bool("update", false, "update golden files")
-
-func TestPlanGolden_FZF(t *testing.T) {
-    // ... generate plan ...
-    if *updateGolden {
-        writeGoldenFile(t, goldenPath, plan)
+    if opts.UpdateOnFailure || os.Getenv("UPDATE_GOLDEN") == "1" {
+        writeGoldenFile(t, goldenPath, actualJSON)
         return
     }
-    testutil.ComparePlanToGolden(t, plan, goldenPath, opts)
+
+    expectedJSON := readGoldenFile(t, goldenPath)
+    expectedJSON = maskFields(expectedJSON, opts.IgnoreFields)
+
+    if !bytes.Equal(actualJSON, expectedJSON) {
+        diff := computeDiff(expectedJSON, actualJSON)
+        t.Errorf("Golden file mismatch:\n%s\n\nRun with UPDATE_GOLDEN=1 to update", diff)
+    }
 }
 ```
 
 ## Implementation Approach
 
-### Phase 1: Test Infrastructure
+### Phase 1: Infrastructure
 
-Add core testing utilities:
+1. Create `scripts/regenerate-golden.sh` for single-recipe regeneration
+2. Create `scripts/regenerate-all-golden.sh` for full regeneration
+3. Add `internal/testutil/golden.go` with comparison utilities
+4. Add `internal/testutil/mock_downloader.go` for unit tests
+5. Create `testdata/golden/versions.json` manifest
 
-1. `internal/testutil/golden.go` - Golden file comparison with field masking
-2. `internal/testutil/plan_assertions.go` - Structural assertion helpers
-3. `internal/testutil/mock_downloader.go` - Deterministic mock downloader using URL hashing
+### Phase 2: CI Workflows (Before Bulk Generation)
 
-### Phase 2: Reference Recipes and Golden File Tests
+1. Add `validate-golden-recipes.yml` for recipe change validation
+2. Add `validate-golden-code.yml` for code change validation
+3. Add download caching using `actions/cache` keyed by recipe+version
+4. Add execution validation step using `--sandbox` flag
 
-Create reference recipes and implement golden file tests together (tightly coupled):
+### Phase 3: Tiered Golden File Generation
 
-1. Add `fzf.toml` to `testdata/recipes/` (copy from embedded registry with pinned version)
-2. Add `terraform.toml` to `testdata/recipes/`
-3. Use existing `sqlite-source.toml` in `testdata/recipes/` for dependency testing
-4. Implement `internal/executor/plan_golden_test.go` with `-update` flag
-5. Run with `-update` to generate initial golden files for all 4 platforms
-6. Commit test and golden files together
-7. Document golden file update process
+**Tier 1 (Pilot)**: Generate golden files for ~30 recipes covering all action types:
+- GitHub archive downloads (fzf, ripgrep, lazygit)
+- Direct URL downloads (terraform, golang, nodejs)
+- Ecosystem builds (cargo-audit, amplify, jekyll)
+- Dependencies (sqlite-source → readline)
+- Platform-specific (btop, nix-portable)
 
-### Phase 3: Structural Tests
+Validate approach and iterate on tooling.
 
-Add structural assertion tests:
+**Tier 2 (Expansion)**: Generate remaining ~125 recipes in batches, running in CI to ensure checksums are computed on trusted infrastructure.
 
-1. Step sequence verification
-2. Platform filtering tests
-3. URL template expansion tests
-4. Dependency ordering tests
-5. Decomposition tests (composite -> primitive actions)
-6. Plan invariant tests (checksums present, primitives only, format version)
+### Phase 4: Documentation and Automation
 
-### Phase 4: CI Integration
-
-Update CI workflows:
-
-1. Add golden file tests to `test.yml`
-2. Ensure `-short` mode skips network-dependent tests but runs golden tests
-3. Consider making golden tests a required check
+1. Document golden file update workflow in CONTRIBUTING.md
+2. Add pre-commit hook option for local validation
+3. Create GitHub Action for automated version bump PRs
+4. Update PR template to note golden file requirements
 
 ## Security Considerations
 
 ### Download Verification
 
-**Not applicable to this feature.** Golden plan testing validates plan generation logic but does not download or execute any files. The plans contain checksums that would be verified during actual execution, but the tests themselves do not perform downloads.
+Golden files contain checksums computed from real downloads. When a golden file changes, the CI workflow validates the plan can be executed with `tsuku install --plan --sandbox`. This ensures:
+
+- Checksums match actual downloadable artifacts
+- Plans are executable, not just syntactically valid
+- Sandbox isolation prevents malicious payload execution
 
 ### Execution Isolation
 
-**Not applicable to this feature.** Golden plan tests generate JSON output and compare strings. No binaries are executed, no files are written outside the test directory, and no elevated permissions are required.
+Execution validation uses the `--sandbox` flag which runs installations in an isolated container. This provides:
+
+- No modification to host system
+- Resource limits (memory, CPU, timeout)
+- Network isolation for non-download actions
 
 ### Supply Chain Risks
 
-**Minimal impact.** The test recipes in `testdata/recipes/` are copies of registry recipes. If a registry recipe were compromised, the test fixture would need to be updated manually. This is actually a benefit: golden files act as a snapshot of expected behavior, making unexpected changes visible in code review.
+Golden files act as a cryptographic snapshot of expected artifacts:
 
-The golden files themselves contain URLs and checksums but do not download anything. A malicious golden file could only cause test failures, not actual compromise.
+- Checksum changes are visible in PR diffs
+- Unexpected checksum changes indicate potential supply chain attack
+- Version pinning prevents "latest" from silently changing
+
+If an upstream artifact is republished with different content:
+1. CI fails (checksum mismatch)
+2. Developer investigates the change
+3. If legitimate, golden file is updated with review
 
 ### User Data Exposure
 
-**Not applicable to this feature.** Golden plan tests read recipe files and write JSON comparison output. No user data is accessed, no network requests are made, and no data is transmitted externally.
+Golden plan tests do not access user data. All operations are confined to:
+
+- Reading recipe files from the repository
+- Writing JSON files to testdata directory
+- Generating deterministic output from public inputs
 
 ## Consequences
 
 ### Positive
 
-- **Faster feedback loop**: Plan generation tests complete in seconds, enabling them to run on every PR
-- **Deterministic tests**: No more failures due to GitHub rate limiting or external service outages
-- **Cross-platform confidence**: Can validate darwin/arm64 plans on linux/amd64 CI runners
-- **Regression detection**: Golden files catch unexpected changes in plan generation
-- **Documentation value**: Golden files serve as examples of expected plan output
+- **Complete regression coverage**: Every recipe has validated golden files
+- **Recipe change visibility**: PR diffs show exactly how plans change
+- **Execution confidence**: Changed golden files must pass installation
+- **Cross-platform validation**: All 4 platforms tested from single runner
+- **Self-documenting**: Golden files show expected plan structure
 
 ### Negative
 
-- **Maintenance overhead**: Golden files must be updated when recipes change intentionally
-- **Test fixture management**: More files to track in version control
-- **Two testing patterns**: Developers must understand both golden and structural approaches
-- **Checksum staleness**: If upstream binaries change (rare but possible), checksums in golden files become stale
+- **Storage overhead**: ~50-100 MB of JSON files in repository
+- **Initial effort**: Generating golden files for 155 recipes
+- **Regeneration time**: Full regeneration requires downloading artifacts
+- **Version management**: Pinned versions need occasional updates
 
 ### Mitigations
 
-- **Automated updates**: The `-update` flag makes golden file regeneration a single command
-- **Clear ownership**: Document which recipes have golden files and why
-- **Bounded scope**: Limit golden files to 3-5 representative recipes
-- **CI notification**: Tests fail clearly when golden files are stale, with instructions to update
+- **Selective regeneration**: Only regenerate changed recipes on most PRs
+- **Caching**: Download cache reduces regeneration time
+- **Automation**: Scripts handle regeneration complexity
+- **Version bump workflow**: Automated PRs for version updates
 
 ## Plan Validity and Forward Compatibility
 
-Golden plan tests validate that plans are generated correctly, but do not validate that plans can be executed. This is by design - execution involves network access, platform dependencies, and is non-deterministic.
+### Format Version
 
-### How Plan Validity Is Maintained
-
-**1. Plan Format Version (`format_version`)**
-
-Plans include a format version that must match the executor's expected version:
+Plans include a `format_version` field that enables forward compatibility:
 
 ```go
 const PlanFormatVersion = 3
 
 func ValidatePlan(plan *InstallationPlan) error {
-    if plan.FormatVersion != PlanFormatVersion {
-        return fmt.Errorf("unsupported plan format version: %d", plan.FormatVersion)
+    if plan.FormatVersion < 2 {
+        return fmt.Errorf("plan format version %d is too old", plan.FormatVersion)
     }
     // ...
 }
 ```
 
-When plan format changes:
-- `PlanFormatVersion` is incremented
-- Golden files with old format versions fail validation tests
-- The `-update` flag regenerates all golden files with the new format
-- This is a deliberate breaking change that requires review
+When format changes:
+1. Increment `PlanFormatVersion`
+2. Regenerate all golden files
+3. PR shows diff of format changes across all recipes
 
-**2. Structural Invariant Tests**
+### Execution Validation
 
-`AssertPlanInvariants()` enforces properties that must hold for all valid plans:
-- All `download_file` steps have non-empty `Checksum`
-- All steps are primitive actions (no composite actions)
-- Platform matches generation parameters
-- `FormatVersion` is current
+Golden files are validated through execution on every change:
 
-These tests catch regressions where generated plans would fail execution validation.
-
-**3. Integration Test Coverage**
-
-The existing integration tests (`test.yml`, `scheduled-tests.yml`) continue to run actual installations. These tests validate end-to-end execution and catch issues that golden tests cannot:
-- Network failures
-- Binary compatibility
-- Verification command success
-
-Golden tests complement but do not replace integration tests.
-
-**4. CI Workflow for Plan Validity**
-
-When tsuku code changes affect plan generation:
-
-1. **Golden tests fail** - detects the change
-2. **Developer reviews diff** - ensures change is intentional
-3. **Developer runs `-update`** - regenerates golden files
-4. **PR includes updated golden files** - change is visible in review
-5. **Integration tests run** - validates execution still works
+| Validation Type | When | How |
+|-----------------|------|-----|
+| Structural | Every PR | Go tests with `AssertPlanInvariants()` |
+| Checksum freshness | Golden file change | `tsuku install --plan --sandbox` |
+| Cross-platform | Recipe change | Generate for all 4 platforms |
 
 ### What Happens When Tsuku Changes
 
-| Change Type | Golden Test Behavior | Action Required |
-|-------------|---------------------|-----------------|
-| New plan field added | Tests pass (extra fields ignored) | None (backwards compatible) |
-| Plan field removed | Tests fail (expected field missing) | Run `-update` |
-| Step order changes | Tests fail (sequence mismatch) | Run `-update`, verify intentional |
-| New action type | Tests pass (structural tests cover) | Add structural test if needed |
-| Format version bump | Tests fail (validation error) | Run `-update`, update all golden files |
-| URL template change | Tests fail (URL mismatch) | Run `-update`, verify intentional |
-
-### Out of Scope
-
-Golden plan tests do not validate:
-- That downloaded files match checksums (execution validation)
-- That installed binaries work (verification command)
-- Platform-specific execution behavior (requires actual platform)
-
-These are validated by integration tests, not golden tests
+| Change Type | Effect | Action |
+|-------------|--------|--------|
+| New plan field | Golden files unchanged | None needed |
+| Field removed | Regeneration changes files | Commit updated files |
+| Step order change | Regeneration changes files | Review and commit |
+| Format version bump | All files change | Regenerate all, review |
+| New action type | New recipes may use it | Add structural tests |
