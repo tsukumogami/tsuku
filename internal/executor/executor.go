@@ -22,6 +22,7 @@ type Executor struct {
 	workDir          string
 	installDir       string
 	downloadCacheDir string // Download cache directory
+	keyCacheDir      string // PGP key cache directory
 	recipe           *recipe.Recipe
 	ctx              *actions.ExecutionContext
 	version          string               // Resolved version
@@ -66,6 +67,11 @@ func NewWithVersion(r *recipe.Recipe, version string) (*Executor, error) {
 // SetDownloadCacheDir sets the download cache directory
 func (e *Executor) SetDownloadCacheDir(dir string) {
 	e.downloadCacheDir = dir
+}
+
+// SetKeyCacheDir sets the PGP key cache directory
+func (e *Executor) SetKeyCacheDir(dir string) {
+	e.keyCacheDir = dir
 }
 
 // resolveVersionWith attempts to resolve the latest version for the recipe using the given resolver
@@ -354,6 +360,7 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		ToolsDir:         e.toolsDir,
 		LibsDir:          e.libsDir,
 		DownloadCacheDir: e.downloadCacheDir,
+		KeyCacheDir:      e.keyCacheDir,
 		Version:          plan.Version,
 		VersionTag:       plan.Version, // Plan doesn't track tag separately
 		OS:               plan.Platform.OS,
@@ -587,6 +594,7 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		ToolsDir:         e.toolsDir,
 		LibsDir:          e.libsDir,
 		DownloadCacheDir: e.downloadCacheDir,
+		KeyCacheDir:      e.keyCacheDir,
 		Version:          dep.Version,
 		VersionTag:       dep.Version,
 		OS:               platform.OS,

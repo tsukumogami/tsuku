@@ -9,12 +9,12 @@ binaries = ["bin/curl"]
 source = "homebrew"
 formula = "curl"
 
-# TODO(#682): Replace skip_verification_reason with signature_url when PGP support is implemented
 [[steps]]
 action = "download"
 url = "https://curl.se/download/curl-{version}.tar.gz"
-skip_verification_reason = "curl.se provides PGP signatures but not checksums; see #682"
-# signature_url = "https://curl.se/download/curl-{version}.tar.gz.asc"
+signature_url = "https://curl.se/download/curl-{version}.tar.gz.asc"
+signature_key_url = "https://daniel.haxx.se/mykey.asc"
+signature_key_fingerprint = "27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2"
 
 [[steps]]
 action = "extract"
