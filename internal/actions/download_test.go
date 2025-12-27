@@ -260,6 +260,140 @@ func TestDownloadAction_RejectsCompressedResponse(t *testing.T) {
 	}
 }
 
+// TestDownloadAction_Preflight_SignatureParams tests Preflight validation of signature parameters
+func TestDownloadAction_Preflight_SignatureParams(t *testing.T) {
+	t.Parallel()
+	action := &DownloadAction{}
+
+	// Use URLs with {version} variable to avoid the "static URL" warning from download action
+	tests := []struct {
+		name    string
+		params  map[string]interface{}
+		wantErr bool
+		errText string
+	}{
+		{
+			name: "no signature params - valid",
+			params: map[string]interface{}{
+				"url": "https://example.com/v{version}/file.tar.gz",
+			},
+			wantErr: false,
+		},
+		{
+			name: "all signature params - valid",
+			params: map[string]interface{}{
+				"url":                       "https://example.com/v{version}/file.tar.gz",
+				"signature_url":             "https://example.com/v{version}/file.tar.gz.asc",
+				"signature_key_url":         "https://example.com/key.asc",
+				"signature_key_fingerprint": "D53626F8174A9846F6A573CC1253FA47EA19E301",
+			},
+			wantErr: false,
+		},
+		{
+			name: "only signature_url - invalid (partial params)",
+			params: map[string]interface{}{
+				"url":           "https://example.com/v{version}/file.tar.gz",
+				"signature_url": "https://example.com/v{version}/file.tar.gz.asc",
+			},
+			wantErr: true,
+			errText: "incomplete signature verification",
+		},
+		{
+			name: "only signature_key_url - invalid (partial params)",
+			params: map[string]interface{}{
+				"url":               "https://example.com/v{version}/file.tar.gz",
+				"signature_key_url": "https://example.com/key.asc",
+			},
+			wantErr: true,
+			errText: "incomplete signature verification",
+		},
+		{
+			name: "only signature_key_fingerprint - invalid (partial params)",
+			params: map[string]interface{}{
+				"url":                       "https://example.com/v{version}/file.tar.gz",
+				"signature_key_fingerprint": "D53626F8174A9846F6A573CC1253FA47EA19E301",
+			},
+			wantErr: true,
+			errText: "incomplete signature verification",
+		},
+		{
+			name: "missing fingerprint - invalid",
+			params: map[string]interface{}{
+				"url":               "https://example.com/v{version}/file.tar.gz",
+				"signature_url":     "https://example.com/v{version}/file.tar.gz.asc",
+				"signature_key_url": "https://example.com/key.asc",
+			},
+			wantErr: true,
+			errText: "incomplete signature verification",
+		},
+		{
+			name: "signature_url and checksum_url - mutually exclusive",
+			params: map[string]interface{}{
+				"url":                       "https://example.com/v{version}/file.tar.gz",
+				"checksum_url":              "https://example.com/v{version}/checksums.txt",
+				"signature_url":             "https://example.com/v{version}/file.tar.gz.asc",
+				"signature_key_url":         "https://example.com/key.asc",
+				"signature_key_fingerprint": "D53626F8174A9846F6A573CC1253FA47EA19E301",
+			},
+			wantErr: true,
+			errText: "mutually exclusive",
+		},
+		{
+			name: "invalid fingerprint format - too short",
+			params: map[string]interface{}{
+				"url":                       "https://example.com/v{version}/file.tar.gz",
+				"signature_url":             "https://example.com/v{version}/file.tar.gz.asc",
+				"signature_key_url":         "https://example.com/key.asc",
+				"signature_key_fingerprint": "D53626F8174A9846",
+			},
+			wantErr: true,
+			errText: "invalid fingerprint format",
+		},
+		{
+			name: "invalid fingerprint format - non-hex chars",
+			params: map[string]interface{}{
+				"url":                       "https://example.com/v{version}/file.tar.gz",
+				"signature_url":             "https://example.com/v{version}/file.tar.gz.asc",
+				"signature_key_url":         "https://example.com/key.asc",
+				"signature_key_fingerprint": "ZZZZ26F8174A9846F6A573CC1253FA47EA19E301",
+			},
+			wantErr: true,
+			errText: "invalid fingerprint format",
+		},
+		{
+			name: "checksum_url only - valid",
+			params: map[string]interface{}{
+				"url":          "https://example.com/v{version}/file.tar.gz",
+				"checksum_url": "https://example.com/v{version}/checksums.txt",
+			},
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := action.Preflight(tt.params)
+			hasErrors := len(result.Errors) > 0
+			if hasErrors != tt.wantErr {
+				t.Errorf("Preflight() errors = %v, wantErr %v", result.Errors, tt.wantErr)
+				return
+			}
+			if tt.wantErr && tt.errText != "" {
+				found := false
+				for _, errMsg := range result.Errors {
+					if strings.Contains(errMsg, tt.errText) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Preflight() errors = %v, want error containing %q", result.Errors, tt.errText)
+				}
+			}
+		})
+	}
+}
+
 // TestDownloadAction_ValidateIP tests IP validation for download redirects
 func TestDownloadAction_ValidateIP(t *testing.T) {
 	t.Parallel()

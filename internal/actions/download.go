@@ -43,16 +43,56 @@ func (a *DownloadAction) Preflight(params map[string]interface{}) *PreflightResu
 		result.AddError("download action does not support static 'checksum'; use 'checksum_url' for dynamic verification or 'download_file' for static URLs")
 	}
 
-	// WARNING: Missing checksum_url (unless explicitly acknowledged)
-	if _, hasChecksumURL := GetString(params, "checksum_url"); !hasChecksumURL {
+	// Check for signature verification parameters
+	_, hasSigURL := GetString(params, "signature_url")
+	_, hasSigKeyURL := GetString(params, "signature_key_url")
+	sigFingerprint, hasSigFingerprint := GetString(params, "signature_key_fingerprint")
+	hasAnySigParam := hasSigURL || hasSigKeyURL || hasSigFingerprint
+	hasAllSigParams := hasSigURL && hasSigKeyURL && hasSigFingerprint
+
+	// ERROR: Partial signature params - must provide all three
+	if hasAnySigParam && !hasAllSigParams {
+		var missing []string
+		if !hasSigURL {
+			missing = append(missing, "signature_url")
+		}
+		if !hasSigKeyURL {
+			missing = append(missing, "signature_key_url")
+		}
+		if !hasSigFingerprint {
+			missing = append(missing, "signature_key_fingerprint")
+		}
+		result.AddError("incomplete signature verification: missing " + strings.Join(missing, ", "))
+	}
+
+	// ERROR: signature_url and checksum_url are mutually exclusive
+	_, hasChecksumURL := GetString(params, "checksum_url")
+	if hasSigURL && hasChecksumURL {
+		result.AddError("signature_url and checksum_url are mutually exclusive; use one verification method")
+	}
+
+	// ERROR: Invalid fingerprint format
+	if hasSigFingerprint {
+		if err := ValidateFingerprint(sigFingerprint); err != nil {
+			result.AddError(err.Error())
+		}
+	}
+
+	// WARNING: Missing verification (checksum_url or signature_url)
+	if !hasChecksumURL && !hasSigURL {
 		if _, hasSkipReason := GetString(params, "skip_verification_reason"); !hasSkipReason {
-			result.AddWarning("no upstream checksum verification (checksum_url); integrity relies on plan-time computation")
+			result.AddWarning("no upstream verification (checksum_url or signature_url); integrity relies on plan-time computation")
 		}
 	}
 
 	// ERROR: URL without variables - should use download_file instead
 	if hasURL && url != "" && !strings.Contains(url, "{") {
 		result.AddError("download URL contains no variables; use 'download_file' action for static URLs")
+	}
+
+	// WARNING: Signature params but no placeholders in URL
+	if hasSigURL && hasURL && url != "" && !strings.Contains(url, "{") {
+		result.AddWarning("signature_url provided but URL has no placeholders; consider using download_file instead")
 	}
 
 	// WARNING: Unused os_mapping
@@ -273,6 +313,11 @@ func (a *DownloadAction) Execute(ctx *ExecutionContext, params map[string]interf
 	}
 	logger.Debug("checksum verification passed", "algo", checksumAlgo)
 
+	// Verify PGP signature if provided
+	if err := a.verifySignature(ctx.Context, ctx, params, destPath, vars); err != nil {
+		return fmt.Errorf("signature verification failed: %w", err)
+	}
+
 	// Save to cache if available (no inline checksum for download action)
 	if cache != nil {
 		if err := cache.Save(url, destPath, ""); err != nil {
@@ -424,5 +469,64 @@ func (a *DownloadAction) verifyChecksumFromURL(ctx context.Context, execCtx *Exe
 		return err
 	}
 
+	return nil
+}
+
+// verifySignature verifies the downloaded file using PGP signature verification.
+func (a *DownloadAction) verifySignature(ctx context.Context, execCtx *ExecutionContext, params map[string]interface{}, filePath string, vars map[string]string) error {
+	// Check if signature verification is requested
+	signatureURLPattern, hasSigURL := GetString(params, "signature_url")
+	if !hasSigURL {
+		return nil
+	}
+
+	// Get required signature parameters
+	keyURLPattern, hasKeyURL := GetString(params, "signature_key_url")
+	fingerprint, hasFingerprint := GetString(params, "signature_key_fingerprint")
+
+	if !hasKeyURL || !hasFingerprint {
+		return fmt.Errorf("signature verification requires signature_key_url and signature_key_fingerprint")
+	}
+
+	// Normalize fingerprint
+	fingerprint, err := ParseFingerprint(fingerprint)
+	if err != nil {
+		return err
+	}
+
+	// Expand variables in URLs
+	signatureURL := ExpandVars(signatureURLPattern, vars)
+	keyURL := ExpandVars(keyURLPattern, vars)
+
+	fmt.Printf("   Verifying PGP signature...\n")
+	fmt.Printf("   Signature: %s\n", signatureURL)
+	fmt.Printf("   Key: %s\n", keyURL)
+	fmt.Printf("   Fingerprint: %s\n", FormatFingerprint(fingerprint))
+
+	// Fetch signature
+	signatureData, err := FetchSignature(ctx, signatureURL)
+	if err != nil {
+		return fmt.Errorf("failed to fetch signature: %w", err)
+	}
+
+	// Get key from cache or fetch
+	keyCacheDir := execCtx.KeyCacheDir
+	if keyCacheDir == "" {
+		// Fall back to a subdirectory in the work dir for testing
+		keyCacheDir = filepath.Join(execCtx.WorkDir, ".keys")
+	}
+
+	keyCache := NewPGPKeyCache(keyCacheDir)
+	key, err := keyCache.Get(ctx, fingerprint, keyURL)
+	if err != nil {
+		return fmt.Errorf("failed to get signing key: %w", err)
+	}
+
+	// Verify signature
+	if err := VerifyPGPSignature(ctx, filePath, signatureData, key); err != nil {
+		return err
+	}
+
+	fmt.Printf("   ✓ PGP signature verified\n")
 	return nil
 }

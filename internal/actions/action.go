@@ -18,6 +18,7 @@ type ExecutionContext struct {
 	ToolsDir         string            // Tools directory (~/.tsuku/tools/) for finding other installed tools
 	LibsDir          string            // Libraries directory (~/.tsuku/libs/) for finding installed libraries
 	DownloadCacheDir string            // Download cache directory (~/.tsuku/cache/downloads/)
+	KeyCacheDir      string            // PGP key cache directory (~/.tsuku/cache/keys/)
 	Version          string            // Resolved version (e.g., "1.29.3")
 	VersionTag       string            // Original version tag (e.g., "v1.29.3" or "1.29.3")
 	OS               string            // Target OS (runtime.GOOS)
