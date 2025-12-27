@@ -13,8 +13,53 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
+// verifyBinaryIntegrity verifies the integrity of installed binaries using stored checksums.
+// Returns true if verification passed, false if there were mismatches or errors.
+// If no checksums are stored (pre-feature installation), prints a skip message and returns true.
+func verifyBinaryIntegrity(toolDir string, versionState *install.VersionState) bool {
+	if len(versionState.BinaryChecksums) == 0 {
+		printInfo("  Integrity: SKIPPED (no stored checksums - pre-feature installation)\n")
+		return true
+	}
+
+	printInfof("  Integrity: Verifying %d binaries...\n", len(versionState.BinaryChecksums))
+
+	mismatches, err := install.VerifyBinaryChecksums(toolDir, versionState.BinaryChecksums)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "  Integrity: ERROR - %v\n", err)
+		return false
+	}
+
+	if len(mismatches) == 0 {
+		printInfof("  Integrity: OK (%d binaries verified)\n", len(versionState.BinaryChecksums))
+		return true
+	}
+
+	// Report mismatches
+	fmt.Fprintf(os.Stderr, "  Integrity: MODIFIED\n")
+	for _, m := range mismatches {
+		if m.Error != nil {
+			fmt.Fprintf(os.Stderr, "    %s: ERROR - %v\n", m.Path, m.Error)
+		} else {
+			fmt.Fprintf(os.Stderr, "    %s: expected %s..., got %s...\n",
+				m.Path, truncateChecksum(m.Expected), truncateChecksum(m.Actual))
+		}
+	}
+	fmt.Fprintf(os.Stderr, "    WARNING: Binary may have been modified after installation.\n")
+	fmt.Fprintf(os.Stderr, "    Run 'tsuku install <tool> --reinstall' to restore original.\n")
+	return false
+}
+
+// truncateChecksum returns the first 12 characters of a checksum for display.
+func truncateChecksum(hash string) string {
+	if len(hash) > 12 {
+		return hash[:12]
+	}
+	return hash
+}
+
 // verifyWithAbsolutePath verifies a hidden tool using absolute paths
-func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir string) {
+func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir string, versionState *install.VersionState) {
 	command := r.Verify.Command
 	command = strings.ReplaceAll(command, "{version}", version)
 	command = strings.ReplaceAll(command, "{install_dir}", installDir)
@@ -42,10 +87,15 @@ func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir stri
 		}
 		printInfof("  Pattern matched: %s\n", pattern)
 	}
+
+	// Binary integrity verification
+	if !verifyBinaryIntegrity(installDir, versionState) {
+		exitWithCode(ExitVerifyFailed)
+	}
 }
 
 // verifyVisibleTool performs comprehensive verification for visible tools
-func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.ToolState, installDir string, cfg *config.Config) {
+func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.ToolState, versionState *install.VersionState, installDir string, cfg *config.Config) {
 	// Step 1: Verify installation via current/ symlink
 	printInfo("  Step 1: Verifying installation via symlink...")
 
@@ -151,13 +201,31 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 		}
 		printInfo("      Correct binary is being used from PATH")
 	}
+
+	// Step 4: Binary integrity verification
+	printInfo("\n  Step 4: Verifying binary integrity...")
+	if !verifyBinaryIntegrity(installDir, versionState) {
+		exitWithCode(ExitVerifyFailed)
+	}
 }
 
 var verifyCmd = &cobra.Command{
 	Use:   "verify <tool>",
 	Short: "Verify an installed tool",
-	Long:  `Verify that an installed tool is working correctly using the recipe's verification command.`,
-	Args:  cobra.ExactArgs(1),
+	Long: `Verify that an installed tool is working correctly.
+
+For visible tools, verification includes:
+  1. Running the recipe's verification command
+  2. Checking that the tool's bin directory is in PATH
+  3. Verifying PATH resolution finds the correct binary
+  4. Checking binary integrity against stored checksums
+
+For hidden tools (execution dependencies), only the verification command is run.
+
+Binary integrity verification detects post-installation tampering by comparing
+current SHA256 checksums against those stored at installation time. Tools
+installed before this feature will show "Integrity: SKIPPED".`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		toolName := args[0]
 
@@ -199,14 +267,28 @@ var verifyCmd = &cobra.Command{
 		installDir := filepath.Join(cfg.ToolsDir, fmt.Sprintf("%s-%s", toolName, toolState.Version))
 		printInfof("Verifying %s (version %s)...\n", toolName, toolState.Version)
 
+		// Get version state for integrity verification
+		var versionState *install.VersionState
+		if toolState.Versions != nil {
+			if vs, ok := toolState.Versions[toolState.Version]; ok {
+				versionState = &vs
+			}
+		}
+		if versionState == nil {
+			// Fallback for legacy state without multi-version support
+			versionState = &install.VersionState{
+				Binaries: toolState.Binaries,
+			}
+		}
+
 		// Determine verification strategy based on tool visibility
 		if toolState.IsHidden {
 			// Hidden tools: verify with absolute path
 			printInfo("  Tool is hidden (not in PATH)")
-			verifyWithAbsolutePath(r, toolName, toolState.Version, installDir)
+			verifyWithAbsolutePath(r, toolName, toolState.Version, installDir, versionState)
 		} else {
 			// Visible tools: comprehensive verification
-			verifyVisibleTool(r, toolName, &toolState, installDir, cfg)
+			verifyVisibleTool(r, toolName, &toolState, versionState, installDir, cfg)
 		}
 
 		printInfof("%s is working correctly\n", toolName)

@@ -145,6 +145,17 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 		fmt.Printf("📍 Installed to: %s (hidden)\n", toolDir)
 	}
 
+	// Compute binary checksums for integrity verification (Layer 3)
+	var binaryChecksums map[string]string
+	if len(opts.Binaries) > 0 {
+		var checksumErr error
+		binaryChecksums, checksumErr = ComputeBinaryChecksums(toolDir, opts.Binaries)
+		if checksumErr != nil {
+			// Log warning but don't fail installation - checksums are for verification, not blocking
+			fmt.Printf("⚠️  Could not compute binary checksums: %v\n", checksumErr)
+		}
+	}
+
 	// Update state with multi-version support
 	// Note: IsExplicit and RequiredBy are handled by the caller (main.go)
 	err := m.state.UpdateTool(name, func(ts *ToolState) {
@@ -155,10 +166,11 @@ func (m *Manager) InstallWithOptions(name, version, workDir string, opts Install
 
 		// Add this version to the map (preserves existing versions)
 		ts.Versions[version] = VersionState{
-			Requested:   opts.RequestedVersion,
-			Binaries:    opts.Binaries,
-			InstalledAt: time.Now(),
-			Plan:        opts.Plan,
+			Requested:       opts.RequestedVersion,
+			Binaries:        opts.Binaries,
+			BinaryChecksums: binaryChecksums,
+			InstalledAt:     time.Now(),
+			Plan:            opts.Plan,
 		}
 
 		// Set as active version
