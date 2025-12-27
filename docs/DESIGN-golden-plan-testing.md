@@ -497,7 +497,7 @@ func ComparePlanToGolden(t *testing.T, actual *executor.InstallationPlan, golden
 
 ### Phase 0: Recipe Metadata Command
 
-Add `tsuku metadata` command to query recipe properties programmatically:
+**Prerequisite**: #705 - Add `tsuku metadata` command to query recipe properties programmatically:
 
 ```bash
 # From registry
