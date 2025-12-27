@@ -18,7 +18,6 @@ type RedundantVersion struct {
 }
 
 // actionInference maps action names to the version source they infer.
-// Note: go_install is NOT in this map because it has no inference strategy.
 var actionInference = map[string]string{
 	"cargo_install":  "crates_io",
 	"pipx_install":   "pypi",
@@ -27,6 +26,7 @@ var actionInference = map[string]string{
 	"cpan_install":   "metacpan",
 	"github_archive": "github_releases",
 	"github_file":    "github_releases",
+	"go_install":     "goproxy",
 }
 
 // DetectRedundantVersion checks if a recipe has an explicit [version] configuration
@@ -37,8 +37,9 @@ var actionInference = map[string]string{
 //   - The recipe uses an action that can infer the same version source
 //   - The explicit source matches what would be inferred
 //
-// Note: go_install is excluded because it has no inference strategy - recipes
-// using go_install must specify source="goproxy" explicitly.
+// For go_install actions, a [version] module is considered redundant when:
+//   - It matches the install path exactly, OR
+//   - It matches what InferGoVersionModule would extract from the install path
 func DetectRedundantVersion(r *recipe.Recipe) []RedundantVersion {
 	var redundant []RedundantVersion
 
@@ -53,6 +54,25 @@ func DetectRedundantVersion(r *recipe.Recipe) []RedundantVersion {
 							Source:  "github_repo=" + r.Version.GitHubRepo,
 							Action:  step.Action,
 							Message: fmt.Sprintf("[version] github_repo=%q is redundant; %s with repo=%q infers this automatically", r.Version.GitHubRepo, step.Action, repo),
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// Check for go_install module redundancy
+	if r.Version.Module != "" {
+		for _, step := range r.Steps {
+			if step.Action == "go_install" {
+				if installPath, ok := step.Params["module"].(string); ok && installPath != "" {
+					inferredModule := InferGoVersionModule(installPath)
+					// Module is redundant if it matches what would be inferred
+					if r.Version.Module == inferredModule {
+						redundant = append(redundant, RedundantVersion{
+							Source:  "module=" + r.Version.Module,
+							Action:  step.Action,
+							Message: fmt.Sprintf("[version] module=%q is redundant; inferred from install path %q", r.Version.Module, installPath),
 						})
 					}
 				}

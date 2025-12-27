@@ -6,6 +6,8 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	versionpkg "github.com/tsukumogami/tsuku/internal/version"
 )
 
 // Ensure GoInstallAction implements Decomposable
@@ -370,10 +372,14 @@ func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interfac
 	)
 
 	// Run go get to populate go.sum
-	// Use version module if recipe specifies one (for subpackages like golang.org/x/tools/cmd/goimports)
-	moduleForVersioning := module
+	// Determine the version module path:
+	// 1. Use Recipe.Version.Module if explicitly set (for edge cases)
+	// 2. Otherwise infer from install path using pattern matching
+	var moduleForVersioning string
 	if ctx.Recipe != nil && ctx.Recipe.Version.Module != "" {
 		moduleForVersioning = ctx.Recipe.Version.Module
+	} else {
+		moduleForVersioning = versionpkg.InferGoVersionModule(module)
 	}
 	target := moduleForVersioning + "@" + version
 	getCmd := exec.CommandContext(ctx.Context, goPath, "get", target)

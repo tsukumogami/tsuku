@@ -4,9 +4,6 @@ description = "Official Go language server"
 homepage = "https://pkg.go.dev/golang.org/x/tools/gopls"
 version_format = "semver"
 
-[version]
-source = "goproxy"
-
 [[steps]]
 action = "go_install"
 module = "golang.org/x/tools/gopls"

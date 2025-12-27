@@ -25,7 +25,7 @@ func TestDetectRedundantVersion(t *testing.T) {
 			wantLen: 0,
 		},
 		{
-			name: "no redundancy - go_install with goproxy",
+			name: "redundant - go_install with goproxy",
 			recipe: &recipe.Recipe{
 				Version: recipe.VersionSection{Source: "goproxy"},
 				Steps: []recipe.Step{{
@@ -33,7 +33,8 @@ func TestDetectRedundantVersion(t *testing.T) {
 					Params: map[string]interface{}{"module": "mvdan.cc/gofumpt"},
 				}},
 			},
-			wantLen: 0, // go_install has no inference, so explicit is required
+			wantLen: 1,
+			wantMsg: "source=\"goproxy\" is redundant",
 		},
 		{
 			name: "redundant - cargo_install with crates_io",
@@ -139,6 +140,54 @@ func TestDetectRedundantVersion(t *testing.T) {
 				}},
 			},
 			wantLen: 0, // download_archive has no inference
+		},
+		// Module redundancy tests
+		{
+			name: "redundant module - github pattern",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Module: "github.com/go-delve/delve"},
+				Steps: []recipe.Step{{
+					Action: "go_install",
+					Params: map[string]interface{}{"module": "github.com/go-delve/delve/cmd/dlv"},
+				}},
+			},
+			wantLen: 1,
+			wantMsg: "module=\"github.com/go-delve/delve\" is redundant",
+		},
+		{
+			name: "redundant module - cmd pattern",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Module: "honnef.co/go/tools"},
+				Steps: []recipe.Step{{
+					Action: "go_install",
+					Params: map[string]interface{}{"module": "honnef.co/go/tools/cmd/staticcheck"},
+				}},
+			},
+			wantLen: 1,
+			wantMsg: "module=\"honnef.co/go/tools\" is redundant",
+		},
+		{
+			name: "redundant module - exact match",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Module: "mvdan.cc/gofumpt"},
+				Steps: []recipe.Step{{
+					Action: "go_install",
+					Params: map[string]interface{}{"module": "mvdan.cc/gofumpt"},
+				}},
+			},
+			wantLen: 1,
+			wantMsg: "module=\"mvdan.cc/gofumpt\" is redundant",
+		},
+		{
+			name: "not redundant module - non-matching pattern",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Module: "go.uber.org/mock"},
+				Steps: []recipe.Step{{
+					Action: "go_install",
+					Params: map[string]interface{}{"module": "go.uber.org/mock/mockgen"},
+				}},
+			},
+			wantLen: 0, // mockgen path doesn't match either pattern - explicit module is needed
 		},
 	}
 

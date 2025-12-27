@@ -71,6 +71,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&InferredRubyGemsStrategy{})  // PriorityInferred (10)
 	f.Register(&InferredMetaCPANStrategy{})  // PriorityInferred (10)
 	f.Register(&InferredGitHubStrategy{})    // PriorityInferred (10)
+	f.Register(&InferredGoProxyStrategy{})   // PriorityInferred (10)
 
 	return f
 }
@@ -542,6 +543,86 @@ func (s *HomebrewSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (V
 		return nil, fmt.Errorf("no formula specified for Homebrew version source")
 	}
 	return NewHomebrewProvider(resolver, r.Version.Formula), nil
+}
+
+// InferredGoProxyStrategy infers goproxy from go_install action
+type InferredGoProxyStrategy struct{}
+
+func (s *InferredGoProxyStrategy) Priority() int { return PriorityInferred }
+
+func (s *InferredGoProxyStrategy) CanHandle(r *recipe.Recipe) bool {
+	for _, step := range r.Steps {
+		if step.Action == "go_install" {
+			if _, ok := step.Params["module"].(string); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *InferredGoProxyStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	// Use Recipe.Version.Module if explicitly set (for edge cases where
+	// pattern-based inference doesn't work)
+	if r.Version.Module != "" {
+		return NewGoProxyProvider(resolver, r.Version.Module), nil
+	}
+
+	// Get module from go_install step and try pattern-based inference
+	for _, step := range r.Steps {
+		if step.Action == "go_install" {
+			if installPath, ok := step.Params["module"].(string); ok {
+				versionModule := InferGoVersionModule(installPath)
+				return NewGoProxyProvider(resolver, versionModule), nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no Go module found in go_install steps")
+}
+
+// InferGoVersionModule extracts the version module path from a Go install path.
+// It handles two common patterns where the install path differs from the version module:
+//
+// Pattern 1 (GitHub): github.com/<owner>/<repo>/deeper/path
+//
+//	→ Returns github.com/<owner>/<repo>
+//
+// Pattern 2 (/cmd/ convention): some.url/path/cmd/tool
+//
+//	→ Returns some.url/path
+//
+// If no pattern matches, returns the install path unchanged.
+func InferGoVersionModule(installPath string) string {
+	// Pattern 1: GitHub repos - github.com/<owner>/<repo>[/...]
+	if len(installPath) > 11 && installPath[:11] == "github.com/" {
+		// Find the third slash (after owner/repo)
+		slashCount := 0
+		for i := 0; i < len(installPath); i++ {
+			if installPath[i] == '/' {
+				slashCount++
+				if slashCount == 3 {
+					return installPath[:i]
+				}
+			}
+		}
+		// No third slash means it's already github.com/owner/repo
+		return installPath
+	}
+
+	// Pattern 2: /cmd/ convention - extract everything before /cmd/
+	cmdIndex := -1
+	for i := 0; i <= len(installPath)-5; i++ {
+		if installPath[i:i+5] == "/cmd/" {
+			cmdIndex = i
+			break
+		}
+	}
+	if cmdIndex > 0 {
+		return installPath[:cmdIndex]
+	}
+
+	// No pattern matched - use install path as-is
+	return installPath
 }
 
 // Pre-compile regex for performance (avoid compiling on every call)

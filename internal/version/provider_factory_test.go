@@ -1227,3 +1227,244 @@ func TestInferredNpmStrategy_Create_NoPackage(t *testing.T) {
 		t.Error("Create() should fail when package is missing")
 	}
 }
+
+func TestInferredGoProxyStrategy_Priority(t *testing.T) {
+	s := &InferredGoProxyStrategy{}
+	if s.Priority() != PriorityInferred {
+		t.Errorf("Priority() = %d, want %d", s.Priority(), PriorityInferred)
+	}
+}
+
+func TestInferredGoProxyStrategy_CanHandle(t *testing.T) {
+	s := &InferredGoProxyStrategy{}
+
+	tests := []struct {
+		name     string
+		recipe   *recipe.Recipe
+		expected bool
+	}{
+		{
+			name: "with go_install action",
+			recipe: &recipe.Recipe{
+				Steps: []recipe.Step{
+					{Action: "go_install", Params: map[string]interface{}{"module": "mvdan.cc/gofumpt"}},
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "without go_install action",
+			recipe: &recipe.Recipe{
+				Steps: []recipe.Step{
+					{Action: "download", Params: map[string]interface{}{}},
+				},
+			},
+			expected: false,
+		},
+		{
+			name: "go_install without module param",
+			recipe: &recipe.Recipe{
+				Steps: []recipe.Step{
+					{Action: "go_install", Params: map[string]interface{}{}},
+				},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := s.CanHandle(tt.recipe)
+			if result != tt.expected {
+				t.Errorf("CanHandle() = %v, want %v", result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestInferredGoProxyStrategy_Create_SimpleCase(t *testing.T) {
+	resolver := New()
+	s := &InferredGoProxyStrategy{}
+
+	// Simple case: module path matches install path
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "gofumpt"},
+		Steps: []recipe.Step{
+			{
+				Action: "go_install",
+				Params: map[string]interface{}{"module": "mvdan.cc/gofumpt"},
+			},
+		},
+	}
+
+	provider, err := s.Create(resolver, r)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	if provider == nil {
+		t.Fatal("Create() returned nil provider")
+	}
+}
+
+func TestInferredGoProxyStrategy_Create_WithVersionModule(t *testing.T) {
+	resolver := New()
+	s := &InferredGoProxyStrategy{}
+
+	// Complex case: version module differs from install path
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "dlv"},
+		Version: recipe.VersionSection{
+			Module: "github.com/go-delve/delve", // Version module
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "go_install",
+				Params: map[string]interface{}{"module": "github.com/go-delve/delve/cmd/dlv"}, // Install path
+			},
+		},
+	}
+
+	provider, err := s.Create(resolver, r)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+
+	if provider == nil {
+		t.Fatal("Create() returned nil provider")
+	}
+}
+
+func TestInferredGoProxyStrategy_Create_NoModule(t *testing.T) {
+	resolver := New()
+	s := &InferredGoProxyStrategy{}
+
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Name: "test-tool"},
+		Steps: []recipe.Step{
+			{
+				Action: "go_install",
+				Params: map[string]interface{}{}, // Missing module
+			},
+		},
+	}
+
+	_, err := s.Create(resolver, r)
+	if err == nil {
+		t.Error("Create() should fail when module is missing")
+	}
+}
+
+func TestInferGoVersionModule(t *testing.T) {
+	tests := []struct {
+		name        string
+		installPath string
+		expected    string
+	}{
+		// Pattern 1: GitHub repos - github.com/<owner>/<repo>[/...]
+		{
+			name:        "github simple - no subpath",
+			installPath: "github.com/go-delve/delve",
+			expected:    "github.com/go-delve/delve",
+		},
+		{
+			name:        "github with cmd subpath",
+			installPath: "github.com/go-delve/delve/cmd/dlv",
+			expected:    "github.com/go-delve/delve",
+		},
+		{
+			name:        "github with deep subpath",
+			installPath: "github.com/x-motemen/gore/cmd/gore",
+			expected:    "github.com/x-motemen/gore",
+		},
+		{
+			name:        "github with single subdir",
+			installPath: "github.com/owner/repo/subdir",
+			expected:    "github.com/owner/repo",
+		},
+
+		// Pattern 2: /cmd/ convention - extract before /cmd/
+		{
+			name:        "non-github with cmd",
+			installPath: "honnef.co/go/tools/cmd/staticcheck",
+			expected:    "honnef.co/go/tools",
+		},
+		{
+			name:        "golang.org with cmd",
+			installPath: "golang.org/x/tools/cmd/goimports",
+			expected:    "golang.org/x/tools",
+		},
+		{
+			name:        "go.uber.org with subpath (no cmd)",
+			installPath: "go.uber.org/mock/mockgen",
+			expected:    "go.uber.org/mock/mockgen",
+		},
+
+		// No pattern matched - return as-is
+		{
+			name:        "simple module path",
+			installPath: "mvdan.cc/gofumpt",
+			expected:    "mvdan.cc/gofumpt",
+		},
+		{
+			name:        "module with subdir but no cmd",
+			installPath: "example.com/pkg/tool",
+			expected:    "example.com/pkg/tool",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := InferGoVersionModule(tt.installPath)
+			if result != tt.expected {
+				t.Errorf("InferGoVersionModule(%q) = %q, want %q", tt.installPath, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestInferredGoProxyStrategy_Create_WithPatternInference(t *testing.T) {
+	resolver := New()
+	s := &InferredGoProxyStrategy{}
+
+	tests := []struct {
+		name        string
+		installPath string
+	}{
+		{
+			name:        "github pattern",
+			installPath: "github.com/go-delve/delve/cmd/dlv",
+		},
+		{
+			name:        "cmd pattern",
+			installPath: "honnef.co/go/tools/cmd/staticcheck",
+		},
+		{
+			name:        "simple path",
+			installPath: "mvdan.cc/gofumpt",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &recipe.Recipe{
+				Metadata: recipe.MetadataSection{Name: "test-tool"},
+				Steps: []recipe.Step{
+					{
+						Action: "go_install",
+						Params: map[string]interface{}{"module": tt.installPath},
+					},
+				},
+			}
+
+			provider, err := s.Create(resolver, r)
+			if err != nil {
+				t.Fatalf("Create() error = %v", err)
+			}
+
+			if provider == nil {
+				t.Fatal("Create() returned nil provider")
+			}
+		})
+	}
+}

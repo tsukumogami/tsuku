@@ -4,9 +4,6 @@ description = "A stricter gofmt"
 homepage = "https://github.com/mvdan/gofumpt"
 version_format = "semver"
 
-[version]
-source = "goproxy"
-
 [[steps]]
 action = "go_install"
 module = "mvdan.cc/gofumpt"
