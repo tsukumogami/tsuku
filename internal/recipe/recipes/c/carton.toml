@@ -4,10 +4,6 @@ description = "Perl module dependency manager"
 homepage = "https://metacpan.org/pod/Carton"
 version_format = "semver"
 
-[version]
-source = "metacpan"
-distribution = "Carton"
-
 [[steps]]
 action = "cpan_install"
 distribution = "Carton"

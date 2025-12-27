@@ -4,10 +4,6 @@ description = "Critique Perl source code for best-practices"
 homepage = "https://metacpan.org/pod/Perl::Critic"
 version_format = "semver"
 
-[version]
-source = "metacpan"
-distribution = "Perl-Critic"
-
 [[steps]]
 action = "cpan_install"
 distribution = "Perl-Critic"

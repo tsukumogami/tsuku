@@ -4,9 +4,6 @@ description = "Ruby dependency manager"
 homepage = "https://bundler.io/"
 version_format = "semver"
 
-[version]
-source = "rubygems"
-
 [[steps]]
 action = "gem_install"
 gem = "bundler"

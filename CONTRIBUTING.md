@@ -262,9 +262,6 @@ description = "Brief description"
 homepage = "https://example.com"
 version_format = "semver"
 
-[version]
-github_repo = "owner/repo"
-
 [[steps]]
 action = "github_archive"
 repo = "owner/repo"
@@ -277,6 +274,53 @@ binaries = ["tool-name"]
 command = "{binary} --version"
 pattern = "{version}"
 ```
+
+### Version Inference
+
+Many actions automatically infer the version source from their parameters, so an explicit `[version]` section is often unnecessary:
+
+| Action | Inferred Source | Parameter Used |
+|--------|----------------|----------------|
+| `cargo_install` | `crates_io` | `crate` |
+| `pipx_install` | `pypi` | `package` |
+| `npm_install` | `npm` | `package` |
+| `gem_install` | `rubygems` | `gem` |
+| `cpan_install` | `metacpan` | `distribution` |
+| `github_archive` | `github_releases` | `repo` |
+| `github_file` | `github_releases` | `repo` |
+
+**When to add `[version]`:**
+
+- **Different source**: When version comes from a different source than the action implies (e.g., using GitHub releases for version but installing from crates.io)
+- **go_install**: Always requires explicit `source = "goproxy"` with `module` parameter
+- **download_archive**: Always requires explicit version configuration
+
+**Example - go_install (always explicit):**
+
+```toml
+[version]
+source = "goproxy"
+module = "mvdan.cc/gofumpt"
+
+[[steps]]
+action = "go_install"
+module = "mvdan.cc/gofumpt"
+```
+
+**Example - override version source:**
+
+```toml
+# Version from GitHub, install from crates.io
+[version]
+source = "github_releases"
+github_repo = "cargo-bins/cargo-binstall"
+
+[[steps]]
+action = "cargo_install"
+crate = "cargo-binstall"
+```
+
+Running `tsuku validate --strict` will warn if a `[version]` section duplicates what would be inferred automatically.
 
 ### Testing Recipes
 

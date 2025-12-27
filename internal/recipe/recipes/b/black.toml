@@ -4,9 +4,6 @@ description = "The uncompromising Python code formatter"
 homepage = "https://github.com/psf/black"
 version_format = "semver"
 
-[version]
-source = "pypi"
-
 [[steps]]
 action = "pipx_install"
 package = "black"

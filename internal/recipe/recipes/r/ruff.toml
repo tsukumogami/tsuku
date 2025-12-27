@@ -6,9 +6,6 @@ version_format = "semver"
 # Ruff is a compiled Rust binary distributed via PyPI - no Python needed at runtime
 runtime_dependencies = []
 
-[version]
-source = "pypi"
-
 [[steps]]
 action = "pipx_install"
 package = "ruff"
