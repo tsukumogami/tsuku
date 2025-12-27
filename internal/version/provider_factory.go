@@ -71,6 +71,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&InferredRubyGemsStrategy{})  // PriorityInferred (10)
 	f.Register(&InferredMetaCPANStrategy{})  // PriorityInferred (10)
 	f.Register(&InferredGitHubStrategy{})    // PriorityInferred (10)
+	f.Register(&InferredGoProxyStrategy{})   // PriorityInferred (10)
 
 	return f
 }
@@ -542,6 +543,40 @@ func (s *HomebrewSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (V
 		return nil, fmt.Errorf("no formula specified for Homebrew version source")
 	}
 	return NewHomebrewProvider(resolver, r.Version.Formula), nil
+}
+
+// InferredGoProxyStrategy infers goproxy from go_install action
+type InferredGoProxyStrategy struct{}
+
+func (s *InferredGoProxyStrategy) Priority() int { return PriorityInferred }
+
+func (s *InferredGoProxyStrategy) CanHandle(r *recipe.Recipe) bool {
+	for _, step := range r.Steps {
+		if step.Action == "go_install" {
+			if _, ok := step.Params["module"].(string); ok {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (s *InferredGoProxyStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	// Use Recipe.Version.Module if explicitly set (for differing paths)
+	// e.g., dlv: install path is github.com/go-delve/delve/cmd/dlv
+	//       but version module is github.com/go-delve/delve
+	if r.Version.Module != "" {
+		return NewGoProxyProvider(resolver, r.Version.Module), nil
+	}
+	// Otherwise use module from go_install step (simple case where paths match)
+	for _, step := range r.Steps {
+		if step.Action == "go_install" {
+			if module, ok := step.Params["module"].(string); ok {
+				return NewGoProxyProvider(resolver, module), nil
+			}
+		}
+	}
+	return nil, fmt.Errorf("no Go module found in go_install steps")
 }
 
 // Pre-compile regex for performance (avoid compiling on every call)

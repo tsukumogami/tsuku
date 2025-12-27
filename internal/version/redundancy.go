@@ -18,7 +18,6 @@ type RedundantVersion struct {
 }
 
 // actionInference maps action names to the version source they infer.
-// Note: go_install is NOT in this map because it has no inference strategy.
 var actionInference = map[string]string{
 	"cargo_install":  "crates_io",
 	"pipx_install":   "pypi",
@@ -27,6 +26,7 @@ var actionInference = map[string]string{
 	"cpan_install":   "metacpan",
 	"github_archive": "github_releases",
 	"github_file":    "github_releases",
+	"go_install":     "goproxy",
 }
 
 // DetectRedundantVersion checks if a recipe has an explicit [version] configuration
@@ -36,9 +36,6 @@ var actionInference = map[string]string{
 //   - The recipe has an explicit [version] source or github_repo
 //   - The recipe uses an action that can infer the same version source
 //   - The explicit source matches what would be inferred
-//
-// Note: go_install is excluded because it has no inference strategy - recipes
-// using go_install must specify source="goproxy" explicitly.
 func DetectRedundantVersion(r *recipe.Recipe) []RedundantVersion {
 	var redundant []RedundantVersion
 
