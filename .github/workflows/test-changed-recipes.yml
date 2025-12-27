@@ -59,12 +59,17 @@ jobs:
                 continue
               fi
 
-              # Check if recipe is Linux-only (has os_mapping with linux but not darwin)
+              # Check if recipe is Linux-only
+              # Method 1: Check supported_os field (new platform-aware format)
+              # Method 2: Check os_mapping (legacy format)
               linux_only="false"
-              if grep -q 'os_mapping.*linux' "$path" 2>/dev/null; then
+              if grep -q 'supported_os.*=.*\["linux"\]' "$path" 2>/dev/null; then
+                linux_only="true"
+                echo "Linux-only recipe (supported_os): $path"
+              elif grep -q 'os_mapping.*linux' "$path" 2>/dev/null; then
                 if ! grep -q 'os_mapping.*darwin' "$path" 2>/dev/null; then
                   linux_only="true"
-                  echo "Linux-only recipe: $path"
+                  echo "Linux-only recipe (os_mapping): $path"
                 fi
               fi
 
