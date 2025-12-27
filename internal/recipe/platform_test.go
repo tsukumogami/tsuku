@@ -554,3 +554,249 @@ func TestFormatPlatformConstraints(t *testing.T) {
 		})
 	}
 }
+
+func TestValidateStepsAgainstPlatforms(t *testing.T) {
+	tests := []struct {
+		name            string
+		supportedOS     []string
+		supportedArch   []string
+		steps           []Step
+		expectedErrors  int
+		errorSubstrings []string
+		description     string
+	}{
+		{
+			name:          "valid os_mapping",
+			supportedOS:   []string{"linux", "darwin"},
+			supportedArch: nil,
+			steps: []Step{
+				{
+					Action: "download",
+					Params: map[string]interface{}{
+						"os_mapping": map[string]interface{}{
+							"darwin": "macos",
+							"linux":  "linux",
+						},
+					},
+				},
+			},
+			expectedErrors: 0,
+			description:    "os_mapping with all supported OS should pass",
+		},
+		{
+			name:          "invalid os_mapping",
+			supportedOS:   []string{"darwin"},
+			supportedArch: nil,
+			steps: []Step{
+				{
+					Action: "download",
+					Params: map[string]interface{}{
+						"os_mapping": map[string]interface{}{
+							"darwin": "macos",
+							"linux":  "linux",
+						},
+					},
+				},
+			},
+			expectedErrors:  1,
+			errorSubstrings: []string{"os_mapping contains 'linux'", "not in the recipe's supported platforms"},
+			description:     "os_mapping with unsupported OS should fail",
+		},
+		{
+			name:          "valid arch_mapping",
+			supportedOS:   nil,
+			supportedArch: []string{"amd64", "arm64"},
+			steps: []Step{
+				{
+					Action: "download",
+					Params: map[string]interface{}{
+						"arch_mapping": map[string]interface{}{
+							"amd64": "x64",
+							"arm64": "aarch64",
+						},
+					},
+				},
+			},
+			expectedErrors: 0,
+			description:    "arch_mapping with all supported arch should pass",
+		},
+		{
+			name:          "invalid arch_mapping",
+			supportedOS:   nil,
+			supportedArch: []string{"amd64"},
+			steps: []Step{
+				{
+					Action: "download",
+					Params: map[string]interface{}{
+						"arch_mapping": map[string]interface{}{
+							"amd64": "x64",
+							"arm64": "aarch64",
+						},
+					},
+				},
+			},
+			expectedErrors:  1,
+			errorSubstrings: []string{"arch_mapping contains 'arm64'", "not in the recipe's supported platforms"},
+			description:     "arch_mapping with unsupported arch should fail",
+		},
+		{
+			name:          "valid install_guide",
+			supportedOS:   []string{"linux", "darwin"},
+			supportedArch: nil,
+			steps: []Step{
+				{
+					Action: "require_system",
+					Params: map[string]interface{}{
+						"command": "gcc",
+						"install_guide": map[string]interface{}{
+							"darwin": "brew install gcc",
+							"linux":  "apt install gcc",
+						},
+					},
+				},
+			},
+			expectedErrors: 0,
+			description:    "install_guide covering all supported OS should pass",
+		},
+		{
+			name:          "missing install_guide entry",
+			supportedOS:   []string{"linux", "darwin"},
+			supportedArch: nil,
+			steps: []Step{
+				{
+					Action: "require_system",
+					Params: map[string]interface{}{
+						"command": "gcc",
+						"install_guide": map[string]interface{}{
+							"darwin": "brew install gcc",
+						},
+					},
+				},
+			},
+			expectedErrors:  1,
+			errorSubstrings: []string{"install_guide missing entry for supported OS 'linux'"},
+			description:     "install_guide with missing OS should fail",
+		},
+		{
+			name:          "install_guide with all platforms",
+			supportedOS:   nil, // All OS
+			supportedArch: []string{"amd64"},
+			steps: []Step{
+				{
+					Action: "require_system",
+					Params: map[string]interface{}{
+						"command": "gcc",
+						"install_guide": map[string]interface{}{
+							"darwin": "brew install gcc",
+							"linux":  "apt install gcc",
+						},
+					},
+				},
+			},
+			expectedErrors:  13, // Missing all other OS (aix, android, dragonfly, freebsd, illumos, ios, js, netbsd, openbsd, plan9, solaris, wasip1, windows)
+			errorSubstrings: []string{"install_guide missing entry"},
+			description:     "install_guide with no supported_os should require all known OS",
+		},
+		{
+			name:          "multiple errors",
+			supportedOS:   []string{"darwin"},
+			supportedArch: []string{"amd64"},
+			steps: []Step{
+				{
+					Action: "download",
+					Params: map[string]interface{}{
+						"os_mapping": map[string]interface{}{
+							"linux": "linux",
+						},
+						"arch_mapping": map[string]interface{}{
+							"arm64": "aarch64",
+						},
+					},
+				},
+				{
+					Action: "require_system",
+					Params: map[string]interface{}{
+						"command": "gcc",
+						"install_guide": map[string]interface{}{
+							"linux": "apt install gcc",
+						},
+					},
+				},
+			},
+			expectedErrors:  3, // os_mapping error, arch_mapping error, install_guide missing darwin
+			errorSubstrings: []string{"os_mapping contains 'linux'", "arch_mapping contains 'arm64'", "install_guide missing entry for supported OS 'darwin'"},
+			description:     "recipe with multiple errors should return all of them",
+		},
+		{
+			name:          "partial os_mapping is valid",
+			supportedOS:   []string{"linux", "darwin"},
+			supportedArch: nil,
+			steps: []Step{
+				{
+					Action: "download",
+					Params: map[string]interface{}{
+						"os_mapping": map[string]interface{}{
+							"darwin": "macos",
+						},
+					},
+				},
+			},
+			expectedErrors: 0,
+			description:    "os_mapping with only some platforms should pass (unmapped use defaults)",
+		},
+		{
+			name:          "non-require_system step ignores install_guide",
+			supportedOS:   []string{"linux", "darwin"},
+			supportedArch: nil,
+			steps: []Step{
+				{
+					Action: "download",
+					Params: map[string]interface{}{
+						"install_guide": map[string]interface{}{
+							"darwin": "brew install gcc",
+						},
+					},
+				},
+			},
+			expectedErrors: 0,
+			description:    "install_guide in non-require_system step should not be validated",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Recipe{
+				Metadata: MetadataSection{
+					SupportedOS:   tt.supportedOS,
+					SupportedArch: tt.supportedArch,
+				},
+				Steps: tt.steps,
+			}
+
+			errors := r.ValidateStepsAgainstPlatforms()
+
+			if len(errors) != tt.expectedErrors {
+				t.Errorf("%s: expected %d errors, got %d", tt.description, tt.expectedErrors, len(errors))
+				for i, err := range errors {
+					t.Logf("  Error %d: %v", i, err)
+				}
+				return
+			}
+
+			// Check that error messages contain expected substrings
+			for _, substr := range tt.errorSubstrings {
+				found := false
+				for _, err := range errors {
+					if contains(err.Error(), substr) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("%s: expected error containing '%s', but not found in errors: %v",
+						tt.description, substr, errors)
+				}
+			}
+		})
+	}
+}

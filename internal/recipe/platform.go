@@ -261,3 +261,83 @@ func (r *Recipe) FormatPlatformConstraints() string {
 
 	return strings.Join(parts, " | ")
 }
+
+// StepValidationError represents an error found during step validation
+type StepValidationError struct {
+	StepIndex int
+	Message   string
+}
+
+func (e *StepValidationError) Error() string {
+	return fmt.Sprintf("step %d: %s", e.StepIndex, e.Message)
+}
+
+// ValidateStepsAgainstPlatforms validates that step mappings and install_guide
+// entries are consistent with the recipe's platform constraints.
+//
+// This validation checks:
+// 1. os_mapping keys exist in the final set of supported OS values
+// 2. arch_mapping keys exist in the final set of supported arch values
+// 3. require_system steps with install_guide cover all supported OS values
+//
+// Returns a slice of errors for any inconsistencies found.
+func (r *Recipe) ValidateStepsAgainstPlatforms() []error {
+	var errors []error
+
+	// Get final supported platforms and extract unique OS/arch sets
+	platforms := r.GetSupportedPlatforms()
+	supportedOS := make(map[string]bool)
+	supportedArch := make(map[string]bool)
+
+	for _, platform := range platforms {
+		parts := strings.Split(platform, "/")
+		if len(parts) == 2 {
+			supportedOS[parts[0]] = true
+			supportedArch[parts[1]] = true
+		}
+	}
+
+	// Validate each step
+	for i, step := range r.Steps {
+		// Check os_mapping
+		if osMapping, ok := step.Params["os_mapping"].(map[string]interface{}); ok {
+			for os := range osMapping {
+				if !supportedOS[os] {
+					errors = append(errors, &StepValidationError{
+						StepIndex: i,
+						Message:   fmt.Sprintf("os_mapping contains '%s' which is not in the recipe's supported platforms", os),
+					})
+				}
+			}
+		}
+
+		// Check arch_mapping
+		if archMapping, ok := step.Params["arch_mapping"].(map[string]interface{}); ok {
+			for arch := range archMapping {
+				if !supportedArch[arch] {
+					errors = append(errors, &StepValidationError{
+						StepIndex: i,
+						Message:   fmt.Sprintf("arch_mapping contains '%s' which is not in the recipe's supported platforms", arch),
+					})
+				}
+			}
+		}
+
+		// Check install_guide coverage for require_system steps
+		// TODO: Update this validation when issue #686 is resolved (support platform tuples in install_guide)
+		if step.Action == "require_system" {
+			if installGuide, ok := step.Params["install_guide"].(map[string]interface{}); ok {
+				for os := range supportedOS {
+					if _, hasGuide := installGuide[os]; !hasGuide {
+						errors = append(errors, &StepValidationError{
+							StepIndex: i,
+							Message:   fmt.Sprintf("install_guide missing entry for supported OS '%s' (see issue #686 for platform tuple support)", os),
+						})
+					}
+				}
+			}
+		}
+	}
+
+	return errors
+}
