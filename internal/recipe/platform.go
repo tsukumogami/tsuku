@@ -6,6 +6,50 @@ import (
 	"strings"
 )
 
+// UnsupportedPlatformError is returned when a recipe doesn't support the current platform
+type UnsupportedPlatformError struct {
+	RecipeName           string
+	CurrentOS            string
+	CurrentArch          string
+	SupportedOS          []string
+	SupportedArch        []string
+	UnsupportedPlatforms []string
+}
+
+func (e *UnsupportedPlatformError) Error() string {
+	var msg strings.Builder
+	fmt.Fprintf(&msg, "recipe '%s' is not available for %s/%s\n\n",
+		e.RecipeName, e.CurrentOS, e.CurrentArch)
+
+	// Determine if we have constraints to show
+	hasAllowlist := len(e.SupportedOS) > 0 || len(e.SupportedArch) > 0
+	hasDenylist := len(e.UnsupportedPlatforms) > 0
+
+	if hasAllowlist || hasDenylist {
+		msg.WriteString("Platform constraints:\n")
+
+		// Show allowlist
+		osStr := "all"
+		if len(e.SupportedOS) > 0 {
+			osStr = strings.Join(e.SupportedOS, ", ")
+		}
+
+		archStr := "all"
+		if len(e.SupportedArch) > 0 {
+			archStr = strings.Join(e.SupportedArch, ", ")
+		}
+
+		fmt.Fprintf(&msg, "  Allowed: %s OS, %s arch\n", osStr, archStr)
+
+		// Show denylist if present
+		if hasDenylist {
+			fmt.Fprintf(&msg, "  Except: %s\n", strings.Join(e.UnsupportedPlatforms, ", "))
+		}
+	}
+
+	return msg.String()
+}
+
 // allKnownOS returns all known GOOS values from the Go runtime
 func allKnownOS() []string {
 	return []string{
@@ -78,6 +122,18 @@ func (r *Recipe) SupportsPlatform(targetOS, targetArch string) bool {
 // using the current runtime's GOOS and GOARCH values.
 func (r *Recipe) SupportsPlatformRuntime() bool {
 	return r.SupportsPlatform(runtime.GOOS, runtime.GOARCH)
+}
+
+// NewUnsupportedPlatformError creates an UnsupportedPlatformError for the current platform
+func (r *Recipe) NewUnsupportedPlatformError() *UnsupportedPlatformError {
+	return &UnsupportedPlatformError{
+		RecipeName:           r.Metadata.Name,
+		CurrentOS:            runtime.GOOS,
+		CurrentArch:          runtime.GOARCH,
+		SupportedOS:          r.Metadata.SupportedOS,
+		SupportedArch:        r.Metadata.SupportedArch,
+		UnsupportedPlatforms: r.Metadata.UnsupportedPlatforms,
+	}
 }
 
 // PlatformConstraintWarning represents a non-critical issue with platform constraints

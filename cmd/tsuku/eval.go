@@ -124,6 +124,12 @@ func runEval(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitRecipeNotFound)
 	}
 
+	// Check platform support before installation
+	if !r.SupportsPlatformRuntime() {
+		printError(r.NewUnsupportedPlatformError())
+		exitWithCode(ExitGeneral)
+	}
+
 	// Load config to get cache directory
 	cfg, err := config.DefaultConfig()
 	if err != nil {

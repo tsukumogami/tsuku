@@ -409,6 +409,89 @@ func TestGetSupportedPlatforms(t *testing.T) {
 	}
 }
 
+func TestUnsupportedPlatformError(t *testing.T) {
+	tests := []struct {
+		name                 string
+		recipeName           string
+		currentOS            string
+		currentArch          string
+		supportedOS          []string
+		supportedArch        []string
+		unsupportedPlatforms []string
+		expectedSubstrings   []string
+		description          string
+	}{
+		{
+			name:                 "simple OS constraint",
+			recipeName:           "hello-nix",
+			currentOS:            "darwin",
+			currentArch:          "arm64",
+			supportedOS:          []string{"linux"},
+			supportedArch:        nil,
+			unsupportedPlatforms: nil,
+			expectedSubstrings: []string{
+				"hello-nix",
+				"darwin/arm64",
+				"Allowed: linux OS",
+				"all arch",
+			},
+			description: "Should show recipe name, current platform, and constraints",
+		},
+		{
+			name:                 "with denylist",
+			recipeName:           "btop",
+			currentOS:            "darwin",
+			currentArch:          "arm64",
+			supportedOS:          []string{"linux", "darwin"},
+			supportedArch:        nil,
+			unsupportedPlatforms: []string{"darwin/arm64"},
+			expectedSubstrings: []string{
+				"btop",
+				"darwin/arm64",
+				"Allowed: linux, darwin OS",
+				"Except: darwin/arm64",
+			},
+			description: "Should show allowlist and denylist",
+		},
+		{
+			name:                 "all platforms (empty constraints)",
+			recipeName:           "tool",
+			currentOS:            "linux",
+			currentArch:          "amd64",
+			supportedOS:          nil,
+			supportedArch:        nil,
+			unsupportedPlatforms: nil,
+			expectedSubstrings: []string{
+				"tool",
+				"linux/amd64",
+			},
+			description: "Should show recipe name and current platform",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := &UnsupportedPlatformError{
+				RecipeName:           tt.recipeName,
+				CurrentOS:            tt.currentOS,
+				CurrentArch:          tt.currentArch,
+				SupportedOS:          tt.supportedOS,
+				SupportedArch:        tt.supportedArch,
+				UnsupportedPlatforms: tt.unsupportedPlatforms,
+			}
+
+			errMsg := err.Error()
+
+			for _, substr := range tt.expectedSubstrings {
+				if !contains(errMsg, substr) {
+					t.Errorf("%s: expected substring '%s' in error message:\n%s",
+						tt.description, substr, errMsg)
+				}
+			}
+		})
+	}
+}
+
 func TestFormatPlatformConstraints(t *testing.T) {
 	tests := []struct {
 		name            string
