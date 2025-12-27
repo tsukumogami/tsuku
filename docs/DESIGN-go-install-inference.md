@@ -1,6 +1,6 @@
 # Design: go_install Version Inference
 
-**Status**: Proposed
+**Status**: Accepted
 
 ## Context and Problem Statement
 
