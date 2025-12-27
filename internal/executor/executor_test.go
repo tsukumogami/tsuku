@@ -1343,3 +1343,51 @@ func TestExecuteDownloadWithVerification_ChecksumMismatch(t *testing.T) {
 		t.Errorf("resolveDownloadDest() = %q, want %q", destPath, testFilePath)
 	}
 }
+
+// TestBuildResolvedDepsFromPlan tests that dependency versions are correctly extracted from plan
+func TestBuildResolvedDepsFromPlan(t *testing.T) {
+	// Create a mock dependency plan with nested dependencies
+	deps := []DependencyPlan{
+		{
+			Tool:    "openssl",
+			Version: "3.6.0",
+			Dependencies: []DependencyPlan{
+				{
+					Tool:    "perl",
+					Version: "5.38.0",
+				},
+			},
+		},
+		{
+			Tool:    "zlib",
+			Version: "1.3.1",
+		},
+	}
+
+	result := buildResolvedDepsFromPlan(deps)
+
+	// Check direct dependencies
+	if result.InstallTime["openssl"] != "3.6.0" {
+		t.Errorf("openssl version = %q, want %q", result.InstallTime["openssl"], "3.6.0")
+	}
+	if result.InstallTime["zlib"] != "1.3.1" {
+		t.Errorf("zlib version = %q, want %q", result.InstallTime["zlib"], "1.3.1")
+	}
+
+	// Check nested dependency
+	if result.InstallTime["perl"] != "5.38.0" {
+		t.Errorf("perl version = %q, want %q", result.InstallTime["perl"], "5.38.0")
+	}
+}
+
+// TestBuildResolvedDepsFromPlan_Empty tests with no dependencies
+func TestBuildResolvedDepsFromPlan_Empty(t *testing.T) {
+	result := buildResolvedDepsFromPlan(nil)
+
+	if len(result.InstallTime) != 0 {
+		t.Errorf("InstallTime should be empty, got %d entries", len(result.InstallTime))
+	}
+	if len(result.Runtime) != 0 {
+		t.Errorf("Runtime should be empty, got %d entries", len(result.Runtime))
+	}
+}

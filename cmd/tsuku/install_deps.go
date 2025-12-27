@@ -424,6 +424,35 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set download cache directory
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 
+	// Look up resolved dependency versions for variable expansion.
+	// This is needed because dependencies are installed before plan generation,
+	// so plan.Dependencies will be empty at execution time.
+	if len(r.Metadata.Dependencies) > 0 {
+		resolvedDeps := actions.ResolvedDeps{
+			InstallTime: make(map[string]string),
+		}
+		state, _ := mgr.GetState().Load()
+		for _, depName := range r.Metadata.Dependencies {
+			// First, check if it's a library (installed in libs/)
+			if libVersion := mgr.GetInstalledLibraryVersion(depName); libVersion != "" {
+				resolvedDeps.InstallTime[depName] = libVersion
+				continue
+			}
+			// Otherwise, check if it's a tool (installed in tools/)
+			if state != nil {
+				if depState, exists := state.Installed[depName]; exists {
+					if depState.ActiveVersion != "" {
+						resolvedDeps.InstallTime[depName] = depState.ActiveVersion
+					} else if depState.Version != "" {
+						// Fall back to deprecated Version field for old state files
+						resolvedDeps.InstallTime[depName] = depState.Version
+					}
+				}
+			}
+		}
+		exec.SetResolvedDeps(resolvedDeps)
+	}
+
 	// Get or generate installation plan (two-phase flow)
 	planCfg := planRetrievalConfig{
 		Tool:              toolName,

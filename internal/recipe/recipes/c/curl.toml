@@ -36,7 +36,7 @@ executables = ["curl"]
 [[steps]]
 action = "set_rpath"
 binaries = [".install/bin/curl"]
-rpath = "$ORIGIN/../lib:{libs_dir}/openssl-3.6.0/lib:{libs_dir}/zlib-1.3.1/lib"
+rpath = "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}/zlib-{deps.zlib.version}/lib"
 
 [[steps]]
 action = "install_binaries"

@@ -682,3 +682,127 @@ func TestGetGoVersion_NonExistent(t *testing.T) {
 		t.Errorf("GetGoVersion() = %q, want empty string", version)
 	}
 }
+
+func TestGetStandardVarsWithDeps(t *testing.T) {
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{
+			"openssl": "3.6.0",
+			"zlib":    "1.3.1",
+		},
+		Runtime: map[string]string{},
+	}
+
+	vars := GetStandardVarsWithDeps("1.2.3", "/install/dir", "/work/dir", "/libs/dir", deps)
+
+	// Check standard vars are present
+	if vars["version"] != "1.2.3" {
+		t.Errorf("version = %q, want %q", vars["version"], "1.2.3")
+	}
+	if vars["install_dir"] != "/install/dir" {
+		t.Errorf("install_dir = %q, want %q", vars["install_dir"], "/install/dir")
+	}
+
+	// Check dependency versions are added
+	if vars["deps.openssl.version"] != "3.6.0" {
+		t.Errorf("deps.openssl.version = %q, want %q", vars["deps.openssl.version"], "3.6.0")
+	}
+	if vars["deps.zlib.version"] != "1.3.1" {
+		t.Errorf("deps.zlib.version = %q, want %q", vars["deps.zlib.version"], "1.3.1")
+	}
+}
+
+func TestGetStandardVarsWithDeps_EmptyDeps(t *testing.T) {
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{},
+		Runtime:     map[string]string{},
+	}
+
+	vars := GetStandardVarsWithDeps("1.0.0", "/install", "/work", "/libs", deps)
+
+	// Should have standard vars only
+	if vars["version"] != "1.0.0" {
+		t.Errorf("version = %q, want %q", vars["version"], "1.0.0")
+	}
+
+	// Should not have any deps.* keys
+	for k := range vars {
+		if len(k) > 5 && k[:5] == "deps." {
+			t.Errorf("unexpected dependency var: %s", k)
+		}
+	}
+}
+
+func TestGetStandardVarsWithDeps_ExpandVarsIntegration(t *testing.T) {
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{
+			"openssl": "3.6.0",
+		},
+		Runtime: map[string]string{},
+	}
+
+	vars := GetStandardVarsWithDeps("1.0.0", "/install", "/work", "/libs", deps)
+
+	// Test expansion works with deps vars
+	input := "{libs_dir}/openssl-{deps.openssl.version}/lib"
+	result := ExpandVars(input, vars)
+	expected := "/libs/openssl-3.6.0/lib"
+
+	if result != expected {
+		t.Errorf("ExpandVars() = %q, want %q", result, expected)
+	}
+}
+
+func TestCheckUnexpandedDepVars(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		context string
+		wantErr bool
+	}{
+		{
+			name:    "no unexpanded vars",
+			input:   "/libs/openssl-3.6.0/lib:/libs/zlib-1.3.1/lib",
+			context: "rpath",
+			wantErr: false,
+		},
+		{
+			name:    "unexpanded deps.X.version",
+			input:   "/libs/openssl-{deps.openssl.version}/lib",
+			context: "rpath",
+			wantErr: true,
+		},
+		{
+			name:    "unexpanded deps with typo",
+			input:   "/libs/openssl-{deps.opnessl.version}/lib",
+			context: "rpath",
+			wantErr: true,
+		},
+		{
+			name:    "mixed expanded and unexpanded",
+			input:   "/libs/openssl-3.6.0/lib:{libs_dir}/zlib-{deps.zlib.version}/lib",
+			context: "rpath",
+			wantErr: true,
+		},
+		{
+			name:    "empty string",
+			input:   "",
+			context: "rpath",
+			wantErr: false,
+		},
+		{
+			name:    "regular variable not flagged",
+			input:   "{version}",
+			context: "url",
+			wantErr: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := CheckUnexpandedDepVars(tt.input, tt.context)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("CheckUnexpandedDepVars(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+			}
+		})
+	}
+}

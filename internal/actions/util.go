@@ -36,6 +36,38 @@ func GetStandardVars(version, installDir, workDir, libsDir string) map[string]st
 	}
 }
 
+// GetStandardVarsWithDeps returns standard variable mappings including dependency versions.
+// For each dependency in deps.InstallTime, adds "deps.<name>.version" to the map.
+// This allows recipes to reference resolved dependency versions dynamically:
+//
+//	rpath = "{libs_dir}/openssl-{deps.openssl.version}/lib"
+func GetStandardVarsWithDeps(version, installDir, workDir, libsDir string, deps ResolvedDeps) map[string]string {
+	vars := GetStandardVars(version, installDir, workDir, libsDir)
+
+	// Add dependency version variables
+	for depName, depVersion := range deps.InstallTime {
+		key := fmt.Sprintf("deps.%s.version", depName)
+		vars[key] = depVersion
+	}
+
+	return vars
+}
+
+// CheckUnexpandedDepVars checks if a string contains unexpanded dependency variables.
+// Returns an error if any {deps.*} patterns remain after expansion.
+func CheckUnexpandedDepVars(s, context string) error {
+	// Look for unexpanded {deps.X.version} patterns
+	if idx := strings.Index(s, "{deps."); idx != -1 {
+		// Find the closing brace
+		end := strings.Index(s[idx:], "}")
+		if end != -1 {
+			unexpanded := s[idx : idx+end+1]
+			return fmt.Errorf("unexpanded dependency variable %q in %s\n  Hint: Is the dependency declared in recipe dependencies?", unexpanded, context)
+		}
+	}
+	return nil
+}
+
 // MapOS maps Go GOOS to common naming conventions
 func MapOS(goos string) string {
 	switch goos {
