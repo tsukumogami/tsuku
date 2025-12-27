@@ -24,11 +24,12 @@ type Executor struct {
 	downloadCacheDir string // Download cache directory
 	recipe           *recipe.Recipe
 	ctx              *actions.ExecutionContext
-	version          string   // Resolved version
-	reqVersion       string   // Requested version (optional)
-	execPaths        []string // Additional bin paths for execution (e.g., nodejs for npm tools)
-	toolsDir         string   // Tools directory (~/.tsuku/tools/) for finding other installed tools
-	libsDir          string   // Libraries directory (~/.tsuku/libs/) for finding installed libraries
+	version          string               // Resolved version
+	reqVersion       string               // Requested version (optional)
+	execPaths        []string             // Additional bin paths for execution (e.g., nodejs for npm tools)
+	toolsDir         string               // Tools directory (~/.tsuku/tools/) for finding other installed tools
+	libsDir          string               // Libraries directory (~/.tsuku/libs/) for finding installed libraries
+	resolvedDeps     actions.ResolvedDeps // Pre-resolved dependencies (from state manager)
 }
 
 // New creates a new executor
@@ -170,6 +171,14 @@ func (e *Executor) SetToolsDir(dir string) {
 // SetLibsDir sets the libraries directory for finding installed libraries
 func (e *Executor) SetLibsDir(dir string) {
 	e.libsDir = dir
+}
+
+// SetResolvedDeps sets the pre-resolved dependency versions (from state manager).
+// When dependencies are installed before generating the plan, the plan's Dependencies
+// will be empty. Use this to pass the actual installed dependency versions so they
+// can be used in variable expansion (e.g., {deps.openssl.version}).
+func (e *Executor) SetResolvedDeps(deps actions.ResolvedDeps) {
+	e.resolvedDeps = deps
 }
 
 // expandVars replaces {var} placeholders in a string
@@ -327,8 +336,14 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		}
 	}
 
-	// Resolve dependencies for build environment setup
-	resolvedDeps := actions.ResolveDependencies(recipeForContext)
+	// Build resolved dependencies: prefer pre-resolved deps (from state manager)
+	// over plan deps. When dependencies are installed before plan generation,
+	// plan.Dependencies will be empty but e.resolvedDeps will be populated.
+	resolvedDeps := e.resolvedDeps
+	if len(resolvedDeps.InstallTime) == 0 && len(resolvedDeps.Runtime) == 0 {
+		// Fall back to building from plan if no pre-resolved deps
+		resolvedDeps = buildResolvedDepsFromPlan(plan.Dependencies)
+	}
 
 	// Create execution context from plan
 	execCtx := &actions.ExecutionContext{
@@ -693,4 +708,30 @@ func copyDir(src, dst string) error {
 		_, err = io.Copy(dstFile, srcFile)
 		return err
 	})
+}
+
+// buildResolvedDepsFromPlan creates a ResolvedDeps from the plan's dependency list.
+// This ensures we use actual installed versions (e.g., "3.6.0") rather than
+// version constraints (e.g., "latest") from recipe parsing.
+func buildResolvedDepsFromPlan(deps []DependencyPlan) actions.ResolvedDeps {
+	result := actions.ResolvedDeps{
+		InstallTime: make(map[string]string),
+		Runtime:     make(map[string]string),
+	}
+
+	// Collect all dependencies recursively (flatten the tree)
+	var collectDeps func(deps []DependencyPlan)
+	collectDeps = func(deps []DependencyPlan) {
+		for _, dep := range deps {
+			// Use actual resolved version from plan
+			result.InstallTime[dep.Tool] = dep.Version
+			// Recursively collect nested dependencies
+			if len(dep.Dependencies) > 0 {
+				collectDeps(dep.Dependencies)
+			}
+		}
+	}
+
+	collectDeps(deps)
+	return result
 }

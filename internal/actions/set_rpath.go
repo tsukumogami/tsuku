@@ -35,8 +35,8 @@ func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interf
 		return fmt.Errorf("set_rpath action requires 'binaries' parameter")
 	}
 
-	// Build vars for variable substitution
-	vars := GetStandardVars(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir)
+	// Build vars for variable substitution including dependency versions
+	vars := GetStandardVarsWithDeps(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir, ctx.Dependencies)
 
 	// Get rpath (defaults to $ORIGIN/../lib per design doc)
 	rpath, _ := GetString(params, "rpath")
@@ -46,6 +46,11 @@ func (a *SetRpathAction) Execute(ctx *ExecutionContext, params map[string]interf
 
 	// Expand variables in rpath
 	rpath = ExpandVars(rpath, vars)
+
+	// Check for unexpanded dependency variables (typos or missing deps)
+	if err := CheckUnexpandedDepVars(rpath, "rpath"); err != nil {
+		return err
+	}
 
 	// Validate RPATH value for security
 	if err := validateRpath(rpath, ctx.LibsDir); err != nil {
