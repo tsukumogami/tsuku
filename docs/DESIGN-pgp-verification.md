@@ -394,6 +394,18 @@ signature_key_fingerprint = "27EDEAF22F3ABCEB50DB9A125CC908FDB71E12C2"
 
 **Note**: `signature_url` and `checksum_url` are mutually exclusive. A recipe should use one verification method, not both. If both are provided, Preflight validation returns an error.
 
+### Preflight Validation
+
+The `download` action's Preflight method will be extended with these new checks:
+
+| Condition | Result |
+|-----------|--------|
+| `signature_url` without `signature_key_url` or `signature_key_fingerprint` | Error: all three signature params required together |
+| `signature_url` AND `checksum_url` both provided | Error: mutually exclusive verification methods |
+| `signature_key_fingerprint` not 40 hex chars | Error: invalid fingerprint format |
+| No `checksum_url` and no `signature_url` | Warning: no upstream verification (unchanged from current behavior) |
+| `signature_url` but URL has no placeholders | Warning: should use download_file instead |
+
 ### Components
 
 ```
@@ -502,12 +514,14 @@ Add the signature verification capability:
 3. Extend `download.go`:
    - Add `signature_url`, `signature_key_url`, `signature_key_fingerprint` parameters
    - Call `VerifyPGPSignature()` after download completes
-4. Update Preflight validation:
-   - Require all three signature params together
-   - Validate fingerprint format (exactly 40 hex characters)
-   - Error if both `checksum_url` and `signature_url` provided
-   - Add key size limit (~100KB) and fetch timeout
-5. Add `KeyCacheDir` field to `ExecutionContext` struct
+4. Update Preflight validation in `download.go`:
+   - If any signature param is provided, require all three together
+   - Validate `signature_key_fingerprint` is exactly 40 hex characters (case-insensitive)
+   - Error if both `checksum_url` and `signature_url` provided (mutually exclusive)
+   - Update "no verification" warning to accept either `checksum_url` OR `signature_url`
+   - Warn if signature params provided but URL has no placeholders (should use download_file with static fingerprint instead)
+5. Add key size limit (~100KB) and fetch timeout to signature.go
+6. Add `KeyCacheDir` field to `ExecutionContext` struct
 
 **Dependencies**: None
 
