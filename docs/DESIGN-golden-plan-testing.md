@@ -124,30 +124,38 @@ The golden plan system consists of four components:
 
 ### Directory Structure
 
+Golden files are organized with first-letter subdirectories, mirroring the recipe registry structure for scalability:
+
 ```
 testdata/
 ├── golden/
 │   └── plans/                          # Golden plan files
-│       ├── fzf/                        # Per-recipe directories
-│       │   ├── v0.46.0-linux-amd64.json
-│       │   ├── v0.46.0-linux-arm64.json
-│       │   ├── v0.46.0-darwin-amd64.json
-│       │   └── v0.46.0-darwin-arm64.json
-│       ├── terraform/
-│       │   └── ...
-│       ├── btop/                       # Linux-only recipe
-│       │   ├── v1.3.0-linux-amd64.json
-│       │   └── v1.3.0-linux-arm64.json
+│       ├── b/
+│       │   └── btop/                   # Linux-only recipe
+│       │       ├── v1.3.0-linux-amd64.json
+│       │       └── v1.3.0-linux-arm64.json
+│       ├── f/
+│       │   └── fzf/
+│       │       ├── v0.46.0-linux-amd64.json
+│       │       ├── v0.46.0-linux-arm64.json
+│       │       ├── v0.46.0-darwin-amd64.json
+│       │       └── v0.46.0-darwin-arm64.json
+│       ├── t/
+│       │   └── terraform/
+│       │       └── ...
 │       └── ...
 ├── recipes/                            # Test recipe copies (version-pinned)
 │   └── ...
 └── states/                             # Existing state fixtures
 ```
 
+This structure enables scaling to tens of thousands of recipes without creating directories with thousands of entries.
+
 ### Naming Convention
 
-Golden files follow the pattern: `{recipe}/{version}-{os}-{arch}.json`
+Golden files follow the pattern: `{first-letter}/{recipe}/{version}-{os}-{arch}.json`
 
+- `{first-letter}` - First letter of recipe name (matches `internal/recipe/recipes/{letter}/`)
 - `{recipe}` - Recipe name matching the TOML filename (kebab-case)
 - `{version}` - Pinned version with `v` prefix (e.g., `v0.46.0`)
 - `{os}` - Target OS (`linux` or `darwin`)
@@ -374,8 +382,9 @@ jobs:
 set -euo pipefail
 
 RECIPE="$1"
-RECIPE_PATH="internal/recipe/recipes/${RECIPE:0:1}/${RECIPE}.toml"
-GOLDEN_DIR="testdata/golden/plans/${RECIPE}"
+FIRST_LETTER="${RECIPE:0:1}"
+RECIPE_PATH="internal/recipe/recipes/${FIRST_LETTER}/${RECIPE}.toml"
+GOLDEN_DIR="testdata/golden/plans/${FIRST_LETTER}/${RECIPE}"
 
 if [[ ! -f "$RECIPE_PATH" ]]; then
     echo "Recipe not found: $RECIPE_PATH"
