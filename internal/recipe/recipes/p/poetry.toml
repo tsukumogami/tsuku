@@ -4,9 +4,6 @@ description = "Python dependency management and packaging made easy"
 homepage = "https://python-poetry.org/"
 version_format = "semver"
 
-[version]
-source = "pypi"
-
 [[steps]]
 action = "pipx_install"
 package = "poetry"

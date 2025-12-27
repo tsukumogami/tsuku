@@ -14,10 +14,6 @@ version_format = "custom"
 tier = 3
 supported_os = ["linux"]
 
-[version]
-source = "github_releases"
-github_repo = "DavHau/nix-portable"
-
 [[steps]]
 action = "github_file"
 repo = "DavHau/nix-portable"

@@ -4,9 +4,6 @@ description = "A user-friendly HTTP client for the API era"
 homepage = "https://httpie.io/"
 version_format = "semver"
 
-[version]
-source = "pypi"
-
 [[steps]]
 action = "pipx_install"
 package = "httpie"

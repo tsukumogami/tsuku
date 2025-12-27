@@ -5,9 +5,6 @@ homepage = "https://jekyllrb.com/"
 version_format = "semver"
 extra_dependencies = ["zig"]  # zig needed for compiling native extensions (json gem)
 
-[version]
-source = "rubygems"
-
 [[steps]]
 action = "gem_install"
 gem = "jekyll"

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/version"
 )
 
 var validateCmd = &cobra.Command{
@@ -60,6 +61,17 @@ Examples:
 				result.Warnings = append(result.Warnings, recipe.ValidationWarning{
 					Field:   "dependencies",
 					Message: msg,
+				})
+			}
+		}
+
+		// Check for redundant version configuration
+		if result.Recipe != nil {
+			redundant := version.DetectRedundantVersion(result.Recipe)
+			for _, r := range redundant {
+				result.Warnings = append(result.Warnings, recipe.ValidationWarning{
+					Field:   "version",
+					Message: r.Message,
 				})
 			}
 		}

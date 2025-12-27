@@ -5,9 +5,6 @@ homepage = "https://crates.io/crates/cargo-audit"
 version_format = "semver"
 extra_dependencies = ["zig"]  # zig needed for native C dependencies
 
-[version]
-source = "crates_io"
-
 [[steps]]
 action = "cargo_install"
 crate = "cargo-audit"

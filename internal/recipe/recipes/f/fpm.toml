@@ -4,9 +4,6 @@ description = "Packaging made simple - build packages for multiple platforms"
 homepage = "https://fpm.readthedocs.io/"
 version_format = "semver"
 
-[version]
-source = "rubygems"
-
 [[steps]]
 action = "gem_install"
 gem = "fpm"

@@ -4,9 +4,6 @@ description = "Cargo subcommands for editing Cargo.toml"
 homepage = "https://crates.io/crates/cargo-edit"
 version_format = "semver"
 
-[version]
-source = "crates_io"
-
 [[steps]]
 action = "cargo_install"
 crate = "cargo-edit"
