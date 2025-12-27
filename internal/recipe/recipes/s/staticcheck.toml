@@ -4,9 +4,6 @@ description = "Go static analysis tool"
 homepage = "https://staticcheck.dev/"
 version_format = "semver"
 
-[version]
-module = "honnef.co/go/tools"
-
 [[steps]]
 action = "go_install"
 module = "honnef.co/go/tools/cmd/staticcheck"

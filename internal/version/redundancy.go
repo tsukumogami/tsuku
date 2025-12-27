@@ -36,6 +36,10 @@ var actionInference = map[string]string{
 //   - The recipe has an explicit [version] source or github_repo
 //   - The recipe uses an action that can infer the same version source
 //   - The explicit source matches what would be inferred
+//
+// For go_install actions, a [version] module is considered redundant when:
+//   - It matches the install path exactly, OR
+//   - It matches what InferGoVersionModule would extract from the install path
 func DetectRedundantVersion(r *recipe.Recipe) []RedundantVersion {
 	var redundant []RedundantVersion
 
@@ -50,6 +54,25 @@ func DetectRedundantVersion(r *recipe.Recipe) []RedundantVersion {
 							Source:  "github_repo=" + r.Version.GitHubRepo,
 							Action:  step.Action,
 							Message: fmt.Sprintf("[version] github_repo=%q is redundant; %s with repo=%q infers this automatically", r.Version.GitHubRepo, step.Action, repo),
+						})
+					}
+				}
+			}
+		}
+	}
+
+	// Check for go_install module redundancy
+	if r.Version.Module != "" {
+		for _, step := range r.Steps {
+			if step.Action == "go_install" {
+				if installPath, ok := step.Params["module"].(string); ok && installPath != "" {
+					inferredModule := InferGoVersionModule(installPath)
+					// Module is redundant if it matches what would be inferred
+					if r.Version.Module == inferredModule {
+						redundant = append(redundant, RedundantVersion{
+							Source:  "module=" + r.Version.Module,
+							Action:  step.Action,
+							Message: fmt.Sprintf("[version] module=%q is redundant; inferred from install path %q", r.Version.Module, installPath),
 						})
 					}
 				}

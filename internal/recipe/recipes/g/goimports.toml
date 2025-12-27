@@ -4,9 +4,6 @@ description = "Updates Go import lines and formats code"
 homepage = "https://pkg.go.dev/golang.org/x/tools/cmd/goimports"
 version_format = "semver"
 
-[version]
-module = "golang.org/x/tools"
-
 [[steps]]
 action = "go_install"
 module = "golang.org/x/tools/cmd/goimports"

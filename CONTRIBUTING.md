@@ -293,8 +293,18 @@ Many actions automatically infer the version source from their parameters, so an
 **When to add `[version]`:**
 
 - **Different source**: When version comes from a different source than the action implies (e.g., using GitHub releases for version but installing from crates.io)
-- **go_install with differing module**: When the install path differs from the versioning module path (see below)
+- **go_install edge cases**: When the install path doesn't follow common patterns (see below)
 - **download_archive**: Always requires explicit version configuration
+
+**go_install automatic module inference:**
+
+For `go_install`, tsuku automatically infers the version module from the install path using these patterns:
+
+| Pattern | Install Path | Inferred Version Module |
+|---------|-------------|------------------------|
+| GitHub repos | `github.com/<owner>/<repo>/...` | `github.com/<owner>/<repo>` |
+| `/cmd/` convention | `some.url/path/cmd/tool` | `some.url/path` |
+| No pattern | `mvdan.cc/gofumpt` | `mvdan.cc/gofumpt` (unchanged) |
 
 **Example - go_install (simple case, no `[version]` needed):**
 
@@ -305,18 +315,38 @@ module = "mvdan.cc/gofumpt"
 executables = ["gofumpt"]
 ```
 
-**Example - go_install (differing paths, `module` required):**
+**Example - go_install (GitHub pattern, no `[version]` needed):**
 
-When the install path differs from the versioning module path (common with `/cmd/` subpackages), specify only `module` in `[version]`:
+```toml
+# Version automatically inferred from github.com/go-delve/delve
+[[steps]]
+action = "go_install"
+module = "github.com/go-delve/delve/cmd/dlv"
+executables = ["dlv"]
+```
+
+**Example - go_install (/cmd/ pattern, no `[version]` needed):**
+
+```toml
+# Version automatically inferred from honnef.co/go/tools
+[[steps]]
+action = "go_install"
+module = "honnef.co/go/tools/cmd/staticcheck"
+executables = ["staticcheck"]
+```
+
+**Example - go_install (edge case, `module` required):**
+
+When the install path doesn't match any pattern, specify the version module explicitly:
 
 ```toml
 [version]
-module = "github.com/go-delve/delve"  # Versioning module
+module = "go.uber.org/mock"  # Version module differs from install path
 
 [[steps]]
 action = "go_install"
-module = "github.com/go-delve/delve/cmd/dlv"  # Install path
-executables = ["dlv"]
+module = "go.uber.org/mock/mockgen"  # No /cmd/, not on github.com
+executables = ["mockgen"]
 ```
 
 **Example - override version source:**

@@ -6,9 +6,6 @@ version_format = "semver"
 # Gore is a Go REPL that needs Go at runtime to interpret code
 runtime_dependencies = ["golang"]
 
-[version]
-module = "github.com/x-motemen/gore"
-
 [[steps]]
 action = "go_install"
 module = "github.com/x-motemen/gore/cmd/gore"

@@ -4,9 +4,6 @@ description = "Delve - Go debugger"
 homepage = "https://github.com/go-delve/delve"
 version_format = "semver"
 
-[version]
-module = "github.com/go-delve/delve"
-
 [[steps]]
 action = "go_install"
 module = "github.com/go-delve/delve/cmd/dlv"
