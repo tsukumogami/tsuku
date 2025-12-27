@@ -85,7 +85,7 @@ func (a *RequireSystemAction) Execute(ctx *ExecutionContext, params map[string]i
 	cmdPath, err := exec.LookPath(command)
 	if err != nil {
 		// Command not found - return error with installation guidance
-		guide := getPlatformGuide(installGuide, runtime.GOOS)
+		guide := getPlatformGuide(installGuide, runtime.GOOS, runtime.GOARCH)
 		return &SystemDepMissingError{
 			Command:      command,
 			InstallGuide: guide,
@@ -106,7 +106,7 @@ func (a *RequireSystemAction) Execute(ctx *ExecutionContext, params map[string]i
 		// Step 3: Validate minimum version if specified
 		if minVersion != "" {
 			if !versionSatisfied(versionStr, minVersion) {
-				guide := getPlatformGuide(installGuide, runtime.GOOS)
+				guide := getPlatformGuide(installGuide, runtime.GOOS, runtime.GOARCH)
 				return &SystemDepVersionError{
 					Command:      command,
 					Found:        versionStr,
@@ -180,18 +180,25 @@ func versionSatisfied(found, required string) bool {
 }
 
 // getPlatformGuide returns the installation guide for the current platform.
-// Tries platform-specific key first, then falls back to "fallback" key.
-func getPlatformGuide(installGuide map[string]string, platform string) string {
+// Implements hierarchical fallback: exact platform tuple → OS key → fallback key.
+// This supports both platform tuples ("darwin/arm64") and OS-only keys ("darwin").
+func getPlatformGuide(installGuide map[string]string, os, arch string) string {
 	if installGuide == nil {
 		return ""
 	}
 
-	// Try platform-specific guide (e.g., "darwin", "linux")
-	if guide, ok := installGuide[platform]; ok {
+	// Try exact platform tuple first (e.g., "darwin/arm64", "linux/amd64")
+	tuple := fmt.Sprintf("%s/%s", os, arch)
+	if guide, ok := installGuide[tuple]; ok {
 		return guide
 	}
 
-	// Try fallback
+	// Fall back to OS-only key (e.g., "darwin", "linux")
+	if guide, ok := installGuide[os]; ok {
+		return guide
+	}
+
+	// Fall back to generic fallback key
 	if guide, ok := installGuide["fallback"]; ok {
 		return guide
 	}

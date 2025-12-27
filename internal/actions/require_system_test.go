@@ -146,46 +146,83 @@ func TestGetPlatformGuide(t *testing.T) {
 	tests := []struct {
 		name         string
 		installGuide map[string]string
-		platform     string
+		os           string
+		arch         string
 		want         string
 	}{
 		{
-			name: "platform-specific guide",
+			name: "exact tuple match",
 			installGuide: map[string]string{
-				"darwin": "brew install docker",
-				"linux":  "apt install docker",
+				"darwin/arm64": "brew install docker (ARM)",
+				"darwin/amd64": "brew install docker (Intel)",
+				"linux/amd64":  "apt install docker",
 			},
-			platform: "darwin",
-			want:     "brew install docker",
+			os:   "darwin",
+			arch: "arm64",
+			want: "brew install docker (ARM)",
 		},
 		{
-			name: "fallback guide",
+			name: "OS fallback when no tuple match",
 			installGuide: map[string]string{
-				"darwin":   "brew install docker",
-				"fallback": "see https://example.com",
+				"darwin/amd64": "brew install docker (Intel)",
+				"darwin":       "brew install docker",
+				"linux":        "apt install docker",
 			},
-			platform: "windows",
-			want:     "see https://example.com",
+			os:   "darwin",
+			arch: "arm64",
+			want: "brew install docker",
 		},
 		{
-			name: "no matching guide",
+			name: "generic fallback when no OS match",
 			installGuide: map[string]string{
-				"darwin": "brew install docker",
+				"darwin/arm64": "brew install docker",
+				"fallback":     "see https://example.com",
 			},
-			platform: "windows",
-			want:     "",
+			os:   "windows",
+			arch: "amd64",
+			want: "see https://example.com",
+		},
+		{
+			name: "mixed keys - tuple preferred over OS",
+			installGuide: map[string]string{
+				"darwin/arm64": "tuple-specific guide",
+				"darwin":       "os-wide guide",
+			},
+			os:   "darwin",
+			arch: "arm64",
+			want: "tuple-specific guide",
+		},
+		{
+			name: "no match returns empty",
+			installGuide: map[string]string{
+				"darwin/arm64": "brew install docker",
+			},
+			os:   "windows",
+			arch: "amd64",
+			want: "",
 		},
 		{
 			name:         "nil install guide",
 			installGuide: nil,
-			platform:     "linux",
+			os:           "linux",
+			arch:         "amd64",
 			want:         "",
+		},
+		{
+			name: "OS-only key still works (backwards compat)",
+			installGuide: map[string]string{
+				"darwin": "brew install docker",
+				"linux":  "apt install docker",
+			},
+			os:   "darwin",
+			arch: "arm64",
+			want: "brew install docker",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getPlatformGuide(tt.installGuide, tt.platform)
+			got := getPlatformGuide(tt.installGuide, tt.os, tt.arch)
 			if got != tt.want {
 				t.Errorf("getPlatformGuide() = %q, want %q", got, tt.want)
 			}
