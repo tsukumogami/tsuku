@@ -1,0 +1,25 @@
+[metadata]
+name = "test-tuples"
+description = "Test recipe demonstrating platform tuple support"
+homepage = "https://www.docker.com"
+version_format = "semver"
+
+supported_os = ["linux", "darwin"]
+supported_arch = ["amd64", "arm64"]
+
+[[steps]]
+action = "require_system"
+command = "docker"
+version_flag = "--version"
+version_regex = "Docker version ([0-9.]+)"
+
+# Platform tuple install_guide demonstrating hierarchical fallback
+[steps.install_guide]
+"darwin/arm64" = "brew install --cask docker (Apple Silicon optimized)"
+"darwin/amd64" = "brew install --cask docker (Intel Mac)"
+"linux/amd64" = "sudo apt install docker.io (x86_64)"
+"linux/arm64" = "sudo apt install docker.io (ARM64)"
+
+[verify]
+command = "docker --version"
+pattern = "Docker version {version}"
