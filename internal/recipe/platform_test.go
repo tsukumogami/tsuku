@@ -322,34 +322,34 @@ func TestGetSupportedPlatforms(t *testing.T) {
 		description      string
 	}{
 		{
-			name:             "no constraints returns all platforms",
+			name:             "no constraints returns tsuku-supported platforms",
 			supportedOS:      nil,
 			supportedArch:    nil,
 			unsupportedPlat:  nil,
-			minExpected:      100, // There are many GOOS/GOARCH combinations
-			shouldContain:    []string{"linux/amd64", "darwin/arm64", "windows/amd64"},
-			shouldNotContain: nil,
-			description:      "Recipe without constraints should return all platform combinations",
+			minExpected:      4, // tsuku supports: (linux, darwin) × (amd64, arm64) = 4 platforms
+			shouldContain:    []string{"linux/amd64", "darwin/arm64", "linux/arm64", "darwin/amd64"},
+			shouldNotContain: []string{"windows/amd64", "freebsd/amd64"},
+			description:      "Recipe without constraints should return tsuku-supported platform combinations",
 		},
 		{
 			name:             "OS-only constraint",
 			supportedOS:      []string{"linux"},
 			supportedArch:    nil,
 			unsupportedPlat:  nil,
-			minExpected:      10, // linux with all archs
+			minExpected:      2, // linux with tsuku-supported archs (amd64, arm64)
 			shouldContain:    []string{"linux/amd64", "linux/arm64"},
 			shouldNotContain: []string{"darwin/amd64", "windows/amd64"},
-			description:      "Linux-only should include all linux/arch combinations",
+			description:      "Linux-only should include linux × tsuku-supported arch combinations",
 		},
 		{
 			name:             "denylist exclusion",
 			supportedOS:      []string{"linux", "darwin"},
 			supportedArch:    nil,
 			unsupportedPlat:  []string{"darwin/arm64"},
-			minExpected:      10,
-			shouldContain:    []string{"linux/amd64", "darwin/amd64"},
+			minExpected:      3, // 4 platforms - 1 excluded = 3
+			shouldContain:    []string{"linux/amd64", "darwin/amd64", "linux/arm64"},
 			shouldNotContain: []string{"darwin/arm64"},
-			description:      "Should exclude darwin/arm64 but include other darwin archs",
+			description:      "Should exclude darwin/arm64 but include other platform combinations",
 		},
 		{
 			name:             "specific OS and arch",
@@ -679,7 +679,7 @@ func TestValidateStepsAgainstPlatforms(t *testing.T) {
 		},
 		{
 			name:          "install_guide with all platforms",
-			supportedOS:   nil, // All OS
+			supportedOS:   nil, // Defaults to tsuku-supported OS (linux, darwin)
 			supportedArch: []string{"amd64"},
 			steps: []Step{
 				{
@@ -693,9 +693,8 @@ func TestValidateStepsAgainstPlatforms(t *testing.T) {
 					},
 				},
 			},
-			expectedErrors:  13, // Missing all other OS (aix, android, dragonfly, freebsd, illumos, ios, js, netbsd, openbsd, plan9, solaris, wasip1, windows)
-			errorSubstrings: []string{"install_guide missing entry"},
-			description:     "install_guide with no supported_os should require all known OS",
+			expectedErrors: 0, // Both tsuku-supported OS have install_guide
+			description:    "install_guide with no supported_os should pass when covering tsuku-supported OS",
 		},
 		{
 			name:          "multiple errors",

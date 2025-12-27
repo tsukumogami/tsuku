@@ -50,22 +50,14 @@ func (e *UnsupportedPlatformError) Error() string {
 	return msg.String()
 }
 
-// allKnownOS returns all known GOOS values from the Go runtime
-func allKnownOS() []string {
-	return []string{
-		"aix", "android", "darwin", "dragonfly", "freebsd",
-		"illumos", "ios", "js", "linux", "netbsd", "openbsd",
-		"plan9", "solaris", "wasip1", "windows",
-	}
+// TsukuSupportedOS returns the operating systems that tsuku supports
+func TsukuSupportedOS() []string {
+	return []string{"linux", "darwin"}
 }
 
-// allKnownArch returns all known GOARCH values from the Go runtime
-func allKnownArch() []string {
-	return []string{
-		"386", "amd64", "arm", "arm64", "loong64",
-		"mips", "mips64", "mips64le", "mipsle",
-		"ppc64", "ppc64le", "riscv64", "s390x", "wasm",
-	}
+// TsukuSupportedArch returns the architectures that tsuku supports
+func TsukuSupportedArch() []string {
+	return []string{"amd64", "arm64"}
 }
 
 // containsString checks if a string slice contains a given value
@@ -93,16 +85,16 @@ func containsString(slice []string, value string) bool {
 //     supports Linux (any arch) and macOS (non-ARM64)
 func (r *Recipe) SupportsPlatform(targetOS, targetArch string) bool {
 	// Build allowlist with defaults
-	// nil = use defaults (all platforms)
+	// nil = use defaults (tsuku-supported platforms)
 	// empty slice [] = explicit empty set (no platforms)
 	supportedOS := r.Metadata.SupportedOS
 	if supportedOS == nil {
-		supportedOS = allKnownOS() // Default: all OS
+		supportedOS = TsukuSupportedOS() // Default: tsuku-supported OS
 	}
 
 	supportedArch := r.Metadata.SupportedArch
 	if supportedArch == nil {
-		supportedArch = allKnownArch() // Default: all arch
+		supportedArch = TsukuSupportedArch() // Default: tsuku-supported arch
 	}
 
 	// Check if in Cartesian product (allowlist)
@@ -155,16 +147,16 @@ func (w *PlatformConstraintWarning) Error() string {
 //   - Result set of supported platforms is empty (all platforms excluded)
 func (r *Recipe) ValidatePlatformConstraints() (warnings []PlatformConstraintWarning, err error) {
 	// Compute effective supported platforms
-	// nil = use defaults (all platforms)
+	// nil = use defaults (tsuku-supported platforms)
 	// empty slice [] = explicit empty set (no platforms)
 	supportedOS := r.Metadata.SupportedOS
 	if supportedOS == nil {
-		supportedOS = allKnownOS()
+		supportedOS = TsukuSupportedOS()
 	}
 
 	supportedArch := r.Metadata.SupportedArch
 	if supportedArch == nil {
-		supportedArch = allKnownArch()
+		supportedArch = TsukuSupportedArch()
 	}
 
 	// Build Cartesian product
@@ -204,12 +196,12 @@ func (r *Recipe) ValidatePlatformConstraints() (warnings []PlatformConstraintWar
 func (r *Recipe) GetSupportedPlatforms() []string {
 	supportedOS := r.Metadata.SupportedOS
 	if supportedOS == nil {
-		supportedOS = allKnownOS()
+		supportedOS = TsukuSupportedOS()
 	}
 
 	supportedArch := r.Metadata.SupportedArch
 	if supportedArch == nil {
-		supportedArch = allKnownArch()
+		supportedArch = TsukuSupportedArch()
 	}
 
 	// Build Cartesian product
