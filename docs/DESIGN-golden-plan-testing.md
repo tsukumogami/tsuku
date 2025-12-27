@@ -409,3 +409,79 @@ The golden files themselves contain URLs and checksums but do not download anyth
 - **Clear ownership**: Document which recipes have golden files and why
 - **Bounded scope**: Limit golden files to 3-5 representative recipes
 - **CI notification**: Tests fail clearly when golden files are stale, with instructions to update
+
+## Plan Validity and Forward Compatibility
+
+Golden plan tests validate that plans are generated correctly, but do not validate that plans can be executed. This is by design - execution involves network access, platform dependencies, and is non-deterministic.
+
+### How Plan Validity Is Maintained
+
+**1. Plan Format Version (`format_version`)**
+
+Plans include a format version that must match the executor's expected version:
+
+```go
+const PlanFormatVersion = 3
+
+func ValidatePlan(plan *InstallationPlan) error {
+    if plan.FormatVersion != PlanFormatVersion {
+        return fmt.Errorf("unsupported plan format version: %d", plan.FormatVersion)
+    }
+    // ...
+}
+```
+
+When plan format changes:
+- `PlanFormatVersion` is incremented
+- Golden files with old format versions fail validation tests
+- The `-update` flag regenerates all golden files with the new format
+- This is a deliberate breaking change that requires review
+
+**2. Structural Invariant Tests**
+
+`AssertPlanInvariants()` enforces properties that must hold for all valid plans:
+- All `download_file` steps have non-empty `Checksum`
+- All steps are primitive actions (no composite actions)
+- Platform matches generation parameters
+- `FormatVersion` is current
+
+These tests catch regressions where generated plans would fail execution validation.
+
+**3. Integration Test Coverage**
+
+The existing integration tests (`test.yml`, `scheduled-tests.yml`) continue to run actual installations. These tests validate end-to-end execution and catch issues that golden tests cannot:
+- Network failures
+- Binary compatibility
+- Verification command success
+
+Golden tests complement but do not replace integration tests.
+
+**4. CI Workflow for Plan Validity**
+
+When tsuku code changes affect plan generation:
+
+1. **Golden tests fail** - detects the change
+2. **Developer reviews diff** - ensures change is intentional
+3. **Developer runs `-update`** - regenerates golden files
+4. **PR includes updated golden files** - change is visible in review
+5. **Integration tests run** - validates execution still works
+
+### What Happens When Tsuku Changes
+
+| Change Type | Golden Test Behavior | Action Required |
+|-------------|---------------------|-----------------|
+| New plan field added | Tests pass (extra fields ignored) | None (backwards compatible) |
+| Plan field removed | Tests fail (expected field missing) | Run `-update` |
+| Step order changes | Tests fail (sequence mismatch) | Run `-update`, verify intentional |
+| New action type | Tests pass (structural tests cover) | Add structural test if needed |
+| Format version bump | Tests fail (validation error) | Run `-update`, update all golden files |
+| URL template change | Tests fail (URL mismatch) | Run `-update`, verify intentional |
+
+### Out of Scope
+
+Golden plan tests do not validate:
+- That downloaded files match checksums (execution validation)
+- That installed binaries work (verification command)
+- Platform-specific execution behavior (requires actual platform)
+
+These are validated by integration tests, not golden tests
