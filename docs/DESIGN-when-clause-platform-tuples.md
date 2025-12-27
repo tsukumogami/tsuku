@@ -279,45 +279,55 @@ The migration cost is acceptable:
 ```go
 type WhenClause struct {
     Platform       []string // Platform tuples: ["darwin/arm64", "linux/amd64"]
-    OS             string   // Deprecated: use Platform instead
-    Arch           string   // Deprecated: use Platform instead
+    OS             []string // OS-only: ["darwin", "linux"] (any arch)
     PackageManager string   // Runtime check (brew, apt, etc.)
 }
 ```
 
 **TOML syntax:**
 ```toml
+# Precise platform targeting
 [[steps]]
 action = "apply_patch"
 when = { platform = ["darwin/arm64", "linux/amd64"] }
+
+# OS-level targeting (any arch)
+[[steps]]
+action = "install_deps"
+when = { os = ["linux"] }
 ```
 
-**Backwards compatibility during transition:**
-- Support legacy `os` and `arch` fields with deprecation warnings
-- Automatically convert `{os="darwin", arch="arm64"}` to `{platform=["darwin/arm64"]}`
-- Validation fails if both `platform` and `os`/`arch` are specified (mutually exclusive)
+**Matching semantics:**
+- **Between steps (additive):** Each step's `when` evaluates independently; all matching steps execute
+- **Within a clause (OR logic):** `platform = ["darwin/arm64", "linux/amd64"]` matches if current platform is in the array
+- **Between fields (validation error):** Cannot specify both `platform` and `os` in same clause (ambiguous semantics)
 
 **Empty array semantics:**
-- `platform = []` means "match no platforms" (step never executes)
+- `platform = []` or `os = []` means "match no platforms" (step never executes)
 - Missing `when` field means "match all platforms"
+
+**Migration:**
+- 2 existing recipes (gcc-libs.toml, nodejs.toml) use `when = { os = "linux" }` (single string)
+- Will be updated to `when = { os = ["linux"] }` (array syntax) in this PR
+- No backwards compatibility needed (all recipes in this repo)
 
 ### Consequences
 
 **Positive:**
 - Clean, maintainable codebase without technical debt
 - Type-safe APIs prevent entire class of bugs
+- Additive matching semantics align with ecosystem precedents (Cargo, Homebrew)
+- Symmetric with install_guide (platform tuples + OS-only)
 - Future when clause enhancements (environment variables, runtime conditions) have clear extension path
 - Aligns with Go idioms (structured types over string maps)
 
 **Negative:**
-- Breaking change requires recipe migration (2 recipes affected)
-- Transition period complexity with deprecated field support
-- Need migration tooling and clear communication to recipe authors
+- Breaking change (2 recipes need migration: gcc-libs.toml, nodejs.toml)
+- Change from single string to array: `os = "linux"` → `os = ["linux"]`
 
 **Mitigation:**
-- Provide automatic migration script for existing recipes
-- Support both formats during one release cycle with deprecation warnings
-- Clear migration guide in docs and release notes
+- Migrate 2 recipes in same PR (trivial change)
+- No external ecosystem to worry about (all recipes in this repo)
 
 ## Solution Architecture
 
@@ -359,18 +369,14 @@ internal/executor/plan_generator_test.go
 type WhenClause struct {
 	// Platform specifies platform tuples where the step should execute
 	// Example: ["darwin/arm64", "linux/amd64"]
-	// Empty array means match no platforms
-	// Nil/omitted means match all platforms (backwards compat)
+	// Mutually exclusive with OS field
 	Platform []string `toml:"platform,omitempty"`
 
-	// OS specifies a single operating system filter (DEPRECATED)
-	// Use Platform instead for precision
-	// Presence of both OS/Arch and Platform is a validation error
-	OS string `toml:"os,omitempty"`
-
-	// Arch specifies a single architecture filter (DEPRECATED)
-	// Use Platform instead for precision
-	Arch string `toml:"arch,omitempty"`
+	// OS specifies operating systems where the step should execute (any arch)
+	// Example: ["darwin", "linux"]
+	// Mutually exclusive with Platform field
+	// Symmetric with install_guide OS-only keys
+	OS []string `toml:"os,omitempty"`
 
 	// PackageManager specifies required package manager (brew, apt, etc.)
 	// This is a runtime check, not validated against supported platforms
@@ -380,39 +386,37 @@ type WhenClause struct {
 // IsEmpty returns true if no filtering conditions are set
 func (w *WhenClause) IsEmpty() bool {
 	return w == nil ||
-		(len(w.Platform) == 0 && w.OS == "" && w.Arch == "" && w.PackageManager == "")
+		(len(w.Platform) == 0 && len(w.OS) == 0 && w.PackageManager == "")
 }
 
 // Matches returns true if the clause matches the given platform
 func (w *WhenClause) Matches(os, arch string) bool {
 	if w.IsEmpty() {
-		return true
+		return true // No conditions = match all platforms
 	}
 
-	// Check platform tuples (new behavior)
-	if w.Platform != nil {
-		// Empty array means "match no platforms"
-		if len(w.Platform) == 0 {
-			return false
-		}
-
+	// Check platform tuples (exact match required)
+	if len(w.Platform) > 0 {
 		tuple := fmt.Sprintf("%s/%s", os, arch)
 		for _, p := range w.Platform {
 			if p == tuple {
 				return true
 			}
 		}
-		return false
+		return false // Platform specified but didn't match
 	}
 
-	// Legacy OS/Arch behavior (deprecated but supported)
-	if w.OS != "" && w.OS != os {
-		return false
-	}
-	if w.Arch != "" && w.Arch != arch {
-		return false
+	// Check OS-only (any arch on this OS)
+	if len(w.OS) > 0 {
+		for _, o := range w.OS {
+			if o == os {
+				return true
+			}
+		}
+		return false // OS specified but didn't match
 	}
 
+	// No platform/OS filtering, only package_manager (not evaluated here)
 	return true
 }
 ```
@@ -457,13 +461,14 @@ Recipe TOML file
 ```
 ValidateStepsAgainstPlatforms()
   └─> For each step with when clause:
-       ├─ If when.OS + when.Arch (legacy):
-       │   ├─ Warn about deprecation
-       │   └─ Validate OS exists in supported OS set
-       └─ If when.Platform (new):
-            └─> For each platform tuple:
-                 ├─ Check tuple format (contains "/")
-                 └─ Validate against Recipe.GetSupportedPlatforms()
+       ├─ Check mutual exclusivity (error if both Platform and OS present)
+       ├─ If when.Platform:
+       │   └─> For each tuple:
+       │        ├─ Check format (contains "/")
+       │        └─ Validate against Recipe.GetSupportedPlatforms()
+       └─ If when.OS:
+            └─> For each os:
+                 └─ Validate against supported OS set
 ```
 
 **3. Plan generation (runtime filtering):**
@@ -472,9 +477,12 @@ GeneratePlan()
   └─> For each step in recipe.Steps:
        ├─ shouldExecuteForPlatform(step.When, targetOS, targetArch)
        │   └─> step.When.Matches(targetOS, targetArch)
-       │        ├─ If Platform array non-empty: check for exact tuple match
-       │        └─ If using legacy OS/Arch: check AND logic
+       │        ├─ If Platform non-empty: check if current tuple in array
+       │        ├─ If OS non-empty: check if current os in array
+       │        └─ If empty: match all platforms
        └─ If matches: include in plan
+
+Note: All matching steps execute (additive semantics)
 ```
 
 ## Implementation Approach
@@ -490,10 +498,10 @@ GeneratePlan()
 
 **Test coverage:**
 - `Matches()` with platform tuples (exact match, no match, first/last in array)
-- `Matches()` with legacy OS/Arch (backwards compat)
+- `Matches()` with OS arrays (match any arch, no match)
 - `Matches()` with empty clause (match all)
-- `Matches()` with empty platform array (match none - critical edge case)
-- `Matches()` with nil platform array (falls through to legacy logic)
+- `Matches()` with empty platform/OS arrays (match none - critical edge case)
+- `Matches()` with package_manager only (should match all platforms)
 
 ### Phase 2: TOML Unmarshaling
 
@@ -506,8 +514,9 @@ GeneratePlan()
 **Dependencies:** Phase 1
 
 **Error cases:**
-- Both `platform` and `os`/`arch` specified → validation error
+- Both `platform` and `os` specified → validation error (mutually exclusive)
 - Invalid platform tuple format (no `/`) → validation error
+- Array type mismatch (TOML provides non-string array elements) → unmarshaling error
 
 ### Phase 3: Execution Layer Updates
 
@@ -525,29 +534,30 @@ GeneratePlan()
 ### Phase 4: Validation Layer
 
 **Deliverables:**
-- Extend `ValidateStepsAgainstPlatforms()` to validate `when.Platform` arrays
-- Add deprecation warnings for legacy `when.OS`/`when.Arch`
+- Extend `ValidateStepsAgainstPlatforms()` to validate `when.Platform` and `when.OS` arrays
+- Add mutual exclusivity check (error if both platform and os specified)
 - Add test coverage in `platform_test.go`
 
 **Dependencies:** Phase 3
 
 **Validation rules:**
 - Platform tuples must exist in `Recipe.GetSupportedPlatforms()`
-- OS-only keys (legacy) must exist in supported OS set (existing behavior)
-- Emit deprecation warnings for OS/Arch usage
+- OS values must exist in supported OS set
+- Platform and OS are mutually exclusive (validation error if both present)
+- Empty arrays are valid (explicit "match nothing")
 
 ### Phase 5: Recipe Migration
 
 **Deliverables:**
-- Audit actual recipe usage (gcc-libs.toml and nodejs.toml may not exist in current repo)
-- Migrate any recipes using `when` clauses to new format if they exist
-- Update recipe validation to run successfully
+- Update gcc-libs.toml: `when = { os = "linux" }` → `when = { os = ["linux"] }`
+- Update nodejs.toml: `when = { os = "linux" }` → `when = { os = ["linux"] }`
+- Verify all recipe validation passes
 
 **Dependencies:** Phase 4
 
-**Migration strategy:**
-- Keep legacy format during one release cycle with warnings
-- Provide migration script if needed (based on audit results)
+**Migration changes:**
+- Only syntax change: single string → array syntax
+- Semantics unchanged: still matches linux on any arch
 
 ### Phase 5.5: Integration Testing
 
@@ -560,10 +570,11 @@ GeneratePlan()
 **Dependencies:** Phase 5
 
 **Test scenarios:**
-- Recipe with `when = { platform = ["darwin/arm64"] }` on different platforms
-- Recipe with legacy `when = { os = "linux" }` (verify warning + correct behavior)
-- Recipe with mutually exclusive fields (verify validation error)
-- Recipe with invalid tuple format (verify error message clarity)
+- Recipe with `when = { platform = ["darwin/arm64"] }` executed on darwin/arm64 (match) and linux/amd64 (no match)
+- Recipe with `when = { os = ["linux"] }` executed on linux/amd64 and linux/arm64 (both match)
+- Recipe with both `platform` and `os` fields (validation error)
+- Recipe with invalid tuple format `darwin-arm64` (validation error)
+- Multiple steps with overlapping when clauses (verify additive behavior)
 
 ### Phase 6: Documentation
 
