@@ -74,28 +74,34 @@ var infoCmd = &cobra.Command{
 		// JSON output mode
 		if jsonOutput {
 			type infoOutput struct {
-				Name                string   `json:"name"`
-				Description         string   `json:"description"`
-				Homepage            string   `json:"homepage,omitempty"`
-				VersionFormat       string   `json:"version_format"`
-				Status              string   `json:"status"`
-				InstalledVersion    string   `json:"installed_version,omitempty"`
-				Location            string   `json:"location,omitempty"`
-				VerifyCommand       string   `json:"verify_command,omitempty"`
-				InstallDependencies []string `json:"install_dependencies,omitempty"`
-				RuntimeDependencies []string `json:"runtime_dependencies,omitempty"`
+				Name                 string   `json:"name"`
+				Description          string   `json:"description"`
+				Homepage             string   `json:"homepage,omitempty"`
+				VersionFormat        string   `json:"version_format"`
+				SupportedOS          []string `json:"supported_os,omitempty"`
+				SupportedArch        []string `json:"supported_arch,omitempty"`
+				UnsupportedPlatforms []string `json:"unsupported_platforms,omitempty"`
+				Status               string   `json:"status"`
+				InstalledVersion     string   `json:"installed_version,omitempty"`
+				Location             string   `json:"location,omitempty"`
+				VerifyCommand        string   `json:"verify_command,omitempty"`
+				InstallDependencies  []string `json:"install_dependencies,omitempty"`
+				RuntimeDependencies  []string `json:"runtime_dependencies,omitempty"`
 			}
 			output := infoOutput{
-				Name:                r.Metadata.Name,
-				Description:         r.Metadata.Description,
-				Homepage:            r.Metadata.Homepage,
-				VersionFormat:       r.Metadata.VersionFormat,
-				Status:              status,
-				InstalledVersion:    installedVersion,
-				Location:            location,
-				VerifyCommand:       r.Verify.Command,
-				InstallDependencies: installDeps,
-				RuntimeDependencies: runtimeDeps,
+				Name:                 r.Metadata.Name,
+				Description:          r.Metadata.Description,
+				Homepage:             r.Metadata.Homepage,
+				VersionFormat:        r.Metadata.VersionFormat,
+				SupportedOS:          r.Metadata.SupportedOS,
+				SupportedArch:        r.Metadata.SupportedArch,
+				UnsupportedPlatforms: r.Metadata.UnsupportedPlatforms,
+				Status:               status,
+				InstalledVersion:     installedVersion,
+				Location:             location,
+				VerifyCommand:        r.Verify.Command,
+				InstallDependencies:  installDeps,
+				RuntimeDependencies:  runtimeDeps,
 			}
 			printJSON(output)
 			return
@@ -107,6 +113,14 @@ var infoCmd = &cobra.Command{
 			fmt.Printf("Homepage:       %s\n", r.Metadata.Homepage)
 		}
 		fmt.Printf("Version Format: %s\n", r.Metadata.VersionFormat)
+
+		// Show platform constraints if present
+		hasConstraints := len(r.Metadata.SupportedOS) > 0 ||
+			len(r.Metadata.SupportedArch) > 0 ||
+			len(r.Metadata.UnsupportedPlatforms) > 0
+		if hasConstraints {
+			fmt.Printf("Platforms:      %s\n", r.FormatPlatformConstraints())
+		}
 
 		if status == "installed" {
 			fmt.Printf("Status:         Installed (v%s)\n", installedVersion)

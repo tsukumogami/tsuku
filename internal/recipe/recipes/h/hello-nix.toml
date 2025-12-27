@@ -16,6 +16,7 @@ name = "hello-nix"
 description = "GNU Hello (installed via nix) - test recipe for nix_install"
 homepage = "https://www.gnu.org/software/hello/"
 tier = 3
+supported_os = ["linux"]
 
 [version]
 source = "nixpkgs"
