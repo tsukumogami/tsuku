@@ -170,7 +170,10 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 		args = []string{"nix-store", "--realize", derivationPath}
 
 		cmd := exec.CommandContext(ctx.Context, nixPortablePath, args...)
-		cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+		cmd.Env = append(os.Environ(),
+			fmt.Sprintf("NP_LOCATION=%s", npLocation),
+			"NP_GIT=git", // Suppress "Installing git" message to stdout
+		)
 
 		output, err = cmd.CombinedOutput()
 		if err != nil {
@@ -207,7 +210,10 @@ func (a *NixRealizeAction) Execute(ctx *ExecutionContext, params map[string]inte
 
 		// Execute with isolation
 		cmd := exec.CommandContext(ctx.Context, nixPortablePath, args...)
-		cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+		cmd.Env = append(os.Environ(),
+			fmt.Sprintf("NP_LOCATION=%s", npLocation),
+			"NP_GIT=git", // Suppress "Installing git" message to stdout
+		)
 
 		output, err = cmd.CombinedOutput()
 		if err != nil {

@@ -186,6 +186,11 @@ func runDryRun(toolName, reqVersion string) error {
 		return fmt.Errorf("recipe not found: %w", err)
 	}
 
+	// Check platform support before installation
+	if !r.SupportsPlatformRuntime() {
+		return r.NewUnsupportedPlatformError()
+	}
+
 	// Create executor
 	var exec *executor.Executor
 	if reqVersion != "" {

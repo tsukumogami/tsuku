@@ -261,7 +261,10 @@ func GetNixFlakeMetadata(ctx context.Context, flakeRef string) (*FlakeMetadata, 
 	}
 
 	cmd := exec.CommandContext(ctx, nixPath, "nix", "flake", "metadata", "--json", flakeRef)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("NP_LOCATION=%s", npLocation),
+		"NP_GIT=git", // Suppress "Installing git" message to stdout
+	)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -270,7 +273,7 @@ func GetNixFlakeMetadata(ctx context.Context, flakeRef string) (*FlakeMetadata, 
 
 	var metadata FlakeMetadata
 	if err := json.Unmarshal(output, &metadata); err != nil {
-		return nil, fmt.Errorf("failed to parse flake metadata: %w", err)
+		return nil, fmt.Errorf("failed to parse flake metadata: %w\nOutput: %s", err, string(output))
 	}
 
 	return &metadata, nil
@@ -292,7 +295,10 @@ func GetNixDerivationPath(ctx context.Context, flakeRef string) (string, string,
 
 	// Use nix derivation show to get paths without building
 	cmd := exec.CommandContext(ctx, nixPath, "nix", "derivation", "show", flakeRef)
-	cmd.Env = append(os.Environ(), fmt.Sprintf("NP_LOCATION=%s", npLocation))
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("NP_LOCATION=%s", npLocation),
+		"NP_GIT=git", // Suppress "Installing git" message to stdout
+	)
 
 	output, err := cmd.CombinedOutput()
 	if err != nil {
@@ -303,7 +309,7 @@ func GetNixDerivationPath(ctx context.Context, flakeRef string) (string, string,
 	// Output is: { "/nix/store/...drv": { "outputs": { "out": { "path": "..." } } } }
 	var derivations map[string]DerivationInfo
 	if err := json.Unmarshal(output, &derivations); err != nil {
-		return "", "", fmt.Errorf("failed to parse derivation info: %w", err)
+		return "", "", fmt.Errorf("failed to parse derivation info: %w\nOutput: %s", err, string(output))
 	}
 
 	// Extract first derivation (typically only one)

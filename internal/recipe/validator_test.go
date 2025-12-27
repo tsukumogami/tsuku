@@ -607,6 +607,7 @@ name = "docker"
 description = "Container runtime platform"
 homepage = "https://www.docker.com"
 version_format = "semver"
+supported_os = ["darwin", "linux"]
 
 [[steps]]
 action = "require_system"
@@ -634,6 +635,7 @@ name = "cuda"
 description = "NVIDIA CUDA Toolkit"
 homepage = "https://developer.nvidia.com/cuda-toolkit"
 version_format = "semver"
+supported_os = ["darwin", "linux"]
 
 [[steps]]
 action = "require_system"

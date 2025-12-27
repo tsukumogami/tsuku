@@ -157,6 +157,11 @@ type MetadataSection struct {
 	Type                     string   `toml:"type"`                       // Recipe type: "tool" (default) or "library"
 	LLMValidation            string   `toml:"llm_validation,omitempty"`   // LLM validation status: "skipped" or empty
 	Binaries                 []string `toml:"binaries,omitempty"`         // Explicit binary paths for homebrew recipes
+
+	// Platform constraints (optional, defaults provide universal support)
+	SupportedOS          []string `toml:"supported_os,omitempty"`          // Allowed OS values (default: all OS)
+	SupportedArch        []string `toml:"supported_arch,omitempty"`        // Allowed architecture values (default: all arch)
+	UnsupportedPlatforms []string `toml:"unsupported_platforms,omitempty"` // Platform exceptions in "os/arch" format (default: empty)
 }
 
 // VersionSection specifies how to resolve versions
