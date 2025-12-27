@@ -252,6 +252,47 @@ tsuku install sqlite
 
 All dependencies are isolated to `$TSUKU_HOME` - no system modifications required.
 
+### System Dependencies
+
+Some tools require dependencies that tsuku cannot provision - things like Docker, CUDA, or kernel modules that require system-level installation. For these, tsuku provides clear guidance.
+
+#### Check Dependencies
+
+Before installing a tool, check what dependencies it requires:
+
+```bash
+# Check dependencies for a tool
+tsuku check-deps docker-compose
+
+# Output shows:
+# - Provisionable: Dependencies tsuku will install automatically
+# - System-required: Dependencies you must install manually
+```
+
+The `check-deps` command:
+- Shows which dependencies tsuku can provision vs. which require manual installation
+- Provides platform-specific installation instructions for system dependencies
+- Exits with code 1 if any system dependency is missing (useful for CI)
+
+#### System-Required Dependencies
+
+When a tool depends on something tsuku cannot provide, the recipe uses the `require_system` action. This:
+- Validates the command exists on your system
+- Checks version requirements if specified
+- Provides installation guidance if missing
+
+Example output when Docker is missing:
+```
+Error: System dependency 'docker' not found
+
+To install on macOS:
+  brew install --cask docker
+
+To install on Linux:
+  See https://docs.docker.com/engine/install/ for platform-specific installation
+```
+
+
 ### Multi-Version Support
 
 tsuku supports installing and managing multiple versions of the same tool:
