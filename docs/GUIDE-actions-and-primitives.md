@@ -29,8 +29,40 @@ File operation primitives are the atomic building blocks of installation. They p
 | `apply_patch_file` | Apply patch file using system patch command | Fully deterministic |
 | `text_replace` | Text replacement in files (Homebrew inreplace equivalent) | Fully deterministic |
 | `homebrew_relocate` | Relocate Homebrew placeholder paths in binaries | Fully deterministic |
+| `require_system` | Validate system dependency exists with version check | Fully deterministic |
 
 **Key property**: All file operation primitives are fully reproducible. Running the same primitive twice produces identical results.
+
+#### require_system Action
+
+The `require_system` action validates that a system dependency exists and optionally checks its version. This is used for dependencies tsuku cannot provision (Docker, CUDA, kernel modules).
+
+```toml
+[[steps]]
+action = "require_system"
+command = "docker"
+version_flag = "--version"
+version_regex = "Docker version ([0-9.]+)"
+min_version = "20.0"  # Optional minimum version
+
+[steps.install_guide]
+darwin = "brew install --cask docker"
+linux = "See https://docs.docker.com/engine/install/"
+fallback = "Visit https://docs.docker.com/get-docker/"
+```
+
+Parameters:
+- `command` (required): The command to check for
+- `version_flag`: Flag to get version output (e.g., `--version`)
+- `version_regex`: Regex to extract version from output
+- `min_version`: Minimum required version
+- `install_guide`: Platform-specific installation instructions
+
+The action:
+1. Checks if the command exists in PATH
+2. If `version_flag` is specified, extracts and validates version
+3. If missing or version too old, displays platform-specific installation guidance
+4. Fails the installation with actionable error message
 
 ### Ecosystem Primitives
 
