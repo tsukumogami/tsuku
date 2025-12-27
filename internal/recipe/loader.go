@@ -360,6 +360,27 @@ func trimTomlExtension(name string) string {
 	return name
 }
 
+// ParseFile parses a recipe from a file path.
+// This is a convenience function for loading recipes outside the registry/loader
+// system (e.g., for evaluating local recipe files).
+func ParseFile(path string) (*Recipe, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	var r Recipe
+	if err := toml.Unmarshal(data, &r); err != nil {
+		return nil, fmt.Errorf("failed to parse TOML: %w", err)
+	}
+
+	if err := validate(&r); err != nil {
+		return nil, fmt.Errorf("recipe validation failed: %w", err)
+	}
+
+	return &r, nil
+}
+
 // RecipesDir returns the local recipes directory
 func (l *Loader) RecipesDir() string {
 	return l.recipesDir

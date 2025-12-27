@@ -739,6 +739,73 @@ func TestTrimTomlExtension(t *testing.T) {
 	}
 }
 
+func TestParseFile(t *testing.T) {
+	validRecipe := `[metadata]
+name = "test-tool"
+description = "A test tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test-tool --version"
+`
+
+	t.Run("valid recipe file", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		path := filepath.Join(tmpDir, "test.toml")
+		if err := os.WriteFile(path, []byte(validRecipe), 0644); err != nil {
+			t.Fatalf("Failed to write test file: %v", err)
+		}
+
+		recipe, err := ParseFile(path)
+		if err != nil {
+			t.Fatalf("ParseFile() failed: %v", err)
+		}
+
+		if recipe.Metadata.Name != "test-tool" {
+			t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "test-tool")
+		}
+	})
+
+	t.Run("file not found", func(t *testing.T) {
+		_, err := ParseFile("/nonexistent/path/recipe.toml")
+		if err == nil {
+			t.Error("ParseFile() should fail for nonexistent file")
+		}
+	})
+
+	t.Run("invalid TOML", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		path := filepath.Join(tmpDir, "invalid.toml")
+		if err := os.WriteFile(path, []byte("invalid toml [[["), 0644); err != nil {
+			t.Fatalf("Failed to write test file: %v", err)
+		}
+
+		_, err := ParseFile(path)
+		if err == nil {
+			t.Error("ParseFile() should fail for invalid TOML")
+		}
+	})
+
+	t.Run("missing required fields", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		path := filepath.Join(tmpDir, "invalid-recipe.toml")
+		invalidRecipe := `[metadata]
+name = ""
+`
+		if err := os.WriteFile(path, []byte(invalidRecipe), 0644); err != nil {
+			t.Fatalf("Failed to write test file: %v", err)
+		}
+
+		_, err := ParseFile(path)
+		if err == nil {
+			t.Error("ParseFile() should fail for recipe with missing required fields")
+		}
+	})
+}
+
 func TestValidate(t *testing.T) {
 	tests := []struct {
 		name    string

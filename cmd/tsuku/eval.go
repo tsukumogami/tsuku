@@ -31,6 +31,7 @@ func makeSet(items []string) map[string]bool {
 var evalOS string
 var evalArch string
 var evalYes bool
+var evalRecipePath string
 
 var evalCmd = &cobra.Command{
 	Use:   "eval <tool>[@version]",
@@ -50,12 +51,17 @@ Some tools require dependencies at eval time (e.g., npm packages need nodejs
 to generate package-lock.json). If these dependencies are missing, you will
 be prompted to install them. Use --yes to auto-accept.
 
+Use --recipe to evaluate a local recipe file:
+  tsuku eval --recipe ./my-recipe.toml
+  tsuku eval --recipe /path/to/recipe.toml --os darwin --arch arm64
+
 Examples:
   tsuku eval kubectl
   tsuku eval kubectl@v1.29.0
   tsuku eval ripgrep --os linux --arch arm64
-  tsuku eval netlify-cli --yes`,
-	Args: cobra.ExactArgs(1),
+  tsuku eval netlify-cli --yes
+  tsuku eval --recipe ./my-recipe.toml --os darwin --arch arm64`,
+	Args: cobra.MaximumNArgs(1),
 	Run:  runEval,
 }
 
@@ -63,6 +69,7 @@ func init() {
 	evalCmd.Flags().StringVar(&evalOS, "os", "", "Target operating system (linux, darwin)")
 	evalCmd.Flags().StringVar(&evalArch, "arch", "", "Target architecture (amd64, arm64)")
 	evalCmd.Flags().BoolVar(&evalYes, "yes", false, "Auto-accept installation of eval-time dependencies")
+	evalCmd.Flags().StringVar(&evalRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 }
 
 // ValidateOS validates an OS value against the whitelist.
@@ -90,21 +97,7 @@ func ValidateArch(arch string) error {
 }
 
 func runEval(cmd *cobra.Command, args []string) {
-	// Parse tool name and version
-	toolName := args[0]
-	reqVersion := ""
-	if strings.Contains(toolName, "@") {
-		parts := strings.SplitN(toolName, "@", 2)
-		toolName = parts[0]
-		reqVersion = parts[1]
-	}
-
-	// Convert "latest" to empty for resolution
-	if reqVersion == "latest" {
-		reqVersion = ""
-	}
-
-	// Validate platform flags
+	// Validate platform flags early
 	if err := ValidateOS(evalOS); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		exitWithCode(ExitUsage)
@@ -114,14 +107,54 @@ func runEval(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitUsage)
 	}
 
-	// Load recipe
-	r, err := loader.Get(toolName)
-	if err != nil {
-		printError(err)
-		fmt.Fprintf(os.Stderr, "\nTo create a recipe from a package ecosystem:\n")
-		fmt.Fprintf(os.Stderr, "  tsuku create %s --from <ecosystem>\n", toolName)
-		fmt.Fprintf(os.Stderr, "\nAvailable ecosystems: crates.io, rubygems, pypi, npm\n")
-		exitWithCode(ExitRecipeNotFound)
+	// Validate mutually exclusive options
+	if evalRecipePath != "" && len(args) > 0 {
+		printError(fmt.Errorf("cannot specify both --recipe and a tool name"))
+		exitWithCode(ExitUsage)
+	}
+	if evalRecipePath == "" && len(args) == 0 {
+		printError(fmt.Errorf("requires either a tool name or --recipe flag"))
+		exitWithCode(ExitUsage)
+	}
+
+	var r *recipe.Recipe
+	var recipeSource string
+	var reqVersion string
+
+	if evalRecipePath != "" {
+		// Recipe file mode: load from local file using shared function
+		var err error
+		r, err = loadLocalRecipe(evalRecipePath)
+		if err != nil {
+			printError(fmt.Errorf("failed to load recipe: %w", err))
+			exitWithCode(ExitGeneral)
+		}
+		recipeSource = evalRecipePath // Use file path as source identifier
+		// Note: version specification (@version) not supported with file paths
+	} else {
+		// Registry mode: existing behavior
+		toolName := args[0]
+		if strings.Contains(toolName, "@") {
+			parts := strings.SplitN(toolName, "@", 2)
+			toolName = parts[0]
+			reqVersion = parts[1]
+		}
+
+		// Convert "latest" to empty for resolution
+		if reqVersion == "latest" {
+			reqVersion = ""
+		}
+
+		var err error
+		r, err = loader.Get(toolName)
+		if err != nil {
+			printError(err)
+			fmt.Fprintf(os.Stderr, "\nTo create a recipe from a package ecosystem:\n")
+			fmt.Fprintf(os.Stderr, "  tsuku create %s --from <ecosystem>\n", toolName)
+			fmt.Fprintf(os.Stderr, "\nAvailable ecosystems: crates.io, rubygems, pypi, npm\n")
+			exitWithCode(ExitRecipeNotFound)
+		}
+		recipeSource = "registry"
 	}
 
 	// Check platform support before installation
@@ -163,7 +196,7 @@ func runEval(cmd *cobra.Command, args []string) {
 	planCfg := executor.PlanConfig{
 		OS:                 evalOS,
 		Arch:               evalArch,
-		RecipeSource:       "registry",
+		RecipeSource:       recipeSource,
 		Downloader:         downloader,
 		DownloadCache:      downloadCache,
 		AutoAcceptEvalDeps: evalYes,

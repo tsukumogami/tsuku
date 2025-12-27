@@ -7,7 +7,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/BurntSushi/toml"
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
@@ -140,18 +139,9 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 }
 
 // loadLocalRecipe loads a recipe from a local file path.
+// This is a thin wrapper around recipe.ParseFile for use in CLI commands.
 func loadLocalRecipe(path string) (*recipe.Recipe, error) {
-	data, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-
-	var r recipe.Recipe
-	if err := toml.Unmarshal(data, &r); err != nil {
-		return nil, fmt.Errorf("invalid recipe TOML: %w", err)
-	}
-
-	return &r, nil
+	return recipe.ParseFile(path)
 }
 
 // generatePlanFromRecipe generates an installation plan from a recipe.
