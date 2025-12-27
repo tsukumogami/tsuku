@@ -31,7 +31,7 @@ Follow the design document `docs/DESIGN-checksum-pinning.md`. The implementation
 - [x] Add integrity verification step to `verifyWithAbsolutePath()` in verify.go
 - [x] Add unit tests for checksum.go functions
 - [x] Add backward compatibility test (old state without checksums) - graceful handling in verify.go
-- [ ] Update documentation in `tsuku verify --help`
+- [x] Update documentation in `tsuku verify --help`
 
 ## Testing Strategy
 - Unit tests:

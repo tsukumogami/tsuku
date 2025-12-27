@@ -212,8 +212,20 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 var verifyCmd = &cobra.Command{
 	Use:   "verify <tool>",
 	Short: "Verify an installed tool",
-	Long:  `Verify that an installed tool is working correctly using the recipe's verification command.`,
-	Args:  cobra.ExactArgs(1),
+	Long: `Verify that an installed tool is working correctly.
+
+For visible tools, verification includes:
+  1. Running the recipe's verification command
+  2. Checking that the tool's bin directory is in PATH
+  3. Verifying PATH resolution finds the correct binary
+  4. Checking binary integrity against stored checksums
+
+For hidden tools (execution dependencies), only the verification command is run.
+
+Binary integrity verification detects post-installation tampering by comparing
+current SHA256 checksums against those stored at installation time. Tools
+installed before this feature will show "Integrity: SKIPPED".`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		toolName := args[0]
 
