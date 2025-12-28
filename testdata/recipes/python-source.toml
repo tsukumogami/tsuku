@@ -1,6 +1,21 @@
 # Ground truth recipe for python (source build with patch)
 # Used by LLM integration tests (llm_homebrew_python_single_patch)
-# Tests: download + extract + configure_make with single patch
+# Tests: download_file + extract + configure_make with single patch
+#
+# NOTE: This recipe uses a pinned version because the patch is version-specific.
+# Dynamic version resolution requires #709 (dynamic patch discovery) to be implemented.
+#
+# When #709 is resolved, uncomment the dynamic configuration below:
+# [version]
+# source = "homebrew"
+# formula = "python@3.13"
+#
+# [[steps]]
+# action = "download"
+# url = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
+# signature_url = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz.asc"
+# signature_key_url = "https://keys.openpgp.org/vks/v1/by-fingerprint/7169605F62C751356D054A26A821E680E5FA6305"
+# signature_key_fingerprint = "7169605F62C751356D054A26A821E680E5FA6305"
 
 [metadata]
 name = "python-source"
@@ -9,19 +24,17 @@ homepage = "https://www.python.org/"
 dependencies = ["make"]
 
 [version]
-source = "homebrew"
-formula = "python@3.13"
+pin = "3.13.11"
 
 [[steps]]
-action = "download"
-url = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz"
-signature_url = "https://www.python.org/ftp/python/{version}/Python-{version}.tgz.asc"
-signature_key_url = "https://keys.openpgp.org/vks/v1/by-fingerprint/7169605F62C751356D054A26A821E680E5FA6305"
-signature_key_fingerprint = "7169605F62C751356D054A26A821E680E5FA6305"
+action = "download_file"
+url = "https://www.python.org/ftp/python/3.13.11/Python-3.13.11.tgz"
+dest = "Python-3.13.11.tgz"
+checksum = "03cfedbe06ce21bc44ce09245e091a77f2fee9ec9be5c52069048a181300b202"
 
 [[steps]]
 action = "extract"
-archive = "Python-{version}.tgz"
+archive = "Python-3.13.11.tgz"
 format = "tar.gz"
 strip_dirs = 1
 

@@ -1,7 +1,21 @@
 # Ground truth recipe for readline (source build with patches)
 # Used by LLM integration tests (llm_homebrew_readline_multi_patches)
-# Tests: download + extract + configure_make with multiple p0 patches
-# TODO(#709): Patches use version-specific URLs (readline83-XXX for 8.3)
+# Tests: download_file + extract + configure_make with multiple p0 patches
+#
+# NOTE: This recipe uses a pinned version because patches are version-specific.
+# Dynamic version resolution requires #709 (dynamic patch discovery) to be implemented.
+#
+# When #709 is resolved, uncomment the dynamic configuration below:
+# [version]
+# source = "homebrew"
+# formula = "readline"
+#
+# [[steps]]
+# action = "download"
+# url = "https://ftpmirror.gnu.org/gnu/readline/readline-{version}.tar.gz"
+# signature_url = "https://ftpmirror.gnu.org/gnu/readline/readline-{version}.tar.gz.sig"
+# signature_key_url = "https://tiswww.case.edu/php/chet/gpgkey.asc"
+# signature_key_fingerprint = "7C0135FB088AAF6C66C650B9BB5869F064EA74AB"
 
 [metadata]
 name = "readline-source"
@@ -11,19 +25,17 @@ type = "library"
 dependencies = ["make"]
 
 [version]
-source = "homebrew"
-formula = "readline"
+pin = "8.3"
 
 [[steps]]
-action = "download"
-url = "https://ftpmirror.gnu.org/gnu/readline/readline-{version}.tar.gz"
-signature_url = "https://ftpmirror.gnu.org/gnu/readline/readline-{version}.tar.gz.sig"
-signature_key_url = "https://tiswww.case.edu/php/chet/gpgkey.asc"
-signature_key_fingerprint = "7C0135FB088AAF6C66C650B9BB5869F064EA74AB"
+action = "download_file"
+url = "https://ftpmirror.gnu.org/gnu/readline/readline-8.3.tar.gz"
+dest = "readline-8.3.tar.gz"
+checksum = "fe5383204467828cd495ee8d1d3c037a7eba1389c22bc6a041f627976f9061cc"
 
 [[steps]]
 action = "extract"
-archive = "readline-{version}.tar.gz"
+archive = "readline-8.3.tar.gz"
 format = "tar.gz"
 strip_dirs = 1
 
