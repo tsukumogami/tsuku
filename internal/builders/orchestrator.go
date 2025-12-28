@@ -38,6 +38,10 @@ type OrchestratorConfig struct {
 	// DownloadCacheDir is the directory for caching downloads ($TSUKU_HOME/cache/downloads).
 	// Required for plan generation if sandbox testing is enabled.
 	DownloadCacheDir string
+
+	// KeyCacheDir is the directory for caching PGP public keys ($TSUKU_HOME/cache/keys).
+	// Used for PGP signature verification.
+	KeyCacheDir string
 }
 
 // Orchestrator coordinates the build → sandbox → repair cycle.
@@ -226,6 +230,7 @@ func (o *Orchestrator) generatePlan(ctx context.Context, r *recipe.Recipe) (*exe
 	exec.SetToolsDir(o.config.ToolsDir)
 	exec.SetLibsDir(o.config.LibsDir)
 	exec.SetDownloadCacheDir(o.config.DownloadCacheDir)
+	exec.SetKeyCacheDir(o.config.KeyCacheDir)
 
 	// Create downloader and cache for plan generation
 	// These enable action decomposition and pre-downloading for sandbox

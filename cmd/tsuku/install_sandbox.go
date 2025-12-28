@@ -155,6 +155,7 @@ func generatePlanFromRecipe(r *recipe.Recipe, toolName string, cfg *config.Confi
 
 	exec.SetToolsDir(cfg.ToolsDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
+	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 
 	// Create downloader for checksum computation and pre-downloading
 	predownloader := validate.NewPreDownloader()

@@ -78,8 +78,8 @@ func TestDownloadAction_StaticChecksumError(t *testing.T) {
 	}
 }
 
-func TestDownloadAction_MissingChecksumURLWarning(t *testing.T) {
-	// Test that missing checksum_url triggers warning
+func TestDownloadAction_MissingVerificationWarning(t *testing.T) {
+	// Test that missing checksum_url or signature_url triggers warning
 	result := ValidateAction("download", map[string]interface{}{
 		"url": "https://example.com/{version}/file.tar.gz",
 	})
@@ -87,17 +87,17 @@ func TestDownloadAction_MissingChecksumURLWarning(t *testing.T) {
 		t.Errorf("expected no errors, got: %v", result.Errors)
 	}
 	if !result.HasWarnings() {
-		t.Error("expected warning for missing checksum_url")
+		t.Error("expected warning for missing verification")
 	}
 	found := false
 	for _, warn := range result.Warnings {
-		if warn == "no upstream checksum verification (checksum_url); integrity relies on plan-time computation" {
+		if warn == "no upstream verification (checksum_url or signature_url); integrity relies on plan-time computation" {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Errorf("expected specific checksum_url warning message, got: %v", result.Warnings)
+		t.Errorf("expected specific verification warning message, got: %v", result.Warnings)
 	}
 }
 

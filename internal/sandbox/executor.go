@@ -266,9 +266,6 @@ func (e *Executor) Sandbox(
 
 // buildSandboxScript creates the shell script for sandbox testing.
 // The script sets up the environment and runs tsuku install --plan.
-//
-// Note: Build tools are NOT installed via apt-get. Instead, tsuku's normal
-// dependency resolution handles them via ActionDependencies.InstallTime.
 func (e *Executor) buildSandboxScript(
 	plan *executor.InstallationPlan,
 	reqs *SandboxRequirements,
@@ -278,11 +275,20 @@ func (e *Executor) buildSandboxScript(
 	sb.WriteString("#!/bin/bash\n")
 	sb.WriteString("set -e\n\n")
 
-	// Minimal system setup for network-enabled builds
+	// Determine what system packages need to be installed
+	packages := []string{}
 	if reqs.RequiresNetwork {
-		sb.WriteString("# Minimal network setup (ca-certificates for HTTPS)\n")
+		packages = append(packages, "ca-certificates", "curl")
+	}
+	if hasBuildActions(plan) {
+		packages = append(packages, "build-essential")
+	}
+
+	// Install packages if needed
+	if len(packages) > 0 {
+		sb.WriteString("# Install system dependencies\n")
 		sb.WriteString("apt-get update -qq\n")
-		sb.WriteString("apt-get install -qq -y ca-certificates curl >/dev/null 2>&1\n\n")
+		sb.WriteString(fmt.Sprintf("apt-get install -qq -y %s >/dev/null 2>&1\n\n", strings.Join(packages, " ")))
 	}
 
 	// Setup TSUKU_HOME directory structure

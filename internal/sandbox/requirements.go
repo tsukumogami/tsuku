@@ -112,8 +112,10 @@ func ComputeSandboxRequirements(plan *executor.InstallationPlan) *SandboxRequire
 
 	// Also upgrade for plans with known build actions (even if offline)
 	// Build actions like configure_make may not need network but still need
-	// more resources and a fuller base image
+	// more resources and a fuller base image. Network is required because
+	// the sandbox needs apt-get to install build-essential.
 	if hasBuildActions(plan) {
+		reqs.RequiresNetwork = true
 		reqs.Image = SourceBuildSandboxImage
 		reqs.Resources = SourceBuildLimits()
 	}
