@@ -194,19 +194,17 @@ Plan generation requires downloading files to compute SHA256 checksums. For gold
 - Unit tests use mock downloader (fast, deterministic, offline)
 - Both approaches produce consistent plans given the same version
 
-### Version Pinning Strategy
+### Version Pinning and Versionless Recipes
 
-Golden files are generated at pinned versions to ensure determinism:
+Recipes are **versionless by design** - a single recipe should correctly generate installation plans for any version of the tool. However, the *plans themselves* are version-specific: they contain resolved download URLs, computed checksums, and version-dependent extraction paths.
 
-1. **Version selection**: Use the latest stable version at time of initial golden file creation
-2. **Version storage**: The version is encoded in the filename and plan content
-3. **Multi-version support**: Each recipe directory can contain golden files for multiple versions
-4. **Version updates**: A separate workflow can propose version bumps by adding new golden files
+Golden files test this versionlessness by maintaining plans for multiple versions of the same recipe:
 
-Example structure supporting multiple versions:
 ```
 testdata/golden/plans/f/fzf/
-├── v0.45.0-linux-amd64.json    # Previous version (kept for regression testing)
+├── v0.44.0-linux-amd64.json    # Older version
+├── v0.44.0-linux-arm64.json
+├── v0.45.0-linux-amd64.json    # Previous version
 ├── v0.45.0-linux-arm64.json
 ├── v0.46.0-linux-amd64.json    # Current version
 ├── v0.46.0-linux-arm64.json
@@ -214,7 +212,23 @@ testdata/golden/plans/f/fzf/
 └── v0.46.0-darwin-arm64.json
 ```
 
-The regeneration script reads existing versions from the directory to determine which versions to regenerate.
+**Why multi-version golden files matter:**
+
+1. **Proves versionlessness**: A recipe change that breaks plan generation for v0.44.0 but works for v0.46.0 is a regression. Multi-version golden files catch this.
+
+2. **Version-specific plan differences are expected**: Different versions have different checksums, sometimes different URL patterns, or different archive structures. Each version's plan is independently valid.
+
+3. **Pinning provides determinism**: Plans for a specific version never change unless the recipe logic changes. This isolates recipe regressions from upstream version churn.
+
+**When to add versions:**
+
+- When a version introduces a URL pattern change (e.g., GitHub release naming convention changed at v2.0)
+- When testing a recipe fix that affected specific versions
+- When validating that a new version works before users encounter it
+
+**Version lifecycle:**
+
+The regeneration script preserves all existing versions in the directory. When a recipe changes, all versions are regenerated to verify the recipe still works for each. Old versions can be pruned manually when no longer valuable for testing.
 
 ### Trust Boundaries
 
