@@ -1339,6 +1339,58 @@ Validate approach and iterate on tooling.
 3. Create GitHub Action for automated version bump PRs
 4. Update PR template to note golden file requirements
 
+### Blocker: Structured install_guide for System Dependencies (needs-design)
+
+**Problem**: Recipes with `require_system` steps cannot be execution-validated in the sandbox because the required system packages are not installed in the container.
+
+**Current state**:
+- The `require_system` action has an `install_guide` field with platform-specific installation instructions
+- These instructions are free-form text (e.g., "sudo apt install docker.io"), not structured package specs
+- The sandbox base containers (`debian:bookworm-slim`, `ubuntu:22.04`) include various pre-installed packages
+- There is no mechanism to parse `install_guide` and install the required packages in the container
+
+**Impact on golden plan testing**:
+- Recipes with `require_system` dependencies are **blocked from execution validation**
+- These recipes can have golden plans generated, but cannot be sandbox-tested
+- This creates a gap in test coverage for recipes like docker-based tools, CUDA tools, etc.
+
+**Required solution** (separate design document):
+
+This is a complex change that warrants its own design document. The high-level requirements are:
+
+1. **Structured install_guide format**: Enhance `require_system` to support machine-parseable package specifications alongside human-readable text:
+   ```toml
+   [steps.install_guide]
+   # Structured format for automation
+   "linux/amd64" = { apt = ["docker.io"], text = "Or visit docker.com" }
+   "darwin/arm64" = { brew = ["docker"], cask = true }
+   ```
+
+2. **Minimal base container**: Remove ALL pre-installed packages from the sandbox base container. The container should contain only:
+   - A pre-built tsuku binary
+   - The absolute minimum for tsuku to execute (glibc)
+   - Nothing else - every dependency must come from the recipe
+
+3. **Dynamic container building**: The sandbox executor should:
+   - Parse `require_system` steps from the plan
+   - Extract structured package specs for the target platform
+   - Build a custom container image with those packages installed
+   - Cache container images by package set hash for efficiency
+
+4. **Recipe completeness**: Every recipe must explicitly declare its system dependencies. Recipes that worked due to packages "accidentally" present in the base container will fail until properly annotated.
+
+**Acceptance criteria for the blocking issue**:
+- [ ] Design document for structured `install_guide` format is accepted
+- [ ] `require_system` action supports structured package specs
+- [ ] Sandbox base container is stripped to minimal (tsuku binary + glibc only)
+- [ ] Sandbox executor builds custom containers from `require_system` declarations
+- [ ] All recipes with `require_system` steps have structured `install_guide`
+- [ ] Golden plans exist for ALL recipes (no exclusions due to system deps)
+- [ ] Execution validation works for recipes with `require_system` dependencies
+
+**Interim approach**:
+Until this blocker is resolved, recipes with `require_system` steps are excluded from execution validation but still have golden plans generated. The validation scripts will skip execution for these recipes and log a warning.
+
 ## Security Considerations
 
 ### Download Verification
