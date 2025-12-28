@@ -111,29 +111,21 @@ func (e *Executor) ResolveVersion(ctx context.Context, constraint string) (strin
 	return versionInfo.Version, nil
 }
 
-// shouldExecute checks if a step should be executed based on 'when' conditions
-func (e *Executor) shouldExecute(when map[string]string) bool {
-	if len(when) == 0 {
+// shouldExecute checks if a step should be executed based on 'when' conditions.
+// Evaluates platform conditions (OS/arch) and package manager availability.
+func (e *Executor) shouldExecute(when *recipe.WhenClause) bool {
+	if when == nil || when.IsEmpty() {
 		return true
 	}
 
-	// Check OS condition
-	if osCondition, ok := when["os"]; ok {
-		if osCondition != runtime.GOOS {
-			return false
-		}
-	}
-
-	// Check arch condition
-	if archCondition, ok := when["arch"]; ok {
-		if archCondition != runtime.GOARCH {
-			return false
-		}
+	// Check platform conditions (OS and arch)
+	if !when.Matches(runtime.GOOS, runtime.GOARCH) {
+		return false
 	}
 
 	// Check package_manager condition (stub - always true for validation)
-	if _, ok := when["package_manager"]; ok {
-		// In real implementation, would detect system package manager
+	// In real implementation, would detect system package manager (brew, apt, etc.)
+	if when.PackageManager != "" {
 		return true
 	}
 
