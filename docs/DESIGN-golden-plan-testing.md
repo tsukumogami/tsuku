@@ -439,8 +439,8 @@ git diff testdata/golden/plans/f/fzf/
 # If you changed tsuku code (executor, actions, etc.)
 ./scripts/validate-all-golden.sh
 
-# If validation fails, regenerate all and review
-./scripts/regenerate-all-golden.sh
+# If validation fails, regenerate only failed recipes and review
+./scripts/validate-all-golden.sh --fix
 git diff --stat testdata/golden/plans/
 
 # Test execution locally (current platform only)
@@ -584,8 +584,8 @@ go test ./internal/executor/...
 # Validate ALL golden files (shows diffs on failure)
 ./scripts/validate-all-golden.sh
 
-# If validation fails, regenerate all
-./scripts/regenerate-all-golden.sh
+# If validation fails, regenerate only failed recipes
+./scripts/validate-all-golden.sh --fix
 
 # Review scope of changes
 git diff --stat testdata/golden/plans/
@@ -987,10 +987,17 @@ exit 0
 ```bash
 #!/bin/bash
 # scripts/validate-all-golden.sh - Validate all golden files
-# Usage: ./scripts/validate-all-golden.sh
+# Usage: ./scripts/validate-all-golden.sh [--fix]
+# Options:
+#   --fix    Regenerate golden files for failed recipes
 # Runs validate-golden.sh for each recipe with golden files
 
 set -euo pipefail
+
+FIX_MODE=false
+if [[ "${1:-}" == "--fix" ]]; then
+    FIX_MODE=true
+fi
 
 GOLDEN_BASE="testdata/golden/plans"
 FAILED=()
@@ -1011,7 +1018,20 @@ done
 if [[ ${#FAILED[@]} -gt 0 ]]; then
     echo ""
     echo "Failed recipes: ${FAILED[*]}"
-    exit 1
+
+    if [[ "$FIX_MODE" == true ]]; then
+        echo ""
+        echo "Regenerating failed recipes..."
+        for recipe in "${FAILED[@]}"; do
+            echo "Regenerating $recipe..."
+            ./scripts/regenerate-golden.sh "$recipe"
+        done
+        echo ""
+        echo "Regeneration complete. Review changes with: git diff testdata/golden/plans/"
+    else
+        echo "Run with --fix to regenerate failed recipes automatically."
+        exit 1
+    fi
 fi
 
 echo "All golden files are up to date."
