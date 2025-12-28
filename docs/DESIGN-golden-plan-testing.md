@@ -230,6 +230,24 @@ testdata/golden/plans/f/fzf/
 
 The regeneration script preserves all existing versions in the directory. When a recipe changes, all versions are regenerated to verify the recipe still works for each. Old versions can be pruned manually when no longer valuable for testing.
 
+### Cross-Platform Generation Limitations
+
+Plan generation for a target platform different from the current runtime works correctly for download-based recipes. However, ecosystem builds have inherent limitations:
+
+| Action | Cross-Platform Support | Notes |
+|--------|----------------------|-------|
+| `github_archive`, `download_archive` | Full | Downloads target platform binary, computes checksum |
+| `homebrew` | Full | Queries GHCR for target platform bottle |
+| `npm_install` | Partial | Lockfile is platform-agnostic, but npm version affects output |
+| `cargo_install` | Partial | Cargo.lock is platform-agnostic |
+| `gem_install` | Partial | Gemfile.lock is platform-agnostic |
+| `go_install` | Partial | go.sum is platform-agnostic |
+| `pipx_install` | Limited | `pip download` fetches platform-specific wheels |
+
+**Implication for golden files**: Ecosystem build recipes should have their golden files generated on a consistent platform to ensure reproducibility. The CI workflow uses `ubuntu-latest` for all plan generation, which provides this consistency.
+
+For `pipx_install` recipes specifically, golden files represent the plan as generated from Linux. Execution validation on macOS will re-resolve dependencies appropriately at install time.
+
 ### Trust Boundaries
 
 The golden plan system relies on the following trust assumptions:
@@ -334,9 +352,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux-amd64
+          - os: macos-latest
+            platform: darwin-arm64
+          - os: macos-13
+            platform: darwin-amd64
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-go@v5
         with:
@@ -348,7 +374,7 @@ jobs:
       - name: Install changed golden plans
         run: |
           # Find golden files changed in this PR that match current platform
-          PLATFORM="${{ runner.os == 'Linux' && 'linux' || 'darwin' }}-${{ runner.arch == 'X64' && 'amd64' || 'arm64' }}"
+          PLATFORM="${{ matrix.platform }}"
           git diff --name-only origin/main...HEAD -- 'testdata/golden/plans/**/*.json' | \
             grep "$PLATFORM" | while read plan; do
               echo "Testing: $plan"
@@ -425,7 +451,7 @@ When a recipe file changes, CI regenerates golden files for that recipe only:
 1. CI detects `recipes/f/fzf.toml` was modified
 2. Runs `./scripts/regenerate-golden.sh fzf`
 3. Script queries `tsuku info --recipe ... --metadata-only --json` for supported platforms
-4. Generates plan for each platform: `tsuku eval --recipe ... --os linux --arch amd64`
+4. Generates plan for each platform: `tsuku eval --recipe ... --os linux --arch amd64 --version <ver>`
 5. Compares generated files against committed golden files
 6. Fails if any difference exists
 
@@ -530,13 +556,21 @@ When golden files are modified (by either trigger above), CI validates they are 
 ```yaml
 strategy:
   matrix:
-    os: [ubuntu-latest, macos-latest]
-    # Note: arm64 runners would be added when available
+    include:
+      - os: ubuntu-latest
+        platform: linux-amd64
+      - os: macos-latest
+        platform: darwin-arm64
+      - os: macos-13
+        platform: darwin-amd64
 ```
 
-Each runner only validates golden files for its platform:
+Each runner validates golden files for its platform:
 - `ubuntu-latest` validates `*-linux-amd64.json` files
 - `macos-latest` validates `*-darwin-arm64.json` files (Apple Silicon)
+- `macos-13` validates `*-darwin-amd64.json` files (Intel Mac)
+
+**Known limitation**: `linux-arm64` golden files are generated but not execution-validated (no arm64 Linux runners in standard GitHub Actions). Plan generation logic is shared across architectures, so this is acceptable risk.
 
 **Execution validation output:**
 ```
@@ -544,7 +578,7 @@ Testing: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
 Running sandbox test for fzf...
   Container image: ubuntu:22.04
   Network access: disabled (binary installation)
-  Resource limits: 2G memory, 2.0 CPUs, 5m0s timeout
+  Resource limits: 2G memory, 2.0 CPUs, 2m0s timeout
 
 Sandbox test PASSED
 
@@ -714,8 +748,9 @@ fi
 
 mkdir -p "$GOLDEN_DIR"
 
-# Get supported platforms from recipe metadata (format: "linux-amd64", "darwin-arm64", etc.)
-PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -r '.supported_platforms[]')
+# Get supported platforms from recipe metadata (format: "linux/amd64", "darwin/arm64", etc.)
+# Convert to hyphenated format for filenames
+PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -r '.supported_platforms[]' | tr '/' '-')
 
 if [[ -z "$PLATFORMS" ]]; then
     echo "No supported platforms found for $RECIPE"
@@ -726,7 +761,12 @@ fi
 if [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
     VERSIONS=$(ls "$GOLDEN_DIR"/*.json | sed 's/.*\/v\([^-]*\)-.*/\1/' | sort -u)
 else
-    VERSIONS=$(./tsuku info "$RECIPE" --json | jq -r '.latest_version')
+    # Get latest version using tsuku versions command (first line is most recent)
+    VERSIONS=$(./tsuku versions "$RECIPE" 2>/dev/null | head -1)
+    if [[ -z "$VERSIONS" ]]; then
+        echo "Could not resolve latest version for $RECIPE"
+        exit 1
+    fi
 fi
 
 # Regenerate for each version
@@ -740,7 +780,7 @@ for VERSION in $VERSIONS; do
         OUTPUT="$GOLDEN_DIR/v${VERSION}-${platform}.json"
 
         if ./tsuku eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
-            "$RECIPE@$VERSION" > "$OUTPUT.tmp" 2>/dev/null; then
+            --version "$VERSION" > "$OUTPUT.tmp" 2>/dev/null; then
             mv "$OUTPUT.tmp" "$OUTPUT"
             echo "  Generated: $OUTPUT"
         else
@@ -810,13 +850,13 @@ tsuku info fzf --json
 tsuku info --recipe path/to/recipe.toml --metadata-only --json
 ```
 
-Output includes `supported_platforms` array:
+Output includes `supported_platforms` array (note: uses `/` separator):
 ```json
 {
   "name": "fzf",
   "description": "A command-line fuzzy finder",
   "type": "tool",
-  "supported_platforms": ["linux-amd64", "linux-arm64", "darwin-amd64", "darwin-arm64"],
+  "supported_platforms": ["linux/amd64", "linux/arm64", "darwin/amd64", "darwin/arm64"],
   ...
 }
 ```
@@ -825,10 +865,12 @@ This enables programmatic tooling for golden plan management and other automatio
 
 ### Phase 1: Infrastructure
 
-1. Create `scripts/regenerate-golden.sh` for single-recipe regeneration
-2. Create `scripts/regenerate-all-golden.sh` for full regeneration
-3. Add `internal/testutil/golden.go` with comparison utilities
-4. Add `internal/testutil/mock_downloader.go` for unit tests
+1. **Fix cross-platform eval bug**: `cmd/tsuku/eval.go` checks platform support using `SupportsPlatformRuntime()` which validates against `runtime.GOOS/runtime.GOARCH` instead of the target platform from `--os`/`--arch` flags. Fix to use `r.SupportsPlatform(targetOS, targetArch)`.
+2. **Add `--version` flag to eval**: When using `--recipe` mode, allow `--version <ver>` to specify the version for plan generation.
+3. Create `scripts/regenerate-golden.sh` for single-recipe regeneration
+4. Create `scripts/regenerate-all-golden.sh` for full regeneration
+5. Add `internal/testutil/golden.go` with comparison utilities
+6. Add `internal/testutil/mock_downloader.go` for unit tests
 
 ### Phase 2: CI Workflows (Before Bulk Generation)
 
