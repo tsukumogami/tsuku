@@ -1,7 +1,7 @@
 # Ground truth recipe for readline (source build with patches)
 # Used by LLM integration tests (llm_homebrew_readline_multi_patches)
 # Tests: download + extract + configure_make with multiple p0 patches
-# Note: Patches use version-specific URLs (readline83-XXX for 8.3)
+# TODO(#709): Patches use version-specific URLs (readline83-XXX for 8.3)
 
 [metadata]
 name = "readline-source"

@@ -1,7 +1,7 @@
 # Ground truth recipe for bash (source build with multiple patches)
 # Used by LLM integration tests (llm_homebrew_bash_patch_ordering)
 # Tests: download + extract + configure_make with multiple patches
-# Note: Patches use version-specific URLs (bash53-XXX for 5.3)
+# TODO(#709): Patches use version-specific URLs (bash53-XXX for 5.3)
 
 [metadata]
 name = "bash-source"
