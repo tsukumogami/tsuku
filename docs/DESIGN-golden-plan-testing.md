@@ -773,6 +773,139 @@ jobs:
 | No golden files for recipe | New recipe added | Run `./scripts/regenerate-golden.sh <recipe>`, commit new files |
 | Golden files for unsupported platform | Recipe platform support narrowed | Regeneration script automatically removes unsupported platform files |
 
+#### Platform Coverage and linux-arm64 Exclusion
+
+Golden file testing covers three of the four supported platforms:
+
+| Platform | Plan Generation | Execution Validation | CI Runner |
+|----------|-----------------|---------------------|-----------|
+| linux-amd64 | Yes | Yes | `ubuntu-latest` |
+| darwin-arm64 | Yes | Yes | `macos-latest` |
+| darwin-amd64 | Yes | Yes | `macos-13` |
+| linux-arm64 | **No** | **No** | None available |
+
+**linux-arm64 is explicitly excluded** from golden file testing because:
+
+1. **No CI runner available**: GitHub Actions does not provide arm64 Linux runners in the standard tier
+2. **Cannot generate build-based plans**: Build recipes require native toolchain execution
+3. **Cannot validate execution**: Even if plans existed, we couldn't run sandbox tests
+
+**What this means in practice:**
+
+- Recipes do NOT have `*-linux-arm64.json` golden files
+- The regeneration scripts skip linux-arm64 when generating golden files
+- Platform support metadata still includes linux-arm64 (the recipe supports it, we just don't test it)
+
+**Risk mitigation:**
+
+- Plan generation logic is shared across architectures - bugs would likely affect both amd64 and arm64
+- Download-based recipes use the same URL patterns for both architectures
+- Users on linux-arm64 are a small minority of the user base
+- If arm64 Linux runners become available, coverage can be added without design changes
+
+**Future option**: Self-hosted arm64 Linux runners or services like Actuated/Blacksmith could enable linux-arm64 coverage if demand justifies the cost.
+
+#### Cross-Platform Golden File Generation Workflow
+
+Developers often work on a single platform but need to generate golden files for platforms they don't have access to. This workflow enables generating golden files on CI runners and committing them back to the PR:
+
+```yaml
+# .github/workflows/generate-golden-files.yml
+name: Generate Golden Files
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipe:
+        description: 'Recipe name to regenerate'
+        required: true
+      commit_to_branch:
+        description: 'Commit results back to current branch'
+        type: boolean
+        default: true
+
+jobs:
+  generate:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux-amd64
+          - os: macos-latest
+            platform: darwin-arm64
+          - os: macos-13
+            platform: darwin-amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Generate golden files
+        run: |
+          RECIPE="${{ inputs.recipe }}"
+          PLATFORM="${{ matrix.platform }}"
+          OS="${PLATFORM%-*}"
+          ARCH="${PLATFORM#*-}"
+          ./scripts/regenerate-golden.sh "$RECIPE" --os "$OS" --arch "$ARCH"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: golden-${{ matrix.platform }}
+          path: testdata/golden/plans/
+
+  commit:
+    needs: generate
+    runs-on: ubuntu-latest
+    if: inputs.commit_to_branch
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Merge platform artifacts
+        run: |
+          for platform_dir in artifacts/golden-*/; do
+            cp -r "$platform_dir"/* testdata/golden/plans/ 2>/dev/null || true
+          done
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add testdata/golden/plans/
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(golden): regenerate ${{ inputs.recipe }} golden files"
+            git push
+          fi
+```
+
+**Developer workflow:**
+
+1. Push recipe changes to a branch/PR
+2. Go to Actions → "Generate Golden Files" → Run workflow
+3. Select your branch, enter the recipe name
+4. Workflow runs on all three platforms in parallel
+5. Golden files are committed back to your branch
+
+**Download-only mode:**
+
+Set `commit_to_branch: false` to download artifacts manually:
+1. Run the workflow
+2. Download artifacts from the workflow run page
+3. Extract and commit locally
+
+This enables developers on any platform to contribute recipes with complete golden file coverage (excluding linux-arm64).
+
 #### The Regeneration Scripts
 
 **`scripts/regenerate-golden.sh <recipe> [flags]`**
@@ -897,10 +1030,12 @@ mkdir -p "$GOLDEN_DIR"
 
 # Get supported platforms from recipe metadata (format: "linux/amd64", "darwin/arm64", etc.)
 # Convert to hyphenated format for filenames
-ALL_PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -r '.supported_platforms[]' | tr '/' '-')
+# Exclude linux-arm64 (no CI runner available for generation or validation)
+ALL_PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | \
+    jq -r '.supported_platforms[]' | tr '/' '-' | grep -v '^linux-arm64$')
 
 if [[ -z "$ALL_PLATFORMS" ]]; then
-    echo "No supported platforms found for $RECIPE"
+    echo "No supported platforms found for $RECIPE (excluding linux-arm64)"
     exit 0
 fi
 
@@ -1013,7 +1148,9 @@ if [[ ! -d "$GOLDEN_DIR" ]]; then
 fi
 
 # Regenerate to temp directory
-PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -r '.supported_platforms[]' | tr '/' '-')
+# Exclude linux-arm64 (no CI runner available for generation or validation)
+PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | \
+    jq -r '.supported_platforms[]' | tr '/' '-' | grep -v '^linux-arm64$')
 VERSIONS=$(ls "$GOLDEN_DIR"/*.json 2>/dev/null | sed 's/.*\/v\([^-]*\)-.*/\1/' | sort -u)
 
 MISMATCH=0
