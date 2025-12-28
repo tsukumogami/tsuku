@@ -235,12 +235,12 @@ func TestDetectRequiredBuildTools_SkipsDarwinOnly(t *testing.T) {
 			// This step should be skipped (darwin-only)
 			{
 				Action: "cmake_build",
-				When:   map[string]string{"os": "darwin"},
+				When:   &recipe.WhenClause{OS: []string{"darwin"}},
 			},
 			// This step should be included (linux-only)
 			{
 				Action: "configure_make",
-				When:   map[string]string{"os": "linux"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}},
 			},
 		},
 	}
