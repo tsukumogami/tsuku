@@ -2,7 +2,100 @@
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Golden Plan Validation (Local)](https://github.com/tsukumogami/tsuku/milestone/24)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#712](https://github.com/tsukumogami/tsuku/issues/712) | fix(eval): support cross-platform plan generation | None |
+| [#713](https://github.com/tsukumogami/tsuku/issues/713) | feat(eval): add --version flag for recipe mode | [#712](https://github.com/tsukumogami/tsuku/issues/712) |
+| [#714](https://github.com/tsukumogami/tsuku/issues/714) | feat(scripts): add golden file regeneration and validation scripts | [#713](https://github.com/tsukumogami/tsuku/issues/713) |
+| [#715](https://github.com/tsukumogami/tsuku/issues/715) | feat(scripts): add batch golden file validation and regeneration | [#714](https://github.com/tsukumogami/tsuku/issues/714) |
+
+### Milestone: [Initial Golden File Coverage](https://github.com/tsukumogami/tsuku/milestone/25)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#716](https://github.com/tsukumogami/tsuku/issues/716) | chore(golden): generate pilot golden files for representative recipes | [#714](https://github.com/tsukumogami/tsuku/issues/714) |
+
+### Milestone: [Golden Plan CI Enforcement](https://github.com/tsukumogami/tsuku/milestone/26)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#717](https://github.com/tsukumogami/tsuku/issues/717) | ci(golden): add workflow to validate golden files on recipe changes | [#716](https://github.com/tsukumogami/tsuku/issues/716) |
+| [#718](https://github.com/tsukumogami/tsuku/issues/718) | ci(golden): add workflow to validate golden files on code changes | [#715](https://github.com/tsukumogami/tsuku/issues/715), [#717](https://github.com/tsukumogami/tsuku/issues/717) |
+| [#719](https://github.com/tsukumogami/tsuku/issues/719) | ci(golden): add execution validation for changed golden files | [#717](https://github.com/tsukumogami/tsuku/issues/717) |
+
+### Milestone: [Cross-Platform Generation and Documentation](https://github.com/tsukumogami/tsuku/milestone/27)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#720](https://github.com/tsukumogami/tsuku/issues/720) | ci(golden): add cross-platform generation workflow | [#714](https://github.com/tsukumogami/tsuku/issues/714) |
+| [#721](https://github.com/tsukumogami/tsuku/issues/721) | docs: add golden file workflow to CONTRIBUTING.md | [#717](https://github.com/tsukumogami/tsuku/issues/717), [#718](https://github.com/tsukumogami/tsuku/issues/718), [#720](https://github.com/tsukumogami/tsuku/issues/720) |
+
+### Needs Design (Future Work)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#722](https://github.com/tsukumogami/tsuku/issues/722) | docs(design): create design for structured install_guide | None |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph M24["Milestone 24: Local Validation"]
+        I712["#712: Fix cross-platform eval"]
+        I713["#713: Add --version flag"]
+        I714["#714: Single-recipe scripts"]
+        I715["#715: Batch scripts"]
+    end
+
+    subgraph M25["Milestone 25: Initial Coverage"]
+        I716["#716: Pilot golden files"]
+    end
+
+    subgraph M26["Milestone 26: CI Enforcement"]
+        I717["#717: Recipe change validation"]
+        I718["#718: Code change validation"]
+        I719["#719: Execution validation"]
+    end
+
+    subgraph M27["Milestone 27: Generation and Docs"]
+        I720["#720: Cross-platform workflow"]
+        I721["#721: Documentation"]
+    end
+
+    subgraph Future["Future Work"]
+        I722["#722: Structured install_guide"]
+    end
+
+    I712 --> I713
+    I713 --> I714
+    I714 --> I715
+    I714 --> I716
+    I714 --> I720
+    I716 --> I717
+    I715 --> I718
+    I717 --> I718
+    I717 --> I719
+    I717 --> I721
+    I718 --> I721
+    I720 --> I721
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I712 ready
+    class I713,I714,I715,I716,I717,I718,I719,I720,I721 blocked
+    class I722 needsDesign
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
