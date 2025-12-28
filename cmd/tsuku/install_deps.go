@@ -424,6 +424,9 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set download cache directory
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 
+	// Set key cache directory for PGP signature verification
+	exec.SetKeyCacheDir(cfg.KeyCacheDir)
+
 	// Look up resolved dependency versions for variable expansion.
 	// This is needed because dependencies are installed before plan generation,
 	// so plan.Dependencies will be empty at execution time.

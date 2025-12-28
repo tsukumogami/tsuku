@@ -46,6 +46,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	cfg, _ := config.DefaultConfig()
 	exec.SetToolsDir(cfg.ToolsDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
+	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 
 	// Create downloader and cache for plan generation
 	// Downloader enables Decompose to download files (e.g., GHCR bottles with auth)
