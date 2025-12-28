@@ -439,8 +439,10 @@ git diff testdata/golden/plans/f/fzf/
 # If you changed tsuku code (executor, actions, etc.)
 ./scripts/validate-all-golden.sh
 
-# If validation fails, regenerate only failed recipes and review
-./scripts/validate-all-golden.sh --fix
+# If validation fails, investigate the diff output, then regenerate selectively:
+./scripts/regenerate-golden.sh fzf                         # Full recipe
+./scripts/regenerate-golden.sh ripgrep --os linux          # Linux platforms only
+./scripts/regenerate-golden.sh terraform --version v1.7.0  # Specific version only
 git diff --stat testdata/golden/plans/
 
 # Test execution locally (current platform only)
@@ -584,8 +586,10 @@ go test ./internal/executor/...
 # Validate ALL golden files (shows diffs on failure)
 ./scripts/validate-all-golden.sh
 
-# If validation fails, regenerate only failed recipes
-./scripts/validate-all-golden.sh --fix
+# If validation fails, investigate the diffs, then regenerate selectively:
+./scripts/regenerate-golden.sh <recipe>                    # One recipe at a time
+./scripts/regenerate-golden.sh <recipe> --os linux         # Filter by OS
+./scripts/regenerate-golden.sh <recipe> --arch amd64       # Filter by arch
 
 # Review scope of changes
 git diff --stat testdata/golden/plans/
@@ -771,10 +775,14 @@ jobs:
 
 #### The Regeneration Scripts
 
-**`scripts/regenerate-golden.sh <recipe> [version]`**
+**`scripts/regenerate-golden.sh <recipe> [flags]`**
 - Regenerates golden files for a single recipe
 - Uses existing versions from directory, or latest if none exist
-- Optional version argument to add a new version
+- Supports constraint filters for targeted regeneration:
+  - `--version <ver>` - regenerate only this version (or add new version)
+  - `--os <os>` - regenerate only for this OS (linux, darwin)
+  - `--arch <arch>` - regenerate only for this arch (amd64, arm64)
+- Filters can be combined: `--os linux --arch amd64 --version v0.46.0`
 - Automatically removes files for unsupported platforms
 
 **`scripts/regenerate-all-golden.sh`**
@@ -841,10 +849,41 @@ git diff --stat testdata/golden/plans/
 ```bash
 #!/bin/bash
 # scripts/regenerate-golden.sh - Regenerate golden files for a recipe
+# Usage: ./scripts/regenerate-golden.sh <recipe> [flags]
+# Flags:
+#   --version <ver>  Regenerate only this version (or add new version)
+#   --os <os>        Regenerate only for this OS (linux, darwin)
+#   --arch <arch>    Regenerate only for this arch (amd64, arm64)
+#
+# Examples:
+#   ./scripts/regenerate-golden.sh fzf                           # All versions, all platforms
+#   ./scripts/regenerate-golden.sh fzf --version v0.47.0         # Add/update specific version
+#   ./scripts/regenerate-golden.sh fzf --os linux                # Linux only, all versions
+#   ./scripts/regenerate-golden.sh fzf --os linux --arch amd64   # Single platform, all versions
 
 set -euo pipefail
 
-RECIPE="$1"
+RECIPE=""
+FILTER_VERSION=""
+FILTER_OS=""
+FILTER_ARCH=""
+
+# Parse arguments
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --version) FILTER_VERSION="$2"; shift 2 ;;
+        --os)      FILTER_OS="$2"; shift 2 ;;
+        --arch)    FILTER_ARCH="$2"; shift 2 ;;
+        -*)        echo "Unknown flag: $1"; exit 1 ;;
+        *)         RECIPE="$1"; shift ;;
+    esac
+done
+
+if [[ -z "$RECIPE" ]]; then
+    echo "Usage: $0 <recipe> [--version <ver>] [--os <os>] [--arch <arch>]"
+    exit 1
+fi
+
 FIRST_LETTER="${RECIPE:0:1}"
 RECIPE_PATH="internal/recipe/recipes/${FIRST_LETTER}/${RECIPE}.toml"
 GOLDEN_DIR="testdata/golden/plans/${FIRST_LETTER}/${RECIPE}"
@@ -858,15 +897,45 @@ mkdir -p "$GOLDEN_DIR"
 
 # Get supported platforms from recipe metadata (format: "linux/amd64", "darwin/arm64", etc.)
 # Convert to hyphenated format for filenames
-PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -r '.supported_platforms[]' | tr '/' '-')
+ALL_PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -r '.supported_platforms[]' | tr '/' '-')
 
-if [[ -z "$PLATFORMS" ]]; then
+if [[ -z "$ALL_PLATFORMS" ]]; then
     echo "No supported platforms found for $RECIPE"
     exit 0
 fi
 
-# Get all versions from existing golden files, or use latest if none exist
-if [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
+# Apply platform filters
+PLATFORMS=""
+for platform in $ALL_PLATFORMS; do
+    os="${platform%-*}"
+    arch="${platform#*-}"
+
+    # Skip if OS filter doesn't match
+    if [[ -n "$FILTER_OS" && "$os" != "$FILTER_OS" ]]; then
+        continue
+    fi
+
+    # Skip if arch filter doesn't match
+    if [[ -n "$FILTER_ARCH" && "$arch" != "$FILTER_ARCH" ]]; then
+        continue
+    fi
+
+    PLATFORMS="$PLATFORMS $platform"
+done
+
+PLATFORMS=$(echo "$PLATFORMS" | xargs)  # Trim whitespace
+
+if [[ -z "$PLATFORMS" ]]; then
+    echo "No platforms match filters (--os=$FILTER_OS, --arch=$FILTER_ARCH)"
+    exit 1
+fi
+
+# Determine which versions to regenerate
+if [[ -n "$FILTER_VERSION" ]]; then
+    # Use the specified version only
+    VERSIONS="$FILTER_VERSION"
+elif [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
+    # Use existing versions from directory
     VERSIONS=$(ls "$GOLDEN_DIR"/*.json | sed 's/.*\/v\([^-]*\)-.*/\1/' | sort -u)
 else
     # Get latest version using tsuku versions command (first line is most recent)
@@ -881,7 +950,7 @@ fi
 for VERSION in $VERSIONS; do
     echo "Regenerating $RECIPE@$VERSION..."
 
-    # Generate only for supported platforms
+    # Generate only for filtered platforms
     for platform in $PLATFORMS; do
         os="${platform%-*}"
         arch="${platform#*-}"
@@ -898,14 +967,16 @@ for VERSION in $VERSIONS; do
     done
 done
 
-# Clean up golden files for platforms no longer supported
-find "$GOLDEN_DIR" -name "*.json" | while read -r file; do
-    platform=$(basename "$file" | sed 's/v[^-]*-//' | sed 's/\.json//')
-    if ! echo "$PLATFORMS" | grep -qx "$platform"; then
-        echo "  Removing unsupported: $file"
-        rm -f "$file"
-    fi
-done
+# Clean up golden files for platforms no longer supported (only when no filters applied)
+if [[ -z "$FILTER_OS" && -z "$FILTER_ARCH" && -z "$FILTER_VERSION" ]]; then
+    find "$GOLDEN_DIR" -name "*.json" | while read -r file; do
+        platform=$(basename "$file" | sed 's/v[^-]*-//' | sed 's/\.json//')
+        if ! echo "$ALL_PLATFORMS" | grep -qx "$platform"; then
+            echo "  Removing unsupported: $file"
+            rm -f "$file"
+        fi
+    done
+fi
 ```
 
 ### Comparison Strategy
@@ -987,17 +1058,11 @@ exit 0
 ```bash
 #!/bin/bash
 # scripts/validate-all-golden.sh - Validate all golden files
-# Usage: ./scripts/validate-all-golden.sh [--fix]
-# Options:
-#   --fix    Regenerate golden files for failed recipes
+# Usage: ./scripts/validate-all-golden.sh
 # Runs validate-golden.sh for each recipe with golden files
+# Reports which recipes failed so you can investigate and selectively regenerate
 
 set -euo pipefail
-
-FIX_MODE=false
-if [[ "${1:-}" == "--fix" ]]; then
-    FIX_MODE=true
-fi
 
 GOLDEN_BASE="testdata/golden/plans"
 FAILED=()
@@ -1018,20 +1083,14 @@ done
 if [[ ${#FAILED[@]} -gt 0 ]]; then
     echo ""
     echo "Failed recipes: ${FAILED[*]}"
-
-    if [[ "$FIX_MODE" == true ]]; then
-        echo ""
-        echo "Regenerating failed recipes..."
-        for recipe in "${FAILED[@]}"; do
-            echo "Regenerating $recipe..."
-            ./scripts/regenerate-golden.sh "$recipe"
-        done
-        echo ""
-        echo "Regeneration complete. Review changes with: git diff testdata/golden/plans/"
-    else
-        echo "Run with --fix to regenerate failed recipes automatically."
-        exit 1
-    fi
+    echo ""
+    echo "To regenerate a specific recipe:"
+    echo "  ./scripts/regenerate-golden.sh <recipe>"
+    echo ""
+    echo "To regenerate with constraints:"
+    echo "  ./scripts/regenerate-golden.sh <recipe> --os linux --arch amd64"
+    echo "  ./scripts/regenerate-golden.sh <recipe> --version v1.2.3"
+    exit 1
 fi
 
 echo "All golden files are up to date."
