@@ -54,7 +54,7 @@ The existing transformations are useful for normalizing version output (e.g., ex
 
 2. **Transforms are tool-specific**: SQLite's encoding is unique to SQLite. We're not designing a general-purpose transform DSL; we're adding named transforms for known tools.
 
-3. **Year components are out of scope**: The SQLite download year (`2025`) cannot be derived from the version string alone. This requires external metadata (release date, website parsing) and is a separate problem. For SQLite specifically, using Homebrew bottles avoids this issue entirely.
+3. **Year components are out of scope**: The SQLite download year (`2025`) cannot be derived from the version string alone. This requires external metadata (release date, website parsing) and is a separate problem that warrants its own design.
 
 4. **Transforms must be deterministic**: A transform given the same input version always produces the same output. This is required for reproducible plans.
 
@@ -320,8 +320,6 @@ formula = "sqlite"
 - Some users may want to build from source
 - Doesn't help other tools with similar issues
 
-**Note:** This option is undervalued in the original analysis. For SQLite specifically, Homebrew bottles are pre-compiled, correctly versioned (Homebrew handles the encoding), and well-tested. The design should justify why source builds are needed when Homebrew works.
-
 ### Evaluation Matrix
 
 | Criterion | 1A (Named Vars) | 1B (Pipe Syntax) | 1C (Transform Block) |
@@ -346,35 +344,33 @@ formula = "sqlite"
 ### Uncertainties
 
 - **Other tools with similar issues**: We've only deeply analyzed SQLite. Other tools may have different transformation needs that influence the design. Candidates to investigate: FFmpeg (date-based snapshot versions), OpenSSL, Python (various encoding schemes), CMake.
-- **Year component necessity**: It's unclear how many recipes actually need year/date components in URLs. If SQLite is unique, Option 3C (Homebrew) may be sufficient.
-- **User demand for source builds**: If most users prefer pre-built binaries, the complexity of version transforms may not be justified.
+- **Year component necessity**: It's unclear how many recipes actually need year/date components in URLs. This may warrant a separate design for version provider metadata.
+- **Scope of source builds**: Understanding which tools are commonly built from source helps prioritize which transforms to implement.
 - **Frequency of new transforms**: If rare, hardcoded Go is fine. If frequent, consider a declarative registry.
 
 ### Validation Required
 
-Before proceeding with implementation, survey 5-10 additional tools to confirm this is a general problem worth solving. If SQLite is a unique edge case, Option 3C (Homebrew fallback) is the pragmatic choice.
+Before proceeding with implementation, survey 5-10 additional tools to confirm the scope of version transformation needs. The `sqlite-source.toml` recipe serves as a reference implementation for tsuku's build-from-source capabilities, so solving this for SQLite validates the approach for other tools with similar challenges.
 
 ## Decision Outcome
 
-**Chosen: 1B (Pipe Syntax) + 2A (Hardcoded Go Transforms) + 3C (Homebrew Fallback as Primary)**
+**Chosen: 1B (Pipe Syntax) + 2A (Hardcoded Go Transforms)**
 
 ### Summary
 
-For tools with complex version encoding, prefer Homebrew bottles when available. When source builds are necessary, use pipe syntax (`{version|sqlite}`) with transforms implemented as a closed set of Go functions. Year/date components that cannot be derived from version strings are deferred to a separate design.
+Use pipe syntax (`{version|sqlite}`) with transforms implemented as a closed set of Go functions. This enables tools like `sqlite-source.toml` to build from source with automatic version resolution. Year/date components that cannot be derived from version strings are deferred to a separate design.
 
 ### Rationale
 
 This combination was chosen because:
 
-1. **Homebrew-first (3C)** addresses the immediate SQLite use case with zero implementation effort. The current SQLite recipe already uses Homebrew bottles and works correctly.
-
-2. **Pipe syntax (1B)** provides the best balance of clarity and extensibility when transforms are needed:
+1. **Pipe syntax (1B)** provides the best balance of clarity and extensibility:
    - Composable: `{version|strip_v|sqlite}` chains transforms naturally
    - Self-documenting: readers see exactly what transform is applied
    - No namespace pollution: new transforms don't add global variables
    - Consistent with Unix pipe metaphor
 
-3. **Hardcoded Go (2A)** ensures security and maintainability:
+2. **Hardcoded Go (2A)** ensures security and maintainability:
    - Closed set of transforms prevents code injection attacks
    - Type-safe with comprehensive test coverage
    - Each transform is auditable and deterministic
@@ -393,7 +389,7 @@ This combination was chosen because:
 
 By choosing this approach, we accept:
 
-1. **Year components remain unsolved**: The SQLite year (`2025`) cannot be derived from the version. Recipes needing year components must use Homebrew or hardcode the year (with manual updates).
+1. **Year components remain unsolved**: The SQLite year (`2025`) cannot be derived from the version. A separate design is needed for version provider metadata or year derivation.
 
 2. **New transforms require code changes**: Adding a new transform means modifying Go code and releasing a new tsuku version.
 
@@ -401,7 +397,7 @@ By choosing this approach, we accept:
 
 These are acceptable because:
 
-- Year components are rare and Homebrew handles most cases
+- Year components are a separate problem that can be addressed in a follow-up design
 - New transforms are expected to be infrequent (SQLite-like encodings are unusual)
 - User-defined transforms would be a security risk without sandboxing
 
@@ -561,8 +557,6 @@ action = "download"
 url = "https://example.com/{version|strip_v|some_transform}.tar.gz"
 ```
 
-However, for SQLite specifically, the current Homebrew-based recipe is preferred since it avoids the year component problem entirely.
-
 ## Consequences
 
 ### Positive
@@ -582,7 +576,7 @@ However, for SQLite specifically, the current Homebrew-based recipe is preferred
 ### Mitigations
 
 - **Backward compatibility**: Keep `ExpandVars()` unchanged; add new `ExpandVarsWithTransforms()` for actions that need it
-- **Year components**: Document that Homebrew should be used for tools with year-based URLs; consider future version provider metadata design
+- **Year components**: Address in a follow-up design for version provider metadata; for now, year components may need to be hardcoded with manual updates
 - **Limited flexibility**: Document the process for requesting new transforms; most tools don't need custom encoding
 
 ## Security Considerations
