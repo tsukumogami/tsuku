@@ -90,8 +90,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I712 ready
-    class I713,I714,I715,I716,I717,I718,I719,I720,I721 blocked
+    class I712 done
+    class I713 ready
+    class I714,I715,I716,I717,I718,I719,I720,I721 blocked
     class I722 needsDesign
 ```
 
