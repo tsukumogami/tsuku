@@ -146,14 +146,14 @@ func TestComputeRecipeHash(t *testing.T) {
 func TestShouldExecuteForPlatform(t *testing.T) {
 	tests := []struct {
 		name       string
-		when       map[string]string
+		when       *recipe.WhenClause
 		targetOS   string
 		targetArch string
 		want       bool
 	}{
 		{
 			name:       "empty when - always execute",
-			when:       map[string]string{},
+			when:       &recipe.WhenClause{},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       true,
@@ -167,49 +167,49 @@ func TestShouldExecuteForPlatform(t *testing.T) {
 		},
 		{
 			name:       "matching OS",
-			when:       map[string]string{"os": "linux"},
+			when:       &recipe.WhenClause{OS: []string{"linux"}},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       true,
 		},
 		{
 			name:       "non-matching OS",
-			when:       map[string]string{"os": "darwin"},
+			when:       &recipe.WhenClause{OS: []string{"darwin"}},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       false,
 		},
 		{
-			name:       "matching arch",
-			when:       map[string]string{"arch": "amd64"},
+			name:       "matching platform tuple",
+			when:       &recipe.WhenClause{Platform: []string{"linux/amd64"}},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       true,
 		},
 		{
-			name:       "non-matching arch",
-			when:       map[string]string{"arch": "arm64"},
+			name:       "non-matching platform tuple",
+			when:       &recipe.WhenClause{Platform: []string{"linux/arm64"}},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       false,
 		},
 		{
-			name:       "matching OS and arch",
-			when:       map[string]string{"os": "linux", "arch": "amd64"},
+			name:       "matching OS with any arch",
+			when:       &recipe.WhenClause{OS: []string{"linux"}},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       true,
 		},
 		{
-			name:       "matching OS but non-matching arch",
-			when:       map[string]string{"os": "linux", "arch": "arm64"},
+			name:       "matching OS with different arch",
+			when:       &recipe.WhenClause{OS: []string{"linux"}},
 			targetOS:   "linux",
-			targetArch: "amd64",
-			want:       false,
+			targetArch: "arm64",
+			want:       true,
 		},
 		{
 			name:       "package_manager ignored for plan",
-			when:       map[string]string{"package_manager": "apt"},
+			when:       &recipe.WhenClause{PackageManager: "apt"},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       true, // package_manager is a runtime check, not plan-time
@@ -701,12 +701,12 @@ func TestGeneratePlan_WhenFiltering(t *testing.T) {
 			{
 				Action: "chmod",
 				Params: map[string]interface{}{"path": "tool", "mode": "0755"},
-				When:   map[string]string{"os": "linux"},
+				When:   &recipe.WhenClause{OS: []string{"linux"}},
 			},
 			{
 				Action: "chmod",
 				Params: map[string]interface{}{"path": "tool", "mode": "0755"},
-				When:   map[string]string{"os": "darwin"},
+				When:   &recipe.WhenClause{OS: []string{"darwin"}},
 			},
 			{
 				Action: "install_binaries",
@@ -1053,28 +1053,28 @@ func TestExpandValue_AllTypes(t *testing.T) {
 func TestShouldExecuteForPlatform_CombinedConditions(t *testing.T) {
 	tests := []struct {
 		name       string
-		when       map[string]string
+		when       *recipe.WhenClause
 		targetOS   string
 		targetArch string
 		want       bool
 	}{
 		{
 			name:       "package_manager with matching OS",
-			when:       map[string]string{"os": "linux", "package_manager": "apt"},
+			when:       &recipe.WhenClause{OS: []string{"linux"}, PackageManager: "apt"},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       true, // package_manager is ignored for plan
 		},
 		{
 			name:       "package_manager with non-matching OS",
-			when:       map[string]string{"os": "darwin", "package_manager": "brew"},
+			when:       &recipe.WhenClause{OS: []string{"darwin"}, PackageManager: "brew"},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       false,
 		},
 		{
-			name:       "all three conditions matching",
-			when:       map[string]string{"os": "linux", "arch": "amd64", "package_manager": "apt"},
+			name:       "platform tuple with package_manager",
+			when:       &recipe.WhenClause{Platform: []string{"linux/amd64"}, PackageManager: "apt"},
 			targetOS:   "linux",
 			targetArch: "amd64",
 			want:       true,

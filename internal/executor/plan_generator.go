@@ -208,29 +208,15 @@ func computeRecipeHash(r interface{ ToTOML() ([]byte, error) }) (string, error) 
 }
 
 // shouldExecuteForPlatform checks if a step should execute for the given platform.
-func shouldExecuteForPlatform(when map[string]string, targetOS, targetArch string) bool {
-	if len(when) == 0 {
+// Package manager conditions are runtime checks and are ignored during plan generation.
+func shouldExecuteForPlatform(when *recipe.WhenClause, targetOS, targetArch string) bool {
+	if when == nil || when.IsEmpty() {
 		return true
 	}
 
-	// Check OS condition
-	if osCondition, ok := when["os"]; ok {
-		if osCondition != targetOS {
-			return false
-		}
-	}
-
-	// Check arch condition
-	if archCondition, ok := when["arch"]; ok {
-		if archCondition != targetArch {
-			return false
-		}
-	}
-
-	// Check package_manager condition (always true for plan generation)
-	// Package manager conditions are runtime checks, not plan-time checks
-
-	return true
+	// Use WhenClause.Matches() for platform/OS filtering
+	// Package manager check is ignored at plan-time (runtime concern only)
+	return when.Matches(targetOS, targetArch)
 }
 
 // resolveStep resolves a single recipe step into one or more ResolvedSteps.

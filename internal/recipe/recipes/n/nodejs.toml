@@ -27,8 +27,7 @@ arch_mapping = { amd64 = "x64", arm64 = "arm64" }
 action = "link_dependencies"
 library = "gcc-libs"
 dependencies = ["gcc-libs"]
-[steps.when]
-os = "linux"
+when = { os = ["linux"] }
 
 # Create wrapper script to set LD_LIBRARY_PATH on Linux
 [[steps]]
@@ -46,8 +45,7 @@ WRAPPER
 chmod +x bin/node
 '''
 description = "Creating wrapper for node to set LD_LIBRARY_PATH"
-[steps.when]
-os = "linux"
+when = { os = ["linux"] }
 
 [verify]
 command = "{install_dir}/bin/node --version"

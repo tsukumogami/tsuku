@@ -376,6 +376,39 @@ func (r *Recipe) ValidateStepsAgainstPlatforms() []error {
 				}
 			}
 		}
+
+		// Validate when clause platform tuples and OS arrays
+		if step.When != nil {
+			// Validate platform tuples exist in supported platforms
+			for _, platform := range step.When.Platform {
+				// Check tuple format
+				if !strings.Contains(platform, "/") {
+					errors = append(errors, &StepValidationError{
+						StepIndex: i,
+						Message:   fmt.Sprintf("when.platform contains invalid tuple '%s' (must be 'os/arch' format)", platform),
+					})
+					continue
+				}
+
+				// Check against supported platforms
+				if !containsString(platforms, platform) {
+					errors = append(errors, &StepValidationError{
+						StepIndex: i,
+						Message:   fmt.Sprintf("when.platform contains '%s' which is not in the recipe's supported platforms", platform),
+					})
+				}
+			}
+
+			// Validate OS values exist in supported OS set
+			for _, os := range step.When.OS {
+				if !supportedOS[os] {
+					errors = append(errors, &StepValidationError{
+						StepIndex: i,
+						Message:   fmt.Sprintf("when.os contains '%s' which is not in the recipe's supported platforms", os),
+					})
+				}
+			}
+		}
 	}
 
 	return errors

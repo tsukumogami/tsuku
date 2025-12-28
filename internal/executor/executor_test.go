@@ -283,12 +283,12 @@ func TestShouldExecute(t *testing.T) {
 
 	tests := []struct {
 		name     string
-		when     map[string]string
+		when     *recipe.WhenClause
 		expected bool
 	}{
 		{
 			name:     "empty when - always execute",
-			when:     map[string]string{},
+			when:     &recipe.WhenClause{},
 			expected: true,
 		},
 		{
@@ -298,27 +298,27 @@ func TestShouldExecute(t *testing.T) {
 		},
 		{
 			name:     "matching OS",
-			when:     map[string]string{"os": "linux"},
+			when:     &recipe.WhenClause{OS: []string{"linux"}},
 			expected: true, // assuming test runs on linux
 		},
 		{
 			name:     "non-matching OS",
-			when:     map[string]string{"os": "windows"},
+			when:     &recipe.WhenClause{OS: []string{"windows"}},
 			expected: false,
 		},
 		{
 			name:     "matching arch",
-			when:     map[string]string{"arch": "amd64"},
+			when:     &recipe.WhenClause{Platform: []string{runtime.GOOS + "/amd64"}},
 			expected: true, // assuming test runs on amd64
 		},
 		{
 			name:     "non-matching arch",
-			when:     map[string]string{"arch": "arm"},
+			when:     &recipe.WhenClause{Platform: []string{runtime.GOOS + "/arm"}},
 			expected: false,
 		},
 		{
 			name:     "package_manager - always true (stub)",
-			when:     map[string]string{"package_manager": "apt"},
+			when:     &recipe.WhenClause{PackageManager: "apt"},
 			expected: true,
 		},
 	}
@@ -772,7 +772,7 @@ func TestDryRun_SkipsConditionalSteps(t *testing.T) {
 			},
 			{
 				Action: "download",
-				When:   map[string]string{"os": "windows"}, // Should be skipped on Linux
+				When:   &recipe.WhenClause{OS: []string{"windows"}}, // Should be skipped on Linux
 				Params: map[string]interface{}{
 					"url": "https://example.com/tool-windows.exe",
 				},
@@ -932,14 +932,14 @@ func TestDryRun_AllConditionalStepsSkipped(t *testing.T) {
 		Steps: []recipe.Step{
 			{
 				Action: "download",
-				When:   map[string]string{"os": "windows"}, // Skipped on Linux
+				When:   &recipe.WhenClause{OS: []string{"windows"}}, // Skipped on Linux
 				Params: map[string]interface{}{
 					"url": "https://example.com/tool-windows.exe",
 				},
 			},
 			{
 				Action: "download",
-				When:   map[string]string{"arch": "arm"}, // Skipped on amd64
+				When:   &recipe.WhenClause{Platform: []string{runtime.GOOS + "/arm"}}, // Skipped on amd64
 				Params: map[string]interface{}{
 					"url": "https://example.com/tool-arm.tar.gz",
 				},

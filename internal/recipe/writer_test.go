@@ -234,7 +234,7 @@ func TestWriteRecipe_WithComplexStep(t *testing.T) {
 				Action:      "github_archive",
 				Description: "Download from GitHub",
 				Note:        "Supports multiple platforms",
-				When:        map[string]string{"os": "linux", "arch": "amd64"},
+				When:        &WhenClause{Platform: []string{"linux/amd64"}},
 				Params: map[string]interface{}{
 					"repo":     "owner/repo",
 					"binaries": []string{"bin1", "bin2"},
