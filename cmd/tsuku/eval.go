@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -157,9 +158,26 @@ func runEval(cmd *cobra.Command, args []string) {
 		recipeSource = "registry"
 	}
 
-	// Check platform support before installation
-	if !r.SupportsPlatformRuntime() {
-		printError(r.NewUnsupportedPlatformError())
+	// Resolve target platform (use flags or fall back to runtime)
+	targetOS := evalOS
+	if targetOS == "" {
+		targetOS = runtime.GOOS
+	}
+	targetArch := evalArch
+	if targetArch == "" {
+		targetArch = runtime.GOARCH
+	}
+
+	// Check platform support for target platform
+	if !r.SupportsPlatform(targetOS, targetArch) {
+		printError(&recipe.UnsupportedPlatformError{
+			RecipeName:           r.Metadata.Name,
+			CurrentOS:            targetOS,
+			CurrentArch:          targetArch,
+			SupportedOS:          r.Metadata.SupportedOS,
+			SupportedArch:        r.Metadata.SupportedArch,
+			UnsupportedPlatforms: r.Metadata.UnsupportedPlatforms,
+		})
 		exitWithCode(ExitGeneral)
 	}
 
