@@ -173,11 +173,64 @@ type VersionSection struct {
 	Formula    string `toml:"formula"`     // Homebrew formula name for version resolution (e.g., "libyaml")
 }
 
+// WhenClause represents platform and runtime conditions for conditional step execution.
+// Supports platform tuples ("os/arch"), OS arrays, and package manager filtering.
+//
+// Matching semantics:
+//   - Empty clause (all fields zero) matches all platforms
+//   - Platform array: exact platform tuple match ("darwin/arm64")
+//   - OS array: matches any architecture on the specified OS
+//   - Platform and OS are mutually exclusive (validation enforces this)
+//   - PackageManager is evaluated at runtime (if present, others must pass AND pm must match)
+type WhenClause struct {
+	Platform       []string `toml:"platform,omitempty"`        // Platform tuples: ["darwin/arm64", "linux/amd64"]
+	OS             []string `toml:"os,omitempty"`              // OS-only: ["darwin", "linux"] (any arch)
+	PackageManager string   `toml:"package_manager,omitempty"` // Runtime check (brew, apt, etc.)
+}
+
+// IsEmpty returns true if the when clause has no conditions (matches all platforms).
+func (w *WhenClause) IsEmpty() bool {
+	return w == nil ||
+		(len(w.Platform) == 0 && len(w.OS) == 0 && w.PackageManager == "")
+}
+
+// Matches returns true if the when clause conditions are satisfied for the given platform.
+// Empty clause matches all platforms. Checks platform array first, then falls back to OS array.
+func (w *WhenClause) Matches(os, arch string) bool {
+	if w.IsEmpty() {
+		return true // No conditions = match all platforms
+	}
+
+	// Check platform tuples first (exact match)
+	if len(w.Platform) > 0 {
+		tuple := fmt.Sprintf("%s/%s", os, arch)
+		for _, p := range w.Platform {
+			if p == tuple {
+				return true
+			}
+		}
+		return false // Had platform conditions but didn't match
+	}
+
+	// Fall back to OS array (match any arch)
+	if len(w.OS) > 0 {
+		for _, o := range w.OS {
+			if o == os {
+				return true
+			}
+		}
+		return false // Had OS conditions but didn't match
+	}
+
+	// No platform or OS conditions, only package_manager (handled at runtime)
+	return true
+}
+
 // Step represents a single action step
 // We use interface{} for the full step data and extract fields manually
 type Step struct {
 	Action      string
-	When        map[string]string
+	When        *WhenClause
 	Note        string
 	Description string
 	Params      map[string]interface{}
@@ -196,12 +249,50 @@ func (s *Step) UnmarshalTOML(data interface{}) error {
 		s.Action = action
 	}
 
-	if when, ok := stepMap["when"].(map[string]interface{}); ok {
-		s.When = make(map[string]string)
-		for k, v := range when {
-			if strVal, ok := v.(string); ok {
-				s.When[k] = strVal
+	// Parse when clause
+	if whenData, ok := stepMap["when"].(map[string]interface{}); ok {
+		s.When = &WhenClause{}
+
+		// Parse platform array
+		if platformData, ok := whenData["platform"]; ok {
+			switch v := platformData.(type) {
+			case []interface{}:
+				s.When.Platform = make([]string, 0, len(v))
+				for _, item := range v {
+					if str, ok := item.(string); ok {
+						s.When.Platform = append(s.When.Platform, str)
+					}
+				}
+			case string:
+				// Single string value, convert to array
+				s.When.Platform = []string{v}
 			}
+		}
+
+		// Parse os array
+		if osData, ok := whenData["os"]; ok {
+			switch v := osData.(type) {
+			case []interface{}:
+				s.When.OS = make([]string, 0, len(v))
+				for _, item := range v {
+					if str, ok := item.(string); ok {
+						s.When.OS = append(s.When.OS, str)
+					}
+				}
+			case string:
+				// Single string value, convert to array
+				s.When.OS = []string{v}
+			}
+		}
+
+		// Parse package_manager
+		if pm, ok := whenData["package_manager"].(string); ok {
+			s.When.PackageManager = pm
+		}
+
+		// Validate mutual exclusivity
+		if len(s.When.Platform) > 0 && len(s.When.OS) > 0 {
+			return fmt.Errorf("when clause cannot have both 'platform' and 'os' fields")
 		}
 	}
 
@@ -239,8 +330,18 @@ func (s Step) ToMap() map[string]interface{} {
 	if s.Description != "" {
 		result["description"] = s.Description
 	}
-	if len(s.When) > 0 {
-		result["when"] = s.When
+	if s.When != nil && !s.When.IsEmpty() {
+		whenMap := make(map[string]interface{})
+		if len(s.When.Platform) > 0 {
+			whenMap["platform"] = s.When.Platform
+		}
+		if len(s.When.OS) > 0 {
+			whenMap["os"] = s.When.OS
+		}
+		if s.When.PackageManager != "" {
+			whenMap["package_manager"] = s.When.PackageManager
+		}
+		result["when"] = whenMap
 	}
 
 	// Add all params
