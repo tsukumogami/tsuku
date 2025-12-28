@@ -76,6 +76,17 @@ Examples:
 			}
 		}
 
+		// Check for hardcoded versions in action parameters
+		if result.Recipe != nil {
+			hardcoded := recipe.DetectHardcodedVersions(result.Recipe)
+			for _, h := range hardcoded {
+				result.Warnings = append(result.Warnings, recipe.ValidationWarning{
+					Field:   fmt.Sprintf("steps[%d].%s", h.Step-1, h.Field),
+					Message: h.String(),
+				})
+			}
+		}
+
 		// In strict mode, warnings are treated as errors
 		if strictMode && len(result.Warnings) > 0 {
 			result.Valid = false
