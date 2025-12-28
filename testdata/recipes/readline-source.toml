@@ -1,6 +1,21 @@
 # Ground truth recipe for readline (source build with patches)
 # Used by LLM integration tests (llm_homebrew_readline_multi_patches)
 # Tests: download_file + extract + configure_make with multiple p0 patches
+#
+# NOTE: This recipe uses a pinned version because patches are version-specific.
+# Dynamic version resolution requires #709 (dynamic patch discovery) to be implemented.
+#
+# When #709 is resolved, uncomment the dynamic configuration below:
+# [version]
+# source = "homebrew"
+# formula = "readline"
+#
+# [[steps]]
+# action = "download"
+# url = "https://ftpmirror.gnu.org/gnu/readline/readline-{version}.tar.gz"
+# signature_url = "https://ftpmirror.gnu.org/gnu/readline/readline-{version}.tar.gz.sig"
+# signature_key_url = "https://tiswww.case.edu/php/chet/gpgkey.asc"
+# signature_key_fingerprint = "7C0135FB088AAF6C66C650B9BB5869F064EA74AB"
 
 [metadata]
 name = "readline-source"
@@ -10,8 +25,7 @@ type = "library"
 dependencies = ["make"]
 
 [version]
-source = "homebrew"
-formula = "readline"
+pin = "8.3"
 
 [[steps]]
 action = "download_file"
