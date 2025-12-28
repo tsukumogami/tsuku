@@ -33,6 +33,7 @@ var evalOS string
 var evalArch string
 var evalYes bool
 var evalRecipePath string
+var evalVersion string
 
 var evalCmd = &cobra.Command{
 	Use:   "eval <tool>[@version]",
@@ -56,12 +57,17 @@ Use --recipe to evaluate a local recipe file:
   tsuku eval --recipe ./my-recipe.toml
   tsuku eval --recipe /path/to/recipe.toml --os darwin --arch arm64
 
+Use --version with --recipe to evaluate at a specific version:
+  tsuku eval --recipe ./my-recipe.toml --version v1.2.0
+  tsuku eval --recipe /path/to/recipe.toml --version v1.2.0 --os darwin --arch arm64
+
 Examples:
   tsuku eval kubectl
   tsuku eval kubectl@v1.29.0
   tsuku eval ripgrep --os linux --arch arm64
   tsuku eval netlify-cli --yes
-  tsuku eval --recipe ./my-recipe.toml --os darwin --arch arm64`,
+  tsuku eval --recipe ./my-recipe.toml --os darwin --arch arm64
+  tsuku eval --recipe ./my-recipe.toml --version v1.2.0`,
 	Args: cobra.MaximumNArgs(1),
 	Run:  runEval,
 }
@@ -71,6 +77,7 @@ func init() {
 	evalCmd.Flags().StringVar(&evalArch, "arch", "", "Target architecture (amd64, arm64)")
 	evalCmd.Flags().BoolVar(&evalYes, "yes", false, "Auto-accept installation of eval-time dependencies")
 	evalCmd.Flags().StringVar(&evalRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
+	evalCmd.Flags().StringVar(&evalVersion, "version", "", "Version to use (only with --recipe)")
 }
 
 // ValidateOS validates an OS value against the whitelist.
@@ -117,6 +124,10 @@ func runEval(cmd *cobra.Command, args []string) {
 		printError(fmt.Errorf("requires either a tool name or --recipe flag"))
 		exitWithCode(ExitUsage)
 	}
+	if evalVersion != "" && evalRecipePath == "" {
+		printError(fmt.Errorf("--version flag requires --recipe flag"))
+		exitWithCode(ExitUsage)
+	}
 
 	var r *recipe.Recipe
 	var recipeSource string
@@ -131,7 +142,7 @@ func runEval(cmd *cobra.Command, args []string) {
 			exitWithCode(ExitGeneral)
 		}
 		recipeSource = evalRecipePath // Use file path as source identifier
-		// Note: version specification (@version) not supported with file paths
+		reqVersion = evalVersion      // Use version from --version flag
 	} else {
 		// Registry mode: existing behavior
 		toolName := args[0]
