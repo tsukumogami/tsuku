@@ -342,6 +342,302 @@ jobs:
             done
 ```
 
+### Execution Validation: Keeping Plans Fresh
+
+This section describes how the golden plan system ensures plans remain valid, executable, and synchronized with both tsuku code and recipe definitions.
+
+#### The Three Synchronization Challenges
+
+Golden plans must stay synchronized with three moving targets:
+
+| Target | What Changes | Detection | Resolution |
+|--------|--------------|-----------|------------|
+| **Recipes** | Download URLs, extraction steps, platform support | `git diff` on `recipes/**/*.toml` | Regenerate affected recipe's golden files |
+| **Tsuku code** | Plan generation logic, action semantics, format version | `git diff` on `internal/**`, `cmd/**` | Regenerate ALL golden files |
+| **Upstream artifacts** | New versions released, checksums change | Manual or automated version bump | Generate new version's golden files |
+
+#### Validation Lifecycle
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           PR SUBMITTED                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │   Detect Changed Files         │
+                    │   - recipes/**/*.toml          │
+                    │   - internal/**, cmd/**        │
+                    │   - testdata/golden/**         │
+                    └───────────────────────────────┘
+                                    │
+              ┌─────────────────────┼─────────────────────┐
+              ▼                     ▼                     ▼
+    ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+    │ Recipe Changed  │   │ Code Changed    │   │ Golden Changed  │
+    └─────────────────┘   └─────────────────┘   └─────────────────┘
+              │                     │                     │
+              ▼                     ▼                     ▼
+    ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+    │ Regenerate      │   │ Regenerate      │   │ Execution       │
+    │ affected recipe │   │ ALL recipes     │   │ validation      │
+    └─────────────────┘   └─────────────────┘   └─────────────────┘
+              │                     │                     │
+              ▼                     ▼                     ▼
+    ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
+    │ git diff        │   │ git diff        │   │ tsuku install   │
+    │ --exit-code     │   │ --exit-code     │   │ --plan --sandbox│
+    └─────────────────┘   └─────────────────┘   └─────────────────┘
+              │                     │                     │
+              └─────────────────────┼─────────────────────┘
+                                    ▼
+                         ┌─────────────────────┐
+                         │  All checks pass?   │
+                         └─────────────────────┘
+                            │              │
+                          Yes              No
+                            ▼              ▼
+                    ┌─────────────┐  ┌─────────────────┐
+                    │ PR mergeable│  │ CI fails with   │
+                    └─────────────┘  │ actionable error│
+                                     └─────────────────┘
+```
+
+#### Trigger 1: Recipe Changes
+
+When a recipe file changes, CI regenerates golden files for that recipe only:
+
+**What happens:**
+1. CI detects `recipes/f/fzf.toml` was modified
+2. Runs `./scripts/regenerate-golden.sh fzf`
+3. Script queries `tsuku info --recipe ... --metadata-only --json` for supported platforms
+4. Generates plan for each platform: `tsuku eval --recipe ... --os linux --arch amd64`
+5. Compares generated files against committed golden files
+6. Fails if any difference exists
+
+**Developer workflow:**
+```bash
+# Edit recipe
+vim recipes/f/fzf.toml
+
+# Regenerate golden files locally
+./scripts/regenerate-golden.sh fzf
+
+# Review changes
+git diff testdata/golden/plans/f/fzf/
+
+# Commit both recipe and golden file changes
+git add recipes/f/fzf.toml testdata/golden/plans/f/fzf/
+git commit -m "feat(recipe): update fzf download URL"
+```
+
+**CI error example:**
+```
+::error::Golden files are out of date for recipe 'fzf'.
+Run './scripts/regenerate-golden.sh fzf' and commit the changes.
+
+--- a/testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
++++ b/testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
+@@ -12,7 +12,7 @@
+   "steps": [
+     {
+       "action": "download",
+-      "url": "https://github.com/junegunn/fzf/archive/v0.46.0.tar.gz",
++      "url": "https://github.com/junegunn/fzf/releases/download/v0.46.0/fzf-0.46.0-linux_amd64.tar.gz",
+```
+
+#### Trigger 2: Tsuku Code Changes
+
+When plan generation logic changes, CI regenerates ALL golden files:
+
+**What happens:**
+1. CI detects changes in `internal/executor/**`, `internal/actions/**`, etc.
+2. Runs `./scripts/regenerate-all-golden.sh` (iterates over all recipes)
+3. Compares all generated files against committed golden files
+4. Fails if any difference exists
+
+**This catches:**
+- Bug fixes that change plan output
+- New fields added to plan JSON
+- Changes to action ordering or dependencies
+- Format version bumps
+
+**Developer workflow:**
+```bash
+# Edit plan generation code
+vim internal/executor/plan.go
+
+# Run tests to validate behavior
+go test ./internal/executor/...
+
+# Regenerate ALL golden files
+./scripts/regenerate-all-golden.sh
+
+# Review scope of changes
+git diff --stat testdata/golden/plans/
+
+# If changes are intentional, commit everything
+git add internal/executor/plan.go testdata/golden/plans/
+git commit -m "fix(executor): correct step ordering for dependencies"
+```
+
+**CI error example:**
+```
+::error::Code changes affect golden plan output for 47 recipes.
+Please regenerate golden files and commit the changes.
+
+testdata/golden/plans/a/amplify/v6.3.1-linux-amd64.json    | 2 +-
+testdata/golden/plans/a/amplify/v6.3.1-linux-arm64.json    | 2 +-
+testdata/golden/plans/a/amplify/v6.3.1-darwin-amd64.json   | 2 +-
+...
+47 files changed, 94 insertions(+), 94 deletions(-)
+```
+
+#### Trigger 3: Golden File Changes (Execution Validation)
+
+When golden files are modified (by either trigger above), CI validates they are executable:
+
+**What happens:**
+1. CI detects golden files changed in the PR
+2. For each changed golden file matching the current runner's platform:
+   - Runs `tsuku install --plan <golden-file> --sandbox`
+   - Sandbox downloads the artifact and verifies checksum
+   - Sandbox executes installation steps in isolated container
+   - Verifies the tool is installed correctly
+3. Fails if any installation fails
+
+**Why this matters:**
+- Catches checksum mismatches (upstream artifact changed)
+- Catches invalid plans (malformed JSON, missing steps)
+- Catches execution failures (broken extraction, missing permissions)
+- Validates the plan actually works, not just that it parses
+
+**Platform matrix:**
+```yaml
+strategy:
+  matrix:
+    os: [ubuntu-latest, macos-latest]
+    # Note: arm64 runners would be added when available
+```
+
+Each runner only validates golden files for its platform:
+- `ubuntu-latest` validates `*-linux-amd64.json` files
+- `macos-latest` validates `*-darwin-arm64.json` files (Apple Silicon)
+
+**Execution validation output:**
+```
+Testing: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
+Running sandbox test for fzf...
+  Container image: ubuntu:22.04
+  Network access: disabled (binary installation)
+  Resource limits: 2G memory, 2.0 CPUs, 5m0s timeout
+
+Sandbox test PASSED
+
+Testing: testdata/golden/plans/r/ripgrep/v14.1.0-linux-amd64.json
+Running sandbox test for ripgrep...
+...
+```
+
+**Execution failure example:**
+```
+Testing: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
+Running sandbox test for fzf...
+
+Sandbox test FAILED
+Exit code: 1
+
+Error output:
+  download: checksum mismatch
+    expected: sha256:abc123...
+    actual:   sha256:def456...
+
+::error::Golden file execution failed. The upstream artifact may have changed.
+Investigate the checksum mismatch and update the golden file if legitimate.
+```
+
+#### Trigger 4: Upstream Version Updates (Keeping Plans Fresh)
+
+Golden files pin specific versions. When new versions are released upstream, plans become stale. Two approaches to freshness:
+
+**Manual version bumps:**
+```bash
+# Developer decides to update fzf to v0.47.0
+./scripts/regenerate-golden.sh fzf v0.47.0
+
+# Review new checksums
+git diff testdata/golden/plans/f/fzf/
+
+# Commit new version's golden files
+git add testdata/golden/plans/f/fzf/
+git commit -m "chore(golden): update fzf to v0.47.0"
+```
+
+**Automated version bump workflow (Phase 4):**
+```yaml
+# .github/workflows/golden-version-bump.yml
+name: Golden Version Bump
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Weekly on Sunday
+
+jobs:
+  check-versions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for outdated golden files
+        run: |
+          ./scripts/check-golden-versions.sh > outdated.txt
+          if [[ -s outdated.txt ]]; then
+            echo "Found outdated golden files"
+            cat outdated.txt
+          fi
+
+      - name: Create PR for version bumps
+        if: steps.check.outputs.outdated == 'true'
+        run: |
+          # Generate new golden files for latest versions
+          # Create PR with changes
+```
+
+**Version retention policy:**
+- Keep golden files for the pinned version
+- When bumping versions, old version files can be removed or retained
+- Retaining old versions enables testing version-specific behavior
+
+#### Failure Modes and Recovery
+
+| Failure | Cause | Resolution |
+|---------|-------|------------|
+| Golden file mismatch after recipe change | Recipe change affects plan output | Run `./scripts/regenerate-golden.sh <recipe>`, commit changes |
+| Golden file mismatch after code change | Code change affects plan output | Run `./scripts/regenerate-all-golden.sh`, commit changes |
+| Execution validation fails (checksum) | Upstream artifact changed | Investigate: is this legitimate? If yes, regenerate. If no, report upstream. |
+| Execution validation fails (other) | Plan is malformed or steps fail | Debug the plan, fix recipe or code, regenerate |
+| No golden files for recipe | New recipe added | Run `./scripts/regenerate-golden.sh <recipe>`, commit new files |
+| Golden files for unsupported platform | Recipe platform support narrowed | Regeneration script automatically removes unsupported platform files |
+
+#### The Regeneration Scripts
+
+**`scripts/regenerate-golden.sh <recipe> [version]`**
+- Regenerates golden files for a single recipe
+- Uses existing versions from directory, or latest if none exist
+- Optional version argument to add a new version
+- Automatically removes files for unsupported platforms
+
+**`scripts/regenerate-all-golden.sh`**
+- Iterates over all recipes in `recipes/`
+- Calls `regenerate-golden.sh` for each
+- Used when code changes require full regeneration
+- Parallelizable for speed (future enhancement)
+
+**`scripts/check-golden-versions.sh`**
+- Compares pinned versions against latest available
+- Reports recipes with newer versions available
+- Used by automated version bump workflow
+
 ### CI Workflow: Code Changes
 
 When tsuku code changes (plan generation logic), all golden files must be validated:
