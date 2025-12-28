@@ -1,6 +1,6 @@
 # Ground truth recipe for sqlite (source build with readline dependency)
-# Used for testing configure_make action with library dependencies
-# Tests: download + extract + setup_build_env + configure_make with readline
+# Used for testing fossil_archive action with configure_make and library dependencies
+# Tests: fossil_archive + setup_build_env + configure_make with readline
 
 [metadata]
 name = "sqlite-source"
@@ -9,25 +9,24 @@ homepage = "https://sqlite.org/"
 dependencies = ["readline"]
 
 [version]
-source = "homebrew"
-formula = "sqlite"
-
-# TODO(#660): SQLite uses non-standard version format (3.51.1 -> 3510100) requiring manual URL updates
-[[steps]]
-action = "download"
-url = "https://sqlite.org/2025/sqlite-autoconf-3510100.tar.gz"
+# Version is resolved from Fossil timeline at https://sqlite.org/src/timeline?t=release
+fossil_repo = "https://sqlite.org/src"
+project_name = "sqlite"
+tag_prefix = "version-"
 
 [[steps]]
-action = "extract"
-archive = "sqlite-autoconf-3510100.tar.gz"
-format = "tar.gz"
+action = "fossil_archive"
+repo = "https://sqlite.org/src"
+project_name = "sqlite"
+binaries = ["sqlite3"]
+strip_dirs = 1
 
 [[steps]]
 action = "setup_build_env"
 
 [[steps]]
 action = "configure_make"
-source_dir = "sqlite-autoconf-3510100"
+source_dir = "."
 configure_args = ["--enable-readline"]
 executables = ["sqlite3"]
 
