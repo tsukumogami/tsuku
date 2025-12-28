@@ -242,10 +242,7 @@ func TestStep_UnmarshalTOML_When(t *testing.T) {
 [[steps]]
 action = "run_command"
 command = "brew install tool"
-
-[steps.when]
-os = "darwin"
-arch = "arm64"
+when = { platform = ["darwin/arm64"] }
 `
 
 	var recipe struct {
@@ -259,16 +256,16 @@ arch = "arm64"
 
 	step := recipe.Steps[0]
 
-	if len(step.When) != 2 {
-		t.Fatalf("When length = %d, want 2", len(step.When))
+	if step.When == nil {
+		t.Fatal("When should not be nil")
 	}
 
-	if step.When["os"] != "darwin" {
-		t.Errorf("When['os'] = %s, want darwin", step.When["os"])
+	if len(step.When.Platform) != 1 {
+		t.Fatalf("When.Platform length = %d, want 1", len(step.When.Platform))
 	}
 
-	if step.When["arch"] != "arm64" {
-		t.Errorf("When['arch'] = %s, want arm64", step.When["arch"])
+	if step.When.Platform[0] != "darwin/arm64" {
+		t.Errorf("When.Platform[0] = %s, want darwin/arm64", step.When.Platform[0])
 	}
 
 	// 'when' should not be in Params
@@ -323,9 +320,7 @@ param1 = "value1"
 param2 = 42
 note = "A note"
 description = "A description"
-
-[steps.when]
-os = "linux"
+when = { os = ["linux"] }
 `
 
 	var recipe struct {
@@ -352,8 +347,8 @@ os = "linux"
 		t.Errorf("Description = %s, want 'A description'", step.Description)
 	}
 
-	if len(step.When) != 1 || step.When["os"] != "linux" {
-		t.Errorf("When = %v, want map[os:linux]", step.When)
+	if step.When == nil || len(step.When.OS) != 1 || step.When.OS[0] != "linux" {
+		t.Errorf("When.OS = %v, want [linux]", step.When)
 	}
 
 	// Check params (only custom fields)
@@ -1256,9 +1251,8 @@ func TestRecipe_ToTOML_WithStepWhen(t *testing.T) {
 		Steps: []Step{
 			{
 				Action: "run_command",
-				When: map[string]string{
-					"os":   "darwin",
-					"arch": "arm64",
+				When: &WhenClause{
+					Platform: []string{"darwin/arm64"},
 				},
 				Params: map[string]interface{}{
 					"command": "brew install tool",

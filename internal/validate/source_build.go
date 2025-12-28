@@ -292,12 +292,34 @@ func (e *Executor) detectRequiredBuildTools(r *recipe.Recipe) []string {
 	toolsNeeded["build-essential"] = true
 
 	// Check all recipe steps for specific build systems
-	// Platform-specific steps use the When field (e.g., when.os = "linux")
+	// Platform-specific steps use the When field (e.g., when.os = ["linux"])
 	// but we install tools for all potential steps since validation runs on Linux
 	for _, step := range r.Steps {
 		// Skip steps that are macOS-only (they won't run in Linux container)
-		if os, hasOS := step.When["os"]; hasOS && os == "darwin" {
-			continue
+		if step.When != nil && len(step.When.OS) > 0 {
+			isDarwinOnly := true
+			for _, os := range step.When.OS {
+				if os != "darwin" {
+					isDarwinOnly = false
+					break
+				}
+			}
+			if isDarwinOnly {
+				continue
+			}
+		}
+		// Also skip platform-specific darwin steps
+		if step.When != nil && len(step.When.Platform) > 0 {
+			isDarwinOnly := true
+			for _, platform := range step.When.Platform {
+				if !strings.HasPrefix(platform, "darwin/") {
+					isDarwinOnly = false
+					break
+				}
+			}
+			if isDarwinOnly {
+				continue
+			}
 		}
 
 		switch step.Action {
