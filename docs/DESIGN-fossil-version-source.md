@@ -1,4 +1,4 @@
-# Fossil Version Source for Build-from-Source Recipes
+# Fossil Version Source
 
 ## Status
 
@@ -6,143 +6,72 @@ Proposed
 
 ## Context and Problem Statement
 
-Some tools use non-standard version formats in their download URLs that are incompatible with simple `{version}` substitution. The canonical example is SQLite:
+Tsuku's version providers currently support GitHub, Homebrew, PyPI, npm, and other popular package registries. However, several important open-source projects are hosted on [Fossil SCM](https://fossil-scm.org/), a distributed version control system that provides consistent patterns for version enumeration and source downloads.
 
-**SQLite amalgamation URL format:**
-- Semantic version: `3.51.1`
-- Download URL: `https://sqlite.org/2025/sqlite-autoconf-3510100.tar.gz`
-  - Year path component: `2025` (changes with releases)
-  - Transformed version: `3510100` (format: `3XXYY00` where X.Y is the minor.patch)
+Notable Fossil-hosted projects include:
 
-This creates two problems:
+| Project | Repository URL |
+|---------|----------------|
+| SQLite | https://sqlite.org/src |
+| Tcl | https://core.tcl-lang.org/tcl |
+| Tk | https://core.tcl-lang.org/tk |
+| SpatiaLite | https://www.gaia-gis.it/fossil/libspatialite |
+| Fossil | https://fossil-scm.org/home |
 
-1. **Recipe maintenance burden**: Recipes must hardcode URLs and version strings, requiring manual updates for each release
-2. **Version provider mismatch**: Even when a version provider (e.g., Homebrew) correctly reports `3.51.1`, the download URL requires a computed transformation
+Without a Fossil version provider, recipes for these tools must either:
+- Use Homebrew as an intermediary (losing the ability to build from source)
+- Hardcode version strings and URLs (requiring manual updates)
 
-**Key insight:** SQLite is hosted on Fossil SCM, which provides a consistent URL pattern for source tarballs that uses semantic versions directly:
-
-```
-https://sqlite.org/src/tarball/version-{version}/sqlite.tar.gz
-```
-
-This URL:
-- Uses the semantic version directly (`version-3.51.1`, not `version-3510100`)
-- Has no year component
-- Works for any tagged version in history
-
-By introducing a **Fossil version source**, we can solve the SQLite recipe problem without implementing version transforms at all.
+Adding a Fossil version source enables recipes to build these tools from source with automatic version tracking.
 
 ### Scope
 
 **In scope:**
-- Fossil version source for tools hosted on Fossil SCM
-- Update sqlite-source.toml to use Fossil tarballs
+- Fossil version source (`source = "fossil"`)
 - Version enumeration from Fossil timeline
-- Release date metadata from Fossil (for future use)
+- Integration with existing version provider system
 
 **Out of scope:**
-- Computed version transformations (deferred - no current use case beyond SQLite)
-- Year/date URL components (not needed with Fossil approach)
-- General-purpose templating language
-
-### Key Trade-off
-
-Fossil tarballs contain **raw source code**, not the pre-processed amalgamation. Building from raw source requires Tcl as a build dependency. This is an acceptable trade-off because:
-
-1. Tsuku can manage Tcl as a recipe dependency
-2. The alternative (version transforms + year resolution) adds significant complexity
-3. Building from raw source is more aligned with "build from source" philosophy
+- Changes to other version providers
+- Fossil-specific download actions (standard `download` action works)
 
 ## Decision Drivers
 
-- **Minimal recipe maintenance**: Version updates should not require recipe edits
-- **Leverage existing infrastructure**: Fossil SCM provides consistent URL patterns across all hosted projects
-- **Complete version history**: Solution must work for pinned versions, not just "latest"
-- **Generic abstraction**: Solution should work for other Fossil-hosted projects (Tcl/Tk, SpatiaLite, Fossil itself)
+- **Expand coverage**: Support important projects not on GitHub/Homebrew
+- **Leverage existing patterns**: Fossil provides consistent, well-documented APIs
+- **Complete version history**: Enable version pinning with full historical data
+- **Minimal integration effort**: Fits existing version provider interface
 
 ### Key Assumptions
 
-1. **Fossil URL patterns are stable**: Fossil SCM's `/tarball/TAG/project.tar.gz` pattern is a core feature of the Fossil SCM software and unlikely to change.
+1. **Fossil URL patterns are stable**: The `/tarball/TAG/project.tar.gz` pattern is a core Fossil SCM feature.
 
-2. **Raw source builds are acceptable**: Building from raw source (requiring Tcl) is acceptable for the sqlite-source recipe. Users wanting pre-built binaries should use the Homebrew-based sqlite recipe.
+2. **Timeline structure is consistent**: All Fossil repositories use the same timeline HTML structure.
 
-3. **Version tags follow semantic versioning**: Fossil tags like `version-3.51.1` can be mapped to semantic versions for version comparison and selection.
-
-4. **Timeline parsing is reliable**: The Fossil release timeline HTML structure has been stable for years and is consistent across all Fossil installations.
+3. **Version tags are parseable**: Projects use predictable tag naming (e.g., `version-X.Y.Z`).
 
 ## Background
 
-### Fossil SCM Overview
+### Fossil SCM Capabilities
 
-[Fossil SCM](https://fossil-scm.org/) is a distributed version control system used by several significant open-source projects:
+Fossil repositories provide:
 
-| Project | Repository URL | Tarball Pattern |
-|---------|----------------|-----------------|
-| SQLite | https://sqlite.org/src | `/tarball/version-X.Y.Z/sqlite.tar.gz` |
-| Tcl | https://core.tcl-lang.org/tcl | `/tarball/core-X-Y-Z/tcl.tar.gz` |
-| Tk | https://core.tcl-lang.org/tk | `/tarball/core-X-Y-Z/tk.tar.gz` |
-| SpatiaLite | https://www.gaia-gis.it/fossil/libspatialite | `/tarball/X.Y.Z/libspatialite.tar.gz` |
-| Fossil | https://fossil-scm.org/home | `/tarball/version-X.Y.Z/fossil.tar.gz` |
+1. **Release timeline**: `{repo}/timeline?t=release&n=all&y=ci` lists all releases with dates and commit hashes
 
-All Fossil repositories provide:
-1. **Timeline page**: Lists all releases with dates and commit hashes
-2. **Tarball endpoint**: Downloads source for any tag: `{repo}/tarball/{tag}/{project}.tar.gz`
-3. **Zipball endpoint**: Same as tarball but `.zip` format
+2. **Source tarballs**: `{repo}/tarball/{tag}/{project}.tar.gz` downloads source for any tag
 
-### Current sqlite-source.toml Problem
+3. **Tag list**: `{repo}/taglist` enumerates all tags
 
-The current recipe uses hardcoded URLs with SQLite's non-standard version encoding:
+These endpoints are consistent across all Fossil installations and have been stable for years.
 
-```toml
-url = "https://sqlite.org/2025/sqlite-autoconf-3510100.tar.gz"
-```
+### Example: SQLite
 
-This requires manual updates for each release because:
-- Version encoding: `3.51.1` → `3510100`
-- Year component: `2025/` in path
+SQLite's Fossil repository at `https://sqlite.org/src` provides:
+- Timeline with 201+ releases dating back to 2007
+- Tarballs for any version: `https://sqlite.org/src/tarball/version-3.51.1/sqlite.tar.gz`
+- Tags following `version-X.Y.Z` naming convention
 
-### Alternative: Fossil Tarball
-
-Using the Fossil tarball URL eliminates both problems:
-
-```toml
-url = "https://sqlite.org/src/tarball/version-{version}/sqlite.tar.gz"
-```
-
-- Uses semantic version directly: `version-3.51.1`
-- No year component needed
-- Works for any tagged version
-
-## Considered Options
-
-### Option A: Version Transforms + Year Resolution
-
-Implement a system for transforming versions in URLs:
-
-```toml
-[[steps]]
-action = "download"
-url = "https://sqlite.org/{release_year}/sqlite-autoconf-{version|packed_semver}.tar.gz"
-```
-
-This requires:
-1. A transform syntax (pipe operator `{version|transform}`)
-2. Transform functions in Go (`packed_semver`, etc.)
-3. A way to resolve year/date components (metadata parsing, provider extension)
-
-**Pros:**
-- Works with amalgamation downloads (simpler build, no Tcl)
-- Could apply to non-Fossil projects with similar issues
-
-**Cons:**
-- Significant implementation effort (three components)
-- Year resolution is complex (metadata parsing, caching, error handling)
-- SQLite-specific until we find other tools that need it
-- Over-engineered for the immediate problem
-
-### Option B: Fossil Version Source (Recommended)
-
-Use Fossil's native tarball endpoint which requires no transforms:
+A recipe using the Fossil version source:
 
 ```toml
 [version]
@@ -154,131 +83,72 @@ action = "download"
 url = "https://sqlite.org/src/tarball/version-{version}/sqlite.tar.gz"
 ```
 
+## Considered Options
+
+### Option A: Fossil Version Source
+
+Add a dedicated Fossil version provider that parses the release timeline.
+
 **Pros:**
-- Single parameter configuration (just repo URL)
-- No version transforms needed (semantic version works directly)
-- No year resolution needed (Fossil URLs are version-only)
-- Works for any Fossil project (SQLite, Tcl, Tk, SpatiaLite, Fossil)
-- Provides full version history for pinned versions
-- Avoids building a transform system we may not need
+- Direct integration with Fossil's native APIs
+- Complete version history available
+- Works for any Fossil-hosted project
+- Consistent with other version providers
 
 **Cons:**
-- Only works for Fossil-hosted projects
-- Raw source requires Tcl to build (vs. amalgamation)
-- Fossil timeline parsing (HTML, though stable)
+- Requires HTML parsing (timeline page)
+- New provider to maintain
 
-### Option C: Keep Hardcoded URLs
+### Option B: GitHub Mirror
 
-Continue with manually-maintained URLs:
+Some Fossil projects have GitHub mirrors. Use the GitHub provider instead.
 
-```toml
-url = "https://sqlite.org/2025/sqlite-autoconf-3510100.tar.gz"
-```
+**Pros:**
+- No new code needed
+- JSON API (no HTML parsing)
+
+**Cons:**
+- Not all Fossil projects have mirrors
+- Mirrors may lag behind or be incomplete
+- Doesn't solve the general case
+
+### Option C: Hardcoded URLs
+
+Continue with manually-maintained URLs in recipes.
 
 **Pros:**
 - No code changes needed
-- Works today
 
 **Cons:**
 - Manual updates for each release
 - Defeats the purpose of version providers
-- Recipe maintenance burden
-
-### Evaluation Matrix
-
-| Criterion | A (Transforms) | B (Fossil) | C (Hardcoded) |
-|-----------|----------------|------------|---------------|
-| Implementation effort | High | Medium | None |
-| Maintenance burden | Low | Low | High |
-| Generality | Medium | Good (Fossil projects) | N/A |
-| Solves SQLite | Yes | Yes | Partially |
-| Future-proof | Maybe | Yes | No |
 
 ## Decision Outcome
 
-**Chosen: Option B - Fossil Version Source**
+**Chosen: Option A - Fossil Version Source**
 
 ### Summary
 
-Introduce a Fossil SCM version source that leverages Fossil's consistent URL patterns. This eliminates the need for version transforms or year resolution entirely, since Fossil tarball URLs use semantic versions directly.
+Add a Fossil version provider that parses the release timeline to enumerate versions and integrates with the existing provider system.
 
 ### Rationale
 
-The Fossil approach was chosen because:
+1. **Complete coverage**: Works for all Fossil-hosted projects, not just those with GitHub mirrors
 
-1. **Eliminates transform complexity**: Fossil tarball URLs like `/tarball/version-3.51.1/sqlite.tar.gz` use the semantic version directly. No `packed_semver` transform needed.
+2. **Authoritative source**: Uses the project's own repository, not a third-party mirror
 
-2. **Eliminates year resolution**: Fossil URLs have no date component. No metadata parsing or caching needed.
+3. **Full history**: Timeline provides all historical versions, enabling version pinning
 
-3. **Generic solution**: Works for any Fossil-hosted project, not just SQLite. The same pattern applies to Tcl, Tk, SpatiaLite, and Fossil itself.
-
-4. **Complete version history**: Fossil timeline provides metadata for all historical versions, enabling version pinning without special handling.
-
-5. **Simpler implementation**: One new version provider vs. three components (transform syntax, transform registry, year resolver).
+4. **Consistent patterns**: Fossil's URL patterns are standardized across all installations
 
 ### Alternatives Rejected
 
-- **Option A (Transforms + Year Resolution)**: Over-engineered for the immediate problem. Building a transform system without clear use cases beyond SQLite is premature. If we encounter non-Fossil tools that need transforms, we can add that system later.
-
-- **Option C (Hardcoded URLs)**: Creates ongoing maintenance burden. Defeats the purpose of having version providers.
-
-### Trade-offs Accepted
-
-1. **Raw source builds require Tcl**: Building from Fossil tarballs requires Tcl as a build dependency. This is acceptable because:
-   - Tcl can be managed as a recipe dependency
-   - Users wanting pre-built binaries can use the Homebrew-based `sqlite` recipe
-   - "Build from source" philosophy aligns with using actual source code
-
-2. **Only Fossil projects benefit**: This solution specifically targets Fossil-hosted projects. Non-Fossil projects with similar version encoding issues would need a different solution. This is acceptable because:
-   - We have no concrete non-Fossil examples yet
-   - YAGNI: we shouldn't build transforms without clear use cases
-   - Fossil hosts several important projects (SQLite, Tcl, Tk, SpatiaLite)
-
-3. **Transform system deferred**: If we later find tools that genuinely need version transforms, we'll design that system then with concrete requirements.
-
-## Deferred Features
-
-The following features were considered during this design but deferred pending concrete use cases. Each should be tracked as a future exploration issue.
-
-### Version Transforms (Future Issue)
-
-A system for transforming version strings in URLs using pipe syntax:
-
-```toml
-url = "https://example.com/{version|packed_semver}.tar.gz"
-```
-
-**Potential transforms:**
-- `packed_semver`: Pack `X.Y.Z` into `XYYZZNN` (e.g., `3.51.1` → `3510100`)
-- `strip_v`: Remove leading `v` prefix
-- `underscores`: Replace dots with underscores
-- `major_minor`: Extract `X.Y` from `X.Y.Z`
-
-**When to implement:** When we encounter non-Fossil tools with non-standard version encodings in download URLs.
-
-### Version Provider Metadata (Future Issue)
-
-Extend version providers to return additional metadata beyond just the version string:
-
-```go
-type VersionInfo struct {
-    Version     string
-    ReleaseDate time.Time  // for year-based URLs
-    Checksum    string     // for verification
-    DownloadURL string     // canonical download URL
-}
-```
-
-**When to implement:** When we need release dates for URL construction (year paths) or want providers to supply checksums directly.
+- **Option B (GitHub Mirror)**: Not all Fossil projects have mirrors, and mirrors may be incomplete
+- **Option C (Hardcoded URLs)**: Creates ongoing maintenance burden
 
 ## Solution Architecture
 
 ### Overview
-
-Add a new Fossil version provider that:
-1. Parses the Fossil release timeline to enumerate available versions
-2. Extracts version tags and release dates
-3. Provides standard version provider interface (`GetLatest`, `GetVersions`)
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -288,19 +158,15 @@ Add a new Fossil version provider that:
 │  source = "fossil"                                                       │
 │  repo = "https://sqlite.org/src"                                        │
 │  tag_prefix = "version-"   # optional, defaults to "version-"           │
-│                                                                          │
-│  [[steps]]                                                               │
-│  action = "download"                                                     │
-│  url = "https://sqlite.org/src/tarball/version-{version}/sqlite.tar.gz" │
 └─────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
                         ┌───────────────────┐
                         │  Fossil Provider  │
                         ├───────────────────┤
-                        │ • Parse timeline  │
-                        │ • Get versions    │
-                        │ • Get latest      │
+                        │ • Fetch timeline  │
+                        │ • Parse versions  │
+                        │ • Sort by date    │
                         └───────────────────┘
                                     │
                                     ▼
@@ -316,18 +182,18 @@ Add a new Fossil version provider that:
 | Fossil Provider | `internal/version/fossil.go` | Fetch versions from Fossil timeline |
 | Provider Registration | `internal/version/providers.go` | Register "fossil" source type |
 
-### Key Interfaces
-
-**Fossil Provider Configuration:**
+### Configuration
 
 ```go
 type FossilConfig struct {
-    Repo      string // Repository URL (e.g., "https://sqlite.org/src")
+    Repo      string // Repository URL (required)
     TagPrefix string // Tag prefix to strip (default: "version-")
 }
 ```
 
-**Provider Interface (existing):**
+### Provider Interface
+
+The Fossil provider implements the existing `Provider` interface:
 
 ```go
 type Provider interface {
@@ -336,104 +202,75 @@ type Provider interface {
 }
 ```
 
-### Fossil Timeline Parsing
+### Timeline Parsing
 
-The Fossil release timeline (`{repo}/timeline?t=release&n=all&y=ci`) contains release entries with:
+The release timeline (`{repo}/timeline?t=release&n=all&y=ci`) contains:
 
 ```html
+<div class="divider timelineDate">2025-11-28</div>
+...
 <span class='timelineSimpleComment'>Version 3.51.1</span>
 ...
 <span class='timelineHash'>281fc0e9af</span>
-...
-<div class="divider timelineDate">2025-11-28</div>
 ```
 
-Extraction approach:
+Extraction:
 1. Fetch timeline HTML
-2. Use regex to extract version tags: `version-(\d+\.\d+\.\d+)`
+2. Extract version tags via regex: `Version (\d+\.\d+\.\d+)`
 3. Parse dates from `timelineDate` dividers
 4. Return versions sorted by date (newest first)
-
-### Data Flow
-
-1. **Recipe Loading**: Parse `[version]` section, recognize `source = "fossil"`
-2. **Provider Creation**: Instantiate `FossilProvider` with repo URL and tag prefix
-3. **Version Resolution**: Call `GetLatest()` or `GetVersions()` as needed
-4. **Timeline Fetch**: Fetch and parse `{repo}/timeline?t=release&n=all&y=ci`
-5. **Version Extraction**: Extract versions from tags, strip prefix, sort by date
-6. **Standard Flow**: Return version string to recipe executor for URL expansion
 
 ### Error Handling
 
 ```go
 // Example error messages
-"fossil: failed to fetch timeline from https://sqlite.org/src: connection timeout"
+"fossil: failed to fetch timeline: connection timeout"
 "fossil: no releases found in timeline"
-"fossil: failed to parse version from tag 'release-3.x'"
+"fossil: failed to parse version from 'Version 3.x'"
 ```
-
-Errors are returned from the provider and propagated to the user with context.
 
 ## Implementation Approach
 
-### Phase 1: Fossil Version Provider
-
-Implement the core Fossil provider.
+### Phase 1: Core Provider
 
 | Task | Description |
 |------|-------------|
-| Create `fossil.go` | New file `internal/version/fossil.go` with `FossilProvider` |
-| Timeline fetching | HTTP client to fetch `{repo}/timeline?t=release&n=all&y=ci` |
-| HTML parsing | Regex extraction of version tags and dates |
-| Provider interface | Implement `GetLatest()` and `GetVersions()` |
-| Unit tests | Test parsing with sample HTML, error cases |
+| Create `fossil.go` | New file with `FossilProvider` struct |
+| Timeline fetching | HTTP GET to `{repo}/timeline?t=release&n=all&y=ci` |
+| HTML parsing | Regex extraction of versions and dates |
+| Provider methods | Implement `GetLatest()` and `GetVersions()` |
+| Unit tests | Test parsing with sample HTML |
 
-**Dependencies:** None
-
-### Phase 2: Provider Registration
-
-Integrate into the version provider system.
+### Phase 2: Integration
 
 | Task | Description |
 |------|-------------|
-| Register provider | Add "fossil" to provider registry in `providers.go` |
-| Config parsing | Parse `repo` and optional `tag_prefix` from recipe TOML |
-| Integration tests | End-to-end test with real Fossil repo |
+| Register provider | Add "fossil" to provider registry |
+| Config parsing | Parse `repo` and `tag_prefix` from TOML |
+| Integration tests | Test with real Fossil repositories |
 
-**Dependencies:** Phase 1
-
-### Phase 3: Recipe Updates
-
-Update sqlite-source.toml to use Fossil.
+### Phase 3: Recipe Examples
 
 | Task | Description |
 |------|-------------|
-| Update sqlite-source.toml | Change to `source = "fossil"` with Fossil tarball URL |
-| Add Tcl dependency | Add `tcl` to dependencies (required for raw source build) |
-| Test build | Verify sqlite builds successfully from Fossil tarball |
-| Documentation | Update recipe authoring guide with Fossil source example |
-
-**Dependencies:** Phase 2, Tcl recipe
+| SQLite recipe | Create/update sqlite recipe using Fossil |
+| Documentation | Add Fossil source to recipe authoring guide |
 
 ### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `internal/version/fossil.go` | New file: `FossilProvider` implementation |
-| `internal/version/providers.go` | Register "fossil" source type |
-| `internal/recipe/version.go` | Parse `repo` and `tag_prefix` config fields |
-| `testdata/recipes/sqlite-source.toml` | Update to use Fossil source |
+| `internal/version/fossil.go` | New file: `FossilProvider` |
+| `internal/version/providers.go` | Register "fossil" source |
+| `internal/recipe/version.go` | Parse `repo` and `tag_prefix` |
 
-### Updated Recipe Example
-
-After implementation, sqlite-source.toml becomes:
+### Recipe Example
 
 ```toml
 [metadata]
-name = "sqlite-source"
-description = "SQLite CLI (built from source)"
+name = "sqlite"
+description = "SQLite database engine"
 homepage = "https://sqlite.org/"
-dependencies = ["readline", "tcl"]
 
 [version]
 source = "fossil"
@@ -442,114 +279,61 @@ repo = "https://sqlite.org/src"
 [[steps]]
 action = "download"
 url = "https://sqlite.org/src/tarball/version-{version}/sqlite.tar.gz"
-skip_verification_reason = "Fossil tarballs are generated on-demand; no published checksums"
+skip_verification_reason = "Fossil tarballs are generated on-demand"
 
 [[steps]]
 action = "extract"
 archive = "sqlite.tar.gz"
 format = "tar.gz"
 
-[[steps]]
-action = "setup_build_env"
-
-[[steps]]
-action = "run_command"
-command = "tclsh configure.tcl"
-working_dir = "sqlite"
-
-[[steps]]
-action = "configure_make"
-source_dir = "sqlite"
-configure_args = ["--enable-readline"]
-executables = ["sqlite3"]
-
-# ... remaining steps
+# ... build steps
 ```
 
 ## Consequences
 
 ### Positive
 
-- **Enables automated version updates**: sqlite-source.toml can track upstream versions without hardcoding
-- **Generic solution**: Works for any Fossil-hosted project (SQLite, Tcl, Tk, SpatiaLite, Fossil)
-- **Complete version history**: Supports version pinning with full historical data
-- **Simpler than alternatives**: One provider vs. transform system + year resolution
-- **Avoids premature abstraction**: No transform system until concrete use cases emerge
+- **Expanded coverage**: Recipes can now track Fossil-hosted projects
+- **Automatic updates**: No manual version maintenance for Fossil projects
+- **Version pinning**: Full version history enables installing specific versions
+- **Consistent interface**: Same provider pattern as GitHub, Homebrew, etc.
 
 ### Negative
 
-- **Tcl build dependency**: Building from raw Fossil source requires Tcl
-- **HTML parsing**: Timeline parsing depends on Fossil's HTML structure (stable but not guaranteed)
-- **Fossil-only**: Non-Fossil projects don't benefit from this solution
+- **HTML parsing**: Depends on Fossil's timeline HTML structure
+- **Maintenance**: Another provider to maintain
 
 ### Mitigations
 
-- **Tcl dependency**: Create a Tcl recipe so it can be managed as a dependency
-- **HTML parsing fragility**: Fossil's timeline format has been stable for years; add robust error handling and fallback to cached versions if parsing fails
-- **Fossil-only scope**: If we encounter non-Fossil tools with similar needs, we can add transforms then with concrete requirements
+- **HTML fragility**: Fossil's timeline format has been stable for years; add robust error handling
+- **Maintenance**: Provider is simple (one HTTP call, regex parsing)
 
 ## Security Considerations
 
 ### Download Verification
 
-**Challenge**: Fossil tarballs are generated on-demand by the Fossil server. There are no pre-published checksums for these archives.
+**Challenge**: Fossil tarballs are generated on-demand. No pre-published checksums exist.
 
 **Mitigations:**
-- Use HTTPS for all Fossil repository URLs (enforced in provider)
-- Fossil servers are first-party (e.g., sqlite.org, not a mirror)
-- Post-install verification (`[verify]` section) confirms expected binary behavior
-- Future: Layer 3 checksum pinning (#693) can pin checksums after first successful install
+- HTTPS enforced for all Fossil URLs
+- First-party servers only (e.g., sqlite.org, not mirrors)
+- Post-install verification via `[verify]` section
+- Layer 3 checksum pinning (#693) can pin after first install
 
-**Residual risk:** First download of a version has no checksum verification. Accepted because:
-- Source is authoritative (project's own Fossil server)
-- Build-from-source users accept more responsibility for verification
-- Users can manually verify source after download
+**Residual risk:** First download has no checksum. Accepted because source is authoritative.
 
 ### Execution Isolation
 
-**Not applicable** - the Fossil provider only fetches HTML (timeline) and tarballs. It does not execute any content.
-
-The provider:
-- Makes HTTP GET requests to Fossil servers
-- Parses HTML with regex (no JavaScript execution)
-- Returns version strings
-
-No code execution occurs in the provider itself.
+**Not applicable** - provider only fetches HTML and returns version strings.
 
 ### Supply Chain Risks
 
 | Risk | Likelihood | Impact | Mitigation |
 |------|------------|--------|------------|
-| Compromised Fossil server | Low | High | HTTPS, first-party servers only |
-| Timeline HTML injection | Very Low | Medium | Strict regex patterns, no eval |
-| Version list manipulation | Low | Medium | Cache timeline results, log version changes |
-| Man-in-the-middle attack | Very Low | High | HTTPS enforced |
-
-**Fossil server compromise:** If sqlite.org were compromised, an attacker could:
-- Inject malicious versions into the timeline
-- Serve malicious tarballs
-
-This risk exists for any version provider. Mitigations:
-- HTTPS prevents MITM
-- Fossil servers are well-maintained first-party infrastructure
-- Users building from source typically have security awareness
+| Compromised Fossil server | Low | High | HTTPS, first-party only |
+| Timeline HTML injection | Very Low | Medium | Strict regex patterns |
+| MITM attack | Very Low | High | HTTPS enforced |
 
 ### User Data Exposure
 
-**Not applicable** - the Fossil provider does not access or transmit user data.
-
-The provider only:
-- Fetches public timeline pages
-- Fetches public source tarballs
-
-No user-specific information (paths, credentials, identifiers) is involved.
-
-### Security Mitigations Summary
-
-| Risk | Mitigation | Residual Risk |
-|------|------------|---------------|
-| No checksum verification | HTTPS, first-party servers, post-install verify | First download unverified (accepted) |
-| HTML parsing vulnerabilities | Strict regex, no eval/JS | Novel parsing edge cases |
-| Server compromise | HTTPS, trusted sources | Sophisticated attack (accepted) |
-| User data exposure | No user data accessed | None |
-
+**Not applicable** - provider only fetches public timeline pages.
