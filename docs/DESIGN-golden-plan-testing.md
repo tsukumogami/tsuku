@@ -404,8 +404,8 @@ fi
 
 mkdir -p "$GOLDEN_DIR"
 
-# Get supported platforms from recipe metadata
-PLATFORMS=$(./tsuku metadata --recipe "$RECIPE_PATH" | jq -c '.supported_platforms[]')
+# Get supported platforms from recipe metadata (format: "linux-amd64", "darwin-arm64", etc.)
+PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -r '.supported_platforms[]')
 
 if [[ -z "$PLATFORMS" ]]; then
     echo "No supported platforms found for $RECIPE"
@@ -416,10 +416,7 @@ fi
 if [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
     VERSIONS=$(ls "$GOLDEN_DIR"/*.json | sed 's/.*\/v\([^-]*\)-.*/\1/' | sort -u)
 else
-    VERSIONS=$(./tsuku metadata --recipe "$RECIPE_PATH" | jq -r '.latest_version // empty')
-    if [[ -z "$VERSIONS" ]]; then
-        VERSIONS=$(./tsuku info "$RECIPE" --json | jq -r '.latest_version')
-    fi
+    VERSIONS=$(./tsuku info "$RECIPE" --json | jq -r '.latest_version')
 fi
 
 # Regenerate for each version
@@ -427,10 +424,10 @@ for VERSION in $VERSIONS; do
     echo "Regenerating $RECIPE@$VERSION..."
 
     # Generate only for supported platforms
-    echo "$PLATFORMS" | while read -r platform; do
-        os=$(echo "$platform" | jq -r '.os')
-        arch=$(echo "$platform" | jq -r '.arch')
-        OUTPUT="$GOLDEN_DIR/v${VERSION}-${os}-${arch}.json"
+    for platform in $PLATFORMS; do
+        os="${platform%-*}"
+        arch="${platform#*-}"
+        OUTPUT="$GOLDEN_DIR/v${VERSION}-${platform}.json"
 
         if ./tsuku eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
             "$RECIPE@$VERSION" > "$OUTPUT.tmp" 2>/dev/null; then
@@ -446,11 +443,7 @@ done
 # Clean up golden files for platforms no longer supported
 find "$GOLDEN_DIR" -name "*.json" | while read -r file; do
     platform=$(basename "$file" | sed 's/v[^-]*-//' | sed 's/\.json//')
-    os="${platform%-*}"
-    arch="${platform#*-}"
-
-    if ! echo "$PLATFORMS" | jq -e --arg os "$os" --arg arch "$arch" \
-        'select(.os == $os and .arch == $arch)' >/dev/null 2>&1; then
+    if ! echo "$PLATFORMS" | grep -qx "$platform"; then
         echo "  Removing unsupported: $file"
         rm -f "$file"
     fi
@@ -497,39 +490,28 @@ func ComparePlanToGolden(t *testing.T, actual *executor.InstallationPlan, golden
 
 ### Phase 0: Recipe Metadata Command
 
-**Prerequisite**: #705 - Add `tsuku metadata` command to query recipe properties programmatically:
+**Implemented**: #706 added `--recipe` and `--metadata-only` flags to `tsuku info`:
 
 ```bash
 # From registry
-tsuku metadata fzf
+tsuku info fzf --json
 
-# From local file
-tsuku metadata --recipe path/to/recipe.toml
+# From local file (fast, no dependency resolution)
+tsuku info --recipe path/to/recipe.toml --metadata-only --json
 ```
 
-Output (JSON):
+Output includes `supported_platforms` array:
 ```json
 {
   "name": "fzf",
   "description": "A command-line fuzzy finder",
   "type": "tool",
-  "supported_platforms": [
-    {"os": "linux", "arch": "amd64"},
-    {"os": "linux", "arch": "arm64"},
-    {"os": "darwin", "arch": "amd64"},
-    {"os": "darwin", "arch": "arm64"}
-  ],
-  "version_source": "github",
-  "has_dependencies": false
+  "supported_platforms": ["linux-amd64", "linux-arm64", "darwin-amd64", "darwin-arm64"],
+  ...
 }
 ```
 
-Platform support is derived from:
-- `metadata.supported_os` field (explicit restriction)
-- `os_mapping` in download steps (implicit support)
-- `[steps.when]` conditions (platform-specific steps)
-
-This command enables programmatic tooling for golden plan management and other automation.
+This enables programmatic tooling for golden plan management and other automation.
 
 ### Phase 1: Infrastructure
 
