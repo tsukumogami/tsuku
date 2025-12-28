@@ -382,6 +382,29 @@ jobs:
             done
 ```
 
+**Local development equivalent:**
+
+Before pushing changes, run the same validation locally:
+
+```bash
+# If you changed a recipe (e.g., fzf.toml)
+./scripts/validate-golden.sh fzf
+
+# If validation fails, regenerate and review the diff
+./scripts/regenerate-golden.sh fzf
+git diff testdata/golden/plans/f/fzf/
+
+# If you changed tsuku code (executor, actions, etc.)
+./scripts/validate-all-golden.sh
+
+# If validation fails, regenerate all and review
+./scripts/regenerate-all-golden.sh
+git diff --stat testdata/golden/plans/
+
+# Test execution locally (current platform only)
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+```
+
 ### Execution Validation: Keeping Plans Fresh
 
 This section describes how the golden plan system ensures plans remain valid, executable, and synchronized with both tsuku code and recipe definitions.
@@ -455,19 +478,25 @@ When a recipe file changes, CI regenerates golden files for that recipe only:
 5. Compares generated files against committed golden files
 6. Fails if any difference exists
 
-**Developer workflow:**
+**Developer workflow (run locally before pushing):**
 ```bash
 # Edit recipe
-vim recipes/f/fzf.toml
+vim internal/recipe/recipes/f/fzf.toml
 
-# Regenerate golden files locally
+# Validate to see what changed (shows diff on failure)
+./scripts/validate-golden.sh fzf
+
+# If validation fails, regenerate golden files
 ./scripts/regenerate-golden.sh fzf
 
-# Review changes
+# Review the changes
 git diff testdata/golden/plans/f/fzf/
 
+# Optional: test execution locally
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+
 # Commit both recipe and golden file changes
-git add recipes/f/fzf.toml testdata/golden/plans/f/fzf/
+git add internal/recipe/recipes/f/fzf.toml testdata/golden/plans/f/fzf/
 git commit -m "feat(recipe): update fzf download URL"
 ```
 
@@ -502,19 +531,26 @@ When plan generation logic changes, CI regenerates ALL golden files:
 - Changes to action ordering or dependencies
 - Format version bumps
 
-**Developer workflow:**
+**Developer workflow (run locally before pushing):**
 ```bash
 # Edit plan generation code
 vim internal/executor/plan.go
 
-# Run tests to validate behavior
+# Run unit tests
 go test ./internal/executor/...
 
-# Regenerate ALL golden files
+# Validate ALL golden files (shows diffs on failure)
+./scripts/validate-all-golden.sh
+
+# If validation fails, regenerate all
 ./scripts/regenerate-all-golden.sh
 
 # Review scope of changes
 git diff --stat testdata/golden/plans/
+
+# Optional: spot-check execution for a few recipes
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/r/ripgrep/v14.1.0-linux-amd64.json --sandbox
 
 # If changes are intentional, commit everything
 git add internal/executor/plan.go testdata/golden/plans/
@@ -604,17 +640,41 @@ Error output:
 Investigate the checksum mismatch and update the golden file if legitimate.
 ```
 
+**Developer workflow (run locally before pushing):**
+```bash
+# After regenerating golden files, test execution locally
+# You can only test plans matching your current platform
+
+# On Linux (amd64):
+for plan in testdata/golden/plans/f/fzf/*-linux-amd64.json; do
+    echo "Testing: $plan"
+    ./tsuku install --plan "$plan" --sandbox
+done
+
+# On macOS (arm64):
+for plan in testdata/golden/plans/f/fzf/*-darwin-arm64.json; do
+    echo "Testing: $plan"
+    ./tsuku install --plan "$plan" --sandbox
+done
+
+# Test a specific plan
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+```
+
 #### Trigger 4: Upstream Version Updates (Keeping Plans Fresh)
 
 Golden files pin specific versions. When new versions are released upstream, plans become stale. Two approaches to freshness:
 
-**Manual version bumps:**
+**Manual version bumps (local workflow):**
 ```bash
 # Developer decides to update fzf to v0.47.0
 ./scripts/regenerate-golden.sh fzf v0.47.0
 
 # Review new checksums
 git diff testdata/golden/plans/f/fzf/
+
+# Test execution for the new version (current platform)
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.47.0-linux-amd64.json --sandbox
 
 # Commit new version's golden files
 git add testdata/golden/plans/f/fzf/
@@ -718,6 +778,20 @@ jobs:
 
       - name: Validate all golden files
         run: ./scripts/validate-all-golden.sh
+```
+
+**Local development equivalent:**
+
+```bash
+# Build tsuku
+go build -o tsuku ./cmd/tsuku
+
+# Validate all golden files (same command CI runs)
+./scripts/validate-all-golden.sh
+
+# If validation fails, regenerate and review
+./scripts/regenerate-all-golden.sh
+git diff --stat testdata/golden/plans/
 ```
 
 ### Golden File Generation Script
