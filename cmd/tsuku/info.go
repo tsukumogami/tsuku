@@ -9,65 +9,95 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 var infoCmd = &cobra.Command{
-	Use:   "info <tool>",
+	Use:   "info <tool> | --recipe <path>",
 	Short: "Show detailed information about a tool",
 	Long:  `Show detailed information about a tool, including description, homepage, and installation status.`,
-	Args:  cobra.ExactArgs(1),
+	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		toolName := args[0]
 		jsonOutput, _ := cmd.Flags().GetBool("json")
+		recipePath, _ := cmd.Flags().GetString("recipe")
+		metadataOnly, _ := cmd.Flags().GetBool("metadata-only")
 
-		// Load recipe
-		r, err := loader.Get(toolName)
-		if err != nil {
-			fmt.Printf("Tool '%s' not found in registry.\n", toolName)
-			return
+		// Validate arguments: tool name XOR --recipe
+		if recipePath != "" && len(args) > 0 {
+			printError(fmt.Errorf("cannot specify both --recipe and a tool name"))
+			exitWithCode(ExitUsage)
+		}
+		if recipePath == "" && len(args) == 0 {
+			printError(fmt.Errorf("must specify either a tool name or --recipe flag"))
+			exitWithCode(ExitUsage)
+		}
+
+		// Load recipe from registry or file
+		var r *recipe.Recipe
+		var toolName string
+		var err error
+
+		if recipePath != "" {
+			r, err = loadLocalRecipe(recipePath)
+			if err != nil {
+				printError(fmt.Errorf("failed to load recipe from %s: %w", recipePath, err))
+				exitWithCode(ExitGeneral)
+			}
+			toolName = r.Metadata.Name
+		} else {
+			toolName = args[0]
+			r, err = loader.Get(toolName)
+			if err != nil {
+				fmt.Printf("Tool '%s' not found in registry.\n", toolName)
+				return
+			}
 		}
 
 		// Check installation status and get dependencies
 		var installedVersion, location string
 		var installDeps, runtimeDeps []string
 		status := "not_installed"
-		cfg, err := config.DefaultConfig()
-		if err == nil {
-			mgr := install.New(cfg)
-			tools, _ := mgr.List()
 
-			for _, t := range tools {
-				if t.Name == toolName {
-					status = "installed"
-					installedVersion = t.Version
-					location = cfg.ToolDir(toolName, t.Version)
-					break
-				}
-			}
-
-			// Get dependencies from state for installed tools
-			if status == "installed" {
-				stateMgr := install.NewStateManager(cfg)
-				toolState, err := stateMgr.GetToolState(toolName)
-				if err == nil && toolState != nil {
-					installDeps = toolState.InstallDependencies
-					runtimeDeps = toolState.RuntimeDependencies
-				}
-			}
-		}
-
-		// For uninstalled tools, resolve dependencies from recipe
-		if status == "not_installed" {
-			directDeps := actions.ResolveDependencies(r)
-			// Resolve transitive dependencies
-			resolvedDeps, err := actions.ResolveTransitive(context.Background(), loader, directDeps, toolName)
+		// Skip installation state and dependency resolution if metadata-only mode
+		if !metadataOnly {
+			cfg, err := config.DefaultConfig()
 			if err == nil {
-				installDeps = sortedKeys(resolvedDeps.InstallTime)
-				runtimeDeps = sortedKeys(resolvedDeps.Runtime)
-			} else {
-				// Fall back to direct deps if transitive resolution fails
-				installDeps = sortedKeys(directDeps.InstallTime)
-				runtimeDeps = sortedKeys(directDeps.Runtime)
+				mgr := install.New(cfg)
+				tools, _ := mgr.List()
+
+				for _, t := range tools {
+					if t.Name == toolName {
+						status = "installed"
+						installedVersion = t.Version
+						location = cfg.ToolDir(toolName, t.Version)
+						break
+					}
+				}
+
+				// Get dependencies from state for installed tools
+				if status == "installed" {
+					stateMgr := install.NewStateManager(cfg)
+					toolState, err := stateMgr.GetToolState(toolName)
+					if err == nil && toolState != nil {
+						installDeps = toolState.InstallDependencies
+						runtimeDeps = toolState.RuntimeDependencies
+					}
+				}
+			}
+
+			// For uninstalled tools, resolve dependencies from recipe
+			if status == "not_installed" {
+				directDeps := actions.ResolveDependencies(r)
+				// Resolve transitive dependencies
+				resolvedDeps, err := actions.ResolveTransitive(context.Background(), loader, directDeps, toolName)
+				if err == nil {
+					installDeps = sortedKeys(resolvedDeps.InstallTime)
+					runtimeDeps = sortedKeys(resolvedDeps.Runtime)
+				} else {
+					// Fall back to direct deps if transitive resolution fails
+					installDeps = sortedKeys(directDeps.InstallTime)
+					runtimeDeps = sortedKeys(directDeps.Runtime)
+				}
 			}
 		}
 
@@ -78,10 +108,14 @@ var infoCmd = &cobra.Command{
 				Description          string   `json:"description"`
 				Homepage             string   `json:"homepage,omitempty"`
 				VersionFormat        string   `json:"version_format"`
+				VersionSource        string   `json:"version_source"`
 				SupportedOS          []string `json:"supported_os,omitempty"`
 				SupportedArch        []string `json:"supported_arch,omitempty"`
 				UnsupportedPlatforms []string `json:"unsupported_platforms,omitempty"`
-				Status               string   `json:"status"`
+				SupportedPlatforms   []string `json:"supported_platforms"`
+				Tier                 int      `json:"tier"`
+				Type                 string   `json:"type"`
+				Status               string   `json:"status,omitempty"`
 				InstalledVersion     string   `json:"installed_version,omitempty"`
 				Location             string   `json:"location,omitempty"`
 				VerifyCommand        string   `json:"verify_command,omitempty"`
@@ -93,9 +127,13 @@ var infoCmd = &cobra.Command{
 				Description:          r.Metadata.Description,
 				Homepage:             r.Metadata.Homepage,
 				VersionFormat:        r.Metadata.VersionFormat,
+				VersionSource:        r.Version.Source,
 				SupportedOS:          r.Metadata.SupportedOS,
 				SupportedArch:        r.Metadata.SupportedArch,
 				UnsupportedPlatforms: r.Metadata.UnsupportedPlatforms,
+				SupportedPlatforms:   r.GetSupportedPlatforms(),
+				Tier:                 r.Metadata.Tier,
+				Type:                 r.Metadata.Type,
 				Status:               status,
 				InstalledVersion:     installedVersion,
 				Location:             location,
@@ -113,6 +151,13 @@ var infoCmd = &cobra.Command{
 			fmt.Printf("Homepage:       %s\n", r.Metadata.Homepage)
 		}
 		fmt.Printf("Version Format: %s\n", r.Metadata.VersionFormat)
+		fmt.Printf("Version Source: %s\n", r.Version.Source)
+		if r.Metadata.Tier > 0 {
+			fmt.Printf("Tier:           %d\n", r.Metadata.Tier)
+		}
+		if r.Metadata.Type != "" {
+			fmt.Printf("Type:           %s\n", r.Metadata.Type)
+		}
 
 		// Show platform constraints if present
 		hasConstraints := len(r.Metadata.SupportedOS) > 0 ||
@@ -122,11 +167,14 @@ var infoCmd = &cobra.Command{
 			fmt.Printf("Platforms:      %s\n", r.FormatPlatformConstraints())
 		}
 
-		if status == "installed" {
-			fmt.Printf("Status:         Installed (v%s)\n", installedVersion)
-			fmt.Printf("Location:       %s\n", location)
-		} else {
-			fmt.Printf("Status:         Not installed\n")
+		// Show installation status (skip in metadata-only mode)
+		if !metadataOnly {
+			if status == "installed" {
+				fmt.Printf("Status:         Installed (v%s)\n", installedVersion)
+				fmt.Printf("Location:       %s\n", location)
+			} else {
+				fmt.Printf("Status:         Not installed\n")
+			}
 		}
 
 		// Show verification method
@@ -134,17 +182,19 @@ var infoCmd = &cobra.Command{
 			fmt.Printf("Verify Command: %s\n", r.Verify.Command)
 		}
 
-		// Show dependencies
-		if len(installDeps) > 0 {
-			fmt.Printf("\nInstall Dependencies:\n")
-			for _, dep := range installDeps {
-				fmt.Printf("  - %s\n", dep)
+		// Show dependencies (skip in metadata-only mode)
+		if !metadataOnly {
+			if len(installDeps) > 0 {
+				fmt.Printf("\nInstall Dependencies:\n")
+				for _, dep := range installDeps {
+					fmt.Printf("  - %s\n", dep)
+				}
 			}
-		}
-		if len(runtimeDeps) > 0 {
-			fmt.Printf("\nRuntime Dependencies:\n")
-			for _, dep := range runtimeDeps {
-				fmt.Printf("  - %s\n", dep)
+			if len(runtimeDeps) > 0 {
+				fmt.Printf("\nRuntime Dependencies:\n")
+				for _, dep := range runtimeDeps {
+					fmt.Printf("  - %s\n", dep)
+				}
 			}
 		}
 	},
@@ -162,4 +212,6 @@ func sortedKeys(m map[string]string) []string {
 
 func init() {
 	infoCmd.Flags().Bool("json", false, "Output in JSON format")
+	infoCmd.Flags().String("recipe", "", "Path to a local recipe file (for testing)")
+	infoCmd.Flags().Bool("metadata-only", false, "Skip dependency resolution for fast static queries")
 }
