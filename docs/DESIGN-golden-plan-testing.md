@@ -232,21 +232,63 @@ The regeneration script preserves all existing versions in the directory. When a
 
 ### Cross-Platform Generation Limitations
 
-Plan generation for a target platform different from the current runtime works correctly for download-based recipes. However, ecosystem builds have inherent limitations:
+Plan generation for a target platform different from the current runtime works correctly for download-based recipes. However, some actions have inherent limitations:
+
+**Download Actions (Full Support):**
+
+| Action | Notes |
+|--------|-------|
+| `download`, `download_archive`, `download_file` | Downloads target platform binary, computes checksum |
+| `github_archive`, `github_release` | Resolves platform-specific asset URLs |
+| `homebrew` | Queries GHCR for target platform bottle |
+
+**Build Actions (Require Native Toolchain):**
 
 | Action | Cross-Platform Support | Notes |
 |--------|----------------------|-------|
-| `github_archive`, `download_archive` | Full | Downloads target platform binary, computes checksum |
-| `homebrew` | Full | Queries GHCR for target platform bottle |
+| `cargo_build` | None | Requires Rust toolchain on build machine |
+| `go_build` | None | Requires Go toolchain on build machine |
+| `cmake_build` | None | Requires CMake + compiler on build machine |
+| `configure_make` | None | Requires autotools + compiler on build machine |
+| `meson_build` | None | Requires Meson + Ninja on build machine |
+
+**Ecosystem Install Actions (Partial Support):**
+
+| Action | Cross-Platform Support | Notes |
+|--------|----------------------|-------|
 | `npm_install` | Partial | Lockfile is platform-agnostic, but npm version affects output |
 | `cargo_install` | Partial | Cargo.lock is platform-agnostic |
 | `gem_install` | Partial | Gemfile.lock is platform-agnostic |
 | `go_install` | Partial | go.sum is platform-agnostic |
-| `pipx_install` | Limited | `pip download` fetches platform-specific wheels |
+| `pipx_install`, `pip_install` | Limited | `pip download` fetches platform-specific wheels |
+| `cpan_install` | Limited | Perl module builds are platform-specific |
 
-**Implication for golden files**: Ecosystem build recipes should have their golden files generated on a consistent platform to ensure reproducibility. The CI workflow uses `ubuntu-latest` for all plan generation, which provides this consistency.
+**Nix Actions (Limited Support):**
 
-For `pipx_install` recipes specifically, golden files represent the plan as generated from Linux. Execution validation on macOS will re-resolve dependencies appropriately at install time.
+| Action | Cross-Platform Support | Notes |
+|--------|----------------------|-------|
+| `nix_install` | Limited | Nix derivations may be platform-specific |
+| `nix_portable` | Limited | Downloads platform-specific nix-portable binary |
+| `nix_realize` | Limited | Realizes derivations for current platform |
+
+**System Actions (No Plans Generated):**
+
+| Action | Notes |
+|--------|-------|
+| `require_system` | Skipped - requires system package, no plan generated |
+| `system_packages` | Skipped - requires system package manager |
+
+**Post-Processing Actions (Platform-Agnostic):**
+
+| Action | Notes |
+|--------|-------|
+| `extract`, `chmod`, `install_binaries` | Operates on already-downloaded files |
+| `set_env`, `set_rpath`, `link_dependencies` | Configures installed files |
+| `text_replace`, `apply_patch` | Modifies file contents |
+
+**Implication for golden files**: Recipes using build actions or Nix should have their golden files generated on a consistent platform. The CI workflow uses `ubuntu-latest` for all plan generation, which provides this consistency.
+
+For ecosystem install recipes, golden files represent the plan as generated from Linux. Execution validation on other platforms will re-resolve dependencies appropriately at install time.
 
 ### Trust Boundaries
 
