@@ -332,17 +332,17 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Regenerate golden files for changed recipes
+      - name: Validate golden files for changed recipes
         run: |
+          FAILED=()
           for recipe in $(echo '${{ needs.detect-changes.outputs.recipes }}' | jq -r '.[]'); do
-            ./scripts/regenerate-golden.sh "$recipe"
+            if ! ./scripts/validate-golden.sh "$recipe"; then
+              FAILED+=("$recipe")
+            fi
           done
-
-      - name: Check for uncommitted golden file changes
-        run: |
-          if ! git diff --exit-code testdata/golden/plans/; then
-            echo "::error::Golden files are out of date. Please run './scripts/regenerate-golden.sh <recipe>' and commit the changes."
-            git diff testdata/golden/plans/
+          if [[ ${#FAILED[@]} -gt 0 ]]; then
+            echo "::error::Golden files are out of date for: ${FAILED[*]}"
+            echo "Run './scripts/regenerate-golden.sh <recipe>' for each and commit the changes."
             exit 1
           fi
 
@@ -716,16 +716,8 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Regenerate all golden files
-        run: ./scripts/regenerate-all-golden.sh
-
-      - name: Check for uncommitted changes
-        run: |
-          if ! git diff --exit-code testdata/golden/plans/; then
-            echo "::error::Code changes affect golden plan output. Please regenerate golden files and commit the changes."
-            git diff --stat testdata/golden/plans/
-            exit 1
-          fi
+      - name: Validate all golden files
+        run: ./scripts/validate-all-golden.sh
 ```
 
 ### Golden File Generation Script
@@ -800,9 +792,119 @@ find "$GOLDEN_DIR" -name "*.json" | while read -r file; do
 done
 ```
 
-### Plan Comparison for Tests
+### Comparison Strategy
 
-Unit tests use a comparison utility that handles unstable fields:
+Golden file comparison uses a two-phase approach:
+
+1. **Detection**: Fast hash comparison to detect changes
+2. **On failure**: Full semantic diff showing exactly what changed
+
+This applies to both local development and CI - the same scripts are used in both contexts.
+
+### Validation Scripts (Local-First)
+
+Scripts are designed for local development and reused by CI:
+
+```bash
+#!/bin/bash
+# scripts/validate-golden.sh - Validate golden files for a recipe
+# Usage: ./scripts/validate-golden.sh <recipe>
+# Exit codes: 0 = match, 1 = mismatch (with diff), 2 = error
+
+set -euo pipefail
+
+RECIPE="$1"
+FIRST_LETTER="${RECIPE:0:1}"
+RECIPE_PATH="internal/recipe/recipes/${FIRST_LETTER}/${RECIPE}.toml"
+GOLDEN_DIR="testdata/golden/plans/${FIRST_LETTER}/${RECIPE}"
+TEMP_DIR=$(mktemp -d)
+trap "rm -rf $TEMP_DIR" EXIT
+
+if [[ ! -d "$GOLDEN_DIR" ]]; then
+    echo "No golden files found for $RECIPE"
+    exit 2
+fi
+
+# Regenerate to temp directory
+PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -r '.supported_platforms[]' | tr '/' '-')
+VERSIONS=$(ls "$GOLDEN_DIR"/*.json 2>/dev/null | sed 's/.*\/v\([^-]*\)-.*/\1/' | sort -u)
+
+MISMATCH=0
+for VERSION in $VERSIONS; do
+    for platform in $PLATFORMS; do
+        os="${platform%-*}"
+        arch="${platform#*-}"
+        GOLDEN="$GOLDEN_DIR/v${VERSION}-${platform}.json"
+        ACTUAL="$TEMP_DIR/v${VERSION}-${platform}.json"
+
+        if [[ ! -f "$GOLDEN" ]]; then
+            continue
+        fi
+
+        ./tsuku eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
+            --version "$VERSION" > "$ACTUAL" 2>/dev/null || continue
+
+        # Fast hash comparison first
+        GOLDEN_HASH=$(sha256sum "$GOLDEN" | cut -d' ' -f1)
+        ACTUAL_HASH=$(sha256sum "$ACTUAL" | cut -d' ' -f1)
+
+        if [[ "$GOLDEN_HASH" != "$ACTUAL_HASH" ]]; then
+            MISMATCH=1
+            echo "MISMATCH: $GOLDEN"
+            echo "--- Expected (golden)"
+            echo "+++ Actual (generated)"
+            diff -u "$GOLDEN" "$ACTUAL" || true
+            echo ""
+        fi
+    done
+done
+
+if [[ $MISMATCH -eq 1 ]]; then
+    echo "Golden file validation failed. Run './scripts/regenerate-golden.sh $RECIPE' to update."
+    exit 1
+fi
+
+echo "Golden files for $RECIPE are up to date."
+exit 0
+```
+
+```bash
+#!/bin/bash
+# scripts/validate-all-golden.sh - Validate all golden files
+# Usage: ./scripts/validate-all-golden.sh
+# Runs validate-golden.sh for each recipe with golden files
+
+set -euo pipefail
+
+GOLDEN_BASE="testdata/golden/plans"
+FAILED=()
+
+for letter_dir in "$GOLDEN_BASE"/*/; do
+    [[ -d "$letter_dir" ]] || continue
+    for recipe_dir in "$letter_dir"*/; do
+        [[ -d "$recipe_dir" ]] || continue
+        recipe=$(basename "$recipe_dir")
+
+        echo "Validating $recipe..."
+        if ! ./scripts/validate-golden.sh "$recipe"; then
+            FAILED+=("$recipe")
+        fi
+    done
+done
+
+if [[ ${#FAILED[@]} -gt 0 ]]; then
+    echo ""
+    echo "Failed recipes: ${FAILED[*]}"
+    exit 1
+fi
+
+echo "All golden files are up to date."
+exit 0
+```
+
+### Plan Comparison for Go Tests
+
+Unit tests use a Go comparison utility that handles unstable fields:
 
 ```go
 // internal/testutil/golden.go
@@ -829,10 +931,14 @@ func ComparePlanToGolden(t *testing.T, actual *executor.InstallationPlan, golden
     expectedJSON := readGoldenFile(t, goldenPath)
     expectedJSON = maskFields(expectedJSON, opts.IgnoreFields)
 
-    if !bytes.Equal(actualJSON, expectedJSON) {
-        diff := computeDiff(expectedJSON, actualJSON)
-        t.Errorf("Golden file mismatch:\n%s\n\nRun with UPDATE_GOLDEN=1 to update", diff)
+    // Fast byte comparison first
+    if bytes.Equal(actualJSON, expectedJSON) {
+        return
     }
+
+    // On mismatch, compute and display semantic diff
+    diff := computeJSONDiff(expectedJSON, actualJSON)
+    t.Errorf("Golden file mismatch:\n%s\n\nRun with UPDATE_GOLDEN=1 to update", diff)
 }
 ```
 
@@ -869,8 +975,10 @@ This enables programmatic tooling for golden plan management and other automatio
 2. **Add `--version` flag to eval**: When using `--recipe` mode, allow `--version <ver>` to specify the version for plan generation.
 3. Create `scripts/regenerate-golden.sh` for single-recipe regeneration
 4. Create `scripts/regenerate-all-golden.sh` for full regeneration
-5. Add `internal/testutil/golden.go` with comparison utilities
-6. Add `internal/testutil/mock_downloader.go` for unit tests
+5. Create `scripts/validate-golden.sh` for single-recipe validation (hash + diff on failure)
+6. Create `scripts/validate-all-golden.sh` for full validation
+7. Add `internal/testutil/golden.go` with comparison utilities for Go tests
+8. Add `internal/testutil/mock_downloader.go` for unit tests
 
 ### Phase 2: CI Workflows (Before Bulk Generation)
 
