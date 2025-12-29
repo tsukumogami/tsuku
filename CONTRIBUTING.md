@@ -405,6 +405,102 @@ tsuku create <tool> --from <source> --skip-sandbox
 
 See the existing recipes in `internal/recipe/recipes/` for examples.
 
+## Golden File Testing
+
+Golden files are pre-generated installation plans stored in `testdata/golden/plans/`. They serve as regression tests: when you change a recipe or tsuku's plan generation code, CI verifies the changes produce expected results.
+
+### Why Golden Files?
+
+1. **Regression detection**: Any code change that affects plan generation is immediately visible in PR diffs
+2. **Recipe validation**: Recipe authors see exactly what their recipe produces before merging
+3. **Cross-platform coverage**: Plans are generated for all supported platforms (linux-amd64, darwin-amd64, darwin-arm64)
+
+### Local Workflow
+
+When you modify a recipe:
+
+```bash
+# Build tsuku
+go build -o tsuku ./cmd/tsuku
+
+# Validate golden files (shows diff if out of date)
+./scripts/validate-golden.sh <recipe>
+
+# If validation fails, regenerate
+./scripts/regenerate-golden.sh <recipe>
+
+# Review the changes
+git diff testdata/golden/plans/
+
+# Test execution locally (current platform only)
+./tsuku install --plan testdata/golden/plans/<letter>/<recipe>/<version>-<os>-<arch>.json --sandbox
+
+# Commit both recipe and golden file changes
+git add internal/recipe/recipes/<letter>/<recipe>.toml testdata/golden/plans/<letter>/<recipe>/
+git commit -m "feat(recipe): update <recipe>"
+```
+
+When you modify tsuku code (executor, actions, etc.):
+
+```bash
+# Validate ALL golden files
+./scripts/validate-all-golden.sh
+
+# If validation fails, regenerate affected recipes
+./scripts/regenerate-golden.sh <recipe>
+
+# Or regenerate with constraints
+./scripts/regenerate-golden.sh <recipe> --os linux --arch amd64
+./scripts/regenerate-golden.sh <recipe> --version v1.2.3
+```
+
+### Cross-Platform Generation
+
+Developers often work on a single platform but need golden files for all platforms. The **Generate Golden Files** workflow solves this:
+
+**Manual trigger (GitHub Actions UI):**
+1. Go to Actions → "Generate Golden Files" → Run workflow
+2. Enter the recipe name
+3. Optionally enable "Commit results back to current branch"
+4. Workflow runs on Linux, macOS Intel, and macOS Apple Silicon in parallel
+5. Golden files are committed to your branch (or download artifacts manually)
+
+**Programmatic trigger (from another workflow):**
+
+```yaml
+jobs:
+  generate:
+    uses: ./.github/workflows/generate-golden-files.yml
+    with:
+      recipe: fzf
+      commit_back: true
+      branch: ${{ github.head_ref }}
+```
+
+**CLI trigger:**
+
+```bash
+gh workflow run generate-golden-files.yml \
+  -f recipe=fzf \
+  -f commit_back=true \
+  -f branch=my-feature-branch
+```
+
+### Platform Coverage
+
+| Platform | Plan Generation | Execution Validation | CI Runner |
+|----------|-----------------|---------------------|-----------|
+| linux-amd64 | Yes | Yes | ubuntu-latest |
+| darwin-arm64 | Yes | Yes | macos-14 |
+| darwin-amd64 | Yes | Yes | macos-15-intel |
+| linux-arm64 | No | No | None available |
+
+linux-arm64 is excluded because GitHub Actions doesn't provide arm64 Linux runners.
+
+### Design Reference
+
+For the complete design rationale, validation workflows, and security considerations, see [docs/DESIGN-golden-plan-testing.md](docs/DESIGN-golden-plan-testing.md).
+
 ## Troubleshooting
 
 ### Linter Failures
