@@ -51,7 +51,7 @@ The recipes will be added to `internal/recipe/recipes/` following the alphabetic
   - Change "curl" dependency to "libcurl" in testdata/recipes/git-source.toml
   - Verify all dependencies are now library recipes: libcurl, openssl, zlib, expat
 
-- [ ] Re-enable test-git-source CI job
+- [x] Re-enable test-git-source CI job
   - Remove `if: false` condition from test-git-source job in .github/workflows/build-essentials.yml
 
 - [ ] Test locally across platforms
