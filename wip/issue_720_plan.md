@@ -46,8 +46,10 @@ on:
 | Runner | Platform | OS | Arch |
 |--------|----------|----|----- |
 | ubuntu-latest | linux-amd64 | linux | amd64 |
-| macos-latest | darwin-arm64 | darwin | arm64 |
-| macos-13 | darwin-amd64 | darwin | amd64 |
+| macos-14 | darwin-arm64 | darwin | arm64 |
+| macos-15-intel | darwin-amd64 | darwin | amd64 |
+
+Note: Using explicit runners (`macos-14`, `macos-15-intel`) for consistency with `build-essentials.yml`.
 
 ### Script Invocation
 
@@ -81,7 +83,7 @@ permissions:
 
 ## Implementation Steps
 
-1. Create `.github/workflows/generate-golden-files.yml` with:
+1. [x] Create `.github/workflows/generate-golden-files.yml` with:
    - workflow_dispatch trigger with recipe, commit_back, and branch inputs
    - Platform matrix (3 runners)
    - Checkout with branch input support

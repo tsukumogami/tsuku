@@ -1,0 +1,105 @@
+name: Generate Golden Files
+
+on:
+  workflow_dispatch:
+    inputs:
+      recipe:
+        description: 'Recipe name to regenerate golden files for'
+        required: true
+        type: string
+      commit_back:
+        description: 'Commit results back to current branch'
+        type: boolean
+        default: false
+      branch:
+        description: 'Branch to run on (defaults to current ref)'
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    name: "${{ matrix.platform.name }}"
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: amd64 }
+          - { runner: macos-14, name: "macOS Apple Silicon", os: darwin, arch: arm64 }
+          - { runner: macos-15-intel, name: "macOS Intel", os: darwin, arch: amd64 }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch || github.ref }}
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Generate golden files for ${{ matrix.platform.os }}-${{ matrix.platform.arch }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./scripts/regenerate-golden.sh "${{ inputs.recipe }}" \
+            --os "${{ matrix.platform.os }}" \
+            --arch "${{ matrix.platform.arch }}"
+
+      - name: Upload golden files
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
+          path: testdata/golden/plans/
+          if-no-files-found: warn
+
+  commit:
+    name: Commit Results
+    needs: generate
+    if: inputs.commit_back
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.branch || github.ref }}
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Merge golden files
+        run: |
+          # Merge all platform artifacts into testdata/golden/plans/
+          for dir in artifacts/golden-*/; do
+            if [ -d "$dir" ]; then
+              echo "Merging from $dir"
+              cp -r "$dir"/* testdata/golden/plans/ 2>/dev/null || true
+            fi
+          done
+
+          # Show what was merged
+          echo "Golden files after merge:"
+          find testdata/golden/plans/ -name "*.json" | head -20
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add testdata/golden/plans/
+
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(golden): regenerate ${{ inputs.recipe }} golden files"
+            git push
+          fi
