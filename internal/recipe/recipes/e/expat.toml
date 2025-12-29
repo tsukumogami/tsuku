@@ -21,6 +21,7 @@ binaries = [
     "lib/libexpat.dylib",
     "lib/libexpat.1.dylib",
     "lib/libexpat.a",
+    "lib/pkgconfig/expat.pc",
     "include/expat.h",
     "include/expat_external.h",
 ]

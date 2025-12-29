@@ -237,10 +237,18 @@ func setRpathMacOS(binaryPath, rpath string) error {
 		}
 	}
 
-	// Add new RPATH
-	addCmd := exec.Command(installNameTool, "-add_rpath", macRpath, binaryPath)
-	if output, err := addCmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("install_name_tool -add_rpath failed: %s: %w", strings.TrimSpace(string(output)), err)
+	// Add new RPATHs - macOS requires separate -add_rpath calls for each path
+	// Split colon-separated paths
+	rpathPaths := strings.Split(macRpath, ":")
+	for _, rpathPath := range rpathPaths {
+		rpathPath = strings.TrimSpace(rpathPath)
+		if rpathPath == "" {
+			continue
+		}
+		addCmd := exec.Command(installNameTool, "-add_rpath", rpathPath, binaryPath)
+		if output, err := addCmd.CombinedOutput(); err != nil {
+			return fmt.Errorf("install_name_tool -add_rpath failed for %s: %s: %w", rpathPath, strings.TrimSpace(string(output)), err)
+		}
 	}
 
 	// Re-sign the binary with ad-hoc signature (required on Apple Silicon)
