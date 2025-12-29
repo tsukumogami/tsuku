@@ -72,19 +72,13 @@ RUN ./tsuku install --force zig
 # Install make (needed for configure_make)
 RUN ./tsuku install --force make
 
-# Copy gdbm-source test recipe
-RUN cp testdata/recipes/gdbm-source.toml internal/recipe/recipes/g/
-
-# Rebuild tsuku with test recipe embedded
-RUN go build -o tsuku ./cmd/tsuku
-
 # Add tsuku tools to PATH for build dependencies
 # ~/.tsuku/tools/current contains symlinks to installed binaries
 ENV PATH="/root/.tsuku/tools/current:$PATH"
 
 # The actual test: build gdbm from source
 # This MUST use zig cc since no system compiler exists
-RUN ./tsuku install --force gdbm-source
+RUN ./tsuku install --recipe testdata/recipes/gdbm-source.toml --sandbox
 
 # Verify the installation works
 RUN ~/.tsuku/tools/current/gdbmtool --version
