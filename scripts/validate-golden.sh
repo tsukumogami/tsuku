@@ -83,6 +83,27 @@ if [[ -z "$VERSIONS" ]]; then
     exit 2
 fi
 
+# Check that all supported platforms have golden files
+MISSING_PLATFORMS=()
+for VERSION in $VERSIONS; do
+    for platform in $PLATFORMS; do
+        GOLDEN="$GOLDEN_DIR/${VERSION}-${platform}.json"
+        if [[ ! -f "$GOLDEN" ]]; then
+            MISSING_PLATFORMS+=("${VERSION}-${platform}")
+        fi
+    done
+done
+
+if [[ ${#MISSING_PLATFORMS[@]} -gt 0 ]]; then
+    echo "ERROR: Missing golden files for supported platforms:" >&2
+    for missing in "${MISSING_PLATFORMS[@]}"; do
+        echo "  - $GOLDEN_DIR/${missing}.json" >&2
+    done
+    echo "" >&2
+    echo "Run './scripts/regenerate-golden.sh $RECIPE' to generate missing files." >&2
+    exit 1
+fi
+
 MISMATCH=0
 
 for VERSION in $VERSIONS; do
@@ -94,12 +115,8 @@ for VERSION in $VERSIONS; do
         GOLDEN="$GOLDEN_DIR/${VERSION}-${platform}.json"
         ACTUAL="$TEMP_DIR/${VERSION}-${platform}.json"
 
-        # Skip if golden file doesn't exist for this platform
-        if [[ ! -f "$GOLDEN" ]]; then
-            continue
-        fi
-
         # Generate current plan (stripping non-deterministic fields)
+        # Note: missing platforms already caught by pre-check above
         if ! "$TSUKU" eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
             --version "$VERSION_NO_V" --install-deps 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$ACTUAL"; then
