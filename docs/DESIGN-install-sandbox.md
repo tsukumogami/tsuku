@@ -779,7 +779,7 @@ Sandbox testing recipe: ./my-recipe.toml
 Proceed with sandbox testing? [y/N]
 ```
 
-This confirmation can be bypassed with `--yes` for CI/automation, but ensures users understand what network-enabled sandbox testing entails for untrusted recipes.
+This confirmation can be bypassed with `--install-deps` for CI/automation, but ensures users understand what network-enabled sandbox testing entails for untrusted recipes.
 
 The `--sandbox` flag:
 1. Generates plan (if tool name provided) or loads plan (if --plan)

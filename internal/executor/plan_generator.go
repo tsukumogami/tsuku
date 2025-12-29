@@ -32,7 +32,7 @@ type PlanConfig struct {
 	// If nil, downloads are not cached.
 	DownloadCache *actions.DownloadCache
 	// AutoAcceptEvalDeps controls whether eval-time dependencies are installed automatically.
-	// When true, missing deps are installed without prompting (equivalent to --yes flag).
+	// When true, missing deps are installed without prompting (equivalent to --install-deps flag).
 	AutoAcceptEvalDeps bool
 	// OnEvalDepsNeeded is called when eval-time dependencies are missing.
 	// The callback receives the list of missing dependencies and the auto-accept flag.

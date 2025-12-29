@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "zig",
+  "version": "0.14.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "27cc6e8bd149ae64c98c3a7123fcb95be35a8113902428ee90134ee1ba2f99ec",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c",
+        "checksum_algo": "sha256",
+        "dest": "zig-x86_64-linux-0.14.1.tar.xz",
+        "url": "https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ziglang.org/download/0.14.1/zig-x86_64-linux-0.14.1.tar.xz",
+      "checksum": "24aeeec8af16c381934a6cd7d95c807a8cb2cf7df9fa40d359aa884195c4716c",
+      "size": 49086504
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "zig-x86_64-linux-0.14.1.tar.xz",
+        "format": "tar.xz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "zig"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "zig"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "zig version",
+    "pattern": "{version}"
+  }
+}
