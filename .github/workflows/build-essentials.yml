@@ -184,7 +184,7 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh ninja
 
-  # Test configure_make with library dependencies (sqlite-source → readline → ncurses)
+  # Test configure_make with library dependencies (sqlite-source -> readline -> ncurses)
   test-sqlite-source:
     name: "${{ matrix.platform.name }}: sqlite-source"
     runs-on: ${{ matrix.platform.runner }}
@@ -213,7 +213,7 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Install sqlite-source (tests dependency chain: sqlite → readline → ncurses)
+      - name: "Install sqlite-source (tests dependency chain: sqlite -> readline -> ncurses)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force sqlite-source
@@ -221,7 +221,7 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh sqlite-source
 
-  # Test configure_make with complex multi-dependency build (git → curl → openssl/zlib + expat)
+  # Test configure_make with complex multi-dependency build (git -> curl -> openssl/zlib + expat)
   test-git-source:
     name: "${{ matrix.platform.name }}: git-source"
     runs-on: ${{ matrix.platform.runner }}
@@ -250,7 +250,7 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Install git-source (tests multi-dependency chain: git → curl → openssl/zlib + expat)
+      - name: "Install git-source (tests multi-dependency chain: git -> curl -> openssl/zlib + expat)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force git-source
