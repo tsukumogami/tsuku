@@ -751,16 +751,19 @@ strategy:
         platform: linux-amd64
       - os: macos-latest
         platform: darwin-arm64
-      - os: macos-15-large
-        platform: darwin-amd64
+      # darwin-amd64 skipped: Intel Mac runners require paid tier
+      # linux-arm64 skipped: no GitHub-hosted runners available
 ```
 
 Each runner validates golden files for its platform:
 - `ubuntu-latest` validates `*-linux-amd64.json` files
 - `macos-latest` validates `*-darwin-arm64.json` files (Apple Silicon)
-- `macos-15-large` validates `*-darwin-amd64.json` files (Intel Mac)
 
-**Known limitation**: `linux-arm64` golden files are generated but not execution-validated (no arm64 Linux runners in standard GitHub Actions). Plan generation logic is shared across architectures, so this is acceptable risk.
+**Known limitations**: Two platforms are excluded from execution validation:
+- `darwin-amd64`: Intel Mac runners (`macos-15-large`) require paid GitHub Actions tier
+- `linux-arm64`: No GitHub-hosted arm64 Linux runners available
+
+Plan generation logic is shared across architectures, so bugs would likely affect validated platforms too. This is acceptable risk given the cost of paid runners.
 
 **Execution validation output:**
 ```
@@ -873,37 +876,41 @@ jobs:
 | No golden files for recipe | New recipe added | Run `./scripts/regenerate-golden.sh <recipe>`, commit new files |
 | Golden files for unsupported platform | Recipe platform support narrowed | Regeneration script automatically removes unsupported platform files |
 
-#### Platform Coverage and linux-arm64 Exclusion
+#### Platform Coverage and Exclusions
 
-Golden file testing covers three of the four supported platforms:
+Golden file testing covers two of the four supported platforms:
 
 | Platform | Plan Generation | Execution Validation | CI Runner |
 |----------|-----------------|---------------------|-----------|
 | linux-amd64 | Yes | Yes | `ubuntu-latest` |
 | darwin-arm64 | Yes | Yes | `macos-latest` |
-| darwin-amd64 | Yes | Yes | `macos-13` |
+| darwin-amd64 | Yes | **No** | Requires paid tier |
 | linux-arm64 | **No** | **No** | None available |
 
-**linux-arm64 is explicitly excluded** from golden file testing because:
+**darwin-amd64 is excluded from execution validation** because:
+- Intel Mac runners (`macos-15-large`) require GitHub Actions paid tier
+- Intel Macs are being phased out industry-wide
+- Plan generation still works; only execution validation is skipped
 
-1. **No CI runner available**: GitHub Actions does not provide arm64 Linux runners in the standard tier
-2. **Cannot generate build-based plans**: Build recipes require native toolchain execution
-3. **Cannot validate execution**: Even if plans existed, we couldn't run sandbox tests
+**linux-arm64 is excluded entirely** because:
+- GitHub Actions does not provide arm64 Linux runners in the standard tier
+- Cannot generate build-based plans (require native toolchain execution)
+- Cannot validate execution
 
 **What this means in practice:**
 
 - Recipes do NOT have `*-linux-arm64.json` golden files
+- Recipes DO have `*-darwin-amd64.json` golden files (plan generation works, execution skipped)
 - The regeneration scripts skip linux-arm64 when generating golden files
-- Platform support metadata still includes linux-arm64 (the recipe supports it, we just don't test it)
+- Platform support metadata still includes both platforms (recipes support them, we just don't fully test them)
 
 **Risk mitigation:**
 
-- Plan generation logic is shared across architectures - bugs would likely affect both amd64 and arm64
-- Download-based recipes use the same URL patterns for both architectures
-- Users on linux-arm64 are a small minority of the user base
-- If arm64 Linux runners become available, coverage can be added without design changes
+- Plan generation logic is shared across architectures - bugs would likely affect validated platforms too
+- Download-based recipes use the same URL patterns across architectures
+- linux-amd64 and darwin-arm64 cover the most common developer environments
 
-**Future option**: Self-hosted arm64 Linux runners or services like Actuated/Blacksmith could enable linux-arm64 coverage if demand justifies the cost.
+**Future option**: Self-hosted runners or paid GitHub Actions tier could enable full coverage if demand justifies the cost.
 
 #### Cross-Platform Golden File Generation Workflow
 
