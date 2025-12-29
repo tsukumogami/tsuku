@@ -252,6 +252,7 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 	var ldFlags []string
 
 	// Iterate over install-time dependencies to build paths
+	var curlConfig string // Track curl-config path for CURL_CONFIG env var
 	for depName, depVersion := range ctx.Dependencies.InstallTime {
 		// Check both tools and libs directories for the dependency
 		// Libraries are installed to ~/.tsuku/libs/, tools to ~/.tsuku/tools/
@@ -272,6 +273,16 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 		binDir := filepath.Join(depDir, "bin")
 		if _, err := os.Stat(binDir); err == nil {
 			binPaths = append(binPaths, binDir)
+
+			// Special handling for libcurl: set CURL_CONFIG for Git's Makefile
+			// Git's Makefile has a known issue where it assumes curl-config is in PATH
+			// but doesn't always find it. Setting CURL_CONFIG explicitly fixes this.
+			if depName == "libcurl" {
+				curlConfigPath := filepath.Join(binDir, "curl-config")
+				if _, err := os.Stat(curlConfigPath); err == nil {
+					curlConfig = curlConfigPath
+				}
+			}
 		}
 
 		// PKG_CONFIG_PATH: check for lib/pkgconfig directory
@@ -305,6 +316,12 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 	} else if existingPath != "" {
 		// No dependency bin paths, but preserve existing PATH
 		filteredEnv = append(filteredEnv, "PATH="+existingPath)
+	}
+
+	// Set CURL_CONFIG if libcurl's curl-config was found
+	// This ensures Git's Makefile can find curl-config even when it's not in the default PATH
+	if curlConfig != "" {
+		filteredEnv = append(filteredEnv, "CURL_CONFIG="+curlConfig)
 	}
 
 	// Set PKG_CONFIG_PATH if any paths found
