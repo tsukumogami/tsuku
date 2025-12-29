@@ -78,7 +78,7 @@ ENV PATH="/root/.tsuku/tools/current:$PATH"
 
 # The actual test: build gdbm from source
 # This MUST use zig cc since no system compiler exists
-RUN ./tsuku install --recipe testdata/recipes/gdbm-source.toml --sandbox
+RUN ./tsuku install --recipe testdata/recipes/gdbm-source.toml --sandbox --force
 
 # Verify the installation works
 RUN ~/.tsuku/tools/current/gdbmtool --version
