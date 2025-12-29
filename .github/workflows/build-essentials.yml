@@ -210,8 +210,8 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh sqlite-source
 
-  # Test configure_make with complex multi-dependency build (git -> curl -> openssl/zlib + expat)
-  # SKIP: Circular dependency false positive - see #732
+  # Test configure_make with complex multi-dependency build (git -> curl -> openssl/zlib)
+  # SKIP: Missing library dependencies (expat, libcurl) - see #742
   test-git-source:
     if: false
     name: "${{ matrix.platform.name }}: git-source"
