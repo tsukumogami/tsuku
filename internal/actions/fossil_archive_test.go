@@ -77,7 +77,6 @@ func TestFossilArchiveAction_Preflight(t *testing.T) {
 			params: map[string]interface{}{
 				"repo":         "https://sqlite.org/src",
 				"project_name": "sqlite",
-				"binaries":     []interface{}{"sqlite3"},
 			},
 			expectError: false,
 			errorCount:  0,
@@ -86,7 +85,6 @@ func TestFossilArchiveAction_Preflight(t *testing.T) {
 			name: "Missing repo",
 			params: map[string]interface{}{
 				"project_name": "sqlite",
-				"binaries":     []interface{}{"sqlite3"},
 			},
 			expectError: true,
 			errorCount:  1,
@@ -94,17 +92,7 @@ func TestFossilArchiveAction_Preflight(t *testing.T) {
 		{
 			name: "Missing project_name",
 			params: map[string]interface{}{
-				"repo":     "https://sqlite.org/src",
-				"binaries": []interface{}{"sqlite3"},
-			},
-			expectError: true,
-			errorCount:  1,
-		},
-		{
-			name: "Missing binaries",
-			params: map[string]interface{}{
-				"repo":         "https://sqlite.org/src",
-				"project_name": "sqlite",
+				"repo": "https://sqlite.org/src",
 			},
 			expectError: true,
 			errorCount:  1,
@@ -114,7 +102,6 @@ func TestFossilArchiveAction_Preflight(t *testing.T) {
 			params: map[string]interface{}{
 				"repo":         "http://sqlite.org/src",
 				"project_name": "sqlite",
-				"binaries":     []interface{}{"sqlite3"},
 			},
 			expectError: true,
 			errorCount:  1,
@@ -123,7 +110,7 @@ func TestFossilArchiveAction_Preflight(t *testing.T) {
 			name:        "All missing",
 			params:      map[string]interface{}{},
 			expectError: true,
-			errorCount:  3,
+			errorCount:  2,
 		},
 	}
 
@@ -160,7 +147,6 @@ func TestFossilArchiveAction_Decompose(t *testing.T) {
 	params := map[string]interface{}{
 		"repo":         "https://sqlite.org/src",
 		"project_name": "sqlite",
-		"binaries":     []interface{}{"sqlite3"},
 		"strip_dirs":   1,
 	}
 
@@ -169,9 +155,10 @@ func TestFossilArchiveAction_Decompose(t *testing.T) {
 		t.Fatalf("Decompose() error = %v", err)
 	}
 
-	// Should have 4 steps: download_file, extract, chmod, install_binaries
-	if len(steps) != 4 {
-		t.Errorf("Decompose() returned %d steps, want 4", len(steps))
+	// Should have 2 steps: download_file, extract
+	// (No chmod/install_binaries because Fossil archives contain source code)
+	if len(steps) != 2 {
+		t.Errorf("Decompose() returned %d steps, want 2", len(steps))
 		for i, step := range steps {
 			t.Logf("  Step %d: %s", i, step.Action)
 		}
@@ -179,7 +166,7 @@ func TestFossilArchiveAction_Decompose(t *testing.T) {
 	}
 
 	// Verify step actions
-	expectedActions := []string{"download_file", "extract", "chmod", "install_binaries"}
+	expectedActions := []string{"download_file", "extract"}
 	for i, expected := range expectedActions {
 		if steps[i].Action != expected {
 			t.Errorf("Step %d action = %q, want %q", i, steps[i].Action, expected)
@@ -214,7 +201,6 @@ func TestFossilArchiveAction_Decompose_WithCustomTagFormat(t *testing.T) {
 	params := map[string]interface{}{
 		"repo":              "https://core.tcl-lang.org/tcl",
 		"project_name":      "tcl",
-		"binaries":          []interface{}{"tclsh"},
 		"tag_prefix":        "core-",
 		"version_separator": "-",
 	}
@@ -224,8 +210,8 @@ func TestFossilArchiveAction_Decompose_WithCustomTagFormat(t *testing.T) {
 		t.Fatalf("Decompose() error = %v", err)
 	}
 
-	if len(steps) != 4 {
-		t.Fatalf("Decompose() returned %d steps, want 4", len(steps))
+	if len(steps) != 2 {
+		t.Fatalf("Decompose() returned %d steps, want 2", len(steps))
 	}
 
 	// Verify download URL with custom tag format
@@ -252,21 +238,12 @@ func TestFossilArchiveAction_Decompose_MissingParams(t *testing.T) {
 			name: "Missing repo",
 			params: map[string]interface{}{
 				"project_name": "sqlite",
-				"binaries":     []interface{}{"sqlite3"},
 			},
 		},
 		{
 			name: "Missing project_name",
 			params: map[string]interface{}{
-				"repo":     "https://sqlite.org/src",
-				"binaries": []interface{}{"sqlite3"},
-			},
-		},
-		{
-			name: "Missing binaries",
-			params: map[string]interface{}{
-				"repo":         "https://sqlite.org/src",
-				"project_name": "sqlite",
+				"repo": "https://sqlite.org/src",
 			},
 		},
 	}
@@ -276,48 +253,6 @@ func TestFossilArchiveAction_Decompose_MissingParams(t *testing.T) {
 			_, err := action.Decompose(ctx, tt.params)
 			if err == nil {
 				t.Error("Decompose() expected error, got nil")
-			}
-		})
-	}
-}
-
-func TestFossilArchiveAction_Decompose_InstallMode(t *testing.T) {
-	action := &FossilArchiveAction{}
-
-	ctx := &EvalContext{
-		Context:    context.Background(),
-		Version:    "3.46.0",
-		VersionTag: "version-3.46.0",
-	}
-
-	tests := []struct {
-		name        string
-		installMode string
-		expectError bool
-	}{
-		{name: "default", installMode: "", expectError: false},
-		{name: "binaries", installMode: "binaries", expectError: false},
-		{name: "directory", installMode: "directory", expectError: false},
-		{name: "directory_wrapped", installMode: "directory_wrapped", expectError: false},
-		{name: "invalid", installMode: "invalid", expectError: true},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			params := map[string]interface{}{
-				"repo":         "https://sqlite.org/src",
-				"project_name": "sqlite",
-				"binaries":     []interface{}{"sqlite3"},
-			}
-			if tt.installMode != "" {
-				params["install_mode"] = tt.installMode
-			}
-
-			_, err := action.Decompose(ctx, params)
-			hasError := err != nil
-
-			if hasError != tt.expectError {
-				t.Errorf("Decompose() error = %v, expectError = %v", err, tt.expectError)
 			}
 		})
 	}

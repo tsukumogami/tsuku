@@ -18,7 +18,6 @@ tag_prefix = "version-"
 action = "fossil_archive"
 repo = "https://sqlite.org/src"
 project_name = "sqlite"
-binaries = ["sqlite3"]
 strip_dirs = 1
 
 [[steps]]

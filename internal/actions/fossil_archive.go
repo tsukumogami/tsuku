@@ -35,14 +35,11 @@ func (a *FossilArchiveAction) Preflight(params map[string]interface{}) *Prefligh
 		result.AddError("fossil_archive action requires 'project_name' parameter")
 	}
 
-	if _, hasBinaries := params["binaries"]; !hasBinaries {
-		result.AddError("fossil_archive action requires 'binaries' parameter")
-	}
-
 	return result
 }
 
 // Execute performs the fossil_archive action (runtime path - not used for deterministic plans).
+// Downloads and extracts source code from a Fossil SCM repository.
 func (a *FossilArchiveAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Extract parameters
 	repo, ok := GetString(params, "repo")
@@ -55,21 +52,10 @@ func (a *FossilArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 		return fmt.Errorf("project_name is required")
 	}
 
-	binariesRaw, ok := params["binaries"]
-	if !ok {
-		return fmt.Errorf("binaries is required")
-	}
-
 	stripDirs, _ := GetInt(params, "strip_dirs")
 	if stripDirs == 0 {
 		stripDirs = 1 // Default: strip 1 directory level
 	}
-
-	installMode, _ := GetString(params, "install_mode")
-	if installMode == "" {
-		installMode = "binaries"
-	}
-	installMode = strings.ToLower(installMode)
 
 	// Get optional tag configuration
 	tagPrefix, _ := GetString(params, "tag_prefix")
@@ -109,33 +95,17 @@ func (a *FossilArchiveAction) Execute(ctx *ExecutionContext, params map[string]i
 		return fmt.Errorf("extract failed: %w", err)
 	}
 
-	// Step 3: Chmod binaries
-	chmodFiles := extractSourceFiles(binariesRaw)
-	chmodAction := &ChmodAction{}
-	chmodParams := map[string]interface{}{
-		"files": chmodFiles,
-	}
-
-	if err := chmodAction.Execute(ctx, chmodParams); err != nil {
-		return fmt.Errorf("chmod failed: %w", err)
-	}
-
-	// Step 4: Install binaries
-	installAction := &InstallBinariesAction{}
-	installParams := map[string]interface{}{
-		"binaries":     binariesRaw,
-		"install_mode": installMode,
-	}
-
-	if err := installAction.Execute(ctx, installParams); err != nil {
-		return fmt.Errorf("install failed: %w", err)
-	}
+	// Note: chmod and install_binaries are NOT performed here
+	// because Fossil archives contain source code that needs to be built first.
+	// Use configure_make or other build actions after fossil_archive.
 
 	return nil
 }
 
 // Decompose returns the primitive steps for fossil_archive action.
 // This enables deterministic plan generation by resolving URLs at evaluation time.
+// Unlike github_archive, fossil_archive only decomposes to download_file + extract
+// because Fossil archives contain source code that needs to be built, not pre-built binaries.
 func (a *FossilArchiveAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
 	// Extract required parameters
 	repo, ok := GetString(params, "repo")
@@ -148,24 +118,9 @@ func (a *FossilArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 		return nil, fmt.Errorf("project_name is required")
 	}
 
-	binariesRaw, ok := params["binaries"]
-	if !ok {
-		return nil, fmt.Errorf("binaries is required")
-	}
-
 	stripDirs, _ := GetInt(params, "strip_dirs")
 	if stripDirs == 0 {
 		stripDirs = 1 // Default: strip 1 directory level
-	}
-
-	installMode, _ := GetString(params, "install_mode")
-	if installMode == "" {
-		installMode = "binaries"
-	}
-	installMode = strings.ToLower(installMode)
-
-	if installMode != "binaries" && installMode != "directory" && installMode != "directory_wrapped" {
-		return nil, fmt.Errorf("invalid install_mode '%s': must be 'binaries', 'directory', or 'directory_wrapped'", installMode)
 	}
 
 	// Get optional tag configuration
@@ -189,10 +144,9 @@ func (a *FossilArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 		return nil, err
 	}
 
-	// Extract source files for chmod
-	chmodFiles := extractSourceFiles(binariesRaw)
-
-	// Return primitive steps
+	// Return only download + extract steps
+	// Fossil archives contain source code, so chmod/install_binaries
+	// should happen after the build step (e.g., configure_make)
 	return []Step{
 		downloadStep,
 		{
@@ -201,19 +155,6 @@ func (a *FossilArchiveAction) Decompose(ctx *EvalContext, params map[string]inte
 				"archive":    archiveFilename,
 				"format":     "tar.gz",
 				"strip_dirs": stripDirs,
-			},
-		},
-		{
-			Action: "chmod",
-			Params: map[string]interface{}{
-				"files": chmodFiles,
-			},
-		},
-		{
-			Action: "install_binaries",
-			Params: map[string]interface{}{
-				"binaries":     binariesRaw,
-				"install_mode": installMode,
 			},
 		},
 	}, nil
