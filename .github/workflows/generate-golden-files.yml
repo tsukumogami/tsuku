@@ -1,3 +1,5 @@
+# Generate golden files across all platforms for a recipe.
+# Note: commit_back only works for branches in this repository, not fork PRs.
 name: Generate Golden Files
 
 on:
@@ -70,6 +72,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.branch || github.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          persist-credentials: true
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
