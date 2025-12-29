@@ -1,0 +1,37 @@
+# Tcl source build from core.tcl-lang.org
+# Used for testing fossil_archive with version_separator
+# Tests: fossil_archive with core-X-Y-Z tag format
+#
+# Uses Homebrew for version resolution (Tcl Fossil has bot detection)
+# while downloading source from Fossil
+
+[metadata]
+name = "tcl-source"
+description = "Tool Command Language (source build for testing)"
+homepage = "https://www.tcl.tk/"
+
+[version]
+source = "homebrew"
+formula = "tcl-tk"
+
+[[steps]]
+action = "fossil_archive"
+repo = "https://core.tcl-lang.org/tcl"
+project_name = "tcl"
+tag_prefix = "core-"
+version_separator = "-"
+strip_dirs = 1
+
+[[steps]]
+action = "configure_make"
+source_dir = "unix"
+executables = ["tclsh9.0"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/tclsh9.0"]
+
+[verify]
+command = "tclsh9.0 <<< 'puts $tcl_version'"
+pattern = "9.0"
