@@ -1,0 +1,60 @@
+{
+  "format_version": 3,
+  "tool": "nomad",
+  "version": "1.11.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "250e778a67d435eddfbb3c4afc065e4c60526f4164051490c3e8019c5f034b8d",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "8e8fbc9c3ddae39a63f7ed70a99bb4b936bb6e88ed9160ce0e9d36ff2909c1f3",
+        "checksum_algo": "sha256",
+        "dest": "nomad_1.11.1_linux_amd64.zip",
+        "url": "https://releases.hashicorp.com/nomad/1.11.1/nomad_1.11.1_linux_amd64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://releases.hashicorp.com/nomad/1.11.1/nomad_1.11.1_linux_amd64.zip",
+      "checksum": "8e8fbc9c3ddae39a63f7ed70a99bb4b936bb6e88ed9160ce0e9d36ff2909c1f3",
+      "size": 55792369
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "nomad_1.11.1_linux_amd64.zip",
+        "format": "zip"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "nomad"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "nomad"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "nomad version",
+    "pattern": "{version}"
+  }
+}

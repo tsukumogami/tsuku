@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "golangci-lint",
+  "version": "2.7.2",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "82d1508c28ce76ce0644640bebfc9a9237d87c2a00c7eebcd56cdccf5cfb5713",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "6ce86a00e22b3709f7b994838659c322fdc9eae09e263db50439ad4f6ec5785c",
+        "checksum_algo": "sha256",
+        "dest": "golangci-lint-2.7.2-darwin-arm64.tar.gz",
+        "url": "https://github.com/golangci/golangci-lint/releases/download/v2.7.2/golangci-lint-2.7.2-darwin-arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/golangci/golangci-lint/releases/download/v2.7.2/golangci-lint-2.7.2-darwin-arm64.tar.gz",
+      "checksum": "6ce86a00e22b3709f7b994838659c322fdc9eae09e263db50439ad4f6ec5785c",
+      "size": 13957794
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "golangci-lint-2.7.2-darwin-arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "golangci-lint"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "golangci-lint"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "golangci-lint --version",
+    "pattern": "{version}"
+  }
+}

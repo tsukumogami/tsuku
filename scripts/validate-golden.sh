@@ -60,7 +60,10 @@ PLATFORMS=$("$TSUKU" info --recipe "$RECIPE_PATH" --metadata-only --json | \
     jq -r '.supported_platforms[]' | tr '/' '-' | grep -v '^linux-arm64$' || true)
 
 # Extract versions from existing golden files
-VERSIONS=$(ls "$GOLDEN_DIR"/*.json 2>/dev/null | sed 's/.*\/\(v[^-]*\)-.*/\1/' | sort -u || true)
+# Version is everything before the last two hyphen-separated components (os-arch)
+VERSIONS=$(for f in "$GOLDEN_DIR"/*.json; do
+    basename "$f" .json | rev | cut -d'-' -f3- | rev
+done 2>/dev/null | sort -u || true)
 
 if [[ -z "$VERSIONS" ]]; then
     echo "No golden files found in $GOLDEN_DIR" >&2

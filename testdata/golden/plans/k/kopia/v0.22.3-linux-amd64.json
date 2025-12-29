@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "kopia",
+  "version": "0.22.3",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "f6c11edc47142a7f1b315ac7efd0ee7a8cec71bd2d2a35d4eee34c6671883305",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "d9e906e0813fc73addca7caa91c6ee33641e49e4fabe3462cd221445cc790c2d",
+        "checksum_algo": "sha256",
+        "dest": "kopia-0.22.3-linux-x64.tar.gz",
+        "url": "https://github.com/kopia/kopia/releases/download/v0.22.3/kopia-0.22.3-linux-x64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/kopia/kopia/releases/download/v0.22.3/kopia-0.22.3-linux-x64.tar.gz",
+      "checksum": "d9e906e0813fc73addca7caa91c6ee33641e49e4fabe3462cd221445cc790c2d",
+      "size": 16674609
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "kopia-0.22.3-linux-x64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "kopia"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "kopia"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "kopia --version",
+    "pattern": "{version}"
+  }
+}
