@@ -171,6 +171,12 @@ type VersionSection struct {
 	TagPrefix  string `toml:"tag_prefix"`  // e.g., "ruby-" - filter tags by prefix and strip it from version
 	Module     string `toml:"module"`      // Go module path for goproxy version resolution (when different from install path)
 	Formula    string `toml:"formula"`     // Homebrew formula name for version resolution (e.g., "libyaml")
+
+	// Fossil-specific fields (used by fossil_archive action)
+	FossilRepo       string `toml:"fossil_repo"`       // Full URL to Fossil repository (e.g., "https://sqlite.org/src")
+	ProjectName      string `toml:"project_name"`      // Project name for tarball filename (e.g., "sqlite")
+	VersionSeparator string `toml:"version_separator"` // Separator in version numbers for tag conversion (e.g., "-" converts 9.0.0 to 9-0-0)
+	TimelineTag      string `toml:"timeline_tag"`      // Tag filter for timeline URL (default: "release")
 }
 
 // WhenClause represents platform and runtime conditions for conditional step execution.

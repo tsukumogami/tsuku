@@ -72,6 +72,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&InferredMetaCPANStrategy{})  // PriorityInferred (10)
 	f.Register(&InferredGitHubStrategy{})    // PriorityInferred (10)
 	f.Register(&InferredGoProxyStrategy{})   // PriorityInferred (10)
+	f.Register(&InferredFossilStrategy{})    // PriorityInferred (10)
 
 	return f
 }
@@ -635,4 +636,48 @@ func isValidSourceName(name string) bool {
 	}
 	// Allow alphanumeric, hyphens, underscores only
 	return sourceNameRegex.MatchString(name)
+}
+
+// InferredFossilStrategy infers Fossil provider from fossil_archive action
+type InferredFossilStrategy struct{}
+
+func (s *InferredFossilStrategy) Priority() int { return PriorityInferred }
+
+func (s *InferredFossilStrategy) CanHandle(r *recipe.Recipe) bool {
+	for _, step := range r.Steps {
+		if step.Action == "fossil_archive" {
+			if _, ok := step.Params["repo"].(string); ok {
+				if _, ok := step.Params["project_name"].(string); ok {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+func (s *InferredFossilStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	for _, step := range r.Steps {
+		if step.Action == "fossil_archive" {
+			repo, ok := step.Params["repo"].(string)
+			if !ok {
+				continue
+			}
+			projectName, ok := step.Params["project_name"].(string)
+			if !ok {
+				continue
+			}
+
+			// Get optional configuration from action params
+			tagPrefix, _ := step.Params["tag_prefix"].(string)
+			versionSeparator, _ := step.Params["version_separator"].(string)
+			timelineTag, _ := step.Params["timeline_tag"].(string)
+
+			return NewFossilTimelineProviderWithOptions(
+				resolver, repo, projectName,
+				tagPrefix, versionSeparator, timelineTag,
+			), nil
+		}
+	}
+	return nil, fmt.Errorf("no Fossil repository found in fossil_archive steps")
 }
