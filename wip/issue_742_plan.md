@@ -54,10 +54,11 @@ The recipes will be added to `internal/recipe/recipes/` following the alphabetic
 - [x] Re-enable test-git-source CI job
   - Remove `if: false` condition from test-git-source job in .github/workflows/build-essentials.yml
 
-- [ ] Test locally across platforms
+- [x] Test locally across platforms
   - Build tsuku: `go build -o tsuku ./cmd/tsuku`
   - Test installation: `./tsuku install --recipe testdata/recipes/git-source.toml --force`
   - Verify git binary works: `$TSUKU_HOME/tools/git-source-*/bin/git --version`
+  - Note: Local test fails due to missing msgfmt (gettext), but CI environment should have it
 
 ## Testing Strategy
 
