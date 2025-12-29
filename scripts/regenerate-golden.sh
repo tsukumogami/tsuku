@@ -14,6 +14,19 @@
 
 set -euo pipefail
 
+# Auto-detect GitHub token if not set (for local development)
+if [[ -z "${GITHUB_TOKEN:-}" ]] && command -v gh &>/dev/null; then
+    GITHUB_TOKEN="$(gh auth token 2>/dev/null)" || true
+    export GITHUB_TOKEN
+fi
+
+# Fail fast if no token available
+if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    echo "Error: GITHUB_TOKEN is not set and could not be detected from 'gh auth token'" >&2
+    echo "Please set GITHUB_TOKEN or run 'gh auth login' first." >&2
+    exit 1
+fi
+
 # Script location for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
