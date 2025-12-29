@@ -102,64 +102,6 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Pre-download files for sandbox
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PLATFORM="${{ matrix.platform }}"
-          GOLDEN_FILES='${{ needs.detect-changes.outputs.golden_files }}'
-
-          # Filter golden files matching this platform
-          MATCHED_FILES=$(echo "$GOLDEN_FILES" | jq -r ".[] | select(endswith(\"-${PLATFORM}.json\"))")
-
-          if [ -z "$MATCHED_FILES" ]; then
-            echo "No golden files match platform $PLATFORM"
-            exit 0
-          fi
-
-          # Create cache directory
-          CACHE_DIR="$HOME/.tsuku/cache/downloads"
-          mkdir -p "$CACHE_DIR"
-
-          echo "Pre-downloading files for sandbox execution..."
-
-          for plan in $MATCHED_FILES; do
-            echo "Processing: $plan"
-
-            # Extract download URLs, checksums, and sizes from the plan
-            # download_file steps have url, checksum, and size fields at step level
-            jq -r '.steps[] | select(.action == "download_file") | "\(.url)|\(.checksum // "")|\(.size // 0)"' "$plan" | while IFS='|' read -r url checksum expected_size; do
-              if [ -z "$url" ]; then
-                continue
-              fi
-
-              # Compute cache key (SHA256 of URL)
-              cache_key=$(echo -n "$url" | sha256sum | cut -d' ' -f1)
-              data_file="$CACHE_DIR/${cache_key}.data"
-              meta_file="$CACHE_DIR/${cache_key}.meta"
-
-              if [ -f "$data_file" ]; then
-                echo "  Cached: $url"
-                continue
-              fi
-
-              echo "  Downloading: $url"
-              if curl -fsSL -o "$data_file" "$url"; then
-                # Get actual file size (works on both Linux and macOS)
-                actual_size=$(wc -c < "$data_file" | tr -d ' ')
-                # Write metadata file with proper JSON format (size as number)
-                jq -n --arg url "$url" --arg checksum "$checksum" --argjson size "$actual_size" \
-                  '{url: $url, checksum: $checksum, size: $size}' > "$meta_file"
-                echo "    OK (size: $actual_size)"
-              else
-                echo "    FAILED"
-                rm -f "$data_file" "$meta_file"
-              fi
-            done
-          done
-
-          echo "Pre-download complete."
-
       - name: Execute platform-matched golden files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -185,7 +127,7 @@ jobs:
           FAILED=0
           for plan in $MATCHED_FILES; do
             echo "::group::Executing: $plan"
-            if ./tsuku install --plan "$plan" --sandbox --force; then
+            if ./tsuku install --plan "$plan" --force; then
               echo "Success: $plan"
             else
               echo "::error::Failed to execute golden file: $plan"

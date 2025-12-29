@@ -521,7 +521,7 @@ jobs:
           git diff --name-only origin/main...HEAD -- 'testdata/golden/plans/**/*.json' | \
             grep "$PLATFORM" | while read plan; do
               echo "Testing: $plan"
-              ./tsuku install --plan "$plan" --sandbox
+              ./tsuku install --plan "$plan" --force
             done
 ```
 
@@ -547,7 +547,7 @@ git diff testdata/golden/plans/f/fzf/
 git diff --stat testdata/golden/plans/
 
 # Test execution locally (current platform only)
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --force
 ```
 
 ### Execution Validation: Keeping Plans Fresh
@@ -594,7 +594,7 @@ Golden plans must stay synchronized with three moving targets:
               ▼                     ▼                     ▼
     ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
     │ git diff        │   │ git diff        │   │ tsuku install   │
-    │ --exit-code     │   │ --exit-code     │   │ --plan --sandbox│
+    │ --exit-code     │   │ --exit-code     │   │ --plan --force  │
     └─────────────────┘   └─────────────────┘   └─────────────────┘
               │                     │                     │
               └─────────────────────┼─────────────────────┘
@@ -638,7 +638,7 @@ vim internal/recipe/recipes/f/fzf.toml
 git diff testdata/golden/plans/f/fzf/
 
 # Optional: test execution locally
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --force
 
 # Commit both recipe and golden file changes
 git add internal/recipe/recipes/f/fzf.toml testdata/golden/plans/f/fzf/
@@ -696,8 +696,8 @@ go test ./internal/executor/...
 git diff --stat testdata/golden/plans/
 
 # Optional: spot-check execution for a few recipes
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
-./tsuku install --plan testdata/golden/plans/r/ripgrep/v14.1.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --force
+./tsuku install --plan testdata/golden/plans/r/ripgrep/v14.1.0-linux-amd64.json --force
 
 # If changes are intentional, commit everything
 git add internal/executor/plan.go testdata/golden/plans/
@@ -723,11 +723,18 @@ When golden files are modified (by either trigger above), CI validates they are 
 **What happens:**
 1. CI detects golden files changed in the PR
 2. For each changed golden file matching the current runner's platform:
-   - Runs `tsuku install --plan <golden-file> --sandbox`
-   - Sandbox downloads the artifact and verifies checksum
-   - Sandbox executes installation steps in isolated container
+   - Runs `tsuku install --plan <golden-file> --force`
+   - Downloads the artifact and verifies checksum
+   - Executes installation steps
    - Verifies the tool is installed correctly
 3. Fails if any installation fails
+
+**Why direct execution (not sandbox):**
+- GitHub Actions runners are ephemeral and clean - no isolation needed
+- Tsuku's built-in checksum verification provides the security guarantee
+- Direct execution supports ALL plan types including ecosystem installers (npm, pip, cargo)
+- Sandbox mode with network isolation only works for binary-download plans
+- The goal is to validate plans work, not to test isolation
 
 **Why this matters:**
 - Catches checksum mismatches (upstream artifact changed)
@@ -758,28 +765,20 @@ Each runner validates golden files for its platform:
 **Execution validation output:**
 ```
 Testing: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
-Running sandbox test for fzf...
-  Container image: ubuntu:22.04
-  Network access: disabled (binary installation)
-  Resource limits: 2G memory, 2.0 CPUs, 2m0s timeout
-
-Sandbox test PASSED
-
-Testing: testdata/golden/plans/r/ripgrep/v14.1.0-linux-amd64.json
-Running sandbox test for ripgrep...
-...
+Installing fzf v0.46.0...
+  Downloading: https://github.com/junegunn/fzf/releases/download/...
+  Verifying checksum: OK
+  Extracting: fzf-0.46.0-linux_amd64.tar.gz
+  Installing binaries: fzf
+Success: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
 ```
 
 **Execution failure example:**
 ```
 Testing: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
-Running sandbox test for fzf...
-
-Sandbox test FAILED
-Exit code: 1
-
-Error output:
-  download: checksum mismatch
+Installing fzf v0.46.0...
+  Downloading: https://github.com/junegunn/fzf/releases/download/...
+  Error: checksum mismatch
     expected: sha256:abc123...
     actual:   sha256:def456...
 
@@ -795,17 +794,17 @@ Investigate the checksum mismatch and update the golden file if legitimate.
 # On Linux (amd64):
 for plan in testdata/golden/plans/f/fzf/*-linux-amd64.json; do
     echo "Testing: $plan"
-    ./tsuku install --plan "$plan" --sandbox
+    ./tsuku install --plan "$plan" --force
 done
 
 # On macOS (arm64):
 for plan in testdata/golden/plans/f/fzf/*-darwin-arm64.json; do
     echo "Testing: $plan"
-    ./tsuku install --plan "$plan" --sandbox
+    ./tsuku install --plan "$plan" --force
 done
 
 # Test a specific plan
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --force
 ```
 
 #### Trigger 4: Upstream Version Updates (Keeping Plans Fresh)
@@ -821,7 +820,7 @@ Golden files pin specific versions. When new versions are released upstream, pla
 git diff testdata/golden/plans/f/fzf/
 
 # Test execution for the new version (current platform)
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.47.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.47.0-linux-amd64.json --force
 
 # Commit new version's golden files
 git add testdata/golden/plans/f/fzf/
@@ -1418,7 +1417,7 @@ This enables programmatic tooling for golden plan management and other automatio
 1. Add `validate-golden-recipes.yml` for recipe change validation
 2. Add `validate-golden-code.yml` for code change validation
 3. Add download caching using `actions/cache` keyed by recipe+version
-4. Add execution validation step using `--sandbox` flag
+4. Add execution validation step for changed golden files
 
 ### Phase 3: Tiered Golden File Generation
 
@@ -1496,19 +1495,21 @@ Until this blocker is resolved, recipes with `require_system` steps are excluded
 
 ### Download Verification
 
-Golden files contain checksums computed from real downloads. When a golden file changes, the CI workflow validates the plan can be executed with `tsuku install --plan --sandbox`. This ensures:
+Golden files contain checksums computed from real downloads. When a golden file changes, the CI workflow validates the plan can be executed with `tsuku install --plan --force`. This ensures:
 
 - Checksums match actual downloadable artifacts
 - Plans are executable, not just syntactically valid
-- Sandbox isolation prevents malicious payload execution
+- Tsuku's built-in checksum verification catches supply chain changes
 
 ### Execution Isolation
 
-Execution validation uses the `--sandbox` flag which runs installations in an isolated container. This provides:
+Execution validation runs directly on GitHub Actions runners rather than in sandbox containers. This is appropriate because:
 
-- No modification to host system
-- Resource limits (memory, CPU, timeout)
-- Network isolation for non-download actions
+- GitHub Actions runners are ephemeral and destroyed after each job
+- The goal is to validate plans work, not to test isolation mechanisms
+- Direct execution supports ALL plan types including ecosystem installers
+- Sandbox mode with network isolation only works for binary-download plans
+- Tsuku's built-in checksum verification provides the security guarantee
 
 ### Supply Chain Risks
 
@@ -1584,7 +1585,7 @@ Golden files are validated through execution on every change:
 | Validation Type | When | How |
 |-----------------|------|-----|
 | Structural | Every PR | Go tests with `AssertPlanInvariants()` |
-| Checksum freshness | Golden file change | `tsuku install --plan --sandbox` |
+| Checksum freshness | Golden file change | `tsuku install --plan --force` |
 | Cross-platform | Recipe change | Generate for all 4 platforms |
 
 ### What Happens When Tsuku Changes
