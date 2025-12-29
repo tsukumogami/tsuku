@@ -23,6 +23,7 @@ on:
       - 'internal/actions/meson_build.go'
       - 'internal/actions/extract.go'
       - 'testdata/recipes/*.toml'
+      - 'scripts/*.sh'
       - 'test/scripts/verify-*.sh'
       - '.github/workflows/build-essentials.yml'
 
