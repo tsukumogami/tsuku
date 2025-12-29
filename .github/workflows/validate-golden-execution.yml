@@ -13,16 +13,16 @@ jobs:
     name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
-      has_changes: ${{ steps.changed.outputs.has_changes }}
-      golden_files: ${{ steps.changed.outputs.golden_files }}
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      has_changes: ${{ steps.build-matrix.outputs.has_changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Get changed golden files
-        id: changed
+      - name: Build execution matrix
+        id: build-matrix
         run: |
           # Get list of changed golden files (exclude deleted files)
           CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'testdata/golden/plans/**/*.json')
@@ -30,16 +30,18 @@ jobs:
           if [ -z "$CHANGED" ]; then
             echo "No golden files changed"
             echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "golden_files=[]" >> $GITHUB_OUTPUT
+            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           echo "Changed golden files:"
           echo "$CHANGED"
 
-          # Build JSON array of golden file paths
-          JSON="["
+          # Build matrix with one entry per file
+          # Map platform suffix to runner
+          MATRIX='{"include":['
           FIRST=true
+
           for path in $CHANGED; do
             # Skip if file doesn't exist (deleted in later commit)
             if [ ! -f "$path" ]; then
@@ -47,39 +49,67 @@ jobs:
               continue
             fi
 
+            # Extract platform from filename (e.g., v1.20.0-linux-amd64.json -> linux-amd64)
+            filename=$(basename "$path" .json)
+            platform=$(echo "$filename" | sed 's/.*-\(linux\|darwin\)-\(amd64\|arm64\)$/\1-\2/')
+
+            # Map platform to runner
+            case "$platform" in
+              linux-amd64)
+                os="ubuntu-latest"
+                ;;
+              darwin-arm64)
+                os="macos-latest"
+                ;;
+              darwin-amd64)
+                # Skip: Intel Mac runners require paid tier
+                echo "Skipping $path (darwin-amd64 requires paid tier)"
+                continue
+                ;;
+              linux-arm64)
+                # Skip: no GitHub-hosted runners available
+                echo "Skipping $path (linux-arm64 no runners available)"
+                continue
+                ;;
+              *)
+                echo "Unknown platform in $path: $platform"
+                continue
+                ;;
+            esac
+
+            # Extract tool name for job naming
+            tool=$(basename "$(dirname "$path")")
+
             if [ "$FIRST" = true ]; then
               FIRST=false
             else
-              JSON="$JSON,"
+              MATRIX="$MATRIX,"
             fi
-            JSON="$JSON\"$path\""
-          done
-          JSON="$JSON]"
 
-          if [ "$JSON" = "[]" ]; then
-            echo "No golden files to validate"
+            MATRIX="$MATRIX{\"file\":\"$path\",\"os\":\"$os\",\"platform\":\"$platform\",\"tool\":\"$tool\",\"version\":\"$filename\"}"
+          done
+
+          MATRIX="$MATRIX]}"
+
+          if [ "$MATRIX" = '{"include":[]}' ]; then
+            echo "No executable golden files to validate"
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
-          echo "golden_files=$JSON" >> $GITHUB_OUTPUT
+
+          echo "Matrix: $MATRIX"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
   validate-execution:
-    name: "Execute: ${{ matrix.platform }}"
+    name: "${{ matrix.tool }} (${{ matrix.platform }})"
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 10
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            platform: linux-amd64
-          - os: macos-latest
-            platform: darwin-arm64
-          # darwin-amd64 skipped: Intel Mac runners require paid tier
-          # linux-arm64 skipped: no GitHub-hosted runners available
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -94,57 +124,16 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.tsuku/cache/downloads
-          key: golden-execution-${{ matrix.platform }}-${{ hashFiles('testdata/golden/plans/**/*.json') }}
+          key: golden-execution-${{ matrix.platform }}-${{ hashFiles(matrix.file) }}
           restore-keys: |
             golden-execution-${{ matrix.platform }}-
-            golden-execution-
 
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Execute platform-matched golden files
+      - name: Execute golden file
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          PLATFORM="${{ matrix.platform }}"
-          GOLDEN_FILES='${{ needs.detect-changes.outputs.golden_files }}'
-
-          echo "Platform: $PLATFORM"
-          echo "Changed golden files: $GOLDEN_FILES"
-
-          # Filter golden files matching this platform
-          MATCHED_FILES=$(echo "$GOLDEN_FILES" | jq -r ".[] | select(endswith(\"-${PLATFORM}.json\"))")
-
-          if [ -z "$MATCHED_FILES" ]; then
-            echo "No golden files match platform $PLATFORM"
-            exit 0
-          fi
-
-          echo "Files to execute:"
-          echo "$MATCHED_FILES"
-          echo ""
-
-          FAILED=0
-          for plan in $MATCHED_FILES; do
-            echo "::group::Executing: $plan"
-            if ./tsuku install --plan "$plan" --force; then
-              echo "Success: $plan"
-            else
-              echo "::error::Failed to execute golden file: $plan"
-              FAILED=1
-            fi
-            echo "::endgroup::"
-          done
-
-          if [ $FAILED -ne 0 ]; then
-            echo ""
-            echo "::error::One or more golden files failed execution validation."
-            echo "::error::This may indicate:"
-            echo "::error::  - Checksum mismatch (upstream artifact changed)"
-            echo "::error::  - Download URL no longer valid"
-            echo "::error::  - Installation steps are broken"
-            exit 1
-          fi
-
-          echo ""
-          echo "All platform-matched golden files executed successfully."
+          echo "Executing: ${{ matrix.file }}"
+          ./tsuku install --plan "${{ matrix.file }}" --force
