@@ -20,9 +20,9 @@ The current implementation marks tools as visited before checking if they're alr
 None
 
 ## Implementation Steps
-- [ ] Move the "already installed" check (lines 251-291) to before the circular dependency check (lines 226-230)
-- [ ] For tools that are already installed and this is a dependency install (`!isExplicit && reqVersion == ""`), update state and return early WITHOUT marking as visited
-- [ ] Only mark tools as visited when they're about to be processed (after the early return for already-installed dependencies)
+- [x] Move the "already installed" check (lines 251-291) to before the circular dependency check (lines 226-230)
+- [x] For tools that are already installed and this is a dependency install (`!isExplicit && reqVersion == ""`), update state and return early WITHOUT marking as visited
+- [x] Only mark tools as visited when they're about to be processed (after the early return for already-installed dependencies)
 - [ ] Add a test case in `dependency_test.go` that reproduces the `git-source` scenario: a tool with multiple dependencies that share a common sub-dependency
 
 ## Testing Strategy
