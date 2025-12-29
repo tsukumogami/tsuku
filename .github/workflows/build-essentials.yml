@@ -211,7 +211,7 @@ jobs:
         run: ./test/scripts/verify-tool.sh sqlite-source
 
   # Test configure_make with complex multi-dependency build (git -> curl -> openssl/zlib)
-  # SKIP: Needs curl library recipe (not just tool) and build system fixes
+  # SKIP: Missing library dependencies (expat, libcurl) - see #742
   test-git-source:
     if: false
     name: "${{ matrix.platform.name }}: git-source"
