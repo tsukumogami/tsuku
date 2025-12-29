@@ -1,0 +1,22 @@
+[metadata]
+name = "geos"
+description = "Geometry Engine - Open Source"
+homepage = "https://libgeos.org/"
+type = "library"
+
+[version]
+source = "homebrew"
+formula = "geos"
+
+[[steps]]
+action = "homebrew"
+formula = "geos"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/geos-config"]
+
+[verify]
+command = "geos-config --version"
+pattern = "{version}"

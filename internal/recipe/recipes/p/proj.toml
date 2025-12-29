@@ -1,0 +1,23 @@
+[metadata]
+name = "proj"
+description = "Cartographic Projections Library"
+homepage = "https://proj.org/"
+type = "library"
+dependencies = ["sqlite"]
+
+[version]
+source = "homebrew"
+formula = "proj"
+
+[[steps]]
+action = "homebrew"
+formula = "proj"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/proj"]
+
+[verify]
+command = "proj"
+pattern = "{version}"

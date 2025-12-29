@@ -1,0 +1,23 @@
+[metadata]
+name = "spatialite"
+description = "SpatiaLite spatial extensions for SQLite"
+homepage = "https://www.gaia-gis.it/fossil/libspatialite"
+binaries = ["bin/spatialite"]
+dependencies = ["sqlite", "geos", "proj", "libxml2"]
+
+[version]
+source = "homebrew"
+formula = "libspatialite"
+
+[[steps]]
+action = "homebrew"
+formula = "libspatialite"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/spatialite"]
+
+[verify]
+command = "spatialite -version"
+pattern = "{version}"
