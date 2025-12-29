@@ -83,12 +83,12 @@ go test ./...
 
 ## Implementation Steps
 
-| Step | Description | Estimated Effort |
-|------|-------------|------------------|
-| 1 | Add `EnsureDirectories()` call in `install_sandbox.go` | 5 minutes |
-| 2 | Run `go test ./...` to verify no regressions | 2 minutes |
-| 3 | Manual test with fresh environment (if container runtime available) | 5 minutes |
-| 4 | Create commit | 2 minutes |
+| Step | Description | Status |
+|------|-------------|--------|
+| 1 | Add `EnsureDirectories()` call in `install_sandbox.go` | Done |
+| 2 | Run `go test ./...` to verify no regressions | Done |
+| 3 | Manual test with fresh environment (if container runtime available) | Skipped (no container runtime) |
+| 4 | Create commit | Done |
 
 ## Risk Assessment
 
