@@ -250,7 +250,8 @@ verify_git() {
     echo "Testing: git clone small repository"
     cd "$TEMP_DIR"
     # Clone a small, stable public repo (git's own test repo is tiny)
-    if git clone --depth 1 https://github.com/git/git-manpages.git test-clone 2>&1 | grep -q "Cloning into"; then
+    # Run clone and capture output for verification
+    if git clone --depth 1 https://github.com/git/git-manpages.git test-clone 2>&1; then
         echo "✓ git clone works (curl integration validated)"
 
         # Verify the clone worked
@@ -258,6 +259,7 @@ verify_git() {
             echo "✓ Repository cloned successfully"
         else
             echo "✗ ERROR: Clone directory exists but .git missing"
+            ls -la test-clone/ 2>/dev/null || echo "test-clone directory not found"
             return 1
         fi
     else
