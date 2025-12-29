@@ -8,6 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
@@ -72,10 +73,31 @@ Test installation in a sandbox container:
 			return
 		}
 
-		// Recipe-based installation (without sandbox) - just validate it exists for now
+		// Recipe-based installation (without sandbox) - load recipe and convert to plan
 		if installRecipePath != "" {
-			printError(fmt.Errorf("--recipe requires --sandbox flag (recipe testing must run in sandbox)"))
-			exitWithCode(ExitUsage)
+			// Validate: cannot specify multiple tools with --recipe
+			if len(args) > 1 {
+				printError(fmt.Errorf("cannot specify multiple tools with --recipe flag"))
+				exitWithCode(ExitUsage)
+			}
+
+			// Dry-run is not supported with --recipe (plan will be generated)
+			if installDryRun {
+				printError(fmt.Errorf("--dry-run is not supported with --recipe"))
+				exitWithCode(ExitUsage)
+			}
+
+			// Tool name is optional - defaults to recipe's tool name
+			var toolName string
+			if len(args) == 1 {
+				toolName = args[0]
+			}
+
+			if err := runRecipeBasedInstall(installRecipePath, toolName); err != nil {
+				printError(err)
+				exitWithCode(ExitInstallFailed)
+			}
+			return
 		}
 
 		// Plan-based installation takes a different path
@@ -205,4 +227,32 @@ func runDryRun(toolName, reqVersion string) error {
 
 	// Run dry-run with cancellable context
 	return exec.DryRun(globalCtx)
+}
+
+// runRecipeBasedInstall loads a recipe from a file and installs it
+func runRecipeBasedInstall(recipePath, toolName string) error {
+	// Load recipe from file
+	r, err := recipe.ParseFile(recipePath)
+	if err != nil {
+		return fmt.Errorf("failed to load recipe from %s: %w", recipePath, err)
+	}
+
+	// Use recipe's name if tool name not provided
+	if toolName == "" {
+		toolName = r.Metadata.Name
+	}
+
+	// Initialize telemetry
+	telemetryClient := telemetry.NewClient()
+	telemetry.ShowNoticeIfNeeded()
+
+	// Cache the recipe in the loader so normal installation flow can find it
+	loader.CacheRecipe(toolName, r)
+
+	// Use the normal installation flow with the cached recipe
+	if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
+		return err
+	}
+
+	return nil
 }
