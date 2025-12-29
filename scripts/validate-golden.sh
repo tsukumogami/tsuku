@@ -98,7 +98,7 @@ for VERSION in $VERSIONS; do
 
         # Generate current plan (stripping non-deterministic fields)
         if ! "$TSUKU" eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
-            --version "$VERSION_NO_V" 2>/dev/null | \
+            --version "$VERSION_NO_V" --yes 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$ACTUAL"; then
             echo "Failed to generate plan for $RECIPE@$VERSION ($platform)" >&2
             continue
