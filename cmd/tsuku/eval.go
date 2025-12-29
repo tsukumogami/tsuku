@@ -31,7 +31,7 @@ func makeSet(items []string) map[string]bool {
 
 var evalOS string
 var evalArch string
-var evalYes bool
+var evalInstallDeps bool
 var evalRecipePath string
 var evalVersion string
 
@@ -51,7 +51,7 @@ to generate plans for other platforms.
 
 Some tools require dependencies at eval time (e.g., npm packages need nodejs
 to generate package-lock.json). If these dependencies are missing, you will
-be prompted to install them. Use --yes to auto-accept.
+be prompted to install them. Use --install-deps to auto-install.
 
 Use --recipe to evaluate a local recipe file:
   tsuku eval --recipe ./my-recipe.toml
@@ -65,7 +65,7 @@ Examples:
   tsuku eval kubectl
   tsuku eval kubectl@v1.29.0
   tsuku eval ripgrep --os linux --arch arm64
-  tsuku eval netlify-cli --yes
+  tsuku eval netlify-cli --install-deps
   tsuku eval --recipe ./my-recipe.toml --os darwin --arch arm64
   tsuku eval --recipe ./my-recipe.toml --version v1.2.0`,
 	Args: cobra.MaximumNArgs(1),
@@ -75,7 +75,7 @@ Examples:
 func init() {
 	evalCmd.Flags().StringVar(&evalOS, "os", "", "Target operating system (linux, darwin)")
 	evalCmd.Flags().StringVar(&evalArch, "arch", "", "Target architecture (amd64, arm64)")
-	evalCmd.Flags().BoolVar(&evalYes, "yes", false, "Auto-accept installation of eval-time dependencies")
+	evalCmd.Flags().BoolVar(&evalInstallDeps, "install-deps", false, "Auto-install eval-time dependencies")
 	evalCmd.Flags().StringVar(&evalRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 	evalCmd.Flags().StringVar(&evalVersion, "version", "", "Version to use (only with --recipe)")
 }
@@ -228,7 +228,7 @@ func runEval(cmd *cobra.Command, args []string) {
 		RecipeSource:       recipeSource,
 		Downloader:         downloader,
 		DownloadCache:      downloadCache,
-		AutoAcceptEvalDeps: evalYes,
+		AutoAcceptEvalDeps: evalInstallDeps,
 		RecipeLoader:       loader,
 		OnWarning: func(action, message string) {
 			// Output warnings to stderr so they don't mix with JSON

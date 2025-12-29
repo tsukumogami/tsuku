@@ -158,7 +158,7 @@ for VERSION in $VERSIONS; do
         OUTPUT="$GOLDEN_DIR/${VERSION}-${platform}.json"
 
         if "$TSUKU" eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
-            --version "$VERSION_NO_V" --yes 2>/dev/null | \
+            --version "$VERSION_NO_V" --install-deps 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$OUTPUT.tmp"; then
             mv "$OUTPUT.tmp" "$OUTPUT"
             echo "  Generated: $OUTPUT"
