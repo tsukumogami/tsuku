@@ -126,9 +126,9 @@ jobs:
           for plan in $MATCHED_FILES; do
             echo "Processing: $plan"
 
-            # Extract download URLs and checksums from the plan
-            # download_file steps have url, checksum, and checksum_algo fields
-            jq -r '.steps[] | select(.action == "download_file") | "\(.url)|\(.checksum // "")|\(.checksum_algo // "sha256")"' "$plan" | while IFS='|' read -r url checksum algo; do
+            # Extract download URLs, checksums, and sizes from the plan
+            # download_file steps have url, checksum, and size fields at step level
+            jq -r '.steps[] | select(.action == "download_file") | "\(.url)|\(.checksum // "")|\(.size // 0)"' "$plan" | while IFS='|' read -r url checksum expected_size; do
               if [ -z "$url" ]; then
                 continue
               fi
@@ -145,9 +145,12 @@ jobs:
 
               echo "  Downloading: $url"
               if curl -fsSL -o "$data_file" "$url"; then
-                # Write metadata file
-                echo "{\"url\": \"$url\", \"checksum\": \"$checksum\", \"checksum_algo\": \"$algo\"}" > "$meta_file"
-                echo "    OK"
+                # Get actual file size (works on both Linux and macOS)
+                actual_size=$(wc -c < "$data_file" | tr -d ' ')
+                # Write metadata file with proper JSON format (size as number)
+                jq -n --arg url "$url" --arg checksum "$checksum" --argjson size "$actual_size" \
+                  '{url: $url, checksum: $checksum, size: $size}' > "$meta_file"
+                echo "    OK (size: $actual_size)"
               else
                 echo "    FAILED"
                 rm -f "$data_file" "$meta_file"
