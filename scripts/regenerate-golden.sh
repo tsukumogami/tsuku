@@ -121,7 +121,10 @@ if [[ -n "$FILTER_VERSION" ]]; then
     VERSIONS="$VERSION_FOR_FILE"
 elif [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
     # Extract versions from existing files (with v prefix)
-    VERSIONS=$(ls "$GOLDEN_DIR"/*.json | sed 's/.*\/\(v[^-]*\)-.*/\1/' | sort -u)
+    # Version is everything before the last two hyphen-separated components (os-arch)
+    VERSIONS=$(for f in "$GOLDEN_DIR"/*.json; do
+        basename "$f" .json | rev | cut -d'-' -f3- | rev
+    done | sort -u)
 else
     # Get latest version
     LATEST=$("$TSUKU" versions "$RECIPE" 2>/dev/null | grep -E '^\s+v' | head -1 | xargs || true)
@@ -161,8 +164,9 @@ if [[ -z "$FILTER_OS" && -z "$FILTER_ARCH" && -z "$FILTER_VERSION" ]]; then
     if [[ -d "$GOLDEN_DIR" ]]; then
         find "$GOLDEN_DIR" -name "*.json" | while read -r file; do
             # Extract platform from filename (e.g., v0.60.0-linux-amd64.json -> linux-amd64)
-            filename=$(basename "$file")
-            platform=$(echo "$filename" | sed 's/v[^-]*-//' | sed 's/\.json$//')
+            # Platform is always the last two hyphen-separated components before .json
+            filename=$(basename "$file" .json)
+            platform=$(echo "$filename" | rev | cut -d'-' -f1,2 | rev)
 
             if ! echo "$ALL_PLATFORMS" | grep -qw "$platform"; then
                 echo "  Removing unsupported: $file"
