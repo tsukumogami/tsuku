@@ -27,7 +27,6 @@ action = "setup_build_env"
 [[steps]]
 action = "configure_make"
 source_dir = "git-{version}"
-configure_args = ["--with-curl", "--with-openssl", "--with-zlib", "--with-expat"]
 executables = ["git"]
 
 [[steps]]

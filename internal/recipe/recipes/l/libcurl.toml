@@ -17,6 +17,7 @@ formula = "curl"
 action = "install_binaries"
 install_mode = "directory"
 binaries = [
+    "bin/curl-config",
     "lib/libcurl.so",
     "lib/libcurl.so.4",
     "lib/libcurl.dylib",
