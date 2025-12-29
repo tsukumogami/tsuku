@@ -1,0 +1,34 @@
+# Fossil SCM source build from fossil-scm.org
+# Used for testing fossil_archive action (self-hosting demo)
+# Tests: fossil_archive + configure_make
+
+[metadata]
+name = "fossil-source"
+description = "Distributed version control system (source build for testing)"
+homepage = "https://fossil-scm.org/"
+
+[version]
+# Version is resolved from Fossil timeline at https://fossil-scm.org/home/timeline?t=release
+fossil_repo = "https://fossil-scm.org/home"
+project_name = "fossil"
+tag_prefix = "version-"
+
+[[steps]]
+action = "fossil_archive"
+repo = "https://fossil-scm.org/home"
+project_name = "fossil"
+strip_dirs = 1
+
+[[steps]]
+action = "configure_make"
+source_dir = "."
+executables = ["fossil"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/fossil"]
+
+[verify]
+command = "fossil version"
+pattern = "{version}"
