@@ -199,6 +199,12 @@ func (l *Loader) ClearCache() {
 	l.recipes = make(map[string]*Recipe)
 }
 
+// CacheRecipe adds a recipe to the in-memory cache
+// This is useful for testing or loading recipes from non-standard sources
+func (l *Loader) CacheRecipe(name string, r *Recipe) {
+	l.recipes[name] = r
+}
+
 // RecipeSource indicates where a recipe comes from
 type RecipeSource string
 
