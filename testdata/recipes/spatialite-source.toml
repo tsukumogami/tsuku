@@ -1,0 +1,37 @@
+# SpatiaLite source build from Fossil
+# Used for testing fossil_archive action with full dependency chain
+# Tests: fossil_archive + setup_build_env + configure_make + complex deps
+
+[metadata]
+name = "spatialite-source"
+description = "SpatiaLite spatial extensions for SQLite (source build for testing)"
+homepage = "https://www.gaia-gis.it/fossil/libspatialite"
+dependencies = ["sqlite-source", "geos-source", "proj-source", "libxml2-source"]
+
+[version]
+source = "homebrew"
+formula = "libspatialite"
+
+[[steps]]
+action = "fossil_archive"
+repo = "https://www.gaia-gis.it/fossil/libspatialite"
+project_name = "libspatialite"
+strip_dirs = 1
+
+[[steps]]
+action = "setup_build_env"
+
+[[steps]]
+action = "configure_make"
+source_dir = "."
+executables = ["spatialite"]
+configure_args = ["--disable-freexl", "--disable-minizip", "--disable-gcp", "--disable-rttopo"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/spatialite"]
+
+[verify]
+command = "spatialite -version"
+pattern = "{version}"

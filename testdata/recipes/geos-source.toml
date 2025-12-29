@@ -1,0 +1,37 @@
+# GEOS source build from GitHub
+# Used for testing cmake_build action with GitHub sources
+# Tests: download + extract + cmake_build
+
+[metadata]
+name = "geos-source"
+description = "Geometry Engine - Open Source (source build for testing)"
+homepage = "https://libgeos.org/"
+
+[version]
+source = "homebrew"
+formula = "geos"
+
+[[steps]]
+action = "download"
+url = "https://github.com/libgeos/geos/archive/{version}.tar.gz"
+skip_verification_reason = "GitHub source archives don't provide checksums"
+
+[[steps]]
+action = "extract"
+archive = "{version}.tar.gz"
+format = "tar.gz"
+
+[[steps]]
+action = "cmake_build"
+source_dir = "geos-{version}"
+executables = ["geos-config"]
+cmake_args = ["-DBUILD_TESTING=OFF"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/geos-config"]
+
+[verify]
+command = "geos-config --version"
+pattern = "{version}"

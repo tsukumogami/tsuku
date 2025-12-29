@@ -1,0 +1,37 @@
+# libxml2 source build from GNOME
+# Used for testing configure_make action with GNOME download server
+# Tests: download + extract + configure_make
+
+[metadata]
+name = "libxml2-source"
+description = "GNOME XML library (source build for testing)"
+homepage = "https://gitlab.gnome.org/GNOME/libxml2"
+
+[version]
+source = "homebrew"
+formula = "libxml2"
+
+[[steps]]
+action = "download"
+url = "https://download.gnome.org/sources/libxml2/2.15/libxml2-{version}.tar.xz"
+skip_verification_reason = "GNOME FTP mirrors don't provide checksums for dynamic versions"
+
+[[steps]]
+action = "extract"
+archive = "libxml2-{version}.tar.xz"
+format = "tar.xz"
+
+[[steps]]
+action = "configure_make"
+source_dir = "libxml2-{version}"
+executables = ["xmllint"]
+configure_args = ["--without-python", "--without-lzma", "--without-icu"]
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/xmllint"]
+
+[verify]
+command = "xmllint --version"
+pattern = "{version}"

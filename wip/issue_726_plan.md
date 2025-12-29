@@ -75,7 +75,7 @@ From existing testdata recipes:
 
 ## Implementation Steps
 
-### Step 1: Create geos-source.toml
+### Step 1: Create geos-source.toml [x]
 
 Recipe pattern:
 - Version: Homebrew `geos` formula
@@ -118,7 +118,7 @@ command = "geos-config --version"
 pattern = "{version}"
 ```
 
-### Step 2: Create proj-source.toml
+### Step 2: Create proj-source.toml [x]
 
 Recipe pattern:
 - Version: Homebrew `proj` formula
@@ -166,7 +166,7 @@ command = "proj"
 pattern = "{version}"
 ```
 
-### Step 3: Create libxml2-source.toml
+### Step 3: Create libxml2-source.toml [x]
 
 Recipe pattern:
 - Version: Homebrew `libxml2` formula
@@ -210,7 +210,7 @@ command = "xmllint --version"
 pattern = "{version}"
 ```
 
-### Step 4: Create spatialite-source.toml
+### Step 4: Create spatialite-source.toml [x]
 
 Recipe pattern:
 - Version: Homebrew `libspatialite` formula
@@ -254,7 +254,7 @@ command = "spatialite -version"
 pattern = "{version}"
 ```
 
-### Step 5: Update BUILD-ESSENTIALS.md
+### Step 5: Update BUILD-ESSENTIALS.md [x]
 
 Add `fossil_archive` to the Build System Actions section after `setup_build_env`:
 
