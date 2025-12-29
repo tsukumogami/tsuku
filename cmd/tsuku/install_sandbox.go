@@ -93,6 +93,11 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 		reqs.Resources.Memory, reqs.Resources.CPUs, reqs.Resources.Timeout)
 	printInfo()
 
+	// Ensure cache directories exist (needed for mounting into container)
+	if err := cfg.EnsureDirectories(); err != nil {
+		return fmt.Errorf("failed to create directories: %w", err)
+	}
+
 	// Create sandbox executor with download cache directory
 	// This allows the sandbox to use pre-downloaded files from plan generation
 	detector := validate.NewRuntimeDetector()
