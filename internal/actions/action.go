@@ -179,4 +179,5 @@ func init() {
 	Register(&DownloadArchiveAction{})
 	Register(&GitHubArchiveAction{})
 	Register(&GitHubFileAction{})
+	Register(&FossilArchiveAction{})
 }
