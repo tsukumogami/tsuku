@@ -223,12 +223,6 @@ func findDependencyBinPath(mgr *install.Manager, depName string) (string, error)
 }
 
 func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client) error {
-	// Check for circular dependencies
-	if visited[toolName] {
-		return fmt.Errorf("circular dependency detected: %s", toolName)
-	}
-	visited[toolName] = true
-
 	// Initialize manager for state updates
 	cfg, err := config.DefaultConfig()
 	if err != nil {
@@ -248,7 +242,8 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 	}
 
-	// Check if already installed
+	// Check if already installed BEFORE checking for circular dependencies
+	// This prevents false positives when multiple tools share a dependency
 	tools, _ := mgr.List()
 	isInstalled := false
 	for _, t := range tools {
@@ -283,12 +278,20 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 
 		// If explicit update requested, we might want to proceed with re-installation
-		// But for dependency check, we just return
+		// But for dependency check, we just return WITHOUT marking as visited
+		// This allows shared dependencies to be recognized as already installed
 		if !isExplicit && reqVersion == "" {
 			return nil
 		}
 		// If it's an explicit install/update, we proceed
 	}
+
+	// Check for circular dependencies AFTER confirming tool isn't already installed
+	// This ensures we only mark tools as visited when they're about to be processed
+	if visited[toolName] {
+		return fmt.Errorf("circular dependency detected: %s", toolName)
+	}
+	visited[toolName] = true
 
 	// Load recipe
 	r, err := loader.Get(toolName)

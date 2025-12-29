@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/install"
@@ -93,6 +94,91 @@ func TestDependencyResolution_PreventDuplicates(t *testing.T) {
 	for i, tool := range expectedOrder {
 		if installOrder[i] != tool {
 			t.Errorf("installOrder[%d] = %s, want %s", i, installOrder[i], tool)
+		}
+	}
+}
+
+func TestDependencyResolution_SharedDependency(t *testing.T) {
+	// Test the scenario that caused issue #732:
+	// - git-source depends on: curl, openssl
+	// - curl depends on: openssl
+	// When curl is installed first (bringing in openssl as a dependency),
+	// then git-source tries to install openssl directly, it should not
+	// trigger a circular dependency error.
+
+	visited := make(map[string]bool)
+	installOrder := []string{}
+
+	// Simulate tool status: nil means not installed
+	installed := make(map[string]bool)
+
+	checkAndInstall := func(tool string, isAlreadyInstalled bool) error {
+		// Check if already installed BEFORE circular dependency check
+		if isAlreadyInstalled || installed[tool] {
+			// Update state and return early WITHOUT marking as visited
+			// This is the fix for issue #732
+			installed[tool] = true
+			return nil
+		}
+
+		// Check for circular dependencies AFTER confirming not installed
+		if visited[tool] {
+			return fmt.Errorf("circular dependency detected: %s", tool)
+		}
+		visited[tool] = true
+
+		// Install the tool
+		installOrder = append(installOrder, tool)
+		installed[tool] = true
+		return nil
+	}
+
+	// Simulate installing curl (which depends on openssl)
+	// 1. Install openssl as dependency of curl
+	if err := checkAndInstall("openssl", false); err != nil {
+		t.Fatalf("Failed to install openssl as curl dependency: %v", err)
+	}
+
+	// 2. Install curl itself
+	if err := checkAndInstall("curl", false); err != nil {
+		t.Fatalf("Failed to install curl: %v", err)
+	}
+
+	// Now simulate installing git-source (which depends on curl and openssl)
+	// 3. Try to install curl - already installed, should skip
+	if err := checkAndInstall("curl", false); err != nil {
+		t.Fatalf("Failed to handle already-installed curl: %v", err)
+	}
+
+	// 4. Try to install openssl - already installed, should NOT trigger circular dependency
+	// This is the key test: openssl was marked as visited during curl's installation,
+	// but since it's already installed, it should return early without error
+	if err := checkAndInstall("openssl", false); err != nil {
+		t.Fatalf("False positive circular dependency for shared dependency: %v", err)
+	}
+
+	// 5. Install git-source itself
+	if err := checkAndInstall("git-source", false); err != nil {
+		t.Fatalf("Failed to install git-source: %v", err)
+	}
+
+	// Verify install order: openssl, curl, git-source
+	// (curl and openssl shouldn't be in installOrder again since they were already installed)
+	expectedOrder := []string{"openssl", "curl", "git-source"}
+	if len(installOrder) != len(expectedOrder) {
+		t.Fatalf("Install order length = %d, want %d. Order: %v", len(installOrder), len(expectedOrder), installOrder)
+	}
+
+	for i, tool := range expectedOrder {
+		if installOrder[i] != tool {
+			t.Errorf("installOrder[%d] = %s, want %s", i, installOrder[i], tool)
+		}
+	}
+
+	// Verify all tools are installed
+	for _, tool := range []string{"openssl", "curl", "git-source"} {
+		if !installed[tool] {
+			t.Errorf("tool %s should be marked as installed", tool)
 		}
 	}
 }
