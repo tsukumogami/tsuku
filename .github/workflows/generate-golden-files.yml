@@ -1,9 +1,31 @@
 # Generate golden files across all platforms for a recipe.
+#
+# This workflow can be triggered:
+# 1. Manually via workflow_dispatch (Actions UI)
+# 2. Programmatically from other workflows via workflow_call
+#
 # Note: commit_back only works for branches in this repository, not fork PRs.
+#
+# See CONTRIBUTING.md "Golden File Testing" section for usage.
 name: Generate Golden Files
 
 on:
   workflow_dispatch:
+    inputs:
+      recipe:
+        description: 'Recipe name to regenerate golden files for'
+        required: true
+        type: string
+      commit_back:
+        description: 'Commit results back to current branch'
+        type: boolean
+        default: false
+      branch:
+        description: 'Branch to run on (defaults to current ref)'
+        required: false
+        type: string
+
+  workflow_call:
     inputs:
       recipe:
         description: 'Recipe name to regenerate golden files for'
