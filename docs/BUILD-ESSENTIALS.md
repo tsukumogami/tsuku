@@ -69,6 +69,36 @@ Validates and displays build environment configuration. This action doesn't modi
 - Displays PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS, CC, CXX configuration
 - No-op execution (actual environment setup happens in build actions)
 
+### fossil_archive
+
+Downloads and extracts source archives from Fossil SCM repositories.
+
+**Action:** `fossil_archive`
+
+**Parameters:**
+- `repo` (required): Fossil repository URL (must be HTTPS)
+- `project_name` (required): Name used in tarball filename
+- `tag_prefix` (optional): Prefix before version in tags (default: "version-")
+- `version_separator` (optional): Separator in version numbers (default: ".")
+- `strip_dirs` (optional): Directories to strip from archive (default: 1)
+
+**Example recipe:**
+```toml
+[[steps]]
+action = "fossil_archive"
+repo = "https://sqlite.org/src"
+project_name = "sqlite"
+strip_dirs = 1
+```
+
+**URL construction:**
+The action builds tarball URLs using the pattern: `{repo}/tarball/{tag}/{project_name}.tar.gz`
+
+For example, with version `3.46.0` and `tag_prefix = "version-"`:
+`https://sqlite.org/src/tarball/version-3.46.0/sqlite.tar.gz`
+
+**See also:** [DESIGN-fossil-archive.md](DESIGN-fossil-archive.md) for detailed implementation
+
 ## Core Build Tools
 
 ### zig

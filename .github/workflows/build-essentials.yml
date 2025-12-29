@@ -1,6 +1,9 @@
 name: Build Essentials
 
 on:
+  schedule:
+    # Weekly on Sunday at midnight UTC
+    - cron: '0 0 * * 0'
   push:
     branches: [main]
     paths:
@@ -349,3 +352,4 @@ jobs:
 
       - name: "Verify gdbm-source functionality"
         run: ./test/scripts/verify-tool.sh gdbm-source
+

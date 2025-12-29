@@ -1,0 +1,22 @@
+[metadata]
+name = "libxml2"
+description = "GNOME XML library"
+homepage = "https://gitlab.gnome.org/GNOME/libxml2"
+type = "library"
+
+[version]
+source = "homebrew"
+formula = "libxml2"
+
+[[steps]]
+action = "homebrew"
+formula = "libxml2"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = ["bin/xmllint"]
+
+[verify]
+command = "xmllint --version"
+pattern = "{version}"
