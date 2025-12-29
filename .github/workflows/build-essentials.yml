@@ -106,7 +106,7 @@ jobs:
       - name: Install gdbm-source (tests configure_make)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --recipe testdata/recipes/gdbm-source.toml --sandbox --force
+        run: ./tsuku install --recipe testdata/recipes/gdbm-source.toml --force
 
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh gdbm-source
@@ -139,7 +139,7 @@ jobs:
       - name: Install libsixel-source (tests meson_build)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --recipe testdata/recipes/libsixel-source.toml --sandbox --force
+        run: ./tsuku install --recipe testdata/recipes/libsixel-source.toml --force
 
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh libsixel-source
@@ -205,7 +205,7 @@ jobs:
       - name: "Install sqlite-source (tests dependency chain: sqlite -> readline -> ncurses)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --recipe testdata/recipes/sqlite-source.toml --sandbox --force
+        run: ./tsuku install --recipe testdata/recipes/sqlite-source.toml --force
 
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh sqlite-source
@@ -240,7 +240,7 @@ jobs:
       - name: "Install git-source (tests multi-dependency chain: git -> curl -> openssl/zlib + expat)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --recipe testdata/recipes/git-source.toml --sandbox --force
+        run: ./tsuku install --recipe testdata/recipes/git-source.toml --force
 
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh git-source
@@ -345,7 +345,7 @@ jobs:
           # and we want configure to detect system make, not the Homebrew make
           echo "Building gdbm-source - should use zig cc since no gcc exists"
           echo "System make: $(which make)"
-          ./tsuku install --recipe testdata/recipes/gdbm-source.toml --sandbox --force
+          ./tsuku install --recipe testdata/recipes/gdbm-source.toml --force
 
       - name: "Verify gdbm-source functionality"
         run: ./test/scripts/verify-tool.sh gdbm-source
