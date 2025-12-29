@@ -60,9 +60,11 @@ Most Fossil-hosted projects have Homebrew bottles or GitHub releases available. 
 | Fossil | TBD (check Homebrew) | `testdata/recipes/fossil-source.toml` | Self-hosting demo |
 | Tcl | TBD (check Homebrew) | `testdata/recipes/tcl-source.toml` | version_separator demo |
 | Tk | TBD (check Homebrew) | `testdata/recipes/tk-source.toml` | Dependency chain demo |
-| SpatiaLite | `recipes/s/spatialite.toml` (Homebrew) | `testdata/recipes/spatialite-source.toml` | Full ecosystem exercise |
+| SpatiaLite | `recipes/s/spatialite.toml` (Homebrew) | N/A | Production only (see note) |
 
 **Exception:** If a tool is ONLY available via Fossil (no Homebrew/GitHub), then `fossil_archive` becomes the production recipe.
+
+**Note:** SpatiaLite's Fossil repository at gaia-gis.it requires authentication for tarball downloads, making it unsuitable for a testdata recipe. The production recipe uses Homebrew bottles instead.
 
 ### Supporting Recipes
 
@@ -73,8 +75,6 @@ SpatiaLite's dependencies use production Homebrew bottle recipes:
 | GEOS | `recipes/g/geos.toml` | Geometry library |
 | PROJ | `recipes/p/proj.toml` | Cartographic projections |
 | libxml2 | `recipes/l/libxml2.toml` | XML parsing |
-
-The `spatialite-source` testdata recipe depends on these production recipes for its dependencies, testing the `fossil_archive` action with a real-world complex dependency chain
 
 ### Scope
 
@@ -331,7 +331,6 @@ Create testdata recipes to showcase `fossil_archive` capability:
 | `fossil-source` | `testdata/recipes/` | Self-hosting demo |
 | `tcl-source` | `testdata/recipes/` | Demonstrates version_separator |
 | `tk-source` | `testdata/recipes/` | Demonstrates dependency chain |
-| `spatialite-source` | `testdata/recipes/` | Full ecosystem exercise (fossil_archive + configure_make) |
 
 **Production recipes for dependencies:**
 
@@ -348,8 +347,7 @@ Create testdata recipes to showcase `fossil_archive` capability:
 | Fossil recipe | New `testdata/recipes/fossil-source.toml` |
 | Tcl recipe | New `testdata/recipes/tcl-source.toml` with `version_separator = "-"` |
 | Tk recipe | New `testdata/recipes/tk-source.toml` with Tcl dependency |
-| SpatiaLite recipe | New `testdata/recipes/spatialite-source.toml` with production deps |
-| Production deps | New production recipes for geos, proj, libxml2, spatialite |
+| Production deps | New production recipes for geos, proj, libxml2, spatialite (Homebrew) |
 | Documentation | Update BUILD-ESSENTIALS.md to reference fossil_archive |
 
 ### Files to Create/Modify
@@ -364,7 +362,6 @@ Create testdata recipes to showcase `fossil_archive` capability:
 | `testdata/recipes/fossil-source.toml` | New: Fossil SCM testdata recipe |
 | `testdata/recipes/tcl-source.toml` | New: Tcl testdata recipe |
 | `testdata/recipes/tk-source.toml` | New: Tk testdata recipe |
-| `testdata/recipes/spatialite-source.toml` | New: SpatiaLite testdata recipe |
 | `internal/recipe/recipes/g/geos.toml` | New: GEOS production recipe (Homebrew) |
 | `internal/recipe/recipes/p/proj.toml` | New: PROJ production recipe (Homebrew) |
 | `internal/recipe/recipes/l/libxml2.toml` | New: libxml2 production recipe (Homebrew) |
