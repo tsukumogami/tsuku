@@ -100,7 +100,13 @@ if [[ ${#MISSING_PLATFORMS[@]} -gt 0 ]]; then
         echo "  - $GOLDEN_DIR/${missing}.json" >&2
     done
     echo "" >&2
-    echo "Run './scripts/regenerate-golden.sh $RECIPE' to generate missing files." >&2
+    echo "To fix, either:" >&2
+    echo "" >&2
+    echo "  1. Generate locally (if you have the required toolchain):" >&2
+    echo "     ./scripts/regenerate-golden.sh $RECIPE" >&2
+    echo "" >&2
+    echo "  2. Generate via CI (for cross-platform generation):" >&2
+    echo "     gh workflow run generate-golden-files.yml -f recipe=$RECIPE -f commit_back=true -f branch=\$(git branch --show-current)" >&2
     exit 1
 fi
 
@@ -141,8 +147,13 @@ done
 
 if [[ $MISMATCH -eq 1 ]]; then
     echo ""
-    echo "Golden file validation failed."
-    echo "Run './scripts/regenerate-golden.sh $RECIPE' to update."
+    echo "Golden file validation failed. To fix, either:"
+    echo ""
+    echo "  1. Generate locally (if you have the required toolchain):"
+    echo "     ./scripts/regenerate-golden.sh $RECIPE"
+    echo ""
+    echo "  2. Generate via CI (for cross-platform generation):"
+    echo "     gh workflow run generate-golden-files.yml -f recipe=$RECIPE -f commit_back=true -f branch=\$(git branch --show-current)"
     exit 1
 fi
 
