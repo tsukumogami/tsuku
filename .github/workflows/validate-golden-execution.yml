@@ -15,6 +15,7 @@ jobs:
     outputs:
       matrix: ${{ steps.build-matrix.outputs.matrix }}
       has_changes: ${{ steps.build-matrix.outputs.has_changes }}
+      recipes: ${{ steps.build-matrix.outputs.recipes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -100,6 +101,45 @@ jobs:
 
           echo "Matrix: $MATRIX"
           echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+          # Extract unique recipe names for coverage validation
+          RECIPES=$(echo "$CHANGED" | while read -r path; do
+            if [ -n "$path" ]; then
+              basename "$(dirname "$path")"
+            fi
+          done | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+          echo "Affected recipes: $RECIPES"
+          echo "recipes=$RECIPES" >> $GITHUB_OUTPUT
+
+  validate-coverage:
+    name: "Coverage: ${{ matrix.recipe }}"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJson(needs.detect-changes.outputs.recipes) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Validate platform coverage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Validating platform coverage for ${{ matrix.recipe }}..."
+          ./scripts/validate-golden.sh "${{ matrix.recipe }}"
 
   validate-execution:
     name: "${{ matrix.tool }} (${{ matrix.platform }})"
