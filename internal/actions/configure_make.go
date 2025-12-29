@@ -94,7 +94,13 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 	configureArgs, _ := GetStringSlice(params, "configure_args")
 	makeTargets, _ := GetStringSlice(params, "make_targets")
 
-	// Validate configure args for security before any output
+	// Expand variables in configure_args (e.g., {libs_dir}, {deps.libcurl.version})
+	vars := GetStandardVarsWithDeps(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir, ctx.Dependencies)
+	for i, arg := range configureArgs {
+		configureArgs[i] = ExpandVars(arg, vars)
+	}
+
+	// Validate configure args for security after expansion
 	for _, arg := range configureArgs {
 		if !isValidConfigureArg(arg) {
 			return fmt.Errorf("invalid configure argument '%s'", arg)
