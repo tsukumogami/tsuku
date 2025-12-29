@@ -2,14 +2,18 @@
 # Used for testing fossil_archive with dependency chain
 # Tests: fossil_archive + dependencies declaration
 #
-# NOTE: The Tk Fossil server has bot detection that blocks automated version
-# resolution. Install with explicit version: tsuku install tk-source@9.0.3
+# Uses Homebrew for version resolution (Tk Fossil has bot detection)
+# while downloading source from Fossil
 
 [metadata]
 name = "tk-source"
 description = "Graphical toolkit for Tcl (source build for testing)"
 homepage = "https://www.tcl.tk/"
 dependencies = ["tcl-source"]
+
+[version]
+source = "homebrew"
+formula = "tcl-tk"
 
 [[steps]]
 action = "fossil_archive"
