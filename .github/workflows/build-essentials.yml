@@ -370,12 +370,14 @@ jobs:
               # Fossil archive action and version provider
               - 'internal/actions/fossil_archive.go'
               - 'internal/version/fossil*.go'
-              # Spatialite dependency chain recipes only
+              # Spatialite testdata recipe and its fossil-built dependency
               - 'testdata/recipes/sqlite-source.toml'
-              - 'testdata/recipes/geos-source.toml'
-              - 'testdata/recipes/proj-source.toml'
-              - 'testdata/recipes/libxml2-source.toml'
               - 'testdata/recipes/spatialite-source.toml'
+              # Production recipes used as dependencies
+              - 'internal/recipe/recipes/g/geos.toml'
+              - 'internal/recipe/recipes/p/proj.toml'
+              - 'internal/recipe/recipes/l/libxml2.toml'
+              - 'internal/recipe/recipes/s/spatialite.toml'
 
   # Test fossil_archive with complex dependency chain (spatialite -> sqlite, geos, proj, libxml2)
   # Runs weekly OR when fossil-related files are touched
@@ -410,20 +412,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Install all testdata recipes needed for the dependency chain
-          # geos-source: CMake build from GitHub
-          # proj-source: CMake with sqlite dependency
-          # libxml2-source: autoconf from GNOME
-          # spatialite-source: fossil_archive with all deps
-          ./tsuku install --recipe testdata/recipes/geos-source.toml --force
-          ./tsuku install --recipe testdata/recipes/proj-source.toml --force
-          ./tsuku install --recipe testdata/recipes/libxml2-source.toml --force
+          # spatialite-source uses fossil_archive and depends on:
+          # - sqlite-source (also fossil_archive - source build)
+          # - geos, proj, libxml2 (production Homebrew bottles)
           ./tsuku install --recipe testdata/recipes/spatialite-source.toml --force
 
       - name: "Verify spatialite functionality"
         run: |
-          # Verify each component of the chain
-          ~/.tsuku/bin/geos-config --version
-          ~/.tsuku/bin/proj
-          ~/.tsuku/bin/xmllint --version
+          # Verify spatialite CLI works
           ~/.tsuku/bin/spatialite -version

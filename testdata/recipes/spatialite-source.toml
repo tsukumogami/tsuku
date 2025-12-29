@@ -6,7 +6,7 @@
 name = "spatialite-source"
 description = "SpatiaLite spatial extensions for SQLite (source build for testing)"
 homepage = "https://www.gaia-gis.it/fossil/libspatialite"
-dependencies = ["sqlite-source", "geos-source", "proj-source", "libxml2-source"]
+dependencies = ["sqlite-source", "geos", "proj", "libxml2"]
 
 [version]
 source = "homebrew"
