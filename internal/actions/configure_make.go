@@ -320,8 +320,12 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 
 	// Set CURL_CONFIG if libcurl's curl-config was found
 	// This ensures Git's Makefile can find curl-config even when it's not in the default PATH
+	var curlDir string
 	if curlConfig != "" {
 		filteredEnv = append(filteredEnv, "CURL_CONFIG="+curlConfig)
+		// Also set CURLDIR for Git's Makefile (expects headers in $CURLDIR/include, libs in $CURLDIR/lib)
+		curlDir = filepath.Dir(filepath.Dir(curlConfig)) // go from bin/curl-config to libcurl root
+		filteredEnv = append(filteredEnv, "CURLDIR="+curlDir)
 	}
 
 	// Set PKG_CONFIG_PATH if any paths found
