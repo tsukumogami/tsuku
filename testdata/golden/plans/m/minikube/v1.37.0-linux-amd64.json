@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "minikube",
+  "version": "1.37.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "5ac36397c92653c10bc3317ca70eb70ca8ca7fe05861dd398771fe840bf140ab",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "d5cf561c71171152ff67d799f041ac0f65c235c87a1e9fc02a6a17b8226214d0",
+        "checksum_algo": "sha256",
+        "dest": "minikube",
+        "url": "https://github.com/kubernetes/minikube/releases/download/v1.37.0/minikube-linux-amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/kubernetes/minikube/releases/download/v1.37.0/minikube-linux-amd64",
+      "checksum": "d5cf561c71171152ff67d799f041ac0f65c235c87a1e9fc02a6a17b8226214d0",
+      "size": 139886451
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "minikube"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "minikube"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "minikube version",
+    "pattern": "{version}"
+  }
+}

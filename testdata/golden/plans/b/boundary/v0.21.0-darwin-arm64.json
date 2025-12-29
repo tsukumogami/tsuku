@@ -1,0 +1,60 @@
+{
+  "format_version": 3,
+  "tool": "boundary",
+  "version": "0.21.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "2fcd2b5baecba1dfe48932add23411476e13908f9809200210466ce35a8bc3ac",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "59dccd76065da4e2a9c9fd186cb77b91b754b5c670b1e8c8eb2af94c2dd5cace",
+        "checksum_algo": "sha256",
+        "dest": "boundary_0.21.0_darwin_arm64.zip",
+        "url": "https://releases.hashicorp.com/boundary/0.21.0/boundary_0.21.0_darwin_arm64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://releases.hashicorp.com/boundary/0.21.0/boundary_0.21.0_darwin_arm64.zip",
+      "checksum": "59dccd76065da4e2a9c9fd186cb77b91b754b5c670b1e8c8eb2af94c2dd5cace",
+      "size": 185160292
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "boundary_0.21.0_darwin_arm64.zip",
+        "format": "zip"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "boundary"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "boundary"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "boundary version",
+    "pattern": "{version}"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "trivy",
+  "version": "0.68.2",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "8a2336b02cff096acc108f5b6380b2de5cdf207959f41e663d4b3c7dcdebf34d",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "c0790530cd717b6bdd02ed437be0710f5c7043078fafaf6841be7c865bf251ce",
+        "checksum_algo": "sha256",
+        "dest": "trivy_0.68.2_macOS-64bit.tar.gz",
+        "url": "https://github.com/aquasecurity/trivy/releases/download/v0.68.2/trivy_0.68.2_macOS-64bit.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/aquasecurity/trivy/releases/download/v0.68.2/trivy_0.68.2_macOS-64bit.tar.gz",
+      "checksum": "c0790530cd717b6bdd02ed437be0710f5c7043078fafaf6841be7c865bf251ce",
+      "size": 48280283
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "trivy_0.68.2_macOS-64bit.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "trivy"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "trivy"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "trivy --version",
+    "pattern": "{version}"
+  }
+}

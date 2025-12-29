@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "stern",
+  "version": "1.33.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "fad2561fafb6615d419a8f691a7549efe2e457de8a565c2632ddd86290e07563",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "185be29c6a22bd07c0791ec697900943c0cc27292e5a5640a07a543886f1bfc9",
+        "checksum_algo": "sha256",
+        "dest": "stern_1.33.1_linux_amd64.tar.gz",
+        "url": "https://github.com/stern/stern/releases/download/v1.33.1/stern_1.33.1_linux_amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/stern/stern/releases/download/v1.33.1/stern_1.33.1_linux_amd64.tar.gz",
+      "checksum": "185be29c6a22bd07c0791ec697900943c0cc27292e5a5640a07a543886f1bfc9",
+      "size": 14481386
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "stern_1.33.1_linux_amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "stern"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "stern"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "stern --version",
+    "pattern": "{version}"
+  }
+}

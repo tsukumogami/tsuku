@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "gotop",
+  "version": "4.2.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "45a8cd380fb565f6e672c2e9ddbadca3e397b8d43fee3a191fac2a8d9f8f0d5b",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "e86296a833d4673a92945a38327b8b2e77d757d059a5dd491cd5ee4569110439",
+        "checksum_algo": "sha256",
+        "dest": "gotop_v4.2.0_darwin_arm64.tgz",
+        "url": "https://github.com/xxxserxxx/gotop/releases/download/v4.2.0/gotop_v4.2.0_darwin_arm64.tgz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/xxxserxxx/gotop/releases/download/v4.2.0/gotop_v4.2.0_darwin_arm64.tgz",
+      "checksum": "e86296a833d4673a92945a38327b8b2e77d757d059a5dd491cd5ee4569110439",
+      "size": 2877467
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gotop_v4.2.0_darwin_arm64.tgz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "gotop"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "gotop"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gotop --version",
+    "pattern": "{version}"
+  }
+}

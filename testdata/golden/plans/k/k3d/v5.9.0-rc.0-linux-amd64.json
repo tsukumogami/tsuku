@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "k3d",
+  "version": "5.9.0-rc.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "054b7917765003a345ef2fc9f4eb73b8980073fb2abf80dbb2f99faee78ea720",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "89d786d2b6d53f8bf2825cf5ada94a436653e89bcbb0fb22f46b6774759887b3",
+        "checksum_algo": "sha256",
+        "dest": "k3d",
+        "url": "https://github.com/k3d-io/k3d/releases/download/v5.9.0-rc.0/k3d-linux-amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/k3d-io/k3d/releases/download/v5.9.0-rc.0/k3d-linux-amd64",
+      "checksum": "89d786d2b6d53f8bf2825cf5ada94a436653e89bcbb0fb22f46b6774759887b3",
+      "size": 24068280
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "k3d"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "k3d"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "k3d version",
+    "pattern": "v{version}"
+  }
+}

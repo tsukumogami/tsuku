@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "lazygit",
+  "version": "0.57.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "74c611b0b3d8e01206531e2063f4e61c499d4cbbaa68972688f7e0022b4ea6cc",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "e90dd90c37bb012f1fe708e7f3d32d28747c8638c75a45268734c5e33277c3d0",
+        "checksum_algo": "sha256",
+        "dest": "lazygit_0.57.0_darwin_arm64.tar.gz",
+        "url": "https://github.com/jesseduffield/lazygit/releases/download/v0.57.0/lazygit_0.57.0_darwin_arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/jesseduffield/lazygit/releases/download/v0.57.0/lazygit_0.57.0_darwin_arm64.tar.gz",
+      "checksum": "e90dd90c37bb012f1fe708e7f3d32d28747c8638c75a45268734c5e33277c3d0",
+      "size": 7469422
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "lazygit_0.57.0_darwin_arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "lazygit"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "lazygit"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "lazygit --version",
+    "pattern": "{version}"
+  }
+}

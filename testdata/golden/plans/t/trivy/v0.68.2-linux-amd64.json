@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "trivy",
+  "version": "0.68.2",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "8a2336b02cff096acc108f5b6380b2de5cdf207959f41e663d4b3c7dcdebf34d",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "3d933bbc3685f95ec15280f620583d05d97ee3affb66944d14481d5d6d567064",
+        "checksum_algo": "sha256",
+        "dest": "trivy_0.68.2_Linux-64bit.tar.gz",
+        "url": "https://github.com/aquasecurity/trivy/releases/download/v0.68.2/trivy_0.68.2_Linux-64bit.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/aquasecurity/trivy/releases/download/v0.68.2/trivy_0.68.2_Linux-64bit.tar.gz",
+      "checksum": "3d933bbc3685f95ec15280f620583d05d97ee3affb66944d14481d5d6d567064",
+      "size": 47322253
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "trivy_0.68.2_Linux-64bit.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "trivy"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "trivy"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "trivy --version",
+    "pattern": "{version}"
+  }
+}

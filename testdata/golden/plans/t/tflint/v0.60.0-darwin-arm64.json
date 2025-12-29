@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "tflint",
+  "version": "0.60.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "40b5daf675d4f8c148f8a37bb4ae69ee14e6b997b2e51bf6b7cdf49de1c6ee6a",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "753a392b70e37b2970732bdaf0c9ad98b0f8ecb96026b21e91261e4e967c7f5e",
+        "checksum_algo": "sha256",
+        "dest": "tflint_darwin_arm64.zip",
+        "url": "https://github.com/terraform-linters/tflint/releases/download/v0.60.0/tflint_darwin_arm64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/terraform-linters/tflint/releases/download/v0.60.0/tflint_darwin_arm64.zip",
+      "checksum": "753a392b70e37b2970732bdaf0c9ad98b0f8ecb96026b21e91261e4e967c7f5e",
+      "size": 15640729
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "tflint_darwin_arm64.zip",
+        "format": "zip",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "tflint"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "tflint"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "tflint --version",
+    "pattern": "{version}"
+  }
+}

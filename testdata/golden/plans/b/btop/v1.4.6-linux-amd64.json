@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "btop",
+  "version": "1.4.6",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "026d964e290768f09460cf00a862fd70480782afaf935af424c9886a37192c91",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "9bf7ed170423bb3709a8020767bd2ca529c5632af478f229dce7cdfd32b25691",
+        "checksum_algo": "sha256",
+        "dest": "btop-x86_64-unknown-linux-musl.tbz",
+        "url": "https://github.com/aristocratos/btop/releases/download/v1.4.6/btop-x86_64-unknown-linux-musl.tbz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/aristocratos/btop/releases/download/v1.4.6/btop-x86_64-unknown-linux-musl.tbz",
+      "checksum": "9bf7ed170423bb3709a8020767bd2ca529c5632af478f229dce7cdfd32b25691",
+      "size": 948523
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "btop-x86_64-unknown-linux-musl.tbz",
+        "format": "tbz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "btop/bin/btop"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "btop/bin/btop"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "btop --version",
+    "pattern": "{version}"
+  }
+}

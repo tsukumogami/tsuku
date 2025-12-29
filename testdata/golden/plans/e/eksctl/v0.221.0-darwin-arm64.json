@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "eksctl",
+  "version": "0.221.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "3625f4573f25af66a9e516a023d8b7c697b1f3cdb06ff1133befe04b7ae2e16a",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "80a5f4ec7c58aad8884665318f448e88f1861a9e0eb2a467e0b879161d90bcc2",
+        "checksum_algo": "sha256",
+        "dest": "eksctl_Darwin_arm64.tar.gz",
+        "url": "https://github.com/eksctl-io/eksctl/releases/download/v0.221.0/eksctl_Darwin_arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/eksctl-io/eksctl/releases/download/v0.221.0/eksctl_Darwin_arm64.tar.gz",
+      "checksum": "80a5f4ec7c58aad8884665318f448e88f1861a9e0eb2a467e0b879161d90bcc2",
+      "size": 34436903
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "eksctl_Darwin_arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "eksctl"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "eksctl"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "eksctl version",
+    "pattern": "{version}"
+  }
+}

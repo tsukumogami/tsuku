@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "grype",
+  "version": "0.104.3",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "c91d46248dbc2b3c1407caf033a2fdc12bd193e45c3d5727bf31fa09e7b6f3bd",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "a2fd4ac95d7c4b2ff65da2e7cecb08d826e0cac6e3e2646aee8989558d9d3006",
+        "checksum_algo": "sha256",
+        "dest": "grype_0.104.3_darwin_arm64.tar.gz",
+        "url": "https://github.com/anchore/grype/releases/download/v0.104.3/grype_0.104.3_darwin_arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/anchore/grype/releases/download/v0.104.3/grype_0.104.3_darwin_arm64.tar.gz",
+      "checksum": "a2fd4ac95d7c4b2ff65da2e7cecb08d826e0cac6e3e2646aee8989558d9d3006",
+      "size": 26484796
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "grype_0.104.3_darwin_arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "grype"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "grype"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "grype version",
+    "pattern": "{version}"
+  }
+}

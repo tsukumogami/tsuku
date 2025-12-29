@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "syft",
+  "version": "1.39.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "0afb9617eb9fb6c0fd3b27ec7607b67136775ed4e0ed8c6aa4671a52b1396b48",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "bb8f1ba8201d1ce0d99ab4f5243142629c1afba4da97a7c4ca2df97327f97190",
+        "checksum_algo": "sha256",
+        "dest": "syft_1.39.0_linux_amd64.tar.gz",
+        "url": "https://github.com/anchore/syft/releases/download/v1.39.0/syft_1.39.0_linux_amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/anchore/syft/releases/download/v1.39.0/syft_1.39.0_linux_amd64.tar.gz",
+      "checksum": "bb8f1ba8201d1ce0d99ab4f5243142629c1afba4da97a7c4ca2df97327f97190",
+      "size": 23376958
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "syft_1.39.0_linux_amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "syft"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "syft"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "syft version",
+    "pattern": "{version}"
+  }
+}
