@@ -12,6 +12,19 @@
 
 set -euo pipefail
 
+# Auto-detect GitHub token if not set (for local development)
+if [[ -z "${GITHUB_TOKEN:-}" ]] && command -v gh &>/dev/null; then
+    GITHUB_TOKEN="$(gh auth token 2>/dev/null)" || true
+    export GITHUB_TOKEN
+fi
+
+# Fail fast if no token available
+if [[ -z "${GITHUB_TOKEN:-}" ]]; then
+    echo "Error: GITHUB_TOKEN is not set and could not be detected from 'gh auth token'" >&2
+    echo "Please set GITHUB_TOKEN or run 'gh auth login' first." >&2
+    exit 2
+fi
+
 # Script location for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -88,7 +101,7 @@ for VERSION in $VERSIONS; do
 
         # Generate current plan (stripping non-deterministic fields)
         if ! "$TSUKU" eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
-            --version "$VERSION_NO_V" 2>/dev/null | \
+            --version "$VERSION_NO_V" --install-deps 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$ACTUAL"; then
             echo "Failed to generate plan for $RECIPE@$VERSION ($platform)" >&2
             continue

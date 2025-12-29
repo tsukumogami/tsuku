@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "zig",
+  "version": "0.14.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "27cc6e8bd149ae64c98c3a7123fcb95be35a8113902428ee90134ee1ba2f99ec",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "39f3dc5e79c22088ce878edc821dedb4ca5a1cd9f5ef915e9b3cc3053e8faefa",
+        "checksum_algo": "sha256",
+        "dest": "zig-aarch64-macos-0.14.1.tar.xz",
+        "url": "https://ziglang.org/download/0.14.1/zig-aarch64-macos-0.14.1.tar.xz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ziglang.org/download/0.14.1/zig-aarch64-macos-0.14.1.tar.xz",
+      "checksum": "39f3dc5e79c22088ce878edc821dedb4ca5a1cd9f5ef915e9b3cc3053e8faefa",
+      "size": 45903552
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "zig-aarch64-macos-0.14.1.tar.xz",
+        "format": "tar.xz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "zig"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "zig"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "zig version",
+    "pattern": "{version}"
+  }
+}

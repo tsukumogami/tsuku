@@ -44,7 +44,7 @@ jobs:
       - name: "Generate plan: ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku eval ${{ matrix.test.tool }} --yes > plan.json
+        run: ./tsuku eval ${{ matrix.test.tool }} --install-deps > plan.json
 
       - name: "Run sandbox: ${{ matrix.test.tool }}"
         run: ./tsuku install --plan plan.json --sandbox --force
