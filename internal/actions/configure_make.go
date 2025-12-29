@@ -192,9 +192,18 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 }
 
 // buildAutotoolsEnv creates an environment for autotools builds.
-// It sets PKG_CONFIG_PATH, CPPFLAGS, and LDFLAGS from dependency paths.
+// It sets PATH, PKG_CONFIG_PATH, CPPFLAGS, and LDFLAGS from dependency paths.
 func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 	env := os.Environ()
+
+	// Extract existing PATH before filtering
+	var existingPath string
+	for _, e := range env {
+		if strings.HasPrefix(e, "PATH=") {
+			existingPath = strings.TrimPrefix(e, "PATH=")
+			break
+		}
+	}
 
 	// Set deterministic build variables
 	filteredEnv := make([]string, 0, len(env))
@@ -231,6 +240,7 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 	filteredEnv = append(filteredEnv, "lt_cv_sys_lib_dlsearch_path_spec=")
 
 	// Build paths from dependencies
+	var binPaths []string
 	var pkgConfigPaths []string
 	var cppFlags []string
 	var ldFlags []string
@@ -252,6 +262,12 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 			depDir = toolsDepDir
 		}
 
+		// PATH: check for bin directory (for tools like curl-config, pkg-config, etc.)
+		binDir := filepath.Join(depDir, "bin")
+		if _, err := os.Stat(binDir); err == nil {
+			binPaths = append(binPaths, binDir)
+		}
+
 		// PKG_CONFIG_PATH: check for lib/pkgconfig directory
 		pkgConfigDir := filepath.Join(depDir, "lib", "pkgconfig")
 		if _, err := os.Stat(pkgConfigDir); err == nil {
@@ -271,6 +287,18 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 			// Add RPATH for runtime library resolution
 			ldFlags = append(ldFlags, "-Wl,-rpath,"+libDir)
 		}
+	}
+
+	// Set PATH with dependency bin directories prepended
+	if len(binPaths) > 0 {
+		newPath := strings.Join(binPaths, ":")
+		if existingPath != "" {
+			newPath = newPath + ":" + existingPath
+		}
+		filteredEnv = append(filteredEnv, "PATH="+newPath)
+	} else if existingPath != "" {
+		// No dependency bin paths, but preserve existing PATH
+		filteredEnv = append(filteredEnv, "PATH="+existingPath)
 	}
 
 	// Set PKG_CONFIG_PATH if any paths found

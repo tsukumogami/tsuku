@@ -21,8 +21,8 @@ func (a *SetupBuildEnvAction) Name() string {
 // Execute configures the build environment from dependencies.
 // This action populates ctx.Env with environment variables that subsequent
 // build actions (configure_make, cmake_build) can use. The environment includes
-// PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS, CC, CXX, and other variables needed for
-// building with tsuku-provided dependencies.
+// PATH, PKG_CONFIG_PATH, CPPFLAGS, LDFLAGS, CC, CXX, and other variables needed
+// for building with tsuku-provided dependencies.
 //
 // No parameters required - uses ctx.Dependencies automatically.
 func (a *SetupBuildEnvAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
@@ -32,9 +32,11 @@ func (a *SetupBuildEnvAction) Execute(ctx *ExecutionContext, params map[string]i
 	ctx.Env = buildAutotoolsEnv(ctx)
 
 	// Extract and display the configured environment variables
-	var pkgConfigPath, cppFlags, ldFlags, cc, cxx string
+	var path, pkgConfigPath, cppFlags, ldFlags, cc, cxx string
 	for _, e := range ctx.Env {
-		if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
+		if strings.HasPrefix(e, "PATH=") {
+			path = strings.TrimPrefix(e, "PATH=")
+		} else if strings.HasPrefix(e, "PKG_CONFIG_PATH=") {
 			pkgConfigPath = strings.TrimPrefix(e, "PKG_CONFIG_PATH=")
 		} else if strings.HasPrefix(e, "CPPFLAGS=") {
 			cppFlags = strings.TrimPrefix(e, "CPPFLAGS=")
@@ -48,6 +50,21 @@ func (a *SetupBuildEnvAction) Execute(ctx *ExecutionContext, params map[string]i
 	}
 
 	// Show what was configured
+	if path != "" {
+		// Count only tsuku-managed paths (before first non-tsuku path)
+		pathParts := strings.Split(path, ":")
+		tsukuPathCount := 0
+		for _, p := range pathParts {
+			if strings.Contains(p, "/.tsuku/") {
+				tsukuPathCount++
+			} else {
+				break // Stop at first non-tsuku path
+			}
+		}
+		if tsukuPathCount > 0 {
+			fmt.Printf("   PATH: %d dependency bin path(s) prepended\n", tsukuPathCount)
+		}
+	}
 	if pkgConfigPath != "" {
 		pathCount := len(strings.Split(pkgConfigPath, ":"))
 		fmt.Printf("   PKG_CONFIG_PATH: %d path(s)\n", pathCount)
