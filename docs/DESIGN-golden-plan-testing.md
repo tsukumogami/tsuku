@@ -40,6 +40,7 @@ Planned
 
 | Issue | Title | Dependencies |
 |-------|-------|--------------|
+| [#745](https://github.com/tsukumogami/tsuku/issues/745) | chore(golden): enforce golden files for all recipes | [#721](https://github.com/tsukumogami/tsuku/issues/721), [#722](https://github.com/tsukumogami/tsuku/issues/722) |
 | [#722](https://github.com/tsukumogami/tsuku/issues/722) | docs(design): create design for structured install_guide | None |
 
 ### Dependency Graph
@@ -68,6 +69,10 @@ graph TD
         I721["#721: Documentation"]
     end
 
+    subgraph M29["Milestone 29: Full Golden Coverage"]
+        I745["#745: Enforce all recipes"]
+    end
+
     subgraph Future["Future Work"]
         I722["#722: Structured install_guide"]
     end
@@ -84,6 +89,8 @@ graph TD
     I717 --> I721
     I718 --> I721
     I720 --> I721
+    I721 --> I745
+    I722 --> I745
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -92,7 +99,7 @@ graph TD
 
     class I712,I713,I714,I715,I716,I720 done
     class I717 ready
-    class I718,I719,I721 blocked
+    class I718,I719,I721,I745 blocked
     class I722 needsDesign
 ```
 
