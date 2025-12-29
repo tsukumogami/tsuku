@@ -47,7 +47,7 @@ The recipes will be added to `internal/recipe/recipes/` following the alphabetic
   - Install only libcurl library files (not curl binary)
   - Add appropriate verify command
 
-- [ ] Update git-source recipe dependencies
+- [x] Update git-source recipe dependencies
   - Change "curl" dependency to "libcurl" in testdata/recipes/git-source.toml
   - Verify all dependencies are now library recipes: libcurl, openssl, zlib, expat
 
