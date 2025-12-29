@@ -28,6 +28,7 @@ action = "setup_build_env"
 action = "configure_make"
 source_dir = "git-{version}"
 executables = ["git"]
+configure_args = ["--with-curl={libs_dir}/libcurl-{deps.libcurl.version}"]
 
 [[steps]]
 action = "set_rpath"
