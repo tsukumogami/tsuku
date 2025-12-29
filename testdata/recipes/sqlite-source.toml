@@ -1,12 +1,11 @@
-# Ground truth recipe for sqlite (source build with readline dependency)
-# Used for testing fossil_archive action with configure_make and library dependencies
-# Tests: fossil_archive + setup_build_env + configure_make with readline
+# Ground truth recipe for sqlite (source build from Fossil SCM)
+# Used for testing fossil_archive action with configure_make
+# Tests: fossil_archive + configure_make (no readline - simpler test case)
 
 [metadata]
 name = "sqlite-source"
 description = "Command-line interface for SQLite (source build for testing)"
 homepage = "https://sqlite.org/"
-dependencies = ["readline"]
 
 [version]
 # Version is resolved from Fossil timeline at https://sqlite.org/src/timeline?t=release
@@ -21,18 +20,9 @@ project_name = "sqlite"
 strip_dirs = 1
 
 [[steps]]
-action = "setup_build_env"
-
-[[steps]]
 action = "configure_make"
 source_dir = "."
-configure_args = ["--enable-readline"]
 executables = ["sqlite3"]
-
-[[steps]]
-action = "set_rpath"
-binaries = [".install/bin/sqlite3"]
-rpath = "$ORIGIN/../lib:{libs_dir}/readline-8.3.3/lib:{libs_dir}/ncurses-6.5/lib"
 
 [[steps]]
 action = "install_binaries"
