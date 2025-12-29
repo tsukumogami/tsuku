@@ -1,0 +1,60 @@
+{
+  "format_version": 3,
+  "tool": "vault",
+  "version": "1.21.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "593a6841cb3928ba2f2d876baccc42861418a94910f482b5e2d2f670ce265068",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "add728e2ca2101826de030b4da6de77cee5a61f3c9cde74f5628d63332bea0ab",
+        "checksum_algo": "sha256",
+        "dest": "vault_1.21.1_darwin_arm64.zip",
+        "url": "https://releases.hashicorp.com/vault/1.21.1/vault_1.21.1_darwin_arm64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://releases.hashicorp.com/vault/1.21.1/vault_1.21.1_darwin_arm64.zip",
+      "checksum": "add728e2ca2101826de030b4da6de77cee5a61f3c9cde74f5628d63332bea0ab",
+      "size": 177234868
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "vault_1.21.1_darwin_arm64.zip",
+        "format": "zip"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "vault"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "vault"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "vault version",
+    "pattern": "{version}"
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "format_version": 3,
+  "tool": "cosign",
+  "version": "3.0.3",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "80520b746b66dfa875dba5db9681447a9e67f38c70642aa9aa457a19a4e8370a",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "052363a0e23e2e7ed53641351b8b420918e7e08f9c1d8a42a3dd3877a78a2e10",
+        "checksum_algo": "sha256",
+        "dest": "cosign-linux-amd64",
+        "url": "https://github.com/sigstore/cosign/releases/download/v3.0.3/cosign-linux-amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/sigstore/cosign/releases/download/v3.0.3/cosign-linux-amd64",
+      "checksum": "052363a0e23e2e7ed53641351b8b420918e7e08f9c1d8a42a3dd3877a78a2e10",
+      "size": 135382598
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "cosign-linux-amd64"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          {
+            "dest": "bin/cosign",
+            "src": "cosign-{os}-{arch}"
+          }
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "cosign version",
+    "pattern": "{version}"
+  }
+}

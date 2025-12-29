@@ -1,0 +1,60 @@
+{
+  "format_version": 3,
+  "tool": "terraform",
+  "version": "1.15.0-alpha20251203",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "d2afd5e428ce62ff9f2e01c12e291512327bb74f3e089ed5eba40bba9709c76a",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "dec9d663ca4395e3993cdf73e571df1f4f1899348988bef8d20042ab62841b78",
+        "checksum_algo": "sha256",
+        "dest": "terraform_1.15.0-alpha20251203_darwin_arm64.zip",
+        "url": "https://releases.hashicorp.com/terraform/1.15.0-alpha20251203/terraform_1.15.0-alpha20251203_darwin_arm64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://releases.hashicorp.com/terraform/1.15.0-alpha20251203/terraform_1.15.0-alpha20251203_darwin_arm64.zip",
+      "checksum": "dec9d663ca4395e3993cdf73e571df1f4f1899348988bef8d20042ab62841b78",
+      "size": 28871918
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "terraform_1.15.0-alpha20251203_darwin_arm64.zip",
+        "format": "zip"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "terraform"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "terraform"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "terraform version",
+    "pattern": "{version}"
+  }
+}

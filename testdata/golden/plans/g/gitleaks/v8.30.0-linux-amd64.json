@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "gitleaks",
+  "version": "8.30.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "bc2230038d03f3a5afa4248e375180d57bc8687fdf6f49c27d3b762d13348618",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "79a3ab579b53f71efd634f3aaf7e04a0fa0cf206b7ed434638d1547a2470a66e",
+        "checksum_algo": "sha256",
+        "dest": "gitleaks_8.30.0_linux_x64.tar.gz",
+        "url": "https://github.com/zricethezav/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/zricethezav/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_linux_x64.tar.gz",
+      "checksum": "79a3ab579b53f71efd634f3aaf7e04a0fa0cf206b7ed434638d1547a2470a66e",
+      "size": 8310309
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gitleaks_8.30.0_linux_x64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "gitleaks"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "gitleaks"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gitleaks version",
+    "pattern": "{version}"
+  }
+}

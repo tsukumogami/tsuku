@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "gotop",
+  "version": "4.2.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "45a8cd380fb565f6e672c2e9ddbadca3e397b8d43fee3a191fac2a8d9f8f0d5b",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "7dbf3619f07b82a8a6145dce7ad8149067550dd950e4f2ca54208b45380394b7",
+        "checksum_algo": "sha256",
+        "dest": "gotop_v4.2.0_linux_amd64.tgz",
+        "url": "https://github.com/xxxserxxx/gotop/releases/download/v4.2.0/gotop_v4.2.0_linux_amd64.tgz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/xxxserxxx/gotop/releases/download/v4.2.0/gotop_v4.2.0_linux_amd64.tgz",
+      "checksum": "7dbf3619f07b82a8a6145dce7ad8149067550dd950e4f2ca54208b45380394b7",
+      "size": 3041686
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gotop_v4.2.0_linux_amd64.tgz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "gotop"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "gotop"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gotop --version",
+    "pattern": "{version}"
+  }
+}

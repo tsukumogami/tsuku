@@ -1,0 +1,60 @@
+{
+  "format_version": 3,
+  "tool": "waypoint",
+  "version": "0.11.4",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "1fba71046c9d1af32b917a626bb3c5ca2aab0ac36e3a65460be62fcb9187bb22",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "96d314f1bc182a30ca9e93910981fbd4ecf7290763c55d2d4e8ddce2b23abdca",
+        "checksum_algo": "sha256",
+        "dest": "waypoint_0.11.4_linux_amd64.zip",
+        "url": "https://releases.hashicorp.com/waypoint/0.11.4/waypoint_0.11.4_linux_amd64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://releases.hashicorp.com/waypoint/0.11.4/waypoint_0.11.4_linux_amd64.zip",
+      "checksum": "96d314f1bc182a30ca9e93910981fbd4ecf7290763c55d2d4e8ddce2b23abdca",
+      "size": 84619571
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "waypoint_0.11.4_linux_amd64.zip",
+        "format": "zip"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "waypoint"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "waypoint"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "waypoint version",
+    "pattern": "{version}"
+  }
+}
