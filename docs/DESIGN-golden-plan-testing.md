@@ -751,14 +751,14 @@ strategy:
         platform: linux-amd64
       - os: macos-latest
         platform: darwin-arm64
-      - os: macos-13
+      - os: macos-15-large
         platform: darwin-amd64
 ```
 
 Each runner validates golden files for its platform:
 - `ubuntu-latest` validates `*-linux-amd64.json` files
 - `macos-latest` validates `*-darwin-arm64.json` files (Apple Silicon)
-- `macos-13` validates `*-darwin-amd64.json` files (Intel Mac)
+- `macos-15-large` validates `*-darwin-amd64.json` files (Intel Mac)
 
 **Known limitation**: `linux-arm64` golden files are generated but not execution-validated (no arm64 Linux runners in standard GitHub Actions). Plan generation logic is shared across architectures, so this is acceptable risk.
 
