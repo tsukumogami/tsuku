@@ -1,6 +1,9 @@
 name: Build Essentials
 
 on:
+  schedule:
+    # Weekly on Sunday at midnight UTC
+    - cron: '0 0 * * 0'
   push:
     branches: [main]
     paths:
@@ -349,3 +352,78 @@ jobs:
 
       - name: "Verify gdbm-source functionality"
         run: ./test/scripts/verify-tool.sh gdbm-source
+
+  # Detect if fossil/spatialite-related files changed (for conditional job execution)
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      spatialite: ${{ steps.filter.outputs.spatialite }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        # On schedule, paths-filter returns false for all filters (no base to compare)
+        # which is fine - we handle schedule separately in the job condition
+        with:
+          filters: |
+            spatialite:
+              # Fossil archive action and version provider
+              - 'internal/actions/fossil_archive.go'
+              - 'internal/version/fossil*.go'
+              # Spatialite dependency chain recipes only
+              - 'testdata/recipes/sqlite-source.toml'
+              - 'testdata/recipes/geos-source.toml'
+              - 'testdata/recipes/proj-source.toml'
+              - 'testdata/recipes/libxml2-source.toml'
+              - 'testdata/recipes/spatialite-source.toml'
+
+  # Test fossil_archive with complex dependency chain (spatialite -> sqlite, geos, proj, libxml2)
+  # Runs weekly OR when fossil-related files are touched
+  test-spatialite:
+    name: "${{ matrix.platform.name }}: spatialite-source"
+    needs: [changes]
+    # Run on schedule OR if fossil/spatialite files changed
+    if: github.event_name == 'schedule' || needs.changes.outputs.spatialite == 'true'
+    runs-on: ${{ matrix.platform.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
+          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
+          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
+          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: "Install spatialite-source (tests full dependency chain)"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Install all testdata recipes needed for the dependency chain
+          # geos-source: CMake build from GitHub
+          # proj-source: CMake with sqlite dependency
+          # libxml2-source: autoconf from GNOME
+          # spatialite-source: fossil_archive with all deps
+          ./tsuku install --recipe testdata/recipes/geos-source.toml --force
+          ./tsuku install --recipe testdata/recipes/proj-source.toml --force
+          ./tsuku install --recipe testdata/recipes/libxml2-source.toml --force
+          ./tsuku install --recipe testdata/recipes/spatialite-source.toml --force
+
+      - name: "Verify spatialite functionality"
+        run: |
+          # Verify each component of the chain
+          ~/.tsuku/bin/geos-config --version
+          ~/.tsuku/bin/proj
+          ~/.tsuku/bin/xmllint --version
+          ~/.tsuku/bin/spatialite -version
