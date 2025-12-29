@@ -1,0 +1,26 @@
+[metadata]
+name = "expat"
+description = "XML parser library"
+homepage = "https://libexpat.github.io/"
+type = "library"
+
+[version]
+source = "homebrew"
+formula = "expat"
+
+[[steps]]
+action = "homebrew"
+formula = "expat"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "lib/libexpat.so",
+    "lib/libexpat.so.1",
+    "lib/libexpat.dylib",
+    "lib/libexpat.1.dylib",
+    "lib/libexpat.a",
+    "include/expat.h",
+    "include/expat_external.h",
+]

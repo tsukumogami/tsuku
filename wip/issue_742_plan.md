@@ -34,13 +34,13 @@ The recipes will be added to `internal/recipe/recipes/` following the alphabetic
 
 ## Implementation Steps
 
-- [ ] Create expat recipe at `internal/recipe/recipes/e/expat.toml`
+- [x] Create expat recipe at `internal/recipe/recipes/e/expat.toml`
   - Use Homebrew action with formula "expat"
   - Set type = "library" in metadata
   - Include library binaries (.so/.dylib files) in install_binaries
   - Add appropriate verify command
 
-- [ ] Create libcurl recipe at `internal/recipe/recipes/l/libcurl.toml`
+- [x] Create libcurl recipe at `internal/recipe/recipes/l/libcurl.toml`
   - Use Homebrew action with formula "curl" but focus on library files
   - Set type = "library" in metadata
   - Declare dependencies on openssl and zlib
