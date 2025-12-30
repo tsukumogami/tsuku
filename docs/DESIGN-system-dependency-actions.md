@@ -2,7 +2,7 @@
 
 ## Status
 
-Draft (Exploratory)
+Proposed
 
 ## Context and Problem Statement
 
@@ -47,101 +47,79 @@ linux = "See https://docs.docker.com/engine/install/"
 4. **Auditable**: Operations can be statically analyzed (no shell commands)
 5. **Extensible**: New package managers can be added as new actions
 
-## Open Questions
+## Decisions
 
-### Q1: What's the right granularity for actions?
+### D1: Action Granularity
 
-**Option A: One action per package manager operation**
+**Decision: One action per operation (Option A)**
+
+Each operation is a separate action type: `apt_install`, `apt_repo`, `brew_cask`, `group_add`, etc.
+
+**Rationale:**
+
+- **Consistency**: Each action has exactly one schema, making validation straightforward
+- **Learnability**: Naming pattern `<manager>_<operation>` is self-documenting
+- **Extensibility**: New package managers are additive; existing actions remain unchanged
+- **Error messages**: Precise errors like "apt_install requires 'packages' field"
+
+**Rejected alternatives:**
+
+- Option B (one action per manager with sub-operations): Creates polymorphic schemas where valid fields depend on which operation is intended
+- Option C (unified action with manager field): Recreates the original problem of generic containers with platform-specific content
+
+### D2: Distro Detection
+
+**Decision: Extend `when` clause with `distro` field, using `/etc/os-release`**
 
 ```toml
-[[steps]]
-action = "apt_install"
-packages = ["docker.io"]
-when = { distro = ["ubuntu", "debian"] }
-
-[[steps]]
-action = "apt_repo"
-url = "https://download.docker.com/linux/ubuntu"
-key_url = "..."
-key_sha256 = "..."
 when = { distro = ["ubuntu", "debian"] }
 ```
 
-**Option B: One action per package manager (with sub-operations as fields)**
+**Detection mechanism:**
 
-```toml
-[[steps]]
-action = "apt"
-install = ["docker.io"]
-when = { distro = ["ubuntu", "debian"] }
+Parse `/etc/os-release` on Linux, extracting:
+- `ID`: Canonical distro identifier (e.g., "ubuntu", "fedora", "arch")
+- `ID_LIKE`: Parent/similar distros (e.g., "debian" for Ubuntu)
 
-[[steps]]
-action = "apt"
-repo = { url = "...", key_url = "...", key_sha256 = "..." }
-install = ["docker-ce"]
-when = { distro = ["ubuntu", "debian"] }
+**Matching semantics:**
+
+1. Match `ID` first (exact match)
+2. Fall back to `ID_LIKE` chain (handles derivatives like Linux Mint, Pop!_OS)
+
+```go
+func (w *WhenClause) matchesDistro(distroID string, idLike []string) bool {
+    for _, d := range w.Distro {
+        if d == distroID {
+            return true
+        }
+        for _, like := range idLike {
+            if d == like {
+                return true
+            }
+        }
+    }
+    return false
+}
 ```
 
-**Option C: Unified action with typed variants**
+**Version constraints: Not in initial implementation.**
 
-```toml
-[[steps]]
-action = "pkg_install"
-manager = "apt"
-packages = ["docker.io"]
-when = { distro = ["ubuntu", "debian"] }
-```
+Version constraint syntax (e.g., `ubuntu>=22.04`) adds significant complexity due to non-uniform versioning schemes across distros. Defer to feature detection via `require_command` instead.
 
-### Q2: How should `when` support distro detection?
+**Failure mode:**
 
-Current `when` supports:
-- `platform`: exact tuple like `["linux/amd64"]`
-- `os`: operating system like `["linux", "darwin"]`
+If `/etc/os-release` is missing or distro is unknown, steps with `distro` conditions are skipped. Fallback `manual` actions can guide users.
 
-Proposed addition:
-- `distro`: Linux distribution like `["ubuntu", "debian", "fedora"]`
+**Validation rules:**
 
-**Detection mechanism**: Read `/etc/os-release` on Linux.
+- `distro` and `os` are mutually exclusive (like `platform` and `os`)
+- `distro` implicitly requires Linux (distro detection only makes sense on Linux)
 
-**Questions:**
-- Should we support version constraints? `distro = ["ubuntu>=22.04"]`
-- What about derivative distros? (Linux Mint → Ubuntu → Debian)
-- What's the fallback if detection fails?
+### D3: Require Semantics
 
-### Q3: What about the "require" semantics?
+**Decision: Idempotent install + final verify (Option C)**
 
-The original `require_system` had two behaviors:
-1. **Check**: Is the command available?
-2. **Fail/Guide**: If not, fail with installation guidance
-
-With composable actions, how do we express "install if needed, then verify"?
-
-**Option A: Separate verify step**
-
-```toml
-[[steps]]
-action = "apt_install"
-packages = ["docker.io"]
-when = { distro = ["ubuntu", "debian"] }
-
-[[steps]]
-action = "require_command"
-command = "docker"
-```
-
-**Option B: Conditional execution**
-
-```toml
-[[steps]]
-action = "apt_install"
-packages = ["docker.io"]
-unless_command = "docker"
-when = { distro = ["ubuntu", "debian"] }
-```
-
-**Option C: Package managers are idempotent, just verify at end**
-
-Most package managers handle "already installed" gracefully. Just run install and verify:
+Package managers handle "already installed" gracefully. Run install actions, then verify with `require_command`:
 
 ```toml
 [[steps]]
@@ -159,14 +137,27 @@ action = "require_command"
 command = "docker"
 ```
 
-### Q4: How to handle post-install configuration?
+**Rationale:**
 
-Some installations need post-install steps:
-- Add user to group (`docker` group for rootless access)
-- Enable/start systemd service
-- Set environment variables
+- Simplest mental model: "run installs, then check"
+- Package managers are idempotent by design
+- `require_command` serves as both assertion and documentation
 
-**Option A: Separate actions for each**
+**Escape hatch:**
+
+For cases where install should be skipped if command exists, add optional `unless_command` field:
+
+```toml
+[[steps]]
+action = "apt_install"
+packages = ["docker.io"]
+unless_command = "docker"
+when = { distro = ["ubuntu", "debian"] }
+```
+
+### D4: Post-Install Configuration
+
+**Decision: Separate actions for each (Option A)**
 
 ```toml
 [[steps]]
@@ -185,36 +176,31 @@ service = "docker"
 when = { os = ["linux"] }
 ```
 
-**Option B: Post-install hooks in package action**
+**Rationale:**
 
-```toml
-[[steps]]
-action = "apt_install"
-packages = ["docker-ce"]
-post_install = [
-  { group_add = "docker" },
-  { service_enable = "docker" },
-]
-when = { distro = ["ubuntu"] }
-```
+- **Single responsibility**: Each action does one thing
+- **Clear errors**: Failures are isolated and easy to diagnose
+- **Composability**: Recipe author controls sequence
+- **Explicit**: Readers see exactly what will happen
 
-### Q5: What about manual/fallback instructions?
+**Rejected alternative:**
 
-Not everything can be automated. Some cases need human intervention:
-- Proprietary software requiring license acceptance
-- Platform/distro combinations we don't support
-- Complex setups that vary by environment
+Option B (post_install hooks) couples unrelated concerns and bloats the schema.
 
-**Option A: Separate manual action**
+### D5: Manual/Fallback Instructions
+
+**Decision: Hybrid approach - both `manual` action and `fallback` field**
+
+**`manual` action** for explicit human intervention:
 
 ```toml
 [[steps]]
 action = "manual"
 text = "Download CUDA from https://developer.nvidia.com/cuda-downloads"
-when = { os = ["linux"] }
+when = { os = ["darwin"] }
 ```
 
-**Option B: Fallback field on other actions**
+**`fallback` field** on install actions for graceful degradation:
 
 ```toml
 [[steps]]
@@ -224,22 +210,26 @@ fallback = "For newer CUDA versions, visit https://developer.nvidia.com/cuda-dow
 when = { distro = ["ubuntu"] }
 ```
 
-## Proposed Action Vocabulary
+**Rationale:**
 
-Based on the discussion, here's a starting vocabulary:
+- `manual` expresses "automation not possible"
+- `fallback` expresses "automation might fail, here's plan B"
+- These are orthogonal concerns that can coexist
+
+## Action Vocabulary
 
 ### Package Installation
 
 | Action | Fields | Description |
 |--------|--------|-------------|
-| `apt_install` | packages | Install Debian/Ubuntu packages |
-| `apt_repo` | url, key_url, key_sha256 | Add APT repository |
+| `apt_install` | packages, fallback? | Install Debian/Ubuntu packages |
+| `apt_repo` | url, key_url, key_sha256 | Add APT repository with GPG key |
 | `apt_ppa` | ppa | Add Ubuntu PPA |
-| `dnf_install` | packages | Install Fedora/RHEL packages |
+| `dnf_install` | packages, fallback? | Install Fedora/RHEL packages |
 | `dnf_repo` | url, key_url, key_sha256 | Add DNF repository |
-| `brew_install` | packages, tap? | Install Homebrew formulae |
-| `brew_cask` | packages, tap? | Install Homebrew casks |
-| `pacman_install` | packages | Install Arch packages |
+| `brew_install` | packages, tap?, fallback? | Install Homebrew formulae |
+| `brew_cask` | packages, tap?, fallback? | Install Homebrew casks |
+| `pacman_install` | packages, fallback? | Install Arch packages |
 
 ### System Configuration
 
@@ -260,6 +250,86 @@ Based on the discussion, here's a starting vocabulary:
 | Action | Fields | Description |
 |--------|--------|-------------|
 | `manual` | text | Display instructions for manual installation |
+
+## Security Constraints
+
+System dependency actions execute privileged operations. The following constraints apply before enabling host execution (Phase 4):
+
+### Group Allowlisting
+
+The `group_add` action grants group membership, which can provide privilege escalation:
+
+| Category | Groups | Risk | Consent |
+|----------|--------|------|---------|
+| Safe | dialout, cdrom, floppy, audio, video | Low | Standard y/n |
+| Elevated | docker, libvirt, kvm | Medium | Requires typing "yes" |
+| Dangerous | wheel, sudo, root | High | Blocked by default |
+
+Groups in the "dangerous" category require explicit `--allow-privileged-groups` flag.
+
+### Repository Allowlisting
+
+The `apt_repo` and `dnf_repo` actions create long-term trust relationships with external repositories. Implementation should:
+
+1. Maintain allowlist of known-safe repository domains
+2. Warn on unknown repository domains
+3. Require content-addressed GPG keys (already specified)
+
+### Tiered Consent
+
+Different operations require different consent levels:
+
+| Risk Level | Actions | Consent |
+|------------|---------|---------|
+| Low | brew_install, brew_cask | y/n prompt |
+| Medium | apt_install, dnf_install, pacman_install | y/n with package list |
+| High | apt_repo, dnf_repo, group_add (elevated) | Type "yes" + warning |
+
+### Audit Logging
+
+All privileged operations must be logged:
+
+1. Timestamp, action type, parameters, outcome
+2. Recipe name/version that triggered the operation
+3. Store outside `$TSUKU_HOME` (e.g., syslog)
+
+## WhenClause Extension
+
+```go
+type WhenClause struct {
+    Platform       []string `toml:"platform,omitempty"`
+    OS             []string `toml:"os,omitempty"`
+    Distro         []string `toml:"distro,omitempty"`         // NEW
+    PackageManager string   `toml:"package_manager,omitempty"`
+}
+```
+
+**Validation:**
+
+- `Distro` and `OS` are mutually exclusive
+- `Distro` and `Platform` are mutually exclusive
+- If `Distro` is set, step only runs on Linux
+
+**Detection implementation:**
+
+Create `internal/platform/distro.go`:
+
+```go
+type OSRelease struct {
+    ID              string   // e.g., "ubuntu"
+    IDLike          []string // e.g., ["debian"]
+    VersionID       string   // e.g., "22.04"
+    VersionCodename string   // e.g., "jammy"
+}
+
+func Detect() (*OSRelease, error) {
+    return ParseFile("/etc/os-release")
+}
+
+func ParseFile(path string) (*OSRelease, error) {
+    // Parse KEY=value format
+}
+```
 
 ## Example: Docker Installation
 
@@ -309,9 +379,81 @@ action = "require_command"
 command = "docker"
 ```
 
+## Implementation Approach
+
+### Phase 1: Infrastructure
+
+1. Add `distro` field to `WhenClause`
+2. Implement distro detection in `internal/platform/distro.go`
+3. Update `WhenClause.Matches()` for distro filtering
+4. Add unit tests with `/etc/os-release` fixtures
+
+### Phase 2: Core Package Actions
+
+1. Implement `apt_install` with actual execution
+2. Implement `dnf_install` using shared base
+3. Implement `brew_install` and `brew_cask`
+4. Implement `pacman_install`
+
+### Phase 3: Repository Management
+
+1. Implement `apt_repo` with GPG key handling
+2. Implement `apt_ppa` as convenience wrapper
+3. Implement `dnf_repo`
+
+### Phase 4: System Configuration
+
+1. Implement `group_add` with allowlisting
+2. Implement `service_enable` and `service_start`
+3. Extract `require_command` from existing `require_system`
+4. Implement `manual` action
+
+### Phase 5: Security and Consent
+
+1. Implement tiered consent flow
+2. Add audit logging
+3. Implement group and repository allowlisting
+4. Add `--allow-privileged-groups` flag
+
+## Future Work
+
+### Composite Shorthand Syntax
+
+The current design is verbose for common cases. A future enhancement could add a high-level syntax:
+
+```toml
+[system_dependency]
+command = "docker"
+apt = ["docker.io"]
+brew_cask = ["docker"]
+dnf = ["docker"]
+```
+
+This would expand internally to the full step sequence. Recipe authors who need fine-grained control would continue using individual steps.
+
+This is deferred to gather real usage patterns before designing the expansion rules.
+
+### Additional Package Managers
+
+As needed:
+- `apk_install` for Alpine Linux
+- `zypper_install` for openSUSE
+- `emerge` for Gentoo
+- `nix_install` for NixOS
+
+### Version Constraints
+
+If version-specific package requirements become common:
+
+```toml
+when = { distro = ["ubuntu>=22.04"] }
+```
+
+Requires defining version comparison semantics across distro versioning schemes.
+
 ## Relationship to Original Design
 
-This design doc explores the action vocabulary for system dependencies. Once settled, it feeds back into [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) which addresses:
+This design doc defines the action vocabulary for system dependencies. It feeds back into [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) which addresses:
 
 - Sandbox testing for recipes with system dependencies
 - Minimal base container strategy
@@ -322,10 +464,11 @@ The two designs are complementary:
 - **This doc**: What actions exist and how they compose
 - **Original doc**: How to execute them safely in sandbox and on host
 
-## Next Steps
+## References
 
-1. Resolve open questions through discussion
-2. Prototype `when` clause distro detection
-3. Implement a few core actions (apt_install, brew_cask, require_command)
-4. Test with existing recipes (docker, cuda)
-5. Merge findings back into structured-install-guide design
+Agent assessments informing this design:
+- `wip/research/system-deps_api-design.md` - API granularity analysis
+- `wip/research/system-deps_platform-detection.md` - Distro detection approach
+- `wip/research/system-deps_security.md` - Security constraints
+- `wip/research/system-deps_authoring-ux.md` - Recipe author experience
+- `wip/research/system-deps_implementation.md` - Implementation feasibility
