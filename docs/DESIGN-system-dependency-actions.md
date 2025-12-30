@@ -39,6 +39,28 @@ linux = "See https://docs.docker.com/engine/install/"
 
 5. **Rigid ordering**: Baking `repo → packages → group → service` into a single action assumes one workflow fits all
 
+## Scope
+
+This design defines a **machine-readable action vocabulary** for system dependencies. The structured format enables three use cases:
+
+| Use Case | Description | Scope |
+|----------|-------------|-------|
+| **Documentation Generation** | Generate platform-specific instructions for users | This design |
+| **Sandbox Container Building** | Extract dependencies to build minimal test containers | This design |
+| **Host Execution** | Guided/automated installation on user's machine | Future design |
+
+**Current scope**: This design focuses on documentation generation and sandbox container building. These features require machine-readable recipes but do NOT execute privileged operations on the user's host.
+
+**Future scope**: Host execution (where tsuku actually runs `apt-get install`, etc. on the user's machine) requires additional design work covering UX, consent flows, and security constraints. The action vocabulary defined here provides the foundation for that future capability.
+
+**Key clarification**: Today, tsuku does not execute system package installations on the host. When a recipe requires system dependencies, tsuku:
+1. Detects the user's platform
+2. Filters steps to those matching the platform
+3. Generates human-readable instructions from the machine-readable specs
+4. Displays instructions for the user to follow manually
+
+In sandbox mode, tsuku uses the structured specs to build containers with the required dependencies pre-installed.
+
 ## Design Goals
 
 1. **Composable**: Recipe authors control the sequence of operations
@@ -251,47 +273,83 @@ when = { distro = ["ubuntu"] }
 |--------|--------|-------------|
 | `manual` | text | Display instructions for manual installation |
 
-## Security Constraints
+## Documentation Generation
 
-System dependency actions execute privileged operations. The following constraints apply before enabling host execution (Phase 4):
+Each action implements a `Describe()` method that generates human-readable instructions:
 
-### Group Allowlisting
+```go
+type Action interface {
+    // Describe returns human-readable instructions for this action
+    Describe() string
+}
 
-The `group_add` action grants group membership, which can provide privilege escalation:
+// Example implementations
+func (a *AptInstallAction) Describe() string {
+    return fmt.Sprintf("Install packages: sudo apt-get install %s",
+        strings.Join(a.Packages, " "))
+}
 
-| Category | Groups | Risk | Consent |
-|----------|--------|------|---------|
-| Safe | dialout, cdrom, floppy, audio, video | Low | Standard y/n |
-| Elevated | docker, libvirt, kvm | Medium | Requires typing "yes" |
-| Dangerous | wheel, sudo, root | High | Blocked by default |
+func (a *BrewCaskAction) Describe() string {
+    return fmt.Sprintf("Install via Homebrew: brew install --cask %s",
+        strings.Join(a.Packages, " "))
+}
 
-Groups in the "dangerous" category require explicit `--allow-privileged-groups` flag.
+func (a *GroupAddAction) Describe() string {
+    return fmt.Sprintf("Add yourself to '%s' group: sudo usermod -aG %s $USER",
+        a.Group, a.Group)
+}
+```
 
-### Repository Allowlisting
+When `tsuku install docker` runs and Docker is not installed, the output looks like:
 
-The `apt_repo` and `dnf_repo` actions create long-term trust relationships with external repositories. Implementation should:
+```
+$ tsuku install docker
 
-1. Maintain allowlist of known-safe repository domains
-2. Warn on unknown repository domains
-3. Require content-addressed GPG keys (already specified)
+Docker requires system dependencies that tsuku cannot install directly.
 
-### Tiered Consent
+For Ubuntu/Debian:
 
-Different operations require different consent levels:
+  1. Add Docker repository:
+     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+     echo "deb [signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
 
-| Risk Level | Actions | Consent |
-|------------|---------|---------|
-| Low | brew_install, brew_cask | y/n prompt |
-| Medium | apt_install, dnf_install, pacman_install | y/n with package list |
-| High | apt_repo, dnf_repo, group_add (elevated) | Type "yes" + warning |
+  2. Install packages:
+     sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io
 
-### Audit Logging
+  3. Add yourself to docker group:
+     sudo usermod -aG docker $USER
 
-All privileged operations must be logged:
+  4. Enable Docker service:
+     sudo systemctl enable docker
 
-1. Timestamp, action type, parameters, outcome
-2. Recipe name/version that triggered the operation
-3. Store outside `$TSUKU_HOME` (e.g., syslog)
+After completing these steps, run: tsuku install docker --verify
+```
+
+The structured action vocabulary enables this generation while remaining machine-readable for sandbox container building.
+
+## Sandbox Container Building
+
+In sandbox mode, tsuku extracts package requirements from actions and builds minimal containers:
+
+```go
+// ExtractPackages collects all package requirements from a filtered plan
+func ExtractPackages(plan *InstallationPlan) map[string][]string {
+    packages := make(map[string][]string)
+    for _, step := range plan.Steps {
+        switch step.Action {
+        case "apt_install":
+            packages["apt"] = append(packages["apt"], step.Packages...)
+        case "brew_install", "brew_cask":
+            packages["brew"] = append(packages["brew"], step.Packages...)
+        case "dnf_install":
+            packages["dnf"] = append(packages["dnf"], step.Packages...)
+        }
+    }
+    return packages
+}
+```
+
+This enables building per-recipe containers from a minimal base image. See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for container building details.
 
 ## WhenClause Extension
 
@@ -381,6 +439,8 @@ command = "docker"
 
 ## Implementation Approach
 
+Implementation focuses on documentation generation and sandbox container building (current scope).
+
 ### Phase 1: Infrastructure
 
 1. Add `distro` field to `WhenClause`
@@ -388,34 +448,65 @@ command = "docker"
 3. Update `WhenClause.Matches()` for distro filtering
 4. Add unit tests with `/etc/os-release` fixtures
 
-### Phase 2: Core Package Actions
+### Phase 2: Action Vocabulary
 
-1. Implement `apt_install` with actual execution
-2. Implement `dnf_install` using shared base
-3. Implement `brew_install` and `brew_cask`
-4. Implement `pacman_install`
-
-### Phase 3: Repository Management
-
-1. Implement `apt_repo` with GPG key handling
-2. Implement `apt_ppa` as convenience wrapper
-3. Implement `dnf_repo`
-
-### Phase 4: System Configuration
-
-1. Implement `group_add` with allowlisting
-2. Implement `service_enable` and `service_start`
+1. Define action types with `Describe()` method for documentation generation
+2. Implement parameter validation for each action
 3. Extract `require_command` from existing `require_system`
-4. Implement `manual` action
+4. Implement `manual` action for fallback instructions
 
-### Phase 5: Security and Consent
+Actions at this phase do NOT execute on the host - they provide:
+- Parameter validation (preflight checks)
+- Human-readable descriptions (documentation generation)
+- Structured data (sandbox container building)
 
-1. Implement tiered consent flow
-2. Add audit logging
-3. Implement group and repository allowlisting
-4. Add `--allow-privileged-groups` flag
+### Phase 3: Documentation Generation
+
+1. Implement `Describe()` for all package actions (`apt_install`, `brew_cask`, etc.)
+2. Implement `Describe()` for configuration actions (`group_add`, `service_enable`)
+3. Update CLI to display platform-filtered instructions when system deps are missing
+4. Add `--verify` flag to check if system deps are satisfied after manual installation
+
+### Phase 4: Sandbox Integration
+
+1. Implement `ExtractPackages()` to collect dependencies from filtered plans
+2. Integrate with sandbox executor for container building
+3. Add sandbox execution capability (actions run inside containers)
+
+See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for container building details.
 
 ## Future Work
+
+### Host Execution
+
+The action vocabulary defined here provides the foundation for future host execution, where tsuku could actually run installation commands on the user's machine. This requires a dedicated design covering:
+
+**UX Considerations:**
+- Consent flow: How does the user approve operations?
+- Progress display: How are multi-step installations shown?
+- Error recovery: What happens when one step fails?
+- Rollback: Can partial installations be undone?
+
+**Security Constraints:**
+
+When host execution is implemented, these constraints will apply:
+
+| Concern | Constraint |
+|---------|------------|
+| Group allowlisting | Categorize groups by risk (safe/elevated/dangerous) |
+| Repository allowlisting | Maintain list of known-safe repository domains |
+| Tiered consent | Different confirmation levels for different risk operations |
+| Audit logging | Log all privileged operations with timestamps and outcomes |
+
+**Group Risk Categories (for future reference):**
+
+| Category | Groups | Risk | Consent |
+|----------|--------|------|---------|
+| Safe | dialout, cdrom, floppy, audio, video | Low | Standard y/n |
+| Elevated | docker, libvirt, kvm | Medium | Requires typing "yes" |
+| Dangerous | wheel, sudo, root | High | Blocked by default |
+
+This is deferred until the documentation generation and sandbox container building features are complete and validated.
 
 ### Composite Shorthand Syntax
 
@@ -457,12 +548,17 @@ This design doc defines the action vocabulary for system dependencies. It feeds 
 
 - Sandbox testing for recipes with system dependencies
 - Minimal base container strategy
-- User consent flow for privileged operations
+- Container building from extracted package requirements
 - Content-addressing for external resources
 
 The two designs are complementary:
-- **This doc**: What actions exist and how they compose
-- **Original doc**: How to execute them safely in sandbox and on host
+
+| Design | Focus | Scope |
+|--------|-------|-------|
+| **This doc** | Action vocabulary, platform filtering, documentation generation | What actions exist and how they compose |
+| **Original doc** | Container building, sandbox execution, caching | How to build and run sandbox containers |
+
+Both designs share the same current scope (documentation generation + sandbox container building) and future scope (host execution).
 
 ## References
 
@@ -472,3 +568,6 @@ Agent assessments informing this design:
 - `wip/research/system-deps_security.md` - Security constraints
 - `wip/research/system-deps_authoring-ux.md` - Recipe author experience
 - `wip/research/system-deps_implementation.md` - Implementation feasibility
+- `wip/research/design-fit_current-behavior.md` - Current require_system behavior analysis
+- `wip/research/design-fit_sandbox-executor.md` - Sandbox executor architecture
+- `wip/research/design-fit_usecase-alignment.md` - Use case alignment assessment
