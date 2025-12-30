@@ -138,8 +138,45 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Validating platform coverage for ${{ matrix.recipe }}..."
-          ./scripts/validate-golden.sh "${{ matrix.recipe }}"
+          RECIPE="${{ matrix.recipe }}"
+          FIRST_LETTER="${RECIPE:0:1}"
+          RECIPE_PATH="internal/recipe/recipes/$FIRST_LETTER/$RECIPE.toml"
+          GOLDEN_DIR="testdata/golden/plans/$FIRST_LETTER/$RECIPE"
+
+          # Get supported platforms (exclude linux-arm64 - no CI runner)
+          PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | \
+            jq -r '.supported_platforms[]' | tr '/' '-' | grep -v '^linux-arm64$')
+
+          # Get versions from existing golden files
+          VERSIONS=$(ls "$GOLDEN_DIR"/*.json 2>/dev/null | xargs -n1 basename | sed 's/.json$//' | rev | cut -d'-' -f3- | rev | sort -u)
+
+          if [ -z "$VERSIONS" ]; then
+            echo "No golden files found in $GOLDEN_DIR"
+            exit 1
+          fi
+
+          # Check all platform/version combinations have files
+          MISSING=()
+          for version in $VERSIONS; do
+            for platform in $PLATFORMS; do
+              if [ ! -f "$GOLDEN_DIR/${version}-${platform}.json" ]; then
+                MISSING+=("$GOLDEN_DIR/${version}-${platform}.json")
+              fi
+            done
+          done
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "ERROR: Missing golden files for supported platforms:"
+            for f in "${MISSING[@]}"; do
+              echo "  - $f"
+            done
+            echo ""
+            echo "Generate missing files with:"
+            echo "  gh workflow run generate-golden-files.yml -f recipe=$RECIPE -f commit_back=true -f branch=\$(git branch --show-current)"
+            exit 1
+          fi
+
+          echo "All platforms covered for $RECIPE"
 
   validate-execution:
     name: "${{ matrix.tool }} (${{ matrix.platform }})"

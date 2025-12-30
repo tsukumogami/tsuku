@@ -718,7 +718,24 @@ testdata/golden/plans/a/amplify/v6.3.1-darwin-amd64.json   | 2 +-
 
 #### Trigger 3: Golden File Changes (Execution Validation)
 
-When golden files are modified (by either trigger above), CI validates they are executable:
+When golden files are modified (by either trigger above), CI validates they are executable.
+
+**IMPORTANT: Separation of Concerns**
+
+There are two distinct validation jobs when golden files change:
+
+| Job | Question It Answers | How It Works |
+|-----|---------------------|--------------|
+| **Coverage** | "Does this recipe have golden files for all supported platforms?" | Compares file list against `tsuku info --metadata-only` |
+| **Execution** | "Do these plans actually work?" | Runs `tsuku install --plan --force` |
+
+**Coverage validation does NOT regenerate plans.** It only checks that files exist. This is critical because:
+
+1. **Ecosystem installers produce platform-specific content**: A plan generated on Linux for darwin will have different wheel hashes than a plan generated on actual macOS
+2. **The coverage check runs on Linux**: It cannot produce valid darwin plans for ecosystem installers
+3. **Content validation is a separate concern**: That belongs in `validate-golden.yml` which triggers on recipe changes and runs on the platform that generated the plans
+
+If coverage validation tried to regenerate and compare content, it would fail for any recipe using `pipx_install`, `npm_install`, `gem_install`, etc. because the platform-specific hashes would never match.
 
 **What happens:**
 1. CI detects golden files changed in the PR
