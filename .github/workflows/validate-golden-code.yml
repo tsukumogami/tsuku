@@ -1,0 +1,102 @@
+name: Validate Golden Files (Code)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      # Core plan generation - affects all recipes
+      - 'cmd/tsuku/eval.go'
+      - 'internal/executor/plan_generator.go'
+      - 'internal/executor/plan.go'
+      - 'internal/executor/plan_conversion.go'
+
+      # Decomposition framework - affects all decomposable actions
+      - 'internal/actions/decomposable.go'
+      - 'internal/actions/action.go'
+
+      # Composite actions - used by most recipes
+      - 'internal/actions/composites.go'
+      - 'internal/actions/download.go'
+
+      # Recipe parsing - affects all recipes
+      - 'internal/recipe/types.go'
+      - 'internal/recipe/loader.go'
+      - 'internal/recipe/platform.go'
+
+      # Package manager decomposers - each affects specific recipe types
+      - 'internal/actions/homebrew.go'
+      - 'internal/actions/cargo_install.go'
+      - 'internal/actions/npm_install.go'
+      - 'internal/actions/pipx_install.go'
+      - 'internal/actions/gem_install.go'
+      - 'internal/actions/go_install.go'
+      - 'internal/actions/nix_install.go'
+      - 'internal/actions/fossil_archive.go'
+      - 'internal/actions/apply_patch.go'
+
+      # Version resolution - affects URL templates
+      - 'internal/version/*.go'
+
+      # This workflow file
+      - '.github/workflows/validate-golden-code.yml'
+
+    paths-ignore:
+      - '**/*_test.go'
+
+  workflow_dispatch:
+
+# Note: The following files do NOT trigger this workflow because they contain
+# only execution logic (Execute methods) and do not affect plan generation:
+#   - internal/actions/extract.go
+#   - internal/actions/chmod.go
+#   - internal/actions/install_binaries.go
+#   - internal/actions/cargo_build.go
+#   - internal/actions/go_build.go
+#   - internal/actions/configure_make.go
+#   - internal/actions/cmake_build.go
+#   - internal/actions/meson_build.go
+#   - internal/actions/pip_install.go (primitive action, not pipx)
+#   - internal/actions/nix_realize.go
+#   - internal/actions/nix_portable.go
+#   - internal/executor/executor.go
+#   - internal/recipe/validate.go
+#   - internal/recipe/writer.go
+#   - And other execution-only files
+
+jobs:
+  validate-all:
+    name: Validate All Golden Files
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.tsuku/cache/downloads
+          key: golden-code-validation-${{ hashFiles('testdata/golden/plans/**/*.json') }}
+          restore-keys: |
+            golden-code-validation-
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Validate all golden files
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Validating all golden files..."
+          if ! ./scripts/validate-all-golden.sh; then
+            echo ""
+            echo "::error::Golden files are out of date due to code changes."
+            echo "::error::See output above for which recipes failed and regeneration commands."
+            exit 1
+          fi
