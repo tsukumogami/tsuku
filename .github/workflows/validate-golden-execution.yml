@@ -1,0 +1,216 @@
+name: Validate Golden Files (Execution)
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'testdata/golden/plans/**/*.json'
+      - '.github/workflows/validate-golden-execution.yml'
+  workflow_dispatch:
+
+jobs:
+  detect-changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.build-matrix.outputs.matrix }}
+      has_changes: ${{ steps.build-matrix.outputs.has_changes }}
+      recipes: ${{ steps.build-matrix.outputs.recipes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build execution matrix
+        id: build-matrix
+        run: |
+          # Get list of changed golden files (exclude deleted files)
+          CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'testdata/golden/plans/**/*.json')
+
+          if [ -z "$CHANGED" ]; then
+            echo "No golden files changed"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Changed golden files:"
+          echo "$CHANGED"
+
+          # Build matrix with one entry per file
+          # Map platform suffix to runner
+          MATRIX='{"include":['
+          FIRST=true
+
+          for path in $CHANGED; do
+            # Skip if file doesn't exist (deleted in later commit)
+            if [ ! -f "$path" ]; then
+              echo "Skipping deleted file: $path"
+              continue
+            fi
+
+            # Extract platform from filename (e.g., v1.20.0-linux-amd64.json -> linux-amd64)
+            filename=$(basename "$path" .json)
+            platform=$(echo "$filename" | sed 's/.*-\(linux\|darwin\)-\(amd64\|arm64\)$/\1-\2/')
+
+            # Map platform to runner
+            case "$platform" in
+              linux-amd64)
+                os="ubuntu-latest"
+                ;;
+              darwin-arm64)
+                os="macos-latest"
+                ;;
+              darwin-amd64)
+                # Skip: Intel Mac runners require paid tier
+                echo "Skipping $path (darwin-amd64 requires paid tier)"
+                continue
+                ;;
+              linux-arm64)
+                # Skip: no GitHub-hosted runners available
+                echo "Skipping $path (linux-arm64 no runners available)"
+                continue
+                ;;
+              *)
+                echo "Unknown platform in $path: $platform"
+                continue
+                ;;
+            esac
+
+            # Extract tool name for job naming
+            tool=$(basename "$(dirname "$path")")
+
+            if [ "$FIRST" = true ]; then
+              FIRST=false
+            else
+              MATRIX="$MATRIX,"
+            fi
+
+            MATRIX="$MATRIX{\"file\":\"$path\",\"os\":\"$os\",\"platform\":\"$platform\",\"tool\":\"$tool\",\"version\":\"$filename\"}"
+          done
+
+          MATRIX="$MATRIX]}"
+
+          if [ "$MATRIX" = '{"include":[]}' ]; then
+            echo "No executable golden files to validate"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+          echo "Matrix: $MATRIX"
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+          # Extract unique recipe names for coverage validation
+          RECIPES=$(echo "$CHANGED" | while read -r path; do
+            if [ -n "$path" ]; then
+              basename "$(dirname "$path")"
+            fi
+          done | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+
+          echo "Affected recipes: $RECIPES"
+          echo "recipes=$RECIPES" >> $GITHUB_OUTPUT
+
+  validate-coverage:
+    name: "Coverage: ${{ matrix.recipe }}"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJson(needs.detect-changes.outputs.recipes) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Validate platform coverage
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RECIPE="${{ matrix.recipe }}"
+          FIRST_LETTER="${RECIPE:0:1}"
+          RECIPE_PATH="internal/recipe/recipes/$FIRST_LETTER/$RECIPE.toml"
+          GOLDEN_DIR="testdata/golden/plans/$FIRST_LETTER/$RECIPE"
+
+          # Get supported platforms (exclude linux-arm64 - no CI runner)
+          PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | \
+            jq -r '.supported_platforms[]' | tr '/' '-' | grep -v '^linux-arm64$')
+
+          # Get versions from existing golden files
+          VERSIONS=$(ls "$GOLDEN_DIR"/*.json 2>/dev/null | xargs -n1 basename | sed 's/.json$//' | rev | cut -d'-' -f3- | rev | sort -u)
+
+          if [ -z "$VERSIONS" ]; then
+            echo "No golden files found in $GOLDEN_DIR"
+            exit 1
+          fi
+
+          # Check all platform/version combinations have files
+          MISSING=()
+          for version in $VERSIONS; do
+            for platform in $PLATFORMS; do
+              if [ ! -f "$GOLDEN_DIR/${version}-${platform}.json" ]; then
+                MISSING+=("$GOLDEN_DIR/${version}-${platform}.json")
+              fi
+            done
+          done
+
+          if [ ${#MISSING[@]} -gt 0 ]; then
+            echo "ERROR: Missing golden files for supported platforms:"
+            for f in "${MISSING[@]}"; do
+              echo "  - $f"
+            done
+            echo ""
+            echo "Generate missing files with:"
+            echo "  gh workflow run generate-golden-files.yml -f recipe=$RECIPE -f commit_back=true -f branch=\$(git branch --show-current)"
+            exit 1
+          fi
+
+          echo "All platforms covered for $RECIPE"
+
+  validate-execution:
+    name: "${{ matrix.tool }} (${{ matrix.platform }})"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_changes == 'true'
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.tsuku/cache/downloads
+          key: golden-execution-${{ matrix.platform }}-${{ hashFiles(matrix.file) }}
+          restore-keys: |
+            golden-execution-${{ matrix.platform }}-
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Execute golden file
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Executing: ${{ matrix.file }}"
+          ./tsuku install --plan "${{ matrix.file }}" --force

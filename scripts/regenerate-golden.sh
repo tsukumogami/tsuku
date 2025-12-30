@@ -139,11 +139,15 @@ elif [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
         basename "$f" .json | rev | cut -d'-' -f3- | rev
     done | sort -u)
 else
-    # Get latest version
-    LATEST=$("$TSUKU" versions "$RECIPE" 2>/dev/null | grep -E '^\s+v' | head -1 | xargs || true)
+    # Get latest version (versions may or may not have 'v' prefix depending on source)
+    LATEST=$("$TSUKU" versions "$RECIPE" 2>/dev/null | grep -E '^\s+' | head -1 | xargs || true)
     if [[ -z "$LATEST" ]]; then
         echo "Could not resolve latest version for $RECIPE" >&2
         exit 1
+    fi
+    # Ensure version has v prefix for filename consistency
+    if [[ "$LATEST" != v* ]]; then
+        LATEST="v$LATEST"
     fi
     VERSIONS="$LATEST"
 fi
