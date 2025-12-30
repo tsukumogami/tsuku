@@ -4,6 +4,10 @@
 
 Proposed
 
+## Upstream Design Reference
+
+This design addresses the "Structured install_guide for System Dependencies" blocker from [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md).
+
 ## Context and Problem Statement
 
 The current `require_system` action conflates multiple concerns:
@@ -238,6 +242,23 @@ when = { distro = ["ubuntu"] }
 - `fallback` expresses "automation might fail, here's plan B"
 - These are orthogonal concerns that can coexist
 
+## Decision Outcome
+
+**Chosen: D1-A + D2 + D3-C + D4-A + D5-Hybrid**
+
+### Summary
+
+We replace the polymorphic `require_system` with granular typed actions (`apt_install`, `brew_cask`, etc.), using `/etc/os-release` for distro detection via `when` clause extension, idempotent installation with final `require_command` verification, separate actions for post-install configuration, and a hybrid fallback approach (`manual` action + `fallback` field).
+
+### Rationale
+
+These choices work together to create a consistent, auditable system:
+- Typed actions (D1) enable static analysis and clear error messages
+- Distro detection (D2) allows precise Linux distribution targeting without implicit assumptions
+- Idempotent install + verify (D3) leverages package manager behavior with explicit verification
+- Separate post-install actions (D4) maintain single-responsibility and clear failure isolation
+- Hybrid fallback (D5) covers both "automation not possible" and "automation might fail" scenarios
+
 ## Action Vocabulary
 
 ### Package Installation
@@ -329,27 +350,7 @@ The structured action vocabulary enables this generation while remaining machine
 
 ## Sandbox Container Building
 
-In sandbox mode, tsuku extracts package requirements from actions and builds minimal containers:
-
-```go
-// ExtractPackages collects all package requirements from a filtered plan
-func ExtractPackages(plan *InstallationPlan) map[string][]string {
-    packages := make(map[string][]string)
-    for _, step := range plan.Steps {
-        switch step.Action {
-        case "apt_install":
-            packages["apt"] = append(packages["apt"], step.Packages...)
-        case "brew_install", "brew_cask":
-            packages["brew"] = append(packages["brew"], step.Packages...)
-        case "dnf_install":
-            packages["dnf"] = append(packages["dnf"], step.Packages...)
-        }
-    }
-    return packages
-}
-```
-
-This enables building per-recipe containers from a minimal base image. See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for container building details.
+In sandbox mode, tsuku extracts package requirements from actions and builds minimal containers. See [DESIGN-structured-install-guide.md - Sandbox Executor Changes](DESIGN-structured-install-guide.md#sandbox-executor-changes) for the `ExtractPackages()` implementation and container building details.
 
 ## WhenClause Extension
 
@@ -437,6 +438,77 @@ action = "require_command"
 command = "docker"
 ```
 
+### Additional Examples
+
+#### Simple Package Installation
+
+A minimal example installing a single package:
+
+```toml
+# Install curl on Ubuntu/Debian
+[[steps]]
+action = "apt_install"
+packages = ["curl"]
+when = { distro = ["ubuntu", "debian"] }
+
+# Install curl on macOS
+[[steps]]
+action = "brew_install"
+packages = ["curl"]
+when = { os = ["darwin"] }
+
+# Verify
+[[steps]]
+action = "require_command"
+command = "curl"
+```
+
+#### Homebrew with Custom Tap
+
+Installing from a third-party tap:
+
+```toml
+[[steps]]
+action = "brew_install"
+packages = ["some-tool"]
+tap = "owner/repo"
+when = { os = ["darwin"] }
+```
+
+#### Ubuntu PPA
+
+Adding a PPA and installing packages from it:
+
+```toml
+[[steps]]
+action = "apt_ppa"
+ppa = "deadsnakes/ppa"
+when = { distro = ["ubuntu"] }
+
+[[steps]]
+action = "apt_install"
+packages = ["python3.11"]
+when = { distro = ["ubuntu"] }
+
+[[steps]]
+action = "require_command"
+command = "python3.11"
+```
+
+#### Fallback for Graceful Degradation
+
+When automated installation might fail, provide a fallback:
+
+```toml
+[[steps]]
+action = "apt_install"
+packages = ["nvidia-cuda-toolkit"]
+fallback = "For newer CUDA versions, visit https://developer.nvidia.com/cuda-downloads"
+when = { distro = ["ubuntu"] }
+```
+
+The `fallback` field is shown to users if the installation fails, guiding them to manual alternatives.
+
 ## Implementation Approach
 
 Implementation focuses on documentation generation and sandbox container building (current scope).
@@ -474,6 +546,39 @@ Actions at this phase do NOT execute on the host - they provide:
 3. Add sandbox execution capability (actions run inside containers)
 
 See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for container building details.
+
+## Security Considerations
+
+**Current scope (documentation generation + sandbox execution):**
+
+- **No privileged host operations**: Tsuku does not execute system package installations on the user's machine
+- **Documentation generation**: Only reads recipe files to generate human-readable instructions
+- **Sandbox isolation**: Actions execute inside ephemeral containers with no host filesystem access
+- **Content-addressing**: External resources (GPG keys, repository URLs) require SHA256 hashes
+
+For security constraints on future host execution, see [Future Work: Host Execution](#host-execution).
+
+## Consequences
+
+### Positive
+
+- **Typed actions enable static analysis**: Every recipe can be audited without execution
+- **Consistent platform filtering**: `when` clause with `distro` support used everywhere
+- **Machine-readable format**: Enables both documentation generation and sandbox container building
+- **No shell commands**: Eliminates arbitrary code execution risks
+- **Extensible**: New actions follow established patterns
+
+### Negative
+
+- **More verbose than polymorphic `require_system`**: Separate steps per platform
+- **Requires Go code changes for new actions**: Higher bar than shell commands (by design)
+- **Two-design coordination**: This design + sandbox container building design must stay aligned
+
+### Mitigations
+
+- Verbosity traded for explicit, auditable behavior
+- New action barrier is intentional security property
+- Clear scope boundaries and cross-references between designs
 
 ## Future Work
 

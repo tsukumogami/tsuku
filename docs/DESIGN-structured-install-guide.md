@@ -189,44 +189,63 @@ install_guide = "sudo apt install docker.io"
 - Cannot be validated
 - Sandbox testing impossible
 
-#### Option 2B: Structured Primitives
+#### Option 2B: Typed Actions
 
-Two mutually exclusive parameters: `packages` (simple) and `primitives` (complex).
+Each operation is a separate step with a typed action. Simple and complex cases use the same syntax.
 
 **Simple case:**
 ```toml
 [[steps]]
-action = "require_system"
+action = "apt_install"
+packages = ["docker.io"]
+when = { distro = ["ubuntu", "debian"] }
+
+[[steps]]
+action = "require_command"
 command = "docker"
-packages = { apt = ["docker.io"] }
-when = { os = ["linux"] }
 ```
 
 **Complex case (multiple operations):**
 ```toml
 [[steps]]
-action = "require_system"
-command = "docker"
-primitives = [
-  { apt_repo = { url = "https://download.docker.com/linux/ubuntu", key_url = "...", key_sha256 = "1500c1f..." } },
-  { apt = ["docker-ce", "docker-ce-cli", "containerd.io"] },
-  { group_add = { group = "docker" } },
-  { service_enable = "docker" },
-]
+action = "apt_repo"
+url = "https://download.docker.com/linux/ubuntu"
+key_url = "https://download.docker.com/linux/ubuntu/gpg"
+key_sha256 = "1500c1f..."
+when = { distro = ["ubuntu", "debian"] }
+
+[[steps]]
+action = "apt_install"
+packages = ["docker-ce", "docker-ce-cli", "containerd.io"]
+when = { distro = ["ubuntu", "debian"] }
+
+[[steps]]
+action = "group_add"
+group = "docker"
 when = { os = ["linux"] }
+
+[[steps]]
+action = "service_enable"
+service = "docker"
+when = { os = ["linux"] }
+
+[[steps]]
+action = "require_command"
+command = "docker"
 ```
 
-**Key constraint: No shell primitive.** All operations use structured primitives that can be statically analyzed.
+**Key constraint: No shell action.** All operations use typed actions that can be statically analyzed.
 
 **Pros:**
 - Machine-executable (with user consent)
 - Auditable (no arbitrary shell commands)
-- Extensible (new primitives added as patterns emerge)
+- Extensible (new actions added as patterns emerge)
 - Content-addressed (external URLs require SHA256)
+- Consistent syntax for simple and complex cases
 
 **Cons:**
-- Requires defining primitive vocabulary
-- Complex installations need multiple primitives
+- Requires defining action vocabulary
+- Complex installations need multiple steps
 - New patterns require code changes
 
 ### Decision 3: Base Container Strategy
@@ -394,38 +413,7 @@ action = "require_command"
 command = "docker"
 ```
 
-**Complex case** (multiple operations):
-```toml
-# Add Docker repository
-[[steps]]
-action = "apt_repo"
-url = "https://download.docker.com/linux/ubuntu"
-key_url = "https://download.docker.com/linux/ubuntu/gpg"
-key_sha256 = "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570"
-when = { distro = ["ubuntu", "debian"] }
-
-# Install packages
-[[steps]]
-action = "apt_install"
-packages = ["docker-ce", "docker-ce-cli", "containerd.io"]
-when = { distro = ["ubuntu", "debian"] }
-
-# Post-install configuration
-[[steps]]
-action = "group_add"
-group = "docker"
-when = { os = ["linux"] }
-
-[[steps]]
-action = "service_enable"
-service = "docker"
-when = { os = ["linux"] }
-
-# Verify
-[[steps]]
-action = "require_command"
-command = "docker"
-```
+**Complex case** (multiple operations): See [DESIGN-system-dependency-actions.md - Example: Docker Installation](DESIGN-system-dependency-actions.md#example-docker-installation) for a complete recipe example showing repository setup, package installation, post-install configuration, and verification.
 
 **Mixed recipe** (tsuku installs on one platform, requires system on another):
 ```toml
@@ -517,32 +505,7 @@ See [DESIGN-system-dependency-actions.md - Documentation Generation](DESIGN-syst
 
 ### Documentation Generation
 
-When a recipe has system dependency actions that cannot be executed on the host, tsuku generates human-readable instructions using each action's `Describe()` method:
-
-```
-$ tsuku install docker
-
-Docker requires system dependencies that tsuku cannot install directly.
-
-For Ubuntu/Debian:
-
-  1. Add Docker repository:
-     curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-     echo "deb [signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list
-
-  2. Install packages:
-     sudo apt-get update && sudo apt-get install docker-ce docker-ce-cli containerd.io
-
-  3. Add yourself to docker group:
-     sudo usermod -aG docker $USER
-
-  4. Enable Docker service:
-     sudo systemctl enable docker
-
-After completing these steps, run: tsuku install docker --verify
-```
-
-See [DESIGN-system-dependency-actions.md - Documentation Generation](DESIGN-system-dependency-actions.md#documentation-generation) for the `Describe()` interface.
+When a recipe has system dependency actions that cannot be executed on the host, tsuku generates human-readable instructions using each action's `Describe()` method. See [DESIGN-system-dependency-actions.md - Documentation Generation](DESIGN-system-dependency-actions.md#documentation-generation) for the `Describe()` interface and example CLI output.
 
 ### Extension Model
 
@@ -598,22 +561,31 @@ func ExtractPackages(plan *executor.InstallationPlan) (map[string][]string, erro
     hasSystemDeps := false
 
     for _, step := range plan.Steps {
+        // Extract packages from Params map with type assertion
+        pkgList, _ := step.Params["packages"].([]interface{})
+        var pkgs []string
+        for _, p := range pkgList {
+            if s, ok := p.(string); ok {
+                pkgs = append(pkgs, s)
+            }
+        }
+
         switch step.Action {
         case "apt_install":
             hasSystemDeps = true
-            packages["apt"] = append(packages["apt"], step.Packages...)
+            packages["apt"] = append(packages["apt"], pkgs...)
         case "apt_repo":
             hasSystemDeps = true
             // apt_repo doesn't add packages directly, but signals we need apt
         case "brew_install", "brew_cask":
             hasSystemDeps = true
-            packages["brew"] = append(packages["brew"], step.Packages...)
+            packages["brew"] = append(packages["brew"], pkgs...)
         case "dnf_install":
             hasSystemDeps = true
-            packages["dnf"] = append(packages["dnf"], step.Packages...)
+            packages["dnf"] = append(packages["dnf"], pkgs...)
         case "pacman_install":
             hasSystemDeps = true
-            packages["pacman"] = append(packages["pacman"], step.Packages...)
+            packages["pacman"] = append(packages["pacman"], pkgs...)
         }
     }
 
@@ -637,6 +609,10 @@ func DeriveContainerSpec(packages map[string][]string) *ContainerSpec {
 ```
 
 **Note:** The plan passed to `ExtractPackages` is already filtered for the target platform. The `when` clause filtering (including `distro` detection) happens during plan generation.
+
+**Implementation note:** The current `Runtime` interface (`internal/validate/runtime.go`) only supports `Run()`. Container building requires adding:
+- `Build(ctx context.Context, dockerfile string, imageName string) error` - Build image from Dockerfile
+- `ImageExists(ctx context.Context, imageName string) (bool, error)` - Check cache
 
 ### Container Image Caching
 
