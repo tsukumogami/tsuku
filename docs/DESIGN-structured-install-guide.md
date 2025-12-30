@@ -107,34 +107,36 @@ fallback = "Visit docker.com for installation instructions"
 - Still requires migration
 - Mixed string/table values may confuse authors
 
-#### Option 1C: Parallel Fields (packages + text)
+#### Option 1C: Structured Field with Generated Text
 
-Keep `install_guide` as human-readable text, add new `packages` field for automation:
+Replace `install_guide` with structured `packages` field. Generate human-readable instructions on the fly:
 
 ```toml
 [[steps]]
 action = "require_system"
 command = "docker"
 
-[steps.install_guide]
-linux = "sudo apt install docker.io"
-darwin = "brew install --cask docker"
-
 [steps.packages]
 linux = { apt = ["docker.io"] }
 darwin = { brew = ["docker"], cask = true }
+fallback = { text = "Visit docker.com for installation instructions" }
 ```
 
+When displaying to users, tsuku generates:
+- `{ apt = ["docker.io"] }` → "Run: `sudo apt install docker.io`"
+- `{ brew = ["docker"], cask = true }` → "Run: `brew install --cask docker`"
+- `{ text = "..." }` → Shows the text as-is
+
 **Pros:**
-- Full backwards compatibility
-- Existing recipes work unchanged
-- Human instructions remain readable
-- Automation can be added incrementally
+- No duplication between human and machine formats
+- Single source of truth for package specs
+- Automation and display use the same data
+- `text` field available for cases that can't be generated (URLs, complex instructions)
 
 **Cons:**
-- Duplication between `install_guide` and `packages`
-- Two places to update when adding new dependencies
-- Slightly more verbose
+- Breaking change to current `install_guide` format
+- Requires migration of existing recipes (currently ~3 with `require_system`)
+- Generated text may be less polished than hand-written
 
 ### Decision 2: Base Container Strategy
 
@@ -232,24 +234,24 @@ Support core managers (apt, brew, dnf) with an extensible schema for adding othe
 
 ### Summary
 
-We add a new `packages` field alongside the existing `install_guide` field, allowing incremental adoption of structured package specs. The sandbox base container is stripped to minimal (tsuku + glibc only), forcing complete dependency declarations. We support core package managers (apt, brew, dnf) initially with a schema designed for extension.
+We replace the free-form `install_guide` field with a structured `packages` field. Human-readable instructions are generated from the structured data. The sandbox base container is stripped to minimal (tsuku + glibc only), forcing complete dependency declarations. We support core package managers (apt, brew, dnf) initially with a schema designed for extension.
 
 ### Rationale
 
-The combination of parallel fields (1C) and minimal container (2A) provides the best balance:
+The combination of structured packages with generated text (1C) and minimal container (2A) provides the best balance:
 
-- **Full backwards compatibility**: Existing recipes with text-only `install_guide` continue to work. The text is displayed to users who need manual installation.
+- **Single source of truth**: Package specs serve both automation (sandbox testing) and display (user instructions). No duplication to maintain.
 
-- **Incremental adoption**: Recipe authors can add structured `packages` specs to their recipes one at a time. Recipes without `packages` are skipped for automated sandbox testing with a logged warning, enabling gradual migration.
+- **Generated text**: Tsuku generates "Run: `sudo apt install docker.io`" from `{ apt = ["docker.io"] }`. For edge cases (URLs, complex instructions), the `text` field provides an escape hatch.
 
 - **Forced completeness**: The minimal base container catches recipes that accidentally depend on packages in the current base images. When sandbox testing fails, it's clear which packages need to be declared.
 
-- **Clear separation**: `install_guide` is for humans, `packages` is for automation. No confusion about which field serves which purpose.
+- **Small migration scope**: Only ~3 recipes currently use `require_system`. Migration is manageable.
 
-Why not Option 1A or 1B (restructuring install_guide):
-- Breaking change requiring migration of all existing recipes
-- Mixes human-readable and machine-readable in one field
-- More complex parsing logic
+Why not Option 1A or 1B:
+- Option 1A is verbose for simple cases
+- Option 1B mixes string and table values, confusing authors
+- Both require migration anyway; 1C is cleaner
 
 Why Option 2A (minimal container) over 2B (current) or 2C (curated):
 - 2A forces explicit dependency declaration, which is the goal
@@ -265,13 +267,17 @@ Why Option 3C (extensible core) over 3A or 3B:
 
 ### Package Specification Schema
 
-The `packages` field is a map from platform key to package specification:
+The `packages` field replaces the current `install_guide` field. It is a map from platform key to package specification:
 
 ```toml
+[[steps]]
+action = "require_system"
+command = "docker"
+
 [steps.packages]
-# Platform keys follow install_guide pattern: tuple (linux/amd64), OS (linux), or fallback
-"linux" = { apt = ["docker.io"] }
-"darwin" = { brew = ["docker"], cask = true }
+linux = { apt = ["docker.io"] }
+darwin = { brew = ["docker"], cask = true }
+fallback = { text = "Visit docker.com for installation instructions" }
 ```
 
 Package specification fields:
@@ -280,14 +286,60 @@ Package specification fields:
 |-------|------|-------------|
 | `apt` | []string | Debian/Ubuntu package names |
 | `brew` | []string | Homebrew formula names |
-| `brew_cask` | []string | Homebrew cask names |
+| `cask` | bool | If true, use `brew install --cask` for brew packages |
 | `dnf` | []string | Fedora/RHEL package names |
-| `text` | string | Fallback human-readable text |
+| `text` | string | Custom human-readable text (overrides generated text) |
 
-Platform key resolution follows the same hierarchy as `install_guide`:
+Platform key resolution follows the same hierarchy as the old `install_guide`:
 1. Exact tuple match (e.g., "linux/amd64")
 2. OS match (e.g., "linux")
 3. "fallback" key
+
+### Human-Readable Text Generation
+
+When displaying installation guidance to users, tsuku generates text from the structured spec:
+
+```go
+func GenerateInstallGuide(spec PackageSpec) string {
+    if spec.Text != "" {
+        return spec.Text  // Use custom text if provided
+    }
+
+    if len(spec.Apt) > 0 {
+        return fmt.Sprintf("Run: sudo apt install %s", strings.Join(spec.Apt, " "))
+    }
+    if len(spec.Brew) > 0 {
+        cmd := "brew install"
+        if spec.Cask {
+            cmd = "brew install --cask"
+        }
+        return fmt.Sprintf("Run: %s %s", cmd, strings.Join(spec.Brew, " "))
+    }
+    if len(spec.Dnf) > 0 {
+        return fmt.Sprintf("Run: sudo dnf install %s", strings.Join(spec.Dnf, " "))
+    }
+
+    return "Please install the required system dependency manually."
+}
+```
+
+### When Generated Text Is Insufficient
+
+Some system dependencies require complex installation procedures (GPG keys, apt repositories, user groups, service configuration). For these cases, use the `text` field to provide proper instructions:
+
+```toml
+[steps.packages]
+# For sandbox testing, docker.io from Debian repos is sufficient
+# For user instructions, link to official Docker docs
+linux = { apt = ["docker.io"], text = "See https://docs.docker.com/engine/install/ for your distribution" }
+darwin = { brew = ["docker"], cask = true }
+```
+
+When both `apt` and `text` are present:
+- **Sandbox automation** uses `apt` to install the package
+- **User display** shows the `text` field (takes precedence over generated text)
+
+This allows recipes to use simple packages for testing while providing comprehensive instructions for users.
 
 ### Minimal Base Container
 
@@ -420,22 +472,24 @@ func (a *RequireSystemAction) Preflight(params map[string]interface{}) *Prefligh
 
 ### Migration Path
 
-1. **Phase 1**: Add `packages` field support to `require_system` action. Recipes without `packages` continue to work but are skipped for automated sandbox testing.
+1. **Phase 1**: Add `packages` field support to `require_system` action. Deprecate `install_guide` but continue to support it for backwards compatibility. Recipes with only `install_guide` are skipped for automated sandbox testing with a deprecation warning.
 
 2. **Phase 2**: Create minimal base container. Update sandbox executor to use derived containers when `packages` is present.
 
-3. **Phase 3**: Add `packages` to existing recipes with `require_system` steps. Track migration progress via golden file coverage reports.
+3. **Phase 3**: Migrate existing recipes from `install_guide` to `packages`. Only ~3 recipes currently use `require_system`, so migration is manageable.
 
-4. **Phase 4**: CI reports which recipes lack `packages` specs. Eventually require `packages` for new recipes with `require_system`.
+4. **Phase 4**: Remove `install_guide` support after all recipes are migrated. Require `packages` for new recipes with `require_system`.
 
 ## Implementation Approach
 
 ### Phase 1: Schema and Parsing
 
-1. Update `require_system` action to accept `packages` field
+1. Update `require_system` action to accept `packages` field (replaces `install_guide`)
 2. Add `GetMapStringSlice` helper for parsing package arrays
-3. Add preflight validation for `packages` structure
-4. Update action documentation
+3. Add `GenerateInstallGuide()` function to produce human-readable text from specs
+4. Add preflight validation for `packages` structure
+5. Deprecate `install_guide` with warning (continue to support for backwards compatibility)
+6. Update action documentation
 
 ### Phase 2: Container Infrastructure
 
