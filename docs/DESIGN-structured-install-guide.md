@@ -1,4 +1,4 @@
-# DESIGN: Structured install_guide for System Dependencies
+# DESIGN: Structured Primitives for System Dependencies
 
 ## Status
 
@@ -19,7 +19,10 @@ This design implements part of [DESIGN-golden-plan-testing.md](DESIGN-golden-pla
 
 ## Context and Problem Statement
 
-Recipes with `require_system` steps cannot be execution-validated in the sandbox because the required system packages are not installed in the container. The current `install_guide` field contains free-form text instructions, not machine-parseable package specifications.
+Recipes with `require_system` steps cannot be execution-validated in the sandbox because the required system packages are not installed in the container. The current `install_guide` field has two problems:
+
+1. **Free-form text**: Contains human-readable instructions, not machine-parseable specifications
+2. **Platform keys inside the parameter**: Bakes platform filtering into the field instead of using the step-level `when` clause
 
 **Current state:**
 
@@ -33,7 +36,27 @@ darwin = "brew install --cask docker"
 linux = "See https://docs.docker.com/engine/install/"
 ```
 
-The sandbox executor cannot parse "brew install --cask docker" to install Docker automatically. This creates a gap in test coverage: recipes with system dependencies can have golden plans generated, but cannot be validated in sandbox containers.
+The sandbox executor cannot parse "brew install --cask docker" to install Docker automatically. Additionally, the platform keys (`darwin`, `linux`) duplicate functionality that belongs in the `when` clause - the standard mechanism for platform-specific step filtering.
+
+**Why platform keys in `install_guide` are wrong:**
+
+Consider a recipe that tsuku can install on one platform but requires system packages on another:
+
+```toml
+# Current approach (inconsistent)
+[[steps]]
+action = "download"
+url = "https://example.com/tool-linux.tar.gz"
+when = { os = ["linux"] }   # <-- platform filtering via when
+
+[[steps]]
+action = "require_system"
+command = "tool"
+[steps.install_guide]        # <-- platform filtering via parameter keys
+darwin = "brew install tool"
+```
+
+The `download` step uses `when` for platform filtering, but `require_system` uses keys inside `install_guide`. This inconsistency makes recipes harder to reason about.
 
 **Why this matters:**
 
@@ -41,129 +64,155 @@ The sandbox executor cannot parse "brew install --cask docker" to install Docker
 
 2. **Accidental dependencies**: The current sandbox base containers (`debian:bookworm-slim`, `ubuntu:22.04`) include hundreds of pre-installed packages. Recipes tested in these environments may work due to packages "accidentally" present - `ca-certificates`, `tar`, `gzip`, `curl`, shell utilities, shared libraries. A truly minimal environment would expose these hidden assumptions.
 
-3. **Platform gaps**: Free-form text cannot reliably tell the sandbox executor which packages to install on which platform.
+3. **Inconsistent platform handling**: Platform filtering should happen at the step level via `when`, not inside action parameters.
 
-4. **Scale requirements**: Tsuku aims to support tens of thousands of tools - anything available via Homebrew, supported ecosystems, or GitHub releases. At that scale, the long tail of tools will have diverse system requirements. The design must be robust and extensible enough to handle patterns we haven't encountered yet.
+4. **Scale requirements**: Tsuku aims to support tens of thousands of tools. At that scale, consistent patterns matter. Every action should use `when` for platform filtering.
 
 **Scope:**
 
-This design addresses structured package specifications for the `require_system` action. It does NOT cover:
+This design addresses:
+- Replacing `install_guide` with structured primitives (`packages` and `primitives`)
+- Moving platform filtering to the step-level `when` clause
+- Enabling sandbox testing for recipes with system dependencies
+
+This design does NOT cover:
 - Tsuku installing system packages directly (tsuku remains non-root)
 - Replacing package managers (apt, brew, etc.)
 - Container image management as a user-facing feature
 
 ## Decision Drivers
 
-1. **Backwards compatibility**: Existing recipes with free-form `install_guide` must continue to work.
+1. **Consistency**: Platform filtering should use the existing `when` clause, not custom keys inside parameters.
 
-2. **Incremental adoption**: Recipe authors should be able to add structured specs gradually.
+2. **Machine-parseable**: The format must be structured for sandbox container provisioning.
 
-3. **Platform coverage**: The format must support apt, brew, dnf, pacman, and potentially others.
+3. **Auditable**: Operations must be statically analyzable (no arbitrary shell commands).
 
-4. **Sandbox enablement**: The format must be machine-parseable for container provisioning.
+4. **Platform coverage**: The format must support apt, brew, dnf, and be extensible to others.
 
-5. **Simplicity**: Recipe authors should not need to learn complex syntax.
+5. **Simplicity**: Recipe authors should not need to learn complex syntax beyond existing patterns.
 
 ## Considered Options
 
-### Decision 1: Format for Structured Package Specs
+### Decision 1: Platform Filtering Mechanism
 
-How should package specifications be represented in TOML?
+How should platform-specific system requirements be expressed?
 
-#### Option 1A: Nested Tables
-
-```toml
-[steps.install_guide.linux]
-apt = ["docker.io"]
-text = "Or visit docker.com"
-
-[steps.install_guide.darwin]
-brew = { packages = ["docker"], cask = true }
-```
-
-**Pros:**
-- Clear separation of platforms
-- Native TOML structure
-- Easy to add new fields per platform
-
-**Cons:**
-- Verbose for simple cases
-- Breaking change to current string format
-- Requires migration of all existing recipes
-
-#### Option 1B: Inline Table with Package Arrays
+#### Option 1A: Platform Keys Inside Parameter (Current Approach)
 
 ```toml
+[[steps]]
+action = "require_system"
+command = "docker"
+
 [steps.install_guide]
-linux = { apt = ["docker.io"], text = "Or see docs.docker.com" }
-darwin = { brew = ["docker"], cask = true }
-fallback = "Visit docker.com for installation instructions"
+linux = "sudo apt install docker.io"
+darwin = "brew install --cask docker"
 ```
 
 **Pros:**
-- Compact representation
-- Clearly distinguishes structured from text-only entries
-- String values provide fallback behavior
+- Compact (one step for all platforms)
+- All platform variants visible together
 
 **Cons:**
-- Still requires migration
-- Mixed string/table values may confuse authors
+- Inconsistent with how other actions handle platforms (via `when`)
+- Two filtering mechanisms in recipes (confusing)
+- Cannot mix `require_system` with other actions per-platform cleanly
 
-#### Option 1C: Declarative Requirements with Structured Primitives
+#### Option 1B: Step-Level `when` Clause (Proposed)
 
-Replace `install_guide` with a declarative `packages` field that specifies *what* is needed using structured primitives. Tsuku executes these primitives directly (with user consent) or generates human-readable instructions.
+Each platform gets its own step, filtered by `when`:
 
-**Simple case (single package):**
 ```toml
+# Linux
 [[steps]]
 action = "require_system"
 command = "docker"
+packages = { apt = ["docker.io"] }
+when = { os = ["linux"] }
 
-[steps.packages]
-linux = { apt = ["docker.io"] }
-darwin = { brew = ["docker"], cask = true }
+# macOS
+[[steps]]
+action = "require_system"
+command = "docker"
+packages = { brew_cask = ["docker"] }
+when = { os = ["darwin"] }
 ```
 
-**Complex case (repository + packages + post-install):**
+**Pros:**
+- Consistent with all other actions
+- Single platform filtering mechanism
+- Easy to mix action types per platform
+- Each step is self-contained and simple
+
+**Cons:**
+- More verbose (duplicate `command` field)
+- Platform variants spread across multiple steps
+
+### Decision 2: Package Specification Format
+
+How should package requirements be structured?
+
+#### Option 2A: Free-Form Text (Current)
+
+```toml
+install_guide = "sudo apt install docker.io"
+```
+
+**Pros:**
+- Flexible for any instruction
+- No schema to learn
+
+**Cons:**
+- Cannot be machine-executed
+- Cannot be validated
+- Sandbox testing impossible
+
+#### Option 2B: Structured Primitives
+
+Two mutually exclusive parameters: `packages` (simple) and `primitives` (complex).
+
+**Simple case:**
 ```toml
 [[steps]]
 action = "require_system"
 command = "docker"
+packages = { apt = ["docker.io"] }
+when = { os = ["linux"] }
+```
 
-[steps.packages.linux]
+**Complex case (multiple operations):**
+```toml
+[[steps]]
+action = "require_system"
+command = "docker"
 primitives = [
-  { apt_repo = { url = "https://download.docker.com/linux/ubuntu", key_url = "https://download.docker.com/linux/ubuntu/gpg", key_sha256 = "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570" } },
+  { apt_repo = { url = "https://download.docker.com/linux/ubuntu", key_url = "...", key_sha256 = "1500c1f..." } },
   { apt = ["docker-ce", "docker-ce-cli", "containerd.io"] },
-  { group_add = { user = "$USER", group = "docker" } },
+  { group_add = { group = "docker" } },
   { service_enable = "docker" },
 ]
-
-[steps.packages.darwin]
-primitives = [
-  { brew_cask = ["docker"] },
-]
+when = { os = ["linux"] }
 ```
 
-**Key constraint: No shell primitive.** All operations use structured primitives that can be statically analyzed and audited. New primitives require code changes (higher review bar).
+**Key constraint: No shell primitive.** All operations use structured primitives that can be statically analyzed.
 
 **Pros:**
-- Machine-executable: tsuku can install system deps (with user consent)
-- Auditable: no arbitrary shell commands, only known primitives
-- Extensible: new primitives added as patterns emerge
-- Content-addressed: external URLs require SHA256 hashes
-- Single source of truth for both automation and user display
+- Machine-executable (with user consent)
+- Auditable (no arbitrary shell commands)
+- Extensible (new primitives added as patterns emerge)
+- Content-addressed (external URLs require SHA256)
 
 **Cons:**
-- Breaking change to current `install_guide` format
-- Requires defining primitive vocabulary upfront
+- Requires defining primitive vocabulary
 - Complex installations need multiple primitives
-- New patterns require code changes to add primitives
+- New patterns require code changes
 
-### Decision 2: Base Container Strategy
+### Decision 3: Base Container Strategy
 
 What should the sandbox base container contain?
 
-#### Option 2A: Minimal Container (tsuku + glibc only)
+#### Option 3A: Minimal Container (tsuku + glibc only)
 
 Strip the base container to absolute minimum. Every dependency must be declared.
 
@@ -178,7 +227,7 @@ Strip the base container to absolute minimum. Every dependency must be declared.
 - Slower sandbox runs (more packages to install per recipe)
 - Base container construction is non-trivial (glibc, locale-archive, SSL certs may all be needed)
 
-#### Option 2B: Current Approach (debian:bookworm-slim)
+#### Option 3B: Current Approach (debian:bookworm-slim)
 
 Keep the current base images with their standard package sets.
 
@@ -192,7 +241,7 @@ Keep the current base images with their standard package sets.
 - Different base images have different packages
 - Doesn't catch missing dependency declarations
 
-#### Option 2C: Curated Base Container
+#### Option 3C: Curated Base Container
 
 Create a custom tsuku base image with a known set of common packages.
 
@@ -206,11 +255,11 @@ Create a custom tsuku base image with a known set of common packages.
 - Still doesn't force complete dependency declarations
 - Extra infrastructure to manage
 
-### Decision 3: Package Manager Coverage
+### Decision 4: Package Manager Coverage
 
 Which package managers should the structured format support?
 
-#### Option 3A: Core Package Managers Only
+#### Option 4A: Core Package Managers Only
 
 Support the most common package managers: `apt`, `brew`, `dnf`.
 
@@ -223,7 +272,7 @@ Support the most common package managers: `apt`, `brew`, `dnf`.
 - Users of Arch (pacman), Alpine (apk) must use fallback text
 - Limits adoption in some ecosystems
 
-#### Option 3B: Comprehensive Package Manager Support
+#### Option 4B: Comprehensive Package Manager Support
 
 Support: `apt`, `brew`, `dnf`, `pacman`, `apk`, `zypper`, `emerge`.
 
@@ -236,7 +285,7 @@ Support: `apt`, `brew`, `dnf`, `pacman`, `apk`, `zypper`, `emerge`.
 - Maintenance of multiple package manager integrations
 - Some managers rarely used in practice
 
-#### Option 3C: Extensible with Core Defaults
+#### Option 4C: Extensible with Core Defaults
 
 Support core managers (apt, brew, dnf) with an extensible schema for adding others.
 
@@ -251,37 +300,40 @@ Support core managers (apt, brew, dnf) with an extensible schema for adding othe
 
 ## Decision Outcome
 
-**Chosen: 1C + 2A + 3C**
+**Chosen: 1B + 2B + 3A + 4C**
 
 ### Summary
 
-We replace the free-form `install_guide` field with a structured `packages` field using a vocabulary of auditable primitives. No shell commands are allowed - all operations use primitives that can be statically analyzed. The sandbox base container is stripped to minimal (tsuku + glibc only), forcing complete dependency declarations. We support core package managers initially with an extensible primitive system.
+We remove the `install_guide` field entirely and replace it with structured primitives (`packages` or `primitives` parameters) on platform-specific steps filtered by `when`. This aligns `require_system` with how all other actions handle platform differences. The sandbox base container is stripped to minimal (tsuku + glibc only), forcing complete dependency declarations. We support core package managers initially with an extensible primitive system.
 
 ### Rationale
 
-The combination of structured primitives (1C) and minimal container (2A) provides the best balance of security, expressiveness, and extensibility:
+**Why Option 1B (step-level `when`) over 1A (platform keys in parameter):**
+
+Platform filtering belongs at the step level, not inside parameters. This provides:
+- **Consistency**: Every action uses `when` for platform filtering
+- **Composability**: Easy to mix action types per platform (e.g., `download` on Linux, `require_system` on macOS)
+- **Simplicity**: Each step is self-contained with one platform target
+
+The verbosity trade-off (duplicate `command` field) is acceptable because:
+- Recipes are generated/validated by tooling, not hand-written at scale
+- Explicit is better than implicit for platform behavior
+- The `when` clause is already familiar to recipe authors
+
+**Why Option 2B (structured primitives) over 2A (free-form text):**
 
 - **No shell, only primitives**: Arbitrary shell commands with sudo are a security risk that cannot be statically analyzed. By restricting to known primitives (`apt`, `apt_repo`, `brew`, `group_add`, `service_enable`), every recipe can be audited.
+- **Machine-executable**: Primitives are designed to be executed by tsuku (with user consent), not just displayed.
+- **Content-addressed resources**: All external URLs (GPG keys, repository definitions) require SHA256 hashes.
 
-- **Machine-executable**: Primitives are designed to be executed by tsuku (with user consent), not just displayed. This enables automated installation of system dependencies.
+**Why Option 3A (minimal container) over 3B (current) or 3C (curated):**
 
-- **Content-addressed resources**: All external URLs (GPG keys, repository definitions) require SHA256 hashes. This prevents TOCTOU attacks where resources change between review and installation.
-
-- **Forced completeness**: The minimal base container exposes hidden dependencies. If a recipe works in `debian:bookworm-slim` but fails in the minimal container, it has undeclared dependencies.
-
-- **Extensible vocabulary**: New primitives are added through code changes as patterns emerge. This creates a higher review bar than allowing arbitrary shell commands.
-
-Why not Option 1A or 1B:
-- Option 1A is verbose for simple cases
-- Option 1B mixes string and table values, confusing authors
-- Neither addresses the shell command security problem
-
-Why Option 2A (minimal container) over 2B (current) or 2C (curated):
-- 2A exposes hidden dependencies that 2B masks
+- 3A exposes hidden dependencies that 3B masks
 - At scale (tens of thousands of tools), hidden dependencies become a major problem
-- 2C doesn't solve the underlying issue
+- 3C doesn't solve the underlying issue
 
-Why Option 3C (extensible core) over 3A or 3B:
+**Why Option 4C (extensible core) over 4A or 4B:**
+
 - Start with proven patterns (apt, brew, dnf)
 - Add primitives as we encounter new patterns during recipe migration
 - Avoids over-engineering upfront while providing clear extension path
@@ -290,37 +342,98 @@ Why Option 3C (extensible core) over 3A or 3B:
 
 ### Design Principles
 
-1. **No shell commands**: All operations use structured primitives that can be statically analyzed
-2. **Content-addressed resources**: All external URLs require SHA256 hashes
-3. **Explicit user consent**: Privileged operations require user confirmation
-4. **Extensible vocabulary**: New primitives added through code as patterns emerge
+1. **Platform filtering via `when`**: Use the existing step-level `when` clause, not parameter keys
+2. **No shell commands**: All operations use structured primitives that can be statically analyzed
+3. **Content-addressed resources**: All external URLs require SHA256 hashes
+4. **Explicit user consent**: Privileged operations require user confirmation
+5. **Extensible vocabulary**: New primitives added through code as patterns emerge
 
-### Package Specification Schema
+### Step Structure
 
-The `packages` field replaces the current `install_guide` field. It supports two forms:
+Each `require_system` step targets a single platform via `when` and specifies either `packages` (simple) or `primitives` (complex):
 
-**Simple form** (shorthand for common cases):
+**Simple case** (single package manager):
 ```toml
-[steps.packages]
-linux = { apt = ["docker.io"] }
-darwin = { brew_cask = ["docker"] }
+# Linux
+[[steps]]
+action = "require_system"
+command = "docker"
+packages = { apt = ["docker.io"] }
+when = { os = ["linux"] }
+
+# macOS
+[[steps]]
+action = "require_system"
+command = "docker"
+packages = { brew_cask = ["docker"] }
+when = { os = ["darwin"] }
 ```
 
-**Full form** (ordered primitives for complex installations):
+**Complex case** (multiple operations):
 ```toml
-[steps.packages.linux]
+[[steps]]
+action = "require_system"
+command = "docker"
 primitives = [
   { apt_repo = { url = "https://download.docker.com/linux/ubuntu", key_url = "https://download.docker.com/linux/ubuntu/gpg", key_sha256 = "1500c1f..." } },
   { apt = ["docker-ce", "docker-ce-cli", "containerd.io"] },
   { group_add = { group = "docker" } },
   { service_enable = "docker" },
 ]
+when = { os = ["linux"] }
 ```
 
-Platform key resolution follows the same hierarchy as the old `install_guide`:
-1. Exact tuple match (e.g., "linux/amd64")
-2. OS match (e.g., "linux")
-3. "fallback" key
+**Mixed recipe** (tsuku installs on one platform, requires system on another):
+```toml
+# Linux - tsuku can install directly
+[[steps]]
+action = "download"
+url = "https://example.com/tool-{version}-linux.tar.gz"
+when = { os = ["linux"] }
+
+[[steps]]
+action = "extract"
+when = { os = ["linux"] }
+
+# macOS - requires system package
+[[steps]]
+action = "require_system"
+command = "tool"
+packages = { brew = ["tool"] }
+when = { os = ["darwin"] }
+```
+
+### Parameter Schema
+
+The `require_system` action accepts these parameters:
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `command` | string | Yes | Command to check for |
+| `packages` | table | No* | Simple package spec (mutually exclusive with `primitives`) |
+| `primitives` | array | No* | Ordered primitive list (mutually exclusive with `packages`) |
+| `version_flag` | string | No | Flag to get version (e.g., "--version") |
+| `version_regex` | string | No | Regex to extract version |
+| `min_version` | string | No | Minimum required version |
+
+*One of `packages` or `primitives` is required for sandbox testing.
+
+**`packages` shorthand forms:**
+```toml
+packages = { apt = ["pkg1", "pkg2"] }
+packages = { brew = ["pkg"] }
+packages = { brew_cask = ["pkg"] }
+packages = { dnf = ["pkg"] }
+```
+
+**`primitives` array:**
+```toml
+primitives = [
+  { apt_repo = { url = "...", key_url = "...", key_sha256 = "..." } },
+  { apt = ["pkg1", "pkg2"] },
+  { group_add = { group = "docker" } },
+]
+```
 
 ### Primitive Vocabulary (Initial Set)
 
@@ -488,7 +601,7 @@ RUN apt-get update && apt-get install -y docker.io
 
 The sandbox executor is modified to:
 
-1. **Extract package specs**: Parse `require_system` steps from the plan, extract `packages` for the target platform.
+1. **Extract primitives**: Parse `require_system` steps from the plan. Steps are already platform-filtered by `when`, so extract `packages` or `primitives` directly.
 
 2. **Compute container image**: Generate a Dockerfile from the base image plus required packages. Hash the package list for caching.
 
@@ -498,13 +611,17 @@ The sandbox executor is modified to:
 
 ```go
 // DeriveContainerSpec extracts system packages from a plan's require_system steps.
+// The plan is already filtered for the target platform, so steps contain only
+// the packages/primitives needed for that platform.
+//
 // Returns (spec, nil) for recipes with complete package specs.
 // Returns (nil, nil) for recipes with no require_system steps.
-// Returns (nil, UnsupportedRecipeError) for recipes with require_system but no packages.
-func DeriveContainerSpec(plan *executor.InstallationPlan, os, arch string) (*ContainerSpec, error) {
+// Returns (nil, UnsupportedRecipeError) for recipes with require_system but no packages/primitives.
+func DeriveContainerSpec(plan *executor.InstallationPlan) (*ContainerSpec, error) {
     spec := &ContainerSpec{
-        Base:     MinimalBaseImage,
-        Packages: make(map[string][]string),
+        Base:       MinimalBaseImage,
+        Packages:   make(map[string][]string),
+        Primitives: nil,
     }
 
     hasRequireSystem := false
@@ -514,20 +631,29 @@ func DeriveContainerSpec(plan *executor.InstallationPlan, os, arch string) (*Con
         }
         hasRequireSystem = true
 
-        packages, ok := step.Params["packages"]
-        if !ok {
-            // No structured packages - skip this recipe for sandbox testing
-            // Caller should log warning and skip, not fail
-            return nil, &UnsupportedRecipeError{
-                Recipe:  plan.Tool,
-                Command: step.Params["command"].(string),
-                Reason:  "missing 'packages' field for sandbox automation",
+        // Check for packages (simple form)
+        if packages, ok := step.Params["packages"]; ok {
+            for manager, pkgs := range parsePackages(packages) {
+                spec.Packages[manager] = append(spec.Packages[manager], pkgs...)
             }
+            continue
         }
 
-        platformPackages := resolvePlatformPackages(packages, os, arch)
-        for manager, pkgs := range platformPackages {
-            spec.Packages[manager] = append(spec.Packages[manager], pkgs...)
+        // Check for primitives (complex form)
+        if primitives, ok := step.Params["primitives"]; ok {
+            parsed, err := parsePrimitives(primitives)
+            if err != nil {
+                return nil, err
+            }
+            spec.Primitives = append(spec.Primitives, parsed...)
+            continue
+        }
+
+        // No packages or primitives - cannot sandbox test
+        return nil, &UnsupportedRecipeError{
+            Recipe:  plan.Tool,
+            Command: step.Params["command"].(string),
+            Reason:  "missing 'packages' or 'primitives' for sandbox automation",
         }
     }
 
@@ -539,15 +665,7 @@ func DeriveContainerSpec(plan *executor.InstallationPlan, os, arch string) (*Con
 }
 ```
 
-**Handling recipes without `packages`**:
-
-When `DeriveContainerSpec` returns `UnsupportedRecipeError`, the sandbox executor logs a warning and skips sandbox testing for that recipe:
-
-```
-WARN: Skipping sandbox test for 'docker' - require_system step for 'docker' missing 'packages' field
-```
-
-This allows incremental migration: existing recipes continue to work for users, but sandbox validation is skipped until `packages` is added. CI reports track which recipes need migration.
+**Note:** The plan passed to `DeriveContainerSpec` is already filtered for the target platform. The `when` clause filtering happens during plan generation, so `require_system` steps in the plan only contain the packages needed for that specific platform.
 
 ### Container Image Caching
 
@@ -575,18 +693,40 @@ The cache can be local (podman/docker image cache) or remote (GHCR for CI).
 
 ### Recipe Validation
 
-Add preflight validation for `require_system` when `packages` is present:
+Update preflight validation for `require_system`:
 
 ```go
 func (a *RequireSystemAction) Preflight(params map[string]interface{}) *PreflightResult {
     result := &PreflightResult{}
 
-    // Existing validation...
+    // Command is required
+    if _, ok := GetString(params, "command"); !ok {
+        result.AddError("require_system action requires 'command' parameter")
+    }
 
-    // Validate packages structure if present
-    if packages, ok := params["packages"]; ok {
-        if err := validatePackagesStructure(packages); err != nil {
+    // Check for packages or primitives
+    hasPackages := params["packages"] != nil
+    hasPrimitives := params["primitives"] != nil
+
+    if hasPackages && hasPrimitives {
+        result.AddError("'packages' and 'primitives' are mutually exclusive")
+    }
+
+    if !hasPackages && !hasPrimitives {
+        result.AddWarning("missing 'packages' or 'primitives' - sandbox testing will be skipped")
+    }
+
+    // Validate packages structure
+    if hasPackages {
+        if err := validatePackagesStructure(params["packages"]); err != nil {
             result.AddError("invalid packages structure: %s", err)
+        }
+    }
+
+    // Validate primitives structure and content-addressing
+    if hasPrimitives {
+        if err := validatePrimitivesStructure(params["primitives"]); err != nil {
+            result.AddError("invalid primitives structure: %s", err)
         }
     }
 
@@ -596,26 +736,31 @@ func (a *RequireSystemAction) Preflight(params map[string]interface{}) *Prefligh
 
 ### Migration Path
 
-1. **Phase 1**: Add `packages` field support to `require_system` action. Deprecate `install_guide` but continue to support it for backwards compatibility. Recipes with only `install_guide` are skipped for automated sandbox testing with a deprecation warning.
+Since tsuku is pre-GA and all recipes are in the repo, we do a clean migration:
 
-2. **Phase 2**: Create minimal base container. Update sandbox executor to use derived containers when `packages` is present.
-
-3. **Phase 3**: Migrate existing recipes from `install_guide` to `packages`. Only ~3 recipes currently use `require_system`, so migration is manageable.
-
-4. **Phase 4**: Remove `install_guide` support after all recipes are migrated. Require `packages` for new recipes with `require_system`.
+1. **Remove `install_guide`**: Delete the field entirely from `require_system` action
+2. **Add `packages` and `primitives`**: Implement the new parameters
+3. **Migrate recipes**: Convert docker.toml, cuda.toml, test-tuples.toml to new format with `when` clauses
+4. **Validate**: Ensure all recipes pass preflight and can be sandbox-tested
 
 ## Implementation Approach
 
-### Phase 1: Primitive Framework
+### Phase 1: Refactor require_system Action
+
+1. Remove `install_guide` parameter from `require_system` action
+2. Add `packages` parameter (simple form: `{ apt = [...] }`)
+3. Add `primitives` parameter (complex form: array of primitive objects)
+4. Update preflight validation (mutually exclusive, structure validation)
+5. Migrate existing recipes (docker.toml, cuda.toml, test-tuples.toml) to use `when` clauses
+
+### Phase 2: Primitive Framework
 
 1. Create `internal/actions/primitives/` package with `Primitive` interface
 2. Implement core primitives: `apt`, `apt_repo`, `brew`, `brew_cask`, `manual`
-3. Add primitive parsing from TOML (simple and full forms)
-4. Add preflight validation (content-addressing, parameter validation)
-5. Implement `Describe()` for human-readable output generation
-6. Deprecate `install_guide` with warning (continue to support temporarily)
+3. Add content-addressing validation for external URLs
+4. Implement `Describe()` for human-readable output generation
 
-### Phase 2: Sandbox Execution
+### Phase 3: Sandbox Execution
 
 1. Create minimal base container Dockerfile (tsuku + glibc only)
 2. Publish base image to GHCR (tsukumogami/sandbox-base)
@@ -623,7 +768,7 @@ func (a *RequireSystemAction) Preflight(params map[string]interface{}) *Prefligh
 4. Add container image caching by primitive hash
 5. Integrate with existing sandbox executor
 
-### Phase 3: User Consent and Host Execution
+### Phase 4: User Consent and Host Execution
 
 1. Implement user consent flow (display primitives, confirm)
 2. Add `--system-deps` flag to `tsuku install` to enable host execution
@@ -631,14 +776,11 @@ func (a *RequireSystemAction) Preflight(params map[string]interface{}) *Prefligh
 4. Add audit logging for privileged operations
 5. Add dry-run mode (`--dry-run`) to show what would be executed
 
-### Phase 4: Recipe Migration and Extension
+### Phase 5: Extension
 
-1. Migrate docker.toml, cuda.toml, test-tuples.toml to new format
-2. Verify sandbox testing and host execution work
-3. Add primitives as needed: `dnf`, `dnf_repo`, `group_add`, `service_enable`
-4. Strip sandbox base container further as hidden dependencies are discovered
-5. Update CONTRIBUTING.md with primitive documentation
-6. Create tracking issue for full recipe registry migration
+1. Add primitives as needed: `dnf`, `dnf_repo`, `group_add`, `service_enable`
+2. Strip sandbox base container further as hidden dependencies are discovered
+3. Update CONTRIBUTING.md with primitive documentation
 
 ## Security Considerations
 
@@ -750,17 +892,23 @@ This would accelerate migration when scaling to thousands of recipes.
 
 ### Platform Version Constraints
 
-The current design treats "linux" as uniform, but apt packages vary by distribution version:
+The `when` clause currently supports OS and architecture filtering, but apt packages vary by distribution version. Future work could extend `when` to support distribution versions:
 
 ```toml
-[steps.packages."linux/ubuntu-24.04"]
-apt = ["docker-ce"]
+[[steps]]
+action = "require_system"
+command = "docker"
+packages = { apt = ["docker-ce"] }
+when = { os = ["linux"], distro = ["ubuntu-24.04"] }
 
-[steps.packages."linux/ubuntu-22.04"]
-apt = ["docker.io"]
+[[steps]]
+action = "require_system"
+command = "docker"
+packages = { apt = ["docker.io"] }
+when = { os = ["linux"], distro = ["ubuntu-22.04"] }
 ```
 
-Future work should define the platform key grammar and version matching semantics.
+This would require extending `WhenClause` to support distribution detection and matching.
 
 ### Container Cache Optimization
 
@@ -782,7 +930,9 @@ Certain primitives (`group_add`, `file_write`, `service_enable`) enable indirect
 
 ### Positive
 
+- **Consistency**: Platform filtering uses `when` clause everywhere, not mixed mechanisms.
 - **Complete golden coverage**: All recipes can be sandbox-tested, including those with system dependencies.
+- **Composability**: Easy to mix action types per platform (download on Linux, require_system on macOS).
 - **Explicit dependencies**: The minimal base container forces recipes to declare all required packages.
 - **Machine-executable**: Tsuku can install system dependencies automatically (with user consent).
 - **Auditable**: No shell commands - every operation uses a primitive that can be statically analyzed.
@@ -791,14 +941,14 @@ Certain primitives (`group_add`, `file_write`, `service_enable`) enable indirect
 
 ### Negative
 
+- **Verbosity**: Platform-specific steps duplicate `command` field across steps.
 - **Infrastructure**: Requires building and publishing minimal base container images.
 - **Primitive vocabulary**: Complex installations may require multiple primitives or new primitive types.
 - **Extension overhead**: New patterns require code changes to add primitives (by design, but adds friction).
-- **Migration effort**: Existing recipes with `require_system` need conversion to primitives.
 
 ### Mitigations
 
+- **Verbosity**: Recipes are validated by tooling; explicit is better than implicit for platform behavior.
 - **Infrastructure**: GitHub Actions can build and publish base images on release.
 - **Primitive vocabulary**: Start with common patterns (apt, brew, dnf); add primitives as needed.
 - **Extension overhead**: The overhead is intentional - it creates a review gate for new operation types.
-- **Migration**: Only ~3 recipes currently use `require_system`. Migration is manageable and will expose patterns for additional primitives.
