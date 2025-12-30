@@ -36,12 +36,19 @@ Planned
 | [#720](https://github.com/tsukumogami/tsuku/issues/720) | ci(golden): add cross-platform generation workflow | [#714](https://github.com/tsukumogami/tsuku/issues/714) |
 | [#721](https://github.com/tsukumogami/tsuku/issues/721) | docs: add golden file workflow to CONTRIBUTING.md | [#717](https://github.com/tsukumogami/tsuku/issues/717), [#718](https://github.com/tsukumogami/tsuku/issues/718), [#720](https://github.com/tsukumogami/tsuku/issues/720) |
 
-### Needs Design (Future Work)
+### Structured System Dependencies (Designed, Pending Implementation)
+
+Issue [#722](https://github.com/tsukumogami/tsuku/issues/722) spawned two companion design documents:
+
+- [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) - Action vocabulary (`apt_install`, `brew_cask`, etc.)
+- [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) - Sandbox container building
+
+Implementation issues will be added after `/plan` runs on those designs.
 
 | Issue | Title | Dependencies |
 |-------|-------|--------------|
-| [#745](https://github.com/tsukumogami/tsuku/issues/745) | chore(golden): enforce golden files for all recipes | [#721](https://github.com/tsukumogami/tsuku/issues/721), [#722](https://github.com/tsukumogami/tsuku/issues/722) |
-| [#722](https://github.com/tsukumogami/tsuku/issues/722) | docs(design): create design for structured install_guide | None |
+| [#745](https://github.com/tsukumogami/tsuku/issues/745) | chore(golden): enforce golden files for all recipes | [#721](https://github.com/tsukumogami/tsuku/issues/721), #722 implementation |
+| [#722](https://github.com/tsukumogami/tsuku/issues/722) | docs(design): create design for structured install_guide | Design complete |
 
 ### Dependency Graph
 
@@ -73,8 +80,8 @@ graph TD
         I745["#745: Enforce all recipes"]
     end
 
-    subgraph Future["Future Work"]
-        I722["#722: Structured install_guide"]
+    subgraph M722["Milestone: System Dependencies (pending /plan)"]
+        I722["#722: Structured install_guide (designed)"]
     end
 
     I712 --> I713
@@ -95,14 +102,14 @@ graph TD
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
+    classDef designed fill:#b3e5fc
 
     class I712,I713,I714,I715,I716,I717,I718,I719,I720,I721 done
     class I745 blocked
-    class I722 needsDesign
+    class I722 designed
 ```
 
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+**Legend**: Green = done, Light blue = designed (pending /plan), Yellow = blocked
 
 ## Context and Problem Statement
 
@@ -1462,57 +1469,32 @@ Validate approach and iterate on tooling.
 3. Create GitHub Action for automated version bump PRs
 4. Update PR template to note golden file requirements
 
-### Blocker: Structured install_guide for System Dependencies (needs-design)
+### Blocker: Structured System Dependencies (designed, pending implementation)
 
-**Problem**: Recipes with `require_system` steps cannot be execution-validated in the sandbox because the required system packages are not installed in the container.
+**Problem**: Recipes with system dependency steps cannot be execution-validated in the sandbox because the required system packages are not installed in the container.
 
-**Current state**:
-- The `require_system` action has an `install_guide` field with platform-specific installation instructions
-- These instructions are free-form text (e.g., "sudo apt install docker.io"), not structured package specs
-- The sandbox base containers (`debian:bookworm-slim`, `ubuntu:22.04`) include various pre-installed packages
-- There is no mechanism to parse `install_guide` and install the required packages in the container
+**Solution**: Issue [#722](https://github.com/tsukumogami/tsuku/issues/722) spawned two companion designs that address this blocker:
+
+1. **[DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)** - Defines typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) that replace free-form `install_guide` text with machine-parseable package specifications. Includes distro detection via `when = { distro = [...] }` clause.
+
+2. **[DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md)** - Defines how the sandbox executor uses these typed actions to build per-recipe containers dynamically, with package-set-based caching.
 
 **Impact on golden plan testing**:
-- Recipes with `require_system` dependencies are **blocked from execution validation**
-- These recipes can have golden plans generated, but cannot be sandbox-tested
-- This creates a gap in test coverage for recipes like docker-based tools, CUDA tools, etc.
+- Once implemented, recipes with system dependencies can be sandbox-tested
+- Golden plans will exist for ALL recipes (no exclusions)
+- Execution validation will work for all recipe types
 
-**Required solution** (separate design document):
-
-This is a complex change that warrants its own design document. The high-level requirements are:
-
-1. **Structured install_guide format**: Enhance `require_system` to support machine-parseable package specifications alongside human-readable text:
-   ```toml
-   [steps.install_guide]
-   # Structured format for automation
-   "linux/amd64" = { apt = ["docker.io"], text = "Or visit docker.com" }
-   "darwin/arm64" = { brew = ["docker"], cask = true }
-   ```
-
-2. **Minimal base container**: Remove ALL pre-installed packages from the sandbox base container. The container should contain only:
-   - A pre-built tsuku binary
-   - The absolute minimum for tsuku to execute (glibc)
-   - Nothing else - every dependency must come from the recipe
-
-3. **Dynamic container building**: The sandbox executor should:
-   - Parse `require_system` steps from the plan
-   - Extract structured package specs for the target platform
-   - Build a custom container image with those packages installed
-   - Cache container images by package set hash for efficiency
-
-4. **Recipe completeness**: Every recipe must explicitly declare its system dependencies. Recipes that worked due to packages "accidentally" present in the base container will fail until properly annotated.
-
-**Acceptance criteria for the blocking issue**:
-- [ ] Design document for structured `install_guide` format is accepted
-- [ ] `require_system` action supports structured package specs
-- [ ] Sandbox base container is stripped to minimal (tsuku binary + glibc only)
-- [ ] Sandbox executor builds custom containers from `require_system` declarations
-- [ ] All recipes with `require_system` steps have structured `install_guide`
-- [ ] Golden plans exist for ALL recipes (no exclusions due to system deps)
-- [ ] Execution validation works for recipes with `require_system` dependencies
+**Acceptance criteria** (tracked in implementation issues after /plan):
+- [ ] Typed actions implemented (`apt_install`, `brew_cask`, `dnf_install`, etc.)
+- [ ] Distro detection via `/etc/os-release` parsing
+- [ ] `Describe()` generates human-readable instructions for documentation
+- [ ] Sandbox executor builds containers from typed actions
+- [ ] Container caching by package set hash
+- [ ] Recipes migrated from `require_system` + `install_guide` to typed actions
+- [ ] Golden plans exist for ALL recipes (no exclusions)
 
 **Interim approach**:
-Until this blocker is resolved, recipes with `require_system` steps are excluded from execution validation but still have golden plans generated. The validation scripts will skip execution for these recipes and log a warning.
+Until implementation is complete, recipes with `require_system` steps are excluded from execution validation but still have golden plans generated. The validation scripts will skip execution for these recipes and log a warning.
 
 ## Security Considerations
 

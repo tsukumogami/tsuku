@@ -6,7 +6,9 @@ Proposed
 
 ## Upstream Design Reference
 
-This design addresses the "Structured install_guide for System Dependencies" blocker from [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md).
+This design addresses issue [#722](https://github.com/tsukumogami/tsuku/issues/722), which resolves the "Structured System Dependencies" blocker in [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md).
+
+**Companion design**: [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) (sandbox container building) depends on this design's action vocabulary.
 
 ## Context and Problem Statement
 

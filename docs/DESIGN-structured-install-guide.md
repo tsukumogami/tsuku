@@ -21,16 +21,14 @@ This design addresses **sandbox container building** for recipes with system dep
 
 ## Upstream Design Reference
 
-This design implements part of [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md).
+This design addresses issue [#722](https://github.com/tsukumogami/tsuku/issues/722), which resolves the "Structured System Dependencies" blocker in [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md).
 
-**Relevant sections:**
-- Blocker: Structured install_guide for System Dependencies (lines 1465-1515)
-- The acceptance criteria for enabling complete golden plan coverage
+**Companion design**: [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) (action vocabulary) is a prerequisite for this design.
 
 **Blocking relationship:**
-- Issue #745 (enforce golden files for all recipes) is blocked by this design
-- Issue #722 (this design) must be completed before #745 can proceed
-- Upon completion, all recipes including those with `require_system` steps can be sandbox-tested
+- Issue #745 (enforce golden files for all recipes) is blocked by #722
+- Both companion designs must be implemented before #745 can proceed
+- Upon completion, all recipes can be sandbox-tested with dynamically-built containers
 
 ## Context and Problem Statement
 
