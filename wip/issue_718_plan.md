@@ -16,7 +16,7 @@ The introspection phase identified that only ~18 core files truly require full v
 
 ## Implementation Steps
 
-- [ ] Create `.github/workflows/validate-golden-code.yml` with:
+- [x] Create `.github/workflows/validate-golden-code.yml` with:
   - Trigger on PR to main with fine-grained path filters
   - Exclude test files with paths-ignore pattern
   - Use download cache like sibling workflows
