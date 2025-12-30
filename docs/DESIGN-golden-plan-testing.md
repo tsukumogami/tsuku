@@ -97,9 +97,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I712,I713,I714,I715,I716,I720 done
-    class I717 ready
-    class I718,I719,I721,I745 blocked
+    class I712,I713,I714,I715,I716,I717,I719,I720 done
+    class I718 ready
+    class I721,I745 blocked
     class I722 needsDesign
 ```
 
@@ -521,7 +521,7 @@ jobs:
           git diff --name-only origin/main...HEAD -- 'testdata/golden/plans/**/*.json' | \
             grep "$PLATFORM" | while read plan; do
               echo "Testing: $plan"
-              ./tsuku install --plan "$plan" --sandbox
+              ./tsuku install --plan "$plan" --force
             done
 ```
 
@@ -547,7 +547,7 @@ git diff testdata/golden/plans/f/fzf/
 git diff --stat testdata/golden/plans/
 
 # Test execution locally (current platform only)
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --force
 ```
 
 ### Execution Validation: Keeping Plans Fresh
@@ -594,7 +594,7 @@ Golden plans must stay synchronized with three moving targets:
               ▼                     ▼                     ▼
     ┌─────────────────┐   ┌─────────────────┐   ┌─────────────────┐
     │ git diff        │   │ git diff        │   │ tsuku install   │
-    │ --exit-code     │   │ --exit-code     │   │ --plan --sandbox│
+    │ --exit-code     │   │ --exit-code     │   │ --plan --force  │
     └─────────────────┘   └─────────────────┘   └─────────────────┘
               │                     │                     │
               └─────────────────────┼─────────────────────┘
@@ -638,7 +638,7 @@ vim internal/recipe/recipes/f/fzf.toml
 git diff testdata/golden/plans/f/fzf/
 
 # Optional: test execution locally
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --force
 
 # Commit both recipe and golden file changes
 git add internal/recipe/recipes/f/fzf.toml testdata/golden/plans/f/fzf/
@@ -696,8 +696,8 @@ go test ./internal/executor/...
 git diff --stat testdata/golden/plans/
 
 # Optional: spot-check execution for a few recipes
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
-./tsuku install --plan testdata/golden/plans/r/ripgrep/v14.1.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --force
+./tsuku install --plan testdata/golden/plans/r/ripgrep/v14.1.0-linux-amd64.json --force
 
 # If changes are intentional, commit everything
 git add internal/executor/plan.go testdata/golden/plans/
@@ -718,16 +718,40 @@ testdata/golden/plans/a/amplify/v6.3.1-darwin-amd64.json   | 2 +-
 
 #### Trigger 3: Golden File Changes (Execution Validation)
 
-When golden files are modified (by either trigger above), CI validates they are executable:
+When golden files are modified (by either trigger above), CI validates they are executable.
+
+**IMPORTANT: Separation of Concerns**
+
+There are two distinct validation jobs when golden files change:
+
+| Job | Question It Answers | How It Works |
+|-----|---------------------|--------------|
+| **Coverage** | "Does this recipe have golden files for all supported platforms?" | Compares file list against `tsuku info --metadata-only` |
+| **Execution** | "Do these plans actually work?" | Runs `tsuku install --plan --force` |
+
+**Coverage validation does NOT regenerate plans.** It only checks that files exist. This is critical because:
+
+1. **Ecosystem installers produce platform-specific content**: A plan generated on Linux for darwin will have different wheel hashes than a plan generated on actual macOS
+2. **The coverage check runs on Linux**: It cannot produce valid darwin plans for ecosystem installers
+3. **Content validation is a separate concern**: That belongs in `validate-golden.yml` which triggers on recipe changes and runs on the platform that generated the plans
+
+If coverage validation tried to regenerate and compare content, it would fail for any recipe using `pipx_install`, `npm_install`, `gem_install`, etc. because the platform-specific hashes would never match.
 
 **What happens:**
 1. CI detects golden files changed in the PR
 2. For each changed golden file matching the current runner's platform:
-   - Runs `tsuku install --plan <golden-file> --sandbox`
-   - Sandbox downloads the artifact and verifies checksum
-   - Sandbox executes installation steps in isolated container
+   - Runs `tsuku install --plan <golden-file> --force`
+   - Downloads the artifact and verifies checksum
+   - Executes installation steps
    - Verifies the tool is installed correctly
 3. Fails if any installation fails
+
+**Why direct execution (not sandbox):**
+- GitHub Actions runners are ephemeral and clean - no isolation needed
+- Tsuku's built-in checksum verification provides the security guarantee
+- Direct execution supports ALL plan types including ecosystem installers (npm, pip, cargo)
+- Sandbox mode with network isolation only works for binary-download plans
+- The goal is to validate plans work, not to test isolation
 
 **Why this matters:**
 - Catches checksum mismatches (upstream artifact changed)
@@ -744,42 +768,37 @@ strategy:
         platform: linux-amd64
       - os: macos-latest
         platform: darwin-arm64
-      - os: macos-13
-        platform: darwin-amd64
+      # darwin-amd64 skipped: Intel Mac runners require paid tier
+      # linux-arm64 skipped: no GitHub-hosted runners available
 ```
 
 Each runner validates golden files for its platform:
 - `ubuntu-latest` validates `*-linux-amd64.json` files
 - `macos-latest` validates `*-darwin-arm64.json` files (Apple Silicon)
-- `macos-13` validates `*-darwin-amd64.json` files (Intel Mac)
 
-**Known limitation**: `linux-arm64` golden files are generated but not execution-validated (no arm64 Linux runners in standard GitHub Actions). Plan generation logic is shared across architectures, so this is acceptable risk.
+**Known limitations**: Two platforms are excluded from execution validation:
+- `darwin-amd64`: Intel Mac runners (`macos-15-large`) require paid GitHub Actions tier
+- `linux-arm64`: No GitHub-hosted arm64 Linux runners available
+
+Plan generation logic is shared across architectures, so bugs would likely affect validated platforms too. This is acceptable risk given the cost of paid runners.
 
 **Execution validation output:**
 ```
 Testing: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
-Running sandbox test for fzf...
-  Container image: ubuntu:22.04
-  Network access: disabled (binary installation)
-  Resource limits: 2G memory, 2.0 CPUs, 2m0s timeout
-
-Sandbox test PASSED
-
-Testing: testdata/golden/plans/r/ripgrep/v14.1.0-linux-amd64.json
-Running sandbox test for ripgrep...
-...
+Installing fzf v0.46.0...
+  Downloading: https://github.com/junegunn/fzf/releases/download/...
+  Verifying checksum: OK
+  Extracting: fzf-0.46.0-linux_amd64.tar.gz
+  Installing binaries: fzf
+Success: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
 ```
 
 **Execution failure example:**
 ```
 Testing: testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json
-Running sandbox test for fzf...
-
-Sandbox test FAILED
-Exit code: 1
-
-Error output:
-  download: checksum mismatch
+Installing fzf v0.46.0...
+  Downloading: https://github.com/junegunn/fzf/releases/download/...
+  Error: checksum mismatch
     expected: sha256:abc123...
     actual:   sha256:def456...
 
@@ -795,17 +814,17 @@ Investigate the checksum mismatch and update the golden file if legitimate.
 # On Linux (amd64):
 for plan in testdata/golden/plans/f/fzf/*-linux-amd64.json; do
     echo "Testing: $plan"
-    ./tsuku install --plan "$plan" --sandbox
+    ./tsuku install --plan "$plan" --force
 done
 
 # On macOS (arm64):
 for plan in testdata/golden/plans/f/fzf/*-darwin-arm64.json; do
     echo "Testing: $plan"
-    ./tsuku install --plan "$plan" --sandbox
+    ./tsuku install --plan "$plan" --force
 done
 
 # Test a specific plan
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.46.0-linux-amd64.json --force
 ```
 
 #### Trigger 4: Upstream Version Updates (Keeping Plans Fresh)
@@ -821,7 +840,7 @@ Golden files pin specific versions. When new versions are released upstream, pla
 git diff testdata/golden/plans/f/fzf/
 
 # Test execution for the new version (current platform)
-./tsuku install --plan testdata/golden/plans/f/fzf/v0.47.0-linux-amd64.json --sandbox
+./tsuku install --plan testdata/golden/plans/f/fzf/v0.47.0-linux-amd64.json --force
 
 # Commit new version's golden files
 git add testdata/golden/plans/f/fzf/
@@ -874,37 +893,41 @@ jobs:
 | No golden files for recipe | New recipe added | Run `./scripts/regenerate-golden.sh <recipe>`, commit new files |
 | Golden files for unsupported platform | Recipe platform support narrowed | Regeneration script automatically removes unsupported platform files |
 
-#### Platform Coverage and linux-arm64 Exclusion
+#### Platform Coverage and Exclusions
 
-Golden file testing covers three of the four supported platforms:
+Golden file testing covers two of the four supported platforms:
 
 | Platform | Plan Generation | Execution Validation | CI Runner |
 |----------|-----------------|---------------------|-----------|
 | linux-amd64 | Yes | Yes | `ubuntu-latest` |
 | darwin-arm64 | Yes | Yes | `macos-latest` |
-| darwin-amd64 | Yes | Yes | `macos-13` |
+| darwin-amd64 | Yes | **No** | Requires paid tier |
 | linux-arm64 | **No** | **No** | None available |
 
-**linux-arm64 is explicitly excluded** from golden file testing because:
+**darwin-amd64 is excluded from execution validation** because:
+- Intel Mac runners (`macos-15-large`) require GitHub Actions paid tier
+- Intel Macs are being phased out industry-wide
+- Plan generation still works; only execution validation is skipped
 
-1. **No CI runner available**: GitHub Actions does not provide arm64 Linux runners in the standard tier
-2. **Cannot generate build-based plans**: Build recipes require native toolchain execution
-3. **Cannot validate execution**: Even if plans existed, we couldn't run sandbox tests
+**linux-arm64 is excluded entirely** because:
+- GitHub Actions does not provide arm64 Linux runners in the standard tier
+- Cannot generate build-based plans (require native toolchain execution)
+- Cannot validate execution
 
 **What this means in practice:**
 
 - Recipes do NOT have `*-linux-arm64.json` golden files
+- Recipes DO have `*-darwin-amd64.json` golden files (plan generation works, execution skipped)
 - The regeneration scripts skip linux-arm64 when generating golden files
-- Platform support metadata still includes linux-arm64 (the recipe supports it, we just don't test it)
+- Platform support metadata still includes both platforms (recipes support them, we just don't fully test them)
 
 **Risk mitigation:**
 
-- Plan generation logic is shared across architectures - bugs would likely affect both amd64 and arm64
-- Download-based recipes use the same URL patterns for both architectures
-- Users on linux-arm64 are a small minority of the user base
-- If arm64 Linux runners become available, coverage can be added without design changes
+- Plan generation logic is shared across architectures - bugs would likely affect validated platforms too
+- Download-based recipes use the same URL patterns across architectures
+- linux-amd64 and darwin-arm64 cover the most common developer environments
 
-**Future option**: Self-hosted arm64 Linux runners or services like Actuated/Blacksmith could enable linux-arm64 coverage if demand justifies the cost.
+**Future option**: Self-hosted runners or paid GitHub Actions tier could enable full coverage if demand justifies the cost.
 
 #### Cross-Platform Golden File Generation Workflow
 
@@ -1418,7 +1441,7 @@ This enables programmatic tooling for golden plan management and other automatio
 1. Add `validate-golden-recipes.yml` for recipe change validation
 2. Add `validate-golden-code.yml` for code change validation
 3. Add download caching using `actions/cache` keyed by recipe+version
-4. Add execution validation step using `--sandbox` flag
+4. Add execution validation step for changed golden files
 
 ### Phase 3: Tiered Golden File Generation
 
@@ -1496,19 +1519,21 @@ Until this blocker is resolved, recipes with `require_system` steps are excluded
 
 ### Download Verification
 
-Golden files contain checksums computed from real downloads. When a golden file changes, the CI workflow validates the plan can be executed with `tsuku install --plan --sandbox`. This ensures:
+Golden files contain checksums computed from real downloads. When a golden file changes, the CI workflow validates the plan can be executed with `tsuku install --plan --force`. This ensures:
 
 - Checksums match actual downloadable artifacts
 - Plans are executable, not just syntactically valid
-- Sandbox isolation prevents malicious payload execution
+- Tsuku's built-in checksum verification catches supply chain changes
 
 ### Execution Isolation
 
-Execution validation uses the `--sandbox` flag which runs installations in an isolated container. This provides:
+Execution validation runs directly on GitHub Actions runners rather than in sandbox containers. This is appropriate because:
 
-- No modification to host system
-- Resource limits (memory, CPU, timeout)
-- Network isolation for non-download actions
+- GitHub Actions runners are ephemeral and destroyed after each job
+- The goal is to validate plans work, not to test isolation mechanisms
+- Direct execution supports ALL plan types including ecosystem installers
+- Sandbox mode with network isolation only works for binary-download plans
+- Tsuku's built-in checksum verification provides the security guarantee
 
 ### Supply Chain Risks
 
@@ -1584,7 +1609,7 @@ Golden files are validated through execution on every change:
 | Validation Type | When | How |
 |-----------------|------|-----|
 | Structural | Every PR | Go tests with `AssertPlanInvariants()` |
-| Checksum freshness | Golden file change | `tsuku install --plan --sandbox` |
+| Checksum freshness | Golden file change | `tsuku install --plan --force` |
 | Cross-platform | Recipe change | Generate for all 4 platforms |
 
 ### What Happens When Tsuku Changes
