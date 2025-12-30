@@ -18,6 +18,7 @@ type RedundantVersion struct {
 }
 
 // actionInference maps action names to the version source they infer.
+// Note: homebrew is handled separately with formula matching logic.
 var actionInference = map[string]string{
 	"cargo_install":  "crates_io",
 	"pipx_install":   "pypi",
@@ -75,6 +76,28 @@ func DetectRedundantVersion(r *recipe.Recipe) []RedundantVersion {
 							Message: fmt.Sprintf("[version] module=%q is redundant; inferred from install path %q", r.Version.Module, installPath),
 						})
 					}
+				}
+			}
+		}
+	}
+
+	// Check for homebrew formula redundancy
+	// A homebrew version source is redundant only if:
+	// 1. source = "homebrew" AND
+	// 2. A homebrew action exists AND
+	// 3. The formulas match (or version.formula is empty, meaning it uses metadata.name)
+	if r.Version.Source == "homebrew" {
+		for _, step := range r.Steps {
+			if step.Action == "homebrew" {
+				stepFormula, _ := step.Params["formula"].(string)
+				// If version.formula matches step formula, it's redundant
+				// (empty version.formula means use metadata.name, which homebrew action also defaults to)
+				if r.Version.Formula == stepFormula {
+					redundant = append(redundant, RedundantVersion{
+						Source:  "homebrew",
+						Action:  step.Action,
+						Message: fmt.Sprintf("[version] source=%q with formula=%q is redundant; homebrew action infers this automatically", r.Version.Source, r.Version.Formula),
+					})
 				}
 			}
 		}
