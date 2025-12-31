@@ -1,0 +1,735 @@
+# Issue Plan Outline for #722: Structured System Dependencies
+
+This document outlines the implementation issues for the two companion designs that address issue #722:
+
+- [DESIGN-system-dependency-actions.md](../docs/DESIGN-system-dependency-actions.md) - Action vocabulary
+- [DESIGN-structured-install-guide.md](../docs/DESIGN-structured-install-guide.md) - Sandbox container building
+
+## Milestone Overview
+
+```
+M-Actions: System Dependency Action Vocabulary
+    └─ Distro detection, action types, documentation generation
+
+M-Sandbox: Sandbox Container Building (depends on M-Actions)
+    └─ Container derivation, caching, executor integration
+
+M-Coverage: Full Golden Plan Coverage (depends on M-Sandbox, existing M27)
+    └─ Recipe discovery, migration, #745 unblocked
+```
+
+---
+
+## Milestone: System Dependency Action Vocabulary
+
+**Design**: DESIGN-system-dependency-actions.md
+**Prerequisite**: None
+**Blocks**: M-Sandbox, M-Coverage
+
+### Issue A1: Add distro field to WhenClause
+
+**Type**: feat(recipe)
+**Phase**: Infrastructure
+
+**Description**:
+Extend the `WhenClause` struct to support Linux distribution filtering. This enables recipes to target specific distros (ubuntu, debian, fedora) rather than just OS (linux, darwin).
+
+**Acceptance Criteria**:
+- [ ] `WhenClause` struct has `Distro []string` field
+- [ ] Validation: `distro` and `os` are mutually exclusive
+- [ ] Validation: `distro` and `platform` are mutually exclusive
+- [ ] If `distro` is set, step implicitly requires `os = linux`
+- [ ] TOML parsing works: `when = { distro = ["ubuntu", "debian"] }`
+- [ ] Unit tests for validation rules
+
+**Dependencies**: None
+
+---
+
+### Issue A2: Implement distro detection
+
+**Type**: feat(platform)
+**Phase**: Infrastructure
+
+**Description**:
+Implement `/etc/os-release` parsing to detect the current Linux distribution. This powers the `when = { distro = [...] }` filtering.
+
+**Acceptance Criteria**:
+- [ ] New file: `internal/platform/distro.go`
+- [ ] Function: `DetectDistro() (id string, idLike []string, err error)`
+- [ ] Parses `ID` and `ID_LIKE` from `/etc/os-release`
+- [ ] Handles missing file gracefully (returns empty, no error)
+- [ ] Handles unknown distros (returns ID from file)
+- [ ] Unit tests with fixture files for: ubuntu, debian, fedora, arch, alpine
+
+**Dependencies**: None (can run in parallel with A1)
+
+---
+
+### Issue A3: Integrate distro matching in WhenClause
+
+**Type**: feat(recipe)
+**Phase**: Infrastructure
+
+**Description**:
+Update `WhenClause.Matches()` to evaluate the `distro` field against a target distro (not just detected distro). This enables both host-native execution (detect distro) and sandbox execution (specify target distro).
+
+**Acceptance Criteria**:
+- [ ] `WhenClause.Matches()` accepts target distro as parameter (not just detection)
+- [ ] Signature: `Matches(platform Platform, distro string) bool`
+- [ ] Matching: exact ID match first, then ID_LIKE fallback
+- [ ] Example: `distro = ["ubuntu"]` matches target="ubuntu"; `distro = ["debian"]` matches target="ubuntu" (via ID_LIKE)
+- [ ] Steps with `distro` condition skip when target distro doesn't match
+- [ ] Default behavior: if no target distro specified, call `DetectDistro()` for host-native mode
+- [ ] Integration test: recipe with distro-specific steps filtered correctly for target distro
+
+**Related Code**:
+- `internal/recipe/when.go` - WhenClause implementation
+- `internal/platform/` - Platform detection
+
+**Dependencies**: A1, A2
+
+---
+
+### Issue A4a: Define package installation action structs
+
+**Type**: feat(actions)
+**Phase**: Action Vocabulary
+
+**Description**:
+Create Go structs for package installation actions. These structs hold validated parameters but do not yet implement execution. Split from A4b to reduce issue complexity.
+
+**Acceptance Criteria**:
+- [ ] Package installation actions:
+  - `AptInstallAction` - packages []string, fallback? string
+  - `AptRepoAction` - url, key_url, key_sha256 (all required)
+  - `AptPPAAction` - ppa string
+  - `BrewInstallAction` - packages []string, tap? string, fallback? string
+  - `BrewCaskAction` - packages []string, tap? string, fallback? string
+  - `DnfInstallAction` - packages []string, fallback? string
+  - `DnfRepoAction` - url, key_url?, key_sha256?
+  - `PacmanInstallAction` - packages []string, fallback? string
+- [ ] All structs implement `SystemAction` interface
+- [ ] All structs have `Validate() error` method
+- [ ] Action parsing from TOML step: `action = "apt_install"` → AptInstallAction
+- [ ] Unit tests for each action struct
+
+**Related Code**:
+- `internal/actions/` - Action implementations
+- `internal/recipe/step.go` - Step parsing
+
+**Dependencies**: None (can run in parallel with A1-A3)
+
+---
+
+### Issue A4b: Define configuration and verification action structs
+
+**Type**: feat(actions)
+**Phase**: Action Vocabulary
+
+**Description**:
+Create Go structs for configuration, verification, and fallback actions. Complements A4a to complete the action vocabulary.
+
+**Acceptance Criteria**:
+- [ ] Configuration actions:
+  - `GroupAddAction` - group string
+  - `ServiceEnableAction` - service string
+  - `ServiceStartAction` - service string
+- [ ] Verification/fallback:
+  - `RequireCommandAction` - command string, version_flag?, version_regex?, min_version?
+  - `ManualAction` - instructions string
+- [ ] All structs implement `SystemAction` interface
+- [ ] All structs have `Validate() error` method
+- [ ] Action parsing from TOML step: `action = "group_add"` → GroupAddAction
+- [ ] Unit tests for each action struct
+
+**Related Code**:
+- `internal/actions/` - Action implementations
+- `internal/recipe/step.go` - Step parsing
+
+**Dependencies**: None (can run in parallel with A4a)
+
+---
+
+### Issue A5: Implement action preflight validation
+
+**Type**: feat(actions)
+**Phase**: Action Vocabulary
+
+**Description**:
+Implement `Preflight()` method on all typed actions to validate parameters before execution.
+
+**Acceptance Criteria**:
+- [ ] Each action has `Preflight() error`
+- [ ] Content-addressing enforcement (REQUIRED for supply chain security):
+  - `apt_repo`: key_sha256 REQUIRED (no exceptions) - verified against downloaded key
+  - `dnf_repo`: key_sha256 REQUIRED when key_url is provided
+  - All external URLs must be HTTPS
+- [ ] Validation rules:
+  - `apt_install`: packages required, no shell metacharacters
+  - `apt_repo`: url, key_url, key_sha256 all required; key_sha256 is 64 hex chars
+  - `brew_install/cask`: packages required
+  - `group_add`: group required, alphanumeric only
+  - `require_command`: command required
+  - `manual`: instructions required
+- [ ] Error messages are actionable: "apt_repo requires key_sha256 for content verification"
+- [ ] Recipe validation calls Preflight() on all parsed actions
+- [ ] Unit tests for each validation rule
+- [ ] Unit tests specifically for SHA256 format validation
+
+**Related Code**:
+- `internal/actions/` - Action implementations
+- `internal/recipe/validate.go` - Recipe validation
+
+**Dependencies**: A4a, A4b
+
+---
+
+### Issue A6: Implement Describe() for documentation generation
+
+**Type**: feat(actions)
+**Phase**: Documentation Generation
+
+**Description**:
+Implement `Describe() string` method on all typed actions to generate human-readable installation instructions.
+
+**Acceptance Criteria**:
+- [ ] Each action implements `Describe() string`
+- [ ] Output examples:
+  - `apt_install`: `sudo apt-get install -y docker-ce docker-ce-cli`
+  - `brew_cask`: `brew install --cask docker`
+  - `apt_repo`: Multi-line with key import and source list creation
+  - `group_add`: `sudo usermod -aG docker $USER`
+  - `require_command`: `Verify: docker --version`
+  - `manual`: Returns the instructions text
+- [ ] Output is copy-pasteable (valid shell commands)
+- [ ] Unit tests for each action's Describe() output
+
+**Related Code**:
+- `internal/actions/` - Action implementations
+
+**Dependencies**: A4a, A4b
+
+---
+
+### Issue A7: Update CLI to display system dependency instructions
+
+**Type**: feat(cli)
+**Phase**: Documentation Generation
+
+**Description**:
+When a recipe has system dependency actions and the user runs `tsuku install`, display the generated instructions for the detected platform+distro.
+
+**Acceptance Criteria**:
+- [ ] CLI detects current platform and distro (via A2's `DetectDistro()`)
+- [ ] Filters recipe steps for current platform+distro
+- [ ] Uses `Describe()` to generate instructions for matched actions
+- [ ] Groups instructions by distro header ("For Ubuntu/Debian:")
+- [ ] Shows `require_command` verification at the end
+- [ ] Output format matches design doc examples (numbered steps)
+- [ ] Respects `--quiet` flag (suppress instructions)
+- [ ] `--target-distro` flag to override detected distro (for documentation)
+- [ ] Integration test: `tsuku install docker` shows apt instructions on Ubuntu
+- [ ] Integration test: `tsuku install docker --target-distro=fedora` shows dnf instructions
+
+**Related Code**:
+- `cmd/tsuku/install.go` - Install command
+- `internal/cli/` - CLI utilities
+
+**Dependencies**: A2, A3, A6
+
+---
+
+### Issue A8: Add --verify flag for system dependency check
+
+**Type**: feat(cli)
+**Phase**: Documentation Generation
+
+**Description**:
+Add `tsuku verify <recipe>` or `tsuku install --verify <recipe>` to check if system dependencies are satisfied after manual installation.
+
+**Acceptance Criteria**:
+- [ ] Command: `tsuku verify <recipe>` or flag: `tsuku install --verify`
+- [ ] Evaluates `require_command` actions to check if commands exist
+- [ ] Reports pass/fail for each required command
+- [ ] Exit code 0 if all satisfied, non-zero if any missing
+- [ ] Example output:
+  ```
+  Checking system dependencies for docker...
+    docker: found (v24.0.7)
+    containerd: found (v1.6.24)
+  All system dependencies satisfied.
+  ```
+- [ ] Integration test with mock commands
+
+**Related Code**:
+- `cmd/tsuku/verify.go` - Verify command (new)
+- `internal/actions/require_command.go` - RequireCommandAction
+
+**Dependencies**: A4b (RequireCommandAction)
+
+---
+
+### Issue A9: Implement ExtractPackages() for sandbox integration
+
+**Type**: feat(sandbox)
+**Phase**: Sandbox Integration
+
+**Description**:
+Implement function to extract package requirements from a filtered installation plan, grouped by package manager.
+
+**Acceptance Criteria**:
+- [ ] Function: `ExtractPackages(plan *InstallationPlan) map[string][]string`
+- [ ] Returns map: `{"apt": ["docker-ce", "containerd.io"], "brew": ["docker"]}`
+- [ ] Only extracts from install actions (apt_install, brew_install, etc.)
+- [ ] Ignores configuration actions (group_add, service_enable)
+- [ ] Returns nil if no system dependency actions in plan
+- [ ] Unit tests with sample plans
+
+**Related Code**:
+- `internal/sandbox/` - Sandbox package
+- `internal/executor/` - Executor package
+
+**Dependencies**: A4a (package installation actions)
+
+---
+
+## Milestone: Sandbox Container Building
+
+**Design**: DESIGN-structured-install-guide.md
+**Prerequisite**: M-Actions (specifically A4a, A4b, A9)
+**Blocks**: M-Coverage
+
+### Issue S0: Create container build CI workflow
+
+**Type**: ci(sandbox)
+**Phase**: Infrastructure
+
+**Description**:
+Create GitHub Actions workflow to build and publish base container images to GHCR. This is required before S1 can be validated in CI.
+
+**Acceptance Criteria**:
+- [ ] Workflow at `.github/workflows/container-build.yml`
+- [ ] Triggers on: push to main (sandbox/ changes), manual dispatch, release tags
+- [ ] Builds multi-arch images: linux/amd64, linux/arm64
+- [ ] Publishes to `ghcr.io/tsukumogami/tsuku-sandbox:latest`
+- [ ] Tags with version on release
+- [ ] Build cache enabled for faster rebuilds
+- [ ] Workflow succeeds on PR that adds sandbox/Dockerfile.minimal
+
+**Related Code**:
+- `.github/workflows/` - CI workflows
+
+**Dependencies**: None (can start early)
+
+---
+
+### Issue S1: Create minimal base container Dockerfile
+
+**Type**: feat(sandbox)
+**Phase**: Container Building
+
+**Description**:
+Create a minimal base container image that contains only tsuku and essential runtime dependencies. System packages are added per-recipe.
+
+**Acceptance Criteria**:
+- [ ] Dockerfile at `sandbox/Dockerfile.minimal`
+- [ ] Based on `debian:bookworm-slim` (decision: use bookworm-slim, not scratch)
+- [ ] Contains: tsuku binary, ca-certificates, basic shell utilities (bash, coreutils)
+- [ ] Does NOT contain: pre-installed packages that recipes might assume
+- [ ] Multi-arch build: linux/amd64, linux/arm64
+- [ ] Size target: <50MB compressed
+- [ ] Dockerfile passes hadolint with no warnings
+- [ ] Image builds successfully via S0 workflow
+
+**Related Code**:
+- `sandbox/` - Sandbox directory (new)
+
+**Dependencies**: S0
+
+---
+
+### Issue S2: Implement container spec derivation
+
+**Type**: feat(sandbox)
+**Phase**: Container Building
+
+**Description**:
+Given a target distro and extracted packages, derive a container specification that can be built. The target distro determines the base image; packages are layered on top.
+
+**Acceptance Criteria**:
+- [ ] Function: `DeriveContainerSpec(targetDistro string, packages map[string][]string) *ContainerSpec`
+- [ ] Distro-to-base-image mapping:
+  - `ubuntu` → `ubuntu:24.04`
+  - `debian` → `debian:bookworm-slim`
+  - `fedora` → `fedora:40`
+  - `arch` → `archlinux:base`
+  - (empty/default) → `debian:bookworm-slim`
+- [ ] ContainerSpec contains: base image, target distro, packages by manager, build commands
+- [ ] Generates Dockerfile content appropriate for base image's package manager
+- [ ] Validates package manager matches distro (apt for debian/ubuntu, dnf for fedora, pacman for arch)
+- [ ] Returns error if packages require incompatible package manager for target distro
+- [ ] Unit tests for each distro mapping
+
+**Related Code**:
+- `internal/sandbox/container.go` - Container spec (new)
+
+**Dependencies**: A9 (ExtractPackages)
+
+---
+
+### Issue S3: Implement container image caching
+
+**Type**: feat(sandbox)
+**Phase**: Container Building
+
+**Description**:
+Cache built container images by distro + package set hash to avoid rebuilding for repeated test runs.
+
+**Acceptance Criteria**:
+- [ ] Function: `ContainerImageName(targetDistro string, packages map[string][]string) string`
+- [ ] Returns deterministic name: `tsuku/sandbox-cache:<distro>-<hash>`
+- [ ] Hash includes: distro + sorted packages (same packages on different distros = different images)
+- [ ] Hash is stable (consistent algorithm - use SHA256)
+- [ ] Check if image exists before building: `ImageExists(name) bool`
+- [ ] Cache hit: reuse existing image
+- [ ] Cache miss: build and tag image
+- [ ] Unit tests for hash stability (same distro+packages → same hash)
+- [ ] Unit tests for hash uniqueness (different distro OR packages → different hash)
+
+**Related Code**:
+- `internal/sandbox/cache.go` - Image caching (new)
+
+**Dependencies**: S2
+
+---
+
+### Issue S4: Integrate container building with sandbox executor
+
+**Type**: feat(sandbox)
+**Phase**: Container Building
+
+**Description**:
+Update the sandbox executor to accept target platform+distro, filter the plan accordingly, and build the appropriate container.
+
+**Acceptance Criteria**:
+- [ ] Sandbox executor accepts target: `Execute(recipe, platform Platform, distro string)`
+- [ ] Plan filtering uses target platform+distro (via A3's `WhenClause.Matches()`)
+- [ ] Extend `Runtime` interface with container building methods:
+  - `Build(spec *ContainerSpec) error` - Build container from spec
+  - `ImageExists(name string) bool` - Check if image exists locally
+- [ ] Sandbox executor calls `ExtractPackages()` on filtered plan
+- [ ] Container spec derived from target distro + extracted packages
+- [ ] If packages present: derive container spec, check cache, build if needed
+- [ ] If no packages: use base container for target distro
+- [ ] Container runs recipe installation steps
+- [ ] Container is destroyed after test completes
+- [ ] Integration test: recipe with apt_install runs in Ubuntu container when target=ubuntu
+- [ ] Integration test: same recipe runs in Fedora container when target=fedora
+
+**Related Code**:
+- `internal/executor/runtime.go` - Runtime interface
+- `internal/executor/docker.go` - Docker runtime
+- `internal/sandbox/executor.go` - Sandbox executor
+
+**Dependencies**: A3, S1, S2, S3, A9
+
+---
+
+### Issue S5: Implement action execution in sandbox context
+
+**Type**: feat(sandbox)
+**Phase**: Container Building
+
+**Description**:
+Implement `ExecuteInSandbox()` method on typed actions to run operations inside the container.
+
+**Acceptance Criteria**:
+- [ ] Each install action implements `ExecuteInSandbox(ctx *SandboxContext) error`
+- [ ] GPG key verification (REQUIRED for supply chain security):
+  - `apt_repo`: Download GPG key, compute SHA256, verify against key_sha256 before import
+  - `dnf_repo`: Same verification when key_url is provided
+  - Execution MUST fail if hash mismatch
+- [ ] Execution:
+  - `apt_install`: runs `apt-get install -y <packages>`
+  - `apt_repo`: downloads key, verifies SHA256, imports to keyring, adds source
+  - `dnf_repo`: downloads key (if provided), verifies SHA256, imports, adds repo
+  - `brew_install/cask`: runs `brew install` (darwin containers only)
+  - `group_add`: runs `groupadd` / `usermod`
+  - `service_enable`: runs `systemctl enable`
+- [ ] Errors captured and returned with context (include hash mismatch details)
+- [ ] Unit tests with container mocking
+- [ ] Unit test for GPG key hash verification failure path
+
+**Related Code**:
+- `internal/actions/` - Action implementations
+- `internal/sandbox/context.go` - SandboxContext (new)
+
+**Dependencies**: A4a, A4b, S4
+
+---
+
+## Milestone: Full Golden Plan Coverage
+
+**Design**: DESIGN-golden-plan-testing.md (blocker section)
+**Prerequisite**: M-Sandbox complete
+**Blocks**: None (enables #745)
+
+### Issue C0: Discover recipes requiring migration
+
+**Type**: chore(recipes)
+**Phase**: Discovery
+
+**Description**:
+Identify all recipes that use `require_system` with `install_guide` and document the migration scope. This reduces risk by establishing the exact count before starting C1.
+
+**Acceptance Criteria**:
+- [ ] Script to find all recipes with `require_system` + `install_guide`
+- [ ] Generate list with: recipe name, current install_guide content, target distros
+- [ ] Count summary: X recipes total, Y with apt, Z with brew, etc.
+- [ ] Identify any recipes with complex/manual instructions that need special handling
+- [ ] Output saved to `wip/migration-scope.md` for reference during C1
+- [ ] Script added to `scripts/` for future use
+
+**Related Code**:
+- `internal/recipe/recipes/` - Recipe directory
+- `scripts/` - Utility scripts
+
+**Dependencies**: None (can run before M-Sandbox complete)
+
+---
+
+### Issue C1: Migrate existing recipes to typed actions
+
+**Type**: chore(recipes)
+**Phase**: Migration
+
+**Description**:
+Convert all recipes identified in C0 to the new typed action format.
+
+**Acceptance Criteria**:
+- [ ] All recipes from C0 discovery converted to typed actions with `when` clauses:
+  - `install_guide.darwin = "brew ..."` → `brew_cask` with `when = { os = ["darwin"] }`
+  - `install_guide.linux = "apt ..."` → `apt_install` with `when = { distro = [...] }`
+- [ ] Add `require_command` for verification
+- [ ] Add content-addressing (SHA256) for any external resources (GPG keys, etc.)
+- [ ] All converted recipes pass preflight validation
+- [ ] All converted recipes can be sandbox-tested (if they have sandbox support)
+- [ ] Migration checklist from C0 fully complete
+- [ ] List of migrated recipes documented in PR
+
+**Related Code**:
+- `internal/recipe/recipes/` - Recipe directory
+
+**Dependencies**: C0, S4 (full sandbox support), S5 (action execution)
+
+---
+
+### Issue C2: Remove legacy install_guide support
+
+**Type**: refactor(actions)
+**Phase**: Migration
+
+**Description**:
+Remove the `install_guide` field from `require_system` action now that typed actions are available.
+
+**Acceptance Criteria**:
+- [ ] `require_system` action no longer accepts `install_guide` parameter
+- [ ] Recipe validation fails with helpful error if `install_guide` found
+- [ ] Error message points to migration guide (link to typed actions documentation)
+- [ ] All tests updated to use typed actions
+- [ ] BREAKING CHANGE noted in commit message (pre-GA, acceptable)
+
+**Related Code**:
+- `internal/actions/require_system.go` - RequireSystem action
+- `internal/recipe/validate.go` - Recipe validation
+
+**Dependencies**: C1 (all recipes migrated)
+
+---
+
+### Issue C3: Enable golden files for system dependency recipes
+
+**Type**: feat(golden)
+**Phase**: Coverage
+
+**Description**:
+Generate golden files for all recipes that previously used `require_system`, now using typed actions. Golden files are generated per platform+distro combination.
+
+**Acceptance Criteria**:
+- [ ] Update `./scripts/regenerate-golden.sh` to accept `--distro` flag
+- [ ] Golden files generated for platform+distro combinations:
+  - `linux/amd64/ubuntu`, `linux/amd64/debian`, `linux/amd64/fedora`
+  - `linux/arm64/ubuntu`, `linux/arm64/debian`
+  - `darwin/amd64` (no distro), `darwin/arm64` (no distro)
+- [ ] Golden file naming: `<recipe>_<os>_<arch>[_<distro>].golden`
+- [ ] Execution validation passes in sandbox for each platform+distro
+- [ ] No recipes excluded due to system dependencies
+- [ ] CI validates golden files for migrated recipes
+- [ ] All golden files committed and passing validation
+
+**Related Code**:
+- `scripts/regenerate-golden.sh` - Golden file regeneration
+- `testdata/golden/` - Golden files directory
+
+**Dependencies**: C1, S4 (sandbox with distro support)
+
+---
+
+### Issue C4: Unblock #745 - Enforce golden files for all recipes
+
+**Type**: chore(golden)
+**Phase**: Coverage
+
+**Description**:
+With system dependency support complete, #745 can proceed. This issue tracks the final verification.
+
+**Acceptance Criteria**:
+- [ ] All 155+ recipes have golden files (verify count matches C0 discovery + existing)
+- [ ] No exclusions in validation scripts
+- [ ] CI enforces golden file presence on PR
+- [ ] Validation script fails if any recipe lacks golden file
+- [ ] Close #745 as completed
+
+**Related Code**:
+- `scripts/validate-golden.sh` - Golden file validation
+- `.github/workflows/` - CI workflows
+
+**Dependencies**: C3, existing #721
+
+---
+
+## Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Actions["M-Actions: Action Vocabulary"]
+        A1["A1: WhenClause distro field"]
+        A2["A2: Distro detection"]
+        A3["A3: Distro matching"]
+        A4a["A4a: Install action structs"]
+        A4b["A4b: Config/verify action structs"]
+        A5["A5: Preflight validation"]
+        A6["A6: Describe() method"]
+        A7["A7: CLI instructions"]
+        A8["A8: --verify flag"]
+        A9["A9: ExtractPackages()"]
+    end
+
+    subgraph Sandbox["M-Sandbox: Container Building"]
+        S0["S0: Container CI workflow"]
+        S1["S1: Minimal base container"]
+        S2["S2: Container spec derivation"]
+        S3["S3: Image caching"]
+        S4["S4: Executor integration"]
+        S5["S5: Action execution"]
+    end
+
+    subgraph Coverage["M-Coverage: Golden Plan Coverage"]
+        C0["C0: Discover recipes"]
+        C1["C1: Migrate recipes"]
+        C2["C2: Remove install_guide"]
+        C3["C3: Generate golden files"]
+        C4["C4: Unblock #745"]
+    end
+
+    %% M-Actions internal
+    A1 --> A3
+    A2 --> A3
+    A4a --> A5
+    A4b --> A5
+    A4a --> A6
+    A4b --> A6
+    A3 --> A7
+    A6 --> A7
+    A4b --> A8
+    A4a --> A9
+
+    %% M-Actions to M-Sandbox
+    A9 --> S2
+    S0 --> S1
+    S2 --> S3
+    S3 --> S4
+    S1 --> S4
+    A3 --> S4
+    A4a --> S5
+    A4b --> S5
+    S4 --> S5
+
+    %% M-Sandbox to M-Coverage
+    C0 --> C1
+    S4 --> C1
+    S5 --> C1
+    C1 --> C2
+    C1 --> C3
+    C3 --> C4
+
+    classDef actions fill:#e3f2fd
+    classDef sandbox fill:#fff3e0
+    classDef coverage fill:#e8f5e9
+
+    class A1,A2,A3,A4a,A4b,A5,A6,A7,A8,A9 actions
+    class S0,S1,S2,S3,S4,S5 sandbox
+    class C0,C1,C2,C3,C4 coverage
+```
+
+## Issue Count Summary
+
+| Milestone | Issues | Estimated Scope |
+|-----------|--------|-----------------|
+| M-Actions | 10 | Core vocabulary + documentation generation (A1-A3, A4a, A4b, A5-A9) |
+| M-Sandbox | 6 | Container CI + building + execution (S0-S5) |
+| M-Coverage | 5 | Discovery + migration + enablement (C0-C4) |
+| **Total** | **21** | |
+
+## Cross-Milestone Dependencies
+
+| From | To | Reason |
+|------|-----|--------|
+| A3 (Distro matching) | S4 | Sandbox needs platform+distro filtering |
+| A4a (Install action structs) | S5, A9 | Sandbox needs install action types |
+| A4b (Config/verify action structs) | S5, A8 | Verification needs action types |
+| A9 (ExtractPackages) | S2 | Container derivation needs package list |
+| S0 (Container CI) | S1 | Base container needs CI workflow to validate |
+| S4 (Executor integration) | C1, C3 | Migration and golden files require sandbox with distro support |
+| S5 (Action execution) | C1 | Migration requires action execution |
+| C0 (Discovery) | C1 | Migration scope must be known |
+| C1 (Migrate recipes) | C2, C3 | Cleanup and coverage depend on migration |
+
+## Notes
+
+1. **Parallelism**: A1/A2 can run in parallel; A4a/A4b can run in parallel; S0 can start early; C0 can start before M-Sandbox completes
+2. **Critical path**: A1/A2 → A3 → S4 → C1 → C4 (distro support is now on critical path)
+3. **Target model**: Plans are filtered by `(platform, distro)` tuple; containers are derived from target distro
+4. **Risk areas**: S1 (base container size - mitigated by bookworm-slim decision), C1 (mitigated by C0 discovery)
+5. **Phase gates**: M-Actions complete before M-Sandbox starts heavy work; M-Sandbox complete before M-Coverage migration (except C0)
+6. **Security checkpoints**: A5 (content-addressing validation), S5 (GPG key verification)
+
+---
+
+## Agent Review Summary
+
+This plan was reviewed by a panel of 5 agents with different perspectives. The following issues were identified and addressed:
+
+### Fixes Applied
+
+| Finding | Fix |
+|---------|-----|
+| A4 too large (13 structs) | Split into A4a (install actions) and A4b (config/verify actions) |
+| S1 base image ambiguous ("or scratch") | Clarified: use `debian:bookworm-slim` |
+| S4 missing Runtime interface extension | Added: `Build()` and `ImageExists()` methods |
+| S5 missing GPG key verification | Added: SHA256 verification requirement for `apt_repo`/`dnf_repo` |
+| A5 content-addressing not enforced | Strengthened: key_sha256 REQUIRED, HTTPS required |
+| C1 scope unknown (recipe count) | Added C0: Discovery issue to establish migration scope |
+| S1 no CI to validate container | Added S0: Container CI workflow |
+| Missing "Related Code" sections | Added to all issues with existing code references |
+| Vague acceptance criteria | Clarified with specific artifacts and test requirements |
+| Container-distro mapping unclear | Clarified: target=(platform, distro) determines container base image |
+
+### Review Perspectives
+
+1. **Technical Delivery**: 88% → 95% coverage after fixes
+2. **Project Management**: Risks mitigated (C1 scope via C0, A4 complexity via split)
+3. **Developer Experience**: Issues now appropriately scoped
+4. **Gap Analysis**: 8 blocking gaps → 0 blocking gaps
+5. **Acceptance Criteria**: Vague terms replaced with specifics
