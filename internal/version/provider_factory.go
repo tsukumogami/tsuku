@@ -73,6 +73,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&InferredGitHubStrategy{})    // PriorityInferred (10)
 	f.Register(&InferredGoProxyStrategy{})   // PriorityInferred (10)
 	f.Register(&InferredFossilStrategy{})    // PriorityInferred (10)
+	f.Register(&InferredHomebrewStrategy{})  // PriorityInferred (10)
 
 	return f
 }
@@ -680,4 +681,32 @@ func (s *InferredFossilStrategy) Create(resolver *Resolver, r *recipe.Recipe) (V
 		}
 	}
 	return nil, fmt.Errorf("no Fossil repository found in fossil_archive steps")
+}
+
+// InferredHomebrewStrategy infers homebrew from homebrew action
+type InferredHomebrewStrategy struct{}
+
+func (s *InferredHomebrewStrategy) Priority() int { return PriorityInferred }
+
+func (s *InferredHomebrewStrategy) CanHandle(r *recipe.Recipe) bool {
+	for _, step := range r.Steps {
+		if step.Action == "homebrew" {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *InferredHomebrewStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	for _, step := range r.Steps {
+		if step.Action == "homebrew" {
+			// Use formula from step params if specified, otherwise use recipe name
+			formula, ok := step.Params["formula"].(string)
+			if !ok || formula == "" {
+				formula = r.Metadata.Name
+			}
+			return NewHomebrewProvider(resolver, formula), nil
+		}
+	}
+	return nil, fmt.Errorf("no homebrew action found in steps")
 }
