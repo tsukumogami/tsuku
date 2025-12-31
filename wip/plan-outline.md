@@ -26,22 +26,22 @@ M-Coverage: Full Golden Plan Coverage (depends on M-Sandbox, existing M27)
 **Prerequisite**: None
 **Blocks**: M-Sandbox, M-Coverage
 
-### Issue A1: Add linux_family field to WhenClause
+### Issue A1: Define Target struct for plan generation
 
-**Type**: feat(recipe)
+**Type**: feat(platform)
 **Phase**: Infrastructure
 
 **Description**:
-Extend the `WhenClause` struct to support Linux family filtering. The `linux_family` dimension maps 1:1 to package manager (debian→apt, rhel→dnf, arch→pacman, alpine→apk, suse→zypper), avoiding the noise of distro-level targeting.
+Define a `Target` struct that represents the platform being targeted for plan generation. This is separate from `WhenClause` - the target is a parameter to plan generation, not a filtering condition in recipes.
 
 **Acceptance Criteria**:
-- [ ] `WhenClause` struct has `LinuxFamily string` field (not array - single family per clause)
-- [ ] Valid values: `debian`, `rhel`, `arch`, `alpine`, `suse`
-- [ ] Validation: `linux_family` and `os` are mutually exclusive
-- [ ] Validation: `linux_family` and `platform` are mutually exclusive
-- [ ] If `linux_family` is set, step implicitly requires Linux
-- [ ] TOML parsing works: `when = { linux_family = "debian" }`
-- [ ] Unit tests for validation rules
+- [ ] New file: `internal/platform/target.go`
+- [ ] `Target` struct with `Platform string` and `LinuxFamily string` fields
+- [ ] `LinuxFamily` is only set when OS is Linux (empty for darwin, windows)
+- [ ] Valid `LinuxFamily` values: `debian`, `rhel`, `arch`, `alpine`, `suse`
+- [ ] Helper methods: `OS() string`, `Arch() string` (parse from Platform)
+- [ ] `WhenClause` is NOT modified - remains generic (os, arch, platform only)
+- [ ] Unit tests for Target struct
 
 **Dependencies**: None
 
@@ -53,11 +53,12 @@ Extend the `WhenClause` struct to support Linux family filtering. The `linux_fam
 **Phase**: Infrastructure
 
 **Description**:
-Implement `/etc/os-release` parsing to detect the current Linux family. Maps distro IDs to family names (ubuntu→debian, fedora→rhel, etc.). This powers the `when = { linux_family = "..." }` filtering.
+Implement `/etc/os-release` parsing to detect the current Linux family. Maps distro IDs to family names (ubuntu→debian, fedora→rhel, etc.). Provides `DetectTarget()` to get the full target tuple for the current host.
 
 **Acceptance Criteria**:
 - [ ] New file: `internal/platform/family.go`
 - [ ] Function: `DetectFamily() (family string, err error)`
+- [ ] Function: `DetectTarget() (Target, error)` - returns full target for current host
 - [ ] Parses `ID` and `ID_LIKE` from `/etc/os-release`
 - [ ] Maps distro IDs to families via `distroToFamily` lookup table:
   - debian family: debian, ubuntu, linuxmint, pop, elementary, zorin
@@ -72,32 +73,36 @@ Implement `/etc/os-release` parsing to detect the current Linux family. Maps dis
 - [ ] Detection order for RHEL: `dnf` > `microdnf` > `yum`
 - [ ] Unit tests with fixture files for: ubuntu, debian, fedora, arch, alpine, rocky (microdnf)
 
-**Dependencies**: None (can run in parallel with A1)
+**Dependencies**: A1 (needs Target struct)
 
 ---
 
-### Issue A3: Integrate linux_family matching in WhenClause
+### Issue A3: Implement plan filtering by target
 
-**Type**: feat(recipe)
+**Type**: feat(executor)
 **Phase**: Infrastructure
 
 **Description**:
-Update `WhenClause.Matches()` to evaluate the `linux_family` field against a target family. This enables both host-native execution (detect family) and sandbox execution (specify target family).
+Implement `FilterPlan(recipe, target)` that filters recipe steps based on the target tuple. This checks both action implicit constraints (D6) and explicit `when` clauses.
 
 **Acceptance Criteria**:
-- [ ] `WhenClause.Matches()` accepts target linux_family as parameter
-- [ ] Signature: `Matches(platform Platform, linuxFamily string) bool`
-- [ ] Matching: exact family match (no fallback - family is already the abstraction)
-- [ ] Example: `linux_family = "debian"` matches target="debian" (covers ubuntu, mint, etc.)
-- [ ] Steps with `linux_family` condition skip when target family doesn't match
-- [ ] Default behavior: if no target family specified, call `DetectFamily()` for host-native mode
-- [ ] Integration test: recipe with linux_family-specific steps filtered correctly for target family
+- [ ] Function: `FilterPlan(recipe *Recipe, target Target) *Plan`
+- [ ] Two-stage filtering:
+  1. Check action's `ImplicitConstraint()` against target
+  2. Check step's explicit `when` clause against target platform
+- [ ] Step included only if both checks pass
+- [ ] Actions without implicit constraint pass stage 1 automatically
+- [ ] Steps without explicit `when` pass stage 2 automatically
+- [ ] `WhenClause.Matches()` unchanged - still checks os, arch, platform only
+- [ ] Integration test: `apt_install` step filtered out when target is `rhel`
+- [ ] Integration test: `brew_cask` step filtered out when target is `linux/amd64`
 
 **Related Code**:
-- `internal/recipe/when.go` - WhenClause implementation
-- `internal/platform/` - Platform detection
+- `internal/executor/filter.go` - New file for FilterPlan
+- `internal/recipe/when.go` - WhenClause (unchanged)
+- `internal/platform/target.go` - Target struct
 
-**Dependencies**: A1, A2
+**Dependencies**: A1, A2, A4c (needs ImplicitConstraint interface)
 
 ---
 
@@ -163,31 +168,34 @@ Create Go structs for configuration, verification, and fallback actions. Complem
 
 ---
 
-### Issue A4c: Implement hardcoded when clauses for PM actions
+### Issue A4c: Implement implicit constraints for PM actions
 
 **Type**: feat(actions)
 **Phase**: Action Vocabulary
 
 **Description**:
-Each PM-specific action has an implicit, immutable `when` clause baked into its definition. Recipe authors do not specify these clauses—they are enforced by the action type. This prevents mistakes like `apt_install` with `when = { linux_family = "rhel" }`.
+Each PM-specific action has an implicit, immutable constraint baked into its definition. This is NOT a `WhenClause` - it's a `Constraint` struct that specifies the action's valid targets. Recipe authors cannot override these constraints.
 
 **Acceptance Criteria**:
-- [ ] Each PM action returns its implicit constraint via `ImplicitWhen() *WhenClause`
+- [ ] New file: `internal/actions/constraint.go`
+- [ ] `Constraint` struct with `OS string` and `LinuxFamily string` fields
+- [ ] Each PM action implements `ImplicitConstraint() *Constraint`
+- [ ] Each action implements `MatchesTarget(target Target) bool`
 - [ ] Implicit constraints:
-  - `apt_install`, `apt_repo`, `apt_ppa` → `linux_family = "debian"`
-  - `dnf_install`, `dnf_repo` → `linux_family = "rhel"`
-  - `pacman_install` → `linux_family = "arch"`
-  - `apk_install` → `linux_family = "alpine"`
-  - `zypper_install` → `linux_family = "suse"`
-  - `brew_install`, `brew_cask` → `os = "darwin"`
-- [ ] Plan filtering applies implicit when + explicit when (AND logic)
-- [ ] Recipe validation warns if explicit `when` conflicts with implicit constraint
+  - `apt_install`, `apt_repo`, `apt_ppa` → `{OS: "linux", LinuxFamily: "debian"}`
+  - `dnf_install`, `dnf_repo` → `{OS: "linux", LinuxFamily: "rhel"}`
+  - `pacman_install` → `{OS: "linux", LinuxFamily: "arch"}`
+  - `apk_install` → `{OS: "linux", LinuxFamily: "alpine"}`
+  - `zypper_install` → `{OS: "linux", LinuxFamily: "suse"}`
+  - `brew_install`, `brew_cask` → `{OS: "darwin"}`
+- [ ] Actions without implicit constraint return `nil` from `ImplicitConstraint()`
 - [ ] Unit tests verify each action's implicit constraint
-- [ ] Integration test: `apt_install` step skipped when target is `rhel`
+- [ ] Unit tests verify `MatchesTarget()` behavior
 
 **Related Code**:
+- `internal/actions/constraint.go` - Constraint struct (new)
 - `internal/actions/` - Action implementations
-- `internal/recipe/when.go` - WhenClause implementation
+- `internal/platform/target.go` - Target struct
 
 **Dependencies**: A1, A4a, A4b
 
@@ -650,12 +658,12 @@ With system dependency support complete, #745 can proceed. This issue tracks the
 ```mermaid
 graph TD
     subgraph Actions["M-Actions: Action Vocabulary"]
-        A1["A1: WhenClause linux_family field"]
+        A1["A1: Target struct"]
         A2["A2: linux_family detection"]
-        A3["A3: linux_family matching"]
+        A3["A3: Plan filtering by target"]
         A4a["A4a: Install action structs"]
         A4b["A4b: Config/verify action structs"]
-        A4c["A4c: Hardcoded when clauses"]
+        A4c["A4c: Implicit constraints"]
         A5["A5: Preflight validation"]
         A6["A6: Describe() method"]
         A7["A7: CLI instructions"]
@@ -681,11 +689,12 @@ graph TD
     end
 
     %% M-Actions internal
-    A1 --> A3
-    A2 --> A3
+    A1 --> A2
     A1 --> A4c
     A4a --> A4c
     A4b --> A4c
+    A2 --> A3
+    A4c --> A3
     A4a --> A5
     A4b --> A5
     A4a --> A6
@@ -737,23 +746,24 @@ graph TD
 
 | From | To | Reason |
 |------|-----|--------|
-| A3 (linux_family matching) | S4 | Sandbox needs platform+linux_family filtering |
+| A1 (Target struct) | A2, A4c | Detection and constraints need Target type |
+| A3 (Plan filtering) | S4 | Sandbox needs FilterPlan for target-based filtering |
 | A4a (Install action structs) | S5, A9 | Sandbox needs install action types |
 | A4b (Config/verify action structs) | S5, A8 | Verification needs action types |
-| A4c (Hardcoded when clauses) | C1 | Migration uses implicit when constraints |
+| A4c (Implicit constraints) | A3, C1 | Filtering and migration use ImplicitConstraint |
 | A9 (ExtractPackages) | S2 | Container derivation needs package list |
 | S0 (Container CI) | S1 | Base container needs CI workflow to validate |
-| S4 (Executor integration) | C1, C3 | Migration and golden files require sandbox with linux_family support |
+| S4 (Executor integration) | C1, C3 | Migration and golden files require sandbox with target support |
 | S5 (Action execution) | C1 | Migration requires action execution |
 | C0 (Discovery) | C1 | Migration scope must be known |
 | C1 (Migrate recipes) | C2, C3 | Cleanup and coverage depend on migration |
 
 ## Notes
 
-1. **Parallelism**: A1/A2 can run in parallel; A4a/A4b can run in parallel; S0 can start early; C0 can start before M-Sandbox completes
-2. **Critical path**: A1/A2 → A3 → S4 → C1 → C4 (linux_family support is now on critical path)
-3. **Target model**: Plans are filtered by `(platform, linux_family)` tuple; containers are derived from target linux_family
-4. **Implicit when clauses**: A4c eliminates explicit `when` clauses for PM actions - each action carries its own constraint
+1. **Parallelism**: A4a/A4b can run in parallel with A1→A2; S0 can start early; C0 can start before M-Sandbox completes
+2. **Critical path**: A1 → A2/A4c → A3 → S4 → C1 → C4 (targeting support is on critical path)
+3. **Target model**: Plans are filtered by `Target{Platform, LinuxFamily}` tuple; containers are derived from target
+4. **Separation of concerns**: `WhenClause` stays generic (os, arch, platform); PM constraints are action-level via `ImplicitConstraint()`
 5. **Risk areas**: S1 (base container size - mitigated by bookworm-slim decision), C1 (mitigated by C0 discovery)
 6. **Phase gates**: M-Actions complete before M-Sandbox starts heavy work; M-Sandbox complete before M-Coverage migration (except C0)
 7. **Security checkpoints**: A5 (content-addressing validation), S5 (GPG key verification)
