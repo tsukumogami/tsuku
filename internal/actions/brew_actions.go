@@ -1,6 +1,9 @@
 package actions
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // darwinConstraint is the implicit constraint for all brew-based actions.
 var darwinConstraint = &Constraint{OS: "darwin"}
@@ -53,6 +56,15 @@ func (a *BrewInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 	return nil
 }
 
+// Describe returns a copy-pasteable brew install command.
+func (a *BrewInstallAction) Describe(params map[string]interface{}) string {
+	packages, ok := GetStringSlice(params, "packages")
+	if !ok || len(packages) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("brew install %s", strings.Join(packages, " "))
+}
+
 // BrewCaskAction installs GUI applications using Homebrew Casks on macOS.
 // Casks are used for applications that don't fit the formula model.
 //
@@ -99,4 +111,13 @@ func (a *BrewCaskAction) Execute(ctx *ExecutionContext, params map[string]interf
 	fmt.Printf("   Would install via brew cask: %v\n", packages)
 	fmt.Printf("   (Skipped - requires system Homebrew)\n")
 	return nil
+}
+
+// Describe returns a copy-pasteable brew install --cask command.
+func (a *BrewCaskAction) Describe(params map[string]interface{}) string {
+	packages, ok := GetStringSlice(params, "packages")
+	if !ok || len(packages) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("brew install --cask %s", strings.Join(packages, " "))
 }

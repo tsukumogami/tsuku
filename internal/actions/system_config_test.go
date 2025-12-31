@@ -653,3 +653,168 @@ func TestSystemConfigActionsRegistered(t *testing.T) {
 		})
 	}
 }
+
+// Describe() tests for config actions
+
+func TestGroupAddAction_Describe(t *testing.T) {
+	action := &GroupAddAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing group",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name:   "valid group",
+			params: map[string]interface{}{"group": "docker"},
+			want:   "sudo usermod -aG docker $USER",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestServiceEnableAction_Describe(t *testing.T) {
+	action := &ServiceEnableAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing service",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name:   "valid service",
+			params: map[string]interface{}{"service": "docker"},
+			want:   "sudo systemctl enable docker",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestServiceStartAction_Describe(t *testing.T) {
+	action := &ServiceStartAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing service",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name:   "valid service",
+			params: map[string]interface{}{"service": "docker"},
+			want:   "sudo systemctl start docker",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestRequireCommandAction_Describe(t *testing.T) {
+	action := &RequireCommandAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing command",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name:   "command only",
+			params: map[string]interface{}{"command": "docker"},
+			want:   "Requires: docker",
+		},
+		{
+			name: "command with version",
+			params: map[string]interface{}{
+				"command":     "docker",
+				"min_version": "20.0.0",
+			},
+			want: "Requires: docker (version >= 20.0.0)",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestManualAction_Describe(t *testing.T) {
+	action := &ManualAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing text",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name:   "valid text",
+			params: map[string]interface{}{"text": "Please install Docker manually."},
+			want:   "Please install Docker manually.",
+		},
+		{
+			name:   "multiline text",
+			params: map[string]interface{}{"text": "Step 1: Download\nStep 2: Install"},
+			want:   "Step 1: Download\nStep 2: Install",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

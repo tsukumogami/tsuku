@@ -453,3 +453,126 @@ func TestAllInstallActions_ImplementSystemAction(t *testing.T) {
 		})
 	}
 }
+
+func TestPacmanInstallAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &PacmanInstallAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing packages",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "single package",
+			params: map[string]interface{}{
+				"packages": []interface{}{"base-devel"},
+			},
+			want: "sudo pacman -S --noconfirm base-devel",
+		},
+		{
+			name: "multiple packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"base-devel", "openssl"},
+			},
+			want: "sudo pacman -S --noconfirm base-devel openssl",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestApkInstallAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &ApkInstallAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing packages",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "single package",
+			params: map[string]interface{}{
+				"packages": []interface{}{"build-base"},
+			},
+			want: "sudo apk add build-base",
+		},
+		{
+			name: "multiple packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"build-base", "openssl-dev"},
+			},
+			want: "sudo apk add build-base openssl-dev",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestZypperInstallAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &ZypperInstallAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing packages",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "single package",
+			params: map[string]interface{}{
+				"packages": []interface{}{"gcc"},
+			},
+			want: "sudo zypper install -y gcc",
+		},
+		{
+			name: "multiple packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"gcc", "libopenssl-devel"},
+			},
+			want: "sudo zypper install -y gcc libopenssl-devel",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

@@ -1,6 +1,9 @@
 package actions
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // rhelConstraint is the implicit constraint for all dnf-based actions.
 var rhelConstraint = &Constraint{OS: "linux", LinuxFamily: "rhel"}
@@ -50,6 +53,15 @@ func (a *DnfInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	fmt.Printf("   Would install via dnf: %v\n", packages)
 	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
 	return nil
+}
+
+// Describe returns a copy-pasteable dnf install command.
+func (a *DnfInstallAction) Describe(params map[string]interface{}) string {
+	packages, ok := GetStringSlice(params, "packages")
+	if !ok || len(packages) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("sudo dnf install -y %s", strings.Join(packages, " "))
 }
 
 // DnfRepoAction adds a DNF repository with its GPG key.
@@ -122,4 +134,13 @@ func (a *DnfRepoAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	fmt.Printf("   Would add DNF repository: %s\n", url)
 	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
 	return nil
+}
+
+// Describe returns a copy-pasteable dnf config-manager command.
+func (a *DnfRepoAction) Describe(params map[string]interface{}) string {
+	url, ok := GetString(params, "url")
+	if !ok || url == "" {
+		return ""
+	}
+	return fmt.Sprintf("sudo dnf config-manager --add-repo %s", url)
 }
