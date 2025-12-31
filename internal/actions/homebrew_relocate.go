@@ -47,15 +47,54 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 	}
 
 	// Determine install path for placeholder replacement
-	installPath := ctx.ToolInstallDir
-	if installPath == "" {
-		installPath = ctx.InstallDir
+	// For libraries, use the final library installation path ($TSUKU_HOME/libs/recipename-version)
+	// Note: Use recipe name (not formula name) since that's where install_binaries puts the library
+	// For tools, use ToolInstallDir or InstallDir
+	var installPath string
+	if ctx.Recipe != nil && ctx.Recipe.Metadata.Type == "library" {
+		// Library: use final library installation path
+		// If LibsDir is not set in context, compute it from TSUKU_HOME
+		libsDir := ctx.LibsDir
+		if libsDir == "" {
+			// Fallback: compute from TSUKU_HOME environment variable or default
+			tsukuHome := os.Getenv("TSUKU_HOME")
+			if tsukuHome == "" {
+				// Default to ~/.tsuku
+				homeDir, err := os.UserHomeDir()
+				if err == nil {
+					tsukuHome = filepath.Join(homeDir, ".tsuku")
+				}
+			}
+			libsDir = filepath.Join(tsukuHome, "libs")
+		}
+		// IMPORTANT: Use recipe name, not formula name!
+		// The actual installation goes to libs/recipename-version
+		recipeName := ctx.Recipe.Metadata.Name
+		installPath = filepath.Join(libsDir, recipeName+"-"+ctx.Version)
+		fmt.Printf("   Relocating placeholders: %s (library, recipe: %s)\n", formula, recipeName)
+	} else {
+		// Tool: use ToolInstallDir or InstallDir
+		installPath = ctx.ToolInstallDir
+		if installPath == "" {
+			installPath = ctx.InstallDir
+		}
+		fmt.Printf("   Relocating placeholders: %s\n", formula)
 	}
 
-	fmt.Printf("   Relocating placeholders: %s\n", formula)
+	fmt.Printf("   Debug: installPath=%s\n", installPath)
+
+	// For libraries, we need to handle @@HOMEBREW_CELLAR@@ and @@HOMEBREW_PREFIX@@ differently:
+	// - @@HOMEBREW_CELLAR@@ should be replaced with the libs directory (e.g., /root/.tsuku/libs)
+	// - @@HOMEBREW_PREFIX@@ should be replaced with the full library path (e.g., /root/.tsuku/libs/curl-8.17.0)
+	// For tools, both are the same (the tool install directory).
+	cellarPath := installPath
+	if ctx.Recipe != nil && ctx.Recipe.Metadata.Type == "library" {
+		// For libraries, cellar path is the parent directory
+		cellarPath = filepath.Dir(installPath)
+	}
 
 	// Relocate placeholders in files
-	if err := a.relocatePlaceholders(ctx, installPath); err != nil {
+	if err := a.relocatePlaceholders(ctx, installPath, cellarPath); err != nil {
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
 
@@ -69,9 +108,15 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 // relocatePlaceholders replaces Homebrew placeholders in all files
 // For text files: direct replacement with install path
 // For binary files: use patchelf/install_name_tool to reset RPATH
-func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, installPath string) error {
+// prefixPath is used for @@HOMEBREW_PREFIX@@, cellarPath for @@HOMEBREW_CELLAR@@
+func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, prefixPath, cellarPath string) error {
 	dir := ctx.WorkDir
-	replacement := []byte(installPath)
+	prefixReplacement := []byte(prefixPath)
+	cellarReplacement := []byte(cellarPath)
+
+	// Detect bottle build paths (e.g., /tmp/action-validator-XXXXXXXX/.install/FORMULA/VERSION)
+	// by scanning for the pattern in all files. We'll collect unique prefixes to replace.
+	bottlePrefixes := make(map[string]bool)
 
 	// Collect binaries that need RPATH fixup
 	var binariesToFix []string
@@ -92,7 +137,7 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, ins
 			return fmt.Errorf("failed to read %s: %w", path, err)
 		}
 
-		// Check if file contains any placeholder
+		// Check if file contains any placeholder or bottle build path
 		hasPlaceholder := false
 		for _, placeholder := range homebrewPlaceholders {
 			if bytes.Contains(content, placeholder) {
@@ -101,8 +146,34 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, ins
 			}
 		}
 
-		if !hasPlaceholder {
+		// Also check for bottle build paths (e.g., /tmp/action-validator-XXXXXXXX/.install/)
+		hasBottlePath := bytes.Contains(content, []byte("/tmp/action-validator-")) ||
+			bytes.Contains(content, []byte("@@HOMEBREW"))
+
+		if !hasPlaceholder && !hasBottlePath {
 			return nil
+		}
+
+		// Collect bottle prefixes from this file for later replacement
+		if hasBottlePath {
+			// Debug: Log which files contain bottle paths
+			if strings.HasSuffix(path, "curl-config") {
+				contentStr := string(content)
+				hasMarker := strings.Contains(contentStr, "/tmp/action-validator-")
+				hasPrefix := strings.Contains(contentStr, "prefix=")
+				fmt.Printf("   Debug: Scanning %s (size: %d, has /tmp marker: %v, has prefix: %v)\n",
+					filepath.Base(path), len(content), hasMarker, hasPrefix)
+
+				// Show what prefix contains
+				if hasPrefix {
+					idx := strings.Index(contentStr, "prefix=")
+					if idx >= 0 && idx+60 < len(contentStr) {
+						sample := contentStr[idx : idx+60]
+						fmt.Printf("   Debug: prefix line: %s\n", sample)
+					}
+				}
+			}
+			a.extractBottlePrefixes(content, bottlePrefixes)
 		}
 
 		// Determine if binary or text file
@@ -112,10 +183,22 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, ins
 			// Binary files: collect for RPATH fixup using patchelf/install_name_tool
 			binariesToFix = append(binariesToFix, path)
 		} else {
-			// Text files: simple replacement with install path
+			// Text files: replace placeholders with appropriate paths
 			newContent := content
-			for _, placeholder := range homebrewPlaceholders {
-				newContent = bytes.ReplaceAll(newContent, placeholder, replacement)
+
+			// Replace Homebrew placeholders with correct paths:
+			// @@HOMEBREW_PREFIX@@ → prefixPath (e.g., /root/.tsuku/libs/curl-8.17.0)
+			// @@HOMEBREW_CELLAR@@ → cellarPath (e.g., /root/.tsuku/libs)
+			newContent = bytes.ReplaceAll(newContent, []byte("@@HOMEBREW_PREFIX@@"), prefixReplacement)
+			newContent = bytes.ReplaceAll(newContent, []byte("@@HOMEBREW_CELLAR@@"), cellarReplacement)
+
+			// Replace bottle build paths
+			// We replace the entire bottle-specific path (e.g., /tmp/action-validator-XXX/.install/curl/8.17.0)
+			// with the prefix path. This is done using a simple pattern match and replace.
+			for prefix := range bottlePrefixes {
+				// Replace paths like /tmp/action-validator-XXX/.install/FORMULA/VERSION
+				// with the installation path
+				newContent = bytes.ReplaceAll(newContent, []byte(prefix), prefixReplacement)
 			}
 
 			// Homebrew bottles often have read-only files; make writable before writing
@@ -138,9 +221,21 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, ins
 		return err
 	}
 
+	// Debug: Show detected bottle prefixes
+	if len(bottlePrefixes) > 0 {
+		fmt.Printf("   Debug: Found %d bottle path(s) to relocate\n", len(bottlePrefixes))
+		for prefix := range bottlePrefixes {
+			if len(prefix) > 60 {
+				fmt.Printf("     %s...\n", prefix[:60])
+			} else {
+				fmt.Printf("     %s\n", prefix)
+			}
+		}
+	}
+
 	// Fix RPATH on binary files using patchelf/install_name_tool
 	for _, binaryPath := range binariesToFix {
-		if err := a.fixBinaryRpath(ctx, binaryPath, installPath); err != nil {
+		if err := a.fixBinaryRpath(ctx, binaryPath, prefixPath); err != nil {
 			return fmt.Errorf("failed to fix RPATH for %s: %w", binaryPath, err)
 		}
 	}
@@ -454,4 +549,52 @@ func (a *HomebrewRelocateAction) isBinaryFile(content []byte) bool {
 	}
 
 	return false
+}
+
+// extractBottlePrefixes scans content for Homebrew bottle build paths and adds them to the map.
+// Bottle paths follow the pattern: /tmp/action-validator-XXXXXXXX/.install/FORMULA/VERSION
+// We need to extract the full path to replace it with the actual installation path.
+func (a *HomebrewRelocateAction) extractBottlePrefixes(content []byte, prefixes map[string]bool) {
+	contentStr := string(content)
+
+	// Look for /tmp/action-validator-XXXXXXXX/.install/FORMULA/VERSION patterns
+	searchPos := 0
+	marker := "/tmp/action-validator-"
+	foundCount := 0
+
+	for {
+		// Find next occurrence of /tmp/action-validator-
+		idx := strings.Index(contentStr[searchPos:], marker)
+		if idx == -1 {
+			break
+		}
+
+		foundCount++
+
+		// Adjust to absolute position
+		absIdx := searchPos + idx
+
+		// Extract path starting from /tmp/action-validator-
+		remaining := contentStr[absIdx:]
+
+		// Find the end of the path (whitespace, quote, newline, etc.)
+		endIdx := strings.IndexAny(remaining, " \t\n\r'\"<>;:|")
+		if endIdx == -1 {
+			endIdx = len(remaining)
+		}
+
+		pathStr := remaining[:endIdx]
+
+		// Debug: Show what we found
+		fmt.Printf("   Debug: Found candidate path #%d: %s (has .install: %v)\n",
+			foundCount, pathStr, strings.Contains(pathStr, "/.install/"))
+
+		// Only add if it looks like a valid bottle path (contains /.install/)
+		if strings.Contains(pathStr, "/.install/") {
+			prefixes[pathStr] = true
+		}
+
+		// Move search position past this occurrence
+		searchPos = absIdx + len(marker)
+	}
 }
