@@ -145,9 +145,16 @@ var ActionEvaluability = map[string]bool{
 	"npm_exec": true,
 
 	// System package actions - not evaluable (external package managers)
-	"apt_install":  false,
-	"yum_install":  false,
-	"brew_install": false,
+	"apt_install":    false,
+	"apt_repo":       false,
+	"apt_ppa":        false,
+	"brew_install":   false,
+	"brew_cask":      false,
+	"dnf_install":    false,
+	"dnf_repo":       false,
+	"pacman_install": false,
+	"apk_install":    false,
+	"zypper_install": false,
 
 	// Ecosystem package managers - not evaluable (external dependency resolution)
 	"npm_install":   false,

@@ -121,8 +121,15 @@ func TestActionDependencies_NoDependencyActions(t *testing.T) {
 		"run_command",
 		// System package managers
 		"apt_install",
-		"yum_install",
+		"apt_repo",
+		"apt_ppa",
 		"brew_install",
+		"brew_cask",
+		"dnf_install",
+		"dnf_repo",
+		"pacman_install",
+		"apk_install",
+		"zypper_install",
 		// Composites
 		"download_archive",
 		"github_archive",

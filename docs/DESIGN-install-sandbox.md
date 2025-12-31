@@ -575,7 +575,7 @@ type ConfigureMakeAction struct {
 | Build actions | configure_make, cmake_build | `false` (source cached) |
 | Ecosystem primitives | cargo_build, cargo_install, go_build, go_install, cpan_install, npm_install, pip_install, gem_install | `true` (fetch dependencies) |
 | Exec actions | npm_exec, gem_exec | `false` (modules installed) |
-| System package managers | apt_install, yum_install, brew_install | `true` (fetch packages) |
+| System package managers | apt_install, dnf_install, brew_install, pacman_install, apk_install, zypper_install | `true` (fetch packages) |
 | Run command | run_command | `true` (conservative) |
 
 **Default handling**: Actions that don't implement `NetworkValidator` (or embed `BaseAction`) default to `RequiresNetwork() = false`. This "fail-closed" design means unknown actions run without network - if they actually need network, validation fails with a clear error (timeout/DNS failure), prompting the developer to add the method.
@@ -877,7 +877,7 @@ tsuku install rg --sandbox
 **Goal**: Add `RequiresNetwork()` method to all actions that need network access.
 
 - Update ecosystem actions to return `true`: cargo_build, cargo_install, go_build, go_install, cpan_install, npm_install, pip_install, gem_install
-- Update system package managers to return `true`: apt_install, yum_install, brew_install
+- Update system package managers to return `true`: apt_install, dnf_install, brew_install, pacman_install, apk_install, zypper_install
 - Update run_command to return `true` (conservative default)
 - Have remaining actions embed `BaseAction` or rely on default `false`
 

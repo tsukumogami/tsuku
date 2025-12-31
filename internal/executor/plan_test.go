@@ -298,7 +298,7 @@ func TestIsActionEvaluable(t *testing.T) {
 		{"go_install", false},
 		{"nix_install", false},
 		{"apt_install", false},
-		{"yum_install", false},
+		{"dnf_install", false},
 		{"brew_install", false},
 
 		// Unknown action - should be non-evaluable for safety
