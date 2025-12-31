@@ -30,6 +30,11 @@ func (a *DnfInstallAction) Validate(params map[string]interface{}) error {
 	return err
 }
 
+// Preflight validates parameters without side effects.
+func (a *DnfInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
+	return ValidatePackagesPreflight(params, a.Name())
+}
+
 // ImplicitConstraint returns the RHEL family constraint.
 func (a *DnfInstallAction) ImplicitConstraint() *Constraint {
 	return rhelConstraint
@@ -78,6 +83,32 @@ func (a *DnfRepoAction) Validate(params map[string]interface{}) error {
 		return fmt.Errorf("dnf_repo requires 'key_sha256' parameter")
 	}
 	return nil
+}
+
+// Preflight validates parameters without side effects.
+func (a *DnfRepoAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+
+	url, hasURL := GetString(params, "url")
+	if !hasURL || url == "" {
+		result.AddError("dnf_repo requires 'url' parameter")
+	}
+
+	keyURL, hasKeyURL := GetString(params, "key_url")
+	if !hasKeyURL || keyURL == "" {
+		result.AddError("dnf_repo requires 'key_url' parameter")
+	}
+
+	keySha256, hasKeySha256 := GetString(params, "key_sha256")
+	if !hasKeySha256 || keySha256 == "" {
+		result.AddError("dnf_repo requires 'key_sha256' parameter")
+	}
+
+	// Security: Validate HTTPS for URLs
+	validateHTTPSURL(result, url, "dnf_repo", "url")
+	validateHTTPSURL(result, keyURL, "dnf_repo", "key_url")
+
+	return result
 }
 
 // ImplicitConstraint returns the RHEL family constraint.

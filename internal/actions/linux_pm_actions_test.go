@@ -1,6 +1,9 @@
 package actions
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestPacmanInstallAction_Name(t *testing.T) {
 	t.Parallel()
@@ -84,6 +87,55 @@ func TestPacmanInstallAction_RequiresNetwork(t *testing.T) {
 	action := &PacmanInstallAction{}
 	if !action.RequiresNetwork() {
 		t.Error("RequiresNetwork() should return true")
+	}
+}
+
+func TestPacmanInstallAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &PacmanInstallAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing packages",
+			params:     map[string]interface{}{},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+		{
+			name: "valid packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"base-devel", "openssl"},
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "empty packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{},
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				if !strings.Contains(result.Errors[0], tt.wantErrMsg) {
+					t.Errorf("Preflight() error = %q, want to contain %q", result.Errors[0], tt.wantErrMsg)
+				}
+			}
+		})
 	}
 }
 
@@ -172,6 +224,55 @@ func TestApkInstallAction_RequiresNetwork(t *testing.T) {
 	}
 }
 
+func TestApkInstallAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &ApkInstallAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing packages",
+			params:     map[string]interface{}{},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+		{
+			name: "valid packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"build-base", "openssl-dev"},
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "empty packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{},
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				if !strings.Contains(result.Errors[0], tt.wantErrMsg) {
+					t.Errorf("Preflight() error = %q, want to contain %q", result.Errors[0], tt.wantErrMsg)
+				}
+			}
+		})
+	}
+}
+
 func TestZypperInstallAction_Name(t *testing.T) {
 	t.Parallel()
 	action := &ZypperInstallAction{}
@@ -254,6 +355,55 @@ func TestZypperInstallAction_RequiresNetwork(t *testing.T) {
 	action := &ZypperInstallAction{}
 	if !action.RequiresNetwork() {
 		t.Error("RequiresNetwork() should return true")
+	}
+}
+
+func TestZypperInstallAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &ZypperInstallAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing packages",
+			params:     map[string]interface{}{},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+		{
+			name: "valid packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"gcc", "libopenssl-devel"},
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "empty packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{},
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				if !strings.Contains(result.Errors[0], tt.wantErrMsg) {
+					t.Errorf("Preflight() error = %q, want to contain %q", result.Errors[0], tt.wantErrMsg)
+				}
+			}
+		})
 	}
 }
 

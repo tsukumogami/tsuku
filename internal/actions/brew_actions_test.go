@@ -1,6 +1,9 @@
 package actions
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestBrewInstallAction_Name(t *testing.T) {
 	t.Parallel()
@@ -104,6 +107,55 @@ func TestBrewInstallAction_RequiresNetwork(t *testing.T) {
 	}
 }
 
+func TestBrewInstallAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &BrewInstallAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing packages",
+			params:     map[string]interface{}{},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+		{
+			name: "valid packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"openssl", "libyaml"},
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "empty packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{},
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				if !strings.Contains(result.Errors[0], tt.wantErrMsg) {
+					t.Errorf("Preflight() error = %q, want to contain %q", result.Errors[0], tt.wantErrMsg)
+				}
+			}
+		})
+	}
+}
+
 func TestBrewCaskAction_Name(t *testing.T) {
 	t.Parallel()
 	action := &BrewCaskAction{}
@@ -194,5 +246,54 @@ func TestBrewCaskAction_RequiresNetwork(t *testing.T) {
 	action := &BrewCaskAction{}
 	if !action.RequiresNetwork() {
 		t.Error("RequiresNetwork() should return true")
+	}
+}
+
+func TestBrewCaskAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &BrewCaskAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing packages",
+			params:     map[string]interface{}{},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+		{
+			name: "valid packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"docker", "visual-studio-code"},
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "empty packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{},
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				if !strings.Contains(result.Errors[0], tt.wantErrMsg) {
+					t.Errorf("Preflight() error = %q, want to contain %q", result.Errors[0], tt.wantErrMsg)
+				}
+			}
+		})
 	}
 }

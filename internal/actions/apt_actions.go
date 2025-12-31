@@ -30,6 +30,11 @@ func (a *AptInstallAction) Validate(params map[string]interface{}) error {
 	return err
 }
 
+// Preflight validates parameters without side effects.
+func (a *AptInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
+	return ValidatePackagesPreflight(params, a.Name())
+}
+
 // ImplicitConstraint returns the debian family constraint.
 func (a *AptInstallAction) ImplicitConstraint() *Constraint {
 	return debianConstraint
@@ -80,6 +85,32 @@ func (a *AptRepoAction) Validate(params map[string]interface{}) error {
 	return nil
 }
 
+// Preflight validates parameters without side effects.
+func (a *AptRepoAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+
+	url, hasURL := GetString(params, "url")
+	if !hasURL || url == "" {
+		result.AddError("apt_repo requires 'url' parameter")
+	}
+
+	keyURL, hasKeyURL := GetString(params, "key_url")
+	if !hasKeyURL || keyURL == "" {
+		result.AddError("apt_repo requires 'key_url' parameter")
+	}
+
+	keySha256, hasKeySha256 := GetString(params, "key_sha256")
+	if !hasKeySha256 || keySha256 == "" {
+		result.AddError("apt_repo requires 'key_sha256' parameter")
+	}
+
+	// Security: Validate HTTPS for URLs
+	validateHTTPSURL(result, url, "apt_repo", "url")
+	validateHTTPSURL(result, keyURL, "apt_repo", "key_url")
+
+	return result
+}
+
 // ImplicitConstraint returns the debian family constraint.
 func (a *AptRepoAction) ImplicitConstraint() *Constraint {
 	return debianConstraint
@@ -117,6 +148,18 @@ func (a *AptPPAAction) Validate(params map[string]interface{}) error {
 		return fmt.Errorf("apt_ppa requires 'ppa' parameter")
 	}
 	return nil
+}
+
+// Preflight validates parameters without side effects.
+func (a *AptPPAAction) Preflight(params map[string]interface{}) *PreflightResult {
+	result := &PreflightResult{}
+
+	ppa, hasPPA := GetString(params, "ppa")
+	if !hasPPA || ppa == "" {
+		result.AddError("apt_ppa requires 'ppa' parameter")
+	}
+
+	return result
 }
 
 // ImplicitConstraint returns the debian family constraint.
