@@ -23,13 +23,13 @@ None - this is a new workflow
 
 ## Implementation Steps
 
-- [ ] Create the container-build.yml workflow with:
+- [x] Create the container-build.yml workflow with:
   - Triggers: push to main (sandbox/** changes), workflow_dispatch, release tags (v*)
   - Multi-arch builds using docker/setup-qemu-action and docker/setup-buildx-action
   - Login to GHCR using docker/login-action
   - Build and push using docker/build-push-action with caching
   - Tag images as ghcr.io/tsukumogami/tsuku-sandbox:latest (and version tags on release)
-- [ ] Add GHCR packages write permission
+- [x] Add GHCR packages write permission
 
 ## Testing Strategy
 
