@@ -1,0 +1,41 @@
+# Minimal sandbox base container for tsuku
+# Built for: linux/amd64, linux/arm64
+# Size target: <50MB compressed
+#
+# This container is intentionally minimal. Recipes must declare system
+# dependencies explicitly. Only ca-certificates is included for HTTPS.
+
+# hadolint ignore=DL3007
+FROM golang:1-bookworm AS builder
+
+WORKDIR /src
+
+# Cache dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Build tsuku with optimizations
+COPY . .
+RUN CGO_ENABLED=0 go build -ldflags="-s -w" -trimpath -o /tsuku ./cmd/tsuku
+
+# Minimal runtime image
+FROM debian:bookworm-slim
+
+# Install only ca-certificates for HTTPS downloads.
+# tar and gzip are included in bookworm-slim.
+# No bash, curl, wget, unzip, or xz - recipes must declare these explicitly.
+# hadolint ignore=DL3008
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy tsuku binary
+COPY --from=builder /tsuku /usr/local/bin/tsuku
+
+# Verify tsuku works
+RUN tsuku --version
+
+# Default working directory for sandbox operations
+WORKDIR /workspace
+
+ENTRYPOINT ["/usr/local/bin/tsuku"]
