@@ -1,0 +1,165 @@
+#!/bin/bash
+# Discover recipes requiring migration from install_guide to typed actions
+#
+# This script finds all recipes using require_system with install_guide
+# and generates a migration scope document.
+#
+# Usage: ./scripts/discover-migration-recipes.sh
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+RECIPES_DIR="$REPO_ROOT/internal/recipe/recipes"
+OUTPUT_FILE="$REPO_ROOT/wip/migration-scope.md"
+
+# Ensure wip directory exists
+mkdir -p "$REPO_ROOT/wip"
+
+# Find all recipes with require_system and install_guide
+echo "Scanning recipes in $RECIPES_DIR..."
+
+# Initialize counters
+total=0
+with_darwin=0
+with_linux=0
+with_fallback=0
+complex_recipes=()
+
+# Start output file
+cat > "$OUTPUT_FILE" << 'EOF'
+# Migration Scope: require_system + install_guide
+
+This document lists all recipes using `require_system` with `install_guide` that need
+migration to typed actions (`apt_install`, `brew_install`, etc.).
+
+## Summary
+
+EOF
+
+# Temporary file for recipe details
+TEMP_FILE=$(mktemp)
+
+# Process each recipe with both require_system and install_guide
+for recipe in $(grep -l "require_system" "$RECIPES_DIR"/*/*.toml 2>/dev/null); do
+    if grep -q "install_guide" "$recipe"; then
+        ((total++)) || true
+        name=$(basename "$recipe" .toml)
+
+        # Extract install_guide content
+        darwin_guide=$(grep -A1 '\[steps.install_guide\]' "$recipe" | grep 'darwin' | sed 's/.*= *//' | tr -d '"' || echo "")
+        linux_guide=$(grep -A2 '\[steps.install_guide\]' "$recipe" | grep 'linux' | sed 's/.*= *//' | tr -d '"' || echo "")
+        fallback_guide=$(grep -A3 '\[steps.install_guide\]' "$recipe" | grep 'fallback' | sed 's/.*= *//' | tr -d '"' || echo "")
+
+        # Count platform coverage
+        [[ -n "$darwin_guide" ]] && ((with_darwin++)) || true
+        [[ -n "$linux_guide" ]] && ((with_linux++)) || true
+        [[ -n "$fallback_guide" ]] && ((with_fallback++)) || true
+
+        # Detect complexity
+        is_complex=false
+        complexity_notes=""
+
+        # Check for manual/complex instructions
+        if echo "$linux_guide" | grep -qi "see\|visit\|manual\|platform-specific"; then
+            is_complex=true
+            complexity_notes="Manual Linux instructions"
+        fi
+        if echo "$darwin_guide" | grep -qi "not supported\|see\|visit"; then
+            is_complex=true
+            complexity_notes="${complexity_notes:+$complexity_notes, }Platform limitation on Darwin"
+        fi
+
+        # Detect actionable patterns per platform
+        darwin_action="unknown"
+        linux_action="unknown"
+
+        if echo "$darwin_guide" | grep -qi "brew install"; then
+            darwin_action="brew_install"
+        elif echo "$darwin_guide" | grep -qi "brew.*cask"; then
+            darwin_action="brew_cask"
+        elif echo "$darwin_guide" | grep -qi "not supported"; then
+            darwin_action="N/A"
+        fi
+
+        if echo "$linux_guide" | grep -qi "apt-get\|apt install"; then
+            linux_action="apt_install"
+        elif echo "$linux_guide" | grep -qi "dnf\|yum"; then
+            linux_action="dnf_install"
+        elif echo "$linux_guide" | grep -qi "see\|visit\|manual"; then
+            linux_action="manual"
+        fi
+
+        # Add to complex list if needed
+        if $is_complex; then
+            complex_recipes+=("$name: $complexity_notes")
+        fi
+
+        # Write recipe details to temp file
+        cat >> "$TEMP_FILE" << EOF
+
+### $name
+
+**File**: \`$(echo "$recipe" | sed "s|$REPO_ROOT/||")\`
+
+| Platform | Install Guide | Suggested Action |
+|----------|--------------|------------------|
+| darwin | ${darwin_guide:-N/A} | ${darwin_action} |
+| linux | ${linux_guide:-N/A} | ${linux_action} |
+| fallback | ${fallback_guide:-N/A} | - |
+
+EOF
+        if $is_complex; then
+            echo "**Complexity**: $complexity_notes" >> "$TEMP_FILE"
+            echo "" >> "$TEMP_FILE"
+        fi
+    fi
+done
+
+# Write summary
+cat >> "$OUTPUT_FILE" << EOF
+| Metric | Count |
+|--------|-------|
+| Total recipes with require_system + install_guide | $total |
+| With darwin instructions | $with_darwin |
+| With linux instructions | $with_linux |
+| With fallback instructions | $with_fallback |
+| Complex/manual instructions | ${#complex_recipes[@]} |
+
+## Complexity Assessment
+
+EOF
+
+if [ ${#complex_recipes[@]} -gt 0 ]; then
+    echo "The following recipes have complex or manual instructions requiring special handling:" >> "$OUTPUT_FILE"
+    echo "" >> "$OUTPUT_FILE"
+    for item in "${complex_recipes[@]}"; do
+        echo "- $item" >> "$OUTPUT_FILE"
+    done
+else
+    echo "No recipes with complex instructions detected." >> "$OUTPUT_FILE"
+fi
+
+echo "" >> "$OUTPUT_FILE"
+echo "## Recipe Details" >> "$OUTPUT_FILE"
+
+# Append recipe details
+cat "$TEMP_FILE" >> "$OUTPUT_FILE"
+rm "$TEMP_FILE"
+
+# Add footer
+cat >> "$OUTPUT_FILE" << 'EOF'
+
+---
+
+*Generated by scripts/discover-migration-recipes.sh*
+EOF
+
+echo ""
+echo "=== Migration Scope Summary ==="
+echo "Total recipes: $total"
+echo "With darwin: $with_darwin"
+echo "With linux: $with_linux"
+echo "Complex recipes: ${#complex_recipes[@]}"
+echo ""
+echo "Output written to: $OUTPUT_FILE"
