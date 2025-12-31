@@ -1,6 +1,10 @@
 package actions
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/tsukumogami/tsuku/internal/platform"
+)
 
 // Constraint represents a platform/family requirement for system actions.
 // Actions like apt_install have implicit constraints (linux_family = "debian")
@@ -19,6 +23,23 @@ func (c *Constraint) String() string {
 		return fmt.Sprintf("linux/%s", c.LinuxFamily)
 	}
 	return c.OS
+}
+
+// MatchesTarget checks if this constraint is satisfied by the given target.
+// Returns true if the target's OS and LinuxFamily match the constraint.
+func (c *Constraint) MatchesTarget(target platform.Target) bool {
+	// Check OS constraint
+	if c.OS != target.OS() {
+		return false
+	}
+
+	// If no LinuxFamily constraint, OS match is sufficient
+	if c.LinuxFamily == "" {
+		return true
+	}
+
+	// Check LinuxFamily constraint (only relevant for Linux)
+	return c.LinuxFamily == target.LinuxFamily
 }
 
 // SystemAction extends Action with system dependency capabilities.
