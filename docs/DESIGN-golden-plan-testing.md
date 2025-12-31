@@ -67,7 +67,6 @@ See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for
 
 | Issue | Title | Dependencies |
 |-------|-------|--------------|
-| [#722](https://github.com/tsukumogami/tsuku/issues/722) | docs(design): create design for structured install_guide | Done |
 | [#758](https://github.com/tsukumogami/tsuku/issues/758) | chore(recipes): discover recipes requiring migration | None |
 | [#772](https://github.com/tsukumogami/tsuku/issues/772) | chore(recipes): migrate existing recipes to typed actions | [#758](https://github.com/tsukumogami/tsuku/issues/758), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#771](https://github.com/tsukumogami/tsuku/issues/771), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
 | [#773](https://github.com/tsukumogami/tsuku/issues/773) | refactor(actions): remove legacy install_guide support | [#772](https://github.com/tsukumogami/tsuku/issues/772) |
@@ -116,9 +115,9 @@ graph TD
     end
 
     subgraph M29["Milestone 29: Full Golden Coverage"]
-        I722["#722: Design (done)"]
         I758["#758: Discover recipes"]
         I772["#772: Migrate recipes"]
+        I773["#773: Remove legacy support"]
         I774["#774: Golden files"]
         I745["#745: Enforce all recipes"]
     end
@@ -149,6 +148,7 @@ graph TD
     I760 --> I772
     I770 --> I772
     I771 --> I772
+    I772 --> I773
     I772 --> I774
     I721 --> I745
     I774 --> I745
@@ -157,9 +157,9 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class I712,I713,I714,I715,I716,I717,I718,I719,I720,I721,I722 done
+    class I712,I713,I714,I715,I716,I717,I718,I719,I720,I721 done
     class I754,I755,I756,I757,I758 ready
-    class I760,I761,I765,I770,I771,I772,I774,I745 blocked
+    class I760,I761,I765,I770,I771,I772,I773,I774,I745 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked
@@ -1522,15 +1522,17 @@ Validate approach and iterate on tooling.
 3. Create GitHub Action for automated version bump PRs
 4. Update PR template to note golden file requirements
 
-### Blocker: Structured System Dependencies (implementation in progress)
+### Blocker: Structured System Dependencies (designed and planned)
 
 **Problem**: Recipes with system dependency steps cannot be execution-validated in the sandbox because the required system packages are not installed in the container.
 
-**Solution**: Issue [#722](https://github.com/tsukumogami/tsuku/issues/722) spawned two companion designs that address this blocker:
+**Solution**: Two companion designs address this blocker (status: Planned, issues created):
 
 1. **[DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)** - Defines typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) that replace free-form `install_guide` text with machine-parseable package specifications. Includes `linux_family` detection for platform targeting.
 
 2. **[DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md)** - Defines how the sandbox executor uses these typed actions to build per-recipe containers dynamically, with package-set-based caching.
+
+**Implementation status**: 22 issues across 3 milestones (M29, M30, M31) are ready for development. See the Implementation Issues section above for the full breakdown.
 
 **Impact on golden plan testing**:
 - Once implemented, recipes with system dependencies can be sandbox-tested
