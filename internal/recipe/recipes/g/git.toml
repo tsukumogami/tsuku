@@ -5,10 +5,6 @@ homepage = "https://git-scm.com/"
 dependencies = ["curl"]
 binaries = ["bin/git"]
 
-[version]
-source = "homebrew"
-formula = "git"
-
 [[steps]]
 action = "homebrew"
 formula = "git"

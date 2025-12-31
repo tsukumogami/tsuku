@@ -4,10 +4,6 @@ description = "Bourne Again SHell"
 homepage = "https://www.gnu.org/software/bash/"
 binaries = ["bin/bash"]
 
-[version]
-source = "homebrew"
-formula = "bash"
-
 [[steps]]
 action = "homebrew"
 formula = "bash"

@@ -4,10 +4,6 @@ description = "Helper tool for compile and link flags for libraries"
 homepage = "https://www.freedesktop.org/wiki/Software/pkg-config/"
 binaries = ["bin/pkg-config"]
 
-[version]
-source = "homebrew"
-formula = "pkgconf"
-
 [[steps]]
 action = "homebrew"
 formula = "pkgconf"

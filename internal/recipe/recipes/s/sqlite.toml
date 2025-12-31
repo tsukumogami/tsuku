@@ -5,10 +5,6 @@ homepage = "https://sqlite.org/"
 dependencies = ["readline"]
 binaries = ["bin/sqlite3"]
 
-[version]
-source = "homebrew"
-formula = "sqlite"
-
 [[steps]]
 action = "homebrew"
 formula = "sqlite"

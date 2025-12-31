@@ -4,10 +4,6 @@ description = "General-purpose lossless data-compression library"
 homepage = "https://zlib.net/"
 type = "library"
 
-[version]
-source = "homebrew"
-formula = "zlib"
-
 [[steps]]
 action = "homebrew"
 formula = "zlib"

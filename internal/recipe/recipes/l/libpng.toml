@@ -5,10 +5,6 @@ homepage = "https://libpng.sourceforge.io/"
 type = "library"
 dependencies = ["zlib"]
 
-[version]
-source = "homebrew"
-formula = "libpng"
-
 [[steps]]
 action = "homebrew"
 formula = "libpng"
