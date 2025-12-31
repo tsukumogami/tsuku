@@ -38,30 +38,11 @@ Planned
 
 ### Milestone: [System Dependency Action Vocabulary](https://github.com/tsukumogami/tsuku/milestone/30)
 
-See [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for full implementation issues table and dependency graph.
-
-**Summary**: 11 issues defining typed actions (`apt_install`, `brew_cask`, etc.), implicit constraints, and CLI integration.
-
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#754](https://github.com/tsukumogami/tsuku/issues/754) | feat(platform): define target struct for plan generation | None |
-| [#755](https://github.com/tsukumogami/tsuku/issues/755) | feat(actions): define package installation action structs | None |
-| [#756](https://github.com/tsukumogami/tsuku/issues/756) | feat(actions): define configuration and verification action structs | None |
-| [#760](https://github.com/tsukumogami/tsuku/issues/760) | feat(actions): implement implicit constraints for PM actions | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#755](https://github.com/tsukumogami/tsuku/issues/755) |
-| [#761](https://github.com/tsukumogami/tsuku/issues/761) | feat(executor): implement plan filtering by target | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
-| [#765](https://github.com/tsukumogami/tsuku/issues/765) | feat(sandbox): implement ExtractPackages() for sandbox integration | [#755](https://github.com/tsukumogami/tsuku/issues/755) |
+11 issues defining typed actions, implicit constraints, and CLI integration. See [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for details.
 
 ### Milestone: [Sandbox Container Building](https://github.com/tsukumogami/tsuku/milestone/31)
 
-See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for full implementation issues table and dependency graph.
-
-**Summary**: 6 issues for container CI, spec derivation, caching, and executor integration.
-
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#757](https://github.com/tsukumogami/tsuku/issues/757) | ci(sandbox): create container build CI workflow | None |
-| [#770](https://github.com/tsukumogami/tsuku/issues/770) | feat(sandbox): integrate container building with sandbox executor | [#761](https://github.com/tsukumogami/tsuku/issues/761), [#767](https://github.com/tsukumogami/tsuku/issues/767), [#768](https://github.com/tsukumogami/tsuku/issues/768), [#769](https://github.com/tsukumogami/tsuku/issues/769), [#765](https://github.com/tsukumogami/tsuku/issues/765) |
-| [#771](https://github.com/tsukumogami/tsuku/issues/771) | feat(sandbox): implement action execution in sandbox context | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#761](https://github.com/tsukumogami/tsuku/issues/761) |
+6 issues for container CI, spec derivation, caching, and executor integration. See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for details.
 
 ### Milestone: [Full Golden Coverage](https://github.com/tsukumogami/tsuku/milestone/29) (continued)
 
@@ -99,20 +80,8 @@ graph TD
         I721["#721: Documentation"]
     end
 
-    subgraph M30["Milestone 30: Action Vocabulary"]
-        I754["#754: Target struct"]
-        I755["#755: Install actions"]
-        I756["#756: Config actions"]
-        I760["#760: Implicit constraints"]
-        I761["#761: Plan filtering"]
-        I765["#765: ExtractPackages"]
-    end
-
-    subgraph M31["Milestone 31: Container Building"]
-        I757["#757: Container CI"]
-        I770["#770: Executor integration"]
-        I771["#771: Action execution"]
-    end
+    M30["M30: Action Vocabulary (11 issues)"]
+    M31["M31: Container Building (6 issues)"]
 
     subgraph M29["Milestone 29: Full Golden Coverage"]
         I758["#758: Discover recipes"]
@@ -135,19 +104,10 @@ graph TD
     I718 --> I721
     I720 --> I721
 
-    I754 --> I760
-    I755 --> I760
-    I760 --> I761
-    I755 --> I765
-    I761 --> I770
-    I765 --> I770
-    I755 --> I771
-    I756 --> I771
-    I770 --> I771
+    M30 --> M31
+    M30 --> I772
+    M31 --> I772
     I758 --> I772
-    I760 --> I772
-    I770 --> I772
-    I771 --> I772
     I772 --> I773
     I772 --> I774
     I721 --> I745
@@ -158,11 +118,13 @@ graph TD
     classDef blocked fill:#fff9c4
 
     class I712,I713,I714,I715,I716,I717,I718,I719,I720,I721 done
-    class I754,I755,I756,I757,I758 ready
-    class I760,I761,I765,I770,I771,I772,I773,I774,I745 blocked
+    class M30,I758 ready
+    class M31,I772,I773,I774,I745 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked
+
+See [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) and [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for detailed issue breakdowns of M30 and M31.
 
 ## Context and Problem Statement
 
