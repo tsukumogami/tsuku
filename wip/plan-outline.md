@@ -9,7 +9,7 @@ This document outlines the implementation issues for the two companion designs t
 
 ```
 M-Actions: System Dependency Action Vocabulary
-    └─ Distro detection, action types, documentation generation
+    └─ Linux family detection, action types, hardcoded when clauses, documentation generation
 
 M-Sandbox: Sandbox Container Building (depends on M-Actions)
     └─ Container derivation, caching, executor integration
@@ -26,62 +26,72 @@ M-Coverage: Full Golden Plan Coverage (depends on M-Sandbox, existing M27)
 **Prerequisite**: None
 **Blocks**: M-Sandbox, M-Coverage
 
-### Issue A1: Add distro field to WhenClause
+### Issue A1: Add linux_family field to WhenClause
 
 **Type**: feat(recipe)
 **Phase**: Infrastructure
 
 **Description**:
-Extend the `WhenClause` struct to support Linux distribution filtering. This enables recipes to target specific distros (ubuntu, debian, fedora) rather than just OS (linux, darwin).
+Extend the `WhenClause` struct to support Linux family filtering. The `linux_family` dimension maps 1:1 to package manager (debian→apt, rhel→dnf, arch→pacman, alpine→apk, suse→zypper), avoiding the noise of distro-level targeting.
 
 **Acceptance Criteria**:
-- [ ] `WhenClause` struct has `Distro []string` field
-- [ ] Validation: `distro` and `os` are mutually exclusive
-- [ ] Validation: `distro` and `platform` are mutually exclusive
-- [ ] If `distro` is set, step implicitly requires `os = linux`
-- [ ] TOML parsing works: `when = { distro = ["ubuntu", "debian"] }`
+- [ ] `WhenClause` struct has `LinuxFamily string` field (not array - single family per clause)
+- [ ] Valid values: `debian`, `rhel`, `arch`, `alpine`, `suse`
+- [ ] Validation: `linux_family` and `os` are mutually exclusive
+- [ ] Validation: `linux_family` and `platform` are mutually exclusive
+- [ ] If `linux_family` is set, step implicitly requires Linux
+- [ ] TOML parsing works: `when = { linux_family = "debian" }`
 - [ ] Unit tests for validation rules
 
 **Dependencies**: None
 
 ---
 
-### Issue A2: Implement distro detection
+### Issue A2: Implement linux_family detection
 
 **Type**: feat(platform)
 **Phase**: Infrastructure
 
 **Description**:
-Implement `/etc/os-release` parsing to detect the current Linux distribution. This powers the `when = { distro = [...] }` filtering.
+Implement `/etc/os-release` parsing to detect the current Linux family. Maps distro IDs to family names (ubuntu→debian, fedora→rhel, etc.). This powers the `when = { linux_family = "..." }` filtering.
 
 **Acceptance Criteria**:
-- [ ] New file: `internal/platform/distro.go`
-- [ ] Function: `DetectDistro() (id string, idLike []string, err error)`
+- [ ] New file: `internal/platform/family.go`
+- [ ] Function: `DetectFamily() (family string, err error)`
 - [ ] Parses `ID` and `ID_LIKE` from `/etc/os-release`
+- [ ] Maps distro IDs to families via `distroToFamily` lookup table:
+  - debian family: debian, ubuntu, linuxmint, pop, elementary, zorin
+  - rhel family: fedora, rhel, centos, rocky, almalinux, ol
+  - arch family: arch, manjaro, endeavouros
+  - alpine family: alpine
+  - suse family: opensuse, opensuse-leap, opensuse-tumbleweed, sles
+- [ ] Falls back to `ID_LIKE` chain if `ID` not in table
 - [ ] Handles missing file gracefully (returns empty, no error)
-- [ ] Handles unknown distros (returns ID from file)
-- [ ] Unit tests with fixture files for: ubuntu, debian, fedora, arch, alpine
+- [ ] Detection uses `exec.LookPath()` (not `which` - missing on Fedora/Arch)
+- [ ] For RHEL: detects `microdnf` as equivalent to `dnf` (minimal RHEL images use microdnf)
+- [ ] Detection order for RHEL: `dnf` > `microdnf` > `yum`
+- [ ] Unit tests with fixture files for: ubuntu, debian, fedora, arch, alpine, rocky (microdnf)
 
 **Dependencies**: None (can run in parallel with A1)
 
 ---
 
-### Issue A3: Integrate distro matching in WhenClause
+### Issue A3: Integrate linux_family matching in WhenClause
 
 **Type**: feat(recipe)
 **Phase**: Infrastructure
 
 **Description**:
-Update `WhenClause.Matches()` to evaluate the `distro` field against a target distro (not just detected distro). This enables both host-native execution (detect distro) and sandbox execution (specify target distro).
+Update `WhenClause.Matches()` to evaluate the `linux_family` field against a target family. This enables both host-native execution (detect family) and sandbox execution (specify target family).
 
 **Acceptance Criteria**:
-- [ ] `WhenClause.Matches()` accepts target distro as parameter (not just detection)
-- [ ] Signature: `Matches(platform Platform, distro string) bool`
-- [ ] Matching: exact ID match first, then ID_LIKE fallback
-- [ ] Example: `distro = ["ubuntu"]` matches target="ubuntu"; `distro = ["debian"]` matches target="ubuntu" (via ID_LIKE)
-- [ ] Steps with `distro` condition skip when target distro doesn't match
-- [ ] Default behavior: if no target distro specified, call `DetectDistro()` for host-native mode
-- [ ] Integration test: recipe with distro-specific steps filtered correctly for target distro
+- [ ] `WhenClause.Matches()` accepts target linux_family as parameter
+- [ ] Signature: `Matches(platform Platform, linuxFamily string) bool`
+- [ ] Matching: exact family match (no fallback - family is already the abstraction)
+- [ ] Example: `linux_family = "debian"` matches target="debian" (covers ubuntu, mint, etc.)
+- [ ] Steps with `linux_family` condition skip when target family doesn't match
+- [ ] Default behavior: if no target family specified, call `DetectFamily()` for host-native mode
+- [ ] Integration test: recipe with linux_family-specific steps filtered correctly for target family
 
 **Related Code**:
 - `internal/recipe/when.go` - WhenClause implementation
@@ -109,6 +119,8 @@ Create Go structs for package installation actions. These structs hold validated
   - `DnfInstallAction` - packages []string, fallback? string
   - `DnfRepoAction` - url, key_url?, key_sha256?
   - `PacmanInstallAction` - packages []string, fallback? string
+  - `ApkInstallAction` - packages []string, fallback? string
+  - `ZypperInstallAction` - packages []string, fallback? string
 - [ ] All structs implement `SystemAction` interface
 - [ ] All structs have `Validate() error` method
 - [ ] Action parsing from TOML step: `action = "apt_install"` → AptInstallAction
@@ -148,6 +160,36 @@ Create Go structs for configuration, verification, and fallback actions. Complem
 - `internal/recipe/step.go` - Step parsing
 
 **Dependencies**: None (can run in parallel with A4a)
+
+---
+
+### Issue A4c: Implement hardcoded when clauses for PM actions
+
+**Type**: feat(actions)
+**Phase**: Action Vocabulary
+
+**Description**:
+Each PM-specific action has an implicit, immutable `when` clause baked into its definition. Recipe authors do not specify these clauses—they are enforced by the action type. This prevents mistakes like `apt_install` with `when = { linux_family = "rhel" }`.
+
+**Acceptance Criteria**:
+- [ ] Each PM action returns its implicit constraint via `ImplicitWhen() *WhenClause`
+- [ ] Implicit constraints:
+  - `apt_install`, `apt_repo`, `apt_ppa` → `linux_family = "debian"`
+  - `dnf_install`, `dnf_repo` → `linux_family = "rhel"`
+  - `pacman_install` → `linux_family = "arch"`
+  - `apk_install` → `linux_family = "alpine"`
+  - `zypper_install` → `linux_family = "suse"`
+  - `brew_install`, `brew_cask` → `os = "darwin"`
+- [ ] Plan filtering applies implicit when + explicit when (AND logic)
+- [ ] Recipe validation warns if explicit `when` conflicts with implicit constraint
+- [ ] Unit tests verify each action's implicit constraint
+- [ ] Integration test: `apt_install` step skipped when target is `rhel`
+
+**Related Code**:
+- `internal/actions/` - Action implementations
+- `internal/recipe/when.go` - WhenClause implementation
+
+**Dependencies**: A1, A4a, A4b
 
 ---
 
@@ -218,19 +260,19 @@ Implement `Describe() string` method on all typed actions to generate human-read
 **Phase**: Documentation Generation
 
 **Description**:
-When a recipe has system dependency actions and the user runs `tsuku install`, display the generated instructions for the detected platform+distro.
+When a recipe has system dependency actions and the user runs `tsuku install`, display the generated instructions for the detected platform+linux_family.
 
 **Acceptance Criteria**:
-- [ ] CLI detects current platform and distro (via A2's `DetectDistro()`)
-- [ ] Filters recipe steps for current platform+distro
+- [ ] CLI detects current platform and linux_family (via A2's `DetectFamily()`)
+- [ ] Filters recipe steps for current platform+linux_family
 - [ ] Uses `Describe()` to generate instructions for matched actions
-- [ ] Groups instructions by distro header ("For Ubuntu/Debian:")
+- [ ] Groups instructions by family header ("For Debian/Ubuntu:")
 - [ ] Shows `require_command` verification at the end
 - [ ] Output format matches design doc examples (numbered steps)
 - [ ] Respects `--quiet` flag (suppress instructions)
-- [ ] `--target-distro` flag to override detected distro (for documentation)
-- [ ] Integration test: `tsuku install docker` shows apt instructions on Ubuntu
-- [ ] Integration test: `tsuku install docker --target-distro=fedora` shows dnf instructions
+- [ ] `--target-family` flag to override detected linux_family (for documentation)
+- [ ] Integration test: `tsuku install docker` shows apt instructions on debian family
+- [ ] Integration test: `tsuku install docker --target-family=rhel` shows dnf instructions
 
 **Related Code**:
 - `cmd/tsuku/install.go` - Install command
@@ -355,21 +397,23 @@ Create a minimal base container image that contains only tsuku and essential run
 **Phase**: Container Building
 
 **Description**:
-Given a target distro and extracted packages, derive a container specification that can be built. The target distro determines the base image; packages are layered on top.
+Given a target linux_family and extracted packages, derive a container specification that can be built. The linux_family determines the base image and package manager; packages are layered on top.
 
 **Acceptance Criteria**:
-- [ ] Function: `DeriveContainerSpec(targetDistro string, packages map[string][]string) *ContainerSpec`
-- [ ] Distro-to-base-image mapping:
-  - `ubuntu` → `ubuntu:24.04`
+- [ ] Function: `DeriveContainerSpec(linuxFamily string, packages map[string][]string) *ContainerSpec`
+- [ ] Family-to-base-image mapping:
   - `debian` → `debian:bookworm-slim`
-  - `fedora` → `fedora:40`
+  - `rhel` → `fedora:41`
   - `arch` → `archlinux:base`
+  - `alpine` → `alpine:3.19`
+  - `suse` → `opensuse/leap:15.6`
   - (empty/default) → `debian:bookworm-slim`
-- [ ] ContainerSpec contains: base image, target distro, packages by manager, build commands
-- [ ] Generates Dockerfile content appropriate for base image's package manager
-- [ ] Validates package manager matches distro (apt for debian/ubuntu, dnf for fedora, pacman for arch)
-- [ ] Returns error if packages require incompatible package manager for target distro
-- [ ] Unit tests for each distro mapping
+- [ ] Family-to-package-manager mapping is 1:1 (no ambiguity):
+  - `debian` → apt, `rhel` → dnf, `arch` → pacman, `alpine` → apk, `suse` → zypper
+- [ ] ContainerSpec contains: base image, linux_family, packages by manager, build commands
+- [ ] Generates Dockerfile content appropriate for family's package manager
+- [ ] Returns error if packages require incompatible package manager for target family
+- [ ] Unit tests for each family mapping
 
 **Related Code**:
 - `internal/sandbox/container.go` - Container spec (new)
@@ -384,18 +428,18 @@ Given a target distro and extracted packages, derive a container specification t
 **Phase**: Container Building
 
 **Description**:
-Cache built container images by distro + package set hash to avoid rebuilding for repeated test runs.
+Cache built container images by linux_family + package set hash to avoid rebuilding for repeated test runs.
 
 **Acceptance Criteria**:
-- [ ] Function: `ContainerImageName(targetDistro string, packages map[string][]string) string`
-- [ ] Returns deterministic name: `tsuku/sandbox-cache:<distro>-<hash>`
-- [ ] Hash includes: distro + sorted packages (same packages on different distros = different images)
+- [ ] Function: `ContainerImageName(linuxFamily string, packages map[string][]string) string`
+- [ ] Returns deterministic name: `tsuku/sandbox-cache:<family>-<hash>`
+- [ ] Hash includes: linux_family + sorted packages (same packages on different families = different images)
 - [ ] Hash is stable (consistent algorithm - use SHA256)
 - [ ] Check if image exists before building: `ImageExists(name) bool`
 - [ ] Cache hit: reuse existing image
 - [ ] Cache miss: build and tag image
-- [ ] Unit tests for hash stability (same distro+packages → same hash)
-- [ ] Unit tests for hash uniqueness (different distro OR packages → different hash)
+- [ ] Unit tests for hash stability (same family+packages → same hash)
+- [ ] Unit tests for hash uniqueness (different family OR packages → different hash)
 
 **Related Code**:
 - `internal/sandbox/cache.go` - Image caching (new)
@@ -410,22 +454,22 @@ Cache built container images by distro + package set hash to avoid rebuilding fo
 **Phase**: Container Building
 
 **Description**:
-Update the sandbox executor to accept target platform+distro, filter the plan accordingly, and build the appropriate container.
+Update the sandbox executor to accept target platform+linux_family, filter the plan accordingly, and build the appropriate container.
 
 **Acceptance Criteria**:
-- [ ] Sandbox executor accepts target: `Execute(recipe, platform Platform, distro string)`
-- [ ] Plan filtering uses target platform+distro (via A3's `WhenClause.Matches()`)
+- [ ] Sandbox executor accepts target: `Execute(recipe, platform Platform, linuxFamily string)`
+- [ ] Plan filtering uses target platform+linux_family (via A3's `WhenClause.Matches()`)
 - [ ] Extend `Runtime` interface with container building methods:
   - `Build(spec *ContainerSpec) error` - Build container from spec
   - `ImageExists(name string) bool` - Check if image exists locally
 - [ ] Sandbox executor calls `ExtractPackages()` on filtered plan
-- [ ] Container spec derived from target distro + extracted packages
+- [ ] Container spec derived from target linux_family + extracted packages
 - [ ] If packages present: derive container spec, check cache, build if needed
-- [ ] If no packages: use base container for target distro
+- [ ] If no packages: use base container for target linux_family
 - [ ] Container runs recipe installation steps
 - [ ] Container is destroyed after test completes
-- [ ] Integration test: recipe with apt_install runs in Ubuntu container when target=ubuntu
-- [ ] Integration test: same recipe runs in Fedora container when target=fedora
+- [ ] Integration test: recipe with apt_install runs in debian container when target=debian
+- [ ] Integration test: same recipe runs in rhel container when target=rhel
 
 **Related Code**:
 - `internal/executor/runtime.go` - Runtime interface
@@ -508,9 +552,11 @@ Identify all recipes that use `require_system` with `install_guide` and document
 Convert all recipes identified in C0 to the new typed action format.
 
 **Acceptance Criteria**:
-- [ ] All recipes from C0 discovery converted to typed actions with `when` clauses:
-  - `install_guide.darwin = "brew ..."` → `brew_cask` with `when = { os = ["darwin"] }`
-  - `install_guide.linux = "apt ..."` → `apt_install` with `when = { distro = [...] }`
+- [ ] All recipes from C0 discovery converted to typed actions:
+  - `install_guide.darwin = "brew ..."` → `brew_cask` (implicit `when = { os = "darwin" }`)
+  - `install_guide.linux = "apt ..."` → `apt_install` (implicit `when = { linux_family = "debian" }`)
+  - `install_guide.linux = "dnf ..."` → `dnf_install` (implicit `when = { linux_family = "rhel" }`)
+- [ ] No explicit `when` clauses needed for PM actions (A4c provides implicit constraints)
 - [ ] Add `require_command` for verification
 - [ ] Add content-addressing (SHA256) for any external resources (GPG keys, etc.)
 - [ ] All converted recipes pass preflight validation
@@ -554,16 +600,16 @@ Remove the `install_guide` field from `require_system` action now that typed act
 **Phase**: Coverage
 
 **Description**:
-Generate golden files for all recipes that previously used `require_system`, now using typed actions. Golden files are generated per platform+distro combination.
+Generate golden files for all recipes that previously used `require_system`, now using typed actions. Golden files are generated per platform+linux_family combination.
 
 **Acceptance Criteria**:
-- [ ] Update `./scripts/regenerate-golden.sh` to accept `--distro` flag
-- [ ] Golden files generated for platform+distro combinations:
-  - `linux/amd64/ubuntu`, `linux/amd64/debian`, `linux/amd64/fedora`
-  - `linux/arm64/ubuntu`, `linux/arm64/debian`
-  - `darwin/amd64` (no distro), `darwin/arm64` (no distro)
-- [ ] Golden file naming: `<recipe>_<os>_<arch>[_<distro>].golden`
-- [ ] Execution validation passes in sandbox for each platform+distro
+- [ ] Update `./scripts/regenerate-golden.sh` to accept `--family` flag
+- [ ] Golden files generated for platform+linux_family combinations:
+  - `linux/amd64/debian`, `linux/amd64/rhel`, `linux/amd64/arch`
+  - `linux/arm64/debian`, `linux/arm64/rhel`
+  - `darwin/amd64` (no family), `darwin/arm64` (no family)
+- [ ] Golden file naming: `<recipe>_<os>_<arch>[_<family>].golden`
+- [ ] Execution validation passes in sandbox for each platform+linux_family
 - [ ] No recipes excluded due to system dependencies
 - [ ] CI validates golden files for migrated recipes
 - [ ] All golden files committed and passing validation
@@ -572,7 +618,7 @@ Generate golden files for all recipes that previously used `require_system`, now
 - `scripts/regenerate-golden.sh` - Golden file regeneration
 - `testdata/golden/` - Golden files directory
 
-**Dependencies**: C1, S4 (sandbox with distro support)
+**Dependencies**: C1, S4 (sandbox with linux_family support)
 
 ---
 
@@ -604,11 +650,12 @@ With system dependency support complete, #745 can proceed. This issue tracks the
 ```mermaid
 graph TD
     subgraph Actions["M-Actions: Action Vocabulary"]
-        A1["A1: WhenClause distro field"]
-        A2["A2: Distro detection"]
-        A3["A3: Distro matching"]
+        A1["A1: WhenClause linux_family field"]
+        A2["A2: linux_family detection"]
+        A3["A3: linux_family matching"]
         A4a["A4a: Install action structs"]
         A4b["A4b: Config/verify action structs"]
+        A4c["A4c: Hardcoded when clauses"]
         A5["A5: Preflight validation"]
         A6["A6: Describe() method"]
         A7["A7: CLI instructions"]
@@ -636,6 +683,9 @@ graph TD
     %% M-Actions internal
     A1 --> A3
     A2 --> A3
+    A1 --> A4c
+    A4a --> A4c
+    A4b --> A4c
     A4a --> A5
     A4b --> A5
     A4a --> A6
@@ -660,6 +710,7 @@ graph TD
     C0 --> C1
     S4 --> C1
     S5 --> C1
+    A4c --> C1
     C1 --> C2
     C1 --> C3
     C3 --> C4
@@ -668,7 +719,7 @@ graph TD
     classDef sandbox fill:#fff3e0
     classDef coverage fill:#e8f5e9
 
-    class A1,A2,A3,A4a,A4b,A5,A6,A7,A8,A9 actions
+    class A1,A2,A3,A4a,A4b,A4c,A5,A6,A7,A8,A9 actions
     class S0,S1,S2,S3,S4,S5 sandbox
     class C0,C1,C2,C3,C4 coverage
 ```
@@ -677,21 +728,22 @@ graph TD
 
 | Milestone | Issues | Estimated Scope |
 |-----------|--------|-----------------|
-| M-Actions | 10 | Core vocabulary + documentation generation (A1-A3, A4a, A4b, A5-A9) |
+| M-Actions | 11 | Core vocabulary + documentation generation (A1-A3, A4a-A4c, A5-A9) |
 | M-Sandbox | 6 | Container CI + building + execution (S0-S5) |
 | M-Coverage | 5 | Discovery + migration + enablement (C0-C4) |
-| **Total** | **21** | |
+| **Total** | **22** | |
 
 ## Cross-Milestone Dependencies
 
 | From | To | Reason |
 |------|-----|--------|
-| A3 (Distro matching) | S4 | Sandbox needs platform+distro filtering |
+| A3 (linux_family matching) | S4 | Sandbox needs platform+linux_family filtering |
 | A4a (Install action structs) | S5, A9 | Sandbox needs install action types |
 | A4b (Config/verify action structs) | S5, A8 | Verification needs action types |
+| A4c (Hardcoded when clauses) | C1 | Migration uses implicit when constraints |
 | A9 (ExtractPackages) | S2 | Container derivation needs package list |
 | S0 (Container CI) | S1 | Base container needs CI workflow to validate |
-| S4 (Executor integration) | C1, C3 | Migration and golden files require sandbox with distro support |
+| S4 (Executor integration) | C1, C3 | Migration and golden files require sandbox with linux_family support |
 | S5 (Action execution) | C1 | Migration requires action execution |
 | C0 (Discovery) | C1 | Migration scope must be known |
 | C1 (Migrate recipes) | C2, C3 | Cleanup and coverage depend on migration |
@@ -699,11 +751,12 @@ graph TD
 ## Notes
 
 1. **Parallelism**: A1/A2 can run in parallel; A4a/A4b can run in parallel; S0 can start early; C0 can start before M-Sandbox completes
-2. **Critical path**: A1/A2 → A3 → S4 → C1 → C4 (distro support is now on critical path)
-3. **Target model**: Plans are filtered by `(platform, distro)` tuple; containers are derived from target distro
-4. **Risk areas**: S1 (base container size - mitigated by bookworm-slim decision), C1 (mitigated by C0 discovery)
-5. **Phase gates**: M-Actions complete before M-Sandbox starts heavy work; M-Sandbox complete before M-Coverage migration (except C0)
-6. **Security checkpoints**: A5 (content-addressing validation), S5 (GPG key verification)
+2. **Critical path**: A1/A2 → A3 → S4 → C1 → C4 (linux_family support is now on critical path)
+3. **Target model**: Plans are filtered by `(platform, linux_family)` tuple; containers are derived from target linux_family
+4. **Implicit when clauses**: A4c eliminates explicit `when` clauses for PM actions - each action carries its own constraint
+5. **Risk areas**: S1 (base container size - mitigated by bookworm-slim decision), C1 (mitigated by C0 discovery)
+6. **Phase gates**: M-Actions complete before M-Sandbox starts heavy work; M-Sandbox complete before M-Coverage migration (except C0)
+7. **Security checkpoints**: A5 (content-addressing validation), S5 (GPG key verification)
 
 ---
 
@@ -724,7 +777,7 @@ This plan was reviewed by a panel of 5 agents with different perspectives. The f
 | S1 no CI to validate container | Added S0: Container CI workflow |
 | Missing "Related Code" sections | Added to all issues with existing code references |
 | Vague acceptance criteria | Clarified with specific artifacts and test requirements |
-| Container-distro mapping unclear | Clarified: target=(platform, distro) determines container base image |
+| Container-family mapping unclear | Clarified: target=(platform, linux_family) determines container base image |
 
 ### Review Perspectives
 
