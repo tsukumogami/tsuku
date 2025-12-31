@@ -11,7 +11,7 @@ This design addresses **sandbox container building** for recipes with system dep
 | Concern | Design |
 |---------|--------|
 | Action vocabulary (what actions exist, how they compose) | [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) |
-| Platform filtering (`when` clause, `distro` detection) | [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) |
+| Platform filtering (`when` clause, `linux_family` detection) | [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) |
 | Documentation generation (`Describe()` interface) | [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) |
 | **Container building, caching, sandbox execution** | **This design** |
 
@@ -91,7 +91,8 @@ This design addresses:
 
 This design depends on [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for:
 - Action vocabulary (`apt_install`, `brew_cask`, `require_command`, etc.)
-- Platform filtering via `when` clause with `distro` field
+- Platform filtering via `when` clause with `linux_family` field
+- Hardcoded when clauses for package manager actions
 - Documentation generation via `Describe()` interface
 
 This design does NOT cover:
@@ -189,14 +190,14 @@ install_guide = "sudo apt install docker.io"
 
 #### Option 2B: Typed Actions
 
-Each operation is a separate step with a typed action. Simple and complex cases use the same syntax.
+Each operation is a separate step with a typed action. Simple and complex cases use the same syntax. Package manager actions have hardcoded `when` clauses (see [DESIGN-system-dependency-actions.md - D6](DESIGN-system-dependency-actions.md#d6-hardcoded-when-clauses-for-package-manager-actions)).
 
 **Simple case:**
 ```toml
+# apt_install has implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_install"
 packages = ["docker.io"]
-when = { distro = ["ubuntu", "debian"] }
 
 [[steps]]
 action = "require_command"
@@ -205,27 +206,26 @@ command = "docker"
 
 **Complex case (multiple operations):**
 ```toml
+# apt_* actions have implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_repo"
 url = "https://download.docker.com/linux/ubuntu"
 key_url = "https://download.docker.com/linux/ubuntu/gpg"
 key_sha256 = "1500c1f..."
-when = { distro = ["ubuntu", "debian"] }
 
 [[steps]]
 action = "apt_install"
 packages = ["docker-ce", "docker-ce-cli", "containerd.io"]
-when = { distro = ["ubuntu", "debian"] }
 
 [[steps]]
 action = "group_add"
 group = "docker"
-when = { os = ["linux"] }
+when = { os = "linux" }
 
 [[steps]]
 action = "service_enable"
 service = "docker"
-when = { os = ["linux"] }
+when = { os = "linux" }
 
 [[steps]]
 action = "require_command"
@@ -342,7 +342,7 @@ Support core managers (apt, brew, dnf) with an extensible schema for adding othe
 
 ### Summary
 
-We replace `install_guide` and the polymorphic `require_system` with typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Each action is a separate step filtered by `when` (including the new `distro` field for Linux distro detection). The sandbox base container is stripped to minimal, forcing complete dependency declarations. We support core package managers initially with an extensible action system.
+We replace `install_guide` and the polymorphic `require_system` with typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Package manager actions have hardcoded `when` clauses based on `linux_family` (e.g., `apt_install` implies `when = { linux_family = "debian" }`). The sandbox base container is stripped to minimal, forcing complete dependency declarations. We support core package managers initially with an extensible action system.
 
 ### Rationale
 
@@ -381,29 +381,28 @@ The verbosity trade-off (separate steps per platform) is acceptable because:
 
 ### Design Principles
 
-1. **Platform filtering via `when`**: Use the step-level `when` clause with `distro` support
-2. **No shell commands**: All operations use typed actions that can be statically analyzed
-3. **Content-addressed resources**: All external URLs require SHA256 hashes
-4. **Typed actions**: Each action has a well-defined schema from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)
-5. **Extensible vocabulary**: New actions added through code as patterns emerge
+1. **Platform filtering via `when`**: Use the step-level `when` clause with `linux_family` support
+2. **Hardcoded when clauses**: Package manager actions have implicit, immutable when clauses (see [D6](DESIGN-system-dependency-actions.md#d6-hardcoded-when-clauses-for-package-manager-actions))
+3. **No shell commands**: All operations use typed actions that can be statically analyzed
+4. **Content-addressed resources**: All external URLs require SHA256 hashes
+5. **Typed actions**: Each action has a well-defined schema from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)
+6. **Extensible vocabulary**: New actions added through code as patterns emerge
 
 ### Step Structure
 
-System dependencies use typed actions from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Each action targets a single platform via `when`:
+System dependencies use typed actions from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Package manager actions have hardcoded `when` clauses based on `linux_family`:
 
 **Simple case** (single package manager):
 ```toml
-# Ubuntu/Debian
+# Debian family - implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_install"
 packages = ["docker.io"]
-when = { distro = ["ubuntu", "debian"] }
 
-# macOS
+# macOS - implicit when = { os = "darwin" }
 [[steps]]
 action = "brew_cask"
 packages = ["docker"]
-when = { os = ["darwin"] }
 
 # Verify installation
 [[steps]]
@@ -419,17 +418,16 @@ command = "docker"
 [[steps]]
 action = "download"
 url = "https://example.com/tool-{version}-linux.tar.gz"
-when = { os = ["linux"] }
+when = { os = "linux" }
 
 [[steps]]
 action = "extract"
-when = { os = ["linux"] }
+when = { os = "linux" }
 
-# macOS - requires system package
+# macOS - requires system package (implicit when = { os = "darwin" })
 [[steps]]
 action = "brew_install"
 packages = ["tool"]
-when = { os = ["darwin"] }
 
 # Verify on both platforms
 [[steps]]
@@ -512,9 +510,14 @@ New actions are added when patterns emerge during recipe migration. See [DESIGN-
 This creates a higher review bar than shell commands - every new action type requires code review.
 
 **Anticipated future actions** (from action vocabulary design):
-- `apk_install` for Alpine Linux
-- `zypper_install` for openSUSE
-- `nix_install` for NixOS
+- `apk_install` for Alpine Linux (alpine family) - already in scope
+- `zypper_install` for openSUSE (suse family) - already in scope
+
+**Explicitly out of scope:**
+- `nix_install` for NixOS - declarative model, fundamentally different paradigm
+- `emerge` for Gentoo - source-based, fundamentally different paradigm
+
+These systems may use nix-portable as a universal fallback in the future.
 
 ### Minimal Base Container
 
@@ -606,7 +609,7 @@ func DeriveContainerSpec(packages map[string][]string) *ContainerSpec {
 }
 ```
 
-**Note:** The plan passed to `ExtractPackages` is already filtered for the target platform. The `when` clause filtering (including `distro` detection) happens during plan generation.
+**Note:** The plan passed to `ExtractPackages` is already filtered for the target platform. The `when` clause filtering (including `linux_family` detection and hardcoded PM action constraints) happens during plan generation.
 
 **Implementation note:** The current `Runtime` interface (`internal/validate/runtime.go`) only supports `Run()`. Container building requires adding:
 - `Build(ctx context.Context, dockerfile string, imageName string) error` - Build image from Dockerfile
@@ -686,12 +689,12 @@ Since tsuku is pre-GA and all recipes are in the repo, we do a clean migration:
 
 1. **Remove `install_guide`**: Delete the field entirely from legacy `require_system` action
 2. **Implement typed actions**: Add `apt_install`, `brew_cask`, `require_command`, etc. per [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)
-3. **Migrate recipes**: Convert docker.toml, cuda.toml, test-tuples.toml to typed actions with `when` clauses including `distro`
+3. **Migrate recipes**: Convert docker.toml, cuda.toml, test-tuples.toml to typed actions (PM actions have implicit when clauses based on `linux_family`)
 4. **Validate**: Ensure all recipes pass preflight and can be sandbox-tested
 
 ## Implementation Approach
 
-This design depends on [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) phases 1-3 being complete (distro detection, action vocabulary, documentation generation).
+This design depends on [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) phases 1-3 being complete (linux_family detection, action vocabulary, documentation generation).
 
 ### Phase 1: Adopt Action Vocabulary
 
@@ -833,18 +836,11 @@ This would accelerate migration when scaling to thousands of recipes.
 
 ### Platform Version Constraints
 
-The `when` clause supports `distro` filtering (see [DESIGN-system-dependency-actions.md - D2: Distro Detection](DESIGN-system-dependency-actions.md#d2-distro-detection)), but not version constraints. Future work could extend `when` to support distribution versions:
+The `when` clause supports `linux_family` filtering (see [DESIGN-system-dependency-actions.md - D2: Linux Family Detection](DESIGN-system-dependency-actions.md#d2-linux-family-detection)), but not version constraints. Future work could extend `when` to support distribution versions:
 
 ```toml
-[[steps]]
-action = "apt_install"
-packages = ["docker-ce"]
-when = { distro = ["ubuntu>=24.04"] }
-
-[[steps]]
-action = "apt_install"
-packages = ["docker.io"]
-when = { distro = ["ubuntu>=22.04", "ubuntu<24.04"] }
+# Version constraints would need to be an additional field
+when = { linux_family = "debian", version = ">=24.04" }
 ```
 
 This requires defining version comparison semantics across distro versioning schemes (deferred per the action vocabulary design).
@@ -870,7 +866,7 @@ Certain actions (`group_add`, `service_enable`) enable indirect privilege escala
 ### Positive
 
 - **Complete golden coverage**: All recipes can be sandbox-tested, including those with system dependencies.
-- **Consistent filtering**: Platform filtering uses `when` clause with `distro` support everywhere.
+- **Consistent filtering**: Platform filtering uses `when` clause with `linux_family` support; PM actions have hardcoded implicit constraints.
 - **Typed actions**: Each action has a well-defined schema (from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)).
 - **Composability**: Easy to mix action types per platform (download on Linux, brew_install on macOS).
 - **Explicit dependencies**: The minimal base container forces recipes to declare all required packages.

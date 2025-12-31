@@ -95,13 +95,25 @@ Each operation is a separate action type: `apt_install`, `apt_repo`, `brew_cask`
 - Option B (one action per manager with sub-operations): Creates polymorphic schemas where valid fields depend on which operation is intended
 - Option C (unified action with manager field): Recreates the original problem of generic containers with platform-specific content
 
-### D2: Distro Detection
+### D2: Linux Family Detection
 
-**Decision: Extend `when` clause with `distro` field, using `/etc/os-release`**
+**Decision: Extend `when` clause with `linux_family` field**
 
 ```toml
-when = { distro = ["ubuntu", "debian"] }
+when = { linux_family = "debian" }
 ```
+
+**Rationale for `linux_family` over `distro`:**
+
+Research revealed that the meaningful boundary for system dependencies is **package manager**, not individual distro. Ubuntu, Debian, and Linux Mint all use `apt` - distinguishing between them adds noise without benefit. The `linux_family` dimension maps 1:1 to package manager:
+
+| linux_family | Package Manager | Example Distros |
+|--------------|-----------------|-----------------|
+| debian | apt | Ubuntu, Debian, Linux Mint, Pop!_OS |
+| rhel | dnf | Fedora, RHEL, CentOS, Rocky, Alma |
+| arch | pacman | Arch, Manjaro, EndeavourOS |
+| alpine | apk | Alpine Linux |
+| suse | zypper | openSUSE, SLES |
 
 **Detection mechanism:**
 
@@ -109,39 +121,60 @@ Parse `/etc/os-release` on Linux, extracting:
 - `ID`: Canonical distro identifier (e.g., "ubuntu", "fedora", "arch")
 - `ID_LIKE`: Parent/similar distros (e.g., "debian" for Ubuntu)
 
-**Matching semantics:**
-
-1. Match `ID` first (exact match)
-2. Fall back to `ID_LIKE` chain (handles derivatives like Linux Mint, Pop!_OS)
+**Mapping to family:**
 
 ```go
-func (w *WhenClause) matchesDistro(distroID string, idLike []string) bool {
-    for _, d := range w.Distro {
-        if d == distroID {
-            return true
-        }
-        for _, like := range idLike {
-            if d == like {
-                return true
-            }
+var distroToFamily = map[string]string{
+    // Debian family
+    "debian": "debian", "ubuntu": "debian", "linuxmint": "debian",
+    "pop": "debian", "elementary": "debian", "zorin": "debian",
+    // RHEL family
+    "fedora": "rhel", "rhel": "rhel", "centos": "rhel",
+    "rocky": "rhel", "almalinux": "rhel", "ol": "rhel",
+    // Arch family
+    "arch": "arch", "manjaro": "arch", "endeavouros": "arch",
+    // Alpine
+    "alpine": "alpine",
+    // SUSE family
+    "opensuse": "suse", "opensuse-leap": "suse",
+    "opensuse-tumbleweed": "suse", "sles": "suse",
+}
+
+func DetectFamily() (string, error) {
+    osRelease, err := ParseOSRelease("/etc/os-release")
+    if err != nil {
+        return "", err
+    }
+
+    // Try ID first
+    if family, ok := distroToFamily[osRelease.ID]; ok {
+        return family, nil
+    }
+
+    // Fall back to ID_LIKE chain
+    for _, like := range osRelease.IDLike {
+        if family, ok := distroToFamily[like]; ok {
+            return family, nil
         }
     }
-    return false
+
+    return "", fmt.Errorf("unknown distro: %s", osRelease.ID)
 }
 ```
 
 **Version constraints: Not in initial implementation.**
 
-Version constraint syntax (e.g., `ubuntu>=22.04`) adds significant complexity due to non-uniform versioning schemes across distros. Defer to feature detection via `require_command` instead.
+Version constraint syntax adds significant complexity due to non-uniform versioning schemes across distros. Defer to feature detection via `require_command` instead.
 
 **Failure mode:**
 
-If `/etc/os-release` is missing or distro is unknown, steps with `distro` conditions are skipped. Fallback `manual` actions can guide users.
+If `/etc/os-release` is missing or family cannot be determined, steps with `linux_family` conditions are skipped. Fallback `manual` actions can guide users.
 
 **Validation rules:**
 
-- `distro` and `os` are mutually exclusive (like `platform` and `os`)
-- `distro` implicitly requires Linux (distro detection only makes sense on Linux)
+- `linux_family` and `os` are mutually exclusive
+- `linux_family` and `platform` are mutually exclusive
+- `linux_family` implicitly requires Linux
 
 ### D3: Require Semantics
 
@@ -150,15 +183,15 @@ If `/etc/os-release` is missing or distro is unknown, steps with `distro` condit
 Package managers handle "already installed" gracefully. Run install actions, then verify with `require_command`:
 
 ```toml
+# implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_install"
 packages = ["docker.io"]
-when = { distro = ["ubuntu", "debian"] }
 
+# implicit when = { os = "darwin" }
 [[steps]]
 action = "brew_cask"
 packages = ["docker"]
-when = { os = ["darwin"] }
 
 [[steps]]
 action = "require_command"
@@ -176,11 +209,11 @@ command = "docker"
 For cases where install should be skipped if command exists, add optional `unless_command` field:
 
 ```toml
+# implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_install"
 packages = ["docker.io"]
 unless_command = "docker"
-when = { distro = ["ubuntu", "debian"] }
 ```
 
 ### D4: Post-Install Configuration
@@ -188,20 +221,20 @@ when = { distro = ["ubuntu", "debian"] }
 **Decision: Separate actions for each (Option A)**
 
 ```toml
+# implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_install"
 packages = ["docker-ce"]
-when = { distro = ["ubuntu"] }
 
 [[steps]]
 action = "group_add"
 group = "docker"
-when = { os = ["linux"] }
+when = { os = "linux" }
 
 [[steps]]
 action = "service_enable"
 service = "docker"
-when = { os = ["linux"] }
+when = { os = "linux" }
 ```
 
 **Rationale:**
@@ -231,11 +264,11 @@ when = { os = ["darwin"] }
 **`fallback` field** on install actions for graceful degradation:
 
 ```toml
+# apt_install has implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_install"
 packages = ["nvidia-cuda-toolkit"]
 fallback = "For newer CUDA versions, visit https://developer.nvidia.com/cuda-downloads"
-when = { distro = ["ubuntu"] }
 ```
 
 **Rationale:**
@@ -244,22 +277,76 @@ when = { distro = ["ubuntu"] }
 - `fallback` expresses "automation might fail, here's plan B"
 - These are orthogonal concerns that can coexist
 
+### D6: Hardcoded When Clauses for Package Manager Actions
+
+**Decision: Package manager actions have immutable, built-in `when` clauses**
+
+Each `*_install` action carries a hardcoded `linux_family` constraint that cannot be overridden by recipe authors:
+
+| Action | Hardcoded Constraint |
+|--------|---------------------|
+| `apt_install`, `apt_repo`, `apt_ppa` | `when = { linux_family = "debian" }` |
+| `dnf_install`, `dnf_repo` | `when = { linux_family = "rhel" }` |
+| `pacman_install` | `when = { linux_family = "arch" }` |
+| `apk_install` | `when = { linux_family = "alpine" }` |
+| `zypper_install` | `when = { linux_family = "suse" }` |
+| `brew_install`, `brew_cask` | `when = { os = "darwin" }` |
+
+**Rationale:**
+
+- **Prevents mistakes**: Cannot accidentally write `apt_install` with `when = { linux_family = "rhel" }`
+- **Reduces noise**: Recipe authors don't repeat the same obvious constraint
+- **Simplifies validation**: Action type determines valid targets
+
+**Implementation:**
+
+```go
+type ActionDefinition struct {
+    Name           string
+    ImplicitWhen   *WhenClause  // Built-in, cannot be overridden
+}
+
+var actionDefinitions = map[string]ActionDefinition{
+    "apt_install": {
+        Name:         "apt_install",
+        ImplicitWhen: &WhenClause{LinuxFamily: "debian"},
+    },
+    "dnf_install": {
+        Name:         "dnf_install",
+        ImplicitWhen: &WhenClause{LinuxFamily: "rhel"},
+    },
+    // ...
+}
+```
+
+**Recipe authors can still add additional constraints** (e.g., architecture), which are combined with the implicit constraint:
+
+```toml
+[[steps]]
+action = "apt_install"
+packages = ["some-x86-only-package"]
+when = { arch = "amd64" }  # Combined with implicit linux_family = "debian"
+```
+
+**Note:** This constraint applies only to package manager actions. Other actions (`require_command`, `group_add`, `manual`, etc.) do not have hardcoded when clauses.
+
 ## Decision Outcome
 
-**Chosen: D1-A + D2 + D3-C + D4-A + D5-Hybrid**
+**Chosen: D1-A + D2 + D3-C + D4-A + D5-Hybrid + D6**
 
 ### Summary
 
-We replace the polymorphic `require_system` with granular typed actions (`apt_install`, `brew_cask`, etc.), using `/etc/os-release` for distro detection via `when` clause extension, idempotent installation with final `require_command` verification, separate actions for post-install configuration, and a hybrid fallback approach (`manual` action + `fallback` field).
+We replace the polymorphic `require_system` with granular typed actions (`apt_install`, `brew_cask`, etc.), using `/etc/os-release` for Linux family detection via `when` clause extension, idempotent installation with final `require_command` verification, separate actions for post-install configuration, a hybrid fallback approach (`manual` action + `fallback` field), and hardcoded when clauses for package manager actions.
 
 ### Rationale
 
 These choices work together to create a consistent, auditable system:
 - Typed actions (D1) enable static analysis and clear error messages
-- Distro detection (D2) allows precise Linux distribution targeting without implicit assumptions
+- Linux family detection (D2) targets package manager ecosystems, not individual distros, reducing plan proliferation
 - Idempotent install + verify (D3) leverages package manager behavior with explicit verification
 - Separate post-install actions (D4) maintain single-responsibility and clear failure isolation
 - Hybrid fallback (D5) covers both "automation not possible" and "automation might fail" scenarios
+- Hardcoded when clauses (D6) prevent mistakes and reduce recipe noise for package manager actions
 
 ## Action Vocabulary
 
@@ -358,22 +445,22 @@ In sandbox mode, tsuku extracts package requirements from actions and builds min
 
 ```go
 type WhenClause struct {
-    Platform       []string `toml:"platform,omitempty"`
-    OS             []string `toml:"os,omitempty"`
-    Distro         []string `toml:"distro,omitempty"`         // NEW
-    PackageManager string   `toml:"package_manager,omitempty"`
+    Platform    []string `toml:"platform,omitempty"`
+    OS          []string `toml:"os,omitempty"`
+    LinuxFamily string   `toml:"linux_family,omitempty"` // NEW
+    Arch        string   `toml:"arch,omitempty"`
 }
 ```
 
 **Validation:**
 
-- `Distro` and `OS` are mutually exclusive
-- `Distro` and `Platform` are mutually exclusive
-- If `Distro` is set, step only runs on Linux
+- `LinuxFamily` and `OS` are mutually exclusive
+- `LinuxFamily` and `Platform` are mutually exclusive
+- If `LinuxFamily` is set, step only runs on Linux
 
 **Detection implementation:**
 
-Create `internal/platform/distro.go`:
+Create `internal/platform/family.go`:
 
 ```go
 type OSRelease struct {
@@ -383,11 +470,16 @@ type OSRelease struct {
     VersionCodename string   // e.g., "jammy"
 }
 
-func Detect() (*OSRelease, error) {
-    return ParseFile("/etc/os-release")
+// DetectFamily returns the linux_family for the current system
+func DetectFamily() (string, error) {
+    osRelease, err := ParseOSRelease("/etc/os-release")
+    if err != nil {
+        return "", err
+    }
+    return MapDistroToFamily(osRelease.ID, osRelease.IDLike)
 }
 
-func ParseFile(path string) (*OSRelease, error) {
+func ParseOSRelease(path string) (*OSRelease, error) {
     // Parse KEY=value format
 }
 ```
@@ -397,42 +489,41 @@ func ParseFile(path string) (*OSRelease, error) {
 Complete example showing composable actions:
 
 ```toml
-# Ubuntu/Debian with official Docker repo
+# Debian family (Ubuntu, Debian, Mint, etc.) - uses official Docker repo
+# Note: apt_* actions have implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_repo"
 url = "https://download.docker.com/linux/ubuntu"
 key_url = "https://download.docker.com/linux/ubuntu/gpg"
 key_sha256 = "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570"
-when = { distro = ["ubuntu", "debian"] }
 
 [[steps]]
 action = "apt_install"
 packages = ["docker-ce", "docker-ce-cli", "containerd.io"]
-when = { distro = ["ubuntu", "debian"] }
 
-# Fedora
+# RHEL family (Fedora, RHEL, CentOS, Rocky, etc.)
+# Note: dnf_install has implicit when = { linux_family = "rhel" }
 [[steps]]
 action = "dnf_install"
 packages = ["docker"]
-when = { distro = ["fedora"] }
 
 # macOS
+# Note: brew_cask has implicit when = { os = "darwin" }
 [[steps]]
 action = "brew_cask"
 packages = ["docker"]
-when = { os = ["darwin"] }
 
 # Post-install: add to docker group (Linux only)
 [[steps]]
 action = "group_add"
 group = "docker"
-when = { os = ["linux"] }
+when = { os = "linux" }
 
 # Post-install: enable service (Linux only, not macOS Docker Desktop)
 [[steps]]
 action = "service_enable"
 service = "docker"
-when = { os = ["linux"] }
+when = { os = "linux" }
 
 # Verify
 [[steps]]
@@ -447,17 +538,15 @@ command = "docker"
 A minimal example installing a single package:
 
 ```toml
-# Install curl on Ubuntu/Debian
+# Debian family - implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_install"
 packages = ["curl"]
-when = { distro = ["ubuntu", "debian"] }
 
-# Install curl on macOS
+# macOS - implicit when = { os = "darwin" }
 [[steps]]
 action = "brew_install"
 packages = ["curl"]
-when = { os = ["darwin"] }
 
 # Verify
 [[steps]]
@@ -470,11 +559,11 @@ command = "curl"
 Installing from a third-party tap:
 
 ```toml
+# implicit when = { os = "darwin" }
 [[steps]]
 action = "brew_install"
 packages = ["some-tool"]
 tap = "owner/repo"
-when = { os = ["darwin"] }
 ```
 
 #### Ubuntu PPA
@@ -482,15 +571,15 @@ when = { os = ["darwin"] }
 Adding a PPA and installing packages from it:
 
 ```toml
+# Both actions have implicit when = { linux_family = "debian" }
+# Note: PPAs are Ubuntu-specific but work on Ubuntu derivatives
 [[steps]]
 action = "apt_ppa"
 ppa = "deadsnakes/ppa"
-when = { distro = ["ubuntu"] }
 
 [[steps]]
 action = "apt_install"
 packages = ["python3.11"]
-when = { distro = ["ubuntu"] }
 
 [[steps]]
 action = "require_command"
@@ -502,11 +591,11 @@ command = "python3.11"
 When automated installation might fail, provide a fallback:
 
 ```toml
+# implicit when = { linux_family = "debian" }
 [[steps]]
 action = "apt_install"
 packages = ["nvidia-cuda-toolkit"]
 fallback = "For newer CUDA versions, visit https://developer.nvidia.com/cuda-downloads"
-when = { distro = ["ubuntu"] }
 ```
 
 The `fallback` field is shown to users if the installation fails, guiding them to manual alternatives.
@@ -517,10 +606,11 @@ Implementation focuses on documentation generation and sandbox container buildin
 
 ### Phase 1: Infrastructure
 
-1. Add `distro` field to `WhenClause`
-2. Implement distro detection in `internal/platform/distro.go`
-3. Update `WhenClause.Matches()` for distro filtering
-4. Add unit tests with `/etc/os-release` fixtures
+1. Add `linux_family` field to `WhenClause`
+2. Implement family detection in `internal/platform/family.go`
+3. Implement distro-to-family mapping with ID_LIKE fallback
+4. Update `WhenClause.Matches()` for linux_family filtering
+5. Add unit tests with `/etc/os-release` fixtures
 
 ### Phase 2: Action Vocabulary
 
@@ -565,7 +655,7 @@ For security constraints on future host execution, see [Future Work: Host Execut
 ### Positive
 
 - **Typed actions enable static analysis**: Every recipe can be audited without execution
-- **Consistent platform filtering**: `when` clause with `distro` support used everywhere
+- **Consistent platform filtering**: `when` clause with `linux_family` support used everywhere
 - **Machine-readable format**: Enables both documentation generation and sandbox container building
 - **No shell commands**: Eliminates arbitrary code execution risks
 - **Extensible**: New actions follow established patterns
@@ -615,39 +705,63 @@ When host execution is implemented, these constraints will apply:
 
 This is deferred until the documentation generation and sandbox container building features are complete and validated.
 
-### Composite Shorthand Syntax
+### Composite Shorthand Syntax (`system_dependency`)
 
-The current design is verbose for common cases. A future enhancement could add a high-level syntax:
+The current design is verbose for common cases. A high-level shorthand simplifies the ~95% of packages with consistent names across package managers:
+
+**Common case (same package name everywhere):**
+
+```toml
+[system_dependency]
+command = "curl"
+packages = ["curl", "ca-certificates"]
+```
+
+This expands to `apt_install`, `dnf_install`, `pacman_install`, `brew_install`, etc. with the same package list for each.
+
+**Exception handling (different names per family):**
+
+```toml
+[system_dependency]
+command = "gcc"
+packages = ["gcc"]
+overrides = { debian = ["build-essential"], rhel = ["@development-tools"], arch = ["base-devel"] }
+```
+
+The `overrides` map uses `linux_family` keys (not distro names) to specify family-specific package names.
+
+**macOS-specific handling:**
 
 ```toml
 [system_dependency]
 command = "docker"
-apt = ["docker.io"]
-brew_cask = ["docker"]
-dnf = ["docker"]
+packages = ["docker"]
+darwin = { cask = ["docker"] }  # Uses brew_cask instead of brew_install
 ```
 
-This would expand internally to the full step sequence. Recipe authors who need fine-grained control would continue using individual steps.
-
-This is deferred to gather real usage patterns before designing the expansion rules.
+This syntax provides the ergonomics of a high-level abstraction while respecting the `linux_family` targeting model. Recipe authors who need fine-grained control (custom repos, post-install hooks) continue using individual steps.
 
 ### Additional Package Managers
 
 As needed:
-- `apk_install` for Alpine Linux
-- `zypper_install` for openSUSE
-- `emerge` for Gentoo
-- `nix_install` for NixOS
+- `apk_install` for Alpine Linux - already in scope (alpine family)
+- `zypper_install` for openSUSE - already in scope (suse family)
+
+**Explicitly out of scope:**
+- `emerge` for Gentoo - source-based, fundamentally different model
+- `nix_install` for NixOS - declarative, fundamentally different model
+
+These systems may use nix-portable as a universal fallback in the future (tsuku already supports Nix).
 
 ### Version Constraints
 
 If version-specific package requirements become common:
 
 ```toml
-when = { distro = ["ubuntu>=22.04"] }
+when = { linux_family = "debian", version = ">=22.04" }
 ```
 
-Requires defining version comparison semantics across distro versioning schemes.
+Requires defining version comparison semantics across distro versioning schemes. Deferred until there's demonstrated need.
 
 ## Relationship to Original Design
 
