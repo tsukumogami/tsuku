@@ -36,19 +36,43 @@ Planned
 | [#720](https://github.com/tsukumogami/tsuku/issues/720) | ci(golden): add cross-platform generation workflow | [#714](https://github.com/tsukumogami/tsuku/issues/714) |
 | [#721](https://github.com/tsukumogami/tsuku/issues/721) | docs: add golden file workflow to CONTRIBUTING.md | [#717](https://github.com/tsukumogami/tsuku/issues/717), [#718](https://github.com/tsukumogami/tsuku/issues/718), [#720](https://github.com/tsukumogami/tsuku/issues/720) |
 
-### Structured System Dependencies (Designed, Pending Implementation)
+### Milestone: [System Dependency Action Vocabulary](https://github.com/tsukumogami/tsuku/milestone/30)
 
-Issue [#722](https://github.com/tsukumogami/tsuku/issues/722) spawned two companion design documents:
+See [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for full implementation issues table and dependency graph.
 
-- [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) - Action vocabulary (`apt_install`, `brew_cask`, etc.)
-- [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) - Sandbox container building
-
-Implementation issues will be added after `/plan` runs on those designs.
+**Summary**: 11 issues defining typed actions (`apt_install`, `brew_cask`, etc.), implicit constraints, and CLI integration.
 
 | Issue | Title | Dependencies |
 |-------|-------|--------------|
-| [#745](https://github.com/tsukumogami/tsuku/issues/745) | chore(golden): enforce golden files for all recipes | [#721](https://github.com/tsukumogami/tsuku/issues/721), #722 implementation |
-| [#722](https://github.com/tsukumogami/tsuku/issues/722) | docs(design): create design for structured install_guide | Design complete |
+| [#754](https://github.com/tsukumogami/tsuku/issues/754) | feat(platform): define target struct for plan generation | None |
+| [#755](https://github.com/tsukumogami/tsuku/issues/755) | feat(actions): define package installation action structs | None |
+| [#756](https://github.com/tsukumogami/tsuku/issues/756) | feat(actions): define configuration and verification action structs | None |
+| [#760](https://github.com/tsukumogami/tsuku/issues/760) | feat(actions): implement implicit constraints for PM actions | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#755](https://github.com/tsukumogami/tsuku/issues/755) |
+| [#761](https://github.com/tsukumogami/tsuku/issues/761) | feat(executor): implement plan filtering by target | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
+| [#765](https://github.com/tsukumogami/tsuku/issues/765) | feat(sandbox): implement ExtractPackages() for sandbox integration | [#755](https://github.com/tsukumogami/tsuku/issues/755) |
+
+### Milestone: [Sandbox Container Building](https://github.com/tsukumogami/tsuku/milestone/31)
+
+See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for full implementation issues table and dependency graph.
+
+**Summary**: 6 issues for container CI, spec derivation, caching, and executor integration.
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#757](https://github.com/tsukumogami/tsuku/issues/757) | ci(sandbox): create container build CI workflow | None |
+| [#770](https://github.com/tsukumogami/tsuku/issues/770) | feat(sandbox): integrate container building with sandbox executor | [#761](https://github.com/tsukumogami/tsuku/issues/761), [#767](https://github.com/tsukumogami/tsuku/issues/767), [#768](https://github.com/tsukumogami/tsuku/issues/768), [#769](https://github.com/tsukumogami/tsuku/issues/769), [#765](https://github.com/tsukumogami/tsuku/issues/765) |
+| [#771](https://github.com/tsukumogami/tsuku/issues/771) | feat(sandbox): implement action execution in sandbox context | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#761](https://github.com/tsukumogami/tsuku/issues/761) |
+
+### Milestone: [Full Golden Coverage](https://github.com/tsukumogami/tsuku/milestone/29) (continued)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#722](https://github.com/tsukumogami/tsuku/issues/722) | docs(design): create design for structured install_guide | Done |
+| [#758](https://github.com/tsukumogami/tsuku/issues/758) | chore(recipes): discover recipes requiring migration | None |
+| [#772](https://github.com/tsukumogami/tsuku/issues/772) | chore(recipes): migrate existing recipes to typed actions | [#758](https://github.com/tsukumogami/tsuku/issues/758), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#771](https://github.com/tsukumogami/tsuku/issues/771), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
+| [#773](https://github.com/tsukumogami/tsuku/issues/773) | refactor(actions): remove legacy install_guide support | [#772](https://github.com/tsukumogami/tsuku/issues/772) |
+| [#774](https://github.com/tsukumogami/tsuku/issues/774) | feat(golden): enable golden files for system dependency recipes | [#772](https://github.com/tsukumogami/tsuku/issues/772), [#770](https://github.com/tsukumogami/tsuku/issues/770) |
+| [#745](https://github.com/tsukumogami/tsuku/issues/745) | chore(golden): enforce golden files for all recipes | [#721](https://github.com/tsukumogami/tsuku/issues/721), [#774](https://github.com/tsukumogami/tsuku/issues/774) |
 
 ### Dependency Graph
 
@@ -76,12 +100,27 @@ graph TD
         I721["#721: Documentation"]
     end
 
-    subgraph M29["Milestone 29: Full Golden Coverage"]
-        I745["#745: Enforce all recipes"]
+    subgraph M30["Milestone 30: Action Vocabulary"]
+        I754["#754: Target struct"]
+        I755["#755: Install actions"]
+        I756["#756: Config actions"]
+        I760["#760: Implicit constraints"]
+        I761["#761: Plan filtering"]
+        I765["#765: ExtractPackages"]
     end
 
-    subgraph M722["Milestone: System Dependencies (pending /plan)"]
-        I722["#722: Structured install_guide (designed)"]
+    subgraph M31["Milestone 31: Container Building"]
+        I757["#757: Container CI"]
+        I770["#770: Executor integration"]
+        I771["#771: Action execution"]
+    end
+
+    subgraph M29["Milestone 29: Full Golden Coverage"]
+        I722["#722: Design (done)"]
+        I758["#758: Discover recipes"]
+        I772["#772: Migrate recipes"]
+        I774["#774: Golden files"]
+        I745["#745: Enforce all recipes"]
     end
 
     I712 --> I713
@@ -96,20 +135,34 @@ graph TD
     I717 --> I721
     I718 --> I721
     I720 --> I721
+
+    I754 --> I760
+    I755 --> I760
+    I760 --> I761
+    I755 --> I765
+    I761 --> I770
+    I765 --> I770
+    I755 --> I771
+    I756 --> I771
+    I770 --> I771
+    I758 --> I772
+    I760 --> I772
+    I770 --> I772
+    I771 --> I772
+    I772 --> I774
     I721 --> I745
-    I722 --> I745
+    I774 --> I745
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
-    classDef designed fill:#b3e5fc
 
-    class I712,I713,I714,I715,I716,I717,I718,I719,I720,I721 done
-    class I745 blocked
-    class I722 designed
+    class I712,I713,I714,I715,I716,I717,I718,I719,I720,I721,I722 done
+    class I754,I755,I756,I757,I758 ready
+    class I760,I761,I765,I770,I771,I772,I774,I745 blocked
 ```
 
-**Legend**: Green = done, Light blue = designed (pending /plan), Yellow = blocked
+**Legend**: Green = done, Blue = ready, Yellow = blocked
 
 ## Context and Problem Statement
 
@@ -1469,13 +1522,13 @@ Validate approach and iterate on tooling.
 3. Create GitHub Action for automated version bump PRs
 4. Update PR template to note golden file requirements
 
-### Blocker: Structured System Dependencies (designed, pending implementation)
+### Blocker: Structured System Dependencies (implementation in progress)
 
 **Problem**: Recipes with system dependency steps cannot be execution-validated in the sandbox because the required system packages are not installed in the container.
 
 **Solution**: Issue [#722](https://github.com/tsukumogami/tsuku/issues/722) spawned two companion designs that address this blocker:
 
-1. **[DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)** - Defines typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) that replace free-form `install_guide` text with machine-parseable package specifications. Includes distro detection via `when = { distro = [...] }` clause.
+1. **[DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)** - Defines typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) that replace free-form `install_guide` text with machine-parseable package specifications. Includes `linux_family` detection for platform targeting.
 
 2. **[DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md)** - Defines how the sandbox executor uses these typed actions to build per-recipe containers dynamically, with package-set-based caching.
 
@@ -1484,14 +1537,17 @@ Validate approach and iterate on tooling.
 - Golden plans will exist for ALL recipes (no exclusions)
 - Execution validation will work for all recipe types
 
-**Acceptance criteria** (tracked in implementation issues after /plan):
-- [ ] Typed actions implemented (`apt_install`, `brew_cask`, `dnf_install`, etc.)
-- [ ] Distro detection via `/etc/os-release` parsing
-- [ ] `Describe()` generates human-readable instructions for documentation
-- [ ] Sandbox executor builds containers from typed actions
-- [ ] Container caching by package set hash
-- [ ] Recipes migrated from `require_system` + `install_guide` to typed actions
-- [ ] Golden plans exist for ALL recipes (no exclusions)
+**Acceptance criteria** (tracked via implementation issues):
+
+| Criterion | Issue |
+|-----------|-------|
+| Typed actions implemented (`apt_install`, `brew_cask`, `dnf_install`, etc.) | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) |
+| `linux_family` detection via `/etc/os-release` parsing | [#759](https://github.com/tsukumogami/tsuku/issues/759) |
+| `Describe()` generates human-readable instructions | [#763](https://github.com/tsukumogami/tsuku/issues/763) |
+| Sandbox executor builds containers from typed actions | [#770](https://github.com/tsukumogami/tsuku/issues/770) |
+| Container caching by package set hash | [#769](https://github.com/tsukumogami/tsuku/issues/769) |
+| Recipes migrated from `require_system` + `install_guide` | [#772](https://github.com/tsukumogami/tsuku/issues/772) |
+| Golden plans exist for ALL recipes (no exclusions) | [#774](https://github.com/tsukumogami/tsuku/issues/774), [#745](https://github.com/tsukumogami/tsuku/issues/745) |
 
 **Interim approach**:
 Until implementation is complete, recipes with `require_system` steps are excluded from execution validation but still have golden plans generated. The validation scripts will skip execution for these recipes and log a warning.
