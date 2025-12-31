@@ -71,8 +71,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I754,I755,I756,I759,I760,I762 done
-    class I761,I763,I764,I765 ready
+    class I754,I755,I756,I759,I760,I761,I762 done
+    class I763,I764,I765 ready
     class I766 blocked
 ```
 
