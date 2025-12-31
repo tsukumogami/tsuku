@@ -92,7 +92,7 @@ This design addresses:
 This design depends on [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) for:
 - Action vocabulary (`apt_install`, `brew_cask`, `require_command`, etc.)
 - Platform filtering via `when` clause with `linux_family` field
-- Hardcoded when clauses for package manager actions
+- Implicit constraints for package manager actions
 - Documentation generation via `Describe()` interface
 
 This design does NOT cover:
@@ -208,7 +208,7 @@ install_guide = "sudo apt install docker.io"
 
 #### Option 2B: Typed Actions
 
-Each operation is a separate step with a typed action. Simple and complex cases use the same syntax. Package manager actions have hardcoded `when` clauses (see [DESIGN-system-dependency-actions.md - D6](DESIGN-system-dependency-actions.md#d6-hardcoded-when-clauses-for-package-manager-actions)).
+Each operation is a separate step with a typed action. Simple and complex cases use the same syntax. Package manager actions have implicit constraints (see [DESIGN-system-dependency-actions.md - D6](DESIGN-system-dependency-actions.md#d6-implicit-constraints-for-package-manager-actions)).
 
 **Simple case:**
 ```toml
@@ -360,7 +360,7 @@ Support core managers (apt, brew, dnf) with an extensible schema for adding othe
 
 ### Summary
 
-We replace `install_guide` and the polymorphic `require_system` with typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Package manager actions have hardcoded `when` clauses based on `linux_family` (e.g., `apt_install` implies `when = { linux_family = "debian" }`). The sandbox base container is stripped to minimal, forcing complete dependency declarations. We support core package managers initially with an extensible action system.
+We replace `install_guide` and the polymorphic `require_system` with typed actions (`apt_install`, `brew_cask`, `require_command`, etc.) from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Package manager actions have implicit constraints based on `linux_family` (e.g., `apt_install` implies `linux_family = "debian"`). The sandbox base container is stripped to minimal, forcing complete dependency declarations. We support core package managers initially with an extensible action system.
 
 ### Rationale
 
@@ -400,7 +400,7 @@ The verbosity trade-off (separate steps per platform) is acceptable because:
 ### Design Principles
 
 1. **Platform filtering via `when`**: Use the step-level `when` clause with `linux_family` support
-2. **Hardcoded when clauses**: Package manager actions have implicit, immutable when clauses (see [D6](DESIGN-system-dependency-actions.md#d6-hardcoded-when-clauses-for-package-manager-actions))
+2. **Implicit constraints**: Package manager actions have implicit, immutable constraints (see [D6](DESIGN-system-dependency-actions.md#d6-implicit-constraints-for-package-manager-actions))
 3. **No shell commands**: All operations use typed actions that can be statically analyzed
 4. **Content-addressed resources**: All external URLs require SHA256 hashes
 5. **Typed actions**: Each action has a well-defined schema from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md)
@@ -408,7 +408,7 @@ The verbosity trade-off (separate steps per platform) is acceptable because:
 
 ### Step Structure
 
-System dependencies use typed actions from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Package manager actions have hardcoded `when` clauses based on `linux_family`:
+System dependencies use typed actions from [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md). Package manager actions have implicit constraints based on `linux_family`:
 
 **Simple case** (single package manager):
 ```toml
@@ -627,7 +627,7 @@ func DeriveContainerSpec(packages map[string][]string) *ContainerSpec {
 }
 ```
 
-**Note:** The plan passed to `ExtractPackages` is already filtered for the target platform. The `when` clause filtering (including `linux_family` detection and hardcoded PM action constraints) happens during plan generation.
+**Note:** The plan passed to `ExtractPackages` is already filtered for the target platform. The filtering (including `linux_family` detection and implicit PM action constraints) happens during plan generation.
 
 **Implementation note:** The current `Runtime` interface (`internal/validate/runtime.go`) only supports `Run()`. Container building requires adding:
 - `Build(ctx context.Context, dockerfile string, imageName string) error` - Build image from Dockerfile

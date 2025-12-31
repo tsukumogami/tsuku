@@ -9,7 +9,7 @@ This document outlines the implementation issues for the two companion designs t
 
 ```
 M-Actions: System Dependency Action Vocabulary
-    └─ Linux family detection, action types, hardcoded when clauses, documentation generation
+    └─ Linux family detection, action types, implicit constraints, documentation generation
 
 M-Sandbox: Sandbox Container Building (depends on M-Actions)
     └─ Container derivation, caching, executor integration
@@ -102,7 +102,7 @@ Implement `FilterPlan(recipe, target)` that filters recipe steps based on the ta
 - `internal/recipe/when.go` - WhenClause (unchanged)
 - `internal/platform/target.go` - Target struct
 
-**Dependencies**: A1, A2, A4c (needs ImplicitConstraint interface)
+**Dependencies**: A1, A4c (needs ImplicitConstraint interface)
 
 ---
 
@@ -197,7 +197,7 @@ Each PM-specific action has an implicit, immutable constraint baked into its def
 - `internal/actions/` - Action implementations
 - `internal/platform/target.go` - Target struct
 
-**Dependencies**: A1, A4a, A4b
+**Dependencies**: A1, A4a
 
 ---
 
@@ -692,8 +692,7 @@ graph TD
     A1 --> A2
     A1 --> A4c
     A4a --> A4c
-    A4b --> A4c
-    A2 --> A3
+    A1 --> A3
     A4c --> A3
     A4a --> A5
     A4b --> A5
@@ -746,7 +745,7 @@ graph TD
 
 | From | To | Reason |
 |------|-----|--------|
-| A1 (Target struct) | A2, A4c | Detection and constraints need Target type |
+| A1 (Target struct) | A2, A3, A4c | Detection, filtering, and constraints need Target type |
 | A3 (Plan filtering) | S4 | Sandbox needs FilterPlan for target-based filtering |
 | A4a (Install action structs) | S5, A9 | Sandbox needs install action types |
 | A4b (Config/verify action structs) | S5, A8 | Verification needs action types |
@@ -761,7 +760,7 @@ graph TD
 ## Notes
 
 1. **Parallelism**: A4a/A4b can run in parallel with A1→A2; S0 can start early; C0 can start before M-Sandbox completes
-2. **Critical path**: A1 → A2/A4c → A3 → S4 → C1 → C4 (targeting support is on critical path)
+2. **Critical path**: A1 → A4a → A4c → A3 → S4 → C1 → C4 (sandbox path; A2 is on CLI path A7)
 3. **Target model**: Plans are filtered by `Target{Platform, LinuxFamily}` tuple; containers are derived from target
 4. **Separation of concerns**: `WhenClause` stays generic (os, arch, platform); PM constraints are action-level via `ImplicitConstraint()`
 5. **Risk areas**: S1 (base container size - mitigated by bookworm-slim decision), C1 (mitigated by C0 discovery)
