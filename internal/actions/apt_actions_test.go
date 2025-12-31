@@ -414,3 +414,120 @@ func TestAptPPAAction_Preflight(t *testing.T) {
 		})
 	}
 }
+
+func TestAptInstallAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &AptInstallAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing packages",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "single package",
+			params: map[string]interface{}{
+				"packages": []interface{}{"curl"},
+			},
+			want: "sudo apt-get install -y curl",
+		},
+		{
+			name: "multiple packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"build-essential", "libssl-dev"},
+			},
+			want: "sudo apt-get install -y build-essential libssl-dev",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAptRepoAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &AptRepoAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing url",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "missing key_url",
+			params: map[string]interface{}{
+				"url": "https://download.docker.com/linux/ubuntu",
+			},
+			want: "",
+		},
+		{
+			name: "valid params",
+			params: map[string]interface{}{
+				"url":     "https://download.docker.com/linux/ubuntu",
+				"key_url": "https://download.docker.com/linux/ubuntu/gpg",
+			},
+			want: "curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/repo.gpg && " +
+				"echo \"deb [signed-by=/etc/apt/keyrings/repo.gpg] https://download.docker.com/linux/ubuntu stable main\" | " +
+				"sudo tee /etc/apt/sources.list.d/repo.list",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestAptPPAAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &AptPPAAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing ppa",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name:   "valid ppa",
+			params: map[string]interface{}{"ppa": "deadsnakes/ppa"},
+			want:   "sudo add-apt-repository ppa:deadsnakes/ppa",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

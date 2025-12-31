@@ -1,6 +1,9 @@
 package actions
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // Linux family constraints for each package manager.
 var (
@@ -56,6 +59,15 @@ func (a *PacmanInstallAction) Execute(ctx *ExecutionContext, params map[string]i
 	return nil
 }
 
+// Describe returns a copy-pasteable pacman install command.
+func (a *PacmanInstallAction) Describe(params map[string]interface{}) string {
+	packages, ok := GetStringSlice(params, "packages")
+	if !ok || len(packages) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("sudo pacman -S --noconfirm %s", strings.Join(packages, " "))
+}
+
 // ApkInstallAction installs packages using apk on Alpine Linux.
 //
 // Parameters:
@@ -100,6 +112,15 @@ func (a *ApkInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	fmt.Printf("   Would install via apk: %v\n", packages)
 	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
 	return nil
+}
+
+// Describe returns a copy-pasteable apk add command.
+func (a *ApkInstallAction) Describe(params map[string]interface{}) string {
+	packages, ok := GetStringSlice(params, "packages")
+	if !ok || len(packages) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("sudo apk add %s", strings.Join(packages, " "))
 }
 
 // ZypperInstallAction installs packages using zypper on SUSE-family systems.
@@ -147,4 +168,13 @@ func (a *ZypperInstallAction) Execute(ctx *ExecutionContext, params map[string]i
 	fmt.Printf("   Would install via zypper: %v\n", packages)
 	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
 	return nil
+}
+
+// Describe returns a copy-pasteable zypper install command.
+func (a *ZypperInstallAction) Describe(params map[string]interface{}) string {
+	packages, ok := GetStringSlice(params, "packages")
+	if !ok || len(packages) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("sudo zypper install -y %s", strings.Join(packages, " "))
 }

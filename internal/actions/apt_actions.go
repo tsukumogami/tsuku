@@ -1,6 +1,9 @@
 package actions
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 // debianConstraint is the implicit constraint for all apt-based actions.
 var debianConstraint = &Constraint{OS: "linux", LinuxFamily: "debian"}
@@ -50,6 +53,15 @@ func (a *AptInstallAction) Execute(ctx *ExecutionContext, params map[string]inte
 	fmt.Printf("   Would install via apt: %v\n", packages)
 	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
 	return nil
+}
+
+// Describe returns a copy-pasteable apt-get install command.
+func (a *AptInstallAction) Describe(params map[string]interface{}) string {
+	packages, ok := GetStringSlice(params, "packages")
+	if !ok || len(packages) == 0 {
+		return ""
+	}
+	return fmt.Sprintf("sudo apt-get install -y %s", strings.Join(packages, " "))
 }
 
 // AptRepoAction adds an APT repository with its GPG key.
@@ -124,6 +136,20 @@ func (a *AptRepoAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	return nil
 }
 
+// Describe returns instructions for adding an APT repository.
+// The output includes fetching the GPG key and adding the repository.
+func (a *AptRepoAction) Describe(params map[string]interface{}) string {
+	url, hasURL := GetString(params, "url")
+	keyURL, hasKeyURL := GetString(params, "key_url")
+	if !hasURL || !hasKeyURL || url == "" || keyURL == "" {
+		return ""
+	}
+	// Generate a simple repo name from the URL for the keyring filename
+	return fmt.Sprintf("curl -fsSL %s | sudo gpg --dearmor -o /etc/apt/keyrings/repo.gpg && "+
+		"echo \"deb [signed-by=/etc/apt/keyrings/repo.gpg] %s stable main\" | "+
+		"sudo tee /etc/apt/sources.list.d/repo.list", keyURL, url)
+}
+
 // AptPPAAction adds an Ubuntu PPA (Personal Package Archive).
 // This is a system action that requires sudo and modifies the system state.
 // Note: PPAs are Ubuntu-specific but work on Ubuntu derivatives.
@@ -173,4 +199,13 @@ func (a *AptPPAAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	fmt.Printf("   Would add PPA: %s\n", ppa)
 	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
 	return nil
+}
+
+// Describe returns a copy-pasteable add-apt-repository command.
+func (a *AptPPAAction) Describe(params map[string]interface{}) string {
+	ppa, ok := GetString(params, "ppa")
+	if !ok || ppa == "" {
+		return ""
+	}
+	return fmt.Sprintf("sudo add-apt-repository ppa:%s", ppa)
 }

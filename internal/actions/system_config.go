@@ -53,6 +53,29 @@ func (a *GroupAddAction) Execute(ctx *ExecutionContext, params map[string]interf
 	return nil
 }
 
+// Validate checks that required parameters are present and valid.
+func (a *GroupAddAction) Validate(params map[string]interface{}) error {
+	group, ok := GetString(params, "group")
+	if !ok || group == "" {
+		return fmt.Errorf("group_add requires 'group' parameter")
+	}
+	return nil
+}
+
+// ImplicitConstraint returns nil since group_add works on all platforms.
+func (a *GroupAddAction) ImplicitConstraint() *Constraint {
+	return nil
+}
+
+// Describe returns a copy-pasteable usermod command.
+func (a *GroupAddAction) Describe(params map[string]interface{}) string {
+	group, ok := GetString(params, "group")
+	if !ok || group == "" {
+		return ""
+	}
+	return fmt.Sprintf("sudo usermod -aG %s $USER", group)
+}
+
 // ServiceEnableAction enables a systemd service.
 // This action does not execute on the host - it provides structured data
 // for documentation generation and sandbox container building.
@@ -99,6 +122,29 @@ func (a *ServiceEnableAction) Execute(ctx *ExecutionContext, params map[string]i
 	return nil
 }
 
+// Validate checks that required parameters are present and valid.
+func (a *ServiceEnableAction) Validate(params map[string]interface{}) error {
+	service, ok := GetString(params, "service")
+	if !ok || service == "" {
+		return fmt.Errorf("service_enable requires 'service' parameter")
+	}
+	return nil
+}
+
+// ImplicitConstraint returns nil since service_enable works on all platforms with systemd.
+func (a *ServiceEnableAction) ImplicitConstraint() *Constraint {
+	return nil
+}
+
+// Describe returns a copy-pasteable systemctl enable command.
+func (a *ServiceEnableAction) Describe(params map[string]interface{}) string {
+	service, ok := GetString(params, "service")
+	if !ok || service == "" {
+		return ""
+	}
+	return fmt.Sprintf("sudo systemctl enable %s", service)
+}
+
 // ServiceStartAction starts a systemd service.
 // This action does not execute on the host - it provides structured data
 // for documentation generation and sandbox container building.
@@ -143,6 +189,29 @@ func (a *ServiceStartAction) Execute(ctx *ExecutionContext, params map[string]in
 	fmt.Printf("   Would start service: %s\n", service)
 	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
 	return nil
+}
+
+// Validate checks that required parameters are present and valid.
+func (a *ServiceStartAction) Validate(params map[string]interface{}) error {
+	service, ok := GetString(params, "service")
+	if !ok || service == "" {
+		return fmt.Errorf("service_start requires 'service' parameter")
+	}
+	return nil
+}
+
+// ImplicitConstraint returns nil since service_start works on all platforms with systemd.
+func (a *ServiceStartAction) ImplicitConstraint() *Constraint {
+	return nil
+}
+
+// Describe returns a copy-pasteable systemctl start command.
+func (a *ServiceStartAction) Describe(params map[string]interface{}) string {
+	service, ok := GetString(params, "service")
+	if !ok || service == "" {
+		return ""
+	}
+	return fmt.Sprintf("sudo systemctl start %s", service)
 }
 
 // RequireCommandAction verifies that a command exists in PATH.
@@ -255,6 +324,33 @@ func (a *RequireCommandAction) Execute(ctx *ExecutionContext, params map[string]
 	return nil
 }
 
+// Validate checks that required parameters are present and valid.
+func (a *RequireCommandAction) Validate(params map[string]interface{}) error {
+	command, ok := GetString(params, "command")
+	if !ok || command == "" {
+		return fmt.Errorf("require_command requires 'command' parameter")
+	}
+	return nil
+}
+
+// ImplicitConstraint returns nil since require_command works on all platforms.
+func (a *RequireCommandAction) ImplicitConstraint() *Constraint {
+	return nil
+}
+
+// Describe returns an informational message about the command requirement.
+func (a *RequireCommandAction) Describe(params map[string]interface{}) string {
+	command, ok := GetString(params, "command")
+	if !ok || command == "" {
+		return ""
+	}
+	minVersion, hasMinVersion := GetString(params, "min_version")
+	if hasMinVersion && minVersion != "" {
+		return fmt.Sprintf("Requires: %s (version >= %s)", command, minVersion)
+	}
+	return fmt.Sprintf("Requires: %s", command)
+}
+
 // ManualAction displays instructions for manual installation.
 // This action is used when automation is not possible or not desired.
 type ManualAction struct{ BaseAction }
@@ -296,6 +392,29 @@ func (a *ManualAction) Execute(ctx *ExecutionContext, params map[string]interfac
 	fmt.Printf("   ╰───────────────────────────────────────────────────────────╯\n\n")
 
 	return nil
+}
+
+// Validate checks that required parameters are present and valid.
+func (a *ManualAction) Validate(params map[string]interface{}) error {
+	text, ok := GetString(params, "text")
+	if !ok || text == "" {
+		return fmt.Errorf("manual requires 'text' parameter")
+	}
+	return nil
+}
+
+// ImplicitConstraint returns nil since manual works on all platforms.
+func (a *ManualAction) ImplicitConstraint() *Constraint {
+	return nil
+}
+
+// Describe returns the manual instruction text directly.
+func (a *ManualAction) Describe(params map[string]interface{}) string {
+	text, ok := GetString(params, "text")
+	if !ok {
+		return ""
+	}
+	return text
 }
 
 // isValidGroupName checks if a group name is valid.
