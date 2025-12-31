@@ -2,7 +2,80 @@
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [System Dependency Action Vocabulary](https://github.com/tsukumogami/tsuku/milestone/30)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#754](https://github.com/tsukumogami/tsuku/issues/754) | feat(platform): define target struct for plan generation | None |
+| [#755](https://github.com/tsukumogami/tsuku/issues/755) | feat(actions): define package installation action structs | None |
+| [#756](https://github.com/tsukumogami/tsuku/issues/756) | feat(actions): define configuration and verification action structs | None |
+| [#759](https://github.com/tsukumogami/tsuku/issues/759) | feat(platform): implement linux_family detection | [#754](https://github.com/tsukumogami/tsuku/issues/754) |
+| [#760](https://github.com/tsukumogami/tsuku/issues/760) | feat(actions): implement implicit constraints for PM actions | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#755](https://github.com/tsukumogami/tsuku/issues/755) |
+| [#761](https://github.com/tsukumogami/tsuku/issues/761) | feat(executor): implement plan filtering by target | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
+| [#762](https://github.com/tsukumogami/tsuku/issues/762) | feat(actions): implement action preflight validation | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) |
+| [#763](https://github.com/tsukumogami/tsuku/issues/763) | feat(actions): implement Describe() for documentation generation | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) |
+| [#764](https://github.com/tsukumogami/tsuku/issues/764) | feat(cli): add --verify flag for system dependency check | [#756](https://github.com/tsukumogami/tsuku/issues/756) |
+| [#765](https://github.com/tsukumogami/tsuku/issues/765) | feat(sandbox): implement ExtractPackages() for sandbox integration | [#755](https://github.com/tsukumogami/tsuku/issues/755) |
+| [#766](https://github.com/tsukumogami/tsuku/issues/766) | feat(cli): update CLI to display system dependency instructions | [#759](https://github.com/tsukumogami/tsuku/issues/759), [#761](https://github.com/tsukumogami/tsuku/issues/761), [#763](https://github.com/tsukumogami/tsuku/issues/763), [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Infrastructure"]
+        I754["#754: Target struct"]
+        I755["#755: Install action structs"]
+        I756["#756: Config/verify structs"]
+    end
+
+    subgraph Phase2["Phase 2: Core Features"]
+        I759["#759: linux_family detection"]
+        I760["#760: Implicit constraints"]
+        I761["#761: Plan filtering"]
+    end
+
+    subgraph Phase3["Phase 3: Validation & Docs"]
+        I762["#762: Preflight validation"]
+        I763["#763: Describe() method"]
+        I764["#764: --verify flag"]
+        I765["#765: ExtractPackages()"]
+    end
+
+    subgraph Phase4["Phase 4: CLI Integration"]
+        I766["#766: CLI instructions"]
+    end
+
+    I754 --> I759
+    I754 --> I760
+    I755 --> I760
+    I754 --> I761
+    I760 --> I761
+    I755 --> I762
+    I756 --> I762
+    I755 --> I763
+    I756 --> I763
+    I756 --> I764
+    I755 --> I765
+    I759 --> I766
+    I761 --> I766
+    I763 --> I766
+    I755 --> I766
+    I756 --> I766
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I754,I755,I756 ready
+    class I759,I760,I761,I762,I763,I764,I765,I766 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 

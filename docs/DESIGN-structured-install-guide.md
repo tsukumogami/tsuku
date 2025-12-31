@@ -2,7 +2,92 @@
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Sandbox Container Building](https://github.com/tsukumogami/tsuku/milestone/31)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#757](https://github.com/tsukumogami/tsuku/issues/757) | ci(sandbox): create container build CI workflow | None |
+| [#767](https://github.com/tsukumogami/tsuku/issues/767) | feat(sandbox): create minimal base container Dockerfile | [#757](https://github.com/tsukumogami/tsuku/issues/757) |
+| [#768](https://github.com/tsukumogami/tsuku/issues/768) | feat(sandbox): implement container spec derivation | [#765](https://github.com/tsukumogami/tsuku/issues/765) |
+| [#769](https://github.com/tsukumogami/tsuku/issues/769) | feat(sandbox): implement container image caching | [#768](https://github.com/tsukumogami/tsuku/issues/768) |
+| [#770](https://github.com/tsukumogami/tsuku/issues/770) | feat(sandbox): integrate container building with sandbox executor | [#761](https://github.com/tsukumogami/tsuku/issues/761), [#767](https://github.com/tsukumogami/tsuku/issues/767), [#768](https://github.com/tsukumogami/tsuku/issues/768), [#769](https://github.com/tsukumogami/tsuku/issues/769), [#765](https://github.com/tsukumogami/tsuku/issues/765) |
+| [#771](https://github.com/tsukumogami/tsuku/issues/771) | feat(sandbox): implement action execution in sandbox context | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#761](https://github.com/tsukumogami/tsuku/issues/761) |
+
+### Milestone: [Full Golden Coverage](https://github.com/tsukumogami/tsuku/milestone/29)
+
+| Issue | Title | Dependencies |
+|-------|-------|--------------|
+| [#758](https://github.com/tsukumogami/tsuku/issues/758) | chore(recipes): discover recipes requiring migration | None |
+| [#772](https://github.com/tsukumogami/tsuku/issues/772) | chore(recipes): migrate existing recipes to typed actions | [#758](https://github.com/tsukumogami/tsuku/issues/758), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#771](https://github.com/tsukumogami/tsuku/issues/771), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
+| [#773](https://github.com/tsukumogami/tsuku/issues/773) | refactor(actions): remove legacy install_guide support | [#772](https://github.com/tsukumogami/tsuku/issues/772) |
+| [#774](https://github.com/tsukumogami/tsuku/issues/774) | feat(golden): enable golden files for system dependency recipes | [#772](https://github.com/tsukumogami/tsuku/issues/772), [#770](https://github.com/tsukumogami/tsuku/issues/770) |
+| [#775](https://github.com/tsukumogami/tsuku/issues/775) | chore(golden): unblock #745 - enforce golden files for all recipes | [#774](https://github.com/tsukumogami/tsuku/issues/774) |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Actions["M-Actions (prerequisite)"]
+        I755["#755: Install actions"]
+        I756["#756: Config actions"]
+        I760["#760: Implicit constraints"]
+        I761["#761: Plan filtering"]
+        I765["#765: ExtractPackages"]
+    end
+
+    subgraph Sandbox["M-Sandbox: Container Building"]
+        I757["#757: Container CI"]
+        I767["#767: Base container"]
+        I768["#768: Container spec"]
+        I769["#769: Image caching"]
+        I770["#770: Executor integration"]
+        I771["#771: Action execution"]
+    end
+
+    subgraph Coverage["M-Coverage: Golden Coverage"]
+        I758["#758: Discover recipes"]
+        I772["#772: Migrate recipes"]
+        I773["#773: Remove install_guide"]
+        I774["#774: Golden files"]
+        I775["#775: Unblock #745"]
+    end
+
+    I757 --> I767
+    I765 --> I768
+    I768 --> I769
+    I761 --> I770
+    I767 --> I770
+    I768 --> I770
+    I769 --> I770
+    I765 --> I770
+    I755 --> I771
+    I756 --> I771
+    I770 --> I771
+    I761 --> I771
+    I758 --> I772
+    I770 --> I772
+    I771 --> I772
+    I760 --> I772
+    I772 --> I773
+    I772 --> I774
+    I770 --> I774
+    I774 --> I775
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I757,I758 ready
+    class I755,I756,I760,I761,I765 blocked
+    class I767,I768,I769,I770,I771,I772,I773,I774,I775 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Scope
 
