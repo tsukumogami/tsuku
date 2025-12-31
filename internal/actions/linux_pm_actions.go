@@ -34,6 +34,11 @@ func (a *PacmanInstallAction) Validate(params map[string]interface{}) error {
 	return err
 }
 
+// Preflight validates parameters without side effects.
+func (a *PacmanInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
+	return ValidatePackagesPreflight(params, a.Name())
+}
+
 // ImplicitConstraint returns the Arch family constraint.
 func (a *PacmanInstallAction) ImplicitConstraint() *Constraint {
 	return archConstraint
@@ -73,6 +78,11 @@ func (a *ApkInstallAction) Name() string {
 func (a *ApkInstallAction) Validate(params map[string]interface{}) error {
 	_, err := ValidatePackages(params, a.Name())
 	return err
+}
+
+// Preflight validates parameters without side effects.
+func (a *ApkInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
+	return ValidatePackagesPreflight(params, a.Name())
 }
 
 // ImplicitConstraint returns the Alpine constraint.
@@ -115,6 +125,11 @@ func (a *ZypperInstallAction) Name() string {
 func (a *ZypperInstallAction) Validate(params map[string]interface{}) error {
 	_, err := ValidatePackages(params, a.Name())
 	return err
+}
+
+// Preflight validates parameters without side effects.
+func (a *ZypperInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
+	return ValidatePackagesPreflight(params, a.Name())
 }
 
 // ImplicitConstraint returns the SUSE family constraint.

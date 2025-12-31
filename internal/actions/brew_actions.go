@@ -31,6 +31,11 @@ func (a *BrewInstallAction) Validate(params map[string]interface{}) error {
 	return err
 }
 
+// Preflight validates parameters without side effects.
+func (a *BrewInstallAction) Preflight(params map[string]interface{}) *PreflightResult {
+	return ValidatePackagesPreflight(params, a.Name())
+}
+
 // ImplicitConstraint returns the darwin constraint.
 func (a *BrewInstallAction) ImplicitConstraint() *Constraint {
 	return darwinConstraint
@@ -72,6 +77,11 @@ func (a *BrewCaskAction) Name() string {
 func (a *BrewCaskAction) Validate(params map[string]interface{}) error {
 	_, err := ValidatePackages(params, a.Name())
 	return err
+}
+
+// Preflight validates parameters without side effects.
+func (a *BrewCaskAction) Preflight(params map[string]interface{}) *PreflightResult {
+	return ValidatePackagesPreflight(params, a.Name())
 }
 
 // ImplicitConstraint returns the darwin constraint.

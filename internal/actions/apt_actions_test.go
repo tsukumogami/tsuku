@@ -1,6 +1,9 @@
 package actions
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestAptInstallAction_Name(t *testing.T) {
 	t.Parallel()
@@ -96,6 +99,55 @@ func TestAptInstallAction_RequiresNetwork(t *testing.T) {
 	}
 }
 
+func TestAptInstallAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &AptInstallAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing packages",
+			params:     map[string]interface{}{},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+		{
+			name: "valid packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"build-essential", "libssl-dev"},
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "empty packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{},
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				if !strings.Contains(result.Errors[0], tt.wantErrMsg) {
+					t.Errorf("Preflight() error = %q, want to contain %q", result.Errors[0], tt.wantErrMsg)
+				}
+			}
+		})
+	}
+}
+
 func TestAptRepoAction_Name(t *testing.T) {
 	t.Parallel()
 	action := &AptRepoAction{}
@@ -171,6 +223,95 @@ func TestAptRepoAction_Validate(t *testing.T) {
 	}
 }
 
+func TestAptRepoAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &AptRepoAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing all fields",
+			params:     map[string]interface{}{},
+			wantErrors: 3,
+			wantErrMsg: "requires",
+		},
+		{
+			name: "missing key_sha256",
+			params: map[string]interface{}{
+				"url":     "https://download.docker.com/linux/ubuntu",
+				"key_url": "https://download.docker.com/linux/ubuntu/gpg",
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires 'key_sha256' parameter",
+		},
+		{
+			name: "valid params",
+			params: map[string]interface{}{
+				"url":        "https://download.docker.com/linux/ubuntu",
+				"key_url":    "https://download.docker.com/linux/ubuntu/gpg",
+				"key_sha256": "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570",
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "http url rejected",
+			params: map[string]interface{}{
+				"url":        "http://download.docker.com/linux/ubuntu",
+				"key_url":    "https://download.docker.com/linux/ubuntu/gpg",
+				"key_sha256": "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570",
+			},
+			wantErrors: 1,
+			wantErrMsg: "must use HTTPS",
+		},
+		{
+			name: "http key_url rejected",
+			params: map[string]interface{}{
+				"url":        "https://download.docker.com/linux/ubuntu",
+				"key_url":    "http://download.docker.com/linux/ubuntu/gpg",
+				"key_sha256": "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570",
+			},
+			wantErrors: 1,
+			wantErrMsg: "must use HTTPS",
+		},
+		{
+			name: "both http urls rejected",
+			params: map[string]interface{}{
+				"url":        "http://download.docker.com/linux/ubuntu",
+				"key_url":    "http://download.docker.com/linux/ubuntu/gpg",
+				"key_sha256": "1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975eb98170b3a570",
+			},
+			wantErrors: 2,
+			wantErrMsg: "must use HTTPS",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				found := false
+				for _, err := range result.Errors {
+					if strings.Contains(err, tt.wantErrMsg) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Preflight() errors = %v, want to contain %q", result.Errors, tt.wantErrMsg)
+				}
+			}
+		})
+	}
+}
+
 func TestAptPPAAction_Name(t *testing.T) {
 	t.Parallel()
 	action := &AptPPAAction{}
@@ -224,6 +365,51 @@ func TestAptPPAAction_Validate(t *testing.T) {
 			err := action.Validate(tt.params)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestAptPPAAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &AptPPAAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing ppa",
+			params:     map[string]interface{}{},
+			wantErrors: 1,
+			wantErrMsg: "requires 'ppa' parameter",
+		},
+		{
+			name:       "empty ppa",
+			params:     map[string]interface{}{"ppa": ""},
+			wantErrors: 1,
+			wantErrMsg: "requires 'ppa' parameter",
+		},
+		{
+			name:       "valid ppa",
+			params:     map[string]interface{}{"ppa": "deadsnakes/ppa"},
+			wantErrors: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				if !strings.Contains(result.Errors[0], tt.wantErrMsg) {
+					t.Errorf("Preflight() error = %q, want to contain %q", result.Errors[0], tt.wantErrMsg)
+				}
 			}
 		})
 	}

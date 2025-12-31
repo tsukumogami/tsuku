@@ -1,6 +1,9 @@
 package actions
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestDnfInstallAction_Name(t *testing.T) {
 	t.Parallel()
@@ -96,6 +99,55 @@ func TestDnfInstallAction_RequiresNetwork(t *testing.T) {
 	}
 }
 
+func TestDnfInstallAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &DnfInstallAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing packages",
+			params:     map[string]interface{}{},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+		{
+			name: "valid packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"gcc", "openssl-devel"},
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "empty packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{},
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires non-empty 'packages' parameter",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				if !strings.Contains(result.Errors[0], tt.wantErrMsg) {
+					t.Errorf("Preflight() error = %q, want to contain %q", result.Errors[0], tt.wantErrMsg)
+				}
+			}
+		})
+	}
+}
+
 func TestDnfRepoAction_Name(t *testing.T) {
 	t.Parallel()
 	action := &DnfRepoAction{}
@@ -166,6 +218,85 @@ func TestDnfRepoAction_Validate(t *testing.T) {
 			err := action.Validate(tt.params)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Validate() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestDnfRepoAction_Preflight(t *testing.T) {
+	t.Parallel()
+	action := &DnfRepoAction{}
+
+	tests := []struct {
+		name       string
+		params     map[string]interface{}
+		wantErrors int
+		wantErrMsg string
+	}{
+		{
+			name:       "missing all fields",
+			params:     map[string]interface{}{},
+			wantErrors: 3,
+			wantErrMsg: "requires",
+		},
+		{
+			name: "missing key_sha256",
+			params: map[string]interface{}{
+				"url":     "https://download.docker.com/linux/fedora/docker-ce.repo",
+				"key_url": "https://download.docker.com/linux/fedora/gpg",
+			},
+			wantErrors: 1,
+			wantErrMsg: "requires 'key_sha256' parameter",
+		},
+		{
+			name: "valid params",
+			params: map[string]interface{}{
+				"url":        "https://download.docker.com/linux/fedora/docker-ce.repo",
+				"key_url":    "https://download.docker.com/linux/fedora/gpg",
+				"key_sha256": "abcd1234567890",
+			},
+			wantErrors: 0,
+		},
+		{
+			name: "http url rejected",
+			params: map[string]interface{}{
+				"url":        "http://download.docker.com/linux/fedora/docker-ce.repo",
+				"key_url":    "https://download.docker.com/linux/fedora/gpg",
+				"key_sha256": "abcd1234567890",
+			},
+			wantErrors: 1,
+			wantErrMsg: "must use HTTPS",
+		},
+		{
+			name: "http key_url rejected",
+			params: map[string]interface{}{
+				"url":        "https://download.docker.com/linux/fedora/docker-ce.repo",
+				"key_url":    "http://download.docker.com/linux/fedora/gpg",
+				"key_sha256": "abcd1234567890",
+			},
+			wantErrors: 1,
+			wantErrMsg: "must use HTTPS",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			result := action.Preflight(tt.params)
+			if len(result.Errors) != tt.wantErrors {
+				t.Errorf("Preflight() errors = %v, want %d errors", result.Errors, tt.wantErrors)
+			}
+			if tt.wantErrMsg != "" && len(result.Errors) > 0 {
+				found := false
+				for _, err := range result.Errors {
+					if strings.Contains(err, tt.wantErrMsg) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("Preflight() errors = %v, want to contain %q", result.Errors, tt.wantErrMsg)
+				}
 			}
 		})
 	}
