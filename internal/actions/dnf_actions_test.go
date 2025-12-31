@@ -301,3 +301,78 @@ func TestDnfRepoAction_Preflight(t *testing.T) {
 		})
 	}
 }
+
+func TestDnfInstallAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &DnfInstallAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing packages",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "single package",
+			params: map[string]interface{}{
+				"packages": []interface{}{"docker-ce"},
+			},
+			want: "sudo dnf install -y docker-ce",
+		},
+		{
+			name: "multiple packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"docker-ce", "containerd.io"},
+			},
+			want: "sudo dnf install -y docker-ce containerd.io",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDnfRepoAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &DnfRepoAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing url",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "valid url",
+			params: map[string]interface{}{
+				"url": "https://download.docker.com/linux/fedora/docker-ce.repo",
+			},
+			want: "sudo dnf config-manager --add-repo https://download.docker.com/linux/fedora/docker-ce.repo",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}

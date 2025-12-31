@@ -57,6 +57,11 @@ type SystemAction interface {
 	// Package manager actions have immutable constraints (e.g., apt_install -> debian).
 	// Returns nil if the action has no implicit constraint and works on all platforms.
 	ImplicitConstraint() *Constraint
+
+	// Describe returns human-readable instructions for this action.
+	// The output should be copy-pasteable shell commands.
+	// Returns empty string if params are invalid.
+	Describe(params map[string]interface{}) string
 }
 
 // BaseSystemFields provides shared fields for system install actions.

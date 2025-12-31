@@ -297,3 +297,85 @@ func TestBrewCaskAction_Preflight(t *testing.T) {
 		})
 	}
 }
+
+func TestBrewInstallAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &BrewInstallAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing packages",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "single package",
+			params: map[string]interface{}{
+				"packages": []interface{}{"openssl"},
+			},
+			want: "brew install openssl",
+		},
+		{
+			name: "multiple packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"openssl", "libyaml"},
+			},
+			want: "brew install openssl libyaml",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBrewCaskAction_Describe(t *testing.T) {
+	t.Parallel()
+	action := &BrewCaskAction{}
+
+	tests := []struct {
+		name   string
+		params map[string]interface{}
+		want   string
+	}{
+		{
+			name:   "missing packages",
+			params: map[string]interface{}{},
+			want:   "",
+		},
+		{
+			name: "single package",
+			params: map[string]interface{}{
+				"packages": []interface{}{"docker"},
+			},
+			want: "brew install --cask docker",
+		},
+		{
+			name: "multiple packages",
+			params: map[string]interface{}{
+				"packages": []interface{}{"docker", "visual-studio-code"},
+			},
+			want: "brew install --cask docker visual-studio-code",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			got := action.Describe(tt.params)
+			if got != tt.want {
+				t.Errorf("Describe() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
