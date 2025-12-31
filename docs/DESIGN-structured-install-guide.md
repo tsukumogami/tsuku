@@ -100,6 +100,24 @@ This design does NOT cover:
 - Replacing package managers (apt, brew, etc.)
 - Container image management as a user-facing feature
 
+### Bootstrap Requirements
+
+Empirical testing across Linux distributions revealed that Debian and Ubuntu base images lack both download tools and CA certificates:
+
+| Distro | curl | wget | CA certificates |
+|--------|------|------|-----------------|
+| debian:bookworm-slim | MISSING | MISSING | MISSING |
+| ubuntu:24.04 | MISSING | MISSING | MISSING |
+| fedora:41 | present | MISSING | present |
+| alpine:3.19 | MISSING | present | present |
+| archlinux:base | present | MISSING | present |
+
+**Implication:** On fresh Debian/Ubuntu systems, tsuku cannot make HTTPS requests until the user installs `ca-certificates`. This is a bootstrap problem - tsuku needs network access to download recipes, but network access requires certificates.
+
+**Resolution:** Tsuku (as a Go static binary) embeds CA certificates and does not rely on system certificates. However, recipes that download binaries via shell commands will fail on minimal Debian/Ubuntu without `ca-certificates`.
+
+**Universal baseline:** Only `/bin/sh`, coreutils, `tar`, and `gzip` are truly universal across all Linux distributions. Recipes should not assume presence of `bash`, `curl`, `wget`, `unzip`, or `xz`.
+
 ## Decision Drivers
 
 1. **Consistency**: Platform filtering should use the existing `when` clause, not custom keys inside parameters.

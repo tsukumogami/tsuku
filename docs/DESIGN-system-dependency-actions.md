@@ -170,6 +170,12 @@ Version constraint syntax adds significant complexity due to non-uniform version
 
 If `/etc/os-release` is missing or family cannot be determined, steps with `linux_family` conditions are skipped. Fallback `manual` actions can guide users.
 
+**Detection implementation notes:**
+
+- Use `exec.LookPath()` (Go) or `type cmd >/dev/null 2>&1` (shell) for binary detection. The `which` command is not universal (missing on Fedora/Arch base images).
+- For RHEL family detection, check for `microdnf` in addition to `dnf`. Minimal RHEL images (AlmaLinux, Rocky Linux) use `microdnf` - a lightweight DNF implementation with identical package names. Treat `microdnf` as `linux_family = "rhel"`.
+- Detection order: `dnf` > `microdnf` > `yum` for RHEL family (prefer modern over legacy).
+
 **Validation rules:**
 
 - `linux_family` and `os` are mutually exclusive
@@ -362,6 +368,8 @@ These choices work together to create a consistent, auditable system:
 | `brew_install` | packages, tap?, fallback? | Install Homebrew formulae |
 | `brew_cask` | packages, tap?, fallback? | Install Homebrew casks |
 | `pacman_install` | packages, fallback? | Install Arch packages |
+| `apk_install` | packages, fallback? | Install Alpine packages |
+| `zypper_install` | packages, fallback? | Install openSUSE/SLES packages |
 
 ### System Configuration
 
