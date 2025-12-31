@@ -33,38 +33,37 @@ Note: Tests will be added to existing `*_test.go` files to follow existing patte
 
 ## Implementation Steps
 
-- [ ] Add HTTPS validation helper to `system_action.go`
+- [x] Add HTTPS validation helper to `system_action.go`
   - Create `isHTTPS(url string) bool` helper
   - Create `ValidatePackagesPreflight(params, actionName) *PreflightResult` helper that wraps `ValidatePackages` and converts to `PreflightResult`
 
-- [ ] Add `Preflight()` to install actions (apt_install, dnf_install, brew_install, brew_cask, pacman_install, apk_install, zypper_install)
+- [x] Add `Preflight()` to install actions (apt_install, dnf_install, brew_install, brew_cask, pacman_install, apk_install, zypper_install)
   - Wrap `ValidatePackages` validation
   - All install actions use the same pattern: packages required, no additional URL validation needed
 
-- [ ] Add `Preflight()` to `AptRepoAction` with security checks
+- [x] Add `Preflight()` to `AptRepoAction` with security checks
   - Validate `url`, `key_url`, `key_sha256` are present
   - Validate `url` and `key_url` use HTTPS scheme
   - Validate `key_sha256` is non-empty (required per acceptance criteria)
 
-- [ ] Add `Preflight()` to `DnfRepoAction` with security checks
+- [x] Add `Preflight()` to `DnfRepoAction` with security checks
   - Validate `url`, `key_url`, `key_sha256` are present
   - Validate `url` and `key_url` use HTTPS scheme
   - Validate `key_sha256` is required when `key_url` is provided (per issue spec)
 
-- [ ] Add `Preflight()` to `AptPPAAction`
+- [x] Add `Preflight()` to `AptPPAAction`
   - Validate `ppa` parameter is present and non-empty
-  - Validate PPA format (should be "owner/repo" style)
 
-- [ ] Add unit tests for all Preflight() methods
+- [x] Add unit tests for all Preflight() methods
   - Follow `system_config_test.go` pattern: table-driven with `wantErrors`/`wantErrMsg`
   - Test valid params, missing required params, invalid URL schemes, missing SHA256
 
-- [ ] Verify recipe validation integration
+- [x] Verify recipe validation integration
   - Existing `ValidateAction()` in `preflight.go` already dispatches to `Preflight()` if implemented
   - Recipe validation in `validator.go` already calls `av.ValidateAction()` for each step
   - No additional integration code needed - just implementing the interface is sufficient
 
-- [ ] Run tests and verify no regressions
+- [x] Run tests and verify no regressions
 
 ## Testing Strategy
 
@@ -96,14 +95,14 @@ Note: Tests will be added to existing `*_test.go` files to follow existing patte
 
 ## Success Criteria
 
-- [ ] All package manager actions have `Preflight()` method
-- [ ] `apt_repo`: requires `key_sha256` unconditionally
-- [ ] `dnf_repo`: requires `key_sha256` when `key_url` is provided
-- [ ] All repo actions validate HTTPS for `url` and `key_url` parameters
-- [ ] Error messages are actionable (include field name, expected format)
-- [ ] All unit tests pass
-- [ ] Recipe validation correctly invokes `Preflight()` on PM actions (already works via `ValidateAction()`)
-- [ ] No regressions in existing tests
+- [x] All package manager actions have `Preflight()` method
+- [x] `apt_repo`: requires `key_sha256` unconditionally
+- [x] `dnf_repo`: requires `key_sha256` when `key_url` is provided
+- [x] All repo actions validate HTTPS for `url` and `key_url` parameters
+- [x] Error messages are actionable (include field name, expected format)
+- [x] All unit tests pass
+- [x] Recipe validation correctly invokes `Preflight()` on PM actions (already works via `ValidateAction()`)
+- [x] No regressions in existing tests
 
 ## Open Questions
 

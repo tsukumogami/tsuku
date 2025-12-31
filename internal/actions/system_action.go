@@ -2,6 +2,7 @@ package actions
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/platform"
 )
@@ -94,4 +95,28 @@ func ValidatePackages(params map[string]interface{}, actionName string) ([]strin
 		return nil, fmt.Errorf("%s requires non-empty 'packages' parameter", actionName)
 	}
 	return packages, nil
+}
+
+// ValidatePackagesPreflight validates the packages parameter and returns a PreflightResult.
+// This wraps ValidatePackages for use in Preflight methods.
+func ValidatePackagesPreflight(params map[string]interface{}, actionName string) *PreflightResult {
+	result := &PreflightResult{}
+	if _, err := ValidatePackages(params, actionName); err != nil {
+		result.AddError(err.Error())
+	}
+	return result
+}
+
+// isHTTPS checks if a URL uses the HTTPS scheme.
+// Returns true for URLs starting with "https://", false otherwise.
+func isHTTPS(url string) bool {
+	return strings.HasPrefix(url, "https://")
+}
+
+// validateHTTPSURL validates that a URL field uses HTTPS and adds an error if not.
+// The fieldName parameter is used in the error message.
+func validateHTTPSURL(result *PreflightResult, url, actionName, fieldName string) {
+	if url != "" && !isHTTPS(url) {
+		result.AddErrorf("%s '%s' must use HTTPS (got %s)", actionName, fieldName, url)
+	}
 }
