@@ -189,4 +189,11 @@ func init() {
 	Register(&GitHubArchiveAction{})
 	Register(&GitHubFileAction{})
 	Register(&FossilArchiveAction{})
+
+	// System configuration actions
+	Register(&GroupAddAction{})
+	Register(&ServiceEnableAction{})
+	Register(&ServiceStartAction{})
+	Register(&RequireCommandAction{})
+	Register(&ManualAction{})
 }
