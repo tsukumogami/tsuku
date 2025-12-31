@@ -95,12 +95,21 @@ Each operation is a separate action type: `apt_install`, `apt_repo`, `brew_cask`
 - Option B (one action per manager with sub-operations): Creates polymorphic schemas where valid fields depend on which operation is intended
 - Option C (unified action with manager field): Recreates the original problem of generic containers with platform-specific content
 
-### D2: Linux Family Detection
+### D2: Linux Family as Targeting Dimension
 
-**Decision: Extend `when` clause with `linux_family` field**
+**Decision: Add `linux_family` as a targeting parameter, not a `when` clause field**
 
-```toml
-when = { linux_family = "debian" }
+The `linux_family` is a **targeting dimension** for plan generation, not a filtering condition in recipes. Recipe authors never write `when = { linux_family = "debian" }` - instead, they use PM-specific actions (`apt_install`, `dnf_install`) which carry implicit constraints (see D6).
+
+```go
+// Targeting tuple for plan generation
+type Target struct {
+    Platform    string // e.g., "linux/amd64"
+    LinuxFamily string // e.g., "debian" (empty for non-Linux)
+}
+
+// Generate plan for a specific target
+func GeneratePlan(recipe *Recipe, target Target) *Plan
 ```
 
 **Rationale for `linux_family` over `distro`:**
@@ -176,11 +185,13 @@ If `/etc/os-release` is missing or family cannot be determined, steps with `linu
 - For RHEL family detection, check for `microdnf` in addition to `dnf`. Minimal RHEL images (AlmaLinux, Rocky Linux) use `microdnf` - a lightweight DNF implementation with identical package names. Treat `microdnf` as `linux_family = "rhel"`.
 - Detection order: `dnf` > `microdnf` > `yum` for RHEL family (prefer modern over legacy).
 
-**Validation rules:**
+**Targeting vs filtering:**
 
-- `linux_family` and `os` are mutually exclusive
-- `linux_family` and `platform` are mutually exclusive
-- `linux_family` implicitly requires Linux
+The `linux_family` is NOT a field in `WhenClause`. Instead:
+
+- **Targeting**: `linux_family` is a parameter to plan generation (e.g., `GeneratePlan(recipe, target)`)
+- **Filtering**: PM actions have implicit constraints checked against the target (via D6's `ImplicitConstraint()`)
+- **`WhenClause`** remains generic: `os`, `arch`, `platform` only
 
 ### D3: Require Semantics
 
@@ -283,58 +294,70 @@ fallback = "For newer CUDA versions, visit https://developer.nvidia.com/cuda-dow
 - `fallback` expresses "automation might fail, here's plan B"
 - These are orthogonal concerns that can coexist
 
-### D6: Hardcoded When Clauses for Package Manager Actions
+### D6: Implicit Constraints for Package Manager Actions
 
-**Decision: Package manager actions have immutable, built-in `when` clauses**
+**Decision: Package manager actions have immutable, built-in constraints**
 
-Each `*_install` action carries a hardcoded `linux_family` constraint that cannot be overridden by recipe authors:
+Each `*_install` action carries a hardcoded constraint that determines which targets it applies to. This is NOT a `WhenClause` field - it's a property of the action type itself:
 
-| Action | Hardcoded Constraint |
+| Action | Implicit Constraint |
 |--------|---------------------|
-| `apt_install`, `apt_repo`, `apt_ppa` | `when = { linux_family = "debian" }` |
-| `dnf_install`, `dnf_repo` | `when = { linux_family = "rhel" }` |
-| `pacman_install` | `when = { linux_family = "arch" }` |
-| `apk_install` | `when = { linux_family = "alpine" }` |
-| `zypper_install` | `when = { linux_family = "suse" }` |
-| `brew_install`, `brew_cask` | `when = { os = "darwin" }` |
+| `apt_install`, `apt_repo`, `apt_ppa` | `linux_family = "debian"` |
+| `dnf_install`, `dnf_repo` | `linux_family = "rhel"` |
+| `pacman_install` | `linux_family = "arch"` |
+| `apk_install` | `linux_family = "alpine"` |
+| `zypper_install` | `linux_family = "suse"` |
+| `brew_install`, `brew_cask` | `os = "darwin"` |
 
 **Rationale:**
 
-- **Prevents mistakes**: Cannot accidentally write `apt_install` with `when = { linux_family = "rhel" }`
+- **Prevents mistakes**: Cannot accidentally use `apt_install` for an `rhel` target
 - **Reduces noise**: Recipe authors don't repeat the same obvious constraint
 - **Simplifies validation**: Action type determines valid targets
+- **Separation of concerns**: `WhenClause` stays generic; PM constraints are action-level
 
 **Implementation:**
 
 ```go
-type ActionDefinition struct {
-    Name           string
-    ImplicitWhen   *WhenClause  // Built-in, cannot be overridden
+// Constraint represents a platform/family requirement
+type Constraint struct {
+    OS          string // e.g., "darwin", "linux"
+    LinuxFamily string // e.g., "debian", "rhel" (only when OS == "linux")
 }
 
-var actionDefinitions = map[string]ActionDefinition{
-    "apt_install": {
-        Name:         "apt_install",
-        ImplicitWhen: &WhenClause{LinuxFamily: "debian"},
-    },
-    "dnf_install": {
-        Name:         "dnf_install",
-        ImplicitWhen: &WhenClause{LinuxFamily: "rhel"},
-    },
-    // ...
+// Action interface includes constraint checking
+type Action interface {
+    ImplicitConstraint() *Constraint  // nil if no constraint
+    MatchesTarget(target Target) bool // checks constraint against target
+}
+
+// Example: apt_install always requires debian family
+func (a *AptInstallAction) ImplicitConstraint() *Constraint {
+    return &Constraint{OS: "linux", LinuxFamily: "debian"}
+}
+
+func (a *AptInstallAction) MatchesTarget(target Target) bool {
+    return target.OS() == "linux" && target.LinuxFamily == "debian"
 }
 ```
 
-**Recipe authors can still add additional constraints** (e.g., architecture), which are combined with the implicit constraint:
+**Recipe authors can still add explicit `when` clauses** for additional constraints (e.g., architecture). These are combined with the action's implicit constraint:
 
 ```toml
 [[steps]]
 action = "apt_install"
 packages = ["some-x86-only-package"]
-when = { arch = "amd64" }  # Combined with implicit linux_family = "debian"
+when = { arch = "amd64" }  # Explicit: architecture filter
+# Implicit: linux_family = "debian" (from action type)
 ```
 
-**Note:** This constraint applies only to package manager actions. Other actions (`require_command`, `group_add`, `manual`, etc.) do not have hardcoded when clauses.
+**Filtering order:**
+
+1. Check action's `ImplicitConstraint()` against target `(platform, linux_family)`
+2. Check step's explicit `when` clause against target platform
+3. Include step only if both pass
+
+**Note:** This constraint applies only to package manager actions. Other actions (`require_command`, `group_add`, `manual`, etc.) have no implicit constraint - they rely solely on explicit `when` clauses.
 
 ## Decision Outcome
 
@@ -342,17 +365,17 @@ when = { arch = "amd64" }  # Combined with implicit linux_family = "debian"
 
 ### Summary
 
-We replace the polymorphic `require_system` with granular typed actions (`apt_install`, `brew_cask`, etc.), using `/etc/os-release` for Linux family detection via `when` clause extension, idempotent installation with final `require_command` verification, separate actions for post-install configuration, a hybrid fallback approach (`manual` action + `fallback` field), and hardcoded when clauses for package manager actions.
+We replace the polymorphic `require_system` with granular typed actions (`apt_install`, `brew_cask`, etc.), with `linux_family` as a targeting dimension for plan generation (not a `when` clause field), idempotent installation with final `require_command` verification, separate actions for post-install configuration, a hybrid fallback approach (`manual` action + `fallback` field), and implicit constraints on package manager actions.
 
 ### Rationale
 
 These choices work together to create a consistent, auditable system:
 - Typed actions (D1) enable static analysis and clear error messages
-- Linux family detection (D2) targets package manager ecosystems, not individual distros, reducing plan proliferation
+- Linux family as targeting dimension (D2) keeps `WhenClause` generic while enabling family-specific plan generation
 - Idempotent install + verify (D3) leverages package manager behavior with explicit verification
 - Separate post-install actions (D4) maintain single-responsibility and clear failure isolation
 - Hybrid fallback (D5) covers both "automation not possible" and "automation might fail" scenarios
-- Hardcoded when clauses (D6) prevent mistakes and reduce recipe noise for package manager actions
+- Implicit constraints (D6) prevent mistakes and reduce recipe noise - PM actions know their valid targets
 
 ## Action Vocabulary
 
@@ -449,24 +472,59 @@ The structured action vocabulary enables this generation while remaining machine
 
 In sandbox mode, tsuku extracts package requirements from actions and builds minimal containers. See [DESIGN-structured-install-guide.md - Sandbox Executor Changes](DESIGN-structured-install-guide.md#sandbox-executor-changes) for the `ExtractPackages()` implementation and container building details.
 
-## WhenClause Extension
+## Targeting Model
+
+Plan generation uses a **target tuple** that includes `linux_family` as a dimension separate from the `WhenClause`:
 
 ```go
+// Target represents the platform being targeted for plan generation
+type Target struct {
+    Platform    string // e.g., "linux/amd64", "darwin/arm64"
+    LinuxFamily string // e.g., "debian", "rhel" (empty for non-Linux)
+}
+
+// WhenClause remains unchanged - no linux_family field
 type WhenClause struct {
-    Platform    []string `toml:"platform,omitempty"`
-    OS          []string `toml:"os,omitempty"`
-    LinuxFamily string   `toml:"linux_family,omitempty"` // NEW
-    Arch        string   `toml:"arch,omitempty"`
+    Platform []string `toml:"platform,omitempty"`
+    OS       []string `toml:"os,omitempty"`
+    Arch     string   `toml:"arch,omitempty"`
 }
 ```
 
-**Validation:**
+**Why this separation?**
 
-- `LinuxFamily` and `OS` are mutually exclusive
-- `LinuxFamily` and `Platform` are mutually exclusive
-- If `LinuxFamily` is set, step only runs on Linux
+- `WhenClause` is a generic filtering mechanism for any step
+- `linux_family` is specific to package manager actions
+- PM actions carry implicit constraints (D6), so explicit `linux_family` in recipes is unnecessary
+- The target is a parameter to plan generation, not a condition in the recipe
 
-**Detection implementation:**
+**Plan filtering:**
+
+```go
+func FilterPlan(recipe *Recipe, target Target) *Plan {
+    var steps []Step
+    for _, step := range recipe.Steps {
+        action := ParseAction(step)
+
+        // 1. Check action's implicit constraint against target
+        if constraint := action.ImplicitConstraint(); constraint != nil {
+            if !constraint.MatchesTarget(target) {
+                continue // Skip: action doesn't apply to this target
+            }
+        }
+
+        // 2. Check explicit when clause against target platform
+        if step.When != nil && !step.When.Matches(target.Platform) {
+            continue // Skip: explicit condition not met
+        }
+
+        steps = append(steps, step)
+    }
+    return &Plan{Steps: steps}
+}
+```
+
+**Family detection for host execution:**
 
 Create `internal/platform/family.go`:
 
@@ -487,8 +545,17 @@ func DetectFamily() (string, error) {
     return MapDistroToFamily(osRelease.ID, osRelease.IDLike)
 }
 
-func ParseOSRelease(path string) (*OSRelease, error) {
-    // Parse KEY=value format
+// DetectTarget returns the full target tuple for the current host
+func DetectTarget() (Target, error) {
+    platform := runtime.GOOS + "/" + runtime.GOARCH
+    if runtime.GOOS != "linux" {
+        return Target{Platform: platform}, nil
+    }
+    family, err := DetectFamily()
+    if err != nil {
+        return Target{}, err
+    }
+    return Target{Platform: platform, LinuxFamily: family}, nil
 }
 ```
 
@@ -614,20 +681,25 @@ Implementation focuses on documentation generation and sandbox container buildin
 
 ### Phase 1: Infrastructure
 
-1. Add `linux_family` field to `WhenClause`
-2. Implement family detection in `internal/platform/family.go`
-3. Implement distro-to-family mapping with ID_LIKE fallback
-4. Update `WhenClause.Matches()` for linux_family filtering
+1. Define `Target` struct with `Platform` and `LinuxFamily` fields
+2. Implement `DetectFamily()` in `internal/platform/family.go`
+3. Implement `DetectTarget()` to get full target tuple for host
+4. Implement distro-to-family mapping with ID_LIKE fallback
 5. Add unit tests with `/etc/os-release` fixtures
+
+Note: `WhenClause` is NOT modified - it remains generic (os, arch, platform only).
 
 ### Phase 2: Action Vocabulary
 
 1. Define action types with `Describe()` method for documentation generation
-2. Implement parameter validation for each action
-3. Extract `require_command` from existing `require_system`
-4. Implement `manual` action for fallback instructions
+2. Implement `ImplicitConstraint()` for PM actions (D6)
+3. Implement `MatchesTarget(target Target)` for filtering
+4. Implement parameter validation for each action
+5. Extract `require_command` from existing `require_system`
+6. Implement `manual` action for fallback instructions
 
 Actions at this phase do NOT execute on the host - they provide:
+- Implicit constraints (target matching)
 - Parameter validation (preflight checks)
 - Human-readable descriptions (documentation generation)
 - Structured data (sandbox container building)
@@ -636,14 +708,17 @@ Actions at this phase do NOT execute on the host - they provide:
 
 1. Implement `Describe()` for all package actions (`apt_install`, `brew_cask`, etc.)
 2. Implement `Describe()` for configuration actions (`group_add`, `service_enable`)
-3. Update CLI to display platform-filtered instructions when system deps are missing
-4. Add `--verify` flag to check if system deps are satisfied after manual installation
+3. Update CLI to detect target via `DetectTarget()` and filter plan accordingly
+4. Display target-filtered instructions when system deps are missing
+5. Add `--verify` flag to check if system deps are satisfied after manual installation
+6. Add `--target-family` flag to override detected family (for documentation preview)
 
 ### Phase 4: Sandbox Integration
 
-1. Implement `ExtractPackages()` to collect dependencies from filtered plans
-2. Integrate with sandbox executor for container building
-3. Add sandbox execution capability (actions run inside containers)
+1. Implement `FilterPlan(recipe, target)` to filter steps by target
+2. Implement `ExtractPackages()` to collect dependencies from filtered plans
+3. Integrate with sandbox executor for container building
+4. Add sandbox execution capability (actions run inside containers)
 
 See [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) for container building details.
 
