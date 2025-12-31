@@ -36,7 +36,7 @@ Create a new file `internal/actions/system_config.go` for configuration and veri
 
 ## Implementation Steps
 
-### Step 1: Create system_config.go with action structs
+### Step 1: Create system_config.go with action structs [DONE]
 
 Create file with:
 
@@ -87,7 +87,7 @@ func (a *ManualAction) Execute(ctx *ExecutionContext, params map[string]interfac
 | `require_command` | `command` | `version_flag`, `version_regex`, `min_version` |
 | `manual` | `text` | - |
 
-### Step 2: Implement Preflight validation for each action
+### Step 2: Implement Preflight validation for each action [DONE]
 
 Each action validates required parameters:
 
@@ -98,7 +98,7 @@ Each action validates required parameters:
   - If `min_version` specified, requires `version_flag` and `version_regex`
 - `manual`: requires `text` (string, non-empty)
 
-### Step 3: Implement Execute stubs
+### Step 3: Implement Execute stubs [DONE]
 
 Each Execute() logs what would be done (no side effects):
 
@@ -114,7 +114,7 @@ func (a *GroupAddAction) Execute(ctx *ExecutionContext, params map[string]interf
 }
 ```
 
-### Step 4: Register actions in action.go init()
+### Step 4: Register actions in action.go init() [DONE]
 
 Add to `init()`:
 ```go
@@ -126,7 +126,7 @@ Register(&RequireCommandAction{})
 Register(&ManualAction{})
 ```
 
-### Step 5: Create unit tests
+### Step 5: Create unit tests [DONE]
 
 Test coverage:
 - `TestGroupAddAction_Name`
@@ -146,7 +146,7 @@ Test coverage:
 - `TestRequireCommandAction_Execute_CommandNotFound`
 - `TestRequireCommandAction_Execute_VersionCheck`
 
-### Step 6: Verify tests pass and linting is clean
+### Step 6: Verify tests pass and linting is clean [DONE]
 
 ```bash
 go test ./internal/actions/... -v
@@ -169,10 +169,10 @@ The existing `RequireSystemAction` can be deprecated later or kept for backwards
 
 ## Validation
 
-- [ ] All 5 action structs implemented
-- [ ] All structs embed BaseAction
-- [ ] All structs implement Action interface
-- [ ] All structs implement Preflight interface
-- [ ] All actions registered in init()
-- [ ] Unit tests pass
-- [ ] go vet passes
+- [x] All 5 action structs implemented
+- [x] All structs embed BaseAction
+- [x] All structs implement Action interface
+- [x] All structs implement Preflight interface
+- [x] All actions registered in init()
+- [x] Unit tests pass
+- [x] go vet passes
