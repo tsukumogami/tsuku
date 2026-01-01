@@ -4,10 +4,6 @@ description = "YAML 1.1 parser and emitter library"
 homepage = "https://pyyaml.org/wiki/LibYAML"
 type = "library"
 
-[version]
-source = "homebrew"
-formula = "libyaml"
-
 [[steps]]
 action = "homebrew"
 formula = "libyaml"

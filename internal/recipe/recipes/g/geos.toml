@@ -4,10 +4,6 @@ description = "Geometry Engine - Open Source"
 homepage = "https://libgeos.org/"
 type = "library"
 
-[version]
-source = "homebrew"
-formula = "geos"
-
 [[steps]]
 action = "homebrew"
 formula = "geos"
