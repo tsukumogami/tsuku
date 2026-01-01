@@ -274,6 +274,24 @@ The `check-deps` command:
 - Provides platform-specific installation instructions for system dependencies
 - Exits with code 1 if any system dependency is missing (useful for CI)
 
+#### Verify System Dependencies
+
+After installing system dependencies manually, verify they are correctly configured:
+
+```bash
+# Verify all require_command checks for a recipe pass
+tsuku verify-deps docker
+
+# JSON output for scripting
+tsuku verify-deps --json docker
+```
+
+The `verify-deps` command:
+- Checks all `require_command` steps for the current platform
+- Verifies commands exist in PATH
+- Checks version requirements when specified
+- Exits with code 0 if all pass, non-zero if any fail
+
 #### System-Required Dependencies
 
 When a tool depends on something tsuku cannot provide, the recipe uses the `require_system` action. This:
