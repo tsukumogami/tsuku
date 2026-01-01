@@ -5,10 +5,6 @@ homepage = "https://cmake.org/"
 dependencies = ["openssl", "patchelf"]
 binaries = ["bin/cmake", "bin/ctest", "bin/cpack"]
 
-[version]
-source = "homebrew"
-formula = "cmake"
-
 [[steps]]
 action = "homebrew"
 formula = "cmake"

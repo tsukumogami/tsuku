@@ -223,6 +223,9 @@ func canInferVersionFromActions(r *Recipe) bool {
 			if _, ok := step.Params["repo"].(string); ok {
 				return true // InferredGitHubStrategy
 			}
+		case "homebrew":
+			// Homebrew action infers version from the formula
+			return true // InferredHomebrewStrategy
 		case "require_system":
 			// System dependencies don't use version providers - version is detected directly
 			return true

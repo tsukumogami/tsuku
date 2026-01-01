@@ -189,6 +189,53 @@ func TestDetectRedundantVersion(t *testing.T) {
 			},
 			wantLen: 0, // mockgen path doesn't match either pattern - explicit module is needed
 		},
+		// Homebrew redundancy tests
+		{
+			name: "redundant - homebrew with matching formula",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Source: "homebrew", Formula: "libspatialite"},
+				Steps: []recipe.Step{{
+					Action: "homebrew",
+					Params: map[string]interface{}{"formula": "libspatialite"},
+				}},
+			},
+			wantLen: 1,
+			wantMsg: "source=\"homebrew\" with formula=\"libspatialite\" is redundant",
+		},
+		{
+			name: "redundant - homebrew with empty formulas",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Source: "homebrew"},
+				Steps: []recipe.Step{{
+					Action: "homebrew",
+					Params: map[string]interface{}{},
+				}},
+			},
+			wantLen: 1,
+			wantMsg: "source=\"homebrew\" with formula=\"\" is redundant",
+		},
+		{
+			name: "not redundant - homebrew version with different action",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Source: "homebrew", Formula: "ninja"},
+				Steps: []recipe.Step{{
+					Action: "cmake_build",
+					Params: map[string]interface{}{},
+				}},
+			},
+			wantLen: 0, // Uses homebrew for version but builds from source
+		},
+		{
+			name: "not redundant - homebrew with different formulas",
+			recipe: &recipe.Recipe{
+				Version: recipe.VersionSection{Source: "homebrew", Formula: "ninja"},
+				Steps: []recipe.Step{{
+					Action: "homebrew",
+					Params: map[string]interface{}{"formula": "cmake"},
+				}},
+			},
+			wantLen: 0, // Different formulas - version source is intentionally different
+		},
 	}
 
 	for _, tt := range tests {

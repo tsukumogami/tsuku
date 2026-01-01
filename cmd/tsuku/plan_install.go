@@ -62,6 +62,9 @@ func runPlanBasedInstall(planPath, toolName string) error {
 	// Set tools directory for finding other installed tools
 	exec.SetToolsDir(cfg.ToolsDir)
 
+	// Set libraries directory for rpath variable expansion
+	exec.SetLibsDir(cfg.LibsDir)
+
 	printInfof("Installing %s@%s from plan...\n", effectiveToolName, plan.Version)
 
 	// Execute the plan

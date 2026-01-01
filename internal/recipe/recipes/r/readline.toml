@@ -5,10 +5,6 @@ homepage = "https://tiswww.case.edu/php/chet/readline/rltop.html"
 type = "library"
 dependencies = ["ncurses"]
 
-[version]
-source = "homebrew"
-formula = "readline"
-
 [[steps]]
 action = "homebrew"
 formula = "readline"

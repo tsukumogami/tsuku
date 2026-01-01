@@ -4,10 +4,6 @@ description = "Optimizer for PNG files"
 homepage = "https://pmt.sourceforge.io/pngcrush/"
 dependencies = ["libpng"]
 
-[version]
-source = "homebrew"
-formula = "pngcrush"
-
 [[steps]]
 action = "homebrew"
 formula = "pngcrush"

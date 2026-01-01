@@ -9,10 +9,6 @@ description = "GCC runtime libraries (libstdc++, libgcc_s)"
 homepage = "https://gcc.gnu.org/"
 type = "library"
 
-[version]
-source = "homebrew"
-formula = "gcc"
-
 # Linux: download gcc bottle and extract runtime libraries
 [[steps]]
 action = "homebrew"

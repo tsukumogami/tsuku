@@ -5,10 +5,6 @@ homepage = "https://proj.org/"
 type = "library"
 dependencies = ["sqlite"]
 
-[version]
-source = "homebrew"
-formula = "proj"
-
 [[steps]]
 action = "homebrew"
 formula = "proj"

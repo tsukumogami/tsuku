@@ -574,8 +574,10 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		}
 	}
 
-	// Resolve dependencies for this dependency's build environment
-	depResolvedDeps := actions.ResolveDependencies(depRecipe)
+	// Build resolved deps from the plan's nested dependencies
+	// This uses actual resolved versions (e.g., "3.6.0") rather than
+	// constraints from recipe parsing (e.g., "latest")
+	depResolvedDeps := buildResolvedDepsFromPlan(dep.Dependencies)
 
 	// Create execution context for this dependency
 	execCtx := &actions.ExecutionContext{

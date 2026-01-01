@@ -4,10 +4,6 @@ description = "GNU database manager"
 homepage = "https://www.gnu.org/software/gdbm/"
 binaries = ["bin/gdbmtool"]
 
-[version]
-source = "homebrew"
-formula = "gdbm"
-
 [[steps]]
 action = "homebrew"
 formula = "gdbm"

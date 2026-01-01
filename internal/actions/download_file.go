@@ -2,9 +2,11 @@ package actions
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -126,21 +128,26 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 
 // downloadFileHTTP performs the actual HTTP download with context for cancellation
 // SECURITY: Enforces HTTPS for all downloads to prevent MITM attacks
-func downloadFileHTTP(ctx context.Context, url, destPath string) error {
+func downloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
 	// SECURITY: Enforce HTTPS for all downloads
-	if !strings.HasPrefix(url, "https://") {
-		return fmt.Errorf("download URL must use HTTPS for security, got: %s", url)
+	if !strings.HasPrefix(downloadURL, "https://") {
+		return fmt.Errorf("download URL must use HTTPS for security, got: %s", downloadURL)
 	}
 
 	// Create secure HTTP client with decompression bomb and SSRF protection
 	client := newDownloadHTTPClient()
-	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", downloadURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
 	// Defense in depth: Explicitly request uncompressed response
 	req.Header.Set("Accept-Encoding", "identity")
+
+	// Add authorization for ghcr.io URLs (Homebrew bottles)
+	if token, err := getGHCRTokenForURL(downloadURL); err == nil && token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
 
 	// Perform request
 	resp, err := client.Do(req)
@@ -179,4 +186,62 @@ func downloadFileHTTP(ctx context.Context, url, destPath string) error {
 	}
 
 	return nil
+}
+
+// getGHCRTokenForURL checks if a URL is a ghcr.io Homebrew bottle URL and fetches
+// an anonymous access token if so. Returns empty string for non-ghcr.io URLs.
+func getGHCRTokenForURL(downloadURL string) (string, error) {
+	// Only handle ghcr.io/v2/homebrew/core/... URLs
+	if !strings.HasPrefix(downloadURL, "https://ghcr.io/v2/homebrew/core/") {
+		return "", nil
+	}
+
+	// Parse URL to extract formula name
+	// URL format: https://ghcr.io/v2/homebrew/core/{formula}/blobs/sha256:{hash}
+	// For versioned formulas: https://ghcr.io/v2/homebrew/core/{formula}/{version}/blobs/sha256:{hash}
+	// e.g., openssl@3 becomes openssl/3 in the path
+	parsed, err := url.Parse(downloadURL)
+	if err != nil {
+		return "", nil
+	}
+
+	// Extract formula from path: /v2/homebrew/core/{formula}[/{version}]/blobs/...
+	// We need everything between "core/" and "/blobs/"
+	path := parsed.Path
+	corePrefix := "/v2/homebrew/core/"
+	if !strings.HasPrefix(path, corePrefix) {
+		return "", nil
+	}
+	afterCore := strings.TrimPrefix(path, corePrefix)
+
+	// Find "/blobs/" to know where the formula path ends
+	blobsIdx := strings.Index(afterCore, "/blobs/")
+	if blobsIdx == -1 {
+		return "", nil
+	}
+	formula := afterCore[:blobsIdx]
+
+	// Fetch anonymous token from ghcr.io
+	// Note: formula may contain slashes for versioned formulas (e.g., "openssl/3")
+	// The token endpoint accepts unencoded slashes in the scope parameter
+	tokenURL := fmt.Sprintf("https://ghcr.io/token?service=ghcr.io&scope=repository:homebrew/core/%s:pull", formula)
+
+	resp, err := newDownloadHTTPClient().Get(tokenURL)
+	if err != nil {
+		return "", fmt.Errorf("token request failed: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("token request returned %d", resp.StatusCode)
+	}
+
+	var tokenResp struct {
+		Token string `json:"token"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tokenResp); err != nil {
+		return "", fmt.Errorf("failed to parse token response: %w", err)
+	}
+
+	return tokenResp.Token, nil
 }

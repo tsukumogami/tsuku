@@ -6,10 +6,6 @@ type = "library"
 dependencies = ["zlib"]
 binaries = ["bin/openssl"]
 
-[version]
-source = "homebrew"
-formula = "openssl@3"
-
 [[steps]]
 action = "homebrew"
 formula = "openssl@3"
