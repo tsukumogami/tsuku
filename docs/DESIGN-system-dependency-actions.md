@@ -2,7 +2,7 @@
 
 ## Status
 
-Current
+Planned
 
 ## Implementation Issues
 
@@ -21,6 +21,8 @@ Current
 | [#764](https://github.com/tsukumogami/tsuku/issues/764) | feat(cli): add --verify flag for system dependency check | [#756](https://github.com/tsukumogami/tsuku/issues/756) |
 | [#765](https://github.com/tsukumogami/tsuku/issues/765) | feat(sandbox): implement ExtractPackages() for sandbox integration | [#755](https://github.com/tsukumogami/tsuku/issues/755) |
 | [#766](https://github.com/tsukumogami/tsuku/issues/766) | feat(cli): update CLI to display system dependency instructions | [#759](https://github.com/tsukumogami/tsuku/issues/759), [#761](https://github.com/tsukumogami/tsuku/issues/761), [#763](https://github.com/tsukumogami/tsuku/issues/763), [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) |
+| [#793](https://github.com/tsukumogami/tsuku/issues/793) | test(fixtures): add testdata recipes for M30 system dependency actions | None |
+| [#794](https://github.com/tsukumogami/tsuku/issues/794) | test(cli): add integration tests for system dependency instruction display | [#793](https://github.com/tsukumogami/tsuku/issues/793) |
 
 ### Dependency Graph
 
@@ -49,6 +51,11 @@ graph TD
         I766["#766: CLI instructions"]
     end
 
+    subgraph Phase5["Phase 5: Validation"]
+        I793["#793: Testdata fixtures"]
+        I794["#794: Integration tests"]
+    end
+
     I754 --> I759
     I754 --> I760
     I755 --> I760
@@ -65,6 +72,7 @@ graph TD
     I763 --> I766
     I755 --> I766
     I756 --> I766
+    I793 --> I794
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -72,6 +80,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I754,I755,I756,I759,I760,I761,I762,I763,I764,I765,I766 done
+    class I793 ready
+    class I794 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
