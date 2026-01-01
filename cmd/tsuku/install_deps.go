@@ -340,6 +340,21 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		return installLibrary(toolName, reqVersion, parent, mgr, telemetryClient)
 	}
 
+	// Check and display system dependency instructions (for explicit installs only)
+	// System deps are displayed before proceeding, allowing users to install them manually
+	if isExplicit && !quietFlag && hasSystemDeps(r) {
+		target, err := resolveTarget(installTargetFamily)
+		if err != nil {
+			return fmt.Errorf("failed to resolve target: %w", err)
+		}
+
+		if displaySystemDeps(r, target) {
+			// System deps were displayed - exit without error
+			// User should run the commands shown and try again
+			return nil
+		}
+	}
+
 	// Check for checksum verification (only warn for explicit installs)
 	if isExplicit && !r.HasChecksumVerification() {
 		fmt.Fprintf(os.Stderr, "Warning: Recipe '%s' does not include checksum verification.\n", toolName)
