@@ -33,9 +33,11 @@ File operation primitives are the atomic building blocks of installation. They p
 
 **Key property**: All file operation primitives are fully reproducible. Running the same primitive twice produces identical results.
 
-#### require_system Action
+#### require_system Action (Legacy)
 
 The `require_system` action validates that a system dependency exists and optionally checks its version. This is used for dependencies tsuku cannot provision (Docker, CUDA, kernel modules).
+
+**Note**: For new recipes, prefer the M30 system dependency vocabulary (`require_command`, `apt_install`, etc.) which provides better platform targeting and documentation generation. The `require_system` action remains for backward compatibility.
 
 ```toml
 [[steps]]
@@ -63,6 +65,47 @@ The action:
 2. If `version_flag` is specified, extracts and validates version
 3. If missing or version too old, displays platform-specific installation guidance
 4. Fails the installation with actionable error message
+
+### System Dependency Primitives
+
+System dependency primitives generate instructions for platform package managers. These actions are filtered by `when` clauses at evaluation time to match the target platform and Linux family.
+
+#### Package Manager Actions
+
+| Action | Package Manager | Implicit Constraint |
+|--------|-----------------|---------------------|
+| `apt_install` | apt-get | `when.linux_family = "debian"` |
+| `apt_ppa` | add-apt-repository | `when.linux_family = "debian"` |
+| `apt_repo` | apt sources | `when.linux_family = "debian"` |
+| `apk_install` | apk | `when.linux_family = "alpine"` |
+| `brew_cask` | Homebrew Cask | `when.platform = "darwin/*"` |
+| `brew_install` | Homebrew | (none - works on macOS and Linux) |
+| `dnf_install` | dnf | `when.linux_family = "rhel"` |
+| `dnf_repo` | dnf config-manager | `when.linux_family = "rhel"` |
+| `pacman_install` | pacman | `when.linux_family = "arch"` |
+| `zypper_install` | zypper | `when.linux_family = "suse"` |
+
+#### Configuration Actions
+
+| Action | Description | Typical Use |
+|--------|-------------|-------------|
+| `group_add` | Add user to a group | Docker group membership |
+| `service_enable` | Enable a system service | Start service on boot |
+| `service_start` | Start a system service | Immediate service activation |
+
+#### Verification Actions
+
+| Action | Description |
+|--------|-------------|
+| `require_command` | Verify a command is available after installation |
+| `manual` | Display manual installation instructions |
+
+**Key properties**:
+- Actions with implicit constraints are automatically filtered by platform
+- Instructions are displayed to the user (tsuku does not execute privileged commands)
+- Multiple actions can be combined for complete installation flows
+
+See [System Dependencies Guide](GUIDE-system-dependencies.md) for user-facing documentation and recipe examples.
 
 ### Ecosystem Primitives
 
