@@ -342,6 +342,301 @@ func generateDockerfile(spec *ContainerSpec) string {
 	return strings.Join(lines, "\n") + "\n"
 }
 
+func TestContainerImageName(t *testing.T) {
+	tests := []struct {
+		name       string
+		spec       *ContainerSpec
+		wantPrefix string
+		wantFormat string
+	}{
+		{
+			name: "debian with single package",
+			spec: &ContainerSpec{
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+			},
+			wantPrefix: "tsuku/sandbox-cache:debian-",
+			wantFormat: "16 hex chars after family",
+		},
+		{
+			name: "debian with multiple packages",
+			spec: &ContainerSpec{
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl", "jq", "wget"}},
+			},
+			wantPrefix: "tsuku/sandbox-cache:debian-",
+			wantFormat: "16 hex chars after family",
+		},
+		{
+			name: "rhel with dnf packages",
+			spec: &ContainerSpec{
+				LinuxFamily: "rhel",
+				Packages:    map[string][]string{"dnf": {"vim", "git"}},
+			},
+			wantPrefix: "tsuku/sandbox-cache:rhel-",
+			wantFormat: "16 hex chars after family",
+		},
+		{
+			name: "arch with pacman packages",
+			spec: &ContainerSpec{
+				LinuxFamily: "arch",
+				Packages:    map[string][]string{"pacman": {"base-devel"}},
+			},
+			wantPrefix: "tsuku/sandbox-cache:arch-",
+			wantFormat: "16 hex chars after family",
+		},
+		{
+			name: "alpine with apk packages",
+			spec: &ContainerSpec{
+				LinuxFamily: "alpine",
+				Packages:    map[string][]string{"apk": {"bash", "curl"}},
+			},
+			wantPrefix: "tsuku/sandbox-cache:alpine-",
+			wantFormat: "16 hex chars after family",
+		},
+		{
+			name: "suse with zypper packages",
+			spec: &ContainerSpec{
+				LinuxFamily: "suse",
+				Packages:    map[string][]string{"zypper": {"gcc", "make"}},
+			},
+			wantPrefix: "tsuku/sandbox-cache:suse-",
+			wantFormat: "16 hex chars after family",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ContainerImageName(tt.spec)
+
+			// Check prefix
+			if !strings.HasPrefix(got, tt.wantPrefix) {
+				t.Errorf("ContainerImageName() = %q, want prefix %q", got, tt.wantPrefix)
+			}
+
+			// Check format: should be "tsuku/sandbox-cache:<family>-<16-hex-chars>"
+			parts := strings.Split(got, ":")
+			if len(parts) != 2 {
+				t.Errorf("Expected format 'repository:tag', got %q", got)
+				return
+			}
+
+			tag := parts[1]
+			tagParts := strings.Split(tag, "-")
+			if len(tagParts) != 2 {
+				t.Errorf("Expected tag format 'family-hash', got %q", tag)
+				return
+			}
+
+			hash := tagParts[1]
+			if len(hash) != 16 {
+				t.Errorf("Hash length = %d, want 16 hex characters", len(hash))
+			}
+
+			// Verify hash is valid hex
+			for _, c := range hash {
+				if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f')) {
+					t.Errorf("Hash contains non-hex character: %c in %q", c, hash)
+					break
+				}
+			}
+		})
+	}
+}
+
+func TestContainerImageName_HashStability(t *testing.T) {
+	// Same spec should produce same hash every time
+	spec := &ContainerSpec{
+		LinuxFamily: "debian",
+		Packages:    map[string][]string{"apt": {"curl", "jq", "wget"}},
+	}
+
+	// Generate name multiple times
+	name1 := ContainerImageName(spec)
+	name2 := ContainerImageName(spec)
+	name3 := ContainerImageName(spec)
+
+	if name1 != name2 {
+		t.Errorf("Hash not stable: first call = %q, second call = %q", name1, name2)
+	}
+	if name1 != name3 {
+		t.Errorf("Hash not stable: first call = %q, third call = %q", name1, name3)
+	}
+}
+
+func TestContainerImageName_HashUniqueness(t *testing.T) {
+	tests := []struct {
+		name  string
+		spec1 *ContainerSpec
+		spec2 *ContainerSpec
+	}{
+		{
+			name: "different packages",
+			spec1: &ContainerSpec{
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+			},
+			spec2: &ContainerSpec{
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"wget"}},
+			},
+		},
+		{
+			name: "different package managers",
+			spec1: &ContainerSpec{
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+			},
+			spec2: &ContainerSpec{
+				LinuxFamily: "rhel",
+				Packages:    map[string][]string{"dnf": {"curl"}},
+			},
+		},
+		{
+			name: "different package counts",
+			spec1: &ContainerSpec{
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+			},
+			spec2: &ContainerSpec{
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl", "jq"}},
+			},
+		},
+		{
+			name: "different families same PM would be different (but this shouldn't happen in practice)",
+			spec1: &ContainerSpec{
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl", "jq"}},
+			},
+			spec2: &ContainerSpec{
+				LinuxFamily: "ubuntu", // hypothetical - ubuntu also uses apt
+				Packages:    map[string][]string{"apt": {"curl", "jq"}},
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			name1 := ContainerImageName(tt.spec1)
+			name2 := ContainerImageName(tt.spec2)
+
+			if name1 == name2 {
+				t.Errorf("Expected different hashes for different specs, but both are %q", name1)
+			}
+		})
+	}
+}
+
+func TestContainerImageName_DeterministicOrdering(t *testing.T) {
+	// Package order in map doesn't matter - hash should be same
+	// Test by creating specs with same packages but they'll iterate in random order
+
+	// Run multiple times to increase chance of catching non-determinism
+	var names []string
+	for i := 0; i < 10; i++ {
+		spec := &ContainerSpec{
+			LinuxFamily: "debian",
+			Packages: map[string][]string{
+				"apt": {"zsh", "bash", "wget", "curl", "jq", "git"},
+			},
+		}
+		names = append(names, ContainerImageName(spec))
+	}
+
+	// All names should be identical
+	first := names[0]
+	for i, name := range names {
+		if name != first {
+			t.Errorf("Iteration %d produced different hash: %q vs %q", i, name, first)
+		}
+	}
+}
+
+func TestContainerImageName_PackageManagerInHash(t *testing.T) {
+	// Same package name but different PM should produce different hash
+	aptSpec := &ContainerSpec{
+		LinuxFamily: "debian",
+		Packages:    map[string][]string{"apt": {"git"}},
+	}
+
+	pacmanSpec := &ContainerSpec{
+		LinuxFamily: "arch",
+		Packages:    map[string][]string{"pacman": {"git"}},
+	}
+
+	aptName := ContainerImageName(aptSpec)
+	pacmanName := ContainerImageName(pacmanSpec)
+
+	if aptName == pacmanName {
+		t.Errorf("Expected different hashes for apt:git vs pacman:git, got same: %q", aptName)
+	}
+
+	// Also verify the family prefix is different
+	if !strings.Contains(aptName, "debian-") {
+		t.Errorf("apt spec should have debian prefix, got %q", aptName)
+	}
+	if !strings.Contains(pacmanName, "arch-") {
+		t.Errorf("pacman spec should have arch prefix, got %q", pacmanName)
+	}
+}
+
+func TestContainerImageName_MultipleManagers(t *testing.T) {
+	// Edge case: multiple package managers in same spec (shouldn't happen in practice
+	// but function should handle it deterministically)
+	spec := &ContainerSpec{
+		LinuxFamily: "debian",
+		Packages: map[string][]string{
+			"apt": {"curl", "wget"},
+			"pip": {"requests"}, // hypothetical mixed PM scenario
+		},
+	}
+
+	// Should produce deterministic name
+	name1 := ContainerImageName(spec)
+	name2 := ContainerImageName(spec)
+
+	if name1 != name2 {
+		t.Errorf("Multiple managers not handled deterministically: %q vs %q", name1, name2)
+	}
+
+	// Should include debian prefix
+	if !strings.HasPrefix(name1, "tsuku/sandbox-cache:debian-") {
+		t.Errorf("Expected debian prefix, got %q", name1)
+	}
+}
+
+func TestContainerImageName_BaseImageInHash(t *testing.T) {
+	// Different base images should produce different hashes even with same packages
+	// This helps distinguish debian:bookworm vs debian:bullseye, etc.
+	spec1 := &ContainerSpec{
+		BaseImage:   "debian:bookworm-slim",
+		LinuxFamily: "debian",
+		Packages:    map[string][]string{"apt": {"curl"}},
+	}
+
+	spec2 := &ContainerSpec{
+		BaseImage:   "debian:bullseye-slim",
+		LinuxFamily: "debian",
+		Packages:    map[string][]string{"apt": {"curl"}},
+	}
+
+	name1 := ContainerImageName(spec1)
+	name2 := ContainerImageName(spec2)
+
+	if name1 == name2 {
+		t.Errorf("Expected different hashes for different base images, but both are %q", name1)
+	}
+
+	// Both should still have debian family prefix
+	if !strings.HasPrefix(name1, "tsuku/sandbox-cache:debian-") {
+		t.Errorf("spec1 should have debian prefix, got %q", name1)
+	}
+	if !strings.HasPrefix(name2, "tsuku/sandbox-cache:debian-") {
+		t.Errorf("spec2 should have debian prefix, got %q", name2)
+	}
+}
+
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||

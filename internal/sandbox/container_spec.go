@@ -1,6 +1,8 @@
 package sandbox
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"sort"
@@ -176,4 +178,58 @@ func generateBuildCommands(family string, packages map[string][]string) ([]strin
 	}
 
 	return commands, nil
+}
+
+// ContainerImageName generates a deterministic cache image name for a container specification.
+//
+// The function produces names like "tsuku/sandbox-cache:debian-a1b2c3d4e5f6g7h8" where:
+// - "debian" is the linux_family from the spec (for human readability)
+// - "a1b2c3d4e5f6g7h8" is the first 16 hex characters of the SHA256 hash
+//
+// The hash is computed from all package manager + package combinations, sorted
+// deterministically to ensure the same package set always produces the same hash.
+// This enables container image caching: if two test runs require the same packages,
+// they can reuse the same cached container image.
+//
+// Hash input format: sorted list of "pm:package" strings joined with newlines.
+// Example: For packages {"apt": ["curl", "jq"]}, the hash input is "apt:curl\napt:jq".
+//
+// The family prefix in the tag is technically redundant (the hash encodes the package
+// manager, which determines the family), but improves human readability when debugging
+// or managing images manually.
+func ContainerImageName(spec *ContainerSpec) string {
+	// Include base image in hash to distinguish different base versions
+	// (e.g., debian:bookworm vs debian:bullseye)
+	// Note: This uses the image tag, not digest, so it doesn't catch
+	// time-based staleness when the tag is updated. See issue #799 for
+	// proper version pinning solution.
+	var parts []string
+	parts = append(parts, fmt.Sprintf("base:%s", spec.BaseImage))
+
+	// Extract and sort all pm:package pairs for deterministic hashing
+	for manager, pkgs := range spec.Packages {
+		// Sort packages within each manager
+		sorted := make([]string, len(pkgs))
+		copy(sorted, pkgs)
+		sort.Strings(sorted)
+
+		// Create pm:package pairs
+		for _, pkg := range sorted {
+			parts = append(parts, fmt.Sprintf("%s:%s", manager, pkg))
+		}
+	}
+
+	// Sort all parts to ensure deterministic ordering regardless of map iteration
+	sort.Strings(parts)
+
+	// Compute SHA256 hash of the sorted parts
+	hashInput := strings.Join(parts, "\n")
+	hash := sha256.Sum256([]byte(hashInput))
+
+	// Use first 16 hex characters (64 bits) for the tag
+	// This provides sufficient uniqueness for realistic package combinations
+	hashStr := hex.EncodeToString(hash[:])[:16]
+
+	// Return image name with family prefix for readability
+	return fmt.Sprintf("tsuku/sandbox-cache:%s-%s", spec.LinuxFamily, hashStr)
 }
