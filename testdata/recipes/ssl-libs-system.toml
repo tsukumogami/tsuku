@@ -1,6 +1,10 @@
 # Ground truth recipe for OpenSSL development libraries (system dependencies)
 # Tests: M30 package manager actions for library packages with different naming conventions
 # Demonstrates implicit constraints and platform-specific package naming
+#
+# NOTE: This recipe will be used by sandbox executor (#770) to test container construction.
+# ExtractPackages() will extract package lists, and the sandbox will build containers with them.
+# When implementing #770, enhance this recipe to be more complete/realistic for integration testing.
 
 [metadata]
 name = "ssl-libs-system"

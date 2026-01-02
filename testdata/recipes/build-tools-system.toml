@@ -1,6 +1,10 @@
 # Ground truth recipe for build tools (system dependencies)
 # Tests: M30 package manager actions with implicit constraints
 # Demonstrates that tsuku generates correct install instructions for different Linux families
+#
+# NOTE: This recipe will be used by sandbox executor (#770) to test container construction.
+# ExtractPackages() will extract package lists, and the sandbox will build containers with them.
+# When implementing #770, enhance this recipe to be more complete/realistic for integration testing.
 
 [metadata]
 name = "build-tools-system"
