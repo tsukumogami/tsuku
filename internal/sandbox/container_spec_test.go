@@ -606,6 +606,37 @@ func TestContainerImageName_MultipleManagers(t *testing.T) {
 	}
 }
 
+func TestContainerImageName_BaseImageInHash(t *testing.T) {
+	// Different base images should produce different hashes even with same packages
+	// This helps distinguish debian:bookworm vs debian:bullseye, etc.
+	spec1 := &ContainerSpec{
+		BaseImage:   "debian:bookworm-slim",
+		LinuxFamily: "debian",
+		Packages:    map[string][]string{"apt": {"curl"}},
+	}
+
+	spec2 := &ContainerSpec{
+		BaseImage:   "debian:bullseye-slim",
+		LinuxFamily: "debian",
+		Packages:    map[string][]string{"apt": {"curl"}},
+	}
+
+	name1 := ContainerImageName(spec1)
+	name2 := ContainerImageName(spec2)
+
+	if name1 == name2 {
+		t.Errorf("Expected different hashes for different base images, but both are %q", name1)
+	}
+
+	// Both should still have debian family prefix
+	if !strings.HasPrefix(name1, "tsuku/sandbox-cache:debian-") {
+		t.Errorf("spec1 should have debian prefix, got %q", name1)
+	}
+	if !strings.HasPrefix(name2, "tsuku/sandbox-cache:debian-") {
+		t.Errorf("spec2 should have debian prefix, got %q", name2)
+	}
+}
+
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||

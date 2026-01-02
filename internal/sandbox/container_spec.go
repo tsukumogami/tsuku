@@ -198,8 +198,15 @@ func generateBuildCommands(family string, packages map[string][]string) ([]strin
 // manager, which determines the family), but improves human readability when debugging
 // or managing images manually.
 func ContainerImageName(spec *ContainerSpec) string {
-	// Extract and sort all pm:package pairs for deterministic hashing
+	// Include base image in hash to distinguish different base versions
+	// (e.g., debian:bookworm vs debian:bullseye)
+	// Note: This uses the image tag, not digest, so it doesn't catch
+	// time-based staleness when the tag is updated. See issue #TBD for
+	// proper version pinning solution.
 	var parts []string
+	parts = append(parts, fmt.Sprintf("base:%s", spec.BaseImage))
+
+	// Extract and sort all pm:package pairs for deterministic hashing
 	for manager, pkgs := range spec.Packages {
 		// Sort packages within each manager
 		sorted := make([]string, len(pkgs))
