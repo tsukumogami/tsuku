@@ -1,0 +1,45 @@
+[metadata]
+name = "sysdep-verify"
+description = "Test fixture for verification and manual fallback actions"
+version_format = "semver"
+
+# Install packages that provide commands to verify
+[[steps]]
+action = "apt_install"
+packages = ["curl"]
+
+[[steps]]
+action = "dnf_install"
+packages = ["curl"]
+
+[[steps]]
+action = "brew_install"
+packages = ["curl"]
+
+# Test require_command - basic command existence check
+[[steps]]
+action = "require_command"
+command = "curl"
+
+# Test require_command with version checking
+[[steps]]
+action = "require_command"
+command = "curl"
+version_flag = "--version"
+version_regex = "curl ([0-9.]+)"
+min_version = "7.0.0"
+
+# Test manual action for specific platform
+[[steps]]
+action = "manual"
+text = "Download and install from https://example.com/downloads"
+when = { os = "darwin" }
+
+# Test manual action without when clause (applies to all platforms)
+[[steps]]
+action = "manual"
+text = "After installation, configure API credentials at ~/.config/tool/credentials.json"
+
+[verify]
+command = "echo"
+pattern = "."

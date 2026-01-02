@@ -1,0 +1,75 @@
+[metadata]
+name = "sysdep-pm"
+description = "Test fixture for package manager system dependency actions"
+version_format = "semver"
+
+# Test apt_install - implicit constraint: linux_family = "debian"
+[[steps]]
+action = "apt_install"
+packages = ["build-essential", "libssl-dev"]
+
+# Test apt_repo - implicit constraint: linux_family = "debian"
+[[steps]]
+action = "apt_repo"
+url = "https://example.com/apt"
+key_url = "https://example.com/key.gpg"
+key_sha256 = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+
+# Test apt_ppa - implicit constraint: linux_family = "debian"
+[[steps]]
+action = "apt_ppa"
+ppa = "ppa:example/repo"
+
+# Test dnf_install - implicit constraint: linux_family = "rhel"
+[[steps]]
+action = "dnf_install"
+packages = ["gcc", "openssl-devel"]
+
+# Test dnf_repo - implicit constraint: linux_family = "rhel"
+[[steps]]
+action = "dnf_repo"
+url = "https://example.com/dnf"
+key_url = "https://example.com/key.asc"
+key_sha256 = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
+
+# Test brew_install with tap - implicit constraint: os = "darwin"
+[[steps]]
+action = "brew_install"
+packages = ["openssl", "libyaml"]
+tap = "example/tap"
+
+# Test brew_cask - implicit constraint: os = "darwin"
+[[steps]]
+action = "brew_cask"
+packages = ["docker"]
+
+# Test pacman_install - implicit constraint: linux_family = "arch"
+[[steps]]
+action = "pacman_install"
+packages = ["base-devel", "openssl"]
+
+# Test apk_install - implicit constraint: linux_family = "alpine"
+[[steps]]
+action = "apk_install"
+packages = ["build-base", "openssl-dev"]
+
+# Test zypper_install - implicit constraint: linux_family = "suse"
+[[steps]]
+action = "zypper_install"
+packages = ["gcc", "libopenssl-devel"]
+
+# Test fallback field on install action
+[[steps]]
+action = "apt_install"
+packages = ["example-package"]
+fallback = "Visit https://example.com/install for manual installation instructions"
+
+# Test unless_command field
+[[steps]]
+action = "brew_install"
+packages = ["git"]
+unless_command = "git"
+
+[verify]
+command = "echo"
+pattern = "."
