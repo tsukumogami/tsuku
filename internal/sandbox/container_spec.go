@@ -201,7 +201,7 @@ func ContainerImageName(spec *ContainerSpec) string {
 	// Include base image in hash to distinguish different base versions
 	// (e.g., debian:bookworm vs debian:bullseye)
 	// Note: This uses the image tag, not digest, so it doesn't catch
-	// time-based staleness when the tag is updated. See issue #TBD for
+	// time-based staleness when the tag is updated. See issue #799 for
 	// proper version pinning solution.
 	var parts []string
 	parts = append(parts, fmt.Sprintf("base:%s", spec.BaseImage))
