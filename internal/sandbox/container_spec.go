@@ -70,7 +70,7 @@ var familyToBaseImage = map[string]string{
 //	// spec.LinuxFamily = "debian"
 //	// spec.BuildCommands = ["RUN apt-get update && apt-get install -y curl jq"]
 func DeriveContainerSpec(packages map[string][]string) (*ContainerSpec, error) {
-	if packages == nil || len(packages) == 0 {
+	if len(packages) == 0 {
 		return nil, nil
 	}
 

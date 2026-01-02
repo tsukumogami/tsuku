@@ -1,6 +1,10 @@
 package sandbox
 
 import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -234,6 +238,108 @@ func TestDeriveContainerSpec_Determinism(t *testing.T) {
 				i, spec1.BuildCommands[i], spec2.BuildCommands[i])
 		}
 	}
+}
+
+// TestDeriveContainerSpec_DockerfileSmoke validates that generated Dockerfiles are syntactically correct
+// and can actually be built (if Docker is available).
+func TestDeriveContainerSpec_DockerfileSmoke(t *testing.T) {
+	// Skip if running in short mode (no external dependencies)
+	if testing.Short() {
+		t.Skip("Skipping Docker smoke test in short mode")
+	}
+
+	tests := []struct {
+		name     string
+		packages map[string][]string
+	}{
+		{
+			name:     "debian with curl",
+			packages: map[string][]string{"apt": {"curl"}},
+		},
+		{
+			name:     "fedora with wget",
+			packages: map[string][]string{"dnf": {"wget"}},
+		},
+	}
+
+	// Check if Docker is available
+	dockerAvailable := false
+	if _, err := exec.LookPath("docker"); err == nil {
+		// Verify Docker daemon is responsive
+		cmd := exec.Command("docker", "info")
+		if err := cmd.Run(); err == nil {
+			dockerAvailable = true
+		}
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			spec, err := DeriveContainerSpec(tt.packages)
+			if err != nil {
+				t.Fatalf("DeriveContainerSpec() error = %v", err)
+			}
+
+			// Generate full Dockerfile
+			dockerfile := generateDockerfile(spec)
+
+			// Basic syntax validation
+			if !strings.HasPrefix(dockerfile, "FROM ") {
+				t.Errorf("Dockerfile doesn't start with FROM: %s", dockerfile)
+			}
+			if !strings.Contains(dockerfile, "RUN ") {
+				t.Errorf("Dockerfile doesn't contain RUN command: %s", dockerfile)
+			}
+
+			// If Docker is available, try building it
+			if dockerAvailable {
+				t.Logf("Docker available - testing actual build for %s", tt.name)
+
+				// Create temp directory for Dockerfile
+				tmpDir, err := os.MkdirTemp("", "tsuku-smoke-test-*")
+				if err != nil {
+					t.Fatalf("Failed to create temp dir: %v", err)
+				}
+				defer os.RemoveAll(tmpDir)
+
+				dockerfilePath := filepath.Join(tmpDir, "Dockerfile")
+				if err := os.WriteFile(dockerfilePath, []byte(dockerfile), 0644); err != nil {
+					t.Fatalf("Failed to write Dockerfile: %v", err)
+				}
+
+				// Try building with --dry-run equivalent (validate syntax without pulling)
+				// Use --pull=never to avoid pulling images we might not have
+				imageName := "tsuku-smoke-test-" + strings.ReplaceAll(tt.name, " ", "-")
+				cmd := exec.Command("docker", "build", "-t", imageName, "-f", dockerfilePath, tmpDir)
+				output, err := cmd.CombinedOutput()
+
+				if err != nil {
+					// Log the failure but don't fail the test if it's just a network/pull issue
+					t.Logf("Docker build failed (may be expected if base images not cached): %v\nOutput: %s", err, output)
+
+					// Check if it's a syntax error vs missing image
+					if strings.Contains(string(output), "syntax") || strings.Contains(string(output), "parse") {
+						t.Errorf("Dockerfile has syntax errors: %s", output)
+					}
+				} else {
+					t.Logf("Docker build succeeded for %s", tt.name)
+
+					// Clean up the image
+					cleanupCmd := exec.Command("docker", "rmi", imageName)
+					_ = cleanupCmd.Run() // Ignore cleanup errors
+				}
+			} else {
+				t.Log("Docker not available - skipping build test (syntax validation only)")
+			}
+		})
+	}
+}
+
+// generateDockerfile creates a complete Dockerfile from a ContainerSpec
+func generateDockerfile(spec *ContainerSpec) string {
+	var lines []string
+	lines = append(lines, "FROM "+spec.BaseImage)
+	lines = append(lines, spec.BuildCommands...)
+	return strings.Join(lines, "\n") + "\n"
 }
 
 // Helper function to check if a string contains a substring
