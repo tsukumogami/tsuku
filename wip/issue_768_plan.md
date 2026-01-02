@@ -43,15 +43,15 @@ None - this is new functionality.
 
 ## Implementation Steps
 
-- [ ] Define ContainerSpec struct with fields: BaseImage, LinuxFamily, Packages, BuildCommands
-- [ ] Implement family-to-base-image mapping (debian→bookworm-slim, rhel→fedora:41, arch→archlinux:base, alpine→alpine:3.19, suse→opensuse/leap:15)
-- [ ] Implement DeriveContainerSpec function that extracts linux_family from packages map
-- [ ] Add validation to detect incompatible package managers (e.g., apt + dnf in same plan)
-- [ ] Implement Dockerfile generation method on ContainerSpec
-- [ ] Add unit tests for single package manager cases (apt, brew, dnf, pacman, apk, zypper)
-- [ ] Add unit tests for incompatible package manager detection
-- [ ] Add unit test for nil/empty packages input
-- [ ] Document the function with examples in godoc
+- [x] Define ContainerSpec struct with fields: BaseImage, LinuxFamily, Packages, BuildCommands
+- [x] Implement family-to-base-image mapping (debian→bookworm-slim, rhel→fedora:41, arch→archlinux:base, alpine→alpine:3.19, suse→opensuse/leap:15)
+- [x] Implement DeriveContainerSpec function that extracts linux_family from packages map
+- [x] Add validation to detect incompatible package managers (e.g., apt + dnf in same plan)
+- [x] Implement Dockerfile generation method on ContainerSpec
+- [x] Add unit tests for single package manager cases (apt, brew, dnf, pacman, apk, zypper)
+- [x] Add unit tests for incompatible package manager detection
+- [x] Add unit test for nil/empty packages input
+- [x] Document the function with examples in godoc
 
 ## Testing Strategy
 
