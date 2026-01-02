@@ -25,13 +25,13 @@ This approach follows the existing test patterns in `cmd/tsuku/install_test.go` 
 
 ## Implementation Steps
 
-- [ ] Create test file with helper to capture CLI output
-- [ ] Add test case for default platform detection (shows current platform instructions)
-- [ ] Add test case for `--target-family debian` (shows apt commands)
-- [ ] Add test case for `--target-family rhel` (shows dnf commands)
-- [ ] Add test case for `--quiet` flag (suppresses instruction output)
-- [ ] Add test case verifying all expected instruction components appear
-- [ ] Run tests and verify they pass
+- [x] Create test file with helper to capture CLI output
+- [x] Add test case for default platform detection (shows current platform instructions)
+- [x] Add test case for `--target-family debian` (shows apt commands)
+- [x] Add test case for `--target-family rhel` (shows dnf commands)
+- [x] Add test case for `--quiet` flag (suppresses instruction output)
+- [x] Add test case verifying all expected instruction components appear
+- [x] Run tests and verify they pass
 
 ## Testing Strategy
 
