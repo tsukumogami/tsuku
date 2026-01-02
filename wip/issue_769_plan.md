@@ -35,14 +35,14 @@ None - all code goes in existing files.
 
 ## Implementation Steps
 
-- [ ] Add `ContainerImageName()` function to `container_spec.go`
+- [x] Add `ContainerImageName()` function to `container_spec.go`
   - Import `crypto/sha256`, `encoding/hex`, and `strings` packages
   - Extract and sort `<pm>:<package>` pairs from `spec.Packages`
   - Compute SHA256 hash of newline-joined pairs
   - Return formatted string: `tsuku/sandbox-cache:<family>-<hash>` where hash is first 16 hex chars
   - Add godoc comment explaining deterministic hashing and cache benefits
 
-- [ ] Add unit tests to `container_spec_test.go`
+- [x] Add unit tests to `container_spec_test.go`
   - Test hash stability: same packages → same hash (run twice to verify)
   - Test hash uniqueness: different packages → different hash
   - Test deterministic ordering: package order in map doesn't affect hash
@@ -50,12 +50,12 @@ None - all code goes in existing files.
   - Test all linux families: verify family prefix is included correctly
   - Test edge cases: empty packages (should still work with nil spec handling), single package
 
-- [ ] Run tests and verify passing
+- [x] Run tests and verify passing
   - `go test -v ./internal/sandbox/...`
   - Verify all new tests pass
   - Check existing tests still pass (no regressions)
 
-- [ ] Run linters
+- [x] Run linters
   - `go vet ./internal/sandbox/...`
   - `golangci-lint run --timeout=5m ./internal/sandbox/...`
 
