@@ -1,0 +1,57 @@
+# Ground truth recipe for build tools (system dependencies)
+# Tests: M30 package manager actions with implicit constraints
+# Demonstrates that tsuku generates correct install instructions for different Linux families
+
+[metadata]
+name = "build-tools-system"
+description = "Essential build tools from system package managers (test fixture)"
+version_format = "semver"
+
+[version]
+pin = "1.0.0"
+
+# Debian/Ubuntu: build-essential metapackage
+# Implicit constraint: linux_family = "debian"
+[[steps]]
+action = "apt_install"
+packages = ["build-essential", "pkg-config"]
+
+# RHEL/Fedora: Development Tools group
+# Implicit constraint: linux_family = "rhel"
+[[steps]]
+action = "dnf_install"
+packages = ["gcc", "gcc-c++", "make", "pkgconfig"]
+
+# Arch: base-devel metapackage
+# Implicit constraint: linux_family = "arch"
+[[steps]]
+action = "pacman_install"
+packages = ["base-devel"]
+
+# Alpine: build-base metapackage
+# Implicit constraint: linux_family = "alpine"
+[[steps]]
+action = "apk_install"
+packages = ["build-base", "pkgconfig"]
+
+# openSUSE: development pattern
+# Implicit constraint: linux_family = "suse"
+[[steps]]
+action = "zypper_install"
+packages = ["gcc", "gcc-c++", "make", "pkg-config"]
+
+# macOS: Command Line Tools (via Homebrew recommendation)
+# Implicit constraint: os = "darwin"
+[[steps]]
+action = "manual"
+text = "Install Xcode Command Line Tools: xcode-select --install"
+when = { os = "darwin" }
+
+# Verify pkg-config is available (cross-platform check)
+[[steps]]
+action = "require_command"
+command = "pkg-config"
+
+[verify]
+command = "pkg-config --version"
+pattern = "."

@@ -1,0 +1,59 @@
+# Ground truth recipe for CA certificates (system dependencies)
+# Tests: M30 package manager actions for certificate packages
+# Demonstrates fallback field and unless_command usage
+
+[metadata]
+name = "ca-certs-system"
+description = "CA certificates from system package managers (test fixture)"
+version_format = "semver"
+
+[version]
+pin = "1.0.0"
+
+# Debian/Ubuntu: ca-certificates
+# Implicit constraint: linux_family = "debian"
+[[steps]]
+action = "apt_install"
+packages = ["ca-certificates"]
+fallback = "Manually install from https://packages.debian.org/stable/ca-certificates"
+
+# RHEL/Fedora: ca-certificates
+# Implicit constraint: linux_family = "rhel"
+[[steps]]
+action = "dnf_install"
+packages = ["ca-certificates"]
+
+# Arch: ca-certificates
+# Implicit constraint: linux_family = "arch"
+[[steps]]
+action = "pacman_install"
+packages = ["ca-certificates"]
+
+# Alpine: ca-certificates
+# Implicit constraint: linux_family = "alpine"
+[[steps]]
+action = "apk_install"
+packages = ["ca-certificates"]
+
+# openSUSE: ca-certificates
+# Implicit constraint: linux_family = "suse"
+[[steps]]
+action = "zypper_install"
+packages = ["ca-certificates"]
+
+# macOS: CA certs via Homebrew
+# Implicit constraint: os = "darwin"
+[[steps]]
+action = "brew_install"
+packages = ["ca-certificates"]
+unless_command = "security"
+
+# Update CA certificate bundle on Linux
+[[steps]]
+action = "manual"
+text = "Update CA certificates: sudo update-ca-certificates"
+when = { os = "linux" }
+
+[verify]
+command = "echo"
+pattern = "."
