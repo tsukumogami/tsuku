@@ -794,6 +794,269 @@ func TestContainerImageName_RepositoryHashStability(t *testing.T) {
 	}
 }
 
+func TestGenerateBuildCommands_AptRepoWithGPG(t *testing.T) {
+	// Test that apt_repo generates correct Docker RUN commands with GPG verification
+	repos := []RepositoryConfig{
+		{
+			Manager:   "apt",
+			Type:      "repo",
+			URL:       "https://download.docker.com/linux/ubuntu",
+			KeyURL:    "https://download.docker.com/linux/ubuntu/gpg",
+			KeySHA256: "9dc858229fc7dd38854ae2d88d81803c0ebfcd88891c9c19954b4c0d8b98b1e4",
+		},
+	}
+
+	commands, err := generateBuildCommands("debian", map[string][]string{"apt": {"curl"}}, repos)
+	if err != nil {
+		t.Fatalf("generateBuildCommands() error = %v", err)
+	}
+
+	// Check prerequisites
+	if !strings.Contains(commands[0], "wget") || !strings.Contains(commands[0], "ca-certificates") {
+		t.Errorf("Expected prerequisites (wget, ca-certificates), got: %s", commands[0])
+	}
+
+	// Check GPG key download
+	foundWget := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "wget -O /tmp/repo-key-0.gpg") {
+			foundWget = true
+			if !strings.Contains(cmd, repos[0].KeyURL) {
+				t.Errorf("wget command should reference key URL %s, got: %s", repos[0].KeyURL, cmd)
+			}
+		}
+	}
+	if !foundWget {
+		t.Errorf("Expected wget command to download GPG key, commands: %v", commands)
+	}
+
+	// Check sha256sum verification
+	foundSha256 := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "sha256sum -c") {
+			foundSha256 = true
+			if !strings.Contains(cmd, repos[0].KeySHA256) {
+				t.Errorf("sha256sum command should reference hash %s, got: %s", repos[0].KeySHA256, cmd)
+			}
+			// Verify it fails on mismatch
+			if !strings.Contains(cmd, "|| (echo") && !strings.Contains(cmd, "&& exit 1)") {
+				t.Errorf("sha256sum command should exit 1 on hash mismatch, got: %s", cmd)
+			}
+		}
+	}
+	if !foundSha256 {
+		t.Errorf("Expected sha256sum verification command, commands: %v", commands)
+	}
+
+	// Check apt-key add
+	foundAptKey := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "apt-key add") {
+			foundAptKey = true
+		}
+	}
+	if !foundAptKey {
+		t.Errorf("Expected apt-key add command, commands: %v", commands)
+	}
+
+	// Check repository file creation
+	foundRepoAdd := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "sources.list.d") && strings.Contains(cmd, repos[0].URL) {
+			foundRepoAdd = true
+		}
+	}
+	if !foundRepoAdd {
+		t.Errorf("Expected repository file creation with URL %s, commands: %v", repos[0].URL, commands)
+	}
+
+	t.Logf("Generated commands for apt_repo with GPG verification:")
+	for i, cmd := range commands {
+		t.Logf("  [%d] %s", i, cmd)
+	}
+}
+
+func TestGenerateBuildCommands_AptPPA(t *testing.T) {
+	// Test that apt_ppa generates correct Docker RUN commands
+	repos := []RepositoryConfig{
+		{
+			Manager: "apt",
+			Type:    "ppa",
+			PPA:     "deadsnakes/ppa",
+		},
+	}
+
+	commands, err := generateBuildCommands("debian", map[string][]string{"apt": {"python3.12"}}, repos)
+	if err != nil {
+		t.Fatalf("generateBuildCommands() error = %v", err)
+	}
+
+	// Check prerequisites (needed for add-apt-repository)
+	if !strings.Contains(commands[0], "software-properties-common") {
+		t.Errorf("Expected software-properties-common in prerequisites, got: %s", commands[0])
+	}
+
+	// Check add-apt-repository command
+	foundPPA := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "add-apt-repository") && strings.Contains(cmd, repos[0].PPA) {
+			foundPPA = true
+		}
+	}
+	if !foundPPA {
+		t.Errorf("Expected add-apt-repository command for PPA %s, commands: %v", repos[0].PPA, commands)
+	}
+
+	// Check apt-get update after PPA
+	foundUpdate := false
+	for i, cmd := range commands {
+		if strings.Contains(cmd, "apt-get update") && i > 0 {
+			// Make sure update comes after PPA addition
+			foundUpdate = true
+		}
+	}
+	if !foundUpdate {
+		t.Errorf("Expected apt-get update after PPA addition, commands: %v", commands)
+	}
+
+	t.Logf("Generated commands for apt_ppa:")
+	for i, cmd := range commands {
+		t.Logf("  [%d] %s", i, cmd)
+	}
+}
+
+func TestGenerateBuildCommands_MultipleRepos(t *testing.T) {
+	// Test multiple repositories with different GPG keys
+	repos := []RepositoryConfig{
+		{
+			Manager:   "apt",
+			Type:      "repo",
+			URL:       "https://repo1.example.com",
+			KeyURL:    "https://repo1.example.com/key.gpg",
+			KeySHA256: "abc123",
+		},
+		{
+			Manager:   "apt",
+			Type:      "repo",
+			URL:       "https://repo2.example.com",
+			KeyURL:    "https://repo2.example.com/key.gpg",
+			KeySHA256: "def456",
+		},
+		{
+			Manager: "apt",
+			Type:    "ppa",
+			PPA:     "user/repo",
+		},
+	}
+
+	commands, err := generateBuildCommands("debian", map[string][]string{"apt": {"curl"}}, repos)
+	if err != nil {
+		t.Fatalf("generateBuildCommands() error = %v", err)
+	}
+
+	// Count GPG key verifications
+	sha256Count := 0
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "sha256sum -c") {
+			sha256Count++
+		}
+	}
+
+	if sha256Count != 2 {
+		t.Errorf("Expected 2 GPG key verifications (for 2 repos with keys), got %d", sha256Count)
+	}
+
+	// Verify both repo URLs are referenced
+	foundRepo1 := false
+	foundRepo2 := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, repos[0].URL) {
+			foundRepo1 = true
+		}
+		if strings.Contains(cmd, repos[1].URL) {
+			foundRepo2 = true
+		}
+	}
+
+	if !foundRepo1 {
+		t.Errorf("Expected repo1 URL %s in commands", repos[0].URL)
+	}
+	if !foundRepo2 {
+		t.Errorf("Expected repo2 URL %s in commands", repos[1].URL)
+	}
+
+	t.Logf("Generated commands for multiple repositories:")
+	for i, cmd := range commands {
+		t.Logf("  [%d] %s", i, cmd)
+	}
+}
+
+func TestGenerateBuildCommands_DnfRepo(t *testing.T) {
+	// Test that dnf_repo generates correct Docker RUN commands
+	repos := []RepositoryConfig{
+		{
+			Manager: "dnf",
+			Type:    "repo",
+			URL:     "https://repo.example.com",
+			KeyURL:  "https://repo.example.com/key.gpg",
+		},
+	}
+
+	commands, err := generateBuildCommands("rhel", map[string][]string{"dnf": {"vim"}}, repos)
+	if err != nil {
+		t.Fatalf("generateBuildCommands() error = %v", err)
+	}
+
+	// Check wget install (prerequisite for downloading GPG keys)
+	foundWgetInstall := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "dnf install") && strings.Contains(cmd, "wget") {
+			foundWgetInstall = true
+		}
+	}
+	if !foundWgetInstall {
+		t.Errorf("Expected dnf install wget for GPG key download, commands: %v", commands)
+	}
+
+	// Check GPG key download
+	foundKeyDownload := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "wget") && strings.Contains(cmd, repos[0].KeyURL) {
+			foundKeyDownload = true
+		}
+	}
+	if !foundKeyDownload {
+		t.Errorf("Expected wget command for GPG key, commands: %v", commands)
+	}
+
+	// Check rpm --import
+	foundRpmImport := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "rpm --import") {
+			foundRpmImport = true
+		}
+	}
+	if !foundRpmImport {
+		t.Errorf("Expected rpm --import command, commands: %v", commands)
+	}
+
+	// Check yum.repos.d configuration
+	foundRepoConfig := false
+	for _, cmd := range commands {
+		if strings.Contains(cmd, "/etc/yum.repos.d") && strings.Contains(cmd, repos[0].URL) {
+			foundRepoConfig = true
+		}
+	}
+	if !foundRepoConfig {
+		t.Errorf("Expected yum.repos.d configuration, commands: %v", commands)
+	}
+
+	t.Logf("Generated commands for dnf_repo:")
+	for i, cmd := range commands {
+		t.Logf("  [%d] %s", i, cmd)
+	}
+}
+
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
