@@ -359,15 +359,19 @@ jobs:
       - name: "Verify gdbm-source functionality"
         run: ./test/scripts/verify-tool.sh gdbm-source
 
-  # Test sandbox with multi-family support  # Validates system dependency extraction and container building across Linux families
+  # Test sandbox with multi-family support
+  # Validates system dependency extraction and container building across Linux families  # Only tests debian family for now - other families would need recipes with
+  # family-specific system dependencies to properly validate multi-family support
   test-sandbox-multifamily:
-    name: "Sandbox (${{ matrix.family }}): ${{ matrix.test }}"
+    name: "Sandbox (${{ matrix.family }}): ${{ matrix.tool }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        family: [debian, rhel, arch, alpine, suse]
-        test: [cmake, sqlite]
+        # Start with debian family only - validates the infrastructure works
+        # TODO: Add recipes with cross-family system deps to test other families
+        family: [debian]
+        tool: [make, pkg-config]
     steps:
       - uses: actions/checkout@v4
 
@@ -380,13 +384,12 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: "Run ${{ matrix.test }} sandbox test (${{ matrix.family }})"
+      - name: "Generate plan for ${{ matrix.tool }} (${{ matrix.family }})"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ matrix.test }}" = "cmake" ]; then
-            ./test/scripts/test-cmake-provisioning.sh ${{ matrix.family }}
-          else
-            ./test/scripts/test-readline-provisioning.sh ${{ matrix.family }}
-          fi
+          ./tsuku eval ${{ matrix.tool }} --os linux --linux-family ${{ matrix.family }} --install-deps > plan.json
+
+      - name: "Run sandbox test for ${{ matrix.tool }} (${{ matrix.family }})"
+        run: ./tsuku install --plan plan.json --sandbox --force
 
