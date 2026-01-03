@@ -150,16 +150,16 @@ func (e *Executor) Sandbox(
 			"docs", "https://docs.docker.com/engine/security/rootless/")
 	}
 
-	// Extract packages from plan
+	// Extract system requirements (packages + repositories) from plan
 	// The plan is already filtered for the target platform during plan generation,
-	// so we can extract packages directly without additional filtering.
-	packages := ExtractPackages(plan)
+	// so we can extract requirements directly without additional filtering.
+	sysReqs := ExtractSystemRequirements(plan)
 
 	// Determine which image to use
 	containerImage := reqs.Image
-	if packages != nil {
-		// Derive container spec from packages
-		spec, err := DeriveContainerSpec(packages)
+	if sysReqs != nil {
+		// Derive container spec from system requirements
+		spec, err := DeriveContainerSpec(sysReqs)
 		if err != nil {
 			return nil, fmt.Errorf("failed to derive container spec: %w", err)
 		}

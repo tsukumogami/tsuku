@@ -567,31 +567,38 @@ All external resources must be content-addressed to prevent TOCTOU attacks:
 
 Preflight validation rejects recipes with unhashed external resources.
 
-### Action Execution in Sandbox
+### Build-Time Container Preparation
 
-When tsuku executes actions in sandbox containers, they run as root (no sudo needed):
+System dependencies (packages and repositories) are installed during container image building, not at action execution time. This "build-time" architecture provides better caching and security:
+
+**Build Time (Container Image Creation):**
+1. Sandbox executor extracts system requirements from the plan (`ExtractSystemRequirements()`)
+2. Container spec generator creates Docker RUN commands with GPG verification
+3. Container runtime builds image with dependencies pre-installed
+4. Built image is cached with hash of packages + repositories + base image
+
+**Action Execution Time (Inside Container):**
+- Actions verify prerequisites exist (commands are in PATH)
+- If missing, action fails with install instructions
+- No actual installation happens - prerequisites were installed at build time
 
 ```go
-// Action interface for typed actions
-type Action interface {
-    // Preflight validates parameters
-    Preflight(params map[string]interface{}) *PreflightResult
-
-    // ExecuteInSandbox runs the action inside a container (as root)
-    ExecuteInSandbox(ctx *SandboxContext) error
-
-    // Describe returns human-readable instructions for documentation
-    Describe() string
-}
-
-// Example: apt_install action in sandbox
+// Example: apt_install action validates prerequisites
 type AptInstallAction struct {
     Packages []string
 }
 
-func (a *AptInstallAction) ExecuteInSandbox(ctx *SandboxContext) error {
-    args := append([]string{"install", "-y"}, a.Packages...)
-    return ctx.Run("apt-get", args...)
+func (a *AptInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+    packages := params["packages"].([]string)
+
+    // Verify each package command exists
+    for _, pkg := range packages {
+        if _, err := exec.LookPath(pkg); err != nil {
+            return fmt.Errorf("command %s not found\nInstall with: apt-get install %s", pkg, pkg)
+        }
+    }
+
+    return nil  // All commands verified
 }
 
 func (a *AptInstallAction) Describe() string {
@@ -599,6 +606,29 @@ func (a *AptInstallAction) Describe() string {
         strings.Join(a.Packages, " "))
 }
 ```
+
+**Build-Time GPG Verification:**
+
+Repository actions (apt_repo, dnf_repo) generate Docker RUN commands that verify GPG keys during image building:
+
+```dockerfile
+# Prerequisites
+RUN apt-get update && apt-get install -y wget ca-certificates software-properties-common gpg
+
+# Download and verify GPG key
+RUN wget -O /tmp/repo-key-0.gpg https://example.com/key.gpg
+RUN echo "abc123...  /tmp/repo-key-0.gpg" | sha256sum -c || (echo "GPG key hash mismatch" && exit 1)
+
+# Import key and add repository
+RUN apt-key add /tmp/repo-key-0.gpg
+RUN echo "deb https://example.com/ubuntu focal main" > /etc/apt/sources.list.d/custom.list
+RUN apt-get update
+
+# Install packages
+RUN apt-get install -y curl jq
+```
+
+If the GPG key hash doesn't match, the container build fails immediately. This prevents compromised repositories from being added to test containers.
 
 See [DESIGN-system-dependency-actions.md - Documentation Generation](DESIGN-system-dependency-actions.md#documentation-generation) for the complete `Describe()` interface.
 

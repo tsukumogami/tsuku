@@ -13,8 +13,11 @@ on:
       - 'internal/actions/cmake_build.go'
       - 'internal/actions/meson_build.go'
       - 'internal/actions/extract.go'
+      - 'internal/sandbox/**/*.go'
+      - 'cmd/tsuku/eval.go'
       - 'testdata/recipes/*.toml'
       - 'test/scripts/verify-*.sh'
+      - 'test/scripts/test-*-provisioning.sh'
       - '.github/workflows/build-essentials.yml'
   pull_request:
     branches: [main]
@@ -25,9 +28,12 @@ on:
       - 'internal/actions/cmake_build.go'
       - 'internal/actions/meson_build.go'
       - 'internal/actions/extract.go'
+      - 'internal/sandbox/**/*.go'
+      - 'cmd/tsuku/eval.go'
       - 'testdata/recipes/*.toml'
       - 'scripts/*.sh'
       - 'test/scripts/verify-*.sh'
+      - 'test/scripts/test-*-provisioning.sh'
       - '.github/workflows/build-essentials.yml'
 
 jobs:
@@ -352,4 +358,38 @@ jobs:
 
       - name: "Verify gdbm-source functionality"
         run: ./test/scripts/verify-tool.sh gdbm-source
+
+  # Test sandbox with multi-family support
+  # Validates system dependency extraction and container building across Linux families  # Only tests debian family for now - other families would need recipes with
+  # family-specific system dependencies to properly validate multi-family support
+  test-sandbox-multifamily:
+    name: "Sandbox (${{ matrix.family }}): ${{ matrix.tool }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Start with debian family only - validates the infrastructure works
+        # TODO: Add recipes with cross-family system deps to test other families
+        family: [debian]
+        tool: [make, pkg-config]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: "Generate plan for ${{ matrix.tool }} (${{ matrix.family }})"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ./tsuku eval ${{ matrix.tool }} --os linux --linux-family ${{ matrix.family }} --install-deps > plan.json
+
+      - name: "Run sandbox test for ${{ matrix.tool }} (${{ matrix.family }})"
+        run: ./tsuku install --plan plan.json --sandbox --force
 

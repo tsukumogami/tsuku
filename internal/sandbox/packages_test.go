@@ -476,3 +476,307 @@ func TestExtractPackages_BrewAggregation(t *testing.T) {
 		t.Errorf("packages[brew] = %v, want %v", packages["brew"], expected)
 	}
 }
+
+func TestExtractSystemRequirements_NilPlan(t *testing.T) {
+	t.Parallel()
+
+	reqs := ExtractSystemRequirements(nil)
+
+	if reqs != nil {
+		t.Errorf("ExtractSystemRequirements(nil) = %v, want nil", reqs)
+	}
+}
+
+func TestExtractSystemRequirements_EmptyPlan(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Steps: []executor.ResolvedStep{},
+	}
+
+	reqs := ExtractSystemRequirements(plan)
+
+	if reqs != nil {
+		t.Errorf("ExtractSystemRequirements(empty) = %v, want nil", reqs)
+	}
+}
+
+func TestExtractSystemRequirements_AptRepoWithGPG(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Steps: []executor.ResolvedStep{
+			{
+				Action: "apt_repo",
+				Params: map[string]interface{}{
+					"url":        "https://download.docker.com/linux/ubuntu",
+					"key_url":    "https://download.docker.com/linux/ubuntu/gpg",
+					"key_sha256": "abc123def456",
+				},
+			},
+		},
+	}
+
+	reqs := ExtractSystemRequirements(plan)
+
+	if reqs == nil {
+		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+	}
+
+	if len(reqs.Repositories) != 1 {
+		t.Fatalf("len(repositories) = %d, want 1", len(reqs.Repositories))
+	}
+
+	repo := reqs.Repositories[0]
+	if repo.Manager != "apt" {
+		t.Errorf("repo.Manager = %q, want %q", repo.Manager, "apt")
+	}
+	if repo.Type != "repo" {
+		t.Errorf("repo.Type = %q, want %q", repo.Type, "repo")
+	}
+	if repo.URL != "https://download.docker.com/linux/ubuntu" {
+		t.Errorf("repo.URL = %q, want %q", repo.URL, "https://download.docker.com/linux/ubuntu")
+	}
+	if repo.KeyURL != "https://download.docker.com/linux/ubuntu/gpg" {
+		t.Errorf("repo.KeyURL = %q, want %q", repo.KeyURL, "https://download.docker.com/linux/ubuntu/gpg")
+	}
+	if repo.KeySHA256 != "abc123def456" {
+		t.Errorf("repo.KeySHA256 = %q, want %q", repo.KeySHA256, "abc123def456")
+	}
+}
+
+func TestExtractSystemRequirements_AptPPA(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Steps: []executor.ResolvedStep{
+			{
+				Action: "apt_ppa",
+				Params: map[string]interface{}{
+					"ppa": "deadsnakes/ppa",
+				},
+			},
+		},
+	}
+
+	reqs := ExtractSystemRequirements(plan)
+
+	if reqs == nil {
+		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+	}
+
+	if len(reqs.Repositories) != 1 {
+		t.Fatalf("len(repositories) = %d, want 1", len(reqs.Repositories))
+	}
+
+	repo := reqs.Repositories[0]
+	if repo.Manager != "apt" {
+		t.Errorf("repo.Manager = %q, want %q", repo.Manager, "apt")
+	}
+	if repo.Type != "ppa" {
+		t.Errorf("repo.Type = %q, want %q", repo.Type, "ppa")
+	}
+	if repo.PPA != "deadsnakes/ppa" {
+		t.Errorf("repo.PPA = %q, want %q", repo.PPA, "deadsnakes/ppa")
+	}
+}
+
+func TestExtractSystemRequirements_BrewTap(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Steps: []executor.ResolvedStep{
+			{
+				Action: "brew_tap",
+				Params: map[string]interface{}{
+					"tap": "homebrew/cask-versions",
+				},
+			},
+		},
+	}
+
+	reqs := ExtractSystemRequirements(plan)
+
+	if reqs == nil {
+		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+	}
+
+	if len(reqs.Repositories) != 1 {
+		t.Fatalf("len(repositories) = %d, want 1", len(reqs.Repositories))
+	}
+
+	repo := reqs.Repositories[0]
+	if repo.Manager != "brew" {
+		t.Errorf("repo.Manager = %q, want %q", repo.Manager, "brew")
+	}
+	if repo.Type != "tap" {
+		t.Errorf("repo.Type = %q, want %q", repo.Type, "tap")
+	}
+	if repo.Tap != "homebrew/cask-versions" {
+		t.Errorf("repo.Tap = %q, want %q", repo.Tap, "homebrew/cask-versions")
+	}
+}
+
+func TestExtractSystemRequirements_DnfRepo(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Steps: []executor.ResolvedStep{
+			{
+				Action: "dnf_repo",
+				Params: map[string]interface{}{
+					"url":    "https://download.docker.com/linux/fedora/docker-ce.repo",
+					"gpgkey": "https://download.docker.com/linux/fedora/gpg",
+				},
+			},
+		},
+	}
+
+	reqs := ExtractSystemRequirements(plan)
+
+	if reqs == nil {
+		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+	}
+
+	if len(reqs.Repositories) != 1 {
+		t.Fatalf("len(repositories) = %d, want 1", len(reqs.Repositories))
+	}
+
+	repo := reqs.Repositories[0]
+	if repo.Manager != "dnf" {
+		t.Errorf("repo.Manager = %q, want %q", repo.Manager, "dnf")
+	}
+	if repo.Type != "repo" {
+		t.Errorf("repo.Type = %q, want %q", repo.Type, "repo")
+	}
+	if repo.URL != "https://download.docker.com/linux/fedora/docker-ce.repo" {
+		t.Errorf("repo.URL = %q, want %q", repo.URL, "https://download.docker.com/linux/fedora/docker-ce.repo")
+	}
+	if repo.KeyURL != "https://download.docker.com/linux/fedora/gpg" {
+		t.Errorf("repo.KeyURL = %q, want %q", repo.KeyURL, "https://download.docker.com/linux/fedora/gpg")
+	}
+}
+
+func TestExtractSystemRequirements_MixedPackagesAndRepos(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Steps: []executor.ResolvedStep{
+			{
+				Action: "apt_repo",
+				Params: map[string]interface{}{
+					"url":        "https://download.docker.com/linux/ubuntu",
+					"key_url":    "https://download.docker.com/linux/ubuntu/gpg",
+					"key_sha256": "abc123",
+				},
+			},
+			{
+				Action: "apt_install",
+				Params: map[string]interface{}{
+					"packages": []interface{}{"docker-ce", "containerd.io"},
+				},
+			},
+		},
+	}
+
+	reqs := ExtractSystemRequirements(plan)
+
+	if reqs == nil {
+		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+	}
+
+	// Check packages
+	expectedPackages := []string{"docker-ce", "containerd.io"}
+	if !reflect.DeepEqual(reqs.Packages["apt"], expectedPackages) {
+		t.Errorf("Packages[apt] = %v, want %v", reqs.Packages["apt"], expectedPackages)
+	}
+
+	// Check repositories
+	if len(reqs.Repositories) != 1 {
+		t.Fatalf("len(repositories) = %d, want 1", len(reqs.Repositories))
+	}
+
+	repo := reqs.Repositories[0]
+	if repo.URL != "https://download.docker.com/linux/ubuntu" {
+		t.Errorf("repo.URL = %q, want %q", repo.URL, "https://download.docker.com/linux/ubuntu")
+	}
+}
+
+func TestExtractSystemRequirements_MultipleRepos(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Steps: []executor.ResolvedStep{
+			{
+				Action: "apt_repo",
+				Params: map[string]interface{}{
+					"url":        "https://repo1.example.com",
+					"key_url":    "https://repo1.example.com/key.gpg",
+					"key_sha256": "hash1",
+				},
+			},
+			{
+				Action: "apt_ppa",
+				Params: map[string]interface{}{
+					"ppa": "user/repo",
+				},
+			},
+			{
+				Action: "apt_repo",
+				Params: map[string]interface{}{
+					"url":        "https://repo2.example.com",
+					"key_url":    "https://repo2.example.com/key.gpg",
+					"key_sha256": "hash2",
+				},
+			},
+		},
+	}
+
+	reqs := ExtractSystemRequirements(plan)
+
+	if reqs == nil {
+		t.Fatal("ExtractSystemRequirements returned nil, want non-nil")
+	}
+
+	if len(reqs.Repositories) != 3 {
+		t.Fatalf("len(repositories) = %d, want 3", len(reqs.Repositories))
+	}
+
+	// Verify all repos extracted in order
+	if reqs.Repositories[0].URL != "https://repo1.example.com" {
+		t.Errorf("repositories[0].URL = %q, want %q", reqs.Repositories[0].URL, "https://repo1.example.com")
+	}
+	if reqs.Repositories[1].PPA != "user/repo" {
+		t.Errorf("repositories[1].PPA = %q, want %q", reqs.Repositories[1].PPA, "user/repo")
+	}
+	if reqs.Repositories[2].URL != "https://repo2.example.com" {
+		t.Errorf("repositories[2].URL = %q, want %q", reqs.Repositories[2].URL, "https://repo2.example.com")
+	}
+}
+
+func TestExtractSystemRequirements_BackwardCompatibility(t *testing.T) {
+	t.Parallel()
+
+	// Verify ExtractPackages wrapper works correctly
+	plan := &executor.InstallationPlan{
+		Steps: []executor.ResolvedStep{
+			{
+				Action: "apt_install",
+				Params: map[string]interface{}{
+					"packages": []interface{}{"curl", "wget"},
+				},
+			},
+		},
+	}
+
+	// Old function should still work
+	packages := ExtractPackages(plan)
+	if packages == nil {
+		t.Fatal("ExtractPackages returned nil, want map")
+	}
+
+	expected := []string{"curl", "wget"}
+	if !reflect.DeepEqual(packages["apt"], expected) {
+		t.Errorf("packages[apt] = %v, want %v", packages["apt"], expected)
+	}
+}
