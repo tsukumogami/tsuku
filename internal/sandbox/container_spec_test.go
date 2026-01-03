@@ -88,7 +88,7 @@ func TestDeriveContainerSpec(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := DeriveContainerSpec(tt.packages)
+			got, err := DeriveContainerSpec(&SystemRequirements{Packages: tt.packages})
 
 			if tt.wantErr {
 				if err == nil {
@@ -190,7 +190,7 @@ func TestDeriveContainerSpec_BuildCommands(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			spec, err := DeriveContainerSpec(tt.packages)
+			spec, err := DeriveContainerSpec(&SystemRequirements{Packages: tt.packages})
 			if err != nil {
 				t.Fatalf("DeriveContainerSpec() error = %v", err)
 			}
@@ -217,12 +217,12 @@ func TestDeriveContainerSpec_Determinism(t *testing.T) {
 		"apt": {"zsh", "bash", "curl", "wget"},
 	}
 
-	spec1, err1 := DeriveContainerSpec(packages)
+	spec1, err1 := DeriveContainerSpec(&SystemRequirements{Packages: packages})
 	if err1 != nil {
 		t.Fatalf("First call error: %v", err1)
 	}
 
-	spec2, err2 := DeriveContainerSpec(packages)
+	spec2, err2 := DeriveContainerSpec(&SystemRequirements{Packages: packages})
 	if err2 != nil {
 		t.Fatalf("Second call error: %v", err2)
 	}
@@ -274,7 +274,7 @@ func TestDeriveContainerSpec_DockerfileSmoke(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			spec, err := DeriveContainerSpec(tt.packages)
+			spec, err := DeriveContainerSpec(&SystemRequirements{Packages: tt.packages})
 			if err != nil {
 				t.Fatalf("DeriveContainerSpec() error = %v", err)
 			}
