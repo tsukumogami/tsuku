@@ -213,10 +213,8 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh sqlite-source
 
-  # Test configure_make with complex multi-dependency build (git -> curl -> openssl/zlib)
-  # SKIP: Missing library dependencies (expat, libcurl) - see #742
+  # Test configure_make with complex multi-dependency build (git -> libcurl -> openssl/zlib + expat)
   test-git-source:
-    if: false
     name: "${{ matrix.platform.name }}: git-source"
     runs-on: ${{ matrix.platform.runner }}
     strategy:
@@ -239,6 +237,16 @@ jobs:
 
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
+
+      - name: Install gettext (required for git build)
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y gettext
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install gettext
+            brew link gettext --force
+          fi
 
       - name: "Install git-source (tests multi-dependency chain: git -> curl -> openssl/zlib + expat)"
         env:
