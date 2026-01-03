@@ -206,9 +206,10 @@ func TestSandbox_NoRuntime(t *testing.T) {
 	}
 	reqs := ComputeSandboxRequirements(plan)
 
-	// Create a target from the plan's platform
-	target := platform.Target{
-		Platform: plan.Platform.OS + "/" + plan.Platform.Arch,
+	// Detect current system target
+	target, err := platform.DetectTarget()
+	if err != nil {
+		t.Fatalf("Failed to detect target: %v", err)
 	}
 
 	// This will either skip (no runtime) or fail (no tsuku binary)

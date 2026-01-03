@@ -214,13 +214,10 @@ func (o *Orchestrator) validate(ctx context.Context, r *recipe.Recipe) (*sandbox
 	// Compute sandbox requirements from plan
 	reqs := sandbox.ComputeSandboxRequirements(plan)
 
-	// Create target from plan platform
-	// For the orchestrator, we're testing on the current system
-	target := platform.Target{
-		Platform: plan.Platform.OS + "/" + plan.Platform.Arch,
-		// LinuxFamily is left empty for non-Linux systems, or can be detected
-		// from the current system for Linux. For now, we use empty which will
-		// cause the fallback to base image behavior.
+	// Detect current system target (platform + linux_family)
+	target, err := platform.DetectTarget()
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect target platform: %w", err)
 	}
 
 	// Run sandbox

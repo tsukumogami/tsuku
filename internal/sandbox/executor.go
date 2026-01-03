@@ -151,9 +151,8 @@ func (e *Executor) Sandbox(
 	}
 
 	// Extract packages from plan
-	// Note: The plan should already be filtered for the target platform during
-	// plan generation. The target parameter is used to select the base image
-	// family matching the plan's target.
+	// The plan is already filtered for the target platform during plan generation,
+	// so we can extract packages directly without additional filtering.
 	packages := ExtractPackages(plan)
 
 	// Determine which image to use

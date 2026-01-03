@@ -104,10 +104,10 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 	detector := validate.NewRuntimeDetector()
 	sandboxExec := sandbox.NewExecutor(detector, sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir))
 
-	// Create target from plan platform
-	target := platform.Target{
-		Platform: plan.Platform.OS + "/" + plan.Platform.Arch,
-		// LinuxFamily is left empty - the sandbox will use the base image from reqs
+	// Detect current system target (platform + linux_family)
+	target, err := platform.DetectTarget()
+	if err != nil {
+		return fmt.Errorf("failed to detect target platform: %w", err)
 	}
 
 	// Run sandbox test
