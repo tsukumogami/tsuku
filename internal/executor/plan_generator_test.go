@@ -1881,3 +1881,116 @@ func TestGeneratePlan_WithPatches(t *testing.T) {
 		t.Error("expected apply_patch step in plan")
 	}
 }
+
+func TestGeneratePlan_LinuxFamilyFiltering(t *testing.T) {
+	// Test that actions with implicit linux_family constraints are filtered correctly
+	r := &recipe.Recipe{
+		Metadata: recipe.MetadataSection{
+			Name: "test-tool",
+		},
+		Version: recipe.VersionSection{
+			Source: "nodejs_dist",
+		},
+		Steps: []recipe.Step{
+			{
+				Action: "apt_install",
+				Params: map[string]interface{}{"packages": []interface{}{"curl"}},
+			},
+			{
+				Action: "dnf_install",
+				Params: map[string]interface{}{"packages": []interface{}{"curl"}},
+			},
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{"files": []interface{}{"bin/tool"}},
+			},
+		},
+	}
+
+	exec, err := New(r)
+	if err != nil {
+		t.Fatalf("New() error: %v", err)
+	}
+	defer exec.Cleanup()
+
+	ctx := context.Background()
+
+	// Test debian family - should only include apt_install
+	debianPlan, err := exec.GeneratePlan(ctx, PlanConfig{
+		OS:          "linux",
+		Arch:        "amd64",
+		LinuxFamily: "debian",
+	})
+	if err != nil {
+		t.Fatalf("GeneratePlan() for debian error: %v", err)
+	}
+
+	// Check that only apt_install is present, not dnf_install
+	hasApt := false
+	hasDnf := false
+	for _, step := range debianPlan.Steps {
+		if step.Action == "apt_install" {
+			hasApt = true
+		}
+		if step.Action == "dnf_install" {
+			hasDnf = true
+		}
+	}
+
+	if !hasApt {
+		t.Error("Debian plan should include apt_install step")
+	}
+	if hasDnf {
+		t.Error("Debian plan should NOT include dnf_install step")
+	}
+
+	// Test rhel family - should only include dnf_install
+	rhelPlan, err := exec.GeneratePlan(ctx, PlanConfig{
+		OS:          "linux",
+		Arch:        "amd64",
+		LinuxFamily: "rhel",
+	})
+	if err != nil {
+		t.Fatalf("GeneratePlan() for rhel error: %v", err)
+	}
+
+	// Check that only dnf_install is present, not apt_install
+	hasApt = false
+	hasDnf = false
+	for _, step := range rhelPlan.Steps {
+		if step.Action == "apt_install" {
+			hasApt = true
+		}
+		if step.Action == "dnf_install" {
+			hasDnf = true
+		}
+	}
+
+	if hasApt {
+		t.Error("RHEL plan should NOT include apt_install step")
+	}
+	if !hasDnf {
+		t.Error("RHEL plan should include dnf_install step")
+	}
+
+	// Both should have install_binaries (no family constraint)
+	hasInstallBinaries := false
+	for _, step := range debianPlan.Steps {
+		if step.Action == "install_binaries" {
+			hasInstallBinaries = true
+		}
+	}
+	if !hasInstallBinaries {
+		t.Error("Debian plan should include install_binaries step")
+	}
+
+	hasInstallBinaries = false
+	for _, step := range rhelPlan.Steps {
+		if step.Action == "install_binaries" {
+			hasInstallBinaries = true
+		}
+	}
+	if !hasInstallBinaries {
+		t.Error("RHEL plan should include install_binaries step")
+	}
+}

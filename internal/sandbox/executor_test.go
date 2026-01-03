@@ -8,6 +8,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
@@ -205,9 +206,15 @@ func TestSandbox_NoRuntime(t *testing.T) {
 	}
 	reqs := ComputeSandboxRequirements(plan)
 
+	// Detect current system target
+	target, err := platform.DetectTarget()
+	if err != nil {
+		t.Fatalf("Failed to detect target: %v", err)
+	}
+
 	// This will either skip (no runtime) or fail (no tsuku binary)
 	// Both are acceptable for this test
-	result, err := exec.Sandbox(context.Background(), plan, reqs)
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
 	if err != nil {
 		t.Fatalf("Sandbox returned error: %v", err)
 	}

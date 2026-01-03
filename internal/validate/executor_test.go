@@ -11,9 +11,11 @@ import (
 
 // mockRuntime is a mock Runtime for testing.
 type mockRuntime struct {
-	name     string
-	rootless bool
-	runFunc  func(ctx context.Context, opts RunOptions) (*RunResult, error)
+	name            string
+	rootless        bool
+	runFunc         func(ctx context.Context, opts RunOptions) (*RunResult, error)
+	buildFunc       func(ctx context.Context, imageName, baseImage string, buildCommands []string) error
+	imageExistsFunc func(ctx context.Context, name string) (bool, error)
 }
 
 func (m *mockRuntime) Name() string {
@@ -29,6 +31,20 @@ func (m *mockRuntime) Run(ctx context.Context, opts RunOptions) (*RunResult, err
 		return m.runFunc(ctx, opts)
 	}
 	return &RunResult{ExitCode: 0}, nil
+}
+
+func (m *mockRuntime) Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error {
+	if m.buildFunc != nil {
+		return m.buildFunc(ctx, imageName, baseImage, buildCommands)
+	}
+	return nil
+}
+
+func (m *mockRuntime) ImageExists(ctx context.Context, name string) (bool, error) {
+	if m.imageExistsFunc != nil {
+		return m.imageExistsFunc(ctx, name)
+	}
+	return false, nil
 }
 
 // testLogger captures log messages for testing.

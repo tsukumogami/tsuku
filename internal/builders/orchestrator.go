@@ -8,6 +8,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
@@ -213,8 +214,14 @@ func (o *Orchestrator) validate(ctx context.Context, r *recipe.Recipe) (*sandbox
 	// Compute sandbox requirements from plan
 	reqs := sandbox.ComputeSandboxRequirements(plan)
 
+	// Detect current system target (platform + linux_family)
+	target, err := platform.DetectTarget()
+	if err != nil {
+		return nil, fmt.Errorf("failed to detect target platform: %w", err)
+	}
+
 	// Run sandbox
-	return o.sandbox.Sandbox(ctx, plan, reqs)
+	return o.sandbox.Sandbox(ctx, plan, target, reqs)
 }
 
 // generatePlan creates a fully resolved installation plan from a recipe.

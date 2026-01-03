@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
@@ -20,6 +21,9 @@ type PlanConfig struct {
 	OS string
 	// Arch overrides the target architecture (default: runtime.GOARCH)
 	Arch string
+	// LinuxFamily specifies the target Linux distribution family (debian, rhel, arch, alpine, suse).
+	// Only used when OS is "linux". If empty on Linux, DetectFamily() is called.
+	LinuxFamily string
 	// RecipeSource indicates where the recipe came from ("registry" or file path)
 	RecipeSource string
 	// OnWarning is called when a non-evaluable step is encountered
@@ -61,6 +65,28 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	recipeSource := cfg.RecipeSource
 	if recipeSource == "" {
 		recipeSource = "unknown"
+	}
+
+	// Detect linux_family if on Linux and not provided
+	linuxFamily := cfg.LinuxFamily
+	if targetOS == "linux" && linuxFamily == "" {
+		detectedFamily, err := platform.DetectFamily()
+		if err != nil {
+			// Don't fail plan generation if family detection fails
+			// Just log a warning and continue without family filtering
+			if cfg.OnWarning != nil {
+				cfg.OnWarning("platform", fmt.Sprintf("linux_family detection failed: %v", err))
+			}
+		} else {
+			linuxFamily = detectedFamily
+		}
+	}
+
+	// Construct target for step filtering
+	// This target is used to filter steps by both explicit When clauses and implicit action constraints
+	target := platform.Target{
+		Platform:    targetOS + "/" + targetArch,
+		LinuxFamily: linuxFamily,
 	}
 
 	// Create version resolver
@@ -117,10 +143,27 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	// Process each step
 	var steps []ResolvedStep
 	for _, step := range e.recipe.Steps {
-		// Check conditional execution against target platform
-		if !shouldExecuteForPlatform(step.When, targetOS, targetArch) {
-			continue
+		// Filter steps by target platform and linux_family
+		// This implements two-stage filtering:
+		// 1. Check action's implicit constraint (e.g., apt_install only on debian family)
+		// 2. Check step's explicit When clause (e.g., when = { os = "linux" })
+
+		// Stage 1: Check action's implicit constraint against target
+		action := actions.Get(step.Action)
+		if sysAction, ok := action.(actions.SystemAction); ok {
+			if constraint := sysAction.ImplicitConstraint(); constraint != nil {
+				if !constraint.MatchesTarget(target) {
+					continue // Skip: action doesn't match target (e.g., apt on rhel)
+				}
+			}
 		}
+		// Actions without implicit constraint (non-SystemAction) pass stage 1
+
+		// Stage 2: Check explicit When clause against target platform
+		if step.When != nil && !step.When.Matches(target.OS(), target.Arch()) {
+			continue // Skip: explicit condition not met
+		}
+		// Steps without When clause pass stage 2
 
 		// Resolve the step (handles decomposition of composites)
 		resolvedSteps, err := e.resolveStep(ctx, step, vars, downloader, cfg, evalCtx)

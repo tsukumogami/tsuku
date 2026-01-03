@@ -11,6 +11,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
@@ -110,9 +111,13 @@ func findTsukuBinary() string {
 // 4. Mount tsuku binary, plan, and cache into container
 // 5. Run container with configured limits
 // 6. Check verification output
+// Sandbox executes a sandbox test for the given installation plan and target.
+// It filters the plan for the target platform and builds a custom container
+// if system dependencies are present, otherwise uses the base image from reqs.
 func (e *Executor) Sandbox(
 	ctx context.Context,
 	plan *executor.InstallationPlan,
+	target platform.Target,
 	reqs *SandboxRequirements,
 ) (*SandboxResult, error) {
 	// Detect container runtime
@@ -145,10 +150,51 @@ func (e *Executor) Sandbox(
 			"docs", "https://docs.docker.com/engine/security/rootless/")
 	}
 
+	// Extract packages from plan
+	// The plan is already filtered for the target platform during plan generation,
+	// so we can extract packages directly without additional filtering.
+	packages := ExtractPackages(plan)
+
+	// Determine which image to use
+	containerImage := reqs.Image
+	if packages != nil {
+		// Derive container spec from packages
+		spec, err := DeriveContainerSpec(packages)
+		if err != nil {
+			return nil, fmt.Errorf("failed to derive container spec: %w", err)
+		}
+
+		// Generate image name for caching
+		imageName := ContainerImageName(spec)
+
+		// Check if image already exists
+		exists, err := runtime.ImageExists(ctx, imageName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check image existence: %w", err)
+		}
+
+		// Build image if it doesn't exist
+		if !exists {
+			e.logger.Debug("Building custom container image",
+				"image", imageName,
+				"base", spec.BaseImage,
+				"family", spec.LinuxFamily)
+
+			if err := runtime.Build(ctx, imageName, spec.BaseImage, spec.BuildCommands); err != nil {
+				return nil, fmt.Errorf("failed to build container image: %w", err)
+			}
+		} else {
+			e.logger.Debug("Using cached container image",
+				"image", imageName)
+		}
+
+		containerImage = imageName
+	}
+
 	e.logger.Debug("Running sandbox test",
 		"tool", plan.Tool,
 		"runtime", runtime.Name(),
-		"image", reqs.Image,
+		"image", containerImage,
 		"network", reqs.RequiresNetwork)
 
 	// Create workspace directory
@@ -204,7 +250,7 @@ func (e *Executor) Sandbox(
 
 	// Build run options
 	opts := validate.RunOptions{
-		Image:   reqs.Image,
+		Image:   containerImage,
 		Command: []string{"/bin/bash", "/workspace/sandbox.sh"},
 		Network: network,
 		WorkDir: "/workspace",
