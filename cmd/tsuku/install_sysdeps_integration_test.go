@@ -315,7 +315,7 @@ func captureOutput(f func()) string {
 	// Start goroutine to read from pipe
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, r)
+		_, _ = io.Copy(&buf, r) // Error is not actionable in test helper
 		outC <- buf.String()
 	}()
 
