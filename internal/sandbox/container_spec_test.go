@@ -637,6 +637,163 @@ func TestContainerImageName_BaseImageInHash(t *testing.T) {
 	}
 }
 
+func TestContainerImageName_WithRepositories(t *testing.T) {
+	tests := []struct {
+		name       string
+		spec1      *ContainerSpec
+		spec2      *ContainerSpec
+		shouldDiff bool
+		reason     string
+	}{
+		{
+			name: "same packages, different repo URL",
+			spec1: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "repo", URL: "https://repo1.example.com", KeyURL: "https://repo1.example.com/key.gpg", KeySHA256: "abc123"},
+				},
+			},
+			spec2: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "repo", URL: "https://repo2.example.com", KeyURL: "https://repo2.example.com/key.gpg", KeySHA256: "abc123"},
+				},
+			},
+			shouldDiff: true,
+			reason:     "different repository URLs should produce different hashes",
+		},
+		{
+			name: "same repo, different GPG key hash",
+			spec1: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "repo", URL: "https://repo.example.com", KeyURL: "https://repo.example.com/key.gpg", KeySHA256: "abc123"},
+				},
+			},
+			spec2: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "repo", URL: "https://repo.example.com", KeyURL: "https://repo.example.com/key.gpg", KeySHA256: "def456"},
+				},
+			},
+			shouldDiff: true,
+			reason:     "different GPG key hashes should produce different hashes",
+		},
+		{
+			name: "same config, repo order doesn't matter",
+			spec1: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "repo", URL: "https://repo1.example.com", KeyURL: "https://repo1.example.com/key.gpg", KeySHA256: "abc123"},
+					{Manager: "apt", Type: "ppa", PPA: "user/repo"},
+				},
+			},
+			spec2: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "ppa", PPA: "user/repo"},
+					{Manager: "apt", Type: "repo", URL: "https://repo1.example.com", KeyURL: "https://repo1.example.com/key.gpg", KeySHA256: "abc123"},
+				},
+			},
+			shouldDiff: false,
+			reason:     "repository order should not affect hash (deterministic sorting)",
+		},
+		{
+			name: "packages only vs packages + repo",
+			spec1: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+			},
+			spec2: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "ppa", PPA: "user/repo"},
+				},
+			},
+			shouldDiff: true,
+			reason:     "adding a repository should change the hash",
+		},
+		{
+			name: "different PPA names",
+			spec1: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "ppa", PPA: "user1/repo"},
+				},
+			},
+			spec2: &ContainerSpec{
+				BaseImage:   "debian:bookworm-slim",
+				LinuxFamily: "debian",
+				Packages:    map[string][]string{"apt": {"curl"}},
+				Repositories: []RepositoryConfig{
+					{Manager: "apt", Type: "ppa", PPA: "user2/repo"},
+				},
+			},
+			shouldDiff: true,
+			reason:     "different PPA names should produce different hashes",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			name1 := ContainerImageName(tt.spec1)
+			name2 := ContainerImageName(tt.spec2)
+
+			if tt.shouldDiff {
+				if name1 == name2 {
+					t.Errorf("%s: expected different hashes, got same: %q", tt.reason, name1)
+				}
+			} else {
+				if name1 != name2 {
+					t.Errorf("%s: expected same hash, got different: %q vs %q", tt.reason, name1, name2)
+				}
+			}
+		})
+	}
+}
+
+func TestContainerImageName_RepositoryHashStability(t *testing.T) {
+	// Same spec with repositories should produce same hash every time
+	spec := &ContainerSpec{
+		BaseImage:   "debian:bookworm-slim",
+		LinuxFamily: "debian",
+		Packages:    map[string][]string{"apt": {"curl", "jq"}},
+		Repositories: []RepositoryConfig{
+			{Manager: "apt", Type: "repo", URL: "https://repo.example.com", KeyURL: "https://repo.example.com/key.gpg", KeySHA256: "abc123def456"},
+			{Manager: "apt", Type: "ppa", PPA: "user/repo"},
+		},
+	}
+
+	// Generate name multiple times
+	name1 := ContainerImageName(spec)
+	name2 := ContainerImageName(spec)
+	name3 := ContainerImageName(spec)
+
+	if name1 != name2 {
+		t.Errorf("Hash not stable with repositories: first call = %q, second call = %q", name1, name2)
+	}
+	if name1 != name3 {
+		t.Errorf("Hash not stable with repositories: first call = %q, third call = %q", name1, name3)
+	}
+}
+
 // Helper function to check if a string contains a substring
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||

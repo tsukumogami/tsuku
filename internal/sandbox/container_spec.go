@@ -346,13 +346,20 @@ func generateSuseCommands(packages []string, repositories []RepositoryConfig) []
 // - "debian" is the linux_family from the spec (for human readability)
 // - "a1b2c3d4e5f6g7h8" is the first 16 hex characters of the SHA256 hash
 //
-// The hash is computed from all package manager + package combinations, sorted
-// deterministically to ensure the same package set always produces the same hash.
-// This enables container image caching: if two test runs require the same packages,
-// they can reuse the same cached container image.
+// The hash is computed from:
+// - Base image tag (e.g., "debian:bookworm-slim")
+// - Package manager + package combinations (e.g., "apt:curl", "apt:jq")
+// - Repository configurations (URL, GPG key hash, PPA/tap names)
 //
-// Hash input format: sorted list of "pm:package" strings joined with newlines.
-// Example: For packages {"apt": ["curl", "jq"]}, the hash input is "apt:curl\napt:jq".
+// All components are sorted deterministically to ensure the same configuration
+// always produces the same hash. This enables container image caching: if two
+// test runs require the same packages and repositories, they can reuse the
+// same cached container image.
+//
+// Hash input examples:
+// - Packages: "apt:curl\napt:jq"
+// - Repositories: "repo:apt:https://example.com:https://example.com/key.gpg:abc123..."
+// - PPAs: "ppa:apt:user/repo"
 //
 // The family prefix in the tag is technically redundant (the hash encodes the package
 // manager, which determines the family), but improves human readability when debugging
@@ -376,6 +383,25 @@ func ContainerImageName(spec *ContainerSpec) string {
 		// Create pm:package pairs
 		for _, pkg := range sorted {
 			parts = append(parts, fmt.Sprintf("%s:%s", manager, pkg))
+		}
+	}
+
+	// Include repository configurations in hash
+	// This ensures cache invalidation when repos change (URL, GPG key, etc.)
+	for _, repo := range spec.Repositories {
+		switch repo.Type {
+		case "repo":
+			// Standard repository with optional GPG key
+			parts = append(parts, fmt.Sprintf("repo:%s:%s:%s:%s",
+				repo.Manager, repo.URL, repo.KeyURL, repo.KeySHA256))
+		case "ppa":
+			// Ubuntu PPA
+			parts = append(parts, fmt.Sprintf("ppa:%s:%s",
+				repo.Manager, repo.PPA))
+		case "tap":
+			// Homebrew tap
+			parts = append(parts, fmt.Sprintf("tap:%s:%s",
+				repo.Manager, repo.Tap))
 		}
 	}
 
