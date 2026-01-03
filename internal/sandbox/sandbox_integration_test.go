@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -55,7 +56,11 @@ func TestSandboxIntegration(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
 
-		result, err := exec.Sandbox(ctx, plan, reqs)
+		target := platform.Target{
+			Platform: plan.Platform.OS + "/" + plan.Platform.Arch,
+		}
+
+		result, err := exec.Sandbox(ctx, plan, target, reqs)
 		if err != nil {
 			t.Fatalf("Sandbox() returned error: %v", err)
 		}

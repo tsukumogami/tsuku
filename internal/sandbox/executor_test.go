@@ -8,6 +8,7 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/log"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
 
@@ -205,9 +206,14 @@ func TestSandbox_NoRuntime(t *testing.T) {
 	}
 	reqs := ComputeSandboxRequirements(plan)
 
+	// Create a target from the plan's platform
+	target := platform.Target{
+		Platform: plan.Platform.OS + "/" + plan.Platform.Arch,
+	}
+
 	// This will either skip (no runtime) or fail (no tsuku binary)
 	// Both are acceptable for this test
-	result, err := exec.Sandbox(context.Background(), plan, reqs)
+	result, err := exec.Sandbox(context.Background(), plan, target, reqs)
 	if err != nil {
 		t.Fatalf("Sandbox returned error: %v", err)
 	}

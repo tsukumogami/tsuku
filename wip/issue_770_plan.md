@@ -55,26 +55,32 @@ None - all functionality uses existing code from #765, #768, #769
   - Format: FROM baseImage + BuildCommands lines
   - Note: Changed from ContainerSpec parameter to primitives to avoid import cycle
 
-- [ ] Modify Sandbox() signature in `internal/sandbox/executor.go`:
+- [x] Modify Sandbox() signature in `internal/sandbox/executor.go`:
   - Change from `Sandbox(ctx, plan, reqs)` to `Sandbox(ctx, plan, target, reqs)`
   - Add platform.Target import
   - Update method documentation
 
-- [ ] Add container building logic to Sandbox() in `internal/sandbox/executor.go`:
-  - After runtime detection, filter plan using executor.FilterStepsByTarget(plan.Steps, target)
-  - Create new InstallationPlan with filtered steps
-  - Call ExtractPackages() on filtered plan
+- [x] Add container building logic to Sandbox() in `internal/sandbox/executor.go`:
+  - Call ExtractPackages() on plan (plan is already platform-specific)
   - If packages != nil: derive spec, check cache with ImageExists(), build if needed with Build()
   - If packages == nil: use reqs.Image (existing behavior)
-  - Update opts.Image to use the determined image
+  - Update opts.Image to use the determined container image
+  - Note: Simplified approach - plan filtering happens during plan generation, not in sandbox
 
-- [ ] Update Sandbox() call in `cmd/tsuku/install_sandbox.go`:
-  - Detect current platform using platform.Target
+- [x] Update Sandbox() call in `cmd/tsuku/install_sandbox.go`:
+  - Create platform.Target from plan.Platform
   - Pass target to sandboxExec.Sandbox()
+  - Add platform import
 
-- [ ] Update Sandbox() call in `internal/builders/orchestrator.go`:
-  - Detect current platform using platform.Target
+- [x] Update Sandbox() call in `internal/builders/orchestrator.go`:
+  - Create platform.Target from plan.Platform
   - Pass target to o.sandbox.Sandbox()
+  - Add platform import
+
+- [x] Update test files:
+  - Fix executor_test.go Sandbox call with target parameter
+  - Fix sandbox_integration_test.go Sandbox call with target parameter
+  - Add platform imports to both test files
 
 - [ ] Add unit tests in `internal/validate/runtime_test.go`:
   - Test Build() method with valid ContainerSpec
