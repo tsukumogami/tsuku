@@ -41,18 +41,19 @@ None - all functionality uses existing code from #765, #768, #769
 
 ## Implementation Steps
 
-- [ ] Extend Runtime interface in `internal/validate/runtime.go`:
-  - Add `Build(ctx context.Context, spec *ContainerSpec) error` method to interface
+- [x] Extend Runtime interface in `internal/validate/runtime.go`:
+  - Add `Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error` method to interface
   - Add `ImageExists(ctx context.Context, name string) (bool, error)` method to interface
   - Implement Build() in podmanRuntime (generate Dockerfile, run podman build)
   - Implement Build() in dockerRuntime (generate Dockerfile, run docker build)
   - Implement ImageExists() in podmanRuntime (run podman image exists)
   - Implement ImageExists() in dockerRuntime (run docker image inspect)
+  - Update mockRuntime in tests to implement new methods
 
-- [ ] Add generateDockerfile() helper in `internal/validate/runtime.go`:
-  - Create function that takes *ContainerSpec and returns Dockerfile string
+- [x] Add generateDockerfile() helper in `internal/validate/runtime.go`:
+  - Create function that takes baseImage and buildCommands, returns Dockerfile string
   - Format: FROM baseImage + BuildCommands lines
-  - Use same pattern as generateDockerfile() in container_spec_test.go
+  - Note: Changed from ContainerSpec parameter to primitives to avoid import cycle
 
 - [ ] Modify Sandbox() signature in `internal/sandbox/executor.go`:
   - Change from `Sandbox(ctx, plan, reqs)` to `Sandbox(ctx, plan, target, reqs)`
