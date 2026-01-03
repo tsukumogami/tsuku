@@ -20,9 +20,9 @@ When no code files change (docs-only), the sandbox tests will be skipped.
 
 ## Implementation Steps
 
-- [ ] Add `dorny/paths-filter@v3` step to matrix job (after checkout)
-- [ ] Define filter for code paths matching test.yml pattern
-- [ ] Add conditional `if` expression to sandbox-tests job
+- [x] Add `dorny/paths-filter@v3` step to matrix job (after checkout)
+- [x] Define filter for code paths matching test.yml pattern
+- [x] Add conditional `if` expression to sandbox-tests job
 
 ## Testing Strategy
 

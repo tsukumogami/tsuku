@@ -12,8 +12,22 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       linux: ${{ steps.matrix.outputs.linux }}
+      code-changed: ${{ steps.filter.outputs.code }}
     steps:
       - uses: actions/checkout@v4
+
+      # Detect if code files changed (vs docs-only changes)
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            code:
+              - '**/*.go'
+              - 'go.mod'
+              - 'go.sum'
+              - 'internal/recipe/recipes/**/*.toml'
+              - 'test-matrix.json'
+
       - name: Generate test matrix
         id: matrix
         run: |
@@ -23,6 +37,7 @@ jobs:
   sandbox-tests:
     name: "Sandbox: ${{ matrix.test.tool }}"
     needs: matrix
+    if: needs.matrix.outputs.code-changed == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
