@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -55,7 +56,13 @@ func TestSandboxIntegration(t *testing.T) {
 		ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 		defer cancel()
 
-		result, err := exec.Sandbox(ctx, plan, reqs)
+		// Detect current system target
+		target, err := platform.DetectTarget()
+		if err != nil {
+			t.Fatalf("Failed to detect target: %v", err)
+		}
+
+		result, err := exec.Sandbox(ctx, plan, target, reqs)
 		if err != nil {
 			t.Fatalf("Sandbox() returned error: %v", err)
 		}
@@ -151,6 +158,65 @@ func TestSandboxIntegration(t *testing.T) {
 
 		t.Logf("Requirements: network=%v, image=%s, memory=%s, cpus=%s",
 			reqs.RequiresNetwork, reqs.Image, reqs.Resources.Memory, reqs.Resources.CPUs)
+	})
+
+	t.Run("multi_family_filtering", func(t *testing.T) {
+		// Test that plans with multiple package manager actions are filtered by linux_family
+		plan := &executor.InstallationPlan{
+			FormatVersion: 2,
+			Tool:          "test-multi-family",
+			Version:       "1.0.0",
+			Steps: []executor.ResolvedStep{
+				{
+					Action: "apt_install",
+					Params: map[string]any{
+						"packages": []any{"curl"},
+					},
+				},
+				{
+					Action: "dnf_install",
+					Params: map[string]any{
+						"packages": []any{"curl"},
+					},
+				},
+			},
+		}
+
+		reqs := sandbox.ComputeSandboxRequirements(plan)
+
+		// Create debian target
+		debianTarget := platform.Target{
+			Platform:    "linux/amd64",
+			LinuxFamily: "debian",
+		}
+
+		// Create rhel target
+		rhelTarget := platform.Target{
+			Platform:    "linux/amd64",
+			LinuxFamily: "rhel",
+		}
+
+		// Test debian filtering
+		debianResult, err := exec.Sandbox(ctx, plan, debianTarget, reqs)
+		if err != nil {
+			t.Fatalf("Sandbox() for debian failed: %v", err)
+		}
+		if debianResult.Skipped {
+			t.Skip("Sandbox test was skipped (no runtime or tsuku binary)")
+		}
+		// Note: We can't easily verify the container image name without building it,
+		// but we can verify the sandbox executed without error
+		t.Logf("Debian sandbox: passed=%v, exit=%d", debianResult.Passed, debianResult.ExitCode)
+
+		// Test rhel filtering
+		rhelResult, err := exec.Sandbox(ctx, plan, rhelTarget, reqs)
+		if err != nil {
+			t.Fatalf("Sandbox() for rhel failed: %v", err)
+		}
+		if rhelResult.Skipped {
+			t.Skip("Sandbox test was skipped (no runtime or tsuku binary)")
+		}
+		t.Logf("RHEL sandbox: passed=%v, exit=%d", rhelResult.Passed, rhelResult.ExitCode)
 	})
 }
 

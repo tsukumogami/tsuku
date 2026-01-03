@@ -10,6 +10,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/validate"
@@ -103,8 +104,14 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 	detector := validate.NewRuntimeDetector()
 	sandboxExec := sandbox.NewExecutor(detector, sandbox.WithDownloadCacheDir(cfg.DownloadCacheDir))
 
+	// Detect current system target (platform + linux_family)
+	target, err := platform.DetectTarget()
+	if err != nil {
+		return fmt.Errorf("failed to detect target platform: %w", err)
+	}
+
 	// Run sandbox test
-	result, err := sandboxExec.Sandbox(globalCtx, plan, reqs)
+	result, err := sandboxExec.Sandbox(globalCtx, plan, target, reqs)
 	if err != nil {
 		return fmt.Errorf("sandbox execution failed: %w", err)
 	}

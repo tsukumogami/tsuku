@@ -14,6 +14,14 @@ import (
 // ErrNoRuntime is returned when no container runtime is available.
 var ErrNoRuntime = errors.New("no container runtime available")
 
+// generateDockerfile creates a Dockerfile from base image and build commands.
+func generateDockerfile(baseImage string, buildCommands []string) string {
+	var lines []string
+	lines = append(lines, "FROM "+baseImage)
+	lines = append(lines, buildCommands...)
+	return strings.Join(lines, "\n") + "\n"
+}
+
 // Runtime represents a container runtime (Podman or Docker).
 type Runtime interface {
 	// Name returns the runtime name ("podman" or "docker").
@@ -24,6 +32,13 @@ type Runtime interface {
 
 	// Run executes a container with the given options.
 	Run(ctx context.Context, opts RunOptions) (*RunResult, error)
+
+	// Build builds a container image from a base image and build commands.
+	// The imageName is the tag to use for the built image.
+	Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error
+
+	// ImageExists checks if a container image exists.
+	ImageExists(ctx context.Context, name string) (bool, error)
 }
 
 // RunOptions configures a container run.
@@ -327,6 +342,37 @@ func (r *podmanRuntime) buildArgs(opts RunOptions) []string {
 	return args
 }
 
+func (r *podmanRuntime) Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error {
+	// Generate Dockerfile content
+	dockerfile := generateDockerfile(baseImage, buildCommands)
+
+	// Build image using podman build with inline Dockerfile
+	cmd := exec.CommandContext(ctx, r.path, "build", "-t", imageName, "-f", "-", ".")
+	cmd.Stdin = strings.NewReader(dockerfile)
+
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("podman build failed: %w: %s", err, stderr.String())
+	}
+
+	return nil
+}
+
+func (r *podmanRuntime) ImageExists(ctx context.Context, name string) (bool, error) {
+	cmd := exec.CommandContext(ctx, r.path, "image", "exists", name)
+	err := cmd.Run()
+	if err != nil {
+		// podman image exists returns exit code 1 if image doesn't exist
+		if exitErr, ok := err.(*exec.ExitError); ok && exitErr.ExitCode() == 1 {
+			return false, nil
+		}
+		return false, fmt.Errorf("podman image exists failed: %w", err)
+	}
+	return true, nil
+}
+
 // dockerRuntime implements Runtime for Docker.
 type dockerRuntime struct {
 	path     string
@@ -434,4 +480,35 @@ func (r *dockerRuntime) buildArgs(opts RunOptions) []string {
 	args = append(args, opts.Command...)
 
 	return args
+}
+
+func (r *dockerRuntime) Build(ctx context.Context, imageName, baseImage string, buildCommands []string) error {
+	// Generate Dockerfile content
+	dockerfile := generateDockerfile(baseImage, buildCommands)
+
+	// Build image using docker build with inline Dockerfile
+	cmd := exec.CommandContext(ctx, r.path, "build", "-t", imageName, "-f", "-", ".")
+	cmd.Stdin = strings.NewReader(dockerfile)
+
+	var stderr strings.Builder
+	cmd.Stderr = &stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("docker build failed: %w: %s", err, stderr.String())
+	}
+
+	return nil
+}
+
+func (r *dockerRuntime) ImageExists(ctx context.Context, name string) (bool, error) {
+	cmd := exec.CommandContext(ctx, r.path, "image", "inspect", name)
+	err := cmd.Run()
+	if err != nil {
+		// docker image inspect returns non-zero exit code if image doesn't exist
+		if _, ok := err.(*exec.ExitError); ok {
+			return false, nil
+		}
+		return false, fmt.Errorf("docker image inspect failed: %w", err)
+	}
+	return true, nil
 }
