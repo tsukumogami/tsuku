@@ -118,12 +118,16 @@ func getOrGeneratePlanWith(
 	}
 
 	return generator.GeneratePlan(ctx, executor.PlanConfig{
-		OS:            targetOS,
-		Arch:          targetArch,
-		RecipeSource:  "registry",
-		Downloader:    downloader,
-		DownloadCache: downloadCache,
-		RecipeLoader:  cfg.RecipeLoader,
+		OS:                 targetOS,
+		Arch:               targetArch,
+		RecipeSource:       "registry",
+		Downloader:         downloader,
+		DownloadCache:      downloadCache,
+		RecipeLoader:       cfg.RecipeLoader,
+		AutoAcceptEvalDeps: true, // Auto-install eval-time dependencies during install
+		OnEvalDepsNeeded: func(deps []string, autoAccept bool) error {
+			return installEvalDeps(deps, autoAccept)
+		},
 	})
 }
 
