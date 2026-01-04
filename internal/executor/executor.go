@@ -555,6 +555,24 @@ func (e *Executor) installDependencies(ctx context.Context, deps []DependencyPla
 
 // installSingleDependency installs a single dependency to its final location.
 func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyPlan, platform Platform) error {
+	// Determine final destination based on recipe type (check before installation)
+	var finalDir string
+	if dep.RecipeType == "library" {
+		// Libraries go to $TSUKU_HOME/libs/{name}-{version}/
+		tsukuHome := filepath.Dir(e.toolsDir)
+		libsDir := filepath.Join(tsukuHome, "libs")
+		finalDir = filepath.Join(libsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
+	} else {
+		// Tools go to $TSUKU_HOME/tools/{name}-{version}/
+		finalDir = filepath.Join(e.toolsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
+	}
+
+	// Skip if already installed (deduplication)
+	if _, err := os.Stat(finalDir); err == nil {
+		fmt.Printf("\nSkipping dependency: %s@%s (already installed)\n", dep.Tool, dep.Version)
+		return nil
+	}
+
 	fmt.Printf("\nInstalling dependency: %s@%s\n", dep.Tool, dep.Version)
 
 	// Create temporary work directory for this dependency
@@ -637,18 +655,6 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		if err := action.Execute(execCtx, step.Params); err != nil {
 			return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
 		}
-	}
-
-	// Determine final destination based on recipe type
-	var finalDir string
-	if dep.RecipeType == "library" {
-		// Libraries go to $TSUKU_HOME/libs/{name}-{version}/
-		tsukuHome := filepath.Dir(e.toolsDir)
-		libsDir := filepath.Join(tsukuHome, "libs")
-		finalDir = filepath.Join(libsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
-	} else {
-		// Tools go to $TSUKU_HOME/tools/{name}-{version}/
-		finalDir = filepath.Join(e.toolsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
 	}
 
 	// Create final directory
