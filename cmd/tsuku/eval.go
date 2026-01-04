@@ -31,6 +31,7 @@ func makeSet(items []string) map[string]bool {
 
 var evalOS string
 var evalArch string
+var evalLinuxFamily string
 var evalInstallDeps bool
 var evalRecipePath string
 var evalVersion string
@@ -65,6 +66,7 @@ Examples:
   tsuku eval kubectl
   tsuku eval kubectl@v1.29.0
   tsuku eval ripgrep --os linux --arch arm64
+  tsuku eval cmake --os linux --linux-family rhel
   tsuku eval netlify-cli --install-deps
   tsuku eval --recipe ./my-recipe.toml --os darwin --arch arm64
   tsuku eval --recipe ./my-recipe.toml --version v1.2.0`,
@@ -75,6 +77,7 @@ Examples:
 func init() {
 	evalCmd.Flags().StringVar(&evalOS, "os", "", "Target operating system (linux, darwin)")
 	evalCmd.Flags().StringVar(&evalArch, "arch", "", "Target architecture (amd64, arm64)")
+	evalCmd.Flags().StringVar(&evalLinuxFamily, "linux-family", "", "Target Linux distribution family (debian, rhel, arch, alpine, suse)")
 	evalCmd.Flags().BoolVar(&evalInstallDeps, "install-deps", false, "Auto-install eval-time dependencies")
 	evalCmd.Flags().StringVar(&evalRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 	evalCmd.Flags().StringVar(&evalVersion, "version", "", "Version to use (only with --recipe)")
@@ -104,6 +107,25 @@ func ValidateArch(arch string) error {
 	return nil
 }
 
+// ValidateLinuxFamily validates a Linux family value against the supported list.
+// Returns an error if the value is invalid.
+func ValidateLinuxFamily(family string) error {
+	if family == "" {
+		return nil // Empty is valid (uses auto-detection)
+	}
+	validFamilies := map[string]bool{
+		"debian": true,
+		"rhel":   true,
+		"arch":   true,
+		"alpine": true,
+		"suse":   true,
+	}
+	if !validFamilies[family] {
+		return fmt.Errorf("invalid linux-family value %q: must be one of debian, rhel, arch, alpine, suse", family)
+	}
+	return nil
+}
+
 func runEval(cmd *cobra.Command, args []string) {
 	// Validate platform flags early
 	if err := ValidateOS(evalOS); err != nil {
@@ -111,6 +133,10 @@ func runEval(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitUsage)
 	}
 	if err := ValidateArch(evalArch); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		exitWithCode(ExitUsage)
+	}
+	if err := ValidateLinuxFamily(evalLinuxFamily); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		exitWithCode(ExitUsage)
 	}
@@ -225,6 +251,7 @@ func runEval(cmd *cobra.Command, args []string) {
 	planCfg := executor.PlanConfig{
 		OS:                 evalOS,
 		Arch:               evalArch,
+		LinuxFamily:        evalLinuxFamily,
 		RecipeSource:       recipeSource,
 		Downloader:         downloader,
 		DownloadCache:      downloadCache,

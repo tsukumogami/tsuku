@@ -1,12 +1,17 @@
 #!/bin/bash
-# Test that tsuku can provision cmake and build cmake-based projects in a
-# clean environment without system cmake.
+# Test that tsuku can provision cmake and build cmake-based projects across
+# different Linux distribution families.
 #
 # This validates:
-# - cmake recipe installs successfully
-# - cmake --version works from relocated path
-# - cmake can configure and build a simple project
+# - cmake recipe installs successfully in isolated containers
 # - ninja recipe builds successfully using cmake_build action
+# - System dependencies are correctly extracted for each family
+# - Container specs are generated for debian, rhel, arch, alpine, suse
+#
+# Uses tsuku eval --linux-family to generate plans for different families,
+# then tsuku install --plan --sandbox to test in isolated containers.
+#
+# Takes an optional family argument to test a specific family only.
 #
 # Exit codes:
 #   0 - All tests passed
@@ -14,93 +19,56 @@
 
 set -e
 
-echo "=== Testing CMake Provisioning ==="
+FAMILY="${1:-all}"
+
+echo "=== Testing CMake Provisioning with Sandbox (Multi-Family) ==="
 echo ""
 
 # Build tsuku binary
 echo "Building tsuku..."
 go build -o tsuku ./cmd/tsuku
-
-# Create Dockerfile for clean environment testing
-DOCKERFILE=$(mktemp)
-cat > "$DOCKERFILE" << 'EOF'
-FROM ubuntu:22.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-
-# Install ONLY minimal dependencies - explicitly NO cmake, NO build tools
-# Just enough to run tsuku: wget for downloads, ca-certificates for HTTPS
-RUN apt-get update && \
-    apt-get install -y \
-        wget \
-        curl \
-        ca-certificates \
-        patchelf \
-        && \
-    rm -rf /var/lib/apt/lists/*
-
-# Verify cmake is NOT installed
-RUN ! command -v cmake && echo "✓ cmake not in system (expected)"
-
-RUN useradd -m -s /bin/bash testuser
-USER testuser
-WORKDIR /home/testuser
-
-COPY --chown=testuser:testuser tsuku /home/testuser/tsuku
-
-ENV PATH="/home/testuser/.tsuku/tools/current:${PATH}"
-EOF
-
-# Build Docker image
-echo "Building Docker image (Ubuntu 22.04 without cmake)..."
-IMAGE_TAG="tsuku-cmake-test:$$"
-docker build -t "$IMAGE_TAG" -f "$DOCKERFILE" . > /dev/null
-
-# Clean up Dockerfile
-rm "$DOCKERFILE"
-
-# Run all tests in a single container to persist installations
 echo ""
-echo "Running all tests in container..."
-docker run --rm "$IMAGE_TAG" bash -c '
-set -e
-export PATH="$HOME/.tsuku/tools/current:$PATH"
-export LD_LIBRARY_PATH="$HOME/.tsuku/libs/openssl-3.6.0/lib:$HOME/.tsuku/libs/zlib-1.3.1/lib:$LD_LIBRARY_PATH"
 
-echo ""
-echo "=== Test 1: Install cmake via tsuku ==="
-./tsuku install cmake
-echo "✓ cmake installed successfully"
+# Define families to test
+if [ "$FAMILY" = "all" ]; then
+    FAMILIES=("debian" "rhel" "arch" "alpine" "suse")
+else
+    FAMILIES=("$FAMILY")
+fi
 
-echo ""
-echo "=== Test 2: Verify cmake works ==="
-cmake --version
-echo "✓ cmake --version works"
+for family in "${FAMILIES[@]}"; do
+    echo "=== Testing family: $family ==="
+    echo ""
 
-echo ""
-echo "=== Test 3: Build ninja using cmake_build action ==="
-# This is the ultimate test - building ninja requires:
-# - cmake (to run the build)
-# - make (invoked by cmake)
-# - zig (as the C++ compiler)
-# All of these should be provided by tsuku, not the system
-./tsuku install ninja --force
-echo "✓ ninja built successfully using cmake_build"
+    echo "Generating plan for cmake (family: $family)..."
+    ./tsuku eval cmake --os linux --linux-family "$family" --install-deps > "cmake-$family.json"
+    echo "✓ Plan generated"
 
-echo ""
-echo "=== Test 4: Verify ninja works ==="
-ninja --version
-echo "✓ ninja --version works"
-'
+    echo "Running sandbox test for cmake (family: $family)..."
+    ./tsuku install --plan "cmake-$family.json" --sandbox --force
+    echo "✓ cmake sandbox test passed for $family"
 
-# Clean up Docker image
-docker rmi "$IMAGE_TAG" > /dev/null 2>&1 || true
+    echo "Generating plan for ninja (family: $family)..."
+    ./tsuku eval ninja --os linux --linux-family "$family" --install-deps > "ninja-$family.json"
+    echo "✓ Plan generated"
 
-echo ""
+    echo "Running sandbox test for ninja (family: $family)..."
+    ./tsuku install --plan "ninja-$family.json" --sandbox --force
+    echo "✓ ninja sandbox test passed for $family"
+
+    # Clean up plan files
+    rm -f "cmake-$family.json" "ninja-$family.json"
+
+    echo ""
+done
+
 echo "=== ALL TESTS PASSED ==="
-echo "✓ cmake recipe installs without system cmake"
-echo "✓ cmake --version works from relocated path"
+if [ "$FAMILY" = "all" ]; then
+    echo "✓ Tested across all Linux families: ${FAMILIES[*]}"
+else
+    echo "✓ Tested family: $FAMILY"
+fi
+echo "✓ cmake recipe installs in isolated containers"
 echo "✓ ninja builds successfully using cmake_build action"
-echo "✓ ninja --version works"
-echo "✓ Complete build toolchain (cmake + make + zig) validated"
+echo "✓ Sandbox automatically provisioned system dependencies for each family"
 exit 0

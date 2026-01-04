@@ -15,7 +15,8 @@ type ContainerSpec struct {
 	BaseImage     string              // Base container image (e.g., "debian:bookworm-slim")
 	LinuxFamily   string              // Linux family (e.g., "debian", "rhel", "arch")
 	Packages      map[string][]string // Package manager to package list mapping
-	BuildCommands []string            // Docker RUN commands to install packages
+	Repositories  []RepositoryConfig  // Repository configurations
+	BuildCommands []string            // Docker RUN commands to install packages and setup repositories
 }
 
 // Package manager to linux_family mapping.
@@ -47,41 +48,55 @@ var familyToBaseImage = map[string]string{
 	"suse":   "opensuse/leap:15",
 }
 
-// DeriveContainerSpec creates a container specification from extracted packages.
-//
-// The packages map comes from ExtractPackages() and contains package manager names
-// as keys (e.g., "apt", "dnf") and package lists as values.
+// DeriveContainerSpec creates a container specification from system requirements.
 //
 // This function:
-// - Infers the linux_family from the package manager(s) present
+// - Infers the linux_family from the package manager(s) and repository types
 // - Selects an appropriate base image for that family
-// - Generates Dockerfile RUN commands to install the packages
+// - Generates Docker RUN commands for repository setup (with GPG verification) and package installation
 //
-// Returns nil if packages is nil or empty (no system dependencies needed).
+// Returns nil if reqs is nil or has no packages/repositories.
 //
 // Returns an error if:
 // - Packages use incompatible package managers (e.g., both apt and dnf)
-// - Packages use a package manager not applicable to containers (e.g., brew)
+// - Packages use a package manager not applicable to containers (e.g., brew on Linux)
 // - The linux_family cannot be determined
 //
 // Example:
 //
-//	packages := map[string][]string{"apt": {"curl", "jq"}}
-//	spec, err := DeriveContainerSpec(packages)
+//	reqs := &SystemRequirements{
+//	    Packages: map[string][]string{"apt": {"curl", "jq"}},
+//	    Repositories: []RepositoryConfig{{Manager: "apt", Type: "repo", URL: "...", KeyURL: "...", KeySHA256: "..."}},
+//	}
+//	spec, err := DeriveContainerSpec(reqs)
 //	// spec.BaseImage = "debian:bookworm-slim"
 //	// spec.LinuxFamily = "debian"
-//	// spec.BuildCommands = ["RUN apt-get update && apt-get install -y curl jq"]
-func DeriveContainerSpec(packages map[string][]string) (*ContainerSpec, error) {
-	if len(packages) == 0 {
+//	// spec.BuildCommands = [GPG key download, verification, repo setup, apt-get update, apt-get install]
+func DeriveContainerSpec(reqs *SystemRequirements) (*ContainerSpec, error) {
+	if reqs == nil || (len(reqs.Packages) == 0 && len(reqs.Repositories) == 0) {
 		return nil, nil
 	}
 
-	// Extract package managers from the map
-	var pms []string
+	packages := reqs.Packages
+	if packages == nil {
+		packages = make(map[string][]string)
+	}
+
+	// Extract package managers from packages and repositories
+	pmSet := make(map[string]bool)
 	for pm := range packages {
+		pmSet[pm] = true
+	}
+	for _, repo := range reqs.Repositories {
+		pmSet[repo.Manager] = true
+	}
+
+	// Convert set to sorted slice for deterministic ordering
+	var pms []string
+	for pm := range pmSet {
 		pms = append(pms, pm)
 	}
-	sort.Strings(pms) // Deterministic ordering for error messages
+	sort.Strings(pms)
 
 	// Validate: all PMs must map to the same family
 	var family string
@@ -104,8 +119,8 @@ func DeriveContainerSpec(packages map[string][]string) (*ContainerSpec, error) {
 		return nil, fmt.Errorf("no base image configured for linux_family %q", family)
 	}
 
-	// Generate build commands
-	buildCommands, err := generateBuildCommands(family, packages)
+	// Generate build commands (repositories first, then packages)
+	buildCommands, err := generateBuildCommands(family, packages, reqs.Repositories)
 	if err != nil {
 		return nil, err
 	}
@@ -114,70 +129,215 @@ func DeriveContainerSpec(packages map[string][]string) (*ContainerSpec, error) {
 		BaseImage:     baseImage,
 		LinuxFamily:   family,
 		Packages:      packages,
+		Repositories:  reqs.Repositories,
 		BuildCommands: buildCommands,
 	}, nil
 }
 
-// generateBuildCommands creates Docker RUN commands for package installation.
-func generateBuildCommands(family string, packages map[string][]string) ([]string, error) {
+// generateBuildCommands creates Docker RUN commands for repository setup and package installation.
+// Command ordering: prerequisites → repositories (with GPG) → update → packages
+func generateBuildCommands(family string, packages map[string][]string, repositories []RepositoryConfig) ([]string, error) {
 	var commands []string
 
 	switch family {
 	case "debian":
-		// Debian/Ubuntu use apt-get
-		// Update package lists first, then install
-		pkgs := packages["apt"]
-		if len(pkgs) > 0 {
-			sort.Strings(pkgs) // Deterministic order
-			pkgList := strings.Join(pkgs, " ")
-			commands = append(commands, fmt.Sprintf("RUN apt-get update && apt-get install -y %s", pkgList))
-		}
-
+		commands = generateDebianCommands(packages["apt"], repositories)
 	case "rhel":
-		// Fedora/RHEL use dnf
-		pkgs := packages["dnf"]
-		if len(pkgs) > 0 {
-			sort.Strings(pkgs)
-			pkgList := strings.Join(pkgs, " ")
-			commands = append(commands, fmt.Sprintf("RUN dnf install -y %s", pkgList))
-		}
-
+		commands = generateRhelCommands(packages["dnf"], repositories)
 	case "arch":
-		// Arch uses pacman
-		pkgs := packages["pacman"]
-		if len(pkgs) > 0 {
-			sort.Strings(pkgs)
-			pkgList := strings.Join(pkgs, " ")
-			commands = append(commands, fmt.Sprintf("RUN pacman -Sy --noconfirm %s", pkgList))
-		}
-
+		commands = generateArchCommands(packages["pacman"], repositories)
 	case "alpine":
-		// Alpine uses apk
-		pkgs := packages["apk"]
-		if len(pkgs) > 0 {
-			sort.Strings(pkgs)
-			pkgList := strings.Join(pkgs, " ")
-			commands = append(commands, fmt.Sprintf("RUN apk add --no-cache %s", pkgList))
-		}
-
+		commands = generateAlpineCommands(packages["apk"], repositories)
 	case "suse":
-		// SUSE uses zypper
-		pkgs := packages["zypper"]
-		if len(pkgs) > 0 {
-			sort.Strings(pkgs)
-			pkgList := strings.Join(pkgs, " ")
-			commands = append(commands, fmt.Sprintf("RUN zypper install -y %s", pkgList))
-		}
-
+		commands = generateSuseCommands(packages["zypper"], repositories)
 	default:
 		return nil, fmt.Errorf("unknown linux_family %q", family)
 	}
 
 	if len(commands) == 0 {
-		return nil, errors.New("no packages found for the detected family")
+		return nil, errors.New("no packages or repositories found")
 	}
 
 	return commands, nil
+}
+
+// generateDebianCommands creates Docker RUN commands for Debian/Ubuntu.
+func generateDebianCommands(packages []string, repositories []RepositoryConfig) []string {
+	var commands []string
+	hasRepos := false
+
+	// Filter repositories for apt
+	var aptRepos []RepositoryConfig
+	for _, repo := range repositories {
+		if repo.Manager == "apt" {
+			aptRepos = append(aptRepos, repo)
+			hasRepos = true
+		}
+	}
+
+	// Install prerequisites only if we have repositories (need wget for GPG keys)
+	if hasRepos {
+		prereqs := []string{"wget", "ca-certificates", "software-properties-common", "gpg"}
+		commands = append(commands, "RUN apt-get update && apt-get install -y "+strings.Join(prereqs, " "))
+	}
+
+	// Setup repositories
+	for i, repo := range aptRepos {
+		if repo.Type == "repo" {
+			// Repository with GPG key verification
+			keyFile := fmt.Sprintf("/tmp/repo-key-%d.gpg", i)
+
+			// Download GPG key
+			commands = append(commands, fmt.Sprintf("RUN wget -O %s %s", keyFile, repo.KeyURL))
+
+			// Verify GPG key hash (fail build if mismatch)
+			commands = append(commands, fmt.Sprintf("RUN echo \"%s  %s\" | sha256sum -c || (echo \"GPG key hash mismatch for %s\" && exit 1)", repo.KeySHA256, keyFile, repo.URL))
+
+			// Import GPG key
+			commands = append(commands, fmt.Sprintf("RUN apt-key add %s", keyFile))
+
+			// Add repository
+			repoName := fmt.Sprintf("custom-repo-%d", i)
+			commands = append(commands, fmt.Sprintf("RUN echo \"deb %s\" > /etc/apt/sources.list.d/%s.list", repo.URL, repoName))
+
+		} else if repo.Type == "ppa" {
+			// PPA addition (uses add-apt-repository)
+			commands = append(commands, fmt.Sprintf("RUN add-apt-repository -y ppa:%s", repo.PPA))
+		}
+	}
+
+	// Update package cache if we added repositories
+	if hasRepos {
+		commands = append(commands, "RUN apt-get update")
+	}
+
+	// Install packages
+	if len(packages) > 0 {
+		sorted := make([]string, len(packages))
+		copy(sorted, packages)
+		sort.Strings(sorted)
+		pkgList := strings.Join(sorted, " ")
+
+		if hasRepos {
+			// Already updated, just install
+			commands = append(commands, fmt.Sprintf("RUN apt-get install -y %s", pkgList))
+		} else {
+			// Update and install in one command
+			commands = append(commands, fmt.Sprintf("RUN apt-get update && apt-get install -y %s", pkgList))
+		}
+	}
+
+	return commands
+}
+
+// generateRhelCommands creates Docker RUN commands for Fedora/RHEL.
+func generateRhelCommands(packages []string, repositories []RepositoryConfig) []string {
+	var commands []string
+	hasRepos := false
+
+	// Filter repositories for dnf
+	var dnfRepos []RepositoryConfig
+	for _, repo := range repositories {
+		if repo.Manager == "dnf" {
+			dnfRepos = append(dnfRepos, repo)
+			hasRepos = true
+		}
+	}
+
+	// Install prerequisites if we have repositories with GPG keys
+	if hasRepos {
+		commands = append(commands, "RUN dnf install -y wget")
+	}
+
+	// Setup repositories
+	for i, repo := range dnfRepos {
+		if repo.KeyURL != "" {
+			// Repository with GPG key
+			keyFile := fmt.Sprintf("/tmp/repo-key-%d.gpg", i)
+
+			// Download GPG key
+			commands = append(commands, fmt.Sprintf("RUN wget -O %s %s", keyFile, repo.KeyURL))
+
+			// Import GPG key
+			commands = append(commands, fmt.Sprintf("RUN rpm --import %s", keyFile))
+		}
+
+		// Add repository configuration
+		repoName := fmt.Sprintf("custom-repo-%d", i)
+		repoConfig := fmt.Sprintf("[%s]\\nname=Custom Repository %d\\nbaseurl=%s\\nenabled=1\\ngpgcheck=1", repoName, i, repo.URL)
+		if repo.KeyURL != "" {
+			repoConfig += fmt.Sprintf("\\ngpgkey=file:///tmp/repo-key-%d.gpg", i)
+		}
+		commands = append(commands, fmt.Sprintf("RUN echo -e \"%s\" > /etc/yum.repos.d/%s.repo", repoConfig, repoName))
+	}
+
+	// Install packages
+	if len(packages) > 0 {
+		sorted := make([]string, len(packages))
+		copy(sorted, packages)
+		sort.Strings(sorted)
+		pkgList := strings.Join(sorted, " ")
+		commands = append(commands, fmt.Sprintf("RUN dnf install -y %s", pkgList))
+	}
+
+	return commands
+}
+
+// generateArchCommands creates Docker RUN commands for Arch Linux.
+func generateArchCommands(packages []string, repositories []RepositoryConfig) []string {
+	var commands []string
+
+	// Arch doesn't commonly use third-party repositories in containers
+	// If needed, repository support can be added later
+
+	// Install packages
+	if len(packages) > 0 {
+		sorted := make([]string, len(packages))
+		copy(sorted, packages)
+		sort.Strings(sorted)
+		pkgList := strings.Join(sorted, " ")
+		commands = append(commands, fmt.Sprintf("RUN pacman -Sy --noconfirm %s", pkgList))
+	}
+
+	return commands
+}
+
+// generateAlpineCommands creates Docker RUN commands for Alpine Linux.
+func generateAlpineCommands(packages []string, repositories []RepositoryConfig) []string {
+	var commands []string
+
+	// Alpine doesn't commonly use third-party repositories in containers
+	// If needed, repository support can be added later
+
+	// Install packages
+	if len(packages) > 0 {
+		sorted := make([]string, len(packages))
+		copy(sorted, packages)
+		sort.Strings(sorted)
+		pkgList := strings.Join(sorted, " ")
+		commands = append(commands, fmt.Sprintf("RUN apk add --no-cache %s", pkgList))
+	}
+
+	return commands
+}
+
+// generateSuseCommands creates Docker RUN commands for SUSE Linux.
+func generateSuseCommands(packages []string, repositories []RepositoryConfig) []string {
+	var commands []string
+
+	// SUSE doesn't commonly use third-party repositories in containers
+	// If needed, repository support can be added later
+
+	// Install packages
+	if len(packages) > 0 {
+		sorted := make([]string, len(packages))
+		copy(sorted, packages)
+		sort.Strings(sorted)
+		pkgList := strings.Join(sorted, " ")
+		commands = append(commands, fmt.Sprintf("RUN zypper install -y %s", pkgList))
+	}
+
+	return commands
 }
 
 // ContainerImageName generates a deterministic cache image name for a container specification.
@@ -186,13 +346,20 @@ func generateBuildCommands(family string, packages map[string][]string) ([]strin
 // - "debian" is the linux_family from the spec (for human readability)
 // - "a1b2c3d4e5f6g7h8" is the first 16 hex characters of the SHA256 hash
 //
-// The hash is computed from all package manager + package combinations, sorted
-// deterministically to ensure the same package set always produces the same hash.
-// This enables container image caching: if two test runs require the same packages,
-// they can reuse the same cached container image.
+// The hash is computed from:
+// - Base image tag (e.g., "debian:bookworm-slim")
+// - Package manager + package combinations (e.g., "apt:curl", "apt:jq")
+// - Repository configurations (URL, GPG key hash, PPA/tap names)
 //
-// Hash input format: sorted list of "pm:package" strings joined with newlines.
-// Example: For packages {"apt": ["curl", "jq"]}, the hash input is "apt:curl\napt:jq".
+// All components are sorted deterministically to ensure the same configuration
+// always produces the same hash. This enables container image caching: if two
+// test runs require the same packages and repositories, they can reuse the
+// same cached container image.
+//
+// Hash input examples:
+// - Packages: "apt:curl\napt:jq"
+// - Repositories: "repo:apt:https://example.com:https://example.com/key.gpg:abc123..."
+// - PPAs: "ppa:apt:user/repo"
 //
 // The family prefix in the tag is technically redundant (the hash encodes the package
 // manager, which determines the family), but improves human readability when debugging
@@ -216,6 +383,25 @@ func ContainerImageName(spec *ContainerSpec) string {
 		// Create pm:package pairs
 		for _, pkg := range sorted {
 			parts = append(parts, fmt.Sprintf("%s:%s", manager, pkg))
+		}
+	}
+
+	// Include repository configurations in hash
+	// This ensures cache invalidation when repos change (URL, GPG key, etc.)
+	for _, repo := range spec.Repositories {
+		switch repo.Type {
+		case "repo":
+			// Standard repository with optional GPG key
+			parts = append(parts, fmt.Sprintf("repo:%s:%s:%s:%s",
+				repo.Manager, repo.URL, repo.KeyURL, repo.KeySHA256))
+		case "ppa":
+			// Ubuntu PPA
+			parts = append(parts, fmt.Sprintf("ppa:%s:%s",
+				repo.Manager, repo.PPA))
+		case "tap":
+			// Homebrew tap
+			parts = append(parts, fmt.Sprintf("tap:%s:%s",
+				repo.Manager, repo.Tap))
 		}
 	}
 
