@@ -253,10 +253,13 @@ Platform detection must happen **before** step filtering and **before** dependen
 - Values: `linux/darwin/windows` for OS, `amd64/arm64/386` for Arch
 - No user override (plans are inherently platform-specific)
 
-**Linux Family** (linux-only, optional):
-- **User override** (preferred): If `--linux-family` flag provided, use that value after validation
-- **Automatic detection** (fallback): Call `platform.DetectFamily()` which reads `/etc/os-release`
-- **Detection failure** (graceful degradation): If detection fails, emit warning and leave field empty
+**Linux Family** (linux-only, conditional):
+- **Only populated if recipe uses family-specific steps**: Check if recipe has any steps with `when.linux_family` conditions
+- **If recipe is family-agnostic**: Leave field empty for maximum portability (plan works on any Linux family)
+- **If recipe has family-specific steps**:
+  - **User override** (preferred): If `--linux-family` flag provided, use that value after validation
+  - **Automatic detection** (fallback): Call `platform.DetectFamily()` which reads `/etc/os-release`
+  - **Detection failure** (graceful degradation): Emit warning and leave field empty
 - **Non-Linux platforms**: Field remains empty (omitted from JSON via `omitempty` tag)
 
 #### Implementation Example
@@ -268,30 +271,45 @@ func detectPlatform(cfg *PlanConfig) (Platform, error) {
         Arch: runtime.GOARCH,
     }
 
-    // Linux family detection (only for linux)
+    // Linux family detection (only for linux AND only if recipe uses family-specific steps)
     if platform.OS == "linux" {
-        if cfg.LinuxFamily != "" {
-            // User provided explicit override
-            if !isValidLinuxFamily(cfg.LinuxFamily) {
-                return Platform{}, fmt.Errorf("invalid linux family: %s (must be debian, fedora, alpine, arch, or gentoo)", cfg.LinuxFamily)
-            }
-            platform.LinuxFamily = cfg.LinuxFamily
-        } else {
-            // Attempt automatic detection
-            family, err := platform.DetectFamily()
-            if err != nil {
-                // Log warning but continue without family filtering
-                if cfg.OnWarning != nil {
-                    cfg.OnWarning("platform", fmt.Sprintf("failed to detect linux family: %v. Plan will filter steps by OS and Arch only. Use --linux-family to override.", err))
+        if recipeHasFamilySpecificSteps(cfg.Recipe) {
+            // Recipe needs family filtering - populate the field
+            if cfg.LinuxFamily != "" {
+                // User provided explicit override
+                if !isValidLinuxFamily(cfg.LinuxFamily) {
+                    return Platform{}, fmt.Errorf("invalid linux family: %s (must be debian, fedora, alpine, arch, or gentoo)", cfg.LinuxFamily)
                 }
-                platform.LinuxFamily = "" // Explicit empty (no family filtering)
+                platform.LinuxFamily = cfg.LinuxFamily
             } else {
-                platform.LinuxFamily = family
+                // Attempt automatic detection
+                family, err := platform.DetectFamily()
+                if err != nil {
+                    // Log warning but continue without family filtering
+                    if cfg.OnWarning != nil {
+                        cfg.OnWarning("platform", fmt.Sprintf("failed to detect linux family: %v. Plan will filter steps by OS and Arch only. Use --linux-family to override.", err))
+                    }
+                    platform.LinuxFamily = "" // Empty (no family filtering)
+                } else {
+                    platform.LinuxFamily = family
+                }
             }
+        } else {
+            // Recipe is family-agnostic - leave empty for max portability
+            platform.LinuxFamily = ""
         }
     }
 
     return platform, nil
+}
+
+func recipeHasFamilySpecificSteps(recipe *Recipe) bool {
+    for _, step := range recipe.Steps {
+        if len(step.When.LinuxFamily) > 0 {
+            return true
+        }
+    }
+    return false
 }
 ```
 
@@ -321,6 +339,8 @@ This ensures:
 1. All steps in the dependency tree are filtered by the same platform
 2. Platform validation at execution time applies to the entire plan
 3. No cross-platform dependency resolution (which would be invalid)
+
+**Note on LinuxFamily inheritance**: If the parent recipe has no family-specific steps (LinuxFamily is empty), dependencies inherit the empty value, allowing maximum portability. If the parent requires a specific family, all dependencies are resolved for that family.
 
 ### Key Components
 
