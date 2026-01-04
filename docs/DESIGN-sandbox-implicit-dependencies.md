@@ -35,8 +35,7 @@ Cross-platform plan execution (e.g., generating a plan on macOS and executing on
 1. **Plan portability**: Plans must be executable on any machine with the same platform without recipe context
 2. **Single code path**: `tsuku eval foo`, `tsuku install foo`, and `tsuku install --plan` must use identical plan generation
 3. **Sandbox validation**: Sandbox tests must validate the same execution path used in production
-4. **Backward compatibility**: Existing plans without dependencies must continue to work
-5. **Minimal changes**: Leverage existing format v3 infrastructure rather than redesigning
+4. **Minimal changes**: Leverage existing format v3 infrastructure rather than redesigning
 
 ## Considered Options
 
@@ -66,7 +65,6 @@ Cross-platform plan execution (e.g., generating a plan on macOS and executing on
 - **Truly portable**: Plans include everything needed for execution
 - **Minimal code changes**: One line changed, ~30 lines deleted
 - **No schema changes**: Uses existing `InstallationPlan.Dependencies` field
-- **Backward compatible**: Old plans without dependencies still work
 
 **Cons**:
 - Larger plan files (includes full dependency trees)
@@ -124,7 +122,6 @@ The fix is to enable the dependency embedding infrastructure that already exists
 2. **Achieves architectural goal**: Plans become truly self-contained and portable (within the same platform).
 3. **Minimal code changes**: One line changed (`RecipeLoader: loader` instead of `nil`), ~30 lines of workaround code deleted.
 4. **No schema changes**: Format v3 already has everything needed.
-5. **Backward compatible**: Old plans without dependencies continue to work (execution gracefully handles empty `Dependencies` array).
 
 ### Platform-Specific Plans
 
@@ -248,11 +245,10 @@ type DependencyPlan struct {
 - Read `internal/executor/plan.go` or equivalent to check `InstallationPlan` struct
 - If missing, design minimal schema addition (may require format version bump to v4)
 - Verify if dependency depth/breadth limits exist in plan generation
-- Design backward compatibility strategy (fail-closed for security)
 
 ### Phase 2: Add Platform Validation and Resource Limits
 
-**Task**: Add platform constraint validation to plan execution with fail-closed security posture.
+**Task**: Add platform constraint validation to plan execution.
 
 **Changes**:
 - Add `PlatformConstraints` to `InstallationPlan` struct (if not present)
@@ -265,11 +261,6 @@ type DependencyPlan struct {
 **Implementation: validatePlatformConstraints()**
 ```go
 func validatePlatformConstraints(plan *InstallationPlan, currentPlatform Platform) error {
-    // Fail closed: reject plans without constraints (security over compatibility)
-    if plan.PlatformConstraints == nil {
-        return fmt.Errorf("plan missing platform constraints (unsafe for execution)")
-    }
-
     if plan.PlatformConstraints.OS != currentPlatform.OS {
         return fmt.Errorf("platform mismatch: plan requires %s, current system is %s",
             plan.PlatformConstraints.OS, currentPlatform.OS)
@@ -328,20 +319,8 @@ func validateResourceLimits(plan *InstallationPlan) error {
 }
 ```
 
-**Backward Compatibility Strategy**:
-Old plans without `PlatformConstraints` will be **rejected** (fail-closed) to prevent unsafe execution. Users must regenerate plans with the new format. This prioritizes security over compatibility.
-
-**Override mechanism** (for emergency recovery):
-```bash
-# Force execution of old plan (unsafe, requires explicit flag)
-tsuku install --plan plan.json --force-platform
-```
-
 **Example errors**:
 ```
-Error: plan missing platform constraints (unsafe for execution)
-Hint: Regenerate plan with: tsuku eval <recipe> --linux-family <family>
-
 Error: platform mismatch
   Plan requires: linux/amd64 (debian)
   Current system: linux/amd64 (alpine)
@@ -490,11 +469,11 @@ This design introduces mitigations for risks that become more relevant with self
 
 #### Platform Validation Bypass
 
-**Risk**: Old plans without `PlatformConstraints` could bypass platform validation and execute on incompatible systems.
+**Risk**: Plans could be executed on incompatible systems if platform constraints are not validated.
 
-**Mitigation**: Fail-closed security posture. Plans without `PlatformConstraints` are rejected with error message instructing user to regenerate plan. Emergency override (`--force-platform`) requires explicit opt-in. See Phase 2 implementation for `validatePlatformConstraints()`.
+**Mitigation**: Platform validation is mandatory. All plans must include `PlatformConstraints` and execution will fail fast if the current platform doesn't match. See Phase 2 implementation for `validatePlatformConstraints()`.
 
-**Residual risk**: Users might habitually use `--force-platform` if they encounter the error frequently during migration. Documentation should emphasize this flag is unsafe.
+**Residual risk**: None. Since tsuku is pre-GA, we can require all plans to have the new format.
 
 #### Plan Tampering
 
@@ -518,6 +497,7 @@ This design introduces mitigations for risks that become more relevant with self
 3. **Sandbox tests validate real behavior**: CI tests the same execution path used in production
 4. **Format v3 infrastructure proves its value**: Existing implementation just needs to be enabled
 5. **Fail-fast platform validation**: Clear error messages when platform mismatches occur
+6. **Clean design**: No backward compatibility complexity since tsuku is pre-GA
 
 ### Negative
 
