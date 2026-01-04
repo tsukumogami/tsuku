@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
@@ -21,13 +20,14 @@ import (
 
 // planRetrievalConfig configures the plan retrieval flow.
 type planRetrievalConfig struct {
-	Tool              string // Tool name
-	VersionConstraint string // User's version constraint (e.g., "14.1.0", "", "@lts")
-	Fresh             bool   // If true, skip cache and regenerate plan
-	OS                string // Target OS (defaults to runtime.GOOS)
-	Arch              string // Target arch (defaults to runtime.GOARCH)
-	RecipeHash        string // SHA256 hash of recipe TOML
-	DownloadCacheDir  string // Directory for download cache (enables caching during Decompose)
+	Tool              string               // Tool name
+	VersionConstraint string               // User's version constraint (e.g., "14.1.0", "", "@lts")
+	Fresh             bool                 // If true, skip cache and regenerate plan
+	OS                string               // Target OS (defaults to runtime.GOOS)
+	Arch              string               // Target arch (defaults to runtime.GOARCH)
+	RecipeHash        string               // SHA256 hash of recipe TOML
+	DownloadCacheDir  string               // Directory for download cache (enables caching during Decompose)
+	RecipeLoader      actions.RecipeLoader // Recipe loader for dependency resolution (enables self-contained plans)
 }
 
 // versionResolver abstracts version resolution for testing.
@@ -123,6 +123,7 @@ func getOrGeneratePlanWith(
 		RecipeSource:  "registry",
 		Downloader:    downloader,
 		DownloadCache: downloadCache,
+		RecipeLoader:  cfg.RecipeLoader,
 	})
 }
 
@@ -138,88 +139,6 @@ func computeRecipeHashForPlan(r *recipe.Recipe) (string, error) {
 
 func runInstallWithTelemetry(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, client *telemetry.Client) error {
 	return installWithDependencies(toolName, reqVersion, versionConstraint, isExplicit, parent, make(map[string]bool), client)
-}
-
-// ensurePackageManagersForRecipe checks if a recipe uses package managers
-// and auto-bootstraps them as execution dependencies if needed.
-// It uses the central dependency resolver (actions.ResolveDependencies) to determine
-// which dependencies are needed, then installs them via installWithDependencies.
-// Returns a list of bin paths that should be added to PATH for execution.
-func ensurePackageManagersForRecipe(mgr *install.Manager, r *recipe.Recipe, visited map[string]bool, telemetryClient *telemetry.Client) ([]string, error) {
-	// Use the central dependency resolver to get install-time deps
-	resolvedDeps := actions.ResolveDependencies(r)
-
-	var execPaths []string
-	processedDeps := make(map[string]bool)
-
-	// Load state once for checking installed deps
-	state, _ := mgr.GetState().Load()
-
-	for depName := range resolvedDeps.InstallTime {
-		// Skip if already processed in this call
-		if processedDeps[depName] {
-			continue
-		}
-		processedDeps[depName] = true
-
-		// Check if already installed - if so, just get the bin path
-		if state != nil {
-			if _, exists := state.Installed[depName]; exists {
-				binPath, err := findDependencyBinPath(mgr, depName)
-				if err == nil {
-					execPaths = append(execPaths, binPath)
-				}
-				continue
-			}
-		}
-
-		printInfof("Ensuring dependency '%s' for package manager action...\n", depName)
-
-		// Install the dependency using the standard mechanism
-		// Use a fresh visited map to avoid false positives from parent installations
-		depVisited := make(map[string]bool)
-		if err := installWithDependencies(depName, "", "", false, r.Metadata.Name, depVisited, telemetryClient); err != nil {
-			return nil, fmt.Errorf("failed to install dependency '%s': %w", depName, err)
-		}
-
-		// Find the installed binary path to add to execPaths
-		binPath, err := findDependencyBinPath(mgr, depName)
-		if err != nil {
-			printInfof("Warning: could not find bin path for %s: %v\n", depName, err)
-			continue
-		}
-		execPaths = append(execPaths, binPath)
-	}
-
-	return execPaths, nil
-}
-
-// findDependencyBinPath finds the bin directory for an installed dependency
-func findDependencyBinPath(mgr *install.Manager, depName string) (string, error) {
-	cfg, err := config.DefaultConfig()
-	if err != nil {
-		return "", fmt.Errorf("failed to load config: %w", err)
-	}
-
-	state, err := mgr.GetState().Load()
-	if err != nil {
-		return "", err
-	}
-
-	toolState, exists := state.Installed[depName]
-	if !exists {
-		return "", fmt.Errorf("dependency %s not found in state", depName)
-	}
-
-	toolDir := cfg.ToolDir(depName, toolState.Version)
-	binDir := filepath.Join(toolDir, "bin")
-
-	// Verify the bin directory exists
-	if _, err := os.Stat(binDir); err != nil {
-		return "", fmt.Errorf("bin directory not found: %s", binDir)
-	}
-
-	return binDir, nil
 }
 
 func installWithDependencies(toolName, reqVersion, versionConstraint string, isExplicit bool, parent string, visited map[string]bool, telemetryClient *telemetry.Client) error {
@@ -386,14 +305,6 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		}
 	}
 
-	// Auto-bootstrap package managers if recipe uses them
-	// This must happen BEFORE checking runtime dependencies so that if a package manager
-	// (like npm/nodejs) is also a runtime dependency, we can expose it
-	execPaths, err := ensurePackageManagersForRecipe(mgr, r, visited, telemetryClient)
-	if err != nil {
-		return fmt.Errorf("failed to ensure package managers: %w", err)
-	}
-
 	// Check and install runtime dependencies (these must be exposed, not hidden)
 	// This happens AFTER package manager bootstrap so CheckAndExposeHidden can work
 	if len(r.Metadata.RuntimeDependencies) > 0 {
@@ -430,9 +341,6 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	}
 	defer exec.Cleanup()
 
-	// Set execution paths (for package managers like npm, pip, cargo)
-	exec.SetExecPaths(execPaths)
-
 	// Set tools directory for finding other installed tools
 	exec.SetToolsDir(cfg.ToolsDir)
 
@@ -445,35 +353,6 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set key cache directory for PGP signature verification
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 
-	// Look up resolved dependency versions for variable expansion.
-	// This is needed because dependencies are installed before plan generation,
-	// so plan.Dependencies will be empty at execution time.
-	if len(r.Metadata.Dependencies) > 0 {
-		resolvedDeps := actions.ResolvedDeps{
-			InstallTime: make(map[string]string),
-		}
-		state, _ := mgr.GetState().Load()
-		for _, depName := range r.Metadata.Dependencies {
-			// First, check if it's a library (installed in libs/)
-			if libVersion := mgr.GetInstalledLibraryVersion(depName); libVersion != "" {
-				resolvedDeps.InstallTime[depName] = libVersion
-				continue
-			}
-			// Otherwise, check if it's a tool (installed in tools/)
-			if state != nil {
-				if depState, exists := state.Installed[depName]; exists {
-					if depState.ActiveVersion != "" {
-						resolvedDeps.InstallTime[depName] = depState.ActiveVersion
-					} else if depState.Version != "" {
-						// Fall back to deprecated Version field for old state files
-						resolvedDeps.InstallTime[depName] = depState.Version
-					}
-				}
-			}
-		}
-		exec.SetResolvedDeps(resolvedDeps)
-	}
-
 	// Get or generate installation plan (two-phase flow)
 	planCfg := planRetrievalConfig{
 		Tool:              toolName,
@@ -481,6 +360,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		Fresh:             installFresh,
 		RecipeHash:        recipeHash,
 		DownloadCacheDir:  cfg.DownloadCacheDir,
+		RecipeLoader:      loader,
 	}
 	plan, err := getOrGeneratePlan(globalCtx, exec, mgr.GetState(), planCfg)
 	if err != nil {

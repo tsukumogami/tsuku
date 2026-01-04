@@ -86,8 +86,9 @@ type PlanVerify struct {
 
 // Platform identifies the target operating system and architecture.
 type Platform struct {
-	OS   string `json:"os"`   // e.g., "linux", "darwin", "windows"
-	Arch string `json:"arch"` // e.g., "amd64", "arm64"
+	OS          string `json:"os"`                     // e.g., "linux", "darwin", "windows"
+	Arch        string `json:"arch"`                   // e.g., "amd64", "arm64"
+	LinuxFamily string `json:"linux_family,omitempty"` // e.g., "debian", "fedora" (only when recipe uses family-specific steps)
 }
 
 // ResolvedStep represents a single installation step with all templates
