@@ -63,7 +63,7 @@ Cross-platform plan execution (e.g., generating a plan on macOS and executing on
 - **Already implemented**: Format v3 (#621) supports recursive dependency trees
 - **Single code path**: All installation modes use the same plan generation and execution
 - **Truly portable**: Plans include everything needed for execution
-- **Minimal code changes**: One line changed, ~30 lines deleted
+- **Minimal code changes**: Add RecipeLoader field to planRetrievalConfig struct, thread it through plan generation (3-5 lines changed), delete ~109 lines of workaround code (entire parallel installation flow)
 - **No schema changes**: Uses existing `InstallationPlan.Dependencies` field
 
 **Cons**:
@@ -120,7 +120,7 @@ The fix is to enable the dependency embedding infrastructure that already exists
 
 1. **Reuses existing infrastructure**: Format v3 introduced `InstallationPlan.Dependencies` in #621 to support recursive dependency trees. The code path already exists; it's just not enabled in `install`.
 2. **Achieves architectural goal**: Plans become truly self-contained and portable (within the same platform).
-3. **Minimal code changes**: One line changed (`RecipeLoader: loader` instead of `nil`), ~30 lines of workaround code deleted.
+3. **Minimal code changes**: Add RecipeLoader to config struct and thread through plan generation (3-5 lines), delete entire parallel installation flow (~109 lines of workaround code including helper functions).
 4. **No schema changes**: Format v3 already has everything needed.
 
 ### Platform-Specific Plans
@@ -197,15 +197,15 @@ Any command that installs:
 
 ```go
 type InstallationPlan struct {
-    PlatformConstraints PlatformConstraints  // Platform this plan was generated for
-    Dependencies        []DependencyPlan      // Nested dependency tree (explicit + implicit)
-    Steps               []ResolvedStep        // Resolved installation steps
+    Platform     Platform          // Platform this plan was generated for
+    Dependencies []DependencyPlan  // Nested dependency tree (explicit + implicit)
+    Steps        []ResolvedStep    // Resolved installation steps
 }
 
-type PlatformConstraints struct {
-    OS          string  // "linux", "darwin", "windows"
-    Arch        string  // "amd64", "arm64"
-    LinuxFamily string  // "debian", "fedora", "alpine" (empty if OS != linux)
+type Platform struct {
+    OS          string `json:"os"`                     // "linux", "darwin", "windows"
+    Arch        string `json:"arch"`                   // "amd64", "arm64"
+    LinuxFamily string `json:"linux_family,omitempty"` // "debian", "fedora", "alpine" (empty for non-Linux)
 }
 
 type DependencyPlan struct {
@@ -216,7 +216,111 @@ type DependencyPlan struct {
 }
 ```
 
-**Note**: `PlatformConstraints` may need to be added to the schema if not already present in format v3. This will be investigated during implementation.
+**Note**: The `LinuxFamily` field will be added to the existing `Platform` struct in internal/executor/plan.go. This extends the format v3 schema but remains backward compatible since the field uses `omitempty` (plans without LinuxFamily will continue to work).
+
+### Platform Detection and Population
+
+The `Platform` field in `InstallationPlan` must be populated during plan generation to enable platform-specific step filtering and execution-time validation.
+
+#### When Platform is Populated
+
+Platform detection occurs in `GeneratePlan()` (internal/executor/plan_generator.go) as the first step of plan generation:
+
+```go
+func GeneratePlan(ctx context.Context, cfg *PlanConfig) (*InstallationPlan, error) {
+    // Step 1: Detect and populate platform constraints
+    platform, err := detectPlatform(cfg)
+    if err != nil {
+        return nil, fmt.Errorf("failed to detect platform: %w", err)
+    }
+
+    // Step 2: Filter recipe steps by platform
+    filteredSteps := filterStepsByPlatform(cfg.Recipe.Steps, platform)
+
+    // Step 3: Resolve dependencies and generate nested plans
+    // (dependencies inherit the same platform from parent)
+    ...
+}
+```
+
+Platform detection must happen **before** step filtering and **before** dependency resolution to ensure the entire dependency tree uses consistent platform constraints.
+
+#### How Platform Values are Determined
+
+**OS and Architecture** (always populated):
+- Detected from Go runtime: `runtime.GOOS` and `runtime.GOARCH`
+- These are compile-time constants reflecting the build platform
+- Values: `linux/darwin/windows` for OS, `amd64/arm64/386` for Arch
+- No user override (plans are inherently platform-specific)
+
+**Linux Family** (linux-only, optional):
+- **User override** (preferred): If `--linux-family` flag provided, use that value after validation
+- **Automatic detection** (fallback): Call `platform.DetectFamily()` which reads `/etc/os-release`
+- **Detection failure** (graceful degradation): If detection fails, emit warning and leave field empty
+- **Non-Linux platforms**: Field remains empty (omitted from JSON via `omitempty` tag)
+
+#### Implementation Example
+
+```go
+func detectPlatform(cfg *PlanConfig) (Platform, error) {
+    platform := Platform{
+        OS:   runtime.GOOS,
+        Arch: runtime.GOARCH,
+    }
+
+    // Linux family detection (only for linux)
+    if platform.OS == "linux" {
+        if cfg.LinuxFamily != "" {
+            // User provided explicit override
+            if !isValidLinuxFamily(cfg.LinuxFamily) {
+                return Platform{}, fmt.Errorf("invalid linux family: %s (must be debian, fedora, alpine, arch, or gentoo)", cfg.LinuxFamily)
+            }
+            platform.LinuxFamily = cfg.LinuxFamily
+        } else {
+            // Attempt automatic detection
+            family, err := platform.DetectFamily()
+            if err != nil {
+                // Log warning but continue without family filtering
+                if cfg.OnWarning != nil {
+                    cfg.OnWarning("platform", fmt.Sprintf("failed to detect linux family: %v. Plan will filter steps by OS and Arch only. Use --linux-family to override.", err))
+                }
+                platform.LinuxFamily = "" // Explicit empty (no family filtering)
+            } else {
+                platform.LinuxFamily = family
+            }
+        }
+    }
+
+    return platform, nil
+}
+```
+
+#### Dependency Inheritance
+
+Platform constraints are **inherited by all dependencies**. Nested dependency plans receive the same `Platform` value as the root plan:
+
+```go
+func generateDependencyPlans(cfg *PlanConfig, deps map[string]string) ([]DependencyPlan, error) {
+    for depName, depVersion := range deps {
+        // Create config for dependency with SAME platform
+        depCfg := &PlanConfig{
+            RecipeLoader: cfg.RecipeLoader,
+            OS:           cfg.OS,           // Same OS as parent
+            Arch:         cfg.Arch,         // Same Arch as parent
+            LinuxFamily:  cfg.LinuxFamily,  // Same LinuxFamily as parent
+            // ...
+        }
+
+        depPlan, err := generateSingleDependencyPlan(depCfg, depName, depVersion, processed)
+        // ...
+    }
+}
+```
+
+This ensures:
+1. All steps in the dependency tree are filtered by the same platform
+2. Platform validation at execution time applies to the entire plan
+3. No cross-platform dependency resolution (which would be invalid)
 
 ### Key Components
 
@@ -231,51 +335,262 @@ type DependencyPlan struct {
    - NEW: Will add platform validation before installation begins
 
 3. **Install Command** (`cmd/tsuku/install_deps.go`):
-   - Currently passes `RecipeLoader: nil` (line 478) → FIX: Pass `RecipeLoader: loader`
-   - Currently calls `ensurePackageManagersForRecipe()` before plan generation (line 392) → DELETE: Redundant
-   - Currently calls `SetResolvedDeps()` workaround (lines 451-475) → DELETE: `buildResolvedDepsFromPlan()` handles it
+   - Currently lacks `RecipeLoader` field in `planRetrievalConfig` struct (lines 22-31) → FIX: Add field, thread through to `executor.GeneratePlan()` call
+   - Currently calls `ensurePackageManagersForRecipe()` before plan generation (line 392) → DELETE: Redundant (4 lines + 53 lines function definition + 27 lines helper)
+   - Currently calls `SetResolvedDeps()` workaround (lines 451-475) → DELETE: `buildResolvedDepsFromPlan()` handles it (25 lines)
+
+### Circular Dependency Detection
+
+Circular dependencies are detected during plan generation and result in hard errors that prevent installation.
+
+#### Detection Mechanism
+
+The `ResolveDependencies()` function (internal/actions/resolver.go) tracks the dependency resolution path and detects cycles during transitive dependency resolution:
+
+```go
+// In resolver.go:347-351
+for _, ancestor := range path {
+    if ancestor == depName {
+        cyclePath := append(path, depName)
+        return fmt.Errorf("%w: %s", ErrCyclicDependency, strings.Join(cyclePath, " -> "))
+    }
+}
+```
+
+The `processed map[string]bool` in `generateDependencyPlans()` prevents infinite loops at the plan generation level, but `ResolveDependencies()` provides the authoritative cycle detection with full path information.
+
+#### Error Handling
+
+When a circular dependency is detected, plan generation fails immediately with a descriptive error message:
+
+```
+Error: circular dependency detected during plan generation
+  Dependency chain: ninja -> cmake -> ninja
+
+This indicates a recipe configuration error. Check:
+  - Recipe metadata.dependencies fields
+  - Action implicit dependencies
+  - Step-level dependency overrides
+
+Recipe maintainers should resolve this before the tool can be installed.
+```
+
+**Why hard error?** Circular dependencies make installation logically impossible. There is no valid installation order when A depends on B and B depends on A. This indicates a recipe misconfiguration that must be fixed by recipe maintainers.
+
+#### Platform-Specific Cycles
+
+Circular dependencies can be platform-specific due to conditional dependencies:
+
+**Example**:
+```toml
+# patchelf.toml
+[metadata]
+name = "patchelf"
+
+[[steps]]
+action = "cargo_install"  # cargo has linux-specific dep on patchelf
+when.os = ["linux"]
+```
+
+On Linux: `patchelf -> cargo -> patchelf` (cycle detected, error)
+On macOS: `patchelf -> cargo` (no cycle, cargo doesn't need patchelf on macOS)
+
+Detection occurs **after** platform filtering, so platform-specific cycles only fail on the affected platform.
+
+### Version Conflict Resolution
+
+When multiple dependencies require different versions of the same tool, tsuku uses a **first-encountered wins** strategy during dependency resolution.
+
+#### Resolution Strategy
+
+During transitive dependency resolution, the first version encountered for a tool is selected and used for all subsequent references:
+
+```go
+// In resolver.go:396-398
+if _, exists := deps[transName]; !exists {
+    deps[transName] = transVersion  // First version wins
+    newDeps[transName] = transVersion
+}
+```
+
+**Example**:
+```
+Tool A depends on cmake@3.20
+Tool B depends on cmake@3.25
+User runs: tsuku install toolchain (which depends on both A and B)
+```
+
+If A is resolved first: cmake@3.20 is selected, B uses cmake@3.20
+If B is resolved first: cmake@3.25 is selected, A uses cmake@3.25
+
+#### Rationale
+
+Tsuku's architecture allows multiple tool versions to coexist in `$TSUKU_HOME/tools/` (e.g., cmake-3.20 and cmake-3.25 can both be installed). However, a single installation plan must choose one version to use during the build process.
+
+The first-wins strategy is deterministic (dependency resolution order is alphabetical by name) and simple, avoiding complex version constraint solving.
+
+#### When Version Conflicts Cause Failures
+
+If the selected version is incompatible with a dependent tool's requirements, the build will fail at runtime with tool-specific errors. This is expected behavior - recipe maintainers should ensure dependencies use compatible version constraints.
+
+**Workaround**: Install tools separately rather than as a bundle. Each tool can then use its required version.
+
+### Dependency Deduplication
+
+When multiple tools share the same dependency, tsuku ensures each dependency is installed only once per version.
+
+#### How Deduplication Works
+
+**During plan generation**:
+- Each dependency is included in the plan's dependency tree based on recipe requirements
+- If Tool A and Tool B both depend on cmake@3.28.1, cmake appears in both dependency subtrees
+- The plan structure reflects the logical dependency graph (potentially duplicated)
+
+**During plan execution**:
+- The state manager checks if each dependency is already installed before executing its steps
+- Check uses tool name + version (e.g., "cmake-3.28.1" in `$TSUKU_HOME/tools/`)
+- If installed: skip to next dependency (~10ms overhead for state lookup)
+- If not installed: execute installation steps and record in state.json
+
+**Example**:
+```
+tsuku install ninja           # Installs: cmake@3.28.1, make@4.3, ninja@1.11.1
+tsuku install libsixel-source # Plan includes cmake@3.28.1, make@4.3
+                              # Execution: skips cmake and make (already installed)
+                              # Installs: libsixel-source only
+```
+
+This idempotent behavior ensures installing multiple tools with overlapping dependencies is efficient and safe.
+
+### User-Facing Error Messages
+
+The following error scenarios require clear, actionable messages with context:
+
+**Circular Dependency Detection**
+```
+Error: circular dependency detected during plan generation
+  Dependency chain: ninja -> cmake -> ninja
+
+This indicates a recipe configuration error. Check recipe metadata.dependencies fields.
+```
+
+**Missing Dependency Recipe**
+```
+Warning: recipe not found for dependency 'cmake'
+  Required by: complex-app (cmake_build action)
+
+If this is a system dependency, install manually. Otherwise: tsuku search cmake
+```
+
+**Version Conflict**
+```
+Error: dependency version conflict
+  nodejs@18 required by: tool-a
+  nodejs@20 required by: tool-b
+
+Workaround: Install tools separately (they can coexist in $TSUKU_HOME/tools/)
+```
+
+**Platform Constraint Violation**
+```
+Error: dependency 'foo' has no installation steps for platform linux/amd64/alpine
+  All steps filtered by platform constraints
+
+This may indicate incompatible platform-specific dependencies.
+```
+
+**Resource Limit Exceeded**
+```
+Error: dependency tree exceeds limits
+  Total dependencies: 143 (limit: 100)
+  Max depth: 7 (limit: 5)
+
+Deepest chain: app -> lib-a -> lib-b -> lib-c -> lib-d -> lib-e -> lib-f -> lib-g
+```
+
+All error messages follow the pattern: error type, specific context, actionable resolution.
+
+### Debugging Plan Generation and Execution
+
+Users can debug issues using these mechanisms:
+
+**Verbose Logging**
+```bash
+tsuku eval <tool> --verbose       # Detailed plan generation logs
+tsuku install --plan plan.json -v # Verbose execution output
+```
+
+Verbose mode shows:
+- Recipe loading (file path, hash)
+- Dependency resolution tree (depth, count)
+- Version resolution for each dependency
+- Step filtering by platform constraints
+- Warnings for missing dependency recipes
+
+**Error Context**
+All errors include:
+- Operation that failed (plan generation vs execution)
+- Tool and dependency chain (e.g., "in dependency cmake → openssl")
+- Specific step/action that failed
+- Actionable resolution hints
+
+Example error format:
+```
+Error: failed to resolve dependency version
+  Tool: complex-app@2.1.0
+  Dependency chain: complex-app → cmake → openssl
+  Version provider: github_releases
+  Error: GitHub API rate limit exceeded
+
+Hint: Set GITHUB_TOKEN environment variable or retry in 30 minutes
+```
+
+**Diagnostic Commands**
+- `tsuku plan-info plan.json` - Inspect plan structure and dependency tree
+- `tsuku eval <tool> --trace-deps` - Show full dependency resolution trace
 
 ## Implementation Approach
 
-### Phase 1: Investigate Platform Constraints and Resource Limits
+### Phase 1: Extend Platform Struct and Add Resource Limits
 
-**Task**: Determine if `PlatformConstraints` already exists in format v3 plan schema and verify resource limit handling.
+**Task**: Add `LinuxFamily` field to existing `Platform` struct and design resource limit validation.
 
 **Actions**:
-- Read `internal/executor/plan.go` or equivalent to check `InstallationPlan` struct
-- If missing, design minimal schema addition (may require format version bump to v4)
-- Verify if dependency depth/breadth limits exist in plan generation
+- Extend `Platform` struct in `internal/executor/plan.go` with `LinuxFamily string` field
+- Add `json:"linux_family,omitempty"` tag to maintain backward compatibility
+- Update `InstallationPlan` to use `Platform` field (verify current field name)
+- Design resource limit constants (max dependency depth: 5, max total dependencies: 100)
 
 ### Phase 2: Add Platform Validation and Resource Limits
 
-**Task**: Add platform constraint validation to plan execution.
+**Task**: Add platform validation to plan execution.
 
 **Changes**:
-- Add `PlatformConstraints` to `InstallationPlan` struct (if not present)
-- Populate `PlatformConstraints` during plan generation from current platform detection
+- Add `LinuxFamily` field to existing `Platform` struct in plan.go
+- Update plan generation to populate `Platform.LinuxFamily` field
 - Add resource limit constants (max dependency depth: 5, max total dependencies: 100)
-- Add `validatePlatformConstraints()` function to executor
+- Add `validatePlatform()` function to executor
 - Add `validateResourceLimits()` to check dependency tree depth and breadth
 - Call validations as first step in `ExecutePlan()`
 
-**Implementation: validatePlatformConstraints()**
+**Implementation: validatePlatform()**
 ```go
-func validatePlatformConstraints(plan *InstallationPlan, currentPlatform Platform) error {
-    if plan.PlatformConstraints.OS != currentPlatform.OS {
+func validatePlatform(plan *InstallationPlan, currentPlatform Platform) error {
+    if plan.Platform.OS != currentPlatform.OS {
         return fmt.Errorf("platform mismatch: plan requires %s, current system is %s",
-            plan.PlatformConstraints.OS, currentPlatform.OS)
+            plan.Platform.OS, currentPlatform.OS)
     }
 
-    if plan.PlatformConstraints.Arch != currentPlatform.Arch {
+    if plan.Platform.Arch != currentPlatform.Arch {
         return fmt.Errorf("architecture mismatch: plan requires %s, current system is %s",
-            plan.PlatformConstraints.Arch, currentPlatform.Arch)
+            plan.Platform.Arch, currentPlatform.Arch)
     }
 
     // Linux family check (only if OS is linux)
-    if plan.PlatformConstraints.OS == "linux" &&
-       plan.PlatformConstraints.LinuxFamily != currentPlatform.LinuxFamily {
+    if plan.Platform.OS == "linux" && plan.Platform.LinuxFamily != "" &&
+       plan.Platform.LinuxFamily != currentPlatform.LinuxFamily {
         return fmt.Errorf("linux family mismatch: plan requires %s, current system is %s",
-            plan.PlatformConstraints.LinuxFamily, currentPlatform.LinuxFamily)
+            plan.Platform.LinuxFamily, currentPlatform.LinuxFamily)
     }
 
     return nil
@@ -321,14 +636,56 @@ func validateResourceLimits(plan *InstallationPlan) error {
 
 **Example errors**:
 ```
-Error: platform mismatch
-  Plan requires: linux/amd64 (debian)
-  Current system: linux/amd64 (alpine)
+Error: linux family mismatch
+  Plan requires: debian
+  Current system: alpine
 
 Error: dependency depth exceeds limit (7 > 5)
 Tool: deeply-nested-tool
 Hint: This may indicate a circular dependency or malicious recipe
 ```
+
+**Implementation: Missing Dependency Recipe Handling**
+
+When `generateSingleDependencyPlan()` encounters a dependency with no recipe in the registry, it should emit a warning but continue plan generation. This allows for system dependencies (tools expected to be pre-installed) while alerting users to potential configuration errors.
+
+```go
+func generateSingleDependencyPlan(cfg *PlanConfig, depName string, depVersion string, processed map[string]bool) (*DependencyPlan, error) {
+    // ... existing recipe loading code ...
+
+    if err != nil {
+        // Recipe not found - may be a system dependency
+        if cfg.OnWarning != nil {
+            cfg.OnWarning("dependency",
+                fmt.Sprintf("recipe not found for dependency '%s' (version: %s) - assuming system dependency. "+
+                    "If this is unexpected, check for typos in recipe metadata.dependencies or action implicit dependencies.",
+                    depName, depVersion))
+        }
+        return nil, nil  // Skip this dependency, continue plan generation
+    }
+
+    // ... rest of implementation ...
+}
+```
+
+**Warning output example**:
+```
+Warning: recipe not found for dependency 'make' (version: latest) - assuming system dependency.
+If this is unexpected, check for typos in recipe metadata.dependencies or action implicit dependencies.
+```
+
+**Behavior**:
+- Dependencies without recipes are **excluded from the plan**
+- The plan executor assumes they are available in the execution environment
+- If the dependency is not available at execution time, the installation will fail with a standard "command not found" error
+
+**Rationale for warn-but-continue**:
+
+1. **Ecosystem reality**: Many build tools (`make`, `pkg-config`, `git`, etc.) are commonly pre-installed via system package managers. Requiring recipes for all of them would create unnecessary duplication.
+
+2. **Gradual recipe coverage**: The recipe registry is growing. Missing recipes for some dependencies should not block installation of tools that work with system dependencies.
+
+3. **Clear failure mode**: If a skipped dependency is truly missing, the build will fail at the step that invokes it (e.g., "cmake: command not found"), providing a clear error that users can resolve by installing the system package.
 
 ### Phase 3: Enable RecipeLoader and Remove Workarounds (Atomic)
 
@@ -336,37 +693,54 @@ Hint: This may indicate a circular dependency or malicious recipe
 
 **File**: `cmd/tsuku/install_deps.go`
 
-**Change 1** (line ~478):
+**Note on implementation**: The `planRetrievalConfig` struct does not currently have a `RecipeLoader` field. The fix requires:
+1. Adding `RecipeLoader actions.RecipeLoader` to the struct definition (cmd/tsuku/install_deps.go:22-31)
+2. Passing `loader` when constructing the config (lines ~478-484)
+3. Threading the field through to the underlying `executor.PlanConfig` in `getOrGeneratePlanWith()` (line ~120)
+
+This is straightforward wiring work but involves more than "changing line 478" - it requires understanding the two-phase config flow (planRetrievalConfig → PlanConfig).
+
+**Change 1** (lines 22-31, ~120, ~478-484):
 ```go
-// Before
-planCfg := planRetrievalConfig{
-    RecipeLoader: nil,  // Disables dependency embedding
+// Add to planRetrievalConfig struct:
+type planRetrievalConfig struct {
+    RecipeLoader actions.RecipeLoader  // NEW: Enable dependency embedding
+    // ... existing fields ...
 }
 
-// After
+// Pass loader when constructing config:
 planCfg := planRetrievalConfig{
     RecipeLoader: loader,  // Enable dependency embedding
+    // ... other fields ...
+}
+
+// Thread through to executor.PlanConfig in getOrGeneratePlanWith():
+execCfg := executor.PlanConfig{
+    RecipeLoader: cfg.RecipeLoader,  // NEW
+    // ... other fields ...
 }
 ```
 
-**Delete 1** (line ~392):
+**Delete 1** (lines 392-395 + function definitions):
 ```go
-// DELETE: ensurePackageManagersForRecipe installs deps BEFORE plan generation
-// This is redundant once RecipeLoader is enabled (plan includes deps)
+// DELETE: ensurePackageManagersForRecipe call (4 lines)
 execPaths, err := ensurePackageManagersForRecipe(mgr, r, visited, telemetryClient)
 if err != nil {
     return fmt.Errorf("failed to ensure package managers: %w", err)
 }
+
+// DELETE: ensurePackageManagersForRecipe function definition (lines 143-195, ~53 lines)
+// DELETE: findDependencyBinPath helper function (lines 197-223, ~27 lines)
+// Total: 84 lines deleted
 ```
 
-**Delete 2** (lines ~451-475):
+**Delete 2** (lines 451-475):
 ```go
-// DELETE: SetResolvedDeps workaround
-// buildResolvedDepsFromPlan() already handles this
+// DELETE: SetResolvedDeps workaround (25 lines)
 exec.SetResolvedDeps(resolvedDeps)
 ```
 
-**Total**: ~30 lines deleted, 1 line changed (plus platform validation and resource limits).
+**Total**: ~109 lines deleted (including helper functions), 3-5 lines changed to thread RecipeLoader through config structs (plus platform validation and resource limits added in Phase 2).
 
 ### Phase 4: Test Plan Portability
 
@@ -404,7 +778,7 @@ docker run -v $(pwd)/plan.json:/plan.json debian:bookworm-slim \
 docker run -v $(pwd)/plan-debian.json:/plan.json alpine:latest \
   /path/to/tsuku install --plan /plan.json
 
-# Expected: "Error: plan platform mismatch: plan requires debian, current system is alpine"
+# Expected: "Error: linux family mismatch: plan requires debian, current system is alpine"
 ```
 
 ### Phase 5: Validate Sandbox Tests
@@ -469,11 +843,11 @@ This design introduces mitigations for risks that become more relevant with self
 
 #### Platform Validation Bypass
 
-**Risk**: Plans could be executed on incompatible systems if platform constraints are not validated.
+**Risk**: Plans could be executed on incompatible systems if platform information is not validated.
 
-**Mitigation**: Platform validation is mandatory. All plans must include `PlatformConstraints` and execution will fail fast if the current platform doesn't match. See Phase 2 implementation for `validatePlatformConstraints()`.
+**Mitigation**: Platform validation is mandatory. All plans must include a `Platform` field and execution will fail fast if the current platform doesn't match. See Phase 2 implementation for `validatePlatform()`.
 
-**Residual risk**: None. Since tsuku is pre-GA, we can require all plans to have the new format.
+**Residual risk**: Plans without `LinuxFamily` populated will skip Linux family validation (backward compatibility), but this is acceptable since pre-GA plans are rare and users can regenerate plans to get full validation.
 
 #### Plan Tampering
 
@@ -487,6 +861,23 @@ This design introduces mitigations for risks that become more relevant with self
 - Plan generation and execution typically happen in same session (limited time window)
 
 **Future work**: Consider cryptographic plan signatures in format v4 or later.
+
+## Migration Path for Pre-GA Users
+
+**What happens to existing plans:**
+- Old plan files (format v3 without dependencies) will execute with a warning
+- Warning message: "Plan has no dependencies (generated with older tsuku). Implicit dependencies may not be available. Regenerate with: tsuku eval <tool>"
+- Installation may fail if implicit dependencies are missing from the system
+- No automatic migration or conversion
+
+**What users need to do:**
+- Regenerate all saved plan files: `tsuku eval <tool> > plan-new.json`
+- Update CI pipelines to use new plans (check for new `dependencies` field)
+- Delete old cached plans to avoid confusion
+- No action needed if using `tsuku install <tool>` directly (auto-generates new plans)
+
+**Breaking change rationale:**
+Since tsuku is pre-GA, we accept this one-time breakage to fix the implicit dependency problem. Users have a clear migration path (regenerate plans), and the new format is strictly better (self-contained).
 
 ## Consequences
 
