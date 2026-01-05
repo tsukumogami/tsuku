@@ -25,9 +25,9 @@ echo ""
 
 cd "$REPO_ROOT"
 
-# Build tsuku binary
+# Build tsuku binary (static for Alpine musl compatibility)
 echo "Building tsuku..."
-go build -o tsuku ./cmd/tsuku
+CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
 # Generate plan for fzf with dependencies (fzf is a simple download, no build deps)
 echo "Generating plan for fzf (family: $FAMILY)..."
