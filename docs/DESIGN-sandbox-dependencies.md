@@ -28,9 +28,11 @@ The generated plan shows:
 Total steps: 6 (including 0 from dependencies)
 ```
 
-**Root cause**: The `generatePlanFromRecipe()` function in `cmd/tsuku/install_sandbox.go` does not pass `RecipeLoader` to the plan generation step. Without RecipeLoader, the dependency embedding infrastructure (format v3) cannot resolve and include dependency installation steps.
+**Root cause**: `cmd/tsuku/install_sandbox.go` has its own `generatePlanFromRecipe()` function (lines 159-192) that **duplicates** the plan generation logic from `install_deps.go`. This duplicate implementation doesn't pass `RecipeLoader`, so dependencies aren't embedded in plans.
 
-This is the same issue that was just fixed in PR #808 for `tsuku install` (issue #805), which addressed *implicit* action dependencies (cmake, make, etc.). Issue #703 addresses *explicit* recipe dependencies declared in the `dependencies` field.
+**Architectural issue**: This violates the principle established in PR #808 that plan generation should use a unified code path. The sandbox executor already runs `tsuku install --plan plan.json` inside the container (executor.go:354), which uses the same execution code as normal install. There's no reason to duplicate plan generation on the host side.
+
+PR #808 fixed plan generation in `install_deps.go` (normal install mode), but the duplicated code in `install_sandbox.go` was left unfixed, creating two divergent implementations.
 
 ### Current State
 
@@ -155,221 +157,198 @@ Apply the same pattern from install_deps.go to install_sandbox.go by adding the 
 
 ## Considered Options
 
-### Option 1: Enable RecipeLoader in generatePlanFromRecipe()
+### Option 1: Eliminate duplication - reuse install_deps.go plan generation
 
-Apply the same fix from PR #808 to the sandbox code path by passing `RecipeLoader` to `GeneratePlan()` in `cmd/tsuku/install_sandbox.go`.
+**Remove** the duplicated `generatePlanFromRecipe()` function from `install_sandbox.go` and reuse the plan generation code from `install_deps.go` instead.
 
 **Changes required:**
+1. Extract plan generation logic from `install_deps.go` into a shared function in `helpers.go`:
+   ```go
+   func generateInstallPlan(toolName, version string, cfg *config.Config) (*executor.InstallationPlan, error)
+   ```
+2. Update `install_deps.go` to call the shared function
+3. Update `install_sandbox.go` to call the shared function
+4. **Delete** `generatePlanFromRecipe()` from `install_sandbox.go` (lines 159-192)
+
+**Pros:**
+- **Eliminates code duplication entirely** (~50 lines deleted)
+- True unification - sandbox and normal install use **identical** plan generation
+- Bug fixes in plan generation automatically apply to both modes
+- RecipeLoader fix from PR #808 automatically works for sandbox
+- Simpler mental model: one code path, not two
+- Reduces maintenance burden (changes only needed in one place)
+
+**Cons:**
+- Requires careful refactoring to extract shared logic
+- Need to handle both tool-from-registry and recipe-from-file cases in shared function
+- More invasive change than quick fix (~100 lines touched across 3 files)
+
+### Option 2: Band-aid fix - add RecipeLoader to duplicated code
+
+Keep the duplicated `generatePlanFromRecipe()` function and add `RecipeLoader` to it (similar to PR #808 fix for `install_deps.go`).
+
+**Changes required:**
+Add ~5 lines to `generatePlanFromRecipe()` in `install_sandbox.go`:
 ```go
 plan, err := exec.GeneratePlan(globalCtx, executor.PlanConfig{
-    OS:                 runtime.GOOS,
-    Arch:               runtime.GOARCH,
-    RecipeSource:       "local",
-    Downloader:         downloader,
-    DownloadCache:      downloadCache,
-    RecipeLoader:       loader,  // ← Add this
-    AutoAcceptEvalDeps: true,    // ← Add this
-    OnEvalDepsNeeded: func(deps []string, autoAccept bool) error {
-        return installEvalDeps(deps, autoAccept)  // ← Add this
-    },
+    // ... existing fields ...
+    RecipeLoader:       loader,              // ← Add
+    AutoAcceptEvalDeps: true,                // ← Add
+    OnEvalDepsNeeded:   installEvalDeps,     // ← Add
 })
 ```
 
 **Pros:**
-- Minimal code change (~5 lines added)
-- Proven pattern from PR #808 (already tested and working)
-- Reuses existing dependency embedding infrastructure
-- Consistent with normal install mode
-- Self-contained plans work in isolated containers
-- Supports transitive dependencies automatically
+- Minimal immediate change (~5 lines added)
+- Low risk - proven pattern from PR #808
+- Quick fix to unblock issue #806
 
 **Cons:**
-- `installEvalDeps()` is in install_deps.go; need to extract to shared location or adapt
-- Requires eval-time dependency installation on host during plan generation (e.g., python-standalone for pipx_install actions)
-- Plan generation time increases slightly (same as normal install mode, typically <1s per dependency)
+- **Perpetuates code duplication** (doesn't fix architectural problem)
+- Still two separate code paths that can drift
+- Future bugs must be fixed in two places
+- Violates DRY principle
+- Contradicts the unified code path goal from PR #808
 
-### Option 2: Pre-install dependencies on host, then copy to container
+### Option 3: Extract to shared helper, keep wrapper functions
 
-Install dependencies on the host system before plan generation, then include dependency artifacts in the plan for mounting into the container.
+Extract the core plan generation logic to a shared helper, but keep thin wrapper functions in both files for their specific use cases.
 
 **Changes required:**
-- Add dependency resolution step before `generatePlanFromRecipe()`
-- Install each dependency to host $TSUKU_HOME/tools
-- Modify plan to include dependency binaries/libraries
-- Update sandbox executor to mount dependency directories
+1. Create `generatePlanFromRecipeInternal()` helper in `helpers.go`
+2. Keep both `install_deps.go` and `install_sandbox.go` wrappers
+3. Wrappers handle file-specific setup, call shared function
 
 **Pros:**
-- No need for eval-time dependency installation in sandbox
-- Dependencies pre-verified on host before sandbox test
-- Could potentially cache dependency installations
+- Shared core logic (reduces duplication)
+- Allows file-specific customization in wrappers
+- Lower risk than full extraction
 
 **Cons:**
-- Violates plan portability (plans depend on host state)
-- Requires host system to have all dependencies installed
-- Creates different code paths for sandbox vs normal install
-- Breaks the architecture principle established in PR #808
-- More complex implementation (~50+ lines of new code)
-- Dependency versions might not match between host and container OS
-
-### Option 3: Generate separate plans for each dependency
-
-Generate individual plans for each dependency, then execute them sequentially in the sandbox before executing the main tool's plan.
-
-**Changes required:**
-- Resolve dependencies before sandbox execution
-- Generate plan for each dependency using existing plan generator
-- Execute dependency plans in dependency order
-- Execute main tool plan with dependencies available
-
-**Pros:**
-- Reuses plan generation for dependencies
-- Dependencies are explicitly installed in correct order
-- Could cache dependency plans for reuse
-
-**Cons:**
-- Requires orchestration logic to handle multiple plans
-- More complex than unified plan approach (~40+ lines)
-- Doesn't leverage existing dependency embedding in format v3
-- Reinvents functionality that already exists in GeneratePlan()
-- More network calls and plan generation overhead
+- Still maintains two entry points (partial duplication)
+- Unclear where logic belongs (helper vs wrapper)
+- More complex than Option 1 with marginal benefit
 
 ## Evaluation Against Decision Drivers
 
-| Option | Consistency | Self-contained | Reuse Infrastructure | Minimal Changes | CI Unblocking |
-|--------|-------------|----------------|----------------------|-----------------|---------------|
-| **Option 1** | ✅ Excellent | ✅ Excellent | ✅ Excellent | ✅ Excellent | ✅ Yes |
-| **Option 2** | ❌ Poor | ❌ Poor | ⚠️  Partial | ⚠️  Fair | ✅ Yes |
-| **Option 3** | ⚠️  Fair | ✅ Good | ❌ Poor | ❌ Poor | ✅ Yes |
+| Option | Consistency | Reuse Infrastructure | Minimal Changes | Code Simplification | Maintainability |
+|--------|-------------|----------------------|-----------------|---------------------|-----------------|
+| **Option 1** | ✅ Perfect | ✅ Perfect | ⚠️ Medium | ✅ Excellent | ✅ Excellent |
+| **Option 2** | ✅ Good | ✅ Good | ✅ Minimal | ❌ Poor | ❌ Poor |
+| **Option 3** | ✅ Good | ✅ Good | ⚠️ Medium | ⚠️ Fair | ⚠️ Fair |
 
-**Option 1** best satisfies all decision drivers:
-- **Consistency**: Identical to normal install mode
-- **Self-contained**: Plans include all dependencies (no host state)
-- **Reuse infrastructure**: Uses proven PR #808 pattern
-- **Minimal changes**: ~5 lines added
-- **CI unblocking**: Enables issue #806 immediately
+**Option 1** best satisfies architectural goals:
+- **Consistency**: Perfect - literally the same code path
+- **Reuse infrastructure**: Perfect - eliminates all duplication
+- **Code simplification**: Removes ~50 lines of duplicate code
+- **Maintainability**: Future fixes only needed once
 
-**Option 2** violates key principles:
-- Breaks plan portability
-- Creates divergent code paths
-- Depends on host state (violates self-contained requirement)
+**Option 2** is a band-aid:
+- Fixes immediate symptom but not root cause
+- Perpetuates technical debt
+- Contradicts architectural goals from PR #808
 
-**Option 3** reinvents existing infrastructure:
-- Doesn't leverage format v3 dependency embedding
-- More complex than necessary
-- Higher maintenance burden
+**Option 3** is a compromise:
+- Better than Option 2 but not as clean as Option 1
+- Adds complexity with wrappers and shared functions
 
 ## Decision Outcome
 
-**Chosen option: Option 1 - Enable RecipeLoader in generatePlanFromRecipe()**
+**Chosen option: Option 1 - Eliminate duplication by reusing install_deps.go plan generation**
 
-This option reuses the proven pattern from PR #808, requires minimal code changes (~5 lines), and fully unifies the code path between normal install and sandbox mode. It ensures plans are self-contained and portable across environments.
+This option removes the duplicated plan generation code entirely, achieving true unification of the install code paths. Sandbox and normal install modes will use **identical** plan generation logic, eliminating drift and reducing maintenance burden.
 
 ### Rationale
 
 This option was chosen because:
 
-- **Consistency** (decision driver): Applies the exact same fix that worked in PR #808, making sandbox mode identical to normal install mode for dependency handling
-- **Reuse infrastructure** (decision driver): Leverages the existing format v3 dependency embedding infrastructure without reinventing any logic
-- **Minimal changes** (decision driver): Only 5 lines of code added to pass RecipeLoader and callbacks to GeneratePlan()
-- **Self-contained plans** (decision driver): Plans include all dependencies in the dependency tree, making them executable without host state
-- **Proven pattern**: PR #808 already validated this approach with comprehensive testing across multiple Linux families
+- **Architectural correctness**: The sandbox executor already runs `tsuku install --plan` inside the container (using the same execution code path). There's no architectural reason to have different plan generation code paths on the host side.
+- **Code simplification**: Removes ~50 lines of duplicate code. Net reduction in codebase complexity.
+- **Automatic bug fixes**: The RecipeLoader fix from PR #808 automatically works for sandbox mode without any additional changes.
+- **Future-proof**: Any improvements to plan generation (better dependency resolution, caching, etc.) automatically benefit both modes.
+- **Maintainability**: Changes to plan generation logic only need to be made once, not twice.
+- **Consistency with PR #808 goals**: PR #808 established that plan generation should use unified infrastructure. This completes that vision.
 
 Alternatives were rejected because:
 
-- **Option 2**: Violates the architectural principle that plans must be portable and self-contained. Depending on host-side dependency installation creates divergent code paths and breaks plan portability.
-- **Option 3**: Reinvents functionality that already exists in GeneratePlan() with dependency embedding. More complex implementation (~40+ lines) with higher maintenance burden and no architectural benefits over Option 1.
+- **Option 2 (band-aid fix)**: Perpetuates code duplication and technical debt. While it's faster to implement (~5 lines), it violates the DRY principle and contradicts the architectural goals from PR #808. Future bugs must be fixed in two places.
+- **Option 3 (partial extraction)**: Adds complexity with wrappers around shared functions without significant benefit over full unification. Unclear where logic should live (wrapper vs helper).
 
 ### Trade-offs Accepted
 
 By choosing this option, we accept:
 
-- **Eval-time dependency installation on host**: During plan generation, some dependencies (like python-standalone for pipx_install) must be installed on the host system. This is the same behavior as normal install mode.
-- **Slight increase in plan generation time**: Adding dependency resolution increases plan generation time by <1 second per dependency. This is identical to the overhead in normal install mode and acceptable for the portability benefits.
-- **Code location decision**: `installEvalDeps()` needs to be either extracted to a shared location or adapted for sandbox use. This is a minor refactoring task.
+- **Refactoring complexity**: Requires extracting plan generation logic to a shared function and updating both call sites. More invasive than a quick fix (~100 lines touched across 3 files vs ~5 lines for band-aid).
+- **Testing burden**: Need to verify both normal install and sandbox modes still work correctly after refactoring. Regression risk exists if extraction is done incorrectly.
+- **Implementation time**: Takes longer to implement than Option 2 band-aid fix (estimated 2-3 hours vs 30 minutes).
 
 These trade-offs are acceptable because:
 
-- Eval-time deps are required for plan generation to work correctly (can't decompose pipx_install without python-standalone)
-- Plan generation time increase is negligible and only happens once (plans can be cached and reused)
-- The code refactoring is straightforward and improves code organization by removing duplication
+- **One-time cost, permanent benefit**: Refactoring takes longer now but eliminates ongoing maintenance burden forever.
+- **Reduced long-term risk**: Having one implementation reduces the chance of bugs compared to maintaining two divergent implementations.
+- **Testing is necessary anyway**: Issue #806 requires comprehensive sandbox testing, which validates the refactoring.
+- **Pays off technical debt**: Eliminates duplication that already exists, rather than adding more.
 
 ## Solution Architecture
 
 ### Overview
 
-The solution adds dependency embedding to sandbox plan generation by passing `RecipeLoader` to `GeneratePlan()` in `cmd/tsuku/install_sandbox.go`. This enables the existing format v3 dependency infrastructure to include all dependencies (explicit and implicit, transitive and direct) in the generated plan.
+The solution eliminates code duplication by extracting plan generation logic into a shared function that both `install_deps.go` and `install_sandbox.go` can use. The duplicated `generatePlanFromRecipe()` function in `install_sandbox.go` is deleted entirely.
 
-When a user runs `tsuku install <tool> --sandbox`, the flow becomes:
+**Key insight**: The sandbox executor already runs `tsuku install --plan plan.json` inside the container (internal/sandbox/executor.go:354), which uses the same execution code path as normal install. There's no reason to have different plan generation code paths on the host side.
 
-1. **Plan Generation** (host): generatePlanFromRecipe() calls GeneratePlan() with RecipeLoader enabled
-2. **Dependency Resolution** (host): GeneratePlan() recursively resolves dependencies and embeds them in the plan's dependency tree
-3. **Eval-time Installation** (host): OnEvalDepsNeeded callback installs tools needed for plan generation (e.g., python-standalone for pipx_install)
-4. **Plan Execution** (container): Sandbox executor runs the plan with all dependencies included
+### Unified Architecture
+
+**Before (current state - duplicated code paths):**
+```
+Normal install:           Sandbox install:
+  install_deps.go           install_sandbox.go
+  ↓                         ↓
+  getOrGeneratePlan()       generatePlanFromRecipe()  ← DUPLICATE!
+  ↓                         ↓
+  GeneratePlan()            GeneratePlan()
+    + RecipeLoader            - RecipeLoader (MISSING!)
+```
+
+**After (unified code path):**
+```
+Normal install:                Sandbox install:
+  install_deps.go                install_sandbox.go
+  ↓                              ↓
+  generateInstallPlan() ────────→ generateInstallPlan()  ← SHARED!
+    (in helpers.go)
+  ↓
+  GeneratePlan() with RecipeLoader (used by both)
+```
 
 ### Components
 
-**Modified file**: `cmd/tsuku/install_sandbox.go`
-
-```
-generatePlanFromRecipe()
-  ├─> executor.GeneratePlan() ← Add RecipeLoader parameter
-  │   ├─> PlanConfig
-  │   │   ├─> RecipeLoader: loader          ← Add this field
-  │   │   ├─> AutoAcceptEvalDeps: true      ← Add this field
-  │   │   └─> OnEvalDepsNeeded: callback    ← Add this field
-  │   └─> Embeds dependencies in plan.Dependencies []Dependency
-  └─> Returns self-contained plan
-```
-
-**New helper** (either extracted or adapted):
+**New shared function** in `cmd/tsuku/helpers.go`:
 
 ```go
-func installEvalDepsForSandbox(deps []string, autoAccept bool) error {
-    // Install eval-time dependencies on host
-    // Reused logic from install_deps.go or extracted to shared location
+// generateInstallPlan generates an installation plan for a tool.
+// It handles both tool-from-registry and recipe-from-file cases.
+func generateInstallPlan(
+    ctx context.Context,
+    toolName string,
+    version string,  // empty string means latest
+    recipePath string,  // empty string means load from registry
+    cfg *config.Config,
+) (*executor.InstallationPlan, error) {
+    // 1. Load recipe (from registry or file)
+    // 2. Create executor
+    // 3. Set up downloader and cache
+    // 4. Call GeneratePlan() with RecipeLoader
+    // 5. Return plan
 }
 ```
 
-### Key Interfaces
+**Modified files**:
+- `cmd/tsuku/helpers.go`: New shared function (`generateInstallPlan`)
+- `cmd/tsuku/install_deps.go`: Replace inline logic with call to shared function
+- `cmd/tsuku/install_sandbox.go`: **Delete** `generatePlanFromRecipe()`, call shared function instead
 
-**PlanConfig struct** (already exists in `internal/executor/plan_generator.go`):
-
-```go
-type PlanConfig struct {
-    OS                 string
-    Arch               string
-    RecipeSource       string
-    Downloader         validate.Downloader
-    DownloadCache      *actions.DownloadCache
-    RecipeLoader       actions.RecipeLoader       // ← Use this
-    AutoAcceptEvalDeps bool                       // ← Add this
-    OnEvalDepsNeeded   func([]string, bool) error // ← Add this
-}
-```
-
-**Generated plan** (format v3):
-
-```json
-{
-  "tool": "curl",
-  "version": "8.5.0",
-  "steps": [...],
-  "dependencies": [
-    {
-      "tool": "openssl",
-      "version": "3.1.4",
-      "recipe_type": "library",
-      "steps": [...]
-    },
-    {
-      "tool": "zlib",
-      "version": "1.3",
-      "recipe_type": "library",
-      "steps": [...]
-    }
-  ]
-}
-```
+**Code reduction**: ~50 lines deleted (duplicate function), ~60 lines added (shared function), net +10 lines but eliminates duplication
 
 ### Data Flow
 
@@ -378,7 +357,9 @@ User: tsuku install curl --sandbox
   ↓
 runSandboxInstall()
   ↓
-generatePlanFromRecipe(curl recipe)
+generateInstallPlan("curl", "", "", cfg)  ← Shared function
+  ├─> Load curl recipe from registry
+  ├─> Create executor
   ├─> GeneratePlan() with RecipeLoader
   │   ├─> Resolve curl recipe dependencies: [openssl, zlib]
   │   ├─> Recursively resolve transitive dependencies
@@ -387,76 +368,147 @@ generatePlanFromRecipe(curl recipe)
   │   │   ├─> Generate dependency plan
   │   │   └─> Add to plan.Dependencies
   │   ├─> OnEvalDepsNeeded fires if pipx_install/etc found
-  │   │   └─> installEvalDepsForSandbox([python-standalone])
+  │   │   └─> installEvalDeps([python-standalone])
   │   └─> Returns plan with embedded dependencies
   ↓
 sandbox.Executor.Sandbox(plan)
-  ├─> Execute dependency steps in container
-  │   ├─> Install openssl in container
-  │   └─> Install zlib in container
-  ├─> Execute main tool steps in container
-  │   └─> Build curl (has openssl and zlib available)
-  └─> Verify installation
+  ├─> Write plan.json to workspace
+  ├─> Create container with tsuku binary mounted
+  ├─> Run: tsuku install --plan /workspace/plan.json
+  │   ├─> Execute dependency steps (openssl, zlib)
+  │   └─> Execute main tool steps (curl)
+  └─> Return success/failure
 ```
+
+### Benefits of Unified Architecture
+
+1. **Bug fixes propagate automatically**: RecipeLoader fix from PR #808 works for sandbox without changes
+2. **Single source of truth**: Plan generation logic exists in exactly one place
+3. **Easier testing**: Test suite only needs to validate one implementation
+4. **Simpler mental model**: Developers don't need to understand two different code paths
+5. **Reduced cognitive load**: Changes to plan generation don't require thinking about two implementations
 
 ## Implementation Approach
 
-### Step 1: Extract or adapt installEvalDeps() helper
+This refactoring extracts plan generation logic to a shared function, eliminating the duplication between `install_deps.go` and `install_sandbox.go`.
 
-**Option A - Extract to shared location:**
-- Move `installEvalDeps()` from `cmd/tsuku/install_deps.go` to a shared file like `cmd/tsuku/helpers.go`
-- Update both install_deps.go and install_sandbox.go to call the shared function
+### Step 1: Create shared plan generation function
 
-**Option B - Adapt inline:**
-- Create `installEvalDepsForSandbox()` in install_sandbox.go that replicates the logic
-- Accept minor duplication for code locality
+Create `generateInstallPlan()` in `cmd/tsuku/helpers.go`:
 
-**Recommendation**: Option A (extract to shared location) to follow DRY principle.
-
-**Files modified**: `cmd/tsuku/helpers.go` (new function), `cmd/tsuku/install_deps.go` (call shared function)
-
-### Step 2: Add RecipeLoader and callbacks to generatePlanFromRecipe()
-
-Modify `cmd/tsuku/install_sandbox.go` line 180-186:
-
-**Before:**
 ```go
-plan, err := exec.GeneratePlan(globalCtx, executor.PlanConfig{
-    OS:            runtime.GOOS,
-    Arch:          runtime.GOARCH,
-    RecipeSource:  "local",
-    Downloader:    downloader,
-    DownloadCache: downloadCache,
-})
+// generateInstallPlan generates an installation plan for a tool.
+// Handles both tool-from-registry and recipe-from-file cases.
+func generateInstallPlan(
+    ctx context.Context,
+    toolName string,
+    version string,      // empty = latest
+    recipePath string,   // empty = load from registry
+    cfg *config.Config,
+) (*executor.InstallationPlan, error) {
+    var r *recipe.Recipe
+    var err error
+
+    // Load recipe from registry or file
+    if recipePath != "" {
+        r, err = recipe.ParseFile(recipePath)
+    } else {
+        r, err = loader.Get(toolName)
+    }
+    if err != nil {
+        return nil, err
+    }
+
+    // Create executor
+    exec, err := executor.New(r)
+    if err != nil {
+        return nil, err
+    }
+    defer exec.Cleanup()
+
+    // Configure executor
+    exec.SetToolsDir(cfg.ToolsDir)
+    exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
+    exec.SetKeyCacheDir(cfg.KeyCacheDir)
+
+    // Set up downloader and cache
+    predownloader := validate.NewPreDownloader()
+    downloader := validate.NewPreDownloaderAdapter(predownloader)
+    downloadCache := actions.NewDownloadCache(cfg.DownloadCacheDir)
+
+    // Generate plan with RecipeLoader (enables dependencies)
+    return exec.GeneratePlan(ctx, executor.PlanConfig{
+        OS:                 runtime.GOOS,
+        Arch:               runtime.GOARCH,
+        RecipeSource:       "registry",  // or "local" based on recipePath
+        Downloader:         downloader,
+        DownloadCache:      downloadCache,
+        RecipeLoader:       loader,
+        AutoAcceptEvalDeps: true,
+        OnEvalDepsNeeded:   installEvalDeps,  // Shared callback
+    })
+}
 ```
 
-**After:**
+**Files modified**: `cmd/tsuku/helpers.go` (~60 lines added)
+
+### Step 2: Extract installEvalDeps to helpers.go
+
+Move `installEvalDeps()` from `install_deps.go` to `helpers.go` so it can be called from the shared function.
+
+**Files modified**:
+- `cmd/tsuku/helpers.go` (~30 lines added - moved from install_deps.go)
+- `cmd/tsuku/install_deps.go` (~30 lines removed - function moved out)
+
+### Step 3: Update install_deps.go to use shared function
+
+Replace plan generation logic in `install_deps.go` with calls to shared function.
+
+**Before** (lines ~335-390 in getOrGeneratePlanWith):
 ```go
-plan, err := exec.GeneratePlan(globalCtx, executor.PlanConfig{
-    OS:                 runtime.GOOS,
-    Arch:               runtime.GOARCH,
-    RecipeSource:       "local",
-    Downloader:         downloader,
-    DownloadCache:      downloadCache,
-    RecipeLoader:       loader,  // ← Add
-    AutoAcceptEvalDeps: true,    // ← Add (non-interactive in sandbox)
-    OnEvalDepsNeeded: func(deps []string, autoAccept bool) error {
-        return installEvalDeps(deps, autoAccept)  // ← Add (shared helper)
-    },
-})
+// Complex logic to create executor, set up downloader, call GeneratePlan...
 ```
 
-**Files modified**: `cmd/tsuku/install_sandbox.go`
+**After**:
+```go
+// Use shared plan generation
+plan, err := generateInstallPlan(ctx, toolName, version, "", cfg)
+```
 
-**Lines changed**: 5 lines added
+**Files modified**: `cmd/tsuku/install_deps.go` (~50 lines removed, ~5 lines added)
 
-### Step 3: Test with tools that have dependencies
+### Step 4: Update install_sandbox.go to use shared function
 
-Verify the fix with integration tests:
+**Delete** `generatePlanFromRecipe()` entirely and use shared function instead.
+
+**Before** (lines 159-192):
+```go
+func generatePlanFromRecipe(...) (*executor.InstallationPlan, error) {
+    // Duplicated logic...
+}
+```
+
+**After** (deleted, replaced with call to shared function in runSandboxInstall):
+```go
+// Use shared plan generation
+plan, err = generateInstallPlan(globalCtx, toolName, "", recipePath, cfg)
+```
+
+**Files modified**: `cmd/tsuku/install_sandbox.go` (~34 lines deleted from generatePlanFromRecipe, ~5 lines modified in runSandboxInstall)
+
+### Step 5: Test both normal and sandbox install paths
+
+Verify no regressions in either mode:
 
 ```bash
-# Test explicit library dependencies
+# Build
 go build -o tsuku ./cmd/tsuku
+
+# Test normal install (should still work)
+./tsuku install curl
+./tsuku list | grep curl
+
+# Test sandbox install with dependencies (should now work!)
 ./tsuku install curl --sandbox
 
 # Test tools with transitive dependencies
@@ -466,19 +518,29 @@ go build -o tsuku ./cmd/tsuku
 ./tsuku install pipx --sandbox
 ```
 
-Expected behavior:
-- Plans include all dependencies in the dependency tree
-- Sandbox execution installs dependencies before main tool
-- Build steps succeed with dependencies available
+**Expected behavior**:
+- Normal install works exactly as before
+- Sandbox install now includes dependencies in plans
+- Dependencies installed correctly in both modes
 
-### Step 4: Verify CI compatibility
+### Step 6: Run full test suite
 
-Run existing CI tests to ensure no regressions:
+Ensure no regressions:
 
 ```bash
 go test ./...
 golangci-lint run --timeout=5m ./...
 ```
+
+### Implementation Summary
+
+**Net code changes**:
+- `helpers.go`: +90 lines (new shared function + moved installEvalDeps)
+- `install_deps.go`: -75 lines (removed inline logic + moved installEvalDeps)
+- `install_sandbox.go`: -29 lines (deleted duplicate function)
+- **Total**: +90 -104 = **-14 lines** (net code reduction)
+
+**Complexity**: Medium refactoring, but well-scoped and testable at each step.
 
 ## Consequences
 
