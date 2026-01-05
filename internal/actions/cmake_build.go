@@ -200,11 +200,14 @@ func buildCMakeEnv(ctx *ExecutionContext) []string {
 
 	// Add ExecPaths to PATH so dependency binaries (cmake, make, etc.) are found
 	// ExecPaths contains bin directories from installed dependencies
+	fmt.Printf("   DEBUG buildCMakeEnv: ExecPaths=%v\n", ctx.ExecPaths)
 	if len(ctx.ExecPaths) > 0 {
 		newPath := strings.Join(ctx.ExecPaths, ":") + ":" + existingPath
 		filteredEnv = append(filteredEnv, "PATH="+newPath)
+		fmt.Printf("   DEBUG buildCMakeEnv: new PATH=%s\n", newPath)
 	} else if existingPath != "" {
 		filteredEnv = append(filteredEnv, "PATH="+existingPath)
+		fmt.Printf("   DEBUG buildCMakeEnv: using existing PATH (ExecPaths empty)\n")
 	}
 
 	// Set SOURCE_DATE_EPOCH for reproducible builds
