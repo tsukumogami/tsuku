@@ -2,9 +2,9 @@
 # Test checksum pinning feature (post-install binary integrity verification).
 # Verifies that checksums are stored after installation and verified correctly.
 #
-# Uses tsuku sandbox-built containers to run tests in isolated environments
-# without hardcoding apt-get calls. System dependencies are automatically
-# provisioned based on the Linux distribution family.
+# Uses Docker containers to run tests in isolated environments across
+# different Linux distribution families. Installs CA certificates for
+# TLS connectivity to GitHub.
 #
 # Usage: ./scripts/test-checksum-pinning.sh [family]
 #   family: debian, rhel, arch, alpine, suse (default: debian)
@@ -53,32 +53,49 @@ esac
 # The test verifies checksums work, not dependency provisioning
 IMAGE_TAG="tsuku-checksum-test-$FAMILY:$$"
 
-# Create minimal Dockerfile - no apt-get needed since fzf is a pre-built binary
+# Create Dockerfile with CA certificates (needed for TLS to GitHub)
 DOCKERFILE=$(mktemp)
 cat > "$DOCKERFILE" << EOF
 FROM $BASE_IMAGE
-
-# Create test user - use different commands per family
 EOF
 
-# Add family-specific user creation
+# Add family-specific CA certificates installation and user creation
 case "$FAMILY" in
-    alpine)
+    debian)
         cat >> "$DOCKERFILE" << 'EOF'
-RUN adduser -D -s /bin/sh testuser
+RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates && rm -rf /var/lib/apt/lists/*
+RUN useradd -m -s /bin/bash testuser
+USER testuser
+WORKDIR /home/testuser
+EOF
+        ;;
+    rhel)
+        cat >> "$DOCKERFILE" << 'EOF'
+RUN dnf install -y ca-certificates && dnf clean all
+RUN useradd -m -s /bin/bash testuser
 USER testuser
 WORKDIR /home/testuser
 EOF
         ;;
     arch)
         cat >> "$DOCKERFILE" << 'EOF'
+RUN pacman -Sy --noconfirm ca-certificates
 RUN useradd -m -s /bin/bash testuser
 USER testuser
 WORKDIR /home/testuser
 EOF
         ;;
-    *)
+    alpine)
         cat >> "$DOCKERFILE" << 'EOF'
+RUN apk add --no-cache ca-certificates
+RUN adduser -D -s /bin/sh testuser
+USER testuser
+WORKDIR /home/testuser
+EOF
+        ;;
+    suse)
+        cat >> "$DOCKERFILE" << 'EOF'
+RUN zypper --non-interactive install ca-certificates && zypper clean
 RUN useradd -m -s /bin/bash testuser
 USER testuser
 WORKDIR /home/testuser

@@ -61,4 +61,4 @@ jobs:
       - name: Run homebrew recipe test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./test/scripts/test-homebrew-recipe.sh tree ${{ matrix.family }}
+        run: ./test/scripts/test-homebrew-recipe.sh pkg-config ${{ matrix.family }}
