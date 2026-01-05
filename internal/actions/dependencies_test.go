@@ -42,7 +42,7 @@ func TestActionDependencies_BuildActions(t *testing.T) {
 		{"configure_make", []string{"make", "zig", "pkg-config"}},
 		{"cmake_build", []string{"cmake", "make", "zig", "pkg-config"}},
 		// meson_build has cross-platform deps; patchelf is Linux-only
-		{"meson_build", []string{"meson", "make", "zig"}},
+		{"meson_build", []string{"meson", "ninja", "zig"}},
 	}
 
 	for _, tt := range tests {

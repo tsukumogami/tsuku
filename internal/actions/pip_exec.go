@@ -190,13 +190,17 @@ func (a *PipExecAction) Execute(ctx *ExecutionContext, params map[string]interfa
 		// Remove the absolute symlink
 		os.Remove(python3Link)
 		// Create relative symlink to tsuku's python-standalone
-		// From: venvs/<package>/bin/python3
-		// To: ../../../python-standalone-XXXXXXXX/bin/python3
+		// From: $TSUKU_HOME/tools/<tool>/venvs/<package>/bin/python3
+		// To:   $TSUKU_HOME/tools/python-standalone-VERSION/bin/python3
+		// Relative: ../../../../python-standalone-VERSION/bin/python3
 		if pythonPath != "" {
-			relPath, err := filepath.Rel(venvBinDir, pythonPath)
-			if err == nil {
-				_ = os.Symlink(relPath, python3Link) // Ignore error if symlink fails
-			}
+			// Extract python-standalone directory name (e.g., "python-standalone-20251217")
+			// pythonPath is like: /home/user/.tsuku/tools/python-standalone-20251217/bin/python3
+			pythonDir := filepath.Dir(filepath.Dir(pythonPath)) // Get tools/python-standalone-VERSION
+			pythonDirName := filepath.Base(pythonDir)           // Get python-standalone-VERSION
+			// Relative path from venvs/<pkg>/bin/ to sibling tool in $TSUKU_HOME/tools/
+			relPath := filepath.Join("..", "..", "..", "..", pythonDirName, "bin", "python3")
+			_ = os.Symlink(relPath, python3Link) // Ignore error if symlink fails
 		}
 	}
 

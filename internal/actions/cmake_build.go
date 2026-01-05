@@ -107,7 +107,7 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	if len(ctx.Env) > 0 {
 		env = ctx.Env
 	} else {
-		env = buildCMakeEnv()
+		env = buildCMakeEnv(ctx)
 	}
 
 	// Create build directory
@@ -115,8 +115,8 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 		return fmt.Errorf("failed to create build directory: %w", err)
 	}
 
-	// Find cmake
-	cmakePath := "cmake"
+	// Find cmake - must search ExecPaths since exec.Command uses parent process's PATH
+	cmakePath := LookPathInDirs("cmake", ctx.ExecPaths)
 
 	// Step 1: Configure with cmake
 	configArgs := []string{
@@ -182,16 +182,29 @@ func (a *CMakeBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 }
 
 // buildCMakeEnv creates an environment for CMake builds.
-func buildCMakeEnv() []string {
+func buildCMakeEnv(ctx *ExecutionContext) []string {
 	env := os.Environ()
 
 	// Set deterministic build variables
 	filteredEnv := make([]string, 0, len(env))
+	var existingPath string
 	for _, e := range env {
 		// Filter variables that could cause non-determinism
-		if !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
+		if strings.HasPrefix(e, "PATH=") {
+			// Capture existing PATH to prepend ExecPaths later
+			existingPath = strings.TrimPrefix(e, "PATH=")
+		} else if !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
 			filteredEnv = append(filteredEnv, e)
 		}
+	}
+
+	// Add ExecPaths to PATH so dependency binaries (make, zig, etc.) are found
+	// ExecPaths contains bin directories from installed dependencies
+	if len(ctx.ExecPaths) > 0 {
+		newPath := strings.Join(ctx.ExecPaths, ":") + ":" + existingPath
+		filteredEnv = append(filteredEnv, "PATH="+newPath)
+	} else if existingPath != "" {
+		filteredEnv = append(filteredEnv, "PATH="+existingPath)
 	}
 
 	// Set SOURCE_DATE_EPOCH for reproducible builds

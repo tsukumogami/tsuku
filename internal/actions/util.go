@@ -776,6 +776,25 @@ func ResolveGoVersion(version string) string {
 	return ""
 }
 
+// LookPathInDirs searches for an executable in the given directories.
+// Returns the full path to the executable if found, or the original name otherwise.
+// This is useful for finding binaries installed by dependencies (via ExecPaths)
+// since exec.Command uses the parent process's PATH for lookup, not Cmd.Env.
+func LookPathInDirs(name string, dirs []string) string {
+	for _, dir := range dirs {
+		path := filepath.Join(dir, name)
+		if info, err := os.Stat(path); err == nil && info.Mode()&0111 != 0 {
+			return path
+		}
+	}
+	// Fall back to PATH lookup
+	if path, err := exec.LookPath(name); err == nil {
+		return path
+	}
+	// Return original name - exec.Command will fail with a clear error
+	return name
+}
+
 // GetGoVersion extracts the Go version string from a Go binary path.
 // Returns the version (e.g., "1.23.4") by running `go version`.
 // Returns empty string on error.
