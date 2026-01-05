@@ -297,6 +297,16 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		return fmt.Errorf("plan validation failed: %w", err)
 	}
 
+	// Validate platform compatibility
+	if err := validatePlatform(plan); err != nil {
+		return fmt.Errorf("platform validation failed: %w", err)
+	}
+
+	// Validate resource limits (dependency depth and count)
+	if err := validateResourceLimits(plan); err != nil {
+		return fmt.Errorf("resource limits exceeded: %w", err)
+	}
+
 	fmt.Printf("Executing plan: %s@%s\n", plan.Tool, plan.Version)
 	fmt.Printf("   Work directory: %s\n", e.workDir)
 
@@ -545,6 +555,33 @@ func (e *Executor) installDependencies(ctx context.Context, deps []DependencyPla
 
 // installSingleDependency installs a single dependency to its final location.
 func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyPlan, platform Platform) error {
+	// Determine final destination based on recipe type (check before installation)
+	var finalDir string
+	if dep.RecipeType == "library" {
+		// Libraries go to $TSUKU_HOME/libs/{name}-{version}/
+		tsukuHome := filepath.Dir(e.toolsDir)
+		libsDir := filepath.Join(tsukuHome, "libs")
+		finalDir = filepath.Join(libsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
+	} else {
+		// Tools go to $TSUKU_HOME/tools/{name}-{version}/
+		finalDir = filepath.Join(e.toolsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
+	}
+
+	// Skip if already installed (deduplication)
+	if _, err := os.Stat(finalDir); err == nil {
+		fmt.Printf("\nSkipping dependency: %s@%s (already installed)\n", dep.Tool, dep.Version)
+
+		// Still add bin directory to exec paths for tools (needed for subsequent steps)
+		if dep.RecipeType != "library" {
+			binDir := filepath.Join(finalDir, "bin")
+			if _, err := os.Stat(binDir); err == nil {
+				e.execPaths = append(e.execPaths, binDir)
+			}
+		}
+
+		return nil
+	}
+
 	fmt.Printf("\nInstalling dependency: %s@%s\n", dep.Tool, dep.Version)
 
 	// Create temporary work directory for this dependency
@@ -627,18 +664,6 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		if err := action.Execute(execCtx, step.Params); err != nil {
 			return fmt.Errorf("step %d (%s) failed: %w", i+1, step.Action, err)
 		}
-	}
-
-	// Determine final destination based on recipe type
-	var finalDir string
-	if dep.RecipeType == "library" {
-		// Libraries go to $TSUKU_HOME/libs/{name}-{version}/
-		tsukuHome := filepath.Dir(e.toolsDir)
-		libsDir := filepath.Join(tsukuHome, "libs")
-		finalDir = filepath.Join(libsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
-	} else {
-		// Tools go to $TSUKU_HOME/tools/{name}-{version}/
-		finalDir = filepath.Join(e.toolsDir, fmt.Sprintf("%s-%s", dep.Tool, dep.Version))
 	}
 
 	// Create final directory
@@ -736,4 +761,67 @@ func buildResolvedDepsFromPlan(deps []DependencyPlan) actions.ResolvedDeps {
 
 	collectDeps(deps)
 	return result
+}
+
+// validatePlatform checks if the plan's target platform matches the execution environment.
+// Returns an error if the platform mismatch would cause the installation to fail.
+func validatePlatform(plan *InstallationPlan) error {
+	// OS and architecture must match exactly
+	if plan.Platform.OS != runtime.GOOS {
+		return fmt.Errorf("plan is for OS %q, but this system is %q", plan.Platform.OS, runtime.GOOS)
+	}
+	if plan.Platform.Arch != runtime.GOARCH {
+		return fmt.Errorf("plan is for architecture %q, but this system is %q", plan.Platform.Arch, runtime.GOARCH)
+	}
+
+	// Note: LinuxFamily validation is handled by ValidatePlan in plan.go
+	// which checks platform compatibility including family constraints.
+	// This function focuses on basic OS/Arch validation for clarity.
+
+	return nil
+}
+
+// validateResourceLimits checks that a plan's dependency tree doesn't exceed resource limits.
+// This prevents pathological cases like circular dependencies or dependency bombs.
+func validateResourceLimits(plan *InstallationPlan) error {
+	const maxDepth = 5
+	const maxTotalDeps = 100
+
+	// Check depth
+	depth := computeDepth(plan.Dependencies)
+	if depth > maxDepth {
+		return fmt.Errorf("dependency tree depth %d exceeds maximum %d", depth, maxDepth)
+	}
+
+	// Check total count
+	totalDeps := countTotalDependencies(plan.Dependencies)
+	if totalDeps > maxTotalDeps {
+		return fmt.Errorf("total dependencies %d exceeds maximum %d", totalDeps, maxTotalDeps)
+	}
+
+	return nil
+}
+
+// computeDepth calculates the maximum depth of a dependency tree.
+func computeDepth(deps []DependencyPlan) int {
+	if len(deps) == 0 {
+		return 0
+	}
+	maxChildDepth := 0
+	for _, dep := range deps {
+		childDepth := computeDepth(dep.Dependencies)
+		if childDepth > maxChildDepth {
+			maxChildDepth = childDepth
+		}
+	}
+	return 1 + maxChildDepth
+}
+
+// countTotalDependencies counts all dependencies recursively.
+func countTotalDependencies(deps []DependencyPlan) int {
+	count := len(deps)
+	for _, dep := range deps {
+		count += countTotalDependencies(dep.Dependencies)
+	}
+	return count
 }

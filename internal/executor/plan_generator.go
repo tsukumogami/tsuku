@@ -197,6 +197,20 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	// (including all dependency steps recursively)
 	planDeterministic := computeDeterministic(steps, dependencies)
 
+	// Detect platform information (populates LinuxFamily only if recipe has family-specific steps)
+	planPlatform, err := detectPlatform(e.recipe, cfg)
+	if err != nil {
+		// Platform detection failures are non-fatal - emit warning and continue
+		if cfg.OnWarning != nil {
+			cfg.OnWarning("platform", fmt.Sprintf("platform detection: %v", err))
+		}
+		// Use fallback platform without LinuxFamily
+		planPlatform = Platform{
+			OS:   targetOS,
+			Arch: targetArch,
+		}
+	}
+
 	// Capture verify section from recipe for plan execution
 	var verify *PlanVerify
 	if e.recipe.Verify.Command != "" {
@@ -210,10 +224,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		FormatVersion: PlanFormatVersion,
 		Tool:          e.recipe.Metadata.Name,
 		Version:       versionInfo.Version,
-		Platform: Platform{
-			OS:   targetOS,
-			Arch: targetArch,
-		},
+		Platform:      planPlatform,
 		GeneratedAt:   time.Now().UTC(),
 		RecipeHash:    recipeHash,
 		RecipeSource:  recipeSource,
@@ -723,4 +734,59 @@ func sortStrings(s []string) {
 			s[j], s[j-1] = s[j-1], s[j]
 		}
 	}
+}
+
+// detectPlatform populates the Platform field for a plan.
+// It only includes LinuxFamily if the recipe contains family-specific steps.
+// This ensures plans without family-specific requirements remain portable across all Linux distributions.
+func detectPlatform(r *recipe.Recipe, cfg PlanConfig) (Platform, error) {
+	targetOS := cfg.OS
+	if targetOS == "" {
+		targetOS = runtime.GOOS
+	}
+	targetArch := cfg.Arch
+	if targetArch == "" {
+		targetArch = runtime.GOARCH
+	}
+
+	plat := Platform{
+		OS:   targetOS,
+		Arch: targetArch,
+	}
+
+	// Only populate LinuxFamily if:
+	// 1. Target OS is Linux
+	// 2. Recipe has family-specific steps
+	if targetOS == "linux" && recipeHasFamilySpecificSteps(r) {
+		linuxFamily := cfg.LinuxFamily
+		if linuxFamily == "" {
+			detectedFamily, err := platform.DetectFamily()
+			if err != nil {
+				// Detection failure is non-fatal - emit warning and leave LinuxFamily empty
+				// Plan will execute but may fail at runtime if family-specific steps exist
+				return plat, fmt.Errorf("linux_family detection failed: %w", err)
+			}
+			linuxFamily = detectedFamily
+		}
+		plat.LinuxFamily = linuxFamily
+	}
+
+	return plat, nil
+}
+
+// recipeHasFamilySpecificSteps checks if a recipe contains any steps with
+// family-specific system actions (apt_*, dnf_*, pacman_*, apk_*, zypper_*).
+func recipeHasFamilySpecificSteps(r *recipe.Recipe) bool {
+	for _, step := range r.Steps {
+		action := actions.Get(step.Action)
+		if sysAction, ok := action.(actions.SystemAction); ok {
+			if constraint := sysAction.ImplicitConstraint(); constraint != nil {
+				// If action has a LinuxFamily constraint, it's family-specific
+				if constraint.LinuxFamily != "" {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
