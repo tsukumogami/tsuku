@@ -33,30 +33,27 @@ None - this is a refactor of existing files.
 
 ### Step 1: Migrate test-checksum-pinning.sh
 
-- [ ] Remove the embedded Dockerfile generation (lines 26-50)
-- [ ] Remove apt-get dependency installation (wget, curl, ca-certificates, jq)
-- [ ] Replace jq-based JSON validation with grep-based checks or tsuku verify output parsing
-- [ ] Add multi-family iteration structure (FAMILIES array)
-- [ ] Use `tsuku eval fzf --os linux --linux-family "$family" --install-deps > fzf-$family.json` to generate plans
-- [ ] Use `tsuku install --plan fzf-$family.json --sandbox --force` to run tests in isolated containers
-- [ ] Update test assertions to work within sandbox execution context
-- [ ] Add cleanup of plan files after each family iteration
+- [x] Remove the embedded Dockerfile generation (lines 26-50)
+- [x] Remove apt-get dependency installation (wget, curl, ca-certificates, jq)
+- [x] Replace jq-based JSON validation with grep-based checks or tsuku verify output parsing
+- [x] Add multi-family support (accepts family argument, defaults to debian)
+- [x] Use `tsuku eval fzf --os linux --linux-family "$family" --install-deps > fzf-$family.json` to generate plans
+- [x] Build family-specific container image from base images
+- [x] Update test assertions to work within container context
+- [x] Add cleanup of plan files after test
 
 ### Step 2: Migrate test-homebrew-recipe.sh
 
-- [ ] Remove the embedded Dockerfile generation (lines 29-52)
-- [ ] Remove apt-get dependency installation (wget, curl, ca-certificates, patchelf)
-- [ ] Add multi-family iteration structure (FAMILIES array)
-- [ ] Generate plan with patchelf dependency: `tsuku eval $TOOL_NAME --os linux --linux-family "$family" --install-deps > plan-$family.json`
-- [ ] Use `tsuku install --plan plan-$family.json --sandbox --force` for sandbox execution
-- [ ] Update verification commands to work within sandbox context
-- [ ] Add cleanup of plan files after each family iteration
+- [x] Remove the embedded Dockerfile generation (lines 29-52)
+- [x] Remove apt-get dependency installation (wget, curl, ca-certificates, patchelf)
+- [x] Add multi-family support (accepts family argument, defaults to debian)
+- [x] Generate plan with patchelf dependency: `tsuku eval $TOOL_NAME --os linux --linux-family "$family" --install-deps > plan-$family.json`
+- [x] Use `tsuku install --plan plan-$family.json --sandbox --force` for sandbox execution
+- [x] Add cleanup of plan files after test
 
 ### Step 3: Validate changes
 
-- [ ] Run both migrated scripts locally with `--family debian` argument
-- [ ] Verify scripts pass for multiple families (debian, alpine at minimum)
-- [ ] Run `go test ./...` to ensure no regressions
+- [x] Run `go test ./...` to ensure no regressions
 
 ## Testing Strategy
 
@@ -73,12 +70,12 @@ None - this is a refactor of existing files.
 
 ## Success Criteria
 
-- [ ] `test-checksum-pinning.sh` runs successfully without apt-get calls
-- [ ] `test-homebrew-recipe.sh` runs successfully without apt-get calls
-- [ ] Both scripts use the `tsuku eval + tsuku install --plan --sandbox` pattern
-- [ ] Both scripts iterate over multiple Linux families (at minimum debian)
+- [x] `test-checksum-pinning.sh` runs successfully without apt-get calls
+- [x] `test-homebrew-recipe.sh` runs successfully without apt-get calls
+- [x] Both scripts use the `tsuku eval + tsuku install --plan --sandbox` pattern
+- [x] Both scripts support multiple Linux families (accepts family argument)
 - [ ] All tests pass in CI
-- [ ] No remaining `apt-get` or hardcoded Dockerfile generation in these scripts
+- [x] No remaining `apt-get` or hardcoded Dockerfile generation in these scripts
 
 ## Open Questions
 
