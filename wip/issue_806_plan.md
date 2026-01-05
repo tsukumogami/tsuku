@@ -39,10 +39,10 @@ Both tools were already validated in the local test script `test/scripts/test-cm
 
 ## Steps
 
-1. Update matrix `family` array: `[debian]` → `[debian, rhel, arch, alpine, suse]`
-2. Update matrix `tool` array: `[make, pkg-config]` → `[cmake, ninja]`
-3. Remove TODO comment about adding recipes
-4. Update job comments if needed
+- [x] Update matrix `family` array: `[debian]` → `[debian, rhel, arch, alpine, suse]`
+- [x] Update matrix `tool` array: `[make, pkg-config]` → `[cmake, ninja]`
+- [x] Remove TODO comment about adding recipes
+- [x] Update job comments if needed
 
 ## Verification
 
