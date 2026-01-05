@@ -87,7 +87,7 @@ EOF
         ;;
     alpine)
         cat >> "$DOCKERFILE" << 'EOF'
-RUN apk add --no-cache ca-certificates
+RUN apk add --no-cache ca-certificates bash
 RUN adduser -D -s /bin/sh testuser
 USER testuser
 WORKDIR /home/testuser
