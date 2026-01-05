@@ -198,14 +198,27 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 
 	// Set deterministic build variables
 	filteredEnv := make([]string, 0, len(env))
+	var existingPath string
 	for _, e := range env {
 		// Filter variables that could cause non-determinism
-		if !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") &&
+		if strings.HasPrefix(e, "PATH=") {
+			// Capture existing PATH to prepend ExecPaths later
+			existingPath = strings.TrimPrefix(e, "PATH=")
+		} else if !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") &&
 			!strings.HasPrefix(e, "PKG_CONFIG_PATH=") &&
 			!strings.HasPrefix(e, "CPPFLAGS=") &&
 			!strings.HasPrefix(e, "LDFLAGS=") {
 			filteredEnv = append(filteredEnv, e)
 		}
+	}
+
+	// Add ExecPaths to PATH so dependency binaries (cmake, make, etc.) are found
+	// ExecPaths contains bin directories from installed dependencies
+	if len(ctx.ExecPaths) > 0 {
+		newPath := strings.Join(ctx.ExecPaths, ":") + ":" + existingPath
+		filteredEnv = append(filteredEnv, "PATH="+newPath)
+	} else if existingPath != "" {
+		filteredEnv = append(filteredEnv, "PATH="+existingPath)
 	}
 
 	// Set SOURCE_DATE_EPOCH for reproducible builds
