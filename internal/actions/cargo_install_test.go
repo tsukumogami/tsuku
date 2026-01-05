@@ -384,6 +384,13 @@ func TestResolveCargo_NonExecutable(t *testing.T) {
 
 // TestCargoInstallAction_Decompose tests the Decompose method
 func TestCargoInstallAction_Decompose(t *testing.T) {
+	// Skip if cargo is not available
+	// TODO: Auto-install rust via tsuku when cargo is missing (see issue #810)
+	// Currently blocked by import cycle: actions package cannot import executor
+	if ResolveCargo() == "" {
+		t.Skip("cargo not available (see issue #810 for auto-install)")
+	}
+
 	action := &CargoInstallAction{}
 
 	// Create eval context
