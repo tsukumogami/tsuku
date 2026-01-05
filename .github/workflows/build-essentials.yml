@@ -368,7 +368,7 @@ jobs:
       fail-fast: false
       matrix:
         family: [debian, rhel, arch, alpine, suse]
-        tool: [cmake, ninja]
+        tool: [cmake, openssl]
     steps:
       - uses: actions/checkout@v4
 
