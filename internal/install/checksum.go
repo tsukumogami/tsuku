@@ -43,6 +43,12 @@ func ComputeBinaryChecksums(toolDir string, binaries []string) (map[string]strin
 		return nil, nil
 	}
 
+	// Canonicalize toolDir to handle symlinks (e.g., macOS /var -> /private/var)
+	canonicalToolDir, err := filepath.EvalSymlinks(toolDir)
+	if err != nil {
+		return nil, fmt.Errorf("failed to resolve tool directory: %w", err)
+	}
+
 	checksums := make(map[string]string, len(binaries))
 
 	for _, binaryPath := range binaries {
@@ -56,7 +62,7 @@ func ComputeBinaryChecksums(toolDir string, binaries []string) (map[string]strin
 
 		// Verify the resolved path is still within the tool directory
 		// (prevent symlink attacks pointing outside)
-		if !isWithinDir(realPath, toolDir) {
+		if !isWithinDir(realPath, canonicalToolDir) {
 			return nil, fmt.Errorf("binary %s resolves outside tool directory: %s", binaryPath, realPath)
 		}
 
