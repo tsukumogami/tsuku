@@ -360,18 +360,15 @@ jobs:
         run: ./test/scripts/verify-tool.sh gdbm-source
 
   # Test sandbox with multi-family support
-  # Validates system dependency extraction and container building across Linux families  # Only tests debian family for now - other families would need recipes with
-  # family-specific system dependencies to properly validate multi-family support
+  # Validates system dependency extraction and container building across Linux families
   test-sandbox-multifamily:
     name: "Sandbox (${{ matrix.family }}): ${{ matrix.tool }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        # Start with debian family only - validates the infrastructure works
-        # TODO: Add recipes with cross-family system deps to test other families
-        family: [debian]
-        tool: [make, pkg-config]
+        family: [debian, rhel, arch, alpine, suse]
+        tool: [cmake, ninja]
     steps:
       - uses: actions/checkout@v4
 

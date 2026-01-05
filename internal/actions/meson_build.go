@@ -19,7 +19,7 @@ type MesonBuildAction struct{ BaseAction }
 // Patchelf is only needed on Linux for RPATH fixup; macOS uses install_name_tool (system-provided).
 func (MesonBuildAction) Dependencies() ActionDeps {
 	return ActionDeps{
-		InstallTime:      []string{"meson", "make", "zig"},
+		InstallTime:      []string{"meson", "ninja", "zig"},
 		LinuxInstallTime: []string{"patchelf"},
 	}
 }
@@ -119,20 +119,10 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 	}
 
 	// Build environment
-	env := buildMesonEnv()
+	env := buildMesonEnv(ctx)
 
-	// Find meson - check ExecPaths first (for installed dependencies), then fall back to PATH
-	mesonPath := ""
-	for _, p := range ctx.ExecPaths {
-		candidatePath := filepath.Join(p, "meson")
-		if _, err := os.Stat(candidatePath); err == nil {
-			mesonPath = candidatePath
-			break
-		}
-	}
-	if mesonPath == "" {
-		mesonPath = "meson" // Fall back to PATH
-	}
+	// Find meson - must search ExecPaths since exec.Command uses parent process's PATH
+	mesonPath := LookPathInDirs("meson", ctx.ExecPaths)
 
 	// Step 1: Setup with meson
 	setupArgs := []string{
@@ -265,16 +255,29 @@ func (a *MesonBuildAction) Execute(ctx *ExecutionContext, params map[string]inte
 }
 
 // buildMesonEnv creates an environment for Meson builds.
-func buildMesonEnv() []string {
+func buildMesonEnv(ctx *ExecutionContext) []string {
 	env := os.Environ()
 
 	// Set deterministic build variables
 	filteredEnv := make([]string, 0, len(env))
+	var existingPath string
 	for _, e := range env {
 		// Filter variables that could cause non-determinism
-		if !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
+		if strings.HasPrefix(e, "PATH=") {
+			// Capture existing PATH to prepend ExecPaths later
+			existingPath = strings.TrimPrefix(e, "PATH=")
+		} else if !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") {
 			filteredEnv = append(filteredEnv, e)
 		}
+	}
+
+	// Add ExecPaths to PATH so dependency binaries (python3, ninja, etc.) are found
+	// ExecPaths contains bin directories from installed dependencies
+	if len(ctx.ExecPaths) > 0 {
+		newPath := strings.Join(ctx.ExecPaths, ":") + ":" + existingPath
+		filteredEnv = append(filteredEnv, "PATH="+newPath)
+	} else if existingPath != "" {
+		filteredEnv = append(filteredEnv, "PATH="+existingPath)
 	}
 
 	// Set SOURCE_DATE_EPOCH for reproducible builds
