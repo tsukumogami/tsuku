@@ -4,14 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"runtime"
 	"strings"
 
-	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/platform"
-	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
 	"github.com/tsukumogami/tsuku/internal/validate"
 )
@@ -28,7 +25,6 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 	}
 
 	var plan *executor.InstallationPlan
-	var r *recipe.Recipe
 
 	switch {
 	case planPath != "":
@@ -46,28 +42,18 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 		}
 
 	case recipePath != "":
-		// Load recipe from local file
-		r, err = loadLocalRecipe(recipePath)
-		if err != nil {
-			return fmt.Errorf("failed to load recipe: %w", err)
-		}
-		if toolName == "" {
-			toolName = r.Metadata.Name
-		}
-		// Generate plan from recipe
-		plan, err = generatePlanFromRecipe(r, toolName, cfg)
+		// Generate plan from local recipe file
+		plan, err = generateInstallPlan(globalCtx, "", "", recipePath, cfg)
 		if err != nil {
 			return fmt.Errorf("failed to generate plan: %w", err)
 		}
+		if toolName == "" {
+			toolName = plan.Tool
+		}
 
 	default:
-		// Load recipe from registry
-		r, err = loader.Get(toolName)
-		if err != nil {
-			return fmt.Errorf("recipe not found: %w", err)
-		}
-		// Generate plan from recipe
-		plan, err = generatePlanFromRecipe(r, toolName, cfg)
+		// Generate plan from recipe in registry
+		plan, err = generateInstallPlan(globalCtx, toolName, "", "", cfg)
 		if err != nil {
 			return fmt.Errorf("failed to generate plan: %w", err)
 		}
@@ -148,47 +134,6 @@ func runSandboxInstall(toolName, planPath, recipePath string) error {
 	}
 
 	return nil
-}
-
-// loadLocalRecipe loads a recipe from a local file path.
-// This is a thin wrapper around recipe.ParseFile for use in CLI commands.
-func loadLocalRecipe(path string) (*recipe.Recipe, error) {
-	return recipe.ParseFile(path)
-}
-
-// generatePlanFromRecipe generates an installation plan from a recipe.
-// It pre-downloads files and caches them for offline sandbox execution.
-func generatePlanFromRecipe(r *recipe.Recipe, toolName string, cfg *config.Config) (*executor.InstallationPlan, error) {
-	exec, err := executor.New(r)
-	if err != nil {
-		return nil, err
-	}
-	defer exec.Cleanup()
-
-	exec.SetToolsDir(cfg.ToolsDir)
-	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
-	exec.SetKeyCacheDir(cfg.KeyCacheDir)
-
-	// Create downloader for checksum computation and pre-downloading
-	predownloader := validate.NewPreDownloader()
-	downloader := validate.NewPreDownloaderAdapter(predownloader)
-
-	// Create download cache for persisting downloads
-	// Downloaded files are cached so they can be mounted into the sandbox container
-	downloadCache := actions.NewDownloadCache(cfg.DownloadCacheDir)
-
-	plan, err := exec.GeneratePlan(globalCtx, executor.PlanConfig{
-		OS:            runtime.GOOS,
-		Arch:          runtime.GOARCH,
-		RecipeSource:  "local",
-		Downloader:    downloader,
-		DownloadCache: downloadCache,
-	})
-	if err != nil {
-		return nil, err
-	}
-
-	return plan, nil
 }
 
 // confirmSandboxExecution prompts the user to confirm sandbox execution for untrusted recipes.
