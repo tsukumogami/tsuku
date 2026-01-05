@@ -173,6 +173,43 @@ tsuku install docker --quiet
 
 In quiet mode, tsuku only shows errors. This is useful for scripted installations where you've already handled system dependencies.
 
+## Sandbox Testing with System Dependencies
+
+When using `--sandbox` mode, tsuku automatically builds container images with system dependencies pre-installed. This allows you to test recipes that require system packages without modifying your host system.
+
+### How It Works
+
+1. tsuku extracts system dependency actions from the recipe (e.g., `apt_install`, `dnf_install`)
+2. A container image is built with those packages installed
+3. The recipe installation runs inside the container
+4. Container images are cached based on their dependency fingerprint
+
+### Example
+
+```bash
+# Test a recipe with apt dependencies in a Debian container
+tsuku install cmake --sandbox
+
+# Test on a specific Linux family
+tsuku install cmake --sandbox --linux-family rhel
+```
+
+### Multi-Family Testing
+
+Use the `--linux-family` flag to test recipes on different distribution families:
+
+```bash
+# Test on all supported families
+for family in debian rhel arch alpine suse; do
+  tsuku install cmake --sandbox --linux-family $family
+done
+```
+
+This is useful for:
+- Validating recipes work across distributions
+- CI/CD pipelines that test on multiple platforms
+- Recipe authors testing cross-platform compatibility
+
 ## Troubleshooting
 
 ### "Invalid target-family" Error

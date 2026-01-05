@@ -424,6 +424,18 @@ Sandbox testing:
 - Automatically configures network access based on recipe requirements
 - Useful for testing recipes before submission or production deployment
 
+**System dependency handling:** When a recipe declares system dependencies (e.g., `apt_install`, `dnf_install`), sandbox mode builds a custom container image with those packages pre-installed. This allows testing recipes that require system packages without modifying your host system. Container images are cached based on their dependency fingerprint for efficient re-use.
+
+**Multi-family support:** Use `--linux-family` to test recipes on different distribution families:
+
+```bash
+# Test on Debian-based container
+tsuku install cmake --sandbox --linux-family debian
+
+# Test on Fedora-based container
+tsuku install cmake --sandbox --linux-family rhel
+```
+
 For technical details, see [DESIGN-install-sandbox.md](docs/DESIGN-install-sandbox.md).
 
 ## Testing
