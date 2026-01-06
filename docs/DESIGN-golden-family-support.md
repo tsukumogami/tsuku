@@ -438,20 +438,32 @@ The existing `SystemAction.ImplicitConstraint()` interface is an implementation 
 
 ### Variable Interpolation Scanning
 
-Steps that use `{{linux_family}}` in their parameters (e.g., download URLs) are **family-varying** - they run on all families but produce different output for each.
+**Any action** can have parameters that use `{{linux_family}}` interpolation. Such steps are **family-varying** - they run on all families but produce different output for each.
 
 ```toml
-# This step varies by family even without implicit constraint
+# download action with family in URL
 [[steps]]
 action = "download"
 url = "https://example.com/pkg-{{linux_family}}.tar.gz"
+
+# extract action with family in path
+[[steps]]
+action = "extract"
+dest = "$TSUKU_HOME/tools/{{linux_family}}/myapp"
+
+# run action with family in command
+[[steps]]
+action = "run"
+command = "setup-{{linux_family}}.sh"
 ```
+
+The scanning is **action-agnostic**: it walks all string fields in the Step struct regardless of action type. Any action (including future or composite actions) that uses `{{linux_family}}` in any parameter will be detected.
 
 This is distinct from family-constrained steps:
 - **Family-constrained** (`apt_install`): Only runs on one family (debian)
-- **Family-varying** (`download` with `{{linux_family}}`): Runs on all families, output differs
+- **Family-varying** (any action with `{{linux_family}}`): Runs on all families, output differs
 
-Both cases require family-specific golden files. The `EffectiveConstraint()` function should scan step parameters for `{{linux_family}}` interpolation and mark such steps as family-varying.
+Both cases require family-specific golden files.
 
 ```go
 type Constraint struct {
