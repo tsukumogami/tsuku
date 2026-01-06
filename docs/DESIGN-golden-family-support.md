@@ -110,14 +110,16 @@ Add a `linux_family_aware: true` field to recipe metadata that authors must set.
 
 #### Option 1D: Derive from Recipe Metadata
 
-Extend `tsuku info` to analyze recipe actions and include linux_family in `supported_platforms` when the recipe uses family-specific actions (apt_install, dnf_install, etc.).
+Extend `tsuku info` to analyze recipe steps and include linux_family in `supported_platforms` when the recipe is family-aware. A recipe is family-aware if any step:
+- Uses a family-constrained action (apt_install, dnf_install, etc.), or
+- Contains `{{linux_family}}` interpolation in its parameters
 
 **Pros:**
 - Clean separation of concerns (recipe metadata describes constraints, tooling follows)
 - No runtime detection needed (derived from static recipe analysis)
 - Single source of truth for platform support
 - Aligns with existing metadata pattern (`tsuku info --metadata-only`)
-- No manual maintenance (automatically derived from actions)
+- No manual maintenance (automatically derived from step analysis)
 - Useful beyond golden files (other tooling can query family support)
 
 **Cons:**
