@@ -51,9 +51,15 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: amd64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: darwin, arch: arm64 }
-          - { runner: macos-15-intel, name: "macOS Intel", os: darwin, arch: amd64 }
+          # Linux variants: one per family (all run on ubuntu, family is a logical concept)
+          - { runner: ubuntu-latest, name: "Linux debian x86_64", os: linux, arch: amd64, family: debian }
+          - { runner: ubuntu-latest, name: "Linux rhel x86_64", os: linux, arch: amd64, family: rhel }
+          - { runner: ubuntu-latest, name: "Linux arch x86_64", os: linux, arch: amd64, family: arch }
+          - { runner: ubuntu-latest, name: "Linux alpine x86_64", os: linux, arch: amd64, family: alpine }
+          - { runner: ubuntu-latest, name: "Linux suse x86_64", os: linux, arch: amd64, family: suse }
+          # macOS variants: no family concept
+          - { runner: macos-14, name: "macOS Apple Silicon", os: darwin, arch: arm64, family: "" }
+          - { runner: macos-15-intel, name: "macOS Intel", os: darwin, arch: amd64, family: "" }
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -76,18 +82,20 @@ jobs:
           first_letter="${first_letter:0:1}"
           echo "recipe_dir=testdata/golden/plans/${first_letter}/${{ inputs.recipe }}" >> "$GITHUB_OUTPUT"
 
-      - name: Generate golden files for ${{ matrix.platform.os }}-${{ matrix.platform.arch }}
+      - name: Generate golden files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ./scripts/regenerate-golden.sh "${{ inputs.recipe }}" \
-            --os "${{ matrix.platform.os }}" \
-            --arch "${{ matrix.platform.arch }}"
+          args=("${{ inputs.recipe }}" --os "${{ matrix.platform.os }}" --arch "${{ matrix.platform.arch }}")
+          if [[ -n "${{ matrix.platform.family }}" ]]; then
+            args+=(--linux-family "${{ matrix.platform.family }}")
+          fi
+          ./scripts/regenerate-golden.sh "${args[@]}"
 
       - name: Upload golden files
         uses: actions/upload-artifact@v4
         with:
-          name: golden-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
+          name: golden-${{ matrix.platform.os }}-${{ matrix.platform.family && format('{0}-', matrix.platform.family) || '' }}${{ matrix.platform.arch }}
           path: ${{ steps.golden-path.outputs.recipe_dir }}
           if-no-files-found: warn
 

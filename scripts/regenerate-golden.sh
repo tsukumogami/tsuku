@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Regenerate golden files for a single recipe
-# Usage: ./scripts/regenerate-golden.sh <recipe> [--version <ver>] [--os <os>] [--arch <arch>]
+# Usage: ./scripts/regenerate-golden.sh <recipe> [--version <ver>] [--os <os>] [--arch <arch>] [--linux-family <family>]
 #
 # Examples:
 #   ./scripts/regenerate-golden.sh fzf
 #   ./scripts/regenerate-golden.sh fzf --version 0.60.0
 #   ./scripts/regenerate-golden.sh fzf --os linux --arch amd64
+#   ./scripts/regenerate-golden.sh fzf --os linux --arch amd64 --linux-family debian
 #
 # Exit codes:
 #   0: Success
@@ -41,21 +42,24 @@ RECIPE=""
 FILTER_VERSION=""
 FILTER_OS=""
 FILTER_ARCH=""
+FILTER_LINUX_FAMILY=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --version) FILTER_VERSION="$2"; shift 2 ;;
-        --os)      FILTER_OS="$2"; shift 2 ;;
-        --arch)    FILTER_ARCH="$2"; shift 2 ;;
+        --version)      FILTER_VERSION="$2"; shift 2 ;;
+        --os)           FILTER_OS="$2"; shift 2 ;;
+        --arch)         FILTER_ARCH="$2"; shift 2 ;;
+        --linux-family) FILTER_LINUX_FAMILY="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: $0 <recipe> [--version <ver>] [--os <os>] [--arch <arch>]"
+            echo "Usage: $0 <recipe> [--version <ver>] [--os <os>] [--arch <arch>] [--linux-family <family>]"
             echo ""
             echo "Regenerate golden files for a recipe."
             echo ""
             echo "Options:"
-            echo "  --version <ver>  Only regenerate for specific version"
-            echo "  --os <os>        Only regenerate for specific OS (linux, darwin)"
-            echo "  --arch <arch>    Only regenerate for specific arch (amd64, arm64)"
+            echo "  --version <ver>        Only regenerate for specific version"
+            echo "  --os <os>              Only regenerate for specific OS (linux, darwin)"
+            echo "  --arch <arch>          Only regenerate for specific arch (amd64, arm64)"
+            echo "  --linux-family <fam>   Only regenerate for specific Linux family (debian, rhel, arch, alpine, suse)"
             exit 0
             ;;
         -*)        echo "Unknown flag: $1" >&2; exit 1 ;;
@@ -162,10 +166,19 @@ for VERSION in $VERSIONS; do
     for platform in $PLATFORMS; do
         os="${platform%-*}"
         arch="${platform#*-}"
-        OUTPUT="$GOLDEN_DIR/${VERSION}-${platform}.json"
 
-        if "$TSUKU" eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
-            --version "$VERSION_NO_V" --install-deps 2>/dev/null | \
+        # Build output filename and eval args based on OS and family
+        EVAL_ARGS=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps)
+        if [[ "$os" == "linux" && -n "$FILTER_LINUX_FAMILY" ]]; then
+            # For Linux with family filter: include family in filename and pass to eval
+            OUTPUT="$GOLDEN_DIR/${VERSION}-${os}-${FILTER_LINUX_FAMILY}-${arch}.json"
+            EVAL_ARGS+=(--linux-family "$FILTER_LINUX_FAMILY")
+        else
+            # For Darwin or Linux without family: use os-arch naming
+            OUTPUT="$GOLDEN_DIR/${VERSION}-${platform}.json"
+        fi
+
+        if "$TSUKU" eval "${EVAL_ARGS[@]}" 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$OUTPUT.tmp"; then
             mv "$OUTPUT.tmp" "$OUTPUT"
             echo "  Generated: $OUTPUT"
