@@ -353,14 +353,11 @@ $ tsuku info build-tools-system --metadata-only --json | jq '.supported_platform
 ]
 ```
 
-**Derivation logic:** A recipe is family-aware if any of its actions have implicit family constraints:
-- `apt_install` → debian family
-- `dnf_install` → rhel family
-- `pacman_install` → arch family
-- `apk_install` → alpine family
-- `zypper_install` → suse family
+**Derivation logic:** A recipe is family-aware if any action references `linux_family` in its `when` clause or interpolated variables. Each action type already knows its own constraints - for example, `apt_install` has an implicit `when: linux_family == "debian"` condition.
 
-If a recipe contains any of these actions, the metadata lists all 5 families for Linux platforms. If not, Linux platforms have no `linux_family` field.
+The detection is generic: scan actions for `linux_family` references rather than maintaining a hardcoded list of action types. This works for any current or future action that might be family-aware.
+
+If any action references `linux_family`, the metadata lists all 5 families for Linux platforms. If not, Linux platforms have no `linux_family` field.
 
 Golden file tooling queries this metadata and generates one file per supported platform. No detection algorithm, no plan comparison - just follow the metadata.
 
@@ -484,9 +481,10 @@ When a recipe changes from family-aware to non-family-aware (rare):
 ### Phase 1: Extend tsuku info
 
 1. Add family awareness detection to metadata generation
-2. When recipe contains family-specific actions (apt_install, dnf_install, etc.), include linux_family in supported_platforms
-3. Update `--metadata-only --json` output format to include expanded platform list
-4. Add tests for family awareness detection
+2. Scan actions for `linux_family` references (in `when` clauses or variables)
+3. When any action references `linux_family`, include it in supported_platforms
+4. Update `--metadata-only --json` output format to include expanded platform list
+5. Add tests for family awareness detection
 
 ### Phase 2: Script Updates
 
@@ -544,6 +542,6 @@ When a recipe changes from family-aware to non-family-aware (rare):
 
 ### Mitigations
 
-- **tsuku info extension**: The detection logic is straightforward (check for family-specific action types). Can be implemented incrementally.
-- **Metadata sync**: The family-action mapping is static and unlikely to change. Unit tests verify consistency.
+- **tsuku info extension**: The detection logic is straightforward (scan actions for `linux_family` references). Can be implemented incrementally.
+- **Metadata sync**: Actions already know their constraints via `when` clauses. The detection piggybacks on existing semantics rather than maintaining a separate mapping.
 - **Mixed naming**: Clear naming convention and documentation make the pattern understandable.
