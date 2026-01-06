@@ -257,11 +257,11 @@ Query metadata for platforms, then check directory for family variants. Missing 
 
 ## Decision Outcome
 
-**Chosen: 1D + 2B + 3B + 4B**
+**Chosen: 1D + 2B + 3C + 4B**
 
 ### Summary
 
-Extend `tsuku info` to expose linux_family awareness in supported_platforms metadata. Golden file tooling queries this metadata to determine which platform+family combinations need files. Use optional family component in filenames. Use debian as canonical family for non-family-aware recipes. Validate based on metadata (enforces completeness).
+Extend `tsuku info` to expose linux_family awareness in supported_platforms metadata. Golden file tooling queries this metadata to determine which platform+family combinations need files. Use optional family component in filenames. Generate non-family-aware plans without the `--linux-family` flag. Validate based on metadata (enforces completeness).
 
 ### Rationale
 
@@ -269,8 +269,8 @@ Extend `tsuku info` to expose linux_family awareness in supported_platforms meta
 - 1A creates 5x waste for most recipes, making diffs noisy and storage larger
 - 1B requires runtime detection by comparing plans, duplicating knowledge already in the recipe structure
 - 1C requires manual maintenance and risks author error
-- 1D derives family awareness from recipe actions (apt_install implies debian family, etc.)
-- The metadata is automatically correct because it's derived from the same actions that produce family-specific plans
+- 1D derives family awareness from recipe actions via existing constraint mechanisms
+- The metadata is automatically correct because it's derived from the same constraints that govern plan generation
 - This knowledge is useful beyond golden files (installers, documentation, CI can all query platform support)
 
 **Why 2B (optional component) over 2A (always family) or 2C (directories):**
@@ -279,11 +279,12 @@ Extend `tsuku info` to expose linux_family awareness in supported_platforms meta
 - 2B is backwards compatible: existing `linux-amd64` files work unchanged
 - The naming difference (`linux-amd64` vs `linux-debian-amd64`) clearly signals whether the recipe varies by family
 
-**Why 3B (debian canonical) over 3A (no field) or 3C (no flag):**
-- 3A requires conditional logic in plan generation
-- 3C means validation generates plans differently than generation, risking mismatches
-- 3B is simple: always generate with `--linux-family debian` for non-family-aware Linux recipes
-- Debian is the most common target (Ubuntu, Debian, Linux Mint are all debian-family)
+**Why 3C (no flag) over 3A (no field) or 3B (debian canonical):**
+- 3A requires conditional logic to omit the field, adding complexity
+- 3B injects an arbitrary "debian" value into plans that don't vary by family, which is confusing
+- 3C is simplest: if the recipe doesn't vary by family, don't pass `--linux-family` at all
+- The plan generator already handles the absence of the flag correctly
+- Avoids users seeing "debian" in golden files for recipes that work on any family
 
 **Why 4B (metadata-based) over 4A (what exists) or 4C (hybrid):**
 - 4A doesn't catch missing coverage (if generation forgot a platform, validation wouldn't notice)
@@ -294,8 +295,6 @@ Extend `tsuku info` to expose linux_family awareness in supported_platforms meta
 
 **Platform enumeration:** The metadata from `tsuku info` lists all supported platform+family combinations. Golden file tooling generates and validates exactly those combinations. No detection, no guessing.
 
-**Platform content:** Non-family-aware golden files (`linux-amd64.json`) contain `linux_family: "debian"` in the platform object since they're generated with `--linux-family debian`. This is arbitrary but deterministic; the recipe produces identical plans regardless of family, so the stored family value doesn't affect correctness.
-
 ## Solution Architecture
 
 ### File Naming
@@ -303,7 +302,7 @@ Extend `tsuku info` to expose linux_family awareness in supported_platforms meta
 **Non-family-aware recipes** (plans identical across Linux families):
 ```
 testdata/golden/plans/f/fzf/
-├── v0.46.0-linux-amd64.json      # Generated with --linux-family debian
+├── v0.46.0-linux-amd64.json       # No linux_family in platform object
 ├── v0.46.0-darwin-amd64.json
 └── v0.46.0-darwin-arm64.json
 ```
@@ -311,11 +310,11 @@ testdata/golden/plans/f/fzf/
 **Family-aware recipes** (plans differ by Linux family):
 ```
 testdata/golden/plans/b/build-tools-system/
-├── v1.0.0-linux-debian-amd64.json    # apt_install steps
-├── v1.0.0-linux-rhel-amd64.json      # dnf_install steps
-├── v1.0.0-linux-arch-amd64.json      # pacman_install steps
-├── v1.0.0-linux-alpine-amd64.json    # apk_install steps
-├── v1.0.0-linux-suse-amd64.json      # zypper_install steps
+├── v1.0.0-linux-debian-amd64.json    # linux_family: "debian"
+├── v1.0.0-linux-rhel-amd64.json      # linux_family: "rhel"
+├── v1.0.0-linux-arch-amd64.json      # linux_family: "arch"
+├── v1.0.0-linux-alpine-amd64.json    # linux_family: "alpine"
+├── v1.0.0-linux-suse-amd64.json      # linux_family: "suse"
 ├── v1.0.0-darwin-amd64.json
 └── v1.0.0-darwin-arm64.json
 ```
@@ -324,9 +323,39 @@ testdata/golden/plans/b/build-tools-system/
 
 Per [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md), linux-arm64 is excluded from golden file generation and validation because GitHub Actions does not provide arm64 Linux runners. This design inherits that exclusion: family-specific files are only generated for linux-amd64.
 
-### Metadata-Based Platform Enumeration
+### Architecture Layers
 
-The `tsuku info` command exposes supported platforms. This design extends it to include linux_family when applicable:
+This design separates three concerns:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  Golden File Tooling (scripts, workflows)                   │
+│  - Queries metadata, generates/validates files              │
+│  - No knowledge of how constraints are determined           │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ queries supported_platforms
+┌─────────────────────────────────────────────────────────────┐
+│  Metadata Aggregation (tsuku info)                          │
+│  - Walks recipe actions, collects constraints               │
+│  - Expands linux_family when any action constrains it       │
+│  - Returns supported_platforms list                         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼ queries ImplicitConstraint()
+┌─────────────────────────────────────────────────────────────┐
+│  Action Constraints (existing Constraint type)              │
+│  - Actions expose constraints via ImplicitConstraint()      │
+│  - SystemAction types return their family constraint        │
+│  - WhenClause can specify linux_family filter               │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Key principle:** Golden file tooling is decoupled from constraint detection. It simply queries `tsuku info` for supported platforms and generates one file per platform.
+
+### Metadata Output Format
+
+The `tsuku info` command exposes supported platforms:
 
 ```bash
 # Non-family-aware recipe (e.g., fzf)
@@ -353,22 +382,30 @@ $ tsuku info build-tools-system --metadata-only --json | jq '.supported_platform
 ]
 ```
 
-**Derivation logic:** Family awareness is determined by querying each action. There are two tiers:
+### Constraint Detection (Implementation Detail)
 
-1. **Intrinsic to action type**: Some action types are inherently family-specific. For example, `apt_install` always returns "family-aware: yes, families: [debian]" - no instance inspection needed. The action type itself encodes the constraint.
+The metadata aggregation layer determines family awareness by examining action constraints. This is an **implementation detail** that golden file tooling does not need to know about.
 
-2. **Instance-dependent**: Generic action types like `download` or `extract` are not inherently family-aware, but a specific instance might reference `linux_family` in its `when` clause or variable interpolations. These action types return "check my instance" and the detection scans for `linux_family` references.
+Family awareness is derived from:
 
-Examples:
-- `apt_install { packages = ["curl"] }` → intrinsically debian-only
-- `dnf_install { packages = ["curl"] }` → intrinsically rhel-only
-- `download { url = "..." }` → not family-aware (no `linux_family` reference)
-- `download { url = "{{linux_family}}/pkg.tar" }` → family-aware (variable interpolation)
-- `extract { when = "linux_family == debian", ... }` → family-aware (when clause)
+1. **`SystemAction.ImplicitConstraint()`** - Package manager actions like `apt_install` return a `Constraint` with `LinuxFamilies: ["debian"]`. This is intrinsic to the action type.
 
-If any action is family-aware (intrinsic or instance), the metadata lists all 5 families for Linux platforms. If not, Linux platforms have no `linux_family` field.
+2. **`WhenClause.LinuxFamily`** - Steps can have explicit `when.linux_family` conditions that filter by family.
 
-Golden file tooling queries this metadata and generates one file per supported platform. No detection algorithm, no plan comparison - just follow the metadata.
+If any action or step constrains `linux_family`, the recipe is family-aware and metadata lists all 5 families for Linux platforms. Otherwise, Linux platforms have no `linux_family` field.
+
+**Note:** Variable interpolation scanning (e.g., detecting `{{linux_family}}` in URL strings) is explicitly excluded. It's too fragile and prone to false positives/negatives. Family awareness must be expressed through explicit constraints (`ImplicitConstraint` or `when` clauses), not implicit string patterns.
+
+### Valid Linux Families
+
+The current set of supported families is: `debian`, `rhel`, `arch`, `alpine`, `suse`.
+
+This list is an **extension point**. Adding a new family (e.g., `nixos`) requires:
+1. Adding it to `ValidLinuxFamilies` constant
+2. Implementing support in relevant `SystemAction` types
+3. No interface changes required
+
+Golden file tooling automatically picks up new families via metadata.
 
 ### Generation Workflow Changes
 
@@ -405,14 +442,13 @@ The script queries `tsuku info` to determine if family-specific files are needed
 - Filter to platforms matching the `--os` and `--arch` arguments
 - For each matching platform:
   - If `linux_family` is present: generate with `--linux-family` flag, name file `{version}-{os}-{family}-{arch}.json`
-  - If `linux_family` is absent and os=linux: generate with `--linux-family debian`, name file `{version}-{os}-{arch}.json`
-  - If os=darwin: generate without family flag, name file `{version}-{os}-{arch}.json`
+  - If `linux_family` is absent: generate without `--linux-family` flag, name file `{version}-{os}-{arch}.json`
 
 **validate-golden.sh**:
 - Query `tsuku info --metadata-only --json` for supported platforms
 - Build expected file list from metadata
 - Verify each expected file exists in golden directory
-- For each file, generate plan with appropriate flags and compare
+- For each file, generate plan with flags matching the platform (include `--linux-family` only if metadata specifies it)
 - Report missing files as errors (enforces completeness)
 
 ### Validation Logic
@@ -441,13 +477,12 @@ for platform in $PLATFORMS; do
         exit 1
     fi
 
-    # Generate plan with appropriate flags
+    # Generate plan with flags matching metadata
     eval_args=(--recipe "$RECIPE" --os "$os" --arch "$arch" --version "${VERSION#v}")
     if [[ -n "$family" ]]; then
         eval_args+=(--linux-family "$family")
-    elif [[ "$os" == "linux" ]]; then
-        eval_args+=(--linux-family debian)  # Canonical family for non-family-aware
     fi
+    # Note: no --linux-family flag for non-family-aware recipes
 
     tsuku eval "${eval_args[@]}" | jq -S 'del(.generated_at, .recipe_source)' > /tmp/actual.json
     # Compare with sorted JSON...
@@ -458,14 +493,14 @@ This approach ensures validation matches exactly what the recipe claims to suppo
 
 ### Migration Path
 
-1. **Phase 1**: Extend `tsuku info` to expose family awareness in metadata
+1. **Phase 1**: Extend `Constraint` type and `tsuku info` to expose family awareness
 2. **Phase 2**: Update generation/validation scripts to use metadata
 3. **Phase 3**: Regenerate golden files for recipes with system dependencies
 4. **Phase 4**: Update CI workflows to use new logic
 5. **Phase 5**: Validate all recipes pass with new system
 
 Existing golden files remain valid:
-- `linux-amd64.json` files are validated with `--linux-family debian`
+- `linux-amd64.json` files are validated without `--linux-family` flag
 - Non-family-aware recipes continue to work unchanged
 - Family-aware recipes get additional files without breaking existing ones
 
@@ -487,32 +522,90 @@ When a recipe changes from family-aware to non-family-aware (rare):
 
 ## Implementation Approach
 
-### Phase 1: Extend tsuku info
+### Phase 1: Extend Constraint Type
 
-1. Add `IsFamilyAware() bool` and `SupportedFamilies() []string` methods to action interface
-2. Intrinsic action types (apt_install, dnf_install, etc.) return hardcoded values
-3. Generic action types scan their instance for `linux_family` references in `when` clauses and variable interpolations
-4. Aggregate across all actions: if any is family-aware, recipe is family-aware
-5. Update `--metadata-only --json` output to include expanded platform list
-6. Add tests for both intrinsic and instance-dependent detection
+Extend the existing `Constraint` type to support multiple families:
 
-### Phase 2: Script Updates
+```go
+// In internal/actions/system_action.go
+type Constraint struct {
+    OS            string
+    LinuxFamilies []string  // nil = any family; populated = specific families
+}
+```
+
+This reuses the existing `ImplicitConstraint()` method on `SystemAction`. Package manager actions return their family constraint:
+
+```go
+func (a *AptInstallAction) ImplicitConstraint() *Constraint {
+    return &Constraint{OS: "linux", LinuxFamilies: []string{"debian"}}
+}
+```
+
+### Phase 2: Extend WhenClause
+
+Add `LinuxFamily` field to allow explicit family constraints in recipe steps:
+
+```go
+// In recipe/types.go
+type WhenClause struct {
+    Platform       []string `toml:"platform,omitempty"`
+    OS             []string `toml:"os,omitempty"`
+    LinuxFamily    []string `toml:"linux_family,omitempty"`  // NEW
+    PackageManager string   `toml:"package_manager,omitempty"`
+}
+```
+
+### Phase 3: Metadata Aggregation
+
+Add recipe-level family awareness computation to `tsuku info`:
+
+```go
+func (e *Executor) SupportedPlatforms() []Platform {
+    // Walk all steps
+    // Collect constraints from SystemAction.ImplicitConstraint()
+    // Collect constraints from step.When.LinuxFamily
+    // If any constraint specifies LinuxFamilies, expand Linux platforms
+    // Return platform list
+}
+```
+
+Update `--metadata-only --json` output to include `supported_platforms`.
+
+### Phase 4: Script Updates
 
 1. Update `regenerate-golden.sh` to query metadata and generate appropriate files
 2. Update `validate-golden.sh` to use metadata-driven validation
 3. Add `--linux-family` flag to scripts for generating family-specific plans
 
-### Phase 3: Workflow Updates
+### Phase 5: Workflow Updates
 
 1. Update `generate-golden-files.yml` to use metadata-based generation
 2. Ensure artifact naming handles both family and non-family files
 3. Merge step handles both patterns
 
-### Phase 4: Documentation
+### Phase 6: Documentation
 
 1. Update CONTRIBUTING.md with family-aware golden file guidance
 2. Add examples for family-aware vs non-family-aware recipes
 3. Document the metadata format
+
+### Future Extensibility
+
+The `Constraint` type can accommodate future targeting dimensions without interface changes:
+
+```go
+type Constraint struct {
+    OS            string
+    Arch          string      // could constrain to specific arches
+    LinuxFamilies []string
+    // Future dimensions:
+    // LibcVariant   string   // glibc, musl
+    // DarwinVersion string   // minimum macOS version
+}
+```
+
+Golden file tooling automatically handles new dimensions via the metadata layer - no script changes required when new dimensions are added.
 
 ## Security Considerations
 
@@ -541,17 +634,19 @@ When a recipe changes from family-aware to non-family-aware (rare):
 - **Minimal waste**: Non-family-aware recipes retain single Linux file
 - **Backwards compatible**: Existing golden files work without migration
 - **Single source of truth**: Metadata is the authoritative source for platform support
+- **Reuses existing patterns**: Extends `Constraint` type and `ImplicitConstraint()` method rather than adding new interfaces
+- **Future-proof**: `Constraint` type can accommodate new targeting dimensions without interface changes
+- **Clean separation**: Golden file tooling is decoupled from constraint detection logic
 - **Useful beyond golden files**: Other tooling can query family support (documentation, installers, CI)
-- **Automatic**: Family awareness derived from actions, no manual flags required
 
 ### Negative
 
-- **Requires `tsuku info` extension**: Must implement family awareness detection in CLI
-- **Metadata must stay in sync**: Detection logic must match action semantics
+- **Requires `Constraint` extension**: Must extend existing type to support multiple families
+- **Requires `WhenClause` extension**: Must add `linux_family` field to step conditions
 - **Mixed naming**: Directory contains both old-style and new-style filenames during transition
 
 ### Mitigations
 
-- **tsuku info extension**: Detection has two clear paths - intrinsic types return hardcoded values, generic types scan their instance. Can be implemented incrementally per action type.
-- **Metadata sync**: Intrinsic actions encode their constraints directly. Instance-dependent detection reuses the same `when` clause and variable parsing already used for plan generation.
+- **Constraint extension**: Simple field addition (`LinuxFamilies []string`) with clear semantics. Existing code continues to work.
+- **WhenClause extension**: Follows existing pattern for `os` and `platform` fields. No new concepts introduced.
 - **Mixed naming**: Clear naming convention and documentation make the pattern understandable.
