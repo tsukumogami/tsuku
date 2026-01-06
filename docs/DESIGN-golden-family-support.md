@@ -420,20 +420,48 @@ When a step has both an implicit constraint (from action type) and an explicit `
 **Conflict detection implementation:**
 
 ```go
+// Clone returns a copy of the constraint, or an empty constraint if nil.
+// Nil-safe: can be called on a nil receiver.
+func (c *Constraint) Clone() *Constraint {
+    if c == nil {
+        return &Constraint{}
+    }
+    return &Constraint{OS: c.OS, Arch: c.Arch, LinuxFamily: c.LinuxFamily}
+}
+
 // mergeWhenClause merges explicit when clause with implicit constraint.
 // Returns error if any dimension conflicts.
 func mergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error) {
-    result := implicit.Clone()  // nil-safe: returns empty constraint if nil
+    result := implicit.Clone()  // nil-safe
+
+    // Check Platform array conflict (e.g., apt_install + when.platform: ["darwin/arm64"])
+    // Platform entries are "os/arch" tuples that must be compatible with implicit OS
+    if len(when.Platform) > 0 && result.OS != "" {
+        compatible := false
+        for _, p := range when.Platform {
+            if os, _, _ := strings.Cut(p, "/"); os == result.OS {
+                compatible = true
+                break
+            }
+        }
+        if !compatible {
+            return nil, fmt.Errorf("platform conflict: action requires OS %q but when.platform specifies %v",
+                result.OS, when.Platform)
+        }
+    }
 
     // Check OS conflict
+    // Note: when.os = ["linux", "darwin"] (multi-OS) leaves result.OS empty
+    // because we can't pick one. This is intentional - step runs on multiple OSes.
     if len(when.OS) > 0 {
-        if result.OS != "" && !contains(when.OS, result.OS) {
+        if result.OS != "" && !slices.Contains(when.OS, result.OS) {
             return nil, fmt.Errorf("OS conflict: action requires %q but when clause specifies %v",
                 result.OS, when.OS)
         }
         if result.OS == "" && len(when.OS) == 1 {
             result.OS = when.OS[0]
         }
+        // Multi-OS case: result.OS stays empty (unconstrained within the listed OSes)
     }
 
     // Check LinuxFamily conflict
@@ -445,7 +473,7 @@ func mergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error
         result.LinuxFamily = when.LinuxFamily
     }
 
-    // Check Arch conflict (similar pattern)
+    // Check Arch conflict
     if when.Arch != "" {
         if result.Arch != "" && result.Arch != when.Arch {
             return nil, fmt.Errorf("arch conflict: action requires %q but when clause specifies %q",
@@ -668,6 +696,8 @@ When a recipe changes from family-aware to non-family-aware (rare):
 
 Resolve constraints during recipe loading and store them on the Step. This eliminates the need to pass a registry at query time - callers just ask the step.
 
+**Go idiom: Constructor guarantee, not error-returning getter.** If analysis isn't computed, that's a programming bug, not a runtime condition. Use a factory function that guarantees validity.
+
 ```go
 // In recipe/types.go - Step includes pre-computed analysis
 type Step struct {
@@ -675,49 +705,63 @@ type Step struct {
     When   *WhenClause
     Params map[string]interface{}
 
-    // Pre-computed during recipe loading
+    // Pre-computed during loading - never nil after construction
     analysis *StepAnalysis
 }
 
 // Analysis returns the pre-computed step analysis.
-// Returns error only if analysis wasn't computed (indicates a bug).
-func (s *Step) Analysis() (*StepAnalysis, error) {
-    if s.analysis == nil {
-        return nil, errors.New("step analysis not computed")
-    }
-    return s.analysis, nil
+// Never returns nil - guaranteed by NewStep constructor.
+func (s *Step) Analysis() *StepAnalysis {
+    return s.analysis
 }
-```
 
-**Loading-time computation** happens in the recipe loader, which has access to the action registry:
+// ConstraintLookup returns the implicit constraint for an action by name.
+// Returns nil if the action has no implicit constraint (runs anywhere).
+// Returns (nil, false) if the action is unknown (validation error).
+type ConstraintLookup func(actionName string) (constraint *Constraint, known bool)
 
-```go
-// In recipe/loader.go (or wherever recipes are loaded)
+// NewStep creates a Step with pre-computed analysis.
+// Returns error if:
+// - Action is unknown (lookup returns known=false)
+// - Constraint conflicts detected (OS, Arch, or LinuxFamily mismatch)
+func NewStep(action string, when *WhenClause, params map[string]interface{},
+             lookup ConstraintLookup) (*Step, error) {
+    analysis, err := computeAnalysis(action, when, params, lookup)
+    if err != nil {
+        return nil, err
+    }
+    return &Step{
+        Action:   action,
+        When:     when,
+        Params:   params,
+        analysis: analysis,
+    }, nil
+}
 
-// ConstraintLookup is the minimal interface needed for step analysis.
-// Defined in recipe package, implemented by actions package.
-type ConstraintLookup func(actionName string) *Constraint
-
-// ComputeStepAnalysis analyzes a step during recipe loading.
-func ComputeStepAnalysis(step *Step, lookup ConstraintLookup) (*StepAnalysis, error) {
+func computeAnalysis(action string, when *WhenClause, params map[string]interface{},
+                     lookup ConstraintLookup) (*StepAnalysis, error) {
     var constraint *Constraint
 
-    // Get action's implicit constraint
-    if implicit := lookup(step.Action); implicit != nil {
+    // Get action's implicit constraint - also validates action exists
+    implicit, known := lookup(action)
+    if !known {
+        return nil, fmt.Errorf("unknown action %q", action)
+    }
+    if implicit != nil {
         constraint = implicit.Clone()
     }
 
     // Merge explicit when clause (validates conflicts)
-    if step.When != nil {
-        merged, err := mergeWhenClause(constraint, step.When)
+    if when != nil {
+        merged, err := mergeWhenClause(constraint, when)
         if err != nil {
-            return nil, err  // conflict detected
+            return nil, err
         }
         constraint = merged
     }
 
     // Check for {{linux_family}} interpolation
-    familyVarying := containsLinuxFamilyVar(step.Params)
+    familyVarying := containsLinuxFamilyVar(params)
 
     return &StepAnalysis{
         Constraint:    constraint,
@@ -725,6 +769,12 @@ func ComputeStepAnalysis(step *Step, lookup ConstraintLookup) (*StepAnalysis, er
     }, nil
 }
 ```
+
+**Benefits of constructor guarantee:**
+- Errors at construction time, not access time
+- `Analysis()` never returns nil - no nil checks needed
+- Unknown actions detected immediately during recipe loading
+- Callers trust the Step is fully valid after construction
 
 **Scanning uses recursive type switch** (no reflection needed):
 
@@ -793,16 +843,20 @@ Note: `LinuxFamily` is singular (like `PackageManager`) since a step targets one
 
 ### Phase 3: Recipe Family Policy
 
-Name the four recipe types explicitly rather than computing them implicitly:
+Name the five recipe types explicitly rather than computing them implicitly:
 
 ```go
 // RecipeFamilyPolicy describes how a recipe relates to Linux families
 type RecipeFamilyPolicy int
 
 const (
-    // FamilyAgnostic: No steps have family constraints or variation.
+    // FamilyDarwinOnly: No Linux-applicable steps exist.
+    // Result: No Linux platforms at all
+    FamilyDarwinOnly RecipeFamilyPolicy = iota
+
+    // FamilyAgnostic: Has Linux steps, but no family constraints or variation.
     // Result: Generic Linux platforms (no family qualifier)
-    FamilyAgnostic RecipeFamilyPolicy = iota
+    FamilyAgnostic
 
     // FamilyVarying: At least one step uses {{linux_family}} interpolation.
     // Result: All families (each produces different output)
@@ -816,6 +870,24 @@ const (
     // Result: All families (some steps filtered per family)
     FamilyMixed
 )
+
+// String returns the policy name for debugging and logging.
+func (p RecipeFamilyPolicy) String() string {
+    switch p {
+    case FamilyDarwinOnly:
+        return "FamilyDarwinOnly"
+    case FamilyAgnostic:
+        return "FamilyAgnostic"
+    case FamilyVarying:
+        return "FamilyVarying"
+    case FamilyConstrained:
+        return "FamilyConstrained"
+    case FamilyMixed:
+        return "FamilyMixed"
+    default:
+        return fmt.Sprintf("RecipeFamilyPolicy(%d)", p)
+    }
+}
 ```
 
 ### Phase 4: Metadata Aggregation
@@ -832,17 +904,16 @@ func AnalyzeRecipe(recipe *Recipe) (RecipeFamilyPolicy, map[string]bool, error) 
     hasAnyLinuxSteps := false
 
     for i, step := range recipe.Steps {
-        analysis, err := step.Analysis()
-        if err != nil {
-            return 0, nil, fmt.Errorf("step %d (%s): %w", i, step.Action, err)
-        }
+        analysis := step.Analysis()  // Never nil - guaranteed by constructor
 
-        // Skip non-Linux steps entirely
+        // Skip non-Linux steps entirely (explicit darwin-only)
         if analysis.Constraint != nil && analysis.Constraint.OS == "darwin" {
             continue
         }
 
         // Track that we have at least one Linux-applicable step
+        // Note: when.os = ["linux", "darwin"] results in Constraint.OS = "" (multi-OS)
+        // which counts as Linux-applicable since it includes Linux
         if analysis.Constraint == nil || analysis.Constraint.OS == "" || analysis.Constraint.OS == "linux" {
             hasAnyLinuxSteps = true
         }
@@ -856,10 +927,9 @@ func AnalyzeRecipe(recipe *Recipe) (RecipeFamilyPolicy, map[string]bool, error) 
         }
     }
 
-    // Determine policy
+    // Determine policy - no nil sentinel, explicit enum for each case
     if !hasAnyLinuxSteps {
-        // Darwin-only recipe - no Linux platforms at all
-        return FamilyAgnostic, nil, nil  // nil families signals "no Linux"
+        return FamilyDarwinOnly, nil, nil
     }
 
     if hasFamilyVaryingStep {
@@ -894,14 +964,15 @@ func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
 
     // Add Linux platforms based on policy
     switch policy {
+    case FamilyDarwinOnly:
+        // No Linux platforms - darwin-only recipe
+
     case FamilyAgnostic:
-        if families != nil {  // nil means darwin-only
-            platforms = append(platforms,
-                Platform{OS: "linux", Arch: "amd64"},
-                Platform{OS: "linux", Arch: "arm64"},
-            )
-        }
-        // else: darwin-only recipe, no Linux platforms
+        // Generic Linux (no family qualifier)
+        platforms = append(platforms,
+            Platform{OS: "linux", Arch: "amd64"},
+            Platform{OS: "linux", Arch: "arm64"},
+        )
 
     case FamilyVarying, FamilyMixed:
         // All families needed
@@ -930,14 +1001,14 @@ func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
 
 | Recipe Pattern | Policy | Linux Platforms |
 |---------------|--------|-----------------|
+| Darwin-only steps (`when.os: darwin`) | FamilyDarwinOnly | None |
 | `download` (no family var) | FamilyAgnostic | Generic linux |
 | `download` with `{{linux_family}}` | FamilyVarying | All 5 families |
 | `apt_install` only | FamilyConstrained | debian only |
 | `apt_install` + `dnf_install` | FamilyConstrained | debian + rhel |
 | `download` (plain) + `apt_install` | FamilyMixed | All 5 families |
-| Darwin-only steps | FamilyAgnostic (nil) | None |
 
-The explicit policy enum makes the logic self-documenting and easier to extend.
+The explicit policy enum makes the logic self-documenting - no nil sentinel values.
 
 Update `tsuku info --metadata-only --json` to include `supported_platforms`.
 
