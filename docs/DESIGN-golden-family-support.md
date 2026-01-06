@@ -388,14 +388,13 @@ $ tsuku info build-tools-system --metadata-only --json | jq '.supported_platform
 Every step has a pre-computed **analysis** that contains its constraint and variation status. Callers ask the step directly - no registry needed at query time.
 
 ```go
-// Callers use this - simple and uniform
-analysis, err := step.Analysis()
-if err != nil {
-    // Analysis not computed (indicates a bug in recipe loading)
-}
+// Callers use this - simple and uniform (no error check needed)
+analysis := step.Analysis()
 // analysis.Constraint: where can this step run
 // analysis.FamilyVarying: does output differ by family
 ```
+
+The `Analysis()` method never returns nil - this is guaranteed by the `NewStep()` constructor which validates and computes analysis at creation time. Errors are surfaced during recipe loading, not at access time.
 
 The analysis combines:
 - The action's implicit constraint (if any) - e.g., `apt_install` implies debian
@@ -420,9 +419,9 @@ When a step has both an implicit constraint (from action type) and an explicit `
 **Conflict detection implementation:**
 
 ```go
-// Clone returns a copy of the constraint, or an empty constraint if nil.
-// Nil-safe: can be called on a nil receiver.
-func (c *Constraint) Clone() *Constraint {
+// cloneOrEmpty returns a copy of the constraint, or an empty constraint if nil.
+// Private helper - avoids confusing nil-receiver methods.
+func cloneOrEmpty(c *Constraint) *Constraint {
     if c == nil {
         return &Constraint{}
     }
@@ -432,7 +431,7 @@ func (c *Constraint) Clone() *Constraint {
 // mergeWhenClause merges explicit when clause with implicit constraint.
 // Returns error if any dimension conflicts.
 func mergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error) {
-    result := implicit.Clone()  // nil-safe
+    result := cloneOrEmpty(implicit)
 
     // Check Platform array conflict (e.g., apt_install + when.platform: ["darwin/arm64"])
     // Platform entries are "os/arch" tuples that must be compatible with implicit OS
@@ -480,6 +479,11 @@ func mergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error
                 result.Arch, when.Arch)
         }
         result.Arch = when.Arch
+    }
+
+    // Validate final constraint (catches invalid combinations like darwin+debian)
+    if err := result.Validate(); err != nil {
+        return nil, err
     }
 
     return result, nil
@@ -553,8 +557,21 @@ type Constraint struct {
     LinuxFamily string   // e.g., "debian", or empty (any linux)
 }
 
+// Validate returns an error if the constraint contains invalid combinations.
+// Invalid state: LinuxFamily set when OS is not "linux" (or empty).
+func (c *Constraint) Validate() error {
+    if c == nil {
+        return nil
+    }
+    if c.LinuxFamily != "" && c.OS != "" && c.OS != "linux" {
+        return fmt.Errorf("invalid constraint: linux_family %q cannot be set when OS is %q",
+            c.LinuxFamily, c.OS)
+    }
+    return nil
+}
+
 // StepAnalysis combines constraint with variation detection
-// This is what EffectiveConstraint() returns
+// This is what computeAnalysis() returns, stored on Step.
 type StepAnalysis struct {
     Constraint    *Constraint  // nil means unconstrained (runs anywhere)
     FamilyVarying bool         // true if step uses {{linux_family}} interpolation
@@ -564,6 +581,23 @@ type StepAnalysis struct {
 Aggregation logic uses both fields:
 - `Constraint.LinuxFamily` set → add that family to the set
 - `FamilyVarying` true → expand to all families
+
+**Edge case: constrained + varying.** A step can have both a family constraint AND use `{{linux_family}}` interpolation:
+
+```toml
+[[steps]]
+action = "download"
+url = "https://example.com/{{linux_family}}-tool.tar.gz"
+when.linux_family = "debian"
+```
+
+This step:
+- Only runs on debian (constraint)
+- Uses interpolation (varying flag is true)
+
+At the step level, `FamilyVarying=true` indicates the output differs. At the recipe level, aggregation respects the constraint - this step contributes `debian` to `familiesUsed`, not "all families". The interpolation happens at plan generation time within the constrained family.
+
+If other steps in the recipe are unconstrained or vary by family, the recipe may still be `FamilyVarying` or `FamilyMixed`. The per-step constraint is honored during plan generation; the varying flag affects what appears in the plan for that family.
 
 ### Valid Linux Families
 
@@ -748,7 +782,7 @@ func computeAnalysis(action string, when *WhenClause, params map[string]interfac
         return nil, fmt.Errorf("unknown action %q", action)
     }
     if implicit != nil {
-        constraint = implicit.Clone()
+        constraint = cloneOrEmpty(implicit)
     }
 
     // Merge explicit when clause (validates conflicts)
@@ -760,8 +794,9 @@ func computeAnalysis(action string, when *WhenClause, params map[string]interfac
         constraint = merged
     }
 
-    // Check for {{linux_family}} interpolation
-    familyVarying := containsLinuxFamilyVar(params)
+    // Detect interpolated variables (e.g., {{linux_family}}, {{arch}})
+    vars := detectInterpolatedVars(params)
+    familyVarying := vars["linux_family"]
 
     return &StepAnalysis{
         Constraint:    constraint,
@@ -776,28 +811,38 @@ func computeAnalysis(action string, when *WhenClause, params map[string]interfac
 - Unknown actions detected immediately during recipe loading
 - Callers trust the Step is fully valid after construction
 
-**Scanning uses recursive type switch** (no reflection needed):
+**Generalized variable detection** (no reflection needed):
 
 ```go
-// containsLinuxFamilyVar scans for {{linux_family}} in any string value
-func containsLinuxFamilyVar(v interface{}) bool {
+// Known interpolation variables that affect platform variance
+var knownVars = []string{"linux_family", "os", "arch"}
+
+// detectInterpolatedVars scans for {{var}} patterns in any string value.
+// Returns a map of variable names found (e.g., {"linux_family": true}).
+// Generalized to support future variables like {{arch}}.
+func detectInterpolatedVars(v interface{}) map[string]bool {
+    found := make(map[string]bool)
+    detectVarsRecursive(v, found)
+    return found
+}
+
+func detectVarsRecursive(v interface{}, found map[string]bool) {
     switch val := v.(type) {
     case string:
-        return strings.Contains(val, "{{linux_family}}")
+        for _, varName := range knownVars {
+            if strings.Contains(val, "{{"+varName+"}}") {
+                found[varName] = true
+            }
+        }
     case map[string]interface{}:
         for _, v := range val {
-            if containsLinuxFamilyVar(v) {
-                return true
-            }
+            detectVarsRecursive(v, found)
         }
     case []interface{}:
         for _, v := range val {
-            if containsLinuxFamilyVar(v) {
-                return true
-            }
+            detectVarsRecursive(v, found)
         }
     }
-    return false
 }
 ```
 
@@ -888,6 +933,12 @@ func (p RecipeFamilyPolicy) String() string {
         return fmt.Sprintf("RecipeFamilyPolicy(%d)", p)
     }
 }
+
+// MarshalText implements encoding.TextMarshaler for JSON serialization.
+// Ensures `tsuku info --json` outputs "FamilyAgnostic" not 1.
+func (p RecipeFamilyPolicy) MarshalText() ([]byte, error) {
+    return []byte(p.String()), nil
+}
 ```
 
 ### Phase 4: Metadata Aggregation
@@ -895,31 +946,49 @@ func (p RecipeFamilyPolicy) String() string {
 Compute recipe family policy, then derive platforms:
 
 ```go
-// AnalyzeRecipe computes the family policy for a recipe.
+// RecipeAnalysis contains the full analysis of a recipe's platform support.
+// Returned by AnalyzeRecipe; used by SupportedPlatforms.
+type RecipeAnalysis struct {
+    Policy          RecipeFamilyPolicy
+    FamiliesUsed    map[string]bool  // For FamilyConstrained/FamilyMixed
+    SupportsDarwin  bool             // Derived from step analysis, not hardcoded
+}
+
+// AnalyzeRecipe computes the family policy and OS support for a recipe.
 // Returns error if any step has conflicting constraints.
-func AnalyzeRecipe(recipe *Recipe) (RecipeFamilyPolicy, map[string]bool, error) {
+func AnalyzeRecipe(recipe *Recipe) (*RecipeAnalysis, error) {
     familiesUsed := make(map[string]bool)
     hasFamilyVaryingStep := false
     hasUnconstrainedLinuxSteps := false
     hasAnyLinuxSteps := false
+    hasAnyDarwinSteps := false
 
-    for i, step := range recipe.Steps {
+    for _, step := range recipe.Steps {
         analysis := step.Analysis()  // Never nil - guaranteed by constructor
 
-        // Skip non-Linux steps entirely (explicit darwin-only)
-        if analysis.Constraint != nil && analysis.Constraint.OS == "darwin" {
-            continue
-        }
-
-        // Track that we have at least one Linux-applicable step
-        // Note: when.os = ["linux", "darwin"] results in Constraint.OS = "" (multi-OS)
-        // which counts as Linux-applicable since it includes Linux
-        if analysis.Constraint == nil || analysis.Constraint.OS == "" || analysis.Constraint.OS == "linux" {
+        // Track OS support from step constraints
+        // Unconstrained (nil or empty OS) means both OSes
+        // Explicit OS constraint means only that OS
+        if analysis.Constraint == nil || analysis.Constraint.OS == "" {
             hasAnyLinuxSteps = true
+            hasAnyDarwinSteps = true
+        } else if analysis.Constraint.OS == "linux" {
+            hasAnyLinuxSteps = true
+        } else if analysis.Constraint.OS == "darwin" {
+            hasAnyDarwinSteps = true
+            continue  // Skip family analysis for darwin-only steps
         }
 
+        // Family analysis (only for Linux-applicable steps)
+        // Handle constrained+varying: interpolation within a family constraint
         if analysis.FamilyVarying {
-            hasFamilyVaryingStep = true
+            if analysis.Constraint != nil && analysis.Constraint.LinuxFamily != "" {
+                // Constrained+varying: interpolation only happens within this family
+                familiesUsed[analysis.Constraint.LinuxFamily] = true
+            } else {
+                // Unconstrained varying: needs all families
+                hasFamilyVaryingStep = true
+            }
         } else if analysis.Constraint != nil && analysis.Constraint.LinuxFamily != "" {
             familiesUsed[analysis.Constraint.LinuxFamily] = true
         } else if analysis.Constraint == nil || analysis.Constraint.OS == "" || analysis.Constraint.OS == "linux" {
@@ -928,42 +997,45 @@ func AnalyzeRecipe(recipe *Recipe) (RecipeFamilyPolicy, map[string]bool, error) 
     }
 
     // Determine policy - no nil sentinel, explicit enum for each case
+    var policy RecipeFamilyPolicy
     if !hasAnyLinuxSteps {
-        return FamilyDarwinOnly, nil, nil
+        policy = FamilyDarwinOnly
+    } else if hasFamilyVaryingStep {
+        policy = FamilyVarying
+    } else if len(familiesUsed) == 0 {
+        policy = FamilyAgnostic
+    } else if hasUnconstrainedLinuxSteps {
+        policy = FamilyMixed
+    } else {
+        policy = FamilyConstrained
     }
 
-    if hasFamilyVaryingStep {
-        return FamilyVarying, nil, nil
-    }
-
-    if len(familiesUsed) == 0 {
-        return FamilyAgnostic, nil, nil
-    }
-
-    if hasUnconstrainedLinuxSteps {
-        return FamilyMixed, familiesUsed, nil
-    }
-
-    return FamilyConstrained, familiesUsed, nil
+    return &RecipeAnalysis{
+        Policy:         policy,
+        FamiliesUsed:   familiesUsed,
+        SupportsDarwin: hasAnyDarwinSteps,
+    }, nil
 }
 
 // SupportedPlatforms returns all platforms the recipe supports.
 func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
-    policy, families, err := AnalyzeRecipe(recipe)
+    analysis, err := AnalyzeRecipe(recipe)
     if err != nil {
         return nil, err
     }
 
     var platforms []Platform
 
-    // Always include darwin platforms
-    platforms = append(platforms,
-        Platform{OS: "darwin", Arch: "amd64"},
-        Platform{OS: "darwin", Arch: "arm64"},
-    )
+    // Add darwin platforms only if recipe supports darwin (derived from analysis)
+    if analysis.SupportsDarwin {
+        platforms = append(platforms,
+            Platform{OS: "darwin", Arch: "amd64"},
+            Platform{OS: "darwin", Arch: "arm64"},
+        )
+    }
 
     // Add Linux platforms based on policy
-    switch policy {
+    switch analysis.Policy {
     case FamilyDarwinOnly:
         // No Linux platforms - darwin-only recipe
 
@@ -985,7 +1057,7 @@ func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
 
     case FamilyConstrained:
         // Only specific families
-        for family := range families {
+        for family := range analysis.FamiliesUsed {
             platforms = append(platforms,
                 Platform{OS: "linux", Arch: "amd64", LinuxFamily: family},
                 Platform{OS: "linux", Arch: "arm64", LinuxFamily: family},
@@ -999,16 +1071,19 @@ func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
 
 **Policy Examples:**
 
-| Recipe Pattern | Policy | Linux Platforms |
-|---------------|--------|-----------------|
-| Darwin-only steps (`when.os: darwin`) | FamilyDarwinOnly | None |
-| `download` (no family var) | FamilyAgnostic | Generic linux |
-| `download` with `{{linux_family}}` | FamilyVarying | All 5 families |
-| `apt_install` only | FamilyConstrained | debian only |
-| `apt_install` + `dnf_install` | FamilyConstrained | debian + rhel |
-| `download` (plain) + `apt_install` | FamilyMixed | All 5 families |
+| Recipe Pattern | Policy | Darwin? | Linux Platforms |
+|---------------|--------|---------|-----------------|
+| Darwin-only steps (`when.os: darwin`) | FamilyDarwinOnly | Yes | None |
+| Linux-only steps (`when.os: linux`) | FamilyAgnostic | No | Generic linux |
+| `download` (no family var) | FamilyAgnostic | Yes | Generic linux |
+| `download` with `{{linux_family}}` | FamilyVarying | Yes | All 5 families |
+| `apt_install` only | FamilyConstrained | No | debian only |
+| `apt_install` + `dnf_install` | FamilyConstrained | No | debian + rhel |
+| `download` (plain) + `apt_install` | FamilyMixed | Yes | All 5 families |
 
-The explicit policy enum makes the logic self-documenting - no nil sentinel values.
+The explicit policy enum makes the logic self-documenting - no nil sentinel values. Darwin support is now derived from step analysis rather than hardcoded.
+
+**Precedence rationale:** `FamilyVarying` takes precedence over `FamilyConstrained` because interpolation creates distinct outputs for all families, regardless of any per-step family constraints. A recipe with both `{{linux_family}}` interpolation and `apt_install` still needs golden files for all 5 families - the apt_install step simply won't appear in non-debian plans.
 
 Update `tsuku info --metadata-only --json` to include `supported_platforms`.
 
@@ -1038,33 +1113,45 @@ The current `WhenClause.Matches()` signature is:
 func (w *WhenClause) Matches(os, arch string) bool
 ```
 
-**Recommended approach:** Use a target struct to future-proof against additional dimensions:
+**Recommended approach:** Use an interface to allow multiple types to satisfy matching:
 
 ```go
-// MatchTarget contains all dimensions for filtering.
-// Defined in recipe package alongside WhenClause.
+// Matchable provides platform dimensions for filtering.
+// Both recipe.MatchTarget and platform.Target implement this.
+type Matchable interface {
+    GetOS() string
+    GetArch() string
+    GetLinuxFamily() string
+}
+
+func (w *WhenClause) Matches(target Matchable) bool
+```
+
+This pattern:
+- Allows adding new dimensions (e.g., libc variant) by extending the interface
+- Eliminates conversion between `platform.Target` and `recipe.MatchTarget`
+- Both types implement the interface directly - no adapter methods needed
+
+Since tsuku is pre-GA, this breaking change is acceptable.
+
+**Implementation:**
+
+```go
+// In recipe package - lightweight struct for tests and simple cases
 type MatchTarget struct {
     OS          string
     Arch        string
     LinuxFamily string
 }
 
-func (w *WhenClause) Matches(target MatchTarget) bool
-```
+func (m MatchTarget) GetOS() string          { return m.OS }
+func (m MatchTarget) GetArch() string        { return m.Arch }
+func (m MatchTarget) GetLinuxFamily() string { return m.LinuxFamily }
 
-This pattern allows adding new dimensions (e.g., libc variant, CPU features) without changing the signature again. Since tsuku is pre-GA, this breaking change is acceptable.
-
-**Interop with platform.Target:**
-
-```go
-// In platform package
-func (t Target) AsMatchTarget() recipe.MatchTarget {
-    return recipe.MatchTarget{
-        OS:          t.OS(),
-        Arch:        t.Arch(),
-        LinuxFamily: t.LinuxFamily,
-    }
-}
+// In platform package - Target already has these fields
+func (t Target) GetOS() string          { return t.OS() }
+func (t Target) GetArch() string        { return t.Arch() }
+func (t Target) GetLinuxFamily() string { return t.LinuxFamily }
 ```
 
 ### Future Extensibility
@@ -1073,11 +1160,13 @@ Adding new constraint dimensions requires changes to:
 1. `Constraint` type - add the new field
 2. `StepAnalysis` type - add `*Varying bool` if the dimension supports interpolation
 3. `WhenClause` type - add the new field
-4. `MatchTarget` type - add the new field
+4. `Matchable` interface - add `Get*()` method for the new dimension
 5. `mergeWhenClause()` - handle new dimension with conflict detection
-6. `containsLinuxFamilyVar()` - generalize to `contains*Var()` for new variables
+6. `knownVars` slice - add the variable name (e.g., `"arch"`)
 7. `AnalyzeRecipe()` / `SupportedPlatforms()` - expand platforms for new dimension
 8. Golden file naming - incorporate the new dimension
+
+**Interpolation variable detection is generalized:** The `detectInterpolatedVars()` function scans for all variables in `knownVars`. Adding a new interpolation variable (step 6) requires only adding the variable name to the slice - the scanning logic is already in place.
 
 The step-level abstraction means most callers don't change - they call `step.Analysis()` and get a `StepAnalysis`. But adding a dimension requires coordinated changes across the constraint model.
 
