@@ -325,34 +325,34 @@ Per [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md), linux-arm64 
 
 ### Architecture Layers
 
-This design separates three concerns with uniform interfaces at each boundary:
+This design separates concerns with step-level constraint resolution:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Golden File Tooling (scripts, workflows)                   │
 │  - Queries: "what platforms does this recipe support?"      │
 │  - Generates one file per supported platform                │
-│  - No knowledge of actions or how constraints work          │
+│  - No knowledge of steps, actions, or how constraints work  │
 └─────────────────────────────────────────────────────────────┘
                               │
                               ▼ tsuku info --metadata-only
 ┌─────────────────────────────────────────────────────────────┐
 │  Recipe Metadata (tsuku info)                               │
-│  - Aggregates constraints from all actions                  │
+│  - Iterates steps, collects effective constraints           │
 │  - Returns supported_platforms list                         │
-│  - Hides action-level details from callers                  │
+│  - Hides step-level and action-level details from callers   │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              ▼ Action.ImplicitConstraint()
+                              ▼ step.EffectiveConstraint()
 ┌─────────────────────────────────────────────────────────────┐
-│  Action Constraints                                         │
-│  - Uniform interface: all actions implement same method     │
-│  - Returns Constraint or nil                                │
-│  - How each action determines its constraint is internal    │
+│  Step Constraint Resolution                                 │
+│  - Each step has one effective constraint                   │
+│  - Combines action's implicit constraint + step's when      │
+│  - Caller asks the step, not the action                     │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Key principle:** Each layer has a uniform interface. CLI users ask about recipes, not actions. Code querying actions uses the same method regardless of action type. Implementation details don't leak upward.
+**Key principle:** Constraints are resolved at the step level, not the action level. Whether a constraint comes from the action type (implicit) or the step's `when` clause (explicit) is an implementation detail. Callers just ask "what is this step's effective constraint?" and get one answer.
 
 ### Metadata Output Format
 
@@ -383,41 +383,52 @@ $ tsuku info build-tools-system --metadata-only --json | jq '.supported_platform
 ]
 ```
 
-### Uniform Constraint Interface
+### Step-Level Constraint Resolution
 
-**At the action level:** All actions expose constraints through the same interface (`ImplicitConstraint()`). The caller asks "what are your constraints?" and gets a `Constraint` back (or `nil`). The caller doesn't know or care *how* the action determined its constraints - whether it's hardcoded in the action type or derived from instance configuration is an internal implementation detail.
+Every step has an **effective constraint** that combines all constraint sources into a single result. Callers ask the step for its constraint - they don't query actions directly or combine multiple sources themselves.
 
-**At the recipe level:** CLI users don't think about actions at all. They query recipe metadata:
+```go
+// Callers use this - simple and uniform
+constraint := step.EffectiveConstraint(actionRegistry)
+```
+
+The effective constraint merges:
+- The action's implicit constraint (if any) - e.g., `apt_install` implies debian
+- The step's explicit `when` clause (if any) - e.g., `when.linux_family = ["debian"]`
+
+This merging happens once, inside `EffectiveConstraint()`. The caller sees one result.
+
+**At the recipe level:** CLI users don't think about steps or actions. They query recipe metadata:
 
 ```bash
 # User just asks: does this recipe have family-specific plans?
 tsuku info myrecipe --metadata-only --json | jq '.supported_platforms'
 ```
 
-The response tells them what platforms are supported. If `linux_family` appears in the platform objects, the recipe is family-aware. Users never interact with individual action constraints.
+The response tells them what platforms are supported. If `linux_family` appears in the platform objects, the recipe is family-aware.
 
-### Constraint Sources (Implementation Detail)
+### Why Step-Level, Not Action-Level
 
-Internally, family awareness is aggregated from two sources:
+The existing `SystemAction.ImplicitConstraint()` interface is an implementation detail, not a caller-facing API. By surfacing constraints at the step level:
 
-1. **`Action.ImplicitConstraint()`** - Every action type implements this uniformly. Some return hardcoded constraints (e.g., `apt_install` returns debian), others analyze their instance configuration. The interface is identical.
+1. **Uniform interface** - All steps respond the same way, regardless of action type
+2. **Single source of truth** - No need to query action + when clause separately
+3. **Implicit/explicit distinction hidden** - Callers don't know or care where the constraint came from
+4. **Extensible** - New constraint sources can be added without changing caller code
 
-2. **`WhenClause.LinuxFamily`** - Steps can have explicit `when.linux_family` conditions.
-
-If any constraint specifies `LinuxFamilies`, the recipe is family-aware. This aggregation logic is internal to `tsuku info` - callers just see the final `supported_platforms` list.
-
-**Note:** Variable interpolation scanning (e.g., detecting `{{linux_family}}` in URL strings) is explicitly excluded. It's too fragile and prone to false positives/negatives. Family awareness must be expressed through explicit constraints, not implicit string patterns.
+**Note:** Variable interpolation scanning (e.g., detecting `{{linux_family}}` in URL strings) is explicitly excluded. Constraints must be expressed through the action type or `when` clause, not implicit string patterns.
 
 ### Valid Linux Families
 
 The current set of supported families is: `debian`, `rhel`, `arch`, `alpine`, `suse`.
 
-This list is an **extension point**. Adding a new family (e.g., `nixos`) requires:
+Adding a new family (e.g., `nixos`) requires:
 1. Adding it to `ValidLinuxFamilies` constant
-2. Implementing support in relevant `SystemAction` types
-3. No interface changes required
+2. Implementing a new `SystemAction` type (e.g., `NixInstallAction`) with its `ImplicitConstraint()`
+3. Adding detection logic in `platform/family.go`
+4. Adding container image support for sandbox execution
 
-Golden file tooling automatically picks up new families via metadata.
+Golden file tooling picks up new families automatically via metadata - no script changes needed for that part. But the underlying system (action types, detection, containers) requires new code.
 
 ### Generation Workflow Changes
 
@@ -534,55 +545,77 @@ When a recipe changes from family-aware to non-family-aware (rare):
 
 ## Implementation Approach
 
-### Phase 1: Extend Constraint Type
+### Phase 1: Add Step.EffectiveConstraint()
 
-Extend the existing `Constraint` type to support multiple families:
+Add a method to `Step` that returns the unified effective constraint:
 
 ```go
-// In internal/actions/system_action.go
-type Constraint struct {
-    OS            string
-    LinuxFamilies []string  // nil = any family; populated = specific families
+// In internal/recipe/types.go
+func (s *Step) EffectiveConstraint(actions ActionRegistry) *Constraint {
+    var result Constraint
+
+    // Get action's implicit constraint (if SystemAction)
+    if action := actions.Get(s.Action); action != nil {
+        if sysAction, ok := action.(SystemAction); ok {
+            if c := sysAction.ImplicitConstraint(); c != nil {
+                result.Merge(c)
+            }
+        }
+    }
+
+    // Merge step's explicit when clause
+    if s.When != nil {
+        result.MergeWhen(s.When)
+    }
+
+    return &result
 }
 ```
 
-This reuses the existing `ImplicitConstraint()` method on `SystemAction`. Package manager actions return their family constraint:
-
-```go
-func (a *AptInstallAction) ImplicitConstraint() *Constraint {
-    return &Constraint{OS: "linux", LinuxFamilies: []string{"debian"}}
-}
-```
+This is the **only** place that combines implicit and explicit constraints. Callers just call this method.
 
 ### Phase 2: Extend WhenClause
 
-Add `LinuxFamily` field to allow explicit family constraints in recipe steps:
+Add `LinuxFamily` field to allow explicit family constraints:
 
 ```go
 // In recipe/types.go
 type WhenClause struct {
     Platform       []string `toml:"platform,omitempty"`
     OS             []string `toml:"os,omitempty"`
-    LinuxFamily    []string `toml:"linux_family,omitempty"`  // NEW
+    LinuxFamily    string   `toml:"linux_family,omitempty"`  // NEW - singular
     PackageManager string   `toml:"package_manager,omitempty"`
 }
 ```
 
+Note: `LinuxFamily` is singular (like `PackageManager`) since a step targets one family. The existing `Constraint.LinuxFamily` is also singular - each action targets one family. Aggregation to multiple families happens at the recipe level.
+
 ### Phase 3: Metadata Aggregation
 
-Add recipe-level family awareness computation to `tsuku info`:
+Add recipe-level supported platforms computation:
 
 ```go
-func (e *Executor) SupportedPlatforms() []Platform {
-    // Walk all steps
-    // Collect constraints from SystemAction.ImplicitConstraint()
-    // Collect constraints from step.When.LinuxFamily
-    // If any constraint specifies LinuxFamilies, expand Linux platforms
-    // Return platform list
+func SupportedPlatforms(recipe *Recipe, actions ActionRegistry) []Platform {
+    familyConstrained := false
+
+    for _, step := range recipe.Steps {
+        c := step.EffectiveConstraint(actions)
+        if c.LinuxFamily != "" {
+            familyConstrained = true
+            break
+        }
+    }
+
+    platforms := baseplatforms()  // linux/amd64, darwin/arm64, etc.
+    if familyConstrained {
+        // Expand Linux platforms to include all families
+        platforms = expandLinuxFamilies(platforms)
+    }
+    return platforms
 }
 ```
 
-Update `--metadata-only --json` output to include `supported_platforms`.
+Update `tsuku info --metadata-only --json` to include `supported_platforms`.
 
 ### Phase 4: Script Updates
 
@@ -604,20 +637,14 @@ Update `--metadata-only --json` output to include `supported_platforms`.
 
 ### Future Extensibility
 
-The `Constraint` type can accommodate future targeting dimensions without interface changes:
+Adding new constraint dimensions requires changes to:
+1. `Constraint` type - add the new field
+2. `WhenClause` type - add the new field
+3. `Step.EffectiveConstraint()` - merge the new dimension
+4. `SupportedPlatforms()` - expand platforms for the new dimension
+5. Golden file naming - incorporate the new dimension
 
-```go
-type Constraint struct {
-    OS            string
-    Arch          string      // could constrain to specific arches
-    LinuxFamilies []string
-    // Future dimensions:
-    // LibcVariant   string   // glibc, musl
-    // DarwinVersion string   // minimum macOS version
-}
-```
-
-Golden file tooling automatically handles new dimensions via the metadata layer - no script changes required when new dimensions are added.
+The step-level abstraction means callers don't change - they still just call `EffectiveConstraint()`. But adding a dimension is not free; it requires coordinated changes across the constraint model.
 
 ## Security Considerations
 
@@ -646,19 +673,19 @@ Golden file tooling automatically handles new dimensions via the metadata layer 
 - **Minimal waste**: Non-family-aware recipes retain single Linux file
 - **Backwards compatible**: Existing golden files work without migration
 - **Single source of truth**: Metadata is the authoritative source for platform support
-- **Reuses existing patterns**: Extends `Constraint` type and `ImplicitConstraint()` method rather than adding new interfaces
-- **Future-proof**: `Constraint` type can accommodate new targeting dimensions without interface changes
-- **Clean separation**: Golden file tooling is decoupled from constraint detection logic
+- **Step-level abstraction**: Callers ask steps for constraints, don't need to know about implicit vs explicit
+- **Uniform interface**: All steps respond the same way to `EffectiveConstraint()`
+- **Clean separation**: Golden file tooling is decoupled from constraint resolution logic
 - **Useful beyond golden files**: Other tooling can query family support (documentation, installers, CI)
 
 ### Negative
 
-- **Requires `Constraint` extension**: Must extend existing type to support multiple families
 - **Requires `WhenClause` extension**: Must add `linux_family` field to step conditions
 - **Mixed naming**: Directory contains both old-style and new-style filenames during transition
+- **Extension not free**: Adding new constraint dimensions requires coordinated changes (see Implementation Approach)
 
 ### Mitigations
 
-- **Constraint extension**: Simple field addition (`LinuxFamilies []string`) with clear semantics. Existing code continues to work.
-- **WhenClause extension**: Follows existing pattern for `os` and `platform` fields. No new concepts introduced.
+- **WhenClause extension**: Follows existing pattern for `os` and `platform` fields. Singular field like `PackageManager`.
 - **Mixed naming**: Clear naming convention and documentation make the pattern understandable.
+- **Extension cost**: The step-level abstraction localizes changes to `EffectiveConstraint()` - callers don't change.
