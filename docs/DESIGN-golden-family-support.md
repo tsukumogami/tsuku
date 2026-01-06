@@ -436,7 +436,34 @@ The existing `SystemAction.ImplicitConstraint()` interface is an implementation 
 3. **Implicit/explicit distinction hidden** - Callers don't know or care where the constraint came from
 4. **Extensible** - New constraint sources can be added without changing caller code
 
-**Note:** Variable interpolation scanning (e.g., detecting `{{linux_family}}` in URL strings) is explicitly excluded. Constraints must be expressed through the action type or `when` clause, not implicit string patterns.
+### Variable Interpolation Scanning
+
+Steps that use `{{linux_family}}` in their parameters (e.g., download URLs) are **family-varying** - they run on all families but produce different output for each.
+
+```toml
+# This step varies by family even without implicit constraint
+[[steps]]
+action = "download"
+url = "https://example.com/pkg-{{linux_family}}.tar.gz"
+```
+
+This is distinct from family-constrained steps:
+- **Family-constrained** (`apt_install`): Only runs on one family (debian)
+- **Family-varying** (`download` with `{{linux_family}}`): Runs on all families, output differs
+
+Both cases require family-specific golden files. The `EffectiveConstraint()` function should scan step parameters for `{{linux_family}}` interpolation and mark such steps as family-varying.
+
+```go
+type Constraint struct {
+    OS            string
+    LinuxFamily   string  // specific family (e.g., "debian") or empty
+    FamilyVarying bool    // true if step uses {{linux_family}} interpolation
+}
+```
+
+Aggregation logic handles both:
+- Steps with `LinuxFamily` set → add that family to the set
+- Steps with `FamilyVarying` true → expand to all families
 
 ### Valid Linux Families
 
@@ -599,7 +626,19 @@ func EffectiveConstraint(step *Step, actions ActionRegistry) (*Constraint, error
         }
     }
 
+    // Check for {{linux_family}} interpolation in step parameters
+    if stepUsesLinuxFamilyVar(step) {
+        result.FamilyVarying = true
+    }
+
     return &result, nil
+}
+
+// stepUsesLinuxFamilyVar scans step parameters for {{linux_family}} interpolation
+func stepUsesLinuxFamilyVar(step *Step) bool {
+    // Scan all string fields in step for "{{linux_family}}"
+    // Implementation walks step struct and checks string fields
+    // Returns true if any field contains the interpolation pattern
 }
 ```
 
@@ -629,33 +668,42 @@ Add recipe-level supported platforms computation:
 
 ```go
 func SupportedPlatforms(recipe *Recipe, actions ActionRegistry) []Platform {
-    // Collect families explicitly targeted by steps
+    // Collect family information from all steps
     familiesUsed := make(map[string]bool)
+    hasFamilyVaryingStep := false
     hasUnconstrainedLinuxSteps := false
 
     for _, step := range recipe.Steps {
-        c := step.EffectiveConstraint(actions)
-        if c.LinuxFamily != "" {
+        c, _ := EffectiveConstraint(step, actions)
+        if c.FamilyVarying {
+            // Step uses {{linux_family}} - varies across all families
+            hasFamilyVaryingStep = true
+        } else if c.LinuxFamily != "" {
+            // Step constrained to specific family
             familiesUsed[c.LinuxFamily] = true
         } else if c.OS == "" || c.OS == "linux" {
-            // Step runs on any Linux (no family constraint)
+            // Step runs on any Linux (no family constraint or variation)
             hasUnconstrainedLinuxSteps = true
         }
     }
 
     platforms := darwinPlatforms() // darwin/amd64, darwin/arm64
 
-    if len(familiesUsed) == 0 {
-        // No family constraints - generic Linux
+    // Determine Linux platform strategy
+    needsAllFamilies := hasFamilyVaryingStep ||
+        (len(familiesUsed) > 0 && hasUnconstrainedLinuxSteps)
+
+    if len(familiesUsed) == 0 && !hasFamilyVaryingStep {
+        // No family constraints or variation - generic Linux
         platforms = append(platforms,
             Platform{OS: "linux", Arch: "amd64"},
             Platform{OS: "linux", Arch: "arm64"},
         )
-    } else if hasUnconstrainedLinuxSteps {
-        // Mixed: some steps have family constraints, some don't
-        // Plans differ by family because unconstrained steps run on all,
-        // but constrained steps only run on their family
-        // Example: [download, apt_install] on debian vs [download] on rhel
+    } else if needsAllFamilies {
+        // Either:
+        // - Has family-varying step (download with {{linux_family}})
+        // - Mixed constrained + unconstrained steps
+        // Plans differ by family, need all families
         for _, family := range AllLinuxFamilies {
             platforms = append(platforms,
                 Platform{OS: "linux", Arch: "amd64", LinuxFamily: family},
@@ -663,9 +711,8 @@ func SupportedPlatforms(recipe *Recipe, actions ActionRegistry) []Platform {
             )
         }
     } else {
-        // Only family-constrained steps - just those families
+        // Only family-constrained steps (no variation, no unconstrained)
         // Example: apt_install only → only debian
-        // Other families would produce empty plans (no steps match)
         for family := range familiesUsed {
             platforms = append(platforms,
                 Platform{OS: "linux", Arch: "amd64", LinuxFamily: family},
@@ -678,16 +725,17 @@ func SupportedPlatforms(recipe *Recipe, actions ActionRegistry) []Platform {
 }
 ```
 
-**Three cases:**
+**Cases:**
 
-| Recipe Pattern | familiesUsed | hasUnconstrained | Result |
-|---------------|--------------|------------------|--------|
-| `download` only | {} | true | Generic linux (no family) |
-| `apt_install` only | {debian} | false | debian only |
-| `apt_install` + `dnf_install` | {debian, rhel} | false | debian + rhel |
-| `download` + `apt_install` | {debian} | true | All 5 families |
+| Recipe Pattern | Result |
+|---------------|--------|
+| `download` (no family var) | Generic linux (no family) |
+| `download` with `{{linux_family}}` | All 5 families |
+| `apt_install` only | debian only |
+| `apt_install` + `dnf_install` | debian + rhel |
+| `download` (plain) + `apt_install` | All 5 families (mixed) |
 
-The fourth case (mixed) expands to all families because the plans differ: debian gets `[download, apt_install]`, rhel gets `[download]`. Both are valid outputs that need golden files for validation.
+The family-varying case (URL with `{{linux_family}}`) expands to all families because the download produces different URLs for each family.
 
 Update `tsuku info --metadata-only --json` to include `supported_platforms`.
 
@@ -742,13 +790,14 @@ This pattern allows adding new dimensions (e.g., libc variant, CPU features) wit
 ### Future Extensibility
 
 Adding new constraint dimensions requires changes to:
-1. `Constraint` type - add the new field
+1. `Constraint` type - add the new field (and possibly a `*Varying` bool)
 2. `WhenClause` type - add the new field
 3. `EffectiveConstraint()` - merge the new dimension
 4. `Constraint.MergeWhen()` - handle new dimension with conflict detection
-5. `WhenClause.Matches()` or `Target` struct - include new dimension
-6. `SupportedPlatforms()` - expand platforms for the new dimension
-7. Golden file naming - incorporate the new dimension
+5. `stepUses*Var()` - scan for interpolation of new variable (if applicable)
+6. `WhenClause.Matches()` or `Target` struct - include new dimension
+7. `SupportedPlatforms()` - expand platforms for the new dimension
+8. Golden file naming - incorporate the new dimension
 
 The step-level abstraction means most callers don't change - they still just call `EffectiveConstraint()`. But adding a dimension is not free; it requires coordinated changes across the constraint model.
 
