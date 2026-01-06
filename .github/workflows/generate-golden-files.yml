@@ -69,6 +69,13 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
+      - name: Compute golden path
+        id: golden-path
+        run: |
+          first_letter="${{ inputs.recipe }}"
+          first_letter="${first_letter:0:1}"
+          echo "recipe_dir=testdata/golden/plans/${first_letter}/${{ inputs.recipe }}" >> "$GITHUB_OUTPUT"
+
       - name: Generate golden files for ${{ matrix.platform.os }}-${{ matrix.platform.arch }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -81,7 +88,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: golden-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
-          path: testdata/golden/plans/
+          path: ${{ steps.golden-path.outputs.recipe_dir }}
           if-no-files-found: warn
 
   commit:
@@ -104,17 +111,24 @@ jobs:
 
       - name: Merge golden files
         run: |
-          # Merge all platform artifacts into testdata/golden/plans/
+          # Compute target directory from recipe name
+          first_letter="${{ inputs.recipe }}"
+          first_letter="${first_letter:0:1}"
+          target_dir="testdata/golden/plans/${first_letter}/${{ inputs.recipe }}"
+          mkdir -p "$target_dir"
+
+          # Merge all platform artifacts into the recipe-specific directory
+          # Each artifact contains only files for that platform (e.g., v1.0.0-linux-amd64.json)
           for dir in artifacts/golden-*/; do
             if [ -d "$dir" ]; then
               echo "Merging from $dir"
-              cp -r "$dir"/* testdata/golden/plans/ 2>/dev/null || true
+              cp -r "$dir"/* "$target_dir/" 2>/dev/null || true
             fi
           done
 
           # Show what was merged
           echo "Golden files after merge:"
-          find testdata/golden/plans/ -name "*.json" | head -20
+          find "$target_dir" -name "*.json"
 
       - name: Commit and push
         run: |
