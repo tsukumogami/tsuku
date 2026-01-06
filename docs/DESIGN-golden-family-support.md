@@ -338,21 +338,21 @@ This design separates concerns with step-level constraint resolution:
                               ▼ tsuku info --metadata-only
 ┌─────────────────────────────────────────────────────────────┐
 │  Recipe Metadata (tsuku info)                               │
-│  - Iterates steps, collects effective constraints           │
-│  - Returns supported_platforms list                         │
+│  - Calls AnalyzeRecipe() → RecipeFamilyPolicy               │
+│  - Calls SupportedPlatforms() → []Platform                  │
 │  - Hides step-level and action-level details from callers   │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              ▼ step.EffectiveConstraint()
+                              ▼ step.Analysis()
 ┌─────────────────────────────────────────────────────────────┐
-│  Step Constraint Resolution                                 │
-│  - Each step has one effective constraint                   │
-│  - Combines action's implicit constraint + step's when      │
-│  - Caller asks the step, not the action                     │
+│  Step Analysis (pre-computed at load time)                  │
+│  - StepAnalysis = Constraint + FamilyVarying                │
+│  - Constraint: where can step run (OS, Arch, LinuxFamily)   │
+│  - FamilyVarying: does output differ by family              │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Key principle:** Constraints are resolved at the step level, not the action level. Whether a constraint comes from the action type (implicit) or the step's `when` clause (explicit) is an implementation detail. Callers just ask "what is this step's effective constraint?" and get one answer.
+**Key principle:** Step analysis is computed once at recipe load time and stored on the Step. Callers just call `step.Analysis()` - no registry, no runtime computation. The distinction between implicit (action type) and explicit (when clause) constraints is hidden.
 
 ### Metadata Output Format
 
@@ -383,19 +383,21 @@ $ tsuku info build-tools-system --metadata-only --json | jq '.supported_platform
 ]
 ```
 
-### Step-Level Constraint Resolution
+### Step-Level Analysis
 
-Every step has an **effective constraint** that combines all constraint sources into a single result. Callers ask the step for its constraint - they don't query actions directly or combine multiple sources themselves.
+Every step has a pre-computed **analysis** that contains its constraint and variation status. Callers ask the step directly - no registry needed at query time.
 
 ```go
 // Callers use this - simple and uniform
-constraint, err := EffectiveConstraint(step, actionRegistry)
+analysis, err := step.Analysis()
 if err != nil {
-    // Recipe has conflicting constraints - fail at load time
+    // Analysis not computed (indicates a bug in recipe loading)
 }
+// analysis.Constraint: where can this step run
+// analysis.FamilyVarying: does output differ by family
 ```
 
-The effective constraint combines:
+The analysis combines:
 - The action's implicit constraint (if any) - e.g., `apt_install` implies debian
 - The step's explicit `when` clause (if any) - e.g., `when.linux_family = "debian"`
 
@@ -404,17 +406,59 @@ The effective constraint combines:
 When a step has both an implicit constraint (from action type) and an explicit `when` clause, the merge follows these rules:
 
 1. **Compatible constraints (AND semantics)**: If both specify the same dimension, they must match.
-   - `apt_install` (implicit: debian) + `when: linux_family: debian` → debian (valid, redundant but allowed)
-   - `apt_install` (implicit: debian) + `when: os: linux` → debian on linux (valid, additional filter)
+   - `apt_install` (implicit: linux/debian) + `when: linux_family: debian` → linux/debian (valid, redundant)
+   - `apt_install` (implicit: linux/debian) + `when: os: linux` → linux/debian (valid, redundant)
 
-2. **Conflicting constraints (validation error)**: If implicit and explicit contradict, the recipe is invalid.
-   - `apt_install` (implicit: debian) + `when: linux_family: rhel` → **ERROR at recipe load time**
-   - This is a recipe authoring error - apt_install cannot run on rhel
+2. **Conflicting constraints (validation error)**: If implicit and explicit contradict on any dimension, the recipe is invalid.
+   - `apt_install` (implicit: linux/debian) + `when: linux_family: rhel` → **ERROR** (family conflict)
+   - `apt_install` (implicit: linux/debian) + `when: os: darwin` → **ERROR** (OS conflict)
+   - This is a recipe authoring error - apt_install cannot run on darwin or rhel
 
 3. **Explicit extends implicit**: Explicit constraints can add dimensions not covered by implicit.
-   - `apt_install` (implicit: debian) + `when: arch: amd64` → debian + amd64
+   - `apt_install` (implicit: linux/debian) + `when: arch: amd64` → linux/debian/amd64
 
-**Rationale**: Implicit constraints are requirements (the action physically cannot run on other families). Explicit constraints are filters (restrict when the step should execute). A conflict means the recipe author made a mistake - they're asking an action to run in an environment where it cannot work. Failing at recipe load time catches this early.
+**Conflict detection implementation:**
+
+```go
+// mergeWhenClause merges explicit when clause with implicit constraint.
+// Returns error if any dimension conflicts.
+func mergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error) {
+    result := implicit.Clone()  // nil-safe: returns empty constraint if nil
+
+    // Check OS conflict
+    if len(when.OS) > 0 {
+        if result.OS != "" && !contains(when.OS, result.OS) {
+            return nil, fmt.Errorf("OS conflict: action requires %q but when clause specifies %v",
+                result.OS, when.OS)
+        }
+        if result.OS == "" && len(when.OS) == 1 {
+            result.OS = when.OS[0]
+        }
+    }
+
+    // Check LinuxFamily conflict
+    if when.LinuxFamily != "" {
+        if result.LinuxFamily != "" && result.LinuxFamily != when.LinuxFamily {
+            return nil, fmt.Errorf("linux_family conflict: action requires %q but when clause specifies %q",
+                result.LinuxFamily, when.LinuxFamily)
+        }
+        result.LinuxFamily = when.LinuxFamily
+    }
+
+    // Check Arch conflict (similar pattern)
+    if when.Arch != "" {
+        if result.Arch != "" && result.Arch != when.Arch {
+            return nil, fmt.Errorf("arch conflict: action requires %q but when clause specifies %q",
+                result.Arch, when.Arch)
+        }
+        result.Arch = when.Arch
+    }
+
+    return result, nil
+}
+```
+
+**Rationale**: Implicit constraints are requirements (the action physically cannot run elsewhere). Explicit constraints are filters. A conflict means the recipe author made a mistake - they're asking an action to run where it cannot work. Failing at load time catches this early.
 
 This merging happens once, inside `EffectiveConstraint()`. The caller sees one result.
 
@@ -463,19 +507,35 @@ This is distinct from family-constrained steps:
 - **Family-constrained** (`apt_install`): Only runs on one family (debian)
 - **Family-varying** (any action with `{{linux_family}}`): Runs on all families, output differs
 
-Both cases require family-specific golden files.
+Both cases require family-specific golden files, but they answer different questions:
+
+| Concept | Question | Type |
+|---------|----------|------|
+| Constraint | Where can this step run? | Requirement |
+| Variation | Does output differ by family? | Property |
+
+These must be separate types - bundling them is a category error:
 
 ```go
+// Constraint answers: "where can this step run?"
+// Represents platform requirements. nil means unconstrained.
 type Constraint struct {
-    OS            string
-    LinuxFamily   string  // specific family (e.g., "debian") or empty
-    FamilyVarying bool    // true if step uses {{linux_family}} interpolation
+    OS          string   // e.g., "linux", "darwin", or empty (any)
+    Arch        string   // e.g., "amd64", "arm64", or empty (any)
+    LinuxFamily string   // e.g., "debian", or empty (any linux)
+}
+
+// StepAnalysis combines constraint with variation detection
+// This is what EffectiveConstraint() returns
+type StepAnalysis struct {
+    Constraint    *Constraint  // nil means unconstrained (runs anywhere)
+    FamilyVarying bool         // true if step uses {{linux_family}} interpolation
 }
 ```
 
-Aggregation logic handles both:
-- Steps with `LinuxFamily` set → add that family to the set
-- Steps with `FamilyVarying` true → expand to all families
+Aggregation logic uses both fields:
+- `Constraint.LinuxFamily` set → add that family to the set
+- `FamilyVarying` true → expand to all families
 
 ### Valid Linux Families
 
@@ -604,128 +664,257 @@ When a recipe changes from family-aware to non-family-aware (rare):
 
 ## Implementation Approach
 
-### Phase 1: Add Step Constraint Resolution
+### Phase 1: Step Analysis at Load Time
 
-Add constraint resolution logic that returns the unified effective constraint for a step.
-
-**Package organization**: The `Step` type lives in `recipe` package, while `ActionRegistry` and `SystemAction` live in `actions` package. To avoid import cycles, use one of these patterns:
-
-1. **Interface in recipe package**: Define `ActionLookup` interface in recipe that actions implements
-2. **Free function in executor**: Put `EffectiveConstraint(step, registry)` in executor package (already imports both)
-3. **Resolve at load time**: Resolve constraints during recipe loading, store on Step
-
-The exact organization is an implementation detail. The key requirement is that callers get one method/function that returns the unified constraint.
+Resolve constraints during recipe loading and store them on the Step. This eliminates the need to pass a registry at query time - callers just ask the step.
 
 ```go
-// Conceptual API - exact location TBD during implementation
-func EffectiveConstraint(step *Step, actions ActionRegistry) (*Constraint, error) {
-    var result Constraint
+// In recipe/types.go - Step includes pre-computed analysis
+type Step struct {
+    Action string
+    When   *WhenClause
+    Params map[string]interface{}
 
-    // Get action's implicit constraint (if SystemAction)
-    if action := actions.Get(step.Action); action != nil {
-        if sysAction, ok := action.(SystemAction); ok {
-            if c := sysAction.ImplicitConstraint(); c != nil {
-                result.Merge(c)
-            }
-        }
-    }
-
-    // Merge step's explicit when clause
-    if step.When != nil {
-        if err := result.MergeWhen(step.When); err != nil {
-            // Conflict detected - e.g., apt_install with when.linux_family: rhel
-            return nil, fmt.Errorf("step %q: constraint conflict: %w", step.Action, err)
-        }
-    }
-
-    // Check for {{linux_family}} interpolation in step parameters
-    if stepUsesLinuxFamilyVar(step) {
-        result.FamilyVarying = true
-    }
-
-    return &result, nil
+    // Pre-computed during recipe loading
+    analysis *StepAnalysis
 }
 
-// stepUsesLinuxFamilyVar scans step parameters for {{linux_family}} interpolation
-func stepUsesLinuxFamilyVar(step *Step) bool {
-    // Scan all string fields in step for "{{linux_family}}"
-    // Implementation walks step struct and checks string fields
-    // Returns true if any field contains the interpolation pattern
+// Analysis returns the pre-computed step analysis.
+// Returns error only if analysis wasn't computed (indicates a bug).
+func (s *Step) Analysis() (*StepAnalysis, error) {
+    if s.analysis == nil {
+        return nil, errors.New("step analysis not computed")
+    }
+    return s.analysis, nil
 }
 ```
 
-Note the error return: `MergeWhen` validates that explicit constraints don't conflict with implicit ones (see Merge Semantics above).
+**Loading-time computation** happens in the recipe loader, which has access to the action registry:
 
-This is the **only** place that combines implicit and explicit constraints. Callers just call this function.
+```go
+// In recipe/loader.go (or wherever recipes are loaded)
+
+// ConstraintLookup is the minimal interface needed for step analysis.
+// Defined in recipe package, implemented by actions package.
+type ConstraintLookup func(actionName string) *Constraint
+
+// ComputeStepAnalysis analyzes a step during recipe loading.
+func ComputeStepAnalysis(step *Step, lookup ConstraintLookup) (*StepAnalysis, error) {
+    var constraint *Constraint
+
+    // Get action's implicit constraint
+    if implicit := lookup(step.Action); implicit != nil {
+        constraint = implicit.Clone()
+    }
+
+    // Merge explicit when clause (validates conflicts)
+    if step.When != nil {
+        merged, err := mergeWhenClause(constraint, step.When)
+        if err != nil {
+            return nil, err  // conflict detected
+        }
+        constraint = merged
+    }
+
+    // Check for {{linux_family}} interpolation
+    familyVarying := containsLinuxFamilyVar(step.Params)
+
+    return &StepAnalysis{
+        Constraint:    constraint,
+        FamilyVarying: familyVarying,
+    }, nil
+}
+```
+
+**Scanning uses recursive type switch** (no reflection needed):
+
+```go
+// containsLinuxFamilyVar scans for {{linux_family}} in any string value
+func containsLinuxFamilyVar(v interface{}) bool {
+    switch val := v.(type) {
+    case string:
+        return strings.Contains(val, "{{linux_family}}")
+    case map[string]interface{}:
+        for _, v := range val {
+            if containsLinuxFamilyVar(v) {
+                return true
+            }
+        }
+    case []interface{}:
+        for _, v := range val {
+            if containsLinuxFamilyVar(v) {
+                return true
+            }
+        }
+    }
+    return false
+}
+```
+
+This pattern:
+- Stores analysis on Step at load time (no runtime registry dependency)
+- Uses minimal function type instead of broad interface
+- Scans params via type switch (no reflection)
+- Callers truly "just ask the step": `step.Analysis()`
 
 ### Phase 2: Extend WhenClause
 
-Add `LinuxFamily` field to allow explicit family constraints:
+Add `LinuxFamily` and `Arch` fields to allow explicit constraints:
 
 ```go
 // In recipe/types.go
 type WhenClause struct {
     Platform       []string `toml:"platform,omitempty"`
     OS             []string `toml:"os,omitempty"`
-    LinuxFamily    string   `toml:"linux_family,omitempty"`  // NEW - singular
+    Arch           string   `toml:"arch,omitempty"`          // NEW
+    LinuxFamily    string   `toml:"linux_family,omitempty"`  // NEW
     PackageManager string   `toml:"package_manager,omitempty"`
 }
 ```
 
-Note: `LinuxFamily` is singular (like `PackageManager`) since a step targets one family. The existing `Constraint.LinuxFamily` is also singular - each action targets one family. Aggregation to multiple families happens at the recipe level.
+**Upstream design reconciliation:** The original `DESIGN-system-dependency-actions.md` specified that `WhenClause` should remain generic (os, arch, platform only), with family constraints handled via implicit action constraints. This design extends `WhenClause` to allow explicit family constraints for non-PM actions.
 
-### Phase 3: Metadata Aggregation
+**Rationale for the change:**
+- PM actions (`apt_install`, `dnf_install`) have implicit family constraints
+- Non-PM actions like `download` or `run` may need explicit family targeting
+- Example: download different binaries per family without using `{{linux_family}}` interpolation
 
-Add recipe-level supported platforms computation:
+```toml
+# Explicit family constraint on non-PM action
+[[steps]]
+action = "download"
+url = "https://example.com/debian-specific-tool.tar.gz"
+when.linux_family = "debian"
+```
+
+This is a deliberate extension of the upstream design to support the broader use case.
+
+Note: `LinuxFamily` is singular (like `PackageManager`) since a step targets one family. Aggregation to multiple families happens at the recipe level via the `FamilyConstrained` policy.
+
+### Phase 3: Recipe Family Policy
+
+Name the four recipe types explicitly rather than computing them implicitly:
 
 ```go
-func SupportedPlatforms(recipe *Recipe, actions ActionRegistry) []Platform {
-    // Collect family information from all steps
+// RecipeFamilyPolicy describes how a recipe relates to Linux families
+type RecipeFamilyPolicy int
+
+const (
+    // FamilyAgnostic: No steps have family constraints or variation.
+    // Result: Generic Linux platforms (no family qualifier)
+    FamilyAgnostic RecipeFamilyPolicy = iota
+
+    // FamilyVarying: At least one step uses {{linux_family}} interpolation.
+    // Result: All families (each produces different output)
+    FamilyVarying
+
+    // FamilyConstrained: All Linux steps target specific families, no unconstrained steps.
+    // Result: Only the families explicitly targeted
+    FamilyConstrained
+
+    // FamilyMixed: Has both family-constrained and unconstrained Linux steps.
+    // Result: All families (some steps filtered per family)
+    FamilyMixed
+)
+```
+
+### Phase 4: Metadata Aggregation
+
+Compute recipe family policy, then derive platforms:
+
+```go
+// AnalyzeRecipe computes the family policy for a recipe.
+// Returns error if any step has conflicting constraints.
+func AnalyzeRecipe(recipe *Recipe) (RecipeFamilyPolicy, map[string]bool, error) {
     familiesUsed := make(map[string]bool)
     hasFamilyVaryingStep := false
     hasUnconstrainedLinuxSteps := false
+    hasAnyLinuxSteps := false
 
-    for _, step := range recipe.Steps {
-        c, _ := EffectiveConstraint(step, actions)
-        if c.FamilyVarying {
-            // Step uses {{linux_family}} - varies across all families
+    for i, step := range recipe.Steps {
+        analysis, err := step.Analysis()
+        if err != nil {
+            return 0, nil, fmt.Errorf("step %d (%s): %w", i, step.Action, err)
+        }
+
+        // Skip non-Linux steps entirely
+        if analysis.Constraint != nil && analysis.Constraint.OS == "darwin" {
+            continue
+        }
+
+        // Track that we have at least one Linux-applicable step
+        if analysis.Constraint == nil || analysis.Constraint.OS == "" || analysis.Constraint.OS == "linux" {
+            hasAnyLinuxSteps = true
+        }
+
+        if analysis.FamilyVarying {
             hasFamilyVaryingStep = true
-        } else if c.LinuxFamily != "" {
-            // Step constrained to specific family
-            familiesUsed[c.LinuxFamily] = true
-        } else if c.OS == "" || c.OS == "linux" {
-            // Step runs on any Linux (no family constraint or variation)
+        } else if analysis.Constraint != nil && analysis.Constraint.LinuxFamily != "" {
+            familiesUsed[analysis.Constraint.LinuxFamily] = true
+        } else if analysis.Constraint == nil || analysis.Constraint.OS == "" || analysis.Constraint.OS == "linux" {
             hasUnconstrainedLinuxSteps = true
         }
     }
 
-    platforms := darwinPlatforms() // darwin/amd64, darwin/arm64
+    // Determine policy
+    if !hasAnyLinuxSteps {
+        // Darwin-only recipe - no Linux platforms at all
+        return FamilyAgnostic, nil, nil  // nil families signals "no Linux"
+    }
 
-    // Determine Linux platform strategy
-    needsAllFamilies := hasFamilyVaryingStep ||
-        (len(familiesUsed) > 0 && hasUnconstrainedLinuxSteps)
+    if hasFamilyVaryingStep {
+        return FamilyVarying, nil, nil
+    }
 
-    if len(familiesUsed) == 0 && !hasFamilyVaryingStep {
-        // No family constraints or variation - generic Linux
-        platforms = append(platforms,
-            Platform{OS: "linux", Arch: "amd64"},
-            Platform{OS: "linux", Arch: "arm64"},
-        )
-    } else if needsAllFamilies {
-        // Either:
-        // - Has family-varying step (download with {{linux_family}})
-        // - Mixed constrained + unconstrained steps
-        // Plans differ by family, need all families
+    if len(familiesUsed) == 0 {
+        return FamilyAgnostic, nil, nil
+    }
+
+    if hasUnconstrainedLinuxSteps {
+        return FamilyMixed, familiesUsed, nil
+    }
+
+    return FamilyConstrained, familiesUsed, nil
+}
+
+// SupportedPlatforms returns all platforms the recipe supports.
+func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
+    policy, families, err := AnalyzeRecipe(recipe)
+    if err != nil {
+        return nil, err
+    }
+
+    var platforms []Platform
+
+    // Always include darwin platforms
+    platforms = append(platforms,
+        Platform{OS: "darwin", Arch: "amd64"},
+        Platform{OS: "darwin", Arch: "arm64"},
+    )
+
+    // Add Linux platforms based on policy
+    switch policy {
+    case FamilyAgnostic:
+        if families != nil {  // nil means darwin-only
+            platforms = append(platforms,
+                Platform{OS: "linux", Arch: "amd64"},
+                Platform{OS: "linux", Arch: "arm64"},
+            )
+        }
+        // else: darwin-only recipe, no Linux platforms
+
+    case FamilyVarying, FamilyMixed:
+        // All families needed
         for _, family := range AllLinuxFamilies {
             platforms = append(platforms,
                 Platform{OS: "linux", Arch: "amd64", LinuxFamily: family},
                 Platform{OS: "linux", Arch: "arm64", LinuxFamily: family},
             )
         }
-    } else {
-        // Only family-constrained steps (no variation, no unconstrained)
-        // Example: apt_install only → only debian
-        for family := range familiesUsed {
+
+    case FamilyConstrained:
+        // Only specific families
+        for family := range families {
             platforms = append(platforms,
                 Platform{OS: "linux", Arch: "amd64", LinuxFamily: family},
                 Platform{OS: "linux", Arch: "arm64", LinuxFamily: family},
@@ -733,21 +922,22 @@ func SupportedPlatforms(recipe *Recipe, actions ActionRegistry) []Platform {
         }
     }
 
-    return platforms
+    return platforms, nil
 }
 ```
 
-**Cases:**
+**Policy Examples:**
 
-| Recipe Pattern | Result |
-|---------------|--------|
-| `download` (no family var) | Generic linux (no family) |
-| `download` with `{{linux_family}}` | All 5 families |
-| `apt_install` only | debian only |
-| `apt_install` + `dnf_install` | debian + rhel |
-| `download` (plain) + `apt_install` | All 5 families (mixed) |
+| Recipe Pattern | Policy | Linux Platforms |
+|---------------|--------|-----------------|
+| `download` (no family var) | FamilyAgnostic | Generic linux |
+| `download` with `{{linux_family}}` | FamilyVarying | All 5 families |
+| `apt_install` only | FamilyConstrained | debian only |
+| `apt_install` + `dnf_install` | FamilyConstrained | debian + rhel |
+| `download` (plain) + `apt_install` | FamilyMixed | All 5 families |
+| Darwin-only steps | FamilyAgnostic (nil) | None |
 
-The family-varying case (URL with `{{linux_family}}`) expands to all families because the download produces different URLs for each family.
+The explicit policy enum makes the logic self-documenting and easier to extend.
 
 Update `tsuku info --metadata-only --json` to include `supported_platforms`.
 
@@ -777,41 +967,48 @@ The current `WhenClause.Matches()` signature is:
 func (w *WhenClause) Matches(os, arch string) bool
 ```
 
-This must be extended to include `linuxFamily`:
+**Recommended approach:** Use a target struct to future-proof against additional dimensions:
 
 ```go
-func (w *WhenClause) Matches(os, arch, linuxFamily string) bool
-```
-
-**Breaking change**: All callers of `Matches()` must be updated. Since tsuku is pre-GA, this is acceptable. The change enables filtering based on the new dimension.
-
-Alternatively, use a target struct to future-proof against additional dimensions:
-
-```go
-type Target struct {
+// MatchTarget contains all dimensions for filtering.
+// Defined in recipe package alongside WhenClause.
+type MatchTarget struct {
     OS          string
     Arch        string
     LinuxFamily string
 }
 
-func (w *WhenClause) Matches(target Target) bool
+func (w *WhenClause) Matches(target MatchTarget) bool
 ```
 
-This pattern allows adding new dimensions (e.g., libc variant, CPU features) without changing the signature again.
+This pattern allows adding new dimensions (e.g., libc variant, CPU features) without changing the signature again. Since tsuku is pre-GA, this breaking change is acceptable.
+
+**Interop with platform.Target:**
+
+```go
+// In platform package
+func (t Target) AsMatchTarget() recipe.MatchTarget {
+    return recipe.MatchTarget{
+        OS:          t.OS(),
+        Arch:        t.Arch(),
+        LinuxFamily: t.LinuxFamily,
+    }
+}
+```
 
 ### Future Extensibility
 
 Adding new constraint dimensions requires changes to:
-1. `Constraint` type - add the new field (and possibly a `*Varying` bool)
-2. `WhenClause` type - add the new field
-3. `EffectiveConstraint()` - merge the new dimension
-4. `Constraint.MergeWhen()` - handle new dimension with conflict detection
-5. `stepUses*Var()` - scan for interpolation of new variable (if applicable)
-6. `WhenClause.Matches()` or `Target` struct - include new dimension
-7. `SupportedPlatforms()` - expand platforms for the new dimension
+1. `Constraint` type - add the new field
+2. `StepAnalysis` type - add `*Varying bool` if the dimension supports interpolation
+3. `WhenClause` type - add the new field
+4. `MatchTarget` type - add the new field
+5. `mergeWhenClause()` - handle new dimension with conflict detection
+6. `containsLinuxFamilyVar()` - generalize to `contains*Var()` for new variables
+7. `AnalyzeRecipe()` / `SupportedPlatforms()` - expand platforms for new dimension
 8. Golden file naming - incorporate the new dimension
 
-The step-level abstraction means most callers don't change - they still just call `EffectiveConstraint()`. But adding a dimension is not free; it requires coordinated changes across the constraint model.
+The step-level abstraction means most callers don't change - they call `step.Analysis()` and get a `StepAnalysis`. But adding a dimension requires coordinated changes across the constraint model.
 
 ## Security Considerations
 
@@ -840,19 +1037,22 @@ The step-level abstraction means most callers don't change - they still just cal
 - **Minimal waste**: Non-family-aware recipes retain single Linux file
 - **Backwards compatible**: Existing golden files work without migration
 - **Single source of truth**: Metadata is the authoritative source for platform support
-- **Step-level abstraction**: Callers ask steps for constraints, don't need to know about implicit vs explicit
-- **Uniform interface**: All steps respond the same way to `EffectiveConstraint()`
-- **Clean separation**: Golden file tooling is decoupled from constraint resolution logic
-- **Useful beyond golden files**: Other tooling can query family support (documentation, installers, CI)
+- **Clean type separation**: `Constraint` (where can it run) vs `StepAnalysis` (constraint + variation) vs `RecipeFamilyPolicy` (aggregated behavior)
+- **Load-time resolution**: Steps are self-describing after loading - no runtime registry dependency
+- **Explicit policy names**: Four recipe types named, not computed implicitly
+- **Conflict detection**: OS, arch, and family conflicts caught at load time with clear error messages
+- **Future-proofed interfaces**: `MatchTarget` struct allows adding dimensions without signature changes
 
 ### Negative
 
-- **Requires `WhenClause` extension**: Must add `linux_family` field to step conditions
+- **Requires `WhenClause` extension**: Must add `linux_family` and `arch` fields to step conditions
+- **Upstream design change**: Extends `WhenClause` beyond original generic scope
 - **Mixed naming**: Directory contains both old-style and new-style filenames during transition
-- **Extension not free**: Adding new constraint dimensions requires coordinated changes (see Implementation Approach)
+- **Extension not free**: Adding new constraint dimensions requires coordinated changes (see Future Extensibility)
 
 ### Mitigations
 
-- **WhenClause extension**: Follows existing pattern for `os` and `platform` fields. Singular field like `PackageManager`.
+- **WhenClause extension**: Follows existing pattern. Documented as deliberate extension of upstream design.
+- **Upstream reconciliation**: Rationale documented - non-PM actions need explicit family targeting.
 - **Mixed naming**: Clear naming convention and documentation make the pattern understandable.
-- **Extension cost**: The step-level abstraction localizes changes to `EffectiveConstraint()` - callers don't change.
+- **Extension cost**: Load-time resolution means most callers just call `step.Analysis()` - only the loader changes.
