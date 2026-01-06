@@ -353,11 +353,20 @@ $ tsuku info build-tools-system --metadata-only --json | jq '.supported_platform
 ]
 ```
 
-**Derivation logic:** A recipe is family-aware if any action references `linux_family` in its `when` clause or interpolated variables. Each action type already knows its own constraints - for example, `apt_install` has an implicit `when: linux_family == "debian"` condition.
+**Derivation logic:** Family awareness is determined by querying each action. There are two tiers:
 
-The detection is generic: scan actions for `linux_family` references rather than maintaining a hardcoded list of action types. This works for any current or future action that might be family-aware.
+1. **Intrinsic to action type**: Some action types are inherently family-specific. For example, `apt_install` always returns "family-aware: yes, families: [debian]" - no instance inspection needed. The action type itself encodes the constraint.
 
-If any action references `linux_family`, the metadata lists all 5 families for Linux platforms. If not, Linux platforms have no `linux_family` field.
+2. **Instance-dependent**: Generic action types like `download` or `extract` are not inherently family-aware, but a specific instance might reference `linux_family` in its `when` clause or variable interpolations. These action types return "check my instance" and the detection scans for `linux_family` references.
+
+Examples:
+- `apt_install { packages = ["curl"] }` → intrinsically debian-only
+- `dnf_install { packages = ["curl"] }` → intrinsically rhel-only
+- `download { url = "..." }` → not family-aware (no `linux_family` reference)
+- `download { url = "{{linux_family}}/pkg.tar" }` → family-aware (variable interpolation)
+- `extract { when = "linux_family == debian", ... }` → family-aware (when clause)
+
+If any action is family-aware (intrinsic or instance), the metadata lists all 5 families for Linux platforms. If not, Linux platforms have no `linux_family` field.
 
 Golden file tooling queries this metadata and generates one file per supported platform. No detection algorithm, no plan comparison - just follow the metadata.
 
@@ -480,11 +489,12 @@ When a recipe changes from family-aware to non-family-aware (rare):
 
 ### Phase 1: Extend tsuku info
 
-1. Add family awareness detection to metadata generation
-2. Scan actions for `linux_family` references (in `when` clauses or variables)
-3. When any action references `linux_family`, include it in supported_platforms
-4. Update `--metadata-only --json` output format to include expanded platform list
-5. Add tests for family awareness detection
+1. Add `IsFamilyAware() bool` and `SupportedFamilies() []string` methods to action interface
+2. Intrinsic action types (apt_install, dnf_install, etc.) return hardcoded values
+3. Generic action types scan their instance for `linux_family` references in `when` clauses and variable interpolations
+4. Aggregate across all actions: if any is family-aware, recipe is family-aware
+5. Update `--metadata-only --json` output to include expanded platform list
+6. Add tests for both intrinsic and instance-dependent detection
 
 ### Phase 2: Script Updates
 
@@ -542,6 +552,6 @@ When a recipe changes from family-aware to non-family-aware (rare):
 
 ### Mitigations
 
-- **tsuku info extension**: The detection logic is straightforward (scan actions for `linux_family` references). Can be implemented incrementally.
-- **Metadata sync**: Actions already know their constraints via `when` clauses. The detection piggybacks on existing semantics rather than maintaining a separate mapping.
+- **tsuku info extension**: Detection has two clear paths - intrinsic types return hardcoded values, generic types scan their instance. Can be implemented incrementally per action type.
+- **Metadata sync**: Intrinsic actions encode their constraints directly. Instance-dependent detection reuses the same `when` clause and variable parsing already used for plan generation.
 - **Mixed naming**: Clear naming convention and documentation make the pattern understandable.
