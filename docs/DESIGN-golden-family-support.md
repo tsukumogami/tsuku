@@ -26,7 +26,7 @@ The golden file system validates that plan generation produces expected output b
 - The `tsuku eval` command accepts `--linux-family` to generate family-specific plans
 
 **The problem:**
-- Family-aware plans (generated with `--linux-family`) include `linux_family` in the platform object
+- Family-aware recipes produce plans that include `linux_family` in the platform object
 - Recipes with package manager actions (apt_install, dnf_install) produce different steps per family
 - The generation and validation workflows do not account for family variation
 - Issue #818 (overwrite bug) was fixed, but family support was deferred pending design
