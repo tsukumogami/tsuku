@@ -23,7 +23,7 @@ The golden file system validates that plan generation produces expected output b
 - Golden files use naming pattern `{version}-{os}-{arch}.json` (e.g., `v0.46.0-linux-amd64.json`)
 - Generation workflow runs 3 platforms: linux-amd64, darwin-arm64, darwin-amd64
 - Validation scripts compare generated plans against stored files by os+arch
-- The `tsuku eval` command accepts `--linux-family` to generate family-specific plans
+- The `tsuku eval` command accepts `--linux-family` to simulate a target family (e.g., generate a debian plan while on macOS)
 
 **The problem:**
 - Family-aware recipes produce plans that include `linux_family` in the platform object
@@ -37,10 +37,10 @@ The golden file system validates that plan generation produces expected output b
 - Recipes with system dependencies cannot be validated without family-specific golden files
 
 **Scope:**
-- Extending golden file naming to include linux_family
-- Updating generation workflow to produce family-specific files for Linux
-- Updating validation scripts to handle family-specific files
-- Defining when family-specific files are needed vs. a single Linux file
+- Extending golden file naming to include linux_family for family-aware recipes
+- Updating generation workflow to produce family-specific files for family-aware recipes
+- Updating validation scripts to handle both family-aware and family-agnostic recipes
+- Defining how to determine if a recipe is family-aware (and thus needs multiple Linux files)
 
 **Out of scope:**
 - Changes to plan generation logic (already implemented)
@@ -201,17 +201,18 @@ Use "debian" as the canonical family for all Linux golden files.
 - Arbitrary choice
 - May confuse users expecting family-neutral plans
 
-#### Option 3C: Generate Without Family Flag
+#### Option 3C: Let Recipe Nature Determine Output
 
-Generate non-family-aware plans without `--linux-family` flag; validation uses same approach.
+Family-agnostic recipes produce plans without `linux_family` in the platform object (this is inherent to the recipe, not controlled by flags). Golden file generation omits the `--linux-family` flag for these recipes since it would have no effect.
 
 **Pros:**
-- Matches current behavior
-- No arbitrary family choice
+- Plan structure reflects recipe semantics (family-agnostic recipes have no family field)
+- No arbitrary family injected into family-agnostic plans
+- Flag usage matches intent: only used when simulating a target family matters
 
 **Cons:**
-- Plan structure differs from family-aware plans
-- Validation must handle both cases
+- Plan structure intentionally differs between family-aware and family-agnostic recipes
+- Validation must recognize both patterns
 
 ### Decision 4: Validation Approach
 
@@ -261,7 +262,7 @@ Query metadata for platforms, then check directory for family variants. Missing 
 
 ### Summary
 
-Extend `tsuku info` to expose linux_family awareness in supported_platforms metadata. Golden file tooling queries this metadata to determine which platform+family combinations need files. Use optional family component in filenames. Generate non-family-aware plans without the `--linux-family` flag. Validate based on metadata (enforces completeness).
+Extend `tsuku info` to expose linux_family awareness in supported_platforms metadata. Golden file tooling queries this metadata to determine which platform+family combinations need files. Use optional family component in filenames (family-aware recipes get `linux-debian-amd64.json`, family-agnostic recipes get `linux-amd64.json`). For family-aware recipes, use `--linux-family` to simulate each target family during cross-platform generation. Validate based on metadata (enforces completeness).
 
 ### Rationale
 
@@ -279,12 +280,12 @@ Extend `tsuku info` to expose linux_family awareness in supported_platforms meta
 - 2B is backwards compatible: existing `linux-amd64` files work unchanged
 - The naming difference (`linux-amd64` vs `linux-debian-amd64`) clearly signals whether the recipe varies by family
 
-**Why 3C (no flag) over 3A (no field) or 3B (debian canonical):**
+**Why 3C (recipe nature) over 3A (no field) or 3B (debian canonical):**
 - 3A requires conditional logic to omit the field, adding complexity
 - 3B injects an arbitrary "debian" value into plans that don't vary by family, which is confusing
-- 3C is simplest: if the recipe doesn't vary by family, don't pass `--linux-family` at all
-- The plan generator already handles the absence of the flag correctly
-- Avoids users seeing "debian" in golden files for recipes that work on any family
+- 3C reflects reality: family-agnostic recipes inherently produce plans without `linux_family`
+- The `--linux-family` flag is for simulation, not for controlling plan structure
+- Family-agnostic golden files correctly show no family field, matching what users see at runtime
 
 **Why 4B (metadata-based) over 4A (what exists) or 4C (hybrid):**
 - 4A doesn't catch missing coverage (if generation forgot a platform, validation wouldn't notice)
@@ -297,20 +298,28 @@ Extend `tsuku info` to expose linux_family awareness in supported_platforms meta
 
 ## Solution Architecture
 
+### Key Invariant: Recipe Nature Determines Plan Structure
+
+**Family-aware recipes** (those with family-constrained actions like `apt_install` or `{{linux_family}}` interpolation) **always** include `linux_family` in their plan output. When `--linux-family` is not passed, the plan generator detects the system's family. When `--linux-family` is passed, it simulates the specified family.
+
+**Family-agnostic recipes** (those without family-specific actions or interpolation) **never** include `linux_family` in their plan output. The `--linux-family` flag has no effect on these recipes - they produce identical plans regardless.
+
+The flag is a **simulation mechanism** for cross-platform golden file generation, not a switch that controls plan structure. Golden file tooling uses it to generate debian plans on a macOS CI runner, not to "enable" family support.
+
 ### File Naming
 
-**Non-family-aware recipes** (plans identical across Linux families):
+**Family-agnostic recipes** (no family-specific actions or interpolation):
 ```
 testdata/golden/plans/f/fzf/
-├── v0.46.0-linux-amd64.json       # No linux_family in platform object
+├── v0.46.0-linux-amd64.json       # Recipe is family-agnostic: no linux_family field
 ├── v0.46.0-darwin-amd64.json
 └── v0.46.0-darwin-arm64.json
 ```
 
-**Family-aware recipes** (plans differ by Linux family):
+**Family-aware recipes** (have family-constrained actions or `{{linux_family}}` interpolation):
 ```
 testdata/golden/plans/b/build-tools-system/
-├── v1.0.0-linux-debian-amd64.json    # linux_family: "debian"
+├── v1.0.0-linux-debian-amd64.json    # Recipe is family-aware: linux_family: "debian"
 ├── v1.0.0-linux-rhel-amd64.json      # linux_family: "rhel"
 ├── v1.0.0-linux-arch-amd64.json      # linux_family: "arch"
 ├── v1.0.0-linux-alpine-amd64.json    # linux_family: "alpine"
@@ -497,11 +506,11 @@ This merging happens once, inside `EffectiveConstraint()`. The caller sees one r
 **At the recipe level:** CLI users don't think about steps or actions. They query recipe metadata:
 
 ```bash
-# User just asks: does this recipe have family-specific plans?
+# User asks: is this recipe family-aware?
 tsuku info myrecipe --metadata-only --json | jq '.supported_platforms'
 ```
 
-The response tells them what platforms are supported. If `linux_family` appears in the platform objects, the recipe is family-aware.
+The response lists supported platforms. If `linux_family` appears in the platform objects, the recipe is family-aware (its plans include `linux_family`).
 
 ### Why Step-Level, Not Action-Level
 
@@ -645,14 +654,14 @@ The script queries `tsuku info` to determine if family-specific files are needed
 - Query `tsuku info --metadata-only --json` for supported platforms
 - Filter to platforms matching the `--os` and `--arch` arguments
 - For each matching platform:
-  - If `linux_family` is present: generate with `--linux-family` flag, name file `{version}-{os}-{family}-{arch}.json`
-  - If `linux_family` is absent: generate without `--linux-family` flag, name file `{version}-{os}-{arch}.json`
+  - If metadata includes `linux_family` (recipe is family-aware): pass `--linux-family` to simulate target family, name file `{version}-{os}-{family}-{arch}.json`
+  - If metadata omits `linux_family` (recipe is family-agnostic): omit flag (would have no effect), name file `{version}-{os}-{arch}.json`
 
 **validate-golden.sh**:
 - Query `tsuku info --metadata-only --json` for supported platforms
-- Build expected file list from metadata
+- Build expected file list from metadata (family-aware recipes have multiple Linux entries)
 - Verify each expected file exists in golden directory
-- For each file, generate plan with flags matching the platform (include `--linux-family` only if metadata specifies it)
+- For each file, generate plan by simulating the target platform (pass `--linux-family` when metadata specifies a family)
 - Report missing files as errors (enforces completeness)
 
 ### Validation Logic
@@ -681,12 +690,13 @@ for platform in $PLATFORMS; do
         exit 1
     fi
 
-    # Generate plan with flags matching metadata
+    # Generate plan by simulating target platform
     eval_args=(--recipe "$RECIPE" --os "$os" --arch "$arch" --version "${VERSION#v}")
     if [[ -n "$family" ]]; then
+        # Family-aware recipe: simulate target family
         eval_args+=(--linux-family "$family")
     fi
-    # Note: no --linux-family flag for non-family-aware recipes
+    # Family-agnostic recipes have no linux_family in metadata, so no simulation needed
 
     tsuku eval "${eval_args[@]}" | jq -S 'del(.generated_at, .recipe_source)' > /tmp/actual.json
     # Compare with sorted JSON...
@@ -699,13 +709,13 @@ This approach ensures validation matches exactly what the recipe claims to suppo
 
 1. **Phase 1**: Extend `Constraint` type and `tsuku info` to expose family awareness
 2. **Phase 2**: Update generation/validation scripts to use metadata
-3. **Phase 3**: Regenerate golden files for recipes with system dependencies
+3. **Phase 3**: Regenerate golden files for family-aware recipes
 4. **Phase 4**: Update CI workflows to use new logic
 5. **Phase 5**: Validate all recipes pass with new system
 
 Existing golden files remain valid:
-- `linux-amd64.json` files are validated without `--linux-family` flag
-- Non-family-aware recipes continue to work unchanged
+- `linux-amd64.json` files for family-agnostic recipes remain unchanged
+- Family-agnostic recipes continue to produce plans without `linux_family` field
 - Family-aware recipes get additional files without breaking existing ones
 
 ### Recipe Transition Handling
@@ -1091,7 +1101,7 @@ Update `tsuku info --metadata-only --json` to include `supported_platforms`.
 
 1. Update `regenerate-golden.sh` to query metadata and generate appropriate files
 2. Update `validate-golden.sh` to use metadata-driven validation
-3. Add `--linux-family` flag to scripts for generating family-specific plans
+3. Add `--linux-family` flag handling to scripts for cross-platform simulation
 
 ### Phase 5: Workflow Updates
 
