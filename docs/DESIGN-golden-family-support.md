@@ -325,33 +325,34 @@ Per [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md), linux-arm64 
 
 ### Architecture Layers
 
-This design separates three concerns:
+This design separates three concerns with uniform interfaces at each boundary:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │  Golden File Tooling (scripts, workflows)                   │
-│  - Queries metadata, generates/validates files              │
-│  - No knowledge of how constraints are determined           │
+│  - Queries: "what platforms does this recipe support?"      │
+│  - Generates one file per supported platform                │
+│  - No knowledge of actions or how constraints work          │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              ▼ queries supported_platforms
+                              ▼ tsuku info --metadata-only
 ┌─────────────────────────────────────────────────────────────┐
-│  Metadata Aggregation (tsuku info)                          │
-│  - Walks recipe actions, collects constraints               │
-│  - Expands linux_family when any action constrains it       │
+│  Recipe Metadata (tsuku info)                               │
+│  - Aggregates constraints from all actions                  │
 │  - Returns supported_platforms list                         │
+│  - Hides action-level details from callers                  │
 └─────────────────────────────────────────────────────────────┘
                               │
-                              ▼ queries ImplicitConstraint()
+                              ▼ Action.ImplicitConstraint()
 ┌─────────────────────────────────────────────────────────────┐
-│  Action Constraints (existing Constraint type)              │
-│  - Actions expose constraints via ImplicitConstraint()      │
-│  - SystemAction types return their family constraint        │
-│  - WhenClause can specify linux_family filter               │
+│  Action Constraints                                         │
+│  - Uniform interface: all actions implement same method     │
+│  - Returns Constraint or nil                                │
+│  - How each action determines its constraint is internal    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-**Key principle:** Golden file tooling is decoupled from constraint detection. It simply queries `tsuku info` for supported platforms and generates one file per platform.
+**Key principle:** Each layer has a uniform interface. CLI users ask about recipes, not actions. Code querying actions uses the same method regardless of action type. Implementation details don't leak upward.
 
 ### Metadata Output Format
 
@@ -382,19 +383,30 @@ $ tsuku info build-tools-system --metadata-only --json | jq '.supported_platform
 ]
 ```
 
-### Constraint Detection (Implementation Detail)
+### Uniform Constraint Interface
 
-The metadata aggregation layer determines family awareness by examining action constraints. This is an **implementation detail** that golden file tooling does not need to know about.
+**At the action level:** All actions expose constraints through the same interface (`ImplicitConstraint()`). The caller asks "what are your constraints?" and gets a `Constraint` back (or `nil`). The caller doesn't know or care *how* the action determined its constraints - whether it's hardcoded in the action type or derived from instance configuration is an internal implementation detail.
 
-Family awareness is derived from:
+**At the recipe level:** CLI users don't think about actions at all. They query recipe metadata:
 
-1. **`SystemAction.ImplicitConstraint()`** - Package manager actions like `apt_install` return a `Constraint` with `LinuxFamilies: ["debian"]`. This is intrinsic to the action type.
+```bash
+# User just asks: does this recipe have family-specific plans?
+tsuku info myrecipe --metadata-only --json | jq '.supported_platforms'
+```
 
-2. **`WhenClause.LinuxFamily`** - Steps can have explicit `when.linux_family` conditions that filter by family.
+The response tells them what platforms are supported. If `linux_family` appears in the platform objects, the recipe is family-aware. Users never interact with individual action constraints.
 
-If any action or step constrains `linux_family`, the recipe is family-aware and metadata lists all 5 families for Linux platforms. Otherwise, Linux platforms have no `linux_family` field.
+### Constraint Sources (Implementation Detail)
 
-**Note:** Variable interpolation scanning (e.g., detecting `{{linux_family}}` in URL strings) is explicitly excluded. It's too fragile and prone to false positives/negatives. Family awareness must be expressed through explicit constraints (`ImplicitConstraint` or `when` clauses), not implicit string patterns.
+Internally, family awareness is aggregated from two sources:
+
+1. **`Action.ImplicitConstraint()`** - Every action type implements this uniformly. Some return hardcoded constraints (e.g., `apt_install` returns debian), others analyze their instance configuration. The interface is identical.
+
+2. **`WhenClause.LinuxFamily`** - Steps can have explicit `when.linux_family` conditions.
+
+If any constraint specifies `LinuxFamilies`, the recipe is family-aware. This aggregation logic is internal to `tsuku info` - callers just see the final `supported_platforms` list.
+
+**Note:** Variable interpolation scanning (e.g., detecting `{{linux_family}}` in URL strings) is explicitly excluded. It's too fragile and prone to false positives/negatives. Family awareness must be expressed through explicit constraints, not implicit string patterns.
 
 ### Valid Linux Families
 
