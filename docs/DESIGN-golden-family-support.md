@@ -1179,7 +1179,7 @@ Adding new constraint dimensions requires changes to:
 1. `Constraint` type - add the new field
 2. `StepAnalysis` type - add `*Varying bool` if the dimension supports interpolation
 3. `WhenClause` type - add the new field
-4. `Matchable` interface - add `Get*()` method for the new dimension
+4. `Matchable` interface - add accessor method for the new dimension
 5. `mergeWhenClause()` - handle new dimension with conflict detection
 6. `knownVars` slice - add the variable name (e.g., `"arch"`)
 7. `AnalyzeRecipe()` / `SupportedPlatforms()` - expand platforms for new dimension
