@@ -302,9 +302,11 @@ Extend `tsuku info` to expose linux_family awareness in supported_platforms meta
 
 ### Key Invariant: Recipe Nature Determines Plan Structure
 
+**This determination is static.** A recipe's family-awareness is computed once at load time via static analysis of its steps—looking for family-constrained actions and `{{linux_family}}` interpolation. This classification is intrinsic to the recipe and never changes based on runtime context, flags, or environment.
+
 **Family-aware recipes** (those with family-constrained actions like `apt_install` or `{{linux_family}}` interpolation) **always** include `linux_family` in their plan output. When `--linux-family` is not passed, the plan generator detects the system's family. When `--linux-family` is passed, it simulates the specified family.
 
-**Family-agnostic recipes** (those without family-specific actions or interpolation) **never** include `linux_family` in their plan output. The `--linux-family` flag has no effect on these recipes - they produce identical plans regardless.
+**Family-agnostic recipes** (those without family-specific actions or interpolation) **never** include `linux_family` in their plan output. The `--linux-family` flag is silently ignored for these recipes - passing it is valid but has no effect; the plan output is identical with or without the flag.
 
 The flag is a **simulation mechanism** for cross-platform golden file generation, not a switch that controls plan structure. Golden file tooling uses it to generate debian plans on a macOS CI runner, not to "enable" family support.
 
@@ -430,9 +432,9 @@ When a step has both an implicit constraint (from action type) and an explicit `
 **Conflict detection implementation:**
 
 ```go
-// cloneOrEmpty returns a copy of the constraint, or an empty constraint if nil.
-// Private helper - avoids confusing nil-receiver methods.
-func cloneOrEmpty(c *Constraint) *Constraint {
+// Clone returns a copy of the constraint, or an empty constraint if c is nil.
+// Nil-safe: can be called on a nil receiver (idiomatic Go pattern).
+func (c *Constraint) Clone() *Constraint {
     if c == nil {
         return &Constraint{}
     }
@@ -442,7 +444,7 @@ func cloneOrEmpty(c *Constraint) *Constraint {
 // mergeWhenClause merges explicit when clause with implicit constraint.
 // Returns error if any dimension conflicts.
 func mergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error) {
-    result := cloneOrEmpty(implicit)
+    result := implicit.Clone()  // nil-safe
 
     // Check Platform array conflict (e.g., apt_install + when.platform: ["darwin/arm64"])
     // Platform entries are "os/arch" tuples that must be compatible with implicit OS
@@ -549,6 +551,8 @@ The scanning is **action-agnostic**: it walks all string fields in the Step stru
 This is distinct from family-constrained steps:
 - **Family-constrained** (`apt_install`): Only runs on one family (debian)
 - **Family-varying** (any action with `{{linux_family}}`): Runs on all families, output differs
+
+**Terminology note:** The design uses different term pairs at different levels. At the recipe level, "family-aware" vs "family-agnostic" describes whether the recipe's plans include `linux_family`—a classification perspective. At the step level, "family-constrained" vs "family-varying" describes the mechanism—constraint filtering vs interpolation. A family-aware recipe contains one or more family-constrained or family-varying steps.
 
 Both cases require family-specific golden files, but they answer different questions:
 
@@ -794,7 +798,7 @@ func computeAnalysis(action string, when *WhenClause, params map[string]interfac
         return nil, fmt.Errorf("unknown action %q", action)
     }
     if implicit != nil {
-        constraint = cloneOrEmpty(implicit)
+        constraint = implicit.Clone()
     }
 
     // Merge explicit when clause (validates conflicts)
@@ -896,7 +900,7 @@ when.linux_family = "debian"
 
 This is a deliberate extension of the upstream design to support the broader use case.
 
-Note: `LinuxFamily` is singular (like `PackageManager`) since a step targets one family. Aggregation to multiple families happens at the recipe level via the `FamilyConstrained` policy.
+Note: `LinuxFamily` is singular (like `PackageManager`) since a step targets one family. Aggregation to multiple families happens at the recipe level via the `FamilySpecific` policy.
 
 ### Phase 3: Recipe Family Policy
 
@@ -907,9 +911,9 @@ Name the five recipe types explicitly rather than computing them implicitly:
 type RecipeFamilyPolicy int
 
 const (
-    // FamilyDarwinOnly: No Linux-applicable steps exist.
+    // FamilyNone: No Linux-applicable steps exist, so no family policy applies.
     // Result: No Linux platforms at all
-    FamilyDarwinOnly RecipeFamilyPolicy = iota
+    FamilyNone RecipeFamilyPolicy = iota
 
     // FamilyAgnostic: Has Linux steps, but no family constraints or variation.
     // Result: Generic Linux platforms (no family qualifier)
@@ -919,9 +923,9 @@ const (
     // Result: All families (each produces different output)
     FamilyVarying
 
-    // FamilyConstrained: All Linux steps target specific families, no unconstrained steps.
+    // FamilySpecific: All Linux steps target specific families, no unconstrained steps.
     // Result: Only the families explicitly targeted
-    FamilyConstrained
+    FamilySpecific
 
     // FamilyMixed: Has both family-constrained and unconstrained Linux steps.
     // Result: All families (some steps filtered per family)
@@ -931,14 +935,14 @@ const (
 // String returns the policy name for debugging and logging.
 func (p RecipeFamilyPolicy) String() string {
     switch p {
-    case FamilyDarwinOnly:
-        return "FamilyDarwinOnly"
+    case FamilyNone:
+        return "FamilyNone"
     case FamilyAgnostic:
         return "FamilyAgnostic"
     case FamilyVarying:
         return "FamilyVarying"
-    case FamilyConstrained:
-        return "FamilyConstrained"
+    case FamilySpecific:
+        return "FamilySpecific"
     case FamilyMixed:
         return "FamilyMixed"
     default:
@@ -946,11 +950,9 @@ func (p RecipeFamilyPolicy) String() string {
     }
 }
 
-// MarshalText implements encoding.TextMarshaler for JSON serialization.
-// Ensures `tsuku info --json` outputs "FamilyAgnostic" not 1.
-func (p RecipeFamilyPolicy) MarshalText() ([]byte, error) {
-    return []byte(p.String()), nil
-}
+// Note: RecipeFamilyPolicy is internal and not exposed in JSON output.
+// Callers use the supported_platforms array, which is derived from the policy.
+// The policy exists for internal logic only (determining which platforms to list).
 ```
 
 ### Phase 4: Metadata Aggregation
@@ -962,13 +964,13 @@ Compute recipe family policy, then derive platforms:
 // Returned by AnalyzeRecipe; used by SupportedPlatforms.
 type RecipeAnalysis struct {
     Policy          RecipeFamilyPolicy
-    FamiliesUsed    map[string]bool  // For FamilyConstrained/FamilyMixed
+    FamiliesUsed    map[string]bool  // For FamilySpecific/FamilyMixed
     SupportsDarwin  bool             // Derived from step analysis, not hardcoded
 }
 
 // AnalyzeRecipe computes the family policy and OS support for a recipe.
-// Returns error if any step has conflicting constraints.
-func AnalyzeRecipe(recipe *Recipe) (*RecipeAnalysis, error) {
+// Cannot fail because step constraints are validated at construction time.
+func AnalyzeRecipe(recipe *Recipe) *RecipeAnalysis {
     familiesUsed := make(map[string]bool)
     hasFamilyVaryingStep := false
     hasUnconstrainedLinuxSteps := false
@@ -1011,7 +1013,7 @@ func AnalyzeRecipe(recipe *Recipe) (*RecipeAnalysis, error) {
     // Determine policy - no nil sentinel, explicit enum for each case
     var policy RecipeFamilyPolicy
     if !hasAnyLinuxSteps {
-        policy = FamilyDarwinOnly
+        policy = FamilyNone
     } else if hasFamilyVaryingStep {
         policy = FamilyVarying
     } else if len(familiesUsed) == 0 {
@@ -1019,22 +1021,20 @@ func AnalyzeRecipe(recipe *Recipe) (*RecipeAnalysis, error) {
     } else if hasUnconstrainedLinuxSteps {
         policy = FamilyMixed
     } else {
-        policy = FamilyConstrained
+        policy = FamilySpecific
     }
 
     return &RecipeAnalysis{
         Policy:         policy,
         FamiliesUsed:   familiesUsed,
         SupportsDarwin: hasAnyDarwinSteps,
-    }, nil
+    }
 }
 
 // SupportedPlatforms returns all platforms the recipe supports.
-func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
-    analysis, err := AnalyzeRecipe(recipe)
-    if err != nil {
-        return nil, err
-    }
+// Cannot fail because AnalyzeRecipe cannot fail.
+func SupportedPlatforms(recipe *Recipe) []Platform {
+    analysis := AnalyzeRecipe(recipe)
 
     var platforms []Platform
 
@@ -1048,8 +1048,8 @@ func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
 
     // Add Linux platforms based on policy
     switch analysis.Policy {
-    case FamilyDarwinOnly:
-        // No Linux platforms - darwin-only recipe
+    case FamilyNone:
+        // No Linux platforms - no family policy applies
 
     case FamilyAgnostic:
         // Generic Linux (no family qualifier)
@@ -1067,7 +1067,7 @@ func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
             )
         }
 
-    case FamilyConstrained:
+    case FamilySpecific:
         // Only specific families
         for family := range analysis.FamiliesUsed {
             platforms = append(platforms,
@@ -1077,7 +1077,7 @@ func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
         }
     }
 
-    return platforms, nil
+    return platforms
 }
 ```
 
@@ -1085,17 +1085,19 @@ func SupportedPlatforms(recipe *Recipe) ([]Platform, error) {
 
 | Recipe Pattern | Policy | Darwin? | Linux Platforms |
 |---------------|--------|---------|-----------------|
-| Darwin-only steps (`when.os: darwin`) | FamilyDarwinOnly | Yes | None |
+| Darwin-only steps (`when.os: darwin`) | FamilyNone | Yes | None |
 | Linux-only steps (`when.os: linux`) | FamilyAgnostic | No | Generic linux |
 | `download` (no family var) | FamilyAgnostic | Yes | Generic linux |
 | `download` with `{{linux_family}}` | FamilyVarying | Yes | All 5 families |
-| `apt_install` only | FamilyConstrained | No | debian only |
-| `apt_install` + `dnf_install` | FamilyConstrained | No | debian + rhel |
+| `apt_install` only | FamilySpecific | No | debian only |
+| `apt_install` + `dnf_install` | FamilySpecific | No | debian + rhel |
 | `download` (plain) + `apt_install` | FamilyMixed | Yes | All 5 families |
+
+**Why FamilyMixed requires all families:** When a recipe has both unconstrained steps (like `download`) and family-constrained steps (like `apt_install`), the unconstrained steps produce valid output on *all* families. The plan for each family is different—debian plans include the apt_install step while other families exclude it. Since each family produces a distinct plan, each needs its own golden file for validation.
 
 The explicit policy enum makes the logic self-documenting - no nil sentinel values. Darwin support is now derived from step analysis rather than hardcoded.
 
-**Precedence rationale:** `FamilyVarying` takes precedence over `FamilyConstrained` because interpolation creates distinct outputs for all families, regardless of any per-step family constraints. A recipe with both `{{linux_family}}` interpolation and `apt_install` still needs golden files for all 5 families - the apt_install step simply won't appear in non-debian plans.
+**Precedence rationale:** `FamilyVarying` takes precedence over `FamilySpecific` because interpolation creates distinct outputs for all families, regardless of any per-step family constraints. A recipe with both `{{linux_family}}` interpolation and `apt_install` still needs golden files for all 5 families - the apt_install step simply won't appear in non-debian plans.
 
 Update `tsuku info --metadata-only --json` to include `supported_platforms`.
 
@@ -1131,15 +1133,16 @@ func (w *WhenClause) Matches(os, arch string) bool
 // Matchable provides platform dimensions for filtering.
 // Both recipe.MatchTarget and platform.Target implement this.
 type Matchable interface {
-    GetOS() string
-    GetArch() string
-    GetLinuxFamily() string
+    OS() string
+    Arch() string
+    LinuxFamily() string
 }
 
 func (w *WhenClause) Matches(target Matchable) bool
 ```
 
 This pattern:
+- Follows Go naming conventions (no `Get` prefix on accessors)
 - Allows adding new dimensions (e.g., libc variant) by extending the interface
 - Eliminates conversion between `platform.Target` and `recipe.MatchTarget`
 - Both types implement the interface directly - no adapter methods needed
@@ -1151,19 +1154,23 @@ Since tsuku is pre-GA, this breaking change is acceptable.
 ```go
 // In recipe package - lightweight struct for tests and simple cases
 type MatchTarget struct {
-    OS          string
-    Arch        string
-    LinuxFamily string
+    os          string
+    arch        string
+    linuxFamily string
 }
 
-func (m MatchTarget) GetOS() string          { return m.OS }
-func (m MatchTarget) GetArch() string        { return m.Arch }
-func (m MatchTarget) GetLinuxFamily() string { return m.LinuxFamily }
+func (m MatchTarget) OS() string          { return m.os }
+func (m MatchTarget) Arch() string        { return m.arch }
+func (m MatchTarget) LinuxFamily() string { return m.linuxFamily }
 
-// In platform package - Target already has these fields
-func (t Target) GetOS() string          { return t.OS() }
-func (t Target) GetArch() string        { return t.Arch() }
-func (t Target) GetLinuxFamily() string { return t.LinuxFamily }
+// Constructor for MatchTarget
+func NewMatchTarget(os, arch, linuxFamily string) MatchTarget {
+    return MatchTarget{os: os, arch: arch, linuxFamily: linuxFamily}
+}
+
+// In platform package - Target already has these methods
+// (assuming OS() and Arch() exist; add LinuxFamily() method)
+func (t Target) LinuxFamily() string { return t.linuxFamily }
 ```
 
 ### Future Extensibility
