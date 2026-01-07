@@ -131,5 +131,5 @@ func DetectTarget() (Target, error) {
 		return Target{}, err
 	}
 
-	return Target{Platform: platform, LinuxFamily: family}, nil
+	return NewTarget(platform, family), nil
 }

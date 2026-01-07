@@ -217,8 +217,8 @@ func TestDetectTarget_NonLinux(t *testing.T) {
 		t.Errorf("Platform = %q, want %q", target.Platform, expectedPlatform)
 	}
 
-	if target.LinuxFamily != "" {
-		t.Errorf("LinuxFamily = %q, want empty for non-Linux", target.LinuxFamily)
+	if target.LinuxFamily() != "" {
+		t.Errorf("LinuxFamily = %q, want empty for non-Linux", target.LinuxFamily())
 	}
 }
 
@@ -242,16 +242,16 @@ func TestDetectTarget_Linux(t *testing.T) {
 	}
 
 	// LinuxFamily should be one of the valid families or empty
-	if target.LinuxFamily != "" {
+	if target.LinuxFamily() != "" {
 		found := false
 		for _, family := range ValidLinuxFamilies {
-			if target.LinuxFamily == family {
+			if target.LinuxFamily() == family {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Errorf("LinuxFamily = %q, not in ValidLinuxFamilies", target.LinuxFamily)
+			t.Errorf("LinuxFamily = %q, not in ValidLinuxFamilies", target.LinuxFamily())
 		}
 	}
 }

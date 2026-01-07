@@ -40,7 +40,7 @@ func (c *Constraint) MatchesTarget(target platform.Target) bool {
 	}
 
 	// Check LinuxFamily constraint (only relevant for Linux)
-	return c.LinuxFamily == target.LinuxFamily
+	return c.LinuxFamily == target.LinuxFamily()
 }
 
 // SystemAction extends Action with system dependency capabilities.
