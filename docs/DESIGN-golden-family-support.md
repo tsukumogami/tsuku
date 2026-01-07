@@ -2,7 +2,71 @@
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Family-Aware Recipe Analysis](https://github.com/tsukumogami/tsuku/milestone/32)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#822](https://github.com/tsukumogami/tsuku/issues/822) | Add platform constraint types | None | testable |
+| [#823](https://github.com/tsukumogami/tsuku/issues/823) | Extend WhenClause with family/arch | [#822](https://github.com/tsukumogami/tsuku/issues/822) | testable |
+| [#824](https://github.com/tsukumogami/tsuku/issues/824) | Add step analysis computation | [#822](https://github.com/tsukumogami/tsuku/issues/822), [#823](https://github.com/tsukumogami/tsuku/issues/823) | testable |
+| [#825](https://github.com/tsukumogami/tsuku/issues/825) | Integrate step analysis into loader | [#824](https://github.com/tsukumogami/tsuku/issues/824) | testable |
+| [#826](https://github.com/tsukumogami/tsuku/issues/826) | Add recipe family policy analysis | [#825](https://github.com/tsukumogami/tsuku/issues/825) | testable |
+| [#827](https://github.com/tsukumogami/tsuku/issues/827) | Add Matchable interface | [#823](https://github.com/tsukumogami/tsuku/issues/823) | simple |
+| [#828](https://github.com/tsukumogami/tsuku/issues/828) | Expose supported platforms in info | [#826](https://github.com/tsukumogami/tsuku/issues/826) | testable |
+
+### Milestone: [Golden File Family Integration](https://github.com/tsukumogami/tsuku/milestone/33)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#829](https://github.com/tsukumogami/tsuku/issues/829) | Update scripts for family-aware recipes | [#828](https://github.com/tsukumogami/tsuku/issues/828) | testable |
+| [#830](https://github.com/tsukumogami/tsuku/issues/830) | Update workflow for family files | [#829](https://github.com/tsukumogami/tsuku/issues/829) | simple |
+| [#831](https://github.com/tsukumogami/tsuku/issues/831) | Add family guidance to CONTRIBUTING | [#829](https://github.com/tsukumogami/tsuku/issues/829) | simple |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph M32["Milestone 32: Recipe Analysis"]
+        I822["#822: Constraint types"]
+        I823["#823: WhenClause extension"]
+        I824["#824: Step analysis"]
+        I825["#825: Loader integration"]
+        I826["#826: Recipe policy"]
+        I827["#827: Matchable interface"]
+        I828["#828: Info metadata"]
+    end
+
+    subgraph M33["Milestone 33: Golden Files"]
+        I829["#829: Script updates"]
+        I830["#830: Workflow updates"]
+        I831["#831: Documentation"]
+    end
+
+    I822 --> I823
+    I822 --> I824
+    I823 --> I824
+    I823 --> I827
+    I824 --> I825
+    I825 --> I826
+    I826 --> I828
+    I828 --> I829
+    I829 --> I830
+    I829 --> I831
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I822 ready
+    class I823,I824,I825,I826,I827,I828,I829,I830,I831 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
