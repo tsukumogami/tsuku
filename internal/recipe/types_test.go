@@ -1898,3 +1898,193 @@ func TestRecipe_ToTOML_ResourcesAndPatches_Combined(t *testing.T) {
 		t.Errorf("Roundtrip: Patches length = %d, want 1", len(parsed.Patches))
 	}
 }
+
+func TestConstraint_Clone_NilReceiver(t *testing.T) {
+	var c *Constraint
+	result := c.Clone()
+
+	if result == nil {
+		t.Fatal("Clone() on nil receiver returned nil, want non-nil")
+	}
+
+	// Should return empty constraint
+	if result.OS != "" || result.Arch != "" || result.LinuxFamily != "" {
+		t.Errorf("Clone() = %+v, want empty constraint", result)
+	}
+}
+
+func TestConstraint_Clone_CopiesFields(t *testing.T) {
+	c := &Constraint{
+		OS:          "linux",
+		Arch:        "amd64",
+		LinuxFamily: "debian",
+	}
+
+	result := c.Clone()
+
+	// Should be a new instance
+	if result == c {
+		t.Error("Clone() returned same pointer, want new instance")
+	}
+
+	// All fields should be copied
+	if result.OS != c.OS {
+		t.Errorf("Clone().OS = %q, want %q", result.OS, c.OS)
+	}
+	if result.Arch != c.Arch {
+		t.Errorf("Clone().Arch = %q, want %q", result.Arch, c.Arch)
+	}
+	if result.LinuxFamily != c.LinuxFamily {
+		t.Errorf("Clone().LinuxFamily = %q, want %q", result.LinuxFamily, c.LinuxFamily)
+	}
+}
+
+func TestConstraint_Validate_NilReceiver(t *testing.T) {
+	var c *Constraint
+	err := c.Validate()
+
+	if err != nil {
+		t.Errorf("Validate() on nil receiver = %v, want nil", err)
+	}
+}
+
+func TestConstraint_Validate_EmptyConstraint(t *testing.T) {
+	c := &Constraint{}
+	err := c.Validate()
+
+	if err != nil {
+		t.Errorf("Validate() on empty constraint = %v, want nil", err)
+	}
+}
+
+func TestConstraint_Validate_LinuxFamilyWithLinuxOS(t *testing.T) {
+	c := &Constraint{
+		OS:          "linux",
+		LinuxFamily: "debian",
+	}
+	err := c.Validate()
+
+	if err != nil {
+		t.Errorf("Validate() on linux+debian = %v, want nil", err)
+	}
+}
+
+func TestConstraint_Validate_LinuxFamilyWithEmptyOS(t *testing.T) {
+	c := &Constraint{
+		LinuxFamily: "debian",
+	}
+	err := c.Validate()
+
+	if err != nil {
+		t.Errorf("Validate() on empty OS + debian = %v, want nil (family implies linux)", err)
+	}
+}
+
+func TestConstraint_Validate_LinuxFamilyWithDarwinOS(t *testing.T) {
+	c := &Constraint{
+		OS:          "darwin",
+		LinuxFamily: "debian",
+	}
+	err := c.Validate()
+
+	if err == nil {
+		t.Error("Validate() on darwin+debian = nil, want error")
+	}
+}
+
+func TestDetectInterpolatedVars_NilInput(t *testing.T) {
+	result := detectInterpolatedVars(nil)
+
+	if len(result) != 0 {
+		t.Errorf("detectInterpolatedVars(nil) = %v, want empty map", result)
+	}
+}
+
+func TestDetectInterpolatedVars_StringWithoutVars(t *testing.T) {
+	result := detectInterpolatedVars("no interpolation here")
+
+	if len(result) != 0 {
+		t.Errorf("detectInterpolatedVars(no vars) = %v, want empty map", result)
+	}
+}
+
+func TestDetectInterpolatedVars_StringWithLinuxFamily(t *testing.T) {
+	result := detectInterpolatedVars("pkg-{{linux_family}}")
+
+	if len(result) != 1 {
+		t.Fatalf("detectInterpolatedVars = %v, want 1 entry", result)
+	}
+	if !result["linux_family"] {
+		t.Error("detectInterpolatedVars missing linux_family key")
+	}
+}
+
+func TestDetectInterpolatedVars_StringWithMultipleVars(t *testing.T) {
+	result := detectInterpolatedVars("tool-{{os}}-{{arch}}")
+
+	if len(result) != 2 {
+		t.Fatalf("detectInterpolatedVars = %v, want 2 entries", result)
+	}
+	if !result["os"] {
+		t.Error("detectInterpolatedVars missing os key")
+	}
+	if !result["arch"] {
+		t.Error("detectInterpolatedVars missing arch key")
+	}
+}
+
+func TestDetectInterpolatedVars_NestedMap(t *testing.T) {
+	input := map[string]interface{}{
+		"key1": "value1",
+		"key2": map[string]interface{}{
+			"nested": "pkg-{{linux_family}}.deb",
+		},
+	}
+
+	result := detectInterpolatedVars(input)
+
+	if len(result) != 1 {
+		t.Fatalf("detectInterpolatedVars(nested map) = %v, want 1 entry", result)
+	}
+	if !result["linux_family"] {
+		t.Error("detectInterpolatedVars missing linux_family from nested map")
+	}
+}
+
+func TestDetectInterpolatedVars_Slice(t *testing.T) {
+	input := []interface{}{
+		"no-var",
+		"tool-{{os}}",
+		"other-{{arch}}",
+	}
+
+	result := detectInterpolatedVars(input)
+
+	if len(result) != 2 {
+		t.Fatalf("detectInterpolatedVars(slice) = %v, want 2 entries", result)
+	}
+	if !result["os"] {
+		t.Error("detectInterpolatedVars missing os from slice")
+	}
+	if !result["arch"] {
+		t.Error("detectInterpolatedVars missing arch from slice")
+	}
+}
+
+func TestDetectInterpolatedVars_UnknownVar(t *testing.T) {
+	result := detectInterpolatedVars("{{unknown}}-{{version}}-{{os}}")
+
+	// Should only detect "os", not "unknown" or "version"
+	if len(result) != 1 {
+		t.Fatalf("detectInterpolatedVars(unknown var) = %v, want 1 entry (only os)", result)
+	}
+	if !result["os"] {
+		t.Error("detectInterpolatedVars missing os")
+	}
+	if result["unknown"] {
+		t.Error("detectInterpolatedVars should not detect unknown")
+	}
+	if result["version"] {
+		t.Error("detectInterpolatedVars should not detect version")
+	}
+}
