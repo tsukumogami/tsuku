@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -192,13 +193,16 @@ type VersionSection struct {
 type WhenClause struct {
 	Platform       []string `toml:"platform,omitempty"`        // Platform tuples: ["darwin/arm64", "linux/amd64"]
 	OS             []string `toml:"os,omitempty"`              // OS-only: ["darwin", "linux"] (any arch)
+	Arch           string   `toml:"arch,omitempty"`            // Architecture filter: "amd64", "arm64"
+	LinuxFamily    string   `toml:"linux_family,omitempty"`    // Linux family filter: "debian", "rhel", etc.
 	PackageManager string   `toml:"package_manager,omitempty"` // Runtime check (brew, apt, etc.)
 }
 
 // IsEmpty returns true if the when clause has no conditions (matches all platforms).
 func (w *WhenClause) IsEmpty() bool {
 	return w == nil ||
-		(len(w.Platform) == 0 && len(w.OS) == 0 && w.PackageManager == "")
+		(len(w.Platform) == 0 && len(w.OS) == 0 &&
+			w.Arch == "" && w.LinuxFamily == "" && w.PackageManager == "")
 }
 
 // Matches returns true if the when clause conditions are satisfied for the given platform.
@@ -297,6 +301,16 @@ func (s *Step) UnmarshalTOML(data interface{}) error {
 			s.When.PackageManager = pm
 		}
 
+		// Parse arch
+		if arch, ok := whenData["arch"].(string); ok {
+			s.When.Arch = arch
+		}
+
+		// Parse linux_family
+		if linuxFamily, ok := whenData["linux_family"].(string); ok {
+			s.When.LinuxFamily = linuxFamily
+		}
+
 		// Validate mutual exclusivity
 		if len(s.When.Platform) > 0 && len(s.When.OS) > 0 {
 			return fmt.Errorf("when clause cannot have both 'platform' and 'os' fields")
@@ -344,6 +358,12 @@ func (s Step) ToMap() map[string]interface{} {
 		}
 		if len(s.When.OS) > 0 {
 			whenMap["os"] = s.When.OS
+		}
+		if s.When.Arch != "" {
+			whenMap["arch"] = s.When.Arch
+		}
+		if s.When.LinuxFamily != "" {
+			whenMap["linux_family"] = s.When.LinuxFamily
 		}
 		if s.When.PackageManager != "" {
 			whenMap["package_manager"] = s.When.PackageManager
@@ -400,6 +420,73 @@ func (c *Constraint) Validate() error {
 		return fmt.Errorf("linux_family %q is only valid with os=\"linux\", got os=%q", c.LinuxFamily, c.OS)
 	}
 	return nil
+}
+
+// MergeWhenClause merges an explicit when clause with an implicit constraint.
+// Returns the merged constraint, or error if any dimension conflicts.
+// Used during step analysis to combine action constraints with explicit when clauses.
+func MergeWhenClause(implicit *Constraint, when *WhenClause) (*Constraint, error) {
+	result := implicit.Clone() // nil-safe from Clone()
+
+	// If no when clause, just return the cloned implicit constraint
+	if when == nil {
+		return result, nil
+	}
+
+	// Check Platform array conflict (e.g., apt_install + when.platform: ["darwin/arm64"])
+	// Platform entries are "os/arch" tuples that must be compatible with implicit OS
+	if len(when.Platform) > 0 && result.OS != "" {
+		compatible := false
+		for _, p := range when.Platform {
+			if os, _, _ := strings.Cut(p, "/"); os == result.OS {
+				compatible = true
+				break
+			}
+		}
+		if !compatible {
+			return nil, fmt.Errorf("platform conflict: action requires OS %q but when.platform specifies %v",
+				result.OS, when.Platform)
+		}
+	}
+
+	// Check OS conflict
+	// Note: when.os = ["linux", "darwin"] (multi-OS) leaves result.OS empty
+	// because we can't pick one. This is intentional - step runs on multiple OSes.
+	if len(when.OS) > 0 {
+		if result.OS != "" && !slices.Contains(when.OS, result.OS) {
+			return nil, fmt.Errorf("OS conflict: action requires %q but when clause specifies %v",
+				result.OS, when.OS)
+		}
+		if result.OS == "" && len(when.OS) == 1 {
+			result.OS = when.OS[0]
+		}
+		// Multi-OS case: result.OS stays empty (unconstrained within the listed OSes)
+	}
+
+	// Check LinuxFamily conflict
+	if when.LinuxFamily != "" {
+		if result.LinuxFamily != "" && result.LinuxFamily != when.LinuxFamily {
+			return nil, fmt.Errorf("linux_family conflict: action requires %q but when clause specifies %q",
+				result.LinuxFamily, when.LinuxFamily)
+		}
+		result.LinuxFamily = when.LinuxFamily
+	}
+
+	// Check Arch conflict
+	if when.Arch != "" {
+		if result.Arch != "" && result.Arch != when.Arch {
+			return nil, fmt.Errorf("arch conflict: action requires %q but when clause specifies %q",
+				result.Arch, when.Arch)
+		}
+		result.Arch = when.Arch
+	}
+
+	// Validate final constraint (catches invalid combinations like darwin+debian)
+	if err := result.Validate(); err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // StepAnalysis combines constraint with variation detection.
