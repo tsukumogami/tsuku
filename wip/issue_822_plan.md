@@ -32,18 +32,18 @@ None - all changes go into existing files.
 
 ## Implementation Steps
 
-- [ ] Add `Constraint` struct with OS, Arch, LinuxFamily fields to `types.go`
-- [ ] Add `Clone()` method with nil-safe behavior
-- [ ] Add `Validate()` method checking LinuxFamily/OS compatibility
-- [ ] Add `StepAnalysis` struct with Constraint pointer and FamilyVarying bool
-- [ ] Add `knownVars` package-level variable with platform interpolation variables
-- [ ] Add `detectInterpolatedVars()` function with recursive scanning
-- [ ] Add unit tests for `Constraint.Clone()` (nil receiver, field copying)
-- [ ] Add unit tests for `Constraint.Validate()` (nil receiver, empty, valid combinations, invalid darwin+family)
-- [ ] Add unit tests for `detectInterpolatedVars()` (nil, no vars, single var, multiple vars, nested map, slice, unknown var)
-- [ ] Run `go build ./internal/recipe/...` to verify compilation
-- [ ] Run `go test ./internal/recipe/...` to verify tests pass
-- [ ] Run `go vet ./internal/recipe/...` to verify no issues
+- [x] Add `Constraint` struct with OS, Arch, LinuxFamily fields to `types.go`
+- [x] Add `Clone()` method with nil-safe behavior
+- [x] Add `Validate()` method checking LinuxFamily/OS compatibility
+- [x] Add `StepAnalysis` struct with Constraint pointer and FamilyVarying bool
+- [x] Add `knownVars` package-level variable with platform interpolation variables
+- [x] Add `detectInterpolatedVars()` function with recursive scanning
+- [x] Add unit tests for `Constraint.Clone()` (nil receiver, field copying)
+- [x] Add unit tests for `Constraint.Validate()` (nil receiver, empty, valid combinations, invalid darwin+family)
+- [x] Add unit tests for `detectInterpolatedVars()` (nil, no vars, single var, multiple vars, nested map, slice, unknown var)
+- [x] Run `go build ./internal/recipe/...` to verify compilation
+- [x] Run `go test ./internal/recipe/...` to verify tests pass
+- [x] Run `go vet ./internal/recipe/...` to verify no issues
 
 ## Testing Strategy
 
