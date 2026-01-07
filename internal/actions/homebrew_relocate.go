@@ -590,6 +590,18 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 		for depName, depVersion := range ctx.Dependencies.InstallTime {
 			// Dependency libraries are in $TSUKU_HOME/libs/depname-version/lib
 			depLibPath := filepath.Join(ctx.LibsDir, fmt.Sprintf("%s-%s", depName, depVersion), "lib")
+
+			// Debug: Check if this dependency lib dir exists and list its contents
+			if entries, err := os.ReadDir(depLibPath); err == nil {
+				var fileNames []string
+				for _, e := range entries {
+					fileNames = append(fileNames, e.Name())
+				}
+				fmt.Printf("   Debug: %s lib dir contains: %v\n", depName, fileNames)
+			} else {
+				fmt.Printf("   Debug: %s lib dir doesn't exist: %v\n", depName, err)
+			}
+
 			depLibPaths = append(depLibPaths, depLibPath)
 		}
 	}
@@ -600,6 +612,7 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 	}
 
 	fmt.Printf("   Fixing dylib RPATHs for %d .dylib file(s) with %d dependencies\n", len(dylibFiles), len(depLibPaths))
+	fmt.Printf("   Debug: Dependency lib paths: %v\n", depLibPaths)
 
 	installNameTool, err := exec.LookPath("install_name_tool")
 	if err != nil {
@@ -609,6 +622,8 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 
 	// For each .dylib file, add RPATHs to all dependency lib directories
 	for _, dylibPath := range dylibFiles {
+		fmt.Printf("   Debug: Processing dylib: %s\n", filepath.Base(dylibPath))
+
 		// Make file writable
 		info, err := os.Stat(dylibPath)
 		if err != nil {
@@ -626,6 +641,7 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 
 		// Add RPATH for each dependency
 		for _, depPath := range depLibPaths {
+			fmt.Printf("   Debug: Adding RPATH %s to %s\n", depPath, filepath.Base(dylibPath))
 			addCmd := exec.Command(installNameTool, "-add_rpath", depPath, dylibPath)
 			output, err := addCmd.CombinedOutput()
 			if err != nil {
@@ -633,7 +649,11 @@ func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, in
 				if !strings.Contains(string(output), "would duplicate") {
 					fmt.Printf("   Warning: failed to add RPATH %s to %s: %s\n",
 						depPath, filepath.Base(dylibPath), strings.TrimSpace(string(output)))
+				} else {
+					fmt.Printf("   Debug: RPATH already exists (duplicate)\n")
 				}
+			} else {
+				fmt.Printf("   Debug: Successfully added RPATH\n")
 			}
 		}
 
