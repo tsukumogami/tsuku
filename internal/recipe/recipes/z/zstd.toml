@@ -1,0 +1,36 @@
+[metadata]
+name = "zstd"
+description = "Zstandard - Fast real-time compression algorithm"
+homepage = "https://facebook.github.io/zstd/"
+type = "library"
+dependencies = []
+
+[version]
+source = "homebrew"
+formula = "zstd"
+
+[[steps]]
+action = "homebrew"
+formula = "zstd"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "bin/zstd",
+    "bin/pzstd",
+    "bin/unzstd",
+    "bin/zstdcat",
+    "bin/zstdgrep",
+    "bin/zstdless",
+    "bin/zstdmt",
+    "lib/libzstd.a",
+    "lib/libzstd.so",
+    "lib/libzstd.so.1",
+    "lib/libzstd.dylib",
+    "lib/libzstd.1.dylib",
+    "lib/pkgconfig/libzstd.pc",
+    "include/zstd.h",
+    "include/zdict.h",
+    "include/zstd_errors.h",
+]

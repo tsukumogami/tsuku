@@ -244,13 +244,10 @@ func buildAutotoolsEnv(ctx *ExecutionContext) []string {
 
 	// Set deterministic build variables
 	filteredEnv := make([]string, 0, len(env))
-	var existingPath string
 	for _, e := range env {
-		// Filter variables that could cause non-determinism
-		if strings.HasPrefix(e, "PATH=") {
-			// Capture existing PATH to prepend ExecPaths later
-			existingPath = strings.TrimPrefix(e, "PATH=")
-		} else if !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") &&
+		// Filter variables that could cause non-determinism or will be set explicitly
+		if !strings.HasPrefix(e, "SOURCE_DATE_EPOCH=") &&
+			!strings.HasPrefix(e, "PATH=") &&
 			!strings.HasPrefix(e, "PKG_CONFIG_PATH=") &&
 			!strings.HasPrefix(e, "CPPFLAGS=") &&
 			!strings.HasPrefix(e, "LDFLAGS=") {

@@ -94,7 +94,7 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 	}
 
 	// Relocate placeholders in files
-	if err := a.relocatePlaceholders(ctx, installPath, cellarPath); err != nil {
+	if err := a.relocatePlaceholders(ctx, installPath, cellarPath, formula); err != nil {
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
 
@@ -109,7 +109,8 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 // For text files: direct replacement with install path
 // For binary files: use patchelf/install_name_tool to reset RPATH
 // prefixPath is used for @@HOMEBREW_PREFIX@@, cellarPath for @@HOMEBREW_CELLAR@@
-func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, prefixPath, cellarPath string) error {
+// formula is the Homebrew formula name (may differ from recipe name, e.g., curl vs libcurl)
+func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, prefixPath, cellarPath, formula string) error {
 	dir := ctx.WorkDir
 	prefixReplacement := []byte(prefixPath)
 	cellarReplacement := []byte(cellarPath)
@@ -187,9 +188,18 @@ func (a *HomebrewRelocateAction) relocatePlaceholders(ctx *ExecutionContext, pre
 			newContent := content
 
 			// Replace Homebrew placeholders with correct paths:
-			// @@HOMEBREW_PREFIX@@ → prefixPath (e.g., /root/.tsuku/libs/curl-8.17.0)
-			// @@HOMEBREW_CELLAR@@ → cellarPath (e.g., /root/.tsuku/libs)
+			// @@HOMEBREW_PREFIX@@ → prefixPath (e.g., /root/.tsuku/libs/libcurl-8.17.0)
 			newContent = bytes.ReplaceAll(newContent, []byte("@@HOMEBREW_PREFIX@@"), prefixReplacement)
+
+			// For @@HOMEBREW_CELLAR@@, bottles contain formula-specific patterns like:
+			// @@HOMEBREW_CELLAR@@/curl/8.17.0 (using FORMULA name, not recipe name)
+			// We need to replace with recipe-based path: /root/.tsuku/libs/libcurl-8.17.0
+			// So we replace the ENTIRE pattern @@HOMEBREW_CELLAR@@/formula/version with the install path
+			// This handles cases where formula name != recipe name (e.g., curl vs libcurl)
+			cellarFormulaPattern := fmt.Sprintf("@@HOMEBREW_CELLAR@@/%s/%s", formula, ctx.Version)
+			newContent = bytes.ReplaceAll(newContent, []byte(cellarFormulaPattern), prefixReplacement)
+
+			// Also replace bare @@HOMEBREW_CELLAR@@ for any other occurrences
 			newContent = bytes.ReplaceAll(newContent, []byte("@@HOMEBREW_CELLAR@@"), cellarReplacement)
 
 			// Replace bottle build paths
