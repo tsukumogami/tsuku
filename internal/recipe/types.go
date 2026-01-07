@@ -3,6 +3,7 @@ package recipe
 import (
 	"fmt"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -365,6 +366,90 @@ const (
 	// RecipeTypeLibrary is for recipes that install shared libraries
 	RecipeTypeLibrary = "library"
 )
+
+// Constraint represents platform requirements for a step.
+// Answers: "where can this step run?"
+// nil constraint means unconstrained (runs anywhere).
+type Constraint struct {
+	OS          string // e.g., "linux", "darwin", or empty (any)
+	Arch        string // e.g., "amd64", "arm64", or empty (any)
+	LinuxFamily string // e.g., "debian", or empty (any linux)
+}
+
+// Clone returns a copy of the constraint, or an empty constraint if c is nil.
+// Nil-safe: can be called on a nil receiver (idiomatic Go pattern).
+func (c *Constraint) Clone() *Constraint {
+	if c == nil {
+		return &Constraint{}
+	}
+	return &Constraint{
+		OS:          c.OS,
+		Arch:        c.Arch,
+		LinuxFamily: c.LinuxFamily,
+	}
+}
+
+// Validate returns an error if the constraint contains invalid combinations.
+// Invalid state: LinuxFamily set when OS is not "linux" (or empty).
+func (c *Constraint) Validate() error {
+	if c == nil {
+		return nil
+	}
+	// LinuxFamily is only valid when OS is empty (implies linux) or OS is "linux"
+	if c.LinuxFamily != "" && c.OS != "" && c.OS != "linux" {
+		return fmt.Errorf("linux_family %q is only valid with os=\"linux\", got os=%q", c.LinuxFamily, c.OS)
+	}
+	return nil
+}
+
+// StepAnalysis combines constraint with variation detection.
+// Stored on Step after construction (pre-computed at load time).
+type StepAnalysis struct {
+	Constraint    *Constraint // nil means unconstrained (runs anywhere)
+	FamilyVarying bool        // true if step uses {{linux_family}} interpolation
+}
+
+// knownVars lists interpolation variables that affect platform variance.
+var knownVars = []string{"linux_family", "os", "arch"}
+
+// interpolationPattern matches {{varname}} for known variables.
+// Built dynamically from knownVars to ensure consistency.
+var interpolationPattern = regexp.MustCompile(`\{\{(` + strings.Join(knownVars, "|") + `)\}\}`)
+
+// detectInterpolatedVars scans for {{var}} patterns in any string value.
+// Returns a map of variable names found (e.g., {"linux_family": true}).
+// Generalized to support future variables like {{arch}}.
+func detectInterpolatedVars(v interface{}) map[string]bool {
+	result := make(map[string]bool)
+	detectInterpolatedVarsInto(v, result)
+	return result
+}
+
+// detectInterpolatedVarsInto recursively scans v for interpolated variables,
+// adding found variables to the result map.
+func detectInterpolatedVarsInto(v interface{}, result map[string]bool) {
+	if v == nil {
+		return
+	}
+
+	switch val := v.(type) {
+	case string:
+		matches := interpolationPattern.FindAllStringSubmatch(val, -1)
+		for _, match := range matches {
+			if len(match) > 1 {
+				result[match[1]] = true
+			}
+		}
+	case map[string]interface{}:
+		for _, mapVal := range val {
+			detectInterpolatedVarsInto(mapVal, result)
+		}
+	case []interface{}:
+		for _, item := range val {
+			detectInterpolatedVarsInto(item, result)
+		}
+	}
+}
 
 // Verification modes
 const (
