@@ -38,7 +38,7 @@ rpath = "$ORIGIN/../lib:{libs_dir}/libcurl-{deps.libcurl.version}/lib:{libs_dir}
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/git"]
+binaries = ["bin/git", "libexec/git-core/git-remote-https"]
 
 [verify]
 command = "git --version"
