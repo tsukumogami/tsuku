@@ -33,7 +33,12 @@ configure_args = ["--with-curl={libs_dir}/libcurl-{deps.libcurl.version}"]
 [[steps]]
 action = "set_rpath"
 binaries = [".install/bin/git"]
-rpath = "$ORIGIN/../lib:{libs_dir}/libcurl-{deps.libcurl.version}/lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}/zlib-{deps.zlib.version}/lib:{libs_dir}/expat-{deps.expat.version}/lib"
+rpath = "$ORIGIN/../lib:{libs_dir}/libcurl-{deps.libcurl.version}/lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}/zlib-{deps.zlib.version}/lib:{libs_dir}/expat-{deps.expat.version}/lib:{libs_dir}/brotli-1.2.0/lib:{libs_dir}/libnghttp2-1.68.0/lib:{libs_dir}/libnghttp3-1.14.0/lib:{libs_dir}/libngtcp2-1.19.0/lib:{libs_dir}/libssh2-1.11.1/lib:{libs_dir}/zstd-1.5.7/lib"
+
+[[steps]]
+action = "set_rpath"
+binaries = [".install/libexec/git-core/git-remote-https"]
+rpath = "$ORIGIN/../../..:$ORIGIN/../../../lib:{libs_dir}/libcurl-{deps.libcurl.version}/lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}/zlib-{deps.zlib.version}/lib:{libs_dir}/expat-{deps.expat.version}/lib:{libs_dir}/brotli-1.2.0/lib:{libs_dir}/libnghttp2-1.68.0/lib:{libs_dir}/libnghttp3-1.14.0/lib:{libs_dir}/libngtcp2-1.19.0/lib:{libs_dir}/libssh2-1.11.1/lib:{libs_dir}/zstd-1.5.7/lib"
 
 [[steps]]
 action = "install_binaries"
