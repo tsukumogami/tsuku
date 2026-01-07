@@ -98,6 +98,13 @@ func (a *HomebrewRelocateAction) Execute(ctx *ExecutionContext, params map[strin
 		return fmt.Errorf("failed to relocate placeholders: %w", err)
 	}
 
+	// For library recipes on macOS, fix RPATHs in .dylib files to include dependency paths
+	if ctx.Recipe != nil && ctx.Recipe.Metadata.Type == "library" && runtime.GOOS == "darwin" {
+		if err := a.fixLibraryDylibRpaths(ctx, installPath); err != nil {
+			return fmt.Errorf("failed to fix library dylib RPATHs: %w", err)
+		}
+	}
+
 	fmt.Printf("   Relocation complete: %s\n", formula)
 
 	return nil
@@ -537,6 +544,111 @@ func (a *HomebrewRelocateAction) fixMachoRpath(binaryPath, installPath string) e
 		codesign, err := exec.LookPath("codesign")
 		if err == nil {
 			signCmd := exec.Command(codesign, "-f", "-s", "-", binaryPath)
+			_ = signCmd.Run() // Best effort
+		}
+	}
+
+	return nil
+}
+
+// fixLibraryDylibRpaths adds RPATHs to library .dylib files pointing to dependency library directories
+// This is needed on macOS where dylibs reference their dependencies via @rpath
+func (a *HomebrewRelocateAction) fixLibraryDylibRpaths(ctx *ExecutionContext, installPath string) error {
+	// Only run on macOS
+	if runtime.GOOS != "darwin" {
+		return nil
+	}
+
+	// Find all .dylib files in the library
+	libDir := filepath.Join(ctx.WorkDir, "lib")
+	if _, err := os.Stat(libDir); os.IsNotExist(err) {
+		// No lib directory, nothing to do
+		return nil
+	}
+
+	var dylibFiles []string
+	err := filepath.Walk(libDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() && strings.HasSuffix(path, ".dylib") {
+			dylibFiles = append(dylibFiles, path)
+		}
+		return nil
+	})
+	if err != nil {
+		return fmt.Errorf("failed to walk lib directory: %w", err)
+	}
+
+	if len(dylibFiles) == 0 {
+		return nil
+	}
+
+	// Build list of dependency library paths
+	var depLibPaths []string
+	if ctx.Dependencies.InstallTime != nil {
+		for depName, depVersion := range ctx.Dependencies.InstallTime {
+			// Dependency libraries are in $TSUKU_HOME/libs/depname-version/lib
+			depLibPath := filepath.Join(ctx.LibsDir, fmt.Sprintf("%s-%s", depName, depVersion), "lib")
+			depLibPaths = append(depLibPaths, depLibPath)
+		}
+	}
+
+	if len(depLibPaths) == 0 {
+		// No dependencies, nothing to add
+		return nil
+	}
+
+	fmt.Printf("   Fixing dylib RPATHs for %d .dylib file(s) with %d dependencies\n", len(dylibFiles), len(depLibPaths))
+
+	installNameTool, err := exec.LookPath("install_name_tool")
+	if err != nil {
+		fmt.Printf("   Warning: install_name_tool not found, skipping dylib RPATH fixes\n")
+		return nil
+	}
+
+	// For each .dylib file, add RPATHs to all dependency lib directories
+	for _, dylibPath := range dylibFiles {
+		// Make file writable
+		info, err := os.Stat(dylibPath)
+		if err != nil {
+			continue
+		}
+		originalMode := info.Mode()
+		if originalMode&0200 == 0 {
+			if err := os.Chmod(dylibPath, originalMode|0200); err != nil {
+				continue
+			}
+			defer func(p string, m os.FileMode) {
+				_ = os.Chmod(p, m)
+			}(dylibPath, originalMode)
+		}
+
+		// Add RPATH for each dependency
+		for _, depPath := range depLibPaths {
+			addCmd := exec.Command(installNameTool, "-add_rpath", depPath, dylibPath)
+			output, err := addCmd.CombinedOutput()
+			if err != nil {
+				// Ignore "would duplicate" errors
+				if !strings.Contains(string(output), "would duplicate") {
+					fmt.Printf("   Warning: failed to add RPATH %s to %s: %s\n",
+						depPath, filepath.Base(dylibPath), strings.TrimSpace(string(output)))
+				}
+			}
+		}
+
+		// Also add @loader_path to find sibling libs in same directory
+		loaderPathCmd := exec.Command(installNameTool, "-add_rpath", "@loader_path", dylibPath)
+		output, err := loaderPathCmd.CombinedOutput()
+		if err != nil && !strings.Contains(string(output), "would duplicate") {
+			fmt.Printf("   Warning: failed to add @loader_path RPATH to %s: %s\n",
+				filepath.Base(dylibPath), strings.TrimSpace(string(output)))
+		}
+
+		// Re-sign the binary (required on macOS after modification)
+		codesign, err := exec.LookPath("codesign")
+		if err == nil {
+			signCmd := exec.Command(codesign, "-f", "-s", "-", dylibPath)
 			_ = signCmd.Run() // Best effort
 		}
 	}
