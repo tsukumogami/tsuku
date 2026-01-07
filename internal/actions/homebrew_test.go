@@ -158,7 +158,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_TextFile(t *testing.T) {
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -193,7 +193,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_BinaryFile(t *testing.T) {
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -234,7 +234,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_SkipsSymlinks(t *testing.T)
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, "/opt"); err != nil {
+	if err := action.relocatePlaceholders(ctx, "/opt", "/opt", "test"); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 }
@@ -256,7 +256,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_NoPlaceholder(t *testing.T)
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, "/opt"); err != nil {
+	if err := action.relocatePlaceholders(ctx, "/opt", "/opt", "test"); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -434,7 +434,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_ReadOnlyTextFile(t *testing
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -474,7 +474,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_MultipleFiles(t *testing.T)
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -520,7 +520,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_NestedDirectories(t *testin
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, installPath); err != nil {
+	if err := action.relocatePlaceholders(ctx, installPath, installPath, "test"); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
@@ -699,7 +699,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_BinaryWithELFMagic(t *testi
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	err := action.relocatePlaceholders(ctx, "/opt/test")
+	err := action.relocatePlaceholders(ctx, "/opt/test", "/opt/test", "test")
 	if err != nil {
 		t.Logf("relocatePlaceholders returned error (may be expected if patchelf not found): %v", err)
 	}
@@ -721,7 +721,7 @@ func TestHomebrewRelocateAction_RelocatePlaceholders_BothPlaceholders(t *testing
 		WorkDir:   tmpDir,
 		ExecPaths: []string{},
 	}
-	if err := action.relocatePlaceholders(ctx, "/opt/test"); err != nil {
+	if err := action.relocatePlaceholders(ctx, "/opt/test", "/opt/test", "test"); err != nil {
 		t.Fatalf("relocatePlaceholders failed: %v", err)
 	}
 
