@@ -15,23 +15,23 @@ None - all changes go into existing files.
 
 ## Implementation Steps
 
-- [ ] Add `Arch` field to WhenClause struct (line ~195)
-- [ ] Add `LinuxFamily` field to WhenClause struct (line ~195)
-- [ ] Update `IsEmpty()` to include new fields (line ~201)
-- [ ] Update `UnmarshalTOML` to parse `arch` from when clause (after line 298)
-- [ ] Update `UnmarshalTOML` to parse `linux_family` from when clause (after line 298)
-- [ ] Update `ToMap` to serialize `Arch` when present (after line 350)
-- [ ] Update `ToMap` to serialize `LinuxFamily` when present (after line 350)
-- [ ] Implement `mergeWhenClause()` function
-- [ ] Add unit tests for WhenClause.IsEmpty() with new fields
-- [ ] Add unit tests for mergeWhenClause() - nil implicit, nil when
-- [ ] Add unit tests for mergeWhenClause() - platform array conflict
-- [ ] Add unit tests for mergeWhenClause() - OS conflict
-- [ ] Add unit tests for mergeWhenClause() - LinuxFamily conflict
-- [ ] Add unit tests for mergeWhenClause() - Arch conflict
-- [ ] Add unit tests for mergeWhenClause() - extends implicit with explicit arch
-- [ ] Add unit tests for mergeWhenClause() - compatible (redundant) constraints
-- [ ] Run go build, go vet, go test
+- [x] Add `Arch` field to WhenClause struct (line ~195)
+- [x] Add `LinuxFamily` field to WhenClause struct (line ~195)
+- [x] Update `IsEmpty()` to include new fields (line ~201)
+- [x] Update `UnmarshalTOML` to parse `arch` from when clause (after line 298)
+- [x] Update `UnmarshalTOML` to parse `linux_family` from when clause (after line 298)
+- [x] Update `ToMap` to serialize `Arch` when present (after line 350)
+- [x] Update `ToMap` to serialize `LinuxFamily` when present (after line 350)
+- [x] Implement `MergeWhenClause()` function
+- [x] Add unit tests for WhenClause.IsEmpty() with new fields
+- [x] Add unit tests for MergeWhenClause() - nil implicit, nil when
+- [x] Add unit tests for MergeWhenClause() - platform array conflict
+- [x] Add unit tests for MergeWhenClause() - OS conflict
+- [x] Add unit tests for MergeWhenClause() - LinuxFamily conflict
+- [x] Add unit tests for MergeWhenClause() - Arch conflict
+- [x] Add unit tests for MergeWhenClause() - extends implicit with explicit arch
+- [x] Add unit tests for MergeWhenClause() - compatible (redundant) constraints
+- [x] Run go build, go vet, go test
 
 ## Testing Strategy
 

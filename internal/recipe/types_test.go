@@ -2088,3 +2088,183 @@ func TestDetectInterpolatedVars_UnknownVar(t *testing.T) {
 		t.Error("detectInterpolatedVars should not detect version")
 	}
 }
+
+// WhenClause.IsEmpty tests with new fields
+
+func TestWhenClause_IsEmpty_WithArch(t *testing.T) {
+	w := &WhenClause{Arch: "amd64"}
+	if w.IsEmpty() {
+		t.Error("IsEmpty() = true for WhenClause with Arch, want false")
+	}
+}
+
+func TestWhenClause_IsEmpty_WithLinuxFamily(t *testing.T) {
+	w := &WhenClause{LinuxFamily: "debian"}
+	if w.IsEmpty() {
+		t.Error("IsEmpty() = true for WhenClause with LinuxFamily, want false")
+	}
+}
+
+// MergeWhenClause tests
+
+func TestMergeWhenClause_NilImplicit_NilWhen(t *testing.T) {
+	result, err := MergeWhenClause(nil, nil)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(nil, nil) error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("MergeWhenClause(nil, nil) returned nil")
+	}
+	// Should be empty constraint
+	if result.OS != "" || result.Arch != "" || result.LinuxFamily != "" {
+		t.Errorf("MergeWhenClause(nil, nil) = %+v, want empty constraint", result)
+	}
+}
+
+func TestMergeWhenClause_NilImplicit_WithArch(t *testing.T) {
+	when := &WhenClause{Arch: "amd64"}
+	result, err := MergeWhenClause(nil, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(nil, arch) error = %v", err)
+	}
+	if result.Arch != "amd64" {
+		t.Errorf("MergeWhenClause().Arch = %q, want %q", result.Arch, "amd64")
+	}
+}
+
+func TestMergeWhenClause_NilImplicit_WithLinuxFamily(t *testing.T) {
+	when := &WhenClause{LinuxFamily: "debian"}
+	result, err := MergeWhenClause(nil, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(nil, family) error = %v", err)
+	}
+	if result.LinuxFamily != "debian" {
+		t.Errorf("MergeWhenClause().LinuxFamily = %q, want %q", result.LinuxFamily, "debian")
+	}
+}
+
+func TestMergeWhenClause_PlatformConflict(t *testing.T) {
+	implicit := &Constraint{OS: "linux"}
+	when := &WhenClause{Platform: []string{"darwin/arm64"}}
+
+	_, err := MergeWhenClause(implicit, when)
+	if err == nil {
+		t.Error("MergeWhenClause(linux, darwin platform) = nil error, want platform conflict")
+	}
+}
+
+func TestMergeWhenClause_OSConflict(t *testing.T) {
+	implicit := &Constraint{OS: "linux"}
+	when := &WhenClause{OS: []string{"darwin"}}
+
+	_, err := MergeWhenClause(implicit, when)
+	if err == nil {
+		t.Error("MergeWhenClause(linux, darwin OS) = nil error, want OS conflict")
+	}
+}
+
+func TestMergeWhenClause_LinuxFamilyConflict(t *testing.T) {
+	implicit := &Constraint{LinuxFamily: "debian"}
+	when := &WhenClause{LinuxFamily: "rhel"}
+
+	_, err := MergeWhenClause(implicit, when)
+	if err == nil {
+		t.Error("MergeWhenClause(debian, rhel) = nil error, want linux_family conflict")
+	}
+}
+
+func TestMergeWhenClause_ArchConflict(t *testing.T) {
+	implicit := &Constraint{Arch: "amd64"}
+	when := &WhenClause{Arch: "arm64"}
+
+	_, err := MergeWhenClause(implicit, when)
+	if err == nil {
+		t.Error("MergeWhenClause(amd64, arm64) = nil error, want arch conflict")
+	}
+}
+
+func TestMergeWhenClause_ExtendsWithArch(t *testing.T) {
+	implicit := &Constraint{OS: "linux", LinuxFamily: "debian"}
+	when := &WhenClause{Arch: "amd64"}
+
+	result, err := MergeWhenClause(implicit, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(linux/debian, arch) error = %v", err)
+	}
+
+	if result.OS != "linux" {
+		t.Errorf("result.OS = %q, want %q", result.OS, "linux")
+	}
+	if result.LinuxFamily != "debian" {
+		t.Errorf("result.LinuxFamily = %q, want %q", result.LinuxFamily, "debian")
+	}
+	if result.Arch != "amd64" {
+		t.Errorf("result.Arch = %q, want %q", result.Arch, "amd64")
+	}
+}
+
+func TestMergeWhenClause_RedundantFamily(t *testing.T) {
+	implicit := &Constraint{LinuxFamily: "debian"}
+	when := &WhenClause{LinuxFamily: "debian"}
+
+	result, err := MergeWhenClause(implicit, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(debian, debian) error = %v, want nil (redundant but valid)", err)
+	}
+	if result.LinuxFamily != "debian" {
+		t.Errorf("result.LinuxFamily = %q, want %q", result.LinuxFamily, "debian")
+	}
+}
+
+func TestMergeWhenClause_InvalidFinalConstraint(t *testing.T) {
+	// darwin + debian should fail Validate()
+	implicit := &Constraint{OS: "darwin"}
+	when := &WhenClause{LinuxFamily: "debian"}
+
+	_, err := MergeWhenClause(implicit, when)
+	if err == nil {
+		t.Error("MergeWhenClause(darwin, debian) = nil error, want validation error")
+	}
+}
+
+func TestMergeWhenClause_PlatformCompatible(t *testing.T) {
+	// linux implicit with linux platform should be compatible
+	implicit := &Constraint{OS: "linux"}
+	when := &WhenClause{Platform: []string{"linux/amd64", "linux/arm64"}}
+
+	result, err := MergeWhenClause(implicit, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(linux, linux platforms) error = %v", err)
+	}
+	if result.OS != "linux" {
+		t.Errorf("result.OS = %q, want %q", result.OS, "linux")
+	}
+}
+
+func TestMergeWhenClause_SingleOSSetsConstraint(t *testing.T) {
+	// When implicit has no OS and when has single OS, set it
+	implicit := &Constraint{}
+	when := &WhenClause{OS: []string{"linux"}}
+
+	result, err := MergeWhenClause(implicit, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(empty, single OS) error = %v", err)
+	}
+	if result.OS != "linux" {
+		t.Errorf("result.OS = %q, want %q", result.OS, "linux")
+	}
+}
+
+func TestMergeWhenClause_MultiOSLeavesEmpty(t *testing.T) {
+	// When implicit has no OS and when has multiple OSes, leave empty
+	implicit := &Constraint{}
+	when := &WhenClause{OS: []string{"linux", "darwin"}}
+
+	result, err := MergeWhenClause(implicit, when)
+	if err != nil {
+		t.Fatalf("MergeWhenClause(empty, multi OS) error = %v", err)
+	}
+	if result.OS != "" {
+		t.Errorf("result.OS = %q, want empty (multi-OS)", result.OS)
+	}
+}
