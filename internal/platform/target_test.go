@@ -122,71 +122,50 @@ func TestTarget_LinuxFamily(t *testing.T) {
 		description string
 	}{
 		{
-			name: "debian family on linux",
-			target: Target{
-				Platform:    "linux/amd64",
-				LinuxFamily: "debian",
-			},
+			name:        "debian family on linux",
+			target:      NewTarget("linux/amd64", "debian"),
 			wantOS:      "linux",
 			wantFamily:  "debian",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
-			name: "rhel family on linux",
-			target: Target{
-				Platform:    "linux/arm64",
-				LinuxFamily: "rhel",
-			},
+			name:        "rhel family on linux",
+			target:      NewTarget("linux/arm64", "rhel"),
 			wantOS:      "linux",
 			wantFamily:  "rhel",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
-			name: "arch family on linux",
-			target: Target{
-				Platform:    "linux/amd64",
-				LinuxFamily: "arch",
-			},
+			name:        "arch family on linux",
+			target:      NewTarget("linux/amd64", "arch"),
 			wantOS:      "linux",
 			wantFamily:  "arch",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
-			name: "alpine family on linux",
-			target: Target{
-				Platform:    "linux/amd64",
-				LinuxFamily: "alpine",
-			},
+			name:        "alpine family on linux",
+			target:      NewTarget("linux/amd64", "alpine"),
 			wantOS:      "linux",
 			wantFamily:  "alpine",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
-			name: "suse family on linux",
-			target: Target{
-				Platform:    "linux/amd64",
-				LinuxFamily: "suse",
-			},
+			name:        "suse family on linux",
+			target:      NewTarget("linux/amd64", "suse"),
 			wantOS:      "linux",
 			wantFamily:  "suse",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
-			name: "darwin has no family",
-			target: Target{
-				Platform:    "darwin/arm64",
-				LinuxFamily: "",
-			},
+			name:        "darwin has no family",
+			target:      NewTarget("darwin/arm64", ""),
 			wantOS:      "darwin",
 			wantFamily:  "",
 			description: "LinuxFamily empty for non-Linux",
 		},
 		{
-			name: "windows has no family",
-			target: Target{
-				Platform:    "windows/amd64",
-				LinuxFamily: "",
-			},
+			name:        "windows has no family",
+			target:      NewTarget("windows/amd64", ""),
 			wantOS:      "windows",
 			wantFamily:  "",
 			description: "LinuxFamily empty for non-Linux",
@@ -198,8 +177,8 @@ func TestTarget_LinuxFamily(t *testing.T) {
 			if got := tt.target.OS(); got != tt.wantOS {
 				t.Errorf("Target.OS() = %q, want %q", got, tt.wantOS)
 			}
-			if got := tt.target.LinuxFamily; got != tt.wantFamily {
-				t.Errorf("Target.LinuxFamily = %q, want %q", got, tt.wantFamily)
+			if got := tt.target.LinuxFamily(); got != tt.wantFamily {
+				t.Errorf("Target.LinuxFamily() = %q, want %q", got, tt.wantFamily)
 			}
 		})
 	}

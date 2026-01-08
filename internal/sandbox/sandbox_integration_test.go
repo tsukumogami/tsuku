@@ -185,16 +185,10 @@ func TestSandboxIntegration(t *testing.T) {
 		reqs := sandbox.ComputeSandboxRequirements(plan)
 
 		// Create debian target
-		debianTarget := platform.Target{
-			Platform:    "linux/amd64",
-			LinuxFamily: "debian",
-		}
+		debianTarget := platform.NewTarget("linux/amd64", "debian")
 
 		// Create rhel target
-		rhelTarget := platform.Target{
-			Platform:    "linux/amd64",
-			LinuxFamily: "rhel",
-		}
+		rhelTarget := platform.NewTarget("linux/amd64", "rhel")
 
 		// Test debian filtering
 		debianResult, err := exec.Sandbox(ctx, plan, debianTarget, reqs)

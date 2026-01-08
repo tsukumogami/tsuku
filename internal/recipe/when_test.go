@@ -166,11 +166,135 @@ func TestWhenClause_Matches(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.when.Matches(tt.os, tt.arch); got != tt.want {
+			target := NewMatchTarget(tt.os, tt.arch, "")
+			if got := tt.when.Matches(target); got != tt.want {
 				t.Errorf("Matches(%s, %s) = %v, want %v", tt.os, tt.arch, got, tt.want)
 			}
 		})
 	}
+}
+
+// TestWhenClause_Matches_ArchAndLinuxFamily tests the new Arch and LinuxFamily filters
+func TestWhenClause_Matches_ArchAndLinuxFamily(t *testing.T) {
+	tests := []struct {
+		name        string
+		when        *WhenClause
+		os          string
+		arch        string
+		linuxFamily string
+		want        bool
+	}{
+		{
+			name: "arch filter matches",
+			when: &WhenClause{Arch: "amd64"},
+			os:   "linux", arch: "amd64", linuxFamily: "debian",
+			want: true,
+		},
+		{
+			name: "arch filter does not match",
+			when: &WhenClause{Arch: "amd64"},
+			os:   "linux", arch: "arm64", linuxFamily: "debian",
+			want: false,
+		},
+		{
+			name: "linux_family filter matches",
+			when: &WhenClause{LinuxFamily: "debian"},
+			os:   "linux", arch: "amd64", linuxFamily: "debian",
+			want: true,
+		},
+		{
+			name: "linux_family filter does not match",
+			when: &WhenClause{LinuxFamily: "debian"},
+			os:   "linux", arch: "amd64", linuxFamily: "rhel",
+			want: false,
+		},
+		{
+			name: "OS with arch filter - both match",
+			when: &WhenClause{OS: []string{"linux"}, Arch: "arm64"},
+			os:   "linux", arch: "arm64", linuxFamily: "debian",
+			want: true,
+		},
+		{
+			name: "OS with arch filter - OS matches, arch does not",
+			when: &WhenClause{OS: []string{"linux"}, Arch: "arm64"},
+			os:   "linux", arch: "amd64", linuxFamily: "debian",
+			want: false,
+		},
+		{
+			name: "OS with arch filter - OS does not match",
+			when: &WhenClause{OS: []string{"darwin"}, Arch: "arm64"},
+			os:   "linux", arch: "arm64", linuxFamily: "debian",
+			want: false,
+		},
+		{
+			name: "OS with linux_family filter - both match",
+			when: &WhenClause{OS: []string{"linux"}, LinuxFamily: "debian"},
+			os:   "linux", arch: "amd64", linuxFamily: "debian",
+			want: true,
+		},
+		{
+			name: "OS with linux_family filter - OS matches, family does not",
+			when: &WhenClause{OS: []string{"linux"}, LinuxFamily: "debian"},
+			os:   "linux", arch: "amd64", linuxFamily: "rhel",
+			want: false,
+		},
+		{
+			name: "arch and linux_family combined - both match",
+			when: &WhenClause{Arch: "amd64", LinuxFamily: "debian"},
+			os:   "linux", arch: "amd64", linuxFamily: "debian",
+			want: true,
+		},
+		{
+			name: "arch and linux_family combined - arch matches, family does not",
+			when: &WhenClause{Arch: "amd64", LinuxFamily: "debian"},
+			os:   "linux", arch: "amd64", linuxFamily: "rhel",
+			want: false,
+		},
+		{
+			name: "arch and linux_family combined - family matches, arch does not",
+			when: &WhenClause{Arch: "amd64", LinuxFamily: "debian"},
+			os:   "linux", arch: "arm64", linuxFamily: "debian",
+			want: false,
+		},
+		{
+			name: "all filters combined - all match",
+			when: &WhenClause{OS: []string{"linux"}, Arch: "amd64", LinuxFamily: "debian"},
+			os:   "linux", arch: "amd64", linuxFamily: "debian",
+			want: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := NewMatchTarget(tt.os, tt.arch, tt.linuxFamily)
+			if got := tt.when.Matches(target); got != tt.want {
+				t.Errorf("Matches() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestMatchTarget tests the MatchTarget struct and NewMatchTarget constructor
+func TestMatchTarget(t *testing.T) {
+	t.Run("NewMatchTarget creates correct values", func(t *testing.T) {
+		target := NewMatchTarget("linux", "amd64", "debian")
+		if target.OS() != "linux" {
+			t.Errorf("OS() = %q, want %q", target.OS(), "linux")
+		}
+		if target.Arch() != "amd64" {
+			t.Errorf("Arch() = %q, want %q", target.Arch(), "amd64")
+		}
+		if target.LinuxFamily() != "debian" {
+			t.Errorf("LinuxFamily() = %q, want %q", target.LinuxFamily(), "debian")
+		}
+	})
+
+	t.Run("MatchTarget with empty linux_family", func(t *testing.T) {
+		target := NewMatchTarget("darwin", "arm64", "")
+		if target.LinuxFamily() != "" {
+			t.Errorf("LinuxFamily() = %q, want empty", target.LinuxFamily())
+		}
+	})
 }
 
 // TestWhenClause_UnmarshalTOML_Platform tests unmarshaling platform arrays

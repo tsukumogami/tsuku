@@ -84,10 +84,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 
 	// Construct target for step filtering
 	// This target is used to filter steps by both explicit When clauses and implicit action constraints
-	target := platform.Target{
-		Platform:    targetOS + "/" + targetArch,
-		LinuxFamily: linuxFamily,
-	}
+	target := platform.NewTarget(targetOS+"/"+targetArch, linuxFamily)
 
 	// Create version resolver
 	resolver := version.New()
@@ -160,7 +157,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		// Actions without implicit constraint (non-SystemAction) pass stage 1
 
 		// Stage 2: Check explicit When clause against target platform
-		if step.When != nil && !step.When.Matches(target.OS(), target.Arch()) {
+		if step.When != nil && !step.When.Matches(target) {
 			continue // Skip: explicit condition not met
 		}
 		// Steps without When clause pass stage 2
@@ -263,14 +260,14 @@ func computeRecipeHash(r interface{ ToTOML() ([]byte, error) }) (string, error) 
 
 // shouldExecuteForPlatform checks if a step should execute for the given platform.
 // Package manager conditions are runtime checks and are ignored during plan generation.
-func shouldExecuteForPlatform(when *recipe.WhenClause, targetOS, targetArch string) bool {
+func shouldExecuteForPlatform(when *recipe.WhenClause, target recipe.Matchable) bool {
 	if when == nil || when.IsEmpty() {
 		return true
 	}
 
 	// Use WhenClause.Matches() for platform/OS filtering
 	// Package manager check is ignored at plan-time (runtime concern only)
-	return when.Matches(targetOS, targetArch)
+	return when.Matches(target)
 }
 
 // resolveStep resolves a single recipe step into one or more ResolvedSteps.

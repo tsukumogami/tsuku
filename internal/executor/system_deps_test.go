@@ -27,7 +27,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "build-tools-system on Debian includes apt_install",
 			recipeFile: "build-tools-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			wantActions: []string{
 				"apt_install",     // Debian-specific
 				"require_command", // Cross-platform verification
@@ -42,7 +42,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "build-tools-system on RHEL includes dnf_install",
 			recipeFile: "build-tools-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "rhel"},
+			target:     platform.NewTarget("linux/amd64", "rhel"),
 			wantActions: []string{
 				"dnf_install",
 				"require_command",
@@ -57,7 +57,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "build-tools-system on Arch includes pacman_install",
 			recipeFile: "build-tools-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "arch"},
+			target:     platform.NewTarget("linux/amd64", "arch"),
 			wantActions: []string{
 				"pacman_install",
 				"require_command",
@@ -72,7 +72,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "build-tools-system on Alpine includes apk_install",
 			recipeFile: "build-tools-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "alpine"},
+			target:     platform.NewTarget("linux/amd64", "alpine"),
 			wantActions: []string{
 				"apk_install",
 				"require_command",
@@ -87,7 +87,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "build-tools-system on SUSE includes zypper_install",
 			recipeFile: "build-tools-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "suse"},
+			target:     platform.NewTarget("linux/amd64", "suse"),
 			wantActions: []string{
 				"zypper_install",
 				"require_command",
@@ -102,7 +102,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "build-tools-system on Darwin includes manual action",
 			recipeFile: "build-tools-system.toml",
-			target:     platform.Target{Platform: "darwin/arm64"},
+			target:     platform.NewTarget("darwin/arm64", ""),
 			wantActions: []string{
 				"manual",          // Darwin-specific manual instruction
 				"require_command", // Cross-platform verification
@@ -118,7 +118,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "ssl-libs-system on Debian includes apt_install",
 			recipeFile: "ssl-libs-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			wantActions: []string{
 				"apt_install",
 				"require_command",
@@ -131,7 +131,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "ssl-libs-system on Darwin includes brew_install",
 			recipeFile: "ssl-libs-system.toml",
-			target:     platform.Target{Platform: "darwin/arm64"},
+			target:     platform.NewTarget("darwin/arm64", ""),
 			wantActions: []string{
 				"brew_install",
 				"require_command",
@@ -145,7 +145,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "ca-certs-system on Debian includes apt_install with fallback",
 			recipeFile: "ca-certs-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			wantActions: []string{
 				"apt_install",
 				"manual", // Manual CA update instruction (has os=linux when clause)
@@ -158,7 +158,7 @@ func TestSystemDepsRecipes(t *testing.T) {
 		{
 			name:       "ca-certs-system on Darwin includes brew_install",
 			recipeFile: "ca-certs-system.toml",
-			target:     platform.Target{Platform: "darwin/arm64"},
+			target:     platform.NewTarget("darwin/arm64", ""),
 			wantActions: []string{
 				"brew_install",
 			},
@@ -221,7 +221,7 @@ func TestSystemDepsDescribe(t *testing.T) {
 		{
 			name:       "build-tools-system on Debian describes apt-get install",
 			recipeFile: "build-tools-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			wantContains: []string{
 				"apt-get install",
 				"build-essential",
@@ -231,7 +231,7 @@ func TestSystemDepsDescribe(t *testing.T) {
 		{
 			name:       "build-tools-system on RHEL describes dnf install",
 			recipeFile: "build-tools-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "rhel"},
+			target:     platform.NewTarget("linux/amd64", "rhel"),
 			wantContains: []string{
 				"dnf install",
 				"gcc",
@@ -241,7 +241,7 @@ func TestSystemDepsDescribe(t *testing.T) {
 		{
 			name:       "ssl-libs-system on Debian describes libssl-dev",
 			recipeFile: "ssl-libs-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			wantContains: []string{
 				"apt-get install",
 				"libssl-dev",
@@ -250,7 +250,7 @@ func TestSystemDepsDescribe(t *testing.T) {
 		{
 			name:       "ssl-libs-system on RHEL describes openssl-devel",
 			recipeFile: "ssl-libs-system.toml",
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "rhel"},
+			target:     platform.NewTarget("linux/amd64", "rhel"),
 			wantContains: []string{
 				"dnf install",
 				"openssl-devel",
@@ -259,7 +259,7 @@ func TestSystemDepsDescribe(t *testing.T) {
 		{
 			name:       "ssl-libs-system on Darwin describes brew install",
 			recipeFile: "ssl-libs-system.toml",
-			target:     platform.Target{Platform: "darwin/arm64"},
+			target:     platform.NewTarget("darwin/arm64", ""),
 			wantContains: []string{
 				"brew install",
 				"openssl@3",

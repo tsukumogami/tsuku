@@ -23,10 +23,19 @@ type Target struct {
 	// Platform is the combined os/arch string (e.g., "linux/amd64", "darwin/arm64").
 	Platform string
 
-	// LinuxFamily identifies the Linux distribution family (e.g., "debian", "rhel").
+	// linuxFamily identifies the Linux distribution family (e.g., "debian", "rhel").
 	// This is only set when OS is "linux". For other operating systems
 	// (darwin, windows), this field is empty.
-	LinuxFamily string
+	// Access via LinuxFamily() method.
+	linuxFamily string
+}
+
+// NewTarget creates a Target with the given platform and linux family.
+func NewTarget(platform, linuxFamily string) Target {
+	return Target{
+		Platform:    platform,
+		linuxFamily: linuxFamily,
+	}
 }
 
 // OS returns the operating system from the Platform field.
@@ -52,4 +61,10 @@ func (t Target) Arch() string {
 		return ""
 	}
 	return parts[1]
+}
+
+// LinuxFamily returns the Linux distribution family.
+// Returns empty string for non-Linux platforms.
+func (t Target) LinuxFamily() string {
+	return t.linuxFamily
 }
