@@ -208,6 +208,10 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 		} else {
 			fmt.Printf("   Running: make\n")
 		}
+		// Debug: Show all make arguments
+		if len(commonMakeArgs) > 0 {
+			fmt.Printf("   Debug make args: %v\n", commonMakeArgs)
+		}
 
 		makeCmd := exec.CommandContext(ctx.Context, makePath, cmdMakeArgs...)
 		makeCmd.Dir = sourceDir
@@ -225,6 +229,27 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 		exePath := filepath.Join(binDir, exe)
 		if _, err := os.Stat(exePath); err != nil {
 			return fmt.Errorf("expected executable %s not found at %s", exe, exePath)
+		}
+	}
+
+	// Debug: Show installed directory structure (useful for diagnosing install issues)
+	libexecDir := filepath.Join(prefix, "libexec")
+	if _, err := os.Stat(libexecDir); err == nil {
+		fmt.Printf("   Debug: libexec directory exists at %s\n", libexecDir)
+		// Check for git-core subdirectory
+		gitCoreDir := filepath.Join(libexecDir, "git-core")
+		if entries, err := os.ReadDir(gitCoreDir); err == nil {
+			fmt.Printf("   Debug: git-core has %d entries\n", len(entries))
+			// Show first few entries
+			for i, entry := range entries {
+				if i >= 5 {
+					fmt.Printf("   Debug: ... and %d more\n", len(entries)-5)
+					break
+				}
+				fmt.Printf("   Debug: git-core/%s\n", entry.Name())
+			}
+		} else {
+			fmt.Printf("   Debug: git-core directory not found or error: %v\n", err)
 		}
 	}
 
