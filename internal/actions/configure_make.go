@@ -240,13 +240,17 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 		gitCoreDir := filepath.Join(libexecDir, "git-core")
 		if entries, err := os.ReadDir(gitCoreDir); err == nil {
 			fmt.Printf("   Debug: git-core has %d entries\n", len(entries))
-			// Show first few entries
-			for i, entry := range entries {
-				if i >= 5 {
-					fmt.Printf("   Debug: ... and %d more\n", len(entries)-5)
-					break
+			// Check specifically for git-remote-* helpers
+			var remoteHelpers []string
+			for _, entry := range entries {
+				if strings.HasPrefix(entry.Name(), "git-remote-") {
+					remoteHelpers = append(remoteHelpers, entry.Name())
 				}
-				fmt.Printf("   Debug: git-core/%s\n", entry.Name())
+			}
+			if len(remoteHelpers) > 0 {
+				fmt.Printf("   Debug: Found %d git-remote-* helpers: %v\n", len(remoteHelpers), remoteHelpers)
+			} else {
+				fmt.Printf("   Debug: WARNING: No git-remote-* helpers found in git-core!\n")
 			}
 		} else {
 			fmt.Printf("   Debug: git-core directory not found or error: %v\n", err)
