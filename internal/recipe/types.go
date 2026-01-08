@@ -298,6 +298,41 @@ type Step struct {
 	Note        string
 	Description string
 	Params      map[string]interface{}
+
+	// Pre-computed during loading - never nil after construction via NewStep
+	analysis *StepAnalysis
+}
+
+// Analysis returns the pre-computed step analysis.
+// Never returns nil for steps constructed via NewStep or after SetAnalysis.
+func (s *Step) Analysis() *StepAnalysis {
+	return s.analysis
+}
+
+// SetAnalysis sets the step's pre-computed analysis.
+// Used by the loader after TOML unmarshaling completes.
+func (s *Step) SetAnalysis(analysis *StepAnalysis) {
+	s.analysis = analysis
+}
+
+// NewStep creates a Step with pre-computed analysis.
+// Returns error if:
+//   - Action is unknown (lookup returns known=false)
+//   - Constraint conflicts detected (OS, Arch, or LinuxFamily mismatch)
+func NewStep(action string, when *WhenClause, note, description string,
+	params map[string]interface{}, lookup ConstraintLookup) (*Step, error) {
+	analysis, err := ComputeAnalysis(action, when, params, lookup)
+	if err != nil {
+		return nil, err
+	}
+	return &Step{
+		Action:      action,
+		When:        when,
+		Note:        note,
+		Description: description,
+		Params:      params,
+		analysis:    analysis,
+	}, nil
 }
 
 // UnmarshalTOML implements custom TOML unmarshaling for Step

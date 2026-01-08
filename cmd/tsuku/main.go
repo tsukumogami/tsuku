@@ -10,6 +10,7 @@ import (
 	"syscall"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/buildinfo"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/log"
@@ -60,6 +61,9 @@ func init() {
 
 	// Initialize recipe loader with registry and local recipes directory
 	loader = recipe.NewWithLocalRecipes(reg, cfg.RecipesDir)
+
+	// Configure constraint lookup for step analysis (enables platform constraint validation)
+	loader.SetConstraintLookup(defaultConstraintLookup())
 
 	// Register all commands
 	rootCmd.AddCommand(activateCmd)
@@ -161,4 +165,31 @@ func determineLogLevel() slog.Level {
 func isTruthy(s string) bool {
 	s = strings.ToLower(s)
 	return s == "1" || s == "true" || s == "yes" || s == "on"
+}
+
+// defaultConstraintLookup returns a ConstraintLookup that uses the action registry.
+// It returns (constraint, true) for known actions and (nil, false) for unknown actions.
+// For SystemAction types, it converts the action's ImplicitConstraint to recipe.Constraint.
+func defaultConstraintLookup() recipe.ConstraintLookup {
+	return func(actionName string) (*recipe.Constraint, bool) {
+		action := actions.Get(actionName)
+		if action == nil {
+			return nil, false // unknown action
+		}
+
+		// Check if action implements SystemAction with ImplicitConstraint
+		if sysAction, ok := action.(actions.SystemAction); ok {
+			if actConstraint := sysAction.ImplicitConstraint(); actConstraint != nil {
+				// Convert actions.Constraint to recipe.Constraint
+				return &recipe.Constraint{
+					OS:          actConstraint.OS,
+					LinuxFamily: actConstraint.LinuxFamily,
+					// Arch is not set by action constraints (left empty)
+				}, true
+			}
+		}
+
+		// Known action with no implicit constraint
+		return nil, true
+	}
 }
