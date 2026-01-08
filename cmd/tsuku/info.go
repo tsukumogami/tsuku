@@ -104,23 +104,23 @@ var infoCmd = &cobra.Command{
 		// JSON output mode
 		if jsonOutput {
 			type infoOutput struct {
-				Name                 string   `json:"name"`
-				Description          string   `json:"description"`
-				Homepage             string   `json:"homepage,omitempty"`
-				VersionFormat        string   `json:"version_format"`
-				VersionSource        string   `json:"version_source"`
-				SupportedOS          []string `json:"supported_os,omitempty"`
-				SupportedArch        []string `json:"supported_arch,omitempty"`
-				UnsupportedPlatforms []string `json:"unsupported_platforms,omitempty"`
-				SupportedPlatforms   []string `json:"supported_platforms"`
-				Tier                 int      `json:"tier"`
-				Type                 string   `json:"type"`
-				Status               string   `json:"status,omitempty"`
-				InstalledVersion     string   `json:"installed_version,omitempty"`
-				Location             string   `json:"location,omitempty"`
-				VerifyCommand        string   `json:"verify_command,omitempty"`
-				InstallDependencies  []string `json:"install_dependencies,omitempty"`
-				RuntimeDependencies  []string `json:"runtime_dependencies,omitempty"`
+				Name                 string            `json:"name"`
+				Description          string            `json:"description"`
+				Homepage             string            `json:"homepage,omitempty"`
+				VersionFormat        string            `json:"version_format"`
+				VersionSource        string            `json:"version_source"`
+				SupportedOS          []string          `json:"supported_os,omitempty"`
+				SupportedArch        []string          `json:"supported_arch,omitempty"`
+				UnsupportedPlatforms []string          `json:"unsupported_platforms,omitempty"`
+				SupportedPlatforms   []recipe.Platform `json:"supported_platforms"`
+				Tier                 int               `json:"tier"`
+				Type                 string            `json:"type"`
+				Status               string            `json:"status,omitempty"`
+				InstalledVersion     string            `json:"installed_version,omitempty"`
+				Location             string            `json:"location,omitempty"`
+				VerifyCommand        string            `json:"verify_command,omitempty"`
+				InstallDependencies  []string          `json:"install_dependencies,omitempty"`
+				RuntimeDependencies  []string          `json:"runtime_dependencies,omitempty"`
 			}
 			output := infoOutput{
 				Name:                 r.Metadata.Name,
@@ -131,7 +131,7 @@ var infoCmd = &cobra.Command{
 				SupportedOS:          r.Metadata.SupportedOS,
 				SupportedArch:        r.Metadata.SupportedArch,
 				UnsupportedPlatforms: r.Metadata.UnsupportedPlatforms,
-				SupportedPlatforms:   r.GetSupportedPlatforms(),
+				SupportedPlatforms:   recipe.SupportedPlatforms(r),
 				Tier:                 r.Metadata.Tier,
 				Type:                 r.Metadata.Type,
 				Status:               status,
