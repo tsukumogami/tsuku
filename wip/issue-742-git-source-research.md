@@ -89,7 +89,7 @@ After fix, CI logs show: `🔗 Symlinked 1 binaries: [bin/git]` ✓
 ## Bug 2: Git Can't Find git-remote-https at Runtime (IN PROGRESS)
 
 ### Symptom
-Even after fixing Bug 1, git clone still fails:
+Even after fixing Bug 1, git clone still fails on all platforms:
 ```
 git: 'remote-https' is not a git command. See 'git --help'.
 fatal: remote helper 'https' aborted session
@@ -111,12 +111,30 @@ Git supports building with relocatable prefix via the `RUNTIME_PREFIX` make vari
 - Git strips known directories (like `bin/`) from the executable path to compute the prefix
 - For example: if binary is at `/path/to/tools/git-2.52.0/bin/git`, prefix becomes `/path/to/tools/git-2.52.0`
 
-### Implementation
+### Implementation (Commit ca57971)
 1. Added `make_args` parameter to configure_make action (internal/actions/configure_make.go)
    - Reads `make_args` from recipe step parameters
    - Expands variables in make_args (like configure_args)
    - Appends to commonMakeArgs before running make
 2. Updated git-source.toml to pass `make_args = ["RUNTIME_PREFIX=1"]`
+
+### Current Issue: Wrapper Scripts Break RUNTIME_PREFIX
+
+CI logs show set_rpath is creating wrapper scripts:
+```
+Warning: RPATH modification failed for .install/bin/git, creating wrapper script
+Warning: RPATH modification failed for .install/libexec/git-core/git-remote-https, creating wrapper script
+```
+
+**Problem**: When set_rpath fails to modify a binary directly (common on macOS), it creates a wrapper script. This breaks RUNTIME_PREFIX because:
+- RUNTIME_PREFIX relies on Git computing its prefix based on the executable's actual location
+- With a wrapper script, Git can't correctly compute the path to `libexec/git-core/`
+- Git fails to find `git-remote-https` at runtime
+
+**Potential Solutions**:
+1. Skip set_rpath for Git binaries (let RUNTIME_PREFIX + Homebrew dylib references handle it)
+2. Improve set_rpath to avoid creating wrappers for Git
+3. Make wrapper scripts preserve RUNTIME_PREFIX functionality
 
 ### References
 - [Git RUNTIME_PREFIX patches](https://www.spinics.net/lists/git/msg90467.html)
