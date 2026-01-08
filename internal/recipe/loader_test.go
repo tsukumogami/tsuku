@@ -6,6 +6,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/registry"
@@ -866,5 +867,252 @@ func TestValidate(t *testing.T) {
 				t.Errorf("validate() error = %v, wantErr %v", err, tc.wantErr)
 			}
 		})
+	}
+}
+
+func TestLoader_SetConstraintLookup(t *testing.T) {
+	reg := registry.New(t.TempDir())
+	loader := New(reg)
+
+	// Initially nil
+	if loader.constraintLookup != nil {
+		t.Error("Expected constraintLookup to be nil initially")
+	}
+
+	// Set a mock lookup
+	called := false
+	mockLookup := func(actionName string) (*Constraint, bool) {
+		called = true
+		return nil, true
+	}
+	loader.SetConstraintLookup(mockLookup)
+
+	if loader.constraintLookup == nil {
+		t.Error("Expected constraintLookup to be set")
+	}
+
+	// Verify it's the function we set
+	loader.constraintLookup("test")
+	if !called {
+		t.Error("Expected mock lookup to be called")
+	}
+}
+
+func TestLoader_StepAnalysisComputation(t *testing.T) {
+	// Recipe with apt_install (has implicit constraint)
+	recipeWithConstraint := `[metadata]
+name = "constrained-tool"
+description = "A tool with constrained step"
+
+[[steps]]
+action = "apt_install"
+packages = ["curl"]
+
+[verify]
+command = "echo ok"
+`
+
+	// Create a mock lookup that returns debian constraint for apt_install
+	mockLookup := func(actionName string) (*Constraint, bool) {
+		if actionName == "apt_install" {
+			return &Constraint{OS: "linux", LinuxFamily: "debian"}, true
+		}
+		return nil, true // known, no constraint
+	}
+
+	// Create local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "constrained-tool.toml"), []byte(recipeWithConstraint), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader.SetConstraintLookup(mockLookup)
+
+	recipe, err := loader.Get("constrained-tool")
+	if err != nil {
+		t.Fatalf("Get() failed: %v", err)
+	}
+
+	// Verify step analysis was computed
+	if len(recipe.Steps) != 1 {
+		t.Fatalf("Expected 1 step, got %d", len(recipe.Steps))
+	}
+
+	analysis := recipe.Steps[0].Analysis()
+	if analysis == nil {
+		t.Fatal("Expected step analysis to be non-nil")
+	}
+
+	// Should have debian constraint from apt_install
+	if analysis.Constraint == nil {
+		t.Fatal("Expected constraint to be non-nil")
+	}
+	if analysis.Constraint.OS != "linux" {
+		t.Errorf("Expected OS=linux, got %q", analysis.Constraint.OS)
+	}
+	if analysis.Constraint.LinuxFamily != "debian" {
+		t.Errorf("Expected LinuxFamily=debian, got %q", analysis.Constraint.LinuxFamily)
+	}
+}
+
+func TestLoader_StepAnalysisSkippedWithoutLookup(t *testing.T) {
+	// Recipe with any action
+	recipeContent := `[metadata]
+name = "no-analysis-tool"
+description = "A tool without step analysis"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "echo ok"
+`
+
+	// Create local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "no-analysis-tool.toml"), []byte(recipeContent), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Don't set constraint lookup - analysis should be skipped
+	loader := NewWithLocalRecipes(reg, recipesDir)
+
+	recipe, err := loader.Get("no-analysis-tool")
+	if err != nil {
+		t.Fatalf("Get() failed: %v", err)
+	}
+
+	// Verify step analysis is nil (not computed)
+	if len(recipe.Steps) != 1 {
+		t.Fatalf("Expected 1 step, got %d", len(recipe.Steps))
+	}
+
+	analysis := recipe.Steps[0].Analysis()
+	if analysis != nil {
+		t.Error("Expected step analysis to be nil when lookup not configured")
+	}
+}
+
+func TestLoader_StepAnalysisWithFamilyVarying(t *testing.T) {
+	// Recipe with linux_family interpolation
+	recipeWithInterpolation := `[metadata]
+name = "varying-tool"
+description = "A tool with family-varying step"
+
+[[steps]]
+action = "download"
+url = "https://example.com/{{linux_family}}/tool.tar.gz"
+
+[verify]
+command = "echo ok"
+`
+
+	mockLookup := func(actionName string) (*Constraint, bool) {
+		return nil, true // known, no constraint
+	}
+
+	// Create local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "varying-tool.toml"), []byte(recipeWithInterpolation), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader.SetConstraintLookup(mockLookup)
+
+	recipe, err := loader.Get("varying-tool")
+	if err != nil {
+		t.Fatalf("Get() failed: %v", err)
+	}
+
+	analysis := recipe.Steps[0].Analysis()
+	if analysis == nil {
+		t.Fatal("Expected step analysis to be non-nil")
+	}
+
+	if !analysis.FamilyVarying {
+		t.Error("Expected FamilyVarying=true for step with {{linux_family}}")
+	}
+}
+
+func TestLoader_StepAnalysisConflictError(t *testing.T) {
+	// Recipe with conflicting constraint (apt_install + darwin OS)
+	conflictRecipe := `[metadata]
+name = "conflict-tool"
+description = "A tool with conflicting constraints"
+
+[[steps]]
+action = "apt_install"
+packages = ["curl"]
+[steps.when]
+os = ["darwin"]
+
+[verify]
+command = "echo ok"
+`
+
+	// apt_install requires linux/debian, but when clause says darwin
+	mockLookup := func(actionName string) (*Constraint, bool) {
+		if actionName == "apt_install" {
+			return &Constraint{OS: "linux", LinuxFamily: "debian"}, true
+		}
+		return nil, true
+	}
+
+	// Create local recipes directory
+	recipesDir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(recipesDir, "conflict-tool.toml"), []byte(conflictRecipe), 0644); err != nil {
+		t.Fatalf("Failed to write local recipe: %v", err)
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := registry.New(cacheDir)
+	reg.BaseURL = server.URL
+
+	loader := NewWithLocalRecipes(reg, recipesDir)
+	loader.SetConstraintLookup(mockLookup)
+
+	_, err := loader.Get("conflict-tool")
+	if err == nil {
+		t.Fatal("Expected error for conflicting constraints")
+	}
+
+	// Should contain error about OS conflict
+	if !strings.Contains(err.Error(), "conflict") {
+		t.Errorf("Expected error about conflict, got: %v", err)
 	}
 }

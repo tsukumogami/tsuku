@@ -12,10 +12,11 @@ import (
 
 // Loader handles loading and discovering recipes from the registry
 type Loader struct {
-	recipes    map[string]*Recipe
-	registry   *registry.Registry
-	embedded   *EmbeddedRegistry
-	recipesDir string // Local recipes directory (~/.tsuku/recipes)
+	recipes          map[string]*Recipe
+	registry         *registry.Registry
+	embedded         *EmbeddedRegistry
+	recipesDir       string           // Local recipes directory (~/.tsuku/recipes)
+	constraintLookup ConstraintLookup // Optional lookup for step analysis (nil skips analysis)
 }
 
 // New creates a new recipe loader with the given registry
@@ -52,6 +53,13 @@ func NewWithoutEmbedded(reg *registry.Registry, recipesDir string) *Loader {
 // SetRecipesDir sets the local recipes directory
 func (l *Loader) SetRecipesDir(dir string) {
 	l.recipesDir = dir
+}
+
+// SetConstraintLookup sets the constraint lookup function for step analysis.
+// When set, loaded recipes will have their steps analyzed for platform constraints.
+// When nil (default), step analysis is skipped (backward compatible).
+func (l *Loader) SetConstraintLookup(lookup ConstraintLookup) {
+	l.constraintLookup = lookup
 }
 
 // Get retrieves a recipe by name
@@ -168,6 +176,13 @@ func (l *Loader) parseBytes(data []byte) (*Recipe, error) {
 
 	if err := validate(&recipe); err != nil {
 		return nil, fmt.Errorf("recipe validation failed: %w", err)
+	}
+
+	// Compute step analysis if constraint lookup is configured
+	if l.constraintLookup != nil {
+		if err := computeStepAnalysis(&recipe, l.constraintLookup); err != nil {
+			return nil, fmt.Errorf("step analysis failed: %w", err)
+		}
 	}
 
 	return &recipe, nil
@@ -369,7 +384,8 @@ func trimTomlExtension(name string) string {
 // ParseFile parses a recipe from a file path.
 // This is a convenience function for loading recipes outside the registry/loader
 // system (e.g., for evaluating local recipe files).
-func ParseFile(path string) (*Recipe, error) {
+// An optional ConstraintLookup can be provided for step analysis.
+func ParseFile(path string, lookup ...ConstraintLookup) (*Recipe, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read file: %w", err)
@@ -384,12 +400,34 @@ func ParseFile(path string) (*Recipe, error) {
 		return nil, fmt.Errorf("recipe validation failed: %w", err)
 	}
 
+	// Compute step analysis if lookup is provided
+	if len(lookup) > 0 && lookup[0] != nil {
+		if err := computeStepAnalysis(&r, lookup[0]); err != nil {
+			return nil, fmt.Errorf("step analysis failed: %w", err)
+		}
+	}
+
 	return &r, nil
 }
 
 // RecipesDir returns the local recipes directory
 func (l *Loader) RecipesDir() string {
 	return l.recipesDir
+}
+
+// computeStepAnalysis computes analysis for all steps in a recipe.
+// It populates each step's analysis field using the provided lookup.
+// Returns the first error encountered (step index included in message).
+func computeStepAnalysis(r *Recipe, lookup ConstraintLookup) error {
+	for i := range r.Steps {
+		step := &r.Steps[i]
+		analysis, err := ComputeAnalysis(step.Action, step.When, step.Params, lookup)
+		if err != nil {
+			return fmt.Errorf("step %d (%s): %w", i+1, step.Action, err)
+		}
+		step.SetAnalysis(analysis)
+	}
+	return nil
 }
 
 // validate performs basic recipe validation
