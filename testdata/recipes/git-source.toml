@@ -35,7 +35,8 @@ make_args = [
     "RUNTIME_PREFIX=YesPlease",
     "gitexecdir=libexec/git-core",
     "NO_CURL=",
-    "CURLDIR={libs_dir}/libcurl-{deps.libcurl.version}"
+    "CURLDIR={libs_dir}/libcurl-{deps.libcurl.version}",
+    "CURL_LIBCURL=-lcurl -lnghttp3 -lngtcp2 -lnghttp2 -lssh2 -lbrotlidec -lbrotlicommon -lzstd"
 ]
 
 [[steps]]

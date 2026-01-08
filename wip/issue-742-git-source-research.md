@@ -220,6 +220,40 @@ This approach is used by Git for Windows and should work for relocatable Unix bu
 
 Now setup_build_env will add `-L` paths for all these libraries to LDFLAGS, allowing the linker to resolve the symbols in libcurl.so.
 
+**BUT THIS DIDN'T FIX THE PROBLEM** - The linker still failed with the same errors.
+
+### Fix Attempt 5: Explicitly Pass CURL_LIBCURL to Make (IMPLEMENTED)
+
+**Problem**: Even with transitive dependencies in LDFLAGS, the linker still fails:
+```
+/usr/bin/ld: libcurl.so: undefined reference to `ngtcp2_conn_del'
+/usr/bin/ld: libcurl.so: undefined reference to `nghttp3_conn_block_stream'
+```
+
+**Root Cause Analysis**:
+- When using `./configure`, Git runs `curl-config --libs` which returns ALL libraries needed
+- When using `CURLDIR` without configure, Git's Makefile only sets: `CURL_LIBCURL = -L$(CURLDIR)/lib -lcurl`
+- This only links against `-lcurl`, not the transitive dependencies
+- The LDFLAGS environment variable contains `-L` paths, but doesn't tell Git's linker which libraries to link
+
+**From Git Makefile Research**:
+- Git's Makefile has `CURL_LIBCURL` variable that accumulates all curl-related linker flags
+- When configure runs, it does: `CURL_LIBCURL += $(shell $(CURL_CONFIG) --libs)`
+- This returns: `-lcurl -lnghttp3 -lngtcp2 -lnghttp2 -lssh2 -lssl -lcrypto -lz -lzstd -lbrotlidec`
+
+**Solution**: Pass `CURL_LIBCURL` explicitly as a make variable with all transitive libraries:
+```toml
+make_args = [
+    "RUNTIME_PREFIX=YesPlease",
+    "gitexecdir=libexec/git-core",
+    "NO_CURL=",
+    "CURLDIR={libs_dir}/libcurl-{deps.libcurl.version}",
+    "CURL_LIBCURL=-lcurl -lnghttp3 -lngtcp2 -lnghttp2 -lssh2 -lbrotlidec -lbrotlicommon -lzstd"
+]
+```
+
+This tells Git's Makefile exactly which libraries to link when building programs that use curl.
+
 ### References
 - [Git RUNTIME_PREFIX patches](https://www.spinics.net/lists/git/msg90467.html)
 - [RUNTIME_PREFIX relocatable Git](https://yhbt.net/lore/all/87vadrc185.fsf@evledraar.gmail.com/T/)
