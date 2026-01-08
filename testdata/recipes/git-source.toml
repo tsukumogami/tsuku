@@ -6,7 +6,9 @@
 name = "git-source"
 description = "Distributed revision control system (source build for testing)"
 homepage = "https://git-scm.com/"
-dependencies = ["libcurl", "openssl", "zlib", "expat"]
+# Include libcurl's transitive dependencies so linker can resolve symbols
+# libcurl.so has undefined references to nghttp3, ngtcp2, etc. that need LDFLAGS
+dependencies = ["libcurl", "brotli", "libnghttp2", "libnghttp3", "libngtcp2", "libssh2", "openssl", "zlib", "zstd", "expat"]
 
 [version]
 source = "homebrew"

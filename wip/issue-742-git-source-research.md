@@ -200,6 +200,26 @@ This approach is used by Git for Windows and should work for relocatable Unix bu
 - This overrides CURL_CONFIG and is the recommended approach when building without configure
 - Other dependencies (openssl, zlib, expat) are still found via CPPFLAGS/LDFLAGS environment vars
 
+### Fix Attempt 4: Add Libcurl Transitive Dependencies (IMPLEMENTED)
+
+**Problem**: Linker errors showing undefined references to nghttp3, ngtcp2, brotli, etc.:
+```
+/usr/bin/ld: /home/runner/.tsuku/libs/libcurl-8.18.0/lib/libcurl.so: undefined reference to `ngtcp2_conn_del'
+/usr/bin/ld: /home/runner/.tsuku/libs/libcurl-8.18.0/lib/libcurl.so: undefined reference to `nghttp3_conn_block_stream'
+```
+
+**Root Cause**: git-source recipe only listed direct dependencies (libcurl, openssl, zlib, expat), but libcurl.so itself depends on many other libraries for HTTP/3 support. When setup_build_env runs, it only adds LDFLAGS for the direct dependencies, not the transitive ones.
+
+**Solution**: Added libcurl's transitive dependencies to git-source recipe:
+- brotli (compression)
+- libnghttp2 (HTTP/2)
+- libnghttp3 (HTTP/3)
+- libngtcp2 (QUIC for HTTP/3)
+- libssh2 (SSH protocol)
+- zstd (compression)
+
+Now setup_build_env will add `-L` paths for all these libraries to LDFLAGS, allowing the linker to resolve the symbols in libcurl.so.
+
 ### References
 - [Git RUNTIME_PREFIX patches](https://www.spinics.net/lists/git/msg90467.html)
 - [RUNTIME_PREFIX relocatable Git](https://yhbt.net/lore/all/87vadrc185.fsf@evledraar.gmail.com/T/)
