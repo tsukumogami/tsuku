@@ -62,9 +62,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I822,I823 done
-    class I824,I827 ready
-    class I825,I826,I828,I829,I830,I831 blocked
+    class I822,I823,I824,I827 done
+    class I825 ready
+    class I826,I828,I829,I830,I831 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
