@@ -28,8 +28,12 @@ action = "setup_build_env"
 action = "configure_make"
 source_dir = "git-{version}"
 executables = ["git"]
-configure_args = ["--with-curl={libs_dir}/libcurl-{deps.libcurl.version}"]
-make_args = ["RUNTIME_PREFIX=1"]
+skip_configure = true
+make_args = [
+    "RUNTIME_PREFIX=YesPlease",
+    "gitexecdir=libexec/git-core",
+    "NO_CURL="
+]
 
 [[steps]]
 action = "install_binaries"

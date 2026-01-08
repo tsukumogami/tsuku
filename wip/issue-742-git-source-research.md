@@ -118,28 +118,81 @@ Git supports building with relocatable prefix via the `RUNTIME_PREFIX` make vari
    - Appends to commonMakeArgs before running make
 2. Updated git-source.toml to pass `make_args = ["RUNTIME_PREFIX=1"]`
 
-### Current Issue: Wrapper Scripts Break RUNTIME_PREFIX
+### Fix Attempt 1: Remove set_rpath Steps (Commit a5db21a)
 
-CI logs show set_rpath is creating wrapper scripts:
+**Hypothesis**: Wrapper scripts created by set_rpath were breaking RUNTIME_PREFIX.
+
+**Action**: Removed both set_rpath steps from git-source.toml, leaving only:
+- configure_make with RUNTIME_PREFIX=1
+- install_binaries in directory mode
+
+**Result**: Still fails with the same error on all platforms.
+
+**Conclusion**: The problem is NOT wrapper scripts. Something else is preventing git-remote-https from being found.
+
+### Current Investigation: Debug Logging (Commit 1e76b21)
+
+Added debug logging to configure_make action to verify:
+1. Whether RUNTIME_PREFIX=1 is actually being passed to make
+2. Whether libexec/git-core/git-remote-https exists after installation
+
+Logging added:
+- Print all make arguments (including RUNTIME_PREFIX=1)
+- List contents of libexec/git-core/ directory after make install
+
+**CI Results**: Confirmed RUNTIME_PREFIX=1 is being passed and git-remote-https is being built, but Git still uses compile-time path.
+
+### Root Cause Identified: configure vs RUNTIME_PREFIX Incompatibility
+
+**Problem**: Git's `./configure` script sets absolute paths for gitexecdir, localedir, and perllibdir. RUNTIME_PREFIX requires these to be relative paths to work correctly.
+
+**Evidence from CI**:
 ```
-Warning: RPATH modification failed for .install/bin/git, creating wrapper script
-Warning: RPATH modification failed for .install/libexec/git-core/git-remote-https, creating wrapper script
+Debug: git --exec-path (where Git looks for helpers)
+/tmp/action-validator-2440619504/.install/libexec/git-core
 ```
 
-**Problem**: When set_rpath fails to modify a binary directly (common on macOS), it creates a wrapper script. This breaks RUNTIME_PREFIX because:
-- RUNTIME_PREFIX relies on Git computing its prefix based on the executable's actual location
-- With a wrapper script, Git can't correctly compute the path to `libexec/git-core/`
-- Git fails to find `git-remote-https` at runtime
+Git is looking at the compile-time path (which no longer exists) instead of computing the path at runtime relative to the binary location.
 
-**Potential Solutions**:
-1. Skip set_rpath for Git binaries (let RUNTIME_PREFIX + Homebrew dylib references handle it)
-2. Improve set_rpath to avoid creating wrappers for Git
-3. Make wrapper scripts preserve RUNTIME_PREFIX functionality
+**Key Findings from Git Documentation**:
+1. RUNTIME_PREFIX and autoconf are incompatible - configure sets absolute paths
+2. The correct make variable is `RUNTIME_PREFIX=YesPlease`, not `RUNTIME_PREFIX=1`
+3. RUNTIME_PREFIX requires relative paths for gitexecdir, localedir, and perllibdir
+4. When using configure, it "munges the relative paths" which breaks RUNTIME_PREFIX
+
+**Solution**: Build Git without configure, passing all required variables directly to make.
+
+### Fix Attempt 2: Build Without Configure (IMPLEMENTED)
+
+**Implementation**: Added `skip_configure` parameter to configure_make action.
+
+**Changes**:
+1. **internal/actions/configure_make.go**:
+   - Added `skip_configure` boolean parameter
+   - When true, skips `./configure` execution
+   - Passes `prefix=<path>` directly to make instead
+   - Updated Preflight to warn if make_args not specified with skip_configure
+
+2. **testdata/recipes/git-source.toml**:
+   - Set `skip_configure = true`
+   - Updated make_args:
+     - `RUNTIME_PREFIX=YesPlease` (correct value, not "1")
+     - `gitexecdir=libexec/git-core` (relative path as required)
+     - `NO_CURL=` (empty to enable curl support)
+   - Removed configure_args (not used when skipping configure)
+
+**How It Works**:
+- Environment variables (CURL_CONFIG, CURLDIR, CPPFLAGS, LDFLAGS) still set by buildAutotoolsEnv()
+- Make receives all variables needed to build relocatable Git without configure
+- RUNTIME_PREFIX with relative paths allows Git to compute prefix at runtime
+
+This approach is used by Git for Windows and should work for relocatable Unix builds.
 
 ### References
 - [Git RUNTIME_PREFIX patches](https://www.spinics.net/lists/git/msg90467.html)
 - [RUNTIME_PREFIX relocatable Git](https://yhbt.net/lore/all/87vadrc185.fsf@evledraar.gmail.com/T/)
 - [Git INSTALL documentation](https://github.com/git/git/blob/master/INSTALL)
+- [Git 2.18 RUNTIME_PREFIX discussion](https://public-inbox.org/git/nycvar.QRO.7.76.6.1807082346140.75@tvgsbejvaqbjf.bet/T/)
 
 ## Key Learnings
 
