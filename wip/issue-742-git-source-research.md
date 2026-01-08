@@ -182,11 +182,23 @@ Git is looking at the compile-time path (which no longer exists) instead of comp
    - Removed configure_args (not used when skipping configure)
 
 **How It Works**:
-- Environment variables (CURL_CONFIG, CURLDIR, CPPFLAGS, LDFLAGS) still set by buildAutotoolsEnv()
+- Environment variables (CURL_CONFIG, CPPFLAGS, LDFLAGS) still set by buildAutotoolsEnv()
+- CURLDIR passed as make variable (Git's Makefile requires this as a make var, not env var)
 - Make receives all variables needed to build relocatable Git without configure
 - RUNTIME_PREFIX with relative paths allows Git to compute prefix at runtime
 
 This approach is used by Git for Windows and should work for relocatable Unix builds.
+
+### Fix Attempt 3: Add CURLDIR as Make Variable (IMPLEMENTED)
+
+**Problem**: Git's Makefile does not read CURLDIR from environment variables when building without configure. It must be passed as a make variable.
+
+**Change**: Added `CURLDIR={libs_dir}/libcurl-{deps.libcurl.version}` to make_args in git-source.toml
+
+**How Git's Makefile Works**:
+- `CURLDIR=/foo/bar` tells Git that curl headers are in `/foo/bar/include` and libs in `/foo/bar/lib`
+- This overrides CURL_CONFIG and is the recommended approach when building without configure
+- Other dependencies (openssl, zlib, expat) are still found via CPPFLAGS/LDFLAGS environment vars
 
 ### References
 - [Git RUNTIME_PREFIX patches](https://www.spinics.net/lists/git/msg90467.html)

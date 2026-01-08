@@ -32,7 +32,8 @@ skip_configure = true
 make_args = [
     "RUNTIME_PREFIX=YesPlease",
     "gitexecdir=libexec/git-core",
-    "NO_CURL="
+    "NO_CURL=",
+    "CURLDIR={libs_dir}/libcurl-{deps.libcurl.version}"
 ]
 
 [[steps]]
