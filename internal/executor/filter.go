@@ -42,7 +42,7 @@ func stepMatchesTarget(step recipe.Step, target platform.Target) bool {
 	// Actions without implicit constraint (non-SystemAction) pass stage 1
 
 	// Stage 2: Check explicit when clause
-	if step.When != nil && !step.When.Matches(target.OS(), target.Arch()) {
+	if step.When != nil && !step.When.Matches(target) {
 		return false
 	}
 	// Steps without when clause pass stage 2

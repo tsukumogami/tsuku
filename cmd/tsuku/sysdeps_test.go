@@ -91,7 +91,7 @@ func TestGetSystemDepsForTarget(t *testing.T) {
 				{Action: "apt_install", Params: map[string]interface{}{"packages": []interface{}{"docker-ce"}}},
 				{Action: "brew_install", Params: map[string]interface{}{"formula": "docker"}},
 			},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			wantCount:  1,
 			wantAction: "apt_install",
 		},
@@ -101,7 +101,7 @@ func TestGetSystemDepsForTarget(t *testing.T) {
 				{Action: "apt_install", Params: map[string]interface{}{"packages": []interface{}{"docker-ce"}}},
 				{Action: "brew_install", Params: map[string]interface{}{"formula": "docker"}},
 			},
-			target:     platform.Target{Platform: "darwin/arm64", LinuxFamily: ""},
+			target:     platform.NewTarget("darwin/arm64", ""),
 			wantCount:  1,
 			wantAction: "brew_install",
 		},
@@ -111,7 +111,7 @@ func TestGetSystemDepsForTarget(t *testing.T) {
 				{Action: "download"},
 				{Action: "extract"},
 			},
-			target:    platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:    platform.NewTarget("linux/amd64", "debian"),
 			wantCount: 0,
 		},
 	}
@@ -138,42 +138,42 @@ func TestGetTargetDisplayName(t *testing.T) {
 	}{
 		{
 			name:   "darwin returns macOS",
-			target: platform.Target{Platform: "darwin/arm64", LinuxFamily: ""},
+			target: platform.NewTarget("darwin/arm64", ""),
 			want:   "macOS",
 		},
 		{
 			name:   "debian family",
-			target: platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target: platform.NewTarget("linux/amd64", "debian"),
 			want:   "Ubuntu/Debian",
 		},
 		{
 			name:   "rhel family",
-			target: platform.Target{Platform: "linux/amd64", LinuxFamily: "rhel"},
+			target: platform.NewTarget("linux/amd64", "rhel"),
 			want:   "Fedora/RHEL/CentOS",
 		},
 		{
 			name:   "arch family",
-			target: platform.Target{Platform: "linux/amd64", LinuxFamily: "arch"},
+			target: platform.NewTarget("linux/amd64", "arch"),
 			want:   "Arch Linux",
 		},
 		{
 			name:   "alpine family",
-			target: platform.Target{Platform: "linux/amd64", LinuxFamily: "alpine"},
+			target: platform.NewTarget("linux/amd64", "alpine"),
 			want:   "Alpine Linux",
 		},
 		{
 			name:   "suse family",
-			target: platform.Target{Platform: "linux/amd64", LinuxFamily: "suse"},
+			target: platform.NewTarget("linux/amd64", "suse"),
 			want:   "openSUSE/SLES",
 		},
 		{
 			name:   "unknown family returns raw value",
-			target: platform.Target{Platform: "linux/amd64", LinuxFamily: "gentoo"},
+			target: platform.NewTarget("linux/amd64", "gentoo"),
 			want:   "gentoo",
 		},
 		{
 			name:   "linux without family returns os",
-			target: platform.Target{Platform: "linux/amd64", LinuxFamily: ""},
+			target: platform.NewTarget("linux/amd64", ""),
 			want:   "linux",
 		},
 	}
@@ -256,8 +256,8 @@ func TestResolveTarget(t *testing.T) {
 				return
 			}
 
-			if tt.familyOverride != "" && got.LinuxFamily != tt.wantFamily {
-				t.Errorf("resolveTarget() LinuxFamily = %q, want %q", got.LinuxFamily, tt.wantFamily)
+			if tt.familyOverride != "" && got.LinuxFamily() != tt.wantFamily {
+				t.Errorf("resolveTarget() LinuxFamily() = %q, want %q", got.LinuxFamily(), tt.wantFamily)
 			}
 		})
 	}

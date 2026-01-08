@@ -181,6 +181,41 @@ type VersionSection struct {
 	TimelineTag      string `toml:"timeline_tag"`      // Tag filter for timeline URL (default: "release")
 }
 
+// Matchable provides platform dimension accessors for matching.
+// Both the lightweight MatchTarget (for recipe evaluation) and
+// the runtime platform.Target implement this interface.
+type Matchable interface {
+	OS() string
+	Arch() string
+	LinuxFamily() string
+}
+
+// MatchTarget is a lightweight struct for platform matching in recipe evaluation.
+// Use NewMatchTarget() to construct instances.
+type MatchTarget struct {
+	os          string
+	arch        string
+	linuxFamily string
+}
+
+// NewMatchTarget creates a MatchTarget for platform matching.
+func NewMatchTarget(os, arch, linuxFamily string) MatchTarget {
+	return MatchTarget{
+		os:          os,
+		arch:        arch,
+		linuxFamily: linuxFamily,
+	}
+}
+
+// OS returns the operating system.
+func (m MatchTarget) OS() string { return m.os }
+
+// Arch returns the architecture.
+func (m MatchTarget) Arch() string { return m.arch }
+
+// LinuxFamily returns the Linux distribution family.
+func (m MatchTarget) LinuxFamily() string { return m.linuxFamily }
+
 // WhenClause represents platform and runtime conditions for conditional step execution.
 // Supports platform tuples ("os/arch"), OS arrays, and package manager filtering.
 //
@@ -205,12 +240,17 @@ func (w *WhenClause) IsEmpty() bool {
 			w.Arch == "" && w.LinuxFamily == "" && w.PackageManager == "")
 }
 
-// Matches returns true if the when clause conditions are satisfied for the given platform.
-// Empty clause matches all platforms. Checks platform array first, then falls back to OS array.
-func (w *WhenClause) Matches(os, arch string) bool {
+// Matches returns true if the when clause conditions are satisfied for the given target.
+// Empty clause matches all platforms. Checks platform array first, then OS array, then
+// individual dimension filters (Arch, LinuxFamily).
+func (w *WhenClause) Matches(target Matchable) bool {
 	if w.IsEmpty() {
 		return true // No conditions = match all platforms
 	}
+
+	os := target.OS()
+	arch := target.Arch()
+	linuxFamily := target.LinuxFamily()
 
 	// Check platform tuples first (exact match)
 	if len(w.Platform) > 0 {
@@ -223,17 +263,30 @@ func (w *WhenClause) Matches(os, arch string) bool {
 		return false // Had platform conditions but didn't match
 	}
 
-	// Fall back to OS array (match any arch)
+	// Check OS array
 	if len(w.OS) > 0 {
+		osMatch := false
 		for _, o := range w.OS {
 			if o == os {
-				return true
+				osMatch = true
+				break
 			}
 		}
-		return false // Had OS conditions but didn't match
+		if !osMatch {
+			return false // Had OS conditions but didn't match
+		}
 	}
 
-	// No platform or OS conditions, only package_manager (handled at runtime)
+	// Check Arch filter
+	if w.Arch != "" && w.Arch != arch {
+		return false
+	}
+
+	// Check LinuxFamily filter
+	if w.LinuxFamily != "" && w.LinuxFamily != linuxFamily {
+		return false
+	}
+
 	return true
 }
 
