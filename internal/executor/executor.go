@@ -126,7 +126,9 @@ func (e *Executor) shouldExecute(when *recipe.WhenClause) bool {
 	}
 
 	// Check platform conditions (OS and arch)
-	if !when.Matches(runtime.GOOS, runtime.GOARCH) {
+	// Note: At runtime, linux_family would be detected if needed
+	target := recipe.NewMatchTarget(runtime.GOOS, runtime.GOARCH, "")
+	if !when.Matches(target) {
 		return false
 	}
 

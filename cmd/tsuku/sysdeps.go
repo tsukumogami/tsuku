@@ -45,11 +45,11 @@ func getTargetDisplayName(target platform.Target) string {
 	if target.OS() == "darwin" {
 		return "macOS"
 	}
-	if target.LinuxFamily != "" {
-		if name, ok := familyDisplayNames[target.LinuxFamily]; ok {
+	if target.LinuxFamily() != "" {
+		if name, ok := familyDisplayNames[target.LinuxFamily()]; ok {
 			return name
 		}
-		return target.LinuxFamily
+		return target.LinuxFamily()
 	}
 	return target.OS()
 }
@@ -205,9 +205,9 @@ func resolveTarget(familyOverride string) (platform.Target, error) {
 
 		// For family override, assume linux platform
 		if runtime.GOOS != "linux" {
-			return platform.Target{Platform: "linux/amd64", LinuxFamily: familyOverride}, nil
+			return platform.NewTarget("linux/amd64", familyOverride), nil
 		}
-		return platform.Target{Platform: platformStr, LinuxFamily: familyOverride}, nil
+		return platform.NewTarget(platformStr, familyOverride), nil
 	}
 
 	// Use platform detection

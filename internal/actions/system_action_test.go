@@ -54,77 +54,77 @@ func TestConstraint_MatchesTarget(t *testing.T) {
 		{
 			name:       "darwin constraint matches darwin target",
 			constraint: Constraint{OS: "darwin"},
-			target:     platform.Target{Platform: "darwin/arm64"},
+			target:     platform.NewTarget("darwin/arm64", ""),
 			want:       true,
 		},
 		{
 			name:       "darwin constraint does not match linux target",
 			constraint: Constraint{OS: "darwin"},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			want:       false,
 		},
 		// Linux constraints with family
 		{
 			name:       "debian constraint matches debian target",
 			constraint: Constraint{OS: "linux", LinuxFamily: "debian"},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			want:       true,
 		},
 		{
 			name:       "debian constraint does not match rhel target",
 			constraint: Constraint{OS: "linux", LinuxFamily: "debian"},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "rhel"},
+			target:     platform.NewTarget("linux/amd64", "rhel"),
 			want:       false,
 		},
 		{
 			name:       "rhel constraint matches rhel target",
 			constraint: Constraint{OS: "linux", LinuxFamily: "rhel"},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "rhel"},
+			target:     platform.NewTarget("linux/amd64", "rhel"),
 			want:       true,
 		},
 		{
 			name:       "arch constraint matches arch target",
 			constraint: Constraint{OS: "linux", LinuxFamily: "arch"},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "arch"},
+			target:     platform.NewTarget("linux/amd64", "arch"),
 			want:       true,
 		},
 		{
 			name:       "alpine constraint matches alpine target",
 			constraint: Constraint{OS: "linux", LinuxFamily: "alpine"},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "alpine"},
+			target:     platform.NewTarget("linux/amd64", "alpine"),
 			want:       true,
 		},
 		{
 			name:       "suse constraint matches suse target",
 			constraint: Constraint{OS: "linux", LinuxFamily: "suse"},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "suse"},
+			target:     platform.NewTarget("linux/amd64", "suse"),
 			want:       true,
 		},
 		// Linux constraint without family
 		{
 			name:       "linux-only constraint matches any linux family",
 			constraint: Constraint{OS: "linux"},
-			target:     platform.Target{Platform: "linux/amd64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/amd64", "debian"),
 			want:       true,
 		},
 		{
 			name:       "linux-only constraint matches linux without family",
 			constraint: Constraint{OS: "linux"},
-			target:     platform.Target{Platform: "linux/amd64"},
+			target:     platform.NewTarget("linux/amd64", ""),
 			want:       true,
 		},
 		// Cross-OS mismatches
 		{
 			name:       "linux constraint does not match darwin",
 			constraint: Constraint{OS: "linux", LinuxFamily: "debian"},
-			target:     platform.Target{Platform: "darwin/arm64"},
+			target:     platform.NewTarget("darwin/arm64", ""),
 			want:       false,
 		},
 		// Architecture is not checked (constraint is OS/family only)
 		{
 			name:       "constraint matches regardless of architecture",
 			constraint: Constraint{OS: "linux", LinuxFamily: "debian"},
-			target:     platform.Target{Platform: "linux/arm64", LinuxFamily: "debian"},
+			target:     platform.NewTarget("linux/arm64", "debian"),
 			want:       true,
 		},
 	}
