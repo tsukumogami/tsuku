@@ -247,6 +247,21 @@ verify_git() {
     git --version
 
     echo ""
+    echo "Debug: git --exec-path (where Git looks for helpers)"
+    git --exec-path
+
+    echo ""
+    echo "Debug: checking if git-remote-https exists at exec-path"
+    EXEC_PATH=$(git --exec-path)
+    if [ -f "$EXEC_PATH/git-remote-https" ]; then
+        echo "✓ git-remote-https found at $EXEC_PATH/git-remote-https"
+    else
+        echo "✗ git-remote-https NOT found at $EXEC_PATH/git-remote-https"
+        echo "Contents of $EXEC_PATH:"
+        ls -la "$EXEC_PATH" | head -20 || echo "Could not list directory"
+    fi
+
+    echo ""
     echo "Testing: git clone small repository"
     cd "$TEMP_DIR"
     # Clone a small, stable public repo (git's own test repo is tiny)
