@@ -29,6 +29,7 @@ action = "configure_make"
 source_dir = "git-{version}"
 executables = ["git"]
 configure_args = ["--with-curl={libs_dir}/libcurl-{deps.libcurl.version}"]
+make_args = ["RUNTIME_PREFIX=1"]
 
 [[steps]]
 action = "set_rpath"

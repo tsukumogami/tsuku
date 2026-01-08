@@ -65,35 +65,63 @@ Fixed all 9 calls to `relocatePlaceholders()` in `homebrew_test.go` to use new 4
 ### 5. macOS dylib RPATH Fixes (internal/actions/homebrew_relocate.go)
 Added `fixLibraryDylibRpaths()` function (lines 545-680) to add RPATHs to .dylib files on macOS using install_name_tool. This ensures dylibs can find their transitive dependencies at runtime.
 
-## Current Bug: Directory Mode Binary Auto-Discovery
+## Bug 1: Directory Mode Binary Auto-Discovery (FIXED)
 
 ### Symptom
-CI logs show:
+CI logs showed:
 ```
 🔗 Symlinked 2 binaries: [bin/git bin/git-remote-https]
 ⚠️  Could not compute binary checksums: failed to resolve binary path bin/git-remote-https:
     lstat /Users/runner/.tsuku/tools/git-source-2.52.0/bin/git-remote-https: no such file or directory
 ```
 
-### Analysis
-The recipe specifies:
-```toml
-[[steps]]
-action = "install_binaries"
-install_mode = "directory"
-binaries = ["bin/git"]
+### Root Cause
+The `ExtractBinaries()` function in `internal/recipe/types.go` was processing `binaries` parameters from ALL steps, including `set_rpath` steps. When it saw `.install/libexec/git-core/git-remote-https` in a set_rpath step, it extracted the basename and added `bin/` prefix, creating `bin/git-remote-https` in the symlink list.
+
+### Fix
+Added action type whitelist to `ExtractBinaries()` to only process installation actions (install_binaries, download_archive, github_archive, github_file, npm_install), skipping set_rpath and other modification actions. See `internal/recipe/types.go` lines 315-326.
+
+### Verification
+After fix, CI logs show: `🔗 Symlinked 1 binaries: [bin/git]` ✓
+
+---
+
+## Bug 2: Git Can't Find git-remote-https at Runtime (IN PROGRESS)
+
+### Symptom
+Even after fixing Bug 1, git clone still fails:
+```
+git: 'remote-https' is not a git command. See 'git --help'.
+fatal: remote helper 'https' aborted session
 ```
 
-But the install manager is trying to symlink 2 binaries, including `bin/git-remote-https` which doesn't exist (it's in `libexec/git-core/`).
+### Analysis
+1. The directory tree IS copied correctly, including `libexec/git-core/git-remote-https`
+2. Git was compiled with `--prefix=/var/folders/.../T/action-validator-.../.install`
+3. This prefix is compiled into git as the location to find helper programs
+4. When the tree is copied to `$TSUKU_HOME/tools/git-source-2.52.0/`, the compiled-in path no longer exists
+5. Git runs via symlink from `$TSUKU_HOME/bin/git` → `$TSUKU_HOME/tools/git-source-2.52.0/bin/git`
+6. Git looks for helpers at the compiled-in path (which doesn't exist), not relative to the binary location
 
-### Hypothesis
-In directory mode, the install manager appears to be auto-discovering binaries from the installed directory tree instead of using only the binaries listed in the recipe. This is causing it to find `git-remote-https` in `libexec/git-core/` and try to symlink it as `bin/git-remote-https`.
+### Solution: RUNTIME_PREFIX Make Variable
 
-### Next Steps
-1. Find where the install manager populates the binaries list for directory mode
-2. Ensure it uses only the binaries specified in the recipe, not auto-discovered ones
-3. The directory tree copy should include everything (including `libexec/git-core/git-remote-https`)
-4. But only the explicitly listed binaries should be symlinked to `$TSUKU_HOME/bin/`
+Git supports building with relocatable prefix via the `RUNTIME_PREFIX` make variable:
+- When built with `RUNTIME_PREFIX=1`, Git computes its prefix at runtime based on the executable's location
+- This allows Git installations to be moved to arbitrary filesystem locations
+- Git strips known directories (like `bin/`) from the executable path to compute the prefix
+- For example: if binary is at `/path/to/tools/git-2.52.0/bin/git`, prefix becomes `/path/to/tools/git-2.52.0`
+
+### Implementation
+1. Added `make_args` parameter to configure_make action (internal/actions/configure_make.go)
+   - Reads `make_args` from recipe step parameters
+   - Expands variables in make_args (like configure_args)
+   - Appends to commonMakeArgs before running make
+2. Updated git-source.toml to pass `make_args = ["RUNTIME_PREFIX=1"]`
+
+### References
+- [Git RUNTIME_PREFIX patches](https://www.spinics.net/lists/git/msg90467.html)
+- [RUNTIME_PREFIX relocatable Git](https://yhbt.net/lore/all/87vadrc185.fsf@evledraar.gmail.com/T/)
+- [Git INSTALL documentation](https://github.com/git/git/blob/master/INSTALL)
 
 ## Key Learnings
 

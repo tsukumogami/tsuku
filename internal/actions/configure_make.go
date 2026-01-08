@@ -93,11 +93,15 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 	// Get optional parameters
 	configureArgs, _ := GetStringSlice(params, "configure_args")
 	makeTargets, _ := GetStringSlice(params, "make_targets")
+	makeArgs, _ := GetStringSlice(params, "make_args")
 
-	// Expand variables in configure_args (e.g., {libs_dir}, {deps.libcurl.version})
+	// Expand variables in configure_args and make_args (e.g., {libs_dir}, {deps.libcurl.version})
 	vars := GetStandardVarsWithDeps(ctx.Version, ctx.InstallDir, ctx.WorkDir, ctx.LibsDir, ctx.Dependencies)
 	for i, arg := range configureArgs {
 		configureArgs[i] = ExpandVars(arg, vars)
+	}
+	for i, arg := range makeArgs {
+		makeArgs[i] = ExpandVars(arg, vars)
 	}
 
 	// Validate configure args for security after expansion
@@ -192,18 +196,20 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 	// Common make arguments to prevent documentation regeneration
 	// MAKEINFO=true prevents makeinfo invocation (for .texi -> .info)
 	commonMakeArgs := []string{"MAKEINFO=true"}
+	// Append user-provided make arguments
+	commonMakeArgs = append(commonMakeArgs, makeArgs...)
 
 	for _, target := range makeTargets {
-		var makeArgs []string
-		makeArgs = append(makeArgs, commonMakeArgs...)
+		var cmdMakeArgs []string
+		cmdMakeArgs = append(cmdMakeArgs, commonMakeArgs...)
 		if target != "" {
-			makeArgs = append(makeArgs, target)
+			cmdMakeArgs = append(cmdMakeArgs, target)
 			fmt.Printf("   Running: make %s\n", target)
 		} else {
 			fmt.Printf("   Running: make\n")
 		}
 
-		makeCmd := exec.CommandContext(ctx.Context, makePath, makeArgs...)
+		makeCmd := exec.CommandContext(ctx.Context, makePath, cmdMakeArgs...)
 		makeCmd.Dir = sourceDir
 		makeCmd.Env = env
 
