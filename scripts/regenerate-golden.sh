@@ -89,34 +89,51 @@ fi
 # Create golden directory
 mkdir -p "$GOLDEN_DIR"
 
-# Get supported platforms (format: linux/amd64)
-# Exclude linux-arm64 (no CI runner available)
-ALL_PLATFORMS=$("$TSUKU" info --recipe "$RECIPE_PATH" --metadata-only --json | \
-    jq -r '.supported_platforms[]' | tr '/' '-' | grep -v '^linux-arm64$' || true)
+# Get supported platforms as JSON objects (preserving linux_family if present)
+# Format: {"os":"linux","arch":"amd64"} or {"os":"linux","arch":"amd64","linux_family":"debian"}
+PLATFORMS_JSON=$("$TSUKU" info --recipe "$RECIPE_PATH" --metadata-only --json | \
+    jq -c '.supported_platforms[]')
 
-if [[ -z "$ALL_PLATFORMS" ]]; then
-    echo "No supported platforms found for $RECIPE (excluding linux-arm64)"
+if [[ -z "$PLATFORMS_JSON" ]]; then
+    echo "No supported platforms found for $RECIPE"
     exit 0
 fi
 
-# Apply platform filters
+# Apply platform filters and build list of platform descriptors
+# Each descriptor is: os:arch:family (family may be empty)
 PLATFORMS=""
-for platform in $ALL_PLATFORMS; do
-    os="${platform%-*}"
-    arch="${platform#*-}"
+ALL_PLATFORMS=""  # For cleanup logic later
+while IFS= read -r platform_json; do
+    os=$(echo "$platform_json" | jq -r '.os')
+    arch=$(echo "$platform_json" | jq -r '.arch')
+    family=$(echo "$platform_json" | jq -r '.linux_family // empty')
 
-    if [[ -n "$FILTER_OS" && "$os" != "$FILTER_OS" ]]; then
+    # Skip linux-arm64 (no CI runner)
+    if [[ "$os" == "linux" && "$arch" == "arm64" ]]; then
         continue
     fi
 
+    # Build platform string for cleanup check (family-aware uses os-family-arch, agnostic uses os-arch)
+    if [[ -n "$family" ]]; then
+        ALL_PLATFORMS="$ALL_PLATFORMS $os-$family-$arch"
+    else
+        ALL_PLATFORMS="$ALL_PLATFORMS $os-$arch"
+    fi
+
+    # Apply filters
+    if [[ -n "$FILTER_OS" && "$os" != "$FILTER_OS" ]]; then
+        continue
+    fi
     if [[ -n "$FILTER_ARCH" && "$arch" != "$FILTER_ARCH" ]]; then
         continue
     fi
 
-    PLATFORMS="$PLATFORMS $platform"
-done
+    # Add to filtered platforms list (format: os:arch:family)
+    PLATFORMS="$PLATFORMS $os:$arch:$family"
+done <<< "$PLATFORMS_JSON"
 
 PLATFORMS=$(echo "$PLATFORMS" | xargs)
+ALL_PLATFORMS=$(echo "$ALL_PLATFORMS" | xargs)
 
 if [[ -z "$PLATFORMS" ]]; then
     echo "No platforms match filters (--os=$FILTER_OS, --arch=$FILTER_ARCH)" >&2
@@ -134,9 +151,28 @@ if [[ -n "$FILTER_VERSION" ]]; then
     VERSIONS="$VERSION_FOR_FILE"
 elif [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
     # Extract versions from existing files (with v prefix)
-    # Version is everything before the last two hyphen-separated components (os-arch)
+    # For family-aware files: v1.0.0-linux-debian-amd64.json -> version is before last 3 components
+    # For family-agnostic files: v0.60.0-linux-amd64.json -> version is before last 2 components
+    # We detect by checking if there are 4+ hyphen-separated components (family-aware)
     VERSIONS=$(for f in "$GOLDEN_DIR"/*.json; do
-        basename "$f" .json | rev | cut -d'-' -f3- | rev
+        filename=$(basename "$f" .json)
+        # Count components
+        num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
+        if [[ $num_parts -ge 4 ]]; then
+            # Could be family-aware (v1.0.0-linux-debian-amd64) or version with hyphen
+            # Check if 3rd-from-last is a known family
+            third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
+            if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+                # Family-aware: version is everything before last 3 components
+                echo "$filename" | rev | cut -d'-' -f4- | rev
+            else
+                # Family-agnostic: version is everything before last 2 components
+                echo "$filename" | rev | cut -d'-' -f3- | rev
+            fi
+        else
+            # Family-agnostic: version is everything before last 2 components
+            echo "$filename" | rev | cut -d'-' -f3- | rev
+        fi
     done | sort -u)
 else
     # Get latest version (versions may or may not have 'v' prefix depending on source)
@@ -159,13 +195,25 @@ for VERSION in $VERSIONS; do
 
     echo "Regenerating $RECIPE@$VERSION..."
 
-    for platform in $PLATFORMS; do
-        os="${platform%-*}"
-        arch="${platform#*-}"
-        OUTPUT="$GOLDEN_DIR/${VERSION}-${platform}.json"
+    for platform_desc in $PLATFORMS; do
+        # Parse platform descriptor (os:arch:family)
+        os="${platform_desc%%:*}"
+        rest="${platform_desc#*:}"
+        arch="${rest%%:*}"
+        family="${rest#*:}"
 
-        if "$TSUKU" eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
-            --version "$VERSION_NO_V" --install-deps 2>/dev/null | \
+        # Build eval command arguments
+        eval_args=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps)
+
+        # Determine output filename based on whether family is present
+        if [[ -n "$family" ]]; then
+            eval_args+=(--linux-family "$family")
+            OUTPUT="$GOLDEN_DIR/${VERSION}-${os}-${family}-${arch}.json"
+        else
+            OUTPUT="$GOLDEN_DIR/${VERSION}-${os}-${arch}.json"
+        fi
+
+        if "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$OUTPUT.tmp"; then
             mv "$OUTPUT.tmp" "$OUTPUT"
             echo "  Generated: $OUTPUT"
@@ -180,10 +228,26 @@ done
 if [[ -z "$FILTER_OS" && -z "$FILTER_ARCH" && -z "$FILTER_VERSION" ]]; then
     if [[ -d "$GOLDEN_DIR" ]]; then
         find "$GOLDEN_DIR" -name "*.json" | while read -r file; do
-            # Extract platform from filename (e.g., v0.60.0-linux-amd64.json -> linux-amd64)
-            # Platform is always the last two hyphen-separated components before .json
+            # Extract platform from filename
+            # Family-aware: v1.0.0-linux-debian-amd64.json -> linux-debian-amd64
+            # Family-agnostic: v0.60.0-linux-amd64.json -> linux-amd64
             filename=$(basename "$file" .json)
-            platform=$(echo "$filename" | rev | cut -d'-' -f1,2 | rev)
+            num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
+
+            if [[ $num_parts -ge 4 ]]; then
+                # Could be family-aware or version with hyphen
+                third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
+                if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+                    # Family-aware: platform is last 3 components
+                    platform=$(echo "$filename" | rev | cut -d'-' -f1,2,3 | rev)
+                else
+                    # Family-agnostic: platform is last 2 components
+                    platform=$(echo "$filename" | rev | cut -d'-' -f1,2 | rev)
+                fi
+            else
+                # Family-agnostic: platform is last 2 components
+                platform=$(echo "$filename" | rev | cut -d'-' -f1,2 | rev)
+            fi
 
             if ! echo "$ALL_PLATFORMS" | grep -qw "$platform"; then
                 echo "  Removing unsupported: $file"

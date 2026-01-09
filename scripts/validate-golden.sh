@@ -68,14 +68,44 @@ fi
 TEMP_DIR=$(mktemp -d)
 trap 'rm -rf "$TEMP_DIR"' EXIT
 
-# Get supported platforms (exclude linux-arm64)
-PLATFORMS=$("$TSUKU" info --recipe "$RECIPE_PATH" --metadata-only --json | \
-    jq -r '.supported_platforms[]' | tr '/' '-' | grep -v '^linux-arm64$' || true)
+# Get supported platforms as JSON objects (preserving linux_family if present)
+PLATFORMS_JSON=$("$TSUKU" info --recipe "$RECIPE_PATH" --metadata-only --json | \
+    jq -c '.supported_platforms[]')
+
+# Build platform descriptors (os:arch:family) and platform strings for file matching
+PLATFORMS=""
+while IFS= read -r platform_json; do
+    os=$(echo "$platform_json" | jq -r '.os')
+    arch=$(echo "$platform_json" | jq -r '.arch')
+    family=$(echo "$platform_json" | jq -r '.linux_family // empty')
+
+    # Skip linux-arm64 (no CI runner)
+    if [[ "$os" == "linux" && "$arch" == "arm64" ]]; then
+        continue
+    fi
+
+    # Add to platforms list (format: os:arch:family)
+    PLATFORMS="$PLATFORMS $os:$arch:$family"
+done <<< "$PLATFORMS_JSON"
+
+PLATFORMS=$(echo "$PLATFORMS" | xargs)
 
 # Extract versions from existing golden files
-# Version is everything before the last two hyphen-separated components (os-arch)
+# For family-aware files: v1.0.0-linux-debian-amd64.json -> version is before last 3 components
+# For family-agnostic files: v0.60.0-linux-amd64.json -> version is before last 2 components
 VERSIONS=$(for f in "$GOLDEN_DIR"/*.json; do
-    basename "$f" .json | rev | cut -d'-' -f3- | rev
+    filename=$(basename "$f" .json)
+    num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
+    if [[ $num_parts -ge 4 ]]; then
+        third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
+        if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+            echo "$filename" | rev | cut -d'-' -f4- | rev
+        else
+            echo "$filename" | rev | cut -d'-' -f3- | rev
+        fi
+    else
+        echo "$filename" | rev | cut -d'-' -f3- | rev
+    fi
 done 2>/dev/null | sort -u || true)
 
 if [[ -z "$VERSIONS" ]]; then
@@ -86,10 +116,23 @@ fi
 # Check that all supported platforms have golden files
 MISSING_PLATFORMS=()
 for VERSION in $VERSIONS; do
-    for platform in $PLATFORMS; do
-        GOLDEN="$GOLDEN_DIR/${VERSION}-${platform}.json"
+    for platform_desc in $PLATFORMS; do
+        # Parse platform descriptor (os:arch:family)
+        os="${platform_desc%%:*}"
+        rest="${platform_desc#*:}"
+        arch="${rest%%:*}"
+        family="${rest#*:}"
+
+        # Build expected filename
+        if [[ -n "$family" ]]; then
+            expected_file="${VERSION}-${os}-${family}-${arch}.json"
+        else
+            expected_file="${VERSION}-${os}-${arch}.json"
+        fi
+
+        GOLDEN="$GOLDEN_DIR/$expected_file"
         if [[ ! -f "$GOLDEN" ]]; then
-            MISSING_PLATFORMS+=("${VERSION}-${platform}")
+            MISSING_PLATFORMS+=("$expected_file")
         fi
     done
 done
@@ -97,7 +140,7 @@ done
 if [[ ${#MISSING_PLATFORMS[@]} -gt 0 ]]; then
     echo "ERROR: Missing golden files for supported platforms:" >&2
     for missing in "${MISSING_PLATFORMS[@]}"; do
-        echo "  - $GOLDEN_DIR/${missing}.json" >&2
+        echo "  - $GOLDEN_DIR/${missing}" >&2
     done
     echo "" >&2
     echo "To fix, either:" >&2
@@ -115,18 +158,34 @@ MISMATCH=0
 for VERSION in $VERSIONS; do
     VERSION_NO_V="${VERSION#v}"
 
-    for platform in $PLATFORMS; do
-        os="${platform%-*}"
-        arch="${platform#*-}"
-        GOLDEN="$GOLDEN_DIR/${VERSION}-${platform}.json"
-        ACTUAL="$TEMP_DIR/${VERSION}-${platform}.json"
+    for platform_desc in $PLATFORMS; do
+        # Parse platform descriptor (os:arch:family)
+        os="${platform_desc%%:*}"
+        rest="${platform_desc#*:}"
+        arch="${rest%%:*}"
+        family="${rest#*:}"
+
+        # Build expected filename and actual filename
+        if [[ -n "$family" ]]; then
+            filename="${VERSION}-${os}-${family}-${arch}.json"
+        else
+            filename="${VERSION}-${os}-${arch}.json"
+        fi
+
+        GOLDEN="$GOLDEN_DIR/$filename"
+        ACTUAL="$TEMP_DIR/$filename"
+
+        # Build eval command arguments
+        eval_args=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps)
+        if [[ -n "$family" ]]; then
+            eval_args+=(--linux-family "$family")
+        fi
 
         # Generate current plan (stripping non-deterministic fields)
         # Note: missing platforms already caught by pre-check above
-        if ! "$TSUKU" eval --recipe "$RECIPE_PATH" --os "$os" --arch "$arch" \
-            --version "$VERSION_NO_V" --install-deps 2>/dev/null | \
+        if ! "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$ACTUAL"; then
-            echo "Failed to generate plan for $RECIPE@$VERSION ($platform)" >&2
+            echo "Failed to generate plan for $RECIPE@$VERSION ($filename)" >&2
             continue
         fi
 
