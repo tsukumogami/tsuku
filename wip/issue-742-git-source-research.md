@@ -254,6 +254,35 @@ make_args = [
 
 This tells Git's Makefile exactly which libraries to link when building programs that use curl.
 
+**BUT THIS STILL DIDN'T WORK** - The linker error changed but still failed.
+
+### Fix Attempt 6: Include -L Paths in CURL_LIBCURL (IMPLEMENTED)
+
+**Problem**: Linker error changed from "undefined reference" to "cannot find":
+```
+/usr/bin/ld: cannot find -lcurl: No such file or directory
+/usr/bin/ld: cannot find -lnghttp3: No such file or directory
+/usr/bin/ld: cannot find -lngtcp2: No such file or directory
+```
+
+**Progress Made**: The CURL_LIBCURL fix in attempt 5 IS working! Git's Makefile is now trying to link against all the correct libraries.
+
+**New Problem**: The linker doesn't know WHERE to find these libraries. I only passed the library names (`-lcurl -lnghttp3 ...`) but not the library paths.
+
+**Root Cause**: When `curl-config --libs` runs normally, it returns BOTH paths and names:
+```
+-L/path/to/libcurl/lib -lcurl -L/path/to/libnghttp3/lib -lnghttp3 ...
+```
+
+I only provided the `-l` parts. The LDFLAGS environment variable has `-L` paths, but Git's Makefile doesn't combine them with CURL_LIBCURL.
+
+**Solution**: Include full `-L` paths for each library in CURL_LIBCURL:
+```toml
+CURL_LIBCURL=-L{libs_dir}/libcurl-{deps.libcurl.version}/lib -lcurl -L{libs_dir}/libnghttp3-{deps.libnghttp3.version}/lib -lnghttp3 -L{libs_dir}/libngtcp2-{deps.libngtcp2.version}/lib -lngtcp2 -L{libs_dir}/libnghttp2-{deps.libnghttp2.version}/lib -lnghttp2 -L{libs_dir}/libssh2-{deps.libssh2.version}/lib -lssh2 -L{libs_dir}/brotli-{deps.brotli.version}/lib -lbrotlidec -lbrotlicommon -L{libs_dir}/zstd-{deps.zstd.version}/lib -lzstd
+```
+
+This provides complete linker information: WHERE to find each library (`-L`) and WHICH library to link (`-l`).
+
 ### References
 - [Git RUNTIME_PREFIX patches](https://www.spinics.net/lists/git/msg90467.html)
 - [RUNTIME_PREFIX relocatable Git](https://yhbt.net/lore/all/87vadrc185.fsf@evledraar.gmail.com/T/)

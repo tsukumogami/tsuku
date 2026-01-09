@@ -36,7 +36,7 @@ make_args = [
     "gitexecdir=libexec/git-core",
     "NO_CURL=",
     "CURLDIR={libs_dir}/libcurl-{deps.libcurl.version}",
-    "CURL_LIBCURL=-lcurl -lnghttp3 -lngtcp2 -lnghttp2 -lssh2 -lbrotlidec -lbrotlicommon -lzstd"
+    "CURL_LIBCURL=-L{libs_dir}/libcurl-{deps.libcurl.version}/lib -lcurl -L{libs_dir}/libnghttp3-{deps.libnghttp3.version}/lib -lnghttp3 -L{libs_dir}/libngtcp2-{deps.libngtcp2.version}/lib -lngtcp2 -L{libs_dir}/libnghttp2-{deps.libnghttp2.version}/lib -lnghttp2 -L{libs_dir}/libssh2-{deps.libssh2.version}/lib -lssh2 -L{libs_dir}/brotli-{deps.brotli.version}/lib -lbrotlidec -lbrotlicommon -L{libs_dir}/zstd-{deps.zstd.version}/lib -lzstd"
 ]
 
 [[steps]]
