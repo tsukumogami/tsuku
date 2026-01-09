@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - 'testdata/golden/plans/**/*.json'
+      - 'scripts/validate-golden.sh'
+      - 'scripts/regenerate-golden.sh'
       - '.github/workflows/validate-golden-execution.yml'
   workflow_dispatch:
 
@@ -50,14 +52,31 @@ jobs:
               continue
             fi
 
-            # Extract platform from filename (e.g., v1.20.0-linux-amd64.json -> linux-amd64)
+            # Extract platform from filename
+            # Family-agnostic: v1.20.0-linux-amd64.json -> linux-amd64
+            # Family-aware: v1.0.0-linux-debian-amd64.json -> linux-debian-amd64
             filename=$(basename "$path" .json)
-            platform=$(echo "$filename" | sed 's/.*-\(linux\|darwin\)-\(amd64\|arm64\)$/\1-\2/')
+            # Check if third-from-last component is a known family
+            third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
+            if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+              # Family-aware: extract os-family-arch
+              platform=$(echo "$filename" | rev | cut -d'-' -f1-3 | rev)
+            else
+              # Family-agnostic: extract os-arch
+              platform=$(echo "$filename" | rev | cut -d'-' -f1-2 | rev)
+            fi
 
             # Map platform to runner
+            # Handle both family-agnostic (linux-amd64) and family-aware (linux-debian-amd64)
             case "$platform" in
-              linux-amd64)
+              linux-amd64|linux-debian-amd64)
+                # Ubuntu runners are Debian-based
                 os="ubuntu-latest"
+                ;;
+              linux-rhel-amd64|linux-arch-amd64|linux-alpine-amd64|linux-suse-amd64)
+                # Skip: no matching GitHub-hosted runners
+                echo "Skipping $path ($platform no matching runner)"
+                continue
                 ;;
               darwin-arm64)
                 os="macos-latest"
@@ -67,7 +86,7 @@ jobs:
                 echo "Skipping $path (darwin-amd64 requires paid tier)"
                 continue
                 ;;
-              linux-arm64)
+              linux-arm64|linux-*-arm64)
                 # Skip: no GitHub-hosted runners available
                 echo "Skipping $path (linux-arm64 no runners available)"
                 continue
@@ -143,12 +162,40 @@ jobs:
           RECIPE_PATH="internal/recipe/recipes/$FIRST_LETTER/$RECIPE.toml"
           GOLDEN_DIR="testdata/golden/plans/$FIRST_LETTER/$RECIPE"
 
-          # Get supported platforms (exclude linux-arm64 - no CI runner)
-          PLATFORMS=$(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | \
-            jq -r '.supported_platforms[]' | tr '/' '-' | grep -v '^linux-arm64$')
+          # Get supported platforms as JSON objects (preserving linux_family if present)
+          # Build platform descriptors (os:arch:family)
+          PLATFORMS=""
+          while IFS= read -r platform_json; do
+            os=$(echo "$platform_json" | jq -r '.os')
+            arch=$(echo "$platform_json" | jq -r '.arch')
+            family=$(echo "$platform_json" | jq -r '.linux_family // empty')
+
+            # Skip linux-arm64 (no CI runner)
+            if [[ "$os" == "linux" && "$arch" == "arm64" ]]; then
+              continue
+            fi
+
+            PLATFORMS="$PLATFORMS $os:$arch:$family"
+          done < <(./tsuku info --recipe "$RECIPE_PATH" --metadata-only --json | jq -c '.supported_platforms[]')
+          PLATFORMS=$(echo "$PLATFORMS" | xargs)
 
           # Get versions from existing golden files
-          VERSIONS=$(ls "$GOLDEN_DIR"/*.json 2>/dev/null | xargs -n1 basename | sed 's/.json$//' | rev | cut -d'-' -f3- | rev | sort -u)
+          # Family-aware: v1.0.0-linux-debian-amd64.json -> version before last 3 components
+          # Family-agnostic: v0.60.0-linux-amd64.json -> version before last 2 components
+          VERSIONS=$(for f in "$GOLDEN_DIR"/*.json; do
+            filename=$(basename "$f" .json)
+            num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
+            if [[ $num_parts -ge 4 ]]; then
+              third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
+              if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+                echo "$filename" | rev | cut -d'-' -f4- | rev
+              else
+                echo "$filename" | rev | cut -d'-' -f3- | rev
+              fi
+            else
+              echo "$filename" | rev | cut -d'-' -f3- | rev
+            fi
+          done 2>/dev/null | sort -u || true)
 
           if [ -z "$VERSIONS" ]; then
             echo "No golden files found in $GOLDEN_DIR"
@@ -158,9 +205,22 @@ jobs:
           # Check all platform/version combinations have files
           MISSING=()
           for version in $VERSIONS; do
-            for platform in $PLATFORMS; do
-              if [ ! -f "$GOLDEN_DIR/${version}-${platform}.json" ]; then
-                MISSING+=("$GOLDEN_DIR/${version}-${platform}.json")
+            for platform_desc in $PLATFORMS; do
+              # Parse platform descriptor (os:arch:family)
+              os="${platform_desc%%:*}"
+              rest="${platform_desc#*:}"
+              arch="${rest%%:*}"
+              family="${rest#*:}"
+
+              # Build expected filename
+              if [[ -n "$family" ]]; then
+                expected_file="${version}-${os}-${family}-${arch}.json"
+              else
+                expected_file="${version}-${os}-${arch}.json"
+              fi
+
+              if [ ! -f "$GOLDEN_DIR/$expected_file" ]; then
+                MISSING+=("$GOLDEN_DIR/$expected_file")
               fi
             done
           done
