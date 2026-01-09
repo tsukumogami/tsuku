@@ -63,7 +63,8 @@ func init() {
 	loader = recipe.NewWithLocalRecipes(reg, cfg.RecipesDir)
 
 	// Configure constraint lookup for step analysis (enables platform constraint validation)
-	loader.SetConstraintLookup(defaultConstraintLookup())
+	constraintLookup = defaultConstraintLookup()
+	loader.SetConstraintLookup(constraintLookup)
 
 	// Register all commands
 	rootCmd.AddCommand(activateCmd)
