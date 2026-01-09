@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Regenerate golden files for a single recipe
-# Usage: ./scripts/regenerate-golden.sh <recipe> [--version <ver>] [--os <os>] [--arch <arch>]
+# Usage: ./scripts/regenerate-golden.sh <recipe> [--version <ver>] [--os <os>] [--arch <arch>] [--recipe <path>]
 #
 # Examples:
 #   ./scripts/regenerate-golden.sh fzf
 #   ./scripts/regenerate-golden.sh fzf --version 0.60.0
 #   ./scripts/regenerate-golden.sh fzf --os linux --arch amd64
+#   ./scripts/regenerate-golden.sh build-tools-system --recipe testdata/recipes/build-tools-system.toml
 #
 # Exit codes:
 #   0: Success
@@ -41,21 +42,24 @@ RECIPE=""
 FILTER_VERSION=""
 FILTER_OS=""
 FILTER_ARCH=""
+CUSTOM_RECIPE_PATH=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --version) FILTER_VERSION="$2"; shift 2 ;;
         --os)      FILTER_OS="$2"; shift 2 ;;
         --arch)    FILTER_ARCH="$2"; shift 2 ;;
+        --recipe)  CUSTOM_RECIPE_PATH="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: $0 <recipe> [--version <ver>] [--os <os>] [--arch <arch>]"
+            echo "Usage: $0 <recipe> [--version <ver>] [--os <os>] [--arch <arch>] [--recipe <path>]"
             echo ""
             echo "Regenerate golden files for a recipe."
             echo ""
             echo "Options:"
-            echo "  --version <ver>  Only regenerate for specific version"
-            echo "  --os <os>        Only regenerate for specific OS (linux, darwin)"
-            echo "  --arch <arch>    Only regenerate for specific arch (amd64, arm64)"
+            echo "  --version <ver>   Only regenerate for specific version"
+            echo "  --os <os>         Only regenerate for specific OS (linux, darwin)"
+            echo "  --arch <arch>     Only regenerate for specific arch (amd64, arm64)"
+            echo "  --recipe <path>   Use custom recipe path (e.g., testdata/recipes/foo.toml)"
             exit 0
             ;;
         -*)        echo "Unknown flag: $1" >&2; exit 1 ;;
@@ -77,7 +81,16 @@ fi
 
 # Compute paths
 FIRST_LETTER="${RECIPE:0:1}"
-RECIPE_PATH="$RECIPE_BASE/$FIRST_LETTER/$RECIPE.toml"
+if [[ -n "$CUSTOM_RECIPE_PATH" ]]; then
+    # Use custom recipe path (convert to absolute if relative)
+    if [[ "$CUSTOM_RECIPE_PATH" = /* ]]; then
+        RECIPE_PATH="$CUSTOM_RECIPE_PATH"
+    else
+        RECIPE_PATH="$REPO_ROOT/$CUSTOM_RECIPE_PATH"
+    fi
+else
+    RECIPE_PATH="$RECIPE_BASE/$FIRST_LETTER/$RECIPE.toml"
+fi
 GOLDEN_DIR="$GOLDEN_BASE/$FIRST_LETTER/$RECIPE"
 
 # Validate recipe exists
@@ -153,20 +166,19 @@ elif [[ -d "$GOLDEN_DIR" ]] && ls "$GOLDEN_DIR"/*.json >/dev/null 2>&1; then
     # Extract versions from existing files (with v prefix)
     # For family-aware files: v1.0.0-linux-debian-amd64.json -> version is before last 3 components
     # For family-agnostic files: v0.60.0-linux-amd64.json -> version is before last 2 components
-    # We detect by checking if there are 4+ hyphen-separated components (family-aware)
+    # Detection: check if second-from-last component is a known family (e.g., debian in linux-debian-amd64)
     VERSIONS=$(for f in "$GOLDEN_DIR"/*.json; do
         filename=$(basename "$f" .json)
         # Count components
         num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
         if [[ $num_parts -ge 4 ]]; then
-            # Could be family-aware (v1.0.0-linux-debian-amd64) or version with hyphen
-            # Check if 3rd-from-last is a known family
-            third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
-            if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
-                # Family-aware: version is everything before last 3 components
+            # Check second-from-last: in linux-debian-amd64, that's "debian"
+            second_from_last=$(echo "$filename" | rev | cut -d'-' -f2 | rev)
+            if [[ "$second_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+                # Family-aware: version is everything before last 3 components (os-family-arch)
                 echo "$filename" | rev | cut -d'-' -f4- | rev
             else
-                # Family-agnostic: version is everything before last 2 components
+                # Family-agnostic: version is everything before last 2 components (os-arch)
                 echo "$filename" | rev | cut -d'-' -f3- | rev
             fi
         else
@@ -231,17 +243,18 @@ if [[ -z "$FILTER_OS" && -z "$FILTER_ARCH" && -z "$FILTER_VERSION" ]]; then
             # Extract platform from filename
             # Family-aware: v1.0.0-linux-debian-amd64.json -> linux-debian-amd64
             # Family-agnostic: v0.60.0-linux-amd64.json -> linux-amd64
+            # Detection: check if second-from-last component is a known family
             filename=$(basename "$file" .json)
             num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
 
             if [[ $num_parts -ge 4 ]]; then
-                # Could be family-aware or version with hyphen
-                third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
-                if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
-                    # Family-aware: platform is last 3 components
+                # Check second-from-last: in linux-debian-amd64, that's "debian"
+                second_from_last=$(echo "$filename" | rev | cut -d'-' -f2 | rev)
+                if [[ "$second_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+                    # Family-aware: platform is last 3 components (os-family-arch)
                     platform=$(echo "$filename" | rev | cut -d'-' -f1,2,3 | rev)
                 else
-                    # Family-agnostic: platform is last 2 components
+                    # Family-agnostic: platform is last 2 components (os-arch)
                     platform=$(echo "$filename" | rev | cut -d'-' -f1,2 | rev)
                 fi
             else

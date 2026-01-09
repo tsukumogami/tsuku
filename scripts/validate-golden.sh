@@ -1,9 +1,13 @@
 #!/usr/bin/env bash
 # Validate golden files for a single recipe
-# Usage: ./scripts/validate-golden.sh <recipe>
+# Usage: ./scripts/validate-golden.sh <recipe> [--recipe <path>]
 #
 # Compares current plan generation output against stored golden files.
 # Uses fast hash comparison first, then shows diff on mismatch.
+#
+# Examples:
+#   ./scripts/validate-golden.sh fzf
+#   ./scripts/validate-golden.sh build-tools-system --recipe testdata/recipes/build-tools-system.toml
 #
 # Exit codes:
 #   0: All golden files match
@@ -34,10 +38,30 @@ RECIPE_BASE="$REPO_ROOT/internal/recipe/recipes"
 GOLDEN_BASE="$REPO_ROOT/testdata/golden/plans"
 TSUKU="$REPO_ROOT/tsuku"
 
+# Parse arguments
+RECIPE=""
+CUSTOM_RECIPE_PATH=""
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --recipe)  CUSTOM_RECIPE_PATH="$2"; shift 2 ;;
+        -h|--help)
+            echo "Usage: $0 <recipe> [--recipe <path>]"
+            echo ""
+            echo "Validate golden files for a recipe."
+            echo ""
+            echo "Options:"
+            echo "  --recipe <path>   Use custom recipe path (e.g., testdata/recipes/foo.toml)"
+            exit 0
+            ;;
+        -*)        echo "Unknown flag: $1" >&2; exit 2 ;;
+        *)         RECIPE="$1"; shift ;;
+    esac
+done
+
 # Validate arguments
-RECIPE="${1:-}"
 if [[ -z "$RECIPE" ]]; then
-    echo "Usage: $0 <recipe>" >&2
+    echo "Usage: $0 <recipe> [--recipe <path>]" >&2
     exit 2
 fi
 
@@ -49,7 +73,16 @@ fi
 
 # Compute paths
 FIRST_LETTER="${RECIPE:0:1}"
-RECIPE_PATH="$RECIPE_BASE/$FIRST_LETTER/$RECIPE.toml"
+if [[ -n "$CUSTOM_RECIPE_PATH" ]]; then
+    # Use custom recipe path (convert to absolute if relative)
+    if [[ "$CUSTOM_RECIPE_PATH" = /* ]]; then
+        RECIPE_PATH="$CUSTOM_RECIPE_PATH"
+    else
+        RECIPE_PATH="$REPO_ROOT/$CUSTOM_RECIPE_PATH"
+    fi
+else
+    RECIPE_PATH="$RECIPE_BASE/$FIRST_LETTER/$RECIPE.toml"
+fi
 GOLDEN_DIR="$GOLDEN_BASE/$FIRST_LETTER/$RECIPE"
 
 # Validate recipe exists
@@ -93,14 +126,18 @@ PLATFORMS=$(echo "$PLATFORMS" | xargs)
 # Extract versions from existing golden files
 # For family-aware files: v1.0.0-linux-debian-amd64.json -> version is before last 3 components
 # For family-agnostic files: v0.60.0-linux-amd64.json -> version is before last 2 components
+# Detection: check if second-from-last component is a known family (e.g., debian in linux-debian-amd64)
 VERSIONS=$(for f in "$GOLDEN_DIR"/*.json; do
     filename=$(basename "$f" .json)
     num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
     if [[ $num_parts -ge 4 ]]; then
-        third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
-        if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+        # Check second-from-last: in linux-debian-amd64, that's "debian"
+        second_from_last=$(echo "$filename" | rev | cut -d'-' -f2 | rev)
+        if [[ "$second_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+            # Family-aware: version is everything before last 3 components (os-family-arch)
             echo "$filename" | rev | cut -d'-' -f4- | rev
         else
+            # Family-agnostic: version is everything before last 2 components (os-arch)
             echo "$filename" | rev | cut -d'-' -f3- | rev
         fi
     else
