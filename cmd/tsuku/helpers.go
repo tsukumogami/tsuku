@@ -18,10 +18,15 @@ import (
 // loader holds the recipe loader (shared across all commands)
 var loader *recipe.Loader
 
+// constraintLookup holds the constraint lookup function (shared across all commands).
+// This is set during initialization and used by loadLocalRecipe for step analysis.
+var constraintLookup recipe.ConstraintLookup
+
 // loadLocalRecipe loads a recipe from a local file path.
 // This is a thin wrapper around recipe.ParseFile for use in CLI commands.
+// It uses the global constraintLookup for step analysis (same as loader).
 func loadLocalRecipe(path string) (*recipe.Recipe, error) {
-	return recipe.ParseFile(path)
+	return recipe.ParseFile(path, constraintLookup)
 }
 
 // printInfo prints an informational message unless quiet mode is enabled
@@ -78,7 +83,7 @@ func generateInstallPlan(
 
 	// Load recipe from file or registry
 	if recipePath != "" {
-		r, err = recipe.ParseFile(recipePath)
+		r, err = recipe.ParseFile(recipePath, constraintLookup)
 		recipeSource = "local"
 	} else {
 		r, err = loader.Get(toolName)
