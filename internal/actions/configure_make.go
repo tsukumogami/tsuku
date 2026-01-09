@@ -222,6 +222,16 @@ func (a *ConfigureMakeAction) Execute(ctx *ExecutionContext, params map[string]i
 		commonMakeArgs = append(commonMakeArgs, "prefix="+prefix)
 	}
 
+	// Pass LDFLAGS as a make variable in addition to environment variable
+	// Some Makefiles (like Git's) don't always use LDFLAGS from the environment
+	// and need it passed as a make variable for certain link commands
+	for _, e := range env {
+		if strings.HasPrefix(e, "LDFLAGS=") {
+			commonMakeArgs = append(commonMakeArgs, e)
+			break
+		}
+	}
+
 	// Append user-provided make arguments
 	commonMakeArgs = append(commonMakeArgs, makeArgs...)
 
