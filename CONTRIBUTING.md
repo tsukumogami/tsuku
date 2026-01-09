@@ -497,6 +497,65 @@ gh workflow run generate-golden-files.yml \
 
 linux-arm64 is excluded because GitHub Actions doesn't provide arm64 Linux runners.
 
+### Golden File Families
+
+Golden files support Linux family-specific plans for recipes that vary by distribution.
+
+**Family-agnostic recipes** use actions like `download`, `github_archive`, or `go_install` that work identically on any Linux distribution. Their plans do not include a `linux_family` field and produce a single Linux golden file:
+
+```
+testdata/golden/plans/f/fzf/
+├── v0.60.0-linux-amd64.json
+├── v0.60.0-darwin-amd64.json
+└── v0.60.0-darwin-arm64.json
+```
+
+**Family-aware recipes** use package manager actions (`apt_install`, `dnf_install`, `pacman_install`, `apk_install`, `zypper_install`) or `{{linux_family}}` interpolation in parameters. Their plans include `linux_family` in the platform object and produce five Linux golden files (one per supported family):
+
+```
+testdata/golden/plans/b/build-tools-system/
+├── v1.0.0-linux-debian-amd64.json
+├── v1.0.0-linux-rhel-amd64.json
+├── v1.0.0-linux-arch-amd64.json
+├── v1.0.0-linux-alpine-amd64.json
+├── v1.0.0-linux-suse-amd64.json
+├── v1.0.0-darwin-amd64.json
+└── v1.0.0-darwin-arm64.json
+```
+
+**File naming conventions:**
+
+| Recipe Type | Pattern | Example |
+|-------------|---------|---------|
+| Family-agnostic | `{version}-{os}-{arch}.json` | `v0.60.0-linux-amd64.json` |
+| Family-aware | `{version}-{os}-{family}-{arch}.json` | `v1.0.0-linux-debian-amd64.json` |
+
+Supported families: `debian`, `rhel`, `arch`, `alpine`, `suse`
+
+**Regenerating golden files:**
+
+The regeneration scripts automatically detect whether a recipe is family-aware by querying `tsuku info --metadata-only`:
+
+```bash
+# Family-agnostic recipe - produces 1 Linux file
+./scripts/regenerate-golden.sh fzf --os linux --arch amd64
+
+# Family-aware recipe - produces 5 family-specific Linux files
+./scripts/regenerate-golden.sh build-tools-system --os linux --arch amd64
+```
+
+**Recipe transition handling:**
+
+When a recipe's family awareness changes (e.g., adding `apt_install` to a previously family-agnostic recipe):
+
+- Old `linux-amd64.json` file is deleted
+- Five new family-specific files are created
+- PR diff shows 1 deletion and 5 additions
+
+The reverse transition (removing family-aware actions) shows 5 deletions and 1 addition.
+
+For technical details on family detection logic and platform metadata, see [docs/DESIGN-golden-family-support.md](docs/DESIGN-golden-family-support.md).
+
 ### Design Reference
 
 For the complete design rationale, validation workflows, and security considerations, see [docs/DESIGN-golden-plan-testing.md](docs/DESIGN-golden-plan-testing.md).
