@@ -1,0 +1,43 @@
+[metadata]
+name = "brotli"
+description = "Generic-purpose lossless compression algorithm"
+homepage = "https://github.com/google/brotli"
+type = "library"
+dependencies = []
+
+[version]
+source = "homebrew"
+formula = "brotli"
+
+[[steps]]
+action = "homebrew"
+formula = "brotli"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "bin/brotli",
+    "lib/libbrotlicommon.so",
+    "lib/libbrotlicommon.so.1",
+    "lib/libbrotlicommon.dylib",
+    "lib/libbrotlicommon.1.dylib",
+    "lib/libbrotlidec.so",
+    "lib/libbrotlidec.so.1",
+    "lib/libbrotlidec.dylib",
+    "lib/libbrotlidec.1.dylib",
+    "lib/libbrotlienc.so",
+    "lib/libbrotlienc.so.1",
+    "lib/libbrotlienc.dylib",
+    "lib/libbrotlienc.1.dylib",
+    "lib/libbrotlicommon.a",
+    "lib/libbrotlidec.a",
+    "lib/libbrotlienc.a",
+    "lib/pkgconfig/libbrotlicommon.pc",
+    "lib/pkgconfig/libbrotlidec.pc",
+    "lib/pkgconfig/libbrotlienc.pc",
+    "include/brotli/decode.h",
+    "include/brotli/encode.h",
+    "include/brotli/port.h",
+    "include/brotli/types.h",
+]

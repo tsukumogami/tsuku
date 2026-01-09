@@ -1,0 +1,33 @@
+[metadata]
+name = "rtmpdump"
+description = "Tool for downloading RTMP streaming media"
+homepage = "https://rtmpdump.mplayerhq.hu/"
+type = "library"
+dependencies = ["openssl"]
+
+[version]
+source = "homebrew"
+formula = "rtmpdump"
+
+[[steps]]
+action = "homebrew"
+formula = "rtmpdump"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "bin/rtmpdump",
+    "bin/rtmpsrv",
+    "bin/rtmpsuck",
+    "bin/rtmpgw",
+    "lib/librtmp.so",
+    "lib/librtmp.so.1",
+    "lib/librtmp.dylib",
+    "lib/librtmp.1.dylib",
+    "lib/pkgconfig/librtmp.pc",
+    "include/librtmp/rtmp.h",
+    "include/librtmp/amf.h",
+    "include/librtmp/http.h",
+    "include/librtmp/log.h",
+]

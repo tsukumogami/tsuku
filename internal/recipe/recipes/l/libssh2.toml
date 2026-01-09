@@ -1,0 +1,29 @@
+[metadata]
+name = "libssh2"
+description = "C library for SSH2 client-side protocol"
+homepage = "https://libssh2.org/"
+type = "library"
+dependencies = ["openssl"]
+
+[version]
+source = "homebrew"
+formula = "libssh2"
+
+[[steps]]
+action = "homebrew"
+formula = "libssh2"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "lib/libssh2.a",
+    "lib/libssh2.so",
+    "lib/libssh2.so.1",
+    "lib/libssh2.dylib",
+    "lib/libssh2.1.dylib",
+    "lib/pkgconfig/libssh2.pc",
+    "include/libssh2.h",
+    "include/libssh2_publickey.h",
+    "include/libssh2_sftp.h",
+]
