@@ -56,6 +56,15 @@ for letter_dir in "$GOLDEN_BASE"/*/; do
         if [[ -n "$FILTER_OS" ]]; then
             VALIDATE_ARGS+=("--os" "$FILTER_OS")
         fi
+
+        # Check if this is a testdata recipe (not in main recipes directory)
+        first_letter="${recipe:0:1}"
+        MAIN_RECIPE="$REPO_ROOT/internal/recipe/recipes/$first_letter/$recipe.toml"
+        TESTDATA_RECIPE="$REPO_ROOT/testdata/recipes/$recipe.toml"
+        if [[ ! -f "$MAIN_RECIPE" && -f "$TESTDATA_RECIPE" ]]; then
+            VALIDATE_ARGS+=("--recipe" "$TESTDATA_RECIPE")
+        fi
+
         if ! "$SCRIPT_DIR/validate-golden.sh" "${VALIDATE_ARGS[@]}"; then
             FAILED+=("$recipe")
         fi
