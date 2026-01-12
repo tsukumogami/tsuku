@@ -36,12 +36,10 @@ on:
 
       # Version resolution - affects URL templates
       - 'internal/version/*.go'
+      - '!internal/version/*_test.go'
 
       # This workflow file
       - '.github/workflows/validate-golden-code.yml'
-
-    paths-ignore:
-      - '**/*_test.go'
 
   workflow_dispatch:
 
@@ -89,12 +87,12 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Validate all golden files
+      - name: Validate linux golden files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Validating all golden files..."
-          if ! ./scripts/validate-all-golden.sh; then
+          echo "Validating linux golden files..."
+          if ! ./scripts/validate-all-golden.sh --os linux; then
             echo ""
             echo "::error::Golden files are out of date due to code changes."
             echo "::error::See output above for which recipes failed and regeneration commands."

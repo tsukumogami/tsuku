@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 # Validate all golden files
-# Usage: ./scripts/validate-all-golden.sh
+# Usage: ./scripts/validate-all-golden.sh [--os <linux|darwin>]
 #
 # Runs validate-golden.sh for each recipe with golden files.
 # Reports which recipes failed so you can investigate and selectively regenerate.
+#
+# Options:
+#   --os <os>  Only validate golden files for the specified OS (linux or darwin)
+#              This is useful for platform-specific CI runners.
 #
 # Exit codes:
 #   0: All golden files match
 #   1: One or more recipes have mismatches
 
 set -euo pipefail
+
+# Parse arguments
+FILTER_OS=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --os)      FILTER_OS="$2"; shift 2 ;;
+        *)         echo "Unknown argument: $1" >&2; exit 1 ;;
+    esac
+done
 
 # Script location for relative paths
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -39,7 +52,20 @@ for letter_dir in "$GOLDEN_BASE"/*/; do
         TOTAL=$((TOTAL + 1))
 
         echo "Validating $recipe..."
-        if ! "$SCRIPT_DIR/validate-golden.sh" "$recipe"; then
+        VALIDATE_ARGS=("$recipe")
+        if [[ -n "$FILTER_OS" ]]; then
+            VALIDATE_ARGS+=("--os" "$FILTER_OS")
+        fi
+
+        # Check if this is a testdata recipe (not in main recipes directory)
+        first_letter="${recipe:0:1}"
+        MAIN_RECIPE="$REPO_ROOT/internal/recipe/recipes/$first_letter/$recipe.toml"
+        TESTDATA_RECIPE="$REPO_ROOT/testdata/recipes/$recipe.toml"
+        if [[ ! -f "$MAIN_RECIPE" && -f "$TESTDATA_RECIPE" ]]; then
+            VALIDATE_ARGS+=("--recipe" "$TESTDATA_RECIPE")
+        fi
+
+        if ! "$SCRIPT_DIR/validate-golden.sh" "${VALIDATE_ARGS[@]}"; then
             FAILED+=("$recipe")
         fi
     done
