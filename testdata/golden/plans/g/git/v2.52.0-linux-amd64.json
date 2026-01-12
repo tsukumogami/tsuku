@@ -11,7 +11,7 @@
   "dependencies": [
     {
       "tool": "curl",
-      "version": "8.17.0",
+      "version": "8.18.0",
       "recipe_hash": "f4143af5375617af092a5bfc6c6545b47bd5a1deb5bcf24c46346930e9647448",
       "dependencies": [
         {
@@ -191,21 +191,21 @@
         {
           "action": "download_file",
           "params": {
-            "checksum": "e8e74cdeefe5fb78b3ae6e90cd542babf788fa9480029cfcee6fd9ced42b7910",
+            "checksum": "e9274a5f8ab5271c0e0e6762d2fce194d5f98acc568e4ce816845b2dcc0cf88f",
             "checksum_algo": "sha256",
-            "dest": "curl-8.17.0.tar.gz",
-            "url": "https://curl.se/download/curl-8.17.0.tar.gz"
+            "dest": "curl-8.18.0.tar.gz",
+            "url": "https://curl.se/download/curl-8.18.0.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://curl.se/download/curl-8.17.0.tar.gz",
-          "checksum": "e8e74cdeefe5fb78b3ae6e90cd542babf788fa9480029cfcee6fd9ced42b7910",
-          "size": 4182287
+          "url": "https://curl.se/download/curl-8.18.0.tar.gz",
+          "checksum": "e9274a5f8ab5271c0e0e6762d2fce194d5f98acc568e4ce816845b2dcc0cf88f",
+          "size": 4182005
         },
         {
           "action": "extract",
           "params": {
-            "archive": "curl-8.17.0.tar.gz",
+            "archive": "curl-8.18.0.tar.gz",
             "format": "tar.gz"
           },
           "evaluable": true,
@@ -229,7 +229,7 @@
             "executables": [
               "curl"
             ],
-            "source_dir": "curl-8.17.0"
+            "source_dir": "curl-8.18.0"
           },
           "evaluable": false,
           "deterministic": false

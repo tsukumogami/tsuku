@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 # Validate golden files for a single recipe
-# Usage: ./scripts/validate-golden.sh <recipe> [--recipe <path>]
+# Usage: ./scripts/validate-golden.sh <recipe> [--recipe <path>] [--os <linux|darwin>]
 #
 # Compares current plan generation output against stored golden files.
 # Uses fast hash comparison first, then shows diff on mismatch.
 #
 # Examples:
 #   ./scripts/validate-golden.sh fzf
+#   ./scripts/validate-golden.sh fzf --os linux
 #   ./scripts/validate-golden.sh build-tools-system --recipe testdata/recipes/build-tools-system.toml
 #
 # Exit codes:
@@ -41,17 +42,20 @@ TSUKU="$REPO_ROOT/tsuku"
 # Parse arguments
 RECIPE=""
 CUSTOM_RECIPE_PATH=""
+FILTER_OS=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --recipe)  CUSTOM_RECIPE_PATH="$2"; shift 2 ;;
+        --os)      FILTER_OS="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: $0 <recipe> [--recipe <path>]"
+            echo "Usage: $0 <recipe> [--recipe <path>] [--os <linux|darwin>]"
             echo ""
             echo "Validate golden files for a recipe."
             echo ""
             echo "Options:"
             echo "  --recipe <path>   Use custom recipe path (e.g., testdata/recipes/foo.toml)"
+            echo "  --os <os>         Only validate golden files for the specified OS (linux or darwin)"
             exit 0
             ;;
         -*)        echo "Unknown flag: $1" >&2; exit 2 ;;
@@ -61,7 +65,7 @@ done
 
 # Validate arguments
 if [[ -z "$RECIPE" ]]; then
-    echo "Usage: $0 <recipe> [--recipe <path>]" >&2
+    echo "Usage: $0 <recipe> [--recipe <path>] [--os <linux|darwin>]" >&2
     exit 2
 fi
 
@@ -160,6 +164,11 @@ for VERSION in $VERSIONS; do
         arch="${rest%%:*}"
         family="${rest#*:}"
 
+        # Skip platforms that don't match the filter OS (if specified)
+        if [[ -n "$FILTER_OS" && "$os" != "$FILTER_OS" ]]; then
+            continue
+        fi
+
         # Build expected filename
         if [[ -n "$family" ]]; then
             expected_file="${VERSION}-${os}-${family}-${arch}.json"
@@ -201,6 +210,11 @@ for VERSION in $VERSIONS; do
         rest="${platform_desc#*:}"
         arch="${rest%%:*}"
         family="${rest#*:}"
+
+        # Skip platforms that don't match the filter OS (if specified)
+        if [[ -n "$FILTER_OS" && "$os" != "$FILTER_OS" ]]; then
+            continue
+        fi
 
         # Build expected filename and actual filename
         if [[ -n "$family" ]]; then
