@@ -1,6 +1,6 @@
 # Design: Decomposable Actions and Primitive Operations
 
-- **Status**: Implemented (Milestone M15)
+- **Status**: Superseded by [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md)
 - **Archived**: 2025-12-19
 - **Milestone**: Deterministic Recipe Execution
 - **Author**: @dangazineu

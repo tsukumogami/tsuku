@@ -1,6 +1,6 @@
 # Design: Installation Plans and tsuku eval Command
 
-- **Status**: Implemented (Milestone M15)
+- **Status**: Superseded by [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md)
 - **Author**: @dangazineu
 - **Created**: 2025-12-10
 - **Scope**: Tactical

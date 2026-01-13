@@ -1,6 +1,6 @@
 # Design Document: Relocatable Library Dependency System
 
-**Status**: Planned
+**Status**: Current
 
 ## Context and Problem Statement
 

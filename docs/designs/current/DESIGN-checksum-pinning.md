@@ -1,6 +1,6 @@
 # Design: Post-Install Checksum Pinning (Layer 3)
 
-- **Status**: Proposed
+- **Status**: Current
 - **Issue**: #203
 - **Author**: @dangazineu
 - **Created**: 2025-12-27

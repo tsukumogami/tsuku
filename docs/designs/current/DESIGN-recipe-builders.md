@@ -1,6 +1,6 @@
 # Design Document: Ecosystem-Specific Recipe Builders
 
-**Status**: Implemented
+**Status**: Current
 
 ## Context and Problem Statement
 

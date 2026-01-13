@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Superseded by [DESIGN-golden-plan-testing.md](../current/DESIGN-golden-plan-testing.md)
 
 ## Implementation Issues
 

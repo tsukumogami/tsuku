@@ -1,6 +1,6 @@
 # Design: Deterministic Recipe Resolution and Installation Plans
 
-- **Status**: Implemented (Milestone M15)
+- **Status**: Current
 - **Issue**: #227
 - **Author**: @dangazineu
 - **Created**: 2025-12-09
