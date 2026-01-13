@@ -704,6 +704,9 @@ func (r *Recipe) ExtractBinaries() []string {
 			"github_archive":   true,
 			"github_file":      true,
 			"npm_install":      true,
+			"configure_make":   true, // Uses 'executables' parameter
+			"cmake_build":      true, // Uses 'executables' parameter
+			"meson_build":      true, // Uses 'executables' parameter
 		}
 		if !installActions[step.Action] {
 			continue
