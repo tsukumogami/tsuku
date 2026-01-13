@@ -4,10 +4,6 @@ description = "XML parser library"
 homepage = "https://libexpat.github.io/"
 type = "library"
 
-[version]
-source = "homebrew"
-formula = "expat"
-
 [[steps]]
 action = "homebrew"
 formula = "expat"

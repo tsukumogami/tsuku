@@ -5,10 +5,6 @@ homepage = "https://rtmpdump.mplayerhq.hu/"
 type = "library"
 dependencies = ["openssl"]
 
-[version]
-source = "homebrew"
-formula = "rtmpdump"
-
 [[steps]]
 action = "homebrew"
 formula = "rtmpdump"

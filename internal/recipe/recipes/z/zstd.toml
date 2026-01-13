@@ -5,10 +5,6 @@ homepage = "https://facebook.github.io/zstd/"
 type = "library"
 dependencies = []
 
-[version]
-source = "homebrew"
-formula = "zstd"
-
 [[steps]]
 action = "homebrew"
 formula = "zstd"

@@ -5,10 +5,6 @@ homepage = "https://nghttp2.org/ngtcp2/"
 type = "library"
 dependencies = []
 
-[version]
-source = "homebrew"
-formula = "libngtcp2"
-
 [[steps]]
 action = "homebrew"
 formula = "libngtcp2"

@@ -3,11 +3,7 @@ name = "libcurl"
 description = "Multi-protocol file transfer library"
 homepage = "https://curl.se/libcurl/"
 type = "library"
-dependencies = ["brotli", "libnghttp2", "libnghttp3", "libngtcp2", "libssh2", "openssl", "zlib", "zstd"]
-
-[version]
-source = "homebrew"
-formula = "curl"
+dependencies = ["brotli", "libnghttp2", "libnghttp3", "libngtcp2", "libssh2", "openssl", "rtmpdump", "zlib", "zstd"]
 
 [[steps]]
 action = "homebrew"
