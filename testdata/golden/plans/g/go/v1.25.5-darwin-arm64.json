@@ -1,0 +1,64 @@
+{
+  "format_version": 3,
+  "tool": "go",
+  "version": "1.25.5",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "6b7017ca80802605129ead86859ab532c4950c3825277dd3dfc9c81e31c499b7",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "bed8ebe824e3d3b27e8471d1307f803fc6ab8e1d0eb7a4ae196979bd9b801dd3",
+        "checksum_algo": "sha256",
+        "dest": "go1.25.5.darwin-arm64.tar.gz",
+        "url": "https://go.dev/dl/go1.25.5.darwin-arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://go.dev/dl/go1.25.5.darwin-arm64.tar.gz",
+      "checksum": "bed8ebe824e3d3b27e8471d1307f803fc6ab8e1d0eb7a4ae196979bd9b801dd3",
+      "size": 58028091
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "go1.25.5.darwin-arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "bin/go",
+          "bin/gofmt"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/go",
+          "bin/gofmt"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "{install_dir}/bin/go version",
+    "pattern": "go{version}"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "kubeseal",
+  "version": "0.34.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "d5ed000d3dae96debc3ada6660c0743f1b31cc0dc63d27373cf060dd6c4c7062",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "02500fbcbb3c751226f1623378827157292d78fb86f31edf222eed2abeb9d4f3",
+        "checksum_algo": "sha256",
+        "dest": "kubeseal-0.34.0-linux-amd64.tar.gz",
+        "url": "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.34.0/kubeseal-0.34.0-linux-amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.34.0/kubeseal-0.34.0-linux-amd64.tar.gz",
+      "checksum": "02500fbcbb3c751226f1623378827157292d78fb86f31edf222eed2abeb9d4f3",
+      "size": 23748820
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "kubeseal-0.34.0-linux-amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "kubeseal"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "kubeseal"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "kubeseal --version",
+    "pattern": "{version}"
+  }
+}

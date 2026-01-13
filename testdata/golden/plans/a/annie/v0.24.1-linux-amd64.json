@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "annie",
+  "version": "0.24.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "01c5b337fe1371e7ce02567d344c6816418cf17ae762d7e5d96a95be07daf090",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "9cb35bb2d6414be130e91e25962bbfdaa1905ddeba40467aa552ad2e04372ee4",
+        "checksum_algo": "sha256",
+        "dest": "lux_0.24.1_Linux_x86_64.tar.gz",
+        "url": "https://github.com/iawia002/lux/releases/download/v0.24.1/lux_0.24.1_Linux_x86_64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/iawia002/lux/releases/download/v0.24.1/lux_0.24.1_Linux_x86_64.tar.gz",
+      "checksum": "9cb35bb2d6414be130e91e25962bbfdaa1905ddeba40467aa552ad2e04372ee4",
+      "size": 8299045
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "lux_0.24.1_Linux_x86_64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "lux"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "lux"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "lux -v",
+    "pattern": "{version}"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "rancher",
+  "version": "2.13.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "a994d5c1eb348cbaafa0d6dad2f9320a3b7ce15a7df6b516d39399f385e7abe9",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "458b37fcc41231431b7f43205e0da7d06f154ec3faabec9b06f029b0473b1fa7",
+        "checksum_algo": "sha256",
+        "dest": "rancher-darwin-amd64-v2.13.1.tar.gz",
+        "url": "https://github.com/rancher/cli/releases/download/v2.13.1/rancher-darwin-amd64-v2.13.1.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/rancher/cli/releases/download/v2.13.1/rancher-darwin-amd64-v2.13.1.tar.gz",
+      "checksum": "458b37fcc41231431b7f43205e0da7d06f154ec3faabec9b06f029b0473b1fa7",
+      "size": 14285334
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "rancher-darwin-amd64-v2.13.1.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "rancher"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "rancher"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "rancher --version",
+    "pattern": "{version}"
+  }
+}

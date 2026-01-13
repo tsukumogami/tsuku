@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "annie",
+  "version": "0.24.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "01c5b337fe1371e7ce02567d344c6816418cf17ae762d7e5d96a95be07daf090",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "550433a17a3f4c18329be525828c4707fab4de8f5d4b8a1a711c189fd0798e2f",
+        "checksum_algo": "sha256",
+        "dest": "lux_0.24.1_Darwin_arm64.tar.gz",
+        "url": "https://github.com/iawia002/lux/releases/download/v0.24.1/lux_0.24.1_Darwin_arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/iawia002/lux/releases/download/v0.24.1/lux_0.24.1_Darwin_arm64.tar.gz",
+      "checksum": "550433a17a3f4c18329be525828c4707fab4de8f5d4b8a1a711c189fd0798e2f",
+      "size": 7993185
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "lux_0.24.1_Darwin_arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "lux"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "lux"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "lux -v",
+    "pattern": "{version}"
+  }
+}

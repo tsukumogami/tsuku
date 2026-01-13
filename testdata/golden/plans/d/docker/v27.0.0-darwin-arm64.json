@@ -1,0 +1,35 @@
+{
+  "format_version": 3,
+  "tool": "docker",
+  "version": "dev",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "a95b12c81c0091424808e98baf384ed32fc0b9622d4edb6a0372a8dbe2132230",
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "brew_cask",
+      "params": {
+        "packages": [
+          "docker"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    },
+    {
+      "action": "require_command",
+      "params": {
+        "command": "docker"
+      },
+      "evaluable": false,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "docker --version",
+    "pattern": "Docker version {version}"
+  }
+}

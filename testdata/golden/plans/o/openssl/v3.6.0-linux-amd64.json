@@ -1,0 +1,178 @@
+{
+  "format_version": 3,
+  "tool": "openssl",
+  "version": "3.6.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "5d6b22eb29f76f54dc84062d1eb9a28a3aa04d29bcc3f438ec6452c625259603",
+  "deterministic": true,
+  "dependencies": [
+    {
+      "tool": "zlib",
+      "version": "1.3.1",
+      "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+      "dependencies": [
+        {
+          "tool": "patchelf",
+          "version": "0.18.0",
+          "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                "dest": "patchelf.tar.gz",
+                "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b"
+              },
+              "evaluable": true,
+              "deterministic": true,
+              "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+              "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+              "size": 130124
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "patchelf.tar.gz",
+                "format": "tar.gz",
+                "strip_dirs": 2
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "homebrew_relocate",
+              "params": {
+                "formula": "patchelf"
+              },
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "install_binaries",
+              "params": {
+                "binaries": [
+                  "bin/patchelf"
+                ]
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "verify": {
+            "command": "patchelf --version",
+            "pattern": "patchelf {version}"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
+            "dest": "zlib.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
+          "checksum": "38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
+          "size": 175143
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "zlib.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "zlib"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "lib/libz.a",
+              "lib/libz.dylib",
+              "lib/libz.so",
+              "include/zlib.h",
+              "include/zconf.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "dae10cea048eae154365f18fc51154093f8ba378ace3fe138f89dda08bf09e4e",
+        "dest": "openssl@3.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:dae10cea048eae154365f18fc51154093f8ba378ace3fe138f89dda08bf09e4e"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:dae10cea048eae154365f18fc51154093f8ba378ace3fe138f89dda08bf09e4e",
+      "checksum": "dae10cea048eae154365f18fc51154093f8ba378ace3fe138f89dda08bf09e4e",
+      "size": 11218983
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "openssl@3.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "openssl@3"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/openssl",
+          "lib/libssl.so",
+          "lib/libssl.so.3",
+          "lib/libssl.dylib",
+          "lib/libssl.3.dylib",
+          "lib/libcrypto.so",
+          "lib/libcrypto.so.3",
+          "lib/libcrypto.dylib",
+          "lib/libcrypto.3.dylib"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "openssl version",
+    "pattern": "OpenSSL {version}"
+  },
+  "recipe_type": "library"
+}

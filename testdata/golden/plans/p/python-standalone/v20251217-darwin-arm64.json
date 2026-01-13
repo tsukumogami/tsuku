@@ -1,0 +1,64 @@
+{
+  "format_version": 3,
+  "tool": "python-standalone",
+  "version": "20251217",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "3068c1ae3ebf682354aa60ac9d3825d538de118e80e1a37cdfcfa725af4e82d1",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "e8a86c0b91ac8e053dfb5b4a9a8dd6323eef4c185c98ae75ff3518e15958a5ed",
+        "checksum_algo": "sha256",
+        "dest": "cpython-3.10.19+20251217-aarch64-apple-darwin-install_only.tar.gz",
+        "url": "https://github.com/indygreg/python-build-standalone/releases/download/20251217/cpython-3.10.19+20251217-aarch64-apple-darwin-install_only.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/indygreg/python-build-standalone/releases/download/20251217/cpython-3.10.19+20251217-aarch64-apple-darwin-install_only.tar.gz",
+      "checksum": "e8a86c0b91ac8e053dfb5b4a9a8dd6323eef4c185c98ae75ff3518e15958a5ed",
+      "size": 18866297
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "cpython-3.10.19+20251217-aarch64-apple-darwin-install_only.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "bin/python3",
+          "bin/pip3"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/python3",
+          "bin/pip3"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "python3 --version",
+    "pattern": "Python 3."
+  }
+}

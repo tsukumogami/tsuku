@@ -1,0 +1,213 @@
+{
+  "format_version": 3,
+  "tool": "bundler",
+  "version": "4.0.3",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "432d10cb7ae27af2a414b8351df34a08fa07d6b12a4d9b99618460b8dbe6728f",
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "ruby",
+      "version": "4.0.0",
+      "recipe_hash": "6d0ac9b358fb401388d532f40e1a23714d4fae56f935b1bc659b1ea6b2c8ab81",
+      "dependencies": [
+        {
+          "tool": "libyaml",
+          "version": "0.2.5",
+          "recipe_hash": "6924285a8102a97d956d36b71c96a935b4171727fc79f855d3dddb61aaed1eab",
+          "dependencies": [
+            {
+              "tool": "patchelf",
+              "version": "0.18.0",
+              "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                    "dest": "patchelf.tar.gz",
+                    "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                  "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                  "size": 130124
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "patchelf.tar.gz",
+                    "format": "tar.gz",
+                    "strip_dirs": 2
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "homebrew_relocate",
+                  "params": {
+                    "formula": "patchelf"
+                  },
+                  "evaluable": false,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "bin/patchelf"
+                    ]
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "verify": {
+                "command": "patchelf --version",
+                "pattern": "patchelf {version}"
+              }
+            }
+          ],
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8",
+                "dest": "libyaml.tar.gz",
+                "url": "https://ghcr.io/v2/homebrew/core/libyaml/blobs/sha256:354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8"
+              },
+              "evaluable": true,
+              "deterministic": true,
+              "url": "https://ghcr.io/v2/homebrew/core/libyaml/blobs/sha256:354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8",
+              "checksum": "354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8",
+              "size": 125801
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "libyaml.tar.gz",
+                "format": "tar.gz",
+                "strip_dirs": 2
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "homebrew_relocate",
+              "params": {
+                "formula": "libyaml"
+              },
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "install_libraries",
+              "params": {
+                "patterns": [
+                  "lib/*.so*",
+                  "lib/*.dylib"
+                ]
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "recipe_type": "library"
+        }
+      ],
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "0e49c3911076b9ad66a6b9b35efe2b14cf31615c9d1aa311f7311e04cfe88ca8",
+            "checksum_algo": "sha256",
+            "dest": "ruby-4.0.0-ubuntu-22.04-x64.tar.gz",
+            "url": "https://github.com/ruby/ruby-builder/releases/download/ruby-4.0.0/ruby-4.0.0-ubuntu-22.04-x64.tar.gz"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://github.com/ruby/ruby-builder/releases/download/ruby-4.0.0/ruby-4.0.0-ubuntu-22.04-x64.tar.gz",
+          "checksum": "0e49c3911076b9ad66a6b9b35efe2b14cf31615c9d1aa311f7311e04cfe88ca8",
+          "size": 48679546
+        },
+        {
+          "action": "extract",
+          "params": {
+            "arch_mapping": {
+              "amd64": "x64",
+              "arm64": "arm64"
+            },
+            "archive": "ruby-4.0.0-ubuntu-22.04-x64.tar.gz",
+            "format": "tar.gz",
+            "os_mapping": {
+              "darwin": "darwin",
+              "linux": "ubuntu-22.04"
+            },
+            "strip_dirs": 1
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "link_dependencies",
+          "params": {
+            "library": "libyaml"
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "run_command",
+          "params": {
+            "command": "mv bin/ruby bin/ruby.real\ncat > bin/ruby << 'WRAPPER'\n#!/bin/bash\n# Resolve symlinks to get the real script location\nSCRIPT_PATH=\"${BASH_SOURCE[0]}\"\nwhile [ -L \"$SCRIPT_PATH\" ]; do\n    SCRIPT_DIR=\"$(cd -P \"$(dirname \"$SCRIPT_PATH\")\" && pwd)\"\n    SCRIPT_PATH=\"$(readlink \"$SCRIPT_PATH\")\"\n    [[ $SCRIPT_PATH != /* ]] && SCRIPT_PATH=\"$SCRIPT_DIR/$SCRIPT_PATH\"\ndone\nSCRIPT_DIR=\"$(cd -P \"$(dirname \"$SCRIPT_PATH\")\" && pwd)\"\nINSTALL_DIR=\"$(dirname \"$SCRIPT_DIR\")\"\n\n# Set library paths for dynamically linked Ruby (includes bundled libyaml)\nif [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n    export DYLD_LIBRARY_PATH=\"$INSTALL_DIR/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}\"\nelse\n    export LD_LIBRARY_PATH=\"$INSTALL_DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"\nfi\n\n# Dynamically detect Ruby version from lib/ruby directory\nRUBY_VERSION=$(ls -1 \"$INSTALL_DIR/lib/ruby\" 2>/dev/null | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)\nif [ -z \"$RUBY_VERSION\" ]; then\n    RUBY_VERSION=$(\"$INSTALL_DIR/bin/ruby.real\" -e 'puts RUBY_VERSION' 2>/dev/null || echo \"3.4.0\")\nfi\n\n# Detect architecture for platform-specific paths\nif [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n    ARCH=$(uname -m)\n    if [ \"$ARCH\" = \"arm64\" ]; then\n        RUBY_ARCH=\"arm64-darwin\"\n    else\n        RUBY_ARCH=\"x86_64-darwin\"\n    fi\n    # Find the exact darwin version directory\n    DARWIN_DIR=$(ls -1 \"$INSTALL_DIR/lib/ruby/$RUBY_VERSION\" 2>/dev/null | grep -E \"darwin\" | head -1)\n    if [ -n \"$DARWIN_DIR\" ]; then\n        RUBY_ARCH=\"$DARWIN_DIR\"\n    fi\nelse\n    ARCH=$(uname -m)\n    case \"$ARCH\" in\n        x86_64) RUBY_ARCH=\"x86_64-linux\" ;;\n        aarch64) RUBY_ARCH=\"aarch64-linux\" ;;\n        *) RUBY_ARCH=\"$ARCH-linux\" ;;\n    esac\nfi\n\n# Set Ruby library paths (override hardcoded paths from build)\nexport RUBYLIB=\"$INSTALL_DIR/lib/ruby/site_ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/site_ruby/$RUBY_VERSION/$RUBY_ARCH:$INSTALL_DIR/lib/ruby/site_ruby:$INSTALL_DIR/lib/ruby/vendor_ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/vendor_ruby/$RUBY_VERSION/$RUBY_ARCH:$INSTALL_DIR/lib/ruby/vendor_ruby:$INSTALL_DIR/lib/ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/$RUBY_VERSION/$RUBY_ARCH${RUBYLIB:+:$RUBYLIB}\"\n\n# Set GEM paths\nexport GEM_HOME=\"$INSTALL_DIR/lib/ruby/gems/$RUBY_VERSION\"\nexport GEM_PATH=\"$GEM_HOME${GEM_PATH:+:$GEM_PATH}\"\n\nexec \"$INSTALL_DIR/bin/ruby.real\" \"$@\"\nWRAPPER\nchmod +x bin/ruby\n\n# Convert Ruby scripts to bash wrappers that call ruby with the script\nfor script in gem irb erb bundle bundler rake rdoc ri; do\n    if [ -f \"bin/$script\" ]; then\n        mv \"bin/$script\" \"bin/$script.rb\"\n        cat > \"bin/$script\" << 'SCRIPTWRAPPER'\n#!/bin/bash\n# Resolve symlinks to get the real script location\nSCRIPT_PATH=\"${BASH_SOURCE[0]}\"\nwhile [ -L \"$SCRIPT_PATH\" ]; do\n    DIR=\"$(cd -P \"$(dirname \"$SCRIPT_PATH\")\" && pwd)\"\n    SCRIPT_PATH=\"$(readlink \"$SCRIPT_PATH\")\"\n    [[ $SCRIPT_PATH != /* ]] && SCRIPT_PATH=\"$DIR/$SCRIPT_PATH\"\ndone\nSCRIPT_DIR=\"$(cd -P \"$(dirname \"$SCRIPT_PATH\")\" && pwd)\"\nSCRIPT_NAME=\"$(basename \"$SCRIPT_PATH\")\"\nexec \"$SCRIPT_DIR/ruby\" \"$SCRIPT_DIR/${SCRIPT_NAME}.rb\" \"$@\"\nSCRIPTWRAPPER\n        chmod +x \"bin/$script\"\n    fi\ndone\n"
+          },
+          "evaluable": false,
+          "deterministic": false
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/ruby",
+              "bin/gem",
+              "bin/bundle",
+              "bin/bundler",
+              "bin/irb",
+              "bin/erb"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "{install_dir}/bin/ruby --version",
+        "pattern": "ruby {version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "install_gem_direct",
+      "params": {
+        "executables": [
+          "bundle",
+          "bundler"
+        ],
+        "gem": "bundler",
+        "version": "4.0.3"
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "bundle --version",
+    "pattern": "{version}"
+  }
+}

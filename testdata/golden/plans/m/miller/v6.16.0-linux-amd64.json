@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "miller",
+  "version": "6.16.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "7184c7612cfdda974ce379ad77a556952e0798724b158ee01cc41f507c32e79c",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "4512c5d9459c1d79d0ebc1a51af36e7044f27d2798cd7fb6764dfb953210b607",
+        "checksum_algo": "sha256",
+        "dest": "miller-6.16.0-linux-amd64.tar.gz",
+        "url": "https://github.com/johnkerl/miller/releases/download/v6.16.0/miller-6.16.0-linux-amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/johnkerl/miller/releases/download/v6.16.0/miller-6.16.0-linux-amd64.tar.gz",
+      "checksum": "4512c5d9459c1d79d0ebc1a51af36e7044f27d2798cd7fb6764dfb953210b607",
+      "size": 4821142
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "miller-6.16.0-linux-amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "mlr"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "mlr"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "mlr --version",
+    "pattern": "{version}"
+  }
+}

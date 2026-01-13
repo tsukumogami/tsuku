@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "gitleaks-cli",
+  "version": "8.30.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "11304cb6d193b475fc01e068339b92d3b29931130cd8b50b1e68ec4bf8b67acb",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "b251ab2bcd4cd8ba9e56ff37698c033ebf38582b477d21ebd86586d927cf87e7",
+        "checksum_algo": "sha256",
+        "dest": "gitleaks_8.30.0_darwin_arm64.tar.gz",
+        "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_darwin_arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/gitleaks/gitleaks/releases/download/v8.30.0/gitleaks_8.30.0_darwin_arm64.tar.gz",
+      "checksum": "b251ab2bcd4cd8ba9e56ff37698c033ebf38582b477d21ebd86586d927cf87e7",
+      "size": 7887640
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gitleaks_8.30.0_darwin_arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "gitleaks"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "gitleaks"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gitleaks version",
+    "pattern": "{version}"
+  }
+}

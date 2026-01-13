@@ -1,0 +1,259 @@
+{
+  "format_version": 3,
+  "tool": "curl",
+  "version": "8.18.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "f4143af5375617af092a5bfc6c6545b47bd5a1deb5bcf24c46346930e9647448",
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "openssl",
+      "version": "3.6.0",
+      "recipe_hash": "5d6b22eb29f76f54dc84062d1eb9a28a3aa04d29bcc3f438ec6452c625259603",
+      "dependencies": [
+        {
+          "tool": "zlib",
+          "version": "1.3.1",
+          "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+          "dependencies": [
+            {
+              "tool": "patchelf",
+              "version": "0.18.0",
+              "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
+                    "dest": "patchelf.tar.gz",
+                    "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
+                  "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
+                  "size": 122324
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "patchelf.tar.gz",
+                    "format": "tar.gz",
+                    "strip_dirs": 2
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "homebrew_relocate",
+                  "params": {
+                    "formula": "patchelf"
+                  },
+                  "evaluable": false,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "bin/patchelf"
+                    ]
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "verify": {
+                "command": "patchelf --version",
+                "pattern": "patchelf {version}"
+              }
+            }
+          ],
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "217f4245cd1da65a3388f512530089f526cd63a38d49ee5f29a90576dfeb3bb7",
+                "dest": "zlib.tar.gz",
+                "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:217f4245cd1da65a3388f512530089f526cd63a38d49ee5f29a90576dfeb3bb7"
+              },
+              "evaluable": true,
+              "deterministic": true,
+              "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:217f4245cd1da65a3388f512530089f526cd63a38d49ee5f29a90576dfeb3bb7",
+              "checksum": "217f4245cd1da65a3388f512530089f526cd63a38d49ee5f29a90576dfeb3bb7",
+              "size": 158015
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "zlib.tar.gz",
+                "format": "tar.gz",
+                "strip_dirs": 2
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "homebrew_relocate",
+              "params": {
+                "formula": "zlib"
+              },
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "install_binaries",
+              "params": {
+                "binaries": [
+                  "lib/libz.a",
+                  "lib/libz.dylib",
+                  "lib/libz.so",
+                  "include/zlib.h",
+                  "include/zconf.h"
+                ],
+                "install_mode": "directory"
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "recipe_type": "library"
+        }
+      ],
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "cdf6125ff77ed7709a44a0ad95918801a3cfaadedbb66c781db7ccf9ab4fae58",
+            "dest": "openssl@3.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:cdf6125ff77ed7709a44a0ad95918801a3cfaadedbb66c781db7ccf9ab4fae58"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:cdf6125ff77ed7709a44a0ad95918801a3cfaadedbb66c781db7ccf9ab4fae58",
+          "checksum": "cdf6125ff77ed7709a44a0ad95918801a3cfaadedbb66c781db7ccf9ab4fae58",
+          "size": 10046453
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "openssl@3.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "openssl@3"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/openssl",
+              "lib/libssl.so",
+              "lib/libssl.so.3",
+              "lib/libssl.dylib",
+              "lib/libssl.3.dylib",
+              "lib/libcrypto.so",
+              "lib/libcrypto.so.3",
+              "lib/libcrypto.dylib",
+              "lib/libcrypto.3.dylib"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "openssl version",
+        "pattern": "OpenSSL {version}"
+      },
+      "recipe_type": "library"
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "e9274a5f8ab5271c0e0e6762d2fce194d5f98acc568e4ce816845b2dcc0cf88f",
+        "checksum_algo": "sha256",
+        "dest": "curl-8.18.0.tar.gz",
+        "url": "https://curl.se/download/curl-8.18.0.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://curl.se/download/curl-8.18.0.tar.gz",
+      "checksum": "e9274a5f8ab5271c0e0e6762d2fce194d5f98acc568e4ce816845b2dcc0cf88f",
+      "size": 4182005
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "curl-8.18.0.tar.gz",
+        "format": "tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "setup_build_env",
+      "params": {},
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "configure_make",
+      "params": {
+        "configure_args": [
+          "--with-openssl",
+          "--with-zlib",
+          "--disable-silent-rules",
+          "--without-libpsl"
+        ],
+        "executables": [
+          "curl"
+        ],
+        "source_dir": "curl-8.18.0"
+      },
+      "evaluable": false,
+      "deterministic": false
+    },
+    {
+      "action": "set_rpath",
+      "params": {
+        "binaries": [
+          ".install/bin/curl"
+        ],
+        "rpath": "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}/zlib-{deps.zlib.version}/lib"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/curl"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "curl --version",
+    "pattern": "curl {version}"
+  }
+}

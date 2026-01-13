@@ -1,0 +1,443 @@
+{
+  "format_version": 3,
+  "tool": "sqlite",
+  "version": "3.51.2",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "666c9738155898e322ddd697536be533323be9e8c03fb1db90a3506ba92de2eb",
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "readline",
+      "version": "8.3.3",
+      "recipe_hash": "f5b030c0b84c395bb2c3b543111ef339df3f505fb0bb5b79b16f6b307fd6b682",
+      "dependencies": [
+        {
+          "tool": "ncurses",
+          "version": "6.6",
+          "recipe_hash": "bbe781c74465170fb32e1c5cdd4edccbcb3217ebed1034fbad081dd79be67b56",
+          "dependencies": [
+            {
+              "tool": "make",
+              "version": "4.4.1",
+              "recipe_hash": "d3c902e0a246e3c16ca8f63b16ce9a3f14bd57fdb023b5c1ef75b8e70dc08e65",
+              "dependencies": [
+                {
+                  "tool": "patchelf",
+                  "version": "0.18.0",
+                  "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+                  "steps": [
+                    {
+                      "action": "download_file",
+                      "params": {
+                        "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                        "dest": "patchelf.tar.gz",
+                        "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b"
+                      },
+                      "evaluable": true,
+                      "deterministic": true,
+                      "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                      "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                      "size": 130124
+                    },
+                    {
+                      "action": "extract",
+                      "params": {
+                        "archive": "patchelf.tar.gz",
+                        "format": "tar.gz",
+                        "strip_dirs": 2
+                      },
+                      "evaluable": true,
+                      "deterministic": true
+                    },
+                    {
+                      "action": "homebrew_relocate",
+                      "params": {
+                        "formula": "patchelf"
+                      },
+                      "evaluable": false,
+                      "deterministic": true
+                    },
+                    {
+                      "action": "install_binaries",
+                      "params": {
+                        "binaries": [
+                          "bin/patchelf"
+                        ]
+                      },
+                      "evaluable": true,
+                      "deterministic": true
+                    }
+                  ],
+                  "verify": {
+                    "command": "patchelf --version",
+                    "pattern": "patchelf {version}"
+                  }
+                }
+              ],
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "bded8e436d51f10ee36207ec69a0a318fb8583f83a5863f45bb203d3ae055170",
+                    "dest": "make.tar.gz",
+                    "url": "https://ghcr.io/v2/homebrew/core/make/blobs/sha256:bded8e436d51f10ee36207ec69a0a318fb8583f83a5863f45bb203d3ae055170"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ghcr.io/v2/homebrew/core/make/blobs/sha256:bded8e436d51f10ee36207ec69a0a318fb8583f83a5863f45bb203d3ae055170",
+                  "checksum": "bded8e436d51f10ee36207ec69a0a318fb8583f83a5863f45bb203d3ae055170",
+                  "size": 902717
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "make.tar.gz",
+                    "format": "tar.gz",
+                    "strip_dirs": 2
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "homebrew_relocate",
+                  "params": {
+                    "formula": "make"
+                  },
+                  "evaluable": false,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "bin/gmake",
+                      "bin/make"
+                    ],
+                    "install_mode": "directory"
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "verify": {
+                "command": "make --version",
+                "pattern": "GNU Make {version}"
+              }
+            },
+            {
+              "tool": "pkg-config",
+              "version": "2.5.1",
+              "recipe_hash": "1832cea3f7b3301b4c3aa62e63486cab92fa753cc8a8df37143124cb34fba897",
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "9df0ce4d9ebae822b763a9c18565d1596a40b2a2e5849c743e768a99f554f24b",
+                    "dest": "pkgconf.tar.gz",
+                    "url": "https://ghcr.io/v2/homebrew/core/pkgconf/blobs/sha256:9df0ce4d9ebae822b763a9c18565d1596a40b2a2e5849c743e768a99f554f24b"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ghcr.io/v2/homebrew/core/pkgconf/blobs/sha256:9df0ce4d9ebae822b763a9c18565d1596a40b2a2e5849c743e768a99f554f24b",
+                  "checksum": "9df0ce4d9ebae822b763a9c18565d1596a40b2a2e5849c743e768a99f554f24b",
+                  "size": 149083
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "pkgconf.tar.gz",
+                    "format": "tar.gz",
+                    "strip_dirs": 2
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "homebrew_relocate",
+                  "params": {
+                    "formula": "pkgconf"
+                  },
+                  "evaluable": false,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "bin/pkg-config",
+                      "bin/pkgconf",
+                      "lib/libpkgconf.so",
+                      "lib/libpkgconf.dylib",
+                      "lib/libpkgconf.so.7",
+                      "lib/libpkgconf.7.dylib",
+                      "lib/libpkgconf.so.7.0.0"
+                    ],
+                    "install_mode": "directory"
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "verify": {
+                "command": "pkg-config --version",
+                "pattern": "{version}"
+              }
+            },
+            {
+              "tool": "zig",
+              "version": "0.15.1",
+              "recipe_hash": "27cc6e8bd149ae64c98c3a7123fcb95be35a8113902428ee90134ee1ba2f99ec",
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "c61c5da6edeea14ca51ecd5e4520c6f4189ef5250383db33d01848293bfafe05",
+                    "checksum_algo": "sha256",
+                    "dest": "zig-x86_64-linux-0.15.1.tar.xz",
+                    "url": "https://ziglang.org/download/0.15.1/zig-x86_64-linux-0.15.1.tar.xz"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ziglang.org/download/0.15.1/zig-x86_64-linux-0.15.1.tar.xz",
+                  "checksum": "c61c5da6edeea14ca51ecd5e4520c6f4189ef5250383db33d01848293bfafe05",
+                  "size": 53734456
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "zig-x86_64-linux-0.15.1.tar.xz",
+                    "format": "tar.xz",
+                    "strip_dirs": 1
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "chmod",
+                  "params": {
+                    "files": [
+                      "zig"
+                    ]
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "zig"
+                    ],
+                    "install_mode": "directory"
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "verify": {
+                "command": "zig version",
+                "pattern": "{version}"
+              }
+            }
+          ],
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "136d91bc269a9a5785e5f9e980bc76ab57428f604ce3e5a5a90cebc767971cc6",
+                "url": "https://ftpmirror.gnu.org/gnu/ncurses/ncurses-6.6.tar.gz"
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "ncurses-6.6.tar.gz",
+                "format": "tar.gz"
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "setup_build_env",
+              "params": {},
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "configure_make",
+              "params": {
+                "configure_args": [
+                  "--with-shared",
+                  "--enable-pc-files",
+                  "--with-pkg-config-libdir=libdir"
+                ],
+                "executables": [
+                  "ncursesw6-config"
+                ],
+                "source_dir": "ncurses-6.6"
+              },
+              "evaluable": false,
+              "deterministic": false
+            },
+            {
+              "action": "install_binaries",
+              "params": {
+                "binaries": [
+                  "bin/ncursesw6-config",
+                  "bin/clear",
+                  "bin/infocmp",
+                  "bin/tabs",
+                  "bin/tic",
+                  "bin/toe",
+                  "bin/tput",
+                  "bin/tset",
+                  "lib/libncurses.so",
+                  "lib/libncurses.so.6",
+                  "lib/libncurses.so.6.5",
+                  "lib/libncurses.dylib",
+                  "lib/libncurses.6.dylib",
+                  "lib/libform.so",
+                  "lib/libform.so.6",
+                  "lib/libform.so.6.5",
+                  "lib/libform.dylib",
+                  "lib/libform.6.dylib",
+                  "lib/libmenu.so",
+                  "lib/libmenu.so.6",
+                  "lib/libmenu.so.6.5",
+                  "lib/libmenu.dylib",
+                  "lib/libmenu.6.dylib",
+                  "lib/libpanel.so",
+                  "lib/libpanel.so.6",
+                  "lib/libpanel.so.6.5",
+                  "lib/libpanel.dylib",
+                  "lib/libpanel.6.dylib"
+                ],
+                "install_mode": "directory"
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "verify": {
+            "command": "ncursesw6-config --version",
+            "pattern": "{version}"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "ea989e13a1df95ab899b8b1d35713def4330950259e7a48053fcd7967ee316b2",
+            "dest": "readline.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/readline/blobs/sha256:ea989e13a1df95ab899b8b1d35713def4330950259e7a48053fcd7967ee316b2"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/readline/blobs/sha256:ea989e13a1df95ab899b8b1d35713def4330950259e7a48053fcd7967ee316b2",
+          "checksum": "ea989e13a1df95ab899b8b1d35713def4330950259e7a48053fcd7967ee316b2",
+          "size": 832964
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "readline.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "readline"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "lib/libreadline.a",
+              "lib/libreadline.so",
+              "lib/libreadline.so.8",
+              "lib/libreadline.so.8.2",
+              "lib/libreadline.dylib",
+              "lib/libreadline.8.dylib",
+              "lib/libhistory.a",
+              "lib/libhistory.so",
+              "lib/libhistory.so.8",
+              "lib/libhistory.so.8.2",
+              "lib/libhistory.dylib",
+              "lib/libhistory.8.dylib",
+              "include/readline"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "ls lib/libreadline.a",
+        "pattern": "libreadline"
+      },
+      "recipe_type": "library"
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "6f75b216a1653cde3decc1af5c7db7578c98d63595cb9ef14a6eacf8d96e1521",
+        "dest": "sqlite.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/sqlite/blobs/sha256:6f75b216a1653cde3decc1af5c7db7578c98d63595cb9ef14a6eacf8d96e1521"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/sqlite/blobs/sha256:6f75b216a1653cde3decc1af5c7db7578c98d63595cb9ef14a6eacf8d96e1521",
+      "checksum": "6f75b216a1653cde3decc1af5c7db7578c98d63595cb9ef14a6eacf8d96e1521",
+      "size": 3047285
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "sqlite.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "sqlite"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/sqlite3"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "sqlite3 --version",
+    "pattern": "{version}"
+  }
+}

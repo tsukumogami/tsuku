@@ -1,0 +1,223 @@
+{
+  "format_version": 3,
+  "tool": "pngcrush",
+  "version": "1.8.13",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "350c822181733d9699bb9047cf9771641f45374f6344b5c01fa66314870967d9",
+  "deterministic": true,
+  "dependencies": [
+    {
+      "tool": "libpng",
+      "version": "1.6.53",
+      "recipe_hash": "e2dc1982302d6b2fd06e0ca412001ee79ac5a17def0e6bbbd6b3eab558baa5ad",
+      "dependencies": [
+        {
+          "tool": "zlib",
+          "version": "1.3.1",
+          "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+          "dependencies": [
+            {
+              "tool": "patchelf",
+              "version": "0.18.0",
+              "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                    "dest": "patchelf.tar.gz",
+                    "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                  "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+                  "size": 130124
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "patchelf.tar.gz",
+                    "format": "tar.gz",
+                    "strip_dirs": 2
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "homebrew_relocate",
+                  "params": {
+                    "formula": "patchelf"
+                  },
+                  "evaluable": false,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "bin/patchelf"
+                    ]
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "verify": {
+                "command": "patchelf --version",
+                "pattern": "patchelf {version}"
+              }
+            }
+          ],
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
+                "dest": "zlib.tar.gz",
+                "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f"
+              },
+              "evaluable": true,
+              "deterministic": true,
+              "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
+              "checksum": "38f2469db2ce63b70855a98e5ee27b5b5a92874e52542cbdc0b230bba1e7195f",
+              "size": 175143
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "zlib.tar.gz",
+                "format": "tar.gz",
+                "strip_dirs": 2
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "homebrew_relocate",
+              "params": {
+                "formula": "zlib"
+              },
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "install_binaries",
+              "params": {
+                "binaries": [
+                  "lib/libz.a",
+                  "lib/libz.dylib",
+                  "lib/libz.so",
+                  "include/zlib.h",
+                  "include/zconf.h"
+                ],
+                "install_mode": "directory"
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "recipe_type": "library"
+        }
+      ],
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "e6f6b36b4272633f7fa5be109719410df8d71814634a21e07509a605af1ee360",
+            "dest": "libpng.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/libpng/blobs/sha256:e6f6b36b4272633f7fa5be109719410df8d71814634a21e07509a605af1ee360"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/libpng/blobs/sha256:e6f6b36b4272633f7fa5be109719410df8d71814634a21e07509a605af1ee360",
+          "checksum": "e6f6b36b4272633f7fa5be109719410df8d71814634a21e07509a605af1ee360",
+          "size": 515977
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "libpng.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "libpng"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "lib/libpng.a",
+              "lib/libpng16.a",
+              "include/png.h",
+              "include/pngconf.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "113b32d47a907b6d52c02bcb079f0d08b066731db671076c54353888288b6142",
+        "dest": "pngcrush.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/pngcrush/blobs/sha256:113b32d47a907b6d52c02bcb079f0d08b066731db671076c54353888288b6142"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/pngcrush/blobs/sha256:113b32d47a907b6d52c02bcb079f0d08b066731db671076c54353888288b6142",
+      "checksum": "113b32d47a907b6d52c02bcb079f0d08b066731db671076c54353888288b6142",
+      "size": 205839
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "pngcrush.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "pngcrush"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/pngcrush"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "pngcrush -version",
+    "pattern": "pngcrush {version}"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "devspace",
+  "version": "6.3.18",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "dd76ea656223e6fedb53a6c4896e2014550de6488e7f1f102ee175da689b1d2b",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "f36a08b8aad2500d26d23ceb2079df514a83799c12a143bfc08a0295c84feac7",
+        "checksum_algo": "sha256",
+        "dest": "devspace",
+        "url": "https://github.com/loft-sh/devspace/releases/download/v6.3.18/devspace-linux-amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/loft-sh/devspace/releases/download/v6.3.18/devspace-linux-amd64",
+      "checksum": "f36a08b8aad2500d26d23ceb2079df514a83799c12a143bfc08a0295c84feac7",
+      "size": 71532728
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "devspace"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "devspace"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "devspace version",
+    "pattern": "{version}"
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "dasel",
+  "version": "3.2.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "e56e359d242d2028b866cf7194e7162f7d06640efb0537540c30842196c98645",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "99df5c2f3d1d12bf46b511a0ba35e7cc17acbf6e59678992ad1ee53975c7ebde",
+        "checksum_algo": "sha256",
+        "dest": "dasel",
+        "url": "https://github.com/TomWright/dasel/releases/download/v3.2.1/dasel_linux_amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/TomWright/dasel/releases/download/v3.2.1/dasel_linux_amd64",
+      "checksum": "99df5c2f3d1d12bf46b511a0ba35e7cc17acbf6e59678992ad1ee53975c7ebde",
+      "size": 9031864
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "dasel"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "dasel"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "dasel --version",
+    "pattern": "{version}"
+  }
+}
