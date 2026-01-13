@@ -1,6 +1,6 @@
 # Design: Telemetry CLI Integration
 
-**Status**: Planned
+**Status**: Current
 
 ## Context and Problem Statement
 

@@ -1,6 +1,6 @@
 # Design: Implicit Dependency Pattern
 
-**Status**: Planned
+**Status**: Current
 **Created**: 2025-12-07
 **Milestone**: [Implicit Dependency Pattern](https://github.com/tsukumogami/tsuku/milestone/11)
 

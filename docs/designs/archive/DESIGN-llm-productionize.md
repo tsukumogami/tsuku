@@ -1,6 +1,6 @@
 # Design Document: LLM Builder Productionization (Slice 4)
 
-**Status**: Planned
+**Status**: Superseded by [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](docs/DESIGN-llm-builder-infrastructure.md)
 
