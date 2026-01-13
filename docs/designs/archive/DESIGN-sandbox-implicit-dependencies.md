@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposed
+Superseded by [DESIGN-sandbox-dependencies.md](../current/DESIGN-sandbox-dependencies.md)
 
 ## Context and Problem Statement
 

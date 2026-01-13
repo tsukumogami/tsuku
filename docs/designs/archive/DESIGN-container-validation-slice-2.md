@@ -1,6 +1,6 @@
 # Design Document: Container Validation (Slice 2)
 
-**Status**: Planned
+**Status**: Superseded by [DESIGN-install-sandbox.md](../current/DESIGN-install-sandbox.md)
 
 **Parent Issue**: [#268 - Slice 2: Container Validation](https://github.com/tsukumogami/tsuku/issues/268)
 

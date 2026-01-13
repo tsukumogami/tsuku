@@ -1,6 +1,6 @@
 # Design: PGP Signature Verification for Downloads
 
-- **Status**: Accepted
+- **Status**: Current
 - **Issue**: #682
 - **Author**: @dangazineu
 - **Created**: 2025-12-27

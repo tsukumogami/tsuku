@@ -1,6 +1,6 @@
 # Design Document: LLM Slice 3 - Repair Loop + Second Provider
 
-**Status**: Current
+**Status**: Superseded by [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
 
 **Parent Design**: [DESIGN-llm-builder-infrastructure.md](DESIGN-llm-builder-infrastructure.md)
 
