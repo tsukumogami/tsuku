@@ -56,3 +56,33 @@ tsuku list
 cat ~/.tsuku/state.json
 # Should show tool-b with is_explicit=true
 ```
+
+## Fossil Archive Test Recipes
+
+These recipes test the `fossil_archive` action for building tools from Fossil SCM repositories.
+
+| Recipe | Purpose |
+|--------|---------|
+| `sqlite-source.toml` | Basic `fossil_archive` usage with default tag format |
+| `fossil-source.toml` | Self-hosting demo (build Fossil from Fossil) |
+| `tcl-source.toml` | Tests `version_separator = "-"` for `core-X-Y-Z` tags |
+| `tk-source.toml` | Tests dependency chain (`dependencies = ["tcl-source"]`) |
+
+### Testing fossil_archive
+
+```bash
+# Build SQLite from source
+tsuku install sqlite-source
+
+# Verify installation
+sqlite3 --version
+
+# Build Tcl (demonstrates version_separator)
+tsuku install tcl-source
+
+# Build Tk (demonstrates dependency handling)
+tsuku install tk-source
+# Should install tcl-source first as dependency
+```
+
+See [BUILD-ESSENTIALS.md](../docs/BUILD-ESSENTIALS.md) for `fossil_archive` documentation.

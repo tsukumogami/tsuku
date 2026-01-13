@@ -180,6 +180,7 @@ Composite actions are shortcuts for recipe authors. They decompose into primitiv
 | Composite | Decomposes To | Example Recipe Use |
 |-----------|---------------|--------------------|
 | `apply_patch` | download_file + apply_patch_file (or just apply_patch_file) | Apply patch from URL or inline data |
+| `fossil_archive` | download_file + extract | Download source archive from Fossil SCM repository |
 | `homebrew` | download_file + extract + homebrew_relocate | Install Homebrew GHCR bottles |
 
 ##### Patch Application
