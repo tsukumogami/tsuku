@@ -77,7 +77,7 @@ func TestBuildSandboxScript_OfflineRequirements(t *testing.T) {
 	}
 }
 
-func TestBuildSandboxScript_NetworkRequirements(t *testing.T) {
+func TestBuildSandboxScript_NoPackageInstallation(t *testing.T) {
 	t.Parallel()
 
 	exec := &Executor{}
@@ -93,21 +93,15 @@ func TestBuildSandboxScript_NetworkRequirements(t *testing.T) {
 
 	script := exec.buildSandboxScript(plan, reqs)
 
-	// Should contain minimal apt-get setup for network builds
-	if !strings.Contains(script, "apt-get update") {
-		t.Error("Network script should run apt-get update")
+	// Infrastructure packages are installed via container build, not sandbox script
+	if strings.Contains(script, "apt-get") {
+		t.Error("Script should not contain apt-get (packages installed via container build)")
 	}
-	if !strings.Contains(script, "ca-certificates") {
-		t.Error("Network script should install ca-certificates")
-	}
-
-	// Should NOT contain build-essential or other heavy packages
-	// (tsuku handles dependencies automatically)
-	if strings.Contains(script, "build-essential") {
-		t.Error("Script should not install build-essential (tsuku handles dependencies)")
+	if strings.Contains(script, "dnf ") {
+		t.Error("Script should not contain dnf (packages installed via container build)")
 	}
 
-	// Should still setup TSUKU_HOME and run install
+	// Should setup TSUKU_HOME and run install
 	if !strings.Contains(script, "mkdir -p /workspace/tsuku") {
 		t.Error("Script should setup TSUKU_HOME")
 	}
@@ -126,8 +120,9 @@ func TestBuildSandboxScript_SetMinusE(t *testing.T) {
 	script := exec.buildSandboxScript(plan, reqs)
 
 	// Script should start with shebang and set -e
-	if !strings.HasPrefix(script, "#!/bin/bash\nset -e\n") {
-		t.Error("Script should start with shebang and set -e")
+	// Uses /bin/sh for portability (Alpine uses ash, not bash)
+	if !strings.HasPrefix(script, "#!/bin/sh\nset -e\n") {
+		t.Error("Script should start with #!/bin/sh and set -e")
 	}
 }
 
@@ -189,6 +184,146 @@ func TestResourceLimitsConversion(t *testing.T) {
 	}
 	if sandboxLimits.Timeout != 15*time.Minute {
 		t.Errorf("Timeout = %v, want %v", sandboxLimits.Timeout, 15*time.Minute)
+	}
+}
+
+func TestAugmentWithInfrastructurePackages_DebianFamily(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+	}
+	reqs := &SandboxRequirements{
+		RequiresNetwork: true,
+	}
+
+	result := augmentWithInfrastructurePackages(nil, plan, reqs)
+
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+	pkgs := result.Packages["apt"]
+	if len(pkgs) == 0 {
+		t.Fatal("Expected apt packages")
+	}
+	hasCA := false
+	for _, p := range pkgs {
+		if p == "ca-certificates" {
+			hasCA = true
+		}
+	}
+	if !hasCA {
+		t.Error("Expected ca-certificates in apt packages")
+	}
+}
+
+func TestAugmentWithInfrastructurePackages_RhelFamily(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "rhel",
+		},
+	}
+	reqs := &SandboxRequirements{
+		RequiresNetwork: true,
+	}
+
+	result := augmentWithInfrastructurePackages(nil, plan, reqs)
+
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+	pkgs := result.Packages["dnf"]
+	if len(pkgs) == 0 {
+		t.Fatal("Expected dnf packages")
+	}
+	hasCA := false
+	for _, p := range pkgs {
+		if p == "ca-certificates" {
+			hasCA = true
+		}
+	}
+	if !hasCA {
+		t.Error("Expected ca-certificates in dnf packages")
+	}
+}
+
+func TestAugmentWithInfrastructurePackages_ExistingSysReqs(t *testing.T) {
+	t.Parallel()
+
+	plan := &executor.InstallationPlan{
+		Platform: executor.Platform{
+			OS:          "linux",
+			Arch:        "amd64",
+			LinuxFamily: "debian",
+		},
+	}
+	reqs := &SandboxRequirements{
+		RequiresNetwork: true,
+	}
+	sysReqs := &SystemRequirements{
+		Packages: map[string][]string{
+			"apt": {"docker.io"},
+		},
+	}
+
+	result := augmentWithInfrastructurePackages(sysReqs, plan, reqs)
+
+	if result == nil {
+		t.Fatal("Expected non-nil result")
+	}
+	pkgs := result.Packages["apt"]
+	hasDocker := false
+	hasCA := false
+	for _, p := range pkgs {
+		if p == "docker.io" {
+			hasDocker = true
+		}
+		if p == "ca-certificates" {
+			hasCA = true
+		}
+	}
+	if !hasDocker {
+		t.Error("Expected docker.io in apt packages (original)")
+	}
+	if !hasCA {
+		t.Error("Expected ca-certificates in apt packages (added)")
+	}
+}
+
+func TestInfrastructurePackages_BuildPackages(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		pm       string
+		expected []string
+	}{
+		{"apt", []string{"build-essential"}},
+		{"dnf", []string{"gcc", "gcc-c++", "make"}},
+		{"pacman", []string{"base-devel"}},
+		{"apk", []string{"build-base"}},
+		{"zypper", []string{"gcc", "gcc-c++", "make"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.pm, func(t *testing.T) {
+			pkgs := infrastructurePackages(tt.pm, "build")
+			if len(pkgs) != len(tt.expected) {
+				t.Errorf("Expected %d packages, got %d", len(tt.expected), len(pkgs))
+			}
+			for i, p := range tt.expected {
+				if pkgs[i] != p {
+					t.Errorf("Expected %q, got %q", p, pkgs[i])
+				}
+			}
+		})
 	}
 }
 

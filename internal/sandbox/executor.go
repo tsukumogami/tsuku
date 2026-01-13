@@ -155,6 +155,9 @@ func (e *Executor) Sandbox(
 	// so we can extract requirements directly without additional filtering.
 	sysReqs := ExtractSystemRequirements(plan)
 
+	// Add infrastructure packages needed for sandbox execution
+	sysReqs = augmentWithInfrastructurePackages(sysReqs, plan, reqs)
+
 	// Determine which image to use
 	containerImage := reqs.Image
 	if sysReqs != nil {
@@ -251,7 +254,7 @@ func (e *Executor) Sandbox(
 	// Build run options
 	opts := validate.RunOptions{
 		Image:   containerImage,
-		Command: []string{"/bin/bash", "/workspace/sandbox.sh"},
+		Command: []string{"/bin/sh", "/workspace/sandbox.sh"},
 		Network: network,
 		WorkDir: "/workspace",
 		Env: []string{
@@ -259,6 +262,7 @@ func (e *Executor) Sandbox(
 			"TSUKU_HOME=/workspace/tsuku",
 			"HOME=/workspace",
 			"DEBIAN_FRONTEND=noninteractive",
+			"PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
 		},
 		Limits: limits,
 		Labels: map[string]string{
@@ -310,32 +314,111 @@ func (e *Executor) Sandbox(
 	}, nil
 }
 
+// augmentWithInfrastructurePackages adds packages needed for sandbox execution
+// to the system requirements. These are installed via the container build step
+// using the family-appropriate package manager.
+func augmentWithInfrastructurePackages(
+	sysReqs *SystemRequirements,
+	plan *executor.InstallationPlan,
+	reqs *SandboxRequirements,
+) *SystemRequirements {
+	// Determine what infrastructure packages are needed
+	needsNetwork := reqs.RequiresNetwork
+	needsBuild := hasBuildActions(plan)
+
+	if !needsNetwork && !needsBuild {
+		return sysReqs
+	}
+
+	// Determine the package manager from existing sysReqs or plan's linux_family
+	pm := ""
+	if sysReqs != nil && len(sysReqs.Packages) > 0 {
+		// Use the package manager already in sysReqs
+		for p := range sysReqs.Packages {
+			pm = p
+			break
+		}
+	} else if plan.Platform.LinuxFamily != "" {
+		// Map linux_family to package manager
+		switch plan.Platform.LinuxFamily {
+		case "debian":
+			pm = "apt"
+		case "rhel":
+			pm = "dnf"
+		case "arch":
+			pm = "pacman"
+		case "alpine":
+			pm = "apk"
+		case "suse":
+			pm = "zypper"
+		}
+	}
+
+	// If no package manager can be determined, return as-is
+	if pm == "" {
+		return sysReqs
+	}
+
+	// Initialize sysReqs if nil
+	if sysReqs == nil {
+		sysReqs = &SystemRequirements{
+			Packages: make(map[string][]string),
+		}
+	}
+	if sysReqs.Packages == nil {
+		sysReqs.Packages = make(map[string][]string)
+	}
+
+	// Add infrastructure packages with family-appropriate names
+	var infraPkgs []string
+	if needsNetwork {
+		infraPkgs = append(infraPkgs, infrastructurePackages(pm, "network")...)
+	}
+	if needsBuild {
+		infraPkgs = append(infraPkgs, infrastructurePackages(pm, "build")...)
+	}
+
+	sysReqs.Packages[pm] = append(sysReqs.Packages[pm], infraPkgs...)
+	return sysReqs
+}
+
+// infrastructurePackages returns the package names for infrastructure needs
+// based on the package manager.
+func infrastructurePackages(pm string, category string) []string {
+	switch category {
+	case "network":
+		// ca-certificates and curl are named the same across most distros
+		return []string{"ca-certificates", "curl"}
+	case "build":
+		switch pm {
+		case "apt":
+			return []string{"build-essential"}
+		case "dnf":
+			return []string{"gcc", "gcc-c++", "make"}
+		case "pacman":
+			return []string{"base-devel"}
+		case "apk":
+			return []string{"build-base"}
+		case "zypper":
+			return []string{"gcc", "gcc-c++", "make"}
+		}
+	}
+	return nil
+}
+
 // buildSandboxScript creates the shell script for sandbox testing.
 // The script sets up the environment and runs tsuku install --plan.
+// Infrastructure packages are installed via the container build step,
+// not in this script.
+// Uses /bin/sh for portability (Alpine uses ash, not bash).
 func (e *Executor) buildSandboxScript(
 	plan *executor.InstallationPlan,
 	reqs *SandboxRequirements,
 ) string {
 	var sb strings.Builder
 
-	sb.WriteString("#!/bin/bash\n")
+	sb.WriteString("#!/bin/sh\n")
 	sb.WriteString("set -e\n\n")
-
-	// Determine what system packages need to be installed
-	packages := []string{}
-	if reqs.RequiresNetwork {
-		packages = append(packages, "ca-certificates", "curl")
-	}
-	if hasBuildActions(plan) {
-		packages = append(packages, "build-essential")
-	}
-
-	// Install packages if needed
-	if len(packages) > 0 {
-		sb.WriteString("# Install system dependencies\n")
-		sb.WriteString("apt-get update -qq\n")
-		sb.WriteString(fmt.Sprintf("apt-get install -qq -y %s >/dev/null 2>&1\n\n", strings.Join(packages, " ")))
-	}
 
 	// Setup TSUKU_HOME directory structure
 	sb.WriteString("# Setup TSUKU_HOME\n")
