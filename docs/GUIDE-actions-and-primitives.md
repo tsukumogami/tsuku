@@ -100,6 +100,22 @@ System dependency primitives generate instructions for platform package managers
 | `require_command` | Verify a command is available after installation |
 | `manual` | Display manual installation instructions |
 
+#### Optional Fields for Package Actions
+
+Package manager actions support these optional fields:
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `unless_command` | Skip action if command already exists | `unless_command = "docker"` |
+| `fallback` | Message shown if installation fails | `fallback = "Visit https://docs.docker.com/get-docker/"` |
+
+Example with optional fields:
+```toml
+[[steps]]
+action = "apt_install"
+params = { packages = ["docker-ce"], unless_command = "docker", fallback = "For manual installation, visit https://docs.docker.com/engine/install/" }
+```
+
 **Key properties**:
 - Actions with implicit constraints are automatically filtered by platform
 - Instructions are displayed to the user (tsuku does not execute privileged commands)
