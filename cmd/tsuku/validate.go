@@ -87,6 +87,17 @@ Examples:
 			}
 		}
 
+		// Check for download_file with version when dynamic source is configured
+		if result.Recipe != nil {
+			mismatches := recipe.DetectDownloadFileVersionMismatch(result.Recipe)
+			for _, m := range mismatches {
+				result.Warnings = append(result.Warnings, recipe.ValidationWarning{
+					Field:   fmt.Sprintf("steps[%d].url", m.Step-1),
+					Message: m.String(),
+				})
+			}
+		}
+
 		// In strict mode, warnings are treated as errors
 		if strictMode && len(result.Warnings) > 0 {
 			result.Valid = false

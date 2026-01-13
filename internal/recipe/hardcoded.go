@@ -148,6 +148,77 @@ func findVersionPattern(value string) string {
 	return ""
 }
 
+// DownloadFileVersionMismatch represents an inconsistency where a recipe has
+// a dynamic version source but uses download_file with hardcoded version URLs.
+type DownloadFileVersionMismatch struct {
+	// Step is the 1-based step index where the mismatch was found
+	Step int
+	// URL is the download_file URL containing a hardcoded version
+	URL string
+	// DetectedVersion is the version-like pattern found in the URL
+	DetectedVersion string
+}
+
+// String returns a human-readable description of the mismatch.
+func (m DownloadFileVersionMismatch) String() string {
+	suggested := strings.Replace(m.URL, m.DetectedVersion, "{version}", 1)
+	return fmt.Sprintf("step %d (download_file): URL contains hardcoded version '%s' but recipe has dynamic version source; consider using 'download' action with URL '%s'",
+		m.Step, m.DetectedVersion, suggested)
+}
+
+// hasDynamicVersionSource checks if a recipe has a dynamic version source configured.
+// Returns false if the recipe only has static/pinned versions (no source, github_repo, or fossil_repo).
+func hasDynamicVersionSource(r *Recipe) bool {
+	v := r.Version
+	return v.Source != "" || v.GitHubRepo != "" || v.FossilRepo != ""
+}
+
+// DetectDownloadFileVersionMismatch finds download_file steps with hardcoded
+// version URLs when the recipe has a dynamic version source configured.
+//
+// This is considered inconsistent because:
+// - If a recipe has a version source (e.g., homebrew), it can resolve versions dynamically
+// - Using download_file with hardcoded versions defeats this capability
+// - The recipe should use download action with {version} placeholder instead
+//
+// Recipes without a dynamic version source (e.g., using pin = "X.Y.Z") are
+// intentionally static and are not flagged.
+func DetectDownloadFileVersionMismatch(r *Recipe) []DownloadFileVersionMismatch {
+	// Skip if no dynamic version source configured
+	if !hasDynamicVersionSource(r) {
+		return nil
+	}
+
+	var mismatches []DownloadFileVersionMismatch
+
+	for stepIdx, step := range r.Steps {
+		if step.Action != "download_file" {
+			continue
+		}
+
+		url, ok := step.Params["url"].(string)
+		if !ok || url == "" {
+			continue
+		}
+
+		// Skip if already has version placeholder
+		if hasVersionPlaceholder(url) {
+			continue
+		}
+
+		// Check for version pattern in URL
+		if version := findVersionPattern(url); version != "" {
+			mismatches = append(mismatches, DownloadFileVersionMismatch{
+				Step:            stepIdx + 1, // 1-based for user display
+				URL:             url,
+				DetectedVersion: version,
+			})
+		}
+	}
+
+	return mismatches
+}
+
 // DetectHardcodedVersions scans a recipe for fields that contain hardcoded
 // version strings where {version} placeholders should be used.
 //
