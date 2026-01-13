@@ -19,7 +19,7 @@ Current
 | [#543](https://github.com/tsukumogami/tsuku/issues/543) | feat(scripts): add build essential validation scripts | None | Done |
 | [#544](https://github.com/tsukumogami/tsuku/issues/544) | feat(recipes): add pngcrush recipe to validate zlib dependency | [#540](https://github.com/tsukumogami/tsuku/issues/540) | Done |
 | [#545](https://github.com/tsukumogami/tsuku/issues/545) | feat(recipes): add gdbm recipe to validate configure_make | [#541](https://github.com/tsukumogami/tsuku/issues/541) | Done |
-| [#546](https://github.com/tsukumogami/tsuku/issues/546) | feat(recipes): add m4 recipe to validate compilation | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542) | Done |
+| [#546](https://github.com/tsukumogami/tsuku/issues/546) | feat(recipes): validate compilation without system gcc | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542) | Done (via gdbm-source) |
 
 ```mermaid
 graph LR
@@ -30,7 +30,7 @@ graph LR
     I543["#543: validation scripts"]
     I544["#544: pngcrush recipe"]
     I545["#545: gdbm recipe"]
-    I546["#546: m4 recipe"]
+    I546["#546: no-gcc validation"]
 
     I540 --> I544
     I541 --> I545
@@ -900,17 +900,19 @@ Each build essential must pass these tests on all 4 platforms:
 - Already implemented and working
 - GCC can be added later if edge cases arise (some configure scripts check for "gcc" specifically)
 
-**Test Tool**: `m4` (macro processor, simple C program)
+**Test Tool**: `gdbm-source` (key-value database, uses configure_make)
+
+**Note**: Originally planned to use m4, but it had autotools timestamp issues on Linux and symlink issues on macOS. gdbm-source provides equivalent validation of zig cc compilation.
 
 | Step | Description |
 |------|-------------|
 | 1 | Verify zig recipe exists and installs correctly on all 4 platforms |
-| 2 | Create `internal/recipe/recipes/m/m4.toml` using `configure_make` action |
-| 3 | CI: Build m4 from source in minimal container with NO system gcc |
+| 2 | Use `testdata/recipes/gdbm-source.toml` with `configure_make` action |
+| 3 | CI: Build gdbm-source in minimal container with NO system gcc |
 | 4 | Validate zig wrapper scripts work (`cc`, `c++` symlinks) |
 | 5 | Document any configure script edge cases that require real gcc |
 
-**Gate**: m4 compiles and runs on all 4 platforms using zig (no system compiler).
+**Gate**: gdbm-source compiles and runs on all 4 platforms using zig (no system compiler).
 
 **Future**: If edge cases accumulate, add `internal/recipe/recipes/g/gcc.toml` using `homebrew` as alternative.
 
@@ -1040,7 +1042,7 @@ Each build essential must pass these tests on all 4 platforms:
 Phase 1: zlib ──────────────────────────────────────────┐
 Phase 2: make ──────────────────────────────────────────┤
 Phase 3: zig (compiler validation) ─────────────────────┤
-         m4 (test) ← zig, make                          │
+         gdbm-source (test) ← zig, make                 │
 Phase 4: pkg-config ────────────────────────────────────┤
          ncurses (test) ← zig, make, pkg-config         │
 Phase 5: openssl ← zlib ────────────────────────────────┤
@@ -1079,7 +1081,7 @@ jobs:
         test:
           - { essential: zlib, consumer: expat }
           - { essential: make, consumer: gdbm }
-          - { essential: gcc, consumer: m4 }
+          - { essential: zig, consumer: gdbm-source }
           - { essential: pkg-config, consumer: ncurses }
           - { essential: openssl, consumer: curl }
           - { essential: cmake, consumer: ninja }
@@ -1103,7 +1105,7 @@ jobs:
       image: ubuntu:22.04  # No gcc, make, or dev tools
     strategy:
       matrix:
-        test: [expat, gdbm, m4, ncurses, curl, ninja]
+        test: [expat, gdbm, gdbm-source, ncurses, curl, ninja]
     steps:
       - name: Install minimal deps (git only)
         run: apt-get update && apt-get install -y git ca-certificates
