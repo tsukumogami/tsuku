@@ -1,12 +1,14 @@
 # Ground truth recipe for git (source build with complex dependencies)
 # Used for testing configure_make action with multiple library dependencies
-# Tests: download + extract + setup_build_env + configure_make with curl, openssl, zlib, expat
+# Tests: download + extract + setup_build_env + configure_make with libcurl, openssl, zlib, expat
 
 [metadata]
 name = "git-source"
 description = "Distributed revision control system (source build for testing)"
 homepage = "https://git-scm.com/"
-dependencies = ["curl", "openssl", "zlib", "expat"]
+# Include libcurl's transitive dependencies so linker can resolve symbols
+# libcurl.so has undefined references to nghttp3, ngtcp2, etc. that need LDFLAGS
+dependencies = ["libcurl", "brotli", "libnghttp2", "libnghttp3", "libngtcp2", "libssh2", "openssl", "zlib", "zstd", "expat"]
 
 [version]
 source = "homebrew"
@@ -27,13 +29,15 @@ action = "setup_build_env"
 [[steps]]
 action = "configure_make"
 source_dir = "git-{version}"
-configure_args = ["--with-curl", "--with-openssl", "--with-zlib", "--with-expat"]
 executables = ["git"]
-
-[[steps]]
-action = "set_rpath"
-binaries = [".install/bin/git"]
-rpath = "$ORIGIN/../lib:{libs_dir}/curl-8.12.1/lib:{libs_dir}/openssl-3.6.0/lib:{libs_dir}/zlib-1.3.1/lib:{libs_dir}/expat-2.6.5/lib"
+skip_configure = true
+make_args = [
+    "RUNTIME_PREFIX=YesPlease",
+    "gitexecdir=libexec/git-core",
+    "NO_CURL=",
+    "CURLDIR={libs_dir}/libcurl-{deps.libcurl.version}",
+    "CURL_LIBCURL=-L{libs_dir}/libcurl-{deps.libcurl.version}/lib -lcurl -L{libs_dir}/libnghttp3-{deps.libnghttp3.version}/lib -lnghttp3 -L{libs_dir}/libngtcp2-{deps.libngtcp2.version}/lib -lngtcp2 -L{libs_dir}/libnghttp2-{deps.libnghttp2.version}/lib -lnghttp2 -L{libs_dir}/libssh2-{deps.libssh2.version}/lib -lssh2 -L{libs_dir}/brotli-{deps.brotli.version}/lib -lbrotlidec -lbrotlicommon -L{libs_dir}/zstd-{deps.zstd.version}/lib -lzstd"
+]
 
 [[steps]]
 action = "install_binaries"

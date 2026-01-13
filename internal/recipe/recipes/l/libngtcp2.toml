@@ -1,0 +1,28 @@
+[metadata]
+name = "libngtcp2"
+description = "QUIC protocol implementation"
+homepage = "https://nghttp2.org/ngtcp2/"
+type = "library"
+dependencies = []
+
+[[steps]]
+action = "homebrew"
+formula = "libngtcp2"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "lib/libngtcp2.so",
+    "lib/libngtcp2.so.16",
+    "lib/libngtcp2.dylib",
+    "lib/libngtcp2_crypto_ossl.so",
+    "lib/libngtcp2_crypto_ossl.so.0",
+    "lib/libngtcp2_crypto_ossl.dylib",
+    "lib/pkgconfig/libngtcp2.pc",
+    "lib/pkgconfig/libngtcp2_crypto_ossl.pc",
+    "include/ngtcp2/ngtcp2.h",
+    "include/ngtcp2/ngtcp2_crypto.h",
+    "include/ngtcp2/ngtcp2_crypto_ossl.h",
+    "include/ngtcp2/version.h",
+]

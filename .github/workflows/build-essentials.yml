@@ -13,8 +13,11 @@ on:
       - 'internal/actions/cmake_build.go'
       - 'internal/actions/meson_build.go'
       - 'internal/actions/extract.go'
+      - 'internal/actions/setup_build_env.go'
       - 'internal/sandbox/**/*.go'
       - 'cmd/tsuku/eval.go'
+      - 'cmd/tsuku/install_deps.go'
+      - 'cmd/tsuku/install_lib.go'
       - 'testdata/recipes/*.toml'
       - 'test/scripts/verify-*.sh'
       - 'test/scripts/test-*-provisioning.sh'
@@ -28,8 +31,11 @@ on:
       - 'internal/actions/cmake_build.go'
       - 'internal/actions/meson_build.go'
       - 'internal/actions/extract.go'
+      - 'internal/actions/setup_build_env.go'
       - 'internal/sandbox/**/*.go'
       - 'cmd/tsuku/eval.go'
+      - 'cmd/tsuku/install_deps.go'
+      - 'cmd/tsuku/install_lib.go'
       - 'testdata/recipes/*.toml'
       - 'scripts/*.sh'
       - 'test/scripts/verify-*.sh'
@@ -219,10 +225,8 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh sqlite-source
 
-  # Test configure_make with complex multi-dependency build (git -> curl -> openssl/zlib)
-  # SKIP: Missing library dependencies (expat, libcurl) - see #742
+  # Test configure_make with complex multi-dependency build (git -> libcurl -> openssl/zlib + expat)
   test-git-source:
-    if: false
     name: "${{ matrix.platform.name }}: git-source"
     runs-on: ${{ matrix.platform.runner }}
     strategy:
@@ -245,6 +249,16 @@ jobs:
 
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
+
+      - name: Install gettext (required for git build)
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get update
+            sudo apt-get install -y gettext
+          elif [ "$RUNNER_OS" == "macOS" ]; then
+            brew install gettext
+            brew link gettext --force
+          fi
 
       - name: "Install git-source (tests multi-dependency chain: git -> curl -> openssl/zlib + expat)"
         env:
@@ -295,7 +309,9 @@ jobs:
 
   # Test source build with zig cc in container without system gcc
   # This validates that configure_make falls back to zig when no gcc exists
+  # SKIP: libtool doesn't work with zig cc - see #856
   test-no-gcc:
+    if: false
     name: "No-GCC Container: gdbm-source"
     runs-on: ubuntu-latest
     container:

@@ -30,6 +30,22 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 		return nil
 	}
 
+	// Check and install dependencies
+	if len(r.Metadata.Dependencies) > 0 {
+		printInfof("Checking dependencies for %s...\n", libName)
+
+		// Create a visited map for dependency resolution
+		visited := make(map[string]bool)
+
+		for _, dep := range r.Metadata.Dependencies {
+			printInfof("  Resolving dependency '%s'...\n", dep)
+			// Install dependency (not explicit, parent is current library)
+			if err := installWithDependencies(dep, "", "", false, libName, visited, telemetryClient); err != nil {
+				return fmt.Errorf("failed to install dependency '%s': %w", dep, err)
+			}
+		}
+	}
+
 	// Create executor
 	var exec *executor.Executor
 	if reqVersion != "" {
@@ -45,8 +61,36 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	// Set tools directory for finding other installed tools
 	cfg, _ := config.DefaultConfig()
 	exec.SetToolsDir(cfg.ToolsDir)
+	exec.SetLibsDir(cfg.LibsDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)
+
+	// Look up resolved dependency versions for variable expansion
+	if len(r.Metadata.Dependencies) > 0 {
+		resolvedDeps := actions.ResolvedDeps{
+			InstallTime: make(map[string]string),
+		}
+		state, _ := mgr.GetState().Load()
+		for _, depName := range r.Metadata.Dependencies {
+			// First, check if it's a library (installed in libs/)
+			if libVersion := mgr.GetInstalledLibraryVersion(depName); libVersion != "" {
+				resolvedDeps.InstallTime[depName] = libVersion
+				continue
+			}
+			// Otherwise, check if it's a tool (installed in tools/)
+			if state != nil {
+				if depState, exists := state.Installed[depName]; exists {
+					if depState.ActiveVersion != "" {
+						resolvedDeps.InstallTime[depName] = depState.ActiveVersion
+					} else if depState.Version != "" {
+						// Fall back to deprecated Version field for old state files
+						resolvedDeps.InstallTime[depName] = depState.Version
+					}
+				}
+			}
+		}
+		exec.SetResolvedDeps(resolvedDeps)
+	}
 
 	// Create downloader and cache for plan generation
 	// Downloader enables Decompose to download files (e.g., GHCR bottles with auth)
