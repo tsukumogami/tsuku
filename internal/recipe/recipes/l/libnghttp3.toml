@@ -1,0 +1,23 @@
+[metadata]
+name = "libnghttp3"
+description = "HTTP/3 C library"
+homepage = "https://nghttp2.org/nghttp3/"
+type = "library"
+dependencies = []
+
+[[steps]]
+action = "homebrew"
+formula = "libnghttp3"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "lib/libnghttp3.a",
+    "lib/libnghttp3.so",
+    "lib/libnghttp3.so.9",
+    "lib/libnghttp3.dylib",
+    "lib/pkgconfig/libnghttp3.pc",
+    "include/nghttp3/nghttp3.h",
+    "include/nghttp3/version.h",
+]

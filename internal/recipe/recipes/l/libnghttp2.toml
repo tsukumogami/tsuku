@@ -1,0 +1,24 @@
+[metadata]
+name = "libnghttp2"
+description = "HTTP/2 C library"
+homepage = "https://nghttp2.org/"
+type = "library"
+dependencies = []
+
+[[steps]]
+action = "homebrew"
+formula = "libnghttp2"
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+binaries = [
+    "lib/libnghttp2.a",
+    "lib/libnghttp2.so",
+    "lib/libnghttp2.so.14",
+    "lib/libnghttp2.dylib",
+    "lib/libnghttp2.14.dylib",
+    "lib/pkgconfig/libnghttp2.pc",
+    "include/nghttp2/nghttp2.h",
+    "include/nghttp2/nghttp2ver.h",
+]

@@ -696,6 +696,22 @@ func (r *Recipe) ExtractBinaries() []string {
 	seen := make(map[string]bool)
 
 	for _, step := range r.Steps {
+		// Only process binaries from actions that install binaries, not actions that modify them (like set_rpath, chmod)
+		// Installation actions that provide binaries to be symlinked to $TSUKU_HOME/bin/:
+		installActions := map[string]bool{
+			"install_binaries": true,
+			"download_archive": true,
+			"github_archive":   true,
+			"github_file":      true,
+			"npm_install":      true,
+			"configure_make":   true, // Uses 'executables' parameter
+			"cmake_build":      true, // Uses 'executables' parameter
+			"meson_build":      true, // Uses 'executables' parameter
+		}
+		if !installActions[step.Action] {
+			continue
+		}
+
 		// Check for 'binary' parameter (singular, used by github_file)
 		if binaryRaw, ok := step.Params["binary"]; ok {
 			if binaryStr, ok := binaryRaw.(string); ok {
@@ -709,7 +725,7 @@ func (r *Recipe) ExtractBinaries() []string {
 			}
 		}
 
-		// Check for 'binaries' parameter (plural, used by download_archive, github_archive)
+		// Check for 'binaries' parameter (plural, used by download_archive, github_archive, install_binaries)
 		if binariesRaw, ok := step.Params["binaries"]; ok {
 			// Check install_mode to determine if we should add bin/ prefix
 			installMode, _ := step.Params["install_mode"].(string)

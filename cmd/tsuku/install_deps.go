@@ -357,6 +357,30 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set key cache directory for PGP signature verification
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 
+	// Look up resolved dependency versions for variable expansion
+	// This mirrors the logic in installLibrary() for libraries
+	if len(r.Metadata.Dependencies) > 0 {
+		resolvedDeps := actions.ResolvedDeps{
+			InstallTime: make(map[string]string),
+		}
+		for _, depName := range r.Metadata.Dependencies {
+			// First, check if it's a library (installed in libs/)
+			if libVersion := mgr.GetInstalledLibraryVersion(depName); libVersion != "" {
+				resolvedDeps.InstallTime[depName] = libVersion
+				continue
+			}
+			// Otherwise, check if it's a tool (installed in tools/)
+			if toolState, err := mgr.GetState().GetToolState(depName); err == nil && toolState != nil {
+				if toolState.ActiveVersion != "" {
+					resolvedDeps.InstallTime[depName] = toolState.ActiveVersion
+				} else if toolState.Version != "" {
+					resolvedDeps.InstallTime[depName] = toolState.Version
+				}
+			}
+		}
+		exec.SetResolvedDeps(resolvedDeps)
+	}
+
 	// Get or generate installation plan (two-phase flow)
 	planCfg := planRetrievalConfig{
 		Tool:              toolName,
