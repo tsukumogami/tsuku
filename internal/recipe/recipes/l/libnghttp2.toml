@@ -5,13 +5,9 @@ homepage = "https://nghttp2.org/"
 type = "library"
 dependencies = []
 
-[version]
-source = "homebrew"
-formula = "nghttp2"
-
 [[steps]]
 action = "homebrew"
-formula = "nghttp2"
+formula = "libnghttp2"
 
 [[steps]]
 action = "install_binaries"
