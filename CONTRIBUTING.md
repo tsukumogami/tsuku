@@ -556,6 +556,16 @@ The reverse transition (removing family-aware actions) shows 5 deletions and 1 a
 
 For technical details on family detection logic and platform metadata, see [docs/DESIGN-golden-family-support.md](docs/DESIGN-golden-family-support.md).
 
+### CI Validation Workflows
+
+These workflows run automatically on pull requests:
+
+| Workflow | Trigger | Purpose |
+|----------|---------|---------|
+| `validate-golden-recipes.yml` | Recipe file changes | Validates golden files for changed recipes |
+| `validate-golden-code.yml` | Plan generation code changes | Validates ALL golden files when core code changes |
+| `validate-golden-execution.yml` | Golden file changes | Executes plans on platform matrix to verify downloads |
+
 ### Design Reference
 
 For the complete design rationale, validation workflows, and security considerations, see [docs/DESIGN-golden-plan-testing.md](docs/DESIGN-golden-plan-testing.md).
