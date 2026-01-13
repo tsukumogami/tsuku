@@ -4,6 +4,19 @@
 # 1. Manually via workflow_dispatch (Actions UI)
 # 2. Programmatically from other workflows via workflow_call
 #
+# Family-Aware Recipes:
+#   The regenerate-golden.sh script queries recipe metadata to determine if
+#   family-specific files are needed. For family-aware recipes (those using
+#   apt_install, dnf_install, etc.), the Linux runner generates multiple files:
+#   - v1.0.0-linux-debian-amd64.json
+#   - v1.0.0-linux-rhel-amd64.json
+#   - v1.0.0-linux-arch-amd64.json
+#   - v1.0.0-linux-alpine-amd64.json
+#   - v1.0.0-linux-suse-amd64.json
+#
+#   For family-agnostic recipes, a single linux file is generated:
+#   - v1.0.0-linux-amd64.json
+#
 # Note: commit_back only works for branches in this repository, not fork PRs.
 #
 # See CONTRIBUTING.md "Golden File Testing" section for usage.
@@ -117,8 +130,11 @@ jobs:
           target_dir="testdata/golden/plans/${first_letter}/${{ inputs.recipe }}"
           mkdir -p "$target_dir"
 
-          # Merge all platform artifacts into the recipe-specific directory
-          # Each artifact contains only files for that platform (e.g., v1.0.0-linux-amd64.json)
+          # Merge all platform artifacts into the recipe-specific directory.
+          # Each artifact contains files for that platform. For family-aware
+          # recipes, the linux artifact may contain multiple files (one per
+          # family: debian, rhel, arch, alpine, suse). For family-agnostic
+          # recipes, the linux artifact contains a single file.
           for dir in artifacts/golden-*/; do
             if [ -d "$dir" ]; then
               echo "Merging from $dir"
