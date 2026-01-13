@@ -113,28 +113,27 @@ Recipes use different action types for different package managers and configurat
 [metadata]
 name = "docker"
 
-# For Ubuntu/Debian
+# For Ubuntu/Debian - apt_repo needs explicit when clause
 [[steps]]
 action = "apt_repo"
 params = { name = "docker", url = "https://download.docker.com/linux/ubuntu", key_url = "https://download.docker.com/linux/ubuntu/gpg" }
 when = { linux_family = "debian" }
 
+# Package manager actions have IMPLICIT platform constraints
+# apt_install automatically applies to debian family - no when clause needed
 [[steps]]
 action = "apt_install"
 params = { packages = ["docker-ce", "docker-ce-cli", "containerd.io"] }
-when = { linux_family = "debian" }
 
-# For Fedora/RHEL
+# dnf_install automatically applies to rhel family - no when clause needed
 [[steps]]
 action = "dnf_install"
 params = { packages = ["docker-ce", "docker-ce-cli", "containerd.io"] }
-when = { linux_family = "rhel" }
 
-# For macOS
+# brew_cask automatically applies to darwin - no when clause needed
 [[steps]]
 action = "brew_cask"
 params = { cask = "docker" }
-when = { platform = "darwin/*" }
 
 # Common configuration
 [[steps]]

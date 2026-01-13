@@ -310,6 +310,30 @@ To install on Linux:
   See https://docs.docker.com/engine/install/ for platform-specific installation
 ```
 
+#### Preview Instructions for Other Platforms
+
+Use `--target-family` to see system dependency instructions for a different Linux distribution family:
+
+```bash
+# See Fedora/RHEL instructions while on Ubuntu
+tsuku install docker --target-family rhel
+
+# See Arch Linux instructions
+tsuku install docker --target-family arch
+```
+
+Supported families: `debian`, `rhel`, `arch`, `alpine`, `suse`
+
+#### Query Platform Support
+
+Use `tsuku info` with JSON output to programmatically query which platforms a recipe supports:
+
+```bash
+# Get supported platforms for a recipe
+tsuku info docker --metadata-only --json | jq '.supported_platforms'
+```
+
+Output includes platform objects with `os`, `arch`, and optionally `linux_family` fields.
 
 ### Multi-Version Support
 
