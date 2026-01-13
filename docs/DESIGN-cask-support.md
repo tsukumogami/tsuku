@@ -1,6 +1,6 @@
 # Design: Homebrew Cask Support
 
-**Status**: Proposed
+**Status**: Accepted
 
 ## Upstream Design Reference
 
