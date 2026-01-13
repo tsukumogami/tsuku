@@ -4,16 +4,21 @@ description = "Container runtime platform"
 homepage = "https://www.docker.com"
 version_format = "semver"
 
+# macOS: Install Docker Desktop via Homebrew Cask
 [[steps]]
-action = "require_system"
-command = "docker"
-version_flag = "--version"
-version_regex = "Docker version ([0-9.]+)"
+action = "brew_cask"
+packages = ["docker"]
 
-[steps.install_guide]
-darwin = "brew install --cask docker"
-linux = "See https://docs.docker.com/engine/install/ for platform-specific installation"
-fallback = "Visit https://docs.docker.com/get-docker/ for installation instructions"
+# Linux: Manual installation required (distro-specific repos)
+[[steps]]
+action = "manual"
+text = "See https://docs.docker.com/engine/install/ for platform-specific installation"
+when = { os = "linux" }
+
+# Verify docker is available
+[[steps]]
+action = "require_command"
+command = "docker"
 
 [verify]
 command = "docker --version"
