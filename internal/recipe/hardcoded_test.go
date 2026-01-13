@@ -325,3 +325,234 @@ func TestIsExcluded(t *testing.T) {
 		})
 	}
 }
+
+func TestHasDynamicVersionSource(t *testing.T) {
+	tests := []struct {
+		name     string
+		recipe   *Recipe
+		expected bool
+	}{
+		{
+			name: "homebrew source is dynamic",
+			recipe: &Recipe{
+				Version: VersionSection{Source: "homebrew", Formula: "gdbm"},
+			},
+			expected: true,
+		},
+		{
+			name: "github_repo is dynamic",
+			recipe: &Recipe{
+				Version: VersionSection{GitHubRepo: "owner/repo"},
+			},
+			expected: true,
+		},
+		{
+			name: "fossil_repo is dynamic",
+			recipe: &Recipe{
+				Version: VersionSection{FossilRepo: "https://sqlite.org/src"},
+			},
+			expected: true,
+		},
+		{
+			name: "empty version section is static (pinned)",
+			recipe: &Recipe{
+				Version: VersionSection{},
+			},
+			expected: false,
+		},
+		{
+			name: "only formula without source is static",
+			recipe: &Recipe{
+				Version: VersionSection{Formula: "gdbm"},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := hasDynamicVersionSource(tt.recipe); got != tt.expected {
+				t.Errorf("hasDynamicVersionSource() = %v, want %v", got, tt.expected)
+			}
+		})
+	}
+}
+
+func TestDetectDownloadFileVersionMismatch(t *testing.T) {
+	tests := []struct {
+		name     string
+		recipe   *Recipe
+		expected int    // number of mismatches
+		contains string // optional substring to check
+	}{
+		{
+			name: "dynamic source + download_file with version - should warn",
+			recipe: &Recipe{
+				Version: VersionSection{Source: "homebrew", Formula: "gdbm"},
+				Steps: []Step{
+					{
+						Action: "download_file",
+						Params: map[string]interface{}{
+							"url": "https://ftpmirror.gnu.org/gnu/gdbm/gdbm-1.26.tar.gz",
+						},
+					},
+				},
+			},
+			expected: 1,
+			contains: "1.26",
+		},
+		{
+			name: "no version source (pinned) + download_file with version - no warning",
+			recipe: &Recipe{
+				Version: VersionSection{}, // No source = pinned version
+				Steps: []Step{
+					{
+						Action: "download_file",
+						Params: map[string]interface{}{
+							"url": "https://ftpmirror.gnu.org/gnu/bash/bash-5.3.tar.gz",
+						},
+					},
+				},
+			},
+			expected: 0,
+		},
+		{
+			name: "dynamic source + download_file without version pattern - no warning",
+			recipe: &Recipe{
+				Version: VersionSection{Source: "homebrew", Formula: "tool"},
+				Steps: []Step{
+					{
+						Action: "download_file",
+						Params: map[string]interface{}{
+							"url": "https://example.com/static-asset.tar.gz",
+						},
+					},
+				},
+			},
+			expected: 0,
+		},
+		{
+			name: "dynamic source + download_file with {version} placeholder - no warning",
+			recipe: &Recipe{
+				Version: VersionSection{Source: "homebrew", Formula: "tool"},
+				Steps: []Step{
+					{
+						Action: "download_file",
+						Params: map[string]interface{}{
+							"url": "https://example.com/tool-{version}.tar.gz",
+						},
+					},
+				},
+			},
+			expected: 0,
+		},
+		{
+			name: "github_repo + download_file with version - should warn",
+			recipe: &Recipe{
+				Version: VersionSection{GitHubRepo: "owner/repo"},
+				Steps: []Step{
+					{
+						Action: "download_file",
+						Params: map[string]interface{}{
+							"url": "https://example.com/tool-2.0.0.tar.gz",
+						},
+					},
+				},
+			},
+			expected: 1,
+			contains: "2.0.0",
+		},
+		{
+			name: "dynamic source + download (not download_file) - no warning",
+			recipe: &Recipe{
+				Version: VersionSection{Source: "homebrew", Formula: "tool"},
+				Steps: []Step{
+					{
+						Action: "download",
+						Params: map[string]interface{}{
+							"url": "https://example.com/tool-1.2.3.tar.gz",
+						},
+					},
+				},
+			},
+			expected: 0, // This is handled by DetectHardcodedVersions, not this function
+		},
+		{
+			name: "multiple download_file steps with versions",
+			recipe: &Recipe{
+				Version: VersionSection{Source: "npm"},
+				Steps: []Step{
+					{
+						Action: "download_file",
+						Params: map[string]interface{}{
+							"url": "https://example.com/a-1.0.0.tar.gz",
+						},
+					},
+					{
+						Action: "download_file",
+						Params: map[string]interface{}{
+							"url": "https://example.com/b-2.0.0.tar.gz",
+						},
+					},
+				},
+			},
+			expected: 2,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			mismatches := DetectDownloadFileVersionMismatch(tt.recipe)
+			if len(mismatches) != tt.expected {
+				t.Errorf("DetectDownloadFileVersionMismatch() returned %d mismatches, want %d", len(mismatches), tt.expected)
+				for _, m := range mismatches {
+					t.Logf("  mismatch: %s", m.String())
+				}
+				return
+			}
+
+			if tt.expected > 0 && tt.contains != "" {
+				found := false
+				for _, m := range mismatches {
+					if strings.Contains(m.String(), tt.contains) {
+						found = true
+						break
+					}
+				}
+				if !found {
+					t.Errorf("mismatch message should contain %q", tt.contains)
+				}
+			}
+		})
+	}
+}
+
+func TestDownloadFileVersionMismatchString(t *testing.T) {
+	m := DownloadFileVersionMismatch{
+		Step:            1,
+		URL:             "https://ftpmirror.gnu.org/gnu/gdbm/gdbm-1.26.tar.gz",
+		DetectedVersion: "1.26",
+	}
+
+	str := m.String()
+
+	// Check expected components
+	if !strings.Contains(str, "step 1") {
+		t.Errorf("String() should contain step number, got: %s", str)
+	}
+	if !strings.Contains(str, "download_file") {
+		t.Errorf("String() should contain action name, got: %s", str)
+	}
+	if !strings.Contains(str, "1.26") {
+		t.Errorf("String() should contain detected version, got: %s", str)
+	}
+	if !strings.Contains(str, "dynamic version source") {
+		t.Errorf("String() should mention dynamic version source, got: %s", str)
+	}
+	if !strings.Contains(str, "{version}") {
+		t.Errorf("String() should suggest {version} placeholder, got: %s", str)
+	}
+	if !strings.Contains(str, "download") && !strings.Contains(str, "'download'") {
+		t.Errorf("String() should suggest using 'download' action, got: %s", str)
+	}
+}
