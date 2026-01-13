@@ -229,6 +229,18 @@ func canInferVersionFromActions(r *Recipe) bool {
 		case "require_system":
 			// System dependencies don't use version providers - version is detected directly
 			return true
+		case "brew_cask":
+			// Homebrew Cask installs version from Homebrew's cask repository
+			return true
+		case "apt_install":
+			// APT installs version from system package repositories
+			return true
+		case "manual":
+			// Manual installation - version detected via verify command
+			return true
+		case "require_command":
+			// Command verification - version detected from existing installation
+			return true
 		}
 	}
 	return false

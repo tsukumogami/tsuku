@@ -7,18 +7,40 @@ version_format = "semver"
 supported_os = ["linux", "darwin"]
 supported_arch = ["amd64", "arm64"]
 
+# macOS: Install Docker Desktop via Homebrew Cask (both Intel and Apple Silicon)
 [[steps]]
-action = "require_system"
-command = "docker"
-version_flag = "--version"
-version_regex = "Docker version ([0-9.]+)"
+action = "brew_cask"
+packages = ["docker"]
 
-# Platform tuple install_guide demonstrating hierarchical fallback
-[steps.install_guide]
-"darwin/arm64" = "brew install --cask docker (Apple Silicon optimized)"
-"darwin/amd64" = "brew install --cask docker (Intel Mac)"
-"linux/amd64" = "sudo apt install docker.io (x86_64)"
-"linux/arm64" = "sudo apt install docker.io (ARM64)"
+# Debian/Ubuntu: Install docker.io from system repos
+[[steps]]
+action = "apt_install"
+packages = ["docker.io"]
+
+# RHEL/Fedora: Install moby-engine from system repos
+[[steps]]
+action = "dnf_install"
+packages = ["moby-engine"]
+
+# Arch Linux: Install docker from system repos
+[[steps]]
+action = "pacman_install"
+packages = ["docker"]
+
+# Alpine: Install docker from system repos
+[[steps]]
+action = "apk_install"
+packages = ["docker"]
+
+# SUSE/openSUSE: Install docker from system repos
+[[steps]]
+action = "zypper_install"
+packages = ["docker"]
+
+# Verify docker is available
+[[steps]]
+action = "require_command"
+command = "docker"
 
 [verify]
 command = "docker --version"
