@@ -9,11 +9,30 @@ version_format = "semver"
 action = "brew_cask"
 packages = ["docker"]
 
-# Linux: Manual installation required (distro-specific repos)
+# Debian/Ubuntu: Install docker.io from system repos
 [[steps]]
-action = "manual"
-text = "See https://docs.docker.com/engine/install/ for platform-specific installation"
-when = { os = "linux" }
+action = "apt_install"
+packages = ["docker.io"]
+
+# RHEL/Fedora: Install moby-engine from system repos
+[[steps]]
+action = "dnf_install"
+packages = ["moby-engine"]
+
+# Arch Linux: Install docker from system repos
+[[steps]]
+action = "pacman_install"
+packages = ["docker"]
+
+# Alpine: Install docker from system repos
+[[steps]]
+action = "apk_install"
+packages = ["docker"]
+
+# SUSE/openSUSE: Install docker from system repos
+[[steps]]
+action = "zypper_install"
+packages = ["docker"]
 
 # Verify docker is available
 [[steps]]

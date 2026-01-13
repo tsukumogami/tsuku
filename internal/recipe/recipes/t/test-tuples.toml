@@ -12,10 +12,30 @@ supported_arch = ["amd64", "arm64"]
 action = "brew_cask"
 packages = ["docker"]
 
-# Linux: Install docker.io package via apt (Debian family)
+# Debian/Ubuntu: Install docker.io from system repos
 [[steps]]
 action = "apt_install"
 packages = ["docker.io"]
+
+# RHEL/Fedora: Install moby-engine from system repos
+[[steps]]
+action = "dnf_install"
+packages = ["moby-engine"]
+
+# Arch Linux: Install docker from system repos
+[[steps]]
+action = "pacman_install"
+packages = ["docker"]
+
+# Alpine: Install docker from system repos
+[[steps]]
+action = "apk_install"
+packages = ["docker"]
+
+# SUSE/openSUSE: Install docker from system repos
+[[steps]]
+action = "zypper_install"
+packages = ["docker"]
 
 # Verify docker is available
 [[steps]]
