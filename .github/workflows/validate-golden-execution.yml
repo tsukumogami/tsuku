@@ -15,9 +15,12 @@ jobs:
     name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.build-matrix.outputs.matrix }}
-      has_changes: ${{ steps.build-matrix.outputs.has_changes }}
+      linux_matrix: ${{ steps.build-matrix.outputs.linux_matrix }}
+      has_linux: ${{ steps.build-matrix.outputs.has_linux }}
+      macos_files: ${{ steps.build-matrix.outputs.macos_files }}
+      has_macos: ${{ steps.build-matrix.outputs.has_macos }}
       recipes: ${{ steps.build-matrix.outputs.recipes }}
+      has_changes: ${{ steps.build-matrix.outputs.has_changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -33,17 +36,21 @@ jobs:
           if [ -z "$CHANGED" ]; then
             echo "No golden files changed"
             echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "matrix={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "has_linux=false" >> $GITHUB_OUTPUT
+            echo "has_macos=false" >> $GITHUB_OUTPUT
+            echo "linux_matrix={\"include\":[]}" >> $GITHUB_OUTPUT
+            echo "macos_files=[]" >> $GITHUB_OUTPUT
             exit 0
           fi
 
           echo "Changed golden files:"
           echo "$CHANGED"
 
-          # Build matrix with one entry per file
-          # Map platform suffix to runner
-          MATRIX='{"include":['
-          FIRST=true
+          # Build separate outputs for Linux (per-file matrix) and macOS (aggregated)
+          LINUX_MATRIX='{"include":['
+          MACOS_FILES='['
+          LINUX_FIRST=true
+          MACOS_FIRST=true
 
           for path in $CHANGED; do
             # Skip if file doesn't exist (deleted in later commit)
@@ -66,60 +73,71 @@ jobs:
               platform=$(echo "$filename" | rev | cut -d'-' -f1-2 | rev)
             fi
 
-            # Map platform to runner
-            # Handle both family-agnostic (linux-amd64) and family-aware (linux-debian-amd64)
+            # Extract tool name for job naming
+            tool=$(basename "$(dirname "$path")")
+
+            # Route to Linux matrix or macOS aggregated list
             case "$platform" in
               linux-amd64|linux-debian-amd64)
-                # Ubuntu runners are Debian-based
-                os="ubuntu-latest"
+                # Ubuntu runners are Debian-based - add to Linux matrix
+                if [ "$LINUX_FIRST" = true ]; then
+                  LINUX_FIRST=false
+                else
+                  LINUX_MATRIX="$LINUX_MATRIX,"
+                fi
+                LINUX_MATRIX="$LINUX_MATRIX{\"file\":\"$path\",\"os\":\"ubuntu-latest\",\"platform\":\"$platform\",\"tool\":\"$tool\",\"version\":\"$filename\"}"
                 ;;
               linux-rhel-amd64|linux-arch-amd64|linux-alpine-amd64|linux-suse-amd64)
                 # Skip: no matching GitHub-hosted runners
                 echo "Skipping $path ($platform no matching runner)"
-                continue
                 ;;
               darwin-arm64)
-                os="macos-latest"
+                # Add to macOS aggregated list
+                if [ "$MACOS_FIRST" = true ]; then
+                  MACOS_FIRST=false
+                else
+                  MACOS_FILES="$MACOS_FILES,"
+                fi
+                MACOS_FILES="$MACOS_FILES{\"file\":\"$path\",\"tool\":\"$tool\",\"version\":\"$filename\"}"
                 ;;
               darwin-amd64)
                 # Skip: Intel Mac runners require paid tier
                 echo "Skipping $path (darwin-amd64 requires paid tier)"
-                continue
                 ;;
               linux-arm64|linux-*-arm64)
                 # Skip: no GitHub-hosted runners available
                 echo "Skipping $path (linux-arm64 no runners available)"
-                continue
                 ;;
               *)
                 echo "Unknown platform in $path: $platform"
-                continue
                 ;;
             esac
-
-            # Extract tool name for job naming
-            tool=$(basename "$(dirname "$path")")
-
-            if [ "$FIRST" = true ]; then
-              FIRST=false
-            else
-              MATRIX="$MATRIX,"
-            fi
-
-            MATRIX="$MATRIX{\"file\":\"$path\",\"os\":\"$os\",\"platform\":\"$platform\",\"tool\":\"$tool\",\"version\":\"$filename\"}"
           done
 
-          MATRIX="$MATRIX]}"
+          LINUX_MATRIX="$LINUX_MATRIX]}"
+          MACOS_FILES="$MACOS_FILES]"
 
-          if [ "$MATRIX" = '{"include":[]}' ]; then
-            echo "No executable golden files to validate"
+          # Set outputs
+          if [ "$LINUX_MATRIX" = '{"include":[]}' ]; then
+            echo "has_linux=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_linux=true" >> $GITHUB_OUTPUT
+          fi
+          echo "linux_matrix=$LINUX_MATRIX" >> $GITHUB_OUTPUT
+
+          if [ "$MACOS_FILES" = '[]' ]; then
+            echo "has_macos=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_macos=true" >> $GITHUB_OUTPUT
+          fi
+          echo "macos_files=$MACOS_FILES" >> $GITHUB_OUTPUT
+
+          # Overall has_changes
+          if [ "$LINUX_MATRIX" = '{"include":[]}' ] && [ "$MACOS_FILES" = '[]' ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
-
-          echo "Matrix: $MATRIX"
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
 
           # Extract unique recipe names for coverage validation
           RECIPES=$(echo "$CHANGED" | while read -r path; do
@@ -238,15 +256,16 @@ jobs:
 
           echo "All platforms covered for $RECIPE"
 
-  validate-execution:
+  # Validate Linux golden files (per-file matrix for visibility)
+  validate-linux:
     name: "${{ matrix.tool }} (${{ matrix.platform }})"
     needs: detect-changes
-    if: needs.detect-changes.outputs.has_changes == 'true'
-    runs-on: ${{ matrix.os }}
+    if: needs.detect-changes.outputs.has_linux == 'true'
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       fail-fast: false
-      matrix: ${{ fromJson(needs.detect-changes.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.detect-changes.outputs.linux_matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -274,3 +293,58 @@ jobs:
         run: |
           echo "Executing: ${{ matrix.file }}"
           ./tsuku install --plan "${{ matrix.file }}" --force
+
+  # Validate macOS golden files (aggregated into single job to reduce runner queue pressure)
+  validate-macos:
+    name: "macOS (darwin-arm64)"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_macos == 'true'
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Execute all macOS golden files
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FAILED=()
+          FILES='${{ needs.detect-changes.outputs.macos_files }}'
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          mkdir -p "$CACHE_DIR"
+
+          for item in $(echo "$FILES" | jq -c '.[]'); do
+            file=$(echo "$item" | jq -r '.file')
+            tool=$(echo "$item" | jq -r '.tool')
+            version=$(echo "$item" | jq -r '.version')
+
+            echo "::group::Executing $tool ($version)"
+
+            # Fresh TSUKU_HOME per golden file with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool-$version"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
+
+            if ! ./tsuku install --plan "$file" --force; then
+              FAILED+=("$tool ($version)")
+            fi
+            echo "::endgroup::"
+          done
+
+          # Report failures at end (don't fail fast)
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed golden files: ${FAILED[*]}"
+            exit 1
+          fi
+
+          echo "All macOS golden files passed"
