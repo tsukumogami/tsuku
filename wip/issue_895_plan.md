@@ -13,11 +13,11 @@ Change the PATH setup from `$HOME/.tsuku/tools/current` to `$HOME/.tsuku/bin` in
 None
 
 ## Implementation Steps
-- [ ] Change line 44 from `$HOME/.tsuku/tools/current` to `$HOME/.tsuku/bin` (Linux job)
-- [ ] Change line 89 from `$HOME/.tsuku/tools/current` to `$HOME/.tsuku/bin` (macOS job)
-- [ ] Remove `if: false` condition from line 26 (Linux job)
-- [ ] Remove `if: false` condition from line 71 (macOS job)
-- [ ] Remove skip comments on lines 24 and 69
+- [x] Change line 44 from `$HOME/.tsuku/tools/current` to `$HOME/.tsuku/bin` (Linux job)
+- [x] Change line 89 from `$HOME/.tsuku/tools/current` to `$HOME/.tsuku/bin` (macOS job)
+- [x] Remove `if: false` condition from line 26 (Linux job)
+- [x] Remove `if: false` condition from line 71 (macOS job)
+- [x] Remove skip comments on lines 24 and 69
 
 ## Success Criteria
 - [ ] Cargo Builder: Linux job passes
