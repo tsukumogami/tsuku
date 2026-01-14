@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "d2afd5e428ce62ff9f2e01c12e291512327bb74f3e089ed5eba40bba9709c76a",
+  "recipe_hash": "4d5a31150fb591ab7f7d99066614876df852199c602f8783c33600eef71e8613",
   "deterministic": true,
   "steps": [
     {
@@ -45,7 +45,7 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "outputs": [
           "terraform"
         ]
       },
