@@ -214,7 +214,7 @@ func TestResolveCask_UnexpectedStatusCode(t *testing.T) {
 func TestResolveCask_InvalidJSON(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("invalid json{"))
+		_, _ = w.Write([]byte("invalid json{"))
 	}))
 	defer server.Close()
 
