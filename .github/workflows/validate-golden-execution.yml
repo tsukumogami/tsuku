@@ -169,7 +169,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
       - name: Validate platform coverage
         env:
@@ -288,7 +288,7 @@ jobs:
             golden-execution-${{ matrix.platform }}-
 
       - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
       - name: Execute golden file
         env:

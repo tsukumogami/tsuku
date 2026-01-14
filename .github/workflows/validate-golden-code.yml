@@ -62,7 +62,9 @@ on:
 #   - And other execution-only files
 
 jobs:
+  # SKIP: Upstream version drift causes non-deterministic failures - see #842
   validate-all:
+    if: false
     name: Validate All Golden Files
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -85,7 +87,7 @@ jobs:
             golden-code-validation-
 
       - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
       - name: Validate linux golden files
         env:

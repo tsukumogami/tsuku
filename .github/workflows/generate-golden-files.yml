@@ -80,7 +80,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
       - name: Compute golden path
         id: golden-path

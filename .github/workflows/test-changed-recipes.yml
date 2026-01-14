@@ -139,7 +139,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
       - name: Setup PATH
         run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
@@ -167,7 +167,7 @@ jobs:
           cache-dependency-path: go.sum
 
       - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
       - name: Test all macOS recipes
         env:
