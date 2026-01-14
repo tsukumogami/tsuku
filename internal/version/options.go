@@ -45,6 +45,13 @@ func WithHomebrewRegistry(url string) Option {
 	}
 }
 
+// WithCaskRegistry sets a custom Homebrew Cask registry URL
+func WithCaskRegistry(url string) Option {
+	return func(r *Resolver) {
+		r.caskRegistryURL = url
+	}
+}
+
 // WithGoDevURL sets a custom go.dev URL
 func WithGoDevURL(url string) Option {
 	return func(r *Resolver) {
