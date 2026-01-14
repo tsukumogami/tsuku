@@ -85,7 +85,7 @@ jobs:
             golden-code-validation-
 
       - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
       - name: Validate linux golden files
         env:

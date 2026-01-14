@@ -34,14 +34,23 @@ None.
 
 ## Implementation Steps
 
-- [ ] Update `.github/workflows/sandbox-tests.yml` build command to use `CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku`
-- [ ] Update `.github/workflows/build-essentials.yml` build commands to use `CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku`
-- [ ] Update `.github/workflows/validate-golden-execution.yml` build commands to use static linking
-- [ ] Update `.github/workflows/validate-golden-recipes.yml` build command to use static linking
-- [ ] Update `.github/workflows/generate-golden-files.yml` build command to use static linking
-- [ ] Update `.github/workflows/test-changed-recipes.yml` build commands to use static linking
-- [ ] Update `.github/workflows/test.yml` build commands to use static linking
-- [ ] Run `go test ./...` to verify no test regressions
+- [x] Update `.github/workflows/sandbox-tests.yml` build command to use `CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku`
+- [x] Update `.github/workflows/build-essentials.yml` build commands to use `CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku`
+- [x] Update `.github/workflows/validate-golden-execution.yml` build commands to use static linking
+- [x] Update `.github/workflows/validate-golden-recipes.yml` build command to use static linking
+- [x] Update `.github/workflows/generate-golden-files.yml` build command to use static linking
+- [x] Update `.github/workflows/test-changed-recipes.yml` build commands to use static linking
+- [x] Update `.github/workflows/test.yml` build commands to use static linking
+- [x] Run `go test ./...` to verify no test regressions
+
+Additional workflow files also updated for consistency:
+- [x] `.github/workflows/npm-builder-tests.yml`
+- [x] `.github/workflows/cargo-builder-tests.yml`
+- [x] `.github/workflows/pypi-builder-tests.yml`
+- [x] `.github/workflows/homebrew-builder-tests.yml`
+- [x] `.github/workflows/gem-builder-tests.yml`
+- [x] `.github/workflows/validate-golden-code.yml`
+- [x] `.github/workflows/scheduled-tests.yml`
 
 ## Testing Strategy
 
