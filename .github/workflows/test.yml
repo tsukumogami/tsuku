@@ -266,7 +266,8 @@ jobs:
           CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
           mkdir -p "$CACHE_DIR"
 
-          for item in $(echo "$TESTS" | jq -c '.[]'); do
+          # Use while loop with process substitution to handle JSON objects with spaces
+          while IFS= read -r item; do
             tool=$(echo "$item" | jq -r '.tool')
             desc=$(echo "$item" | jq -r '.desc')
 
@@ -282,7 +283,7 @@ jobs:
               FAILED+=("$tool")
             fi
             echo "::endgroup::"
-          done
+          done < <(echo "$TESTS" | jq -c '.[]')
 
           # Report failures at end (don't fail fast)
           if [ ${#FAILED[@]} -gt 0 ]; then
