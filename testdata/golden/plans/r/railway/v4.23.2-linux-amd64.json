@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "railway",
+  "version": "4.23.2",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "4fc395c8712da06a9565c3ec9e4c97b046a889700d697d05e1d72eee0eff5200",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "619bb94b722996acbcd23ddf55281a4a2dabef617b1bd169fc6822ccabf34c0d",
+        "checksum_algo": "sha256",
+        "dest": "railway-v4.23.2-x86_64-unknown-linux-gnu.tar.gz",
+        "url": "https://github.com/railwayapp/cli/releases/download/v4.23.2/railway-v4.23.2-x86_64-unknown-linux-gnu.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/railwayapp/cli/releases/download/v4.23.2/railway-v4.23.2-x86_64-unknown-linux-gnu.tar.gz",
+      "checksum": "619bb94b722996acbcd23ddf55281a4a2dabef617b1bd169fc6822ccabf34c0d",
+      "size": 3478122
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "railway-v4.23.2-x86_64-unknown-linux-gnu.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "railway"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "railway"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "railway --version",
+    "pattern": "{version}"
+  }
+}

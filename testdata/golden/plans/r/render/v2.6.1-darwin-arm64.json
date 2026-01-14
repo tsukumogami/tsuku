@@ -1,0 +1,65 @@
+{
+  "format_version": 3,
+  "tool": "render",
+  "version": "2.6.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "75ae6e447ec49746fd94e976365c043c12cf9e45ee2787394556b299f5511470",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "3766bf821cbff2509bc671a9e1dc37bccd92440eb74775fe0ad9dfe47c39a84b",
+        "checksum_algo": "sha256",
+        "dest": "cli_2.6.1_darwin_arm64.zip",
+        "url": "https://github.com/render-oss/cli/releases/download/v2.6.1/cli_2.6.1_darwin_arm64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/render-oss/cli/releases/download/v2.6.1/cli_2.6.1_darwin_arm64.zip",
+      "checksum": "3766bf821cbff2509bc671a9e1dc37bccd92440eb74775fe0ad9dfe47c39a84b",
+      "size": 5689631
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "cli_2.6.1_darwin_arm64.zip",
+        "format": "zip",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "cli_v{version}"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          {
+            "dest": "bin/render",
+            "src": "cli_v{version}"
+          }
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "render --version",
+    "pattern": "{version}"
+  }
+}

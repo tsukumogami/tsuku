@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "cfssl",
+  "version": "1.6.5",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "86efd331a58f7fe9c74e9d6a2c045d242df10ad92721b61cf1b0219ccf996fdb",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "6625b252053d9499bf26102b8fa78d7f675de56703d0808f8ff6dcf43121fa0c",
+        "checksum_algo": "sha256",
+        "dest": "cfssl",
+        "url": "https://github.com/cloudflare/cfssl/releases/download/v1.6.5/cfssl_1.6.5_darwin_amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/cloudflare/cfssl/releases/download/v1.6.5/cfssl_1.6.5_darwin_amd64",
+      "checksum": "6625b252053d9499bf26102b8fa78d7f675de56703d0808f8ff6dcf43121fa0c",
+      "size": 13683624
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "cfssl"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "cfssl"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "cfssl version",
+    "pattern": "{version}"
+  }
+}

@@ -1,0 +1,270 @@
+{
+  "format_version": 3,
+  "tool": "jekyll",
+  "version": "4.4.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "af9c91e72399aed52e40545fd0a0b7d6159aac637bad0c26ee5a07d94934b857",
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "ruby",
+      "version": "4.0.0",
+      "recipe_hash": "6d0ac9b358fb401388d532f40e1a23714d4fae56f935b1bc659b1ea6b2c8ab81",
+      "dependencies": [
+        {
+          "tool": "libyaml",
+          "version": "0.2.5",
+          "recipe_hash": "6924285a8102a97d956d36b71c96a935b4171727fc79f855d3dddb61aaed1eab",
+          "dependencies": [
+            {
+              "tool": "patchelf",
+              "version": "0.18.0",
+              "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+                    "dest": "patchelf.tar.gz",
+                    "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+                  "checksum": "25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+                  "size": 122480
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "patchelf.tar.gz",
+                    "format": "tar.gz",
+                    "strip_dirs": 2
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "homebrew_relocate",
+                  "params": {
+                    "formula": "patchelf"
+                  },
+                  "evaluable": false,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "bin/patchelf"
+                    ]
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "verify": {
+                "command": "patchelf --version",
+                "pattern": "patchelf {version}"
+              }
+            }
+          ],
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "98c0cf81bcdf7577d5fdc8cc18732970b9ae7e0e7423a733f88f0f566ba483ad",
+                "dest": "libyaml.tar.gz",
+                "url": "https://ghcr.io/v2/homebrew/core/libyaml/blobs/sha256:98c0cf81bcdf7577d5fdc8cc18732970b9ae7e0e7423a733f88f0f566ba483ad"
+              },
+              "evaluable": true,
+              "deterministic": true,
+              "url": "https://ghcr.io/v2/homebrew/core/libyaml/blobs/sha256:98c0cf81bcdf7577d5fdc8cc18732970b9ae7e0e7423a733f88f0f566ba483ad",
+              "checksum": "98c0cf81bcdf7577d5fdc8cc18732970b9ae7e0e7423a733f88f0f566ba483ad",
+              "size": 111251
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "libyaml.tar.gz",
+                "format": "tar.gz",
+                "strip_dirs": 2
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "homebrew_relocate",
+              "params": {
+                "formula": "libyaml"
+              },
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "install_libraries",
+              "params": {
+                "patterns": [
+                  "lib/*.so*",
+                  "lib/*.dylib"
+                ]
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "recipe_type": "library"
+        }
+      ],
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "80db20a12cb96ecd897c33c9da1b9df8f959980809ed74caa69d0b95247a4f45",
+            "checksum_algo": "sha256",
+            "dest": "ruby-4.0.0-darwin-arm64.tar.gz",
+            "url": "https://github.com/ruby/ruby-builder/releases/download/ruby-4.0.0/ruby-4.0.0-darwin-arm64.tar.gz"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://github.com/ruby/ruby-builder/releases/download/ruby-4.0.0/ruby-4.0.0-darwin-arm64.tar.gz",
+          "checksum": "80db20a12cb96ecd897c33c9da1b9df8f959980809ed74caa69d0b95247a4f45",
+          "size": 17789407
+        },
+        {
+          "action": "extract",
+          "params": {
+            "arch_mapping": {
+              "amd64": "x64",
+              "arm64": "arm64"
+            },
+            "archive": "ruby-4.0.0-darwin-arm64.tar.gz",
+            "format": "tar.gz",
+            "os_mapping": {
+              "darwin": "darwin",
+              "linux": "ubuntu-22.04"
+            },
+            "strip_dirs": 1
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "link_dependencies",
+          "params": {
+            "library": "libyaml"
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "run_command",
+          "params": {
+            "command": "mv bin/ruby bin/ruby.real\ncat > bin/ruby << 'WRAPPER'\n#!/bin/bash\n# Resolve symlinks to get the real script location\nSCRIPT_PATH=\"${BASH_SOURCE[0]}\"\nwhile [ -L \"$SCRIPT_PATH\" ]; do\n    SCRIPT_DIR=\"$(cd -P \"$(dirname \"$SCRIPT_PATH\")\" && pwd)\"\n    SCRIPT_PATH=\"$(readlink \"$SCRIPT_PATH\")\"\n    [[ $SCRIPT_PATH != /* ]] && SCRIPT_PATH=\"$SCRIPT_DIR/$SCRIPT_PATH\"\ndone\nSCRIPT_DIR=\"$(cd -P \"$(dirname \"$SCRIPT_PATH\")\" && pwd)\"\nINSTALL_DIR=\"$(dirname \"$SCRIPT_DIR\")\"\n\n# Set library paths for dynamically linked Ruby (includes bundled libyaml)\nif [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n    export DYLD_LIBRARY_PATH=\"$INSTALL_DIR/lib${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}\"\nelse\n    export LD_LIBRARY_PATH=\"$INSTALL_DIR/lib${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}\"\nfi\n\n# Dynamically detect Ruby version from lib/ruby directory\nRUBY_VERSION=$(ls -1 \"$INSTALL_DIR/lib/ruby\" 2>/dev/null | grep -E '^[0-9]+\\.[0-9]+\\.[0-9]+$' | head -1)\nif [ -z \"$RUBY_VERSION\" ]; then\n    RUBY_VERSION=$(\"$INSTALL_DIR/bin/ruby.real\" -e 'puts RUBY_VERSION' 2>/dev/null || echo \"3.4.0\")\nfi\n\n# Detect architecture for platform-specific paths\nif [[ \"$OSTYPE\" == \"darwin\"* ]]; then\n    ARCH=$(uname -m)\n    if [ \"$ARCH\" = \"arm64\" ]; then\n        RUBY_ARCH=\"arm64-darwin\"\n    else\n        RUBY_ARCH=\"x86_64-darwin\"\n    fi\n    # Find the exact darwin version directory\n    DARWIN_DIR=$(ls -1 \"$INSTALL_DIR/lib/ruby/$RUBY_VERSION\" 2>/dev/null | grep -E \"darwin\" | head -1)\n    if [ -n \"$DARWIN_DIR\" ]; then\n        RUBY_ARCH=\"$DARWIN_DIR\"\n    fi\nelse\n    ARCH=$(uname -m)\n    case \"$ARCH\" in\n        x86_64) RUBY_ARCH=\"x86_64-linux\" ;;\n        aarch64) RUBY_ARCH=\"aarch64-linux\" ;;\n        *) RUBY_ARCH=\"$ARCH-linux\" ;;\n    esac\nfi\n\n# Set Ruby library paths (override hardcoded paths from build)\nexport RUBYLIB=\"$INSTALL_DIR/lib/ruby/site_ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/site_ruby/$RUBY_VERSION/$RUBY_ARCH:$INSTALL_DIR/lib/ruby/site_ruby:$INSTALL_DIR/lib/ruby/vendor_ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/vendor_ruby/$RUBY_VERSION/$RUBY_ARCH:$INSTALL_DIR/lib/ruby/vendor_ruby:$INSTALL_DIR/lib/ruby/$RUBY_VERSION:$INSTALL_DIR/lib/ruby/$RUBY_VERSION/$RUBY_ARCH${RUBYLIB:+:$RUBYLIB}\"\n\n# Set GEM paths\nexport GEM_HOME=\"$INSTALL_DIR/lib/ruby/gems/$RUBY_VERSION\"\nexport GEM_PATH=\"$GEM_HOME${GEM_PATH:+:$GEM_PATH}\"\n\nexec \"$INSTALL_DIR/bin/ruby.real\" \"$@\"\nWRAPPER\nchmod +x bin/ruby\n\n# Convert Ruby scripts to bash wrappers that call ruby with the script\nfor script in gem irb erb bundle bundler rake rdoc ri; do\n    if [ -f \"bin/$script\" ]; then\n        mv \"bin/$script\" \"bin/$script.rb\"\n        cat > \"bin/$script\" << 'SCRIPTWRAPPER'\n#!/bin/bash\n# Resolve symlinks to get the real script location\nSCRIPT_PATH=\"${BASH_SOURCE[0]}\"\nwhile [ -L \"$SCRIPT_PATH\" ]; do\n    DIR=\"$(cd -P \"$(dirname \"$SCRIPT_PATH\")\" && pwd)\"\n    SCRIPT_PATH=\"$(readlink \"$SCRIPT_PATH\")\"\n    [[ $SCRIPT_PATH != /* ]] && SCRIPT_PATH=\"$DIR/$SCRIPT_PATH\"\ndone\nSCRIPT_DIR=\"$(cd -P \"$(dirname \"$SCRIPT_PATH\")\" && pwd)\"\nSCRIPT_NAME=\"$(basename \"$SCRIPT_PATH\")\"\nexec \"$SCRIPT_DIR/ruby\" \"$SCRIPT_DIR/${SCRIPT_NAME}.rb\" \"$@\"\nSCRIPTWRAPPER\n        chmod +x \"bin/$script\"\n    fi\ndone\n"
+          },
+          "evaluable": false,
+          "deterministic": false
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/ruby",
+              "bin/gem",
+              "bin/bundle",
+              "bin/bundler",
+              "bin/irb",
+              "bin/erb"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "{install_dir}/bin/ruby --version",
+        "pattern": "ruby {version}"
+      }
+    },
+    {
+      "tool": "zig",
+      "version": "0.15.1",
+      "recipe_hash": "27cc6e8bd149ae64c98c3a7123fcb95be35a8113902428ee90134ee1ba2f99ec",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "c4bd624d901c1268f2deb9d8eb2d86a2f8b97bafa3f118025344242da2c54d7b",
+            "checksum_algo": "sha256",
+            "dest": "zig-aarch64-macos-0.15.1.tar.xz",
+            "url": "https://ziglang.org/download/0.15.1/zig-aarch64-macos-0.15.1.tar.xz"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ziglang.org/download/0.15.1/zig-aarch64-macos-0.15.1.tar.xz",
+          "checksum": "c4bd624d901c1268f2deb9d8eb2d86a2f8b97bafa3f118025344242da2c54d7b",
+          "size": 50644996
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "zig-aarch64-macos-0.15.1.tar.xz",
+            "format": "tar.xz",
+            "strip_dirs": 1
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "chmod",
+          "params": {
+            "files": [
+              "zig"
+            ]
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "zig"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "zig version",
+        "pattern": "{version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "gem_exec",
+      "params": {
+        "executables": [
+          "jekyll"
+        ],
+        "gem": "jekyll",
+        "lock_data": "GEM\n  remote: https://rubygems.org/\n  specs:\n    addressable (2.8.8)\n      public_suffix (>= 2.0.2, < 8.0)\n    base64 (0.3.0)\n    bigdecimal (4.0.1)\n    colorator (1.1.0)\n    concurrent-ruby (1.3.6)\n    csv (3.3.5)\n    em-websocket (0.5.3)\n      eventmachine (>= 0.12.9)\n      http_parser.rb (~> 0)\n    eventmachine (1.2.7)\n    ffi (1.17.3)\n    ffi (1.17.3-arm-linux-gnu)\n    ffi (1.17.3-arm-linux-musl)\n    ffi (1.17.3-x86_64-linux-gnu)\n    forwardable-extended (2.6.0)\n    google-protobuf (4.33.4)\n      bigdecimal\n      rake (>= 13)\n    http_parser.rb (0.8.1)\n    i18n (1.14.8)\n      concurrent-ruby (~> 1.0)\n    jekyll (4.4.1)\n      addressable (~> 2.4)\n      base64 (~> 0.2)\n      colorator (~> 1.0)\n      csv (~> 3.0)\n      em-websocket (~> 0.5)\n      i18n (~> 1.0)\n      jekyll-sass-converter (>= 2.0, < 4.0)\n      jekyll-watch (~> 2.0)\n      json (~> 2.6)\n      kramdown (~> 2.3, >= 2.3.1)\n      kramdown-parser-gfm (~> 1.0)\n      liquid (~> 4.0)\n      mercenary (~> 0.3, >= 0.3.6)\n      pathutil (~> 0.9)\n      rouge (>= 3.0, < 5.0)\n      safe_yaml (~> 1.0)\n      terminal-table (>= 1.8, < 4.0)\n      webrick (~> 1.7)\n    jekyll-sass-converter (3.1.0)\n      sass-embedded (~> 1.75)\n    jekyll-watch (2.2.1)\n      listen (~> 3.0)\n    json (2.18.0)\n    kramdown (2.5.1)\n      rexml (>= 3.3.9)\n    kramdown-parser-gfm (1.1.0)\n      kramdown (~> 2.0)\n    liquid (4.0.4)\n    listen (3.9.0)\n      rb-fsevent (~> 0.10, >= 0.10.3)\n      rb-inotify (~> 0.9, >= 0.9.10)\n    mercenary (0.4.0)\n    pathutil (0.16.2)\n      forwardable-extended (~> 2.6)\n    public_suffix (7.0.2)\n    rake (13.3.1)\n    rb-fsevent (0.11.2)\n    rb-inotify (0.11.1)\n      ffi (~> 1.0)\n    rexml (3.4.4)\n    rouge (4.7.0)\n    safe_yaml (1.0.5)\n    sass-embedded (1.97.2)\n      google-protobuf (~> 4.31)\n      rake (>= 13)\n    sass-embedded (1.97.2-aarch64-linux-android)\n      google-protobuf (~> 4.31)\n    sass-embedded (1.97.2-arm-linux-androideabi)\n      google-protobuf (~> 4.31)\n    sass-embedded (1.97.2-arm-linux-gnueabihf)\n      google-protobuf (~> 4.31)\n    sass-embedded (1.97.2-arm-linux-musleabihf)\n      google-protobuf (~> 4.31)\n    sass-embedded (1.97.2-riscv64-linux-android)\n      google-protobuf (~> 4.31)\n    sass-embedded (1.97.2-riscv64-linux-gnu)\n      google-protobuf (~> 4.31)\n    sass-embedded (1.97.2-riscv64-linux-musl)\n      google-protobuf (~> 4.31)\n    sass-embedded (1.97.2-x86_64-linux-android)\n      google-protobuf (~> 4.31)\n    sass-embedded (1.97.2-x86_64-linux-gnu)\n      google-protobuf (~> 4.31)\n    terminal-table (3.0.2)\n      unicode-display_width (>= 1.1.1, < 3)\n    unicode-display_width (2.6.0)\n    webrick (1.9.2)\n\nPLATFORMS\n  aarch64-linux-android\n  arm-linux-androideabi\n  arm-linux-gnu\n  arm-linux-gnueabihf\n  arm-linux-musl\n  arm-linux-musleabihf\n  riscv64-linux-android\n  riscv64-linux-gnu\n  riscv64-linux-musl\n  ruby\n  x86_64-linux\n  x86_64-linux-android\n\nDEPENDENCIES\n  jekyll (= 4.4.1)\n\nCHECKSUMS\n  addressable (2.8.8) sha256=7c13b8f9536cf6364c03b9d417c19986019e28f7c00ac8132da4eb0fe393b057\n  base64 (0.3.0) sha256=27337aeabad6ffae05c265c450490628ef3ebd4b67be58257393227588f5a97b\n  bigdecimal (4.0.1) sha256=8b07d3d065a9f921c80ceaea7c9d4ae596697295b584c296fe599dd0ad01c4a7\n  colorator (1.1.0) sha256=e2f85daf57af47d740db2a32191d1bdfb0f6503a0dfbc8327d0c9154d5ddfc38\n  concurrent-ruby (1.3.6) sha256=6b56837e1e7e5292f9864f34b69c5a2cbc75c0cf5338f1ce9903d10fa762d5ab\n  csv (3.3.5) sha256=6e5134ac3383ef728b7f02725d9872934f523cb40b961479f69cf3afa6c8e73f\n  em-websocket (0.5.3) sha256=f56a92bde4e6cb879256d58ee31f124181f68f8887bd14d53d5d9a292758c6a8\n  eventmachine (1.2.7) sha256=994016e42aa041477ba9cff45cbe50de2047f25dd418eba003e84f0d16560972\n  ffi (1.17.3) sha256=0e9f39f7bb3934f77ad6feab49662be77e87eedcdeb2a3f5c0234c2938563d4c\n  ffi (1.17.3-arm-linux-gnu) sha256=5bd4cea83b68b5ec0037f99c57d5ce2dd5aa438f35decc5ef68a7d085c785668\n  ffi (1.17.3-arm-linux-musl) sha256=0d7626bb96265f9af78afa33e267d71cfef9d9a8eb8f5525344f8da6c7d76053\n  ffi (1.17.3-x86_64-linux-gnu) sha256=3746b01f677aae7b16dc1acb7cb3cc17b3e35bdae7676a3f568153fb0e2c887f\n  forwardable-extended (2.6.0) sha256=1bec948c469bbddfadeb3bd90eb8c85f6e627a412a3e852acfd7eaedbac3ec97\n  google-protobuf (4.33.4) sha256=86921935b023ed0d872d6e84382e79016c91689be0520d614c74426778f13c16\n  http_parser.rb (0.8.1) sha256=9ae8df145b39aa5398b2f90090d651c67bd8e2ebfe4507c966579f641e11097a\n  i18n (1.14.8) sha256=285778639134865c5e0f6269e0b818256017e8cde89993fdfcbfb64d088824a5\n  jekyll (4.4.1) sha256=4c1144d857a5b2b80d45b8cf5138289579a9f8136aadfa6dd684b31fe2bc18c1\n  jekyll-sass-converter (3.1.0) sha256=83925d84f1d134410c11d0c6643b0093e82e3a3cf127e90757a85294a3862443\n  jekyll-watch (2.2.1) sha256=bc44ed43f5e0a552836245a54dbff3ea7421ecc2856707e8a1ee203a8387a7e1\n  json (2.18.0) sha256=b10506aee4183f5cf49e0efc48073d7b75843ce3782c68dbeb763351c08fd505\n  kramdown (2.5.1) sha256=87bbb6abd9d3cebe4fc1f33e367c392b4500e6f8fa19dd61c0972cf4afe7368c\n  kramdown-parser-gfm (1.1.0) sha256=fb39745516427d2988543bf01fc4cf0ab1149476382393e0e9c48592f6581729\n  liquid (4.0.4) sha256=4fcfebb1a045e47918388dbb7a0925e7c3893e58d2bd6c3b3c73ec17a2d8fdb3\n  listen (3.9.0) sha256=db9e4424e0e5834480385197c139cb6b0ae0ef28cc13310cfd1ca78377d59c67\n  mercenary (0.4.0) sha256=b25a1e4a59adca88665e08e24acf0af30da5b5d859f7d8f38fba52c28f405138\n  pathutil (0.16.2) sha256=e43b74365631cab4f6d5e4228f812927efc9cb2c71e62976edcb252ee948d589\n  public_suffix (7.0.2) sha256=9114090c8e4e7135c1fd0e7acfea33afaab38101884320c65aaa0ffb8e26a857\n  rake (13.3.1) sha256=8c9e89d09f66a26a01264e7e3480ec0607f0c497a861ef16063604b1b08eb19c\n  rb-fsevent (0.11.2) sha256=43900b972e7301d6570f64b850a5aa67833ee7d87b458ee92805d56b7318aefe\n  rb-inotify (0.11.1) sha256=a0a700441239b0ff18eb65e3866236cd78613d6b9f78fea1f9ac47a85e47be6e\n  rexml (3.4.4) sha256=19e0a2c3425dfbf2d4fc1189747bdb2f849b6c5e74180401b15734bc97b5d142\n  rouge (4.7.0) sha256=dba5896715c0325c362e895460a6d350803dbf6427454f49a47500f3193ea739\n  safe_yaml (1.0.5) sha256=a6ac2d64b7eb027bdeeca1851fe7e7af0d668e133e8a88066a0c6f7087d9f848\n  sass-embedded (1.97.2) sha256=654c7de13cedc066e3b3a2d518af387b8083fc44ed40ce4379b430f580779a07\n  sass-embedded (1.97.2-aarch64-linux-android) sha256=a27079c6fe7161cb67eb0082c5d03a81fb486d2719cfbb93e94f701e68601392\n  sass-embedded (1.97.2-arm-linux-androideabi) sha256=bb1c76b7b4e3d234534da20e89f2d64626ec90be0079be4a8f2beacec61cb009\n  sass-embedded (1.97.2-arm-linux-gnueabihf) sha256=fb9b5a5a7060f39288db046ef29b31fd90c7f7d77ed834be26c2f45d6e4ebceb\n  sass-embedded (1.97.2-arm-linux-musleabihf) sha256=541d76f347f06702bb21a8367b32ed6b9354cdb8108bdd0955c666fae515422c\n  sass-embedded (1.97.2-riscv64-linux-android) sha256=08c9d348694770a5e409d0f1e42dad94684f35a7a356410219b00f3ec84c5b47\n  sass-embedded (1.97.2-riscv64-linux-gnu) sha256=d8c94f804e77e296ab932eff7e742fdabfb20a049448fa0b62a7634a60918e50\n  sass-embedded (1.97.2-riscv64-linux-musl) sha256=3d5f97026c21afba246994a47667f8f75cce920c20840f8f8d33a9b018df855d\n  sass-embedded (1.97.2-x86_64-linux-android) sha256=54da8348b985d0b6efd1fd4bb9b3f6cc6044ddbd042ac3d15314db755700e87b\n  sass-embedded (1.97.2-x86_64-linux-gnu) sha256=8f44c1572fc43cbb96cef68492f555797e4a56962ab59eb721d08f9e2162e79c\n  terminal-table (3.0.2) sha256=f951b6af5f3e00203fb290a669e0a85c5dd5b051b3b023392ccfd67ba5abae91\n  unicode-display_width (2.6.0) sha256=12279874bba6d5e4d2728cef814b19197dbb10d7a7837a869bab65da943b7f5a\n  webrick (1.9.2) sha256=beb4a15fc474defed24a3bda4ffd88a490d517c9e4e6118c3edce59e45864131\n\nBUNDLED WITH\n  4.0.3\n",
+        "ruby_version": "4.0.0",
+        "version": "4.4.1"
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "jekyll --version",
+    "pattern": "jekyll {version}"
+  }
+}

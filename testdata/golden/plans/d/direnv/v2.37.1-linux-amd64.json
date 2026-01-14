@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "direnv",
+  "version": "2.37.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "84cc4e760914b0f50a8b1f49691101adf83e66535c0aab6776814fb829265e0a",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "1f1b93dd6f38523fde26dfac96151ef9d31a374e3005cd3345fb93555ae0c9b5",
+        "checksum_algo": "sha256",
+        "dest": "direnv",
+        "url": "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.linux-amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.linux-amd64",
+      "checksum": "1f1b93dd6f38523fde26dfac96151ef9d31a374e3005cd3345fb93555ae0c9b5",
+      "size": 8151224
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "direnv"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "direnv"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "direnv version",
+    "pattern": "{version}"
+  }
+}

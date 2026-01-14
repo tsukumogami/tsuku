@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "azure-nuke",
+  "version": "1.2.8",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "385833ecd3b20e034e5bf30e7d046393024cf93eda67dd2109b8fddd93c8a5f9",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "fa3bf525a53b2cf9cfb569ba4700bb2704f9fd979874e5a69fef4e957ea66db4",
+        "checksum_algo": "sha256",
+        "dest": "azure-nuke-v1.2.8-linux-amd64.tar.gz",
+        "url": "https://github.com/ekristen/azure-nuke/releases/download/v1.2.8/azure-nuke-v1.2.8-linux-amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/ekristen/azure-nuke/releases/download/v1.2.8/azure-nuke-v1.2.8-linux-amd64.tar.gz",
+      "checksum": "fa3bf525a53b2cf9cfb569ba4700bb2704f9fd979874e5a69fef4e957ea66db4",
+      "size": 8750100
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "azure-nuke-v1.2.8-linux-amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "azure-nuke"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "azure-nuke"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "azure-nuke --version",
+    "pattern": "{version}"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "atlantis",
+  "version": "0.39.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "5bbf5a119605da46b1dc6623960f757394272b9d88f2039117b339465fcd84cc",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "58ce23a9bc67d46a9310e7f031967e07cd8acc916ccfa9ed7de42e3fe92fa05e",
+        "checksum_algo": "sha256",
+        "dest": "atlantis_linux_amd64.zip",
+        "url": "https://github.com/runatlantis/atlantis/releases/download/v0.39.0/atlantis_linux_amd64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/runatlantis/atlantis/releases/download/v0.39.0/atlantis_linux_amd64.zip",
+      "checksum": "58ce23a9bc67d46a9310e7f031967e07cd8acc916ccfa9ed7de42e3fe92fa05e",
+      "size": 12641717
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "atlantis_linux_amd64.zip",
+        "format": "zip",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "atlantis"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "atlantis"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "atlantis version",
+    "pattern": "{version}"
+  }
+}

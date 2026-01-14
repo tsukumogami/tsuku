@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "gocloc",
+  "version": "0.7.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "53ceb7196ebd22ae6e6baf937610593b0a0328fcb3e85163b3265467d6234f3c",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "e9721e010b4747758fc9ec0107845e01af54b6234cff47bb0461b0e40bfef4af",
+        "checksum_algo": "sha256",
+        "dest": "gocloc_Darwin_x86_64.tar.gz",
+        "url": "https://github.com/hhatto/gocloc/releases/download/v0.7.0/gocloc_Darwin_x86_64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/hhatto/gocloc/releases/download/v0.7.0/gocloc_Darwin_x86_64.tar.gz",
+      "checksum": "e9721e010b4747758fc9ec0107845e01af54b6234cff47bb0461b0e40bfef4af",
+      "size": 3105960
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gocloc_Darwin_x86_64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "gocloc"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "gocloc"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gocloc --version",
+    "pattern": "{version}"
+  }
+}

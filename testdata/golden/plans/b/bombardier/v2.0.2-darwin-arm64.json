@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "bombardier",
+  "version": "2.0.2",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "a58cf72145dffd66703a325838e1256fce7bc8989d00f0e7983bbbeca7a9e347",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "5d893be6e3e90d660c798b13f7616bdcee6954c04be4f34eb5b45a667e50e18b",
+        "checksum_algo": "sha256",
+        "dest": "bombardier",
+        "url": "https://github.com/codesenberg/bombardier/releases/download/v2.0.2/bombardier-darwin-arm64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/codesenberg/bombardier/releases/download/v2.0.2/bombardier-darwin-arm64",
+      "checksum": "5d893be6e3e90d660c798b13f7616bdcee6954c04be4f34eb5b45a667e50e18b",
+      "size": 10043010
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "bombardier"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bombardier"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "bombardier --version",
+    "pattern": "bombardier"
+  }
+}
