@@ -61,17 +61,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force hyperfine
 
-      - name: Debug symlinks
-        run: |
-          echo "=== Current directory contents ==="
-          ls -la "$HOME/.tsuku/tools/current/" || echo "Directory doesn't exist"
-          echo ""
-          echo "=== PATH ==="
-          echo "$PATH"
-          echo ""
-          echo "=== which hyperfine ==="
-          which hyperfine || echo "hyperfine not found in PATH"
-
       - name: Verify hyperfine works
         run: hyperfine --version
 
@@ -114,17 +103,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force hyperfine
-
-      - name: Debug symlinks
-        run: |
-          echo "=== Current directory contents ==="
-          ls -la "$HOME/.tsuku/tools/current/" || echo "Directory doesn't exist"
-          echo ""
-          echo "=== PATH ==="
-          echo "$PATH"
-          echo ""
-          echo "=== which hyperfine ==="
-          which hyperfine || echo "hyperfine not found in PATH"
 
       - name: Verify hyperfine works
         run: hyperfine --version

@@ -706,6 +706,8 @@ func (r *Recipe) ExtractBinaries() []string {
 			"github_archive":   true,
 			"github_file":      true,
 			"npm_install":      true,
+			"cargo_install":    true, // Uses 'executables' parameter, installs to bin/
+			"cargo_build":      true, // Uses 'executables' parameter, installs to bin/
 			"configure_make":   true, // Uses 'executables' parameter
 			"cmake_build":      true, // Uses 'executables' parameter
 			"meson_build":      true, // Uses 'executables' parameter
@@ -767,12 +769,12 @@ func (r *Recipe) ExtractBinaries() []string {
 			}
 		}
 
-		// Check for 'executables' parameter (used by npm_install)
+		// Check for 'executables' parameter (used by npm_install, cargo_install, cargo_build)
 		if executablesRaw, ok := step.Params["executables"]; ok {
 			if executablesList, ok := executablesRaw.([]interface{}); ok {
 				for _, e := range executablesList {
 					if exeStr, ok := e.(string); ok {
-						// npm_install installs to bin/ directory
+						// These actions install executables to bin/ directory
 						binaryName := filepath.Base(exeStr)
 						destPath := filepath.Join("bin", binaryName)
 						if !seen[binaryName] {
