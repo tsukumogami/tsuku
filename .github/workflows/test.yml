@@ -237,17 +237,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force ${{ matrix.test.tool }}
 
+  # macOS integration tests (aggregated into single job to reduce runner queue pressure)
   integration-macos:
-    name: "macOS: ${{ matrix.test.tool }}"
+    name: "macOS (darwin-arm64)"
     needs: matrix
     # Run when code files or recipes changed (skip for docs-only changes)
     if: ${{ needs.matrix.outputs.code == 'true' || needs.matrix.outputs.recipes == 'true' }}
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      max-parallel: 4
-      matrix:
-        test: ${{ fromJson(needs.matrix.outputs.macos) }}
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -260,10 +257,38 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Setup PATH
-        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
-
-      - name: "Install ${{ matrix.test.tool }}"
+      - name: Run all macOS integration tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --force ${{ matrix.test.tool }}
+        run: |
+          FAILED=()
+          TESTS='${{ needs.matrix.outputs.macos }}'
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          mkdir -p "$CACHE_DIR"
+
+          # Use while loop with process substitution to handle JSON objects with spaces
+          while IFS= read -r item; do
+            tool=$(echo "$item" | jq -r '.tool')
+            desc=$(echo "$item" | jq -r '.desc')
+
+            echo "::group::Testing $tool ($desc)"
+
+            # Fresh TSUKU_HOME per test with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
+            echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
+
+            if ! ./tsuku install --force "$tool"; then
+              FAILED+=("$tool")
+            fi
+            echo "::endgroup::"
+          done < <(echo "$TESTS" | jq -c '.[]')
+
+          # Report failures at end (don't fail fast)
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed tools: ${FAILED[*]}"
+            exit 1
+          fi
+
+          echo "All macOS integration tests passed"

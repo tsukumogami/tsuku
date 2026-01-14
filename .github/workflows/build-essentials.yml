@@ -43,29 +43,19 @@ on:
       - '.github/workflows/build-essentials.yml'
 
 jobs:
-  # Test homebrew action with make, gdbm, and pngcrush
-  test-homebrew:
-    name: "${{ matrix.platform.name }}: ${{ matrix.tool }}"
-    runs-on: ${{ matrix.platform.runner }}
+  # Test homebrew action with make, gdbm, and pngcrush (Linux only - macOS aggregated below)
+  test-homebrew-linux:
+    name: "Linux x86_64: ${{ matrix.tool }}"
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        platform:
-          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
-          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
-          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
         tool:
           - make
           - pkg-config
           - cmake
           - gdbm
           - pngcrush  # Tests dependency chain: pngcrush -> libpng -> zlib
-        exclude:
-          # gdbm bottles on macOS have unrelocated paths and gdbmtool crashes
-          # See: https://github.com/tsukumogami/tsuku/issues/605
-          - platform: { os: macos }
-            tool: gdbm
 
     steps:
       - uses: actions/checkout@v4
@@ -93,18 +83,10 @@ jobs:
       - name: "Verify no system deps"
         run: ./test/scripts/verify-no-system-deps.sh ${{ matrix.tool }}
 
-  # Test configure_make action with gdbm-source (source build)
-  test-configure-make:
-    name: "${{ matrix.platform.name }}: gdbm-source"
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
-          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
-          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+  # Test configure_make action with gdbm-source (source build) - Linux only
+  test-configure-make-linux:
+    name: "Linux x86_64: gdbm-source"
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -126,18 +108,10 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh gdbm-source
 
-  # Test meson_build action with libsixel-source (source build)
-  test-meson-build:
-    name: "${{ matrix.platform.name }}: libsixel-source"
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
-          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
-          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+  # Test meson_build action with libsixel-source (source build) - Linux only
+  test-meson-build-linux:
+    name: "Linux x86_64: libsixel-source"
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -159,18 +133,10 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh libsixel-source
 
-  # Test cmake_build action with ninja (source build)
-  test-cmake-build:
-    name: "${{ matrix.platform.name }}: ninja"
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
-          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
-          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+  # Test cmake_build action with ninja (source build) - Linux only
+  test-cmake-build-linux:
+    name: "Linux x86_64: ninja"
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -192,18 +158,10 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh ninja
 
-  # Test configure_make with library dependencies (sqlite-source -> readline -> ncurses)
-  test-sqlite-source:
-    name: "${{ matrix.platform.name }}: sqlite-source"
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
-          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
-          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+  # Test configure_make with library dependencies (sqlite-source -> readline -> ncurses) - Linux only
+  test-sqlite-source-linux:
+    name: "Linux x86_64: sqlite-source"
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -225,18 +183,10 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh sqlite-source
 
-  # Test configure_make with complex multi-dependency build (git -> libcurl -> openssl/zlib + expat)
-  test-git-source:
-    name: "${{ matrix.platform.name }}: git-source"
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          # Note: arm64_linux excluded - Homebrew doesn't publish bottles for this platform
-          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
-          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+  # Test configure_make with complex multi-dependency build - Linux only
+  test-git-source-linux:
+    name: "Linux x86_64: git-source"
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -252,13 +202,8 @@ jobs:
 
       - name: Install gettext (required for git build)
         run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt-get update
-            sudo apt-get install -y gettext
-          elif [ "$RUNNER_OS" == "macOS" ]; then
-            brew install gettext
-            brew link gettext --force
-          fi
+          sudo apt-get update
+          sudo apt-get install -y gettext
 
       - name: "Install git-source (tests multi-dependency chain: git -> curl -> openssl/zlib + expat)"
         env:
@@ -268,18 +213,10 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh git-source
 
-  # Test zig installation
-  test-zig:
-    name: "${{ matrix.platform.name }}: zig"
-    runs-on: ${{ matrix.platform.runner }}
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          # Note: arm64_linux excluded - zig downloads from ziglang.org which only has x86_64/aarch64
-          - { runner: ubuntu-latest, name: "Linux x86_64", os: linux, arch: x86_64 }
-          - { runner: macos-15-intel, name: "macOS Intel", os: macos, arch: x86_64 }
-          - { runner: macos-14, name: "macOS Apple Silicon", os: macos, arch: arm64 }
+  # Test zig installation - Linux only
+  test-zig-linux:
+    name: "Linux x86_64: zig"
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -406,3 +343,194 @@ jobs:
       - name: "Run sandbox test for ${{ matrix.tool }} (${{ matrix.family }})"
         run: ./tsuku install --plan plan.json --sandbox --force
 
+  # Aggregated macOS Apple Silicon tests (reduces runner queue pressure)
+  test-macos-arm64:
+    name: "macOS Apple Silicon (arm64)"
+    runs-on: macos-14
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Run all macOS tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FAILED=()
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          mkdir -p "$CACHE_DIR"
+
+          run_test() {
+            local name="$1"
+            local tool="$2"
+            local recipe="$3"
+            local verify_relocation="${4:-false}"
+            local verify_no_system_deps="${5:-false}"
+
+            echo "::group::Testing $name"
+
+            # Fresh TSUKU_HOME per test with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$name"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads" 2>/dev/null || true
+
+            # Install
+            if [ -n "$recipe" ]; then
+              if ! ./tsuku install --recipe "$recipe" --force; then
+                FAILED+=("$name")
+                echo "::endgroup::"
+                return
+              fi
+            else
+              if ! ./tsuku install --force "$tool"; then
+                FAILED+=("$name")
+                echo "::endgroup::"
+                return
+              fi
+            fi
+
+            # Verify functionality
+            if ! ./test/scripts/verify-tool.sh "$tool"; then
+              FAILED+=("$name (verify)")
+            fi
+
+            # Optional: verify relocation
+            if [ "$verify_relocation" = "true" ]; then
+              ./test/scripts/verify-relocation.sh "$tool" || FAILED+=("$name (relocation)")
+            fi
+
+            # Optional: verify no system deps
+            if [ "$verify_no_system_deps" = "true" ]; then
+              ./test/scripts/verify-no-system-deps.sh "$tool" || FAILED+=("$name (system-deps)")
+            fi
+
+            echo "::endgroup::"
+          }
+
+          # Homebrew tools (gdbm excluded on macOS - see issue #605)
+          run_test "make" "make" "" "true" "true"
+          run_test "pkg-config" "pkg-config" "" "true" "true"
+          run_test "cmake" "cmake" "" "true" "true"
+          run_test "pngcrush" "pngcrush" "" "true" "true"
+
+          # Source builds
+          run_test "gdbm-source" "gdbm-source" "testdata/recipes/gdbm-source.toml"
+          # libsixel-source excluded on macOS - see issue #880
+          run_test "ninja" "ninja" ""
+          run_test "sqlite-source" "sqlite-source" "testdata/recipes/sqlite-source.toml"
+          # git-source excluded on macOS - see issue #881
+
+          # Zig
+          run_test "zig" "zig" "" "true" "true"
+
+          # Report failures
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed tests: ${FAILED[*]}"
+            exit 1
+          fi
+
+          echo "All macOS Apple Silicon tests passed"
+
+  # Aggregated macOS Intel tests (reduces runner queue pressure)
+  test-macos-intel:
+    name: "macOS Intel (x86_64)"
+    runs-on: macos-13
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Run all macOS tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FAILED=()
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          mkdir -p "$CACHE_DIR"
+
+          run_test() {
+            local name="$1"
+            local tool="$2"
+            local recipe="$3"
+            local verify_relocation="${4:-false}"
+            local verify_no_system_deps="${5:-false}"
+
+            echo "::group::Testing $name"
+
+            # Fresh TSUKU_HOME per test with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$name"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads" 2>/dev/null || true
+
+            # Install
+            if [ -n "$recipe" ]; then
+              if ! ./tsuku install --recipe "$recipe" --force; then
+                FAILED+=("$name")
+                echo "::endgroup::"
+                return
+              fi
+            else
+              if ! ./tsuku install --force "$tool"; then
+                FAILED+=("$name")
+                echo "::endgroup::"
+                return
+              fi
+            fi
+
+            # Verify functionality
+            if ! ./test/scripts/verify-tool.sh "$tool"; then
+              FAILED+=("$name (verify)")
+            fi
+
+            # Optional: verify relocation
+            if [ "$verify_relocation" = "true" ]; then
+              ./test/scripts/verify-relocation.sh "$tool" || FAILED+=("$name (relocation)")
+            fi
+
+            # Optional: verify no system deps
+            if [ "$verify_no_system_deps" = "true" ]; then
+              ./test/scripts/verify-no-system-deps.sh "$tool" || FAILED+=("$name (system-deps)")
+            fi
+
+            echo "::endgroup::"
+          }
+
+          # Homebrew tools (gdbm excluded on macOS - see issue #605)
+          run_test "make" "make" "" "true" "true"
+          run_test "pkg-config" "pkg-config" "" "true" "true"
+          run_test "cmake" "cmake" "" "true" "true"
+          run_test "pngcrush" "pngcrush" "" "true" "true"
+
+          # Source builds
+          run_test "gdbm-source" "gdbm-source" "testdata/recipes/gdbm-source.toml"
+          # libsixel-source excluded on macOS - see issue #880
+          run_test "ninja" "ninja" ""
+          run_test "sqlite-source" "sqlite-source" "testdata/recipes/sqlite-source.toml"
+          # git-source excluded on macOS - see issue #881
+
+          # Zig
+          run_test "zig" "zig" "" "true" "true"
+
+          # Report failures
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed tests: ${FAILED[*]}"
+            exit 1
+          fi
+
+          echo "All macOS Intel tests passed"
