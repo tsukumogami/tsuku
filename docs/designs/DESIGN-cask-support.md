@@ -1,23 +1,23 @@
 # Design: Homebrew Cask Support
 
-**Status**: Planned
+**Status**: In Progress
 
 ## Implementation Issues
 
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [#862](https://github.com/tsukumogami/tsuku/issues/862) | feat(cask): add walking skeleton for cask support | None | testable |
-| [#863](https://github.com/tsukumogami/tsuku/issues/863) | feat(version): implement full cask version provider | #862 | testable |
-| [#864](https://github.com/tsukumogami/tsuku/issues/864) | feat(actions): add DMG extraction to app_bundle action | #862 | testable |
-| [#865](https://github.com/tsukumogami/tsuku/issues/865) | feat(cask): add binary symlinks and applications integration | #862 | testable |
-| [#866](https://github.com/tsukumogami/tsuku/issues/866) | feat(builder): add CaskBuilder for recipe generation | #863, #864, #865 | testable |
+| Issue | Title | Dependencies | Tier | Status |
+|-------|-------|--------------|------|--------|
+| [#862](https://github.com/tsukumogami/tsuku/issues/862) | feat(cask): add walking skeleton for cask support | None | testable | Done |
+| [#863](https://github.com/tsukumogami/tsuku/issues/863) | feat(version): implement full cask version provider | #862 | testable | Done |
+| [#864](https://github.com/tsukumogami/tsuku/issues/864) | feat(actions): add DMG extraction to app_bundle action | #862 | testable | Ready |
+| [#865](https://github.com/tsukumogami/tsuku/issues/865) | feat(cask): add binary symlinks and applications integration | #862 | testable | Ready |
+| [#866](https://github.com/tsukumogami/tsuku/issues/866) | feat(builder): add CaskBuilder for recipe generation | #863, #864, #865 | testable | Blocked |
 
 ```mermaid
 graph TD
-    I862["#862 Walking Skeleton"]:::ready
-    I863["#863 Cask API"]:::blocked
-    I864["#864 DMG Extraction"]:::blocked
-    I865["#865 Symlinks"]:::blocked
+    I862["#862 Walking Skeleton"]:::done
+    I863["#863 Cask API"]:::done
+    I864["#864 DMG Extraction"]:::ready
+    I865["#865 Symlinks"]:::ready
     I866["#866 CaskBuilder"]:::blocked
 
     I862 --> I863
