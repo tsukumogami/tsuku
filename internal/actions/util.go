@@ -309,17 +309,27 @@ func GetMapStringString(params map[string]interface{}, key string) (map[string]s
 	}
 }
 
-// ResolvePythonStandalone finds the path to tsuku's python-standalone installation
-// This ensures pipx uses tsuku's managed Python, not the system Python
-// Returns empty string if not found
-func ResolvePythonStandalone() string {
+// GetToolsDir returns the tools directory path, respecting $TSUKU_HOME.
+// Uses $TSUKU_HOME/tools if set, otherwise defaults to ~/.tsuku/tools.
+func GetToolsDir() string {
+	if tsukuHome := os.Getenv("TSUKU_HOME"); tsukuHome != "" {
+		return filepath.Join(tsukuHome, "tools")
+	}
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
 		return ""
 	}
+	return filepath.Join(homeDir, ".tsuku", "tools")
+}
 
-	// Look for python-standalone in ~/.tsuku/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
+// ResolvePythonStandalone finds the path to tsuku's python-standalone installation
+// This ensures pipx uses tsuku's managed Python, not the system Python
+// Returns empty string if not found
+func ResolvePythonStandalone() string {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
+		return ""
+	}
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
@@ -353,13 +363,11 @@ func ResolvePythonStandalone() string {
 // ResolvePipx finds the path to tsuku's pipx installation
 // Returns empty string if not found
 func ResolvePipx() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
 
-	// Look for pipx in ~/.tsuku/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
@@ -393,13 +401,11 @@ func ResolvePipx() string {
 // ResolveCargo finds the path to tsuku's cargo installation
 // Returns empty string if not found
 func ResolveCargo() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
 
-	// Look for rust-* directories in ~/.tsuku/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
@@ -440,13 +446,11 @@ func ResolveCargo() string {
 // ResolveGem finds the path to tsuku's gem executable (from ruby installation)
 // Returns empty string if not found
 func ResolveGem() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
 
-	// Look for ruby-* directories in ~/.tsuku/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
@@ -480,13 +484,11 @@ func ResolveGem() string {
 // ResolveZig finds the path to tsuku's zig executable
 // Returns empty string if not found
 func ResolveZig() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
 
-	// Look for zig-* directories in ~/.tsuku/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
@@ -633,13 +635,11 @@ func SetupCCompilerEnv(env []string) ([]string, bool) {
 // ResolvePerl finds the path to tsuku's perl executable
 // Returns empty string if not found
 func ResolvePerl() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
 
-	// Look for perl-* directories in ~/.tsuku/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
@@ -673,13 +673,11 @@ func ResolvePerl() string {
 // ResolveCpanm finds the path to tsuku's cpanm executable (from perl installation)
 // Returns empty string if not found
 func ResolveCpanm() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
 
-	// Look for perl-* directories in ~/.tsuku/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
@@ -713,13 +711,11 @@ func ResolveCpanm() string {
 // ResolveGo finds the path to tsuku's go executable
 // Returns empty string if not found
 func ResolveGo() string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
 
-	// Look for go-* directories in $TSUKU_HOME/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 	entries, err := os.ReadDir(toolsDir)
 	if err != nil {
 		return ""
@@ -760,13 +756,11 @@ func ResolveGo() string {
 // Returns empty string if the specific version is not found.
 // The version should be in format "1.23.4" (without "go" prefix).
 func ResolveGoVersion(version string) string {
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
+	toolsDir := GetToolsDir()
+	if toolsDir == "" {
 		return ""
 	}
 
-	// Look for go-<version> directory in $TSUKU_HOME/tools/
-	toolsDir := filepath.Join(homeDir, ".tsuku", "tools")
 	goPath := filepath.Join(toolsDir, "go-"+version, "bin", "go")
 
 	if info, err := os.Stat(goPath); err == nil && info.Mode()&0111 != 0 {

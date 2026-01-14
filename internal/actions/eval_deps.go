@@ -2,7 +2,6 @@ package actions
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 )
 
@@ -25,7 +24,7 @@ func CheckEvalDeps(deps []string) []string {
 		return nil
 	}
 
-	toolsDir := getToolsDir()
+	toolsDir := GetToolsDir()
 	if toolsDir == "" {
 		// Can't determine tools directory, assume all deps are missing
 		return deps
@@ -38,22 +37,6 @@ func CheckEvalDeps(deps []string) []string {
 		}
 	}
 	return missing
-}
-
-// getToolsDir returns the tools directory path.
-// Uses $TSUKU_HOME/tools or defaults to ~/.tsuku/tools.
-func getToolsDir() string {
-	// Check TSUKU_HOME env var first
-	if tsukuHome := os.Getenv("TSUKU_HOME"); tsukuHome != "" {
-		return filepath.Join(tsukuHome, "tools")
-	}
-
-	// Default to ~/.tsuku/tools
-	homeDir, err := os.UserHomeDir()
-	if err != nil {
-		return ""
-	}
-	return filepath.Join(homeDir, ".tsuku", "tools")
 }
 
 // isToolInstalled checks if a tool is installed in the tools directory.
