@@ -14,12 +14,13 @@ Evidence from PR #858 demonstrates the problem:
 - The PR added golden files for 138 recipes, triggering validation for each on each platform
 - Total wall-clock time to completion exceeded 60 minutes due to queue serialization
 
-Three workflows are affected:
+Four workflows are affected:
 - `validate-golden-execution.yml` - Executes each changed golden file on its target platform
 - `test-changed-recipes.yml` - Tests each changed recipe on Linux and macOS
 - `test.yml` - Runs integration tests for a fixed set of tools on each platform
+- `build-essentials.yml` - Tests build tooling (Homebrew, configure/make, cmake, meson) on all platforms
 
-All three workflows use matrix strategy with `fail-fast: false`, spawning independent jobs per changed recipe/file. This provides excellent failure isolation but causes queue saturation for macOS.
+All four workflows use matrix strategy with `fail-fast: false`, spawning independent jobs per changed recipe/file. This provides excellent failure isolation but causes queue saturation for macOS.
 
 ### Scope
 
@@ -49,9 +50,9 @@ All three workflows use matrix strategy with `fail-fast: false`, spawning indepe
 - `validate-golden-execution.yml` (lines 241-277): Uses dynamic matrix from `detect-changes` job, spawns one job per golden file with `${{ matrix.os }}` runner
 - `test-changed-recipes.yml` (lines 128-169): Uses static matrix with `${{ fromJson(needs.matrix.outputs.recipes) }}`, spawns separate jobs for Linux and macOS
 - `test.yml` (lines 240-270): Uses matrix from `test-matrix.json`, spawns one job per tool on each platform
+- `build-essentials.yml`: Uses hardcoded platform × tool matrix, spawns ~20 macOS jobs (10 Apple Silicon + 10 Intel)
 
 **Similar implementations:**
-- `build-essentials.yml`: Uses hardcoded matrix with specific tools and platforms - not dynamic, but demonstrates platform x tool combinations
 - `deploy-recipes.yml`: Uses `concurrency:` to serialize Pages deployments (different problem)
 
 **Conventions to follow:**
@@ -178,7 +179,7 @@ Apply batching only when item count exceeds a threshold. Below threshold, use pe
 | 4. Adaptive | Good (targets 5 jobs) | Good | Poor (batch-level) | Good | Fair |
 | 5. Hybrid | Good (batches when needed) | Good | Good (small PRs) / Poor (large) | Good | Poor |
 
-**Note:** Option 3 (Single Job Per Architecture) is the chosen approach. Cross-workflow safety (3 workflows × 1 job = 3 jobs) makes this preferable to adaptive batching which would need coordination between workflows.
+**Note:** Option 3 (Single Job Per Architecture) is the chosen approach. Cross-workflow safety (3 workflows × 1 job + 1 workflow × 2 jobs = 5 jobs) makes this preferable to adaptive batching which would need coordination between workflows.
 
 ## Uncertainties
 
@@ -198,14 +199,14 @@ Apply batching only when item count exceeds a threshold. Below threshold, use pe
 
 **Chosen option: Single Job Per Architecture (variant of Option 3)**
 
-Each workflow spawns at most one macOS job per architecture. Since only darwin-arm64 is currently tested, this means one macOS job per workflow. With three affected workflows, the maximum is 3 macOS jobs competing for 5 runners.
+Each workflow spawns at most one macOS job per architecture. Three workflows test only darwin-arm64 (1 job each), while build-essentials tests both darwin-arm64 and darwin-amd64 (2 jobs). With four affected workflows, the maximum is 5 macOS jobs matching the 5 runner limit.
 
 ### Rationale
 
 This option was chosen because:
 - **Simplicity:** No batch calculation logic needed - just aggregate items by architecture
-- **Cross-workflow safety:** Multiple workflows can run concurrently without exceeding runner limits (3 workflows × 1 job = 3 jobs << 5 runners)
-- **Future-proof:** If darwin-amd64 is enabled later, each workflow would have 2 jobs (one per arch), still well under limits (6 jobs total)
+- **Cross-workflow safety:** Multiple workflows can run concurrently without exceeding runner limits (5 jobs = 5 runners)
+- **Future-proof:** If darwin-amd64 is enabled for all workflows, each would have 2 jobs (one per arch), totaling 8 jobs which would need attention
 - **Reduced risk:** Simpler implementation means fewer edge cases and easier debugging
 
 Alternatives were rejected because:
@@ -224,13 +225,13 @@ By choosing this option, we accept:
 These are acceptable because:
 - Per-recipe failures in macOS CI are relatively rare (most failures are caught in Linux runs)
 - Sequential execution is simpler and avoids cross-workflow resource contention
-- Total wall-clock time improves: 3 jobs (from 3 workflows) vs 170+ jobs queued for 5 runners
+- Total wall-clock time improves: 5 jobs (from 4 workflows) vs 170+ jobs queued for 5 runners
 
 ## Solution Architecture
 
 ### Overview
 
-The solution modifies three workflow files to aggregate macOS items into a single job per architecture:
+The solution modifies four workflow files to aggregate macOS items into a single job per architecture:
 
 1. **detect-changes job:** Groups all darwin items by architecture (currently only darwin-arm64)
 2. **macOS test job:** Single job iterates over all items for that architecture
@@ -340,7 +341,7 @@ test-macos:
 
 ### Phase 1: Workflow Changes
 
-Update all three affected workflows to aggregate macOS items:
+Update all four affected workflows to aggregate macOS items:
 
 **For `test-changed-recipes.yml`:**
 - Modify `matrix` job to output `macos_items` array and `has_macos` boolean
@@ -357,6 +358,11 @@ Update all three affected workflows to aggregate macOS items:
 - Iterate over all macOS tests from `test-matrix.json`
 - Keep Linux execution unchanged (per-test matrix)
 
+**For `build-essentials.yml`:**
+- Split existing jobs into Linux-only versions (keep per-tool matrix)
+- Add two aggregated macOS jobs: `test-macos-arm64` and `test-macos-intel`
+- Each macOS job runs all tool tests sequentially with isolated TSUKU_HOME
+
 ### Phase 2: Testing and Rollout
 
 - Test with a PR that touches multiple recipes
@@ -368,9 +374,9 @@ Update all three affected workflows to aggregate macOS items:
 
 ### Positive
 
-- **Eliminated queue contention:** 3 macOS jobs (one per workflow) vs 170+ jobs competing for 5 runners
+- **Eliminated queue contention:** 5 macOS jobs (one per workflow) vs 170+ jobs competing for 5 runners
 - **Lower job overhead:** Single job amortizes checkout, Go setup, tsuku build across all items
-- **Simpler GitHub UI:** 3 macOS jobs instead of 170+ makes PR checks easy to scan
+- **Simpler GitHub UI:** 5 macOS jobs instead of 170+ makes PR checks easy to scan
 - **Cross-workflow safety:** Multiple workflows can run concurrently without exceeding runner limits
 - **Simpler implementation:** No batch calculation logic needed
 
