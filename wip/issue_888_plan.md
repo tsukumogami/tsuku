@@ -24,11 +24,11 @@ None.
 
 ## Implementation Steps
 
-- [ ] Modify `go_build.go` `Execute()` method to search `ctx.ExecPaths` when `ResolveGoVersion()` returns empty
-- [ ] Modify `go_install.go` `Execute()` method to search `ctx.ExecPaths` when `ResolveGo()` returns empty
-- [ ] Modify `go_install.go` `Decompose()` method to search `ctx.EvalContext.ExecPaths` when `ResolveGo()` returns empty (if applicable)
-- [ ] Run `go test ./internal/actions/...` to verify no regressions
-- [ ] Run `go vet ./...` and `golangci-lint run --timeout=5m ./...` for code quality
+- [x] Modify `go_build.go` `Execute()` method to search `ctx.ExecPaths` when `ResolveGoVersion()` returns empty
+- [x] Modify `go_install.go` `Execute()` method to search `ctx.ExecPaths` when `ResolveGo()` returns empty
+- [x] ~~Modify `go_install.go` `Decompose()` method~~ (Not needed: Decompose runs at eval time, not execution time)
+- [x] Run `go test ./internal/actions/...` to verify no regressions
+- [x] Run `go vet ./...` and `golangci-lint run --timeout=5m ./...` for code quality
 
 ## Testing Strategy
 

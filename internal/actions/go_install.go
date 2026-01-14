@@ -101,6 +101,16 @@ func (a *GoInstallAction) Execute(ctx *ExecutionContext, params map[string]inter
 	// Find Go binary from tsuku's tools directory
 	goPath := ResolveGo()
 	if goPath == "" {
+		// Check ExecPaths from dependencies (for golden file execution)
+		for _, p := range ctx.ExecPaths {
+			candidatePath := filepath.Join(p, "go")
+			if _, err := os.Stat(candidatePath); err == nil {
+				goPath = candidatePath
+				break
+			}
+		}
+	}
+	if goPath == "" {
 		return fmt.Errorf("go not found: install go first (tsuku install go)")
 	}
 

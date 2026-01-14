@@ -117,11 +117,36 @@ func (a *GoBuildAction) Execute(ctx *ExecutionContext, params map[string]interfa
 	if hasGoVersion && requiredGoVersion != "" {
 		goPath = ResolveGoVersion(requiredGoVersion)
 		if goPath == "" {
+			// Check ExecPaths from dependencies for version-specific Go
+			// The go dependency will be in a go-<version>/bin directory
+			for _, p := range ctx.ExecPaths {
+				// Check if this ExecPath is for the required Go version
+				parentDir := filepath.Dir(p)
+				if strings.HasSuffix(parentDir, "go-"+requiredGoVersion) {
+					candidatePath := filepath.Join(p, "go")
+					if _, err := os.Stat(candidatePath); err == nil {
+						goPath = candidatePath
+						break
+					}
+				}
+			}
+		}
+		if goPath == "" {
 			return fmt.Errorf("go %s not found: install it first (tsuku install go@%s)", requiredGoVersion, requiredGoVersion)
 		}
 	} else {
 		// Fallback to any available Go for backwards compatibility
 		goPath = ResolveGo()
+		if goPath == "" {
+			// Check ExecPaths from dependencies (for golden file execution)
+			for _, p := range ctx.ExecPaths {
+				candidatePath := filepath.Join(p, "go")
+				if _, err := os.Stat(candidatePath); err == nil {
+					goPath = candidatePath
+					break
+				}
+			}
+		}
 		if goPath == "" {
 			return fmt.Errorf("go not found: install go first (tsuku install go)")
 		}
