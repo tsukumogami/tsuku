@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "6d0ac9b358fb401388d532f40e1a23714d4fae56f935b1bc659b1ea6b2c8ab81",
+  "recipe_hash": "bbd80751ea106e390919d8e0f4bef8e95e75888b6b12e621a1892b7957b4e35a",
   "deterministic": false,
   "dependencies": [
     {
@@ -17,7 +17,7 @@
         {
           "tool": "patchelf",
           "version": "0.18.0",
-          "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+          "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
           "steps": [
             {
               "action": "download_file",
@@ -53,7 +53,7 @@
             {
               "action": "install_binaries",
               "params": {
-                "binaries": [
+                "outputs": [
                   "bin/patchelf"
                 ]
               },
@@ -166,15 +166,15 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/ruby",
           "bin/gem",
           "bin/bundle",
           "bin/bundler",
           "bin/irb",
           "bin/erb"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true

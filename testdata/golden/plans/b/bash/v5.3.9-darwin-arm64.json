@@ -6,13 +6,13 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "0aed4c4c0f368b39ec5885280a719b093f87977d4ac19b70bf60396148845cc0",
+  "recipe_hash": "a68baa673aeb842bf81753c526a4d9f2532efe4dc88c5cc08bac063e1ac41406",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+      "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
       "steps": [
         {
           "action": "download_file",
@@ -48,7 +48,7 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "outputs": [
               "bin/patchelf"
             ]
           },
@@ -97,10 +97,10 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/bash"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true

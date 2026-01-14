@@ -6,13 +6,13 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "1832cea3f7b3301b4c3aa62e63486cab92fa753cc8a8df37143124cb34fba897",
+  "recipe_hash": "002918e3e8ddf9fd1a9d00475209640675ca0982304443ef4b796c135678d905",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+      "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
       "steps": [
         {
           "action": "download_file",
@@ -48,7 +48,7 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "outputs": [
               "bin/patchelf"
             ]
           },
@@ -97,7 +97,8 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/pkg-config",
           "bin/pkgconf",
           "lib/libpkgconf.so",
@@ -105,8 +106,7 @@
           "lib/libpkgconf.so.7",
           "lib/libpkgconf.7.dylib",
           "lib/libpkgconf.so.7.0.0"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true

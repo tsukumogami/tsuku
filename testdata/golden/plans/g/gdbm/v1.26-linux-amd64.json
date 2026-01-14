@@ -6,13 +6,13 @@
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "96ddcf6847cd9abb035d9f227365bed460b4ed94770b6b83219494de8f35ba89",
+  "recipe_hash": "b7594cfe7762f652a3be772f7d31c5c0473f96c6b740ae466c4e912afaa852b6",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "patchelf",
       "version": "0.18.0",
-      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+      "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
       "steps": [
         {
           "action": "download_file",
@@ -48,7 +48,7 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "outputs": [
               "bin/patchelf"
             ]
           },
@@ -97,10 +97,10 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/gdbmtool"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true
