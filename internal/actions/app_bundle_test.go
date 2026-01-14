@@ -130,3 +130,27 @@ func TestDetectArchiveFormatFromURL(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractDMG_NonMacOS(t *testing.T) {
+	if runtime.GOOS == "darwin" {
+		t.Skip("test only runs on non-macOS")
+	}
+
+	// On non-macOS, extractDMG should fail because hdiutil is not available
+	err := extractDMG("/nonexistent.dmg", "/tmp/dest")
+	if err == nil {
+		t.Error("extractDMG should fail on non-macOS")
+	}
+}
+
+func TestExtractDMG_NonExistentFile(t *testing.T) {
+	if runtime.GOOS != "darwin" {
+		t.Skip("test only runs on macOS")
+	}
+
+	// Even on macOS, should fail for non-existent file
+	err := extractDMG("/nonexistent/path/to/file.dmg", t.TempDir())
+	if err == nil {
+		t.Error("extractDMG should fail for non-existent file")
+	}
+}

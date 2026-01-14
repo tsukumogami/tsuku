@@ -5,14 +5,16 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
 )
 
-// AppBundleAction installs macOS .app bundles from ZIP archives.
-// This is a walking skeleton implementation that supports ZIP extraction.
-// Issue #864 will add DMG support.
+// AppBundleAction installs macOS .app bundles from ZIP or DMG archives.
+// It supports downloading and extracting .app bundles from:
+// - ZIP archives (cross-platform extraction)
+// - DMG disk images (macOS only, uses hdiutil)
 type AppBundleAction struct{ BaseAction }
 
 // IsDeterministic returns true because app_bundle produces identical results
@@ -91,10 +93,10 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 		"appName", appName,
 		"appsDir", ctx.AppsDir)
 
-	// Detect archive format (walking skeleton only supports ZIP)
+	// Detect archive format
 	archiveFormat := detectArchiveFormatFromURL(url)
-	if archiveFormat != "zip" {
-		return fmt.Errorf("app_bundle only supports ZIP archives; got %s (DMG support coming in issue #864)", archiveFormat)
+	if archiveFormat != "zip" && archiveFormat != "dmg" {
+		return fmt.Errorf("app_bundle supports ZIP and DMG archives; got %s", archiveFormat)
 	}
 
 	// Download the archive
@@ -106,11 +108,19 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 		return fmt.Errorf("download failed: %w", err)
 	}
 
-	// Extract the ZIP
+	// Extract based on archive format
 	fmt.Printf("   Extracting: %s\n", archiveName)
 	extractDir := filepath.Join(ctx.WorkDir, "extracted")
-	if err := extractZIP(archivePath, extractDir); err != nil {
-		return fmt.Errorf("extraction failed: %w", err)
+
+	var extractErr error
+	switch archiveFormat {
+	case "zip":
+		extractErr = extractZIP(archivePath, extractDir)
+	case "dmg":
+		extractErr = extractDMG(archivePath, extractDir)
+	}
+	if extractErr != nil {
+		return fmt.Errorf("extraction failed: %w", extractErr)
 	}
 
 	// Find the .app bundle
@@ -240,6 +250,87 @@ func extractZIP(archivePath, destDir string) error {
 		outFile.Close()
 		if err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+// extractDMG extracts a DMG disk image to the destination directory.
+// It uses hdiutil to mount the DMG, copies the contents, and unmounts.
+// This function only works on macOS.
+func extractDMG(dmgPath, destDir string) error {
+	// Ensure destination directory exists
+	if err := os.MkdirAll(destDir, 0755); err != nil {
+		return fmt.Errorf("failed to create destination directory: %w", err)
+	}
+
+	// Create a temporary mount point
+	mountPoint, err := os.MkdirTemp("", "tsuku-dmg-*")
+	if err != nil {
+		return fmt.Errorf("failed to create mount point: %w", err)
+	}
+	// Ensure cleanup of mount point directory
+	defer os.RemoveAll(mountPoint)
+
+	// Mount the DMG read-only without Finder interference
+	// -nobrowse: Don't show in Finder
+	// -readonly: Mount read-only
+	// -mountpoint: Specify where to mount
+	mountCmd := exec.Command("hdiutil", "attach", dmgPath,
+		"-nobrowse", "-readonly", "-mountpoint", mountPoint)
+	if output, err := mountCmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("failed to mount DMG: %w\nOutput: %s", err, string(output))
+	}
+
+	// Ensure we unmount even if copy fails
+	defer func() {
+		detachCmd := exec.Command("hdiutil", "detach", mountPoint, "-quiet", "-force")
+		_ = detachCmd.Run() // Best effort; ignore errors on cleanup
+	}()
+
+	// Copy all contents from mount point to destination
+	// We search for .app bundles and copy them
+	entries, err := os.ReadDir(mountPoint)
+	if err != nil {
+		return fmt.Errorf("failed to read mount point: %w", err)
+	}
+
+	// Copy all entries (directories and files) from mount to dest
+	for _, entry := range entries {
+		srcPath := filepath.Join(mountPoint, entry.Name())
+		dstPath := filepath.Join(destDir, entry.Name())
+
+		// Skip hidden system files
+		if strings.HasPrefix(entry.Name(), ".") {
+			continue
+		}
+
+		// Get file info to handle symlinks properly
+		info, err := entry.Info()
+		if err != nil {
+			return fmt.Errorf("failed to get file info for %s: %w", entry.Name(), err)
+		}
+
+		if info.Mode()&os.ModeSymlink != 0 {
+			// Handle symlinks (some DMGs use aliases/symlinks)
+			linkTarget, err := os.Readlink(srcPath)
+			if err != nil {
+				return fmt.Errorf("failed to read symlink %s: %w", srcPath, err)
+			}
+			if err := os.Symlink(linkTarget, dstPath); err != nil {
+				return fmt.Errorf("failed to create symlink %s: %w", dstPath, err)
+			}
+		} else if entry.IsDir() {
+			// Copy directories (including .app bundles)
+			if err := copyDir(srcPath, dstPath); err != nil {
+				return fmt.Errorf("failed to copy %s: %w", entry.Name(), err)
+			}
+		} else {
+			// Copy regular files
+			if err := copyFile(srcPath, dstPath); err != nil {
+				return fmt.Errorf("failed to copy file %s: %w", entry.Name(), err)
+			}
 		}
 	}
 
