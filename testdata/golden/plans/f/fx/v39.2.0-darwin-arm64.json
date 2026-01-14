@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "fx",
+  "version": "39.2.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "bd4b82ab8a57f2d55dc9a0252c1e976156c6c64c60dfa59dc1aca3c503492d43",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "5d7dadbf8ac4e4a55b5b6d31bdd958b90823292997ba9ddae395f66417bb4a9b",
+        "checksum_algo": "sha256",
+        "dest": "fx",
+        "url": "https://github.com/antonmedv/fx/releases/download/39.2.0/fx_darwin_arm64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/antonmedv/fx/releases/download/39.2.0/fx_darwin_arm64",
+      "checksum": "5d7dadbf8ac4e4a55b5b6d31bdd958b90823292997ba9ddae395f66417bb4a9b",
+      "size": 17640450
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "fx"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "fx"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "fx --version",
+    "pattern": "{version}"
+  }
+}

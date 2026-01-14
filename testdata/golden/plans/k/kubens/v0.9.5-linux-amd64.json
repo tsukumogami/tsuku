@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "kubens",
+  "version": "0.9.5",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "b1948b4092cac939a36704435e21ed92d928e5aacdffc8c27bed797d57a1e45b",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "acc1a9c7f6b722fbe5fad25dd0e784a7335d18436b9c414ab996629e82702cba",
+        "checksum_algo": "sha256",
+        "dest": "kubens_v0.9.5_linux_x86_64.tar.gz",
+        "url": "https://github.com/ahmetb/kubectx/releases/download/v0.9.5/kubens_v0.9.5_linux_x86_64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/ahmetb/kubectx/releases/download/v0.9.5/kubens_v0.9.5_linux_x86_64.tar.gz",
+      "checksum": "acc1a9c7f6b722fbe5fad25dd0e784a7335d18436b9c414ab996629e82702cba",
+      "size": 9936939
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "kubens_v0.9.5_linux_x86_64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "kubens"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "kubens"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "kubens --version",
+    "pattern": "{version}"
+  }
+}

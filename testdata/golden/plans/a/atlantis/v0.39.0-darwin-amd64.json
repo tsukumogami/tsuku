@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "atlantis",
+  "version": "0.39.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "5bbf5a119605da46b1dc6623960f757394272b9d88f2039117b339465fcd84cc",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "7c32f9f0e27303c40cf0c69f85a320742be6e865f2a5f11232a7baed31637cde",
+        "checksum_algo": "sha256",
+        "dest": "atlantis_darwin_amd64.zip",
+        "url": "https://github.com/runatlantis/atlantis/releases/download/v0.39.0/atlantis_darwin_amd64.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/runatlantis/atlantis/releases/download/v0.39.0/atlantis_darwin_amd64.zip",
+      "checksum": "7c32f9f0e27303c40cf0c69f85a320742be6e865f2a5f11232a7baed31637cde",
+      "size": 12930323
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "atlantis_darwin_amd64.zip",
+        "format": "zip",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "atlantis"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "atlantis"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "atlantis version",
+    "pattern": "{version}"
+  }
+}

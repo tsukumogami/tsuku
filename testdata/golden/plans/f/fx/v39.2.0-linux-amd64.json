@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "fx",
+  "version": "39.2.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "bd4b82ab8a57f2d55dc9a0252c1e976156c6c64c60dfa59dc1aca3c503492d43",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "17ea6549c7cf0b8be5ec109d04da7fbf1d5de9f7b99d957a6215081933528afe",
+        "checksum_algo": "sha256",
+        "dest": "fx",
+        "url": "https://github.com/antonmedv/fx/releases/download/39.2.0/fx_linux_amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/antonmedv/fx/releases/download/39.2.0/fx_linux_amd64",
+      "checksum": "17ea6549c7cf0b8be5ec109d04da7fbf1d5de9f7b99d957a6215081933528afe",
+      "size": 18104523
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "fx"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "fx"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "fx --version",
+    "pattern": "{version}"
+  }
+}

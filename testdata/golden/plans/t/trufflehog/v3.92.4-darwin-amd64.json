@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "trufflehog",
+  "version": "3.92.4",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "c4dfeb0fe8a33ac60bef9138f36fcbc79db6ff9a5c1dc85cfa2cac5b08619523",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "7599e25b2d9c8eea30aac873114bad54cb254a3dbc4b01cac52b28ef9f013f0e",
+        "checksum_algo": "sha256",
+        "dest": "trufflehog_3.92.4_darwin_amd64.tar.gz",
+        "url": "https://github.com/trufflesecurity/trufflehog/releases/download/v3.92.4/trufflehog_3.92.4_darwin_amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/trufflesecurity/trufflehog/releases/download/v3.92.4/trufflehog_3.92.4_darwin_amd64.tar.gz",
+      "checksum": "7599e25b2d9c8eea30aac873114bad54cb254a3dbc4b01cac52b28ef9f013f0e",
+      "size": 70474984
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "trufflehog_3.92.4_darwin_amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "trufflehog"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "trufflehog"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "trufflehog --version",
+    "pattern": "{version}"
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "format_version": 3,
+  "tool": "libxml2",
+  "version": "2.15.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "5e01c1bd63ba2ec55559dc2005dc9bdaf180d6507c289d05a7fc51bd15c377a4",
+  "deterministic": true,
+  "dependencies": [
+    {
+      "tool": "patchelf",
+      "version": "0.18.0",
+      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+            "dest": "patchelf.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+          "checksum": "25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+          "size": 122480
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "patchelf.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "patchelf"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/patchelf"
+            ]
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "patchelf --version",
+        "pattern": "patchelf {version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "a033ccee8c5ca031c62685c9791ae6f119101272a2a8a881b62a60d54252a89e",
+        "dest": "libxml2.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/libxml2/blobs/sha256:a033ccee8c5ca031c62685c9791ae6f119101272a2a8a881b62a60d54252a89e"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/libxml2/blobs/sha256:a033ccee8c5ca031c62685c9791ae6f119101272a2a8a881b62a60d54252a89e",
+      "checksum": "a033ccee8c5ca031c62685c9791ae6f119101272a2a8a881b62a60d54252a89e",
+      "size": 645017
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "libxml2.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "libxml2"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/xmllint"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "xmllint --version",
+    "pattern": "{version}"
+  },
+  "recipe_type": "library"
+}

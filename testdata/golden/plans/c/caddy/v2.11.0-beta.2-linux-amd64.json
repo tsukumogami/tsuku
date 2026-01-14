@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "caddy",
+  "version": "2.11.0-beta.2",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "75a6f36aca5dbfb04fb22702724ee88ac32bca3543ec63c92113d042c38778dd",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "dcf018352d614bd615731c9c923f72d850eb1cf00b2baf51d9fbf1e37da8b298",
+        "checksum_algo": "sha256",
+        "dest": "caddy_2.11.0-beta.2_linux_amd64.tar.gz",
+        "url": "https://github.com/caddyserver/caddy/releases/download/v2.11.0-beta.2/caddy_2.11.0-beta.2_linux_amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/caddyserver/caddy/releases/download/v2.11.0-beta.2/caddy_2.11.0-beta.2_linux_amd64.tar.gz",
+      "checksum": "dcf018352d614bd615731c9c923f72d850eb1cf00b2baf51d9fbf1e37da8b298",
+      "size": 16453741
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "caddy_2.11.0-beta.2_linux_amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "caddy"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "caddy"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "caddy version",
+    "pattern": "v{version}"
+  }
+}

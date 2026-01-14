@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "direnv",
+  "version": "2.37.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "84cc4e760914b0f50a8b1f49691101adf83e66535c0aab6776814fb829265e0a",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "4f569f3a36732bfd8b8fea7bfcc6ad87a59745c109022164d0ca4832451d5369",
+        "checksum_algo": "sha256",
+        "dest": "direnv",
+        "url": "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.darwin-arm64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/direnv/direnv/releases/download/v2.37.1/direnv.darwin-arm64",
+      "checksum": "4f569f3a36732bfd8b8fea7bfcc6ad87a59745c109022164d0ca4832451d5369",
+      "size": 7899154
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "direnv"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "direnv"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "direnv version",
+    "pattern": "{version}"
+  }
+}

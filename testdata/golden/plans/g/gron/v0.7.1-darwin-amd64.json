@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "gron",
+  "version": "0.7.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "5a4f42c67ff726a9fae4bfb44c794681f263b7b101b966384f40930cc43514b1",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "59034d4aa883c5815784b290567d104669a51f20eaf97f1d8baa4f74e22047d6",
+        "checksum_algo": "sha256",
+        "dest": "gron-darwin-amd64-0.7.1.tgz",
+        "url": "https://github.com/tomnomnom/gron/releases/download/v0.7.1/gron-darwin-amd64-0.7.1.tgz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/tomnomnom/gron/releases/download/v0.7.1/gron-darwin-amd64-0.7.1.tgz",
+      "checksum": "59034d4aa883c5815784b290567d104669a51f20eaf97f1d8baa4f74e22047d6",
+      "size": 3927504
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gron-darwin-amd64-0.7.1.tgz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "gron"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "gron"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gron --version",
+    "pattern": "gron"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "jpegoptim",
+  "version": "1.5.6",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "32cc796368cc071be4cbe591b0822510357f993a236df70af56c9c990198960b",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "5ca21c2f8f02ed815b00e453b0ea235d84ac6a99704d15bb587f952f700d6d44",
+        "checksum_algo": "sha256",
+        "dest": "jpegoptim-1.5.6-x64-osx.zip",
+        "url": "https://github.com/tjko/jpegoptim/releases/download/v1.5.6/jpegoptim-1.5.6-x64-osx.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/tjko/jpegoptim/releases/download/v1.5.6/jpegoptim-1.5.6-x64-osx.zip",
+      "checksum": "5ca21c2f8f02ed815b00e453b0ea235d84ac6a99704d15bb587f952f700d6d44",
+      "size": 205390
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "jpegoptim-1.5.6-x64-osx.zip",
+        "format": "zip",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "jpegoptim"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "jpegoptim"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "jpegoptim --version",
+    "pattern": "{version}"
+  }
+}

@@ -63,9 +63,9 @@ jobs:
             # Family-agnostic: v1.20.0-linux-amd64.json -> linux-amd64
             # Family-aware: v1.0.0-linux-debian-amd64.json -> linux-debian-amd64
             filename=$(basename "$path" .json)
-            # Check if third-from-last component is a known family
-            third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
-            if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+            # Check if second-from-last component is a known family (e.g., "debian" in linux-debian-amd64)
+            second_from_last=$(echo "$filename" | rev | cut -d'-' -f2 | rev)
+            if [[ "$second_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
               # Family-aware: extract os-family-arch
               platform=$(echo "$filename" | rev | cut -d'-' -f1-3 | rev)
             else
@@ -204,10 +204,13 @@ jobs:
             filename=$(basename "$f" .json)
             num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
             if [[ $num_parts -ge 4 ]]; then
-              third_from_last=$(echo "$filename" | rev | cut -d'-' -f3 | rev)
-              if [[ "$third_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+              # Check second-from-last component for family (e.g., "debian" in linux-debian-amd64)
+              second_from_last=$(echo "$filename" | rev | cut -d'-' -f2 | rev)
+              if [[ "$second_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+                # Family-aware: version is everything before os-family-arch
                 echo "$filename" | rev | cut -d'-' -f4- | rev
               else
+                # Family-agnostic: version is everything before os-arch
                 echo "$filename" | rev | cut -d'-' -f3- | rev
               fi
             else

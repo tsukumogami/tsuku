@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "skaffold",
+  "version": "2.17.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "6d237cd44ccb71cd494301aa474f94a1aeb297627ad8a904355d7b708d2c85c6",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "b4c215eccd09b2fc7c688fd0845cdd8b7eb8de0fdc2d9fbbd1148af62a9ea0e8",
+        "checksum_algo": "sha256",
+        "dest": "skaffold",
+        "url": "https://github.com/GoogleContainerTools/skaffold/releases/download/v2.17.1/skaffold-linux-amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/GoogleContainerTools/skaffold/releases/download/v2.17.1/skaffold-linux-amd64",
+      "checksum": "b4c215eccd09b2fc7c688fd0845cdd8b7eb8de0fdc2d9fbbd1148af62a9ea0e8",
+      "size": 127498216
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "skaffold"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "skaffold"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "skaffold version",
+    "pattern": "{version}"
+  }
+}

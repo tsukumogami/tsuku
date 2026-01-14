@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "cloud-nuke",
+  "version": "0.46.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "f7f72d3a2cc6a41e534a781d54acc081f42b156abeaee45f9b44d2f5e6c8c8f8",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "1a947fa5ce0ed74876cbcfd44afb8bebcc566c361db272ed70729ec67d59271a",
+        "checksum_algo": "sha256",
+        "dest": "cloud-nuke",
+        "url": "https://github.com/gruntwork-io/cloud-nuke/releases/download/v0.46.0/cloud-nuke_darwin_amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/gruntwork-io/cloud-nuke/releases/download/v0.46.0/cloud-nuke_darwin_amd64",
+      "checksum": "1a947fa5ce0ed74876cbcfd44afb8bebcc566c361db272ed70729ec67d59271a",
+      "size": 278701840
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "cloud-nuke"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "cloud-nuke"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "cloud-nuke --version",
+    "pattern": "{version}"
+  }
+}

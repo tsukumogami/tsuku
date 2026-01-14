@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "velero",
+  "version": "1.17.2-rc.2",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "82bcb6fb1e37ccd8e1e1a4186da9c9da6e3bf946d8b92545ecc37d06af0c3589",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "7e654f6202d5b1dceb178b53add8e5033d8761f1f0741b652f054de344b00218",
+        "checksum_algo": "sha256",
+        "dest": "velero-v1.17.2-rc.2-darwin-amd64.tar.gz",
+        "url": "https://github.com/vmware-tanzu/velero/releases/download/v1.17.2-rc.2/velero-v1.17.2-rc.2-darwin-amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/vmware-tanzu/velero/releases/download/v1.17.2-rc.2/velero-v1.17.2-rc.2-darwin-amd64.tar.gz",
+      "checksum": "7e654f6202d5b1dceb178b53add8e5033d8761f1f0741b652f054de344b00218",
+      "size": 59149142
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "velero-v1.17.2-rc.2-darwin-amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "velero"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "velero"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "velero version --client-only",
+    "pattern": "{version}"
+  }
+}

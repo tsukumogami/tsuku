@@ -1,0 +1,54 @@
+{
+  "format_version": 3,
+  "tool": "scaleway-cli",
+  "version": "2.49.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "4f09d5b83a83c72941acbf09e027646566bde9d3d878258499ed32cf6016581b",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "f422aa0157054fde1fa4140646b45cac2b228b4f22ee8caf834c591525c810fa",
+        "checksum_algo": "sha256",
+        "dest": "scaleway-cli_2.49.0_linux_amd64",
+        "url": "https://github.com/scaleway/scaleway-cli/releases/download/v2.49.0/scaleway-cli_2.49.0_linux_amd64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/scaleway/scaleway-cli/releases/download/v2.49.0/scaleway-cli_2.49.0_linux_amd64",
+      "checksum": "f422aa0157054fde1fa4140646b45cac2b228b4f22ee8caf834c591525c810fa",
+      "size": 53543096
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "scaleway-cli_2.49.0_linux_amd64"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          {
+            "dest": "bin/scw",
+            "src": "scaleway-cli_{version}_{os}_{arch}"
+          }
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "scw version",
+    "pattern": "{version}"
+  }
+}

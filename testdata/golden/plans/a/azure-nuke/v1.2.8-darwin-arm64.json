@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "azure-nuke",
+  "version": "1.2.8",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "385833ecd3b20e034e5bf30e7d046393024cf93eda67dd2109b8fddd93c8a5f9",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "7c487699e834248a93054a45e6b29c1fc0389a3e87758d6444168fa6b40a9f2e",
+        "checksum_algo": "sha256",
+        "dest": "azure-nuke-v1.2.8-darwin-arm64.tar.gz",
+        "url": "https://github.com/ekristen/azure-nuke/releases/download/v1.2.8/azure-nuke-v1.2.8-darwin-arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/ekristen/azure-nuke/releases/download/v1.2.8/azure-nuke-v1.2.8-darwin-arm64.tar.gz",
+      "checksum": "7c487699e834248a93054a45e6b29c1fc0389a3e87758d6444168fa6b40a9f2e",
+      "size": 9133692
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "azure-nuke-v1.2.8-darwin-arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "azure-nuke"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "azure-nuke"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "azure-nuke --version",
+    "pattern": "{version}"
+  }
+}

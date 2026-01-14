@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "caddy",
+  "version": "2.11.0-beta.2",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "75a6f36aca5dbfb04fb22702724ee88ac32bca3543ec63c92113d042c38778dd",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "d75bb3371128d10c881f17b0e90a07f984d419c88e1c834d9df9d55623236485",
+        "checksum_algo": "sha256",
+        "dest": "caddy_2.11.0-beta.2_mac_amd64.tar.gz",
+        "url": "https://github.com/caddyserver/caddy/releases/download/v2.11.0-beta.2/caddy_2.11.0-beta.2_mac_amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/caddyserver/caddy/releases/download/v2.11.0-beta.2/caddy_2.11.0-beta.2_mac_amd64.tar.gz",
+      "checksum": "d75bb3371128d10c881f17b0e90a07f984d419c88e1c834d9df9d55623236485",
+      "size": 16810600
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "caddy_2.11.0-beta.2_mac_amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "caddy"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "caddy"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "caddy version",
+    "pattern": "v{version}"
+  }
+}

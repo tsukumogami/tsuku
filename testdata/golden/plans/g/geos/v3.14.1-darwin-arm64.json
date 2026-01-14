@@ -1,0 +1,114 @@
+{
+  "format_version": 3,
+  "tool": "geos",
+  "version": "3.14.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "25bd857fc4502bd4a033c64b8288aafe273668d17777a44532d72beb84044aca",
+  "deterministic": true,
+  "dependencies": [
+    {
+      "tool": "patchelf",
+      "version": "0.18.0",
+      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+            "dest": "patchelf.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+          "checksum": "25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+          "size": 122480
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "patchelf.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "patchelf"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/patchelf"
+            ]
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "patchelf --version",
+        "pattern": "patchelf {version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "b27c740de141794db4f06ef3f1c07c0d91749eaf101fa68af35e4076eb01fee8",
+        "dest": "geos.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/geos/blobs/sha256:b27c740de141794db4f06ef3f1c07c0d91749eaf101fa68af35e4076eb01fee8"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/geos/blobs/sha256:b27c740de141794db4f06ef3f1c07c0d91749eaf101fa68af35e4076eb01fee8",
+      "checksum": "b27c740de141794db4f06ef3f1c07c0d91749eaf101fa68af35e4076eb01fee8",
+      "size": 4028513
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "geos.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "geos"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/geos-config"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "geos-config --version",
+    "pattern": "{version}"
+  },
+  "recipe_type": "library"
+}

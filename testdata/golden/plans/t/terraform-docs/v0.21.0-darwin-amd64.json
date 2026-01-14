@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "terraform-docs",
+  "version": "0.21.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "70059e5bf1a79fe14eecde91eaa681ef0cade0d51d9a5af5956a8395266b46a3",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "ddf4b53925d857ae81210ebeda32b429a17385d6e4561ab1972067a9ccb36873",
+        "checksum_algo": "sha256",
+        "dest": "terraform-docs-v0.21.0-darwin-amd64.tar.gz",
+        "url": "https://github.com/terraform-docs/terraform-docs/releases/download/v0.21.0/terraform-docs-v0.21.0-darwin-amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/terraform-docs/terraform-docs/releases/download/v0.21.0/terraform-docs-v0.21.0-darwin-amd64.tar.gz",
+      "checksum": "ddf4b53925d857ae81210ebeda32b429a17385d6e4561ab1972067a9ccb36873",
+      "size": 7138928
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "terraform-docs-v0.21.0-darwin-amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "terraform-docs"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "terraform-docs"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "terraform-docs --version",
+    "pattern": "{version}"
+  }
+}

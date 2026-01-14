@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "fnm",
+  "version": "1.38.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "fbb1dd9fe48443b78512177fc70a069312575a59703999e633f6cbeed97d0bc8",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "80deb3db3db45598f25aea594c10936a7658f70826104fe37e33b4072a5e11f9",
+        "checksum_algo": "sha256",
+        "dest": "fnm-macos.zip",
+        "url": "https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-macos.zip"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/Schniz/fnm/releases/download/v1.38.1/fnm-macos.zip",
+      "checksum": "80deb3db3db45598f25aea594c10936a7658f70826104fe37e33b4072a5e11f9",
+      "size": 6067639
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "fnm-macos.zip",
+        "format": "zip",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "fnm"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "fnm"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "fnm --version",
+    "pattern": "{version}"
+  }
+}

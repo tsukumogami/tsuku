@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "appwrite",
+  "version": "13.0.0-rc.4",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "e0a57d0d608c884191fb4ae7686c99133fd03bba32639c20d7f663672a23ede3",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "4c0bd0386f2e57da0a26635f2d99bb84aefbd850ec90b7c9a4cbf26d13c847cc",
+        "checksum_algo": "sha256",
+        "dest": "appwrite",
+        "url": "https://github.com/appwrite/sdk-for-cli/releases/download/13.0.0-rc.4/appwrite-cli-darwin-arm64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/appwrite/sdk-for-cli/releases/download/13.0.0-rc.4/appwrite-cli-darwin-arm64",
+      "checksum": "4c0bd0386f2e57da0a26635f2d99bb84aefbd850ec90b7c9a4cbf26d13c847cc",
+      "size": 66292080
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "appwrite"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "appwrite"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "appwrite --version",
+    "pattern": "{version}"
+  }
+}

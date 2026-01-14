@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "docker-compose",
+  "version": "5.0.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "fd600f329fd1b8b788c2952a321ddbee454941985b21aa3de09f6f2cf60a2d58",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "dc94eecbe55c2d3c32aecc1fefc63b6ee63086f18bbbf5f4dac91b80f8f6b51b",
+        "checksum_algo": "sha256",
+        "dest": "docker-compose",
+        "url": "https://github.com/docker/compose/releases/download/v5.0.1/docker-compose-darwin-x86_64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/docker/compose/releases/download/v5.0.1/docker-compose-darwin-x86_64",
+      "checksum": "dc94eecbe55c2d3c32aecc1fefc63b6ee63086f18bbbf5f4dac91b80f8f6b51b",
+      "size": 31654976
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "docker-compose"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "docker-compose"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "docker-compose version",
+    "pattern": "v{version}"
+  }
+}

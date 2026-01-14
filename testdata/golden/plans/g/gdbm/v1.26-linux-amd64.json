@@ -1,0 +1,113 @@
+{
+  "format_version": 3,
+  "tool": "gdbm",
+  "version": "1.26",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "96ddcf6847cd9abb035d9f227365bed460b4ed94770b6b83219494de8f35ba89",
+  "deterministic": true,
+  "dependencies": [
+    {
+      "tool": "patchelf",
+      "version": "0.18.0",
+      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+            "dest": "patchelf.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+          "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+          "size": 130124
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "patchelf.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "patchelf"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/patchelf"
+            ]
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "patchelf --version",
+        "pattern": "patchelf {version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "4c4edca03ef3c629d9849d37084eb16afa5aaaf4b76d004f89c6f43e78af5adb",
+        "dest": "gdbm.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/gdbm/blobs/sha256:4c4edca03ef3c629d9849d37084eb16afa5aaaf4b76d004f89c6f43e78af5adb"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/gdbm/blobs/sha256:4c4edca03ef3c629d9849d37084eb16afa5aaaf4b76d004f89c6f43e78af5adb",
+      "checksum": "4c4edca03ef3c629d9849d37084eb16afa5aaaf4b76d004f89c6f43e78af5adb",
+      "size": 436792
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gdbm.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "gdbm"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/gdbmtool"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gdbmtool --version",
+    "pattern": "gdbmtool (GDBM) {version}"
+  }
+}

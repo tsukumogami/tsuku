@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "gum",
+  "version": "0.17.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "4b54b0bc33d87efe2a8b50d76d77c2967dec7939de5d54541bd0832e5daf4ff2",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "69ee169bd6387331928864e94d47ed01ef649fbfe875baed1bbf27b5377a6fdb",
+        "checksum_algo": "sha256",
+        "dest": "gum_0.17.0_Linux_x86_64.tar.gz",
+        "url": "https://github.com/charmbracelet/gum/releases/download/v0.17.0/gum_0.17.0_Linux_x86_64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/charmbracelet/gum/releases/download/v0.17.0/gum_0.17.0_Linux_x86_64.tar.gz",
+      "checksum": "69ee169bd6387331928864e94d47ed01ef649fbfe875baed1bbf27b5377a6fdb",
+      "size": 4681855
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gum_0.17.0_Linux_x86_64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "gum"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "gum"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gum --version",
+    "pattern": "{version}"
+  }
+}

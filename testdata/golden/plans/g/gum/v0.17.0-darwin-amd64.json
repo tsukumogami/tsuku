@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "gum",
+  "version": "0.17.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "4b54b0bc33d87efe2a8b50d76d77c2967dec7939de5d54541bd0832e5daf4ff2",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "cd66576aeebe6cd19c771863c7e8d696e0e1d5387d1e7075666baa67c2052e53",
+        "checksum_algo": "sha256",
+        "dest": "gum_0.17.0_Darwin_x86_64.tar.gz",
+        "url": "https://github.com/charmbracelet/gum/releases/download/v0.17.0/gum_0.17.0_Darwin_x86_64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/charmbracelet/gum/releases/download/v0.17.0/gum_0.17.0_Darwin_x86_64.tar.gz",
+      "checksum": "cd66576aeebe6cd19c771863c7e8d696e0e1d5387d1e7075666baa67c2052e53",
+      "size": 4828902
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gum_0.17.0_Darwin_x86_64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 1
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "gum"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "gum"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "gum --version",
+    "pattern": "{version}"
+  }
+}

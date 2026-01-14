@@ -1,0 +1,54 @@
+{
+  "format_version": 3,
+  "tool": "scaleway-cli",
+  "version": "2.49.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "4f09d5b83a83c72941acbf09e027646566bde9d3d878258499ed32cf6016581b",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "59474214cedecaee6af478787bfee03f5566312c08214883930678f92e156fbd",
+        "checksum_algo": "sha256",
+        "dest": "scaleway-cli_2.49.0_darwin_arm64",
+        "url": "https://github.com/scaleway/scaleway-cli/releases/download/v2.49.0/scaleway-cli_2.49.0_darwin_arm64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/scaleway/scaleway-cli/releases/download/v2.49.0/scaleway-cli_2.49.0_darwin_arm64",
+      "checksum": "59474214cedecaee6af478787bfee03f5566312c08214883930678f92e156fbd",
+      "size": 51043026
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "scaleway-cli_2.49.0_darwin_arm64"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          {
+            "dest": "bin/scw",
+            "src": "scaleway-cli_{version}_{os}_{arch}"
+          }
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "scw version",
+    "pattern": "{version}"
+  }
+}

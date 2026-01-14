@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "air",
+  "version": "1.64.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "33192baf916e2daf81c1a993860f64e7d39291cb38c68f889a0b5181f9de2f58",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "4acb2411a1b77b34bd61418015dee1c38ad431064f242cac9546a56b8b932e01",
+        "checksum_algo": "sha256",
+        "dest": "air_1.64.0_linux_amd64.tar.gz",
+        "url": "https://github.com/cosmtrek/air/releases/download/v1.64.0/air_1.64.0_linux_amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/cosmtrek/air/releases/download/v1.64.0/air_1.64.0_linux_amd64.tar.gz",
+      "checksum": "4acb2411a1b77b34bd61418015dee1c38ad431064f242cac9546a56b8b932e01",
+      "size": 3736522
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "air_1.64.0_linux_amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "air"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "air"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "air -v",
+    "pattern": "{version}"
+  }
+}

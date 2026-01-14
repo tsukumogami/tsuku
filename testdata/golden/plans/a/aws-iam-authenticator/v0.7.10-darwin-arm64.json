@@ -1,0 +1,51 @@
+{
+  "format_version": 3,
+  "tool": "aws-iam-authenticator",
+  "version": "0.7.10",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "f5eb4cbcf051f48d922c324423a678e2bed8f592594a3c50f1ecaf64b6804485",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "1046194d75f836e4cb9c7d697af929dad83e252f1d91a6fcfd388c6f1b2ea290",
+        "checksum_algo": "sha256",
+        "dest": "aws-iam-authenticator",
+        "url": "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.7.10/aws-iam-authenticator_0.7.10_darwin_arm64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/kubernetes-sigs/aws-iam-authenticator/releases/download/v0.7.10/aws-iam-authenticator_0.7.10_darwin_arm64",
+      "checksum": "1046194d75f836e4cb9c7d697af929dad83e252f1d91a6fcfd388c6f1b2ea290",
+      "size": 76320194
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "aws-iam-authenticator"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "aws-iam-authenticator"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "aws-iam-authenticator version",
+    "pattern": "{version}"
+  }
+}

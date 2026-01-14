@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "jsonnet",
+  "version": "0.21.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "7a88f5c9049c48242244d4b7a95b9854fcf7875132a9729f56bfe566d88153ad",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "398189a264e31a2c1316eed8ee6308306a221fd10b72f405def0100d295efeac",
+        "checksum_algo": "sha256",
+        "dest": "go-jsonnet_Darwin_arm64.tar.gz",
+        "url": "https://github.com/google/go-jsonnet/releases/download/v0.21.0/go-jsonnet_Darwin_arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/google/go-jsonnet/releases/download/v0.21.0/go-jsonnet_Darwin_arm64.tar.gz",
+      "checksum": "398189a264e31a2c1316eed8ee6308306a221fd10b72f405def0100d295efeac",
+      "size": 6208363
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "go-jsonnet_Darwin_arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "jsonnet"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "jsonnet"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "jsonnet --version",
+    "pattern": "{version}"
+  }
+}

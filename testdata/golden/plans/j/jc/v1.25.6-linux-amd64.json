@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "jc",
+  "version": "1.25.6",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "71aa0a59aafb8b0c619b2f8f3a3df0c049fdd8bab11cffccedae8201ae6e7ae3",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "cb7c58187cfde4dfcd2bf4368e5cb8b969b98cb7eeacfe46f6eb9e336c90ad40",
+        "checksum_algo": "sha256",
+        "dest": "jc-1.25.6-linux-x86_64.tar.gz",
+        "url": "https://github.com/kellyjonbrazil/jc/releases/download/v1.25.6/jc-1.25.6-linux-x86_64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/kellyjonbrazil/jc/releases/download/v1.25.6/jc-1.25.6-linux-x86_64.tar.gz",
+      "checksum": "cb7c58187cfde4dfcd2bf4368e5cb8b969b98cb7eeacfe46f6eb9e336c90ad40",
+      "size": 26995339
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "jc-1.25.6-linux-x86_64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "jc"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "jc"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "jc --version",
+    "pattern": "{version}"
+  }
+}

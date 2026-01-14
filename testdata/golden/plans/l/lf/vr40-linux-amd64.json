@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "lf",
+  "version": "r40",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "846be84d4035db5deceec5e980ce4d3a268fbcfe84b8a75cf5d07b4599b6009e",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "4418a7f12bd3b2440193510ef75607b084e46e070e0998c42aa6e6eac4d86430",
+        "checksum_algo": "sha256",
+        "dest": "lf-linux-amd64.tar.gz",
+        "url": "https://github.com/gokcehan/lf/releases/download/r40/lf-linux-amd64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/gokcehan/lf/releases/download/r40/lf-linux-amd64.tar.gz",
+      "checksum": "4418a7f12bd3b2440193510ef75607b084e46e070e0998c42aa6e6eac4d86430",
+      "size": 2340910
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "lf-linux-amd64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "lf"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "lf"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "lf -version",
+    "pattern": "{version}"
+  }
+}

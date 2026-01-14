@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "flux",
+  "version": "2.7.5",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "15f898432f40bd7c8bcb3fa8a736fd1aa8c304ea70556efca918152899b82fdc",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "79faae964badc0b08f61ef6228f636bea99c6750537634855fa8b84f75b006d8",
+        "checksum_algo": "sha256",
+        "dest": "flux_2.7.5_darwin_arm64.tar.gz",
+        "url": "https://github.com/fluxcd/flux2/releases/download/v2.7.5/flux_2.7.5_darwin_arm64.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/fluxcd/flux2/releases/download/v2.7.5/flux_2.7.5_darwin_arm64.tar.gz",
+      "checksum": "79faae964badc0b08f61ef6228f636bea99c6750537634855fa8b84f75b006d8",
+      "size": 22943028
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "flux_2.7.5_darwin_arm64.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 0
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "flux"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "flux"
+        ],
+        "install_mode": "binaries"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "flux version --client",
+    "pattern": "{version}"
+  }
+}
