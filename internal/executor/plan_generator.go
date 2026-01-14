@@ -124,6 +124,12 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		"arch":        targetArch,
 	}
 
+	// Add version metadata with dotted-path keys (e.g., "version.url", "version.checksum")
+	// This enables {version.url} placeholders for Cask and other providers that return metadata
+	for k, v := range versionInfo.Metadata {
+		vars["version."+k] = v
+	}
+
 	// Create EvalContext for decomposition
 	evalCtx := &actions.EvalContext{
 		Context:       ctx,

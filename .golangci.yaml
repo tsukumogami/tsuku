@@ -49,6 +49,8 @@ linters:
         - G204
         # Package manager must open archive files from upstream sources
         - G304
+        # Package manager must extract archives - path traversal is validated in code
+        - G305
         # Package manager must create executable files with 0755 permissions
         - G302
         - G306
