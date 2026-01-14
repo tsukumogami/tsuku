@@ -33,8 +33,8 @@ None
 
 ## Implementation Steps
 
-- [ ] Remove the comment excluding libsixel-source from macOS Apple Silicon test
-- [ ] Add the run_test call for libsixel-source in the Apple Silicon job
+- [x] Remove the comment excluding libsixel-source from macOS Apple Silicon test
+- [x] Add the run_test call for libsixel-source in the Apple Silicon job
 - [ ] Push changes and verify CI passes on macOS Apple Silicon
 
 Note: macOS Intel tests are currently skipped due to runner deprecation (#896), so no changes needed there.
