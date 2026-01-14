@@ -1,6 +1,36 @@
 # Design: Homebrew Cask Support
 
-**Status**: Accepted
+**Status**: Planned
+
+## Implementation Issues
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#862](https://github.com/tsukumogami/tsuku/issues/862) | feat(cask): add walking skeleton for cask support | None | testable |
+| [#863](https://github.com/tsukumogami/tsuku/issues/863) | feat(version): implement full cask version provider | #862 | testable |
+| [#864](https://github.com/tsukumogami/tsuku/issues/864) | feat(actions): add DMG extraction to app_bundle action | #862 | testable |
+| [#865](https://github.com/tsukumogami/tsuku/issues/865) | feat(cask): add binary symlinks and applications integration | #862 | testable |
+| [#866](https://github.com/tsukumogami/tsuku/issues/866) | feat(builder): add CaskBuilder for recipe generation | #863, #864, #865 | testable |
+
+```mermaid
+graph TD
+    I862["#862 Walking Skeleton"]:::ready
+    I863["#863 Cask API"]:::blocked
+    I864["#864 DMG Extraction"]:::blocked
+    I865["#865 Symlinks"]:::blocked
+    I866["#866 CaskBuilder"]:::blocked
+
+    I862 --> I863
+    I862 --> I864
+    I862 --> I865
+    I863 --> I866
+    I864 --> I866
+    I865 --> I866
+
+    classDef done fill:#28a745,stroke:#1e7e34,color:white
+    classDef ready fill:#007bff,stroke:#0056b3,color:white
+    classDef blocked fill:#ffc107,stroke:#d39e00,color:black
+```
 
 ## Upstream Design Reference
 
