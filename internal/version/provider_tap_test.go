@@ -422,6 +422,145 @@ func TestTapSourceStrategy_CanHandle(t *testing.T) {
 	}
 }
 
+func TestTapProvider_WithCache_CacheHit(t *testing.T) {
+	// Create a counter to track fetch requests
+	fetchCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fetchCount++
+		if strings.Contains(r.URL.Path, "Formula/terraform.rb") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(sampleTerraformFormula))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	// Create cache in temp directory
+	cacheDir := t.TempDir()
+	cache := NewTapCache(cacheDir, DefaultTapCacheTTL)
+
+	resolver := New()
+	resolver.httpClient = &http.Client{
+		Transport: &testTransport{server: server},
+	}
+
+	provider := NewTapProviderWithCache(resolver, "hashicorp/tap", "terraform", cache)
+
+	// First call should fetch from server
+	info1, err := provider.ResolveLatest(context.Background())
+	if err != nil {
+		t.Fatalf("First ResolveLatest() error = %v", err)
+	}
+	if fetchCount != 1 {
+		t.Errorf("Expected 1 fetch, got %d", fetchCount)
+	}
+
+	// Second call should use cache (no additional fetch)
+	info2, err := provider.ResolveLatest(context.Background())
+	if err != nil {
+		t.Fatalf("Second ResolveLatest() error = %v", err)
+	}
+	if fetchCount != 1 {
+		t.Errorf("Expected 1 fetch after cache hit, got %d", fetchCount)
+	}
+
+	// Both results should be identical
+	if info1.Version != info2.Version {
+		t.Errorf("Version mismatch: %q != %q", info1.Version, info2.Version)
+	}
+}
+
+func TestTapProvider_WithCache_CacheMiss(t *testing.T) {
+	fetchCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fetchCount++
+		if strings.Contains(r.URL.Path, "Formula/terraform.rb") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(sampleTerraformFormula))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	// Create cache in temp directory
+	cacheDir := t.TempDir()
+	cache := NewTapCache(cacheDir, DefaultTapCacheTTL)
+
+	resolver := New()
+	resolver.httpClient = &http.Client{
+		Transport: &testTransport{server: server},
+	}
+
+	// Query for a formula not in cache
+	provider := NewTapProviderWithCache(resolver, "hashicorp/tap", "terraform", cache)
+
+	_, err := provider.ResolveLatest(context.Background())
+	if err != nil {
+		t.Fatalf("ResolveLatest() error = %v", err)
+	}
+	if fetchCount != 1 {
+		t.Errorf("Expected 1 fetch on cache miss, got %d", fetchCount)
+	}
+}
+
+func TestTapProvider_WithoutCache(t *testing.T) {
+	fetchCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fetchCount++
+		if strings.Contains(r.URL.Path, "Formula/terraform.rb") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(sampleTerraformFormula))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	resolver := New()
+	resolver.httpClient = &http.Client{
+		Transport: &testTransport{server: server},
+	}
+
+	// Provider without cache (nil)
+	provider := NewTapProviderWithCache(resolver, "hashicorp/tap", "terraform", nil)
+
+	// First call
+	_, err := provider.ResolveLatest(context.Background())
+	if err != nil {
+		t.Fatalf("First ResolveLatest() error = %v", err)
+	}
+
+	// Second call - should fetch again since no cache
+	_, err = provider.ResolveLatest(context.Background())
+	if err != nil {
+		t.Fatalf("Second ResolveLatest() error = %v", err)
+	}
+
+	if fetchCount != 2 {
+		t.Errorf("Expected 2 fetches without cache, got %d", fetchCount)
+	}
+}
+
+func TestNewTapProviderWithCache(t *testing.T) {
+	resolver := New()
+	cacheDir := t.TempDir()
+	cache := NewTapCache(cacheDir, DefaultTapCacheTTL)
+
+	provider := NewTapProviderWithCache(resolver, "hashicorp/tap", "terraform", cache)
+
+	if provider.cache != cache {
+		t.Error("Cache not properly set")
+	}
+	if provider.tap != "hashicorp/tap" {
+		t.Errorf("Tap = %q, want %q", provider.tap, "hashicorp/tap")
+	}
+	if provider.formula != "terraform" {
+		t.Errorf("Formula = %q, want %q", provider.formula, "terraform")
+	}
+}
+
 // testTransport is a custom transport that redirects requests to the test server
 type testTransport struct {
 	server *httptest.Server

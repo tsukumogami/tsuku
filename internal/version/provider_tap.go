@@ -17,6 +17,7 @@ type TapProvider struct {
 	tap        string // e.g., "hashicorp/tap"
 	formula    string // e.g., "terraform"
 	httpClient *http.Client
+	cache      *TapCache // Optional cache for formula metadata
 }
 
 // TapVersionInfo contains parsed metadata from a tap formula.
@@ -30,13 +31,21 @@ type TapVersionInfo struct {
 	Extra     map[string]string // Additional metadata
 }
 
-// NewTapProvider creates a provider for third-party Homebrew taps
+// NewTapProvider creates a provider for third-party Homebrew taps.
+// Use NewTapProviderWithCache to enable caching of formula metadata.
 func NewTapProvider(resolver *Resolver, tap, formula string) *TapProvider {
+	return NewTapProviderWithCache(resolver, tap, formula, nil)
+}
+
+// NewTapProviderWithCache creates a provider for third-party Homebrew taps
+// with optional caching support. If cache is nil, caching is disabled.
+func NewTapProviderWithCache(resolver *Resolver, tap, formula string, cache *TapCache) *TapProvider {
 	return &TapProvider{
 		resolver:   resolver,
 		tap:        tap,
 		formula:    formula,
 		httpClient: resolver.httpClient,
+		cache:      cache,
 	}
 }
 
@@ -52,30 +61,17 @@ var formulaLocations = []string{
 // The returned VersionInfo includes Metadata with "bottle_url", "checksum",
 // "formula", and "tap" fields.
 func (p *TapProvider) ResolveLatest(ctx context.Context) (*VersionInfo, error) {
-	// Parse tap into owner and repo
-	owner, repo, err := parseTap(p.tap)
-	if err != nil {
-		return nil, err
-	}
-
-	// Try to fetch formula from different possible locations
-	var content string
-	var fetchErr error
-	for _, loc := range formulaLocations {
-		path := fmt.Sprintf(loc, p.formula)
-		content, fetchErr = p.fetchFormulaFile(ctx, owner, repo, path)
-		if fetchErr == nil {
-			break
+	// Try cache first
+	info := p.getFromCache()
+	if info == nil {
+		// Cache miss - fetch from GitHub
+		var err error
+		info, err = p.fetchFormulaInfo(ctx)
+		if err != nil {
+			return nil, err
 		}
-	}
-	if content == "" {
-		return nil, fmt.Errorf("formula '%s' not found in tap '%s'", p.formula, p.tap)
-	}
-
-	// Parse the formula file
-	info, err := parseFormulaFile(content)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse formula '%s': %w", p.formula, err)
+		// Cache the result for future use
+		p.setInCache(info)
 	}
 
 	// Select platform-specific bottle
@@ -144,6 +140,56 @@ func (p *TapProvider) ResolveVersion(ctx context.Context, version string) (*Vers
 // SourceDescription returns a human-readable source description
 func (p *TapProvider) SourceDescription() string {
 	return fmt.Sprintf("Tap:%s/%s", p.tap, p.formula)
+}
+
+// getFromCache retrieves formula info from cache if available and not expired.
+// Returns nil if cache is disabled or on cache miss.
+func (p *TapProvider) getFromCache() *tapFormulaInfo {
+	if p.cache == nil {
+		return nil
+	}
+	return p.cache.Get(p.tap, p.formula)
+}
+
+// setInCache stores formula info in cache.
+// Does nothing if cache is disabled.
+func (p *TapProvider) setInCache(info *tapFormulaInfo) {
+	if p.cache == nil {
+		return
+	}
+	// Ignore errors - caching is best-effort
+	_ = p.cache.Set(p.tap, p.formula, info)
+}
+
+// fetchFormulaInfo fetches and parses formula info from GitHub.
+func (p *TapProvider) fetchFormulaInfo(ctx context.Context) (*tapFormulaInfo, error) {
+	// Parse tap into owner and repo
+	owner, repo, err := parseTap(p.tap)
+	if err != nil {
+		return nil, err
+	}
+
+	// Try to fetch formula from different possible locations
+	var content string
+	var fetchErr error
+	for _, loc := range formulaLocations {
+		path := fmt.Sprintf(loc, p.formula)
+		content, fetchErr = p.fetchFormulaFile(ctx, owner, repo, path)
+		if fetchErr == nil {
+			break
+		}
+	}
+	if content == "" {
+		return nil, fmt.Errorf("formula '%s' not found in tap '%s'", p.formula, p.tap)
+	}
+
+	// Parse the formula file
+	info, err := parseFormulaFile(content)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse formula '%s': %w", p.formula, err)
+	}
+
+	return info, nil
 }
 
 // parseTap splits a tap string (e.g., "hashicorp/tap") into owner and repo parts.
