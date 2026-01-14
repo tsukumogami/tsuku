@@ -1,0 +1,22 @@
+# Test recipe for cask walking skeleton
+# This recipe demonstrates the Homebrew Cask integration using a stub provider.
+# It is macOS-only and used for testing the app_bundle action.
+
+[metadata]
+name = "iterm2-test"
+description = "Test recipe for cask walking skeleton"
+supported_os = ["darwin"]
+
+[version]
+source = "cask"
+cask = "iterm2"
+
+[[steps]]
+action = "app_bundle"
+url = "{version.url}"
+checksum = "{version.checksum}"
+app_name = "iTerm.app"
+
+[verify]
+command = "test -d ~/.tsuku/apps/iterm2-test-*.app"
+mode = "output"

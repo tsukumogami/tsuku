@@ -13,12 +13,13 @@ import (
 type ExecutionContext struct {
 	Context          context.Context   // Context for cancellation, timeouts, and deadlines
 	WorkDir          string            // Temporary work directory
-	InstallDir       string            // Installation directory (~/.tsuku/tools/.install/)
-	ToolInstallDir   string            // Tool-specific directory for directory-based installations (~/.tsuku/tools/{name}-{version}/)
-	ToolsDir         string            // Tools directory (~/.tsuku/tools/) for finding other installed tools
-	LibsDir          string            // Libraries directory (~/.tsuku/libs/) for finding installed libraries
-	DownloadCacheDir string            // Download cache directory (~/.tsuku/cache/downloads/)
-	KeyCacheDir      string            // PGP key cache directory (~/.tsuku/cache/keys/)
+	InstallDir       string            // Installation directory ($TSUKU_HOME/tools/.install/)
+	ToolInstallDir   string            // Tool-specific directory for directory-based installations ($TSUKU_HOME/tools/{name}-{version}/)
+	ToolsDir         string            // Tools directory ($TSUKU_HOME/tools/) for finding other installed tools
+	LibsDir          string            // Libraries directory ($TSUKU_HOME/libs/) for finding installed libraries
+	AppsDir          string            // Applications directory ($TSUKU_HOME/apps/) for macOS .app bundles
+	DownloadCacheDir string            // Download cache directory ($TSUKU_HOME/cache/downloads/)
+	KeyCacheDir      string            // PGP key cache directory ($TSUKU_HOME/cache/keys/)
 	Version          string            // Resolved version (e.g., "1.29.3")
 	VersionTag       string            // Original version tag (e.g., "v1.29.3" or "1.29.3")
 	OS               string            // Target OS (runtime.GOOS)
@@ -189,6 +190,9 @@ func init() {
 	Register(&GitHubArchiveAction{})
 	Register(&GitHubFileAction{})
 	Register(&FossilArchiveAction{})
+
+	// macOS application bundles
+	Register(&AppBundleAction{})
 
 	// System configuration actions
 	Register(&GroupAddAction{})
