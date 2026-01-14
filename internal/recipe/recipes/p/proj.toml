@@ -12,7 +12,7 @@ formula = "proj"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/proj"]
+outputs = ["bin/proj"]
 
 [verify]
 command = "proj"

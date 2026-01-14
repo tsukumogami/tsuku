@@ -12,7 +12,7 @@ formula = "curl"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "bin/curl-config",
     "lib/libcurl.so",
     "lib/libcurl.so.4",

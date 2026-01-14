@@ -11,7 +11,7 @@ formula = "pkgconf"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/pkg-config", "bin/pkgconf", "lib/libpkgconf.so", "lib/libpkgconf.dylib", "lib/libpkgconf.so.7", "lib/libpkgconf.7.dylib", "lib/libpkgconf.so.7.0.0"]
+outputs = ["bin/pkg-config", "bin/pkgconf", "lib/libpkgconf.so", "lib/libpkgconf.dylib", "lib/libpkgconf.so.7", "lib/libpkgconf.7.dylib", "lib/libpkgconf.so.7.0.0"]
 
 [verify]
 command = "pkg-config --version"

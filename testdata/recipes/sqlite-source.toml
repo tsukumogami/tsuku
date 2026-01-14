@@ -27,7 +27,7 @@ executables = ["sqlite3"]
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/sqlite3"]
+outputs = ["bin/sqlite3"]
 
 [verify]
 command = "sqlite3 --version"

@@ -11,7 +11,7 @@ formula = "expat"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "lib/libexpat.so",
     "lib/libexpat.so.1",
     "lib/libexpat.dylib",

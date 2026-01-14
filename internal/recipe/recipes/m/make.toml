@@ -11,7 +11,7 @@ formula = "make"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/gmake", "bin/make"]
+outputs = ["bin/gmake", "bin/make"]
 
 [verify]
 command = "make --version"

@@ -34,7 +34,7 @@ executables = ["wish9.0"]
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/wish9.0"]
+outputs = ["bin/wish9.0"]
 
 [verify]
 command = "wish9.0 <<< 'puts $tk_version; exit'"
