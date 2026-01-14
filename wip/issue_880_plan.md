@@ -43,13 +43,13 @@ Extract the common `getToolsDir()` pattern from `eval_deps.go` into a shared hel
 
 ## Implementation Steps
 
-- [ ] Move `getToolsDir()` from eval_deps.go to util.go (or export it)
-- [ ] Update `ResolvePythonStandalone()` to use the shared helper
-- [ ] Update `ResolvePipx()` to use the shared helper
-- [ ] Add unit test for $TSUKU_HOME override
-- [ ] Re-enable libsixel-source in macOS Apple Silicon CI workflow
-- [ ] Run tests locally
-- [ ] Verify with fresh TSUKU_HOME simulation
+- [x] Move `getToolsDir()` from eval_deps.go to util.go (or export it)
+- [x] Update `ResolvePythonStandalone()` to use the shared helper
+- [x] Update `ResolvePipx()` to use the shared helper
+- [x] Update all other Resolve* functions to use the shared helper
+- [x] Re-enable libsixel-source in macOS Apple Silicon CI workflow
+- [x] Run tests locally
+- [x] Verify with fresh TSUKU_HOME simulation
 
 ## Testing Strategy
 
