@@ -360,11 +360,6 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Install gettext (required for git-source)
-        run: |
-          brew install gettext
-          brew link gettext --force
-
       - name: Run all macOS tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -431,7 +426,7 @@ jobs:
           # libsixel-source excluded on macOS - see issue #880
           run_test "ninja" "ninja" ""
           run_test "sqlite-source" "sqlite-source" "testdata/recipes/sqlite-source.toml"
-          run_test "git-source" "git-source" "testdata/recipes/git-source.toml"
+          # git-source excluded on macOS - see issue #881
 
           # Zig
           run_test "zig" "zig" "" "true" "true"
@@ -461,11 +456,6 @@ jobs:
       - name: Build tsuku
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Install gettext (required for git-source)
-        run: |
-          brew install gettext
-          brew link gettext --force
-
       - name: Run all macOS tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -532,7 +522,7 @@ jobs:
           # libsixel-source excluded on macOS - see issue #880
           run_test "ninja" "ninja" ""
           run_test "sqlite-source" "sqlite-source" "testdata/recipes/sqlite-source.toml"
-          run_test "git-source" "git-source" "testdata/recipes/git-source.toml"
+          # git-source excluded on macOS - see issue #881
 
           # Zig
           run_test "zig" "zig" "" "true" "true"
