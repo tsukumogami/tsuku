@@ -64,6 +64,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&MetaCPANSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="metacpan"
 	f.Register(&HomebrewSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="homebrew"
 	f.Register(&CaskSourceStrategy{})        // PriorityKnownRegistry (100) - intercepts source="cask"
+	f.Register(&TapSourceStrategy{})         // PriorityKnownRegistry (100) - intercepts source="tap"
 	f.Register(&GitHubRepoStrategy{})        // PriorityExplicitHint (90)
 	f.Register(&ExplicitSourceStrategy{})    // PriorityExplicitSource (80) - catch-all for custom sources
 	f.Register(&InferredNpmStrategy{})       // PriorityInferred (10)
@@ -567,6 +568,30 @@ func (s *CaskSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (Versi
 		return nil, fmt.Errorf("no cask specified for Cask version source")
 	}
 	return NewCaskProvider(resolver, r.Version.Cask), nil
+}
+
+// TapSourceStrategy handles recipes with [version] source = "tap"
+// This intercepts source="tap" to use TapProvider for third-party Homebrew tap formula resolution
+type TapSourceStrategy struct{}
+
+func (s *TapSourceStrategy) Priority() int { return PriorityKnownRegistry }
+
+func (s *TapSourceStrategy) CanHandle(r *recipe.Recipe) bool {
+	if r.Version.Source != "tap" {
+		return false
+	}
+	// Must have tap and formula specified in version section
+	return r.Version.Tap != "" && r.Version.Formula != ""
+}
+
+func (s *TapSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	if r.Version.Tap == "" {
+		return nil, fmt.Errorf("no tap specified for Tap version source")
+	}
+	if r.Version.Formula == "" {
+		return nil, fmt.Errorf("no formula specified for Tap version source")
+	}
+	return NewTapProvider(resolver, r.Version.Tap, r.Version.Formula), nil
 }
 
 // InferredGoProxyStrategy infers goproxy from go_install action

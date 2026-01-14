@@ -13,11 +13,11 @@
 
 ```mermaid
 graph TD
-    I862["#862 Cask Skeleton"]:::blocked
-    I872["#872 Tap Provider Core"]:::blocked
-    I873["#873 Tap Cache"]:::blocked
-    I874["#874 Factory Integration"]:::blocked
-    I875["#875 GitHub Token"]:::blocked
+    I862["#862 Cask Skeleton"]:::done
+    I872["#872 Tap Provider Core"]:::done
+    I873["#873 Tap Cache"]:::ready
+    I874["#874 Factory Integration"]:::ready
+    I875["#875 GitHub Token"]:::ready
 
     I862 --> I872
     I872 --> I873
