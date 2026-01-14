@@ -21,8 +21,9 @@ import (
 
 // VersionInfo contains both the original tag and normalized version
 type VersionInfo struct {
-	Tag     string // Original tag (e.g., "v1.2.3" or "1.2.3")
-	Version string // Normalized version (e.g., "1.2.3")
+	Tag      string            // Original tag (e.g., "v1.2.3" or "1.2.3")
+	Version  string            // Normalized version (e.g., "1.2.3")
+	Metadata map[string]string // Provider-specific metadata (e.g., "url", "checksum" for Cask)
 }
 
 // Resolver resolves versions for different sources

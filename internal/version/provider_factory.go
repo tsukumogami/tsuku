@@ -63,6 +63,7 @@ func NewProviderFactory() *ProviderFactory {
 	f.Register(&GoProxySourceStrategy{})     // PriorityKnownRegistry (100) - intercepts source="goproxy"
 	f.Register(&MetaCPANSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="metacpan"
 	f.Register(&HomebrewSourceStrategy{})    // PriorityKnownRegistry (100) - intercepts source="homebrew"
+	f.Register(&CaskSourceStrategy{})        // PriorityKnownRegistry (100) - intercepts source="cask"
 	f.Register(&GitHubRepoStrategy{})        // PriorityExplicitHint (90)
 	f.Register(&ExplicitSourceStrategy{})    // PriorityExplicitSource (80) - catch-all for custom sources
 	f.Register(&InferredNpmStrategy{})       // PriorityInferred (10)
@@ -545,6 +546,27 @@ func (s *HomebrewSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (V
 		return nil, fmt.Errorf("no formula specified for Homebrew version source")
 	}
 	return NewHomebrewProvider(resolver, r.Version.Formula), nil
+}
+
+// CaskSourceStrategy handles recipes with [version] source = "cask"
+// This intercepts source="cask" to use CaskProvider for macOS application version resolution
+type CaskSourceStrategy struct{}
+
+func (s *CaskSourceStrategy) Priority() int { return PriorityKnownRegistry }
+
+func (s *CaskSourceStrategy) CanHandle(r *recipe.Recipe) bool {
+	if r.Version.Source != "cask" {
+		return false
+	}
+	// Must have cask specified in version section
+	return r.Version.Cask != ""
+}
+
+func (s *CaskSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
+	if r.Version.Cask == "" {
+		return nil, fmt.Errorf("no cask specified for Cask version source")
+	}
+	return NewCaskProvider(resolver, r.Version.Cask), nil
 }
 
 // InferredGoProxyStrategy infers goproxy from go_install action
