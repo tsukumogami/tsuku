@@ -16,6 +16,8 @@ jobs:
     outputs:
       recipes: ${{ steps.changed.outputs.recipes }}
       has_changes: ${{ steps.changed.outputs.has_changes }}
+      macos_recipes: ${{ steps.changed.outputs.macos_recipes }}
+      has_macos: ${{ steps.changed.outputs.has_macos }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -32,6 +34,8 @@ jobs:
             echo "No recipe files changed"
             echo "has_changes=false" >> $GITHUB_OUTPUT
             echo "recipes=[]" >> $GITHUB_OUTPUT
+            echo "has_macos=false" >> $GITHUB_OUTPUT
+            echo "macos_recipes=[]" >> $GITHUB_OUTPUT
           else
             echo "Changed recipes:"
             echo "$CHANGED"
@@ -39,7 +43,9 @@ jobs:
             # Build JSON array of {tool, path, linux_only} objects
             # Skip library recipes (type = "library") as they cannot be installed directly
             JSON="["
+            MACOS_JSON="["
             FIRST=true
+            MACOS_FIRST=true
             for path in $CHANGED; do
               # Skip if file doesn't exist (deleted in later commit)
               if [ ! -f "$path" ]; then
@@ -80,8 +86,19 @@ jobs:
                 JSON="$JSON,"
               fi
               JSON="$JSON{\"tool\":\"$tool\",\"path\":\"$path\",\"linux_only\":$linux_only}"
+
+              # Add to macOS list if not Linux-only
+              if [ "$linux_only" = "false" ]; then
+                if [ "$MACOS_FIRST" = true ]; then
+                  MACOS_FIRST=false
+                else
+                  MACOS_JSON="$MACOS_JSON,"
+                fi
+                MACOS_JSON="$MACOS_JSON\"$tool\""
+              fi
             done
             JSON="$JSON]"
+            MACOS_JSON="$MACOS_JSON]"
 
             # Check if we have any non-library recipes
             if [ "$JSON" = "[]" ]; then
@@ -90,6 +107,14 @@ jobs:
               echo "has_changes=true" >> $GITHUB_OUTPUT
             fi
             echo "recipes=$JSON" >> $GITHUB_OUTPUT
+
+            # Check if we have any macOS-compatible recipes
+            if [ "$MACOS_JSON" = "[]" ]; then
+              echo "has_macos=false" >> $GITHUB_OUTPUT
+            else
+              echo "has_macos=true" >> $GITHUB_OUTPUT
+            fi
+            echo "macos_recipes=$MACOS_JSON" >> $GITHUB_OUTPUT
           fi
 
   # Test each changed recipe on Linux
@@ -124,45 +149,54 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./tsuku install --force ${{ matrix.recipe.tool }}
 
-  # Test each changed recipe on macOS (skip Linux-only recipes)
+  # Test all macOS-compatible recipes in a single job (reduces runner queue pressure)
   test-macos:
-    name: "macOS: ${{ matrix.recipe.tool }}"
+    name: "macOS (darwin-arm64)"
     needs: matrix
-    if: ${{ needs.matrix.outputs.has_changes == 'true' }}
+    if: ${{ needs.matrix.outputs.has_macos == 'true' }}
     runs-on: macos-latest
-    timeout-minutes: 15
-    strategy:
-      fail-fast: false
-      matrix:
-        recipe: ${{ fromJson(needs.matrix.outputs.recipes) }}
+    timeout-minutes: 60
     steps:
-      - name: Skip Linux-only recipes
-        if: ${{ matrix.recipe.linux_only == true }}
-        run: |
-          echo "Skipping ${{ matrix.recipe.tool }} - Linux-only recipe"
-          exit 0
-
       - name: Checkout
-        if: ${{ matrix.recipe.linux_only != true }}
         uses: actions/checkout@v4
 
       - name: Set up Go
-        if: ${{ matrix.recipe.linux_only != true }}
         uses: actions/setup-go@v5
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
       - name: Build tsuku
-        if: ${{ matrix.recipe.linux_only != true }}
         run: go build -o tsuku ./cmd/tsuku
 
-      - name: Setup PATH
-        if: ${{ matrix.recipe.linux_only != true }}
-        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
-
-      - name: "Install ${{ matrix.recipe.tool }}"
-        if: ${{ matrix.recipe.linux_only != true }}
+      - name: Test all macOS recipes
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --force ${{ matrix.recipe.tool }}
+        run: |
+          FAILED=()
+          RECIPES='${{ needs.matrix.outputs.macos_recipes }}'
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          mkdir -p "$CACHE_DIR"
+
+          for recipe in $(echo "$RECIPES" | jq -r '.[]'); do
+            echo "::group::Testing $recipe"
+
+            # Fresh TSUKU_HOME per recipe with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
+            echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
+
+            if ! ./tsuku install --force "$recipe"; then
+              FAILED+=("$recipe")
+            fi
+            echo "::endgroup::"
+          done
+
+          # Report failures at end (don't fail fast)
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "::error::Failed recipes: ${FAILED[*]}"
+            exit 1
+          fi
+
+          echo "All macOS recipes passed"
