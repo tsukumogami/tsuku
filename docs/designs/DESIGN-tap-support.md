@@ -1,6 +1,33 @@
 # Design: Homebrew Tap Support
 
-**Status**: Proposed
+**Status**: Planned
+
+## Implementation Issues
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#872](https://github.com/tsukumogami/tsuku/issues/872) | feat(version): implement tap version provider core | #862 | testable |
+| [#873](https://github.com/tsukumogami/tsuku/issues/873) | feat(version): add tap metadata cache | #872 | testable |
+| [#874](https://github.com/tsukumogami/tsuku/issues/874) | feat(version): integrate tap provider with factory | #872, #862 | testable |
+| [#875](https://github.com/tsukumogami/tsuku/issues/875) | feat(version): add GitHub token support for tap provider | #872 | testable |
+
+```mermaid
+graph TD
+    I862["#862 Cask Skeleton"]:::blocked
+    I872["#872 Tap Provider Core"]:::blocked
+    I873["#873 Tap Cache"]:::blocked
+    I874["#874 Factory Integration"]:::blocked
+    I875["#875 GitHub Token"]:::blocked
+
+    I862 --> I872
+    I872 --> I873
+    I872 --> I874
+    I872 --> I875
+
+    classDef done fill:#28a745,stroke:#1e7e34,color:white
+    classDef ready fill:#007bff,stroke:#0056b3,color:white
+    classDef blocked fill:#ffc107,stroke:#d39e00,color:black
+```
 
 ## Upstream Design Reference
 
