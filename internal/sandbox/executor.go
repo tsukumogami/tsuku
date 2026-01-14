@@ -155,9 +155,15 @@ func (e *Executor) Sandbox(
 	// so we can extract requirements directly without additional filtering.
 	sysReqs := ExtractSystemRequirements(plan)
 
+	// Determine the effective linux family: prefer plan's, fall back to target's
+	effectiveFamily := plan.Platform.LinuxFamily
+	if effectiveFamily == "" {
+		effectiveFamily = target.LinuxFamily()
+	}
+
 	// Skip Alpine sandbox tests - the tsuku binary is dynamically linked against
 	// glibc, but Alpine uses musl libc. See issue #860 for tracking.
-	if plan.Platform.LinuxFamily == "alpine" {
+	if effectiveFamily == "alpine" {
 		e.logger.Warn("Skipping Alpine sandbox test - musl/glibc incompatibility.",
 			"issue", "https://github.com/tsukumogami/tsuku/issues/860")
 		return &SandboxResult{
@@ -166,7 +172,7 @@ func (e *Executor) Sandbox(
 	}
 
 	// Add infrastructure packages needed for sandbox execution
-	sysReqs = augmentWithInfrastructurePackages(sysReqs, plan, reqs)
+	sysReqs = augmentWithInfrastructurePackages(sysReqs, plan, reqs, effectiveFamily)
 
 	// Determine which image to use
 	containerImage := reqs.Image
@@ -331,6 +337,7 @@ func augmentWithInfrastructurePackages(
 	sysReqs *SystemRequirements,
 	plan *executor.InstallationPlan,
 	reqs *SandboxRequirements,
+	effectiveFamily string,
 ) *SystemRequirements {
 	// Determine what infrastructure packages are needed
 	needsNetwork := reqs.RequiresNetwork
@@ -340,7 +347,7 @@ func augmentWithInfrastructurePackages(
 		return sysReqs
 	}
 
-	// Determine the package manager from existing sysReqs or plan's linux_family
+	// Determine the package manager from existing sysReqs or effective linux family
 	pm := ""
 	if sysReqs != nil && len(sysReqs.Packages) > 0 {
 		// Use the package manager already in sysReqs
@@ -348,9 +355,9 @@ func augmentWithInfrastructurePackages(
 			pm = p
 			break
 		}
-	} else if plan.Platform.LinuxFamily != "" {
+	} else if effectiveFamily != "" {
 		// Map linux_family to package manager
-		switch plan.Platform.LinuxFamily {
+		switch effectiveFamily {
 		case "debian":
 			pm = "apt"
 		case "rhel":

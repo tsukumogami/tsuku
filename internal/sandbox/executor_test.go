@@ -201,7 +201,7 @@ func TestAugmentWithInfrastructurePackages_DebianFamily(t *testing.T) {
 		RequiresNetwork: true,
 	}
 
-	result := augmentWithInfrastructurePackages(nil, plan, reqs)
+	result := augmentWithInfrastructurePackages(nil, plan, reqs, "debian")
 
 	if result == nil {
 		t.Fatal("Expected non-nil result")
@@ -235,7 +235,7 @@ func TestAugmentWithInfrastructurePackages_RhelFamily(t *testing.T) {
 		RequiresNetwork: true,
 	}
 
-	result := augmentWithInfrastructurePackages(nil, plan, reqs)
+	result := augmentWithInfrastructurePackages(nil, plan, reqs, "rhel")
 
 	if result == nil {
 		t.Fatal("Expected non-nil result")
@@ -274,7 +274,7 @@ func TestAugmentWithInfrastructurePackages_ExistingSysReqs(t *testing.T) {
 		},
 	}
 
-	result := augmentWithInfrastructurePackages(sysReqs, plan, reqs)
+	result := augmentWithInfrastructurePackages(sysReqs, plan, reqs, "debian")
 
 	if result == nil {
 		t.Fatal("Expected non-nil result")
