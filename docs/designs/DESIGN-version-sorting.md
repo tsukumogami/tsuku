@@ -212,6 +212,51 @@ The existing `CompareVersions()` function needs enhancement to handle:
 func CompareVersions(v1, v2 string) int
 ```
 
+### Version Format Handling
+
+**Key insight**: Versions are only compared within the same tool. A tool using semver (like `dlv`) will never have its versions compared against a tool using calver (like `python`). The algorithm only needs to sort correctly *within* each tool's version list.
+
+**Approach: Numeric extraction with fallback**
+
+Most versioning schemes share a common property: they're sequences of numbers separated by delimiters. The algorithm:
+
+1. Normalizes the version string (strips prefixes like `v`, `go`, `Release_`)
+2. Extracts numeric components by splitting on non-numeric characters
+3. Compares numeric sequences element-by-element
+4. Falls back to lexicographic comparison when extraction fails
+
+**Format examples:**
+
+| Format | Input | After Normalization | Numeric Sequence |
+|--------|-------|---------------------|------------------|
+| Semver | `v1.2.3` | `1.2.3` | `[1, 2, 3]` |
+| Semver+pre | `1.0.0-rc.2` | `1.0.0-rc.2` | `[1, 0, 0]` + prerelease |
+| Calver | `2024.01.15` | `2024.01.15` | `[2024, 1, 15]` |
+| Go | `go1.21.5` | `1.21.5` | `[1, 21, 5]` |
+| Custom | `Release_1_15_0` | `1.15.0` | `[1, 15, 0]` |
+
+**Prerelease handling:**
+
+Prereleases are detected by the presence of `-` after the version core:
+- Stable versions sort higher than prereleases: `1.0.0 > 1.0.0-rc.1`
+- Prereleases of the same version sort lexicographically: `1.0.0-rc.2 > 1.0.0-rc.1 > 1.0.0-beta > 1.0.0-alpha`
+- Common prerelease tags are recognized: `alpha < beta < rc`
+
+**Fallback behavior:**
+
+When numeric extraction produces identical sequences (or fails entirely), the algorithm falls back to lexicographic comparison. This handles edge cases like:
+- Build metadata: `1.0.0+build.123` vs `1.0.0+build.456`
+- Non-standard formats: `nightly-2024-01-15`
+
+**Cross-format comparison:**
+
+If two versions from the same tool use different formats (unlikely but possible), numeric extraction still produces a reasonable ordering. For example, if a tool switched from calver to semver:
+- `2024.01.15` → `[2024, 1, 15]`
+- `1.0.0` → `[1, 0, 0]`
+- Result: `2024.01.15 > 1.0.0` (calver sorts higher due to larger first component)
+
+This may not reflect the tool's actual release order, but such format changes are rare and would require manual intervention regardless of the sorting algorithm.
+
 ### Provider Modifications
 
 Sorting is added at the resolver's internal list methods (e.g., `ListGoProxyVersions`, `ListGitHubVersions`). These are the lowest-level functions that return version lists, ensuring all consumers receive sorted results.
