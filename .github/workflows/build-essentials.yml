@@ -440,11 +440,9 @@ jobs:
           echo "All macOS Apple Silicon tests passed"
 
   # Aggregated macOS Intel tests (reduces runner queue pressure)
-  # SKIP: macos-13 runner is deprecated - see #896
   test-macos-intel:
-    if: false
     name: "macOS Intel (x86_64)"
-    runs-on: macos-13
+    runs-on: macos-15-intel
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
