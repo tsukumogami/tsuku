@@ -1,5 +1,24 @@
 {
   "$schema": "./exclusions.schema.json",
   "description": "Golden file exclusions. Each exclusion must link to an open issue tracking the blocker.",
-  "exclusions": []
+  "exclusions": [
+    {
+      "recipe": "carton",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/919",
+      "reason": "metacpan version resolver returns 'dev' instead of actual version"
+    },
+    {
+      "recipe": "carton",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/919",
+      "reason": "metacpan version resolver returns 'dev' instead of actual version"
+    },
+    {
+      "recipe": "carton",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/919",
+      "reason": "metacpan version resolver returns 'dev' instead of actual version"
+    }
+  ]
 }
