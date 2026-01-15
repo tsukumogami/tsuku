@@ -100,6 +100,7 @@ type Config struct {
 	VersionCacheDir  string // $TSUKU_HOME/cache/versions
 	DownloadCacheDir string // $TSUKU_HOME/cache/downloads
 	KeyCacheDir      string // $TSUKU_HOME/cache/keys (PGP public keys)
+	TapCacheDir      string // $TSUKU_HOME/cache/taps (Homebrew tap metadata)
 	ConfigFile       string // $TSUKU_HOME/config.toml
 }
 
@@ -126,6 +127,7 @@ func DefaultConfig() (*Config, error) {
 		VersionCacheDir:  filepath.Join(tsukuHome, "cache", "versions"),
 		DownloadCacheDir: filepath.Join(tsukuHome, "cache", "downloads"),
 		KeyCacheDir:      filepath.Join(tsukuHome, "cache", "keys"),
+		TapCacheDir:      filepath.Join(tsukuHome, "cache", "taps"),
 		ConfigFile:       filepath.Join(tsukuHome, "config.toml"),
 	}, nil
 }
@@ -143,6 +145,7 @@ func (c *Config) EnsureDirectories() error {
 		c.VersionCacheDir,
 		c.DownloadCacheDir,
 		c.KeyCacheDir,
+		c.TapCacheDir,
 	}
 
 	for _, dir := range dirs {
