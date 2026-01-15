@@ -217,6 +217,18 @@
       "platform": {"os": "darwin", "arch": "arm64"},
       "issue": "https://github.com/tsukumogami/tsuku/issues/920",
       "reason": "nested action dependencies incorrectly added to plans on CI"
+    },
+    {
+      "recipe": "curl",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/879",
+      "reason": "configure auto-detects homebrew nghttp2/libidn2 but linker cannot find them"
+    },
+    {
+      "recipe": "curl",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/879",
+      "reason": "configure auto-detects homebrew nghttp2/libidn2 but linker cannot find them"
     }
   ]
 }
