@@ -30,3 +30,4 @@ binaries = [
     "include/zdict.h",
     "include/zstd_errors.h",
 ]
+

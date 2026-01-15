@@ -26,3 +26,7 @@ binaries = [
     "include/curl/multi.h",
     "include/curl/urlapi.h",
 ]
+
+[verify]
+command = "curl-config --version"
+pattern = "libcurl {version}"
