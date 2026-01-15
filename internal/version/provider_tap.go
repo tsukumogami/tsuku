@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"runtime"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // TapProvider resolves versions from third-party Homebrew taps via GitHub.
@@ -66,6 +69,10 @@ func (p *TapProvider) ResolveLatest(ctx context.Context) (*VersionInfo, error) {
 		content, fetchErr = p.fetchFormulaFile(ctx, owner, repo, path)
 		if fetchErr == nil {
 			break
+		}
+		// If we hit a rate limit error, return it immediately rather than trying other paths
+		if _, ok := fetchErr.(*GitHubRateLimitError); ok {
+			return nil, fetchErr
 		}
 	}
 	if content == "" {
@@ -160,12 +167,19 @@ func parseTap(tap string) (owner, repo string, err error) {
 
 // fetchFormulaFile fetches a formula file from GitHub raw content.
 // URL format: https://raw.githubusercontent.com/{owner}/{repo}/HEAD/{path}
+// If GITHUB_TOKEN is set, it will be used for authentication to increase rate limits.
 func (p *TapProvider) fetchFormulaFile(ctx context.Context, owner, repo, path string) (string, error) {
 	url := fmt.Sprintf("https://raw.githubusercontent.com/%s/%s/HEAD/%s", owner, repo, path)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return "", fmt.Errorf("failed to create request: %w", err)
+	}
+
+	// Add GitHub token for authentication if available
+	token := os.Getenv("GITHUB_TOKEN")
+	if token != "" {
+		req.Header.Set("Authorization", "Bearer "+token)
 	}
 
 	resp, err := p.httpClient.Do(req)
@@ -176,6 +190,11 @@ func (p *TapProvider) fetchFormulaFile(ctx context.Context, owner, repo, path st
 
 	if resp.StatusCode == http.StatusNotFound {
 		return "", fmt.Errorf("formula not found at %s", path)
+	}
+
+	// Handle rate limiting (403 with rate limit headers)
+	if resp.StatusCode == http.StatusForbidden {
+		return "", p.parseRateLimitError(resp, token != "")
 	}
 
 	if resp.StatusCode != http.StatusOK {
@@ -190,4 +209,42 @@ func (p *TapProvider) fetchFormulaFile(ctx context.Context, owner, repo, path st
 	}
 
 	return string(body), nil
+}
+
+// parseRateLimitError extracts rate limit information from GitHub response headers
+// and returns a GitHubRateLimitError with actionable information.
+func (p *TapProvider) parseRateLimitError(resp *http.Response, authenticated bool) error {
+	limit := parseIntHeader(resp, "X-RateLimit-Limit", 60)
+	remaining := parseIntHeader(resp, "X-RateLimit-Remaining", 0)
+	resetUnix := parseIntHeader(resp, "X-RateLimit-Reset", 0)
+
+	var resetTime time.Time
+	if resetUnix > 0 {
+		resetTime = time.Unix(int64(resetUnix), 0)
+	} else {
+		// Default to 1 hour from now if header not present
+		resetTime = time.Now().Add(time.Hour)
+	}
+
+	return &GitHubRateLimitError{
+		Limit:         limit,
+		Remaining:     remaining,
+		ResetTime:     resetTime,
+		Authenticated: authenticated,
+		Context:       GitHubContextVersionResolution,
+	}
+}
+
+// parseIntHeader extracts an integer value from a response header.
+// Returns defaultVal if the header is missing or cannot be parsed.
+func parseIntHeader(resp *http.Response, name string, defaultVal int) int {
+	val := resp.Header.Get(name)
+	if val == "" {
+		return defaultVal
+	}
+	i, err := strconv.Atoi(val)
+	if err != nil {
+		return defaultVal
+	}
+	return i
 }
