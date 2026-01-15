@@ -23,5 +23,3 @@ binaries = [
     "include/nghttp2/nghttp2ver.h",
 ]
 
-[verify]
-command = "test -f lib/libnghttp2.a"

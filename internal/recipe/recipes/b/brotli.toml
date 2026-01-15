@@ -38,5 +38,3 @@ binaries = [
     "include/brotli/types.h",
 ]
 
-[verify]
-command = "test -f lib/libbrotlicommon.a"

@@ -27,5 +27,3 @@ binaries = [
     "include/ngtcp2/version.h",
 ]
 
-[verify]
-command = "test -f lib/libngtcp2.so"

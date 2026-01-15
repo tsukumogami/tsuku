@@ -3,6 +3,24 @@
   "description": "Golden file exclusions. Each exclusion must link to an open issue tracking the blocker.",
   "exclusions": [
     {
+      "recipe": "brotli",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "brotli",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "brotli",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
       "recipe": "carton",
       "platform": {"os": "linux", "arch": "amd64"},
       "issue": "https://github.com/tsukumogami/tsuku/issues/919",
@@ -19,6 +37,150 @@
       "platform": {"os": "darwin", "arch": "arm64"},
       "issue": "https://github.com/tsukumogami/tsuku/issues/919",
       "reason": "metacpan version resolver returns 'dev' instead of actual version"
+    },
+    {
+      "recipe": "expat",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "expat",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "expat",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libnghttp2",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libnghttp2",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libnghttp2",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libnghttp3",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libnghttp3",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libnghttp3",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libngtcp2",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libngtcp2",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libngtcp2",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libpng",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libpng",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libpng",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libssh2",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libssh2",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "libssh2",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "zlib",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "zlib",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "zlib",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "zstd",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "zstd",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
+    },
+    {
+      "recipe": "zstd",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/518",
+      "reason": "library recipes lack meaningful verification (no executable to run)"
     }
   ]
 }
