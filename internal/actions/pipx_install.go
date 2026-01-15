@@ -93,6 +93,16 @@ func (a *PipxInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		// Try to resolve pipx from tsuku's tools directory
 		pipxPath = ResolvePipx()
 		if pipxPath == "" {
+			// Check ExecPaths from dependencies (for golden file execution)
+			for _, p := range ctx.ExecPaths {
+				candidatePath := filepath.Join(p, "pipx")
+				if _, err := os.Stat(candidatePath); err == nil {
+					pipxPath = candidatePath
+					break
+				}
+			}
+		}
+		if pipxPath == "" {
 			// Fallback to pipx in PATH
 			pipxPath = "pipx"
 		}
@@ -105,6 +115,16 @@ func (a *PipxInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 		// CRITICAL: Enforce Q2-B decision - always use python-standalone
 		// Look for python-standalone in tsuku's installation
 		pythonPath = ResolvePythonStandalone()
+		if pythonPath == "" {
+			// Check ExecPaths from dependencies (for golden file execution)
+			for _, p := range ctx.ExecPaths {
+				candidatePath := filepath.Join(p, "python3")
+				if _, err := os.Stat(candidatePath); err == nil {
+					pythonPath = candidatePath
+					break
+				}
+			}
+		}
 		if pythonPath != "" {
 			fmt.Printf("   Using python-standalone: %s\n", pythonPath)
 		}
