@@ -159,9 +159,7 @@ jobs:
         run: ./test/scripts/verify-tool.sh ninja
 
   # Test configure_make with library dependencies (sqlite-source -> readline -> ncurses) - Linux only
-  # SKIP: Homebrew MANIFEST_UNKNOWN for make dependency - see #897
   test-sqlite-source-linux:
-    if: false
     name: "Linux x86_64: sqlite-source"
     runs-on: ubuntu-latest
 
