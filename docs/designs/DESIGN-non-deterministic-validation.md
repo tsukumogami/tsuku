@@ -222,43 +222,247 @@ Accept that golden files have limited validity and introduce a freshness model. 
 - CI behavior changes based on when it runs
 - Requires infrastructure for "time since generation" tracking
 
+### Option 9: Transparent Plan Caching (Recommended)
+
+Make `tsuku eval` deterministic through automatic plan caching. First eval for a tool+version+platform resolves fresh and caches the result. Subsequent evals reuse the cached plan for determinism. No explicit CLI flag needed - discovery is implicit.
+
+**How it works:**
+1. `tsuku eval httpie@3.2.4` checks `$TSUKU_HOME/cache/plans/httpie/v3.2.4-linux-amd64.json`
+2. If found AND recipe_hash matches current recipe: Return cached plan (instant, deterministic)
+3. If not found OR recipe changed: Resolve fresh, cache result, return plan
+4. Plans include `recipe_hash` to detect when recipe changed (staleness check)
+
+**CLI interface:**
+- `tsuku eval httpie` - Normal usage, auto-caches (implicit discovery like npm/cargo)
+- `tsuku eval httpie --refresh` - Force fresh resolution, update cache
+- `tsuku eval httpie --locked` - Fail if no cached plan exists (for CI determinism)
+- `tsuku cache clear` - Clear plan cache
+
+**Cache location:**
+```
+$TSUKU_HOME/cache/plans/
+  └── httpie/
+      ├── v3.2.4-darwin-arm64.json
+      ├── v3.2.4-linux-amd64.json
+      └── ...
+```
+
+**For CI validation**, golden files can seed the cache:
+```bash
+# In validate-golden.sh, before validation:
+cp testdata/golden/plans/h/httpie/v3.2.4-linux-amd64.json \
+   $TSUKU_HOME/cache/plans/httpie/v3.2.4-linux-amd64.json
+
+# Now eval produces deterministic output matching the golden file
+tsuku eval httpie@3.2.4 --locked
+```
+
+**Pros:**
+- **No chicken-and-egg**: Normal CLI doesn't require prior state - first run resolves fresh
+- **Implicit discovery**: Like npm/cargo, presence of cache triggers deterministic mode
+- **Solves the user's complaint**: "I don't want a plan to generate a plan" - you don't, caching is transparent
+- **Recipe hash freshness**: Automatically regenerates when recipe changes
+- **CI-friendly**: `--locked` mode fails fast if no cached plan (catches missing golden files)
+- **No infrastructure**: Local file cache only, no registry changes
+- **Exact comparison works**: No structural validation needed when cache is used
+
+**Cons:**
+- First eval for any version is slow (network required)
+- Different machines get different first-run results until cached
+- Cache invalidation relies on recipe_hash (if hash function changes, cache is invalid)
+
+**Pattern precedent:**
+This follows the proven pattern from npm (package-lock.json), Cargo (Cargo.lock), and Poetry (poetry.lock):
+- Implicit discovery (no CLI flag needed)
+- First-run capture, subsequent reuse
+- Staleness detection via content hash
+
 ## Decision Outcome
 
-**Chosen: Option 5 - Tiered Validation by Determinism (with enhanced structural schema)**
+**Chosen: Option 9 - Transparent Plan Caching**
 
 ### Summary
 
-Apply different validation strategies based on the plan's determinism status. Deterministic plans use exact byte-for-byte comparison. Non-deterministic plans use structural validation that compares tool identity, action types, step ordering, structurally significant params, and dependency structure while ignoring fields known to vary (checksums, lockfile content text, size).
+Make `tsuku eval` deterministic through automatic plan caching with implicit discovery. First eval for a tool+version+platform resolves fresh and caches the result. Subsequent evals reuse the cached plan. This follows the proven pattern from npm, Cargo, and Poetry where lockfiles are automatically discovered and used without explicit CLI flags.
+
+For CI validation, golden files seed the cache before validation runs, making regeneration produce identical output.
 
 ### Rationale
 
-Option 5 provides the best balance between CI stability and regression detection:
+Option 9 provides the cleanest solution to the core problem:
 
-1. **Maintains regression detection**: Unlike Option 1 (skip), structural validation still catches recipe bugs that change action ordering, add/remove steps, or break dependencies.
+1. **Eliminates drift at the source**: Instead of tolerating drift through structural comparison, we prevent drift by reusing cached resolutions.
 
-2. **Tolerates expected drift**: Unlike exact comparison, structural validation ignores checksums and lockfile content that vary due to upstream changes.
+2. **Clean CLI ergonomics**: No need for `--existing-plan <file>` flag. The user runs `tsuku eval httpie@3.2.4` and gets deterministic output if a cached plan exists.
 
-3. **Builds on existing infrastructure**: Uses the `deterministic` flag already computed during plan generation, requiring no recipe format changes (unlike Option 4).
+3. **Follows proven patterns**: npm (package-lock.json), Cargo (Cargo.lock), and Poetry (poetry.lock) all use implicit lockfile discovery. Users expect this behavior.
 
-4. **Avoids automation complexity**: Unlike Option 3, does not require bot infrastructure for PR creation or review of automated changes.
+4. **Recipe hash freshness**: Cache automatically invalidates when recipe changes, ensuring code changes are detected.
 
-5. **Lower implementation cost than alternatives**: Option 6 (semantic diff) requires parsing multiple lockfile formats. Option 7 (split format) requires a plan format change and full regeneration. Option 8 (time-boxing) introduces time-based complexity.
+5. **CI-friendly**: `--locked` mode provides strict validation - fails if no cached plan exists.
 
-The main trade-off is maintaining two validation paths, but this complexity is localized to the validation scripts and uses a well-defined schema extraction.
+6. **Exact comparison works**: No structural validation complexity needed when cache is used.
 
 ### Why Not Other Options
 
-- **Option 1 (Skip)**: Viable for early-stage, but we have sufficient coverage to benefit from structural validation.
-- **Option 2 (Structural only)**: Would lose exact comparison for deterministic plans.
-- **Option 3 (Auto-regen PRs)**: Infrastructure complexity for marginal benefit.
-- **Option 4 (Freeze lockfiles)**: Good for Cargo/Go-heavy registries, but tsuku has diverse ecosystem coverage and the authoring burden is high.
-- **Option 6 (Semantic diff)**: More precise but higher implementation cost; consider as future enhancement.
-- **Option 7 (Split format)**: Architecturally cleaner but requires format change and full regeneration.
-- **Option 8 (Time-boxing)**: Pragmatic but introduces time-based complexity.
+- **Option 5 (Structural validation)**: Solves the symptom (CI failures) but not the cause (non-deterministic resolution). More complex to maintain.
+- **Option 1 (Skip)**: No regression detection.
+- **Option 3 (Auto-regen PRs)**: Infrastructure complexity.
+- **Option 4 (Freeze lockfiles in recipes)**: High authoring burden, doesn't scale.
+- **Options 6-8**: Higher complexity for marginal benefit over Option 9.
+
+### Fallback Strategy
+
+If cached plan is missing and `--locked` is not specified:
+1. Generate fresh plan
+2. Cache result for next time
+3. Log warning that fresh resolution was used
+
+For CI, always use `--locked` to fail fast if golden file wasn't seeded to cache.
 
 ## Solution Architecture
 
-### Structural Schema Definition
+### Plan Cache Design
+
+The plan cache stores resolved plans keyed by tool, version, and platform:
+
+```
+$TSUKU_HOME/cache/plans/
+├── httpie/
+│   ├── v3.2.4-darwin-arm64.json
+│   ├── v3.2.4-darwin-amd64.json
+│   └── v3.2.4-linux-amd64.json
+├── ruff/
+│   ├── v0.8.6-darwin-arm64.json
+│   └── ...
+└── ...
+```
+
+Each cached plan is a complete JSON plan (same format as golden files) with `recipe_hash` for staleness detection.
+
+### Cache Lookup Flow
+
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        tsuku eval httpie@3.2.4                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  Compute cache key:           │
+                    │  httpie/v3.2.4-linux-amd64    │
+                    └───────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  Check $TSUKU_HOME/cache/     │
+                    │  plans/{key}.json             │
+                    └───────────────────────────────┘
+                            │               │
+                        Found           Not Found
+                            │               │
+                            ▼               │
+                ┌───────────────────────┐   │
+                │ Recipe hash matches?  │   │
+                │ (current vs cached)   │   │
+                └───────────────────────┘   │
+                    │           │           │
+                  Yes          No           │
+                    │           │           │
+                    ▼           └───────────┤
+        ┌───────────────────┐               │
+        │ Return cached     │               │
+        │ plan (instant)    │               ▼
+        └───────────────────┘   ┌───────────────────────┐
+                                │ --locked flag set?    │
+                                └───────────────────────┘
+                                    │           │
+                                  Yes          No
+                                    │           │
+                                    ▼           ▼
+                        ┌───────────────┐   ┌───────────────────────┐
+                        │ ERROR: No     │   │ Generate fresh plan   │
+                        │ cached plan   │   │ (resolve deps)        │
+                        └───────────────┘   └───────────────────────┘
+                                                        │
+                                                        ▼
+                                            ┌───────────────────────┐
+                                            │ Save to cache         │
+                                            │ Return plan           │
+                                            └───────────────────────┘
+```
+
+### CI Validation Flow
+
+For golden file validation, seed the cache from golden files before running validation:
+
+```bash
+#!/bin/bash
+# validate-golden.sh <recipe>
+
+RECIPE="$1"
+GOLDEN_DIR="testdata/golden/plans"
+
+# Seed cache from golden files
+for golden in "$GOLDEN_DIR"/*/"$RECIPE"/*.json; do
+    # Extract version and platform from filename
+    filename=$(basename "$golden")  # e.g., v3.2.4-linux-amd64.json
+    version_platform="${filename%.json}"  # v3.2.4-linux-amd64
+
+    # Copy to cache location
+    cache_path="$TSUKU_HOME/cache/plans/$RECIPE/$filename"
+    mkdir -p "$(dirname "$cache_path")"
+    cp "$golden" "$cache_path"
+done
+
+# Now eval with --locked will produce deterministic output
+for golden in "$GOLDEN_DIR"/*/"$RECIPE"/*.json; do
+    version=$(jq -r '.version' "$golden")
+    os=$(jq -r '.platform.os' "$golden")
+    arch=$(jq -r '.platform.arch' "$golden")
+
+    # Generate plan (will use cached version)
+    actual=$(mktemp)
+    ./tsuku eval "$RECIPE@$version" --os "$os" --arch "$arch" --locked > "$actual"
+
+    # Compare
+    if ! diff -q "$golden" "$actual" > /dev/null; then
+        echo "MISMATCH: $golden"
+        diff -u "$golden" "$actual"
+        exit 1
+    fi
+done
+
+echo "All golden files validated successfully"
+```
+
+### Recipe Hash Staleness Detection
+
+Each plan includes `recipe_hash` computed from the recipe file:
+
+```json
+{
+  "format_version": 3,
+  "tool": "httpie",
+  "version": "3.2.4",
+  "recipe_hash": "927743d6894ffc490ac7b5d2495ed60c4e952e32ed2ed819f3b3f72e4465b0f1",
+  ...
+}
+```
+
+When checking cache:
+1. Load cached plan
+2. Compute current recipe hash
+3. If hashes differ: cache is stale, regenerate
+4. If hashes match: cache is valid, use it
+
+This ensures code changes to recipes invalidate the cache.
+
+### Structural Schema (Fallback)
+
+If Option 9 implementation is delayed, Option 5 (structural validation) remains as a viable fallback. The structural schema definition is preserved below for reference.
+
+#### Structural Schema Definition
 
 The structural schema extracts comparable elements while filtering out varying content. Critically, it includes **structurally significant params** that identify what is being installed, while ignoring content that varies (checksums, lockfile text).
 
@@ -559,55 +763,68 @@ jobs:
 
 ## Implementation Approach
 
-### MVP Scope Decision
+### Phase 1: Plan Cache Infrastructure
 
-The design supports two scopes:
+Add plan caching to `tsuku eval`:
 
-**MVP (Recommended)**: Structural comparison WITHOUT lockfile fingerprinting
-- Catches: action ordering, step injection, wrong package/module/version, dependency changes
-- Simpler implementation, faster iteration
-- Fingerprinting can be added later based on real-world experience
+1. **Cache directory structure**: `$TSUKU_HOME/cache/plans/{tool}/{version}-{os}-{arch}.json`
+2. **Cache lookup in eval**: Check cache before running Decompose()
+3. **Recipe hash staleness**: Compare cached `recipe_hash` with current recipe
+4. **Cache write**: Save generated plans to cache after fresh resolution
 
-**Full Scope**: Structural comparison WITH lockfile fingerprinting
-- Additional catches: transitive dependency changes via fingerprint
-- More complex jq parsing, may need Go migration later
+**Key files to modify:**
+- `cmd/tsuku/eval.go` - Add cache lookup/write logic
+- `internal/executor/plan_generator.go` - Extract cache key generation
+- `internal/tsuku/config.go` - Add cache directory path
 
-Start with MVP scope and add fingerprinting if false negatives become problematic.
+### Phase 2: CLI Flags
 
-### Phase 1: Schema Extraction Script
+Add flags to `tsuku eval`:
 
-1. Create `scripts/extract-structural-schema.sh` with MVP scope (no fingerprinting)
-2. Add unknown action type detection - fail if action type not in significant params list
-3. Create test fixtures in `testdata/schema-extraction/` with expected outputs
-4. Verify script handles edge cases (empty dependencies, nested deps)
+1. `--locked` - Fail if no cached plan exists (for CI determinism)
+2. `--refresh` - Force fresh resolution, update cache
+3. `--no-cache` - Skip cache entirely (for debugging)
 
-### Phase 2: Modify Validation Script
+**Key files to modify:**
+- `cmd/tsuku/eval.go` - Add flag definitions and handling
 
-1. Update `scripts/validate-golden.sh` with tiered comparison logic
-2. Add determinism transition detection (flag change = require review)
-3. Implement error handling with exit codes: 0=match, 1=mismatch, 2=error
-4. Update `scripts/validate-all-golden.sh` to report deterministic vs structural mismatches separately
-5. Test locally with both deterministic and non-deterministic recipes
+### Phase 3: Validation Script Update
 
-### Phase 3: Dry-Run CI Validation
+Update `scripts/validate-golden.sh` to use plan cache:
 
-1. Re-enable `validate-golden-code.yml` in NON-BLOCKING mode
-2. Run new validation for 1-2 weeks, collecting false positive/negative metrics
-3. Tune structural schema based on observed failures
-4. Document any false positives as exclusions or schema adjustments
+1. Seed cache from golden files before validation
+2. Run `tsuku eval --locked` instead of bare `tsuku eval`
+3. Compare output to golden file (exact match)
+4. Remove structural validation complexity
 
-### Phase 4: Full CI Enforcement
+**Key files to modify:**
+- `scripts/validate-golden.sh` - Rewrite validation logic
+- `scripts/validate-all-golden.sh` - Update to use new validation
 
-1. Switch `validate-golden-code.yml` to blocking mode (fail build on mismatch)
-2. Monitor CI for a few PRs to confirm stability
-3. Address any remaining false positives
+### Phase 4: Re-enable CI Workflow
 
-### Phase 5: Documentation
+1. Remove `if: false` from `validate-golden-code.yml`
+2. Update workflow to seed cache from golden files
+3. Run validation with `--locked` flag
+4. Monitor for a few PRs to confirm stability
 
-1. Update CONTRIBUTING.md to explain the two validation modes
-2. Document which actions produce non-deterministic output
-3. Add troubleshooting guide for validation failures
-4. Clarify that structural validation is for CI stability, not security (execution validates checksums)
+### Phase 5: Cache Management Commands
+
+Add cache management commands (optional but useful):
+
+1. `tsuku cache list` - Show cached plans
+2. `tsuku cache clear [tool]` - Clear cache (all or specific tool)
+3. `tsuku cache info <tool>@<version>` - Show cache status
+
+### Phase 6: Documentation
+
+1. Update CONTRIBUTING.md to explain plan caching
+2. Document `--locked` flag for CI usage
+3. Add troubleshooting guide for cache misses
+
+### Fallback: Structural Validation
+
+If plan caching proves insufficient (e.g., recipe hash changes too frequently), the structural validation approach from Option 5 can be implemented as a fallback. The schema extraction script and validation logic are preserved in this design document for reference.
 
 ## Security Considerations
 
@@ -652,30 +869,31 @@ The trade-off is accepting that checksum values and hash strings within lockfile
 
 ### Positive
 
-- **CI stability restored**: `validate-golden-code.yml` can be re-enabled without frequent false failures
-- **Regression detection maintained**: Structural changes to non-deterministic plans are still caught
-- **Security maintained**: Significant params (package names, module paths) are validated; lockfile fingerprints detect semantic changes
+- **CI stability restored**: `validate-golden-code.yml` can be re-enabled without false failures
+- **True determinism**: Plan caching eliminates drift at the source, not just tolerates it
+- **Clean CLI ergonomics**: No need for `--existing-plan` flag; caching is transparent
+- **Follows proven patterns**: Same approach as npm, Cargo, Poetry
+- **Exact comparison works**: No structural validation complexity needed
+- **Recipe change detection**: Recipe hash staleness automatically invalidates cache
 - **No recipe format changes**: Existing recipes work without modification
-- **Minimal infrastructure**: No bot/automation for PR creation needed
-- **Clear separation**: Deterministic plans retain exact validation guarantee
-- **Determinism transition detection**: Changes between deterministic/non-deterministic are flagged for review
+- **Minimal infrastructure**: Local file cache only, no registry changes
 
 ### Negative
 
-- **Two validation paths**: Slightly more complex validation logic to maintain
-- **Schema maintenance**: New actions require adding their significant params to the extraction script
-- **Lockfile fingerprint complexity**: jq-based parsing of lockfile formats may be fragile for edge cases
-- **Reduced coverage for non-deterministic**: Exact checksum changes not detected until execution
+- **First eval is slow**: First resolution for any tool+version requires network
+- **Cache storage**: Plans accumulate in `$TSUKU_HOME/cache/plans/`
+- **Different first-run results**: Different machines may get different results on first run (before cache exists)
+- **Recipe hash dependency**: If hash function changes, all cached plans become stale
 
 ### Mitigations
 
-- **Schema maintenance**: Document significant params per action type; review during action additions
-- **Two paths**: Both paths share most logic; only the comparison function differs
-- **Lockfile parsing**: Keep fingerprint extraction simple (package names only); fall back to structural-only on parse errors
-- **Reduced coverage**: Execution validation (`validate-golden-execution.yml`) provides defense-in-depth
+- **First eval is slow**: This is inherent to dependency resolution; caching makes subsequent runs instant
+- **Cache storage**: Plans are small JSON files (~10KB each); add `tsuku cache clear` for cleanup
+- **Different first-run**: For CI, always seed cache from golden files before validation
+- **Recipe hash changes**: Document that major changes to recipe hashing invalidate cache
 
 ### Future Enhancements
 
-If the jq-based fingerprinting proves insufficient, consider:
-- **Option 6 (Semantic Diff)**: Full lockfile parsing in Go for more robust semantic comparison
-- **Validation mode override**: Allow recipes to opt into exact comparison when lockfiles are intentionally frozen
+- **Registry-hosted lockfiles**: Store blessed lockfiles alongside recipes in the registry for version-controlled determinism
+- **Cache sharing**: Allow teams to share plan caches via remote storage
+- **Structural validation fallback**: If caching proves insufficient, Option 5 (structural validation) can be layered on top
