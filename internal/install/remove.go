@@ -65,7 +65,8 @@ func (m *Manager) RemoveVersion(name, version string) error {
 	}
 
 	// Check if version exists
-	if _, exists := toolState.Versions[version]; !exists {
+	versionState, exists := toolState.Versions[version]
+	if !exists {
 		return m.versionNotInstalledError(name, version, toolState)
 	}
 
@@ -73,6 +74,14 @@ func (m *Manager) RemoveVersion(name, version string) error {
 	toolDir := m.config.ToolDir(name, version)
 	if err := os.RemoveAll(toolDir); err != nil {
 		return fmt.Errorf("failed to remove tool directory: %w", err)
+	}
+
+	// Remove .app bundle and ~/Applications symlink if this was an app
+	if versionState.AppPath != "" {
+		_ = os.RemoveAll(versionState.AppPath)
+	}
+	if versionState.ApplicationSymlink != "" {
+		_ = os.Remove(versionState.ApplicationSymlink)
 	}
 
 	// Check if this was the last version
@@ -159,6 +168,14 @@ func (m *Manager) removeToolEntirely(name string, toolState *ToolState) error {
 	for _, vs := range toolState.Versions {
 		for _, b := range vs.Binaries {
 			binaries[filepath.Base(b)] = true
+		}
+
+		// Remove .app bundles and ~/Applications symlinks
+		if vs.AppPath != "" {
+			_ = os.RemoveAll(vs.AppPath) // Remove the .app bundle
+		}
+		if vs.ApplicationSymlink != "" {
+			_ = os.Remove(vs.ApplicationSymlink) // Remove ~/Applications symlink
 		}
 	}
 

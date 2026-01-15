@@ -49,12 +49,22 @@ func (a *AppBundleAction) Preflight(params map[string]interface{}) *PreflightRes
 	return result
 }
 
+// AppBundleResult contains the result of an app_bundle installation.
+// This is stored in ExecutionContext.AppResult for state tracking.
+type AppBundleResult struct {
+	AppPath            string   // Installed .app path
+	ApplicationSymlink string   // ~/Applications symlink path (if created)
+	Binaries           []string // Symlinked binary names
+}
+
 // Execute downloads, extracts, and installs a macOS .app bundle.
 //
 // Parameters:
-//   - url (required): Download URL for the ZIP archive
+//   - url (required): Download URL for the ZIP or DMG archive
 //   - checksum (required): SHA256 checksum in "sha256:..." format
 //   - app_name (required): Name of .app bundle to install (e.g., "iTerm.app")
+//   - binaries (optional): Paths to CLI tools within .app to symlink to $TSUKU_HOME/tools/current
+//   - symlink_applications (optional): Create ~/Applications symlink (default: true)
 func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	// Only run on macOS
 	if ctx.OS != "darwin" {
@@ -62,7 +72,7 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 		return nil
 	}
 
-	// Get parameters
+	// Get required parameters
 	url, ok := GetString(params, "url")
 	if !ok {
 		return fmt.Errorf("app_bundle action requires 'url' parameter")
@@ -78,6 +88,10 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 		return fmt.Errorf("app_bundle action requires 'app_name' parameter")
 	}
 
+	// Get optional parameters
+	binaries, _ := GetStringSlice(params, "binaries")
+	symlinkApplications := GetBoolDefault(params, "symlink_applications", true)
+
 	// Ensure AppsDir exists
 	if ctx.AppsDir == "" {
 		return fmt.Errorf("AppsDir not configured in execution context")
@@ -91,7 +105,9 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 		"url", url,
 		"checksum", checksum,
 		"appName", appName,
-		"appsDir", ctx.AppsDir)
+		"appsDir", ctx.AppsDir,
+		"binaries", binaries,
+		"symlinkApplications", symlinkApplications)
 
 	// Detect archive format
 	archiveFormat := detectArchiveFormatFromURL(url)
@@ -148,6 +164,69 @@ func (a *AppBundleAction) Execute(ctx *ExecutionContext, params map[string]inter
 	}
 
 	fmt.Printf("   Installed: %s\n", destPath)
+
+	// Initialize result for state tracking
+	result := &AppBundleResult{
+		AppPath:  destPath,
+		Binaries: []string{},
+	}
+
+	// Create binary symlinks
+	if len(binaries) > 0 {
+		// Ensure CurrentDir exists (for binary symlinks)
+		if ctx.CurrentDir != "" {
+			if err := os.MkdirAll(ctx.CurrentDir, 0755); err != nil {
+				return fmt.Errorf("failed to create current directory: %w", err)
+			}
+
+			for _, binaryPath := range binaries {
+				binaryName := filepath.Base(binaryPath)
+				targetPath := filepath.Join(destPath, binaryPath)
+				symlinkPath := filepath.Join(ctx.CurrentDir, binaryName)
+
+				// Verify the binary exists in the .app bundle
+				if _, err := os.Stat(targetPath); os.IsNotExist(err) {
+					fmt.Printf("   Warning: binary not found in app bundle: %s\n", binaryPath)
+					continue
+				}
+
+				// Create symlink atomically
+				if err := atomicSymlink(targetPath, symlinkPath); err != nil {
+					return fmt.Errorf("failed to create symlink for %s: %w", binaryName, err)
+				}
+
+				fmt.Printf("   Symlinked: %s -> %s\n", symlinkPath, targetPath)
+				result.Binaries = append(result.Binaries, binaryName)
+			}
+		}
+	}
+
+	// Create ~/Applications symlink for Launchpad/Spotlight integration
+	if symlinkApplications {
+		homeDir, err := os.UserHomeDir()
+		if err == nil {
+			applicationsDir := filepath.Join(homeDir, "Applications")
+			// Ensure ~/Applications exists
+			if err := os.MkdirAll(applicationsDir, 0755); err != nil {
+				fmt.Printf("   Warning: could not create ~/Applications: %v\n", err)
+			} else {
+				// Use app_name for the symlink (e.g., "Visual Studio Code.app")
+				applicationSymlink := filepath.Join(applicationsDir, appName)
+
+				// Create symlink atomically
+				if err := atomicSymlink(destPath, applicationSymlink); err != nil {
+					fmt.Printf("   Warning: could not create ~/Applications symlink: %v\n", err)
+				} else {
+					fmt.Printf("   Symlinked: %s -> %s\n", applicationSymlink, destPath)
+					result.ApplicationSymlink = applicationSymlink
+				}
+			}
+		}
+	}
+
+	// Store result for state tracking
+	ctx.AppResult = result
+
 	return nil
 }
 

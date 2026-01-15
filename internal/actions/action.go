@@ -18,6 +18,7 @@ type ExecutionContext struct {
 	ToolsDir         string            // Tools directory ($TSUKU_HOME/tools/) for finding other installed tools
 	LibsDir          string            // Libraries directory ($TSUKU_HOME/libs/) for finding installed libraries
 	AppsDir          string            // Applications directory ($TSUKU_HOME/apps/) for macOS .app bundles
+	CurrentDir       string            // Current symlinks directory ($TSUKU_HOME/tools/current/) for binary symlinks
 	DownloadCacheDir string            // Download cache directory ($TSUKU_HOME/cache/downloads/)
 	KeyCacheDir      string            // PGP key cache directory ($TSUKU_HOME/cache/keys/)
 	Version          string            // Resolved version (e.g., "1.29.3")
@@ -30,6 +31,7 @@ type ExecutionContext struct {
 	Logger           log.Logger        // Logger for structured logging (optional, falls back to log.Default())
 	Dependencies     ResolvedDeps      // Resolved dependencies with their versions
 	Env              []string          // Shared environment variables set by setup_build_env, used by build actions
+	AppResult        interface{}       // Result from app_bundle action for state tracking (stores *AppBundleResult)
 }
 
 // Log returns the logger for this context.

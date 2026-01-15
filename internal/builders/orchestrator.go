@@ -36,6 +36,14 @@ type OrchestratorConfig struct {
 	// Required for finding dependencies during build environment setup.
 	LibsDir string
 
+	// AppsDir is the directory for macOS .app bundles ($TSUKU_HOME/apps).
+	// Used by app_bundle action for GUI application installation.
+	AppsDir string
+
+	// CurrentDir is the symlinks directory ($TSUKU_HOME/tools/current).
+	// Used by app_bundle action for binary symlinks.
+	CurrentDir string
+
 	// DownloadCacheDir is the directory for caching downloads ($TSUKU_HOME/cache/downloads).
 	// Required for plan generation if sandbox testing is enabled.
 	DownloadCacheDir string
@@ -236,6 +244,8 @@ func (o *Orchestrator) generatePlan(ctx context.Context, r *recipe.Recipe) (*exe
 	// Configure executor with paths
 	exec.SetToolsDir(o.config.ToolsDir)
 	exec.SetLibsDir(o.config.LibsDir)
+	exec.SetAppsDir(o.config.AppsDir)
+	exec.SetCurrentDir(o.config.CurrentDir)
 	exec.SetDownloadCacheDir(o.config.DownloadCacheDir)
 	exec.SetKeyCacheDir(o.config.KeyCacheDir)
 

@@ -65,6 +65,12 @@ func runPlanBasedInstall(planPath, toolName string) error {
 	// Set libraries directory for rpath variable expansion
 	exec.SetLibsDir(cfg.LibsDir)
 
+	// Set apps directory for macOS .app bundles
+	exec.SetAppsDir(cfg.AppsDir)
+
+	// Set current directory for binary symlinks
+	exec.SetCurrentDir(cfg.CurrentDir)
+
 	printInfof("Installing %s@%s from plan...\n", effectiveToolName, plan.Version)
 
 	// Execute the plan
