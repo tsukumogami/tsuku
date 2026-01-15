@@ -21,7 +21,7 @@ The codebase has a `deterministic` flag on actions and plans, but it measures **
 
 The golden file drift is an **eval-time stability** problem. The `deterministic` flag is correctly applied for its intended purpose (marking execution variance), but it does not predict or solve eval-time drift.
 
-**Key insight**: Plan caching (Option 9) solves eval-time drift regardless of the `deterministic` flag. The flag becomes metadata only - it doesn't drive the validation strategy.
+**Key insight**: Constrained evaluation (Option 9) solves eval-time drift by pinning dependency versions while still exercising all code paths. The `deterministic` flag becomes metadata only - it doesn't drive the validation strategy.
 
 ### Scope
 
@@ -237,179 +237,266 @@ Accept that golden files have limited validity and introduce a freshness model. 
 - CI behavior changes based on when it runs
 - Requires infrastructure for "time since generation" tracking
 
-### Option 9: Transparent Plan Caching (Recommended)
+### Option 9: Constrained Evaluation (Recommended)
 
-Make `tsuku eval` deterministic through automatic plan caching. First eval for a tool+version+platform resolves fresh and caches the result. Subsequent evals reuse the cached plan for determinism. No explicit CLI flag needed - discovery is implicit.
+Pass version constraints to `tsuku eval` so all evaluation code runs but dependency resolution produces deterministic versions. This exercises the full code path while enabling exact comparison with golden files.
 
 **How it works:**
-1. `tsuku eval httpie@3.2.4` checks `$TSUKU_HOME/cache/plans/httpie/v3.2.4-linux-amd64.json`
-2. If found AND recipe_hash matches current recipe: Return cached plan (instant, deterministic)
-3. If not found OR recipe changed: Resolve fresh, cache result, return plan
-4. Plans include `recipe_hash` to detect when recipe changed (staleness check)
+1. Extract constraints from existing golden file (pip requirements, go.sum, Cargo.lock)
+2. Pass constraints to `tsuku eval` via `--pin-from` flag
+3. Each ecosystem's Decompose() uses constraints instead of live resolution:
+   - pip: Uses `--constraint` flag with extracted package versions
+   - go: Reuses captured `go.sum` content
+   - cargo: Reuses captured `Cargo.lock` content
+4. All eval code executes (Decompose, version resolution, template expansion)
+5. Output is deterministic and can be compared exactly to golden file
 
 **CLI interface:**
-- `tsuku eval httpie` - Normal usage, auto-caches (implicit discovery like npm/cargo)
-- `tsuku eval httpie --refresh` - Force fresh resolution, update cache
-- `tsuku eval httpie --locked` - Fail if no cached plan exists (for CI determinism)
-- `tsuku cache clear` - Clear plan cache
-
-**Cache location:**
-```
-$TSUKU_HOME/cache/plans/
-  └── httpie/
-      ├── v3.2.4-darwin-arm64.json
-      ├── v3.2.4-linux-amd64.json
-      └── ...
-```
-
-**For CI validation**, golden files can seed the cache:
 ```bash
-# In validate-golden.sh, before validation:
-cp testdata/golden/plans/h/httpie/v3.2.4-linux-amd64.json \
-   $TSUKU_HOME/cache/plans/httpie/v3.2.4-linux-amd64.json
+# Constrained evaluation for validation
+tsuku eval httpie@3.2.4 --pin-from golden.json --os darwin --arch arm64
 
-# Now eval produces deterministic output matching the golden file
-tsuku eval httpie@3.2.4 --locked
+# Normal evaluation (unconstrained, for generating new golden files)
+tsuku eval httpie@3.2.4 --os darwin --arch arm64
 ```
+
+**What gets exercised:**
+- Recipe parsing and validation
+- Version provider calls
+- All Decompose() code paths
+- Template variable expansion
+- Platform filtering (when clauses)
+- Step ordering logic
+- Determinism flag computation
+
+**What stays deterministic:**
+- Dependency versions (from constraints)
+- Download checksums (from constraints)
+- Lockfile content (from constraints)
 
 **Pros:**
-- **No chicken-and-egg**: Normal CLI doesn't require prior state - first run resolves fresh
-- **Implicit discovery**: Like npm/cargo, presence of cache triggers deterministic mode
-- **Solves the user's complaint**: "I don't want a plan to generate a plan" - you don't, caching is transparent
-- **Recipe hash freshness**: Automatically regenerates when recipe changes
-- **CI-friendly**: `--locked` mode fails fast if no cached plan (catches missing golden files)
-- **No infrastructure**: Local file cache only, no registry changes
-- **Exact comparison works**: No structural validation needed when cache is used
+- **Full code exercise**: All eval code runs, not skipped - we're actually testing the code
+- **Deterministic output**: Constraints pin versions to match golden files exactly
+- **Clean CLI**: Single `--pin-from` flag, no complex constraint files to manage
+- **Regression detection**: If eval code breaks, output differs from golden file
+- **Leverages ecosystem mechanisms**: pip `--constraint`, go.sum reuse, Cargo.lock reuse
 
 **Cons:**
-- First eval for any version is slow (network required)
-- Different machines get different first-run results until cached
-- Cache invalidation relies on recipe_hash (if hash function changes, cache is invalid)
+- Requires extracting constraints from golden files (parsing locked_requirements, go.sum, etc.)
+- Ecosystem-specific constraint logic in each Decompose() method
+- May need to handle toolchain version differences (go_version, python_version)
 
-**Pattern precedent:**
-This follows the proven pattern from npm (package-lock.json), Cargo (Cargo.lock), and Poetry (poetry.lock):
-- Implicit discovery (no CLI flag needed)
-- First-run capture, subsequent reuse
-- Staleness detection via content hash
+**Constraint extraction:**
+```go
+// Extract constraints from golden file
+constraints, err := ExtractConstraints("golden.json")
+// Returns: {
+//   PipConstraints: {"requests": "2.31.0", "certifi": "2023.12.0", ...},
+//   GoSum: "github.com/foo/bar v1.0.0 h1:...\n...",
+//   CargoLock: "[package]\nname = ...",
+// }
+```
 
 ## Decision Outcome
 
-**Chosen: Option 9 - Transparent Plan Caching**
+**Chosen: Option 9 - Constrained Evaluation**
 
 ### Summary
 
-Make `tsuku eval` deterministic through automatic plan caching with implicit discovery. First eval for a tool+version+platform resolves fresh and caches the result. Subsequent evals reuse the cached plan. This follows the proven pattern from npm, Cargo, and Poetry where lockfiles are automatically discovered and used without explicit CLI flags.
-
-For CI validation, golden files seed the cache before validation runs, making regeneration produce identical output.
+Pass version constraints from existing golden files to `tsuku eval` so all evaluation code runs but dependency resolution produces deterministic versions. This exercises the full code path (Decompose, version resolution, template expansion) while enabling exact comparison with golden files.
 
 ### Rationale
 
-Option 9 provides the cleanest solution to the core problem:
+Option 9 provides the correct solution because:
 
-1. **Eliminates drift at the source**: Instead of tolerating drift through structural comparison, we prevent drift by reusing cached resolutions.
+1. **Full code exercise**: Unlike caching which skips eval, constrained evaluation runs all code paths. This is the point of golden file testing - validating that eval code works correctly.
 
-2. **Clean CLI ergonomics**: No need for `--existing-plan <file>` flag. The user runs `tsuku eval httpie@3.2.4` and gets deterministic output if a cached plan exists.
+2. **Deterministic output**: Constraints pin dependency versions to match golden files exactly. pip uses `--constraint`, go reuses `go.sum`, cargo reuses `Cargo.lock`.
 
-3. **Follows proven patterns**: npm (package-lock.json), Cargo (Cargo.lock), and Poetry (poetry.lock) all use implicit lockfile discovery. Users expect this behavior.
+3. **Regression detection**: If eval code breaks (wrong step order, missing params, bad template expansion), output differs from golden file and validation fails.
 
-4. **Recipe hash freshness**: Cache automatically invalidates when recipe changes, ensuring code changes are detected.
+4. **Leverages ecosystem mechanisms**: Each package manager already supports constrained resolution. We're using their intended features.
 
-5. **CI-friendly**: `--locked` mode provides strict validation - fails if no cached plan exists.
-
-6. **Exact comparison works**: No structural validation complexity needed when cache is used.
+5. **Clean interface**: Single `--pin-from golden.json` flag extracts all needed constraints.
 
 ### Why Not Other Options
 
-- **Option 5 (Structural validation)**: Solves the symptom (CI failures) but not the cause (non-deterministic resolution). More complex to maintain.
-- **Option 1 (Skip)**: No regression detection.
-- **Option 3 (Auto-regen PRs)**: Infrastructure complexity.
-- **Option 4 (Freeze lockfiles in recipes)**: High authoring burden, doesn't scale.
-- **Options 6-8**: Higher complexity for marginal benefit over Option 9.
+- **Caching (previous Option 9 variant)**: Skips eval code entirely - defeats the purpose of testing.
+- **Option 5 (Structural validation)**: Doesn't exercise code fully, tolerates rather than prevents drift.
+- **Option 1 (Skip)**: No regression detection at all.
+- **Option 4 (Freeze in recipes)**: High authoring burden, doesn't scale.
 
-### Fallback Strategy
+### What This Validates
 
-If cached plan is missing and `--locked` is not specified:
-1. Generate fresh plan
-2. Cache result for next time
-3. Log warning that fresh resolution was used
-
-For CI, always use `--locked` to fail fast if golden file wasn't seeded to cache.
+When `tsuku eval httpie@3.2.4 --pin-from golden.json` runs:
+- Recipe TOML parsing ✓
+- Version provider logic ✓
+- pipx_install.Decompose() ✓
+- pip constraint handling ✓
+- Template expansion ✓
+- Platform filtering ✓
+- Step ordering ✓
+- Output matches golden file ✓
 
 ## Solution Architecture
 
-### Plan Cache Design
+### Constrained Evaluation Design
 
-The plan cache stores resolved plans keyed by tool, version, and platform:
-
-```
-$TSUKU_HOME/cache/plans/
-├── httpie/
-│   ├── v3.2.4-darwin-arm64.json
-│   ├── v3.2.4-darwin-amd64.json
-│   └── v3.2.4-linux-amd64.json
-├── ruff/
-│   ├── v0.8.6-darwin-arm64.json
-│   └── ...
-└── ...
-```
-
-Each cached plan is a complete JSON plan (same format as golden files) with `recipe_hash` for staleness detection.
-
-### Cache Lookup Flow
+The constrained evaluation approach passes dependency version constraints from golden files to `tsuku eval`, ensuring all code paths execute while producing deterministic output.
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                        tsuku eval httpie@3.2.4                              │
+│      tsuku eval httpie@3.2.4 --pin-from golden.json --os darwin --arch arm64│
 └─────────────────────────────────────────────────────────────────────────────┘
                                     │
                                     ▼
                     ┌───────────────────────────────┐
-                    │  Compute cache key:           │
-                    │  httpie/v3.2.4-linux-amd64    │
+                    │  Parse --pin-from file        │
+                    │  Extract constraints:         │
+                    │  - pip: locked_requirements   │
+                    │  - go: go_sum content         │
+                    │  - cargo: cargo_lock content  │
                     └───────────────────────────────┘
                                     │
                                     ▼
                     ┌───────────────────────────────┐
-                    │  Check $TSUKU_HOME/cache/     │
-                    │  plans/{key}.json             │
+                    │  Load recipe (httpie.toml)    │
+                    │  Parse version, actions       │
                     └───────────────────────────────┘
-                            │               │
-                        Found           Not Found
-                            │               │
-                            ▼               │
-                ┌───────────────────────┐   │
-                │ Recipe hash matches?  │   │
-                │ (current vs cached)   │   │
-                └───────────────────────┘   │
-                    │           │           │
-                  Yes          No           │
-                    │           │           │
-                    ▼           └───────────┤
-        ┌───────────────────┐               │
-        │ Return cached     │               │
-        │ plan (instant)    │               ▼
-        └───────────────────┘   ┌───────────────────────┐
-                                │ --locked flag set?    │
-                                └───────────────────────┘
-                                    │           │
-                                  Yes          No
-                                    │           │
-                                    ▼           ▼
-                        ┌───────────────┐   ┌───────────────────────┐
-                        │ ERROR: No     │   │ Generate fresh plan   │
-                        │ cached plan   │   │ (resolve deps)        │
-                        └───────────────┘   └───────────────────────┘
-                                                        │
-                                                        ▼
-                                            ┌───────────────────────┐
-                                            │ Save to cache         │
-                                            │ Return plan           │
-                                            └───────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  Create EvalContext with      │
+                    │  Constraints field populated  │
+                    └───────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  Run Decompose() for each     │
+                    │  action - ALL CODE EXECUTES   │
+                    └───────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  Dependency resolution uses   │
+                    │  constraints instead of live  │
+                    │  registry queries             │
+                    └───────────────────────────────┘
+                                    │
+                                    ▼
+                    ┌───────────────────────────────┐
+                    │  Output: deterministic plan   │
+                    │  matching golden file         │
+                    └───────────────────────────────┘
+```
+
+### Constraint Extraction
+
+Extract constraints from golden files to pass to eval:
+
+```go
+// EvalConstraints holds version constraints extracted from golden files
+type EvalConstraints struct {
+    // PipConstraints maps package names to pinned versions
+    // Extracted from locked_requirements in pip_exec steps
+    PipConstraints map[string]string
+
+    // GoSum contains the full go.sum content for go_build steps
+    GoSum string
+
+    // CargoLock contains the full Cargo.lock content for cargo_install steps
+    CargoLock string
+
+    // NpmLock contains package-lock.json content for npm_install steps
+    NpmLock string
+}
+
+// ExtractConstraints parses a golden file and extracts all constraints
+func ExtractConstraints(goldenPath string) (*EvalConstraints, error) {
+    plan, err := LoadPlan(goldenPath)
+    if err != nil {
+        return nil, err
+    }
+
+    constraints := &EvalConstraints{
+        PipConstraints: make(map[string]string),
+    }
+
+    // Walk all steps (including dependencies) to extract constraints
+    for _, step := range plan.AllSteps() {
+        switch step.Action {
+        case "pip_exec":
+            // Parse locked_requirements: "requests==2.31.0\ncertifi==2023.12.0\n..."
+            if reqs, ok := step.Params["locked_requirements"].(string); ok {
+                constraints.PipConstraints = parsePipRequirements(reqs)
+            }
+        case "go_build":
+            if goSum, ok := step.Params["go_sum"].(string); ok {
+                constraints.GoSum = goSum
+            }
+        case "cargo_install", "cargo_build":
+            if lock, ok := step.Params["cargo_lock"].(string); ok {
+                constraints.CargoLock = lock
+            }
+        case "npm_install", "npm_exec":
+            if lock, ok := step.Params["package_lock"].(string); ok {
+                constraints.NpmLock = lock
+            }
+        }
+    }
+
+    return constraints, nil
+}
+```
+
+### Ecosystem Constraint Application
+
+Each ecosystem's Decompose() method uses constraints when available:
+
+#### pip_exec
+
+```go
+func (a *PipExecAction) Decompose(ctx *EvalContext) ([]*Step, error) {
+    if ctx.Constraints != nil && len(ctx.Constraints.PipConstraints) > 0 {
+        // Use --constraint flag with extracted versions
+        constraintFile := generateConstraintFile(ctx.Constraints.PipConstraints)
+        // pip download --constraint constraints.txt httpie==3.2.4
+        return a.decomposeWithConstraints(ctx, constraintFile)
+    }
+    // Normal resolution (unconstrained)
+    return a.decompose(ctx)
+}
+```
+
+#### go_build
+
+```go
+func (a *GoBuildAction) Decompose(ctx *EvalContext) ([]*Step, error) {
+    if ctx.Constraints != nil && ctx.Constraints.GoSum != "" {
+        // Reuse captured go.sum content
+        // go mod download with existing go.sum
+        return a.decomposeWithGoSum(ctx, ctx.Constraints.GoSum)
+    }
+    // Normal resolution (unconstrained)
+    return a.decompose(ctx)
+}
+```
+
+#### cargo_install
+
+```go
+func (a *CargoInstallAction) Decompose(ctx *EvalContext) ([]*Step, error) {
+    if ctx.Constraints != nil && ctx.Constraints.CargoLock != "" {
+        // Reuse captured Cargo.lock content
+        // cargo install --locked
+        return a.decomposeWithCargoLock(ctx, ctx.Constraints.CargoLock)
+    }
+    // Normal resolution (unconstrained)
+    return a.decompose(ctx)
+}
 ```
 
 ### CI Validation Flow
-
-For golden file validation, seed the cache from golden files before running validation:
 
 ```bash
 #!/bin/bash
@@ -418,29 +505,19 @@ For golden file validation, seed the cache from golden files before running vali
 RECIPE="$1"
 GOLDEN_DIR="testdata/golden/plans"
 
-# Seed cache from golden files
-for golden in "$GOLDEN_DIR"/*/"$RECIPE"/*.json; do
-    # Extract version and platform from filename
-    filename=$(basename "$golden")  # e.g., v3.2.4-linux-amd64.json
-    version_platform="${filename%.json}"  # v3.2.4-linux-amd64
-
-    # Copy to cache location
-    cache_path="$TSUKU_HOME/cache/plans/$RECIPE/$filename"
-    mkdir -p "$(dirname "$cache_path")"
-    cp "$golden" "$cache_path"
-done
-
-# Now eval with --locked will produce deterministic output
 for golden in "$GOLDEN_DIR"/*/"$RECIPE"/*.json; do
     version=$(jq -r '.version' "$golden")
     os=$(jq -r '.platform.os' "$golden")
     arch=$(jq -r '.platform.arch' "$golden")
 
-    # Generate plan (will use cached version)
+    # Generate plan with constraints from golden file
     actual=$(mktemp)
-    ./tsuku eval "$RECIPE@$version" --os "$os" --arch "$arch" --locked > "$actual"
+    ./tsuku eval "$RECIPE@$version" \
+        --pin-from "$golden" \
+        --os "$os" \
+        --arch "$arch" > "$actual"
 
-    # Compare
+    # Exact comparison - constrained eval should match golden
     if ! diff -q "$golden" "$actual" > /dev/null; then
         echo "MISMATCH: $golden"
         diff -u "$golden" "$actual"
@@ -451,27 +528,31 @@ done
 echo "All golden files validated successfully"
 ```
 
-### Recipe Hash Staleness Detection
+### What Gets Exercised
 
-Each plan includes `recipe_hash` computed from the recipe file:
+With constrained evaluation, the following code paths execute during validation:
 
-```json
-{
-  "format_version": 3,
-  "tool": "httpie",
-  "version": "3.2.4",
-  "recipe_hash": "927743d6894ffc490ac7b5d2495ed60c4e952e32ed2ed819f3b3f72e4465b0f1",
-  ...
-}
-```
+| Component | Exercised? | Notes |
+|-----------|------------|-------|
+| Recipe TOML parsing | Yes | Full recipe loaded |
+| Version provider calls | Yes | Version resolved (pinned by constraint) |
+| Action Decompose() | Yes | Full decomposition logic runs |
+| Template expansion | Yes | Variables interpolated |
+| Platform filtering | Yes | When clauses evaluated |
+| Step ordering | Yes | Dependencies resolved |
+| Determinism computation | Yes | Flag computed from steps |
+| Constraint application | Yes | New code path for pinning |
 
-When checking cache:
-1. Load cached plan
-2. Compute current recipe hash
-3. If hashes differ: cache is stale, regenerate
-4. If hashes match: cache is valid, use it
+### Recipe Hash Validation
 
-This ensures code changes to recipes invalidate the cache.
+Plans include `recipe_hash` computed from the recipe file. During constrained evaluation:
+
+1. Load golden file, extract `recipe_hash`
+2. Compute current recipe hash from recipe.toml
+3. If hashes differ: recipe changed, golden file may need regeneration
+4. If hashes match: proceed with constrained evaluation
+
+This catches cases where the recipe changed but golden files weren't updated.
 
 ### Structural Schema (Fallback)
 
@@ -780,68 +861,90 @@ jobs:
 
 ## Implementation Approach
 
-### Phase 1: Plan Cache Infrastructure
+### Phase 1: EvalConstraints Infrastructure
 
-Add plan caching to `tsuku eval`:
+Add constraint data structure and extraction:
 
-1. **Cache directory structure**: `$TSUKU_HOME/cache/plans/{tool}/{version}-{os}-{arch}.json`
-2. **Cache lookup in eval**: Check cache before running Decompose()
-3. **Recipe hash staleness**: Compare cached `recipe_hash` with current recipe
-4. **Cache write**: Save generated plans to cache after fresh resolution
-
-**Key files to modify:**
-- `cmd/tsuku/eval.go` - Add cache lookup/write logic
-- `internal/executor/plan_generator.go` - Extract cache key generation
-- `internal/tsuku/config.go` - Add cache directory path
-
-### Phase 2: CLI Flags
-
-Add flags to `tsuku eval`:
-
-1. `--locked` - Fail if no cached plan exists (for CI determinism)
-2. `--refresh` - Force fresh resolution, update cache
-3. `--no-cache` - Skip cache entirely (for debugging)
+1. **EvalConstraints struct**: Define in `internal/actions/decomposable.go`
+2. **ExtractConstraints function**: Parse golden files to extract constraints
+3. **EvalContext extension**: Add `Constraints` field to EvalContext
 
 **Key files to modify:**
-- `cmd/tsuku/eval.go` - Add flag definitions and handling
+- `internal/actions/decomposable.go` - Add EvalConstraints struct, extend EvalContext
+- `internal/executor/constraints.go` (new) - ExtractConstraints implementation
 
-### Phase 3: Validation Script Update
+### Phase 2: CLI Flag
 
-Update `scripts/validate-golden.sh` to use plan cache:
+Add `--pin-from` flag to `tsuku eval`:
 
-1. Seed cache from golden files before validation
-2. Run `tsuku eval --locked` instead of bare `tsuku eval`
-3. Compare output to golden file (exact match)
-4. Remove structural validation complexity
+1. **Flag definition**: `--pin-from <path>` accepts path to golden file
+2. **Constraint loading**: Extract constraints from golden file before eval
+3. **Context propagation**: Pass constraints to EvalContext
+
+**Key files to modify:**
+- `cmd/tsuku/eval.go` - Add flag definition and constraint loading
+
+### Phase 3: pip_exec Constraint Support
+
+Implement constraint application for pip ecosystem:
+
+1. **Parse locked_requirements**: Extract package==version pairs from golden file
+2. **Generate constraint file**: Create temporary constraints.txt
+3. **Modify pip download command**: Add `--constraint constraints.txt` flag
+4. **Test with httpie, black, ruff golden files**
+
+**Key files to modify:**
+- `internal/actions/pipx_install.go` - Modify Decompose() for constraint support
+
+### Phase 4: go_build Constraint Support
+
+Implement constraint application for Go ecosystem:
+
+1. **Capture go.sum content**: Extract from golden file go_build steps
+2. **Reuse go.sum during resolution**: Write captured content before `go mod download`
+3. **Test with dlv, gh, gopls golden files**
+
+**Key files to modify:**
+- `internal/actions/go_build.go` - Modify Decompose() for go.sum reuse
+
+### Phase 5: cargo_install Constraint Support
+
+Implement constraint application for Cargo ecosystem:
+
+1. **Capture Cargo.lock content**: Extract from golden file cargo_install steps
+2. **Use --locked flag**: Pass captured lockfile to cargo install
+3. **Test with ripgrep, fd, bat golden files**
+
+**Key files to modify:**
+- `internal/actions/cargo_install.go` - Modify Decompose() for Cargo.lock reuse
+
+### Phase 6: Validation Script Update
+
+Update validation to use constrained evaluation:
+
+1. **Modify validate-golden.sh**: Use `--pin-from` flag
+2. **Remove structural validation**: Exact comparison is now sufficient
+3. **Test full golden file suite**
 
 **Key files to modify:**
 - `scripts/validate-golden.sh` - Rewrite validation logic
 - `scripts/validate-all-golden.sh` - Update to use new validation
 
-### Phase 4: Re-enable CI Workflow
+### Phase 7: Re-enable CI Workflow
 
 1. Remove `if: false` from `validate-golden-code.yml`
-2. Update workflow to seed cache from golden files
-3. Run validation with `--locked` flag
-4. Monitor for a few PRs to confirm stability
+2. Update workflow to use `--pin-from` flag
+3. Monitor for a few PRs to confirm stability
 
-### Phase 5: Cache Management Commands
+### Phase 8: Documentation
 
-Add cache management commands (optional but useful):
-
-1. `tsuku cache list` - Show cached plans
-2. `tsuku cache clear [tool]` - Clear cache (all or specific tool)
-3. `tsuku cache info <tool>@<version>` - Show cache status
-
-### Phase 6: Documentation
-
-1. Update CONTRIBUTING.md to explain plan caching
-2. Document `--locked` flag for CI usage
-3. Add troubleshooting guide for cache misses
+1. Update CONTRIBUTING.md to explain constrained evaluation
+2. Document `--pin-from` flag usage
+3. Add troubleshooting guide for constraint extraction failures
 
 ### Fallback: Structural Validation
 
-If plan caching proves insufficient (e.g., recipe hash changes too frequently), the structural validation approach from Option 5 can be implemented as a fallback. The schema extraction script and validation logic are preserved in this design document for reference.
+If constrained evaluation proves insufficient for some ecosystems, the structural validation approach from Option 5 can be implemented as a fallback. The schema extraction script and validation logic are preserved in this design document for reference.
 
 ## Security Considerations
 
@@ -887,30 +990,31 @@ The trade-off is accepting that checksum values and hash strings within lockfile
 ### Positive
 
 - **CI stability restored**: `validate-golden-code.yml` can be re-enabled without false failures
-- **True determinism**: Plan caching eliminates drift at the source, not just tolerates it
-- **Clean CLI ergonomics**: No need for `--existing-plan` flag; caching is transparent
-- **Follows proven patterns**: Same approach as npm, Cargo, Poetry
-- **Exact comparison works**: No structural validation complexity needed
-- **Recipe change detection**: Recipe hash staleness automatically invalidates cache
+- **Full code exercise**: All eval code paths execute during validation, not skipped
+- **True regression detection**: Any change to Decompose() logic that affects output will be caught
+- **Exact comparison works**: Constrained eval produces deterministic output, no structural validation complexity
+- **Leverages ecosystem mechanisms**: Uses pip `--constraint`, go.sum reuse, Cargo.lock reuse
+- **Clean CLI ergonomics**: Single `--pin-from` flag extracts all needed constraints
 - **No recipe format changes**: Existing recipes work without modification
-- **Minimal infrastructure**: Local file cache only, no registry changes
+- **No caching complexity**: No cache invalidation, staleness detection, or storage management
 
 ### Negative
 
-- **First eval is slow**: First resolution for any tool+version requires network
-- **Cache storage**: Plans accumulate in `$TSUKU_HOME/cache/plans/`
-- **Different first-run results**: Different machines may get different results on first run (before cache exists)
-- **Recipe hash dependency**: If hash function changes, all cached plans become stale
+- **Ecosystem-specific constraint logic**: Each ecosystem needs its own constraint application code
+- **Constraint extraction complexity**: Must parse different lockfile formats (pip requirements, go.sum, Cargo.lock)
+- **Toolchain version sensitivity**: If Go/Python/Rust toolchain versions change, constraints may not apply identically
+- **New code paths to test**: Constrained evaluation is a new code path that needs thorough testing
 
 ### Mitigations
 
-- **First eval is slow**: This is inherent to dependency resolution; caching makes subsequent runs instant
-- **Cache storage**: Plans are small JSON files (~10KB each); add `tsuku cache clear` for cleanup
-- **Different first-run**: For CI, always seed cache from golden files before validation
-- **Recipe hash changes**: Document that major changes to recipe hashing invalidate cache
+- **Ecosystem-specific logic**: Each ecosystem already has constraint mechanisms; we're using their intended features
+- **Constraint extraction**: Start with simple regex/line parsing; can evolve to proper parsers if needed
+- **Toolchain versions**: Golden files can include toolchain version metadata; validation can warn on mismatch
+- **New code paths**: Integration tests with real golden files validate the full flow
 
 ### Future Enhancements
 
-- **Registry-hosted lockfiles**: Store blessed lockfiles alongside recipes in the registry for version-controlled determinism
-- **Cache sharing**: Allow teams to share plan caches via remote storage
-- **Structural validation fallback**: If caching proves insufficient, Option 5 (structural validation) can be layered on top
+- **Registry-hosted constraints**: Store blessed constraints alongside recipes for offline validation
+- **Constraint file format**: Support standalone constraint files (not just extraction from golden)
+- **Structural validation fallback**: If constraints prove insufficient, Option 5 can be layered on top
+- **Cross-ecosystem constraint sharing**: Share dependency versions across related recipes
