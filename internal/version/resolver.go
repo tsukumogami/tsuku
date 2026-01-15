@@ -315,7 +315,7 @@ func (r *Resolver) ListGitHubVersions(ctx context.Context, repo string) ([]strin
 		}
 	}
 
-	return versions, nil
+	return SortVersionsDescending(versions), nil
 }
 
 // ResolveHashiCorp resolves the latest version from HashiCorp releases
@@ -472,7 +472,7 @@ func (r *Resolver) ListGoToolchainVersions(ctx context.Context) ([]string, error
 		}
 	}
 
-	// Extract stable versions (API returns them in newest-first order)
+	// Extract stable versions
 	var versions []string
 	for _, release := range releases {
 		if release.Stable {
@@ -483,7 +483,8 @@ func (r *Resolver) ListGoToolchainVersions(ctx context.Context) ([]string, error
 		}
 	}
 
-	return versions, nil
+	// Sort to ensure consistent descending order regardless of API response order
+	return SortVersionsDescending(versions), nil
 }
 
 // normalizeGoToolchainVersion strips the "go" prefix from Go version strings
@@ -661,7 +662,7 @@ func (r *Resolver) ListGoProxyVersions(ctx context.Context, modulePath string) (
 		}
 	}
 
-	return versions, nil
+	return SortVersionsDescending(versions), nil
 }
 
 // ResolveCustom resolves a version using a custom source from the registry
