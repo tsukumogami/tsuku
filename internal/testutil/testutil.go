@@ -35,6 +35,7 @@ func NewTestConfig(t *testing.T) (*config.Config, func()) {
 		VersionCacheDir:  filepath.Join(tmpDir, "cache", "versions"),
 		DownloadCacheDir: filepath.Join(tmpDir, "cache", "downloads"),
 		KeyCacheDir:      filepath.Join(tmpDir, "cache", "keys"),
+		TapCacheDir:      filepath.Join(tmpDir, "cache", "taps"),
 		ConfigFile:       filepath.Join(tmpDir, "config.toml"),
 	}
 
@@ -74,6 +75,10 @@ func NewTestConfig(t *testing.T) (*config.Config, func()) {
 	if err := os.MkdirAll(cfg.KeyCacheDir, 0755); err != nil {
 		cleanup()
 		t.Fatalf("failed to create key cache dir: %v", err)
+	}
+	if err := os.MkdirAll(cfg.TapCacheDir, 0755); err != nil {
+		cleanup()
+		t.Fatalf("failed to create tap cache dir: %v", err)
 	}
 
 	return cfg, cleanup
