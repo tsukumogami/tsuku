@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strconv"
 	"strings"
 	"testing"
@@ -468,8 +467,7 @@ func TestTapProvider_GitHubTokenAuth(t *testing.T) {
 
 	// Test with token set
 	t.Run("with token", func(t *testing.T) {
-		os.Setenv("GITHUB_TOKEN", "test-token-12345")
-		defer os.Unsetenv("GITHUB_TOKEN")
+		t.Setenv("GITHUB_TOKEN", "test-token-12345")
 
 		receivedAuth = ""
 		_, err := provider.ResolveLatest(context.Background())
@@ -484,7 +482,7 @@ func TestTapProvider_GitHubTokenAuth(t *testing.T) {
 
 	// Test without token
 	t.Run("without token", func(t *testing.T) {
-		os.Unsetenv("GITHUB_TOKEN")
+		t.Setenv("GITHUB_TOKEN", "")
 
 		receivedAuth = ""
 		_, err := provider.ResolveLatest(context.Background())
@@ -600,7 +598,7 @@ func TestTapProvider_RateLimitError_Integration(t *testing.T) {
 	}
 
 	provider := NewTapProvider(resolver, "hashicorp/tap", "terraform")
-	os.Unsetenv("GITHUB_TOKEN")
+	t.Setenv("GITHUB_TOKEN", "")
 
 	_, err := provider.ResolveLatest(context.Background())
 	if err == nil {
@@ -636,8 +634,7 @@ func TestTapProvider_TokenNotExposed(t *testing.T) {
 	provider := NewTapProvider(resolver, "hashicorp/tap", "terraform")
 
 	secretToken := "ghp_supersecrettoken12345"
-	os.Setenv("GITHUB_TOKEN", secretToken)
-	defer os.Unsetenv("GITHUB_TOKEN")
+	t.Setenv("GITHUB_TOKEN", secretToken)
 
 	_, err := provider.ResolveLatest(context.Background())
 	if err == nil {
