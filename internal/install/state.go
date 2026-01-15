@@ -14,11 +14,13 @@ import (
 
 // VersionState holds per-version metadata for an installed tool version.
 type VersionState struct {
-	Requested       string            `json:"requested"`                  // What user asked for ("17", "@lts", "")
-	Binaries        []string          `json:"binaries,omitempty"`         // Binary names this version provides
-	BinaryChecksums map[string]string `json:"binary_checksums,omitempty"` // SHA256 checksums of installed binaries (path -> hex hash)
-	InstalledAt     time.Time         `json:"installed_at"`               // When this version was installed
-	Plan            *Plan             `json:"plan,omitempty"`             // Installation plan (if generated)
+	Requested          string            `json:"requested"`                     // What user asked for ("17", "@lts", "")
+	Binaries           []string          `json:"binaries,omitempty"`            // Binary names this version provides
+	BinaryChecksums    map[string]string `json:"binary_checksums,omitempty"`    // SHA256 checksums of installed binaries (path -> hex hash)
+	InstalledAt        time.Time         `json:"installed_at"`                  // When this version was installed
+	Plan               *Plan             `json:"plan,omitempty"`                // Installation plan (if generated)
+	AppPath            string            `json:"app_path,omitempty"`            // Path to installed .app bundle (macOS only)
+	ApplicationSymlink string            `json:"application_symlink,omitempty"` // Path to ~/Applications symlink (if created)
 }
 
 // Plan represents a stored installation plan. This is a simplified view of
