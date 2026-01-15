@@ -2,7 +2,67 @@
 
 ## Status
 
-Proposed
+Planned
+
+## Implementation Issues
+
+### Milestone: [Constrained Golden File Validation](https://github.com/tsukumogami/tsuku/milestone/35)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#921](https://github.com/tsukumogami/tsuku/issues/921) | feat(eval): add constrained evaluation skeleton with pip support | None | testable |
+| [#922](https://github.com/tsukumogami/tsuku/issues/922) | feat(eval): add go_build constraint support | [#921](https://github.com/tsukumogami/tsuku/issues/921) | testable |
+| [#923](https://github.com/tsukumogami/tsuku/issues/923) | feat(eval): add cargo_install constraint support | [#921](https://github.com/tsukumogami/tsuku/issues/921) | testable |
+| [#924](https://github.com/tsukumogami/tsuku/issues/924) | feat(eval): add npm_install constraint support | [#921](https://github.com/tsukumogami/tsuku/issues/921) | testable |
+| [#925](https://github.com/tsukumogami/tsuku/issues/925) | feat(eval): add gem_install constraint support | [#921](https://github.com/tsukumogami/tsuku/issues/921) | simple |
+| [#926](https://github.com/tsukumogami/tsuku/issues/926) | feat(eval): add cpan_install constraint support | [#921](https://github.com/tsukumogami/tsuku/issues/921) | simple |
+| [#927](https://github.com/tsukumogami/tsuku/issues/927) | feat(scripts): update validate-golden.sh | [#921](https://github.com/tsukumogami/tsuku/issues/921), [#922](https://github.com/tsukumogami/tsuku/issues/922), [#923](https://github.com/tsukumogami/tsuku/issues/923) | testable |
+| [#928](https://github.com/tsukumogami/tsuku/issues/928) | ci(golden): re-enable validate-golden-code.yml | [#927](https://github.com/tsukumogami/tsuku/issues/927) | critical |
+| [#929](https://github.com/tsukumogami/tsuku/issues/929) | docs: add constrained evaluation documentation | [#928](https://github.com/tsukumogami/tsuku/issues/928) | simple |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Skeleton"]
+        I921["#921: Constrained eval skeleton (pip)"]
+    end
+
+    subgraph Phase2["Phase 2: Ecosystem Support"]
+        I922["#922: go_build constraint"]
+        I923["#923: cargo_install constraint"]
+        I924["#924: npm_install constraint"]
+        I925["#925: gem_install constraint"]
+        I926["#926: cpan_install constraint"]
+    end
+
+    subgraph Phase3["Phase 3: Integration"]
+        I927["#927: Update validate-golden.sh"]
+        I928["#928: Re-enable CI workflow"]
+        I929["#929: Documentation"]
+    end
+
+    I921 --> I922
+    I921 --> I923
+    I921 --> I924
+    I921 --> I925
+    I921 --> I926
+    I921 --> I927
+    I922 --> I927
+    I923 --> I927
+    I927 --> I928
+    I928 --> I929
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I921 ready
+    class I922,I923,I924,I925,I926,I927,I928,I929 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
