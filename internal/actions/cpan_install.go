@@ -151,10 +151,30 @@ func (a *CpanInstallAction) Execute(ctx *ExecutionContext, params map[string]int
 	// Find perl and cpanm from tsuku's tools directory
 	perlPath := ResolvePerl()
 	if perlPath == "" {
+		// Check ExecPaths from dependencies (for golden file execution)
+		for _, p := range ctx.ExecPaths {
+			candidatePath := filepath.Join(p, "perl")
+			if _, err := os.Stat(candidatePath); err == nil {
+				perlPath = candidatePath
+				break
+			}
+		}
+	}
+	if perlPath == "" {
 		return fmt.Errorf("perl not found: install perl first (tsuku install perl)")
 	}
 
 	cpanmPath := ResolveCpanm()
+	if cpanmPath == "" {
+		// Check ExecPaths from dependencies (for golden file execution)
+		for _, p := range ctx.ExecPaths {
+			candidatePath := filepath.Join(p, "cpanm")
+			if _, err := os.Stat(candidatePath); err == nil {
+				cpanmPath = candidatePath
+				break
+			}
+		}
+	}
 	if cpanmPath == "" {
 		return fmt.Errorf("cpanm not found: install perl first (tsuku install perl)")
 	}
