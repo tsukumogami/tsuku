@@ -6,21 +6,32 @@ Proposed
 
 ## Context and Problem Statement
 
-Golden files for non-deterministic recipes (pip_exec, cargo_install, go_build, cpan_install, gem_install, npm_install, etc.) drift over time because dependency resolution happens at eval time and picks up new transitive dependency versions from upstream registries. This causes CI failures in `validate-golden-code.yml` that require manual regeneration, even when neither the recipe nor tsuku code has changed.
+Golden files for ecosystem recipes (pip_exec, cargo_install, go_build, cpan_install, gem_install, npm_install, etc.) drift over time because dependency resolution happens at eval time and picks up new transitive dependency versions from upstream registries. This causes CI failures in `validate-golden-code.yml` that require manual regeneration, even when neither the recipe nor tsuku code has changed.
 
-The plans are already marked `deterministic: false` at both the step and plan level, but the current validation performs exact byte-for-byte content comparison regardless of this flag. This creates a maintenance burden where the golden-code validation workflow had to be disabled entirely (see line 67: `if: false` in validate-golden-code.yml).
+**Current state**: The `validate-golden-code.yml` workflow is disabled. Ecosystem recipes like `ruff`, `black`, `httpie`, `poetry`, and `meson` have golden files that frequently become stale due to upstream dependency changes.
 
-**Current state**: The `validate-golden-code.yml` workflow is disabled. Non-deterministic recipes like `ruff`, `black`, `httpie`, `poetry`, and `meson` have golden files that frequently become stale due to upstream dependency changes.
+### Clarification: Eval-Time vs Exec-Time Determinism
+
+The codebase has a `deterministic` flag on actions and plans, but it measures **execution-time determinism** (will the same plan produce identical binaries?), NOT **eval-time stability** (will the same recipe produce the same plan?). These are orthogonal concepts:
+
+| Concept | Question | Example |
+|---------|----------|---------|
+| **Exec-time determinism** (what flag measures) | Same plan → same binary? | `go_build` produces different binaries with different Go compiler versions |
+| **Eval-time stability** (actual problem) | Same recipe → same plan? | `pip download httpie==3.2.4` resolves different transitive deps over time |
+
+The golden file drift is an **eval-time stability** problem. The `deterministic` flag is correctly applied for its intended purpose (marking execution variance), but it does not predict or solve eval-time drift.
+
+**Key insight**: Plan caching (Option 9) solves eval-time drift regardless of the `deterministic` flag. The flag becomes metadata only - it doesn't drive the validation strategy.
 
 ### Scope
 
 **In scope:**
-- Validation strategy for non-deterministic golden files
+- Validation strategy for golden files that exhibit eval-time drift
 - Changes to validation scripts and CI workflows
-- Documentation of which recipes/actions produce non-deterministic output
+- Documentation of which recipes/actions have eval-time variability
 
 **Out of scope:**
-- Making non-deterministic actions deterministic (covered by separate designs)
+- Making ecosystem actions produce identical binaries (exec-time determinism - different problem)
 - Changes to the lockfile generation approach (already implemented in #609)
 - Version provider changes
 
@@ -29,31 +40,33 @@ The plans are already marked `deterministic: false` at both the step and plan le
 1. **CI stability**: Validation should not fail due to upstream dependency changes unrelated to recipe or code changes
 2. **Regression detection**: Changes to recipes or tsuku code that affect plan structure should still be caught
 3. **Maintainability**: The solution should not require frequent manual intervention
-4. **Execution confidence**: Non-deterministic plans should still be executable when validated
+4. **Execution confidence**: Plans with eval-time variability should still be executable when validated
 5. **Minimal complexity**: Prefer solutions that build on existing infrastructure
+6. **Clean CLI ergonomics**: Users should not need to provide existing plans to generate reproducible plans
 
 ## Considered Options
 
-### Option 1: Skip Validation for Non-Deterministic Plans
+### Option 1: Skip Validation for Ecosystem Recipes
 
-Read the `deterministic` flag from each golden file and skip comparison entirely for non-deterministic plans.
+Skip comparison entirely for recipes that use ecosystem actions (pip_exec, go_build, etc.).
 
 **How it works:**
-- `validate-golden.sh` reads `jq '.deterministic'` from each golden file
-- If `false`, skip the regenerate-and-compare step
+- `validate-golden.sh` checks if the plan contains ecosystem actions
+- If yes, skip the regenerate-and-compare step
 - Only validate that the file exists and is valid JSON
 
 **Pros:**
 - Simple implementation
 - No false positive failures
-- Uses existing metadata
 - JSON validity checks still catch file corruption
 - Execution validation (`validate-golden-execution.yml`) provides defense-in-depth
 
 **Cons:**
-- No regression detection for non-deterministic recipes at plan-generation level
-- Recipe changes that break non-deterministic plans go unnoticed until execution
+- No regression detection for ecosystem recipes at plan-generation level
+- Recipe changes that break ecosystem plans go unnoticed until execution
 - Structural changes (new fields, action ordering) are not validated
+
+**Note on the `deterministic` flag:** While the codebase has a `deterministic` flag, it measures exec-time variance, not eval-time drift. Using it as a validation switch would be semantically incorrect. See "Clarification" section above.
 
 **When this option makes sense:**
 - Early-stage development where execution validation coverage is strong
@@ -137,28 +150,30 @@ Require non-deterministic recipes to include frozen lockfiles in the recipe itse
 - When reproducibility is paramount and the authoring cost is acceptable
 - For recipes with minimal transitive dependencies where lockfiles are small
 
-### Option 5: Tiered Validation by Determinism
+### Option 5: Tiered Validation by Recipe Type
 
-Apply different validation strategies based on the plan's determinism status:
-- Deterministic plans: exact comparison (current behavior)
-- Non-deterministic plans: structural validation (Option 2)
+Apply different validation strategies based on whether the recipe uses ecosystem actions:
+- Core-only recipes (download_file, extract, etc.): exact comparison
+- Ecosystem recipes (pip_exec, go_build, etc.): structural validation (Option 2)
 
 **How it works:**
-- Validation script checks `deterministic` flag first
+- Validation script checks if plan contains ecosystem actions
 - Routes to appropriate comparison function
 - Single workflow handles both cases
 - Structural validation uses jq to extract comparable fields
 
 **Pros:**
-- Best of both worlds: strict for deterministic, flexible for non-deterministic
+- Best of both worlds: strict for core recipes, flexible for ecosystem recipes
 - Single unified workflow
-- Leverages existing `deterministic` flag
 - Maintains regression detection for both types
 
 **Cons:**
 - Two validation paths to maintain
 - Need to keep structural schema definition updated
 - Slightly more complex than pure skip
+- Need to maintain list of "ecosystem" vs "core" actions
+
+**Note on the `deterministic` flag:** The flag measures exec-time variance (binary reproducibility), not eval-time drift (plan reproducibility). Using it as the tier switch would be semantically incorrect - a `download_file` action could have eval-time drift if the URL template resolves differently, while a `pip_exec` with cached lockfile could be eval-stable.
 
 ### Option 6: Semantic Diff with Equivalence Classes
 
@@ -461,6 +476,8 @@ This ensures code changes to recipes invalidate the cache.
 ### Structural Schema (Fallback)
 
 If Option 9 implementation is delayed, Option 5 (structural validation) remains as a viable fallback. The structural schema definition is preserved below for reference.
+
+**Note on flag usage in fallback:** The fallback implementation uses the `deterministic` flag to route validation. This is not semantically ideal since the flag measures exec-time variance, not eval-time drift. However, in practice there's high correlation: ecosystem actions (pip_exec, go_build) are both exec-non-deterministic AND eval-variable, while core actions (download_file, extract) are both exec-deterministic AND eval-stable. The flag works as an imperfect proxy. If implementing the fallback, consider detecting ecosystem actions directly instead of relying on the flag.
 
 #### Structural Schema Definition
 
