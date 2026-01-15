@@ -38,11 +38,14 @@ func runPlanBasedInstall(planPath, toolName string) error {
 	}
 	mgr := install.New(cfg)
 
-	// Create minimal recipe for executor context
-	// The executor needs a recipe to set up paths, but the plan contains all actual steps
+	// Create minimal recipe for executor context.
+	// The executor needs a recipe to set up paths, but the plan contains all actual steps.
+	// Include RecipeType so actions can check if this is a library (needed for
+	// directory mode verification exemption).
 	minimalRecipe := &recipe.Recipe{
 		Metadata: recipe.MetadataSection{
 			Name: effectiveToolName,
+			Type: plan.RecipeType,
 		},
 	}
 

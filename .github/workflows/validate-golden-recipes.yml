@@ -5,12 +5,26 @@ on:
     branches: [main]
     paths:
       - 'internal/recipe/recipes/**/*.toml'
+      - 'testdata/golden/exclusions.json'
       - '.github/workflows/validate-golden-recipes.yml'
   workflow_dispatch:
 
 jobs:
+  validate-exclusions:
+    name: Validate Exclusions
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check for stale exclusions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/validate-golden-exclusions.sh --check-issues
+
   detect-changes:
     name: Detect Changes
+    needs: validate-exclusions
     runs-on: ubuntu-latest
     outputs:
       recipes: ${{ steps.changed.outputs.recipes }}
@@ -38,7 +52,7 @@ jobs:
           echo "$CHANGED"
 
           # Build JSON array of recipe names
-          # Only include recipes that have golden files
+          # All recipes must have golden files - fail if any are missing
           JSON="["
           FIRST=true
           for path in $CHANGED; do
@@ -52,11 +66,17 @@ jobs:
             first_letter="${recipe:0:1}"
             golden_dir="testdata/golden/plans/$first_letter/$recipe"
 
-            # Only validate if golden files exist for this recipe
-            # TODO(#745): Remove this skip once all recipes have golden files
+            # Check if recipe has golden files
             if [ ! -d "$golden_dir" ]; then
-              echo "No golden files for $recipe, skipping"
-              continue
+              # Check if recipe is fully excluded (has exclusions for all platforms)
+              exclusion_count=$(jq --arg r "$recipe" '[.exclusions[] | select(.recipe == $r)] | length' testdata/golden/exclusions.json)
+              if [ "$exclusion_count" -gt 0 ]; then
+                echo "Recipe '$recipe' has no golden files but is excluded ($exclusion_count exclusion(s))"
+                continue
+              fi
+              echo "::error::Recipe '$recipe' has no golden files. Run './scripts/regenerate-golden.sh $recipe' to generate them."
+              echo "::error::Or add exclusions to testdata/golden/exclusions.json with a tracking issue."
+              exit 1
             fi
 
             if [ "$FIRST" = true ]; then
