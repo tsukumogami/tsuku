@@ -141,47 +141,63 @@ func AnalyzeRecipe(recipe *Recipe) *RecipeAnalysis {
 
 // SupportedPlatforms returns all platforms the recipe supports.
 // This is the list that should be used for golden file generation/validation.
+//
+// Platform support is determined by both:
+// 1. Metadata constraints (supported_os, supported_arch, unsupported_platforms)
+// 2. Step analysis (whether steps exist for each platform)
+//
+// A platform is only included if it passes BOTH checks.
 func SupportedPlatforms(recipe *Recipe) []Platform {
 	analysis := AnalyzeRecipe(recipe)
 
 	var platforms []Platform
 
-	// Add darwin platforms only if recipe supports darwin (derived from analysis)
+	// Add darwin platforms only if:
+	// 1. Recipe's metadata allows it (supported_os, unsupported_platforms)
+	// 2. Recipe has darwin-applicable steps (derived from analysis)
 	if analysis.SupportsDarwin {
-		platforms = append(platforms,
-			Platform{OS: "darwin", Arch: "amd64"},
-			Platform{OS: "darwin", Arch: "arm64"},
-		)
+		if recipe.SupportsPlatform("darwin", "amd64") {
+			platforms = append(platforms, Platform{OS: "darwin", Arch: "amd64"})
+		}
+		if recipe.SupportsPlatform("darwin", "arm64") {
+			platforms = append(platforms, Platform{OS: "darwin", Arch: "arm64"})
+		}
 	}
 
-	// Add Linux platforms based on policy
+	// Add Linux platforms based on policy, respecting metadata constraints
 	switch analysis.Policy {
 	case FamilyNone:
 		// No Linux platforms - no family policy applies
 
 	case FamilyAgnostic:
 		// Generic Linux (no family qualifier)
-		platforms = append(platforms,
-			Platform{OS: "linux", Arch: "amd64"},
-			Platform{OS: "linux", Arch: "arm64"},
-		)
+		if recipe.SupportsPlatform("linux", "amd64") {
+			platforms = append(platforms, Platform{OS: "linux", Arch: "amd64"})
+		}
+		if recipe.SupportsPlatform("linux", "arm64") {
+			platforms = append(platforms, Platform{OS: "linux", Arch: "arm64"})
+		}
 
 	case FamilyVarying, FamilyMixed:
 		// All families needed
 		for _, family := range AllLinuxFamilies {
-			platforms = append(platforms,
-				Platform{OS: "linux", Arch: "amd64", LinuxFamily: family},
-				Platform{OS: "linux", Arch: "arm64", LinuxFamily: family},
-			)
+			if recipe.SupportsPlatform("linux", "amd64") {
+				platforms = append(platforms, Platform{OS: "linux", Arch: "amd64", LinuxFamily: family})
+			}
+			if recipe.SupportsPlatform("linux", "arm64") {
+				platforms = append(platforms, Platform{OS: "linux", Arch: "arm64", LinuxFamily: family})
+			}
 		}
 
 	case FamilySpecific:
 		// Only specific families
 		for family := range analysis.FamiliesUsed {
-			platforms = append(platforms,
-				Platform{OS: "linux", Arch: "amd64", LinuxFamily: family},
-				Platform{OS: "linux", Arch: "arm64", LinuxFamily: family},
-			)
+			if recipe.SupportsPlatform("linux", "amd64") {
+				platforms = append(platforms, Platform{OS: "linux", Arch: "amd64", LinuxFamily: family})
+			}
+			if recipe.SupportsPlatform("linux", "arm64") {
+				platforms = append(platforms, Platform{OS: "linux", Arch: "arm64", LinuxFamily: family})
+			}
 		}
 	}
 

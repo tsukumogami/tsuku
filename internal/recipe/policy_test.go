@@ -468,3 +468,127 @@ func TestSupportedPlatforms_EmptyRecipe(t *testing.T) {
 		t.Errorf("expected 0 platforms for empty recipe, got %d", len(platforms))
 	}
 }
+
+func TestSupportedPlatforms_SupportedOSLinuxOnly(t *testing.T) {
+	// Recipe with steps that support both darwin and linux,
+	// but metadata restricts to linux only
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: nil}, // Supports both OS
+		},
+	})
+	recipe.Metadata.SupportedOS = []string{"linux"}
+
+	platforms := SupportedPlatforms(recipe)
+
+	// Should only have linux platforms (2 arches), no darwin
+	if len(platforms) != 2 {
+		t.Errorf("expected 2 platforms, got %d", len(platforms))
+	}
+
+	for _, p := range platforms {
+		if p.OS != "linux" {
+			t.Errorf("expected only linux platforms, got %s", p.OS)
+		}
+	}
+}
+
+func TestSupportedPlatforms_SupportedOSDarwinOnly(t *testing.T) {
+	// Recipe with steps that support both darwin and linux,
+	// but metadata restricts to darwin only
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: nil}, // Supports both OS
+		},
+	})
+	recipe.Metadata.SupportedOS = []string{"darwin"}
+
+	platforms := SupportedPlatforms(recipe)
+
+	// Should only have darwin platforms (2 arches)
+	if len(platforms) != 2 {
+		t.Errorf("expected 2 platforms, got %d", len(platforms))
+	}
+
+	for _, p := range platforms {
+		if p.OS != "darwin" {
+			t.Errorf("expected only darwin platforms, got %s", p.OS)
+		}
+	}
+}
+
+func TestSupportedPlatforms_SupportedArchAmd64Only(t *testing.T) {
+	// Recipe restricted to amd64 only
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: nil}, // Supports both OS
+		},
+	})
+	recipe.Metadata.SupportedArch = []string{"amd64"}
+
+	platforms := SupportedPlatforms(recipe)
+
+	// Should have darwin/amd64 + linux/amd64 = 2 platforms
+	if len(platforms) != 2 {
+		t.Errorf("expected 2 platforms, got %d", len(platforms))
+	}
+
+	for _, p := range platforms {
+		if p.Arch != "amd64" {
+			t.Errorf("expected only amd64 arch, got %s", p.Arch)
+		}
+	}
+}
+
+func TestSupportedPlatforms_UnsupportedPlatforms(t *testing.T) {
+	// Recipe that excludes darwin/arm64
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: nil}, // Supports both OS
+		},
+	})
+	recipe.Metadata.UnsupportedPlatforms = []string{"darwin/arm64"}
+
+	platforms := SupportedPlatforms(recipe)
+
+	// Should have darwin/amd64 + linux/amd64 + linux/arm64 = 3 platforms
+	if len(platforms) != 3 {
+		t.Errorf("expected 3 platforms, got %d", len(platforms))
+	}
+
+	// Verify darwin/arm64 is excluded
+	for _, p := range platforms {
+		if p.OS == "darwin" && p.Arch == "arm64" {
+			t.Error("darwin/arm64 should be excluded")
+		}
+	}
+}
+
+func TestSupportedPlatforms_FamilyVaryingWithSupportedOSLinux(t *testing.T) {
+	// Recipe with family-varying steps but linux-only metadata
+	recipe := makeRecipeWithAnalysis([]stepWithAnalysis{
+		{
+			action:   "download",
+			analysis: &StepAnalysis{Constraint: nil, FamilyVarying: true},
+		},
+	})
+	recipe.Metadata.SupportedOS = []string{"linux"}
+
+	platforms := SupportedPlatforms(recipe)
+
+	// Should have all linux families (5 * 2 = 10), no darwin
+	expectedCount := len(AllLinuxFamilies) * 2
+	if len(platforms) != expectedCount {
+		t.Errorf("expected %d platforms, got %d", expectedCount, len(platforms))
+	}
+
+	for _, p := range platforms {
+		if p.OS != "linux" {
+			t.Errorf("expected only linux platforms, got %s", p.OS)
+		}
+	}
+}
