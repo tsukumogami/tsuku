@@ -65,7 +65,7 @@ while IFS= read -r exclusion; do
     recipe=$(echo "$exclusion" | jq -r '.recipe')
     os=$(echo "$exclusion" | jq -r '.platform.os')
     arch=$(echo "$exclusion" | jq -r '.platform.arch')
-    family=$(echo "$exclusion" | jq -r '.platform.family // empty')
+    family=$(echo "$exclusion" | jq -r '.platform.linux_family // empty')
     issue_url=$(echo "$exclusion" | jq -r '.issue')
     reason=$(echo "$exclusion" | jq -r '.reason')
 

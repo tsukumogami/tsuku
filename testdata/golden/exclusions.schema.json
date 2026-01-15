@@ -32,7 +32,7 @@
                 "enum": ["amd64", "arm64"],
                 "description": "Architecture"
               },
-              "family": {
+              "linux_family": {
                 "type": "string",
                 "enum": ["debian", "rhel", "arch", "alpine", "suse"],
                 "description": "Linux family (optional, for family-aware recipes)"

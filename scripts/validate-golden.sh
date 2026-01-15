@@ -171,11 +171,11 @@ is_platform_excluded() {
     # Build jq query based on whether family is present
     if [[ -n "$family" ]]; then
         jq -e --arg r "$recipe" --arg o "$os" --arg a "$arch" --arg f "$family" \
-            '.exclusions[] | select(.recipe == $r and .platform.os == $o and .platform.arch == $a and .platform.family == $f)' \
+            '.exclusions[] | select(.recipe == $r and .platform.os == $o and .platform.arch == $a and .platform.linux_family == $f)' \
             "$EXCLUSIONS_FILE" > /dev/null 2>&1
     else
         jq -e --arg r "$recipe" --arg o "$os" --arg a "$arch" \
-            '.exclusions[] | select(.recipe == $r and .platform.os == $o and .platform.arch == $a and (.platform.family == null or .platform.family == ""))' \
+            '.exclusions[] | select(.recipe == $r and .platform.os == $o and .platform.arch == $a and (.platform.linux_family == null or .platform.linux_family == ""))' \
             "$EXCLUSIONS_FILE" > /dev/null 2>&1
     fi
 }
