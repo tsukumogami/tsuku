@@ -30,6 +30,8 @@ type Executor struct {
 	execPaths        []string             // Additional bin paths for execution (e.g., nodejs for npm tools)
 	toolsDir         string               // Tools directory (~/.tsuku/tools/) for finding other installed tools
 	libsDir          string               // Libraries directory (~/.tsuku/libs/) for finding installed libraries
+	appsDir          string               // Applications directory (~/.tsuku/apps/) for macOS .app bundles
+	currentDir       string               // Current symlinks directory (~/.tsuku/tools/current/) for binary symlinks
 	resolvedDeps     actions.ResolvedDeps // Pre-resolved dependencies (from state manager)
 }
 
@@ -171,6 +173,16 @@ func (e *Executor) SetToolsDir(dir string) {
 // SetLibsDir sets the libraries directory for finding installed libraries
 func (e *Executor) SetLibsDir(dir string) {
 	e.libsDir = dir
+}
+
+// SetAppsDir sets the applications directory for macOS .app bundles
+func (e *Executor) SetAppsDir(dir string) {
+	e.appsDir = dir
+}
+
+// SetCurrentDir sets the current symlinks directory for binary symlinks
+func (e *Executor) SetCurrentDir(dir string) {
+	e.currentDir = dir
 }
 
 // SetResolvedDeps sets the pre-resolved dependency versions (from state manager).
@@ -363,6 +375,8 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 		ToolInstallDir:   "",
 		ToolsDir:         e.toolsDir,
 		LibsDir:          e.libsDir,
+		AppsDir:          e.appsDir,
+		CurrentDir:       e.currentDir,
 		DownloadCacheDir: e.downloadCacheDir,
 		KeyCacheDir:      e.keyCacheDir,
 		Version:          plan.Version,
@@ -626,6 +640,8 @@ func (e *Executor) installSingleDependency(ctx context.Context, dep *DependencyP
 		ToolInstallDir:   "",
 		ToolsDir:         e.toolsDir,
 		LibsDir:          e.libsDir,
+		AppsDir:          e.appsDir,
+		CurrentDir:       e.currentDir,
 		DownloadCacheDir: e.downloadCacheDir,
 		KeyCacheDir:      e.keyCacheDir,
 		Version:          dep.Version,

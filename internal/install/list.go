@@ -70,3 +70,55 @@ func (m *Manager) ListWithOptions(includeHidden bool) ([]InstalledTool, error) {
 
 	return tools, nil
 }
+
+// InstalledApp represents an installed macOS application bundle
+type InstalledApp struct {
+	Name               string // Tool name from recipe
+	Version            string // Installed version
+	AppPath            string // Path to installed .app bundle ($TSUKU_HOME/apps/)
+	ApplicationSymlink string // Path to ~/Applications symlink (if created)
+	IsActive           bool   // Whether this is the currently active version
+}
+
+// ListApps returns a list of installed macOS application bundles.
+// Apps are identified by having a non-empty AppPath in their VersionState.
+func (m *Manager) ListApps() ([]InstalledApp, error) {
+	state, err := m.state.Load()
+	if err != nil {
+		return nil, fmt.Errorf("failed to load state: %w", err)
+	}
+
+	var apps []InstalledApp
+
+	for toolName, toolState := range state.Installed {
+		for version, versionState := range toolState.Versions {
+			// Skip entries without AppPath (not an app)
+			if versionState.AppPath == "" {
+				continue
+			}
+
+			// Verify .app bundle exists (skip stale state entries)
+			if _, err := os.Stat(versionState.AppPath); os.IsNotExist(err) {
+				continue
+			}
+
+			apps = append(apps, InstalledApp{
+				Name:               toolName,
+				Version:            version,
+				AppPath:            versionState.AppPath,
+				ApplicationSymlink: versionState.ApplicationSymlink,
+				IsActive:           version == toolState.ActiveVersion,
+			})
+		}
+	}
+
+	// Sort by name, then version
+	sort.Slice(apps, func(i, j int) bool {
+		if apps[i].Name != apps[j].Name {
+			return apps[i].Name < apps[j].Name
+		}
+		return apps[i].Version < apps[j].Version
+	})
+
+	return apps, nil
+}

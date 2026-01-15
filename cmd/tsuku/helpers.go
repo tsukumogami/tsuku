@@ -102,6 +102,8 @@ func generateInstallPlan(
 
 	// Configure executor paths
 	exec.SetToolsDir(cfg.ToolsDir)
+	exec.SetAppsDir(cfg.AppsDir)
+	exec.SetCurrentDir(cfg.CurrentDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 

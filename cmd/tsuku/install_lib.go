@@ -62,6 +62,8 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 	cfg, _ := config.DefaultConfig()
 	exec.SetToolsDir(cfg.ToolsDir)
 	exec.SetLibsDir(cfg.LibsDir)
+	exec.SetAppsDir(cfg.AppsDir)
+	exec.SetCurrentDir(cfg.CurrentDir)
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 	exec.SetKeyCacheDir(cfg.KeyCacheDir)
 

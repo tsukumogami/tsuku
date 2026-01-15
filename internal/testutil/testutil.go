@@ -31,6 +31,7 @@ func NewTestConfig(t *testing.T) (*config.Config, func()) {
 		RecipesDir:       filepath.Join(tmpDir, "recipes"),
 		RegistryDir:      filepath.Join(tmpDir, "registry"),
 		LibsDir:          filepath.Join(tmpDir, "libs"),
+		AppsDir:          filepath.Join(tmpDir, "apps"),
 		CacheDir:         filepath.Join(tmpDir, "cache"),
 		VersionCacheDir:  filepath.Join(tmpDir, "cache", "versions"),
 		DownloadCacheDir: filepath.Join(tmpDir, "cache", "downloads"),
@@ -59,6 +60,10 @@ func NewTestConfig(t *testing.T) (*config.Config, func()) {
 	if err := os.MkdirAll(cfg.LibsDir, 0755); err != nil {
 		cleanup()
 		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	if err := os.MkdirAll(cfg.AppsDir, 0755); err != nil {
+		cleanup()
+		t.Fatalf("failed to create apps dir: %v", err)
 	}
 	if err := os.MkdirAll(cfg.CacheDir, 0755); err != nil {
 		cleanup()

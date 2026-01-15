@@ -351,6 +351,12 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Set libraries directory for finding installed libraries
 	exec.SetLibsDir(cfg.LibsDir)
 
+	// Set apps directory for macOS .app bundles
+	exec.SetAppsDir(cfg.AppsDir)
+
+	// Set current directory for binary symlinks
+	exec.SetCurrentDir(cfg.CurrentDir)
+
 	// Set download cache directory
 	exec.SetDownloadCacheDir(cfg.DownloadCacheDir)
 

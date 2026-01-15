@@ -25,6 +25,7 @@ var listCmd = &cobra.Command{
 		// Check flags
 		showSystemDeps, _ := cmd.Flags().GetBool("show-system-dependencies")
 		showAll, _ := cmd.Flags().GetBool("all")
+		showApps, _ := cmd.Flags().GetBool("apps")
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
 		var tools []install.InstalledTool
@@ -49,6 +50,16 @@ var listCmd = &cobra.Command{
 			}
 		}
 
+		// Get apps if --apps flag is set
+		var apps []install.InstalledApp
+		if showApps || showAll {
+			apps, err = mgr.ListApps()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "Failed to list apps: %v\n", err)
+				exitWithCode(ExitGeneral)
+			}
+		}
+
 		// JSON output mode
 		if jsonOutput {
 			type itemJSON struct {
@@ -58,13 +69,22 @@ var listCmd = &cobra.Command{
 				Type     string `json:"type,omitempty"`
 				IsActive bool   `json:"is_active,omitempty"`
 			}
+			type appJSON struct {
+				Name               string `json:"name"`
+				Version            string `json:"version"`
+				AppPath            string `json:"app_path"`
+				ApplicationSymlink string `json:"application_symlink,omitempty"`
+				IsActive           bool   `json:"is_active,omitempty"`
+			}
 			type listOutput struct {
 				Tools     []itemJSON `json:"tools"`
 				Libraries []itemJSON `json:"libraries,omitempty"`
+				Apps      []appJSON  `json:"apps,omitempty"`
 			}
 			output := listOutput{
 				Tools:     make([]itemJSON, 0, len(tools)),
 				Libraries: make([]itemJSON, 0, len(libs)),
+				Apps:      make([]appJSON, 0, len(apps)),
 			}
 			for _, t := range tools {
 				output.Tools = append(output.Tools, itemJSON{
@@ -83,11 +103,20 @@ var listCmd = &cobra.Command{
 					Type:    "library",
 				})
 			}
+			for _, a := range apps {
+				output.Apps = append(output.Apps, appJSON{
+					Name:               a.Name,
+					Version:            a.Version,
+					AppPath:            a.AppPath,
+					ApplicationSymlink: a.ApplicationSymlink,
+					IsActive:           a.IsActive,
+				})
+			}
 			printJSON(output)
 			return
 		}
 
-		if len(tools) == 0 && len(libs) == 0 {
+		if len(tools) == 0 && len(libs) == 0 && len(apps) == 0 {
 			printInfo("No tools installed.")
 			return
 		}
@@ -128,11 +157,28 @@ var listCmd = &cobra.Command{
 				fmt.Printf("  %-20s  %s  [lib]\n", lib.Name, lib.Version)
 			}
 		}
+
+		// Show apps if --apps or --all flag is set
+		if (showApps || showAll) && len(apps) > 0 {
+			printInfof("\nInstalled applications (%d total):\n\n", len(apps))
+			for _, app := range apps {
+				activeIndicator := ""
+				if app.IsActive {
+					activeIndicator = " (active)"
+				}
+				fmt.Printf("  %-20s  %s%s\n", app.Name, app.Version, activeIndicator)
+				fmt.Printf("    App: %s\n", app.AppPath)
+				if app.ApplicationSymlink != "" {
+					fmt.Printf("    Link: %s\n", app.ApplicationSymlink)
+				}
+			}
+		}
 	},
 }
 
 func init() {
 	listCmd.Flags().Bool("show-system-dependencies", false, "Include hidden system dependencies in output")
-	listCmd.Flags().Bool("all", false, "Include libraries in output")
+	listCmd.Flags().Bool("all", false, "Include libraries and applications in output")
+	listCmd.Flags().Bool("apps", false, "Show only macOS application bundles")
 	listCmd.Flags().Bool("json", false, "Output in JSON format")
 }

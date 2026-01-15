@@ -234,6 +234,15 @@ func GetBool(params map[string]interface{}, key string) (bool, bool) {
 	return b, ok
 }
 
+// GetBoolDefault safely gets a bool value from params map, returning defaultVal if not present
+func GetBoolDefault(params map[string]interface{}, key string, defaultVal bool) bool {
+	val, ok := GetBool(params, key)
+	if !ok {
+		return defaultVal
+	}
+	return val
+}
+
 // GetStringSlice safely gets a []string from params map
 func GetStringSlice(params map[string]interface{}, key string) ([]string, bool) {
 	val, ok := params[key]

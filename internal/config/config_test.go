@@ -49,6 +49,7 @@ func TestEnsureDirectories(t *testing.T) {
 		RecipesDir:       filepath.Join(tmpDir, "tsuku", "recipes"),
 		RegistryDir:      filepath.Join(tmpDir, "tsuku", "registry"),
 		LibsDir:          filepath.Join(tmpDir, "tsuku", "libs"),
+		AppsDir:          filepath.Join(tmpDir, "tsuku", "apps"),
 		CacheDir:         filepath.Join(tmpDir, "tsuku", "cache"),
 		VersionCacheDir:  filepath.Join(tmpDir, "tsuku", "cache", "versions"),
 		DownloadCacheDir: filepath.Join(tmpDir, "tsuku", "cache", "downloads"),
@@ -62,7 +63,7 @@ func TestEnsureDirectories(t *testing.T) {
 	}
 
 	// Verify all directories exist
-	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir, cfg.CacheDir, cfg.VersionCacheDir, cfg.DownloadCacheDir, cfg.KeyCacheDir, cfg.TapCacheDir}
+	dirs := []string{cfg.HomeDir, cfg.ToolsDir, cfg.CurrentDir, cfg.RecipesDir, cfg.RegistryDir, cfg.LibsDir, cfg.AppsDir, cfg.CacheDir, cfg.VersionCacheDir, cfg.DownloadCacheDir, cfg.KeyCacheDir, cfg.TapCacheDir}
 	for _, dir := range dirs {
 		info, err := os.Stat(dir)
 		if err != nil {
@@ -112,6 +113,16 @@ func TestLibDir(t *testing.T) {
 	want := "/home/user/.tsuku/libs/libyaml-0.2.5"
 	if got != want {
 		t.Errorf("LibDir() = %q, want %q", got, want)
+	}
+}
+
+func TestAppDir(t *testing.T) {
+	cfg := &Config{AppsDir: "/home/user/.tsuku/apps"}
+
+	got := cfg.AppDir("visual-studio-code", "1.85.0")
+	want := "/home/user/.tsuku/apps/visual-studio-code-1.85.0.app"
+	if got != want {
+		t.Errorf("AppDir() = %q, want %q", got, want)
 	}
 }
 

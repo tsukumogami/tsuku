@@ -96,6 +96,7 @@ type Config struct {
 	RecipesDir       string // $TSUKU_HOME/recipes
 	RegistryDir      string // $TSUKU_HOME/registry (cached recipes from remote registry)
 	LibsDir          string // $TSUKU_HOME/libs (shared libraries)
+	AppsDir          string // $TSUKU_HOME/apps (macOS application bundles)
 	CacheDir         string // $TSUKU_HOME/cache
 	VersionCacheDir  string // $TSUKU_HOME/cache/versions
 	DownloadCacheDir string // $TSUKU_HOME/cache/downloads
@@ -123,6 +124,7 @@ func DefaultConfig() (*Config, error) {
 		RecipesDir:       filepath.Join(tsukuHome, "recipes"),
 		RegistryDir:      filepath.Join(tsukuHome, "registry"),
 		LibsDir:          filepath.Join(tsukuHome, "libs"),
+		AppsDir:          filepath.Join(tsukuHome, "apps"),
 		CacheDir:         filepath.Join(tsukuHome, "cache"),
 		VersionCacheDir:  filepath.Join(tsukuHome, "cache", "versions"),
 		DownloadCacheDir: filepath.Join(tsukuHome, "cache", "downloads"),
@@ -141,6 +143,7 @@ func (c *Config) EnsureDirectories() error {
 		c.RecipesDir,
 		c.RegistryDir,
 		c.LibsDir,
+		c.AppsDir,
 		c.CacheDir,
 		c.VersionCacheDir,
 		c.DownloadCacheDir,
@@ -175,4 +178,9 @@ func (c *Config) CurrentSymlink(name string) string {
 // LibDir returns the installation directory for a specific library version
 func (c *Config) LibDir(name, version string) string {
 	return filepath.Join(c.LibsDir, fmt.Sprintf("%s-%s", name, version))
+}
+
+// AppDir returns the installation directory for a specific app bundle version
+func (c *Config) AppDir(name, version string) string {
+	return filepath.Join(c.AppsDir, fmt.Sprintf("%s-%s.app", name, version))
 }
