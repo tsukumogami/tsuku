@@ -4,8 +4,11 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
@@ -434,5 +437,251 @@ func (t *testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+	// Copy headers from original request
+	for k, v := range req.Header {
+		newReq.Header[k] = v
+	}
 	return http.DefaultTransport.RoundTrip(newReq)
+}
+
+func TestTapProvider_GitHubTokenAuth(t *testing.T) {
+	// Track if authorization header was sent
+	var receivedAuth string
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		receivedAuth = r.Header.Get("Authorization")
+		if strings.Contains(r.URL.Path, "Formula/terraform.rb") {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(sampleTerraformFormula))
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	resolver := New()
+	resolver.httpClient = &http.Client{
+		Transport: &testTransport{server: server},
+	}
+
+	provider := NewTapProvider(resolver, "hashicorp/tap", "terraform")
+
+	// Test with token set
+	t.Run("with token", func(t *testing.T) {
+		os.Setenv("GITHUB_TOKEN", "test-token-12345")
+		defer os.Unsetenv("GITHUB_TOKEN")
+
+		receivedAuth = ""
+		_, err := provider.ResolveLatest(context.Background())
+		if err != nil {
+			t.Fatalf("ResolveLatest() error = %v", err)
+		}
+
+		if receivedAuth != "Bearer test-token-12345" {
+			t.Errorf("Authorization header = %q, want %q", receivedAuth, "Bearer test-token-12345")
+		}
+	})
+
+	// Test without token
+	t.Run("without token", func(t *testing.T) {
+		os.Unsetenv("GITHUB_TOKEN")
+
+		receivedAuth = ""
+		_, err := provider.ResolveLatest(context.Background())
+		if err != nil {
+			t.Fatalf("ResolveLatest() error = %v", err)
+		}
+
+		if receivedAuth != "" {
+			t.Errorf("Authorization header = %q, want empty", receivedAuth)
+		}
+	})
+}
+
+func TestTapProvider_RateLimitError(t *testing.T) {
+	resetTime := time.Now().Add(30 * time.Minute)
+
+	// Test unauthenticated rate limit using parseRateLimitError directly
+	t.Run("unauthenticated", func(t *testing.T) {
+		// Create a mock response with rate limit headers
+		resp := &http.Response{
+			StatusCode: http.StatusForbidden,
+			Header:     make(http.Header),
+		}
+		resp.Header.Set("X-RateLimit-Limit", "60")
+		resp.Header.Set("X-RateLimit-Remaining", "0")
+		resp.Header.Set("X-RateLimit-Reset", strconv.FormatInt(resetTime.Unix(), 10))
+
+		resolver := New()
+		provider := NewTapProvider(resolver, "hashicorp/tap", "terraform")
+
+		err := provider.parseRateLimitError(resp, false)
+
+		rateLimitErr, ok := err.(*GitHubRateLimitError)
+		if !ok {
+			t.Fatalf("Expected GitHubRateLimitError, got %T: %v", err, err)
+		}
+
+		if rateLimitErr.Limit != 60 {
+			t.Errorf("Limit = %d, want 60", rateLimitErr.Limit)
+		}
+		if rateLimitErr.Remaining != 0 {
+			t.Errorf("Remaining = %d, want 0", rateLimitErr.Remaining)
+		}
+		if rateLimitErr.Authenticated {
+			t.Error("Authenticated = true, want false")
+		}
+
+		// Verify error message includes actionable info
+		errMsg := err.Error()
+		if !strings.Contains(errMsg, "rate limit") {
+			t.Errorf("Error message should contain 'rate limit', got: %s", errMsg)
+		}
+
+		// Verify suggestion mentions GITHUB_TOKEN
+		suggestion := rateLimitErr.Suggestion()
+		if !strings.Contains(suggestion, "GITHUB_TOKEN") {
+			t.Errorf("Suggestion should mention GITHUB_TOKEN, got: %s", suggestion)
+		}
+	})
+
+	// Test authenticated rate limit (higher limit)
+	t.Run("authenticated", func(t *testing.T) {
+		resp := &http.Response{
+			StatusCode: http.StatusForbidden,
+			Header:     make(http.Header),
+		}
+		resp.Header.Set("X-RateLimit-Limit", "5000")
+		resp.Header.Set("X-RateLimit-Remaining", "0")
+		resp.Header.Set("X-RateLimit-Reset", strconv.FormatInt(resetTime.Unix(), 10))
+
+		resolver := New()
+		provider := NewTapProvider(resolver, "hashicorp/tap", "terraform")
+
+		err := provider.parseRateLimitError(resp, true)
+
+		rateLimitErr, ok := err.(*GitHubRateLimitError)
+		if !ok {
+			t.Fatalf("Expected GitHubRateLimitError, got %T: %v", err, err)
+		}
+
+		if rateLimitErr.Limit != 5000 {
+			t.Errorf("Limit = %d, want 5000", rateLimitErr.Limit)
+		}
+		if !rateLimitErr.Authenticated {
+			t.Error("Authenticated = false, want true")
+		}
+
+		// Suggestion should NOT mention GITHUB_TOKEN when already authenticated
+		suggestion := rateLimitErr.Suggestion()
+		if strings.Contains(suggestion, "GITHUB_TOKEN") {
+			t.Errorf("Suggestion should not mention GITHUB_TOKEN when authenticated, got: %s", suggestion)
+		}
+	})
+}
+
+func TestTapProvider_RateLimitError_Integration(t *testing.T) {
+	resetTime := time.Now().Add(30 * time.Minute)
+
+	// Test that 403 response triggers rate limit error in full flow
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Return 403 for all formula locations
+		w.Header().Set("X-RateLimit-Limit", "60")
+		w.Header().Set("X-RateLimit-Remaining", "0")
+		w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(resetTime.Unix(), 10))
+		w.WriteHeader(http.StatusForbidden)
+		_, _ = w.Write([]byte(`{"message": "API rate limit exceeded"}`))
+	}))
+	defer server.Close()
+
+	resolver := New()
+	resolver.httpClient = &http.Client{
+		Transport: &testTransport{server: server},
+	}
+
+	provider := NewTapProvider(resolver, "hashicorp/tap", "terraform")
+	os.Unsetenv("GITHUB_TOKEN")
+
+	_, err := provider.ResolveLatest(context.Background())
+	if err == nil {
+		t.Fatal("ResolveLatest() expected error for rate limit")
+	}
+
+	// The error should be a rate limit error (first 403 encountered)
+	rateLimitErr, ok := err.(*GitHubRateLimitError)
+	if !ok {
+		t.Fatalf("Expected GitHubRateLimitError, got %T: %v", err, err)
+	}
+
+	if rateLimitErr.Limit != 60 {
+		t.Errorf("Limit = %d, want 60", rateLimitErr.Limit)
+	}
+}
+
+func TestTapProvider_TokenNotExposed(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Return 403 to trigger rate limit error
+		w.Header().Set("X-RateLimit-Limit", "60")
+		w.Header().Set("X-RateLimit-Remaining", "0")
+		w.Header().Set("X-RateLimit-Reset", strconv.FormatInt(time.Now().Add(time.Hour).Unix(), 10))
+		w.WriteHeader(http.StatusForbidden)
+	}))
+	defer server.Close()
+
+	resolver := New()
+	resolver.httpClient = &http.Client{
+		Transport: &testTransport{server: server},
+	}
+
+	provider := NewTapProvider(resolver, "hashicorp/tap", "terraform")
+
+	secretToken := "ghp_supersecrettoken12345"
+	os.Setenv("GITHUB_TOKEN", secretToken)
+	defer os.Unsetenv("GITHUB_TOKEN")
+
+	_, err := provider.ResolveLatest(context.Background())
+	if err == nil {
+		t.Fatal("Expected error")
+	}
+
+	// Verify token is not in error message
+	errMsg := err.Error()
+	if strings.Contains(errMsg, secretToken) {
+		t.Error("Token should not appear in error message")
+	}
+
+	// Verify token is not in suggestion
+	if rateLimitErr, ok := err.(*GitHubRateLimitError); ok {
+		suggestion := rateLimitErr.Suggestion()
+		if strings.Contains(suggestion, secretToken) {
+			t.Error("Token should not appear in suggestion")
+		}
+	}
+}
+
+func TestParseIntHeader(t *testing.T) {
+	tests := []struct {
+		name       string
+		headerVal  string
+		defaultVal int
+		want       int
+	}{
+		{"valid integer", "100", 0, 100},
+		{"empty header", "", 50, 50},
+		{"invalid integer", "not-a-number", 25, 25},
+		{"zero", "0", 10, 0},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			resp := &http.Response{Header: make(http.Header)}
+			if tt.headerVal != "" {
+				resp.Header.Set("X-Test", tt.headerVal)
+			}
+			got := parseIntHeader(resp, "X-Test", tt.defaultVal)
+			if got != tt.want {
+				t.Errorf("parseIntHeader() = %d, want %d", got, tt.want)
+			}
+		})
+	}
 }
