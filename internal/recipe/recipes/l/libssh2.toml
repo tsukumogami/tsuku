@@ -23,3 +23,6 @@ binaries = [
     "include/libssh2_publickey.h",
     "include/libssh2_sftp.h",
 ]
+
+[verify]
+command = "test -f lib/libssh2.a"

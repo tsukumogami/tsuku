@@ -26,3 +26,6 @@ binaries = [
     "include/ngtcp2/ngtcp2_crypto_ossl.h",
     "include/ngtcp2/version.h",
 ]
+
+[verify]
+command = "test -f lib/libngtcp2.so"

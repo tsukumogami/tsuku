@@ -6,7 +6,7 @@
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "a2ce13326389fe9b81c28e3fb69e3bbe705c1aa0b2b0a5ace7104f630064b86a",
+  "recipe_hash": "f1c52fd8ebac332abd6cefba2ffb2e371da45b40c3e4f7c1d6345a8495829ca8",
   "deterministic": true,
   "steps": [
     {
@@ -74,5 +74,8 @@
       "deterministic": true
     }
   ],
+  "verify": {
+    "command": "test -f lib/libbrotlicommon.a"
+  },
   "recipe_type": "library"
 }

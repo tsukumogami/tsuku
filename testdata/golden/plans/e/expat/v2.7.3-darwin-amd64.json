@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "9b9b267d99db28b9f191893dc827d7c079ee8c2260eeeb51d73c5833ee11aed3",
+  "recipe_hash": "3dc58d5315734c4a66136e069f9b2bff09c7bdf4df40c0db630bee0463c7671b",
   "deterministic": true,
   "steps": [
     {
@@ -59,5 +59,8 @@
       "deterministic": true
     }
   ],
+  "verify": {
+    "command": "test -f lib/libexpat.a"
+  },
   "recipe_type": "library"
 }

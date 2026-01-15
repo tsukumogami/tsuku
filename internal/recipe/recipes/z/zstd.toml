@@ -30,3 +30,6 @@ binaries = [
     "include/zdict.h",
     "include/zstd_errors.h",
 ]
+
+[verify]
+command = "test -f lib/libzstd.a"

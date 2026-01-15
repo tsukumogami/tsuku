@@ -21,3 +21,6 @@ binaries = [
     "include/expat.h",
     "include/expat_external.h",
 ]
+
+[verify]
+command = "test -f lib/libexpat.a"

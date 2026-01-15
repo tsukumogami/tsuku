@@ -1138,6 +1138,56 @@ func TestExecutePlan_NonDownloadSteps(t *testing.T) {
 	}
 }
 
+// TestExecutePlan_LibraryWithDirectoryMode tests that library recipes can use
+// directory install mode without requiring a verify section.
+// This is a regression test for the bug where RecipeType wasn't propagated
+// from the plan to the execution context when there was no verify section.
+func TestExecutePlan_LibraryWithDirectoryMode(t *testing.T) {
+	// Create executor WITHOUT a recipe (simulates plan-only execution)
+	exec, err := New(nil)
+	if err != nil {
+		t.Fatalf("New() error = %v", err)
+	}
+	defer exec.Cleanup()
+
+	// Create test files in work directory
+	binDir := exec.WorkDir() + "/bin"
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("Failed to create bin dir: %v", err)
+	}
+	testBinary := binDir + "/testlib"
+	if err := os.WriteFile(testBinary, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("Failed to create test binary: %v", err)
+	}
+
+	// Create a plan for a library with directory install mode and NO verify section
+	plan := &InstallationPlan{
+		FormatVersion: PlanFormatVersion,
+		Tool:          "test-lib",
+		Version:       "1.0.0",
+		Platform:      Platform{OS: runtime.GOOS, Arch: runtime.GOARCH},
+		RecipeType:    "library", // This is the key field that must be propagated
+		// Note: No Verify section - libraries are exempt from verification
+		Steps: []ResolvedStep{
+			{
+				Action: "install_binaries",
+				Params: map[string]interface{}{
+					"binaries":     []interface{}{"bin/testlib"},
+					"install_mode": "directory",
+				},
+			},
+		},
+	}
+
+	ctx := context.Background()
+	err = exec.ExecutePlan(ctx, plan)
+
+	if err != nil {
+		t.Errorf("ExecutePlan() for library with directory mode error = %v", err)
+		t.Log("Libraries should be exempt from verify requirement when using directory install mode")
+	}
+}
+
 // TestComputeFileChecksum tests the checksum computation helper
 func TestComputeFileChecksum(t *testing.T) {
 	// Create a temp file with known content

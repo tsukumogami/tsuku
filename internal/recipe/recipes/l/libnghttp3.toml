@@ -21,3 +21,6 @@ binaries = [
     "include/nghttp3/nghttp3.h",
     "include/nghttp3/version.h",
 ]
+
+[verify]
+command = "test -f lib/libnghttp3.a"

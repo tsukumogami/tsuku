@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+  "recipe_hash": "8bcd0cf48c4c1c3e063b5e67788b7638d3aab8a7ef928381cf59e424017ff584",
   "deterministic": true,
   "steps": [
     {
@@ -56,5 +56,8 @@
       "deterministic": true
     }
   ],
+  "verify": {
+    "command": "test -f lib/libz.a"
+  },
   "recipe_type": "library"
 }

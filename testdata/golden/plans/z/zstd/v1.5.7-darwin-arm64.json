@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "8978a4c1c1b15a691097cd7cf84cb673c552b441b5e55ed2bdf627fd46cbbaed",
+  "recipe_hash": "ee02963b3b761dc3773942e54edf5bf23bbc3e573cc946cb794381a56c28cc84",
   "deterministic": true,
   "steps": [
     {
@@ -67,5 +67,8 @@
       "deterministic": true
     }
   ],
+  "verify": {
+    "command": "test -f lib/libzstd.a"
+  },
   "recipe_type": "library"
 }

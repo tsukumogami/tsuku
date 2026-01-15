@@ -6,7 +6,7 @@
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "95f70bd7cf9a944963e35a92dcf74a208bfc1255ffcf4c408fa38bfa907771a5",
+  "recipe_hash": "5809de15c47998218dfae9ed3642ad84b0ff3e41544a26d9c749693b102b7d3a",
   "deterministic": true,
   "steps": [
     {
@@ -58,5 +58,8 @@
       "deterministic": true
     }
   ],
+  "verify": {
+    "command": "test -f lib/libnghttp3.a"
+  },
   "recipe_type": "library"
 }

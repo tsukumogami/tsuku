@@ -329,20 +329,29 @@ func (e *Executor) ExecutePlan(ctx context.Context, plan *InstallationPlan) erro
 	e.version = plan.Version
 
 	// When executing from a plan file, the recipe may be nil or have empty Verify.
-	// If the plan has verify info, use it to create/update the recipe context.
+	// We always need to ensure recipe metadata (especially Type) is available
+	// so that actions can check whether this is a library or tool.
 	recipeForContext := e.recipe
-	if plan.Verify != nil && plan.Verify.Command != "" {
-		if recipeForContext == nil || recipeForContext.Verify.Command == "" {
-			recipeForContext = &recipe.Recipe{
-				Metadata: recipe.MetadataSection{
-					Name: plan.Tool,
-					Type: plan.RecipeType,
-				},
-				Verify: recipe.VerifySection{
-					Command: plan.Verify.Command,
-					Pattern: plan.Verify.Pattern,
-				},
+	if recipeForContext == nil {
+		// Always create a recipe context with at least the metadata from the plan
+		recipeForContext = &recipe.Recipe{
+			Metadata: recipe.MetadataSection{
+				Name: plan.Tool,
+				Type: plan.RecipeType,
+			},
+		}
+		// Add verify info if available
+		if plan.Verify != nil && plan.Verify.Command != "" {
+			recipeForContext.Verify = recipe.VerifySection{
+				Command: plan.Verify.Command,
+				Pattern: plan.Verify.Pattern,
 			}
+		}
+	} else if recipeForContext.Verify.Command == "" && plan.Verify != nil && plan.Verify.Command != "" {
+		// Recipe exists but has no verify, add from plan
+		recipeForContext.Verify = recipe.VerifySection{
+			Command: plan.Verify.Command,
+			Pattern: plan.Verify.Pattern,
 		}
 	}
 

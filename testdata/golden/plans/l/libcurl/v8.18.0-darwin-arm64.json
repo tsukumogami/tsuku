@@ -6,13 +6,13 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "db03f86b5bf09e514e1b8dab3acfb63d343eabf200fef78bf4e6ffd6705ced37",
+  "recipe_hash": "e715efac519ffa0cb8e45ce340f89d9a2b278ce3e3f4ddff8551a9189e07c7fa",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "brotli",
       "version": "1.2.0",
-      "recipe_hash": "a2ce13326389fe9b81c28e3fb69e3bbe705c1aa0b2b0a5ace7104f630064b86a",
+      "recipe_hash": "f1c52fd8ebac332abd6cefba2ffb2e371da45b40c3e4f7c1d6345a8495829ca8",
       "steps": [
         {
           "action": "download_file",
@@ -79,12 +79,15 @@
           "deterministic": true
         }
       ],
+      "verify": {
+        "command": "test -f lib/libbrotlicommon.a"
+      },
       "recipe_type": "library"
     },
     {
       "tool": "libnghttp2",
       "version": "1.68.0",
-      "recipe_hash": "2532ee621b859e390c45d3e1ed2cfe14142dad99efa182556b8e2171a14030f5",
+      "recipe_hash": "c34a0261fb22b44ac7768e0df6734091a0d45e9fef6b9e69e569f7a112835eda",
       "steps": [
         {
           "action": "download_file",
@@ -136,12 +139,15 @@
           "deterministic": true
         }
       ],
+      "verify": {
+        "command": "test -f lib/libnghttp2.a"
+      },
       "recipe_type": "library"
     },
     {
       "tool": "libnghttp3",
       "version": "1.14.0",
-      "recipe_hash": "95f70bd7cf9a944963e35a92dcf74a208bfc1255ffcf4c408fa38bfa907771a5",
+      "recipe_hash": "5809de15c47998218dfae9ed3642ad84b0ff3e41544a26d9c749693b102b7d3a",
       "steps": [
         {
           "action": "download_file",
@@ -192,12 +198,15 @@
           "deterministic": true
         }
       ],
+      "verify": {
+        "command": "test -f lib/libnghttp3.a"
+      },
       "recipe_type": "library"
     },
     {
       "tool": "libngtcp2",
       "version": "1.19.0",
-      "recipe_hash": "79309efcd2138e1cc2e4acc8dc59335e06bae224358a22f6f001a55205efa49b",
+      "recipe_hash": "5422afabfc07c59f557ec31262d1186a1843bd733af95358c8b538fcb25c5d78",
       "steps": [
         {
           "action": "download_file",
@@ -253,12 +262,15 @@
           "deterministic": true
         }
       ],
+      "verify": {
+        "command": "test -f lib/libngtcp2.so"
+      },
       "recipe_type": "library"
     },
     {
       "tool": "libssh2",
       "version": "1.11.1",
-      "recipe_hash": "e102bac2c87cf58e52348a3cbf2e37e2178c3b2aaa4631ecabe1bc849cf5d5df",
+      "recipe_hash": "0edc8c3401bec46c8f27851aff9d73389bbe8482964ee0732ce2a36332198abd",
       "dependencies": [
         {
           "tool": "openssl",
@@ -268,7 +280,7 @@
             {
               "tool": "zlib",
               "version": "1.3.1",
-              "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+              "recipe_hash": "8bcd0cf48c4c1c3e063b5e67788b7638d3aab8a7ef928381cf59e424017ff584",
               "steps": [
                 {
                   "action": "download_file",
@@ -317,6 +329,9 @@
                   "deterministic": true
                 }
               ],
+              "verify": {
+                "command": "test -f lib/libz.a"
+              },
               "recipe_type": "library"
             }
           ],
@@ -431,12 +446,15 @@
           "deterministic": true
         }
       ],
+      "verify": {
+        "command": "test -f lib/libssh2.a"
+      },
       "recipe_type": "library"
     },
     {
       "tool": "zstd",
       "version": "1.5.7",
-      "recipe_hash": "8978a4c1c1b15a691097cd7cf84cb673c552b441b5e55ed2bdf627fd46cbbaed",
+      "recipe_hash": "ee02963b3b761dc3773942e54edf5bf23bbc3e573cc946cb794381a56c28cc84",
       "steps": [
         {
           "action": "download_file",
@@ -496,6 +514,9 @@
           "deterministic": true
         }
       ],
+      "verify": {
+        "command": "test -f lib/libzstd.a"
+      },
       "recipe_type": "library"
     }
   ],
@@ -554,5 +575,9 @@
       "deterministic": true
     }
   ],
+  "verify": {
+    "command": "curl-config --version",
+    "pattern": "libcurl {version}"
+  },
   "recipe_type": "library"
 }

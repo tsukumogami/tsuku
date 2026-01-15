@@ -13,3 +13,6 @@ formula = "libpng"
 action = "install_binaries"
 install_mode = "directory"
 binaries = ["lib/libpng.a", "lib/libpng16.a", "include/png.h", "include/pngconf.h"]
+
+[verify]
+command = "test -f lib/libpng.a"
