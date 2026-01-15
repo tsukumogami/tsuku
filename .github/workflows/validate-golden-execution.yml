@@ -179,6 +179,36 @@ jobs:
           FIRST_LETTER="${RECIPE:0:1}"
           RECIPE_PATH="internal/recipe/recipes/$FIRST_LETTER/$RECIPE.toml"
           GOLDEN_DIR="testdata/golden/plans/$FIRST_LETTER/$RECIPE"
+          EXCLUSIONS_FILE="testdata/golden/exclusions.json"
+
+          # Function to check if a recipe/platform is excluded
+          is_excluded() {
+            local recipe="$1"
+            local os="$2"
+            local arch="$3"
+            local family="$4"
+
+            if [ ! -f "$EXCLUSIONS_FILE" ]; then
+              return 1
+            fi
+
+            # Build jq filter for matching exclusions
+            # Match: recipe AND os AND arch AND (family matches OR no family in exclusion)
+            local filter
+            if [ -n "$family" ]; then
+              filter=".exclusions[] | select(.recipe == \"$recipe\" and .platform.os == \"$os\" and .platform.arch == \"$arch\" and (.platform.linux_family == \"$family\" or .platform.linux_family == null))"
+            else
+              filter=".exclusions[] | select(.recipe == \"$recipe\" and .platform.os == \"$os\" and .platform.arch == \"$arch\" and .platform.linux_family == null)"
+            fi
+
+            local match
+            match=$(jq -r "$filter | .issue" "$EXCLUSIONS_FILE" 2>/dev/null | head -1)
+            if [ -n "$match" ]; then
+              echo "  (excluded: $match)"
+              return 0
+            fi
+            return 1
+          }
 
           # Get supported platforms as JSON objects (preserving linux_family if present)
           # Build platform descriptors (os:arch:family)
@@ -225,6 +255,7 @@ jobs:
 
           # Check all platform/version combinations have files
           MISSING=()
+          EXCLUDED_COUNT=0
           for version in $VERSIONS; do
             for platform_desc in $PLATFORMS; do
               # Parse platform descriptor (os:arch:family)
@@ -241,7 +272,12 @@ jobs:
               fi
 
               if [ ! -f "$GOLDEN_DIR/$expected_file" ]; then
-                MISSING+=("$GOLDEN_DIR/$expected_file")
+                # Check if this recipe/platform is excluded
+                if is_excluded "$RECIPE" "$os" "$arch" "$family"; then
+                  ((EXCLUDED_COUNT++))
+                else
+                  MISSING+=("$GOLDEN_DIR/$expected_file")
+                fi
               fi
             done
           done
@@ -257,7 +293,11 @@ jobs:
             exit 1
           fi
 
-          echo "All platforms covered for $RECIPE"
+          if [ $EXCLUDED_COUNT -gt 0 ]; then
+            echo "All platforms covered for $RECIPE ($EXCLUDED_COUNT excluded)"
+          else
+            echo "All platforms covered for $RECIPE"
+          fi
 
   # Validate Linux golden files (per-file matrix for visibility)
   validate-linux:
