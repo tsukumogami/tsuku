@@ -154,8 +154,35 @@ if [[ -z "$VERSIONS" ]]; then
     exit 2
 fi
 
+# Load exclusions file
+EXCLUSIONS_FILE="$REPO_ROOT/testdata/golden/exclusions.json"
+
+# Helper function to check if a platform is excluded
+is_platform_excluded() {
+    local recipe="$1"
+    local os="$2"
+    local arch="$3"
+    local family="$4"
+
+    if [[ ! -f "$EXCLUSIONS_FILE" ]]; then
+        return 1
+    fi
+
+    # Build jq query based on whether family is present
+    if [[ -n "$family" ]]; then
+        jq -e --arg r "$recipe" --arg o "$os" --arg a "$arch" --arg f "$family" \
+            '.exclusions[] | select(.recipe == $r and .platform.os == $o and .platform.arch == $a and .platform.family == $f)' \
+            "$EXCLUSIONS_FILE" > /dev/null 2>&1
+    else
+        jq -e --arg r "$recipe" --arg o "$os" --arg a "$arch" \
+            '.exclusions[] | select(.recipe == $r and .platform.os == $o and .platform.arch == $a and (.platform.family == null or .platform.family == ""))' \
+            "$EXCLUSIONS_FILE" > /dev/null 2>&1
+    fi
+}
+
 # Check that all supported platforms have golden files
 MISSING_PLATFORMS=()
+EXCLUDED_PLATFORMS=()
 for VERSION in $VERSIONS; do
     for platform_desc in $PLATFORMS; do
         # Parse platform descriptor (os:arch:family)
@@ -178,10 +205,23 @@ for VERSION in $VERSIONS; do
 
         GOLDEN="$GOLDEN_DIR/$expected_file"
         if [[ ! -f "$GOLDEN" ]]; then
-            MISSING_PLATFORMS+=("$expected_file")
+            # Check if platform is excluded
+            if is_platform_excluded "$RECIPE" "$os" "$arch" "$family"; then
+                EXCLUDED_PLATFORMS+=("$expected_file")
+            else
+                MISSING_PLATFORMS+=("$expected_file")
+            fi
         fi
     done
 done
+
+# Report excluded platforms
+if [[ ${#EXCLUDED_PLATFORMS[@]} -gt 0 ]]; then
+    echo "Excluded platforms (see testdata/golden/exclusions.json):"
+    for excluded in "${EXCLUDED_PLATFORMS[@]}"; do
+        echo "  - $excluded"
+    done
+fi
 
 if [[ ${#MISSING_PLATFORMS[@]} -gt 0 ]]; then
     echo "ERROR: Missing golden files for supported platforms:" >&2
@@ -196,6 +236,9 @@ if [[ ${#MISSING_PLATFORMS[@]} -gt 0 ]]; then
     echo "" >&2
     echo "  2. Generate via CI (for cross-platform generation):" >&2
     echo "     gh workflow run generate-golden-files.yml -f recipe=$RECIPE -f commit_back=true -f branch=\$(git branch --show-current)" >&2
+    echo "" >&2
+    echo "  3. Add an exclusion with a tracking issue:" >&2
+    echo "     Edit testdata/golden/exclusions.json" >&2
     exit 1
 fi
 

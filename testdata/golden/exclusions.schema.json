@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Golden File Exclusions",
+  "description": "Registry of recipes/platforms excluded from golden file requirements",
+  "type": "object",
+  "required": ["exclusions"],
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["recipe", "platform", "issue", "reason"],
+        "properties": {
+          "recipe": {
+            "type": "string",
+            "description": "Recipe name (e.g., 'cuda', 'docker')"
+          },
+          "platform": {
+            "type": "object",
+            "required": ["os", "arch"],
+            "properties": {
+              "os": {
+                "type": "string",
+                "enum": ["linux", "darwin"],
+                "description": "Operating system"
+              },
+              "arch": {
+                "type": "string",
+                "enum": ["amd64", "arm64"],
+                "description": "Architecture"
+              },
+              "family": {
+                "type": "string",
+                "enum": ["debian", "rhel", "arch", "alpine", "suse"],
+                "description": "Linux family (optional, for family-aware recipes)"
+              }
+            }
+          },
+          "issue": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://github.com/.+/issues/[0-9]+$",
+            "description": "GitHub issue URL tracking the blocker"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Brief explanation of why golden files cannot be generated"
+          }
+        }
+      }
+    }
+  }
+}

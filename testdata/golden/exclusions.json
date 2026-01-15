@@ -1,0 +1,5 @@
+{
+  "$schema": "./exclusions.schema.json",
+  "description": "Golden file exclusions. Each exclusion must link to an open issue tracking the blocker.",
+  "exclusions": []
+}

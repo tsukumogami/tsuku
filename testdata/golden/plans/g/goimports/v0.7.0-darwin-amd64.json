@@ -1,0 +1,92 @@
+{
+  "format_version": 3,
+  "tool": "goimports",
+  "version": "0.7.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "85897946699617cd2008b37dca8ec727951a60da96cb55905aa03f37c734d63c",
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "go",
+      "version": "1.25.5",
+      "recipe_hash": "6b7017ca80802605129ead86859ab532c4950c3825277dd3dfc9c81e31c499b7",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "b69d51bce599e5381a94ce15263ae644ec84667a5ce23d58dc2e63e2c12a9f56",
+            "checksum_algo": "sha256",
+            "dest": "go1.25.5.darwin-amd64.tar.gz",
+            "url": "https://go.dev/dl/go1.25.5.darwin-amd64.tar.gz"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://go.dev/dl/go1.25.5.darwin-amd64.tar.gz",
+          "checksum": "b69d51bce599e5381a94ce15263ae644ec84667a5ce23d58dc2e63e2c12a9f56",
+          "size": 60495242
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "go1.25.5.darwin-amd64.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 1
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "chmod",
+          "params": {
+            "files": [
+              "bin/go",
+              "bin/gofmt"
+            ]
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/go",
+              "bin/gofmt"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "{install_dir}/bin/go version",
+        "pattern": "go{version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "go_build",
+      "params": {
+        "executables": [
+          "goimports"
+        ],
+        "go_sum": "golang.org/x/tools v0.7.0 h1:W4OVu8VVOaIO0yzWMNdepAulS7YfoS3Zabrm8DOXXU4=\ngolang.org/x/tools v0.7.0/go.mod h1:4pg6aUX35JBAogB10C9AtvVL+qowtN4pT3CGSQex14s=\n",
+        "go_version": "1.25.5",
+        "install_module": "golang.org/x/tools/cmd/goimports",
+        "module": "golang.org/x/tools",
+        "version": "v0.7.0"
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "goimports -h 2>&1",
+    "pattern": "usage:"
+  }
+}

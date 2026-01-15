@@ -1,0 +1,63 @@
+{
+  "format_version": 3,
+  "tool": "expat",
+  "version": "2.7.3",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "9b9b267d99db28b9f191893dc827d7c079ee8c2260eeeb51d73c5833ee11aed3",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "2bf2b3e08565d092b4a927a941055cd4177deea3efecd986ec4d350d6328e40a",
+        "dest": "expat.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/expat/blobs/sha256:2bf2b3e08565d092b4a927a941055cd4177deea3efecd986ec4d350d6328e40a"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/expat/blobs/sha256:2bf2b3e08565d092b4a927a941055cd4177deea3efecd986ec4d350d6328e40a",
+      "checksum": "2bf2b3e08565d092b4a927a941055cd4177deea3efecd986ec4d350d6328e40a",
+      "size": 229103
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "expat.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "expat"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "lib/libexpat.so",
+          "lib/libexpat.so.1",
+          "lib/libexpat.dylib",
+          "lib/libexpat.1.dylib",
+          "lib/libexpat.a",
+          "lib/pkgconfig/expat.pc",
+          "include/expat.h",
+          "include/expat_external.h"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "recipe_type": "library"
+}

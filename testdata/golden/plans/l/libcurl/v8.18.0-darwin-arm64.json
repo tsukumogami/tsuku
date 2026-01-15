@@ -1,0 +1,558 @@
+{
+  "format_version": 3,
+  "tool": "libcurl",
+  "version": "8.18.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "db03f86b5bf09e514e1b8dab3acfb63d343eabf200fef78bf4e6ffd6705ced37",
+  "deterministic": true,
+  "dependencies": [
+    {
+      "tool": "brotli",
+      "version": "1.2.0",
+      "recipe_hash": "a2ce13326389fe9b81c28e3fb69e3bbe705c1aa0b2b0a5ace7104f630064b86a",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "46b1cc7ef8ba325e56f7363de1068a84449dac940187dd2290a75e7008b3b4e1",
+            "dest": "brotli.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/brotli/blobs/sha256:46b1cc7ef8ba325e56f7363de1068a84449dac940187dd2290a75e7008b3b4e1"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/brotli/blobs/sha256:46b1cc7ef8ba325e56f7363de1068a84449dac940187dd2290a75e7008b3b4e1",
+          "checksum": "46b1cc7ef8ba325e56f7363de1068a84449dac940187dd2290a75e7008b3b4e1",
+          "size": 793998
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "brotli.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "brotli"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/brotli",
+              "lib/libbrotlicommon.so",
+              "lib/libbrotlicommon.so.1",
+              "lib/libbrotlicommon.dylib",
+              "lib/libbrotlicommon.1.dylib",
+              "lib/libbrotlidec.so",
+              "lib/libbrotlidec.so.1",
+              "lib/libbrotlidec.dylib",
+              "lib/libbrotlidec.1.dylib",
+              "lib/libbrotlienc.so",
+              "lib/libbrotlienc.so.1",
+              "lib/libbrotlienc.dylib",
+              "lib/libbrotlienc.1.dylib",
+              "lib/libbrotlicommon.a",
+              "lib/libbrotlidec.a",
+              "lib/libbrotlienc.a",
+              "lib/pkgconfig/libbrotlicommon.pc",
+              "lib/pkgconfig/libbrotlidec.pc",
+              "lib/pkgconfig/libbrotlienc.pc",
+              "include/brotli/decode.h",
+              "include/brotli/encode.h",
+              "include/brotli/port.h",
+              "include/brotli/types.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    },
+    {
+      "tool": "libnghttp2",
+      "version": "1.68.0",
+      "recipe_hash": "2532ee621b859e390c45d3e1ed2cfe14142dad99efa182556b8e2171a14030f5",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "df1ab82f0ed698ee1ed6330f1a9269faef489a13552c43922fa27798ec7997d3",
+            "dest": "libnghttp2.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/libnghttp2/blobs/sha256:df1ab82f0ed698ee1ed6330f1a9269faef489a13552c43922fa27798ec7997d3"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/libnghttp2/blobs/sha256:df1ab82f0ed698ee1ed6330f1a9269faef489a13552c43922fa27798ec7997d3",
+          "checksum": "df1ab82f0ed698ee1ed6330f1a9269faef489a13552c43922fa27798ec7997d3",
+          "size": 221461
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "libnghttp2.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "libnghttp2"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "lib/libnghttp2.a",
+              "lib/libnghttp2.so",
+              "lib/libnghttp2.so.14",
+              "lib/libnghttp2.dylib",
+              "lib/libnghttp2.14.dylib",
+              "lib/pkgconfig/libnghttp2.pc",
+              "include/nghttp2/nghttp2.h",
+              "include/nghttp2/nghttp2ver.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    },
+    {
+      "tool": "libnghttp3",
+      "version": "1.14.0",
+      "recipe_hash": "95f70bd7cf9a944963e35a92dcf74a208bfc1255ffcf4c408fa38bfa907771a5",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "a7995f5700354aa6602f4cfbbdaa605ee1fd74f7197b61897367495bdbd7eb1e",
+            "dest": "libnghttp3.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/libnghttp3/blobs/sha256:a7995f5700354aa6602f4cfbbdaa605ee1fd74f7197b61897367495bdbd7eb1e"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/libnghttp3/blobs/sha256:a7995f5700354aa6602f4cfbbdaa605ee1fd74f7197b61897367495bdbd7eb1e",
+          "checksum": "a7995f5700354aa6602f4cfbbdaa605ee1fd74f7197b61897367495bdbd7eb1e",
+          "size": 193119
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "libnghttp3.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "libnghttp3"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "lib/libnghttp3.a",
+              "lib/libnghttp3.so",
+              "lib/libnghttp3.so.9",
+              "lib/libnghttp3.dylib",
+              "lib/pkgconfig/libnghttp3.pc",
+              "include/nghttp3/nghttp3.h",
+              "include/nghttp3/version.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    },
+    {
+      "tool": "libngtcp2",
+      "version": "1.19.0",
+      "recipe_hash": "79309efcd2138e1cc2e4acc8dc59335e06bae224358a22f6f001a55205efa49b",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "21b434d7bc23aa0be7bb9baeb0f96cde64cdf96215a578b6c6f26bf7d3e1ddc2",
+            "dest": "libngtcp2.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/libngtcp2/blobs/sha256:21b434d7bc23aa0be7bb9baeb0f96cde64cdf96215a578b6c6f26bf7d3e1ddc2"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/libngtcp2/blobs/sha256:21b434d7bc23aa0be7bb9baeb0f96cde64cdf96215a578b6c6f26bf7d3e1ddc2",
+          "checksum": "21b434d7bc23aa0be7bb9baeb0f96cde64cdf96215a578b6c6f26bf7d3e1ddc2",
+          "size": 404348
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "libngtcp2.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "libngtcp2"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "lib/libngtcp2.so",
+              "lib/libngtcp2.so.16",
+              "lib/libngtcp2.dylib",
+              "lib/libngtcp2_crypto_ossl.so",
+              "lib/libngtcp2_crypto_ossl.so.0",
+              "lib/libngtcp2_crypto_ossl.dylib",
+              "lib/pkgconfig/libngtcp2.pc",
+              "lib/pkgconfig/libngtcp2_crypto_ossl.pc",
+              "include/ngtcp2/ngtcp2.h",
+              "include/ngtcp2/ngtcp2_crypto.h",
+              "include/ngtcp2/ngtcp2_crypto_ossl.h",
+              "include/ngtcp2/version.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    },
+    {
+      "tool": "libssh2",
+      "version": "1.11.1",
+      "recipe_hash": "e102bac2c87cf58e52348a3cbf2e37e2178c3b2aaa4631ecabe1bc849cf5d5df",
+      "dependencies": [
+        {
+          "tool": "openssl",
+          "version": "3.6.0",
+          "recipe_hash": "5d6b22eb29f76f54dc84062d1eb9a28a3aa04d29bcc3f438ec6452c625259603",
+          "dependencies": [
+            {
+              "tool": "zlib",
+              "version": "1.3.1",
+              "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+                    "dest": "zlib.tar.gz",
+                    "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+                  "checksum": "f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+                  "size": 140089
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "zlib.tar.gz",
+                    "format": "tar.gz",
+                    "strip_dirs": 2
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "homebrew_relocate",
+                  "params": {
+                    "formula": "zlib"
+                  },
+                  "evaluable": false,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "lib/libz.a",
+                      "lib/libz.dylib",
+                      "lib/libz.so",
+                      "include/zlib.h",
+                      "include/zconf.h"
+                    ],
+                    "install_mode": "directory"
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "recipe_type": "library"
+            }
+          ],
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "055bf163fbfd98f5de31c25b1e8cac41129d3cb21581843f7ab30aec0c35bdf7",
+                "dest": "openssl@3.tar.gz",
+                "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:055bf163fbfd98f5de31c25b1e8cac41129d3cb21581843f7ab30aec0c35bdf7"
+              },
+              "evaluable": true,
+              "deterministic": true,
+              "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:055bf163fbfd98f5de31c25b1e8cac41129d3cb21581843f7ab30aec0c35bdf7",
+              "checksum": "055bf163fbfd98f5de31c25b1e8cac41129d3cb21581843f7ab30aec0c35bdf7",
+              "size": 10869743
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "openssl@3.tar.gz",
+                "format": "tar.gz",
+                "strip_dirs": 2
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "homebrew_relocate",
+              "params": {
+                "formula": "openssl@3"
+              },
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "install_binaries",
+              "params": {
+                "binaries": [
+                  "bin/openssl",
+                  "lib/libssl.so",
+                  "lib/libssl.so.3",
+                  "lib/libssl.dylib",
+                  "lib/libssl.3.dylib",
+                  "lib/libcrypto.so",
+                  "lib/libcrypto.so.3",
+                  "lib/libcrypto.dylib",
+                  "lib/libcrypto.3.dylib"
+                ],
+                "install_mode": "directory"
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "verify": {
+            "command": "openssl version",
+            "pattern": "OpenSSL {version}"
+          },
+          "recipe_type": "library"
+        }
+      ],
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "2e6ffae575cf6e8335026f209f24c8a12250afa093e7a49577ee95c3bb781554",
+            "dest": "libssh2.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/libssh2/blobs/sha256:2e6ffae575cf6e8335026f209f24c8a12250afa093e7a49577ee95c3bb781554"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/libssh2/blobs/sha256:2e6ffae575cf6e8335026f209f24c8a12250afa093e7a49577ee95c3bb781554",
+          "checksum": "2e6ffae575cf6e8335026f209f24c8a12250afa093e7a49577ee95c3bb781554",
+          "size": 423814
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "libssh2.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "libssh2"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "lib/libssh2.a",
+              "lib/libssh2.so",
+              "lib/libssh2.so.1",
+              "lib/libssh2.dylib",
+              "lib/libssh2.1.dylib",
+              "lib/pkgconfig/libssh2.pc",
+              "include/libssh2.h",
+              "include/libssh2_publickey.h",
+              "include/libssh2_sftp.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    },
+    {
+      "tool": "zstd",
+      "version": "1.5.7",
+      "recipe_hash": "8978a4c1c1b15a691097cd7cf84cb673c552b441b5e55ed2bdf627fd46cbbaed",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "af7a39452f08144cb27f8f9c31feafd46beca7eb4dd3047c49925800e00c6e7a",
+            "dest": "zstd.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/zstd/blobs/sha256:af7a39452f08144cb27f8f9c31feafd46beca7eb4dd3047c49925800e00c6e7a"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/zstd/blobs/sha256:af7a39452f08144cb27f8f9c31feafd46beca7eb4dd3047c49925800e00c6e7a",
+          "checksum": "af7a39452f08144cb27f8f9c31feafd46beca7eb4dd3047c49925800e00c6e7a",
+          "size": 785466
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "zstd.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "zstd"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/zstd",
+              "bin/pzstd",
+              "bin/unzstd",
+              "bin/zstdcat",
+              "bin/zstdgrep",
+              "bin/zstdless",
+              "bin/zstdmt",
+              "lib/libzstd.a",
+              "lib/libzstd.so",
+              "lib/libzstd.so.1",
+              "lib/libzstd.dylib",
+              "lib/libzstd.1.dylib",
+              "lib/pkgconfig/libzstd.pc",
+              "include/zstd.h",
+              "include/zdict.h",
+              "include/zstd_errors.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "06de4b7375fdbf85bff231ad3dec139009ae09f424915509457286e84e08c549",
+        "dest": "curl.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/curl/blobs/sha256:06de4b7375fdbf85bff231ad3dec139009ae09f424915509457286e84e08c549"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/curl/blobs/sha256:06de4b7375fdbf85bff231ad3dec139009ae09f424915509457286e84e08c549",
+      "checksum": "06de4b7375fdbf85bff231ad3dec139009ae09f424915509457286e84e08c549",
+      "size": 1600177
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "curl.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "curl"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/curl-config",
+          "lib/libcurl.so",
+          "lib/libcurl.so.4",
+          "lib/libcurl.dylib",
+          "lib/libcurl.4.dylib",
+          "lib/libcurl.a",
+          "lib/pkgconfig/libcurl.pc",
+          "include/curl/curl.h",
+          "include/curl/curlver.h",
+          "include/curl/easy.h",
+          "include/curl/multi.h",
+          "include/curl/urlapi.h"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "recipe_type": "library"
+}

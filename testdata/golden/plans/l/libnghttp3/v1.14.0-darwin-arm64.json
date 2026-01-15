@@ -1,0 +1,62 @@
+{
+  "format_version": 3,
+  "tool": "libnghttp3",
+  "version": "1.14.0",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "95f70bd7cf9a944963e35a92dcf74a208bfc1255ffcf4c408fa38bfa907771a5",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "a7995f5700354aa6602f4cfbbdaa605ee1fd74f7197b61897367495bdbd7eb1e",
+        "dest": "libnghttp3.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/libnghttp3/blobs/sha256:a7995f5700354aa6602f4cfbbdaa605ee1fd74f7197b61897367495bdbd7eb1e"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/libnghttp3/blobs/sha256:a7995f5700354aa6602f4cfbbdaa605ee1fd74f7197b61897367495bdbd7eb1e",
+      "checksum": "a7995f5700354aa6602f4cfbbdaa605ee1fd74f7197b61897367495bdbd7eb1e",
+      "size": 193119
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "libnghttp3.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "libnghttp3"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "lib/libnghttp3.a",
+          "lib/libnghttp3.so",
+          "lib/libnghttp3.so.9",
+          "lib/libnghttp3.dylib",
+          "lib/pkgconfig/libnghttp3.pc",
+          "include/nghttp3/nghttp3.h",
+          "include/nghttp3/version.h"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "recipe_type": "library"
+}

@@ -1,0 +1,71 @@
+{
+  "format_version": 3,
+  "tool": "zstd",
+  "version": "1.5.7",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64"
+  },
+  "recipe_hash": "8978a4c1c1b15a691097cd7cf84cb673c552b441b5e55ed2bdf627fd46cbbaed",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "4748929efb3666f0fd60451479cb306991c75fc6a84253e81828354185f4a23b",
+        "dest": "zstd.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/zstd/blobs/sha256:4748929efb3666f0fd60451479cb306991c75fc6a84253e81828354185f4a23b"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/zstd/blobs/sha256:4748929efb3666f0fd60451479cb306991c75fc6a84253e81828354185f4a23b",
+      "checksum": "4748929efb3666f0fd60451479cb306991c75fc6a84253e81828354185f4a23b",
+      "size": 1114240
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "zstd.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "zstd"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/zstd",
+          "bin/pzstd",
+          "bin/unzstd",
+          "bin/zstdcat",
+          "bin/zstdgrep",
+          "bin/zstdless",
+          "bin/zstdmt",
+          "lib/libzstd.a",
+          "lib/libzstd.so",
+          "lib/libzstd.so.1",
+          "lib/libzstd.dylib",
+          "lib/libzstd.1.dylib",
+          "lib/pkgconfig/libzstd.pc",
+          "include/zstd.h",
+          "include/zdict.h",
+          "include/zstd_errors.h"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "recipe_type": "library"
+}

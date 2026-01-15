@@ -1,0 +1,115 @@
+{
+  "format_version": 3,
+  "tool": "libpng",
+  "version": "1.6.54",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "e2dc1982302d6b2fd06e0ca412001ee79ac5a17def0e6bbbd6b3eab558baa5ad",
+  "deterministic": true,
+  "dependencies": [
+    {
+      "tool": "zlib",
+      "version": "1.3.1",
+      "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+            "dest": "zlib.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+          "checksum": "f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+          "size": 140089
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "zlib.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "zlib"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "lib/libz.a",
+              "lib/libz.dylib",
+              "lib/libz.so",
+              "include/zlib.h",
+              "include/zconf.h"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "recipe_type": "library"
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "54cc968d700adfcdd439f681c6432bddb696270ce251d3dd37fb7de755582892",
+        "dest": "libpng.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/libpng/blobs/sha256:54cc968d700adfcdd439f681c6432bddb696270ce251d3dd37fb7de755582892"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/libpng/blobs/sha256:54cc968d700adfcdd439f681c6432bddb696270ce251d3dd37fb7de755582892",
+      "checksum": "54cc968d700adfcdd439f681c6432bddb696270ce251d3dd37fb7de755582892",
+      "size": 459520
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "libpng.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "libpng"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "lib/libpng.a",
+          "lib/libpng16.a",
+          "include/png.h",
+          "include/pngconf.h"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "recipe_type": "library"
+}

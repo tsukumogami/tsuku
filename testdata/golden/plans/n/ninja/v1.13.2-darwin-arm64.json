@@ -1,0 +1,478 @@
+{
+  "format_version": 3,
+  "tool": "ninja",
+  "version": "1.13.2",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "72aeb3c4d17e164f3e797bd944cf44974d9a08f523cd1e6a88f9d6924960ad1b",
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "cmake",
+      "version": "4.2.1",
+      "recipe_hash": "2b6fd841e112d2e2a5217ea95c6cff20810c7ab065721097b2cd73bdf2667a55",
+      "dependencies": [
+        {
+          "tool": "openssl",
+          "version": "3.6.0",
+          "recipe_hash": "5d6b22eb29f76f54dc84062d1eb9a28a3aa04d29bcc3f438ec6452c625259603",
+          "dependencies": [
+            {
+              "tool": "zlib",
+              "version": "1.3.1",
+              "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+              "steps": [
+                {
+                  "action": "download_file",
+                  "params": {
+                    "checksum": "f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+                    "dest": "zlib.tar.gz",
+                    "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682"
+                  },
+                  "evaluable": true,
+                  "deterministic": true,
+                  "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+                  "checksum": "f867540472a59ab3fb1201625df546593e5fae2e98948c4c16c6154b0468b682",
+                  "size": 140089
+                },
+                {
+                  "action": "extract",
+                  "params": {
+                    "archive": "zlib.tar.gz",
+                    "format": "tar.gz",
+                    "strip_dirs": 2
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                },
+                {
+                  "action": "homebrew_relocate",
+                  "params": {
+                    "formula": "zlib"
+                  },
+                  "evaluable": false,
+                  "deterministic": true
+                },
+                {
+                  "action": "install_binaries",
+                  "params": {
+                    "binaries": [
+                      "lib/libz.a",
+                      "lib/libz.dylib",
+                      "lib/libz.so",
+                      "include/zlib.h",
+                      "include/zconf.h"
+                    ],
+                    "install_mode": "directory"
+                  },
+                  "evaluable": true,
+                  "deterministic": true
+                }
+              ],
+              "recipe_type": "library"
+            }
+          ],
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "055bf163fbfd98f5de31c25b1e8cac41129d3cb21581843f7ab30aec0c35bdf7",
+                "dest": "openssl@3.tar.gz",
+                "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:055bf163fbfd98f5de31c25b1e8cac41129d3cb21581843f7ab30aec0c35bdf7"
+              },
+              "evaluable": true,
+              "deterministic": true,
+              "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:055bf163fbfd98f5de31c25b1e8cac41129d3cb21581843f7ab30aec0c35bdf7",
+              "checksum": "055bf163fbfd98f5de31c25b1e8cac41129d3cb21581843f7ab30aec0c35bdf7",
+              "size": 10869743
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "openssl@3.tar.gz",
+                "format": "tar.gz",
+                "strip_dirs": 2
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "homebrew_relocate",
+              "params": {
+                "formula": "openssl@3"
+              },
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "install_binaries",
+              "params": {
+                "binaries": [
+                  "bin/openssl",
+                  "lib/libssl.so",
+                  "lib/libssl.so.3",
+                  "lib/libssl.dylib",
+                  "lib/libssl.3.dylib",
+                  "lib/libcrypto.so",
+                  "lib/libcrypto.so.3",
+                  "lib/libcrypto.dylib",
+                  "lib/libcrypto.3.dylib"
+                ],
+                "install_mode": "directory"
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "verify": {
+            "command": "openssl version",
+            "pattern": "OpenSSL {version}"
+          },
+          "recipe_type": "library"
+        },
+        {
+          "tool": "patchelf",
+          "version": "0.18.0",
+          "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+          "steps": [
+            {
+              "action": "download_file",
+              "params": {
+                "checksum": "25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+                "dest": "patchelf.tar.gz",
+                "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db"
+              },
+              "evaluable": true,
+              "deterministic": true,
+              "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+              "checksum": "25689776796afacaf452e8e74dd3805bf9ff129c00f3cc886c0857db9802c9db",
+              "size": 122480
+            },
+            {
+              "action": "extract",
+              "params": {
+                "archive": "patchelf.tar.gz",
+                "format": "tar.gz",
+                "strip_dirs": 2
+              },
+              "evaluable": true,
+              "deterministic": true
+            },
+            {
+              "action": "homebrew_relocate",
+              "params": {
+                "formula": "patchelf"
+              },
+              "evaluable": false,
+              "deterministic": true
+            },
+            {
+              "action": "install_binaries",
+              "params": {
+                "binaries": [
+                  "bin/patchelf"
+                ]
+              },
+              "evaluable": true,
+              "deterministic": true
+            }
+          ],
+          "verify": {
+            "command": "patchelf --version",
+            "pattern": "patchelf {version}"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "55b4255c8eafdb8b0f4672a441f0ae6b91420a6a363569022f690aea1f39a531",
+            "dest": "cmake.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/cmake/blobs/sha256:55b4255c8eafdb8b0f4672a441f0ae6b91420a6a363569022f690aea1f39a531"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/cmake/blobs/sha256:55b4255c8eafdb8b0f4672a441f0ae6b91420a6a363569022f690aea1f39a531",
+          "checksum": "55b4255c8eafdb8b0f4672a441f0ae6b91420a6a363569022f690aea1f39a531",
+          "size": 19031438
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "cmake.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "cmake"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "set_rpath",
+          "params": {
+            "binaries": [
+              "bin/cmake",
+              "bin/ctest",
+              "bin/cpack",
+              "bin/ccmake"
+            ],
+            "rpath": "$ORIGIN/../lib:{libs_dir}/openssl-3.6.0/lib"
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/cmake",
+              "bin/ctest",
+              "bin/cpack",
+              "bin/ccmake"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "cmake --version",
+        "pattern": "cmake version {version}"
+      }
+    },
+    {
+      "tool": "make",
+      "version": "4.4.1",
+      "recipe_hash": "d3c902e0a246e3c16ca8f63b16ce9a3f14bd57fdb023b5c1ef75b8e70dc08e65",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "2cf9b5846e07363681d41819a13d2d9a993a69dd5090bbfae3da182915e777b9",
+            "dest": "make.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/make/blobs/sha256:2cf9b5846e07363681d41819a13d2d9a993a69dd5090bbfae3da182915e777b9"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/make/blobs/sha256:2cf9b5846e07363681d41819a13d2d9a993a69dd5090bbfae3da182915e777b9",
+          "checksum": "2cf9b5846e07363681d41819a13d2d9a993a69dd5090bbfae3da182915e777b9",
+          "size": 429132
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "make.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "make"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/gmake",
+              "bin/make"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "make --version",
+        "pattern": "GNU Make {version}"
+      }
+    },
+    {
+      "tool": "pkg-config",
+      "version": "2.5.1",
+      "recipe_hash": "1832cea3f7b3301b4c3aa62e63486cab92fa753cc8a8df37143124cb34fba897",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "bc7f9963756598248220da128a5f06ea0e6685aa7cd965a5ce357fcfaad2cdec",
+            "dest": "pkgconf.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/pkgconf/blobs/sha256:bc7f9963756598248220da128a5f06ea0e6685aa7cd965a5ce357fcfaad2cdec"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/pkgconf/blobs/sha256:bc7f9963756598248220da128a5f06ea0e6685aa7cd965a5ce357fcfaad2cdec",
+          "checksum": "bc7f9963756598248220da128a5f06ea0e6685aa7cd965a5ce357fcfaad2cdec",
+          "size": 122445
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "pkgconf.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "pkgconf"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "bin/pkg-config",
+              "bin/pkgconf",
+              "lib/libpkgconf.so",
+              "lib/libpkgconf.dylib",
+              "lib/libpkgconf.so.7",
+              "lib/libpkgconf.7.dylib",
+              "lib/libpkgconf.so.7.0.0"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "pkg-config --version",
+        "pattern": "{version}"
+      }
+    },
+    {
+      "tool": "zig",
+      "version": "0.15.1",
+      "recipe_hash": "27cc6e8bd149ae64c98c3a7123fcb95be35a8113902428ee90134ee1ba2f99ec",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "c4bd624d901c1268f2deb9d8eb2d86a2f8b97bafa3f118025344242da2c54d7b",
+            "checksum_algo": "sha256",
+            "dest": "zig-aarch64-macos-0.15.1.tar.xz",
+            "url": "https://ziglang.org/download/0.15.1/zig-aarch64-macos-0.15.1.tar.xz"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ziglang.org/download/0.15.1/zig-aarch64-macos-0.15.1.tar.xz",
+          "checksum": "c4bd624d901c1268f2deb9d8eb2d86a2f8b97bafa3f118025344242da2c54d7b",
+          "size": 50644996
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "zig-aarch64-macos-0.15.1.tar.xz",
+            "format": "tar.xz",
+            "strip_dirs": 1
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "chmod",
+          "params": {
+            "files": [
+              "zig"
+            ]
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "binaries": [
+              "zig"
+            ],
+            "install_mode": "directory"
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "zig version",
+        "pattern": "{version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "974d6b2f4eeefa25625d34da3cb36bdcebe7fbce40f4c16ac0835fd1c0cbae17",
+        "checksum_algo": "sha256",
+        "dest": "v1.13.2.tar.gz",
+        "url": "https://github.com/ninja-build/ninja/archive/v1.13.2.tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/ninja-build/ninja/archive/v1.13.2.tar.gz",
+      "checksum": "974d6b2f4eeefa25625d34da3cb36bdcebe7fbce40f4c16ac0835fd1c0cbae17",
+      "size": 292385
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "v1.13.2.tar.gz",
+        "format": "tar.gz"
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "cmake_build",
+      "params": {
+        "cmake_args": [
+          "-DBUILD_TESTING=OFF"
+        ],
+        "executables": [
+          "ninja"
+        ],
+        "source_dir": "ninja-1.13.2"
+      },
+      "evaluable": false,
+      "deterministic": false
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          "bin/ninja"
+        ],
+        "install_mode": "directory"
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "ninja --version",
+    "pattern": "{version}"
+  }
+}
