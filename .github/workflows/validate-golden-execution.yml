@@ -274,7 +274,7 @@ jobs:
               if [ ! -f "$GOLDEN_DIR/$expected_file" ]; then
                 # Check if this recipe/platform is excluded
                 if is_excluded "$RECIPE" "$os" "$arch" "$family"; then
-                  ((EXCLUDED_COUNT++))
+                  EXCLUDED_COUNT=$((EXCLUDED_COUNT + 1))
                 else
                   MISSING+=("$GOLDEN_DIR/$expected_file")
                 fi
