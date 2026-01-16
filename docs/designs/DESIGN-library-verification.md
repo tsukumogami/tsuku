@@ -17,9 +17,9 @@
 ```mermaid
 graph TD
     subgraph Infrastructure["Library Verification Infrastructure"]
-        I942["#942 State schema<br/>(simple)"]:::ready
+        I942["#942 State schema<br/>(simple)"]:::done
         I943["#943 Verify command<br/>(testable)"]:::ready
-        I946["#946 Install checksums<br/>(testable)"]:::blocked
+        I946["#946 Install checksums<br/>(testable)"]:::ready
     end
 
     subgraph Tiers["Library Verification Tiers"]
