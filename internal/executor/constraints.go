@@ -39,6 +39,7 @@ func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraint
 	// Extract from main steps
 	extractPipConstraintsFromSteps(plan.Steps, constraints)
 	extractGoConstraintsFromSteps(plan.Steps, constraints)
+	extractCargoConstraintsFromSteps(plan.Steps, constraints)
 
 	// Extract from dependencies
 	for _, dep := range plan.Dependencies {
@@ -52,6 +53,7 @@ func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraint
 func extractConstraintsFromDependency(dep *DependencyPlan, constraints *actions.EvalConstraints) {
 	extractPipConstraintsFromSteps(dep.Steps, constraints)
 	extractGoConstraintsFromSteps(dep.Steps, constraints)
+	extractCargoConstraintsFromSteps(dep.Steps, constraints)
 
 	for _, nestedDep := range dep.Dependencies {
 		extractConstraintsFromDependency(&nestedDep, constraints)
@@ -147,4 +149,28 @@ func extractGoConstraintsFromSteps(steps []ResolvedStep, constraints *actions.Ev
 // HasGoSumConstraint returns true if the constraints contain a go.sum.
 func HasGoSumConstraint(constraints *actions.EvalConstraints) bool {
 	return constraints != nil && constraints.GoSum != ""
+}
+
+// extractCargoConstraintsFromSteps extracts cargo constraints from cargo_build steps.
+func extractCargoConstraintsFromSteps(steps []ResolvedStep, constraints *actions.EvalConstraints) {
+	for _, step := range steps {
+		if step.Action != "cargo_build" {
+			continue
+		}
+
+		lockData, ok := step.Params["lock_data"].(string)
+		if !ok || lockData == "" {
+			continue
+		}
+
+		// Only store if we don't already have a CargoLock (first one wins)
+		if constraints.CargoLock == "" {
+			constraints.CargoLock = lockData
+		}
+	}
+}
+
+// HasCargoLockConstraint returns true if the constraints contain a Cargo.lock.
+func HasCargoLockConstraint(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && constraints.CargoLock != ""
 }
