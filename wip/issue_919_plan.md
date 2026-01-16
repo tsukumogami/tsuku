@@ -27,11 +27,11 @@ None.
 
 ## Implementation Steps
 
-- [ ] Update `ResolveVersion` in `provider_metacpan.go` to normalize both API versions and user-provided version using `normalizeVersion()` before comparison
-- [ ] Update the `VersionInfo` return value to use the original API version as `Tag` and normalized version as `Version` (matching GitHub provider pattern)
-- [ ] Add test case to `metacpan_test.go` for resolving version without `v` prefix when API returns with prefix
-- [ ] Add test case for resolving version with `v` prefix when API returns with prefix (should still work)
-- [ ] Run tests to verify fix: `go test ./internal/version/... -run MetaCPAN`
+- [x] Update `ResolveVersion` in `provider_metacpan.go` to normalize both API versions and user-provided version using `normalizeVersion()` before comparison
+- [x] Update the `VersionInfo` return value to use the original API version as `Tag` and normalized version as `Version` (matching GitHub provider pattern)
+- [x] Add test case to `metacpan_test.go` for resolving version without `v` prefix when API returns with prefix
+- [x] Add test case for resolving version with `v` prefix when API returns with prefix (should still work)
+- [x] Run tests to verify fix: `go test ./internal/version/... -run MetaCPAN`
 - [ ] Manual verification: `./tsuku eval --recipe internal/recipe/recipes/c/carton.toml --os linux --arch amd64 --version 1.0.35`
 
 ## Testing Strategy
