@@ -31,7 +31,7 @@ jobs:
       - name: Generate test matrix
         id: matrix
         run: |
-          LINUX=$(jq -c '[.ci.linux[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc}]' test-matrix.json)
+          LINUX=$(jq -c '[.ci.linux[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
           echo "linux=$LINUX" >> $GITHUB_OUTPUT
 
   sandbox-tests:
@@ -59,7 +59,13 @@ jobs:
       - name: "Generate plan: ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku eval ${{ matrix.test.tool }} --install-deps > plan.json
+        run: |
+          # Use recipe path if specified (for testdata recipes), otherwise use tool name
+          if [ -n "${{ matrix.test.recipe }}" ]; then
+            ./tsuku eval --recipe "${{ matrix.test.recipe }}" --install-deps > plan.json
+          else
+            ./tsuku eval ${{ matrix.test.tool }} --install-deps > plan.json
+          fi
 
       - name: "Run sandbox: ${{ matrix.test.tool }}"
         run: ./tsuku install --plan plan.json --sandbox --force

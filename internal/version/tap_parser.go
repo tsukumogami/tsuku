@@ -31,7 +31,7 @@ var (
 )
 
 // parseFormulaFile extracts version and bottle metadata from a Homebrew formula file.
-// Returns error if required fields are missing.
+// Version is required; bottle metadata is optional (many third-party taps don't use bottles).
 func parseFormulaFile(content string) (*tapFormulaInfo, error) {
 	info := &tapFormulaInfo{
 		Checksums: make(map[string]string),
@@ -44,34 +44,30 @@ func parseFormulaFile(content string) (*tapFormulaInfo, error) {
 		return nil, fmt.Errorf("no version found in formula")
 	}
 
-	// 2. Extract bottle block (required for tsuku - we only support bottle-based installation)
+	// 2. Extract bottle block (optional - many third-party taps don't use bottles)
 	bottleMatch := bottleBlockRegex.FindStringSubmatch(content)
-	if len(bottleMatch) < 2 {
-		return nil, fmt.Errorf("no bottle block found; source-only formulas not supported")
-	}
-	bottleBlock := bottleMatch[1]
+	if len(bottleMatch) >= 2 {
+		bottleBlock := bottleMatch[1]
 
-	// 3. Extract root_url (required for bottle URL construction)
-	if rootMatch := rootURLRegex.FindStringSubmatch(bottleBlock); len(rootMatch) > 1 {
-		info.RootURL = rootMatch[1]
-	}
-	// Note: root_url is optional - some formulas use GHCR default
+		// 3. Extract root_url from bottle block
+		if rootMatch := rootURLRegex.FindStringSubmatch(bottleBlock); len(rootMatch) > 1 {
+			info.RootURL = rootMatch[1]
+		}
 
-	// 4. Extract checksums per platform
-	for _, match := range sha256Regex.FindAllStringSubmatch(bottleBlock, -1) {
-		// Handle both patterns:
-		// match[1], match[2] for: sha256 "hash" => :platform
-		// match[3], match[4] for: sha256 platform: "hash"
-		if match[1] != "" && match[2] != "" {
-			info.Checksums[match[2]] = match[1]
-		} else if match[3] != "" && match[4] != "" {
-			info.Checksums[match[3]] = match[4]
+		// 4. Extract checksums per platform
+		for _, match := range sha256Regex.FindAllStringSubmatch(bottleBlock, -1) {
+			// Handle both patterns:
+			// match[1], match[2] for: sha256 "hash" => :platform
+			// match[3], match[4] for: sha256 platform: "hash"
+			if match[1] != "" && match[2] != "" {
+				info.Checksums[match[2]] = match[1]
+			} else if match[3] != "" && match[4] != "" {
+				info.Checksums[match[3]] = match[4]
+			}
 		}
 	}
-
-	if len(info.Checksums) == 0 {
-		return nil, fmt.Errorf("no bottle checksums found")
-	}
+	// Note: If no bottle block, info.RootURL and info.Checksums remain empty.
+	// This is valid - the recipe can construct download URLs using the version.
 
 	return info, nil
 }

@@ -85,48 +85,36 @@ func (p *TapProvider) ResolveLatest(ctx context.Context) (*VersionInfo, error) {
 		return nil, fmt.Errorf("failed to parse formula '%s': %w", p.formula, err)
 	}
 
-	// Select platform-specific bottle
+	// Build base metadata (always available)
+	metadata := map[string]string{
+		"formula": p.formula,
+		"tap":     p.tap,
+	}
+
+	// Try to extract bottle information if available
+	// Many third-party taps (like hashicorp/tap) don't use bottles,
+	// so we make this optional and still return the version.
 	goos := runtime.GOOS
 	goarch := runtime.GOARCH
 	macOSVersion := 0 // TODO: Detect actual macOS version in future enhancement
 
 	platformTags := getPlatformTags(goos, goarch, macOSVersion)
-	if len(platformTags) == 0 {
-		return nil, fmt.Errorf("no bottle available for platform %s/%s", goos, goarch)
-	}
-
-	// Find first matching platform
-	var selectedPlatform string
-	var checksum string
-	for _, tag := range platformTags {
-		if cs, ok := info.Checksums[tag]; ok {
-			selectedPlatform = tag
-			checksum = cs
-			break
+	if len(platformTags) > 0 && info.RootURL != "" {
+		// Find first matching platform
+		for _, tag := range platformTags {
+			if cs, ok := info.Checksums[tag]; ok {
+				bottleURL := buildBottleURL(info.RootURL, p.formula, info.Version, tag)
+				metadata["bottle_url"] = bottleURL
+				metadata["checksum"] = "sha256:" + cs
+				break
+			}
 		}
 	}
 
-	if selectedPlatform == "" {
-		return nil, fmt.Errorf("no bottle available for platform %s/%s (tried: %v)", goos, goarch, platformTags)
-	}
-
-	// Check for root_url - required for bottle URL construction
-	if info.RootURL == "" {
-		return nil, fmt.Errorf("no root_url specified in bottle block; cannot construct bottle URL")
-	}
-
-	// Construct bottle URL
-	bottleURL := buildBottleURL(info.RootURL, p.formula, info.Version, selectedPlatform)
-
 	return &VersionInfo{
-		Tag:     info.Version,
-		Version: info.Version,
-		Metadata: map[string]string{
-			"bottle_url": bottleURL,
-			"checksum":   "sha256:" + checksum,
-			"formula":    p.formula,
-			"tap":        p.tap,
-		},
+		Tag:      info.Version,
+		Version:  info.Version,
+		Metadata: metadata,
 	}, nil
 }
 

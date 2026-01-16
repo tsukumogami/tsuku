@@ -1,0 +1,26 @@
+# iTerm2 via Homebrew Cask
+#
+# This recipe demonstrates installing macOS applications using the cask version provider.
+# The cask provider fetches version and download info from Homebrew Cask metadata,
+# which tracks macOS application releases.
+
+[metadata]
+name = "iterm2"
+description = "Terminal emulator for macOS (via Homebrew Cask)"
+homepage = "https://iterm2.com/"
+supported_os = ["darwin"]
+
+[version]
+source = "cask"
+cask = "iterm2"
+
+[[steps]]
+action = "app_bundle"
+url = "{version.url}"
+checksum = "{version.checksum}"
+app_name = "iTerm.app"
+
+[verify]
+command = "test -d $TSUKU_HOME/apps/iterm2-*.app"
+mode = "output"
+reason = "macOS applications do not have version flags; verification checks that the .app bundle was installed"
