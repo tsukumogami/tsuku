@@ -1,6 +1,6 @@
 # DESIGN: Libtool Compatibility with Zig CC
 
-**Status:** Accepted
+**Status:** Current
 
 **Upstream Tracking:** [ziglang/zig#17273](https://github.com/ziglang/zig/issues/17273) - When this is resolved, we can remove our wrapper workaround.
 
