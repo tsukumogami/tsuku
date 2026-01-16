@@ -40,6 +40,7 @@ func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraint
 	extractPipConstraintsFromSteps(plan.Steps, constraints)
 	extractGoConstraintsFromSteps(plan.Steps, constraints)
 	extractCargoConstraintsFromSteps(plan.Steps, constraints)
+	extractNpmConstraintsFromSteps(plan.Steps, constraints)
 
 	// Extract from dependencies
 	for _, dep := range plan.Dependencies {
@@ -54,6 +55,7 @@ func extractConstraintsFromDependency(dep *DependencyPlan, constraints *actions.
 	extractPipConstraintsFromSteps(dep.Steps, constraints)
 	extractGoConstraintsFromSteps(dep.Steps, constraints)
 	extractCargoConstraintsFromSteps(dep.Steps, constraints)
+	extractNpmConstraintsFromSteps(dep.Steps, constraints)
 
 	for _, nestedDep := range dep.Dependencies {
 		extractConstraintsFromDependency(&nestedDep, constraints)
@@ -173,4 +175,28 @@ func extractCargoConstraintsFromSteps(steps []ResolvedStep, constraints *actions
 // HasCargoLockConstraint returns true if the constraints contain a Cargo.lock.
 func HasCargoLockConstraint(constraints *actions.EvalConstraints) bool {
 	return constraints != nil && constraints.CargoLock != ""
+}
+
+// extractNpmConstraintsFromSteps extracts npm constraints from npm_exec steps.
+func extractNpmConstraintsFromSteps(steps []ResolvedStep, constraints *actions.EvalConstraints) {
+	for _, step := range steps {
+		if step.Action != "npm_exec" {
+			continue
+		}
+
+		packageLock, ok := step.Params["package_lock"].(string)
+		if !ok || packageLock == "" {
+			continue
+		}
+
+		// Only store if we don't already have an NpmLock (first one wins)
+		if constraints.NpmLock == "" {
+			constraints.NpmLock = packageLock
+		}
+	}
+}
+
+// HasNpmLockConstraint returns true if the constraints contain a package-lock.json.
+func HasNpmLockConstraint(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && constraints.NpmLock != ""
 }

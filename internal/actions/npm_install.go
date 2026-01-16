@@ -153,6 +153,11 @@ func (a *NpmInstallAction) Decompose(ctx *EvalContext, params map[string]interfa
 		return nil, fmt.Errorf("npm_install decomposition requires a resolved version")
 	}
 
+	// Check if we have package-lock.json constraints for constrained evaluation
+	if ctx.Constraints != nil && ctx.Constraints.NpmLock != "" {
+		return a.decomposeWithConstraints(ctx, packageName, version, executables)
+	}
+
 	// Find npm binary from nodejs installation
 	npmPath := ResolveNpm()
 	if npmPath == "" {
@@ -375,4 +380,49 @@ func detectNativeAddons(lockfileContent string) bool {
 	}
 
 	return false
+}
+
+// decomposeWithConstraints generates an npm_exec step using constraints from a golden file.
+// This enables deterministic plan generation for validation by reusing the exact
+// package-lock.json from a previous evaluation instead of running npm install --package-lock-only.
+func (a *NpmInstallAction) decomposeWithConstraints(ctx *EvalContext, packageName, version string, executables []string) ([]Step, error) {
+	// Use the constrained package-lock.json
+	lockfileContent := ctx.Constraints.NpmLock
+
+	// Detect native addons from the cached lockfile
+	hasNativeAddons := detectNativeAddons(lockfileContent)
+
+	// Get Node.js and npm versions for metadata (optional, but good to include if available)
+	npmPath := ResolveNpm()
+	nodeVersion := ""
+	npmVersion := ""
+	if npmPath != "" {
+		nodeVersion = GetNodeVersion(npmPath)
+		npmVersion = GetNpmVersion(npmPath)
+	}
+
+	// Build npm_exec params
+	npmExecParams := map[string]interface{}{
+		"package":           packageName,
+		"version":           version,
+		"executables":       executables,
+		"package_lock":      lockfileContent,
+		"ignore_scripts":    true, // Security default
+		"has_native_addons": hasNativeAddons,
+	}
+
+	// Add version info if available
+	if nodeVersion != "" {
+		npmExecParams["node_version"] = nodeVersion
+	}
+	if npmVersion != "" {
+		npmExecParams["npm_version"] = npmVersion
+	}
+
+	return []Step{
+		{
+			Action: "npm_exec",
+			Params: npmExecParams,
+		},
+	}, nil
 }

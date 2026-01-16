@@ -780,3 +780,197 @@ func TestHasCargoLockConstraint(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractConstraints_NpmExec(t *testing.T) {
+	packageLock := `{
+  "name": "tsuku-npm-eval",
+  "version": "0.0.0",
+  "lockfileVersion": 3,
+  "packages": {
+    "node_modules/wrangler": {
+      "version": "4.58.0"
+    }
+  }
+}`
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "wrangler",
+		Version:       "4.58.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "npm_exec",
+				Params: map[string]interface{}{
+					"package":      "wrangler",
+					"version":      "4.58.0",
+					"executables":  []interface{}{"wrangler"},
+					"package_lock": packageLock,
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.NpmLock != packageLock {
+		t.Errorf("Expected NpmLock to be extracted, got %q", constraints.NpmLock)
+	}
+}
+
+func TestExtractConstraints_NpmExecInDependency(t *testing.T) {
+	packageLock := `{"name": "dep-package", "lockfileVersion": 3}`
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "myapp",
+		Version:       "1.0.0",
+		Dependencies: []DependencyPlan{
+			{
+				Tool:    "npm-tool",
+				Version: "1.0.0",
+				Steps: []ResolvedStep{
+					{
+						Action: "npm_exec",
+						Params: map[string]interface{}{
+							"package":      "npm-tool",
+							"version":      "1.0.0",
+							"package_lock": packageLock,
+						},
+					},
+				},
+			},
+		},
+		Steps: []ResolvedStep{
+			{
+				Action: "download_file",
+				Params: map[string]interface{}{
+					"url": "https://example.com/myapp",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.NpmLock != packageLock {
+		t.Errorf("Expected NpmLock from dependency to be extracted, got %q", constraints.NpmLock)
+	}
+}
+
+func TestExtractConstraints_NpmExecFirstWins(t *testing.T) {
+	packageLock1 := `first package-lock.json content`
+	packageLock2 := `second package-lock.json content`
+
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "multi-tool",
+		Version:       "1.0.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "npm_exec",
+				Params: map[string]interface{}{
+					"package":      "first-package",
+					"version":      "1.0.0",
+					"package_lock": packageLock1,
+				},
+			},
+			{
+				Action: "npm_exec",
+				Params: map[string]interface{}{
+					"package":      "second-package",
+					"version":      "2.0.0",
+					"package_lock": packageLock2,
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.NpmLock != packageLock1 {
+		t.Errorf("Expected first NpmLock to win, got %q", constraints.NpmLock)
+	}
+}
+
+func TestExtractConstraints_NpmExecEmptyPackageLock(t *testing.T) {
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "tool",
+		Version:       "1.0.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "npm_exec",
+				Params: map[string]interface{}{
+					"package":      "some-package",
+					"version":      "1.0.0",
+					"package_lock": "",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.NpmLock != "" {
+		t.Errorf("Expected empty NpmLock for empty package_lock param, got %q", constraints.NpmLock)
+	}
+}
+
+func TestHasNpmLockConstraint(t *testing.T) {
+	tests := []struct {
+		name        string
+		constraints *actions.EvalConstraints
+		expected    bool
+	}{
+		{
+			name:        "nil constraints",
+			constraints: nil,
+			expected:    false,
+		},
+		{
+			name: "empty constraints",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				NpmLock:        "",
+			},
+			expected: false,
+		},
+		{
+			name: "with npm lock",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				NpmLock:        `{"name": "test", "lockfileVersion": 3}`,
+			},
+			expected: true,
+		},
+		{
+			name: "with pip but no npm",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{
+					"flask": "2.3.0",
+				},
+				NpmLock: "",
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := HasNpmLockConstraint(tt.constraints)
+			if result != tt.expected {
+				t.Errorf("Expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
