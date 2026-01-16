@@ -238,7 +238,7 @@ jobs:
         run: |
           # Use recipe path if specified (for testdata recipes), otherwise use tool name
           if [ -n "${{ matrix.test.recipe }}" ]; then
-            ./tsuku install --force "${{ matrix.test.recipe }}"
+            ./tsuku install --force --recipe "${{ matrix.test.recipe }}"
           else
             ./tsuku install --force "${{ matrix.test.tool }}"
           fi
@@ -288,7 +288,7 @@ jobs:
 
             # Use recipe path if specified (for testdata recipes), otherwise use tool name
             if [ -n "$recipe" ]; then
-              if ! ./tsuku install --force "$recipe"; then
+              if ! ./tsuku install --force --recipe "$recipe"; then
                 FAILED+=("$tool")
               fi
             else

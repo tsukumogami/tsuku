@@ -193,6 +193,24 @@
       "platform": {"os": "darwin", "arch": "arm64"},
       "issue": "https://github.com/tsukumogami/tsuku/issues/879",
       "reason": "configure auto-detects homebrew nghttp2/libidn2 but linker cannot find them"
+    },
+    {
+      "recipe": "iterm2",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/887",
+      "reason": "cask recipes are macOS-only and cannot generate golden files on Linux"
+    },
+    {
+      "recipe": "iterm2",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/887",
+      "reason": "cask recipes require GUI interaction which is unavailable in CI"
+    },
+    {
+      "recipe": "iterm2",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/887",
+      "reason": "cask recipes require GUI interaction which is unavailable in CI"
     }
   ]
 }
