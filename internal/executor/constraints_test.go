@@ -1174,3 +1174,199 @@ func TestHasGemLockConstraint(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractConstraints_CpanInstall(t *testing.T) {
+	snapshot := `# carton snapshot format: version 1.0
+DISTRIBUTIONS
+  Carton-1.0.35
+    pathname: M/MI/MIYAGAWA/Carton-1.0.35.tar.gz
+    provides:
+      Carton 1.0.35
+    requirements:
+      perl 5.008001
+`
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "carton",
+		Version:       "1.0.35",
+		Steps: []ResolvedStep{
+			{
+				Action: "cpan_install",
+				Params: map[string]interface{}{
+					"distribution": "Carton",
+					"version":      "1.0.35",
+					"executables":  []interface{}{"carton"},
+					"snapshot":     snapshot,
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.CpanMeta != snapshot {
+		t.Errorf("Expected CpanMeta to be extracted, got %q", constraints.CpanMeta)
+	}
+}
+
+func TestExtractConstraints_CpanInstallInDependency(t *testing.T) {
+	snapshot := `# carton snapshot format: version 1.0
+DISTRIBUTIONS
+  Some-Module-1.0.0
+`
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "myapp",
+		Version:       "1.0.0",
+		Dependencies: []DependencyPlan{
+			{
+				Tool:    "perl-tool",
+				Version: "1.0.0",
+				Steps: []ResolvedStep{
+					{
+						Action: "cpan_install",
+						Params: map[string]interface{}{
+							"distribution": "perl-tool",
+							"version":      "1.0.0",
+							"snapshot":     snapshot,
+						},
+					},
+				},
+			},
+		},
+		Steps: []ResolvedStep{
+			{
+				Action: "download_file",
+				Params: map[string]interface{}{
+					"url": "https://example.com/myapp",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.CpanMeta != snapshot {
+		t.Errorf("Expected CpanMeta from dependency to be extracted, got %q", constraints.CpanMeta)
+	}
+}
+
+func TestExtractConstraints_CpanInstallFirstWins(t *testing.T) {
+	snapshot1 := `first cpanfile.snapshot content`
+	snapshot2 := `second cpanfile.snapshot content`
+
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "multi-tool",
+		Version:       "1.0.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "cpan_install",
+				Params: map[string]interface{}{
+					"distribution": "first-dist",
+					"version":      "1.0.0",
+					"snapshot":     snapshot1,
+				},
+			},
+			{
+				Action: "cpan_install",
+				Params: map[string]interface{}{
+					"distribution": "second-dist",
+					"version":      "2.0.0",
+					"snapshot":     snapshot2,
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.CpanMeta != snapshot1 {
+		t.Errorf("Expected first CpanMeta to win, got %q", constraints.CpanMeta)
+	}
+}
+
+func TestExtractConstraints_CpanInstallEmptySnapshot(t *testing.T) {
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "tool",
+		Version:       "1.0.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "cpan_install",
+				Params: map[string]interface{}{
+					"distribution": "some-dist",
+					"version":      "1.0.0",
+					"snapshot":     "",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.CpanMeta != "" {
+		t.Errorf("Expected empty CpanMeta for empty snapshot param, got %q", constraints.CpanMeta)
+	}
+}
+
+func TestHasCpanMetaConstraint(t *testing.T) {
+	tests := []struct {
+		name        string
+		constraints *actions.EvalConstraints
+		expected    bool
+	}{
+		{
+			name:        "nil constraints",
+			constraints: nil,
+			expected:    false,
+		},
+		{
+			name: "empty constraints",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				CpanMeta:       "",
+			},
+			expected: false,
+		},
+		{
+			name: "with cpan meta",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				CpanMeta:       "# carton snapshot format: version 1.0\nDISTRIBUTIONS\n",
+			},
+			expected: true,
+		},
+		{
+			name: "with pip but no cpan",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{
+					"flask": "2.3.0",
+				},
+				CpanMeta: "",
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := HasCpanMetaConstraint(tt.constraints)
+			if result != tt.expected {
+				t.Errorf("Expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
