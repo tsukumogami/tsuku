@@ -646,10 +646,15 @@ func SetupCCompilerEnv(env []string) ([]string, bool) {
 
 	ccWrapper := filepath.Join(wrapperDir, "cc")
 	cxxWrapper := filepath.Join(wrapperDir, "c++")
+	arWrapper := filepath.Join(wrapperDir, "ar")
+	ranlibWrapper := filepath.Join(wrapperDir, "ranlib")
 
-	// Set CC, CXX and add wrapper directory to PATH
+	// Set CC, CXX, AR, RANLIB and add wrapper directory to PATH
+	// Explicitly setting AR/RANLIB bypasses libtool detection that may fail with zig
 	env = append(env, fmt.Sprintf("CC=%s", ccWrapper))
 	env = append(env, fmt.Sprintf("CXX=%s", cxxWrapper))
+	env = append(env, fmt.Sprintf("AR=%s", arWrapper))
+	env = append(env, fmt.Sprintf("RANLIB=%s", ranlibWrapper))
 
 	// Prepend wrapper directory to PATH so cc/gcc are found first
 	for i, e := range env {
