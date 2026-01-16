@@ -1,6 +1,6 @@
 # DESIGN: Consistent Version Sorting
 
-**Status:** Proposed
+**Status:** Current
 
 ## Context and Problem Statement
 
