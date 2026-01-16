@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/tsukumogami/tsuku/internal/testutil"
@@ -1026,6 +1027,143 @@ func TestStateManager_SaveAndLoad_WithLibs(t *testing.T) {
 	}
 	if libState.UsedBy[0] != "ruby-3.4.0" {
 		t.Errorf("UsedBy[0] = %s, want ruby-3.4.0", libState.UsedBy[0])
+	}
+}
+
+func TestLibraryVersionState_Checksums_SaveAndLoad(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Create state with library checksums
+	state := &State{
+		Installed: map[string]ToolState{},
+		Libs: map[string]map[string]LibraryVersionState{
+			"gcc-libs": {
+				"15.2.0": {
+					UsedBy: []string{"ruby-3.4.0"},
+					Checksums: map[string]string{
+						"lib/libstdc++.so.6.0.33": "abc123def456789",
+						"lib/libgcc_s.so.1":       "fedcba987654321",
+					},
+				},
+			},
+		},
+	}
+
+	// Save
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Load
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// Verify checksums
+	libState := loaded.Libs["gcc-libs"]["15.2.0"]
+
+	if len(libState.Checksums) != 2 {
+		t.Fatalf("Checksums count = %d, want 2", len(libState.Checksums))
+	}
+
+	if libState.Checksums["lib/libstdc++.so.6.0.33"] != "abc123def456789" {
+		t.Errorf("Checksum for libstdc++ = %s, want abc123def456789", libState.Checksums["lib/libstdc++.so.6.0.33"])
+	}
+
+	if libState.Checksums["lib/libgcc_s.so.1"] != "fedcba987654321" {
+		t.Errorf("Checksum for libgcc_s = %s, want fedcba987654321", libState.Checksums["lib/libgcc_s.so.1"])
+	}
+
+	// Verify UsedBy still works
+	if len(libState.UsedBy) != 1 || libState.UsedBy[0] != "ruby-3.4.0" {
+		t.Errorf("UsedBy = %v, want [ruby-3.4.0]", libState.UsedBy)
+	}
+}
+
+func TestLibraryVersionState_Checksums_BackwardCompatibility(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write state.json without checksums field (old format)
+	oldStateJSON := `{
+  "installed": {},
+  "libs": {
+    "libyaml": {
+      "0.2.5": {"used_by": ["ruby-3.4.0"]}
+    }
+  }
+}`
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(oldStateJSON), 0644); err != nil {
+		t.Fatalf("failed to write old state: %v", err)
+	}
+
+	// Load should succeed
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// Verify library loaded
+	libState := loaded.Libs["libyaml"]["0.2.5"]
+	if len(libState.UsedBy) != 1 {
+		t.Errorf("UsedBy length = %d, want 1", len(libState.UsedBy))
+	}
+
+	// Checksums should be nil (not present in old format)
+	if libState.Checksums != nil {
+		t.Errorf("Checksums = %v, want nil for old format without checksums", libState.Checksums)
+	}
+}
+
+func TestLibraryVersionState_Checksums_OmitsEmpty(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Create state with library but empty checksums
+	state := &State{
+		Installed: map[string]ToolState{},
+		Libs: map[string]map[string]LibraryVersionState{
+			"libyaml": {
+				"0.2.5": {
+					UsedBy:    []string{"ruby-3.4.0"},
+					Checksums: nil, // Empty/nil checksums
+				},
+			},
+		},
+	}
+
+	// Save
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Read raw JSON to verify omitempty works
+	statePath := filepath.Join(sm.config.HomeDir, "state.json")
+	data, err := os.ReadFile(statePath)
+	if err != nil {
+		t.Fatalf("failed to read state file: %v", err)
+	}
+
+	// JSON should not contain "checksums" field when nil (omitempty)
+	jsonStr := string(data)
+	if strings.Contains(jsonStr, `"checksums"`) {
+		t.Errorf("JSON contains checksums field when it should be omitted (nil map): %s", jsonStr)
+	}
+
+	// Load and verify
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	libState := loaded.Libs["libyaml"]["0.2.5"]
+	if libState.Checksums != nil && len(libState.Checksums) > 0 {
+		t.Errorf("Checksums = %v, want nil or empty", libState.Checksums)
 	}
 }
 
