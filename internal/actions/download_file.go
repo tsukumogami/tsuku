@@ -10,7 +10,9 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
+	"github.com/tsukumogami/tsuku/internal/httputil"
 	"github.com/tsukumogami/tsuku/internal/log"
 	"github.com/tsukumogami/tsuku/internal/progress"
 )
@@ -126,7 +128,19 @@ func (a *DownloadFileAction) Execute(ctx *ExecutionContext, params map[string]in
 	return nil
 }
 
-// downloadFileHTTP performs the actual HTTP download with context for cancellation
+// isRetryableStatusCode returns true if the HTTP status code is transient and
+// the request should be retried. This includes:
+// - 403 Forbidden: Often caused by rate limiting or bot detection
+// - 429 Too Many Requests: Explicit rate limiting
+// - 5xx Server Errors: Temporary server issues
+func isRetryableStatusCode(statusCode int) bool {
+	return statusCode == http.StatusForbidden ||
+		statusCode == http.StatusTooManyRequests ||
+		statusCode >= 500
+}
+
+// downloadFileHTTP performs the actual HTTP download with context for cancellation.
+// Implements retry logic with exponential backoff for transient errors (403, 429, 5xx).
 // SECURITY: Enforces HTTPS for all downloads to prevent MITM attacks
 func downloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
 	// SECURITY: Enforce HTTPS for all downloads
@@ -134,12 +148,70 @@ func downloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
 		return fmt.Errorf("download URL must use HTTPS for security, got: %s", downloadURL)
 	}
 
+	const maxRetries = 3
+	baseDelay := time.Second
+
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			// Exponential backoff: 1s, 2s, 4s
+			delay := baseDelay * time.Duration(1<<(attempt-1))
+			fmt.Printf("   Retry %d/%d after %v...\n", attempt, maxRetries, delay)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(delay):
+			}
+		}
+
+		err := doDownloadFileHTTP(ctx, downloadURL, destPath)
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+
+		// Check if error is retryable (contains status code info)
+		// Non-retryable errors (400, 404, etc.) fail immediately
+		if httpErr, ok := err.(*httpStatusError); ok {
+			if !isRetryableStatusCode(httpErr.StatusCode) {
+				return err
+			}
+			// Retryable error, continue to next attempt
+			continue
+		}
+
+		// For non-HTTP errors (network issues, etc.), also retry
+		// unless context is cancelled
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+	}
+
+	return fmt.Errorf("download failed after %d retries: %w", maxRetries, lastErr)
+}
+
+// httpStatusError wraps an HTTP error with status code for retry logic
+type httpStatusError struct {
+	StatusCode int
+	Status     string
+}
+
+func (e *httpStatusError) Error() string {
+	return fmt.Sprintf("bad status: %s", e.Status)
+}
+
+// doDownloadFileHTTP performs a single HTTP download attempt
+func doDownloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
 	// Create secure HTTP client with decompression bomb and SSRF protection
 	client := newDownloadHTTPClient()
 	req, err := http.NewRequestWithContext(ctx, "GET", downloadURL, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
+
+	// Set User-Agent to avoid 403 from servers that block default Go HTTP client
+	req.Header.Set("User-Agent", httputil.DefaultUserAgent)
 
 	// Defense in depth: Explicitly request uncompressed response
 	req.Header.Set("Accept-Encoding", "identity")
@@ -157,7 +229,7 @@ func downloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
+		return &httpStatusError{StatusCode: resp.StatusCode, Status: resp.Status}
 	}
 
 	// Defense in depth: Reject compressed responses
