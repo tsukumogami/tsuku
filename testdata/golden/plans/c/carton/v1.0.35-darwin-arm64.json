@@ -1,10 +1,10 @@
 {
   "format_version": 3,
   "tool": "carton",
-  "version": "1.0.901",
+  "version": "1.0.35",
   "platform": {
-    "os": "linux",
-    "arch": "amd64"
+    "os": "darwin",
+    "arch": "arm64"
   },
   "recipe_hash": "f333e969b32f13cee91fd07a1a3158ea2dfd7344db092ef1c80c4372afc93279",
   "deterministic": false,
@@ -17,21 +17,21 @@
         {
           "action": "download_file",
           "params": {
-            "checksum": "b2f927d3e932cd3cfc2c3482bcdba832dfded9ddd7109774674c2c9fdc49567f",
+            "checksum": "ec30ef310a5b18015ca0102f15c2e223ef0e3cb224ea27c514a7fab95a4573f1",
             "checksum_algo": "sha256",
-            "dest": "perl-linux-amd64.tar.xz",
-            "url": "https://github.com/skaji/relocatable-perl/releases/download/5.42.0.0/perl-linux-amd64.tar.xz"
+            "dest": "perl-darwin-arm64.tar.xz",
+            "url": "https://github.com/skaji/relocatable-perl/releases/download/5.42.0.0/perl-darwin-arm64.tar.xz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://github.com/skaji/relocatable-perl/releases/download/5.42.0.0/perl-linux-amd64.tar.xz",
-          "checksum": "b2f927d3e932cd3cfc2c3482bcdba832dfded9ddd7109774674c2c9fdc49567f",
-          "size": 14832372
+          "url": "https://github.com/skaji/relocatable-perl/releases/download/5.42.0.0/perl-darwin-arm64.tar.xz",
+          "checksum": "ec30ef310a5b18015ca0102f15c2e223ef0e3cb224ea27c514a7fab95a4573f1",
+          "size": 10832668
         },
         {
           "action": "extract",
           "params": {
-            "archive": "perl-linux-amd64.tar.xz",
+            "archive": "perl-darwin-arm64.tar.xz",
             "format": "tar.xz",
             "strip_dirs": 1
           },
