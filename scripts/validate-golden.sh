@@ -154,23 +154,8 @@ if [[ -z "$VERSIONS" ]]; then
     exit 2
 fi
 
-# Load exclusions files
+# Load exclusions file
 EXCLUSIONS_FILE="$REPO_ROOT/testdata/golden/exclusions.json"
-CODE_VALIDATION_EXCLUSIONS_FILE="$REPO_ROOT/testdata/golden/code-validation-exclusions.json"
-
-# Helper function to check if a recipe is excluded from code validation
-# (used for mismatch comparison, not for missing file checks)
-is_recipe_excluded_from_code_validation() {
-    local recipe="$1"
-
-    if [[ ! -f "$CODE_VALIDATION_EXCLUSIONS_FILE" ]]; then
-        return 1
-    fi
-
-    jq -e --arg r "$recipe" \
-        '.exclusions[] | select(.recipe == $r)' \
-        "$CODE_VALIDATION_EXCLUSIONS_FILE" > /dev/null 2>&1
-}
 
 # Helper function to check if a platform is excluded
 is_platform_excluded() {
@@ -257,16 +242,6 @@ if [[ ${#MISSING_PLATFORMS[@]} -gt 0 ]]; then
     exit 1
 fi
 
-# Check if recipe is excluded from code validation (toolchain drift, etc.)
-if is_recipe_excluded_from_code_validation "$RECIPE"; then
-    reason=$(jq -r --arg r "$RECIPE" '.exclusions[] | select(.recipe == $r) | .reason' "$CODE_VALIDATION_EXCLUSIONS_FILE" | head -1)
-    issue=$(jq -r --arg r "$RECIPE" '.exclusions[] | select(.recipe == $r) | .issue' "$CODE_VALIDATION_EXCLUSIONS_FILE" | head -1)
-    echo "SKIPPED: $RECIPE is excluded from code validation"
-    echo "  Reason: $reason"
-    echo "  Tracking: $issue"
-    exit 0
-fi
-
 MISMATCH=0
 
 for VERSION in $VERSIONS; do
@@ -294,15 +269,18 @@ for VERSION in $VERSIONS; do
         GOLDEN="$GOLDEN_DIR/$filename"
         ACTUAL="$TEMP_DIR/$filename"
 
-        # Build eval command arguments with constrained evaluation
-        eval_args=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps --pin-from "$GOLDEN")
+        # Skip excluded platforms
+        if is_platform_excluded "$RECIPE" "$os" "$arch" "$family"; then
+            continue
+        fi
+
+        # Build eval command arguments
+        eval_args=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps)
         if [[ -n "$family" ]]; then
             eval_args+=(--linux-family "$family")
         fi
 
-        # Generate current plan with constrained evaluation (stripping non-deterministic fields)
-        # The --pin-from flag extracts constraints from the golden file (pip versions,
-        # go.sum, cargo.lock, etc.) to produce deterministic output.
+        # Generate current plan (stripping non-deterministic fields)
         # Note: missing platforms already caught by pre-check above
         if ! "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$ACTUAL"; then
