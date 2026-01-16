@@ -32,7 +32,7 @@ None.
 - [x] Add test case to `metacpan_test.go` for resolving version without `v` prefix when API returns with prefix
 - [x] Add test case for resolving version with `v` prefix when API returns with prefix (should still work)
 - [x] Run tests to verify fix: `go test ./internal/version/... -run MetaCPAN`
-- [ ] Manual verification: `./tsuku eval --recipe internal/recipe/recipes/c/carton.toml --os linux --arch amd64 --version 1.0.35`
+- [x] Manual verification: `./tsuku eval --recipe internal/recipe/recipes/c/carton.toml --os linux --arch amd64 --version 1.0.35`
 
 ## Testing Strategy
 
