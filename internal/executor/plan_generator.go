@@ -634,8 +634,12 @@ func generateDependencyPlans(
 	cfg PlanConfig,
 	processed map[string]bool,
 ) ([]DependencyPlan, error) {
-	// Resolve direct dependencies from recipe
-	deps := actions.ResolveDependencies(r)
+	// Resolve direct dependencies from recipe using target OS from config
+	targetOS := cfg.OS
+	if targetOS == "" {
+		targetOS = runtime.GOOS
+	}
+	deps := actions.ResolveDependenciesForPlatform(r, targetOS)
 
 	if len(deps.InstallTime) == 0 {
 		return nil, nil

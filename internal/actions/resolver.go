@@ -268,6 +268,8 @@ func aggregatePrimitiveDeps(action string, params map[string]interface{}) Action
 
 // ResolveTransitive expands dependencies transitively by loading each dependency's
 // recipe and resolving its dependencies recursively.
+// Uses runtime.GOOS for platform-specific dependency filtering.
+// For cross-platform plan generation, use ResolveTransitiveForPlatform instead.
 //
 // Parameters:
 //   - ctx: Context for cancellation and timeouts
@@ -289,6 +291,28 @@ func ResolveTransitive(
 	deps ResolvedDeps,
 	rootName string,
 ) (ResolvedDeps, error) {
+	return ResolveTransitiveForPlatform(ctx, loader, deps, rootName, runtime.GOOS)
+}
+
+// ResolveTransitiveForPlatform expands dependencies transitively for a specific target OS.
+// This allows generating plans for a target platform different from the host.
+//
+// Parameters:
+//   - ctx: Context for cancellation and timeouts
+//   - loader: RecipeLoader to fetch dependency recipes
+//   - deps: Direct dependencies to expand (from ResolveDependencies)
+//   - rootName: Name of the root recipe (used for cycle detection)
+//   - targetOS: Target operating system for platform-specific dependency filtering
+//
+// Returns the fully expanded dependencies or an error if a cycle is detected
+// or max depth is exceeded.
+func ResolveTransitiveForPlatform(
+	ctx context.Context,
+	loader RecipeLoader,
+	deps ResolvedDeps,
+	rootName string,
+	targetOS string,
+) (ResolvedDeps, error) {
 	result := ResolvedDeps{
 		InstallTime: make(map[string]string),
 		Runtime:     make(map[string]string),
@@ -304,13 +328,13 @@ func ResolveTransitive(
 
 	// Resolve install-time deps transitively
 	installVisited := make(map[string]bool)
-	if err := resolveTransitiveSet(ctx, loader, result.InstallTime, []string{rootName}, 0, installVisited, false); err != nil {
+	if err := resolveTransitiveSet(ctx, loader, result.InstallTime, []string{rootName}, 0, installVisited, false, targetOS); err != nil {
 		return ResolvedDeps{}, err
 	}
 
 	// Resolve runtime deps transitively
 	runtimeVisited := make(map[string]bool)
-	if err := resolveTransitiveSet(ctx, loader, result.Runtime, []string{rootName}, 0, runtimeVisited, true); err != nil {
+	if err := resolveTransitiveSet(ctx, loader, result.Runtime, []string{rootName}, 0, runtimeVisited, true, targetOS); err != nil {
 		return ResolvedDeps{}, err
 	}
 
@@ -322,6 +346,7 @@ func ResolveTransitive(
 // The path slice tracks the current resolution path for cycle detection.
 // The visited map tracks already-processed deps to avoid redundant work.
 // The forRuntime flag indicates whether to use Runtime or InstallTime deps.
+// The targetOS parameter specifies the target platform for filtering platform-specific deps.
 func resolveTransitiveSet(
 	ctx context.Context,
 	loader RecipeLoader,
@@ -330,6 +355,7 @@ func resolveTransitiveSet(
 	depth int,
 	visited map[string]bool,
 	forRuntime bool,
+	targetOS string,
 ) error {
 	if depth >= MaxTransitiveDepth {
 		return fmt.Errorf("%w: exceeded depth %d at path %s",
@@ -366,8 +392,8 @@ func resolveTransitiveSet(
 			continue
 		}
 
-		// Resolve the dependency's own dependencies
-		depDeps := ResolveDependencies(depRecipe)
+		// Resolve the dependency's own dependencies using the target OS
+		depDeps := ResolveDependenciesForPlatform(depRecipe, targetOS)
 
 		// Select the appropriate dep set based on forRuntime flag
 		var sourceDeps map[string]string
@@ -399,11 +425,19 @@ func resolveTransitiveSet(
 			}
 		}
 
-		// Only recurse if there are new deps to process
+		// Recurse to process only newly discovered deps
+		// Pass newDeps as the deps parameter so we only process new items,
+		// but all additions still go to the main deps map via the parent's deps[transName] assignments
 		if len(newDeps) > 0 {
 			newPath := append(path, depName)
-			if err := resolveTransitiveSet(ctx, loader, newDeps, newPath, depth+1, visited, forRuntime); err != nil {
+			if err := resolveTransitiveSet(ctx, loader, newDeps, newPath, depth+1, visited, forRuntime, targetOS); err != nil {
 				return err
+			}
+			// Merge recursive results back into main deps map
+			for name, version := range newDeps {
+				if _, exists := deps[name]; !exists {
+					deps[name] = version
+				}
 			}
 		}
 	}
