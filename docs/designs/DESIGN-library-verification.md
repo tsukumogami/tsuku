@@ -92,12 +92,28 @@ Research was conducted across five approaches. Key findings:
 - Industry standard (RPM, dpkg, pacman) but always as complement, never standalone
 - Good for detecting post-install tampering
 
+### Platform-Specific Considerations
+
+**macOS Big Sur+ dyld Shared Cache:**
+Starting with macOS Big Sur, Apple moved most system libraries into a shared cache (`/System/Library/dyld/dyld_shared_cache_*`). System libraries like `libSystem.B.dylib` no longer exist as individual files on disk. This has implications for dependency resolution:
+
+- Dependency checking (Level 2) cannot verify system library existence by file path
+- The dyld cache contains: libc, libm, libpthread, CoreFoundation, and most system frameworks
+- Solution: Skip file existence checks for libraries in system paths (`/usr/lib/`, `/System/Library/`)
+- dlopen (Level 3) still works correctly - the dynamic linker knows how to load from the cache
+
+**Linux System Library Paths:**
+Linux system libraries remain on disk but may be in various locations depending on distribution:
+- `/lib`, `/lib64`, `/usr/lib`, `/usr/lib64`
+- Multiarch paths like `/usr/lib/x86_64-linux-gnu/`
+
 ### Anti-patterns to Avoid
 
 - Shelling out to `ldd` (security risk - executes untrusted code)
 - Requiring recipe changes for basic verification
 - Making verification so slow it's never used
 - Giving false confidence (file exists != file works)
+- Checking file existence for macOS system libraries (they're in dyld cache)
 
 ## Considered Options
 
@@ -158,22 +174,23 @@ Actually load the library using the dynamic linker.
 
 Combine approaches in layers, with configurable depth:
 
-| Level | What | Speed | Default |
-|-------|------|-------|---------|
-| 1. Header | Valid format, correct architecture | ~50μs | Yes |
-| 2. Dependencies | Required libraries exist | ~100μs | Yes |
-| 3. Loadable | dlopen succeeds | ~1ms | Yes |
-| 4. Integrity | Checksum unchanged | 1-3ms | No (flag) |
+| Level | What | Speed | Default | Flag |
+|-------|------|-------|---------|------|
+| 1. Header | Valid format, correct architecture | ~50μs | Yes | - |
+| 2. Dependencies | Required libraries exist | ~100μs | Yes | - |
+| 3. Loadable | dlopen succeeds | ~1ms | Yes | `--skip-dlopen` to disable |
+| 4. Integrity | Checksum unchanged | 1-3ms | No | `--integrity` to enable |
 
 **Pros:**
 - Fast default catches most issues
-- Users can opt into deeper verification
+- Users can opt into deeper verification or skip dlopen
 - Each layer adds meaningful assurance
 - No single point of false confidence
+- Graceful degradation when helper unavailable
 
 **Cons:**
 - More complex implementation
-- Requires helper binary for dlopen layer
+- Requires helper binary for dlopen layer (auto-installed)
 
 ### Evaluation Against Decision Drivers
 
@@ -203,6 +220,26 @@ This provides meaningful verification by default while allowing users to choose 
 - `tsuku-dltest` helper binary auto-installed on first use (follows existing pattern for zig, nix-portable)
 - Pre-existing libraries won't have stored checksums (graceful degradation)
 - Symlink chain modifications not detected by checksum (only real files)
+- macOS system library dependencies assumed valid (cannot verify files in dyld cache)
+
+### Fallback Behavior
+
+If the `tsuku-dltest` helper cannot be installed (network issues, platform not supported), verification degrades gracefully:
+
+| Scenario | Behavior |
+|----------|----------|
+| Helper available | Levels 1-3 run by default |
+| Helper unavailable | Levels 1-2 run, Level 3 skipped with warning |
+| `--skip-dlopen` flag | Levels 1-2 run, Level 3 explicitly skipped |
+| `--integrity` flag | Adds Level 4 to whichever levels run |
+
+Warning message when helper unavailable:
+```
+Warning: tsuku-dltest helper not available, skipping load test
+  Run 'tsuku install tsuku-dltest' to enable full verification
+```
+
+This ensures verification is always useful even in constrained environments.
 
 ## Solution Architecture
 
@@ -211,6 +248,7 @@ This provides meaningful verification by default while allowing users to choose 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                    tsuku verify <library>                        │
+│                    [--skip-dlopen] [--integrity]                 │
 ├─────────────────────────────────────────────────────────────────┤
 │  Level 1: Header Validation (~50μs)                              │
 │  ├── Parse ELF/Mach-O headers                                    │
@@ -219,11 +257,13 @@ This provides meaningful verification by default while allowing users to choose 
 ├─────────────────────────────────────────────────────────────────┤
 │  Level 2: Dependency Check (~100μs)                              │
 │  ├── Extract DT_NEEDED / LC_LOAD_DYLIB entries                   │
-│  └── Verify each dependency exists (tsuku libs or system)        │
+│  ├── Verify tsuku-provided dependencies exist on disk            │
+│  └── Skip existence check for system paths (macOS dyld cache)    │
 ├─────────────────────────────────────────────────────────────────┤
-│  Level 3: Load Test (~1ms)                                       │
-│  ├── Invoke tsuku-dltest helper                                  │
-│  └── Attempt dlopen() on library file                            │
+│  Level 3: Load Test (~1ms) [skipped if --skip-dlopen]            │
+│  ├── Check if tsuku-dltest helper available                      │
+│  ├── Invoke helper with batched library paths                    │
+│  └── Attempt dlopen() on each library file                       │
 ├─────────────────────────────────────────────────────────────────┤
 │  Level 4: Integrity Check (--integrity flag, 1-3ms)              │
 │  ├── Load stored checksums from state.json                       │
@@ -247,7 +287,8 @@ This provides meaningful verification by default while allowing users to choose 
 **New file: `internal/verify/deps.go`**
 - `CheckDependencies(libs []string, searchPaths []string) []DepResult`
 - Resolves dependencies against tsuku libs and system paths
-- Handles $ORIGIN/@loader_path expansion
+- Handles $ORIGIN/@loader_path/@rpath expansion
+- Skips file existence check for macOS system paths (dyld cache)
 
 **New file: `cmd/tsuku-dltest/main.go`** (separate binary)
 - Minimal cgo program that calls dlopen/dlclose
@@ -321,7 +362,7 @@ gcc-libs verification failed
 
 ### Helper Binary Design
 
-The `tsuku-dltest` helper is a minimal cgo program:
+The `tsuku-dltest` helper is a minimal cgo program that supports batched verification:
 
 ```go
 // cmd/tsuku-dltest/main.go
@@ -334,32 +375,72 @@ package main
 */
 import "C"
 import (
-    "fmt"
+    "encoding/json"
     "os"
     "unsafe"
 )
 
+type Result struct {
+    Path  string `json:"path"`
+    OK    bool   `json:"ok"`
+    Error string `json:"error,omitempty"`
+}
+
 func main() {
-    if len(os.Args) != 2 {
+    if len(os.Args) < 2 {
         os.Exit(2)
     }
 
-    path := C.CString(os.Args[1])
-    defer C.free(unsafe.Pointer(path))
+    // Support batched verification: multiple paths as arguments
+    var results []Result
+    exitCode := 0
 
-    handle := C.dlopen(path, C.RTLD_LAZY)
-    if handle == nil {
-        fmt.Fprintln(os.Stderr, C.GoString(C.dlerror()))
-        os.Exit(1)
+    for _, path := range os.Args[1:] {
+        result := Result{Path: path, OK: true}
+        cpath := C.CString(path)
+        handle := C.dlopen(cpath, C.RTLD_LAZY)
+        C.free(unsafe.Pointer(cpath))
+
+        if handle == nil {
+            result.OK = false
+            result.Error = C.GoString(C.dlerror())
+            exitCode = 1
+        } else {
+            C.dlclose(handle)
+        }
+        results = append(results, result)
     }
-    C.dlclose(handle)
-    os.Exit(0)
+
+    // Output JSON for structured parsing
+    json.NewEncoder(os.Stdout).Encode(results)
+    os.Exit(exitCode)
 }
 ```
 
+**Batching rationale**: Spawning a process per library adds ~2-5ms overhead. For libraries with many files (e.g., Qt with 50+ dylibs), batching reduces verification time from 100-250ms to ~10ms.
+
+**Installation and Trust Chain:**
+
 The helper is installed automatically on first use to `$TSUKU_HOME/tools/tsuku-dltest-{version}/`, following the same pattern as other action dependencies (zig, nix-portable). This keeps the main tsuku binary pure Go (CGO_ENABLED=0) while providing dlopen capability when needed.
 
-The helper binary is built and published as a GitHub release asset, downloaded and verified like any other tsuku-managed tool.
+The helper binary is built and published as a GitHub release asset, with checksums pinned in tsuku's source code:
+
+```go
+// internal/verify/dltest.go
+var dltestChecksums = map[string]string{
+    "linux-amd64":  "sha256:abc123...",
+    "linux-arm64":  "sha256:def456...",
+    "darwin-amd64": "sha256:789abc...",
+    "darwin-arm64": "sha256:cde012...",
+}
+```
+
+**Why embedded checksums**: Unlike regular recipes that can be updated independently, the helper binary is a security-sensitive component. Embedding checksums in tsuku's source code means:
+1. Helper updates require a tsuku release (reviewed code change)
+2. Users can audit exactly which helper binary their tsuku version uses
+3. No dependency on external checksum files that could be modified
+
+This mirrors how Go embeds checksums in `go.sum` for module verification.
 
 ## Implementation Approach
 
@@ -398,6 +479,12 @@ func ValidateHeader(path string) (*HeaderInfo, error) {
 Create `internal/verify/deps.go`:
 
 ```go
+// System paths where we trust libraries exist (macOS dyld cache, Linux system dirs)
+var systemPaths = map[string][]string{
+    "darwin": {"/usr/lib/", "/System/Library/"},
+    "linux":  {"/lib/", "/lib64/", "/usr/lib/", "/usr/lib64/"},
+}
+
 func CheckDependencies(deps []string, libDir string, cfg *config.Config) []DepResult {
     var results []DepResult
 
@@ -405,18 +492,42 @@ func CheckDependencies(deps []string, libDir string, cfg *config.Config) []DepRe
 
     for _, dep := range deps {
         result := DepResult{Name: dep}
-        result.Found, result.Path = findLibrary(dep, searchPaths)
+
+        // Check if this is a system library (macOS dyld cache, Linux base)
+        if isSystemLibrary(dep) {
+            result.Found = true
+            result.Path = "(system)"
+            result.Note = "assumed present in system paths"
+        } else {
+            result.Found, result.Path = findLibrary(dep, searchPaths)
+        }
         results = append(results, result)
     }
 
     return results
 }
 
-func buildSearchPaths(libDir string, cfg *config.Config) []string {
-    // 1. Library's own directory (for $ORIGIN)
-    // 2. Other tsuku libraries in $TSUKU_HOME/libs/
+func isSystemLibrary(name string) bool {
+    // Common system libraries that are always present
+    // On macOS Big Sur+, these are in the dyld shared cache
+    systemLibs := []string{
+        "libc.so", "libm.so", "libpthread.so", "libdl.so",     // Linux
+        "libSystem.B.dylib", "libobjc.A.dylib",                 // macOS
+    }
+    // Also match versioned variants like libc.so.6
+    for _, sysLib := range systemLibs {
+        if strings.HasPrefix(name, strings.TrimSuffix(sysLib, ".so")) ||
+           strings.HasPrefix(name, strings.TrimSuffix(sysLib, ".dylib")) {
+            return true
+        }
+    }
+    return false
+}
 
-    // 3. System library paths (/lib, /usr/lib, etc.)
+func buildSearchPaths(libDir string, cfg *config.Config) []string {
+    // 1. Library's own directory (for $ORIGIN/@loader_path)
+    // 2. Other tsuku libraries in $TSUKU_HOME/libs/
+    // 3. System library paths (only checked for non-system libraries)
 }
 ```
 
@@ -459,16 +570,30 @@ m.state.SetLibraryChecksums(name, version, checksums)
 Modify `cmd/tsuku/verify.go`:
 
 ```go
+// New flags for library verification
+var (
+    integrityFlag  bool // --integrity: enable checksum verification
+    skipDlopenFlag bool // --skip-dlopen: skip load testing
+)
+
 // After loading recipe...
 if r.Metadata.Type == "library" {
     opts := verify.Options{
         CheckIntegrity: integrityFlag,
+        SkipDlopen:     skipDlopenFlag,
     }
     result, err := verify.VerifyLibrary(libDir, opts, cfg)
     // ... handle result
     return
 }
 ```
+
+**Flag behavior:**
+- `--integrity`: Enables Level 4 (checksum verification)
+- `--skip-dlopen`: Disables Level 3 (load testing), useful for:
+  - Users who don't want `.init` sections to execute
+  - Environments where the helper can't be installed
+  - Quick verification when header+deps checks are sufficient
 
 ### Step 7: Add Tests
 
@@ -485,20 +610,38 @@ if r.Metadata.Type == "library" {
 
 ### Execution Isolation
 
-**Medium consideration.** The `tsuku-dltest` helper uses `dlopen()` which:
-- Executes library initialization code (`.init` sections)
-- Should only be run on libraries tsuku itself installed
-- Is isolated to the helper process (crashes don't affect tsuku)
+**Medium consideration.** The `tsuku-dltest` helper uses `dlopen()` which executes library initialization code:
+
+**What runs during dlopen:**
+- `.init` sections (ELF) / `__mod_init_func` (Mach-O)
+- C++ global constructors
+- `__attribute__((constructor))` functions
+
+**Mitigations:**
+1. **Process isolation**: The helper runs as a separate process; crashes or hangs don't affect tsuku
+2. **Only tsuku-installed libraries**: We only verify libraries in `$TSUKU_HOME/libs/`, not arbitrary paths
+3. **User opt-out**: `--skip-dlopen` flag allows users to skip load testing entirely
+4. **Timeout**: Helper invocation has a 5-second timeout to prevent hangs
+
+**Residual risk**: A malicious library could execute arbitrary code when dlopen'd. This is inherent to dynamic loading - users must trust the libraries they install. The `--skip-dlopen` flag is provided for paranoid users or automated pipelines where code execution is unacceptable.
 
 The main tsuku binary never executes library code - it only parses headers using Go's `debug/elf` and `debug/macho` packages.
 
 ### Supply Chain Risks
 
-**Partially addressed.** Header and dlopen verification confirm the library is structurally valid but cannot detect:
-- Malicious code inserted by compromised upstream
-- Backdoors that only trigger under specific conditions
+**Partially addressed through two mechanisms:**
 
-Checksum verification (with `--integrity`) detects post-installation tampering but not supply chain attacks.
+**Helper binary trust chain:**
+- Checksums are embedded in tsuku source code (not downloaded from a URL)
+- Updating the helper requires a reviewed PR to tsuku
+- Users can audit exactly which helper their tsuku version uses
+- macOS binaries should be code-signed for Gatekeeper (future consideration)
+
+**Library verification limitations:**
+- Header and dlopen verification confirm structural validity but cannot detect:
+  - Malicious code inserted by compromised upstream
+  - Backdoors that only trigger under specific conditions
+- Checksum verification (with `--integrity`) detects post-installation tampering but not supply chain attacks
 
 ### User Data Exposure
 
@@ -510,17 +653,21 @@ Checksum verification (with `--integrity`) detects post-installation tampering b
 
 - **Meaningful verification**: Answers "does this work?" not just "does this exist?"
 - **Fast by default**: Header validation + dependency check completes in <1ms
-- **Graduated depth**: Users can choose verification thoroughness
-- **Cross-platform**: Works on Linux (ELF) and macOS (Mach-O)
+- **Graduated depth**: Users can choose verification thoroughness via flags
+- **Cross-platform**: Works on Linux (ELF) and macOS (Mach-O), handles dyld cache
 - **No external tools**: Uses Go stdlib for parsing, self-contained helper for dlopen
+- **Graceful degradation**: Works even if helper unavailable (levels 1-2 still run)
+- **Batched verification**: Efficient for libraries with many files
 
 ### Negative
 
 - **Helper binary dependency**: `tsuku-dltest` is auto-installed on first use (transparent to users, ~1MB download)
-- **dlopen executes code**: Library `.init` sections run during load test (isolated to helper process)
+- **dlopen executes code**: Library `.init` sections run during load test (mitigated by isolation and `--skip-dlopen`)
 - **More complex than checksum-only**: Multiple verification levels to implement and test
+- **macOS system libraries assumed valid**: Cannot verify files in dyld cache exist
 
 ### Neutral
 
 - **Checksums optional**: Users who want integrity verification must use `--integrity` flag
 - **Pre-existing libraries**: Show "integrity: unknown" until reinstalled
+- **`--skip-dlopen` tradeoff**: Users who skip dlopen get faster verification but less confidence
