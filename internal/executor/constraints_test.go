@@ -392,3 +392,193 @@ func TestGetPipConstraint(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractConstraints_GoBuild(t *testing.T) {
+	goSum := `github.com/go-delve/delve v1.9.0 h1:abc123
+github.com/go-delve/delve v1.9.0/go.mod h1:def456
+golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f h1:xyz789
+`
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "dlv",
+		Version:       "1.9.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "go_build",
+				Params: map[string]interface{}{
+					"module":         "github.com/go-delve/delve/cmd/dlv",
+					"install_module": "github.com/go-delve/delve/cmd/dlv",
+					"version":        "v1.9.0",
+					"executables":    []interface{}{"dlv"},
+					"go_sum":         goSum,
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.GoSum != goSum {
+		t.Errorf("Expected GoSum to be extracted, got %q", constraints.GoSum)
+	}
+}
+
+func TestExtractConstraints_GoBuildInDependency(t *testing.T) {
+	goSum := `github.com/example/tool v1.0.0 h1:abc123
+`
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "myapp",
+		Version:       "1.0.0",
+		Dependencies: []DependencyPlan{
+			{
+				Tool:    "go-tool",
+				Version: "1.0.0",
+				Steps: []ResolvedStep{
+					{
+						Action: "go_build",
+						Params: map[string]interface{}{
+							"module":  "github.com/example/tool",
+							"version": "v1.0.0",
+							"go_sum":  goSum,
+						},
+					},
+				},
+			},
+		},
+		Steps: []ResolvedStep{
+			{
+				Action: "download_file",
+				Params: map[string]interface{}{
+					"url": "https://example.com/myapp",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.GoSum != goSum {
+		t.Errorf("Expected GoSum from dependency to be extracted, got %q", constraints.GoSum)
+	}
+}
+
+func TestExtractConstraints_GoBuildFirstWins(t *testing.T) {
+	goSum1 := `first go.sum content`
+	goSum2 := `second go.sum content`
+
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "multi-tool",
+		Version:       "1.0.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "go_build",
+				Params: map[string]interface{}{
+					"module":  "github.com/example/first",
+					"version": "v1.0.0",
+					"go_sum":  goSum1,
+				},
+			},
+			{
+				Action: "go_build",
+				Params: map[string]interface{}{
+					"module":  "github.com/example/second",
+					"version": "v2.0.0",
+					"go_sum":  goSum2,
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.GoSum != goSum1 {
+		t.Errorf("Expected first GoSum to win, got %q", constraints.GoSum)
+	}
+}
+
+func TestExtractConstraints_GoBuildEmptyGoSum(t *testing.T) {
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "tool",
+		Version:       "1.0.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "go_build",
+				Params: map[string]interface{}{
+					"module":  "github.com/example/tool",
+					"version": "v1.0.0",
+					"go_sum":  "",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.GoSum != "" {
+		t.Errorf("Expected empty GoSum for empty go_sum param, got %q", constraints.GoSum)
+	}
+}
+
+func TestHasGoSumConstraint(t *testing.T) {
+	tests := []struct {
+		name        string
+		constraints *actions.EvalConstraints
+		expected    bool
+	}{
+		{
+			name:        "nil constraints",
+			constraints: nil,
+			expected:    false,
+		},
+		{
+			name: "empty constraints",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				GoSum:          "",
+			},
+			expected: false,
+		},
+		{
+			name: "with go sum",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				GoSum:          "github.com/example/pkg v1.0.0 h1:abc123\n",
+			},
+			expected: true,
+		},
+		{
+			name: "with pip but no go",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{
+					"flask": "2.3.0",
+				},
+				GoSum: "",
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := HasGoSumConstraint(tt.constraints)
+			if result != tt.expected {
+				t.Errorf("Expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
