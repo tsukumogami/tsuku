@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// DefaultUserAgent is the User-Agent header value for tsuku HTTP requests.
+// Many servers, including GNU FTP mirrors, require a proper User-Agent to avoid
+// 403 errors from bot detection or rate limiting.
+const DefaultUserAgent = "tsuku/1.0 (https://github.com/tsukumogami/tsuku)"
+
 // ClientOptions configures the secure HTTP client.
 type ClientOptions struct {
 	// Timeout is the overall request timeout. Default: 30s.

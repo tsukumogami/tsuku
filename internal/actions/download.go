@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/httputil"
@@ -342,7 +343,8 @@ func newDownloadHTTPClient() *http.Client {
 	})
 }
 
-// downloadFile performs the actual HTTP download with context for cancellation
+// downloadFile performs the actual HTTP download with context for cancellation.
+// Implements retry logic with exponential backoff for transient errors (403, 429, 5xx).
 // SECURITY: Enforces HTTPS for all downloads to prevent MITM attacks
 func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string) error {
 	// SECURITY: Enforce HTTPS for all downloads
@@ -350,12 +352,60 @@ func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string)
 		return fmt.Errorf("download URL must use HTTPS for security, got: %s", url)
 	}
 
+	const maxRetries = 3
+	baseDelay := time.Second
+
+	var lastErr error
+	for attempt := 0; attempt <= maxRetries; attempt++ {
+		if attempt > 0 {
+			// Exponential backoff: 1s, 2s, 4s
+			delay := baseDelay * time.Duration(1<<(attempt-1))
+			fmt.Printf("   Retry %d/%d after %v...\n", attempt, maxRetries, delay)
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			case <-time.After(delay):
+			}
+		}
+
+		err := a.doDownloadFile(ctx, url, destPath)
+		if err == nil {
+			return nil
+		}
+
+		lastErr = err
+
+		// Check if error is retryable (contains status code info)
+		// Non-retryable errors (400, 404, etc.) fail immediately
+		if httpErr, ok := err.(*httpStatusError); ok {
+			if !isRetryableStatusCode(httpErr.StatusCode) {
+				return err
+			}
+			// Retryable error, continue to next attempt
+			continue
+		}
+
+		// For non-HTTP errors (network issues, etc.), also retry
+		// unless context is canceled
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+	}
+
+	return fmt.Errorf("download failed after %d retries: %w", maxRetries, lastErr)
+}
+
+// doDownloadFile performs a single HTTP download attempt
+func (a *DownloadAction) doDownloadFile(ctx context.Context, url, destPath string) error {
 	// Create secure HTTP client with decompression bomb and SSRF protection
 	client := newDownloadHTTPClient()
 	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
 	}
+
+	// Set User-Agent to avoid 403 from servers that block default Go HTTP client
+	req.Header.Set("User-Agent", httputil.DefaultUserAgent)
 
 	// Defense in depth: Explicitly request uncompressed response
 	req.Header.Set("Accept-Encoding", "identity")
@@ -368,7 +418,7 @@ func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string)
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("bad status: %s", resp.Status)
+		return &httpStatusError{StatusCode: resp.StatusCode, Status: resp.Status}
 	}
 
 	// Defense in depth: Reject compressed responses
