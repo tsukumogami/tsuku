@@ -1144,3 +1144,189 @@ func containsAll(s string, substrs ...string) bool {
 	}
 	return true
 }
+
+// Tests for ResolveTransitiveForPlatform - verifies cross-platform dependency resolution
+
+func TestResolveTransitiveForPlatform_PlatformFiltering(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name         string
+		targetOS     string
+		wantDeps     []string // deps that should be present
+		excludedDeps []string // deps that should NOT be present
+	}{
+		{
+			name:         "darwin target excludes linux deps",
+			targetOS:     "darwin",
+			wantDeps:     []string{"B", "common-tool", "macos-tool"},
+			excludedDeps: []string{"patchelf"},
+		},
+		{
+			name:         "linux target excludes darwin deps",
+			targetOS:     "linux",
+			wantDeps:     []string{"B", "common-tool", "patchelf"},
+			excludedDeps: []string{"macos-tool"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			loader := newMockLoader()
+			loader.addRecipe("B", &recipe.Recipe{
+				Steps: []recipe.Step{
+					{Action: "test_platform", Params: map[string]interface{}{}},
+				},
+			})
+			loader.addRecipe("common-tool", &recipe.Recipe{
+				Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+			})
+			loader.addRecipe("patchelf", &recipe.Recipe{
+				Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+			})
+			loader.addRecipe("macos-tool", &recipe.Recipe{
+				Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+			})
+
+			ctx := context.Background()
+			deps := ResolvedDeps{
+				InstallTime: map[string]string{"B": "latest"},
+				Runtime:     make(map[string]string),
+			}
+
+			result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", tt.targetOS)
+			if err != nil {
+				t.Fatalf("ResolveTransitiveForPlatform() error = %v", err)
+			}
+
+			for _, dep := range tt.wantDeps {
+				if result.InstallTime[dep] != "latest" {
+					t.Errorf("InstallTime[%s] = %q, want %q", dep, result.InstallTime[dep], "latest")
+				}
+			}
+
+			for _, dep := range tt.excludedDeps {
+				if _, has := result.InstallTime[dep]; has {
+					t.Errorf("InstallTime should not contain %s on %s target, got %v", dep, tt.targetOS, result.InstallTime)
+				}
+			}
+
+			if len(result.InstallTime) != len(tt.wantDeps) {
+				t.Errorf("InstallTime has %d deps, want %d: %v", len(result.InstallTime), len(tt.wantDeps), result.InstallTime)
+			}
+		})
+	}
+}
+
+func TestResolveTransitiveForPlatform_NestedDependencies(t *testing.T) {
+	t.Parallel()
+	// Test deeper nesting: A -> B -> C (where C has platform-specific deps)
+	loader := newMockLoader()
+
+	// B depends on C
+	loader.addRecipe("B", &recipe.Recipe{
+		Metadata: recipe.MetadataSection{Dependencies: []string{"C"}},
+		Steps:    []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	// C uses test_platform action
+	loader.addRecipe("C", &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "test_platform", Params: map[string]interface{}{}},
+		},
+	})
+
+	loader.addRecipe("common-tool", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+	loader.addRecipe("patchelf", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+	loader.addRecipe("macos-tool", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	ctx := context.Background()
+
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"B": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	// Resolve for darwin - nested patchelf should NOT be included
+	result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", "darwin")
+	if err != nil {
+		t.Fatalf("ResolveTransitiveForPlatform() error = %v", err)
+	}
+
+	// Should have B, C, common-tool, and macos-tool
+	if result.InstallTime["B"] != "latest" {
+		t.Errorf("InstallTime[B] = %q, want %q", result.InstallTime["B"], "latest")
+	}
+	if result.InstallTime["C"] != "latest" {
+		t.Errorf("InstallTime[C] = %q, want %q", result.InstallTime["C"], "latest")
+	}
+	if result.InstallTime["common-tool"] != "latest" {
+		t.Errorf("InstallTime[common-tool] = %q, want %q", result.InstallTime["common-tool"], "latest")
+	}
+	if result.InstallTime["macos-tool"] != "latest" {
+		t.Errorf("InstallTime[macos-tool] = %q, want %q", result.InstallTime["macos-tool"], "latest")
+	}
+
+	// Should NOT have patchelf (linux-only, even in nested deps)
+	if _, has := result.InstallTime["patchelf"]; has {
+		t.Errorf("InstallTime should not contain patchelf (nested) on Darwin target, got %v", result.InstallTime)
+	}
+
+	// Verify exact count: B + C + common-tool + macos-tool = 4
+	if len(result.InstallTime) != 4 {
+		t.Errorf("InstallTime has %d deps, want 4: %v", len(result.InstallTime), result.InstallTime)
+	}
+}
+
+func TestResolveTransitiveForPlatform_RuntimeDeps(t *testing.T) {
+	t.Parallel()
+	// Verify runtime deps also respect platform filtering
+	loader := newMockLoader()
+
+	loader.addRecipe("B", &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "test_platform", Params: map[string]interface{}{}},
+		},
+	})
+
+	loader.addRecipe("linux-runtime", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+	loader.addRecipe("darwin-runtime", &recipe.Recipe{
+		Steps: []recipe.Step{{Action: "download", Params: map[string]interface{}{}}},
+	})
+
+	ctx := context.Background()
+
+	deps := ResolvedDeps{
+		InstallTime: make(map[string]string),
+		Runtime:     map[string]string{"B": "latest"},
+	}
+
+	// Resolve for darwin
+	result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", "darwin")
+	if err != nil {
+		t.Fatalf("ResolveTransitiveForPlatform() error = %v", err)
+	}
+
+	// Should have B and darwin-runtime
+	if result.Runtime["B"] != "latest" {
+		t.Errorf("Runtime[B] = %q, want %q", result.Runtime["B"], "latest")
+	}
+	if result.Runtime["darwin-runtime"] != "latest" {
+		t.Errorf("Runtime[darwin-runtime] = %q, want %q", result.Runtime["darwin-runtime"], "latest")
+	}
+
+	// Should NOT have linux-runtime
+	if _, has := result.Runtime["linux-runtime"]; has {
+		t.Errorf("Runtime should not contain linux-runtime on Darwin target, got %v", result.Runtime)
+	}
+}
