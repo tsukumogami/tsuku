@@ -74,29 +74,31 @@ The fix requires passing the target OS through the dependency resolution chain:
 
 ## Implementation Steps
 
-1. **Add `ResolveTransitiveForPlatform` function in `resolver.go`:**
+1. [x] **Add `ResolveTransitiveForPlatform` function in `resolver.go`:**
    - Copy signature from `ResolveTransitive`
    - Add `targetOS string` parameter
    - Update both calls to `resolveTransitiveSet` to pass `targetOS`
 
-2. **Update `ResolveTransitive` for backward compatibility:**
+2. [x] **Update `ResolveTransitive` for backward compatibility:**
    - Make it a thin wrapper that calls `ResolveTransitiveForPlatform` with `runtime.GOOS`
 
-3. **Update `resolveTransitiveSet` function signature:**
+3. [x] **Update `resolveTransitiveSet` function signature:**
    - Add `targetOS string` parameter after `forRuntime bool`
    - Update line 370: `ResolveDependencies(depRecipe)` -> `ResolveDependenciesForPlatform(depRecipe, targetOS)`
    - Update line 405: Add `targetOS` argument to recursive call
+   - Also fixed: merge recursive results back into main deps map
 
-4. **Update `generateDependencyPlans` in `plan_generator.go`:**
+4. [x] **Update `generateDependencyPlans` in `plan_generator.go`:**
    - Determine effective target OS: `targetOS := cfg.OS; if targetOS == "" { targetOS = runtime.GOOS }`
    - Change line 632: `deps := actions.ResolveDependenciesForPlatform(r, targetOS)`
 
-5. **Write tests:**
+5. [x] **Write tests:**
    - Add test for `ResolveTransitiveForPlatform` with cross-platform scenario
    - Test that darwin plan generated on linux excludes `patchelf`
    - Test that linux plan generated on darwin includes `patchelf`
+   - Added 4 new tests covering platform filtering in transitive deps
 
-6. **Update golden files:**
+6. [x] **Update golden files:**
    - Remove workaround exclusions for libcurl and ncurses from CI
    - Regenerate affected golden files
 
