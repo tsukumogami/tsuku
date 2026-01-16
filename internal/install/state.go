@@ -94,7 +94,8 @@ type ToolState struct {
 
 // LibraryVersionState represents the state of a specific library version
 type LibraryVersionState struct {
-	UsedBy []string `json:"used_by"` // Tools that depend on this library version (e.g., ["ruby-3.4.0", "python-3.12"])
+	UsedBy    []string          `json:"used_by"`             // Tools that depend on this library version (e.g., ["ruby-3.4.0", "python-3.12"])
+	Checksums map[string]string `json:"checksums,omitempty"` // SHA256 checksums of library files (relative path -> hex hash)
 }
 
 // LLMUsage tracks LLM generation history for rate limiting and budget enforcement.
