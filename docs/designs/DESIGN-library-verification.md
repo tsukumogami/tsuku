@@ -1,6 +1,46 @@
 # DESIGN: Library Verification for tsuku verify Command
 
-**Status:** Proposed
+**Status:** Planned
+
+## Implementation Issues
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#942](https://github.com/tsukumogami/tsuku/issues/942) | feat(state): add checksums field to library version state | None | simple |
+| [#943](https://github.com/tsukumogami/tsuku/issues/943) | feat(verify): add library type detection and flag routing | None | testable |
+| [#946](https://github.com/tsukumogami/tsuku/issues/946) | feat(install): compute and store library checksums at install time | #942 | testable |
+| [#947](https://github.com/tsukumogami/tsuku/issues/947) | docs: design header validation for library verification (Tier 1) | #943 | critical |
+| [#948](https://github.com/tsukumogami/tsuku/issues/948) | docs: design dependency resolution for library verification (Tier 2) | #947 | critical |
+| [#949](https://github.com/tsukumogami/tsuku/issues/949) | docs: design dlopen load testing for library verification (Tier 3) | #948 | critical |
+| [#950](https://github.com/tsukumogami/tsuku/issues/950) | docs: design integrity verification for library verification (Tier 4) | #946, #949 | testable |
+
+```mermaid
+graph TD
+    subgraph Infrastructure["Library Verification Infrastructure"]
+        I942["#942 State schema<br/>(simple)"]:::ready
+        I943["#943 Verify command<br/>(testable)"]:::ready
+        I946["#946 Install checksums<br/>(testable)"]:::blocked
+    end
+
+    subgraph Tiers["Library Verification Tiers"]
+        I947["#947 Tier 1 Design<br/>(needs-design)"]:::needsdesign
+        I948["#948 Tier 2 Design<br/>(needs-design)"]:::needsdesign
+        I949["#949 Tier 3 Design<br/>(needs-design)"]:::needsdesign
+        I950["#950 Tier 4 Design<br/>(needs-design)"]:::needsdesign
+    end
+
+    I942 --> I946
+    I943 --> I947
+    I947 --> I948
+    I948 --> I949
+    I946 --> I950
+    I949 --> I950
+
+    classDef done fill:#2da44e,color:white
+    classDef ready fill:#0969da,color:white
+    classDef blocked fill:#d4a72c,color:white
+    classDef needsdesign fill:#8250df,color:white
+```
 
 ## Context and Problem Statement
 
