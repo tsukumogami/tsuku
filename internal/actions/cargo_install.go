@@ -196,6 +196,11 @@ func (a *CargoInstallAction) Decompose(ctx *EvalContext, params map[string]inter
 		return nil, fmt.Errorf("invalid version format '%s'", version)
 	}
 
+	// Check if we have Cargo.lock constraints for constrained evaluation
+	if ctx.Constraints != nil && ctx.Constraints.CargoLock != "" {
+		return a.decomposeWithConstraints(ctx, crateName, version, executables)
+	}
+
 	// Find cargo command
 	cargoPath := findCargoForEval()
 	if cargoPath == "" {
@@ -435,4 +440,43 @@ func isValidCargoVersion(version string) bool {
 	}
 
 	return true
+}
+
+// decomposeWithConstraints generates a cargo_build step using constraints from a golden file.
+// This enables deterministic plan generation for validation by reusing the exact
+// Cargo.lock from a previous evaluation instead of running cargo generate-lockfile.
+func (a *CargoInstallAction) decomposeWithConstraints(ctx *EvalContext, crateName, version string, executables []string) ([]Step, error) {
+	// Use the constrained Cargo.lock
+	lockData := ctx.Constraints.CargoLock
+
+	// Compute Cargo.lock checksum
+	lockSHA := fmt.Sprintf("%x", sha256.Sum256([]byte(lockData)))
+
+	// Get Rust version for metadata (optional, but good to include if available)
+	cargoPath := findCargoForEval()
+	rustVersion := ""
+	if cargoPath != "" {
+		rustVersion = getRustVersionForCargo(cargoPath)
+	}
+
+	// Build cargo_build params
+	cargoBuildParams := map[string]interface{}{
+		"crate":         crateName,
+		"version":       version,
+		"executables":   executables,
+		"lock_data":     lockData,
+		"lock_checksum": lockSHA,
+	}
+
+	// Add Rust version info if available
+	if rustVersion != "" {
+		cargoBuildParams["rust_version"] = rustVersion
+	}
+
+	return []Step{
+		{
+			Action: "cargo_build",
+			Params: cargoBuildParams,
+		},
+	}, nil
 }
