@@ -1162,7 +1162,7 @@ func TestLibraryVersionState_Checksums_OmitsEmpty(t *testing.T) {
 	}
 
 	libState := loaded.Libs["libyaml"]["0.2.5"]
-	if libState.Checksums != nil && len(libState.Checksums) > 0 {
+	if len(libState.Checksums) > 0 {
 		t.Errorf("Checksums = %v, want nil or empty", libState.Checksums)
 	}
 }
