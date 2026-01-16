@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Code Validation Exclusions",
+  "description": "Recipes excluded from golden file code validation (validate-golden-code.yml). These recipes still run in execution validation.",
+  "type": "object",
+  "required": ["exclusions"],
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "exclusions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["recipe", "issue", "reason"],
+        "properties": {
+          "recipe": {
+            "type": "string",
+            "description": "Recipe name (e.g., 'black', 'poetry')"
+          },
+          "issue": {
+            "type": "string",
+            "format": "uri",
+            "pattern": "^https://github.com/.+/issues/[0-9]+$",
+            "description": "GitHub issue URL tracking the blocker"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Brief explanation of why code validation is skipped (e.g., toolchain version drift)"
+          }
+        }
+      }
+    }
+  }
+}
