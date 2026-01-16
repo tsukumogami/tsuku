@@ -23,3 +23,4 @@ app_name = "iTerm.app"
 [verify]
 command = "test -d $TSUKU_HOME/apps/iterm2-*.app"
 mode = "output"
+reason = "macOS applications do not have version flags; verification checks that the .app bundle was installed"

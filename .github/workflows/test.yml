@@ -148,8 +148,8 @@ jobs:
       - name: Generate test matrices
         id: matrix
         run: |
-          LINUX=$(jq -c '[.ci.linux[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc}]' test-matrix.json)
-          MACOS=$(jq -c '[.ci.macos[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc}]' test-matrix.json)
+          LINUX=$(jq -c '[.ci.linux[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
+          MACOS=$(jq -c '[.ci.macos[] as $id | {id: $id, tool: .tests[$id].tool, desc: .tests[$id].desc, recipe: .tests[$id].recipe}]' test-matrix.json)
           echo "linux=$LINUX" >> $GITHUB_OUTPUT
           echo "macos=$MACOS" >> $GITHUB_OUTPUT
 
@@ -235,7 +235,13 @@ jobs:
       - name: "Install ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --force ${{ matrix.test.tool }}
+        run: |
+          # Use recipe path if specified (for testdata recipes), otherwise use tool name
+          if [ -n "${{ matrix.test.recipe }}" ]; then
+            ./tsuku install --force "${{ matrix.test.recipe }}"
+          else
+            ./tsuku install --force "${{ matrix.test.tool }}"
+          fi
 
   # macOS integration tests (aggregated into single job to reduce runner queue pressure)
   integration-macos:
@@ -270,6 +276,7 @@ jobs:
           while IFS= read -r item; do
             tool=$(echo "$item" | jq -r '.tool')
             desc=$(echo "$item" | jq -r '.desc')
+            recipe=$(echo "$item" | jq -r '.recipe // empty')
 
             echo "::group::Testing $tool ($desc)"
 
@@ -279,8 +286,15 @@ jobs:
             ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
             echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
 
-            if ! ./tsuku install --force "$tool"; then
-              FAILED+=("$tool")
+            # Use recipe path if specified (for testdata recipes), otherwise use tool name
+            if [ -n "$recipe" ]; then
+              if ! ./tsuku install --force "$recipe"; then
+                FAILED+=("$tool")
+              fi
+            else
+              if ! ./tsuku install --force "$tool"; then
+                FAILED+=("$tool")
+              fi
             fi
             echo "::endgroup::"
           done < <(echo "$TESTS" | jq -c '.[]')
