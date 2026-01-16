@@ -200,7 +200,7 @@ This provides meaningful verification by default while allowing users to choose 
 
 ### Trade-offs Accepted
 
-- Requires building a `tsuku-dltest` helper binary for dlopen verification
+- `tsuku-dltest` helper binary auto-installed on first use (follows existing pattern for zig, nix-portable)
 - Pre-existing libraries won't have stored checksums (graceful degradation)
 - Symlink chain modifications not detected by checksum (only real files)
 
@@ -357,7 +357,9 @@ func main() {
 }
 ```
 
-Built during `go generate` or as part of release, placed in `$TSUKU_HOME/tools/tsuku-dltest`.
+The helper is installed automatically on first use to `$TSUKU_HOME/tools/tsuku-dltest-{version}/`, following the same pattern as other action dependencies (zig, nix-portable). This keeps the main tsuku binary pure Go (CGO_ENABLED=0) while providing dlopen capability when needed.
+
+The helper binary is built and published as a GitHub release asset, downloaded and verified like any other tsuku-managed tool.
 
 ## Implementation Approach
 
@@ -514,8 +516,8 @@ Checksum verification (with `--integrity`) detects post-installation tampering b
 
 ### Negative
 
-- **Requires helper binary**: `tsuku-dltest` must be built with cgo and distributed
-- **dlopen executes code**: Library `.init` sections run during load test (isolated to helper)
+- **Helper binary dependency**: `tsuku-dltest` is auto-installed on first use (transparent to users, ~1MB download)
+- **dlopen executes code**: Library `.init` sections run during load test (isolated to helper process)
 - **More complex than checksum-only**: Multiple verification levels to implement and test
 
 ### Neutral
