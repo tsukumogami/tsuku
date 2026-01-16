@@ -1,6 +1,6 @@
 # Design: Homebrew Cask Support
 
-**Status**: Planned
+**Status**: Implemented
 
 ## Implementation Issues
 
@@ -14,11 +14,11 @@
 
 ```mermaid
 graph TD
-    I862["#862 Walking Skeleton"]:::ready
-    I863["#863 Cask API"]:::blocked
-    I864["#864 DMG Extraction"]:::blocked
-    I865["#865 Symlinks"]:::blocked
-    I866["#866 CaskBuilder"]:::blocked
+    I862["#862 Walking Skeleton"]:::done
+    I863["#863 Cask API"]:::done
+    I864["#864 DMG Extraction"]:::done
+    I865["#865 Symlinks"]:::done
+    I866["#866 CaskBuilder"]:::done
 
     I862 --> I863
     I862 --> I864
