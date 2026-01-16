@@ -15,7 +15,7 @@
     "archive_zig_tar_xz": { "tool": "zig",          "tier": 2, "desc": "tar.xz install_dir",          "features": ["action:download_archive", "archive_format:tar.xz", "install_mode:directory"] },
     "archive_rust_custom_source": { "tool": "rust",         "tier": 2, "desc": "custom source",               "features": ["action:download_archive", "install_mode:directory"] },
     "archive_nodejs_checksum": { "tool": "nodejs",       "tier": 2, "desc": "checksum verification",       "features": ["action:download_archive", "checksum:with", "install_mode:directory"] },
-    "tap_waypoint-tap_short_form": { "tool": "waypoint-tap", "tier": 4, "desc": "tap version detection",      "features": ["version_detection:tap", "source:tap_short_form", "action:download"] },
+    "tap_waypoint-tap_short_form": { "tool": "waypoint-tap", "tier": 4, "desc": "tap version detection",      "features": ["version_detection:tap", "source:tap_short_form", "action:download"], "recipe": "testdata/recipes/waypoint-tap.toml" },
     "cask_iterm2_app_bundle": { "tool": "iterm2",       "tier": 4, "desc": "cask app bundle",            "features": ["version_detection:cask", "action:app_bundle", "platform:macos_only"] },
     "npm_netlify-cli_basic": { "tool": "netlify-cli",  "tier": 5, "desc": "npm_install",                 "features": ["action:npm_install", "version_detection:npm"] },
     "npm_serve_empty_pattern": { "tool": "serve",        "tier": 5, "desc": "npm_install empty pattern",   "features": ["action:npm_install", "verify:pattern_empty"] },
