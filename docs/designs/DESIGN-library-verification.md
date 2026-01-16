@@ -12,318 +12,425 @@ However, the `tsuku verify` command does not support libraries. When users run `
 2. Library recipes have no `[verify]` section (the validator explicitly skips this check for libraries)
 3. The verify command's design assumes all tools produce an executable output
 
-This creates an inconsistency in user experience: users can install libraries with `tsuku install gcc-libs`, but cannot verify them. This matters because:
+**The core question is: what does "verification" mean for libraries?**
 
-- Users expect verification to work uniformly across installed packages
-- Libraries are critical dependencies; a corrupted `libstdc++.so` could cause subtle runtime failures
-- The existing binary integrity verification (checksum comparison) would be valuable for libraries
+Users don't just want to know "is the file present?" - they want to know "will this library actually work when my tools try to use it?" This requires verifying:
+
+1. The file is a valid shared library (not corrupted or wrong type)
+2. The library is for the correct architecture
+3. The library's dependencies can be resolved
+4. The library can actually be loaded by the dynamic linker
 
 ### Scope
 
 **In scope:**
-- Verification mechanism for library recipes
-- Library-specific output in `tsuku verify` command
-- File existence and integrity checks for installed libraries
-- Recipe schema changes for library verification (if needed)
+- Verification that library files are valid shared objects
+- Architecture compatibility checking
+- Dependency resolution verification
+- Dynamic loading verification (dlopen)
+- Optional integrity checking (checksums)
 
 **Out of scope:**
-- Runtime verification (checking if libraries actually load)
-- Symbol table validation (checking exported symbols)
-- ABI compatibility checking (verifying library versions match expectations)
+- Symbol table validation against expected APIs (too maintenance-heavy)
+- ABI compatibility checking between library versions
+- Functional testing with compilation (requires compiler toolchain)
 - Transitive dependency verification (`tsuku verify nodejs` does not verify `gcc-libs`)
-- ELF/Mach-O header verification (adds platform-specific complexity)
 
 ## Decision Drivers
 
-- **Consistency**: Verification should work for all installable package types
-- **Simplicity**: Library verification should not require complex runtime checks
-- **Existing patterns**: Reuse binary integrity verification infrastructure where possible
-- **Recipe maintainability**: Minimize required additions to library recipes
-- **User clarity**: Output should clearly communicate what was verified
+- **Usefulness**: Verification should answer "will this library work?" not just "is the file present?"
+- **Speed**: Default verification should be fast enough to run routinely
+- **No external dependencies**: Should work without requiring ldd, nm, or other tools
+- **Cross-platform**: Must work on both Linux (ELF) and macOS (Mach-O)
+- **Graduated depth**: Users should be able to choose verification thoroughness
 
 ## Implementation Context
 
 ### Existing Patterns
 
+**Go standard library support:**
+- `debug/elf` - Full ELF parsing (Linux shared objects)
+- `debug/macho` - Full Mach-O parsing (macOS dylibs)
+- Both provide: file type, architecture, imported libraries, dynamic symbols
+
 **Binary integrity verification (verify.go:17-51):**
 - Computes SHA256 checksums of installed binaries
-- Compares against checksums stored at installation time in `state.json`
-- Reports mismatches with file paths and hash prefixes
+- Compares against checksums stored at installation time
+- Can be extended to libraries
 
 **Library installation (library.go:23-51):**
-- Copies library files from work directory to `$TSUKU_HOME/libs/{name}-{version}/`
+- Copies library files to `$TSUKU_HOME/libs/{name}-{version}/`
 - Tracks `used_by` relationships in state
-- Does not currently store checksums
-
-**Install libraries action (install_libraries.go):**
-- Glob patterns like `["lib/*.so*", "lib/*.dylib"]` specify which files to install
-- Preserves symlinks (critical for library versioning like `libfoo.so.2 -> libfoo.so.2.0.9`)
-
-**Recipe validation (validator.go):**
-- Libraries skip `[verify]` section validation
-- Libraries skip visibility requirements
-
-### Conventions to Follow
-
-- Verification should exit with `ExitVerifyFailed` (code 4) on failure
-- Verification output uses consistent formatting (`printInfo`, `printInfof`)
-- State tracking follows existing patterns in `state.json`
-
-### Anti-patterns to Avoid
-
-- Runtime dependency on external tools (like `ldd` or `nm`)
-- Platform-specific verification logic that would be hard to test
-- Overly complex verification that obscures simple failures
+- Preserves symlinks for library versioning
 
 ### Research Summary
 
-**Industry patterns from package managers:**
+Research was conducted across five approaches. Key findings:
 
-| System | Verification Model | Key Feature |
-|--------|-------------------|-------------|
-| RPM | `rpm -V` compares files against stored MD5/SHA256 checksums | Checks 9+ attributes (size, perms, checksum, ownership) |
-| dpkg/apt | `dpkg -V` or `debsums` compares against package manifest | Config files handled specially |
-| Pacman | `pacman -Qk` verifies presence and integrity | Database contains MD5 hashes |
-| Nix | `nix store verify` validates NAR hash | Content-addressed paths |
-| Homebrew | Functional verification via test blocks | Compiles/runs test code against library |
+**Header Validation (debug/elf, debug/macho):**
+- 20-75x faster than checksumming
+- Catches: wrong file type, truncation, architecture mismatch, corrupted headers
+- Go stdlib only, no external tools needed
 
-**Common patterns:**
-1. **Hash-based integrity**: All systems store checksums at install time and compare during verification
-2. **Manifest model**: Package maintains list of expected files with attributes
-3. **Graceful degradation**: Handle pre-existing packages without stored checksums
-4. **Attribute checking**: Beyond content - permissions, ownership, timestamps (RPM)
+**Dynamic Linker Tools (ldd/otool):**
+- **Security risk**: `ldd` executes code from the binary's `.init` sections
+- Go's `debug/elf.ImportedLibraries()` is safe and 300x faster than ldd
+- Can verify dependencies without execution
 
-**Applicable to tsuku:**
-- Extend existing `BinaryChecksums` pattern to library files
-- Store checksums in `LibraryVersionState` in state.json
-- Follow graceful degradation pattern for pre-existing libraries
+**Symbol Table Verification:**
+- Fast (~50-850μs per library)
+- **Critical finding**: Zeroing function code passes symbol validation - corruption only crashes when the function is called
+- Useful as sanity check, not integrity guarantee
+
+**dlopen Testing:**
+- Actually loads the library via dynamic linker
+- Most practical "does it work?" test
+- Requires helper binary to avoid cgo in main tsuku
+
+**Checksum Verification:**
+- Answers "has file changed since install?" not "is file valid?"
+- Industry standard (RPM, dpkg, pacman) but always as complement, never standalone
+- Good for detecting post-install tampering
+
+### Anti-patterns to Avoid
+
+- Shelling out to `ldd` (security risk - executes untrusted code)
+- Requiring recipe changes for basic verification
+- Making verification so slow it's never used
+- Giving false confidence (file exists != file works)
 
 ## Considered Options
 
-### Option 1: File Existence Verification
+### Option 1: File Existence Only
 
-Add a `[verify]` section to library recipes specifying expected files. The verify command checks that these files exist in the library directory.
-
-Recipe changes:
-```toml
-[verify]
-files = ["lib/libstdc++.so.6", "lib/libgcc_s.so.1"]
-```
-
-Verify command changes:
-- Detect library type from recipe metadata
-- For libraries, check file existence instead of running a command
-- Report missing files
+Check that expected library files exist.
 
 **Pros:**
-- Simple to implement and understand
-- Explicit about what files a library should contain
-- No runtime dependencies
+- Simplest implementation
+- Very fast
 
 **Cons:**
-- Doesn't detect corruption (file exists but is truncated/corrupted)
-- Requires recipe changes for all library recipes
-- Symlink chains could be broken but files "exist"
+- Doesn't verify files are valid libraries
+- Truncated or corrupted files pass
+- Wrong architecture files pass
 
-### Option 2: Checksum Verification (Extend Binary Integrity)
+### Option 2: Checksum Verification Only
 
-Extend the existing binary integrity system to libraries. Store checksums of library files at installation time and verify them.
-
-Implementation:
-- Modify `install_libraries` action to compute and store checksums
-- Modify library installation to save checksums to state.json
-- Verify command checks library checksums
+Store SHA256 checksums at install time, verify they match.
 
 **Pros:**
-- Detects corruption, not just missing files
-- Reuses existing checksum infrastructure
-- No recipe changes needed - verification is automatic
+- Detects any file modification
+- Industry-standard approach
 
 **Cons:**
-- Requires state.json schema changes for library checksums
-- Symlinks need special handling (verify target, not link)
-- Pre-existing libraries won't have stored checksums
+- Doesn't verify initial validity (checksums a bad file = bad checksum)
+- Doesn't verify loadability
+- Gives false confidence about functionality
 
-### Option 3: Pattern-Based Verification
+### Option 3: Header Validation Only
 
-Library recipes already specify patterns in `install_libraries` action. Use these same patterns for verification - check that the installed directory matches the expected pattern.
-
-Implementation:
-- Parse `install_libraries` patterns from recipe
-- Verify at least one file matches each pattern
-- Optionally verify checksum of matched files
+Parse ELF/Mach-O headers to verify valid shared library format.
 
 **Pros:**
-- No new recipe sections needed
-- Patterns already define expected library structure
-- Works with existing recipes immediately
+- Fast (~50μs per file)
+- Catches most practical issues (wrong type, architecture, truncation)
+- No external dependencies
 
 **Cons:**
-- Patterns might be too broad (*.so* matches many files)
-- Doesn't verify specific required files
-- Pattern matching alone doesn't ensure completeness
+- Doesn't verify code section integrity
+- Doesn't verify dependencies resolve
+- Doesn't confirm library actually loads
 
-### Option 4: Hybrid Approach (Checksums + Optional Files)
+### Option 4: dlopen Verification Only
 
-Store checksums automatically during installation. Allow optional `[verify]` section for libraries to specify required files for additional validation.
-
-Implementation:
-- Always compute and store checksums at install time
-- Verify checksums by default
-- If `[verify]` section exists, also check specified files
-
-Recipe (optional):
-```toml
-[verify]
-required_files = ["lib/libstdc++.so.6"]  # Optional: specific files that must exist
-```
+Actually load the library using the dynamic linker.
 
 **Pros:**
-- Automatic checksum verification works out of the box
-- Optional explicit verification for important files
-- Graceful handling of symlink chains (verify the final target)
+- Definitive "does it load?" answer
+- Catches missing dependencies, invalid format, architecture mismatch
 
 **Cons:**
-- More complex than single approach
-- Two sources of truth (checksums + explicit files)
+- Requires helper binary (cgo or separate tool)
+- Slower than header validation
+- Doesn't detect code corruption until function is called
+
+### Option 5: Tiered Verification (Recommended)
+
+Combine approaches in layers, with configurable depth:
+
+| Level | What | Speed | Default |
+|-------|------|-------|---------|
+| 1. Header | Valid format, correct architecture | ~50μs | Yes |
+| 2. Dependencies | Required libraries exist | ~100μs | Yes |
+| 3. Loadable | dlopen succeeds | ~1ms | Yes |
+| 4. Integrity | Checksum unchanged | 1-3ms | No (flag) |
+
+**Pros:**
+- Fast default catches most issues
+- Users can opt into deeper verification
+- Each layer adds meaningful assurance
+- No single point of false confidence
+
+**Cons:**
+- More complex implementation
+- Requires helper binary for dlopen layer
 
 ### Evaluation Against Decision Drivers
 
-| Option | Consistency | Simplicity | Reuse Patterns | Recipe Maintenance | User Clarity |
-|--------|-------------|------------|----------------|--------------------|--------------|
-| Option 1: File Existence | Good | Good | Poor | Poor (requires changes) | Good |
-| Option 2: Checksums | Good | Good | Good | Good (automatic) | Good |
-| Option 3: Patterns | Fair | Good | Good | Good (automatic) | Fair |
-| Option 4: Hybrid | Good | Fair | Good | Good | Good |
+| Option | Usefulness | Speed | No Ext Deps | Cross-Platform | Graduated |
+|--------|------------|-------|-------------|----------------|-----------|
+| 1. Existence | Poor | Excellent | Yes | Yes | No |
+| 2. Checksum | Fair | Good | Yes | Yes | No |
+| 3. Header | Good | Excellent | Yes | Yes | No |
+| 4. dlopen | Good | Good | Needs helper | Yes | No |
+| 5. Tiered | Excellent | Good | Needs helper | Yes | Yes |
 
 ## Decision Outcome
 
-**Chosen option: Option 2 (Checksum Verification)**
+**Chosen option: Option 5 (Tiered Verification)**
 
-This option directly extends the existing binary integrity verification to libraries, providing automatic corruption detection without requiring recipe changes.
+This provides meaningful verification by default while allowing users to choose their depth. The default (levels 1-3) answers "will this library work?" rather than just "is the file present?"
 
 ### Rationale
 
-Option 2 was chosen because:
-- **Consistency**: Uses the same verification mechanism as tools (checksum comparison)
-- **Existing patterns**: Directly extends `BinaryChecksums` infrastructure from DESIGN-checksum-pinning
-- **No recipe changes**: Works automatically for all library recipes
-- **Industry alignment**: Follows the hash-based integrity pattern used by RPM, dpkg, Pacman, and Nix
-
-Alternatives were rejected because:
-- **Option 1 (File Existence)**: Doesn't detect corruption; requires explicit recipe changes
-- **Option 3 (Pattern-Based)**: Too coarse - patterns don't identify specific required files
-- **Option 4 (Hybrid)**: Over-engineered; checksums alone provide sufficient verification
+- **Header validation** catches most practical issues (wrong type, architecture, truncation) with minimal overhead
+- **Dependency checking** verifies the library's requirements can be satisfied
+- **dlopen testing** provides definitive "it loads" confirmation
+- **Checksum verification** is available for users who need integrity assurance but isn't required by default since it doesn't verify functionality
 
 ### Trade-offs Accepted
 
-By choosing this option, we accept:
-- Pre-existing libraries (installed before this feature) will show "SKIPPED" during verification
-- Users who want to verify pre-existing libraries must reinstall them
-
-These are acceptable because:
-- The graceful degradation pattern is established by DESIGN-checksum-pinning
-- Reinstallation is straightforward: `tsuku install <library> --reinstall`
+- Requires building a `tsuku-dltest` helper binary for dlopen verification
+- Pre-existing libraries won't have stored checksums (graceful degradation)
+- Symlink chain modifications not detected by checksum (only real files)
 
 ## Solution Architecture
 
 ### Overview
 
 ```
-┌──────────────────┐     ┌──────────────────┐     ┌──────────────────┐
-│  Library Install │────▶│   State Save     │────▶│   Verify Flow    │
-│                  │     │                  │     │                  │
-│ 1. Download      │     │ 3. Compute       │     │ 5. Load stored   │
-│ 2. install_libs  │     │    checksums     │     │    checksums     │
-│                  │     │ 4. Save to       │     │ 6. Recompute     │
-│                  │     │    state.json    │     │ 7. Compare       │
-└──────────────────┘     └──────────────────┘     └──────────────────┘
-```
-
-### State Schema Extension
-
-Extend `LibraryVersionState` to include checksums:
-
-```go
-type LibraryVersionState struct {
-    UsedBy    []string          `json:"used_by"`
-    Checksums map[string]string `json:"checksums,omitempty"` // NEW: path -> SHA256 hex
-}
+┌─────────────────────────────────────────────────────────────────┐
+│                    tsuku verify <library>                        │
+├─────────────────────────────────────────────────────────────────┤
+│  Level 1: Header Validation (~50μs)                              │
+│  ├── Parse ELF/Mach-O headers                                    │
+│  ├── Verify file type is shared library                          │
+│  └── Verify architecture matches platform                        │
+├─────────────────────────────────────────────────────────────────┤
+│  Level 2: Dependency Check (~100μs)                              │
+│  ├── Extract DT_NEEDED / LC_LOAD_DYLIB entries                   │
+│  └── Verify each dependency exists (tsuku libs or system)        │
+├─────────────────────────────────────────────────────────────────┤
+│  Level 3: Load Test (~1ms)                                       │
+│  ├── Invoke tsuku-dltest helper                                  │
+│  └── Attempt dlopen() on library file                            │
+├─────────────────────────────────────────────────────────────────┤
+│  Level 4: Integrity Check (--integrity flag, 1-3ms)              │
+│  ├── Load stored checksums from state.json                       │
+│  └── Recompute and compare SHA256                                │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Component Changes
 
-**`internal/install/state.go`:**
-- Add `Checksums` field to `LibraryVersionState`
+**New file: `internal/verify/library.go`**
+- `VerifyLibrary(libDir string, opts VerifyOptions) (*VerifyResult, error)`
+- Orchestrates tiered verification
+- Returns detailed results for each level
 
-**`internal/install/library.go`:**
-- After copying library files, compute checksums of all non-symlink files
-- Store checksums in state via new `SetLibraryChecksums()` method
+**New file: `internal/verify/header.go`**
+- `ValidateELF(path string) (*HeaderInfo, error)`
+- `ValidateMachO(path string) (*HeaderInfo, error)`
+- Uses `debug/elf` and `debug/macho` from stdlib
+- Returns: file type, architecture, dependencies, symbol count
 
-**`internal/install/checksum.go`:**
-- Add `ComputeLibraryChecksums(libDir string) (map[string]string, error)`
-- Reuse existing `ComputeFileChecksum()` for individual files
-- Handle symlinks: resolve to target, checksum the actual file
+**New file: `internal/verify/deps.go`**
+- `CheckDependencies(libs []string, searchPaths []string) []DepResult`
+- Resolves dependencies against tsuku libs and system paths
+- Handles $ORIGIN/@loader_path expansion
 
-**`cmd/tsuku/verify.go`:**
+**New file: `cmd/tsuku-dltest/main.go`** (separate binary)
+- Minimal cgo program that calls dlopen/dlclose
+- Invoked by tsuku verify for load testing
+- Exit code indicates success/failure
+
+**Modified: `internal/install/state.go`**
+- Add `Checksums map[string]string` to `LibraryVersionState`
+
+**Modified: `internal/install/library.go`**
+- Compute and store checksums after installation
+
+**Modified: `cmd/tsuku/verify.go`**
 - Detect library type from recipe metadata
-- For libraries: skip command execution, perform checksum verification only
-- Output format matches tool verification style
+- Call `verify.VerifyLibrary()` instead of running command
 
-### Verification Flow for Libraries
+### Verification Output
 
+**Default verification (levels 1-3):**
 ```
 $ tsuku verify gcc-libs
 Verifying gcc-libs (version 15.2.0)...
-  Type: library (installed to $TSUKU_HOME/libs/)
-  Integrity: Verifying 4 files...
-  Integrity: OK (4 files verified)
-gcc-libs is correctly installed
+
+  lib/libstdc++.so.6.0.33
+    Format: ELF shared object (x86_64) ✓
+    Dependencies: libm.so.6, libc.so.6, libgcc_s.so.1 ✓
+    Loadable: yes ✓
+
+  lib/libgcc_s.so.1
+    Format: ELF shared object (x86_64) ✓
+    Dependencies: libc.so.6 ✓
+    Loadable: yes ✓
+
+gcc-libs is working correctly (2 libraries verified)
 ```
 
-With tampering detected:
+**With integrity flag:**
+```
+$ tsuku verify gcc-libs --integrity
+Verifying gcc-libs (version 15.2.0)...
+
+  lib/libstdc++.so.6.0.33
+    Format: ELF shared object (x86_64) ✓
+    Dependencies: libm.so.6, libc.so.6, libgcc_s.so.1 ✓
+    Loadable: yes ✓
+    Integrity: unchanged ✓
+
+  lib/libgcc_s.so.1
+    Format: ELF shared object (x86_64) ✓
+    Dependencies: libc.so.6 ✓
+    Loadable: yes ✓
+    Integrity: unchanged ✓
+
+gcc-libs is working correctly (2 libraries verified, integrity confirmed)
+```
+
+**Failure example:**
 ```
 $ tsuku verify gcc-libs
 Verifying gcc-libs (version 15.2.0)...
-  Type: library (installed to $TSUKU_HOME/libs/)
-  Integrity: Verifying 4 files...
-  Integrity: MODIFIED
-    lib/libstdc++.so.6.0.33: expected abc123..., got def456...
-    WARNING: Library file may have been modified after installation.
-    Run 'tsuku install gcc-libs --reinstall' to restore original.
+
+  lib/libstdc++.so.6.0.33
+    Format: ELF shared object (x86_64) ✓
+    Dependencies: libm.so.6, libc.so.6, libgcc_s.so.1 ✓
+    Loadable: FAILED
+      Error: libgcc_s.so.1: cannot open shared object file
+
+gcc-libs verification failed
+  Run 'tsuku install gcc-libs --reinstall' to restore
 ```
 
-Pre-feature installation:
-```
-$ tsuku verify gcc-libs
-Verifying gcc-libs (version 15.2.0)...
-  Type: library (installed to $TSUKU_HOME/libs/)
-  Integrity: SKIPPED (no stored checksums - pre-feature installation)
-gcc-libs is installed (integrity not verified)
+### Helper Binary Design
+
+The `tsuku-dltest` helper is a minimal cgo program:
+
+```go
+// cmd/tsuku-dltest/main.go
+package main
+
+/*
+#cgo LDFLAGS: -ldl
+#include <dlfcn.h>
+#include <stdlib.h>
+*/
+import "C"
+import (
+    "fmt"
+    "os"
+    "unsafe"
+)
+
+func main() {
+    if len(os.Args) != 2 {
+        os.Exit(2)
+    }
+
+    path := C.CString(os.Args[1])
+    defer C.free(unsafe.Pointer(path))
+
+    handle := C.dlopen(path, C.RTLD_LAZY)
+    if handle == nil {
+        fmt.Fprintln(os.Stderr, C.GoString(C.dlerror()))
+        os.Exit(1)
+    }
+    C.dlclose(handle)
+    os.Exit(0)
+}
 ```
 
-### Symlink Handling
-
-Library files often include symlinks for versioning:
-```
-lib/libstdc++.so -> libstdc++.so.6
-lib/libstdc++.so.6 -> libstdc++.so.6.0.33
-lib/libstdc++.so.6.0.33  (actual file)
-```
-
-Strategy:
-1. **During install**: Checksum only real files (not symlinks)
-2. **During verify**:
-   - Verify real file checksums
-   - Verify symlinks still point to expected targets (optional enhancement)
-
-This matches the existing `install_libraries` action which preserves symlinks.
+Built during `go generate` or as part of release, placed in `$TSUKU_HOME/tools/tsuku-dltest`.
 
 ## Implementation Approach
 
-### Step 1: Extend State Schema
+### Step 1: Header Validation Module
 
-Add `Checksums` field to `LibraryVersionState` in `internal/install/state.go`:
+Create `internal/verify/header.go`:
+
+```go
+type HeaderInfo struct {
+    Format       string   // "ELF" or "Mach-O"
+    Type         string   // "shared object", "executable", etc.
+    Architecture string   // "x86_64", "arm64", etc.
+    Dependencies []string // Required libraries
+    SymbolCount  int      // Number of exported symbols
+}
+
+func ValidateHeader(path string) (*HeaderInfo, error) {
+    // Try ELF first
+    if f, err := elf.Open(path); err == nil {
+        defer f.Close()
+        return validateELF(f)
+    }
+
+    // Try Mach-O
+    if f, err := macho.Open(path); err == nil {
+        defer f.Close()
+        return validateMachO(f)
+    }
+
+    return nil, fmt.Errorf("not a valid ELF or Mach-O file")
+}
+```
+
+### Step 2: Dependency Resolution Module
+
+Create `internal/verify/deps.go`:
+
+```go
+func CheckDependencies(deps []string, libDir string, cfg *config.Config) []DepResult {
+    var results []DepResult
+
+    searchPaths := buildSearchPaths(libDir, cfg)
+
+    for _, dep := range deps {
+        result := DepResult{Name: dep}
+        result.Found, result.Path = findLibrary(dep, searchPaths)
+        results = append(results, result)
+    }
+
+    return results
+}
+
+func buildSearchPaths(libDir string, cfg *config.Config) []string {
+    // 1. Library's own directory (for $ORIGIN)
+    // 2. Other tsuku libraries in $TSUKU_HOME/libs/
+
+    // 3. System library paths (/lib, /usr/lib, etc.)
+}
+```
+
+### Step 3: dltest Helper Binary
+
+Create `cmd/tsuku-dltest/main.go` (cgo program shown above).
+
+Build configuration in Makefile/goreleaser:
+```makefile
+tsuku-dltest:
+    CGO_ENABLED=1 go build -o bin/tsuku-dltest ./cmd/tsuku-dltest
+```
+
+### Step 4: State Schema Extension
+
+Add checksums to `LibraryVersionState`:
 
 ```go
 type LibraryVersionState struct {
@@ -332,113 +439,40 @@ type LibraryVersionState struct {
 }
 ```
 
-### Step 2: Add State Manager Method
+### Step 5: Library Installation Update
 
-Add to `internal/install/state.go`:
-
-```go
-func (sm *StateManager) SetLibraryChecksums(name, version string, checksums map[string]string) error {
-    // Load, modify, save pattern following existing AddLibraryUsedBy
-}
-```
-
-### Step 3: Add Library Checksum Computation
-
-Create helper in `internal/install/checksum.go`:
+Modify `InstallLibrary()` to compute checksums:
 
 ```go
-// ComputeLibraryChecksums computes SHA256 checksums for all regular files in a library directory.
-// Symlinks are skipped; their targets should be checksummed directly.
-// All files in the library directory are checksummed (lib/, include/, etc.).
-func ComputeLibraryChecksums(libDir string) (map[string]string, error) {
-    checksums := make(map[string]string)
-
-    // Canonicalize libDir to handle symlinks
-    canonicalLibDir, err := filepath.EvalSymlinks(libDir)
-    if err != nil {
-        return nil, fmt.Errorf("failed to resolve library directory: %w", err)
-    }
-
-    err = filepath.WalkDir(libDir, func(path string, d fs.DirEntry, err error) error {
-        if err != nil || d.IsDir() {
-            return err
-        }
-
-        info, err := d.Info()
-        if err != nil {
-            return err
-        }
-
-        // Skip symlinks - checksum only real files
-        if info.Mode()&os.ModeSymlink != 0 {
-            return nil
-        }
-
-        // Security: verify file is within library directory (prevent symlink escape)
-        realPath, err := filepath.EvalSymlinks(path)
-        if err != nil {
-            return fmt.Errorf("failed to resolve path %s: %w", path, err)
-        }
-        if !isWithinDir(realPath, canonicalLibDir) {
-            return fmt.Errorf("file resolves outside library directory: %s", path)
-        }
-
-        relPath, _ := filepath.Rel(libDir, path)
-        checksum, err := ComputeFileChecksum(path)
-        if err != nil {
-            return fmt.Errorf("checksum %s: %w", relPath, err)
-        }
-        checksums[relPath] = checksum
-        return nil
-    })
-
-    return checksums, err
-}
-```
-
-### Step 4: Store Checksums During Library Installation
-
-Modify `Manager.InstallLibrary()` in `internal/install/library.go`:
-
-```go
-// After copying files to libDir...
+// After copying files...
 checksums, err := ComputeLibraryChecksums(libDir)
 if err != nil {
-    return fmt.Errorf("computing library checksums: %w", err)
+    return fmt.Errorf("computing checksums: %w", err)
 }
-
-if err := m.state.SetLibraryChecksums(name, version, checksums); err != nil {
-    return fmt.Errorf("storing library checksums: %w", err)
-}
+m.state.SetLibraryChecksums(name, version, checksums)
 ```
 
-### Step 5: Extend Verify Command
+### Step 6: Verify Command Integration
 
-Modify `cmd/tsuku/verify.go` to handle libraries. Insert library detection before the `r.Verify.Command == ""` check:
+Modify `cmd/tsuku/verify.go`:
 
 ```go
 // After loading recipe...
 if r.Metadata.Type == "library" {
-    verifyLibrary(r, toolName, cfg)
+    opts := verify.Options{
+        CheckIntegrity: integrityFlag,
+    }
+    result, err := verify.VerifyLibrary(libDir, opts, cfg)
+    // ... handle result
     return
-}
-
-// Check if recipe has verification (existing code)
-if r.Verify.Command == "" {
-    // ... existing error handling
 }
 ```
 
-The `verifyLibrary()` function:
-1. Uses `GetInstalledLibraryVersion()` to find installed version
-2. Loads stored checksums from `state.Libs[name][version].Checksums`
-3. Recomputes checksums using `ComputeLibraryChecksums()`
-4. Compares and reports using existing `ChecksumMismatch` type
+### Step 7: Add Tests
 
-### Step 6: Add Tests
-
-- Unit tests for `ComputeLibraryChecksums()`
-- Integration test: install library, verify checksums stored, verify passes
+- Unit tests for header validation (ELF and Mach-O)
+- Unit tests for dependency resolution
+- Integration test with tsuku-dltest helper
 - Test graceful degradation for pre-existing libraries
 
 ## Security Considerations
@@ -449,11 +483,20 @@ The `verifyLibrary()` function:
 
 ### Execution Isolation
 
-**Low risk.** Library verification does not execute library code. File operations (stat, checksum) require only read access to `$TSUKU_HOME/libs/`.
+**Medium consideration.** The `tsuku-dltest` helper uses `dlopen()` which:
+- Executes library initialization code (`.init` sections)
+- Should only be run on libraries tsuku itself installed
+- Is isolated to the helper process (crashes don't affect tsuku)
+
+The main tsuku binary never executes library code - it only parses headers using Go's `debug/elf` and `debug/macho` packages.
 
 ### Supply Chain Risks
 
-**Not applicable.** This design verifies installed libraries, not their source. Supply chain integrity is handled by recipe checksums at download time.
+**Partially addressed.** Header and dlopen verification confirm the library is structurally valid but cannot detect:
+- Malicious code inserted by compromised upstream
+- Backdoors that only trigger under specific conditions
+
+Checksum verification (with `--integrity`) detects post-installation tampering but not supply chain attacks.
 
 ### User Data Exposure
 
@@ -463,18 +506,19 @@ The `verifyLibrary()` function:
 
 ### Positive
 
-- **Consistent UX**: `tsuku verify` works uniformly for tools and libraries
-- **Corruption detection**: SHA256 checksums detect post-installation tampering or corruption
-- **No recipe changes**: Works automatically with existing library recipes
-- **Reuses infrastructure**: Extends proven `BinaryChecksums` pattern from tools
-- **Industry-standard approach**: Follows patterns established by RPM, dpkg, Pacman, Nix
+- **Meaningful verification**: Answers "does this work?" not just "does this exist?"
+- **Fast by default**: Header validation + dependency check completes in <1ms
+- **Graduated depth**: Users can choose verification thoroughness
+- **Cross-platform**: Works on Linux (ELF) and macOS (Mach-O)
+- **No external tools**: Uses Go stdlib for parsing, self-contained helper for dlopen
 
 ### Negative
 
-- **State file size increase**: ~100-200 bytes per installed library version for checksums
-- **Pre-existing libraries unverified**: Libraries installed before this feature won't have stored checksums
-- **Symlink chain modification undetected**: If symlinks are modified to point to different (but valid) targets, verification won't detect this since only real file checksums are stored. This is a known limitation shared with the existing binary checksum system.
+- **Requires helper binary**: `tsuku-dltest` must be built with cgo and distributed
+- **dlopen executes code**: Library `.init` sections run during load test (isolated to helper)
+- **More complex than checksum-only**: Multiple verification levels to implement and test
 
 ### Neutral
 
-- **Verification time**: Checksumming library files adds ~10-50ms to verification, acceptable for explicit verify command
+- **Checksums optional**: Users who want integrity verification must use `--integrity` flag
+- **Pre-existing libraries**: Show "integrity: unknown" until reinstalled
