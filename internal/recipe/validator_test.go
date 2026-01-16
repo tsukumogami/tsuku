@@ -516,7 +516,7 @@ name = "broken"
 
 func TestValidateBytes_VersionSourceValidation(t *testing.T) {
 	// Test valid version sources
-	validSources := []string{"github_releases", "github_tags", "npm_registry", "pypi", "crates_io", "goproxy:example.com/test"}
+	validSources := []string{"github_releases", "github_tags", "npm_registry", "pypi", "crates_io", "goproxy:example.com/test", "tap:owner/repo/formula", "cask"}
 	for _, source := range validSources {
 		recipe := `
 [metadata]

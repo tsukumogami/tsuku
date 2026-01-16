@@ -156,6 +156,8 @@ func validateVersion(result *ValidationResult, r *Recipe) {
 		"goproxy":         true,
 		"metacpan":        true,
 		"nixpkgs":         true,
+		"tap":             true, // Homebrew tap (third-party formulas)
+		"cask":            true, // Homebrew cask (macOS applications)
 		"":                true, // Empty is allowed (can be inferred from actions)
 	}
 
@@ -322,6 +324,10 @@ func validateSteps(result *ValidationResult, r *Recipe) {
 
 			// Process warnings from action validation
 			for _, warnMsg := range actionResult.Warnings {
+				// Suppress macOS-only action warnings for recipes with supported_os = ["darwin"]
+				if strings.Contains(warnMsg, "only works on macOS") && isMacOSOnlyRecipe(r) {
+					continue
+				}
 				result.addWarning(stepField, warnMsg)
 			}
 
@@ -641,4 +647,12 @@ func validatePlatformConstraints(result *ValidationResult, r *Recipe) {
 	for _, stepErr := range stepErrors {
 		result.addError("steps", stepErr.Error())
 	}
+}
+
+// isMacOSOnlyRecipe returns true if the recipe is restricted to macOS via supported_os
+func isMacOSOnlyRecipe(r *Recipe) bool {
+	if len(r.Metadata.SupportedOS) == 1 && r.Metadata.SupportedOS[0] == "darwin" {
+		return true
+	}
+	return false
 }

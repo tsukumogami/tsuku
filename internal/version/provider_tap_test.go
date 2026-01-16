@@ -131,12 +131,21 @@ func TestParseFormulaFile_AlternateSyntax(t *testing.T) {
 }
 
 func TestParseFormulaFile_NoBottleBlock(t *testing.T) {
-	_, err := parseFormulaFile(sampleSourceOnlyFormula)
-	if err == nil {
-		t.Error("parseFormulaFile() expected error for source-only formula")
+	// Formulas without bottle blocks are valid - they just don't have bottle metadata.
+	// This supports third-party taps (like hashicorp/tap) that use conditional URLs
+	// instead of bottles.
+	info, err := parseFormulaFile(sampleSourceOnlyFormula)
+	if err != nil {
+		t.Fatalf("parseFormulaFile() unexpected error = %v", err)
 	}
-	if !strings.Contains(err.Error(), "no bottle block found") {
-		t.Errorf("Error message = %q, want to contain 'no bottle block found'", err.Error())
+	if info.Version != "2.0.0" {
+		t.Errorf("Version = %q, want %q", info.Version, "2.0.0")
+	}
+	if info.RootURL != "" {
+		t.Errorf("RootURL = %q, want empty for non-bottle formula", info.RootURL)
+	}
+	if len(info.Checksums) != 0 {
+		t.Errorf("Checksums count = %d, want 0 for non-bottle formula", len(info.Checksums))
 	}
 }
 
@@ -151,12 +160,20 @@ func TestParseFormulaFile_NoVersion(t *testing.T) {
 }
 
 func TestParseFormulaFile_NoChecksums(t *testing.T) {
-	_, err := parseFormulaFile(sampleNoChecksumsFormula)
-	if err == nil {
-		t.Error("parseFormulaFile() expected error for formula without checksums")
+	// Bottle blocks without checksums are valid - the recipe can still use the version.
+	// This is unusual but technically valid in Homebrew formulas.
+	info, err := parseFormulaFile(sampleNoChecksumsFormula)
+	if err != nil {
+		t.Fatalf("parseFormulaFile() unexpected error = %v", err)
 	}
-	if !strings.Contains(err.Error(), "no bottle checksums found") {
-		t.Errorf("Error message = %q, want to contain 'no bottle checksums found'", err.Error())
+	if info.Version != "1.0.0" {
+		t.Errorf("Version = %q, want %q", info.Version, "1.0.0")
+	}
+	if info.RootURL != "https://example.com/bottles" {
+		t.Errorf("RootURL = %q, want %q", info.RootURL, "https://example.com/bottles")
+	}
+	if len(info.Checksums) != 0 {
+		t.Errorf("Checksums count = %d, want 0", len(info.Checksums))
 	}
 }
 
@@ -681,4 +698,110 @@ func TestParseIntHeader(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestParseTapShortForm(t *testing.T) {
+	tests := []struct {
+		name        string
+		source      string
+		wantTap     string
+		wantFormula string
+		wantErr     bool
+	}{
+		{"valid hashicorp/tap/terraform", "tap:hashicorp/tap/terraform", "hashicorp/tap", "terraform", false},
+		{"valid github/gh/gh", "tap:github/gh/gh", "github/gh", "gh", false},
+		{"valid with hyphenated names", "tap:my-org/my-tap/my-formula", "my-org/my-tap", "my-formula", false},
+		{"missing tap prefix", "hashicorp/tap/terraform", "", "", true},
+		{"too few parts", "tap:hashicorp/terraform", "", "", true},
+		{"too many parts", "tap:a/b/c/d", "", "", true},
+		{"empty owner", "tap:/tap/terraform", "", "", true},
+		{"empty repo", "tap:hashicorp//terraform", "", "", true},
+		{"empty formula", "tap:hashicorp/tap/", "", "", true},
+		{"just tap:", "tap:", "", "", true},
+		{"only one part", "tap:hashicorp", "", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tap, formula, err := parseTapShortForm(tt.source)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseTapShortForm() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tap != tt.wantTap {
+				t.Errorf("parseTapShortForm() tap = %q, want %q", tap, tt.wantTap)
+			}
+			if formula != tt.wantFormula {
+				t.Errorf("parseTapShortForm() formula = %q, want %q", formula, tt.wantFormula)
+			}
+		})
+	}
+}
+
+func TestTapSourceStrategy_CanHandle_ShortForm(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   bool
+	}{
+		{"valid short form", "tap:hashicorp/tap/terraform", true},
+		{"valid short form with github", "tap:github/gh/gh", true},
+		{"invalid short form - too few parts", "tap:hashicorp/terraform", false},
+		{"invalid short form - empty", "tap:", false},
+		{"invalid short form - one part", "tap:hashicorp", false},
+		{"not short form - github", "github", false},
+		{"not short form - homebrew", "homebrew", false},
+	}
+
+	strategy := &TapSourceStrategy{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &recipe.Recipe{
+				Version: recipe.VersionSection{
+					Source: tt.source,
+				},
+			}
+			if got := strategy.CanHandle(r); got != tt.want {
+				t.Errorf("CanHandle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTapSourceStrategy_Create_ShortForm(t *testing.T) {
+	resolver := New()
+	strategy := &TapSourceStrategy{}
+
+	t.Run("creates provider from short form", func(t *testing.T) {
+		r := &recipe.Recipe{
+			Version: recipe.VersionSection{
+				Source: "tap:hashicorp/tap/terraform",
+			},
+		}
+		provider, err := strategy.Create(resolver, r)
+		if err != nil {
+			t.Fatalf("Create() error = %v", err)
+		}
+		if provider == nil {
+			t.Fatal("Create() returned nil provider")
+		}
+
+		// Verify provider description contains expected tap and formula
+		desc := provider.SourceDescription()
+		if desc != "Tap:hashicorp/tap/terraform" {
+			t.Errorf("SourceDescription() = %q, want %q", desc, "Tap:hashicorp/tap/terraform")
+		}
+	})
+
+	t.Run("returns error for invalid short form", func(t *testing.T) {
+		r := &recipe.Recipe{
+			Version: recipe.VersionSection{
+				Source: "tap:invalid",
+			},
+		}
+		_, err := strategy.Create(resolver, r)
+		if err == nil {
+			t.Error("Create() expected error for invalid short form")
+		}
+	})
 }
