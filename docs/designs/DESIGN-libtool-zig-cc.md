@@ -281,6 +281,21 @@ No integration changes needed. The wrapper enhancement is transparent to:
 
 ### Step 1: Modify setupZigWrappers Function
 
+Update the cc wrapper generation in `setupZigWrappers()` to handle `-print-prog-name`:
+
+### Step 2: Explicitly Set AR and RANLIB in SetupCCompilerEnv
+
+Update `SetupCCompilerEnv()` to set AR and RANLIB environment variables explicitly. This bypasses libtool's archiver detection which can fail with zig ar:
+
+```go
+arWrapper := filepath.Join(wrapperDir, "ar")
+ranlibWrapper := filepath.Join(wrapperDir, "ranlib")
+env = append(env, fmt.Sprintf("AR=%s", arWrapper))
+env = append(env, fmt.Sprintf("RANLIB=%s", ranlibWrapper))
+```
+
+### Step 3: Wrapper Script Implementation
+
 Update the cc wrapper generation in `setupZigWrappers()`:
 
 ```go
@@ -313,13 +328,13 @@ exec "%s" cc -fPIC -Wno-date-time "$@"
 
 Apply the same pattern to the c++ wrapper.
 
-### Step 2: Re-enable No-GCC Container Test
+### Step 4: Re-enable No-GCC Container Test
 
 In `.github/workflows/build-essentials.yml`:
 - Remove `if: false` from `test-no-gcc` job
 - Update comment to note the fix
 
-### Step 3: Verify Locally
+### Step 5: Verify Locally
 
 Test the fix by:
 1. Building tsuku
