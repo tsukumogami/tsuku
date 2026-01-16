@@ -974,3 +974,203 @@ func TestHasNpmLockConstraint(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractConstraints_GemExec(t *testing.T) {
+	lockData := `GEM
+  remote: https://rubygems.org/
+  specs:
+    jekyll (4.4.1)
+      addressable (~> 2.4)
+      colorator (~> 1.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  jekyll (= 4.4.1)
+`
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "jekyll",
+		Version:       "4.4.1",
+		Steps: []ResolvedStep{
+			{
+				Action: "gem_exec",
+				Params: map[string]interface{}{
+					"gem":         "jekyll",
+					"version":     "4.4.1",
+					"executables": []interface{}{"jekyll"},
+					"lock_data":   lockData,
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.GemLock != lockData {
+		t.Errorf("Expected GemLock to be extracted, got %q", constraints.GemLock)
+	}
+}
+
+func TestExtractConstraints_GemExecInDependency(t *testing.T) {
+	lockData := `GEM
+  specs:
+    dep-gem (1.0.0)
+`
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "myapp",
+		Version:       "1.0.0",
+		Dependencies: []DependencyPlan{
+			{
+				Tool:    "ruby-tool",
+				Version: "1.0.0",
+				Steps: []ResolvedStep{
+					{
+						Action: "gem_exec",
+						Params: map[string]interface{}{
+							"gem":       "ruby-tool",
+							"version":   "1.0.0",
+							"lock_data": lockData,
+						},
+					},
+				},
+			},
+		},
+		Steps: []ResolvedStep{
+			{
+				Action: "download_file",
+				Params: map[string]interface{}{
+					"url": "https://example.com/myapp",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.GemLock != lockData {
+		t.Errorf("Expected GemLock from dependency to be extracted, got %q", constraints.GemLock)
+	}
+}
+
+func TestExtractConstraints_GemExecFirstWins(t *testing.T) {
+	lockData1 := `first Gemfile.lock content`
+	lockData2 := `second Gemfile.lock content`
+
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "multi-tool",
+		Version:       "1.0.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "gem_exec",
+				Params: map[string]interface{}{
+					"gem":       "first-gem",
+					"version":   "1.0.0",
+					"lock_data": lockData1,
+				},
+			},
+			{
+				Action: "gem_exec",
+				Params: map[string]interface{}{
+					"gem":       "second-gem",
+					"version":   "2.0.0",
+					"lock_data": lockData2,
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.GemLock != lockData1 {
+		t.Errorf("Expected first GemLock to win, got %q", constraints.GemLock)
+	}
+}
+
+func TestExtractConstraints_GemExecEmptyLockData(t *testing.T) {
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "tool",
+		Version:       "1.0.0",
+		Steps: []ResolvedStep{
+			{
+				Action: "gem_exec",
+				Params: map[string]interface{}{
+					"gem":       "some-gem",
+					"version":   "1.0.0",
+					"lock_data": "",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	if constraints.GemLock != "" {
+		t.Errorf("Expected empty GemLock for empty lock_data param, got %q", constraints.GemLock)
+	}
+}
+
+func TestHasGemLockConstraint(t *testing.T) {
+	tests := []struct {
+		name        string
+		constraints *actions.EvalConstraints
+		expected    bool
+	}{
+		{
+			name:        "nil constraints",
+			constraints: nil,
+			expected:    false,
+		},
+		{
+			name: "empty constraints",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				GemLock:        "",
+			},
+			expected: false,
+		},
+		{
+			name: "with gem lock",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				GemLock:        "GEM\n  specs:\n    jekyll (4.4.1)\n",
+			},
+			expected: true,
+		},
+		{
+			name: "with pip but no gem",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{
+					"flask": "2.3.0",
+				},
+				GemLock: "",
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := HasGemLockConstraint(tt.constraints)
+			if result != tt.expected {
+				t.Errorf("Expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
