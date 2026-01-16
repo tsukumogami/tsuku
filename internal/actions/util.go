@@ -537,20 +537,46 @@ func setupZigWrappers(zigPath, wrapperDir string) error {
 		return err
 	}
 
+	// Compute paths for all wrappers (needed for -print-prog-name support)
+	ldWrapper := filepath.Join(wrapperDir, "ld")
+	arWrapper := filepath.Join(wrapperDir, "ar")
+	ranlibWrapper := filepath.Join(wrapperDir, "ranlib")
+
 	// Create cc wrapper
 	// Add -fPIC by default because zig's lld is stricter about this than GNU ld
 	// This is required for building shared libraries (like Ruby native extensions)
 	// Add -Wno-date-time because zig/clang treats __DATE__/__TIME__ macros as errors
 	// by default (for reproducibility), but many legacy projects use them
+	// Handle -print-prog-name for libtool compatibility (see ziglang/zig#17273)
 	ccWrapper := filepath.Join(wrapperDir, "cc")
-	ccContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" cc -fPIC -Wno-date-time \"$@\"\n", zigPath)
+	ccContent := fmt.Sprintf(`#!/bin/sh
+# Handle -print-prog-name for libtool compatibility (ziglang/zig#17273)
+for arg in "$@"; do
+  case "$arg" in
+    -print-prog-name=ld) echo "%s"; exit 0 ;;
+    -print-prog-name=ar) echo "%s"; exit 0 ;;
+    -print-prog-name=ranlib) echo "%s"; exit 0 ;;
+  esac
+done
+exec "%s" cc -fPIC -Wno-date-time "$@"
+`, ldWrapper, arWrapper, ranlibWrapper, zigPath)
 	if err := os.WriteFile(ccWrapper, []byte(ccContent), 0755); err != nil {
 		return err
 	}
 
-	// Create c++ wrapper
+	// Create c++ wrapper (same -print-prog-name handling as cc)
 	cxxWrapper := filepath.Join(wrapperDir, "c++")
-	cxxContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" c++ -fPIC -Wno-date-time \"$@\"\n", zigPath)
+	cxxContent := fmt.Sprintf(`#!/bin/sh
+# Handle -print-prog-name for libtool compatibility (ziglang/zig#17273)
+for arg in "$@"; do
+  case "$arg" in
+    -print-prog-name=ld) echo "%s"; exit 0 ;;
+    -print-prog-name=ar) echo "%s"; exit 0 ;;
+    -print-prog-name=ranlib) echo "%s"; exit 0 ;;
+  esac
+done
+exec "%s" c++ -fPIC -Wno-date-time "$@"
+`, ldWrapper, arWrapper, ranlibWrapper, zigPath)
 	if err := os.WriteFile(cxxWrapper, []byte(cxxContent), 0755); err != nil {
 		return err
 	}
@@ -565,14 +591,12 @@ func setupZigWrappers(zigPath, wrapperDir string) error {
 	_ = os.Symlink(cxxWrapper, gxxWrapper) // Ignore error - symlink is best-effort
 
 	// Create ar wrapper (zig ar)
-	arWrapper := filepath.Join(wrapperDir, "ar")
 	arContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" ar \"$@\"\n", zigPath)
 	if err := os.WriteFile(arWrapper, []byte(arContent), 0755); err != nil {
 		return err
 	}
 
 	// Create ranlib wrapper (zig ranlib)
-	ranlibWrapper := filepath.Join(wrapperDir, "ranlib")
 	ranlibContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" ranlib \"$@\"\n", zigPath)
 	if err := os.WriteFile(ranlibWrapper, []byte(ranlibContent), 0755); err != nil {
 		return err
@@ -580,7 +604,6 @@ func setupZigWrappers(zigPath, wrapperDir string) error {
 
 	// Create ld wrapper using zig's bundled lld
 	// zig ld.lld is a drop-in replacement for GNU ld
-	ldWrapper := filepath.Join(wrapperDir, "ld")
 	ldContent := fmt.Sprintf("#!/bin/sh\nexec \"%s\" ld.lld \"$@\"\n", zigPath)
 	if err := os.WriteFile(ldWrapper, []byte(ldContent), 0755); err != nil {
 		return err
@@ -623,10 +646,15 @@ func SetupCCompilerEnv(env []string) ([]string, bool) {
 
 	ccWrapper := filepath.Join(wrapperDir, "cc")
 	cxxWrapper := filepath.Join(wrapperDir, "c++")
+	arWrapper := filepath.Join(wrapperDir, "ar")
+	ranlibWrapper := filepath.Join(wrapperDir, "ranlib")
 
-	// Set CC, CXX and add wrapper directory to PATH
+	// Set CC, CXX, AR, RANLIB and add wrapper directory to PATH
+	// Explicitly setting AR/RANLIB bypasses libtool detection that may fail with zig
 	env = append(env, fmt.Sprintf("CC=%s", ccWrapper))
 	env = append(env, fmt.Sprintf("CXX=%s", cxxWrapper))
+	env = append(env, fmt.Sprintf("AR=%s", arWrapper))
+	env = append(env, fmt.Sprintf("RANLIB=%s", ranlibWrapper))
 
 	// Prepend wrapper directory to PATH so cc/gcc are found first
 	for i, e := range env {
