@@ -41,6 +41,7 @@ func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraint
 	extractGoConstraintsFromSteps(plan.Steps, constraints)
 	extractCargoConstraintsFromSteps(plan.Steps, constraints)
 	extractNpmConstraintsFromSteps(plan.Steps, constraints)
+	extractGemConstraintsFromSteps(plan.Steps, constraints)
 
 	// Extract from dependencies
 	for _, dep := range plan.Dependencies {
@@ -56,6 +57,7 @@ func extractConstraintsFromDependency(dep *DependencyPlan, constraints *actions.
 	extractGoConstraintsFromSteps(dep.Steps, constraints)
 	extractCargoConstraintsFromSteps(dep.Steps, constraints)
 	extractNpmConstraintsFromSteps(dep.Steps, constraints)
+	extractGemConstraintsFromSteps(dep.Steps, constraints)
 
 	for _, nestedDep := range dep.Dependencies {
 		extractConstraintsFromDependency(&nestedDep, constraints)
@@ -199,4 +201,28 @@ func extractNpmConstraintsFromSteps(steps []ResolvedStep, constraints *actions.E
 // HasNpmLockConstraint returns true if the constraints contain a package-lock.json.
 func HasNpmLockConstraint(constraints *actions.EvalConstraints) bool {
 	return constraints != nil && constraints.NpmLock != ""
+}
+
+// extractGemConstraintsFromSteps extracts gem constraints from gem_exec steps.
+func extractGemConstraintsFromSteps(steps []ResolvedStep, constraints *actions.EvalConstraints) {
+	for _, step := range steps {
+		if step.Action != "gem_exec" {
+			continue
+		}
+
+		lockData, ok := step.Params["lock_data"].(string)
+		if !ok || lockData == "" {
+			continue
+		}
+
+		// Only store if we don't already have a GemLock (first one wins)
+		if constraints.GemLock == "" {
+			constraints.GemLock = lockData
+		}
+	}
+}
+
+// HasGemLockConstraint returns true if the constraints contain a Gemfile.lock.
+func HasGemLockConstraint(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && constraints.GemLock != ""
 }
