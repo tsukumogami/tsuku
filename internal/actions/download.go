@@ -386,7 +386,7 @@ func (a *DownloadAction) downloadFile(ctx context.Context, url, destPath string)
 		}
 
 		// For non-HTTP errors (network issues, etc.), also retry
-		// unless context is cancelled
+		// unless context is canceled
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}

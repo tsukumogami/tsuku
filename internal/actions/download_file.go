@@ -182,7 +182,7 @@ func downloadFileHTTP(ctx context.Context, downloadURL, destPath string) error {
 		}
 
 		// For non-HTTP errors (network issues, etc.), also retry
-		// unless context is cancelled
+		// unless context is canceled
 		if ctx.Err() != nil {
 			return ctx.Err()
 		}
