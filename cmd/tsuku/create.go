@@ -67,6 +67,7 @@ Supported sources:
   github:owner/repo      GitHub releases (uses LLM to analyze assets)
   homebrew:formula       Homebrew formulas (uses LLM to generate recipes)
   homebrew:formula:source  Force source build even if bottles available
+  cask:name              Homebrew Casks (macOS applications)
 
 Examples:
   tsuku create ripgrep --from crates.io
@@ -77,7 +78,9 @@ Examples:
   tsuku create gh --from github:cli/cli
   tsuku create age --from github:FiloSottile/age
   tsuku create jq --from homebrew:jq
-  tsuku create ripgrep --from homebrew:ripgrep`,
+  tsuku create ripgrep --from homebrew:ripgrep
+  tsuku create vscode --from cask:visual-studio-code
+  tsuku create iterm2 --from cask:iterm2`,
 	Args: cobra.ExactArgs(1),
 	Run:  runCreate,
 }
@@ -201,6 +204,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	builderRegistry.Register(builders.NewNpmBuilder(nil))
 	builderRegistry.Register(builders.NewGitHubReleaseBuilder())
 	builderRegistry.Register(builders.NewHomebrewBuilder())
+	builderRegistry.Register(builders.NewCaskBuilder(nil))
 
 	// Get the builder
 	builder, ok := builderRegistry.Get(builderName)
@@ -212,6 +216,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 		}
 		fmt.Fprintf(os.Stderr, "  github:owner/repo\n")
 		fmt.Fprintf(os.Stderr, "  homebrew:formula\n")
+		fmt.Fprintf(os.Stderr, "  cask:name\n")
 		exitWithCode(ExitUsage)
 	}
 

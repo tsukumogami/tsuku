@@ -24,23 +24,23 @@ Create a new deterministic builder that implements `SessionBuilder`, similar to 
 
 ## Implementation Steps
 
-- [ ] **Step 1**: Create `cask.go` with struct definitions and interface methods
+- [x] **Step 1**: Create `cask.go` with struct definitions and interface methods
   - Define `CaskBuilder` struct with `httpClient` and `homebrewAPIURL` fields
   - Implement `Name()` returning "cask"
   - Implement `RequiresLLM()` returning `false`
 
-- [ ] **Step 2**: Implement `CanBuild` method
+- [x] **Step 2**: Implement `CanBuild` method
   - Parse `SourceArg` to extract cask name (e.g., "visual-studio-code" from "cask:visual-studio-code")
   - Validate cask name using existing `isValidCaskName` pattern from version provider
   - Query cask API and check for supported artifacts (app or binary)
   - Return false for casks with `pkg` or unsupported artifact types
 
-- [ ] **Step 3**: Implement cask API response parsing
+- [x] **Step 3**: Implement cask API response parsing
   - Define `caskAPIResponse` struct with fields: `token`, `version`, `sha256`, `url`, `name[]`, `desc`, `homepage`, `artifacts`
   - Handle heterogeneous `artifacts` array: each element is an object with one key (`app`, `binary`, `pkg`, etc.)
   - Implement `extractArtifacts()` to parse app name and binary paths from artifacts
 
-- [ ] **Step 4**: Implement recipe generation
+- [x] **Step 4**: Implement recipe generation
   - Build `recipe.Recipe` with:
     - `[version] source = "cask"` and `cask = "<name>"`
     - `[[steps]] action = "app_bundle"` with url/checksum templates and app_name
@@ -48,25 +48,25 @@ Create a new deterministic builder that implements `SessionBuilder`, similar to 
     - `[verify] command` based on first binary or app name
   - Handle `{{appdir}}` placeholder normalization in binary paths
 
-- [ ] **Step 5**: Implement `NewSession` method
+- [x] **Step 5**: Implement `NewSession` method
   - Validate cask name and check for supported artifacts
   - Return `DeterministicSession` wrapping the Build function
   - Report progress via `SessionOptions.ProgressReporter`
 
-- [ ] **Step 6**: Add error types for unsupported cask patterns
+- [x] **Step 6**: Add error types for unsupported cask patterns
   - Create `CaskUnsupportedArtifactError` for pkg, preflight, postflight
   - Create `CaskNotFoundError` for 404 responses
 
-- [ ] **Step 7**: Register builder in `cmd/tsuku/create.go`
+- [x] **Step 7**: Register builder in `cmd/tsuku/create.go`
   - Add `builderRegistry.Register(builders.NewCaskBuilder(nil))` after HomebrewBuilder registration
 
-- [ ] **Step 8**: Write unit tests in `cask_test.go`
+- [x] **Step 8**: Write unit tests in `cask_test.go`
   - Test `CanBuild` with valid cask (app artifact), invalid cask (pkg artifact), nonexistent cask
   - Test `extractArtifacts` with app-only, app+binary, and binary-only casks
   - Test recipe generation with proper TOML structure
   - Mock HTTP responses using `httptest.Server`
 
-- [ ] **Step 9**: Add integration test case
+- [x] **Step 9**: Add integration test case
   - Test full flow: `NewSession` -> `Generate` -> verify recipe structure
   - Use mock server with realistic cask API response
 
@@ -112,13 +112,13 @@ cat ~/.tsuku/recipes/vscode.toml
 
 ## Success Criteria
 
-- [ ] `CaskBuilder` implements `SessionBuilder` interface
-- [ ] `tsuku create --from cask:<name>` generates valid recipe
-- [ ] App artifacts detected and `app_name` populated correctly
-- [ ] Binary artifacts detected and `binaries` array populated
-- [ ] Casks with unsupported artifacts (pkg, preflight) return clear error
-- [ ] Unit tests cover artifact detection edge cases
-- [ ] E2E flow still works (existing tests pass)
+- [x] `CaskBuilder` implements `SessionBuilder` interface
+- [x] `tsuku create --from cask:<name>` generates valid recipe
+- [x] App artifacts detected and `app_name` populated correctly
+- [x] Binary artifacts detected and `binaries` array populated
+- [x] Casks with unsupported artifacts (pkg, preflight) return clear error
+- [x] Unit tests cover artifact detection edge cases
+- [x] E2E flow still works (existing tests pass)
 
 ## Open Questions
 
