@@ -13,60 +13,6 @@
       "tool": "zlib",
       "version": "1.3.1",
       "recipe_hash": "1cb26974336ea947b3ebf9a6b21747d0fdd3fdf9a5f2d94cc9ec18e59b682b29",
-      "dependencies": [
-        {
-          "tool": "patchelf",
-          "version": "0.18.0",
-          "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
-          "steps": [
-            {
-              "action": "download_file",
-              "params": {
-                "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-                "dest": "patchelf.tar.gz",
-                "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef"
-              },
-              "evaluable": true,
-              "deterministic": true,
-              "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-              "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-              "size": 122324
-            },
-            {
-              "action": "extract",
-              "params": {
-                "archive": "patchelf.tar.gz",
-                "format": "tar.gz",
-                "strip_dirs": 2
-              },
-              "evaluable": true,
-              "deterministic": true
-            },
-            {
-              "action": "homebrew_relocate",
-              "params": {
-                "formula": "patchelf"
-              },
-              "evaluable": false,
-              "deterministic": true
-            },
-            {
-              "action": "install_binaries",
-              "params": {
-                "outputs": [
-                  "bin/patchelf"
-                ]
-              },
-              "evaluable": true,
-              "deterministic": true
-            }
-          ],
-          "verify": {
-            "command": "patchelf --version",
-            "pattern": "patchelf {version}"
-          }
-        }
-      ],
       "steps": [
         {
           "action": "download_file",
