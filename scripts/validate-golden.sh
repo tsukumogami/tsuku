@@ -269,13 +269,15 @@ for VERSION in $VERSIONS; do
         GOLDEN="$GOLDEN_DIR/$filename"
         ACTUAL="$TEMP_DIR/$filename"
 
-        # Build eval command arguments
-        eval_args=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps)
+        # Build eval command arguments with constrained evaluation
+        eval_args=(--recipe "$RECIPE_PATH" --os "$os" --arch "$arch" --version "$VERSION_NO_V" --install-deps --pin-from "$GOLDEN")
         if [[ -n "$family" ]]; then
             eval_args+=(--linux-family "$family")
         fi
 
-        # Generate current plan (stripping non-deterministic fields)
+        # Generate current plan with constrained evaluation (stripping non-deterministic fields)
+        # The --pin-from flag extracts constraints from the golden file (pip versions,
+        # go.sum, cargo.lock, etc.) to produce deterministic output.
         # Note: missing platforms already caught by pre-check above
         if ! "$TSUKU" eval "${eval_args[@]}" 2>/dev/null | \
             jq 'del(.generated_at, .recipe_source)' > "$ACTUAL"; then
