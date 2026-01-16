@@ -199,6 +199,60 @@
       "platform": {"os": "linux", "arch": "amd64"},
       "issue": "https://github.com/tsukumogami/tsuku/issues/964",
       "reason": "go_install toolchain version drift (golden file references Go version not available in CI)"
+    },
+    {
+      "recipe": "proj",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "proj",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "proj",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "rust",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "rust",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "rust",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "spatialite",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "spatialite",
+      "platform": {"os": "darwin", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "spatialite",
+      "platform": {"os": "darwin", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/931",
+      "reason": "golden files not yet generated"
     }
   ]
 }
