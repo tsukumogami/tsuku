@@ -1,0 +1,26 @@
+{
+  "format_version": 3,
+  "tool": "iterm2",
+  "version": "3.6.6",
+  "platform": {
+    "os": "darwin",
+    "arch": "amd64"
+  },
+  "recipe_hash": "44c62c89eeaedabbbc156bbfa3041ecdcf25f98522f102994c59ac108f1acc18",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "app_bundle",
+      "params": {
+        "app_name": "iTerm.app",
+        "checksum": "sha256:68293d89ddf2140407879a651b42d9d05e12f403f69633ec635a96a29d90b4f3",
+        "url": "https://iterm2.com/downloads/stable/iTerm2-3_6_6.zip"
+      },
+      "evaluable": false,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "test -d $TSUKU_HOME/apps/iterm2-*.app"
+  }
+}
