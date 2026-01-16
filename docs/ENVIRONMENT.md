@@ -18,6 +18,7 @@ Directory structure:
 $TSUKU_HOME/
 ├── tools/          # Installed tools
 │   └── current/    # Symlinks to active versions
+├── apps/           # Installed macOS applications (.app bundles)
 ├── libs/           # Shared libraries
 ├── recipes/        # Local recipe overrides
 ├── registry/       # Cached recipes from remote registry

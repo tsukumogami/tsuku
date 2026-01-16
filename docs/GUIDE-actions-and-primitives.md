@@ -198,6 +198,7 @@ Composite actions are shortcuts for recipe authors. They decompose into primitiv
 | `apply_patch` | download_file + apply_patch_file (or just apply_patch_file) | Apply patch from URL or inline data |
 | `fossil_archive` | download_file + extract | Download source archive from Fossil SCM repository |
 | `homebrew` | download_file + extract + homebrew_relocate | Install Homebrew GHCR bottles |
+| `app_bundle` | download_file + extract + install to apps/ + symlinks | Install macOS .app bundles |
 
 ##### Patch Application
 
@@ -217,6 +218,72 @@ The `apply_patch` composite:
 3. Validates patch application succeeded
 
 For inline patches, omit the `url` parameter and provide patch data directly.
+
+##### macOS Application Bundles (app_bundle)
+
+The `app_bundle` action installs macOS GUI applications (.app bundles). It works with the `cask` version provider to install applications from Homebrew Cask metadata.
+
+```toml
+[version]
+source = "cask"
+cask = "iterm2"
+
+[[steps]]
+action = "app_bundle"
+url = "{version.url}"
+checksum = "{version.checksum}"
+app_name = "iTerm.app"
+```
+
+Parameters:
+- `url` (required): Download URL for the application archive (DMG or ZIP)
+- `checksum` (required): SHA256 checksum for verification
+- `app_name` (required): Name of the .app bundle inside the archive
+- `binaries` (optional): List of CLI tools to symlink to `$TSUKU_HOME/bin`
+- `symlink_applications` (optional, default: true): Create symlink in `~/Applications`
+
+The action:
+1. Downloads the archive (DMG or ZIP) with checksum verification
+2. Extracts or mounts the archive
+3. Copies the .app bundle to `$TSUKU_HOME/apps/<name>-<version>.app`
+4. Creates symlinks for any specified CLI binaries to `$TSUKU_HOME/bin`
+5. Creates a symlink in `~/Applications` for Launchpad/Spotlight integration
+
+**Platform restriction**: The `app_bundle` action only runs on macOS. On other platforms, it skips with a message.
+
+##### Cask Version Provider
+
+The `cask` version provider queries Homebrew Cask metadata to resolve application versions, download URLs, and checksums:
+
+```toml
+[version]
+source = "cask"
+cask = "firefox"
+```
+
+The provider:
+- Queries `formulae.brew.sh/api/cask/<name>.json`
+- Selects architecture-specific variants (arm64 vs x86_64)
+- Returns version, URL, and checksum in template variables
+
+Template variables available:
+- `{version}` - Application version string
+- `{version.url}` - Architecture-specific download URL
+- `{version.checksum}` - SHA256 checksum (or empty for `:no_check` casks)
+
+Example with binaries:
+```toml
+[version]
+source = "cask"
+cask = "visual-studio-code"
+
+[[steps]]
+action = "app_bundle"
+url = "{version.url}"
+checksum = "{version.checksum}"
+app_name = "Visual Studio Code.app"
+binaries = ["Contents/Resources/app/bin/code"]
+```
 
 #### Ecosystem Install Composites
 

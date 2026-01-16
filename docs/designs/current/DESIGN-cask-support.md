@@ -1,6 +1,6 @@
 # Design: Homebrew Cask Support
 
-**Status**: Implemented
+**Status**: Current
 
 ## Implementation Issues
 
