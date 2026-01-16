@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 	"sort"
+	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
@@ -570,28 +571,75 @@ func (s *CaskSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (Versi
 	return NewCaskProvider(resolver, r.Version.Cask), nil
 }
 
-// TapSourceStrategy handles recipes with [version] source = "tap"
-// This intercepts source="tap" to use TapProvider for third-party Homebrew tap formula resolution
+// TapSourceStrategy handles recipes with [version] source = "tap" or source = "tap:owner/repo/formula"
+// This intercepts tap sources to use TapProvider for third-party Homebrew tap formula resolution
 type TapSourceStrategy struct{}
 
 func (s *TapSourceStrategy) Priority() int { return PriorityKnownRegistry }
 
 func (s *TapSourceStrategy) CanHandle(r *recipe.Recipe) bool {
-	if r.Version.Source != "tap" {
-		return false
+	// Explicit form: source = "tap" with tap and formula fields
+	if r.Version.Source == "tap" {
+		return r.Version.Tap != "" && r.Version.Formula != ""
 	}
-	// Must have tap and formula specified in version section
-	return r.Version.Tap != "" && r.Version.Formula != ""
+	// Short form: source = "tap:owner/repo/formula"
+	if strings.HasPrefix(r.Version.Source, "tap:") {
+		_, _, err := parseTapShortForm(r.Version.Source)
+		return err == nil
+	}
+	return false
 }
 
 func (s *TapSourceStrategy) Create(resolver *Resolver, r *recipe.Recipe) (VersionProvider, error) {
-	if r.Version.Tap == "" {
+	var tap, formula string
+
+	if strings.HasPrefix(r.Version.Source, "tap:") {
+		// Short form: parse from source
+		var err error
+		tap, formula, err = parseTapShortForm(r.Version.Source)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		// Explicit form: use fields
+		tap = r.Version.Tap
+		formula = r.Version.Formula
+	}
+
+	if tap == "" {
 		return nil, fmt.Errorf("no tap specified for Tap version source")
 	}
-	if r.Version.Formula == "" {
+	if formula == "" {
 		return nil, fmt.Errorf("no formula specified for Tap version source")
 	}
-	return NewTapProvider(resolver, r.Version.Tap, r.Version.Formula), nil
+
+	return NewTapProvider(resolver, tap, formula), nil
+}
+
+// parseTapShortForm parses the short form tap source syntax.
+// Input: "tap:owner/repo/formula" (e.g., "tap:hashicorp/tap/terraform")
+// Returns: tap ("hashicorp/tap"), formula ("terraform"), or error
+func parseTapShortForm(source string) (tap, formula string, err error) {
+	if !strings.HasPrefix(source, "tap:") {
+		return "", "", fmt.Errorf("not a tap short form source: %s", source)
+	}
+
+	path := strings.TrimPrefix(source, "tap:")
+	parts := strings.Split(path, "/")
+	if len(parts) != 3 {
+		return "", "", fmt.Errorf("invalid tap short form: expected tap:owner/repo/formula, got %s", source)
+	}
+
+	owner := parts[0]
+	repo := parts[1]
+	formula = parts[2]
+
+	if owner == "" || repo == "" || formula == "" {
+		return "", "", fmt.Errorf("invalid tap short form: empty component in %s", source)
+	}
+
+	tap = owner + "/" + repo
+	return tap, formula, nil
 }
 
 // InferredGoProxyStrategy infers goproxy from go_install action

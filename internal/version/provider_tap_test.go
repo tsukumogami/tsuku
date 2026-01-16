@@ -682,3 +682,109 @@ func TestParseIntHeader(t *testing.T) {
 		})
 	}
 }
+
+func TestParseTapShortForm(t *testing.T) {
+	tests := []struct {
+		name        string
+		source      string
+		wantTap     string
+		wantFormula string
+		wantErr     bool
+	}{
+		{"valid hashicorp/tap/terraform", "tap:hashicorp/tap/terraform", "hashicorp/tap", "terraform", false},
+		{"valid github/gh/gh", "tap:github/gh/gh", "github/gh", "gh", false},
+		{"valid with hyphenated names", "tap:my-org/my-tap/my-formula", "my-org/my-tap", "my-formula", false},
+		{"missing tap prefix", "hashicorp/tap/terraform", "", "", true},
+		{"too few parts", "tap:hashicorp/terraform", "", "", true},
+		{"too many parts", "tap:a/b/c/d", "", "", true},
+		{"empty owner", "tap:/tap/terraform", "", "", true},
+		{"empty repo", "tap:hashicorp//terraform", "", "", true},
+		{"empty formula", "tap:hashicorp/tap/", "", "", true},
+		{"just tap:", "tap:", "", "", true},
+		{"only one part", "tap:hashicorp", "", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tap, formula, err := parseTapShortForm(tt.source)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("parseTapShortForm() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tap != tt.wantTap {
+				t.Errorf("parseTapShortForm() tap = %q, want %q", tap, tt.wantTap)
+			}
+			if formula != tt.wantFormula {
+				t.Errorf("parseTapShortForm() formula = %q, want %q", formula, tt.wantFormula)
+			}
+		})
+	}
+}
+
+func TestTapSourceStrategy_CanHandle_ShortForm(t *testing.T) {
+	tests := []struct {
+		name   string
+		source string
+		want   bool
+	}{
+		{"valid short form", "tap:hashicorp/tap/terraform", true},
+		{"valid short form with github", "tap:github/gh/gh", true},
+		{"invalid short form - too few parts", "tap:hashicorp/terraform", false},
+		{"invalid short form - empty", "tap:", false},
+		{"invalid short form - one part", "tap:hashicorp", false},
+		{"not short form - github", "github", false},
+		{"not short form - homebrew", "homebrew", false},
+	}
+
+	strategy := &TapSourceStrategy{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &recipe.Recipe{
+				Version: recipe.VersionSection{
+					Source: tt.source,
+				},
+			}
+			if got := strategy.CanHandle(r); got != tt.want {
+				t.Errorf("CanHandle() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTapSourceStrategy_Create_ShortForm(t *testing.T) {
+	resolver := New()
+	strategy := &TapSourceStrategy{}
+
+	t.Run("creates provider from short form", func(t *testing.T) {
+		r := &recipe.Recipe{
+			Version: recipe.VersionSection{
+				Source: "tap:hashicorp/tap/terraform",
+			},
+		}
+		provider, err := strategy.Create(resolver, r)
+		if err != nil {
+			t.Fatalf("Create() error = %v", err)
+		}
+		if provider == nil {
+			t.Fatal("Create() returned nil provider")
+		}
+
+		// Verify provider description contains expected tap and formula
+		desc := provider.SourceDescription()
+		if desc != "Tap:hashicorp/tap/terraform" {
+			t.Errorf("SourceDescription() = %q, want %q", desc, "Tap:hashicorp/tap/terraform")
+		}
+	})
+
+	t.Run("returns error for invalid short form", func(t *testing.T) {
+		r := &recipe.Recipe{
+			Version: recipe.VersionSection{
+				Source: "tap:invalid",
+			},
+		}
+		_, err := strategy.Create(resolver, r)
+		if err == nil {
+			t.Error("Create() expected error for invalid short form")
+		}
+	})
+}
