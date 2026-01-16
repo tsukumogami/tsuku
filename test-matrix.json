@@ -3,6 +3,7 @@
     "tier1": ["github_actionlint_with_version", "github_btop_no_version", "github_argo-cd_binary", "github_bombardier_simple"],
     "tier2": ["archive_golang_directory", "archive_zig_tar_xz", "archive_rust_custom_source", "archive_nodejs_checksum", "archive_perl_relocatable"],
     "tier3": ["nix_hello-nix_simple"],
+    "tier4": ["cask_iterm2-test_basic"],
     "tier5": ["npm_netlify-cli_basic", "npm_serve_empty_pattern", "pipx_ruff_basic", "pipx_black_multi_exec", "cargo_cargo-audit_basic", "cargo_cargo-watch_single", "gem_bundler_multi_exec", "gem_jekyll_single", "gem_fpm_packaging", "cpan_ack_with_dependency"]
   },
   "tests": {
@@ -14,6 +15,7 @@
     "archive_zig_tar_xz": { "tool": "zig",          "tier": 2, "desc": "tar.xz install_dir",          "features": ["action:download_archive", "archive_format:tar.xz", "install_mode:directory"] },
     "archive_rust_custom_source": { "tool": "rust",         "tier": 2, "desc": "custom source",               "features": ["action:download_archive", "install_mode:directory"] },
     "archive_nodejs_checksum": { "tool": "nodejs",       "tier": 2, "desc": "checksum verification",       "features": ["action:download_archive", "checksum:with", "install_mode:directory"] },
+    "cask_iterm2-test_basic": { "tool": "iterm2-test",  "tier": 4, "desc": "cask app bundle",            "features": ["version_detection:cask", "action:app_bundle", "platform:macos_only"], "recipe": "testdata/recipes/iterm2-test.toml" },
     "npm_netlify-cli_basic": { "tool": "netlify-cli",  "tier": 5, "desc": "npm_install",                 "features": ["action:npm_install", "version_detection:npm"] },
     "npm_serve_empty_pattern": { "tool": "serve",        "tier": 5, "desc": "npm_install empty pattern",   "features": ["action:npm_install", "verify:pattern_empty"] },
     "pipx_ruff_basic": { "tool": "ruff",         "tier": 5, "desc": "pipx_install",                "features": ["action:pipx_install", "version_detection:pypi"] },
