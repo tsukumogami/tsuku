@@ -34,23 +34,30 @@ func (p *MetaCPANProvider) ResolveLatest(ctx context.Context) (*VersionInfo, err
 // ResolveVersion resolves a specific version for CPAN distributions.
 // Validates that the requested version exists.
 // Supports fuzzy matching (e.g., "3.7" matches "3.7.0" but not "3.70")
+// Normalizes versions by stripping "v" prefix to handle MetaCPAN's version format
+// (API returns "v1.0.35" but users may pass "1.0.35")
 func (p *MetaCPANProvider) ResolveVersion(ctx context.Context, version string) (*VersionInfo, error) {
 	versions, err := p.ListVersions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list MetaCPAN versions: %w", err)
 	}
 
-	// Check for exact match
+	// Normalize the requested version for comparison
+	normalizedRequested := normalizeVersion(version)
+
+	// Check for exact match (comparing normalized versions)
 	for _, v := range versions {
-		if v == version {
-			return &VersionInfo{Tag: version, Version: version}, nil
+		if v == version || v == "v"+version || normalizeVersion(v) == normalizedRequested {
+			return &VersionInfo{Tag: v, Version: normalizeVersion(v)}, nil
 		}
 	}
 
 	// Try fuzzy matching (e.g., "3.7" matches "3.7.0" but not "3.70")
+	// Compare using normalized versions
 	for _, v := range versions {
-		if strings.HasPrefix(v, version+".") {
-			return &VersionInfo{Tag: v, Version: v}, nil
+		normalizedV := normalizeVersion(v)
+		if strings.HasPrefix(normalizedV, normalizedRequested+".") {
+			return &VersionInfo{Tag: v, Version: normalizedV}, nil
 		}
 	}
 

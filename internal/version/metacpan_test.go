@@ -365,6 +365,72 @@ func TestMetaCPANProvider_ResolveVersion(t *testing.T) {
 	}
 }
 
+func TestMetaCPANProvider_ResolveVersion_PrefixNormalization(t *testing.T) {
+	// Create mock server that returns versions with "v" prefix (like real Carton versions)
+	server := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		response := metacpanSearchResponse{
+			Hits: struct {
+				Hits []struct {
+					Source metacpanRelease `json:"_source"`
+				} `json:"hits"`
+			}{
+				Hits: []struct {
+					Source metacpanRelease `json:"_source"`
+				}{
+					{Source: metacpanRelease{Version: "v1.0.35"}},
+					{Source: metacpanRelease{Version: "v1.0.34"}},
+					{Source: metacpanRelease{Version: "v1.0.33"}},
+				},
+			},
+		}
+		_ = json.NewEncoder(w).Encode(response)
+	}))
+	defer server.Close()
+
+	resolver := New(WithMetaCPANRegistry(server.URL))
+	resolver.httpClient = server.Client()
+	provider := NewMetaCPANProvider(resolver, "Carton")
+
+	ctx := context.Background()
+
+	// Test resolving version WITHOUT "v" prefix (user input) matches API version WITH prefix
+	info, err := provider.ResolveVersion(ctx, "1.0.35")
+	if err != nil {
+		t.Fatalf("ResolveVersion without v prefix failed: %v", err)
+	}
+	if info.Tag != "v1.0.35" {
+		t.Errorf("expected tag v1.0.35, got %s", info.Tag)
+	}
+	if info.Version != "1.0.35" {
+		t.Errorf("expected normalized version 1.0.35, got %s", info.Version)
+	}
+
+	// Test resolving version WITH "v" prefix still works
+	info, err = provider.ResolveVersion(ctx, "v1.0.34")
+	if err != nil {
+		t.Fatalf("ResolveVersion with v prefix failed: %v", err)
+	}
+	if info.Tag != "v1.0.34" {
+		t.Errorf("expected tag v1.0.34, got %s", info.Tag)
+	}
+	if info.Version != "1.0.34" {
+		t.Errorf("expected normalized version 1.0.34, got %s", info.Version)
+	}
+
+	// Test fuzzy matching with normalized versions
+	info, err = provider.ResolveVersion(ctx, "1.0")
+	if err != nil {
+		t.Fatalf("ResolveVersion fuzzy failed: %v", err)
+	}
+	if info.Tag != "v1.0.35" {
+		t.Errorf("expected tag v1.0.35, got %s", info.Tag)
+	}
+	if info.Version != "1.0.35" {
+		t.Errorf("expected normalized version 1.0.35, got %s", info.Version)
+	}
+}
+
 func TestMetaCPANProvider_SourceDescription(t *testing.T) {
 	resolver := New()
 	provider := NewMetaCPANProvider(resolver, "App-Ack")
