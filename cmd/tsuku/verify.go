@@ -13,6 +13,23 @@ import (
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
+// Library verification flags
+var (
+	verifyIntegrityFlag  bool // --integrity: enable checksum verification for libraries
+	verifySkipDlopenFlag bool // --skip-dlopen: skip load testing for libraries
+)
+
+// LibraryVerifyOptions controls library verification behavior
+type LibraryVerifyOptions struct {
+	CheckIntegrity bool // Enable Level 4: checksum verification
+	SkipDlopen     bool // Disable Level 3: dlopen load testing
+}
+
+func init() {
+	verifyCmd.Flags().BoolVar(&verifyIntegrityFlag, "integrity", false, "Enable checksum verification for libraries")
+	verifyCmd.Flags().BoolVar(&verifySkipDlopenFlag, "skip-dlopen", false, "Skip dlopen load testing for libraries")
+}
+
 // verifyBinaryIntegrity verifies the integrity of installed binaries using stored checksums.
 // Returns true if verification passed, false if there were mismatches or errors.
 // If no checksums are stored (pre-feature installation), prints a skip message and returns true.
@@ -209,10 +226,57 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 	}
 }
 
+// verifyLibrary performs verification for library recipes.
+// This is a stub that verifies the library directory exists. Full tiered verification
+// (header validation, dependency checking, dlopen testing) will be implemented in
+// subsequent issues (#947, #948, #949, #950).
+func verifyLibrary(name string, state *install.State, cfg *config.Config, opts LibraryVerifyOptions) error {
+	// Look up library in state.Libs (not state.Installed)
+	libVersions, ok := state.Libs[name]
+	if !ok {
+		return fmt.Errorf("library '%s' is not installed", name)
+	}
+
+	// Get the first version (libraries typically have one active version)
+	var version string
+	var libState install.LibraryVersionState
+	for v, ls := range libVersions {
+		version = v
+		libState = ls
+		break
+	}
+
+	libDir := cfg.LibDir(name, version)
+
+	printInfof("Verifying library %s (version %s)...\n", name, version)
+
+	// Verify directory exists
+	if _, err := os.Stat(libDir); os.IsNotExist(err) {
+		return fmt.Errorf("library directory not found: %s", libDir)
+	}
+
+	printInfo("  Library directory exists\n")
+
+	// Log options for future implementation
+	if opts.CheckIntegrity {
+		printInfo("  Integrity checking requested (not yet implemented)\n")
+	}
+	if opts.SkipDlopen {
+		printInfo("  dlopen testing will be skipped\n")
+	}
+
+	printInfo("  (Full verification not yet implemented)\n")
+
+	// Store libState for future integrity verification
+	_ = libState
+
+	return nil
+}
+
 var verifyCmd = &cobra.Command{
 	Use:   "verify <tool>",
-	Short: "Verify an installed tool",
-	Long: `Verify that an installed tool is working correctly.
+	Short: "Verify an installed tool or library",
+	Long: `Verify that an installed tool or library is working correctly.
 
 For visible tools, verification includes:
   1. Running the recipe's verification command
@@ -222,12 +286,21 @@ For visible tools, verification includes:
 
 For hidden tools (execution dependencies), only the verification command is run.
 
+For libraries:
+  Verifies the library directory exists.
+  Full verification (header validation, dependency checking, dlopen testing)
+  will be implemented in future updates.
+
+  Flags:
+    --integrity     Enable checksum verification (Level 4)
+    --skip-dlopen   Skip dlopen load testing (Level 3)
+
 Binary integrity verification detects post-installation tampering by comparing
 current SHA256 checksums against those stored at installation time. Tools
 installed before this feature will show "Integrity: SKIPPED".`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		toolName := args[0]
+		name := args[0]
 
 		// Get config and manager
 		cfg, err := config.DefaultConfig()
@@ -238,34 +311,50 @@ installed before this feature will show "Integrity: SKIPPED".`,
 
 		mgr := install.New(cfg)
 
-		// Check if tool is installed
+		// Load state
 		state, err := mgr.GetState().Load()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load state: %v\n", err)
 			exitWithCode(ExitGeneral)
 		}
 
-		toolState, ok := state.Installed[toolName]
-		if !ok {
-			fmt.Fprintf(os.Stderr, "Tool '%s' is not installed\n", toolName)
-			exitWithCode(ExitGeneral)
-		}
-
-		// Load recipe
-		r, err := loader.Get(toolName)
+		// Load recipe to determine type
+		r, err := loader.Get(name)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load recipe: %v\n", err)
 			exitWithCode(ExitRecipeNotFound)
 		}
 
-		// Check if recipe has verification
-		if r.Verify.Command == "" {
-			fmt.Fprintf(os.Stderr, "Recipe for '%s' does not define verification\n", toolName)
+		// Route based on recipe type
+		if r.IsLibrary() {
+			// Library verification
+			opts := LibraryVerifyOptions{
+				CheckIntegrity: verifyIntegrityFlag,
+				SkipDlopen:     verifySkipDlopenFlag,
+			}
+			if err := verifyLibrary(name, state, cfg, opts); err != nil {
+				fmt.Fprintf(os.Stderr, "Library verification failed: %v\n", err)
+				exitWithCode(ExitVerifyFailed)
+			}
+			printInfof("%s is working correctly\n", name)
+			return
+		}
+
+		// Tool verification
+		toolState, ok := state.Installed[name]
+		if !ok {
+			fmt.Fprintf(os.Stderr, "Tool '%s' is not installed\n", name)
 			exitWithCode(ExitGeneral)
 		}
 
-		installDir := filepath.Join(cfg.ToolsDir, fmt.Sprintf("%s-%s", toolName, toolState.Version))
-		printInfof("Verifying %s (version %s)...\n", toolName, toolState.Version)
+		// Check if recipe has verification
+		if r.Verify.Command == "" {
+			fmt.Fprintf(os.Stderr, "Recipe for '%s' does not define verification\n", name)
+			exitWithCode(ExitGeneral)
+		}
+
+		installDir := filepath.Join(cfg.ToolsDir, fmt.Sprintf("%s-%s", name, toolState.Version))
+		printInfof("Verifying %s (version %s)...\n", name, toolState.Version)
 
 		// Get version state for integrity verification
 		var versionState *install.VersionState
@@ -285,12 +374,12 @@ installed before this feature will show "Integrity: SKIPPED".`,
 		if toolState.IsHidden {
 			// Hidden tools: verify with absolute path
 			printInfo("  Tool is hidden (not in PATH)")
-			verifyWithAbsolutePath(r, toolName, toolState.Version, installDir, versionState)
+			verifyWithAbsolutePath(r, name, toolState.Version, installDir, versionState)
 		} else {
 			// Visible tools: comprehensive verification
-			verifyVisibleTool(r, toolName, &toolState, versionState, installDir, cfg)
+			verifyVisibleTool(r, name, &toolState, versionState, installDir, cfg)
 		}
 
-		printInfof("%s is working correctly\n", toolName)
+		printInfof("%s is working correctly\n", name)
 	},
 }
