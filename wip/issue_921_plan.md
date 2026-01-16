@@ -33,18 +33,18 @@ Key design decisions:
 
 ## Implementation Steps
 
-- [ ] Add `EvalConstraints` struct to `internal/actions/decomposable.go` with `PipConstraints map[string]string` field (other ecosystems will be empty for now)
-- [ ] Add `Constraints *EvalConstraints` field to `EvalContext` struct
-- [ ] Create `internal/executor/constraints.go` with `ExtractConstraints(planPath string) (*actions.EvalConstraints, error)` function
-- [ ] Implement pip constraint parsing in `ExtractConstraints` - parse `locked_requirements` from `pip_exec` steps to extract `package==version` pairs
-- [ ] Add `--pin-from` flag to `cmd/tsuku/eval.go` with validation (file must exist, be valid JSON)
-- [ ] Load and parse constraints in `runEval()` when `--pin-from` is provided
-- [ ] Pass constraints to `EvalContext` in plan generation via `PlanConfig`
-- [ ] Extend `PlanConfig` in `internal/executor/plan_generator.go` to include `Constraints *actions.EvalConstraints`
-- [ ] Modify `pipx_install.Decompose()` to check `ctx.Constraints` and use `PipConstraints` when available
-- [ ] Implement `generateLockedRequirementsWithConstraints()` that reuses the pinned versions instead of live resolution
-- [ ] Write unit tests for constraint extraction
-- [ ] Write integration test: eval with `--pin-from` produces output matching golden file
+- [x] Add `EvalConstraints` struct to `internal/actions/decomposable.go` with `PipConstraints map[string]string` field (other ecosystems will be empty for now)
+- [x] Add `Constraints *EvalConstraints` field to `EvalContext` struct
+- [x] Create `internal/executor/constraints.go` with `ExtractConstraints(planPath string) (*actions.EvalConstraints, error)` function
+- [x] Implement pip constraint parsing in `ExtractConstraints` - parse `locked_requirements` from `pip_exec` steps to extract `package==version` pairs
+- [x] Add `--pin-from` flag to `cmd/tsuku/eval.go` with validation (file must exist, be valid JSON)
+- [x] Load and parse constraints in `runEval()` when `--pin-from` is provided
+- [x] Pass constraints to `EvalContext` in plan generation via `PlanConfig`
+- [x] Extend `PlanConfig` in `internal/executor/plan_generator.go` to include `Constraints *actions.EvalConstraints`
+- [x] Modify `pipx_install.Decompose()` to check `ctx.Constraints` and use `PipConstraints` when available
+- [x] Implement `generateLockedRequirementsFromConstraints()` that reuses the pinned versions instead of live resolution
+- [x] Write unit tests for constraint extraction
+- [ ] Write integration test: eval with `--pin-from` produces output matching golden file (deferred to follow-up issue)
 
 ## Testing Strategy
 
@@ -77,16 +77,16 @@ Key design decisions:
 
 ## Success Criteria
 
-- [ ] `EvalConstraints` struct exists with `PipConstraints map[string]string` field
-- [ ] `EvalContext` has `Constraints *EvalConstraints` field
-- [ ] `ExtractConstraints` correctly parses pip constraints from golden files
-- [ ] `--pin-from` flag is available on `tsuku eval` command
-- [ ] When `--pin-from` is provided, constraints are extracted and passed to `EvalContext`
-- [ ] `pipx_install.Decompose()` uses constraints when `ctx.Constraints.PipConstraints` is populated
-- [ ] Constrained evaluation produces deterministic output matching the golden file
-- [ ] All existing tests pass (no regressions)
-- [ ] `go vet ./...` passes
-- [ ] `go build -o tsuku ./cmd/tsuku` succeeds
+- [x] `EvalConstraints` struct exists with `PipConstraints map[string]string` field
+- [x] `EvalContext` has `Constraints *EvalConstraints` field
+- [x] `ExtractConstraints` correctly parses pip constraints from golden files
+- [x] `--pin-from` flag is available on `tsuku eval` command
+- [x] When `--pin-from` is provided, constraints are extracted and passed to `EvalContext`
+- [x] `pipx_install.Decompose()` uses constraints when `ctx.Constraints.PipConstraints` is populated
+- [ ] Constrained evaluation produces deterministic output matching the golden file (requires integration test)
+- [x] All existing tests pass (no regressions)
+- [x] `go vet ./...` passes
+- [x] `go build -o tsuku ./cmd/tsuku` succeeds
 
 ## Open Questions
 
