@@ -35,6 +35,7 @@ var evalLinuxFamily string
 var evalInstallDeps bool
 var evalRecipePath string
 var evalVersion string
+var evalPinFrom string
 
 var evalCmd = &cobra.Command{
 	Use:   "eval <tool>[@version]",
@@ -62,6 +63,11 @@ Use --version with --recipe to evaluate at a specific version:
   tsuku eval --recipe ./my-recipe.toml --version v1.2.0
   tsuku eval --recipe /path/to/recipe.toml --version v1.2.0 --os darwin --arch arm64
 
+Use --pin-from to enable constrained evaluation for golden file validation:
+  tsuku eval httpie@3.2.4 --pin-from testdata/golden/plans/h/httpie/v3.2.4-darwin-arm64.json
+  This extracts version constraints from the golden file and uses them during
+  evaluation to produce deterministic output matching the golden file.
+
 Examples:
   tsuku eval kubectl
   tsuku eval kubectl@v1.29.0
@@ -69,7 +75,8 @@ Examples:
   tsuku eval cmake --os linux --linux-family rhel
   tsuku eval netlify-cli --install-deps
   tsuku eval --recipe ./my-recipe.toml --os darwin --arch arm64
-  tsuku eval --recipe ./my-recipe.toml --version v1.2.0`,
+  tsuku eval --recipe ./my-recipe.toml --version v1.2.0
+  tsuku eval black@26.1a1 --pin-from testdata/golden/plans/b/black/v26.1a1-darwin-amd64.json`,
 	Args: cobra.MaximumNArgs(1),
 	Run:  runEval,
 }
@@ -81,6 +88,7 @@ func init() {
 	evalCmd.Flags().BoolVar(&evalInstallDeps, "install-deps", false, "Auto-install eval-time dependencies")
 	evalCmd.Flags().StringVar(&evalRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 	evalCmd.Flags().StringVar(&evalVersion, "version", "", "Version to use (only with --recipe)")
+	evalCmd.Flags().StringVar(&evalPinFrom, "pin-from", "", "Path to golden file for constrained evaluation")
 }
 
 // ValidateOS validates an OS value against the whitelist.
@@ -247,6 +255,17 @@ func runEval(cmd *cobra.Command, args []string) {
 	// Uses the standard cache directory so downloads can be reused by install --plan
 	downloadCache := actions.NewDownloadCache(cfg.DownloadCacheDir)
 
+	// Load constraints if --pin-from is specified
+	var constraints *actions.EvalConstraints
+	if evalPinFrom != "" {
+		var err error
+		constraints, err = executor.ExtractConstraints(evalPinFrom)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: failed to extract constraints from %s: %v\n", evalPinFrom, err)
+			exitWithCode(ExitGeneral)
+		}
+	}
+
 	// Configure plan generation
 	planCfg := executor.PlanConfig{
 		OS:                 evalOS,
@@ -257,6 +276,7 @@ func runEval(cmd *cobra.Command, args []string) {
 		DownloadCache:      downloadCache,
 		AutoAcceptEvalDeps: evalInstallDeps,
 		RecipeLoader:       loader,
+		Constraints:        constraints,
 		OnWarning: func(action, message string) {
 			// Output warnings to stderr so they don't mix with JSON
 			fmt.Fprintf(os.Stderr, "Warning: %s\n", message)

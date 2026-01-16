@@ -55,6 +55,35 @@ type Downloader interface {
 	Download(ctx context.Context, url string) (*DownloadResult, error)
 }
 
+// EvalConstraints holds version constraints extracted from golden files.
+// Used during constrained evaluation to pin dependency versions for deterministic output.
+type EvalConstraints struct {
+	// PipConstraints maps package names to pinned versions.
+	// Extracted from locked_requirements in pip_exec steps.
+	// Keys are normalized package names (lowercase, hyphens).
+	PipConstraints map[string]string
+
+	// GoSum contains the full go.sum content for go_build steps.
+	// Future: will be populated by issue #922.
+	GoSum string
+
+	// CargoLock contains the full Cargo.lock content for cargo_install steps.
+	// Future: will be populated by issue #923.
+	CargoLock string
+
+	// NpmLock contains package-lock.json content for npm_install steps.
+	// Future: will be populated by issue #924.
+	NpmLock string
+
+	// GemLock contains Gemfile.lock content for gem_install steps.
+	// Future: will be populated by issue #925.
+	GemLock string
+
+	// CpanMeta contains cpan metadata for cpan_install steps.
+	// Future: will be populated by issue #926.
+	CpanMeta string
+}
+
 // EvalContext provides context during decomposition.
 // Used by composite actions to resolve parameters and compute checksums.
 type EvalContext struct {
@@ -67,6 +96,7 @@ type EvalContext struct {
 	Resolver      *version.Resolver // For API calls (asset resolution, etc.)
 	Downloader    Downloader        // For downloading files to compute checksums
 	DownloadCache *DownloadCache    // For caching downloaded files (optional)
+	Constraints   *EvalConstraints  // Version constraints for constrained evaluation (optional)
 }
 
 // primitives is the set of primitive action names.

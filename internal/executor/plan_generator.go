@@ -47,6 +47,11 @@ type PlanConfig struct {
 	// If nil, plans will not include dependency installation steps.
 	// When set, plans become self-contained by including steps for all dependencies.
 	RecipeLoader actions.RecipeLoader
+	// Constraints provides version constraints for constrained evaluation.
+	// When set, ecosystem actions (pip_exec, go_build, etc.) use these constraints
+	// instead of live dependency resolution, producing deterministic output.
+	// Extracted from golden files using ExtractConstraints().
+	Constraints *actions.EvalConstraints
 }
 
 // GeneratePlan evaluates a recipe and produces an installation plan.
@@ -141,6 +146,7 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 		Resolver:      resolver,
 		Downloader:    downloader,
 		DownloadCache: cfg.DownloadCache,
+		Constraints:   cfg.Constraints,
 	}
 
 	// Process each step
