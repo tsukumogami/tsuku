@@ -293,6 +293,9 @@ func isValidGoVersion(version string) bool {
 //  2. Runs `go get <module>@<version>` to resolve dependencies
 //  3. Captures the complete go.sum content
 //  4. Returns a go_build step with the captured checksums
+//
+// When ctx.Constraints contains a GoSum, the decomposition uses the
+// constrained go.sum instead of live resolution, producing deterministic output.
 func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interface{}) ([]Step, error) {
 	// Get module path (required)
 	module, ok := GetString(params, "module")
@@ -320,6 +323,11 @@ func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interfac
 	// Validate version
 	if !isValidGoVersion(version) {
 		return nil, fmt.Errorf("invalid version format '%s': must match semver format", version)
+	}
+
+	// Check if we have go.sum constraints for constrained evaluation
+	if ctx.Constraints != nil && ctx.Constraints.GoSum != "" {
+		return a.decomposeWithConstraints(ctx, module, version, executables, params)
 	}
 
 	// Find Go binary
@@ -419,6 +427,60 @@ func (a *GoInstallAction) Decompose(ctx *EvalContext, params map[string]interfac
 		"executables":    executables,
 		"go_sum":         goSum,
 		"go_version":     goVersion, // Captured for reproducibility
+	}
+
+	// Pass through optional params if set
+	if cgo, ok := GetBool(params, "cgo_enabled"); ok {
+		goBuildParams["cgo_enabled"] = cgo
+	}
+	if flags, ok := GetStringSlice(params, "build_flags"); ok {
+		goBuildParams["build_flags"] = flags
+	}
+
+	return []Step{
+		{
+			Action: "go_build",
+			Params: goBuildParams,
+		},
+	}, nil
+}
+
+// decomposeWithConstraints generates a go_build step using constraints from a golden file.
+// This enables deterministic plan generation for validation by reusing the exact
+// go.sum from a previous evaluation instead of running `go get`.
+func (a *GoInstallAction) decomposeWithConstraints(ctx *EvalContext, module, version string, executables []string, params map[string]interface{}) ([]Step, error) {
+	// Use the constrained go.sum
+	goSum := ctx.Constraints.GoSum
+
+	// Get Go version from the installed Go
+	goPath := ResolveGo()
+	goVersion := ""
+	if goPath != "" {
+		goVersion = GetGoVersion(goPath)
+	}
+
+	// Determine the version module path:
+	// 1. Use Recipe.Version.Module if explicitly set
+	// 2. Otherwise infer from install path
+	var moduleForVersioning string
+	if ctx.Recipe != nil && ctx.Recipe.Version.Module != "" {
+		moduleForVersioning = ctx.Recipe.Version.Module
+	} else {
+		moduleForVersioning = versionpkg.InferGoVersionModule(module)
+	}
+
+	// Build go_build params
+	goBuildParams := map[string]interface{}{
+		"module":         moduleForVersioning,
+		"install_module": module, // Subpackage path for go install
+		"version":        version,
+		"executables":    executables,
+		"go_sum":         goSum,
+	}
+
+	// Add go_version if available
+	if goVersion != "" {
+		goBuildParams["go_version"] = goVersion
 	}
 
 	// Pass through optional params if set

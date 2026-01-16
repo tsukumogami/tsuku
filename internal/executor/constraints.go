@@ -38,6 +38,7 @@ func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraint
 
 	// Extract from main steps
 	extractPipConstraintsFromSteps(plan.Steps, constraints)
+	extractGoConstraintsFromSteps(plan.Steps, constraints)
 
 	// Extract from dependencies
 	for _, dep := range plan.Dependencies {
@@ -50,6 +51,7 @@ func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraint
 // extractConstraintsFromDependency extracts constraints from a dependency plan recursively.
 func extractConstraintsFromDependency(dep *DependencyPlan, constraints *actions.EvalConstraints) {
 	extractPipConstraintsFromSteps(dep.Steps, constraints)
+	extractGoConstraintsFromSteps(dep.Steps, constraints)
 
 	for _, nestedDep := range dep.Dependencies {
 		extractConstraintsFromDependency(&nestedDep, constraints)
@@ -121,4 +123,28 @@ func GetPipConstraint(constraints *actions.EvalConstraints, packageName string) 
 	}
 	ver, ok := constraints.PipConstraints[normalizePackageName(packageName)]
 	return ver, ok
+}
+
+// extractGoConstraintsFromSteps extracts go constraints from go_build steps.
+func extractGoConstraintsFromSteps(steps []ResolvedStep, constraints *actions.EvalConstraints) {
+	for _, step := range steps {
+		if step.Action != "go_build" {
+			continue
+		}
+
+		goSum, ok := step.Params["go_sum"].(string)
+		if !ok || goSum == "" {
+			continue
+		}
+
+		// Only store if we don't already have a GoSum (first one wins)
+		if constraints.GoSum == "" {
+			constraints.GoSum = goSum
+		}
+	}
+}
+
+// HasGoSumConstraint returns true if the constraints contain a go.sum.
+func HasGoSumConstraint(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && constraints.GoSum != ""
 }
