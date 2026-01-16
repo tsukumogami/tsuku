@@ -18,12 +18,12 @@
 graph TD
     subgraph Infrastructure["Library Verification Infrastructure"]
         I942["#942 State schema<br/>(simple)"]:::done
-        I943["#943 Verify command<br/>(testable)"]:::ready
+        I943["#943 Verify command<br/>(testable)"]:::done
         I946["#946 Install checksums<br/>(testable)"]:::ready
     end
 
     subgraph Tiers["Library Verification Tiers"]
-        I947["#947 Tier 1 Design<br/>(needs-design)"]:::needsdesign
+        I947["#947 Tier 1 Design<br/>(needs-design)"]:::ready
         I948["#948 Tier 2 Design<br/>(needs-design)"]:::needsdesign
         I949["#949 Tier 3 Design<br/>(needs-design)"]:::needsdesign
         I950["#950 Tier 4 Design<br/>(needs-design)"]:::needsdesign
