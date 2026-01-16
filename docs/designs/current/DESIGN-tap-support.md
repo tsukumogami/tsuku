@@ -1,6 +1,6 @@
 # Design: Homebrew Tap Support
 
-**Status**: Planned
+**Status**: Current
 
 ## Implementation Issues
 
@@ -15,9 +15,9 @@
 graph TD
     I862["#862 Cask Skeleton"]:::done
     I872["#872 Tap Provider Core"]:::done
-    I873["#873 Tap Cache"]:::ready
-    I874["#874 Factory Integration"]:::ready
-    I875["#875 GitHub Token"]:::ready
+    I873["#873 Tap Cache"]:::done
+    I874["#874 Factory Integration"]:::done
+    I875["#875 GitHub Token"]:::done
 
     I862 --> I872
     I872 --> I873
@@ -33,7 +33,7 @@ graph TD
 
 This design extends:
 - [DESIGN-homebrew.md](current/DESIGN-homebrew.md) - Core formula bottle support
-- [DESIGN-cask-support.md](DESIGN-cask-support.md) - Cask support (planned)
+- [DESIGN-cask-support.md](current/DESIGN-cask-support.md) - Cask support
 
 **Relevant patterns:**
 - Cask design's hybrid approach (version provider + generic action)

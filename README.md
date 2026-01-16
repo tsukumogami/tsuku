@@ -40,6 +40,14 @@ tsuku install gh
 tsuku list
 ```
 
+### List installed macOS applications
+
+```bash
+tsuku list --apps
+```
+
+Applications installed via cask recipes are stored in `$TSUKU_HOME/apps/` and symlinked to `~/Applications` for Launchpad and Spotlight integration.
+
 ### Update a tool
 
 ```bash
@@ -75,6 +83,10 @@ tsuku create gh --from github:cli/cli
 # From Homebrew bottles (pre-built binaries for Linux/macOS)
 tsuku create zlib --from homebrew:zlib
 tsuku create jq --from homebrew:jq
+
+# From Homebrew Cask (macOS GUI applications)
+tsuku create iterm2 --from cask:iterm2
+tsuku create firefox --from cask:firefox
 ```
 
 #### LLM-Powered Recipe Generation
@@ -90,6 +102,7 @@ Some recipe builders use LLM analysis to generate recipes from complex sources. 
 - `--from npm` - Uses npm registry
 - `--from pypi` - Uses PyPI API
 - `--from rubygems` - Uses RubyGems API
+- `--from cask:<name>` - Uses Homebrew Cask API (macOS applications)
 
 To use LLM-powered builders, export an API key for Claude or Gemini:
 
