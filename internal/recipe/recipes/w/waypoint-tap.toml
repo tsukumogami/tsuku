@@ -1,0 +1,39 @@
+# Waypoint with version detection via Homebrew tap
+#
+# This recipe demonstrates using a third-party Homebrew tap for version tracking.
+# It uses the tap provider to detect the current version from hashicorp/tap,
+# then downloads the binary directly from HashiCorp's releases.
+#
+# This is useful when you want version updates to track Homebrew's release cycle
+# rather than GitHub releases, which may include pre-releases or RCs.
+
+[metadata]
+name = "waypoint-tap"
+description = "Build, deploy, and release applications (version via Homebrew tap)"
+homepage = "https://www.waypointproject.io/"
+version_format = "semver"
+
+[version]
+source = "tap:hashicorp/tap/waypoint"
+
+[[steps]]
+action = "download"
+url = "https://releases.hashicorp.com/waypoint/{version}/waypoint_{version}_{os}_{arch}.zip"
+checksum_url = "https://releases.hashicorp.com/waypoint/{version}/waypoint_{version}_SHA256SUMS"
+
+[[steps]]
+action = "extract"
+archive = "waypoint_{version}_{os}_{arch}.zip"
+format = "zip"
+
+[[steps]]
+action = "chmod"
+files = ["waypoint"]
+
+[[steps]]
+action = "install_binaries"
+binaries = ["waypoint"]
+
+[verify]
+command = "waypoint version"
+pattern = "{version}"

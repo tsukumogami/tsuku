@@ -131,12 +131,21 @@ func TestParseFormulaFile_AlternateSyntax(t *testing.T) {
 }
 
 func TestParseFormulaFile_NoBottleBlock(t *testing.T) {
-	_, err := parseFormulaFile(sampleSourceOnlyFormula)
-	if err == nil {
-		t.Error("parseFormulaFile() expected error for source-only formula")
+	// Formulas without bottle blocks are valid - they just don't have bottle metadata.
+	// This supports third-party taps (like hashicorp/tap) that use conditional URLs
+	// instead of bottles.
+	info, err := parseFormulaFile(sampleSourceOnlyFormula)
+	if err != nil {
+		t.Fatalf("parseFormulaFile() unexpected error = %v", err)
 	}
-	if !strings.Contains(err.Error(), "no bottle block found") {
-		t.Errorf("Error message = %q, want to contain 'no bottle block found'", err.Error())
+	if info.Version != "2.0.0" {
+		t.Errorf("Version = %q, want %q", info.Version, "2.0.0")
+	}
+	if info.RootURL != "" {
+		t.Errorf("RootURL = %q, want empty for non-bottle formula", info.RootURL)
+	}
+	if len(info.Checksums) != 0 {
+		t.Errorf("Checksums count = %d, want 0 for non-bottle formula", len(info.Checksums))
 	}
 }
 
@@ -151,12 +160,20 @@ func TestParseFormulaFile_NoVersion(t *testing.T) {
 }
 
 func TestParseFormulaFile_NoChecksums(t *testing.T) {
-	_, err := parseFormulaFile(sampleNoChecksumsFormula)
-	if err == nil {
-		t.Error("parseFormulaFile() expected error for formula without checksums")
+	// Bottle blocks without checksums are valid - the recipe can still use the version.
+	// This is unusual but technically valid in Homebrew formulas.
+	info, err := parseFormulaFile(sampleNoChecksumsFormula)
+	if err != nil {
+		t.Fatalf("parseFormulaFile() unexpected error = %v", err)
 	}
-	if !strings.Contains(err.Error(), "no bottle checksums found") {
-		t.Errorf("Error message = %q, want to contain 'no bottle checksums found'", err.Error())
+	if info.Version != "1.0.0" {
+		t.Errorf("Version = %q, want %q", info.Version, "1.0.0")
+	}
+	if info.RootURL != "https://example.com/bottles" {
+		t.Errorf("RootURL = %q, want %q", info.RootURL, "https://example.com/bottles")
+	}
+	if len(info.Checksums) != 0 {
+		t.Errorf("Checksums count = %d, want 0", len(info.Checksums))
 	}
 }
 
