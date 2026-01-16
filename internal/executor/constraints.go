@@ -42,6 +42,7 @@ func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraint
 	extractCargoConstraintsFromSteps(plan.Steps, constraints)
 	extractNpmConstraintsFromSteps(plan.Steps, constraints)
 	extractGemConstraintsFromSteps(plan.Steps, constraints)
+	extractCpanConstraintsFromSteps(plan.Steps, constraints)
 
 	// Extract from dependencies
 	for _, dep := range plan.Dependencies {
@@ -58,6 +59,7 @@ func extractConstraintsFromDependency(dep *DependencyPlan, constraints *actions.
 	extractCargoConstraintsFromSteps(dep.Steps, constraints)
 	extractNpmConstraintsFromSteps(dep.Steps, constraints)
 	extractGemConstraintsFromSteps(dep.Steps, constraints)
+	extractCpanConstraintsFromSteps(dep.Steps, constraints)
 
 	for _, nestedDep := range dep.Dependencies {
 		extractConstraintsFromDependency(&nestedDep, constraints)
@@ -225,4 +227,29 @@ func extractGemConstraintsFromSteps(steps []ResolvedStep, constraints *actions.E
 // HasGemLockConstraint returns true if the constraints contain a Gemfile.lock.
 func HasGemLockConstraint(constraints *actions.EvalConstraints) bool {
 	return constraints != nil && constraints.GemLock != ""
+}
+
+// extractCpanConstraintsFromSteps extracts cpan constraints from cpan_install steps.
+// It looks for the "snapshot" parameter containing cpanfile.snapshot content.
+func extractCpanConstraintsFromSteps(steps []ResolvedStep, constraints *actions.EvalConstraints) {
+	for _, step := range steps {
+		if step.Action != "cpan_install" {
+			continue
+		}
+
+		snapshot, ok := step.Params["snapshot"].(string)
+		if !ok || snapshot == "" {
+			continue
+		}
+
+		// Only store if we don't already have a CpanMeta (first one wins)
+		if constraints.CpanMeta == "" {
+			constraints.CpanMeta = snapshot
+		}
+	}
+}
+
+// HasCpanMetaConstraint returns true if the constraints contain a cpanfile.snapshot.
+func HasCpanMetaConstraint(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && constraints.CpanMeta != ""
 }
