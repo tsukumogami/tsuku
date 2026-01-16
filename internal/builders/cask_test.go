@@ -43,7 +43,7 @@ func TestCaskBuilder_CanBuild_ValidCask(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResp)
+		_ = json.NewEncoder(w).Encode(mockResp)
 	}))
 	defer server.Close()
 
@@ -73,7 +73,7 @@ func TestCaskBuilder_CanBuild_PkgCask(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResp)
+		_ = json.NewEncoder(w).Encode(mockResp)
 	}))
 	defer server.Close()
 
@@ -299,7 +299,7 @@ func TestCaskBuilder_GenerateRecipe(t *testing.T) {
 			return
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResp)
+		_ = json.NewEncoder(w).Encode(mockResp)
 	}))
 	defer server.Close()
 
@@ -389,7 +389,7 @@ func TestCaskBuilder_GenerateRecipe_AppOnly(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResp)
+		_ = json.NewEncoder(w).Encode(mockResp)
 	}))
 	defer server.Close()
 
@@ -432,7 +432,7 @@ func TestCaskBuilder_GenerateRecipe_NoChecksum(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResp)
+		_ = json.NewEncoder(w).Encode(mockResp)
 	}))
 	defer server.Close()
 
@@ -508,7 +508,7 @@ func TestCaskBuilder_Session(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(mockResp)
+		_ = json.NewEncoder(w).Encode(mockResp)
 	}))
 	defer server.Close()
 
@@ -519,7 +519,7 @@ func TestCaskBuilder_Session(t *testing.T) {
 	if err != nil {
 		t.Fatalf("NewSession() error = %v", err)
 	}
-	defer session.Close()
+	defer func() { _ = session.Close() }()
 
 	result, err := session.Generate(context.Background())
 	if err != nil {
