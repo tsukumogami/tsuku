@@ -11,7 +11,8 @@
 | [#946](https://github.com/tsukumogami/tsuku/issues/946) | feat(install): compute and store library checksums at install time | #942 | testable |
 | ~~[#947](https://github.com/tsukumogami/tsuku/issues/947)~~ | ~~docs: design header validation for library verification (Tier 1)~~ | ~~#943~~ | ~~critical~~ |
 | ~~[#948](https://github.com/tsukumogami/tsuku/issues/948)~~ | ~~docs: design dependency resolution for library verification (Tier 2)~~ | ~~#947~~ | ~~critical~~ |
-| [#949](https://github.com/tsukumogami/tsuku/issues/949) | docs: design dlopen load testing for library verification (Tier 3) | #948 | critical |
+| [M38](https://github.com/tsukumogami/tsuku/milestone/38) | Tier 2 Dependency Validation (12 issues) | #948 | milestone |
+| [#949](https://github.com/tsukumogami/tsuku/issues/949) | docs: design dlopen load testing for library verification (Tier 3) | M38 | critical |
 | [#950](https://github.com/tsukumogami/tsuku/issues/950) | docs: design integrity verification for library verification (Tier 4) | #946, #949 | testable |
 
 ```mermaid
@@ -25,14 +26,16 @@ graph TD
     subgraph Tiers["Library Verification Tiers"]
         I947["#947 Tier 1 Design<br/>(done)"]:::done
         I948["#948 Tier 2 Design<br/>(done)"]:::done
-        I949["#949 Tier 3 Design<br/>(needs-design)"]:::ready
+        M38["M38: Tier 2 Implementation<br/>(12 issues)"]:::ready
+        I949["#949 Tier 3 Design<br/>(needs-design)"]:::needsdesign
         I950["#950 Tier 4 Design<br/>(needs-design)"]:::needsdesign
     end
 
     I942 --> I946
     I943 --> I947
     I947 --> I948
-    I948 --> I949
+    I948 --> M38
+    M38 --> I949
     I946 --> I950
     I949 --> I950
 
