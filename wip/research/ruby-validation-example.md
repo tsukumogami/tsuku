@@ -207,6 +207,97 @@ when = { os = "darwin" }
 
 ---
 
+## Step 0: PT_INTERP Validation (ABI Compatibility Check)
+
+Before extracting and classifying dependencies, we validate the dynamic linker (interpreter) exists. This catches fundamental ABI mismatches that would prevent the binary from running at all.
+
+### What is PT_INTERP?
+
+The PT_INTERP segment in an ELF binary specifies the dynamic linker path. This is the program the kernel invokes to load the binary and resolve its shared libraries. If this interpreter doesn't exist, the binary cannot start.
+
+### Extracting PT_INTERP
+
+```bash
+# Linux: readelf shows the interpreter
+$ readelf -l $TSUKU_HOME/tools/ruby-3.3.0/bin/ruby | grep interpreter
+      [Requesting program interpreter: /lib64/ld-linux-x86-64.so.2]
+
+# Or using file command
+$ file $TSUKU_HOME/tools/ruby-3.3.0/bin/ruby
+ruby: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV),
+dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, ...
+```
+
+### Common Interpreters by ABI
+
+| ABI | Interpreter Path | Systems |
+|-----|------------------|---------|
+| glibc x86_64 | `/lib64/ld-linux-x86-64.so.2` | Debian, Ubuntu, Fedora, RHEL |
+| glibc aarch64 | `/lib/ld-linux-aarch64.so.1` | Debian ARM, Ubuntu ARM |
+| musl x86_64 | `/lib/ld-musl-x86_64.so.1` | Alpine |
+| musl aarch64 | `/lib/ld-musl-aarch64.so.1` | Alpine ARM |
+
+### Validation Logic
+
+```go
+// Extract interpreter from ELF PT_INTERP segment
+interp := getInterpreter(binary)  // e.g., "/lib64/ld-linux-x86-64.so.2"
+
+if interp == "" {
+    // No interpreter = statically linked
+    return Info("No dynamic dependencies (statically linked)")
+}
+
+if !fileExists(interp) {
+    // Binary expects a different ABI than this system provides
+    return Warning("Binary requires %s which is not present (ABI mismatch?)", interp)
+}
+// Interpreter exists, proceed with dependency validation
+```
+
+### ABI Mismatch Example: glibc Binary on Alpine (musl)
+
+A binary built on Ubuntu (glibc) will NOT run on Alpine (musl):
+
+```
+$ tsuku verify ruby
+Verifying ruby (version 3.3.0) on linux-musl-x86_64...
+
+  Tier 1: Header validation
+    bin/ruby: OK (ELF x86_64)
+
+  ABI Compatibility Check:
+    Interpreter: /lib64/ld-linux-x86-64.so.2
+    WARNING: Interpreter not found - ABI mismatch detected
+
+    This binary was built for glibc but you appear to be running musl.
+    The binary will not run on this system.
+
+    Possible solutions:
+    - Use a musl-compatible binary (if available)
+    - Run in a glibc-based container
+    - Build from source on this system
+
+ruby verification FAILED
+```
+
+### Why This Check Comes First
+
+The PT_INTERP check happens before dependency classification because:
+
+1. **Fundamental requirement**: If the interpreter doesn't exist, nothing else matters
+2. **Clear error message**: Users get a specific, actionable error instead of confusing "file not found" from the kernel
+3. **Fast check**: Single stat() call before more expensive operations
+4. **Catches common mistake**: Downloading pre-built binaries for wrong distro type
+
+### macOS Note
+
+macOS uses the Mach-O format instead of ELF, so PT_INTERP doesn't apply. The dynamic linker (`/usr/lib/dyld`) is always present on macOS systems. ABI compatibility on macOS is handled differently through:
+- Minimum OS version requirements (LC_VERSION_MIN_MACOSX)
+- Architecture checks (x86_64 vs arm64)
+
+---
+
 ## Step 1: Extract Binary Dependencies
 
 ### Linux (glibc) - e.g., Debian/Ubuntu
@@ -475,6 +566,9 @@ Verifying ruby (version 3.3.0) on linux-glibc-x86_64...
   Tier 1: Header validation
     bin/ruby: OK (ELF x86_64)
 
+  ABI Compatibility:
+    Interpreter: /lib64/ld-linux-x86-64.so.2 [OK]
+
   Tier 2: Dependency validation
     Binary deps: libc.so.6, libm.so.6, libpthread.so.0, libdl.so.2,
                  libyaml-0.so.2, libssl.so.3, libcrypto.so.3,
@@ -514,6 +608,9 @@ Verifying ruby (version 3.3.0) on darwin-arm64...
 
   Tier 1: Header validation
     bin/ruby: OK (Mach-O arm64)
+
+  ABI Compatibility:
+    (macOS uses dyld - always present)
 
   Tier 2: Dependency validation
     Binary deps: /usr/lib/libSystem.B.dylib, @rpath/libyaml-0.2.dylib,

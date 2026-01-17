@@ -106,6 +106,30 @@ The system library registry patterns (`libc.so`, `libm.so`, `libpthread.so`, etc
 
 **Status:** ✅ Decided (pending user confirmation)
 
+### 6. PT_INTERP Validation for PURE SYSTEM Libraries
+**Decision:** Add PT_INTERP (dynamic linker) validation even for PURE SYSTEM libraries to detect ABI mismatches.
+
+**Context:** While we classify PURE SYSTEM libraries (libc, libm, etc.) and skip them entirely during dependency resolution, this misses ABI mismatches. For example, a glibc-linked binary won't run on Alpine (musl) because the expected dynamic linker doesn't exist.
+
+**Approach:**
+```go
+// Extract interpreter from ELF PT_INTERP segment
+interp := getInterpreter(binary)  // e.g., "/lib64/ld-linux-x86-64.so.2"
+
+if interp != "" && !fileExists(interp) {
+    // Binary expects glibc but we're on musl (or vice versa)
+    return Warning("Binary requires %s which is not present (ABI mismatch?)", interp)
+}
+```
+
+**Why this matters:**
+- The dynamic linker (PT_INTERP) is the kernel's entry point for running dynamically-linked binaries
+- If `/lib64/ld-linux-x86-64.so.2` (glibc) doesn't exist, the binary cannot start at all
+- This catches the most critical ABI mismatch: glibc vs musl
+- Cost is minimal: one stat() call per binary
+
+**Status:** ✅ Decided
+
 ---
 
 ## Pending Decisions
@@ -240,17 +264,21 @@ Based on all research, the design should:
 
 1. **Infer binary deps** from DT_NEEDED/LC_LOAD_DYLIB (already done in Tier 1)
 2. **Detect static binaries** via PT_INTERP check, show "No dynamic dependencies (statically linked)"
-3. **Build soname index** from state.json at verification time
-4. **Classify deps using THREE categories** (see `ruby-validation-example.md` and Key Learning #4):
+3. **Validate PT_INTERP for ABI compatibility** - even before classifying deps, verify the dynamic linker exists:
+   - Extract interpreter path from PT_INTERP segment (e.g., `/lib64/ld-linux-x86-64.so.2`)
+   - If interpreter path exists but file doesn't exist → warn about ABI mismatch
+   - This catches glibc binary on musl system (or vice versa) before any other validation
+4. **Build soname index** from state.json at verification time
+5. **Classify deps using THREE categories** (see `ruby-validation-example.md` and Key Learning #4):
    - **TSUKU-MANAGED**: Soname found in index → validate + recurse (or stop if externally-managed)
    - **PURE SYSTEM**: Library is inherently OS-provided (detected via pattern matching) → skip entirely
    - **UNKNOWN**: Neither in index nor matching system patterns → warn
 
    **Important:** PURE SYSTEM is defined by the library's inherent nature (OS-provided), not by the absence of a recipe. Pattern matching encodes our knowledge of what the OS provides.
-5. **Compare binary deps to recipe declarations** and warn on mismatch
-6. **Recursive validation via `--deep` flag** following recipe tree
-7. **Stop recursion at externally-managed** recipes (detected via `IsExternallyManaged()` on actions)
-8. **Warn, don't fail** for undeclared deps (graceful migration)
+6. **Compare binary deps to recipe declarations** and warn on mismatch
+7. **Recursive validation via `--deep` flag** following recipe tree
+8. **Stop recursion at externally-managed** recipes (detected via `IsExternallyManaged()` on actions)
+9. **Warn, don't fail** for undeclared deps (graceful migration)
 
 ### Classification Order (CRITICAL)
 
