@@ -13,19 +13,9 @@
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
     },
     {
-      "recipe": "biome",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
-    },
-    {
       "recipe": "black",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "pipx_install toolchain version drift (Python versions not pinned)"
-    },
-    {
-      "recipe": "bundler",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "gem_install toolchain version drift (Ruby versions not pinned)"
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
       "recipe": "cdk",
@@ -41,11 +31,6 @@
       "recipe": "curl",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "compile_from_source toolchain version drift"
-    },
-    {
-      "recipe": "dlv",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "go_install toolchain version drift (Go versions not pinned)"
     },
     {
       "recipe": "fpm",
@@ -69,8 +54,8 @@
     },
     {
       "recipe": "httpie",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "pipx_install toolchain version drift (Python versions not pinned)"
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
       "recipe": "jekyll",
@@ -79,8 +64,8 @@
     },
     {
       "recipe": "meson",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "pipx_install toolchain version drift (Python versions not pinned)"
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
       "recipe": "netlify-cli",
@@ -99,8 +84,8 @@
     },
     {
       "recipe": "poetry",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "pipx_install toolchain version drift (Python versions not pinned)"
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
       "recipe": "readline",
@@ -109,13 +94,8 @@
     },
     {
       "recipe": "ruff",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "pipx_install toolchain version drift (Python versions not pinned)"
-    },
-    {
-      "recipe": "serve",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
       "recipe": "serverless",
