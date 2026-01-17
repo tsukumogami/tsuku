@@ -15,7 +15,7 @@
     {
       "recipe": "cobra-cli",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
-      "reason": "go_sum mismatch in CI (passes locally, needs investigation)"
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
     },
     {
       "recipe": "curl",
@@ -23,9 +23,29 @@
       "reason": "stale golden file (missing dependencies, needs regeneration)"
     },
     {
+      "recipe": "dlv",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
+    },
+    {
       "recipe": "fpm",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "stale golden file (needs regeneration)"
+    },
+    {
+      "recipe": "gofumpt",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
+    },
+    {
+      "recipe": "goimports",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
+    },
+    {
+      "recipe": "gopls",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
     },
     {
       "recipe": "httpie",
