@@ -301,10 +301,11 @@ const (
     DepWarning                   // Unknown absolute path (not system, not tsuku)
 )
 
-// New error categories in ErrorCategory
+// Tier 2 error categories (extends Tier 1's 0-5 range)
 const (
-    ErrDepMissing   ErrorCategory = iota + 100 // Dependency file not found
-    ErrDepInvalid                              // Dependency exists but invalid
+    ErrDepMissing  ErrorCategory = 10 // Dependency file not found
+    ErrDepInvalid  ErrorCategory = 11 // Dependency exists but Tier 1 validation failed
+    ErrDepWarning  ErrorCategory = 12 // Unknown absolute path outside tsuku
 )
 ```
 
@@ -320,13 +321,16 @@ func ValidateDependencies(libPath string, deps []string, libsDir string) []DepRe
 
 ### Data Flow
 
-1. `verify.go` calls `ValidateHeader(libPath)` → returns `HeaderInfo` with `Dependencies []string`
-2. `verify.go` calls `ValidateDependencies(libPath, info.Dependencies, libsDir)`
-3. For each dependency:
+1. `verifyLibrary()` in `cmd/tsuku/verify.go` iterates library files via `findLibraryFiles(libDir)`
+2. For each file, calls `verify.ValidateHeader(libFile)` → returns `HeaderInfo` with `Dependencies []string`
+3. For each library with dependencies, calls `verify.ValidateDependencies(libFile, info.Dependencies, libsDir)`
+4. For each dependency in `ValidateDependencies()`:
    - `classifyDep(dep)` → returns `DepSystem`, `DepWarning`, or "needs resolution"
    - If needs resolution: `resolveTsukuDep(dep, libPath, libsDir)` → expands path variables
    - If resolved: `ValidateHeader(resolvedPath)` → validates the dependency file
-4. Results aggregated and returned to caller
+5. Results aggregated and returned to caller
+
+**Integration point:** The current `verifyLibrary()` function logs "Tier 2: not yet implemented" at the point where `ValidateDependencies()` should be called.
 
 ### System Library Patterns
 
@@ -336,9 +340,10 @@ Patterns are organized by platform and stored as Go slices for O(n) matching:
 // Linux system library patterns (glibc + musl)
 // Synced from test/scripts/verify-no-system-deps.sh
 var linuxSystemPatterns = []string{
-    "linux-vdso.so",       // Virtual DSO
+    "linux-vdso.so",       // Virtual DSO (kernel-provided)
+    "linux-gate.so",       // 32-bit virtual DSO
     "ld-linux",            // Dynamic linker (glibc)
-    "ld-musl",             // Dynamic linker (musl)
+    "ld-musl",             // Dynamic linker (musl/Alpine)
     "libc.so",             // C library
     "libm.so",             // Math library
     "libdl.so",            // Dynamic loading
@@ -350,6 +355,7 @@ var linuxSystemPatterns = []string{
     "libutil.so",          // Utility library
     "libgcc_s.so",         // GCC runtime
     "libstdc++.so",        // C++ standard library
+    "libatomic.so",        // Atomic operations (GCC)
 }
 
 var linuxSystemPaths = []string{
@@ -386,6 +392,55 @@ var pathVariablePrefixes = []string{
 func ExtractRPaths(path string) ([]string, error)
 ```
 
+**RPATH extraction implementation:**
+
+For ELF binaries, use Go's `debug/elf` package:
+
+```go
+func extractELFRPaths(path string) ([]string, error) {
+    f, err := elf.Open(path)
+    if err != nil {
+        return nil, err
+    }
+    defer f.Close()
+
+    // Try DT_RUNPATH first (preferred), then DT_RPATH
+    runpath, _ := f.DynString(elf.DT_RUNPATH)
+    if len(runpath) > 0 {
+        return strings.Split(runpath[0], ":"), nil
+    }
+
+    rpath, _ := f.DynString(elf.DT_RPATH)
+    if len(rpath) > 0 {
+        return strings.Split(rpath[0], ":"), nil
+    }
+
+    return nil, nil // No RPATH set
+}
+```
+
+For Mach-O binaries, iterate load commands:
+
+```go
+func extractMachORPaths(path string) ([]string, error) {
+    f, err := macho.Open(path)
+    if err != nil {
+        return nil, err
+    }
+    defer f.Close()
+
+    var rpaths []string
+    for _, load := range f.Loads {
+        if rpath, ok := load.(*macho.Rpath); ok {
+            rpaths = append(rpaths, rpath.Path)
+        }
+    }
+    return rpaths, nil
+}
+```
+
+Note: Go's `debug/macho.Rpath` type is available since Go 1.16.
+
 ## Implementation Approach
 
 ### Step 1: Add dependency types and error categories
@@ -405,6 +460,11 @@ Create `internal/verify/deps.go` with `classifyDep()` function that matches agai
 Add `expandPathVariables()` to handle `$ORIGIN`, `@rpath`, `@loader_path`, `@executable_path`. Extract RPATH entries from binaries for `@rpath` resolution.
 
 **Files:** `internal/verify/deps.go`
+
+**Symlink handling:** Follow the same pattern established for checksum computation (PR #963):
+- Use `filepath.EvalSymlinks()` to resolve symlinks to real files before validation
+- Only validate the real file, not each symlink pointing to it
+- This is consistent with `findLibraryFiles()` in `cmd/tsuku/verify.go`
 
 ### Step 4: Implement ValidateDependencies
 
