@@ -18,6 +18,11 @@
       "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
+      "recipe": "bundler",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "gem_install toolchain version drift (Ruby versions not pinned)"
+    },
+    {
       "recipe": "cdk",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
@@ -31,6 +36,11 @@
       "recipe": "curl",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "compile_from_source toolchain version drift"
+    },
+    {
+      "recipe": "dlv",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_install toolchain version drift (Go versions not pinned)"
     },
     {
       "recipe": "fpm",
@@ -96,6 +106,11 @@
       "recipe": "ruff",
       "issue": "https://github.com/tsukumogami/tsuku/issues/961",
       "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "serve",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
     },
     {
       "recipe": "serverless",
