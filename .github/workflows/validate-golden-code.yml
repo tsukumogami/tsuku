@@ -62,9 +62,7 @@ on:
 #   - And other execution-only files
 
 jobs:
-  # SKIP: Upstream version drift causes non-deterministic failures - see #842
   validate-all:
-    if: false
     name: Validate All Golden Files
     runs-on: ubuntu-latest
     timeout-minutes: 30
