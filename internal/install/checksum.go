@@ -177,6 +177,47 @@ func ComputeLibraryChecksums(libDir string) (map[string]string, error) {
 	return checksums, nil
 }
 
+// VerifyLibraryChecksums verifies stored checksums against current library file state.
+// libDir is the absolute path to the library installation directory.
+// stored is a map of relative path to expected hex-encoded checksum.
+// Returns a slice of mismatches (empty if all verified), or an error for unexpected failures.
+//
+// Note: This is a basic implementation for CI validation. Production-grade verification
+// with detailed reporting will be implemented in issue #950.
+func VerifyLibraryChecksums(libDir string, stored map[string]string) ([]ChecksumMismatch, error) {
+	if len(stored) == 0 {
+		return nil, nil
+	}
+
+	var mismatches []ChecksumMismatch
+
+	for relPath, expectedChecksum := range stored {
+		absPath := filepath.Join(libDir, relPath)
+
+		// Compute current checksum
+		actualChecksum, err := ComputeFileChecksum(absPath)
+		if err != nil {
+			mismatches = append(mismatches, ChecksumMismatch{
+				Path:     relPath,
+				Expected: expectedChecksum,
+				Error:    err,
+			})
+			continue
+		}
+
+		// Compare
+		if actualChecksum != expectedChecksum {
+			mismatches = append(mismatches, ChecksumMismatch{
+				Path:     relPath,
+				Expected: expectedChecksum,
+				Actual:   actualChecksum,
+			})
+		}
+	}
+
+	return mismatches, nil
+}
+
 // isWithinDir checks if path is within the specified directory.
 // Both paths should be absolute and cleaned.
 func isWithinDir(path, dir string) bool {

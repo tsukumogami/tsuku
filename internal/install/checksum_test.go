@@ -436,6 +436,126 @@ func TestComputeLibraryChecksums_NonexistentDirectory(t *testing.T) {
 	}
 }
 
+func TestVerifyLibraryChecksums_AllMatch(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create test files
+	libDir := filepath.Join(tmpDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatalf("failed to create lib dir: %v", err)
+	}
+
+	file1 := filepath.Join(libDir, "libtest.so.1")
+	if err := os.WriteFile(file1, []byte("test content"), 0644); err != nil {
+		t.Fatalf("failed to create file: %v", err)
+	}
+
+	// Compute checksums
+	checksums, err := ComputeLibraryChecksums(tmpDir)
+	if err != nil {
+		t.Fatalf("ComputeLibraryChecksums failed: %v", err)
+	}
+
+	// Verify - should have no mismatches
+	mismatches, err := VerifyLibraryChecksums(tmpDir, checksums)
+	if err != nil {
+		t.Fatalf("VerifyLibraryChecksums failed: %v", err)
+	}
+	if len(mismatches) != 0 {
+		t.Errorf("expected no mismatches, got %d", len(mismatches))
+	}
+}
+
+func TestVerifyLibraryChecksums_Mismatch(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create test file
+	libDir := filepath.Join(tmpDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatalf("failed to create lib dir: %v", err)
+	}
+
+	file1 := filepath.Join(libDir, "libtest.so.1")
+	if err := os.WriteFile(file1, []byte("original content"), 0644); err != nil {
+		t.Fatalf("failed to create file: %v", err)
+	}
+
+	// Compute checksums
+	checksums, err := ComputeLibraryChecksums(tmpDir)
+	if err != nil {
+		t.Fatalf("ComputeLibraryChecksums failed: %v", err)
+	}
+
+	// Modify the file
+	if err := os.WriteFile(file1, []byte("modified content"), 0644); err != nil {
+		t.Fatalf("failed to modify file: %v", err)
+	}
+
+	// Verify - should detect mismatch
+	mismatches, err := VerifyLibraryChecksums(tmpDir, checksums)
+	if err != nil {
+		t.Fatalf("VerifyLibraryChecksums failed: %v", err)
+	}
+	if len(mismatches) != 1 {
+		t.Fatalf("expected 1 mismatch, got %d", len(mismatches))
+	}
+
+	expectedPath := filepath.Join("lib", "libtest.so.1")
+	if mismatches[0].Path != expectedPath {
+		t.Errorf("unexpected path: got %s, want %s", mismatches[0].Path, expectedPath)
+	}
+	if mismatches[0].Error != nil {
+		t.Errorf("unexpected error: %v", mismatches[0].Error)
+	}
+	if mismatches[0].Expected == mismatches[0].Actual {
+		t.Error("expected and actual checksums should be different")
+	}
+}
+
+func TestVerifyLibraryChecksums_MissingFile(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	// Create stored checksums for a file that doesn't exist
+	stored := map[string]string{
+		"lib/missing.so": "abc123",
+	}
+
+	mismatches, err := VerifyLibraryChecksums(tmpDir, stored)
+	if err != nil {
+		t.Fatalf("VerifyLibraryChecksums failed: %v", err)
+	}
+	if len(mismatches) != 1 {
+		t.Fatalf("expected 1 mismatch, got %d", len(mismatches))
+	}
+
+	if mismatches[0].Path != "lib/missing.so" {
+		t.Errorf("unexpected path: %s", mismatches[0].Path)
+	}
+	if mismatches[0].Error == nil {
+		t.Error("expected error for missing file")
+	}
+}
+
+func TestVerifyLibraryChecksums_EmptyStored(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	mismatches, err := VerifyLibraryChecksums(tmpDir, nil)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if mismatches != nil {
+		t.Error("expected nil for empty stored checksums")
+	}
+
+	mismatches, err = VerifyLibraryChecksums(tmpDir, map[string]string{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if mismatches != nil {
+		t.Error("expected nil for empty stored checksums")
+	}
+}
+
 func TestIsWithinDir(t *testing.T) {
 	tests := []struct {
 		name   string
