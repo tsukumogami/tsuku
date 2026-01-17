@@ -7,9 +7,11 @@
 
 | Category | Example | What We Do |
 |----------|---------|------------|
-| **Pure system lib** | `libc.so.6`, `libm.so.6` | Skip entirely (no tsuku recipe exists) |
+| **Pure system lib** | `libc.so.6`, `libm.so.6` | Skip entirely (inherently OS-provided) |
 | **Tsuku-managed** | `libyaml` (built from source) | Validate soname + recurse into its deps |
 | **Externally-managed tsuku recipe** | `openssl-system` (via apt) | Validate provides expected soname, but STOP recursion |
+
+**Why PURE SYSTEM?** Libraries like `libc`, `libm`, `libpthread` are classified as PURE SYSTEM because they are **inherently OS-provided**. The OS kernel and standard runtime require these libraries to function. Pattern matching identifies them (e.g., `libc.so*`, `libm.so*`). The absence of tsuku recipes for these libraries is a **consequence** of being OS-provided, not the definition.
 
 ## Ruby Example Walkthrough
 
@@ -84,8 +86,10 @@ libz.so.1        → zlib
 
 For each binary dependency, we ask TWO questions in order:
 
-1. **Is it in our soname index?** (Do we have a tsuku recipe providing this?)
-2. **If not, is it a known system library pattern?**
+1. **Is it in our soname index?** (Is tsuku managing this library?)
+2. **If not, does it match a known OS-provided library pattern?**
+
+The patterns encode our knowledge of what the operating system inherently provides (glibc, libm, libpthread, etc.).
 
 | DT_NEEDED | In Index? | System Pattern? | Category | Action |
 |-----------|-----------|-----------------|----------|--------|
@@ -98,7 +102,7 @@ For each binary dependency, we ask TWO questions in order:
 | `libreadline.so.8` | Yes → readline | - | TSUKU-MANAGED | Validate + Recurse |
 | `libz.so.1` | Yes → zlib | - | TSUKU-MANAGED | Validate + Recurse |
 
-**Key insight:** We check the soname index FIRST. If a soname is in our index, we know tsuku provides it. If not in our index, THEN we check system patterns.
+**Key insight:** We check the soname index FIRST. If a soname is in our index, we know tsuku provides it. If not in our index, THEN we check system patterns to see if it's an inherently OS-provided library.
 
 ### Step 4: Validate Tsuku-Managed Dependencies
 
@@ -274,8 +278,10 @@ ruby verified successfully
 The order of checks matters:
 
 1. **First:** Check if soname is in our index → If yes, it's TSUKU-MANAGED
-2. **Second:** If not in index, check system patterns → If matches, it's PURE SYSTEM
+2. **Second:** If not in index, check system patterns → If matches, it's PURE SYSTEM (inherently OS-provided)
 3. **Third:** If neither → Warning (unknown dependency)
+
+**On PURE SYSTEM classification:** The patterns encode our knowledge of what the operating system inherently provides. Libraries like `libc`, `libm`, `libpthread`, `libdl`, `librt` are fundamental OS components that exist on every Linux system. We don't create tsuku recipes for them BECAUSE they are OS-provided, not the other way around.
 
 For tsuku-managed deps, we also check:
 - Is the recipe externally managed? → If yes, validate but DON'T recurse

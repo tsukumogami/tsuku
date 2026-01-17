@@ -48,7 +48,27 @@ The concern about "recipe author burden" was analyzed. The burden is **concentra
 
 **Solution:** Hardcoded system library registry per OS/arch. This is maintenance but tractable (~50-100 patterns).
 
-### 4. Existing Infrastructure
+### 4. PURE SYSTEM Definition (Clarified)
+
+**Critical insight:** A library is PURE SYSTEM because it is **inherently OS-provided**, not because "no tsuku recipe exists."
+
+| Incorrect reasoning | Correct reasoning |
+|---------------------|-------------------|
+| "No recipe exists" → therefore PURE SYSTEM | Library is OS-provided → therefore no recipe exists |
+
+**Why this matters:** If we defined PURE SYSTEM as "no recipe exists," then any library we haven't written a recipe for yet would be classified as PURE SYSTEM. That's wrong - it should be UNKNOWN.
+
+**The three categories are defined by inherent properties:**
+
+| Category | Definition | Detection Method |
+|----------|------------|------------------|
+| **PURE SYSTEM** | Library is inherently OS-provided (libc, libm, etc.) | Pattern matching (encodes our knowledge of OS-provided libs) |
+| **TSUKU-MANAGED** | Library is managed by tsuku | Soname found in our index (state.json) |
+| **UNKNOWN** | Library we don't recognize | Neither in index nor matching system patterns |
+
+The system library registry patterns (`libc.so`, `libm.so`, `libpthread.so`, etc.) encode our knowledge of "these libraries are provided by the operating system." The absence of a tsuku recipe for them is a consequence of this classification, not the cause.
+
+### 5. Existing Infrastructure
 
 | Component | Location | Reusable? |
 |-----------|----------|-----------|
@@ -221,10 +241,12 @@ Based on all research, the design should:
 1. **Infer binary deps** from DT_NEEDED/LC_LOAD_DYLIB (already done in Tier 1)
 2. **Detect static binaries** via PT_INTERP check, show "No dynamic dependencies (statically linked)"
 3. **Build soname index** from state.json at verification time
-4. **Classify deps using THREE categories** (see `ruby-validation-example.md`):
+4. **Classify deps using THREE categories** (see `ruby-validation-example.md` and Key Learning #4):
    - **TSUKU-MANAGED**: Soname found in index → validate + recurse (or stop if externally-managed)
-   - **PURE SYSTEM**: Soname NOT in index but matches system pattern → skip entirely
-   - **UNKNOWN**: Soname NOT in index and NOT system pattern → warn
+   - **PURE SYSTEM**: Library is inherently OS-provided (detected via pattern matching) → skip entirely
+   - **UNKNOWN**: Neither in index nor matching system patterns → warn
+
+   **Important:** PURE SYSTEM is defined by the library's inherent nature (OS-provided), not by the absence of a recipe. Pattern matching encodes our knowledge of what the OS provides.
 5. **Compare binary deps to recipe declarations** and warn on mismatch
 6. **Recursive validation via `--deep` flag** following recipe tree
 7. **Stop recursion at externally-managed** recipes (detected via `IsExternallyManaged()` on actions)

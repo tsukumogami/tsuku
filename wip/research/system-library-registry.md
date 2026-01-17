@@ -5,14 +5,20 @@
 
 ## Summary
 
-System libraries (provided by OS, not tsuku) should be skipped during dependency validation. This document defines the registry format and complete pattern lists.
+The system library registry encodes our knowledge of libraries that are **inherently OS-provided**. These libraries exist as part of the operating system itself and are expected to be present on any conforming system.
+
+We skip these libraries during dependency validation because they ARE OS-provided by nature, not because tsuku lacks recipes for them. The absence of tsuku recipes for these libraries is a CONSEQUENCE of their OS-provided nature, not the definition of why they are system libraries.
+
+This document defines the registry format and complete pattern lists.
 
 ## Recommended Data Structure
 
 ```go
 // internal/verify/system_libs.go
 
-// SystemLibraryRegistry contains patterns for identifying system libraries
+// SystemLibraryRegistry contains patterns for identifying inherently OS-provided libraries.
+// These patterns encode our knowledge of what libraries the operating system provides as part
+// of its core functionality. Pattern matching detects libraries that are OS-provided by nature.
 type SystemLibraryRegistry struct {
     // Soname patterns (prefix match)
     LinuxPatterns  []string
@@ -151,7 +157,9 @@ var pathVariablePrefixes = []string{
 ## Classification Function
 
 ```go
-// ClassifyDependency determines if a dependency is system-provided or tsuku-managed
+// ClassifyDependency determines if a dependency is inherently OS-provided or tsuku-managed.
+// Libraries are classified as system libraries because they ARE part of the OS, not because
+// tsuku lacks a recipe for them. The registry encodes our knowledge of OS-provided libraries.
 func (r *SystemLibraryRegistry) ClassifyDependency(dep string, targetOS string) DepClassification {
     // 1. Check path variable prefixes (needs resolution)
     for _, prefix := range r.PathVariables {
@@ -192,15 +200,15 @@ func (r *SystemLibraryRegistry) ClassifyDependency(dep string, targetOS string) 
 type DepClassification int
 
 const (
-    DepSystem          DepClassification = iota // Skip - system library
-    DepTsukuManaged                             // Validate - tsuku should provide
+    DepSystem          DepClassification = iota // Skip - inherently OS-provided, expected on any system
+    DepTsukuManaged                             // Validate - library tsuku can/should manage
     DepNeedsResolution                          // Expand path variable first
 )
 ```
 
 ## Handling Ambiguous Libraries
 
-Some libraries (libssl, libz, libcurl) exist as both system and tsuku versions.
+Some libraries (libssl, libz, libcurl) exist as both system and tsuku versions. These are NOT inherently system libraries - they are third-party libraries that the OS happens to bundle. When tsuku provides its own version, we want to use that; when a binary links to the system copy, we accept it.
 
 **Resolution strategy:**
 
@@ -273,6 +281,8 @@ func ValidateDependencies(binaryPath string, deps []string, cfg *Config) []DepRe
 
         switch class {
         case DepSystem:
+            // Skip validation - this library is inherently OS-provided.
+            // We know it will be available on any conforming system.
             results = append(results, DepResult{
                 Name:   dep,
                 Status: DepStatusSystem,
@@ -284,7 +294,8 @@ func ValidateDependencies(binaryPath string, deps []string, cfg *Config) []DepRe
             // ... recursive classification
 
         case DepTsukuManaged:
-            // Look up in soname index, validate
+            // This is a library that tsuku can/should manage.
+            // Look up in soname index to find which tsuku package provides it.
             // ...
         }
     }
