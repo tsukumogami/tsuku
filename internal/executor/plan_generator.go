@@ -695,14 +695,30 @@ func generateSingleDependencyPlan(
 		return nil, err
 	}
 
-	// Generate the plan for this dependency (without further recursion)
-	exec, err := New(depRecipe)
+	// Check for pinned version from constraints
+	var exec *Executor
+	if pinnedVersion, ok := GetDependencyVersionConstraint(cfg.Constraints, depName); ok {
+		// Use pinned version from constraints
+		exec, err = NewWithVersion(depRecipe, pinnedVersion)
+		if err != nil {
+			// Pinned version unavailable - fall back to latest with warning
+			if cfg.OnWarning != nil {
+				cfg.OnWarning("dependency_pinning",
+					fmt.Sprintf("pinned version %s for %s unavailable, using latest", pinnedVersion, depName))
+			}
+			exec, err = New(depRecipe)
+		}
+	} else {
+		// No constraint - use latest version
+		exec, err = New(depRecipe)
+	}
 	if err != nil {
 		return nil, fmt.Errorf("failed to create executor for %s: %w", depName, err)
 	}
 	defer exec.Cleanup()
 
 	// Generate plan without RecipeLoader to get just this tool's steps
+	// Propagate constraints for nested dependency resolution
 	depCfg := PlanConfig{
 		OS:                 cfg.OS,
 		Arch:               cfg.Arch,
@@ -712,7 +728,8 @@ func generateSingleDependencyPlan(
 		DownloadCache:      cfg.DownloadCache,
 		AutoAcceptEvalDeps: cfg.AutoAcceptEvalDeps,
 		OnEvalDepsNeeded:   cfg.OnEvalDepsNeeded,
-		RecipeLoader:       nil, // Don't recurse here - we handle it above
+		RecipeLoader:       nil,             // Don't recurse here - we handle it above
+		Constraints:        cfg.Constraints, // Propagate constraints for nested decomposition
 	}
 
 	plan, err := exec.GeneratePlan(ctx, depCfg)
