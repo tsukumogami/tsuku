@@ -1,6 +1,6 @@
 # DESIGN: Library Verification Header Validation (Tier 1)
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Upstream Design Reference
 
