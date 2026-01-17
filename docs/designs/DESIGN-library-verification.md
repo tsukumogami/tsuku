@@ -9,8 +9,8 @@
 | [#942](https://github.com/tsukumogami/tsuku/issues/942) | feat(state): add checksums field to library version state | None | simple |
 | [#943](https://github.com/tsukumogami/tsuku/issues/943) | feat(verify): add library type detection and flag routing | None | testable |
 | [#946](https://github.com/tsukumogami/tsuku/issues/946) | feat(install): compute and store library checksums at install time | #942 | testable |
-| [#947](https://github.com/tsukumogami/tsuku/issues/947) | docs: design header validation for library verification (Tier 1) | #943 | critical |
-| [#948](https://github.com/tsukumogami/tsuku/issues/948) | docs: design dependency resolution for library verification (Tier 2) | #947 | critical |
+| ~~[#947](https://github.com/tsukumogami/tsuku/issues/947)~~ | ~~docs: design header validation for library verification (Tier 1)~~ | ~~#943~~ | ~~critical~~ |
+| ~~[#948](https://github.com/tsukumogami/tsuku/issues/948)~~ | ~~docs: design dependency resolution for library verification (Tier 2)~~ | ~~#947~~ | ~~critical~~ |
 | [#949](https://github.com/tsukumogami/tsuku/issues/949) | docs: design dlopen load testing for library verification (Tier 3) | #948 | critical |
 | [#950](https://github.com/tsukumogami/tsuku/issues/950) | docs: design integrity verification for library verification (Tier 4) | #946, #949 | testable |
 
@@ -23,9 +23,9 @@ graph TD
     end
 
     subgraph Tiers["Library Verification Tiers"]
-        I947["#947 Tier 1 Design<br/>(needs-design)"]:::ready
-        I948["#948 Tier 2 Design<br/>(needs-design)"]:::needsdesign
-        I949["#949 Tier 3 Design<br/>(needs-design)"]:::needsdesign
+        I947["#947 Tier 1 Design<br/>(done)"]:::done
+        I948["#948 Tier 2 Design<br/>(done)"]:::done
+        I949["#949 Tier 3 Design<br/>(needs-design)"]:::ready
         I950["#950 Tier 4 Design<br/>(needs-design)"]:::needsdesign
     end
 
