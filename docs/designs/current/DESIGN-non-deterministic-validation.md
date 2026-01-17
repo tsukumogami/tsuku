@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -54,16 +54,11 @@ graph TD
     I928 --> I929
 
     classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
 
-    class I921 done
-    class I922,I923,I924,I925,I926 ready
-    class I927,I928,I929 blocked
+    class I921,I922,I923,I924,I925,I926,I927,I928,I929 done
 ```
 
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+**Legend**: Green = done
 
 ## Context and Problem Statement
 
