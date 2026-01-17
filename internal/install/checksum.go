@@ -126,6 +126,57 @@ func VerifyBinaryChecksums(toolDir string, stored map[string]string) ([]Checksum
 	return mismatches, nil
 }
 
+// ComputeLibraryChecksums computes SHA256 checksums for all regular files in a library directory.
+// libDir is the absolute path to the library installation directory.
+// Returns a map of relative path to hex-encoded checksum.
+// Symlinks are skipped (only real files are checksummed).
+func ComputeLibraryChecksums(libDir string) (map[string]string, error) {
+	checksums := make(map[string]string)
+
+	err := filepath.Walk(libDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// Use Lstat to detect symlinks (Walk uses Stat which follows symlinks)
+		linfo, err := os.Lstat(path)
+		if err != nil {
+			return fmt.Errorf("failed to lstat %s: %w", path, err)
+		}
+
+		// Skip symlinks - only checksum real files
+		if linfo.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
+
+		// Compute relative path from library directory root
+		relPath, err := filepath.Rel(libDir, path)
+		if err != nil {
+			return fmt.Errorf("failed to compute relative path for %s: %w", path, err)
+		}
+
+		// Compute checksum
+		checksum, err := ComputeFileChecksum(path)
+		if err != nil {
+			return fmt.Errorf("failed to compute checksum for %s: %w", relPath, err)
+		}
+
+		checksums[relPath] = checksum
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to walk library directory: %w", err)
+	}
+
+	return checksums, nil
+}
+
 // isWithinDir checks if path is within the specified directory.
 // Both paths should be absolute and cleaned.
 func isWithinDir(path, dir string) bool {

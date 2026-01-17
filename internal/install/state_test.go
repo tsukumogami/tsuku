@@ -1167,6 +1167,77 @@ func TestLibraryVersionState_Checksums_OmitsEmpty(t *testing.T) {
 	}
 }
 
+func TestStateManager_SetLibraryChecksums(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// First, create a library entry (SetLibraryChecksums should work on new or existing)
+	checksums := map[string]string{
+		"lib/libtest.so.1.0.0": "abc123def456789",
+		"lib/libtest.so.2.0.0": "fedcba987654321",
+	}
+
+	// Set checksums
+	if err := sm.SetLibraryChecksums("testlib", "1.0.0", checksums); err != nil {
+		t.Fatalf("SetLibraryChecksums() error = %v", err)
+	}
+
+	// Load and verify
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	libState := loaded.Libs["testlib"]["1.0.0"]
+	if len(libState.Checksums) != 2 {
+		t.Fatalf("Checksums count = %d, want 2", len(libState.Checksums))
+	}
+
+	if libState.Checksums["lib/libtest.so.1.0.0"] != "abc123def456789" {
+		t.Errorf("Checksum = %s, want abc123def456789", libState.Checksums["lib/libtest.so.1.0.0"])
+	}
+
+	if libState.Checksums["lib/libtest.so.2.0.0"] != "fedcba987654321" {
+		t.Errorf("Checksum = %s, want fedcba987654321", libState.Checksums["lib/libtest.so.2.0.0"])
+	}
+}
+
+func TestStateManager_SetLibraryChecksums_UpdatesExisting(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// First add a library with used_by
+	if err := sm.AddLibraryUsedBy("testlib", "1.0.0", "tool-1.0"); err != nil {
+		t.Fatalf("AddLibraryUsedBy() error = %v", err)
+	}
+
+	// Now set checksums
+	checksums := map[string]string{
+		"lib/libtest.so": "abc123",
+	}
+	if err := sm.SetLibraryChecksums("testlib", "1.0.0", checksums); err != nil {
+		t.Fatalf("SetLibraryChecksums() error = %v", err)
+	}
+
+	// Verify both used_by and checksums are present
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	libState := loaded.Libs["testlib"]["1.0.0"]
+
+	// Checksums should be set
+	if len(libState.Checksums) != 1 {
+		t.Errorf("Checksums count = %d, want 1", len(libState.Checksums))
+	}
+
+	// UsedBy should be preserved
+	if len(libState.UsedBy) != 1 || libState.UsedBy[0] != "tool-1.0" {
+		t.Errorf("UsedBy = %v, want [tool-1.0]", libState.UsedBy)
+	}
+}
+
 func TestStateManager_SaveAndLoad_WithDependencies(t *testing.T) {
 	sm, cleanup := newTestStateManager(t)
 	defer cleanup()
