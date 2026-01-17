@@ -8,12 +8,42 @@
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
     },
     {
+      "recipe": "black",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
       "recipe": "cdk",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
     },
     {
+      "recipe": "git",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "compile_from_source toolchain version drift (macOS build failures)"
+    },
+    {
+      "recipe": "httpie",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
       "recipe": "netlify-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "poetry",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "ruff",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "serve",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
     },
