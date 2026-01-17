@@ -1370,3 +1370,298 @@ func TestHasCpanMetaConstraint(t *testing.T) {
 		})
 	}
 }
+
+// Tests for DependencyVersions extraction
+
+func TestExtractConstraints_DependencyVersions(t *testing.T) {
+	// Test that dependency versions are extracted from the dependency tree
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "black",
+		Version:       "26.1a1",
+		Dependencies: []DependencyPlan{
+			{
+				Tool:    "python-standalone",
+				Version: "20260113",
+				Steps: []ResolvedStep{
+					{
+						Action: "download_file",
+						Params: map[string]interface{}{
+							"url": "https://example.com/python.tar.zst",
+						},
+					},
+				},
+			},
+		},
+		Steps: []ResolvedStep{
+			{
+				Action: "pip_exec",
+				Params: map[string]interface{}{
+					"package": "black",
+					"version": "26.1a1",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	// Verify dependency version was extracted
+	if ver, ok := constraints.DependencyVersions["python-standalone"]; !ok || ver != "20260113" {
+		t.Errorf("Expected python-standalone==20260113, got %q", ver)
+	}
+}
+
+func TestExtractConstraints_DependencyVersionsNested(t *testing.T) {
+	// Test that nested dependencies are also extracted
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "myapp",
+		Version:       "1.0.0",
+		Dependencies: []DependencyPlan{
+			{
+				Tool:    "rust-tool",
+				Version: "1.0.0",
+				Dependencies: []DependencyPlan{
+					{
+						Tool:    "rust",
+						Version: "1.75.0",
+						Steps: []ResolvedStep{
+							{
+								Action: "download_file",
+								Params: map[string]interface{}{
+									"url": "https://example.com/rust.tar.xz",
+								},
+							},
+						},
+					},
+				},
+				Steps: []ResolvedStep{
+					{
+						Action: "cargo_build",
+						Params: map[string]interface{}{
+							"crate":   "rust-tool",
+							"version": "1.0.0",
+						},
+					},
+				},
+			},
+		},
+		Steps: []ResolvedStep{
+			{
+				Action: "download_file",
+				Params: map[string]interface{}{
+					"url": "https://example.com/myapp",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	// Verify both dependency versions were extracted
+	if ver, ok := constraints.DependencyVersions["rust-tool"]; !ok || ver != "1.0.0" {
+		t.Errorf("Expected rust-tool==1.0.0, got %q", ver)
+	}
+	if ver, ok := constraints.DependencyVersions["rust"]; !ok || ver != "1.75.0" {
+		t.Errorf("Expected rust==1.75.0, got %q", ver)
+	}
+}
+
+func TestExtractConstraints_DependencyVersionsFirstWins(t *testing.T) {
+	// Test first-encountered-wins semantics for version conflicts
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "myapp",
+		Version:       "1.0.0",
+		Dependencies: []DependencyPlan{
+			{
+				Tool:    "toolA",
+				Version: "1.0.0",
+				Dependencies: []DependencyPlan{
+					{
+						Tool:    "shared-dep",
+						Version: "2.0.0", // First occurrence
+						Steps:   []ResolvedStep{},
+					},
+				},
+				Steps: []ResolvedStep{},
+			},
+			{
+				Tool:    "toolB",
+				Version: "1.0.0",
+				Dependencies: []DependencyPlan{
+					{
+						Tool:    "shared-dep",
+						Version: "3.0.0", // Later occurrence - should be ignored
+						Steps:   []ResolvedStep{},
+					},
+				},
+				Steps: []ResolvedStep{},
+			},
+		},
+		Steps: []ResolvedStep{},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	// First-encountered version should win
+	if ver, ok := constraints.DependencyVersions["shared-dep"]; !ok || ver != "2.0.0" {
+		t.Errorf("Expected first-encountered shared-dep==2.0.0, got %q", ver)
+	}
+}
+
+func TestExtractConstraints_DependencyVersionsEmpty(t *testing.T) {
+	// Test plan with no dependencies
+	plan := &InstallationPlan{
+		FormatVersion: 3,
+		Tool:          "kubectl",
+		Version:       "1.29.0",
+		Dependencies:  []DependencyPlan{},
+		Steps: []ResolvedStep{
+			{
+				Action: "download_file",
+				Params: map[string]interface{}{
+					"url": "https://example.com/kubectl",
+				},
+			},
+		},
+	}
+
+	constraints, err := ExtractConstraintsFromPlan(plan)
+	if err != nil {
+		t.Fatalf("ExtractConstraintsFromPlan failed: %v", err)
+	}
+
+	// Should have empty dependency versions (initialized but empty map)
+	if len(constraints.DependencyVersions) != 0 {
+		t.Errorf("Expected 0 dependency versions for plan with no dependencies, got %d", len(constraints.DependencyVersions))
+	}
+}
+
+func TestHasDependencyVersionConstraints(t *testing.T) {
+	tests := []struct {
+		name        string
+		constraints *actions.EvalConstraints
+		expected    bool
+	}{
+		{
+			name:        "nil constraints",
+			constraints: nil,
+			expected:    false,
+		},
+		{
+			name: "empty constraints",
+			constraints: &actions.EvalConstraints{
+				PipConstraints:     map[string]string{},
+				DependencyVersions: map[string]string{},
+			},
+			expected: false,
+		},
+		{
+			name: "with dependency versions",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{},
+				DependencyVersions: map[string]string{
+					"python-standalone": "20260113",
+				},
+			},
+			expected: true,
+		},
+		{
+			name: "with pip but no dependency versions",
+			constraints: &actions.EvalConstraints{
+				PipConstraints: map[string]string{
+					"flask": "2.3.0",
+				},
+				DependencyVersions: map[string]string{},
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := HasDependencyVersionConstraints(tt.constraints)
+			if result != tt.expected {
+				t.Errorf("Expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestGetDependencyVersionConstraint(t *testing.T) {
+	constraints := &actions.EvalConstraints{
+		DependencyVersions: map[string]string{
+			"python-standalone": "20260113",
+			"go":                "1.25.5",
+		},
+	}
+
+	tests := []struct {
+		name        string
+		toolName    string
+		constraints *actions.EvalConstraints
+		wantVersion string
+		wantOK      bool
+	}{
+		{
+			name:        "existing tool",
+			toolName:    "python-standalone",
+			constraints: constraints,
+			wantVersion: "20260113",
+			wantOK:      true,
+		},
+		{
+			name:        "another existing tool",
+			toolName:    "go",
+			constraints: constraints,
+			wantVersion: "1.25.5",
+			wantOK:      true,
+		},
+		{
+			name:        "non-existent tool",
+			toolName:    "nodejs",
+			constraints: constraints,
+			wantVersion: "",
+			wantOK:      false,
+		},
+		{
+			name:        "nil constraints",
+			toolName:    "python-standalone",
+			constraints: nil,
+			wantVersion: "",
+			wantOK:      false,
+		},
+		{
+			name:     "empty dependency versions",
+			toolName: "python-standalone",
+			constraints: &actions.EvalConstraints{
+				DependencyVersions: map[string]string{},
+			},
+			wantVersion: "",
+			wantOK:      false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotVersion, gotOK := GetDependencyVersionConstraint(tt.constraints, tt.toolName)
+			if gotOK != tt.wantOK {
+				t.Errorf("GetDependencyVersionConstraint() ok = %v, want %v", gotOK, tt.wantOK)
+			}
+			if gotVersion != tt.wantVersion {
+				t.Errorf("GetDependencyVersionConstraint() version = %q, want %q", gotVersion, tt.wantVersion)
+			}
+		})
+	}
+}
