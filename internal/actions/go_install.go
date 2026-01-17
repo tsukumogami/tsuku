@@ -452,11 +452,13 @@ func (a *GoInstallAction) decomposeWithConstraints(ctx *EvalContext, module, ver
 	// Use the constrained go.sum
 	goSum := ctx.Constraints.GoSum
 
-	// Get Go version from the installed Go
-	goPath := ResolveGo()
-	goVersion := ""
-	if goPath != "" {
-		goVersion = GetGoVersion(goPath)
+	// Use constrained go_version if available, otherwise fall back to installed Go
+	goVersion := ctx.Constraints.GoVersion
+	if goVersion == "" {
+		goPath := ResolveGo()
+		if goPath != "" {
+			goVersion = GetGoVersion(goPath)
+		}
 	}
 
 	// Determine the version module path:

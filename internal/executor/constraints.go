@@ -144,14 +144,18 @@ func extractGoConstraintsFromSteps(steps []ResolvedStep, constraints *actions.Ev
 			continue
 		}
 
-		goSum, ok := step.Params["go_sum"].(string)
-		if !ok || goSum == "" {
-			continue
+		// Extract go_sum (first one wins)
+		if goSum, ok := step.Params["go_sum"].(string); ok && goSum != "" {
+			if constraints.GoSum == "" {
+				constraints.GoSum = goSum
+			}
 		}
 
-		// Only store if we don't already have a GoSum (first one wins)
-		if constraints.GoSum == "" {
-			constraints.GoSum = goSum
+		// Extract go_version (first one wins)
+		if goVersion, ok := step.Params["go_version"].(string); ok && goVersion != "" {
+			if constraints.GoVersion == "" {
+				constraints.GoVersion = goVersion
+			}
 		}
 	}
 }
@@ -159,6 +163,19 @@ func extractGoConstraintsFromSteps(steps []ResolvedStep, constraints *actions.Ev
 // HasGoSumConstraint returns true if the constraints contain a go.sum.
 func HasGoSumConstraint(constraints *actions.EvalConstraints) bool {
 	return constraints != nil && constraints.GoSum != ""
+}
+
+// HasGoVersionConstraint returns true if the constraints contain a go_version.
+func HasGoVersionConstraint(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && constraints.GoVersion != ""
+}
+
+// GetGoVersionConstraint returns the constrained go_version, if any.
+func GetGoVersionConstraint(constraints *actions.EvalConstraints) (string, bool) {
+	if constraints == nil || constraints.GoVersion == "" {
+		return "", false
+	}
+	return constraints.GoVersion, true
 }
 
 // extractCargoConstraintsFromSteps extracts cargo constraints from cargo_build steps.

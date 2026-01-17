@@ -67,6 +67,11 @@ type EvalConstraints struct {
 	// Extracted from go_sum param in golden files.
 	GoSum string
 
+	// GoVersion contains the Go binary version used during decomposition.
+	// Extracted from go_version param in go_build steps.
+	// Used to pin the go_version parameter during constrained evaluation.
+	GoVersion string
+
 	// CargoLock contains the full Cargo.lock content for cargo_install steps.
 	// Extracted from lock_data param in golden files.
 	CargoLock string

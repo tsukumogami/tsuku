@@ -13,39 +13,14 @@
       "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
-      "recipe": "cobra-cli",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
-      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
-    },
-    {
       "recipe": "curl",
       "issue": "https://github.com/tsukumogami/tsuku/issues/988",
       "reason": "stale golden file (missing dependencies, needs regeneration)"
     },
     {
-      "recipe": "dlv",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
-      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
-    },
-    {
       "recipe": "fpm",
       "issue": "https://github.com/tsukumogami/tsuku/issues/988",
       "reason": "stale golden file (needs regeneration)"
-    },
-    {
-      "recipe": "gofumpt",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
-      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
-    },
-    {
-      "recipe": "goimports",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
-      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
-    },
-    {
-      "recipe": "gopls",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
-      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
     },
     {
       "recipe": "httpie",
