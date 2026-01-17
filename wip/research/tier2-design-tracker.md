@@ -130,26 +130,39 @@ if interp != "" && !fileExists(interp) {
 
 **Status:** ✅ Decided
 
+### 7. Scope: Tools + Libraries (Unified)
+**Decision:** Apply Tier 2 validation to both tools and libraries using a unified `ValidateDependencies()` function.
+
+**Context:** Tools also have DT_NEEDED entries. Should `tsuku verify <tool>` validate binary deps?
+
+**Analysis:** A devil's advocate review found no technical blocking reasons:
+- Binary format parsing is identical (ELF/Mach-O work the same for executables and .so files)
+- Dependency resolution semantics are the same (declared vs actual)
+- Only difference is path patterns (`tools/*/bin/*` vs `libs/*/lib/*.so*`)
+
+**Implementation:** Single `ValidateDependencies(binaryPaths []string, declaredDeps []string)` function used by both `verifyTool()` and `verifyLibrary()`.
+
+**Status:** ✅ Decided
+
+### 8. Recursion: Always Deep (No User Flag Yet)
+**Decision:** All verification is recursive (deep) by default. No user-facing `--deep` flag exposed yet.
+
+**Context:** Should `tsuku verify` recursively validate dependencies?
+
+**Approach:**
+- Code internally supports a flag for recursion depth control
+- User-facing behavior: always validates transitively
+- Future: may expose `--shallow` flag if users request it
+
+**Rationale:** Transitive validation catches more issues. Since this is a verification command (not install), thoroughness is more important than speed.
+
+**Status:** ✅ Decided
+
 ---
 
 ## Pending Decisions
 
-### 1. Scope: Tools + Libraries or Libraries Only?
-
-**Context:** Tools also have DT_NEEDED entries. Should `tsuku verify <tool>` validate binary deps?
-
-**Options:**
-| Option | Description | Pros | Cons |
-|--------|-------------|------|------|
-| A | Libraries only | Simpler, matches original design | Inconsistent UX |
-| B | Tools + Libraries | Unified model, more complete | More code paths |
-| C | Unified `ValidateDependencies()` | Code reuse, consistent | Need to handle static binaries |
-
-**Leaning:** Option C - unified function used by both `verifyTool()` and `verifyLibrary()`
-
-**Status:** 🔄 Needs decision
-
-### 2. Validation Behavior: Warn vs Fail
+### 1. Validation Behavior: Warn vs Fail
 
 **Context:** What happens when binary has dep not declared in recipe?
 
@@ -161,21 +174,6 @@ if interp != "" && !fileExists(interp) {
 | C | Configurable | Flexibility | Complexity |
 
 **Leaning:** Option A for MVP, consider C later
-
-**Status:** 🔄 Needs decision
-
-### 3. Recursion: Opt-in or Default?
-
-**Context:** Should `tsuku verify` recursively validate dependencies?
-
-**Options:**
-| Option | Description | Pros | Cons |
-|--------|-------------|------|------|
-| A | Direct deps only (default) | Fast, simple | Misses transitive issues |
-| B | `--deep` flag for recursive | User control | Extra flag to remember |
-| C | Always recursive | Complete | Slow, verbose |
-
-**Leaning:** Option B - match pattern of `--integrity` flag
 
 **Status:** 🔄 Needs decision
 
