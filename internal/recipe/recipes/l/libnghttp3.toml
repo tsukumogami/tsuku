@@ -12,7 +12,7 @@ formula = "libnghttp3"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "lib/libnghttp3.a",
     "lib/libnghttp3.so",
     "lib/libnghttp3.so.9",

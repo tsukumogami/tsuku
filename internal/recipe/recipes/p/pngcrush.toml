@@ -10,7 +10,7 @@ formula = "pngcrush"
 
 [[steps]]
 action = "install_binaries"
-binaries = ["bin/pngcrush"]
+outputs = ["bin/pngcrush"]
 
 [verify]
 command = "pngcrush -version"

@@ -12,5 +12,4 @@ formula = "libpng"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["lib/libpng.a", "lib/libpng16.a", "include/png.h", "include/pngconf.h"]
-
+outputs = ["lib/libpng.a", "lib/libpng16.a", "include/png.h", "include/pngconf.h"]

@@ -12,7 +12,7 @@ formula = "brotli"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "bin/brotli",
     "lib/libbrotlicommon.so",
     "lib/libbrotlicommon.so.1",

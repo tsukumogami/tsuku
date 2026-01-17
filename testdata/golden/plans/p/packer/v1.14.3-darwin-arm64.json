@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "a02199125b3bd3655c6ca6e5372de7579bbd0e8abc7e804b317a305c6970d5cb",
+  "recipe_hash": "fdab623796595d90952c342e421b2f223640d92ed4d735b02961cd303f009a6e",
   "deterministic": true,
   "steps": [
     {
@@ -45,7 +45,7 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "outputs": [
           "packer"
         ]
       },

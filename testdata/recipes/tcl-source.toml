@@ -30,7 +30,7 @@ executables = ["tclsh9.0"]
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/tclsh9.0"]
+outputs = ["bin/tclsh9.0"]
 
 [verify]
 command = "tclsh9.0 <<< 'puts $tcl_version'"

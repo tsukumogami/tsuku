@@ -11,7 +11,7 @@ formula = "libxml2"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/xmllint"]
+outputs = ["bin/xmllint"]
 
 [verify]
 command = "xmllint --version"

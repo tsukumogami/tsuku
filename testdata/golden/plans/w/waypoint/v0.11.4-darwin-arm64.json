@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "1fba71046c9d1af32b917a626bb3c5ca2aab0ac36e3a65460be62fcb9187bb22",
+  "recipe_hash": "f83329e0e0d3cb3bab168bc8fb4c95e56eee84ee58a0071dfed9c5f03bf0debd",
   "deterministic": true,
   "steps": [
     {
@@ -45,7 +45,7 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "outputs": [
           "waypoint"
         ]
       },

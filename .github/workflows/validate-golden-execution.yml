@@ -31,8 +31,9 @@ jobs:
         id: build-matrix
         run: |
           EXCLUSIONS_FILE="testdata/golden/exclusions.json"
+          EXECUTION_EXCLUSIONS_FILE="testdata/golden/execution-exclusions.json"
 
-          # Function to check if a recipe/platform is excluded
+          # Function to check if a recipe/platform is excluded (platform-specific exclusions)
           is_excluded() {
             local recipe="$1"
             local os="$2"
@@ -45,6 +46,23 @@ jobs:
             local filter=".exclusions[] | select(.recipe == \"$recipe\" and .platform.os == \"$os\" and .platform.arch == \"$arch\")"
             local match
             match=$(jq -r "$filter | .issue" "$EXCLUSIONS_FILE" 2>/dev/null | head -1)
+            if [ -n "$match" ]; then
+              echo "$match"
+              return 0
+            fi
+            return 1
+          }
+
+          # Function to check if a recipe is excluded from execution validation entirely
+          is_execution_excluded() {
+            local recipe="$1"
+
+            if [ ! -f "$EXECUTION_EXCLUSIONS_FILE" ]; then
+              return 1
+            fi
+
+            local match
+            match=$(jq -r --arg r "$recipe" '.exclusions[] | select(.recipe == $r) | .issue' "$EXECUTION_EXCLUSIONS_FILE" 2>/dev/null | head -1)
             if [ -n "$match" ]; then
               echo "$match"
               return 0
@@ -101,7 +119,13 @@ jobs:
             # Route to Linux matrix or macOS aggregated list
             case "$platform" in
               linux-amd64|linux-debian-amd64)
-                # Check if excluded
+                # Check if excluded from execution validation entirely
+                exec_exclusion=$(is_execution_excluded "$tool" || true)
+                if [ -n "$exec_exclusion" ]; then
+                  echo "Skipping $path (execution excluded: $exec_exclusion)"
+                  continue
+                fi
+                # Check if platform-specific excluded
                 exclusion_issue=$(is_excluded "$tool" "linux" "amd64" || true)
                 if [ -n "$exclusion_issue" ]; then
                   echo "Skipping $path (excluded: $exclusion_issue)"
@@ -120,7 +144,13 @@ jobs:
                 echo "Skipping $path ($platform no matching runner)"
                 ;;
               darwin-arm64)
-                # Check if excluded
+                # Check if excluded from execution validation entirely
+                exec_exclusion=$(is_execution_excluded "$tool" || true)
+                if [ -n "$exec_exclusion" ]; then
+                  echo "Skipping $path (execution excluded: $exec_exclusion)"
+                  continue
+                fi
+                # Check if platform-specific excluded
                 exclusion_issue=$(is_excluded "$tool" "darwin" "arm64" || true)
                 if [ -n "$exclusion_issue" ]; then
                   echo "Skipping $path (excluded: $exclusion_issue)"
@@ -173,12 +203,29 @@ jobs:
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
 
-          # Extract unique recipe names for coverage validation
-          RECIPES=$(echo "$CHANGED" | while read -r path; do
+          # Extract unique recipe names for coverage validation (excluding execution-excluded recipes)
+          ALL_RECIPES=$(echo "$CHANGED" | while read -r path; do
             if [ -n "$path" ]; then
               basename "$(dirname "$path")"
             fi
-          done | sort -u | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          done | sort -u)
+
+          RECIPES='['
+          RECIPES_FIRST=true
+          for recipe in $ALL_RECIPES; do
+            exec_exclusion=$(is_execution_excluded "$recipe" || true)
+            if [ -n "$exec_exclusion" ]; then
+              echo "Excluding recipe from coverage validation: $recipe ($exec_exclusion)"
+              continue
+            fi
+            if [ "$RECIPES_FIRST" = true ]; then
+              RECIPES_FIRST=false
+            else
+              RECIPES="$RECIPES,"
+            fi
+            RECIPES="$RECIPES\"$recipe\""
+          done
+          RECIPES="$RECIPES]"
 
           echo "Affected recipes: $RECIPES"
           echo "recipes=$RECIPES" >> $GITHUB_OUTPUT

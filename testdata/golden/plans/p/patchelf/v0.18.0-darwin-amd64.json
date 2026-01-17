@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+  "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
   "deterministic": true,
   "steps": [
     {
@@ -43,7 +43,7 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "outputs": [
           "bin/patchelf"
         ]
       },

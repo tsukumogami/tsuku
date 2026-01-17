@@ -13,7 +13,7 @@ formula = "openssl@3"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "bin/openssl",
     "lib/libssl.so",
     "lib/libssl.so.3",

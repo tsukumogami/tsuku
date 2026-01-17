@@ -12,7 +12,7 @@ formula = "libngtcp2"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "lib/libngtcp2.so",
     "lib/libngtcp2.so.16",
     "lib/libngtcp2.dylib",

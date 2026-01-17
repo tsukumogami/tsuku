@@ -23,7 +23,7 @@ files = ["vault"]
 
 [[steps]]
 action = "install_binaries"
-binaries = ["vault"]
+outputs = ["vault"]
 
 [verify]
 command = "vault version"

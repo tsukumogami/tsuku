@@ -30,7 +30,7 @@ executables = ["ncursesw6-config"]
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "bin/ncursesw6-config",
     "bin/clear",
     "bin/infocmp",

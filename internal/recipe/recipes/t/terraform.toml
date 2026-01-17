@@ -23,7 +23,7 @@ files = ["terraform"]
 
 [[steps]]
 action = "install_binaries"
-binaries = ["terraform"]
+outputs = ["terraform"]
 
 [verify]
 command = "terraform version"

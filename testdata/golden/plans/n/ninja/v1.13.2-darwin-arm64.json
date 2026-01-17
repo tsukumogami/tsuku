@@ -6,23 +6,23 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "72aeb3c4d17e164f3e797bd944cf44974d9a08f523cd1e6a88f9d6924960ad1b",
+  "recipe_hash": "e5080a0a9361c013b8fcb5f926d6ac28a4d79d50f9fa1c055dc7b8d540ae202f",
   "deterministic": false,
   "dependencies": [
     {
       "tool": "cmake",
       "version": "4.2.1",
-      "recipe_hash": "2b6fd841e112d2e2a5217ea95c6cff20810c7ab065721097b2cd73bdf2667a55",
+      "recipe_hash": "cbbeeebdcd07623ef64ebabb2ac6a0c8732051969b50029d7d33a4c87640a356",
       "dependencies": [
         {
           "tool": "openssl",
           "version": "3.6.0",
-          "recipe_hash": "5d6b22eb29f76f54dc84062d1eb9a28a3aa04d29bcc3f438ec6452c625259603",
+          "recipe_hash": "588f4d7c1dc27ca08660bcef58a10e34034517935f9050149450058b19fa401e",
           "dependencies": [
             {
               "tool": "zlib",
               "version": "1.3.1",
-              "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+              "recipe_hash": "1cb26974336ea947b3ebf9a6b21747d0fdd3fdf9a5f2d94cc9ec18e59b682b29",
               "steps": [
                 {
                   "action": "download_file",
@@ -58,14 +58,14 @@
                 {
                   "action": "install_binaries",
                   "params": {
-                    "binaries": [
+                    "install_mode": "directory",
+                    "outputs": [
                       "lib/libz.a",
                       "lib/libz.dylib",
                       "lib/libz.so",
                       "include/zlib.h",
                       "include/zconf.h"
-                    ],
-                    "install_mode": "directory"
+                    ]
                   },
                   "evaluable": true,
                   "deterministic": true
@@ -109,7 +109,8 @@
             {
               "action": "install_binaries",
               "params": {
-                "binaries": [
+                "install_mode": "directory",
+                "outputs": [
                   "bin/openssl",
                   "lib/libssl.so",
                   "lib/libssl.so.3",
@@ -119,8 +120,7 @@
                   "lib/libcrypto.so.3",
                   "lib/libcrypto.dylib",
                   "lib/libcrypto.3.dylib"
-                ],
-                "install_mode": "directory"
+                ]
               },
               "evaluable": true,
               "deterministic": true
@@ -135,7 +135,7 @@
         {
           "tool": "patchelf",
           "version": "0.18.0",
-          "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+          "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
           "steps": [
             {
               "action": "download_file",
@@ -171,7 +171,7 @@
             {
               "action": "install_binaries",
               "params": {
-                "binaries": [
+                "outputs": [
                   "bin/patchelf"
                 ]
               },
@@ -234,13 +234,13 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "bin/cmake",
               "bin/ctest",
               "bin/cpack",
               "bin/ccmake"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -254,7 +254,7 @@
     {
       "tool": "make",
       "version": "4.4.1",
-      "recipe_hash": "d3c902e0a246e3c16ca8f63b16ce9a3f14bd57fdb023b5c1ef75b8e70dc08e65",
+      "recipe_hash": "f1513e89985d8719bd2a253a81beeabe061b039cac5ba731d764aaaae8626551",
       "steps": [
         {
           "action": "download_file",
@@ -290,11 +290,11 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "bin/gmake",
               "bin/make"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -308,7 +308,7 @@
     {
       "tool": "pkg-config",
       "version": "2.5.1",
-      "recipe_hash": "1832cea3f7b3301b4c3aa62e63486cab92fa753cc8a8df37143124cb34fba897",
+      "recipe_hash": "002918e3e8ddf9fd1a9d00475209640675ca0982304443ef4b796c135678d905",
       "steps": [
         {
           "action": "download_file",
@@ -344,7 +344,8 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "bin/pkg-config",
               "bin/pkgconf",
               "lib/libpkgconf.so",
@@ -352,8 +353,7 @@
               "lib/libpkgconf.so.7",
               "lib/libpkgconf.7.dylib",
               "lib/libpkgconf.so.7.0.0"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -462,10 +462,10 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/ninja"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true

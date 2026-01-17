@@ -12,7 +12,7 @@
     {
       "tool": "rust",
       "version": "1.92.0",
-      "recipe_hash": "7266cb492059cf276dff32ac21d25bcfffb294830ab87ae225182222c15123f7",
+      "recipe_hash": "7070c6b9f6f374d9696eda14013688baedaaa586bd73cd75525ea989aa0bba52",
       "steps": [
         {
           "action": "download_file",
@@ -57,7 +57,8 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "bin/cargo",
               "bin/rustc",
               "bin/rustdoc",
@@ -65,8 +66,7 @@
               "bin/cargo-clippy",
               "bin/clippy-driver",
               "bin/rust-analyzer"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true

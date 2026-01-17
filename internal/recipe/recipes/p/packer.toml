@@ -23,7 +23,7 @@ files = ["packer"]
 
 [[steps]]
 action = "install_binaries"
-binaries = ["packer"]
+outputs = ["packer"]
 
 [verify]
 command = "packer version"

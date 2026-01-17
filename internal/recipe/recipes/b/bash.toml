@@ -11,7 +11,7 @@ formula = "bash"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/bash"]
+outputs = ["bin/bash"]
 
 [verify]
 command = "bash --version"

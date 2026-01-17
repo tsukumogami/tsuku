@@ -12,7 +12,7 @@ formula = "zstd"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "bin/zstd",
     "bin/pzstd",
     "bin/unzstd",

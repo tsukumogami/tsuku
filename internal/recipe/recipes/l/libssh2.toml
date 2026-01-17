@@ -12,7 +12,7 @@ formula = "libssh2"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "lib/libssh2.a",
     "lib/libssh2.so",
     "lib/libssh2.so.1",

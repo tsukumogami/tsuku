@@ -12,7 +12,7 @@ formula = "git"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/git"]
+outputs = ["bin/git"]
 
 [verify]
 command = "git --version"

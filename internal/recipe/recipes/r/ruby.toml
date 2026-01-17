@@ -125,7 +125,7 @@ description = "Creating wrapper for ruby and converting Ruby scripts"
 # Step 4: Register binaries for symlinking
 [[steps]]
 action = "install_binaries"
-binaries = ["bin/ruby", "bin/gem", "bin/bundle", "bin/bundler", "bin/irb", "bin/erb"]
+outputs = ["bin/ruby", "bin/gem", "bin/bundle", "bin/bundler", "bin/irb", "bin/erb"]
 install_mode = "directory"
 
 [verify]

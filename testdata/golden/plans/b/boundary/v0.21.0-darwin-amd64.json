@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "2fcd2b5baecba1dfe48932add23411476e13908f9809200210466ce35a8bc3ac",
+  "recipe_hash": "fb4dc23fd9dcd0be01182bcb59b9c314242d66935ef9768505761c5d82ea9571",
   "deterministic": true,
   "steps": [
     {
@@ -45,7 +45,7 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "outputs": [
           "boundary"
         ]
       },

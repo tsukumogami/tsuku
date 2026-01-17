@@ -11,27 +11,27 @@
   "dependencies": [
     {
       "tool": "python-standalone",
-      "version": "20251217",
+      "version": "20260113",
       "recipe_hash": "3068c1ae3ebf682354aa60ac9d3825d538de118e80e1a37cdfcfa725af4e82d1",
       "steps": [
         {
           "action": "download_file",
           "params": {
-            "checksum": "b501791dd2a2752f3f35329c4af736983cc5ef5e12e50776c13c752cbfa9cbf8",
+            "checksum": "695fb2688b5cd5ee6017ab47bd621636aceae91b992390b0f3459b3ced91e267",
             "checksum_algo": "sha256",
-            "dest": "cpython-3.10.19+20251217-x86_64-unknown-linux-gnu-install_only.tar.gz",
-            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20251217/cpython-3.10.19+20251217-x86_64-unknown-linux-gnu-install_only.tar.gz"
+            "dest": "cpython-3.10.19+20260113-x86_64-unknown-linux-gnu-install_only.tar.gz",
+            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260113/cpython-3.10.19+20260113-x86_64-unknown-linux-gnu-install_only.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20251217/cpython-3.10.19+20251217-x86_64-unknown-linux-gnu-install_only.tar.gz",
-          "checksum": "b501791dd2a2752f3f35329c4af736983cc5ef5e12e50776c13c752cbfa9cbf8",
-          "size": 43215542
+          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260113/cpython-3.10.19+20260113-x86_64-unknown-linux-gnu-install_only.tar.gz",
+          "checksum": "695fb2688b5cd5ee6017ab47bd621636aceae91b992390b0f3459b3ced91e267",
+          "size": 43880889
         },
         {
           "action": "extract",
           "params": {
-            "archive": "cpython-3.10.19+20251217-x86_64-unknown-linux-gnu-install_only.tar.gz",
+            "archive": "cpython-3.10.19+20260113-x86_64-unknown-linux-gnu-install_only.tar.gz",
             "format": "tar.gz",
             "strip_dirs": 1
           },

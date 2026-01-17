@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "250e778a67d435eddfbb3c4afc065e4c60526f4164051490c3e8019c5f034b8d",
+  "recipe_hash": "0fd580b0ba3112267b6ac8a3eca58c389961d3eb30f990da570c845fdfec1d6d",
   "deterministic": true,
   "steps": [
     {
@@ -45,7 +45,7 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "outputs": [
           "nomad"
         ]
       },

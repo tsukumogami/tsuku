@@ -11,7 +11,7 @@
   "dependencies": [
     {
       "tool": "nodejs",
-      "version": "24.12.0",
+      "version": "24.13.0",
       "recipe_hash": "275f5a5af4ac0739d853885eecb1326860b69650d579fa7db5a420d958e5b02a",
       "dependencies": [
         {
@@ -22,7 +22,7 @@
             {
               "tool": "patchelf",
               "version": "0.18.0",
-              "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+              "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
               "steps": [
                 {
                   "action": "download_file",
@@ -58,7 +58,7 @@
                 {
                   "action": "install_binaries",
                   "params": {
-                    "binaries": [
+                    "outputs": [
                       "bin/patchelf"
                     ]
                   },
@@ -80,21 +80,21 @@
         {
           "action": "download_file",
           "params": {
-            "checksum": "b82ea4c62fd08e250cab59d625e75d77cc5b0a3d60c6698ebee4545c88a169c5",
+            "checksum": "6f03c1b48ddbe1b129a6f8038be08e0899f05f17185b4d3e4350180ab669a7f3",
             "checksum_algo": "sha256",
-            "dest": "node-v24.12.0-darwin-x64.tar.gz",
-            "url": "https://nodejs.org/dist/v24.12.0/node-v24.12.0-darwin-x64.tar.gz"
+            "dest": "node-v24.13.0-darwin-x64.tar.gz",
+            "url": "https://nodejs.org/dist/v24.13.0/node-v24.13.0-darwin-x64.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://nodejs.org/dist/v24.12.0/node-v24.12.0-darwin-x64.tar.gz",
-          "checksum": "b82ea4c62fd08e250cab59d625e75d77cc5b0a3d60c6698ebee4545c88a169c5",
-          "size": 52376978
+          "url": "https://nodejs.org/dist/v24.13.0/node-v24.13.0-darwin-x64.tar.gz",
+          "checksum": "6f03c1b48ddbe1b129a6f8038be08e0899f05f17185b4d3e4350180ab669a7f3",
+          "size": 52380198
         },
         {
           "action": "extract",
           "params": {
-            "archive": "node-v24.12.0-darwin-x64.tar.gz",
+            "archive": "node-v24.13.0-darwin-x64.tar.gz",
             "format": "tar.gz",
             "strip_dirs": 1
           },

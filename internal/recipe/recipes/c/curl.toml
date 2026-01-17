@@ -41,7 +41,7 @@ rpath = "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib:{libs_dir}
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/curl"]
+outputs = ["bin/curl"]
 
 [verify]
 command = "curl --version"

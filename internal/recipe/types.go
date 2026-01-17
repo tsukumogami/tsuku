@@ -729,14 +729,19 @@ func (r *Recipe) ExtractBinaries() []string {
 			}
 		}
 
-		// Check for 'binaries' parameter (plural, used by download_archive, github_archive, install_binaries)
-		if binariesRaw, ok := step.Params["binaries"]; ok {
+		// Check for 'outputs' parameter (preferred) or 'binaries' (deprecated)
+		// Used by install_binaries action
+		outputsRaw, hasOutputs := step.Params["outputs"]
+		if !hasOutputs {
+			outputsRaw = step.Params["binaries"]
+		}
+		if outputsRaw != nil {
 			// Check install_mode to determine if we should add bin/ prefix
 			installMode, _ := step.Params["install_mode"].(string)
 			isDirectoryMode := (installMode == "directory" || installMode == "directory_wrapped")
 
-			if binariesList, ok := binariesRaw.([]interface{}); ok {
-				for _, b := range binariesList {
+			if outputsList, ok := outputsRaw.([]interface{}); ok {
+				for _, b := range outputsList {
 					var destPath string
 
 					// Handle two formats:

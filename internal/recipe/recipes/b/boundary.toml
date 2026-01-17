@@ -23,7 +23,7 @@ files = ["boundary"]
 
 [[steps]]
 action = "install_binaries"
-binaries = ["boundary"]
+outputs = ["boundary"]
 
 [verify]
 command = "boundary version"

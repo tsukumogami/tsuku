@@ -11,7 +11,7 @@ formula = "gdbm"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/gdbmtool"]
+outputs = ["bin/gdbmtool"]
 
 [verify]
 command = "gdbmtool --version"

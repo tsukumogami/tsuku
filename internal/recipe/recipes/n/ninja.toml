@@ -27,7 +27,7 @@ cmake_args = ["-DBUILD_TESTING=OFF"]
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/ninja"]
+outputs = ["bin/ninja"]
 
 [verify]
 command = "ninja --version"

@@ -1,0 +1,76 @@
+{
+  "$schema": "./execution-exclusions.schema.json",
+  "description": "Exclusions for golden file EXECUTION validation (install --plan). These recipes are excluded from validate-linux and validate-macos jobs in validate-golden-execution.yml. Each exclusion must link to an open issue tracking the blocker.",
+  "exclusions": [
+    {
+      "recipe": "amplify",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "black",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "cdk",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "curl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/879",
+      "reason": "configure auto-detects homebrew nghttp2/libidn2 but linker cannot find them (macOS)"
+    },
+    {
+      "recipe": "git",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "compile_from_source toolchain version drift (macOS build failures)"
+    },
+    {
+      "recipe": "httpie",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "netlify-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "poetry",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "ruff",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "serve",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "serverless",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "turbo",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "vercel",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "wrangler",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    }
+  ]
+}

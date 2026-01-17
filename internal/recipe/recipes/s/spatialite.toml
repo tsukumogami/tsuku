@@ -12,7 +12,7 @@ formula = "libspatialite"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/spatialite"]
+outputs = ["bin/spatialite"]
 
 [verify]
 command = "spatialite -version"

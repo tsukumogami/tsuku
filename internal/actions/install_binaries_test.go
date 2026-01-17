@@ -564,8 +564,12 @@ func TestInstallBinaries_SecurityValidation(t *testing.T) {
 				Version:    "1.0.0",
 			}
 
-			// Execute binaries installation
-			err := action.installBinaries(ctx, tt.binaries)
+			// Execute binaries installation - use all outputs as executables for security test
+			executables := make([]string, len(tt.binaries))
+			for i, b := range tt.binaries {
+				executables[i] = b.Dest
+			}
+			err := action.installBinariesMode(ctx, tt.binaries, executables)
 
 			if tt.shouldErr && err == nil {
 				t.Errorf("expected error, got nil")
@@ -609,14 +613,14 @@ func findSubstring(s, substr string) bool {
 	return false
 }
 
-// TestParseBinaries tests the binaries parameter parsing
-func TestParseBinaries(t *testing.T) {
+// TestParseOutputs tests the outputs parameter parsing
+func TestParseOutputs(t *testing.T) {
 	t.Parallel()
 	action := &InstallBinariesAction{}
 
 	tests := []struct {
 		name        string
-		input       interface{}
+		input       []interface{}
 		expectCount int
 		shouldErr   bool
 	}{
@@ -642,11 +646,6 @@ func TestParseBinaries(t *testing.T) {
 			shouldErr:   false,
 		},
 		{
-			name:      "invalid type",
-			input:     "not an array",
-			shouldErr: true,
-		},
-		{
 			name:      "invalid array item type",
 			input:     []interface{}{123},
 			shouldErr: true,
@@ -655,7 +654,7 @@ func TestParseBinaries(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result, err := action.parseBinaries(tt.input)
+			result, err := action.parseOutputs(tt.input)
 			if tt.shouldErr {
 				if err == nil {
 					t.Error("expected error, got nil")
@@ -667,7 +666,80 @@ func TestParseBinaries(t *testing.T) {
 				return
 			}
 			if len(result) != tt.expectCount {
-				t.Errorf("expected %d binaries, got %d", tt.expectCount, len(result))
+				t.Errorf("expected %d outputs, got %d", tt.expectCount, len(result))
+			}
+		})
+	}
+}
+
+// TestDetermineExecutables tests the path-based executability inference
+func TestDetermineExecutables(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                string
+		outputs             []recipe.BinaryMapping
+		explicitExecutables []string
+		expected            []string
+	}{
+		{
+			name: "infer from bin path",
+			outputs: []recipe.BinaryMapping{
+				{Src: "bin/java", Dest: "bin/java"},
+				{Src: "lib/libjli.so", Dest: "lib/libjli.so"},
+			},
+			explicitExecutables: nil,
+			expected:            []string{"bin/java"},
+		},
+		{
+			name: "multiple executables in bin",
+			outputs: []recipe.BinaryMapping{
+				{Src: "bin/java", Dest: "bin/java"},
+				{Src: "bin/javac", Dest: "bin/javac"},
+				{Src: "lib/libjli.so", Dest: "lib/libjli.so"},
+			},
+			explicitExecutables: nil,
+			expected:            []string{"bin/java", "bin/javac"},
+		},
+		{
+			name: "explicit executables override",
+			outputs: []recipe.BinaryMapping{
+				{Src: "libexec/helper", Dest: "libexec/helper"},
+				{Src: "lib/lib.so", Dest: "lib/lib.so"},
+			},
+			explicitExecutables: []string{"libexec/helper"},
+			expected:            []string{"libexec/helper"},
+		},
+		{
+			name: "no executables in lib only",
+			outputs: []recipe.BinaryMapping{
+				{Src: "lib/libfoo.so", Dest: "lib/libfoo.so"},
+				{Src: "lib/libbar.so", Dest: "lib/libbar.so"},
+			},
+			explicitExecutables: nil,
+			expected:            nil,
+		},
+		{
+			name:                "empty outputs",
+			outputs:             []recipe.BinaryMapping{},
+			explicitExecutables: nil,
+			expected:            nil,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := DetermineExecutables(tt.outputs, tt.explicitExecutables)
+
+			if len(result) != len(tt.expected) {
+				t.Errorf("DetermineExecutables() = %v, want %v", result, tt.expected)
+				return
+			}
+
+			for i := range result {
+				if result[i] != tt.expected[i] {
+					t.Errorf("DetermineExecutables()[%d] = %q, want %q", i, result[i], tt.expected[i])
+				}
 			}
 		})
 	}
@@ -682,8 +754,8 @@ func TestInstallBinariesAction_Name(t *testing.T) {
 	}
 }
 
-// TestInstallBinariesAction_Execute_MissingBinaries tests missing parameter
-func TestInstallBinariesAction_Execute_MissingBinaries(t *testing.T) {
+// TestInstallBinariesAction_Execute_MissingOutputs tests missing parameter
+func TestInstallBinariesAction_Execute_MissingOutputs(t *testing.T) {
 	t.Parallel()
 	action := &InstallBinariesAction{}
 	tmpDir := t.TempDir()
@@ -696,6 +768,63 @@ func TestInstallBinariesAction_Execute_MissingBinaries(t *testing.T) {
 
 	err := action.Execute(ctx, map[string]interface{}{})
 	if err == nil {
-		t.Error("Execute() should fail when 'binaries' parameter is missing")
+		t.Error("Execute() should fail when 'outputs' parameter is missing")
+	}
+}
+
+// TestInstallBinariesAction_Execute_BothOutputsAndBinaries tests error when both params present
+func TestInstallBinariesAction_Execute_BothOutputsAndBinaries(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+
+	result := action.Preflight(map[string]interface{}{
+		"outputs":  []interface{}{"bin/java"},
+		"binaries": []interface{}{"bin/java"},
+	})
+
+	if len(result.Errors) == 0 {
+		t.Error("Preflight() should error when both 'outputs' and 'binaries' are present")
+	}
+}
+
+// TestInstallBinariesAction_Execute_DeprecatedBinariesStillWorks tests backward compat
+func TestInstallBinariesAction_Execute_DeprecatedBinariesStillWorks(t *testing.T) {
+	t.Parallel()
+	action := &InstallBinariesAction{}
+	tmpDir := t.TempDir()
+	workDir := filepath.Join(tmpDir, "work")
+	installDir := filepath.Join(tmpDir, ".install")
+
+	// Create work directory with mock binary
+	binDir := filepath.Join(workDir, "bin")
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	testFile := filepath.Join(binDir, "test")
+	if err := os.WriteFile(testFile, []byte("test"), 0755); err != nil {
+		t.Fatalf("failed to create test file: %v", err)
+	}
+
+	ctx := &ExecutionContext{
+		Context:    context.Background(),
+		WorkDir:    workDir,
+		InstallDir: installDir,
+		Version:    "1.0.0",
+		Recipe: &recipe.Recipe{
+			Metadata: recipe.MetadataSection{
+				Name: "test-tool",
+			},
+		},
+	}
+
+	// Use deprecated 'binaries' parameter - should still work
+	params := map[string]interface{}{
+		"binaries": []interface{}{"bin/test"},
+	}
+
+	err := action.Execute(ctx, params)
+	if err != nil {
+		t.Errorf("Execute() with deprecated 'binaries' should still work, got: %v", err)
 	}
 }
