@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Validate golden file exclusions
-# Usage: ./scripts/validate-golden-exclusions.sh [--check-issues]
+# Usage: ./scripts/validate-golden-exclusions.sh [--file <path>] [--check-issues]
 #
 # Validates that:
 # 1. Exclusions file is valid JSON
@@ -16,25 +16,40 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-EXCLUSIONS_FILE="$REPO_ROOT/testdata/golden/exclusions.json"
+DEFAULT_FILE="$REPO_ROOT/testdata/golden/exclusions.json"
+EXCLUSIONS_FILE=""
 
 CHECK_ISSUES=false
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        --file)
+            if [[ -z "${2:-}" ]]; then
+                echo "Error: --file requires a path argument" >&2
+                exit 2
+            fi
+            EXCLUSIONS_FILE="$2"
+            shift 2
+            ;;
         --check-issues) CHECK_ISSUES=true; shift ;;
         -h|--help)
-            echo "Usage: $0 [--check-issues]"
+            echo "Usage: $0 [--file <path>] [--check-issues]"
             echo ""
             echo "Validate golden file exclusions."
             echo ""
             echo "Options:"
+            echo "  --file <path>   Exclusion file to validate (default: testdata/golden/exclusions.json)"
             echo "  --check-issues  Verify linked issues are still open (requires GITHUB_TOKEN)"
             exit 0
             ;;
         *) echo "Unknown flag: $1" >&2; exit 2 ;;
     esac
 done
+
+# Use default file if not specified
+if [[ -z "$EXCLUSIONS_FILE" ]]; then
+    EXCLUSIONS_FILE="$DEFAULT_FILE"
+fi
 
 # Check exclusions file exists
 if [[ ! -f "$EXCLUSIONS_FILE" ]]; then
@@ -63,17 +78,21 @@ INVALID_COUNT=0
 
 while IFS= read -r exclusion; do
     recipe=$(echo "$exclusion" | jq -r '.recipe')
-    os=$(echo "$exclusion" | jq -r '.platform.os')
-    arch=$(echo "$exclusion" | jq -r '.platform.arch')
+    os=$(echo "$exclusion" | jq -r '.platform.os // empty')
+    arch=$(echo "$exclusion" | jq -r '.platform.arch // empty')
     family=$(echo "$exclusion" | jq -r '.platform.linux_family // empty')
     issue_url=$(echo "$exclusion" | jq -r '.issue')
     reason=$(echo "$exclusion" | jq -r '.reason')
 
-    # Build platform string for display
-    if [[ -n "$family" ]]; then
-        platform_str="$os-$family-$arch"
+    # Build platform string for display (handle missing platform for code-validation exclusions)
+    if [[ -n "$os" && -n "$arch" ]]; then
+        if [[ -n "$family" ]]; then
+            platform_str="$os-$family-$arch"
+        else
+            platform_str="$os-$arch"
+        fi
     else
-        platform_str="$os-$arch"
+        platform_str="all platforms"
     fi
 
     echo ""

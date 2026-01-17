@@ -41,6 +41,9 @@ on:
       # This workflow file
       - '.github/workflows/validate-golden-code.yml'
 
+      # Code validation exclusions file
+      - 'testdata/golden/code-validation-exclusions.json'
+
   workflow_dispatch:
 
 # Note: The following files do NOT trigger this workflow because they contain
@@ -86,6 +89,11 @@ jobs:
 
       - name: Build tsuku
         run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Validate code-validation exclusions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./scripts/validate-golden-exclusions.sh --file testdata/golden/code-validation-exclusions.json --check-issues
 
       - name: Validate linux golden files
         env:
