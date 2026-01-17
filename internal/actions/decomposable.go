@@ -64,23 +64,23 @@ type EvalConstraints struct {
 	PipConstraints map[string]string
 
 	// GoSum contains the full go.sum content for go_build steps.
-	// Future: will be populated by issue #922.
+	// Extracted from go_sum param in golden files.
 	GoSum string
 
 	// CargoLock contains the full Cargo.lock content for cargo_install steps.
-	// Future: will be populated by issue #923.
+	// Extracted from lock_data param in golden files.
 	CargoLock string
 
 	// NpmLock contains package-lock.json content for npm_install steps.
-	// Future: will be populated by issue #924.
+	// Extracted from package_lock param in golden files.
 	NpmLock string
 
 	// GemLock contains Gemfile.lock content for gem_install steps.
-	// Future: will be populated by issue #925.
+	// Extracted from lock_data param in golden files.
 	GemLock string
 
-	// CpanMeta contains cpan metadata for cpan_install steps.
-	// Future: will be populated by issue #926.
+	// CpanMeta contains cpanfile.snapshot content for cpan_install steps.
+	// Extracted from snapshot param in golden files.
 	CpanMeta string
 }
 
