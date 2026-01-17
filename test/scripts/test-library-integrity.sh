@@ -92,6 +92,9 @@ if [ -z "$TARGET_FILE" ]; then
 fi
 echo "Modifying file: $TARGET_FILE"
 
+# Make file writable (library files are typically read-only)
+chmod +w "$TARGET_FILE"
+
 # Append data to the file to change its checksum
 echo "# modified by integrity test" >> "$TARGET_FILE"
 echo "File modified"
