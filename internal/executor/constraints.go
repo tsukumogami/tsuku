@@ -33,7 +33,8 @@ func ExtractConstraints(planPath string) (*actions.EvalConstraints, error) {
 // This is useful when the plan is already loaded in memory.
 func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraints, error) {
 	constraints := &actions.EvalConstraints{
-		PipConstraints: make(map[string]string),
+		PipConstraints:     make(map[string]string),
+		DependencyVersions: make(map[string]string),
 	}
 
 	// Extract from main steps
@@ -44,10 +45,13 @@ func ExtractConstraintsFromPlan(plan *InstallationPlan) (*actions.EvalConstraint
 	extractGemConstraintsFromSteps(plan.Steps, constraints)
 	extractCpanConstraintsFromSteps(plan.Steps, constraints)
 
-	// Extract from dependencies
+	// Extract from dependencies (both step constraints and dependency versions)
 	for _, dep := range plan.Dependencies {
 		extractConstraintsFromDependency(&dep, constraints)
 	}
+
+	// Extract toolchain dependency versions from the dependency tree
+	extractDependencyVersions(plan, constraints)
 
 	return constraints, nil
 }
@@ -252,4 +256,43 @@ func extractCpanConstraintsFromSteps(steps []ResolvedStep, constraints *actions.
 // HasCpanMetaConstraint returns true if the constraints contain a cpanfile.snapshot.
 func HasCpanMetaConstraint(constraints *actions.EvalConstraints) bool {
 	return constraints != nil && constraints.CpanMeta != ""
+}
+
+// extractDependencyVersions extracts toolchain dependency versions from the plan.
+// It recursively traverses the dependency tree, collecting tool names and versions.
+// First-encountered version wins in case of conflicts (depth-first traversal).
+func extractDependencyVersions(plan *InstallationPlan, constraints *actions.EvalConstraints) {
+	for _, dep := range plan.Dependencies {
+		// First-encountered wins: only set if not already present
+		if _, exists := constraints.DependencyVersions[dep.Tool]; !exists {
+			constraints.DependencyVersions[dep.Tool] = dep.Version
+		}
+		// Recursively extract from nested dependencies
+		extractDependencyVersionsFromDep(&dep, constraints)
+	}
+}
+
+// extractDependencyVersionsFromDep extracts dependency versions from a DependencyPlan recursively.
+func extractDependencyVersionsFromDep(dep *DependencyPlan, constraints *actions.EvalConstraints) {
+	for _, nested := range dep.Dependencies {
+		// First-encountered wins: only set if not already present
+		if _, exists := constraints.DependencyVersions[nested.Tool]; !exists {
+			constraints.DependencyVersions[nested.Tool] = nested.Version
+		}
+		extractDependencyVersionsFromDep(&nested, constraints)
+	}
+}
+
+// HasDependencyVersionConstraints returns true if the constraints contain toolchain dependency versions.
+func HasDependencyVersionConstraints(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && len(constraints.DependencyVersions) > 0
+}
+
+// GetDependencyVersionConstraint returns the pinned version for a dependency, if any.
+func GetDependencyVersionConstraint(constraints *actions.EvalConstraints, toolName string) (string, bool) {
+	if constraints == nil || len(constraints.DependencyVersions) == 0 {
+		return "", false
+	}
+	ver, ok := constraints.DependencyVersions[toolName]
+	return ver, ok
 }

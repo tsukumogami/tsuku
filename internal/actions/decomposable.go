@@ -82,6 +82,12 @@ type EvalConstraints struct {
 	// CpanMeta contains cpanfile.snapshot content for cpan_install steps.
 	// Extracted from snapshot param in golden files.
 	CpanMeta string
+
+	// DependencyVersions maps toolchain dependency names to pinned versions.
+	// Extracted from dependencies[] in the golden file plan.
+	// Used to pin toolchain versions (e.g., python-standalone, go, nodejs)
+	// during constrained evaluation for reproducible plan generation.
+	DependencyVersions map[string]string
 }
 
 // EvalContext provides context during decomposition.
