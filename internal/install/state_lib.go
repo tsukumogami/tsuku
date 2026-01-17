@@ -48,6 +48,13 @@ func (sm *StateManager) AddLibraryUsedBy(libName, libVersion, toolNameVersion st
 	})
 }
 
+// SetLibraryChecksums sets the checksums for a library version
+func (sm *StateManager) SetLibraryChecksums(libName, libVersion string, checksums map[string]string) error {
+	return sm.UpdateLibrary(libName, libVersion, func(ls *LibraryVersionState) {
+		ls.Checksums = checksums
+	})
+}
+
 // RemoveLibraryUsedBy removes a dependent tool from the UsedBy list for a library version
 func (sm *StateManager) RemoveLibraryUsedBy(libName, libVersion, toolNameVersion string) error {
 	return sm.UpdateLibrary(libName, libVersion, func(ls *LibraryVersionState) {
