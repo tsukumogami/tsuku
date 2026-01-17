@@ -23,7 +23,7 @@ files = ["waypoint"]
 
 [[steps]]
 action = "install_binaries"
-binaries = ["waypoint"]
+outputs = ["waypoint"]
 
 [verify]
 command = "waypoint version"

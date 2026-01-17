@@ -10,7 +10,7 @@ formula = "patchelf"
 
 [[steps]]
 action = "install_binaries"
-binaries = ["bin/patchelf"]
+outputs = ["bin/patchelf"]
 
 [verify]
 command = "patchelf --version"

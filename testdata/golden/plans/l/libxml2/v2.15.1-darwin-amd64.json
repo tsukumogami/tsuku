@@ -6,62 +6,8 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "5e01c1bd63ba2ec55559dc2005dc9bdaf180d6507c289d05a7fc51bd15c377a4",
+  "recipe_hash": "9b7a77e1b29212cae19d650b51b448c1a46e1c434b655d3bb1241c5209fef7a3",
   "deterministic": true,
-  "dependencies": [
-    {
-      "tool": "patchelf",
-      "version": "0.18.0",
-      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
-      "steps": [
-        {
-          "action": "download_file",
-          "params": {
-            "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-            "dest": "patchelf.tar.gz",
-            "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef"
-          },
-          "evaluable": true,
-          "deterministic": true,
-          "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-          "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-          "size": 122324
-        },
-        {
-          "action": "extract",
-          "params": {
-            "archive": "patchelf.tar.gz",
-            "format": "tar.gz",
-            "strip_dirs": 2
-          },
-          "evaluable": true,
-          "deterministic": true
-        },
-        {
-          "action": "homebrew_relocate",
-          "params": {
-            "formula": "patchelf"
-          },
-          "evaluable": false,
-          "deterministic": true
-        },
-        {
-          "action": "install_binaries",
-          "params": {
-            "binaries": [
-              "bin/patchelf"
-            ]
-          },
-          "evaluable": true,
-          "deterministic": true
-        }
-      ],
-      "verify": {
-        "command": "patchelf --version",
-        "pattern": "patchelf {version}"
-      }
-    }
-  ],
   "steps": [
     {
       "action": "download_file",
@@ -97,10 +43,10 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/xmllint"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true

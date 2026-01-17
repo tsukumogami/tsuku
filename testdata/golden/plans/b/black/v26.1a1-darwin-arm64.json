@@ -11,27 +11,27 @@
   "dependencies": [
     {
       "tool": "python-standalone",
-      "version": "20251217",
+      "version": "20260113",
       "recipe_hash": "3068c1ae3ebf682354aa60ac9d3825d538de118e80e1a37cdfcfa725af4e82d1",
       "steps": [
         {
           "action": "download_file",
           "params": {
-            "checksum": "e8a86c0b91ac8e053dfb5b4a9a8dd6323eef4c185c98ae75ff3518e15958a5ed",
+            "checksum": "d24ae39fd50f791355b578c2365f278e8d5f010af9487aa26c04366044bb9e60",
             "checksum_algo": "sha256",
-            "dest": "cpython-3.10.19+20251217-aarch64-apple-darwin-install_only.tar.gz",
-            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20251217/cpython-3.10.19+20251217-aarch64-apple-darwin-install_only.tar.gz"
+            "dest": "cpython-3.10.19+20260113-aarch64-apple-darwin-install_only.tar.gz",
+            "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260113/cpython-3.10.19+20260113-aarch64-apple-darwin-install_only.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20251217/cpython-3.10.19+20251217-aarch64-apple-darwin-install_only.tar.gz",
-          "checksum": "e8a86c0b91ac8e053dfb5b4a9a8dd6323eef4c185c98ae75ff3518e15958a5ed",
-          "size": 18866297
+          "url": "https://github.com/indygreg/python-build-standalone/releases/download/20260113/cpython-3.10.19+20260113-aarch64-apple-darwin-install_only.tar.gz",
+          "checksum": "d24ae39fd50f791355b578c2365f278e8d5f010af9487aa26c04366044bb9e60",
+          "size": 19522088
         },
         {
           "action": "extract",
           "params": {
-            "archive": "cpython-3.10.19+20251217-aarch64-apple-darwin-install_only.tar.gz",
+            "archive": "cpython-3.10.19+20260113-aarch64-apple-darwin-install_only.tar.gz",
             "format": "tar.gz",
             "strip_dirs": 1
           },
@@ -77,7 +77,7 @@
           "blackd"
         ],
         "has_native_addons": true,
-        "locked_requirements": "black==26.1a1 \\\n    --hash=sha256:6718cb8982a2b9be04df81656c7d011fc08ba6ba65dda5fe11fe3bda38968d34\nclick==8.3.1 \\\n    --hash=sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6\nmypy-extensions==1.1.0 \\\n    --hash=sha256:1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505\npackaging==25.0 \\\n    --hash=sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484\npathspec==0.12.1 \\\n    --hash=sha256:a0d503e138a4c123b27490a4f7beda6a01c6f288df0e4a8b79c7eb0dc7b4cc08\nplatformdirs==4.5.1 \\\n    --hash=sha256:d03afa3963c806a9bed9d5125c8f4cb2fdaf74a55ab60e5d59b3fde758104d31\npytokens==0.3.0 \\\n    --hash=sha256:95b2b5eaf832e469d141a378872480ede3f251a5a5041b8ec6e581d3ac71bbf3\ntomli==2.3.0 \\\n    --hash=sha256:e95b1af3c5b07d9e643909b5abbec77cd9f1217e6d0bca72b0234736b9fb1f1b\ntyping-extensions==4.15.0 \\\n    --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548\n",
+        "locked_requirements": "black==26.1a1 \\\n    --hash=sha256:8fb482cf11667cd271a900cef5e58648c4511f3e25902cf1d35b4294c6964c99\nclick==8.3.1 \\\n    --hash=sha256:981153a64e25f12d547d3426c367a4857371575ee7ad18df2a6183ab0545b2a6\nmypy-extensions==1.1.0 \\\n    --hash=sha256:1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505\npackaging==25.0 \\\n    --hash=sha256:29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484\npathspec==1.0.3 \\\n    --hash=sha256:e80767021c1cc524aa3fb14bedda9c34406591343cc42797b386ce7b9354fb6c\nplatformdirs==4.5.1 \\\n    --hash=sha256:d03afa3963c806a9bed9d5125c8f4cb2fdaf74a55ab60e5d59b3fde758104d31\npytokens==0.3.0 \\\n    --hash=sha256:95b2b5eaf832e469d141a378872480ede3f251a5a5041b8ec6e581d3ac71bbf3\ntomli==2.4.0 \\\n    --hash=sha256:1f776e7d669ebceb01dee46484485f43a4048746235e683bcdffacdf1fb4785a\ntyping-extensions==4.15.0 \\\n    --hash=sha256:f0fa19c6845758ab08074a0cfa8b7aecb71c999ca73d62883bc25cc018c4e548\n",
         "package": "black",
         "python_version": "3.10.19",
         "version": "26.1a1"

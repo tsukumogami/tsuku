@@ -11,7 +11,7 @@ formula = "geos"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/geos-config"]
+outputs = ["bin/geos-config"]
 
 [verify]
 command = "geos-config --version"

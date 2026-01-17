@@ -11,7 +11,7 @@
   "dependencies": [
     {
       "tool": "nodejs",
-      "version": "24.12.0",
+      "version": "24.13.0",
       "recipe_hash": "275f5a5af4ac0739d853885eecb1326860b69650d579fa7db5a420d958e5b02a",
       "dependencies": [
         {
@@ -22,7 +22,7 @@
             {
               "tool": "patchelf",
               "version": "0.18.0",
-              "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+              "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
               "steps": [
                 {
                   "action": "download_file",
@@ -58,7 +58,7 @@
                 {
                   "action": "install_binaries",
                   "params": {
-                    "binaries": [
+                    "outputs": [
                       "bin/patchelf"
                     ]
                   },
@@ -131,21 +131,21 @@
         {
           "action": "download_file",
           "params": {
-            "checksum": "6159227e0af7d7c3c6bb2fa900452b04a6cb8841a702a79acc613209d70b04d0",
+            "checksum": "6223aad1a81f9d1e7b682c59d12e2de233f7b4c37475cd40d1c89c42b737ffa8",
             "checksum_algo": "sha256",
-            "dest": "node-v24.12.0-linux-x64.tar.gz",
-            "url": "https://nodejs.org/dist/v24.12.0/node-v24.12.0-linux-x64.tar.gz"
+            "dest": "node-v24.13.0-linux-x64.tar.gz",
+            "url": "https://nodejs.org/dist/v24.13.0/node-v24.13.0-linux-x64.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://nodejs.org/dist/v24.12.0/node-v24.12.0-linux-x64.tar.gz",
-          "checksum": "6159227e0af7d7c3c6bb2fa900452b04a6cb8841a702a79acc613209d70b04d0",
-          "size": 56331493
+          "url": "https://nodejs.org/dist/v24.13.0/node-v24.13.0-linux-x64.tar.gz",
+          "checksum": "6223aad1a81f9d1e7b682c59d12e2de233f7b4c37475cd40d1c89c42b737ffa8",
+          "size": 56292159
         },
         {
           "action": "extract",
           "params": {
-            "archive": "node-v24.12.0-linux-x64.tar.gz",
+            "archive": "node-v24.13.0-linux-x64.tar.gz",
             "format": "tar.gz",
             "strip_dirs": 1
           },

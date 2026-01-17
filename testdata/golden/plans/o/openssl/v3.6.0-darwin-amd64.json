@@ -6,67 +6,13 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "5d6b22eb29f76f54dc84062d1eb9a28a3aa04d29bcc3f438ec6452c625259603",
+  "recipe_hash": "588f4d7c1dc27ca08660bcef58a10e34034517935f9050149450058b19fa401e",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "zlib",
       "version": "1.3.1",
-      "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
-      "dependencies": [
-        {
-          "tool": "patchelf",
-          "version": "0.18.0",
-          "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
-          "steps": [
-            {
-              "action": "download_file",
-              "params": {
-                "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-                "dest": "patchelf.tar.gz",
-                "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef"
-              },
-              "evaluable": true,
-              "deterministic": true,
-              "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-              "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-              "size": 122324
-            },
-            {
-              "action": "extract",
-              "params": {
-                "archive": "patchelf.tar.gz",
-                "format": "tar.gz",
-                "strip_dirs": 2
-              },
-              "evaluable": true,
-              "deterministic": true
-            },
-            {
-              "action": "homebrew_relocate",
-              "params": {
-                "formula": "patchelf"
-              },
-              "evaluable": false,
-              "deterministic": true
-            },
-            {
-              "action": "install_binaries",
-              "params": {
-                "binaries": [
-                  "bin/patchelf"
-                ]
-              },
-              "evaluable": true,
-              "deterministic": true
-            }
-          ],
-          "verify": {
-            "command": "patchelf --version",
-            "pattern": "patchelf {version}"
-          }
-        }
-      ],
+      "recipe_hash": "1cb26974336ea947b3ebf9a6b21747d0fdd3fdf9a5f2d94cc9ec18e59b682b29",
       "steps": [
         {
           "action": "download_file",
@@ -102,14 +48,14 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "lib/libz.a",
               "lib/libz.dylib",
               "lib/libz.so",
               "include/zlib.h",
               "include/zconf.h"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -153,7 +99,8 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/openssl",
           "lib/libssl.so",
           "lib/libssl.so.3",
@@ -163,8 +110,7 @@
           "lib/libcrypto.so.3",
           "lib/libcrypto.dylib",
           "lib/libcrypto.3.dylib"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true

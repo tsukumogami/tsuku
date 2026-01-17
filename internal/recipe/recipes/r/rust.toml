@@ -38,7 +38,7 @@ description = "Running Rust installer to set up toolchain"
 # Step 4: Register binaries for symlinking
 [[steps]]
 action = "install_binaries"
-binaries = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
+outputs = ["bin/cargo", "bin/rustc", "bin/rustdoc", "bin/rustfmt", "bin/cargo-clippy", "bin/clippy-driver", "bin/rust-analyzer"]
 install_mode = "directory"
 
 [verify]

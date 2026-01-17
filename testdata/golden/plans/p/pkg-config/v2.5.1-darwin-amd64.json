@@ -6,62 +6,8 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "1832cea3f7b3301b4c3aa62e63486cab92fa753cc8a8df37143124cb34fba897",
+  "recipe_hash": "002918e3e8ddf9fd1a9d00475209640675ca0982304443ef4b796c135678d905",
   "deterministic": true,
-  "dependencies": [
-    {
-      "tool": "patchelf",
-      "version": "0.18.0",
-      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
-      "steps": [
-        {
-          "action": "download_file",
-          "params": {
-            "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-            "dest": "patchelf.tar.gz",
-            "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef"
-          },
-          "evaluable": true,
-          "deterministic": true,
-          "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-          "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-          "size": 122324
-        },
-        {
-          "action": "extract",
-          "params": {
-            "archive": "patchelf.tar.gz",
-            "format": "tar.gz",
-            "strip_dirs": 2
-          },
-          "evaluable": true,
-          "deterministic": true
-        },
-        {
-          "action": "homebrew_relocate",
-          "params": {
-            "formula": "patchelf"
-          },
-          "evaluable": false,
-          "deterministic": true
-        },
-        {
-          "action": "install_binaries",
-          "params": {
-            "binaries": [
-              "bin/patchelf"
-            ]
-          },
-          "evaluable": true,
-          "deterministic": true
-        }
-      ],
-      "verify": {
-        "command": "patchelf --version",
-        "pattern": "patchelf {version}"
-      }
-    }
-  ],
   "steps": [
     {
       "action": "download_file",
@@ -97,7 +43,8 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/pkg-config",
           "bin/pkgconf",
           "lib/libpkgconf.so",
@@ -105,8 +52,7 @@
           "lib/libpkgconf.so.7",
           "lib/libpkgconf.7.dylib",
           "lib/libpkgconf.so.7.0.0"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true

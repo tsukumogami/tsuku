@@ -23,7 +23,7 @@ files = ["nomad"]
 
 [[steps]]
 action = "install_binaries"
-binaries = ["nomad"]
+outputs = ["nomad"]
 
 [verify]
 command = "nomad version"

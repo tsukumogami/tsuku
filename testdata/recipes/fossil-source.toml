@@ -27,7 +27,7 @@ executables = ["fossil"]
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = ["bin/fossil"]
+outputs = ["bin/fossil"]
 
 [verify]
 command = "fossil version"

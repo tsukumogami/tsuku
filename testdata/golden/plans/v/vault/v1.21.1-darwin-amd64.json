@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "593a6841cb3928ba2f2d876baccc42861418a94910f482b5e2d2f670ce265068",
+  "recipe_hash": "d4ecbf100129abb4c0843fe7c7018d4b577b52103bb1bbe2dfdc0fee34f1b2af",
   "deterministic": true,
   "steps": [
     {
@@ -45,7 +45,7 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "outputs": [
           "vault"
         ]
       },

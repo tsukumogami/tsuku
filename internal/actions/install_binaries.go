@@ -24,38 +24,65 @@ func (a *InstallBinariesAction) Name() string {
 // Preflight validates parameters without side effects.
 func (a *InstallBinariesAction) Preflight(params map[string]interface{}) *PreflightResult {
 	result := &PreflightResult{}
+
+	_, hasOutputs := params["outputs"]
 	_, hasBinaries := params["binaries"]
-	if !hasBinaries {
-		result.AddError("install_binaries action requires 'binaries' parameter")
+
+	if !hasOutputs && !hasBinaries {
+		result.AddError("install_binaries action requires 'outputs' parameter")
+	}
+	if hasOutputs && hasBinaries {
+		result.AddError("cannot specify both 'outputs' and 'binaries'; use 'outputs' only")
 	}
 	if _, hasBinary := params["binary"]; hasBinary {
-		result.AddError("'binary' parameter is not supported; use 'binaries' array instead")
+		result.AddError("'binary' parameter is not supported; use 'outputs' array instead")
 	}
-	// ERROR: Empty binaries array
-	binaries, hasBinaries := GetStringSlice(params, "binaries")
-	if hasBinaries && len(binaries) == 0 {
-		result.AddError("binaries array is empty; no files will be installed")
+
+	// ERROR: Empty outputs/binaries array
+	outputs := a.getOutputsParam(params)
+	if outputs != nil && len(outputs) == 0 {
+		result.AddError("outputs array is empty; no files will be installed")
 	}
 	return result
+}
+
+// getOutputsParam returns the outputs list, preferring 'outputs' over deprecated 'binaries'.
+func (a *InstallBinariesAction) getOutputsParam(params map[string]interface{}) []interface{} {
+	if outputsRaw, ok := params["outputs"]; ok {
+		if outputs, ok := outputsRaw.([]interface{}); ok {
+			return outputs
+		}
+	}
+	if binariesRaw, ok := params["binaries"]; ok {
+		if binaries, ok := binariesRaw.([]interface{}); ok {
+			return binaries
+		}
+	}
+	return nil
 }
 
 // Execute installs binaries to the installation directory
 //
 // Parameters:
-//   - binaries (required): List of binary mappings [{src: "kubectl", dest: "bin/kubectl"}]
+//   - outputs (required): List of output mappings [{src: "kubectl", dest: "bin/kubectl"}]
+//   - binaries (deprecated): Alias for outputs, use 'outputs' instead
+//   - executables (optional): List of files to make executable; if empty, inferred from path (bin/* = executable)
 //   - install_mode (optional): "binaries" (default), "directory", or "directory_wrapped"
 func (a *InstallBinariesAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
-	// Get binaries list (required)
-	binariesRaw, ok := params["binaries"]
-	if !ok {
-		return fmt.Errorf("install_binaries action requires 'binaries' parameter")
+	// Get outputs list (required) - prefer 'outputs' over deprecated 'binaries'
+	outputsRaw := a.getOutputsParam(params)
+	if outputsRaw == nil {
+		return fmt.Errorf("install_binaries action requires 'outputs' parameter")
 	}
 
-	// Parse binaries list
-	binaries, err := a.parseBinaries(binariesRaw)
+	// Parse outputs list
+	outputs, err := a.parseOutputs(outputsRaw)
 	if err != nil {
-		return fmt.Errorf("failed to parse binaries: %w", err)
+		return fmt.Errorf("failed to parse outputs: %w", err)
 	}
+
+	// Get explicit executables list (optional)
+	explicitExecutables, _ := GetStringSlice(params, "executables")
 
 	// Get install_mode parameter (default: "binaries")
 	installMode, _ := GetString(params, "install_mode")
@@ -73,12 +100,15 @@ func (a *InstallBinariesAction) Execute(ctx *ExecutionContext, params map[string
 		return fmt.Errorf("recipes with install_mode='%s' must include a [verify] section with a command to ensure the installation works correctly", installMode)
 	}
 
+	// Determine which files should be executable
+	executables := DetermineExecutables(outputs, explicitExecutables)
+
 	// Route to appropriate installation method
 	switch installMode {
 	case "binaries":
-		return a.installBinaries(ctx, binaries)
+		return a.installBinariesMode(ctx, outputs, executables)
 	case "directory":
-		return a.installDirectoryWithSymlinks(ctx, binaries)
+		return a.installDirectoryWithSymlinks(ctx, outputs)
 	case "directory_wrapped":
 		return fmt.Errorf("directory_wrapped mode not yet implemented (Phase 2)")
 	default:
@@ -86,13 +116,37 @@ func (a *InstallBinariesAction) Execute(ctx *ExecutionContext, params map[string
 	}
 }
 
-// installBinaries implements the traditional binary-only installation
-func (a *InstallBinariesAction) installBinaries(ctx *ExecutionContext, binaries []recipe.BinaryMapping) error {
-	// Validate all binary paths for security
-	for _, binary := range binaries {
-		if err := a.validateBinaryPath(binary.Src); err != nil {
+// DetermineExecutables returns the list of files that should be made executable.
+// If an explicit executables list is provided, use it.
+// Otherwise, infer from path: files in bin/ are executable.
+func DetermineExecutables(outputs []recipe.BinaryMapping, explicitExecutables []string) []string {
+	if len(explicitExecutables) > 0 {
+		return explicitExecutables
+	}
+
+	var result []string
+	for _, output := range outputs {
+		// Use Dest path for checking since that's where it will be installed
+		if strings.HasPrefix(output.Dest, "bin/") || strings.HasPrefix(output.Dest, "bin"+string(filepath.Separator)) {
+			result = append(result, output.Dest)
+		}
+	}
+	return result
+}
+
+// installBinariesMode implements the traditional binary-only installation
+func (a *InstallBinariesAction) installBinariesMode(ctx *ExecutionContext, outputs []recipe.BinaryMapping, executables []string) error {
+	// Validate all output paths for security
+	for _, output := range outputs {
+		if err := a.validateBinaryPath(output.Src); err != nil {
 			return err
 		}
+	}
+
+	// Build set of executable paths for quick lookup
+	executableSet := make(map[string]bool)
+	for _, exe := range executables {
+		executableSet[exe] = true
 	}
 
 	// Build vars for variable substitution
@@ -101,19 +155,20 @@ func (a *InstallBinariesAction) installBinaries(ctx *ExecutionContext, binaries 
 	// Log installation details
 	logger := ctx.Log()
 	logger.Debug("install_binaries action starting",
-		"count", len(binaries),
+		"count", len(outputs),
+		"executables", len(executables),
 		"installDir", ctx.InstallDir)
 
-	fmt.Printf("   Installing %d binary(ies)\n", len(binaries))
+	fmt.Printf("   Installing %d file(s)\n", len(outputs))
 
-	for _, binary := range binaries {
-		src := ExpandVars(binary.Src, vars)
-		dest := ExpandVars(binary.Dest, vars)
+	for _, output := range outputs {
+		src := ExpandVars(output.Src, vars)
+		dest := ExpandVars(output.Dest, vars)
 
 		srcPath := filepath.Join(ctx.WorkDir, src)
 		destPath := filepath.Join(ctx.InstallDir, dest)
 
-		logger.Debug("installing binary",
+		logger.Debug("installing file",
 			"src", src,
 			"srcPath", srcPath,
 			"dest", dest,
@@ -124,50 +179,48 @@ func (a *InstallBinariesAction) installBinaries(ctx *ExecutionContext, binaries 
 			return fmt.Errorf("failed to create destination directory: %w", err)
 		}
 
-		// Copy binary
+		// Copy file
 		if err := a.copyFile(srcPath, destPath); err != nil {
 			return fmt.Errorf("failed to install %s: %w", src, err)
 		}
 
-		// Make executable
-		if err := os.Chmod(destPath, 0755); err != nil {
-			return fmt.Errorf("failed to chmod %s: %w", dest, err)
+		// Make executable only if it's in the executables list
+		if executableSet[dest] {
+			if err := os.Chmod(destPath, 0755); err != nil {
+				return fmt.Errorf("failed to chmod %s: %w", dest, err)
+			}
+			logger.Debug("file installed as executable", "dest", destPath)
+			fmt.Printf("   ✓ Installed (executable): %s → %s\n", src, dest)
+		} else {
+			logger.Debug("file installed", "dest", destPath)
+			fmt.Printf("   ✓ Installed: %s → %s\n", src, dest)
 		}
-
-		logger.Debug("binary installed successfully", "dest", destPath)
-		fmt.Printf("   ✓ Installed: %s → %s\n", src, dest)
 	}
 
 	return nil
 }
 
-// parseBinaries parses the binaries parameter
+// parseOutputs parses the outputs parameter
 // Supports both array of maps and array of strings
-func (a *InstallBinariesAction) parseBinaries(raw interface{}) ([]recipe.BinaryMapping, error) {
-	// Handle []interface{} from TOML
-	arr, ok := raw.([]interface{})
-	if !ok {
-		return nil, fmt.Errorf("binaries must be an array")
-	}
-
+func (a *InstallBinariesAction) parseOutputs(raw []interface{}) ([]recipe.BinaryMapping, error) {
 	var result []recipe.BinaryMapping
 
-	for i, item := range arr {
+	for i, item := range raw {
 		switch v := item.(type) {
 		case map[string]interface{}:
 			// Parse as {src: "...", dest: "..."}
 			src, ok := v["src"].(string)
 			if !ok {
-				return nil, fmt.Errorf("binary %d: 'src' must be a string", i)
+				return nil, fmt.Errorf("output %d: 'src' must be a string", i)
 			}
 			dest, ok := v["dest"].(string)
 			if !ok {
-				return nil, fmt.Errorf("binary %d: 'dest' must be a string", i)
+				return nil, fmt.Errorf("output %d: 'dest' must be a string", i)
 			}
 			result = append(result, recipe.BinaryMapping{Src: src, Dest: dest})
 
 		case string:
-			// Shorthand: just binary path, install to bin/<basename>
+			// Shorthand: just output path, install to bin/<basename>
 			// e.g., "dist/sam" → bin/sam
 			basename := filepath.Base(v)
 			result = append(result, recipe.BinaryMapping{
@@ -176,7 +229,7 @@ func (a *InstallBinariesAction) parseBinaries(raw interface{}) ([]recipe.BinaryM
 			})
 
 		default:
-			return nil, fmt.Errorf("binary %d: invalid type %T", i, item)
+			return nil, fmt.Errorf("output %d: invalid type %T", i, item)
 		}
 	}
 
@@ -262,10 +315,10 @@ func (a *InstallBinariesAction) createSymlink(targetPath, linkPath string) error
 // installDirectoryWithSymlinks implements directory-based installation
 // This method copies the entire directory tree to InstallDir (workDir/.install)
 // The install manager will then copy from .install to the permanent location
-func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionContext, binaries []recipe.BinaryMapping) error {
-	// Validate all binary paths for security
-	for _, binary := range binaries {
-		if err := a.validateBinaryPath(binary.Src); err != nil {
+func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionContext, outputs []recipe.BinaryMapping) error {
+	// Validate all output paths for security
+	for _, output := range outputs {
+		if err := a.validateBinaryPath(output.Src); err != nil {
 			return err
 		}
 	}
@@ -275,7 +328,7 @@ func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionConte
 	logger.Debug("install_binaries (directory mode) starting",
 		"workDir", ctx.WorkDir,
 		"installDir", ctx.InstallDir,
-		"binaryCount", len(binaries))
+		"outputCount", len(outputs))
 
 	fmt.Printf("   Installing directory tree to: %s\n", ctx.InstallDir)
 
@@ -287,16 +340,16 @@ func (a *InstallBinariesAction) installDirectoryWithSymlinks(ctx *ExecutionConte
 	}
 
 	fmt.Printf("   ✓ Directory tree copied to %s\n", ctx.InstallDir)
-	fmt.Printf("   ✓ %d binary(ies) will be symlinked: %v\n", len(binaries), extractBinaryNames(binaries))
+	fmt.Printf("   ✓ %d output(s) will be symlinked: %v\n", len(outputs), extractOutputNames(outputs))
 
 	return nil
 }
 
-// extractBinaryNames extracts just the binary names from BinaryMapping for display
-func extractBinaryNames(binaries []recipe.BinaryMapping) []string {
-	names := make([]string, len(binaries))
-	for i, b := range binaries {
-		names[i] = filepath.Base(b.Src)
+// extractOutputNames extracts just the output names from BinaryMapping for display
+func extractOutputNames(outputs []recipe.BinaryMapping) []string {
+	names := make([]string, len(outputs))
+	for i, o := range outputs {
+		names[i] = filepath.Base(o.Src)
 	}
 	return names
 }

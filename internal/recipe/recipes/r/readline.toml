@@ -12,7 +12,7 @@ formula = "readline"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-binaries = [
+outputs = [
     "lib/libreadline.a",
     "lib/libreadline.so",
     "lib/libreadline.so.8",

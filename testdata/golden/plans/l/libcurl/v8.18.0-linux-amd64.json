@@ -6,18 +6,18 @@
     "os": "linux",
     "arch": "amd64"
   },
-  "recipe_hash": "e715efac519ffa0cb8e45ce340f89d9a2b278ce3e3f4ddff8551a9189e07c7fa",
+  "recipe_hash": "65bb0cc7e77cc3488d3ecd5851326303841f393577c276234b9109fca1389095",
   "deterministic": true,
   "dependencies": [
     {
       "tool": "brotli",
       "version": "1.2.0",
-      "recipe_hash": "a2ce13326389fe9b81c28e3fb69e3bbe705c1aa0b2b0a5ace7104f630064b86a",
+      "recipe_hash": "fe0827f52e3fa2258a05bd3422a203b033ae5e1d55cc5e6ef24b8aa0291546f5",
       "dependencies": [
         {
           "tool": "patchelf",
           "version": "0.18.0",
-          "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
+          "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
           "steps": [
             {
               "action": "download_file",
@@ -53,7 +53,7 @@
             {
               "action": "install_binaries",
               "params": {
-                "binaries": [
+                "outputs": [
                   "bin/patchelf"
                 ]
               },
@@ -102,7 +102,8 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "bin/brotli",
               "lib/libbrotlicommon.so",
               "lib/libbrotlicommon.so.1",
@@ -126,8 +127,7 @@
               "include/brotli/encode.h",
               "include/brotli/port.h",
               "include/brotli/types.h"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -138,7 +138,7 @@
     {
       "tool": "libnghttp2",
       "version": "1.68.0",
-      "recipe_hash": "2532ee621b859e390c45d3e1ed2cfe14142dad99efa182556b8e2171a14030f5",
+      "recipe_hash": "e5274626febdb38c16308f9214268b4d2e950a4b877c7dffedf514ec33070f37",
       "steps": [
         {
           "action": "download_file",
@@ -174,7 +174,8 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "lib/libnghttp2.a",
               "lib/libnghttp2.so",
               "lib/libnghttp2.so.14",
@@ -183,8 +184,7 @@
               "lib/pkgconfig/libnghttp2.pc",
               "include/nghttp2/nghttp2.h",
               "include/nghttp2/nghttp2ver.h"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -195,7 +195,7 @@
     {
       "tool": "libnghttp3",
       "version": "1.14.0",
-      "recipe_hash": "95f70bd7cf9a944963e35a92dcf74a208bfc1255ffcf4c408fa38bfa907771a5",
+      "recipe_hash": "06a006cff8a95e5c505720660e925b98599ed2e1f4e7f8390ab3558796a5d484",
       "steps": [
         {
           "action": "download_file",
@@ -231,7 +231,8 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "lib/libnghttp3.a",
               "lib/libnghttp3.so",
               "lib/libnghttp3.so.9",
@@ -239,8 +240,7 @@
               "lib/pkgconfig/libnghttp3.pc",
               "include/nghttp3/nghttp3.h",
               "include/nghttp3/version.h"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -251,7 +251,7 @@
     {
       "tool": "libngtcp2",
       "version": "1.19.0",
-      "recipe_hash": "79309efcd2138e1cc2e4acc8dc59335e06bae224358a22f6f001a55205efa49b",
+      "recipe_hash": "ae5e4337b5b9e79bdb0204697f48874be1f765087a6b70e3121afa220d16f800",
       "steps": [
         {
           "action": "download_file",
@@ -287,7 +287,8 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "lib/libngtcp2.so",
               "lib/libngtcp2.so.16",
               "lib/libngtcp2.dylib",
@@ -300,8 +301,7 @@
               "include/ngtcp2/ngtcp2_crypto.h",
               "include/ngtcp2/ngtcp2_crypto_ossl.h",
               "include/ngtcp2/version.h"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -312,17 +312,17 @@
     {
       "tool": "libssh2",
       "version": "1.11.1",
-      "recipe_hash": "e102bac2c87cf58e52348a3cbf2e37e2178c3b2aaa4631ecabe1bc849cf5d5df",
+      "recipe_hash": "c34a7d53405211b3509b57078a162900d164072a0624b646153ca8cfc25db883",
       "dependencies": [
         {
           "tool": "openssl",
           "version": "3.6.0",
-          "recipe_hash": "5d6b22eb29f76f54dc84062d1eb9a28a3aa04d29bcc3f438ec6452c625259603",
+          "recipe_hash": "588f4d7c1dc27ca08660bcef58a10e34034517935f9050149450058b19fa401e",
           "dependencies": [
             {
               "tool": "zlib",
               "version": "1.3.1",
-              "recipe_hash": "62ae9669a3217be4234586299512fd8a75d4308451764331097114e6061f0a47",
+              "recipe_hash": "1cb26974336ea947b3ebf9a6b21747d0fdd3fdf9a5f2d94cc9ec18e59b682b29",
               "steps": [
                 {
                   "action": "download_file",
@@ -358,14 +358,14 @@
                 {
                   "action": "install_binaries",
                   "params": {
-                    "binaries": [
+                    "install_mode": "directory",
+                    "outputs": [
                       "lib/libz.a",
                       "lib/libz.dylib",
                       "lib/libz.so",
                       "include/zlib.h",
                       "include/zconf.h"
-                    ],
-                    "install_mode": "directory"
+                    ]
                   },
                   "evaluable": true,
                   "deterministic": true
@@ -409,7 +409,8 @@
             {
               "action": "install_binaries",
               "params": {
-                "binaries": [
+                "install_mode": "directory",
+                "outputs": [
                   "bin/openssl",
                   "lib/libssl.so",
                   "lib/libssl.so.3",
@@ -419,8 +420,7 @@
                   "lib/libcrypto.so.3",
                   "lib/libcrypto.dylib",
                   "lib/libcrypto.3.dylib"
-                ],
-                "install_mode": "directory"
+                ]
               },
               "evaluable": true,
               "deterministic": true
@@ -468,7 +468,8 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "lib/libssh2.a",
               "lib/libssh2.so",
               "lib/libssh2.so.1",
@@ -478,8 +479,7 @@
               "include/libssh2.h",
               "include/libssh2_publickey.h",
               "include/libssh2_sftp.h"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -490,7 +490,7 @@
     {
       "tool": "zstd",
       "version": "1.5.7",
-      "recipe_hash": "8978a4c1c1b15a691097cd7cf84cb673c552b441b5e55ed2bdf627fd46cbbaed",
+      "recipe_hash": "6fc4d7ca35fa9fec376970016925e22746e50f7221ef4f9c652f793aba377397",
       "steps": [
         {
           "action": "download_file",
@@ -526,7 +526,8 @@
         {
           "action": "install_binaries",
           "params": {
-            "binaries": [
+            "install_mode": "directory",
+            "outputs": [
               "bin/zstd",
               "bin/pzstd",
               "bin/unzstd",
@@ -543,8 +544,7 @@
               "include/zstd.h",
               "include/zdict.h",
               "include/zstd_errors.h"
-            ],
-            "install_mode": "directory"
+            ]
           },
           "evaluable": true,
           "deterministic": true
@@ -588,7 +588,8 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/curl-config",
           "lib/libcurl.so",
           "lib/libcurl.so.4",
@@ -601,8 +602,7 @@
           "include/curl/easy.h",
           "include/curl/multi.h",
           "include/curl/urlapi.h"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true

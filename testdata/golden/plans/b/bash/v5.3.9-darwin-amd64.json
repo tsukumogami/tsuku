@@ -6,62 +6,8 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "0aed4c4c0f368b39ec5885280a719b093f87977d4ac19b70bf60396148845cc0",
+  "recipe_hash": "a68baa673aeb842bf81753c526a4d9f2532efe4dc88c5cc08bac063e1ac41406",
   "deterministic": true,
-  "dependencies": [
-    {
-      "tool": "patchelf",
-      "version": "0.18.0",
-      "recipe_hash": "9758ffc0465a69a5240824812b93b0c2e1e24aa6d09bef8ffc005ba4ed66406d",
-      "steps": [
-        {
-          "action": "download_file",
-          "params": {
-            "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-            "dest": "patchelf.tar.gz",
-            "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef"
-          },
-          "evaluable": true,
-          "deterministic": true,
-          "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-          "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-          "size": 122324
-        },
-        {
-          "action": "extract",
-          "params": {
-            "archive": "patchelf.tar.gz",
-            "format": "tar.gz",
-            "strip_dirs": 2
-          },
-          "evaluable": true,
-          "deterministic": true
-        },
-        {
-          "action": "homebrew_relocate",
-          "params": {
-            "formula": "patchelf"
-          },
-          "evaluable": false,
-          "deterministic": true
-        },
-        {
-          "action": "install_binaries",
-          "params": {
-            "binaries": [
-              "bin/patchelf"
-            ]
-          },
-          "evaluable": true,
-          "deterministic": true
-        }
-      ],
-      "verify": {
-        "command": "patchelf --version",
-        "pattern": "patchelf {version}"
-      }
-    }
-  ],
   "steps": [
     {
       "action": "download_file",
@@ -97,10 +43,10 @@
     {
       "action": "install_binaries",
       "params": {
-        "binaries": [
+        "install_mode": "directory",
+        "outputs": [
           "bin/bash"
-        ],
-        "install_mode": "directory"
+        ]
       },
       "evaluable": true,
       "deterministic": true
