@@ -158,59 +158,36 @@ if interp != "" && !fileExists(interp) {
 
 **Status:** ✅ Decided
 
+### 9. Validation Behavior: Fail on Undeclared Dependencies
+**Decision:** Fail verification when binary has dependencies not declared in recipe. No warn-only mode.
+
+**Context:** What happens when binary has dep not declared in recipe?
+
+**Pre-GA Context:**
+- tsuku is pre-GA with no real users yet
+- All recipes in registry exist to exercise the tool's use cases
+- Recipes are meant to fail when things change, and be atomically fixed
+- Breaking changes are acceptable now - no legacy format or backward compatibility concerns
+- Required checks help identify corner cases that need solving
+
+**Rationale:**
+- "Breaks existing recipes" is a **feature**, not a bug - surfaces issues to fix
+- Warn-only mode would let problems go unnoticed
+- Enforcing correctness now prevents technical debt
+- Failures during pre-GA are learning opportunities
+
+**Implementation:**
+- `tsuku verify` exits non-zero if undeclared deps found
+- Clear error message showing which deps are missing from recipe
+- No `--warn-only` or `--strict` flags needed
+
+**Status:** ✅ Decided
+
 ---
 
 ## Pending Decisions
 
-### 1. Validation Behavior: Warn vs Fail
-
-**Context:** What happens when binary has dep not declared in recipe?
-
-**Options:**
-| Option | Description | Pros | Cons |
-|--------|-------------|------|------|
-| A | Warn only | Non-blocking, graceful migration | May be ignored |
-| B | Fail by default | Enforces correctness | Breaks existing recipes |
-| C | Configurable | Flexibility | Complexity |
-
-**Leaning:** Option A for MVP, consider C later
-
-**Status:** 🔄 Needs decision
-
-### 4. Soname → Recipe Mapping
-
-**Context:** Need soname → recipe mapping for Tier 2 validation.
-
-**Decision:** Use **auto-discovery at install time**.
-
-**Approach:**
-- At library install: Extract DT_SONAME (ELF) / LC_ID_DYLIB (Mach-O) from binaries
-- Store in `state.json` under `LibraryVersionState.Sonames`
-- Build reverse index at verification time for Tier 2 lookups
-
-**Out of scope:** Optional `provides` field for discoverability is a separate feature (issue #969).
-
-**Status:** ✅ Decided - see `wip/research/soname-auto-discovery.md`
-
-### 5. System Recipe Detection
-
-**Context:** How do we know a recipe is "externally managed" (stops recursion)?
-
-**Decision:** Infer from actions via `IsExternallyManaged()` method on `SystemAction` interface.
-
-**Design:**
-- Add `IsExternallyManaged() bool` to `SystemAction` interface
-- Package manager actions return `true`: apt_install, brew_install, dnf_install, etc.
-- Other actions return `false`: group_add, download, go_build, etc.
-- Recipe-level: `IsExternallyManagedFor(target)` checks if ALL filtered steps are externally managed
-
-**Why this approach:**
-- Knowledge lives in the action (no central registry)
-- Target-dependent (step filtering happens first)
-- Follows existing pattern (`ImplicitConstraint()`)
-- Extensible (new package managers just implement the method)
-
-**Status:** ✅ Decided - see `wip/research/action-interface-pattern.md`
+*All decisions resolved.*
 
 ---
 
@@ -256,27 +233,79 @@ Moved to separate issue #969 (needs-design). Auto-discovery handles runtime; `pr
 
 ---
 
-## Proposed Design Direction
+## Complete Validation Model
 
-Based on all research, the design should:
+The complete `tsuku verify <target>` flow:
 
-1. **Infer binary deps** from DT_NEEDED/LC_LOAD_DYLIB (already done in Tier 1)
-2. **Detect static binaries** via PT_INTERP check, show "No dynamic dependencies (statically linked)"
-3. **Validate PT_INTERP for ABI compatibility** - even before classifying deps, verify the dynamic linker exists:
-   - Extract interpreter path from PT_INTERP segment (e.g., `/lib64/ld-linux-x86-64.so.2`)
-   - If interpreter path exists but file doesn't exist → warn about ABI mismatch
-   - This catches glibc binary on musl system (or vice versa) before any other validation
-4. **Build soname index** from state.json at verification time
-5. **Classify deps using THREE categories** (see `ruby-validation-example.md` and Key Learning #4):
-   - **TSUKU-MANAGED**: Soname found in index → validate + recurse (or stop if externally-managed)
-   - **PURE SYSTEM**: Library is inherently OS-provided (detected via pattern matching) → skip entirely
-   - **UNKNOWN**: Neither in index nor matching system patterns → warn
+```
+tsuku verify <target>
 
-   **Important:** PURE SYSTEM is defined by the library's inherent nature (OS-provided), not by the absence of a recipe. Pattern matching encodes our knowledge of what the OS provides.
-6. **Compare binary deps to recipe declarations** and warn on mismatch
-7. **Recursive validation via `--deep` flag** following recipe tree
-8. **Stop recursion at externally-managed** recipes (detected via `IsExternallyManaged()` on actions)
-9. **Warn, don't fail** for undeclared deps (graceful migration)
+1. LOAD target from state.json
+   → FAIL if not installed
+
+2. VALIDATE target itself:
+
+   a. ABI compatible?
+      - Linux: PT_INTERP interpreter exists
+      - macOS: Architecture matches
+      → FAIL if not
+
+   b. 🔮 Do I provide what my recipe declares?
+      - Compare actual sonames against declared `provides`
+      → FAIL if not
+      → PENDING: requires `provides` field (issue #969)
+
+   c. 🔮 Do I provide more than declared?
+      - Undeclared sonames suggest incomplete recipe
+      → WARN
+      → PENDING: requires `provides` field (issue #969)
+
+3. AM I TSUKU-MANAGED?
+   - Check via IsExternallyManaged() on recipe actions
+   → If externally-managed: STOP here (steps 2a-2c validated me, done)
+
+4. VALIDATE my dependencies:
+
+   a. Resolve path variables in DT_NEEDED
+      - Expand $ORIGIN, @rpath, @loader_path
+
+   b. For each DT_NEEDED entry, classify:
+      - In soname index → TSUKU dep (managed or external)
+      - System pattern match → PURE SYSTEM
+      - Neither → UNKNOWN → FAIL
+
+   c. For each dependency:
+      - PURE SYSTEM: verify accessible (file exists, or pattern-trusted on macOS)
+      - TSUKU: verify provides what I expect (soname in their auto-discovered sonames)
+      → FAIL if not
+
+5. RECURSE into TSUKU-MANAGED dependencies
+   - Run steps 1-5 on each
+   - Skip EXTERNALLY-MANAGED (validated in 4c, but don't recurse - pkg manager owns internals)
+   - Skip PURE SYSTEM (no recipe)
+   - Track visited nodes (cycle detection via existing MaxTransitiveDepth)
+```
+
+### What's Implemented vs Pending
+
+| Step | Status | Notes |
+|------|--------|-------|
+| 1. Load target | ✅ Implement now | Uses existing state.json |
+| 2a. ABI check | ✅ Implement now | PT_INTERP validation |
+| 2b. Provides match | 🔮 Pending #969 | Skip until `provides` field exists |
+| 2c. Extra provides | 🔮 Pending #969 | Skip until `provides` field exists |
+| 3. Management check | ✅ Implement now | IsExternallyManaged() pattern |
+| 4a. Path resolution | ✅ Implement now | Expand $ORIGIN, @rpath |
+| 4b. Classification | ✅ Implement now | Soname index + system patterns |
+| 4c. Dep validation | ✅ Implement now | Uses auto-discovered sonames |
+| 5. Recursion | ✅ Implement now | Cycle detection exists |
+
+### Static Binary Handling
+
+Static binaries (zero DT_NEEDED) are a special case:
+- Step 2a: Check PT_INTERP - if absent, binary is statically linked
+- Steps 4-5: Nothing to validate (no dependencies)
+- Result: "No dynamic dependencies (statically linked)" - PASS
 
 ### Classification Order (CRITICAL)
 
