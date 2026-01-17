@@ -421,6 +421,48 @@ git commit -m "update kubectl plan to 1.30.0"
 
 This workflow ensures that every plan change is reviewed and tracked before deployment.
 
+## Constrained Evaluation
+
+Constrained evaluation enables deterministic plan regeneration for recipes that normally have non-deterministic dependencies (pip, go, cargo, npm, gem, cpan).
+
+### The Problem
+
+Ecosystem recipes resolve dependency versions at eval time. Running `tsuku eval httpie` on two different days might produce different plans because transitive dependencies have been updated upstream. This makes plan comparison difficult for validation purposes.
+
+### The Solution
+
+Use the `--pin-from` flag to pass version constraints from an existing plan:
+
+```bash
+# Regenerate a plan using constraints from an existing golden file
+tsuku eval httpie@3.2.4 --pin-from testdata/golden/plans/h/httpie/v3.2.4-darwin-arm64.json
+```
+
+This extracts constraint data from the existing plan:
+- **pip recipes**: `locked_requirements` (package versions)
+- **go recipes**: `go_sum` content
+- **cargo recipes**: `Cargo.lock` content
+- **npm recipes**: `package-lock.json` content
+- **gem recipes**: `Gemfile.lock` content
+- **cpan recipes**: `cpanfile.snapshot` content
+
+The constrained eval produces deterministic output matching the original plan, enabling exact comparison.
+
+### Use Cases
+
+**Golden file validation:** CI can verify that recipe or code changes don't accidentally alter plan output.
+
+```bash
+# In CI: validate that regenerated plans match stored golden files
+tsuku eval httpie@3.2.4 --pin-from golden/httpie.json | diff - golden/httpie.json
+```
+
+**Debugging plan differences:** Compare what changed between two eval runs by constraining one to match the other.
+
+### Technical Details
+
+For the complete design, see [DESIGN-non-deterministic-validation.md](designs/current/DESIGN-non-deterministic-validation.md).
+
 ## Troubleshooting
 
 ### Plan Validation Errors
