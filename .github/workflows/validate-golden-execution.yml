@@ -102,7 +102,7 @@ jobs:
             case "$platform" in
               linux-amd64|linux-debian-amd64)
                 # Check if excluded
-                exclusion_issue=$(is_excluded "$tool" "linux" "amd64")
+                exclusion_issue=$(is_excluded "$tool" "linux" "amd64" || true)
                 if [ -n "$exclusion_issue" ]; then
                   echo "Skipping $path (excluded: $exclusion_issue)"
                   continue
@@ -121,7 +121,7 @@ jobs:
                 ;;
               darwin-arm64)
                 # Check if excluded
-                exclusion_issue=$(is_excluded "$tool" "darwin" "arm64")
+                exclusion_issue=$(is_excluded "$tool" "darwin" "arm64" || true)
                 if [ -n "$exclusion_issue" ]; then
                   echo "Skipping $path (excluded: $exclusion_issue)"
                   continue
