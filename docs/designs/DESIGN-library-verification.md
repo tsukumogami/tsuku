@@ -19,7 +19,7 @@ graph TD
     subgraph Infrastructure["Library Verification Infrastructure"]
         I942["#942 State schema<br/>(simple)"]:::done
         I943["#943 Verify command<br/>(testable)"]:::done
-        I946["#946 Install checksums<br/>(testable)"]:::ready
+        I946["#946 Install checksums<br/>(testable)"]:::done
     end
 
     subgraph Tiers["Library Verification Tiers"]
