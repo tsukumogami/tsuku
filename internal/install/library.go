@@ -41,11 +41,20 @@ func (m *Manager) InstallLibrary(name, version, workDir string, opts LibraryInst
 
 	fmt.Printf("   Installed library to: %s\n", libDir)
 
-	// Update state with used_by tracking
-	if opts.ToolNameVersion != "" {
-		if err := m.state.AddLibraryUsedBy(name, version, opts.ToolNameVersion); err != nil {
-			return fmt.Errorf("failed to update library state: %w", err)
+	// Always record library in state (even if not used by any tool yet)
+	// This ensures verify command can find standalone library installations
+	if err := m.state.UpdateLibrary(name, version, func(ls *LibraryVersionState) {
+		// Add to used_by if a tool depends on this library
+		if opts.ToolNameVersion != "" {
+			for _, u := range ls.UsedBy {
+				if u == opts.ToolNameVersion {
+					return // Already in list
+				}
+			}
+			ls.UsedBy = append(ls.UsedBy, opts.ToolNameVersion)
 		}
+	}); err != nil {
+		return fmt.Errorf("failed to update library state: %w", err)
 	}
 
 	return nil

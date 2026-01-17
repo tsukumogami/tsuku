@@ -11,6 +11,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/verify"
 )
 
 // Library verification flags
@@ -227,9 +228,9 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 }
 
 // verifyLibrary performs verification for library recipes.
-// This is a stub that verifies the library directory exists. Full tiered verification
-// (header validation, dependency checking, dlopen testing) will be implemented in
-// subsequent issues (#947, #948, #949, #950).
+// Implements Tier 1 header validation: validates that library files are valid
+// shared libraries for the current platform. Additional tiers (dependency checking,
+// dlopen testing, integrity) will be implemented in subsequent issues.
 func verifyLibrary(name string, state *install.State, cfg *config.Config, opts LibraryVerifyOptions) error {
 	// Look up library in state.Libs (not state.Installed)
 	libVersions, ok := state.Libs[name]
@@ -255,22 +256,122 @@ func verifyLibrary(name string, state *install.State, cfg *config.Config, opts L
 		return fmt.Errorf("library directory not found: %s", libDir)
 	}
 
-	printInfo("  Library directory exists\n")
+	printInfo("  Directory: exists\n")
 
-	// Log options for future implementation
+	// Tier 1: Header validation - validate all shared library files
+	printInfo("  Tier 1: Header validation...\n")
+
+	libFiles, err := findLibraryFiles(libDir)
+	if err != nil {
+		return fmt.Errorf("failed to scan library directory: %w", err)
+	}
+
+	if len(libFiles) == 0 {
+		printInfo("    No shared library files found (may be header-only)\n")
+	} else {
+		var validated, skipped int
+		for _, libFile := range libFiles {
+			relPath, _ := filepath.Rel(libDir, libFile)
+			info, err := verify.ValidateHeader(libFile)
+			if err != nil {
+				// Check if it's a wrong architecture error - this is acceptable for cross-platform recipes
+				if verr, ok := err.(*verify.ValidationError); ok {
+					if verr.Category == verify.ErrWrongArch {
+						printInfof("    %s: SKIPPED (%s)\n", relPath, verr.Message)
+						skipped++
+						continue
+					}
+				}
+				return fmt.Errorf("header validation failed for %s: %w", relPath, err)
+			}
+			printInfof("    %s: OK (%s %s, %s)\n", relPath, info.Format, info.Type, info.Architecture)
+			validated++
+		}
+		printInfof("  Tier 1: %d validated", validated)
+		if skipped > 0 {
+			printInfof(", %d skipped (wrong arch)", skipped)
+		}
+		printInfo("\n")
+	}
+
+	// Log options for future tiers
 	if opts.CheckIntegrity {
-		printInfo("  Integrity checking requested (not yet implemented)\n")
+		printInfo("  Tier 4 (integrity): not yet implemented\n")
 	}
-	if opts.SkipDlopen {
-		printInfo("  dlopen testing will be skipped\n")
+	if !opts.SkipDlopen {
+		printInfo("  Tier 3 (dlopen): not yet implemented\n")
 	}
-
-	printInfo("  (Full verification not yet implemented)\n")
 
 	// Store libState for future integrity verification
 	_ = libState
 
 	return nil
+}
+
+// findLibraryFiles walks a directory and returns paths to shared library files.
+// It identifies shared libraries by extension (.so, .dylib) and follows symlinks.
+func findLibraryFiles(dir string) ([]string, error) {
+	var files []string
+
+	err := filepath.WalkDir(dir, func(path string, d os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip directories
+		if d.IsDir() {
+			return nil
+		}
+
+		// Check for shared library extensions
+		name := d.Name()
+		if isSharedLibrary(name) {
+			// Resolve symlinks to avoid validating the same file twice
+			realPath, err := filepath.EvalSymlinks(path)
+			if err != nil {
+				return nil // Skip broken symlinks
+			}
+
+			// Only add if it's the real file (not a symlink)
+			if realPath == path {
+				files = append(files, path)
+			}
+		}
+
+		return nil
+	})
+
+	return files, err
+}
+
+// isSharedLibrary returns true if the filename indicates a shared library.
+func isSharedLibrary(name string) bool {
+	// macOS dynamic libraries
+	if strings.HasSuffix(name, ".dylib") {
+		return true
+	}
+
+	// Linux shared objects: libfoo.so, libfoo.so.1, libfoo.so.1.2.3
+	if strings.Contains(name, ".so") {
+		// Ensure .so is followed by nothing or a version number
+		idx := strings.Index(name, ".so")
+		suffix := name[idx+3:]
+		if suffix == "" {
+			return true
+		}
+		// Check if suffix is version-like: .1, .1.2, .1.2.3, etc.
+		if len(suffix) > 0 && suffix[0] == '.' {
+			// All remaining chars should be digits or dots
+			for _, c := range suffix[1:] {
+				if c != '.' && (c < '0' || c > '9') {
+					return false
+				}
+			}
+			return true
+		}
+	}
+
+	return false
 }
 
 var verifyCmd = &cobra.Command{
@@ -286,14 +387,16 @@ For visible tools, verification includes:
 
 For hidden tools (execution dependencies), only the verification command is run.
 
-For libraries:
-  Verifies the library directory exists.
-  Full verification (header validation, dependency checking, dlopen testing)
-  will be implemented in future updates.
+For libraries, verification is tiered:
+  Tier 1: Header validation - validates that library files are valid
+          shared libraries (ELF or Mach-O) for the current platform
+  Tier 2: Dependency checking (not yet implemented)
+  Tier 3: dlopen load testing (not yet implemented)
+  Tier 4: Integrity verification (not yet implemented)
 
   Flags:
-    --integrity     Enable checksum verification (Level 4)
-    --skip-dlopen   Skip dlopen load testing (Level 3)
+    --integrity     Enable checksum verification (Tier 4)
+    --skip-dlopen   Skip dlopen load testing (Tier 3)
 
 Binary integrity verification detects post-installation tampering by comparing
 current SHA256 checksums against those stored at installation time. Tools

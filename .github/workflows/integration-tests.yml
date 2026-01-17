@@ -62,3 +62,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./test/scripts/test-homebrew-recipe.sh pkg-config ${{ matrix.family }}
+
+  library-verify:
+    name: "Library Verify: ${{ matrix.library }} (${{ matrix.family }})"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        library: [zlib, libyaml]
+        family: [debian]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Run library verification test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./test/scripts/test-library-verify.sh ${{ matrix.library }} ${{ matrix.family }}
