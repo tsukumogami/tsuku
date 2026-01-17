@@ -1,80 +1,213 @@
 # Ruby Validation Example - Three-Category Model (Cross-Platform)
 
 **Date:** 2026-01-17
-**Purpose:** Concrete walkthrough of Tier 2 validation using Ruby as example across Linux (glibc), Linux (musl), and macOS
+**Purpose:** Concrete walkthrough of Tier 2 validation using Ruby as example across Linux and macOS, demonstrating all THREE dependency categories and how recursion behavior differs for each.
 
 ## The Three Categories
 
-| Category | Example | What We Do |
-|----------|---------|------------|
-| **Pure system lib** | `libc.so.6` (Linux), `libSystem.B.dylib` (macOS) | Skip entirely (inherently OS-provided) |
-| **Tsuku-managed** | `libyaml` (built from source) | Validate soname + recurse into its deps |
-| **Externally-managed tsuku recipe** | `openssl-system` (via apt/brew) | Validate provides expected soname, but STOP recursion |
+| Category | Definition | Recursion Behavior | Example |
+|----------|------------|-------------------|---------|
+| **PURE SYSTEM** | Inherently OS-provided libraries (no tsuku recipe exists) | Skip entirely | libc.so.6, libSystem.B.dylib |
+| **TSUKU-MANAGED** | Tsuku recipe builds from source | Validate soname + recurse into its deps | libyaml (source build) |
+| **EXTERNALLY-MANAGED** | Tsuku recipe delegates to package manager (apt/brew/apk) | Validate soname provided, but STOP recursion | openssl (via apt on Linux) |
 
-**Why PURE SYSTEM?** Libraries like libc, libm, libpthread are classified as PURE SYSTEM because they are **inherently OS-provided**. The OS kernel and standard runtime require these libraries to function. Pattern matching identifies them, with patterns varying by platform. The absence of tsuku recipes for these libraries is a **consequence** of being OS-provided, not the definition.
-
----
-
-## Platform Overview
-
-| Aspect | Linux (glibc) | Linux (musl) | macOS (Darwin) |
-|--------|--------------|--------------|----------------|
-| **Distribution examples** | Debian, Ubuntu, RHEL, Fedora | Alpine, Void Linux | macOS 12+, 13+, 14+ |
-| **Binary format** | ELF | ELF | Mach-O |
-| **Dependency extraction** | `readelf -d` (DT_NEEDED) | `readelf -d` (DT_NEEDED) | `otool -L` (LC_LOAD_DYLIB) |
-| **Standard C library** | glibc | musl-libc | libSystem |
-| **Linker** | `ld-linux-x86-64.so.2` | `ld-musl-x86_64.so.1` | `/usr/lib/dyld` |
+**Key insight:** The same logical library may have different management styles on different platforms. For example, openssl might be EXTERNALLY-MANAGED on Linux (via apt) but TSUKU-MANAGED on macOS (built from source because Apple deprecated OpenSSL).
 
 ---
 
-## Ruby Recipe with Platform-Specific Steps
+## Ruby Recipe (Simple, Correct Form)
 
-The Ruby recipe uses conditional steps based on the target platform:
+The Ruby recipe declares its dependencies but does NOT install them inline. Dependencies are SEPARATE tsuku recipes.
 
 ```toml
 # recipes/ruby.toml
 [recipe]
 name = "ruby"
 type = "tool"
+description = "Dynamic programming language"
 dependencies = ["libyaml", "openssl", "readline", "zlib"]
 
-# Step 1: Download Ruby source (all platforms)
 [[steps]]
 action = "download"
 url = "https://cache.ruby-lang.org/pub/ruby/3.3/ruby-{{version}}.tar.gz"
 
-# Step 2: Install build dependencies (platform-specific)
+[[steps]]
+action = "extract"
+format = "tar.gz"
+
+[[steps]]
+action = "configure_make_install"
+configure_flags = [
+  "--enable-shared",
+  "--with-openssl-dir={{openssl.prefix}}",
+  "--with-readline-dir={{readline.prefix}}",
+  "--with-libyaml-dir={{libyaml.prefix}}",
+  "--with-zlib-dir={{zlib.prefix}}"
+]
+```
+
+**Note:** Build tools (gcc, make, build-essential) are environment prerequisites, not recipe dependencies. Users must have a working build environment.
+
+---
+
+## Dependency Recipes with Different Management Styles
+
+Each dependency has its own recipe with platform-specific management:
+
+### libyaml - TSUKU-MANAGED (all platforms)
+
+Built from source on all platforms. Tsuku controls the entire build.
+
+```toml
+# recipes/libyaml.toml
+[recipe]
+name = "libyaml"
+type = "library"
+description = "YAML parser and emitter library"
+
+[[steps]]
+action = "download"
+url = "https://github.com/yaml/libyaml/releases/download/{{version}}/yaml-{{version}}.tar.gz"
+
+[[steps]]
+action = "extract"
+format = "tar.gz"
+
+[[steps]]
+action = "configure_make_install"
+```
+
+**Category:** TSUKU-MANAGED on all platforms (source build)
+**Recursion:** Validate + recurse into libyaml's dependencies
+
+---
+
+### openssl - EXTERNALLY-MANAGED (Linux) / TSUKU-MANAGED (macOS)
+
+Different management styles per platform:
+
+```toml
+# recipes/openssl.toml
+[recipe]
+name = "openssl"
+type = "library"
+description = "TLS/SSL and crypto library"
+
+# Linux: Use system OpenSSL via apt/apk (common, well-tested)
 [[steps]]
 action = "apt_install"
-packages = ["build-essential", "libffi-dev"]
-when = { os = "linux", libc = "glibc" }
+packages = ["libssl-dev"]
+when = { os = "linux", distro_family = "debian" }
 
 [[steps]]
 action = "apk_add"
-packages = ["build-base", "libffi-dev"]
-when = { os = "linux", libc = "musl" }
+packages = ["openssl-dev"]
+when = { os = "linux", distro_family = "alpine" }
+
+# macOS: Build from source (Apple deprecated system OpenSSL)
+[[steps]]
+action = "download"
+url = "https://www.openssl.org/source/openssl-{{version}}.tar.gz"
+when = { os = "darwin" }
+
+[[steps]]
+action = "extract"
+format = "tar.gz"
+when = { os = "darwin" }
+
+[[steps]]
+action = "shell"
+script = "./Configure darwin64-arm64-cc --prefix={{prefix}} && make && make install"
+when = { os = "darwin" }
+```
+
+**Category:**
+- Linux: EXTERNALLY-MANAGED (apt owns the library and its transitive deps)
+- macOS: TSUKU-MANAGED (tsuku builds from source)
+
+**Recursion:**
+- Linux: Validate soname provided, STOP (apt owns the dependency tree)
+- macOS: Validate soname + recurse into openssl's dependencies
+
+---
+
+### readline - EXTERNALLY-MANAGED (Linux) / TSUKU-MANAGED (macOS)
+
+Similar pattern to openssl:
+
+```toml
+# recipes/readline.toml
+[recipe]
+name = "readline"
+type = "library"
+description = "GNU readline library"
+
+# Linux: Use system readline
+[[steps]]
+action = "apt_install"
+packages = ["libreadline-dev"]
+when = { os = "linux", distro_family = "debian" }
+
+[[steps]]
+action = "apk_add"
+packages = ["readline-dev"]
+when = { os = "linux", distro_family = "alpine" }
+
+# macOS: Build from source (system readline is BSD libedit)
+[[steps]]
+action = "download"
+url = "https://ftp.gnu.org/gnu/readline/readline-{{version}}.tar.gz"
+when = { os = "darwin" }
+
+[[steps]]
+action = "extract"
+format = "tar.gz"
+when = { os = "darwin" }
+
+[[steps]]
+action = "configure_make_install"
+when = { os = "darwin" }
+```
+
+**Category:**
+- Linux: EXTERNALLY-MANAGED
+- macOS: TSUKU-MANAGED
+
+---
+
+### zlib - EXTERNALLY-MANAGED (all platforms)
+
+Very common system library, use system version everywhere:
+
+```toml
+# recipes/zlib.toml
+[recipe]
+name = "zlib"
+type = "library"
+description = "Compression library"
+
+[[steps]]
+action = "apt_install"
+packages = ["zlib1g-dev"]
+when = { os = "linux", distro_family = "debian" }
+
+[[steps]]
+action = "apk_add"
+packages = ["zlib-dev"]
+when = { os = "linux", distro_family = "alpine" }
 
 [[steps]]
 action = "brew_install"
-packages = ["libffi"]
+packages = ["zlib"]
 when = { os = "darwin" }
-
-# Step 3: Build from source (all platforms, uses installed deps)
-[[steps]]
-action = "configure_make_install"
-configure_flags = ["--enable-shared", "--with-openssl-dir={{openssl.prefix}}"]
 ```
 
-**Key points:**
-- The `when` clause controls which steps run on each platform
-- Actions like `apt_install`, `apk_add`, `brew_install` imply the platform
-- Dependencies are resolved to platform-appropriate library paths
+**Category:** EXTERNALLY-MANAGED on all platforms
+**Recursion:** Validate soname provided, STOP on all platforms
 
 ---
 
 ## Step 1: Extract Binary Dependencies
-
-Each platform uses different tools and reports dependencies differently:
 
 ### Linux (glibc) - e.g., Debian/Ubuntu
 
@@ -91,20 +224,6 @@ $ readelf -d $TSUKU_HOME/tools/ruby-3.3.0/bin/ruby | grep NEEDED
   NEEDED: libz.so.1
 ```
 
-### Linux (musl) - e.g., Alpine
-
-```bash
-$ readelf -d $TSUKU_HOME/tools/ruby-3.3.0/bin/ruby | grep NEEDED
-  NEEDED: libc.musl-x86_64.so.1
-  NEEDED: libyaml-0.so.2
-  NEEDED: libssl.so.3
-  NEEDED: libcrypto.so.3
-  NEEDED: libreadline.so.8
-  NEEDED: libz.so.1
-```
-
-**Note:** musl combines libc, libm, libpthread, libdl into a single `libc.musl-*.so.1` library.
-
 ### macOS (Darwin)
 
 ```bash
@@ -118,24 +237,24 @@ $ otool -L $TSUKU_HOME/tools/ruby-3.3.0/bin/ruby
   @rpath/libz.1.dylib
 ```
 
-**Note:** macOS uses `@rpath` prefixes for libraries that should be resolved via the runtime search path, and absolute paths for system libraries.
-
 ---
 
 ## Step 2: Build Soname Index from state.json
 
-The soname index is built the same way on all platforms, but the recorded sonames differ:
+The soname index maps library sonames to recipe names:
 
 ```json
-// state.json structure (platform-aware)
 {
   "libs": {
     "libyaml": {
       "0.2.5": {
         "sonames": {
           "linux-glibc": ["libyaml-0.so.2"],
-          "linux-musl": ["libyaml-0.so.2"],
           "darwin": ["libyaml-0.2.dylib"]
+        },
+        "management": {
+          "linux-glibc": "source",
+          "darwin": "source"
         }
       }
     },
@@ -143,8 +262,11 @@ The soname index is built the same way on all platforms, but the recorded soname
       "3.2.1": {
         "sonames": {
           "linux-glibc": ["libssl.so.3", "libcrypto.so.3"],
-          "linux-musl": ["libssl.so.3", "libcrypto.so.3"],
           "darwin": ["libssl.3.dylib", "libcrypto.3.dylib"]
+        },
+        "management": {
+          "linux-glibc": "apt",
+          "darwin": "source"
         }
       }
     },
@@ -152,8 +274,11 @@ The soname index is built the same way on all platforms, but the recorded soname
       "8.2": {
         "sonames": {
           "linux-glibc": ["libreadline.so.8"],
-          "linux-musl": ["libreadline.so.8"],
           "darwin": ["libreadline.8.dylib"]
+        },
+        "management": {
+          "linux-glibc": "apt",
+          "darwin": "source"
         }
       }
     },
@@ -161,8 +286,11 @@ The soname index is built the same way on all platforms, but the recorded soname
       "1.3.1": {
         "sonames": {
           "linux-glibc": ["libz.so.1"],
-          "linux-musl": ["libz.so.1"],
           "darwin": ["libz.1.dylib"]
+        },
+        "management": {
+          "linux-glibc": "apt",
+          "darwin": "brew"
         }
       }
     }
@@ -170,104 +298,74 @@ The soname index is built the same way on all platforms, but the recorded soname
 }
 ```
 
-**Resulting index (per platform):**
+---
 
-| Linux (glibc/musl) | macOS (Darwin) |
-|-------------------|----------------|
-| `libyaml-0.so.2` -> libyaml | `libyaml-0.2.dylib` -> libyaml |
-| `libssl.so.3` -> openssl | `libssl.3.dylib` -> openssl |
-| `libcrypto.so.3` -> openssl | `libcrypto.3.dylib` -> openssl |
-| `libreadline.so.8` -> readline | `libreadline.8.dylib` -> readline |
-| `libz.so.1` -> zlib | `libz.1.dylib` -> zlib |
+## Step 3: Classify Dependencies
+
+For each binary dependency, we ask:
+1. **Is it in our soname index?** -> Which recipe provides it?
+2. **If yes, is that recipe externally-managed for this platform?**
+3. **If not in index, does it match a pure system pattern?**
+
+### Classification Table - Linux (glibc)
+
+| DT_NEEDED | Category | Reason | Action |
+|-----------|----------|--------|--------|
+| `libc.so.6` | **PURE SYSTEM** | Inherently OS-provided, no tsuku recipe | Skip |
+| `libm.so.6` | **PURE SYSTEM** | Inherently OS-provided, no tsuku recipe | Skip |
+| `libpthread.so.0` | **PURE SYSTEM** | Inherently OS-provided, no tsuku recipe | Skip |
+| `libdl.so.2` | **PURE SYSTEM** | Inherently OS-provided, no tsuku recipe | Skip |
+| `libyaml-0.so.2` | **TSUKU-MANAGED** | libyaml recipe builds from source | Validate + Recurse |
+| `libssl.so.3` | **EXTERNALLY-MANAGED** | openssl recipe uses `apt_install` | Validate, NO recurse |
+| `libcrypto.so.3` | **EXTERNALLY-MANAGED** | openssl recipe uses `apt_install` | Validate, NO recurse |
+| `libreadline.so.8` | **EXTERNALLY-MANAGED** | readline recipe uses `apt_install` | Validate, NO recurse |
+| `libz.so.1` | **EXTERNALLY-MANAGED** | zlib recipe uses `apt_install` | Validate, NO recurse |
+
+**Summary for Linux:**
+- 4 PURE SYSTEM libs (skipped entirely)
+- 1 TSUKU-MANAGED lib (validate + recurse)
+- 4 EXTERNALLY-MANAGED libs (validate, stop recursion)
+
+### Classification Table - macOS (Darwin)
+
+| LC_LOAD_DYLIB | Category | Reason | Action |
+|---------------|----------|--------|--------|
+| `/usr/lib/libSystem.B.dylib` | **PURE SYSTEM** | Inherently OS-provided, no tsuku recipe | Skip |
+| `@rpath/libyaml-0.2.dylib` | **TSUKU-MANAGED** | libyaml recipe builds from source | Validate + Recurse |
+| `@rpath/libssl.3.dylib` | **TSUKU-MANAGED** | openssl recipe builds from source on macOS | Validate + Recurse |
+| `@rpath/libcrypto.3.dylib` | **TSUKU-MANAGED** | openssl recipe builds from source on macOS | Validate + Recurse |
+| `@rpath/libreadline.8.dylib` | **TSUKU-MANAGED** | readline recipe builds from source on macOS | Validate + Recurse |
+| `@rpath/libz.1.dylib` | **EXTERNALLY-MANAGED** | zlib recipe uses `brew_install` | Validate, NO recurse |
+
+**Summary for macOS:**
+- 1 PURE SYSTEM lib (skipped entirely)
+- 4 TSUKU-MANAGED libs (validate + recurse) - more than Linux!
+- 1 EXTERNALLY-MANAGED lib (validate, stop recursion)
+
+**Key difference:** openssl and readline are EXTERNALLY-MANAGED on Linux but TSUKU-MANAGED on macOS. This reflects real-world needs (Apple deprecated OpenSSL, macOS "readline" is actually libedit).
 
 ---
 
-## Step 3: Classify Dependencies (Platform-Specific Patterns)
+## Step 4: Recursive Validation (--deep)
 
-For each binary dependency, we ask TWO questions in order:
-
-1. **Is it in our soname index?** (Is tsuku managing this library?)
-2. **If not, does it match a known OS-provided library pattern?**
-
-### Pure System Patterns by Platform
-
-| Platform | Pattern Examples | Rationale |
-|----------|-----------------|-----------|
-| **Linux (glibc)** | `libc.so.*`, `libm.so.*`, `libpthread.so.*`, `libdl.so.*`, `librt.so.*`, `ld-linux*.so.*` | Core glibc components provided by every glibc-based distribution |
-| **Linux (musl)** | `libc.musl-*.so.*`, `ld-musl-*.so.*` | All standard C library functions consolidated in single musl library |
-| **macOS (Darwin)** | `/usr/lib/libSystem.B.dylib`, `/usr/lib/libc++.1.dylib`, `/usr/lib/libobjc.A.dylib`, `/System/Library/Frameworks/*` | Apple system libraries and frameworks, always available |
-
-### Classification Tables by Platform
-
-#### Linux (glibc)
-
-| DT_NEEDED | In Index? | System Pattern? | Category | Action |
-|-----------|-----------|-----------------|----------|--------|
-| `libc.so.6` | No | Yes (`libc.so.*`) | PURE SYSTEM | Skip |
-| `libm.so.6` | No | Yes (`libm.so.*`) | PURE SYSTEM | Skip |
-| `libpthread.so.0` | No | Yes (`libpthread.so.*`) | PURE SYSTEM | Skip |
-| `libdl.so.2` | No | Yes (`libdl.so.*`) | PURE SYSTEM | Skip |
-| `libyaml-0.so.2` | Yes -> libyaml | - | TSUKU-MANAGED | Validate + Recurse |
-| `libssl.so.3` | Yes -> openssl | - | TSUKU-MANAGED | Validate + Recurse |
-| `libcrypto.so.3` | Yes -> openssl | - | TSUKU-MANAGED | Validate + Recurse |
-| `libreadline.so.8` | Yes -> readline | - | TSUKU-MANAGED | Validate + Recurse |
-| `libz.so.1` | Yes -> zlib | - | TSUKU-MANAGED | Validate + Recurse |
-
-#### Linux (musl)
-
-| DT_NEEDED | In Index? | System Pattern? | Category | Action |
-|-----------|-----------|-----------------|----------|--------|
-| `libc.musl-x86_64.so.1` | No | Yes (`libc.musl-*.so.*`) | PURE SYSTEM | Skip |
-| `libyaml-0.so.2` | Yes -> libyaml | - | TSUKU-MANAGED | Validate + Recurse |
-| `libssl.so.3` | Yes -> openssl | - | TSUKU-MANAGED | Validate + Recurse |
-| `libcrypto.so.3` | Yes -> openssl | - | TSUKU-MANAGED | Validate + Recurse |
-| `libreadline.so.8` | Yes -> readline | - | TSUKU-MANAGED | Validate + Recurse |
-| `libz.so.1` | Yes -> zlib | - | TSUKU-MANAGED | Validate + Recurse |
-
-**Note:** Fewer system libraries appear because musl consolidates them.
-
-#### macOS (Darwin)
-
-| LC_LOAD_DYLIB | In Index? | System Pattern? | Category | Action |
-|---------------|-----------|-----------------|----------|--------|
-| `/usr/lib/libSystem.B.dylib` | No | Yes (`/usr/lib/libSystem*`) | PURE SYSTEM | Skip |
-| `@rpath/libyaml-0.2.dylib` | Yes -> libyaml | - | TSUKU-MANAGED | Validate + Recurse |
-| `@rpath/libssl.3.dylib` | Yes -> openssl | - | TSUKU-MANAGED | Validate + Recurse |
-| `@rpath/libcrypto.3.dylib` | Yes -> openssl | - | TSUKU-MANAGED | Validate + Recurse |
-| `@rpath/libreadline.8.dylib` | Yes -> readline | - | TSUKU-MANAGED | Validate + Recurse |
-| `@rpath/libz.1.dylib` | Yes -> zlib | - | TSUKU-MANAGED | Validate + Recurse |
-
-**Note:** `@rpath` prefixes are stripped when looking up in the soname index.
-
----
-
-## Step 4: Validate Tsuku-Managed Dependencies
-
-For each tsuku-managed dependency found in index:
-
-1. **Check recipe declaration:** Is `libyaml` in Ruby's `dependencies`? YES
-2. **Verify installation:** Is `libyaml` actually installed? YES
-3. **Verify soname match:** Does installed libyaml provide the expected soname for this platform? YES
-
-If any check fails -> Warning (dep not declared, or declared but not installed, or soname mismatch).
-
----
-
-## Step 5: Recursive Validation (--deep)
-
-For each validated tsuku-managed dependency, we check if it's externally managed:
+Recursion behavior differs by category:
 
 ```go
-// Simplified logic
-for _, dep := range tsukuManagedDeps {
-    recipe := LoadRecipe(dep.RecipeName)
+for _, dep := range binaryDeps {
+    category := classifyDep(dep)
 
-    if recipe.IsExternallyManagedFor(currentTarget) {
-        // Category: EXTERNALLY-MANAGED TSUKU RECIPE
-        // Validate it provides expected soname, but DON'T recurse
+    switch category {
+    case PURE_SYSTEM:
+        // Skip entirely - no validation, no recursion
+        continue
+
+    case EXTERNALLY_MANAGED:
+        // Validate soname is provided, but DON'T recurse
+        // The package manager (apt/brew/apk) owns the dependency tree
         validateSonameProvided(dep)
-    } else {
-        // Category: TSUKU-MANAGED
+        // STOP - don't look at openssl's deps when apt installed it
+
+    case TSUKU_MANAGED:
         // Validate AND recurse
         validateSonameProvided(dep)
         recursivelyValidate(dep)  // Continue down the tree
@@ -275,77 +373,50 @@ for _, dep := range tsukuManagedDeps {
 }
 ```
 
-### Externally-Managed Recipes by Platform
+### Recursive Validation on Linux
 
-The same logical recipe can be externally managed on one platform but built from source on another:
+Only **libyaml** triggers recursion (built from source):
 
-```toml
-# recipes/openssl.toml
-[recipe]
-name = "openssl"
-type = "library"
-
-# On Linux glibc systems: use system openssl via apt
-[[steps]]
-action = "apt_install"
-packages = ["libssl-dev"]
-when = { os = "linux", libc = "glibc" }
-
-# On Alpine (musl): use system openssl via apk
-[[steps]]
-action = "apk_add"
-packages = ["openssl-dev"]
-when = { os = "linux", libc = "musl" }
-
-# On macOS: use Homebrew
-[[steps]]
-action = "brew_install"
-packages = ["openssl@3"]
-when = { os = "darwin" }
-```
-
-All three platform variants return `IsExternallyManaged() = true`, so validation stops recursion for openssl on all platforms.
-
-### Recursive Validation of libyaml (Built from Source)
-
-libyaml is built from source on all platforms:
-
-```toml
-# recipes/libyaml.toml
-[recipe]
-name = "libyaml"
-type = "library"
-
-[[steps]]
-action = "download"
-url = "https://github.com/yaml/libyaml/releases/..."
-
-[[steps]]
-action = "configure_make_install"
-```
-
-**Recursive validation extracts libyaml's dependencies:**
-
-#### Linux (glibc)
 ```bash
 $ readelf -d $TSUKU_HOME/libs/libyaml-0.2.5/lib/libyaml-0.so.2 | grep NEEDED
   NEEDED: libc.so.6
 ```
-Classification: `libc.so.6` -> PURE SYSTEM -> Skip. Validation complete.
 
-#### Linux (musl)
-```bash
-$ readelf -d $TSUKU_HOME/libs/libyaml-0.2.5/lib/libyaml-0.so.2 | grep NEEDED
-  NEEDED: libc.musl-x86_64.so.1
-```
-Classification: `libc.musl-x86_64.so.1` -> PURE SYSTEM -> Skip. Validation complete.
+Classification: `libc.so.6` -> PURE SYSTEM -> Skip
+Result: libyaml has no tsuku-managed deps, recursion ends cleanly.
 
-#### macOS (Darwin)
+**openssl, readline, zlib:** NO recursion. apt installed them, apt owns their dependency trees. We trust apt to have installed their transitive dependencies correctly.
+
+### Recursive Validation on macOS
+
+More libraries trigger recursion (built from source):
+
+**libyaml:**
 ```bash
 $ otool -L $TSUKU_HOME/libs/libyaml-0.2.5/lib/libyaml-0.2.dylib
   /usr/lib/libSystem.B.dylib
 ```
-Classification: `/usr/lib/libSystem.B.dylib` -> PURE SYSTEM -> Skip. Validation complete.
+-> PURE SYSTEM -> Skip. Done.
+
+**openssl (macOS builds from source!):**
+```bash
+$ otool -L $TSUKU_HOME/libs/openssl-3.2.1/lib/libssl.3.dylib
+  /usr/lib/libSystem.B.dylib
+  @rpath/libcrypto.3.dylib
+```
+-> libSystem: PURE SYSTEM -> Skip
+-> libcrypto: TSUKU-MANAGED (same openssl recipe) -> Already validated. Done.
+
+**readline (macOS builds from source!):**
+```bash
+$ otool -L $TSUKU_HOME/libs/readline-8.2/lib/libreadline.8.dylib
+  /usr/lib/libSystem.B.dylib
+  /usr/lib/libncurses.5.4.dylib
+```
+-> libSystem: PURE SYSTEM -> Skip
+-> libncurses: PURE SYSTEM (macOS system lib) -> Skip. Done.
+
+**zlib:** NO recursion. brew installed it, brew owns its dependency tree.
 
 ---
 
@@ -353,53 +424,49 @@ Classification: `/usr/lib/libSystem.B.dylib` -> PURE SYSTEM -> Skip. Validation 
 
 ```
                     DT_NEEDED / LC_LOAD_DYLIB entry
-                              │
-                              ▼
-                    ┌─────────────────┐
-                    │ In soname index? │
-                    └────────┬────────┘
-                        │         │
-                       YES        NO
-                        │         │
-                        ▼         ▼
-               ┌────────────┐  ┌──────────────────────┐
-               │TSUKU-MANAGED│  │System lib pattern?   │
-               └──────┬─────┘  │(platform-specific)   │
-                      │        └────────┬─────────────┘
-                      │              │         │
-                      │             YES        NO
-                      │              │         │
-                      │              ▼         ▼
-                      │        ┌──────────┐  ┌─────────┐
-                      │        │PURE SYSTEM│  │ WARNING │
-                      │        │  (skip)   │  │(unknown)│
-                      │        └──────────┘  └─────────┘
-                      ▼
-            ┌─────────────────────┐
-            │Validate soname match│
-            └──────────┬──────────┘
-                       │
-                       ▼
-            ┌─────────────────────────┐
-            │Is recipe externally     │
-            │managed for this target? │
-            └────────────┬────────────┘
-                    │          │
-                   YES         NO
-                    │          │
-                    ▼          ▼
-            ┌──────────┐  ┌──────────┐
-            │  STOP    │  │ RECURSE  │
-            │(apt/brew │  │(validate │
-            │ owns it) │  │ its deps)│
-            └──────────┘  └──────────┘
+                              |
+                              v
+                    +-------------------+
+                    | In soname index?  |
+                    +--------+----------+
+                         |         |
+                        YES        NO
+                         |         |
+                         v         v
+              +---------------+  +------------------------+
+              | Tsuku recipe  |  | System lib pattern?    |
+              | found         |  | (platform-specific)    |
+              +-------+-------+  +-----------+------------+
+                      |                  |         |
+                      v                 YES        NO
+          +------------------------+     |         |
+          | Recipe externally      |     v         v
+          | managed for platform?  | +--------+ +----------+
+          +-----------+------------+ |  PURE  | | WARNING  |
+                  |         |        | SYSTEM | | (unknown)|
+                 YES        NO       | (skip) | +----------+
+                  |         |        +--------+
+                  v         v
+          +------------+  +-------------+
+          | EXTERNALLY |  | TSUKU       |
+          | MANAGED    |  | MANAGED     |
+          +-----+------+  +------+------+
+                |                |
+                v                v
+          +------------+  +-------------+
+          | Validate   |  | Validate    |
+          | soname     |  | soname      |
+          | STOP       |  | RECURSE     |
+          | (apt/brew  |  | (validate   |
+          | owns tree) |  | its deps)   |
+          +------------+  +-------------+
 ```
 
 ---
 
-## Example Output by Platform
+## Example Output
 
-### Linux (glibc) - Debian/Ubuntu
+### Linux (glibc) - Mixed Categories
 
 ```
 $ tsuku verify ruby --deep
@@ -413,55 +480,33 @@ Verifying ruby (version 3.3.0) on linux-glibc-x86_64...
                  libyaml-0.so.2, libssl.so.3, libcrypto.so.3,
                  libreadline.so.8, libz.so.1
 
-    libc.so.6        -> SYSTEM (glibc)
-    libm.so.6        -> SYSTEM (glibc)
-    libpthread.so.0  -> SYSTEM (glibc)
-    libdl.so.2       -> SYSTEM (glibc)
-    libyaml-0.so.2   -> libyaml [OK] (declared, installed, soname matches)
-    libssl.so.3      -> openssl [OK] (declared, installed, soname matches)
-    libcrypto.so.3   -> openssl [OK] (declared, installed, soname matches)
-    libreadline.so.8 -> readline [OK] (declared, installed, soname matches)
-    libz.so.1        -> zlib [OK] (declared, installed, soname matches)
+    libc.so.6        -> SYSTEM (skip)
+    libm.so.6        -> SYSTEM (skip)
+    libpthread.so.0  -> SYSTEM (skip)
+    libdl.so.2       -> SYSTEM (skip)
+    libyaml-0.so.2   -> libyaml [OK] (tsuku-managed, source build)
+    libssl.so.3      -> openssl [OK] (externally-managed via apt)
+    libcrypto.so.3   -> openssl [OK] (externally-managed via apt)
+    libreadline.so.8 -> readline [OK] (externally-managed via apt)
+    libz.so.1        -> zlib [OK] (externally-managed via apt)
 
   Recursive validation (--deep):
-    -> libyaml: OK (tsuku-managed, only system deps)
-    -> openssl: OK (externally-managed via apt, recursion stopped)
-    -> readline: OK (externally-managed via apt, recursion stopped)
-    -> zlib: OK (tsuku-managed, only system deps)
+    -> libyaml: recursing into tsuku-managed library...
+       libc.so.6 -> SYSTEM (skip)
+       libyaml OK (only system deps)
+    -> openssl: externally-managed via apt, recursion stopped
+    -> readline: externally-managed via apt, recursion stopped
+    -> zlib: externally-managed via apt, recursion stopped
+
+  Summary:
+    PURE SYSTEM: 4 (skipped)
+    TSUKU-MANAGED: 1 (validated, recursed)
+    EXTERNALLY-MANAGED: 4 (validated, no recursion)
 
 ruby verified successfully
 ```
 
-### Linux (musl) - Alpine
-
-```
-$ tsuku verify ruby --deep
-Verifying ruby (version 3.3.0) on linux-musl-x86_64...
-
-  Tier 1: Header validation
-    bin/ruby: OK (ELF x86_64)
-
-  Tier 2: Dependency validation
-    Binary deps: libc.musl-x86_64.so.1, libyaml-0.so.2, libssl.so.3,
-                 libcrypto.so.3, libreadline.so.8, libz.so.1
-
-    libc.musl-x86_64.so.1 -> SYSTEM (musl)
-    libyaml-0.so.2        -> libyaml [OK] (declared, installed, soname matches)
-    libssl.so.3           -> openssl [OK] (declared, installed, soname matches)
-    libcrypto.so.3        -> openssl [OK] (declared, installed, soname matches)
-    libreadline.so.8      -> readline [OK] (declared, installed, soname matches)
-    libz.so.1             -> zlib [OK] (declared, installed, soname matches)
-
-  Recursive validation (--deep):
-    -> libyaml: OK (tsuku-managed, only system deps)
-    -> openssl: OK (externally-managed via apk, recursion stopped)
-    -> readline: OK (externally-managed via apk, recursion stopped)
-    -> zlib: OK (tsuku-managed, only system deps)
-
-ruby verified successfully
-```
-
-### macOS (Darwin)
+### macOS (Darwin) - More TSUKU-MANAGED
 
 ```
 $ tsuku verify ruby --deep
@@ -475,51 +520,55 @@ Verifying ruby (version 3.3.0) on darwin-arm64...
                  @rpath/libssl.3.dylib, @rpath/libcrypto.3.dylib,
                  @rpath/libreadline.8.dylib, @rpath/libz.1.dylib
 
-    /usr/lib/libSystem.B.dylib -> SYSTEM (Darwin)
-    @rpath/libyaml-0.2.dylib   -> libyaml [OK] (declared, installed, soname matches)
-    @rpath/libssl.3.dylib      -> openssl [OK] (declared, installed, soname matches)
-    @rpath/libcrypto.3.dylib   -> openssl [OK] (declared, installed, soname matches)
-    @rpath/libreadline.8.dylib -> readline [OK] (declared, installed, soname matches)
-    @rpath/libz.1.dylib        -> zlib [OK] (declared, installed, soname matches)
+    /usr/lib/libSystem.B.dylib -> SYSTEM (skip)
+    @rpath/libyaml-0.2.dylib   -> libyaml [OK] (tsuku-managed, source build)
+    @rpath/libssl.3.dylib      -> openssl [OK] (tsuku-managed, source build)
+    @rpath/libcrypto.3.dylib   -> openssl [OK] (tsuku-managed, source build)
+    @rpath/libreadline.8.dylib -> readline [OK] (tsuku-managed, source build)
+    @rpath/libz.1.dylib        -> zlib [OK] (externally-managed via brew)
 
   Recursive validation (--deep):
-    -> libyaml: OK (tsuku-managed, only system deps)
-    -> openssl: OK (externally-managed via brew, recursion stopped)
-    -> readline: OK (externally-managed via brew, recursion stopped)
-    -> zlib: OK (tsuku-managed, only system deps)
+    -> libyaml: recursing into tsuku-managed library...
+       libSystem.B.dylib -> SYSTEM (skip)
+       libyaml OK (only system deps)
+    -> openssl: recursing into tsuku-managed library...
+       libSystem.B.dylib -> SYSTEM (skip)
+       libcrypto.3.dylib -> openssl (already validated)
+       openssl OK
+    -> readline: recursing into tsuku-managed library...
+       libSystem.B.dylib -> SYSTEM (skip)
+       libncurses.5.4.dylib -> SYSTEM (skip)
+       readline OK (only system deps)
+    -> zlib: externally-managed via brew, recursion stopped
+
+  Summary:
+    PURE SYSTEM: 1 (skipped)
+    TSUKU-MANAGED: 4 (validated, recursed)
+    EXTERNALLY-MANAGED: 1 (validated, no recursion)
 
 ruby verified successfully
 ```
 
 ---
 
-## Summary
+## Summary: Why Platform Management Differs
 
-### Platform Consistency
+| Library | Linux Management | macOS Management | Why Different? |
+|---------|-----------------|------------------|----------------|
+| libyaml | TSUKU-MANAGED | TSUKU-MANAGED | Consistent: always build from source for control |
+| openssl | EXTERNALLY-MANAGED (apt) | TSUKU-MANAGED | macOS deprecated system OpenSSL; must build |
+| readline | EXTERNALLY-MANAGED (apt) | TSUKU-MANAGED | macOS "readline" is libedit; need real GNU readline |
+| zlib | EXTERNALLY-MANAGED (apt) | EXTERNALLY-MANAGED (brew) | Common system lib, safe to use system version |
+| libc/libSystem | PURE SYSTEM | PURE SYSTEM | Always OS-provided, never a tsuku recipe |
 
-The validation logic works **consistently across all platforms**:
+### Key Takeaways
 
-1. **First:** Check if soname is in our index -> If yes, it's TSUKU-MANAGED
-2. **Second:** If not in index, check system patterns -> If matches, it's PURE SYSTEM
-3. **Third:** If neither -> Warning (unknown dependency)
+1. **PURE SYSTEM** = No tsuku recipe exists (inherently OS-provided). Pattern-matched and skipped.
 
-### What Differs by Platform
+2. **TSUKU-MANAGED** = Tsuku recipe builds from source. We validate AND recurse because we control the entire dependency tree.
 
-| Aspect | What Changes |
-|--------|-------------|
-| **Extraction tool** | `readelf` (Linux) vs `otool` (macOS) |
-| **Dependency format** | DT_NEEDED sonames vs LC_LOAD_DYLIB paths |
-| **System patterns** | glibc libs vs musl libs vs Darwin libs |
-| **Soname conventions** | `libfoo.so.N` vs `libfoo.N.dylib` |
-| **Path prefixes** | None (Linux) vs `@rpath/`, `/usr/lib/` (macOS) |
-| **External managers** | apt (glibc), apk (musl), brew (macOS) |
+3. **EXTERNALLY-MANAGED** = Tsuku recipe delegates to package manager. We validate the soname is provided but STOP recursion because apt/brew/apk owns the transitive dependencies.
 
-### Why This Works
+4. **Same library, different management per platform.** The recipe's `when` clauses determine management style. This reflects real-world constraints (Apple deprecations, BSD vs GNU differences).
 
-The three-category model abstracts platform differences:
-
-- **PURE SYSTEM** patterns are platform-specific but serve the same purpose: identify OS-provided libraries that need no validation
-- **TSUKU-MANAGED** libraries record platform-appropriate sonames at install time, so index lookups work consistently
-- **EXTERNALLY-MANAGED** recipes specify platform via `when` clauses, making `IsExternallyManaged()` correct per-platform
-
-The core algorithm remains identical; only the data (patterns, sonames, extraction commands) differs.
+5. **Recursion stops at external boundaries.** When apt installs openssl, apt also installed openssl's dependencies (libcrypto, etc.). We trust the package manager within its domain.
