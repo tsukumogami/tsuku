@@ -12,7 +12,7 @@ The `validate-golden-exclusions.sh` script only validates `testdata/golden/exclu
 
 ## Implementation Steps
 
-### Step 1: Update `validate-golden-exclusions.sh` to accept `--file` argument
+### Step 1: Update `validate-golden-exclusions.sh` to accept `--file` argument [DONE]
 
 **Lines to modify: 3, 19, 23-36**
 
@@ -63,7 +63,7 @@ The `validate-golden-exclusions.sh` script only validates `testdata/golden/exclu
    fi
    ```
 
-### Step 2: Update `validate-golden-code.yml` to validate code-validation-exclusions
+### Step 2: Update `validate-golden-code.yml` to validate code-validation-exclusions [DONE]
 
 **Add new step after line 71 (after "Build tsuku" step)**
 
@@ -80,7 +80,7 @@ This step should run **before** the "Validate linux golden files" step since sta
 
 **Recommended insertion point:** After "Build tsuku" (line 88), before "Validate linux golden files" (line 90).
 
-### Step 3: Remove stale exclusions from `code-validation-exclusions.json`
+### Step 3: Remove stale exclusions from `code-validation-exclusions.json` [DONE]
 
 **Lines to remove:** All exclusions referencing issue #953 (12 total)
 
