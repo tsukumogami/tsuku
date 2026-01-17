@@ -1,6 +1,76 @@
 # Dependency Resolution for Library Verification (Tier 2)
 
-**Status:** Proposed
+**Status:** Planned
+
+## Implementation Issues
+
+### Milestone: [Tier 2 Dependency Validation](https://github.com/tsukumogami/tsuku/milestone/38)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#978](https://github.com/tsukumogami/tsuku/issues/978) | Add Sonames field to LibraryVersionState | None | simple |
+| [#979](https://github.com/tsukumogami/tsuku/issues/979) | Add IsExternallyManaged() to SystemAction | None | testable |
+| [#980](https://github.com/tsukumogami/tsuku/issues/980) | Implement system library pattern matching | None | testable |
+| [#981](https://github.com/tsukumogami/tsuku/issues/981) | Implement PT_INTERP ABI validation | None | testable |
+| [#982](https://github.com/tsukumogami/tsuku/issues/982) | Implement RPATH and path variable expansion | None | critical |
+| [#983](https://github.com/tsukumogami/tsuku/issues/983) | Implement soname extraction for ELF/Mach-O | [#978](https://github.com/tsukumogami/tsuku/issues/978) | testable |
+| [#984](https://github.com/tsukumogami/tsuku/issues/984) | Add IsExternallyManagedFor() method | [#979](https://github.com/tsukumogami/tsuku/issues/979) | testable |
+| [#985](https://github.com/tsukumogami/tsuku/issues/985) | Extract and store sonames during install | [#983](https://github.com/tsukumogami/tsuku/issues/983) | testable |
+| [#986](https://github.com/tsukumogami/tsuku/issues/986) | Implement SonameIndex and classification | [#978](https://github.com/tsukumogami/tsuku/issues/978), [#980](https://github.com/tsukumogami/tsuku/issues/980) | testable |
+| [#989](https://github.com/tsukumogami/tsuku/issues/989) | Implement recursive dependency validation | [#981](https://github.com/tsukumogami/tsuku/issues/981), [#982](https://github.com/tsukumogami/tsuku/issues/982), [#984](https://github.com/tsukumogami/tsuku/issues/984), [#986](https://github.com/tsukumogami/tsuku/issues/986) | critical |
+| [#990](https://github.com/tsukumogami/tsuku/issues/990) | Integrate Tier 2 dependency validation | [#989](https://github.com/tsukumogami/tsuku/issues/989) | testable |
+| [#991](https://github.com/tsukumogami/tsuku/issues/991) | Add Tier 2 integration tests | [#990](https://github.com/tsukumogami/tsuku/issues/990) | testable |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph TrackA["Track A: State + Extraction"]
+        I978["#978: Add Sonames field"]
+        I983["#983: Soname extraction"]
+        I985["#985: Store sonames on install"]
+    end
+
+    subgraph TrackB["Track B: Actions"]
+        I979["#979: IsExternallyManaged()"]
+        I984["#984: IsExternallyManagedFor()"]
+    end
+
+    subgraph TrackC["Track C: Verify Infrastructure"]
+        I980["#980: System lib patterns"]
+        I981["#981: PT_INTERP ABI check"]
+        I982["#982: RPATH expansion"]
+    end
+
+    subgraph Integration["Integration"]
+        I986["#986: SonameIndex + classify"]
+        I989["#989: Recursive validation"]
+        I990["#990: Verify integration"]
+        I991["#991: Integration tests"]
+    end
+
+    I978 --> I983
+    I983 --> I985
+    I979 --> I984
+    I978 --> I986
+    I980 --> I986
+    I981 --> I989
+    I982 --> I989
+    I984 --> I989
+    I986 --> I989
+    I989 --> I990
+    I990 --> I991
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I978,I979,I980,I981,I982 ready
+    class I983,I984,I985,I986,I989,I990,I991 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 **Upstream Design Reference:** This design implements Tier 2 of [DESIGN-library-verification.md](./DESIGN-library-verification.md).
 
