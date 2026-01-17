@@ -76,6 +76,9 @@ func (a *GroupAddAction) Describe(params map[string]interface{}) string {
 	return fmt.Sprintf("sudo usermod -aG %s $USER", group)
 }
 
+// IsExternallyManaged returns false because group_add does not delegate to a package manager.
+func (a *GroupAddAction) IsExternallyManaged() bool { return false }
+
 // ServiceEnableAction enables a systemd service.
 // This action does not execute on the host - it provides structured data
 // for documentation generation and sandbox container building.
@@ -145,6 +148,9 @@ func (a *ServiceEnableAction) Describe(params map[string]interface{}) string {
 	return fmt.Sprintf("sudo systemctl enable %s", service)
 }
 
+// IsExternallyManaged returns false because service_enable does not delegate to a package manager.
+func (a *ServiceEnableAction) IsExternallyManaged() bool { return false }
+
 // ServiceStartAction starts a systemd service.
 // This action does not execute on the host - it provides structured data
 // for documentation generation and sandbox container building.
@@ -213,6 +219,9 @@ func (a *ServiceStartAction) Describe(params map[string]interface{}) string {
 	}
 	return fmt.Sprintf("sudo systemctl start %s", service)
 }
+
+// IsExternallyManaged returns false because service_start does not delegate to a package manager.
+func (a *ServiceStartAction) IsExternallyManaged() bool { return false }
 
 // RequireCommandAction verifies that a command exists in PATH.
 // Optionally checks that the command meets a minimum version requirement.
@@ -351,6 +360,9 @@ func (a *RequireCommandAction) Describe(params map[string]interface{}) string {
 	return fmt.Sprintf("Requires: %s", command)
 }
 
+// IsExternallyManaged returns false because require_command does not delegate to a package manager.
+func (a *RequireCommandAction) IsExternallyManaged() bool { return false }
+
 // ManualAction displays instructions for manual installation.
 // This action is used when automation is not possible or not desired.
 type ManualAction struct{ BaseAction }
@@ -416,6 +428,9 @@ func (a *ManualAction) Describe(params map[string]interface{}) string {
 	}
 	return text
 }
+
+// IsExternallyManaged returns false because manual does not delegate to a package manager.
+func (a *ManualAction) IsExternallyManaged() bool { return false }
 
 // isValidGroupName checks if a group name is valid.
 // Valid names: start with letter or underscore, contain only alphanumeric, underscore, hyphen.

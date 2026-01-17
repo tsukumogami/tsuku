@@ -64,6 +64,9 @@ func (a *AptInstallAction) Describe(params map[string]interface{}) string {
 	return fmt.Sprintf("sudo apt-get install -y %s", strings.Join(packages, " "))
 }
 
+// IsExternallyManaged returns true because apt delegates to the system package manager.
+func (a *AptInstallAction) IsExternallyManaged() bool { return true }
+
 // AptRepoAction adds an APT repository with its GPG key.
 // This is a system action that requires sudo and modifies the system state.
 //
@@ -150,6 +153,9 @@ func (a *AptRepoAction) Describe(params map[string]interface{}) string {
 		"sudo tee /etc/apt/sources.list.d/repo.list", keyURL, url)
 }
 
+// IsExternallyManaged returns true because apt delegates to the system package manager.
+func (a *AptRepoAction) IsExternallyManaged() bool { return true }
+
 // AptPPAAction adds an Ubuntu PPA (Personal Package Archive).
 // This is a system action that requires sudo and modifies the system state.
 // Note: PPAs are Ubuntu-specific but work on Ubuntu derivatives.
@@ -209,3 +215,6 @@ func (a *AptPPAAction) Describe(params map[string]interface{}) string {
 	}
 	return fmt.Sprintf("sudo add-apt-repository ppa:%s", ppa)
 }
+
+// IsExternallyManaged returns true because apt delegates to the system package manager.
+func (a *AptPPAAction) IsExternallyManaged() bool { return true }
