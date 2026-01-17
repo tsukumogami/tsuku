@@ -3,9 +3,49 @@
   "description": "Exclusions for golden file CODE validation (regenerate-and-compare). These recipes are excluded from validate-golden-code.yml but still run in execution validation. Each exclusion must link to an open issue tracking the blocker.",
   "exclusions": [
     {
+      "recipe": "ack",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/988",
+      "reason": "stale golden file (version field incorrect, needs regeneration)"
+    },
+    {
       "recipe": "black",
       "issue": "https://github.com/tsukumogami/tsuku/issues/961",
       "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "cobra-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
+    },
+    {
+      "recipe": "curl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/988",
+      "reason": "stale golden file (missing dependencies, needs regeneration)"
+    },
+    {
+      "recipe": "dlv",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
+    },
+    {
+      "recipe": "fpm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/988",
+      "reason": "stale golden file (needs regeneration)"
+    },
+    {
+      "recipe": "gofumpt",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
+    },
+    {
+      "recipe": "goimports",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
+    },
+    {
+      "recipe": "gopls",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/964",
+      "reason": "go_version from installed Go differs from golden file (needs go_version constraint)"
     },
     {
       "recipe": "httpie",
@@ -13,9 +53,19 @@
       "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
+      "recipe": "jekyll",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/988",
+      "reason": "stale golden file (needs regeneration)"
+    },
+    {
       "recipe": "meson",
       "issue": "https://github.com/tsukumogami/tsuku/issues/961",
       "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "ninja",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/988",
+      "reason": "stale golden file (missing dependencies, needs regeneration)"
     },
     {
       "recipe": "poetry",
@@ -23,9 +73,19 @@
       "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
+      "recipe": "readline",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/988",
+      "reason": "stale golden file (needs regeneration)"
+    },
+    {
       "recipe": "ruff",
       "issue": "https://github.com/tsukumogami/tsuku/issues/961",
       "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "sqlite",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/988",
+      "reason": "stale golden file (missing dependencies, needs regeneration)"
     }
   ]
 }
