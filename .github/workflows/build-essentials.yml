@@ -77,11 +77,8 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh ${{ matrix.tool }}
 
-      - name: "Verify relocation"
-        run: ./test/scripts/verify-relocation.sh ${{ matrix.tool }}
-
-      - name: "Verify no system deps"
-        run: ./test/scripts/verify-no-system-deps.sh ${{ matrix.tool }}
+      - name: "Verify binary quality"
+        run: ./test/scripts/verify-binary.sh ${{ matrix.tool }}
 
   # Test configure_make action with gdbm-source (source build) - Linux only
   test-configure-make-linux:
@@ -238,11 +235,8 @@ jobs:
       - name: "Verify tool functionality"
         run: ./test/scripts/verify-tool.sh zig
 
-      - name: "Verify relocation"
-        run: ./test/scripts/verify-relocation.sh zig
-
-      - name: "Verify no system deps"
-        run: ./test/scripts/verify-no-system-deps.sh zig
+      - name: "Verify binary quality"
+        run: ./test/scripts/verify-binary.sh zig
 
   # Test source build with zig cc in container without system gcc
   # This validates that configure_make falls back to zig when no gcc exists
@@ -371,8 +365,7 @@ jobs:
             local name="$1"
             local tool="$2"
             local recipe="$3"
-            local verify_relocation="${4:-false}"
-            local verify_no_system_deps="${5:-false}"
+            local verify_binary="${4:-false}"
 
             echo "::group::Testing $name"
 
@@ -401,24 +394,19 @@ jobs:
               FAILED+=("$name (verify)")
             fi
 
-            # Optional: verify relocation
-            if [ "$verify_relocation" = "true" ]; then
-              ./test/scripts/verify-relocation.sh "$tool" || FAILED+=("$name (relocation)")
-            fi
-
-            # Optional: verify no system deps
-            if [ "$verify_no_system_deps" = "true" ]; then
-              ./test/scripts/verify-no-system-deps.sh "$tool" || FAILED+=("$name (system-deps)")
+            # Optional: verify binary quality (relocation + system deps)
+            if [ "$verify_binary" = "true" ]; then
+              ./test/scripts/verify-binary.sh "$tool" || FAILED+=("$name (binary)")
             fi
 
             echo "::endgroup::"
           }
 
           # Homebrew tools (gdbm excluded on macOS - see issue #605)
-          run_test "make" "make" "" "true" "true"
-          run_test "pkg-config" "pkg-config" "" "true" "true"
-          run_test "cmake" "cmake" "" "true" "true"
-          run_test "pngcrush" "pngcrush" "" "true" "true"
+          run_test "make" "make" "" "true"
+          run_test "pkg-config" "pkg-config" "" "true"
+          run_test "cmake" "cmake" "" "true"
+          run_test "pngcrush" "pngcrush" "" "true"
 
           # Source builds
           run_test "gdbm-source" "gdbm-source" "testdata/recipes/gdbm-source.toml"
@@ -428,7 +416,7 @@ jobs:
           # git-source excluded on macOS - see issue #881
 
           # Zig
-          run_test "zig" "zig" "" "true" "true"
+          run_test "zig" "zig" "" "true"
 
           # Report failures
           if [ ${#FAILED[@]} -gt 0 ]; then
@@ -467,8 +455,7 @@ jobs:
             local name="$1"
             local tool="$2"
             local recipe="$3"
-            local verify_relocation="${4:-false}"
-            local verify_no_system_deps="${5:-false}"
+            local verify_binary="${4:-false}"
 
             echo "::group::Testing $name"
 
@@ -497,24 +484,19 @@ jobs:
               FAILED+=("$name (verify)")
             fi
 
-            # Optional: verify relocation
-            if [ "$verify_relocation" = "true" ]; then
-              ./test/scripts/verify-relocation.sh "$tool" || FAILED+=("$name (relocation)")
-            fi
-
-            # Optional: verify no system deps
-            if [ "$verify_no_system_deps" = "true" ]; then
-              ./test/scripts/verify-no-system-deps.sh "$tool" || FAILED+=("$name (system-deps)")
+            # Optional: verify binary quality (relocation + system deps)
+            if [ "$verify_binary" = "true" ]; then
+              ./test/scripts/verify-binary.sh "$tool" || FAILED+=("$name (binary)")
             fi
 
             echo "::endgroup::"
           }
 
           # Homebrew tools (gdbm excluded on macOS - see issue #605)
-          run_test "make" "make" "" "true" "true"
-          run_test "pkg-config" "pkg-config" "" "true" "true"
-          run_test "cmake" "cmake" "" "true" "true"
-          run_test "pngcrush" "pngcrush" "" "true" "true"
+          run_test "make" "make" "" "true"
+          run_test "pkg-config" "pkg-config" "" "true"
+          run_test "cmake" "cmake" "" "true"
+          run_test "pngcrush" "pngcrush" "" "true"
 
           # Source builds
           run_test "gdbm-source" "gdbm-source" "testdata/recipes/gdbm-source.toml"
@@ -524,7 +506,7 @@ jobs:
           # git-source excluded on macOS - see issue #881
 
           # Zig
-          run_test "zig" "zig" "" "true" "true"
+          run_test "zig" "zig" "" "true"
 
           # Report failures
           if [ ${#FAILED[@]} -gt 0 ]; then
