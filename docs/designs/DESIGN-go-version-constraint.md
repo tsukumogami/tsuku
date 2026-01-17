@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: Code validation fails for go_install recipes because decomposeWithConstraints() uses the installed Go version instead of the golden file's go_version parameter.
 decision: Add a GoVersion field to EvalConstraints, extracted from go_build steps, and use it in decomposeWithConstraints().
 rationale: This follows established constraint patterns exactly, requires minimal code changes (~15 lines), and provides explicit semantics for the source of truth.
@@ -9,7 +9,7 @@ rationale: This follows established constraint patterns exactly, requires minima
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
