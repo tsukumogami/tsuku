@@ -57,6 +57,7 @@ These designs are implemented and represent the current system architecture.
 |--------|-------------|
 | [DESIGN-golden-plan-testing.md](current/DESIGN-golden-plan-testing.md) | CI-driven regression testing for recipe plans |
 | [DESIGN-hardcoded-version-detection.md](current/DESIGN-hardcoded-version-detection.md) | Recipe validation for version templating |
+| [DESIGN-non-deterministic-validation.md](current/DESIGN-non-deterministic-validation.md) | Constrained evaluation for ecosystem recipe validation |
 | [DESIGN-version-verification.md](current/DESIGN-version-verification.md) | Version format transforms and verification modes |
 
 ### Ecosystem Support
