@@ -18,6 +18,11 @@
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
     },
     {
+      "recipe": "curl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/879",
+      "reason": "configure auto-detects homebrew nghttp2/libidn2 but linker cannot find them (macOS)"
+    },
+    {
       "recipe": "git",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "compile_from_source toolchain version drift (macOS build failures)"
