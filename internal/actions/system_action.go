@@ -62,6 +62,12 @@ type SystemAction interface {
 	// The output should be copy-pasteable shell commands.
 	// Returns empty string if params are invalid.
 	Describe(params map[string]interface{}) string
+
+	// IsExternallyManaged returns true if this action delegates to an external
+	// package manager (apt, brew, dnf, etc.). Used by verification to determine
+	// whether to recursively validate dependencies - externally-managed
+	// dependencies are validated but not recursed into.
+	IsExternallyManaged() bool
 }
 
 // BaseSystemFields provides shared fields for system install actions.

@@ -68,6 +68,9 @@ func (a *PacmanInstallAction) Describe(params map[string]interface{}) string {
 	return fmt.Sprintf("sudo pacman -S --noconfirm %s", strings.Join(packages, " "))
 }
 
+// IsExternallyManaged returns true because pacman delegates to the system package manager.
+func (a *PacmanInstallAction) IsExternallyManaged() bool { return true }
+
 // ApkInstallAction installs packages using apk on Alpine Linux.
 //
 // Parameters:
@@ -122,6 +125,9 @@ func (a *ApkInstallAction) Describe(params map[string]interface{}) string {
 	}
 	return fmt.Sprintf("sudo apk add %s", strings.Join(packages, " "))
 }
+
+// IsExternallyManaged returns true because apk delegates to the system package manager.
+func (a *ApkInstallAction) IsExternallyManaged() bool { return true }
 
 // ZypperInstallAction installs packages using zypper on SUSE-family systems.
 // This includes openSUSE and SUSE Linux Enterprise Server (SLES).
@@ -178,3 +184,6 @@ func (a *ZypperInstallAction) Describe(params map[string]interface{}) string {
 	}
 	return fmt.Sprintf("sudo zypper install -y %s", strings.Join(packages, " "))
 }
+
+// IsExternallyManaged returns true because zypper delegates to the system package manager.
+func (a *ZypperInstallAction) IsExternallyManaged() bool { return true }

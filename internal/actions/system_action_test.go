@@ -241,3 +241,41 @@ func TestValidatePackages(t *testing.T) {
 		})
 	}
 }
+
+func TestSystemAction_IsExternallyManaged(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name   string
+		action SystemAction
+		want   bool
+	}{
+		// Package manager actions return true
+		{"AptInstallAction", &AptInstallAction{}, true},
+		{"AptRepoAction", &AptRepoAction{}, true},
+		{"AptPPAAction", &AptPPAAction{}, true},
+		{"BrewInstallAction", &BrewInstallAction{}, true},
+		{"BrewCaskAction", &BrewCaskAction{}, true},
+		{"DnfInstallAction", &DnfInstallAction{}, true},
+		{"DnfRepoAction", &DnfRepoAction{}, true},
+		{"PacmanInstallAction", &PacmanInstallAction{}, true},
+		{"ApkInstallAction", &ApkInstallAction{}, true},
+		{"ZypperInstallAction", &ZypperInstallAction{}, true},
+
+		// Other system actions return false
+		{"GroupAddAction", &GroupAddAction{}, false},
+		{"ServiceEnableAction", &ServiceEnableAction{}, false},
+		{"ServiceStartAction", &ServiceStartAction{}, false},
+		{"RequireCommandAction", &RequireCommandAction{}, false},
+		{"ManualAction", &ManualAction{}, false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+			if got := tt.action.IsExternallyManaged(); got != tt.want {
+				t.Errorf("%s.IsExternallyManaged() = %v, want %v", tt.name, got, tt.want)
+			}
+		})
+	}
+}

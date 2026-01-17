@@ -64,6 +64,9 @@ func (a *DnfInstallAction) Describe(params map[string]interface{}) string {
 	return fmt.Sprintf("sudo dnf install -y %s", strings.Join(packages, " "))
 }
 
+// IsExternallyManaged returns true because dnf delegates to the system package manager.
+func (a *DnfInstallAction) IsExternallyManaged() bool { return true }
+
 // DnfRepoAction adds a DNF repository with its GPG key.
 // This is a system action that requires sudo and modifies the system state.
 //
@@ -144,3 +147,6 @@ func (a *DnfRepoAction) Describe(params map[string]interface{}) string {
 	}
 	return fmt.Sprintf("sudo dnf config-manager --add-repo %s", url)
 }
+
+// IsExternallyManaged returns true because dnf delegates to the system package manager.
+func (a *DnfRepoAction) IsExternallyManaged() bool { return true }

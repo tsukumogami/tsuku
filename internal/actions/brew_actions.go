@@ -65,6 +65,9 @@ func (a *BrewInstallAction) Describe(params map[string]interface{}) string {
 	return fmt.Sprintf("brew install %s", strings.Join(packages, " "))
 }
 
+// IsExternallyManaged returns true because brew delegates to Homebrew.
+func (a *BrewInstallAction) IsExternallyManaged() bool { return true }
+
 // BrewCaskAction installs GUI applications using Homebrew Casks on macOS.
 // Casks are used for applications that don't fit the formula model.
 //
@@ -121,3 +124,6 @@ func (a *BrewCaskAction) Describe(params map[string]interface{}) string {
 	}
 	return fmt.Sprintf("brew install --cask %s", strings.Join(packages, " "))
 }
+
+// IsExternallyManaged returns true because brew delegates to Homebrew.
+func (a *BrewCaskAction) IsExternallyManaged() bool { return true }
