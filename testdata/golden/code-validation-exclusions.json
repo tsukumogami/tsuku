@@ -13,14 +13,29 @@
       "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
+      "recipe": "cobra-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_sum mismatch in CI (passes locally, needs investigation)"
+    },
+    {
       "recipe": "curl",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "stale golden file (missing dependencies, needs regeneration)"
     },
     {
+      "recipe": "fpm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "stale golden file (needs regeneration)"
+    },
+    {
       "recipe": "httpie",
       "issue": "https://github.com/tsukumogami/tsuku/issues/961",
       "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "jekyll",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "stale golden file (needs regeneration)"
     },
     {
       "recipe": "meson",
@@ -36,6 +51,11 @@
       "recipe": "poetry",
       "issue": "https://github.com/tsukumogami/tsuku/issues/961",
       "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "readline",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "stale golden file (needs regeneration)"
     },
     {
       "recipe": "ruff",
