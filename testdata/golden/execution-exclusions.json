@@ -1,0 +1,41 @@
+{
+  "$schema": "./execution-exclusions.schema.json",
+  "description": "Exclusions for golden file EXECUTION validation (install --plan). These recipes are excluded from validate-linux and validate-macos jobs in validate-golden-execution.yml. Each exclusion must link to an open issue tracking the blocker.",
+  "exclusions": [
+    {
+      "recipe": "amplify",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "cdk",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "netlify-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "serverless",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "turbo",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "vercel",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "wrangler",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    }
+  ]
+}
