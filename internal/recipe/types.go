@@ -830,3 +830,52 @@ func (r *Recipe) HasChecksumVerification() bool {
 	// If there are no download steps, consider it "verified" (nothing to verify)
 	return !hasDownloadStep
 }
+
+// SystemActionChecker is the interface that SystemAction implements.
+// Defined here to avoid importing the actions package (circular dependency).
+type SystemActionChecker interface {
+	IsExternallyManaged() bool
+}
+
+// IsExternallyManagedFor returns true if all steps that apply to the given target
+// delegate to external package managers (apt, brew, dnf, etc.).
+//
+// The actionLookup function should return the action implementation for a given
+// action name, or nil if the action doesn't exist. Typically this is actions.Get.
+//
+// Returns true if:
+//   - All applicable steps use actions that implement SystemAction with IsExternallyManaged() == true
+//   - No steps apply to the target (empty recipe for this platform)
+//
+// Returns false if any applicable step:
+//   - Uses an action that doesn't implement SystemAction (e.g., download, extract)
+//   - Uses a SystemAction with IsExternallyManaged() == false (e.g., manual, require_command)
+func (r *Recipe) IsExternallyManagedFor(target Matchable, actionLookup func(string) interface{}) bool {
+	for _, step := range r.Steps {
+		// Skip steps that don't apply to this target
+		if step.When != nil && !step.When.Matches(target) {
+			continue
+		}
+
+		// Look up the action
+		action := actionLookup(step.Action)
+		if action == nil {
+			// Unknown action - conservatively assume not externally managed
+			return false
+		}
+
+		// Check if action implements SystemAction with IsExternallyManaged
+		sysAction, ok := action.(SystemActionChecker)
+		if !ok {
+			// Action doesn't implement SystemAction - not externally managed
+			return false
+		}
+
+		if !sysAction.IsExternallyManaged() {
+			return false
+		}
+	}
+
+	// All applicable steps are externally managed (or no steps apply)
+	return true
+}
