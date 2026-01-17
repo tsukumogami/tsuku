@@ -52,6 +52,11 @@ type PlanConfig struct {
 	// instead of live dependency resolution, producing deterministic output.
 	// Extracted from golden files using ExtractConstraints().
 	Constraints *actions.EvalConstraints
+	// PinnedVersion bypasses version resolution and uses this exact version.
+	// Used during constrained evaluation for dependencies where the version is
+	// already known from the golden file. This avoids version provider calls
+	// that may not support specific version lookup.
+	PinnedVersion string
 }
 
 // GeneratePlan evaluates a recipe and produces an installation plan.
@@ -94,17 +99,28 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 	// Create version resolver
 	resolver := version.New()
 
-	// Resolve version from recipe
-	versionInfo, err := e.resolveVersionWith(ctx, resolver)
-	if err != nil {
-		// Fall back to "dev" version for recipes without proper version sources
-		// This matches the behavior in Execute() for backward compatibility
-		if cfg.OnWarning != nil {
-			cfg.OnWarning("version", fmt.Sprintf("version resolution failed: %v, using 'dev'", err))
-		}
+	// Resolve version from recipe (or use pinned version if provided)
+	var versionInfo *version.VersionInfo
+	if cfg.PinnedVersion != "" {
+		// Use pinned version directly, bypassing version resolution
+		// This is used for constrained evaluation of dependencies
 		versionInfo = &version.VersionInfo{
-			Version: "dev",
-			Tag:     "dev",
+			Version: cfg.PinnedVersion,
+			Tag:     cfg.PinnedVersion, // Use version as tag when pinned
+		}
+	} else {
+		var err error
+		versionInfo, err = e.resolveVersionWith(ctx, resolver)
+		if err != nil {
+			// Fall back to "dev" version for recipes without proper version sources
+			// This matches the behavior in Execute() for backward compatibility
+			if cfg.OnWarning != nil {
+				cfg.OnWarning("version", fmt.Sprintf("version resolution failed: %v, using 'dev'", err))
+			}
+			versionInfo = &version.VersionInfo{
+				Version: "dev",
+				Tag:     "dev",
+			}
 		}
 	}
 
@@ -695,30 +711,22 @@ func generateSingleDependencyPlan(
 		return nil, err
 	}
 
-	// Check for pinned version from constraints
-	var exec *Executor
-	if pinnedVersion, ok := GetDependencyVersionConstraint(cfg.Constraints, depName); ok {
-		// Use pinned version from constraints
-		exec, err = NewWithVersion(depRecipe, pinnedVersion)
-		if err != nil {
-			// Pinned version unavailable - fall back to latest with warning
-			if cfg.OnWarning != nil {
-				cfg.OnWarning("dependency_pinning",
-					fmt.Sprintf("pinned version %s for %s unavailable, using latest", pinnedVersion, depName))
-			}
-			exec, err = New(depRecipe)
-		}
-	} else {
-		// No constraint - use latest version
-		exec, err = New(depRecipe)
-	}
+	// Create executor for dependency
+	exec, err := New(depRecipe)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create executor for %s: %w", depName, err)
 	}
 	defer exec.Cleanup()
 
+	// Check for pinned version from constraints
+	var pinnedVersion string
+	if pv, ok := GetDependencyVersionConstraint(cfg.Constraints, depName); ok {
+		pinnedVersion = pv
+	}
+
 	// Generate plan without RecipeLoader to get just this tool's steps
 	// Propagate constraints for nested dependency resolution
+	// Use PinnedVersion to bypass version resolution when we have a constraint
 	depCfg := PlanConfig{
 		OS:                 cfg.OS,
 		Arch:               cfg.Arch,
@@ -730,6 +738,7 @@ func generateSingleDependencyPlan(
 		OnEvalDepsNeeded:   cfg.OnEvalDepsNeeded,
 		RecipeLoader:       nil,             // Don't recurse here - we handle it above
 		Constraints:        cfg.Constraints, // Propagate constraints for nested decomposition
+		PinnedVersion:      pinnedVersion,   // Bypass version resolution for pinned deps
 	}
 
 	plan, err := exec.GeneratePlan(ctx, depCfg)
