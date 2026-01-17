@@ -11,27 +11,27 @@
   "dependencies": [
     {
       "tool": "go",
-      "version": "1.25.5",
+      "version": "1.25.6",
       "recipe_hash": "6b7017ca80802605129ead86859ab532c4950c3825277dd3dfc9c81e31c499b7",
       "steps": [
         {
           "action": "download_file",
           "params": {
-            "checksum": "9e9b755d63b36acf30c12a9a3fc379243714c1c6d3dd72861da637f336ebb35b",
+            "checksum": "f022b6aad78e362bcba9b0b94d09ad58c5a70c6ba3b7582905fababf5fe0181a",
             "checksum_algo": "sha256",
-            "dest": "go1.25.5.linux-amd64.tar.gz",
-            "url": "https://go.dev/dl/go1.25.5.linux-amd64.tar.gz"
+            "dest": "go1.25.6.linux-amd64.tar.gz",
+            "url": "https://go.dev/dl/go1.25.6.linux-amd64.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://go.dev/dl/go1.25.5.linux-amd64.tar.gz",
-          "checksum": "9e9b755d63b36acf30c12a9a3fc379243714c1c6d3dd72861da637f336ebb35b",
-          "size": 59768009
+          "url": "https://go.dev/dl/go1.25.6.linux-amd64.tar.gz",
+          "checksum": "f022b6aad78e362bcba9b0b94d09ad58c5a70c6ba3b7582905fababf5fe0181a",
+          "size": 59768880
         },
         {
           "action": "extract",
           "params": {
-            "archive": "go1.25.5.linux-amd64.tar.gz",
+            "archive": "go1.25.6.linux-amd64.tar.gz",
             "format": "tar.gz",
             "strip_dirs": 1
           },

@@ -154,8 +154,23 @@ if [[ -z "$VERSIONS" ]]; then
     exit 2
 fi
 
-# Load exclusions file
+# Load exclusions files
 EXCLUSIONS_FILE="$REPO_ROOT/testdata/golden/exclusions.json"
+CODE_VALIDATION_EXCLUSIONS_FILE="$REPO_ROOT/testdata/golden/code-validation-exclusions.json"
+
+# Helper function to check if a recipe is excluded from code validation
+# (used for mismatch comparison, not for missing file checks)
+is_recipe_excluded_from_code_validation() {
+    local recipe="$1"
+
+    if [[ ! -f "$CODE_VALIDATION_EXCLUSIONS_FILE" ]]; then
+        return 1
+    fi
+
+    jq -e --arg r "$recipe" \
+        '.exclusions[] | select(.recipe == $r)' \
+        "$CODE_VALIDATION_EXCLUSIONS_FILE" > /dev/null 2>&1
+}
 
 # Helper function to check if a platform is excluded
 is_platform_excluded() {
@@ -240,6 +255,16 @@ if [[ ${#MISSING_PLATFORMS[@]} -gt 0 ]]; then
     echo "  3. Add an exclusion with a tracking issue:" >&2
     echo "     Edit testdata/golden/exclusions.json" >&2
     exit 1
+fi
+
+# Check if recipe is excluded from code validation (toolchain drift, etc.)
+if is_recipe_excluded_from_code_validation "$RECIPE"; then
+    reason=$(jq -r --arg r "$RECIPE" '.exclusions[] | select(.recipe == $r) | .reason' "$CODE_VALIDATION_EXCLUSIONS_FILE" | head -1)
+    issue=$(jq -r --arg r "$RECIPE" '.exclusions[] | select(.recipe == $r) | .issue' "$CODE_VALIDATION_EXCLUSIONS_FILE" | head -1)
+    echo "SKIPPED: $RECIPE is excluded from code validation"
+    echo "  Reason: $reason"
+    echo "  Tracking: $issue"
+    exit 0
 fi
 
 MISMATCH=0

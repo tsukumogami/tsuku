@@ -11,7 +11,7 @@
   "dependencies": [
     {
       "tool": "ruby",
-      "version": "4.0.0",
+      "version": "4.0.1",
       "recipe_hash": "6d0ac9b358fb401388d532f40e1a23714d4fae56f935b1bc659b1ea6b2c8ab81",
       "dependencies": [
         {
@@ -123,16 +123,16 @@
         {
           "action": "download_file",
           "params": {
-            "checksum": "0e49c3911076b9ad66a6b9b35efe2b14cf31615c9d1aa311f7311e04cfe88ca8",
+            "checksum": "69c0a7adf5e6604c5d302b8d6b87cdd7eca88bb858fe8aaea41c75697cc83b79",
             "checksum_algo": "sha256",
-            "dest": "ruby-4.0.0-ubuntu-22.04-x64.tar.gz",
-            "url": "https://github.com/ruby/ruby-builder/releases/download/ruby-4.0.0/ruby-4.0.0-ubuntu-22.04-x64.tar.gz"
+            "dest": "ruby-4.0.1-ubuntu-22.04-x64.tar.gz",
+            "url": "https://github.com/ruby/ruby-builder/releases/download/ruby-4.0.1/ruby-4.0.1-ubuntu-22.04-x64.tar.gz"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://github.com/ruby/ruby-builder/releases/download/ruby-4.0.0/ruby-4.0.0-ubuntu-22.04-x64.tar.gz",
-          "checksum": "0e49c3911076b9ad66a6b9b35efe2b14cf31615c9d1aa311f7311e04cfe88ca8",
-          "size": 48679546
+          "url": "https://github.com/ruby/ruby-builder/releases/download/ruby-4.0.1/ruby-4.0.1-ubuntu-22.04-x64.tar.gz",
+          "checksum": "69c0a7adf5e6604c5d302b8d6b87cdd7eca88bb858fe8aaea41c75697cc83b79",
+          "size": 48687481
         },
         {
           "action": "extract",
@@ -141,7 +141,7 @@
               "amd64": "x64",
               "arm64": "arm64"
             },
-            "archive": "ruby-4.0.0-ubuntu-22.04-x64.tar.gz",
+            "archive": "ruby-4.0.1-ubuntu-22.04-x64.tar.gz",
             "format": "tar.gz",
             "os_mapping": {
               "darwin": "darwin",

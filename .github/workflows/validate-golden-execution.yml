@@ -30,6 +30,28 @@ jobs:
       - name: Build execution matrix
         id: build-matrix
         run: |
+          EXCLUSIONS_FILE="testdata/golden/exclusions.json"
+
+          # Function to check if a recipe/platform is excluded
+          is_excluded() {
+            local recipe="$1"
+            local os="$2"
+            local arch="$3"
+
+            if [ ! -f "$EXCLUSIONS_FILE" ]; then
+              return 1
+            fi
+
+            local filter=".exclusions[] | select(.recipe == \"$recipe\" and .platform.os == \"$os\" and .platform.arch == \"$arch\")"
+            local match
+            match=$(jq -r "$filter | .issue" "$EXCLUSIONS_FILE" 2>/dev/null | head -1)
+            if [ -n "$match" ]; then
+              echo "$match"
+              return 0
+            fi
+            return 1
+          }
+
           # Get list of changed golden files (exclude deleted files)
           CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'testdata/golden/plans/**/*.json')
 
@@ -79,6 +101,12 @@ jobs:
             # Route to Linux matrix or macOS aggregated list
             case "$platform" in
               linux-amd64|linux-debian-amd64)
+                # Check if excluded
+                exclusion_issue=$(is_excluded "$tool" "linux" "amd64" || true)
+                if [ -n "$exclusion_issue" ]; then
+                  echo "Skipping $path (excluded: $exclusion_issue)"
+                  continue
+                fi
                 # Ubuntu runners are Debian-based - add to Linux matrix
                 if [ "$LINUX_FIRST" = true ]; then
                   LINUX_FIRST=false
@@ -92,6 +120,12 @@ jobs:
                 echo "Skipping $path ($platform no matching runner)"
                 ;;
               darwin-arm64)
+                # Check if excluded
+                exclusion_issue=$(is_excluded "$tool" "darwin" "arm64" || true)
+                if [ -n "$exclusion_issue" ]; then
+                  echo "Skipping $path (excluded: $exclusion_issue)"
+                  continue
+                fi
                 # Add to macOS aggregated list
                 if [ "$MACOS_FIRST" = true ]; then
                   MACOS_FIRST=false

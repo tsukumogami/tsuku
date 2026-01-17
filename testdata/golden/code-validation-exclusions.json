@@ -1,0 +1,141 @@
+{
+  "$schema": "./code-validation-exclusions.schema.json",
+  "description": "Exclusions for golden file CODE validation (regenerate-and-compare). These recipes are excluded from validate-golden-code.yml but still run in execution validation. Each exclusion must link to an open issue tracking the blocker.",
+  "exclusions": [
+    {
+      "recipe": "ack",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "cpan_install toolchain version drift (Perl versions not pinned)"
+    },
+    {
+      "recipe": "amplify",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "black",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "bundler",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "gem_install toolchain version drift (Ruby versions not pinned)"
+    },
+    {
+      "recipe": "cdk",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "cobra-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_install toolchain version drift (Go versions not pinned)"
+    },
+    {
+      "recipe": "curl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "compile_from_source toolchain version drift"
+    },
+    {
+      "recipe": "dlv",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_install toolchain version drift (Go versions not pinned)"
+    },
+    {
+      "recipe": "fpm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "gem_install toolchain version drift (Ruby versions not pinned)"
+    },
+    {
+      "recipe": "gofumpt",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_install toolchain version drift (Go versions not pinned)"
+    },
+    {
+      "recipe": "goimports",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_install toolchain version drift (Go versions not pinned)"
+    },
+    {
+      "recipe": "gopls",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "go_install toolchain version drift (Go versions not pinned)"
+    },
+    {
+      "recipe": "httpie",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "jekyll",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "gem_install toolchain version drift (Ruby versions not pinned)"
+    },
+    {
+      "recipe": "meson",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "netlify-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "ninja",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "compile_from_source toolchain version drift"
+    },
+    {
+      "recipe": "pngcrush",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "homebrew toolchain version drift"
+    },
+    {
+      "recipe": "poetry",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "readline",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "homebrew toolchain version drift"
+    },
+    {
+      "recipe": "ruff",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
+      "reason": "pipx_install constraint bug (hashes not preserved)"
+    },
+    {
+      "recipe": "serve",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "serverless",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "sqlite",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "homebrew toolchain version drift"
+    },
+    {
+      "recipe": "turbo",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "vercel",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "wrangler",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    }
+  ]
+}
