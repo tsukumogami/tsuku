@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: The current release workflow can't handle native binaries like the Rust dlopen helper because cross-compilation to macOS requires the macOS SDK, which is only legally available on macOS hardware.
 decision: Use parallel matrix builds on native runners with a draft-then-publish pattern, both glibc and musl Linux variants, and ad-hoc code signing for macOS.
 rationale: Draft releases provide atomic publishing semantics. Dual glibc/musl builds cover both modern glibc systems and Alpine/musl distributions. Ad-hoc signing eliminates common macOS friction without Apple Developer costs.
@@ -7,7 +7,78 @@ rationale: Draft releases provide atomic publishing semantics. Dual glibc/musl b
 
 # DESIGN: Native Binary Release Workflow
 
-**Status:** Accepted
+**Status:** Planned
+
+## Implementation Issues
+
+### Milestone: [Native Binary Release Workflow](https://github.com/tsukumogami/tsuku/milestone/43)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1025](https://github.com/tsukumogami/tsuku/issues/1025) | add draft-finalize workflow structure | None | testable |
+| [#1026](https://github.com/tsukumogami/tsuku/issues/1026) | update goreleaser configuration | [#1025](https://github.com/tsukumogami/tsuku/issues/1025) | testable |
+| [#1027](https://github.com/tsukumogami/tsuku/issues/1027) | add minimal tsuku-dltest Rust project | [#1025](https://github.com/tsukumogami/tsuku/issues/1025) | testable |
+| [#1028](https://github.com/tsukumogami/tsuku/issues/1028) | add Rust build jobs with native runners | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1027](https://github.com/tsukumogami/tsuku/issues/1027) | testable |
+| [#1030](https://github.com/tsukumogami/tsuku/issues/1030) | add integration test job | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1028](https://github.com/tsukumogami/tsuku/issues/1028) | testable |
+| [#1031](https://github.com/tsukumogami/tsuku/issues/1031) | add artifact verification and checksums | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1028](https://github.com/tsukumogami/tsuku/issues/1028), [#1030](https://github.com/tsukumogami/tsuku/issues/1030) | critical |
+| [#1040](https://github.com/tsukumogami/tsuku/issues/1040) | validate workflow with v0.3.0 release | All previous | testable |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Foundation"]
+        I1025["#1025: draft-finalize structure"]
+    end
+
+    subgraph Phase2["Phase 2: Parallel Refinements"]
+        I1026["#1026: goreleaser config"]
+        I1027["#1027: Rust project"]
+    end
+
+    subgraph Phase3["Phase 3: Build Infrastructure"]
+        I1028["#1028: Rust build jobs"]
+    end
+
+    subgraph Phase4["Phase 4: Quality Gates"]
+        I1030["#1030: integration tests"]
+        I1031["#1031: artifact verification"]
+    end
+
+    subgraph Phase5["Phase 5: Validation"]
+        I1040["#1040: v0.3.0 release"]
+    end
+
+    I1025 --> I1026
+    I1025 --> I1027
+    I1027 --> I1028
+    I1025 --> I1028
+    I1028 --> I1030
+    I1025 --> I1030
+    I1030 --> I1031
+    I1028 --> I1031
+    I1025 --> I1031
+    I1026 --> I1040
+    I1027 --> I1040
+    I1028 --> I1040
+    I1030 --> I1040
+    I1031 --> I1040
+    I1025 --> I1040
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1025 ready
+    class I1026,I1027 blocked
+    class I1028 blocked
+    class I1030 blocked
+    class I1031 blocked
+    class I1040 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
