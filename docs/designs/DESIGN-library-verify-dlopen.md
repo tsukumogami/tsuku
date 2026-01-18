@@ -142,6 +142,38 @@ For verification, `RTLD_NOW` is preferred to catch symbol resolution failures.
 - Same API as Linux
 - Handles dyld shared cache transparently
 
+### Language Choice for Helper Binary
+
+Since the helper is a separate binary, we're not constrained to Go. Options considered:
+
+| Language | Binary Size | Build Complexity | Safety | Contributor Familiarity |
+|----------|-------------|------------------|--------|-------------------------|
+| **Go+cgo** | ~5MB | Low (goreleaser) | High | High (same as tsuku) |
+| **Rust** | ~1MB | Medium (cargo) | High | Medium |
+| **C** | ~10KB | High (cross-compile) | Low | Medium |
+
+**Go+cgo chosen because:**
+- **Same build system**: Fits into existing goreleaser workflow without new toolchains
+- **Contributor familiarity**: tsuku contributors can maintain both binaries
+- **Shared code**: Can import tsuku packages if needed (version constants, etc.)
+- **Safety**: Go's memory safety applies to all non-cgo code
+
+**Trade-offs accepted:**
+- Larger binary (~5MB vs ~1MB for Rust or ~10KB for C)
+- CGO cross-compilation requires platform-specific runners in CI
+
+**Why not Rust:**
+- Would add a second toolchain to the project
+- Goreleaser doesn't natively support Rust (would need separate workflow)
+- Binary size savings don't justify the complexity for a ~5MB helper
+
+**Why not C:**
+- Memory safety risks in security-critical code
+- Cross-compilation requires platform-specific toolchains
+- Harder to maintain for Go-focused contributors
+
+**Future consideration:** If binary size becomes a concern, Rust could be reconsidered. The JSON protocol is language-agnostic, so the helper could be rewritten without changing tsuku.
+
 ### Anti-patterns to Avoid
 
 - **Shelling out to ldd**: Security risk—ldd executes the binary's `.init` sections
