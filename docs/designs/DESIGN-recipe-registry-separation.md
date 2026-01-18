@@ -1,7 +1,7 @@
 ---
 status: Proposed
 problem: All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
-decision: Separate recipes into critical (embedded) and community (registry-fetched) based on directory location. Store community golden files in Cloudflare R2 for scalability.
+decision: Separate recipes into embedded (in binary) and contrib (registry-fetched) based on directory location. Store contrib golden files in Cloudflare R2 for scalability.
 rationale: Location-based categorization is simplest. R2 storage scales to 10K+ recipes without git bloat. testdata/recipes/ ensures integration tests work reliably.
 ---
 
@@ -22,16 +22,16 @@ As tsuku matures, this approach creates problems:
 3. **CI burden**: All recipes receive the same testing rigor, even rarely-used ones
 4. **Maintenance friction**: Contributors must rebuild the CLI to test recipe changes
 
-However, the CLI depends on certain recipes to function. Actions like `go_install`, `cargo_build`, and `homebrew` require tools (Go, Rust, patchelf) that tsuku itself must install. These "critical" recipes must remain embedded to ensure tsuku can bootstrap its own dependencies.
+However, the CLI depends on certain recipes to function. Actions like `go_install`, `cargo_build`, and `homebrew` require tools (Go, Rust, patchelf) that tsuku itself must install. These recipes must remain embedded to ensure tsuku can bootstrap its own dependencies.
 
 ### Scope
 
 **In scope:**
-- Defining criteria for critical vs community recipes
-- Moving community recipes to `recipes/` directory at repo root
-- Updating the loader to fetch community recipes from registry
+- Defining criteria for embedded vs contrib recipes
+- Moving contrib recipes to `recipes/` directory at repo root
+- Updating the loader to fetch contrib recipes from registry
 - Restructuring CI to differentiate testing levels
-- Updating golden file testing strategy for community recipes
+- Updating golden file testing strategy for contrib recipes
 
 **Out of scope:**
 - Version pinning or lockfile features
@@ -43,8 +43,8 @@ However, the CLI depends on certain recipes to function. Actions like `go_instal
 
 - **Bootstrap reliability**: CLI must always install action dependencies without network access to recipe registry
 - **Binary size**: Smaller binaries mean faster downloads and less disk usage
-- **Recipe agility**: Community recipes should update without waiting for CLI releases
-- **CI efficiency**: Critical recipes warrant exhaustive testing; community recipes need lighter validation
+- **Recipe agility**: Contrib recipes should update without waiting for CLI releases
+- **CI efficiency**: Embedded recipes warrant exhaustive testing; contrib recipes need lighter validation
 - **Backwards compatibility**: Existing workflows must continue working
 - **Contributor experience**: Recipe development shouldn't require rebuilding the CLI
 
@@ -66,7 +66,7 @@ var embeddedRecipes embed.FS
 
 The loader already supports fetching non-embedded recipes from the registry. The infrastructure exists; it just isn't used because all recipes are embedded.
 
-### Critical Recipe Analysis
+### Embedded Recipe Analysis
 
 Actions that depend on tsuku-managed tools:
 
@@ -91,7 +91,7 @@ Transitive dependencies (libraries):
 
 **Important:** The current `Dependencies()` infrastructure has known gaps. For example, `homebrew` has a TODO (#644) noting that composite actions don't automatically aggregate primitive dependencies. The build-time analysis must account for these gaps.
 
-Estimated critical recipes: 15-20 (language toolchains + build tools + their dependencies). This estimate needs validation via actual dependency graph analysis during implementation.
+Estimated embedded recipes: 15-20 (language toolchains + build tools + their dependencies). This estimate needs validation via actual dependency graph analysis during implementation.
 
 ### Current Testing Architecture
 
@@ -120,7 +120,7 @@ Tsuku uses four complementary workflows that trigger under different conditions:
 - Tests: Changed golden files only
 - Actions: Runs `tsuku install --plan <golden-file>` to verify installation
 
-**Key insight:** Only code changes trigger full recipe validation. Recipe changes only test the changed recipe. This means a community recipe can break without CI catching it if the breakage comes from external factors (download URL changes, version drift).
+**Key insight:** Only code changes trigger full recipe validation. Recipe changes only test the changed recipe. This means a contrib recipe can break without CI catching it if the breakage comes from external factors (download URL changes, version drift).
 
 **Integration testing (`test.yml` via `test-matrix.json`):**
 
@@ -140,7 +140,7 @@ These tests ensure specific actions work (npm_install, cargo_install, gem_instal
 - **Tier 4**: tap, cask (macOS-specific)
 - **Tier 5**: npm_install, pipx_install, cargo_install, gem_install, cpan_install, go_install (using recipes like netlify-cli, ruff, cargo-audit, bundler, ack, gofumpt)
 
-**Important:** Tier 5 recipes (netlify-cli, cargo-audit, bundler, etc.) test action implementations but are NOT action dependencies. After separation, these could become community recipes, but integration tests still need them available.
+**Important:** Tier 5 recipes (netlify-cli, cargo-audit, bundler, etc.) test action implementations but are NOT action dependencies. After separation, these could become contrib recipes, but integration tests still need them available.
 
 **Three exclusion files:**
 - `exclusions.json`: Platform-specific exclusions (~50 entries) - "can't generate golden file for this platform"
@@ -151,26 +151,26 @@ These tests ensure specific actions work (npm_install, cargo_install, gem_instal
 
 ### Decision 1: Recipe Categorization Method
 
-How do we identify which recipes are critical?
+How do we identify which recipes should be embedded?
 
 #### Option 1A: Explicit Metadata Flag
 
-Add a `critical = true` field to recipe metadata:
+Add an `embedded = true` field to recipe metadata:
 
 ```toml
 [metadata]
 name = "go"
-critical = true
+embedded = true
 ```
 
 **Pros:**
 - Simple, explicit, easy to understand
-- Contributors can see and reason about criticality
+- Contributors can see and reason about embedding status
 - No magic or implicit behavior
 
 **Cons:**
 - Manual maintenance burden
-- Risk of forgetting to mark a transitive dependency as critical
+- Risk of forgetting to mark a transitive dependency as embedded
 - Doesn't automatically update when action dependencies change
 
 #### Option 1B: Computed from Action Dependencies
@@ -185,13 +185,13 @@ Build-time script analyzes action implementations, extracts `Dependencies()` ret
 **Cons:**
 - More complex build process
 - Requires parsing Go code or maintaining a separate registry
-- Harder for contributors to predict what's critical
+- Harder for contributors to predict what's embedded
 
 #### Option 1C: Hybrid Approach
 
 Compute the set automatically, but allow explicit overrides via metadata:
-- `critical = true` forces a recipe to be critical
-- `critical = false` forces a recipe to be community (override computed status)
+- `embedded = true` forces a recipe to be embedded
+- `embedded = false` forces a recipe to be contrib (override computed status)
 
 **Pros:**
 - Best of both approaches
@@ -204,12 +204,12 @@ Compute the set automatically, but allow explicit overrides via metadata:
 
 ### Decision 2: Directory Structure
 
-Where do critical and community recipes live?
+Where do embedded and contrib recipes live?
 
 #### Option 2A: Current Location Split
 
-- Critical: `internal/recipe/recipes/` (unchanged, embedded)
-- Community: `recipes/` at repo root (new, not embedded)
+- Embedded: `internal/recipe/recipes/` (unchanged, embedded)
+- Contrib: `recipes/` at repo root (new, not embedded)
 
 **Pros:**
 - Minimal changes to existing embed directive
@@ -217,7 +217,7 @@ Where do critical and community recipes live?
 - `recipes/` matches monorepo documentation
 
 **Cons:**
-- Moving a recipe from community to critical requires moving files
+- Moving a recipe from contrib to embedded requires moving files
 - Creates a boundary that needs clear criteria for when recipes should move
 
 #### Option 2B: Single Directory with Build Filter
@@ -236,7 +236,7 @@ All recipes in `recipes/`. Build process filters which to embed based on compute
 
 ### Decision 3: Testing Strategy
 
-How should testing differ between critical and community recipes?
+How should testing differ between embedded and contrib recipes?
 
 **Current behavior reminder:**
 - Recipe changes: Only that recipe is tested (plan + execution)
@@ -245,45 +245,45 @@ How should testing differ between critical and community recipes?
 
 The question is: what should change when we split recipes into categories?
 
-#### Option 3A: Broader Triggers for Critical, Unchanged for Community
+#### Option 3A: Broader Triggers for Embedded, Unchanged for Contrib
 
-Critical recipes get tested whenever ANY critical recipe OR critical code changes. Community recipes keep current behavior (only tested when that recipe changes).
+Embedded recipes get tested whenever ANY embedded recipe OR plan-critical code changes. Contrib recipes keep current behavior (only tested when that recipe changes).
 
 **Pros:**
-- Critical recipes are always validated together as a unit
-- Community recipe PRs stay fast
-- No change to community recipe testing on their own PRs
+- Embedded recipes are always validated together as a unit
+- Contrib recipe PRs stay fast
+- No change to contrib recipe testing on their own PRs
 
 **Cons:**
-- Defining "critical code" vs "community code" adds complexity
-- Doesn't address community recipe drift (broken by external factors)
+- Defining which code affects which recipe category adds complexity
+- Doesn't address contrib recipe drift (broken by external factors)
 
 #### Option 3B: Current Triggers, Split Execution Scope
 
 Keep current triggers, but when code changes occur:
-- Critical recipes: Full execution validation (plan + install)
-- Community recipes: Plan validation only (no execution)
+- Embedded recipes: Full execution validation (plan + install)
+- Contrib recipes: Plan validation only (no execution)
 
 **Pros:**
 - Same trigger logic, just different execution scope
-- Critical recipes always fully validated
-- Community recipes still get plan validation on code changes
+- Embedded recipes always fully validated
+- Contrib recipes still get plan validation on code changes
 
 **Cons:**
-- Community recipes may have broken downloads undetected
-- Still runs plan validation for all 150+ community recipes on code changes
+- Contrib recipes may have broken downloads undetected
+- Still runs plan validation for all 150+ contrib recipes on code changes
 
-#### Option 3C: Split Golden Files with Nightly Community Execution
+#### Option 3C: Split Golden Files with Nightly Contrib Execution
 
-Split golden file directories by category. On code changes, only validate critical recipes. Community recipes validated only when changed, with nightly full execution run.
+Split golden file directories by category. On code changes, only validate embedded recipes. Contrib recipes validated only when changed, with nightly full execution run.
 
 **Pros:**
-- Code changes run much faster (15-20 critical vs 150+ community)
-- Community recipe changes still tested (plan + execution)
+- Code changes run much faster (15-20 embedded vs 150+ contrib)
+- Contrib recipe changes still tested (plan + execution)
 - Nightly catches external breakage within 24 hours
 
 **Cons:**
-- Community recipe breakage from code changes not caught until nightly
+- Contrib recipe breakage from code changes not caught until nightly
 - Requires splitting golden file directory structure
 - More complex CI workflow logic
 
@@ -291,18 +291,18 @@ Split golden file directories by category. On code changes, only validate critic
 
 Integration tests (`test-matrix.json`) need specific recipes to test action implementations. Some tier 5 test recipes (netlify-cli, cargo-audit, bundler) are NOT action dependencies but ARE required for feature coverage testing.
 
-#### Option 4A: Keep Test Recipes Critical
+#### Option 4A: Keep Test Recipes Embedded
 
 Any recipe referenced in `test-matrix.json` stays in `internal/recipe/recipes/` even if it's not an action dependency.
 
 **Pros:**
 - Integration tests always work (recipes embedded)
 - No changes to test.yml workflow
-- Simple mental model: "test recipe = critical"
+- Simple mental model: "test recipe = embedded"
 
 **Cons:**
-- Inflates critical recipe count (adds ~10 more recipes)
-- Blurs the "action dependency" definition of critical
+- Inflates embedded recipe count (adds ~10 more recipes)
+- Blurs the "action dependency" definition of embedded
 - Test recipes can't be updated without CLI release
 
 #### Option 4B: Use testdata/recipes/ for Test Variants
@@ -312,7 +312,7 @@ Create test-specific recipe variants in `testdata/recipes/` that are always embe
 **Pros:**
 - Clean separation of concerns
 - Test recipes can be simplified versions
-- Production recipes can move to community
+- Production recipes can move to contrib
 - Already have precedent (waypoint-tap uses testdata/recipes/)
 
 **Cons:**
@@ -320,13 +320,13 @@ Create test-specific recipe variants in `testdata/recipes/` that are always embe
 - Test recipes could drift from production
 - More complex recipe structure
 
-#### Option 4C: Ensure test.yml Fetches Community Recipes
+#### Option 4C: Ensure test.yml Fetches Contrib Recipes
 
-Update test.yml to fetch community recipes before running integration tests, ensuring they're available regardless of embedding.
+Update test.yml to fetch contrib recipes before running integration tests, ensuring they're available regardless of embedding.
 
 **Pros:**
-- Clean separation: critical = action dependencies only
-- Integration tests work with community recipes
+- Clean separation: embedded = action dependencies only
+- Integration tests work with contrib recipes
 - No recipe duplication
 
 **Cons:**
@@ -351,27 +351,27 @@ Update test.yml to fetch community recipes before running integration tests, ens
 | Driver | 3A (Broader Triggers) | 3B (Split Execution) | 3C (Split Golden + Nightly) |
 |--------|----------------------|---------------------|------------------------------|
 | CI efficiency | Fair | Fair | Good |
-| Regression detection | Good (critical) / Poor (community) | Good (critical) / Fair (community) | Good (critical) / Fair (community) |
+| Regression detection | Good (embedded) / Poor (contrib) | Good (embedded) / Fair (contrib) | Good (embedded) / Fair (contrib) |
 | Simplicity | Poor | Good | Fair |
 
-| Driver | 4A (Keep Test Critical) | 4B (testdata/recipes) | 4C (Fetch Community) |
+| Driver | 4A (Keep Test Embedded) | 4B (testdata/recipes) | 4C (Fetch Contrib) |
 |--------|------------------------|----------------------|---------------------|
 | CI reliability | Good | Good | Fair |
 | Maintenance burden | Fair | Poor | Good |
 | Separation of concerns | Poor | Good | Good |
 
-### Decision 5: Community Golden File Storage
+### Decision 5: Contrib Golden File Storage
 
-At 10K community recipes with ~2.4 golden files each (~24K files, ~380MB), storing golden files in git creates unsustainable repo bloat. Git history compounds this - every version bump changes URLs/checksums.
+At 10K contrib recipes with ~2.4 golden files each (~24K files, ~380MB), storing golden files in git creates unsustainable repo bloat. Git history compounds this - every version bump changes URLs/checksums.
 
 However, golden files can't be reduced to hashes alone: the `--pin-from` flag requires the full previous plan to extract ecosystem-specific lock information for deterministic regeneration.
 
 #### Option 5A: Full Golden Files in Git
 
-Store all community golden files in `testdata/golden/plans/community/` like critical recipes.
+Store all contrib golden files in `testdata/golden/plans/contrib/` like embedded recipes.
 
 **Pros:**
-- Simple, consistent with critical recipes
+- Simple, consistent with embedded recipes
 - Full git history for debugging
 
 **Cons:**
@@ -381,7 +381,7 @@ Store all community golden files in `testdata/golden/plans/community/` like crit
 
 #### Option 5B: External Storage (Cloudflare R2)
 
-Store community golden files in Cloudflare R2. Only latest version, no history.
+Store contrib golden files in Cloudflare R2. Only latest version, no history.
 
 **Pros:**
 - Scales to 10K+ recipes without repo bloat
@@ -394,7 +394,7 @@ Store community golden files in Cloudflare R2. Only latest version, no history.
 - Needs upload/download workflow
 - Requires its own tactical design
 
-#### Option 5C: No Golden Files for Community
+#### Option 5C: No Golden Files for Contrib
 
 Only validate "plan generation succeeds", not "plan matches expectation".
 
@@ -405,7 +405,7 @@ Only validate "plan generation succeeds", not "plan matches expectation".
 **Cons:**
 - Can't detect plan generation regressions
 - Loses determinism validation
-- Lower quality assurance for community recipes
+- Lower quality assurance for contrib recipes
 
 | Driver | 5A (Git Storage) | 5B (R2 External) | 5C (No Golden) |
 |--------|-----------------|------------------|----------------|
@@ -419,17 +419,17 @@ Only validate "plan generation succeeds", not "plan matches expectation".
 ### Uncertainties
 
 - **Binary size impact**: The 15-20 estimate needs validation. Implementation should measure baseline binary size and compare after separation.
-- **Version drift**: How do we handle community recipe updates that conflict with installed versions?
+- **Version drift**: How do we handle contrib recipe updates that conflict with installed versions?
 
 ### Review Feedback Integration
 
 Based on reviews from Release, DevOps, Platform, and DX engineers, the following gaps were identified and decisions made:
 
-**Gap 1: Community Recipe Breakage Detection (24-Hour Blind Spot)**
+**Gap 1: Contrib Recipe Breakage Detection (24-Hour Blind Spot)**
 
-All reviewers flagged that code changes could break community recipes without detection until nightly runs.
+All reviewers flagged that code changes could break contrib recipes without detection until nightly runs.
 
-**Decision:** Community recipe PRs MUST pass execution validation before merge, not just plan validation. Nightly runs are for catching *external* drift (URL changes, version rot), not *internal* breakage from code changes.
+**Decision:** Contrib recipe PRs MUST pass execution validation before merge, not just plan validation. Nightly runs are for catching *external* drift (URL changes, version rot), not *internal* breakage from code changes.
 
 **Gap 2: Network Failure Handling Undefined**
 
@@ -441,11 +441,11 @@ Reviewers asked: What happens when GitHub is unavailable and cache is expired?
 3. Cache exists → return with warning "Recipe may be stale (cached X hours ago)"
 4. Cache missing → fail with "No network and no cached recipe"
 
-**Gap 3: Critical Recipe List Unvalidated**
+**Gap 3: Embedded Recipe List Unvalidated**
 
 The 15-20 estimate relies on manual analysis. Dependencies() infrastructure has known gaps (#644).
 
-**Decision:** BEFORE Stage 1, generate definitive critical recipe list via build-time dependency analysis. Create `CRITICAL_RECIPES.md` with explicit list and dependency rationale. Add CI validation that alerts when action dependencies change.
+**Decision:** BEFORE Stage 1, generate definitive embedded recipe list via build-time dependency analysis. Create `EMBEDDED_RECIPES.md` with explicit list and dependency rationale. Add CI validation that alerts when action dependencies change.
 
 **Gap 4: R2 Single Point of Failure**
 
@@ -465,11 +465,11 @@ No limits on `$TSUKU_HOME/registry/` growth.
 
 ## Decision Outcome
 
-**Chosen: Location-based categorization (2A) + Split golden files with nightly community execution (3C) + testdata/recipes for integration tests (4B) + Cloudflare R2 for community golden files (5B)**
+**Chosen: Location-based categorization (2A) + Split golden files with nightly contrib execution (3C) + testdata/recipes for integration tests (4B) + Cloudflare R2 for contrib golden files (5B)**
 
 ### Summary
 
-Recipe criticality is determined by directory location: `internal/recipe/recipes/` = critical (embedded), `recipes/` = community (fetched from registry). Critical golden files stay in git; community golden files are stored in Cloudflare R2 (no history, just latest). Code changes only validate critical recipes. Community recipes are fully tested when changed, with nightly runs catching external breakage. Integration tests use `testdata/recipes/` for feature coverage recipes that aren't action dependencies.
+Recipe category is determined by directory location: `internal/recipe/recipes/` = embedded, `recipes/` = contrib (fetched from registry). Embedded golden files stay in git; contrib golden files are stored in Cloudflare R2 (no history, just latest). Code changes only validate embedded recipes. Contrib recipes are fully tested when changed, with nightly runs catching external breakage. Integration tests use `testdata/recipes/` for feature coverage recipes that aren't action dependencies.
 
 ### Rationale
 
@@ -480,18 +480,18 @@ Recipe criticality is determined by directory location: `internal/recipe/recipes
 - **Aligns with existing loader priority**: The embed directive already uses directory paths
 
 **Split golden files + nightly testing (3C) chosen because:**
-- **CI efficiency**: Code changes only validate 15-20 critical recipes instead of 170+
-- **Community recipes still fully tested when changed**: Plan validation AND execution on that recipe's PR
+- **CI efficiency**: Code changes only validate 15-20 embedded recipes instead of 170+
+- **Contrib recipes still fully tested when changed**: Plan validation AND execution on that recipe's PR
 - **Nightly catches external drift**: Download URL changes, version drift detected within 24 hours
-- **Clear trigger logic**: Critical = always validated on code changes; Community = validated on their own changes + nightly
+- **Clear trigger logic**: Embedded = always validated on code changes; Contrib = validated on their own changes + nightly
 
 **testdata/recipes for integration tests (4B) chosen because:**
-- **Clean separation**: Critical recipes = action dependencies; test recipes = feature coverage
+- **Clean separation**: Embedded recipes = action dependencies; test recipes = feature coverage
 - **Existing precedent**: waypoint-tap already uses testdata/recipes/ pattern
 - **CI reliability**: Test recipes are embedded, no network dependency for integration tests
 - **Independent evolution**: Test recipes can be simplified versions focused on CI speed
 
-**Cloudflare R2 for community golden files (5B) chosen because:**
+**Cloudflare R2 for contrib golden files (5B) chosen because:**
 - **Scalability**: Supports 10K+ recipes without git repo bloat
 - **Existing infrastructure**: Already have Cloudflare for telemetry worker
 - **Cost effective**: 10GB free tier covers initial scale, cheap beyond
@@ -501,22 +501,22 @@ Recipe criticality is determined by directory location: `internal/recipe/recipes
 
 - **1A (Explicit metadata)**: Adds manual maintenance burden with risk of forgetting transitive dependencies
 - **1B/1C (Computed from dependencies)**: Complex build process, harder to predict results, requires fixing Dependencies() infrastructure gaps (#644)
-- **3A (Broader triggers)**: Doesn't address community recipe drift; adds complexity defining "critical code"
-- **3B (Split execution)**: Still validates all 150+ community recipes on code changes, slow CI
-- **4A (Keep test recipes critical)**: Inflates critical count, blurs the "action dependency" definition
-- **4C (Fetch community)**: Makes integration tests depend on registry availability
-- **5A (Git storage for community golden files)**: ~380MB for 10K recipes plus history overhead, doesn't scale
-- **5C (No golden files for community)**: Loses plan generation regression detection, lower quality assurance
+- **3A (Broader triggers)**: Doesn't address contrib recipe drift; adds complexity defining code-recipe relationships
+- **3B (Split execution)**: Still validates all 150+ contrib recipes on code changes, slow CI
+- **4A (Keep test recipes embedded)**: Inflates embedded count, blurs the "action dependency" definition
+- **4C (Fetch contrib)**: Makes integration tests depend on registry availability
+- **5A (Git storage for contrib golden files)**: ~380MB for 10K recipes plus history overhead, doesn't scale
+- **5C (No golden files for contrib)**: Loses plan generation regression detection, lower quality assurance
 
 ### Trade-offs Accepted
 
 By choosing location-based categorization:
 - Moving a recipe between categories requires moving files (accepted: this is an intentional friction)
-- Critical recipe list isn't automatically updated when action dependencies change (accepted: critical recipes change rarely, manual review is appropriate)
+- Embedded recipe list isn't automatically updated when action dependencies change (accepted: embedded recipes change rarely, manual review is appropriate)
 
 By choosing split golden files + nightly:
-- Community recipe breakage from code changes not caught until nightly (accepted: code changes rarely break community recipes, and nightly catches it)
-- Community recipe issues from external factors (URL changes) may go undetected for up to 24 hours (accepted: faster contributor feedback is worth this tradeoff)
+- Contrib recipe breakage from code changes not caught until nightly (accepted: code changes rarely break contrib recipes, and nightly catches it)
+- Contrib recipe issues from external factors (URL changes) may go undetected for up to 24 hours (accepted: faster contributor feedback is worth this tradeoff)
 - Requires splitting golden file directories and updating workflow triggers (accepted: one-time migration cost)
 
 By choosing testdata/recipes for integration tests:
@@ -524,7 +524,7 @@ By choosing testdata/recipes for integration tests:
 - Two copies of some recipes (accepted: test versions are simplified, clear ownership boundary)
 - More complex recipe structure to understand (accepted: well-documented in CONTRIBUTING.md)
 
-By choosing Cloudflare R2 for community golden files:
+By choosing Cloudflare R2 for contrib golden files:
 - External dependency for CI validation (accepted: Cloudflare has high availability, fallback to skip validation on outage)
 - No git history for golden file changes (accepted: history not needed, only latest matters for validation)
 - Requires separate tactical design for implementation (accepted: complexity warrants dedicated design)
@@ -534,8 +534,8 @@ By choosing Cloudflare R2 for community golden files:
 ### Overview
 
 The solution separates recipes into two directory locations:
-- **Critical recipes**: `internal/recipe/recipes/` (embedded via `//go:embed`)
-- **Community recipes**: `recipes/` at repo root (fetched from GitHub registry)
+- **Embedded recipes**: `internal/recipe/recipes/` (embedded via `//go:embed`)
+- **Contrib recipes**: `recipes/` at repo root (fetched from GitHub registry)
 
 The loader's existing priority chain handles this naturally. No code changes are needed for the basic fetch mechanism - the separation is purely organizational.
 
@@ -546,12 +546,12 @@ tsuku/
 ├── internal/
 │   └── recipe/
 │       ├── embedded.go          # //go:embed recipes/*/*.toml
-│       └── recipes/             # Critical recipes (15-20)
+│       └── recipes/             # Embedded recipes (15-20)
 │           ├── g/go.toml
 │           ├── r/rust.toml
 │           ├── n/nodejs.toml
 │           └── ...
-├── recipes/                     # Community recipes (~150)
+├── recipes/                     # Contrib recipes (~150)
 │   ├── a/actionlint.toml
 │   ├── f/fzf.toml
 │   └── ...
@@ -566,23 +566,23 @@ tsuku/
     │   └── waypoint-tap.toml    # Tests tap action (already exists)
     └── golden/
         ├── plans/
-        │   └── critical/        # Golden files for critical recipes (in git)
+        │   └── embedded/        # Golden files for embedded recipes (in git)
         └── exclusions.json      # Updated with category awareness
 
-# Community golden files stored externally:
+# Contrib golden files stored externally:
 # Cloudflare R2: tsuku-golden-files bucket
-#   └── community/
+#   └── contrib/
 #       └── {letter}/{recipe}/{version}-{platform}.json
 ```
 
 **Three recipe locations:**
-1. `internal/recipe/recipes/` - Critical (action dependencies), embedded
-2. `recipes/` - Community (production), fetched from registry
+1. `internal/recipe/recipes/` - Embedded (action dependencies)
+2. `recipes/` - Contrib (production), fetched from registry
 3. `testdata/recipes/` - Integration test recipes, embedded for CI reliability
 
 **Two golden file locations:**
-1. `testdata/golden/plans/critical/` - In git, versioned
-2. Cloudflare R2 bucket - Community golden files, latest only, no history
+1. `testdata/golden/plans/embedded/` - In git, versioned
+2. Cloudflare R2 bucket - Contrib golden files, latest only, no history
 
 ### Loader Behavior
 
@@ -595,7 +595,7 @@ User requests recipe "fzf"
     ↓
 2. Check local recipes ($TSUKU_HOME/recipes/fzf.toml) → miss
     ↓
-3. Check embedded recipes (internal/recipe/recipes/) → miss (fzf is community)
+3. Check embedded recipes (internal/recipe/recipes/) → miss (fzf is contrib)
     ↓
 4. Fetch from registry (GitHub raw URL) → found
     ↓
@@ -604,20 +604,20 @@ User requests recipe "fzf"
 6. Return recipe
 ```
 
-For critical recipes like "go":
+For embedded recipes like "go":
 ```
 User requests recipe "go"
     ↓
 1-2. Cache/local checks → miss
     ↓
-3. Check embedded recipes → found (go is critical)
+3. Check embedded recipes → found (go is embedded)
     ↓
 4. Return recipe (no network needed)
 ```
 
 ### Registry URL Structure
 
-Community recipes are fetched from GitHub raw URLs:
+Contrib recipes are fetched from GitHub raw URLs:
 ```
 https://raw.githubusercontent.com/tsukumogami/tsuku/main/recipes/{letter}/{name}.toml
 ```
@@ -632,11 +632,11 @@ https://raw.githubusercontent.com/tsukumogami/tsuku/main/internal/recipe/recipes
 Golden files mirror the recipe structure:
 ```
 testdata/golden/plans/
-├── critical/           # Full validation (plan + execution)
+├── embedded/           # Full validation (plan + execution)
 │   ├── g/go/
 │   ├── r/rust/
 │   └── ...
-└── community/          # Plan-only validation (nightly execution)
+└── contrib/          # Plan-only validation (nightly execution)
     ├── a/actionlint/
     ├── f/fzf/
     └── ...
@@ -649,14 +649,14 @@ testdata/golden/plans/
 |----------|---------|-------|
 | `test-changed-recipes.yml` | Recipe files change | Changed recipes only |
 | `validate-golden-recipes.yml` | Recipe files change | Changed recipes only |
-| `validate-golden-code.yml` | 35 critical code files change | ALL recipes |
+| `validate-golden-code.yml` | 35 plan-critical code files change | ALL recipes |
 | `validate-golden-execution.yml` | Golden files change | Changed golden files |
 
 **Changes needed:**
 
 1. **test-changed-recipes.yml** - Update path triggers:
    - Currently: `internal/recipe/recipes/**/*.toml`
-   - Add: `recipes/**/*.toml` (community recipes)
+   - Add: `recipes/**/*.toml` (contrib recipes)
    - Behavior unchanged: tests changed recipes on their PRs
 
 2. **validate-golden-recipes.yml** - Update path triggers:
@@ -666,79 +666,79 @@ testdata/golden/plans/
 
 3. **validate-golden-code.yml** - Scope reduction (key change):
    - Currently: Validates ALL golden files when code changes
-   - Change to: Only validate `testdata/golden/plans/critical/**`
-   - Rationale: Code changes rarely break community recipes; nightly catches any drift
+   - Change to: Only validate `testdata/golden/plans/embedded/**`
+   - Rationale: Code changes rarely break contrib recipes; nightly catches any drift
 
 4. **validate-golden-execution.yml** - No change needed:
    - Already only executes changed golden files
    - Will naturally work with split directory structure
 
-5. **nightly-community-validation.yml** (new):
+5. **nightly-contrib-validation.yml** (new):
    - Cron: Daily at 2 AM UTC
-   - Scope: All community recipes (`testdata/golden/plans/community/**`)
+   - Scope: All contrib recipes (`testdata/golden/plans/contrib/**`)
    - Actions: Full plan validation + execution
    - Reporting: Creates GitHub issue on failure
 
 **Testing behavior by scenario:**
 
-| Scenario | Critical Recipes | Community Recipes |
+| Scenario | Embedded Recipes | Contrib Recipes |
 |----------|------------------|-------------------|
 | Recipe file changes | Plan + Execution | Plan + Execution (required for merge) |
-| Critical code changes (35 files) | Plan validation | Not tested (caught by nightly) |
+| Plan-critical code changes (35 files) | Plan validation | Not tested (caught by nightly) |
 | Golden file changes | Execution | Execution |
 | Nightly run | Not included | Full validation + Execution (external drift detection) |
 
-**Important (from review feedback):** Community recipe PRs MUST pass execution validation before merge, not just plan validation. This closes the "24-hour blind spot" where broken recipes could merge and affect users before nightly detection.
+**Important (from review feedback):** Contrib recipe PRs MUST pass execution validation before merge, not just plan validation. This closes the "24-hour blind spot" where broken recipes could merge and affect users before nightly detection.
 
-**Nightly purpose clarified:** Nightly runs catch *external* drift (URL changes, version rot, upstream breakage) - not internal breakage from code changes. If a community recipe breaks from a code change, the recipe maintainer should add that recipe to their PR's test scope.
+**Nightly purpose clarified:** Nightly runs catch *external* drift (URL changes, version rot, upstream breakage) - not internal breakage from code changes. If a contrib recipe breaks from a code change, the recipe maintainer should add that recipe to their PR's test scope.
 
 ## Implementation Approach
 
-### Stage 0: Critical Recipe List Validation (Prerequisite)
+### Stage 0: Embedded Recipe List Validation (Prerequisite)
 
-**Goal:** Generate and validate the definitive critical recipe list before any migration.
+**Goal:** Generate and validate the definitive embedded recipe list before any migration.
 
 **Steps:**
 1. Create build-time script to extract all `Dependencies()` returns from action code
 2. Compute transitive closure of all action dependencies
 3. Validate against known gaps (issue #644 for homebrew composite actions)
-4. Generate `CRITICAL_RECIPES.md` with:
-   - Explicit list of all critical recipes
-   - Dependency graph showing why each is critical
+4. Generate `EMBEDDED_RECIPES.md` with:
+   - Explicit list of all embedded recipes
+   - Dependency graph showing why each is embedded
    - Which action(s) require each recipe
-5. Add CI validation script: `verify-critical-recipes.sh`
+5. Add CI validation script: `verify-embedded-recipes.sh`
    - Alerts when action dependencies change
-   - Fails if critical recipe is missing from embedded directory
+   - Fails if embedded recipe is missing from embedded directory
 
-**Validation:** `CRITICAL_RECIPES.md` exists with complete list. CI script passes.
+**Validation:** `EMBEDDED_RECIPES.md` exists with complete list. CI script passes.
 
 **Blocking:** Stage 1 cannot proceed until this is complete.
 
 ### Stage 1: Recipe Migration
 
-**Goal:** Move community recipes to `recipes/` directory.
+**Goal:** Move contrib recipes to `recipes/` directory.
 
 **Steps:**
-1. Identify critical recipes (action dependencies + transitive deps)
+1. Identify embedded recipes (action dependencies + transitive deps)
 2. Move all other recipes from `internal/recipe/recipes/` to `recipes/`
 3. Update embed directive if needed (should work unchanged)
 4. Update registry URL in `internal/registry/registry.go`
 
-**Validation:** All existing tests pass. `tsuku install <community-recipe>` works via registry fetch.
+**Validation:** All existing tests pass. `tsuku install <contrib-recipe>` works via registry fetch.
 
 ### Stage 2: Golden File Reorganization
 
-**Goal:** Separate golden files - critical in git, community in R2.
+**Goal:** Separate golden files - embedded in git, contrib in R2.
 
 **Steps:**
-1. Create `testdata/golden/plans/critical/`
-2. Move critical recipe golden files to `critical/` subdirectory
-3. Update regeneration scripts to use new paths for critical recipes
+1. Create `testdata/golden/plans/embedded/`
+2. Move embedded recipe golden files to `embedded/` subdirectory
+3. Update regeneration scripts to use new paths for embedded recipes
 4. Update validation scripts to use new paths
 
-**Note:** Community golden files migration to R2 requires separate tactical design (see Stage 7).
+**Note:** Contrib golden files migration to R2 requires separate tactical design (see Stage 7).
 
-**Validation:** Critical golden file scripts work with new structure.
+**Validation:** Embedded golden file scripts work with new structure.
 
 ### Stage 3: Integration Test Recipe Setup
 
@@ -767,7 +767,7 @@ testdata/golden/plans/
 
 4. Verify integration tests still pass with new recipe paths
 
-**Validation:** `go test ./...` passes. Integration tests use testdata/recipes/ and don't depend on community recipes.
+**Validation:** `go test ./...` passes. Integration tests use testdata/recipes/ and don't depend on contrib recipes.
 
 ### Stage 4: CI Workflow Updates
 
@@ -778,21 +778,21 @@ testdata/golden/plans/
 
 2. **validate-golden-recipes.yml**: Add `recipes/**/*.toml` to path triggers. Update script to detect recipe category from path and look in appropriate golden file directory.
 
-3. **validate-golden-code.yml**: Change scope from all golden files to `testdata/golden/plans/critical/**` only. This is the key optimization - code changes no longer validate 150+ community recipes.
+3. **validate-golden-code.yml**: Change scope from all golden files to `testdata/golden/plans/embedded/**` only. This is the key optimization - code changes no longer validate 150+ contrib recipes.
 
-4. **validate-golden-execution.yml**: Update to handle both `critical/` and `community/` subdirectories in golden file detection.
+4. **validate-golden-execution.yml**: Update to handle both `embedded/` and `contrib/` subdirectories in golden file detection.
 
-5. **Create nightly-community-validation.yml**:
+5. **Create nightly-contrib-validation.yml**:
    - Cron trigger: `0 2 * * *`
-   - Runs `validate-all-golden.sh` for `testdata/golden/plans/community/`
-   - Executes all community golden files
+   - Runs `validate-all-golden.sh` for `testdata/golden/plans/contrib/`
+   - Executes all contrib golden files
    - Creates GitHub issue on failure with list of broken recipes
 
-6. Update exclusions.json: Add `category` field or split into `critical-exclusions.json` and `community-exclusions.json`
+6. Update exclusions.json: Add `category` field or split into `embedded-exclusions.json` and `contrib-exclusions.json`
 
 **Validation:**
-- Code change PRs complete faster (only critical recipes)
-- Community recipe change PRs still run full validation
+- Code change PRs complete faster (only embedded recipes)
+- Contrib recipe change PRs still run full validation
 - Nightly workflow runs and reports failures
 
 ### Stage 5: Cache Policy Implementation (Expanded per Review Feedback)
@@ -829,25 +829,25 @@ testdata/golden/plans/
 
 **Steps:**
 1. Update CONTRIBUTING.md with recipe category guidance:
-   - Decision flowchart: "Should my recipe be critical?"
+   - Decision flowchart: "Should my recipe be embedded?"
    - Troubleshooting: "My recipe works locally but fails in CI"
-   - Explain three directories (critical, community, testdata)
-2. Reference CRITICAL_RECIPES.md (created in Stage 0)
+   - Explain three directories (embedded, contrib, testdata)
+2. Reference EMBEDDED_RECIPES.md (created in Stage 0)
 3. Document the nightly validation process and failure notification channels
 4. Update troubleshooting for "recipe not found" errors (network issues)
 5. Create incident response playbook for repository compromise
 
-### Stage 7: Community Golden File R2 Storage (Separate Design)
+### Stage 7: Contrib Golden File R2 Storage (Separate Design)
 
-**Goal:** Implement Cloudflare R2 storage for community golden files.
+**Goal:** Implement Cloudflare R2 storage for contrib golden files.
 
 **This stage requires its own tactical design document covering:**
 - R2 bucket structure and naming conventions
-- Upload workflow (on community recipe PR merge)
+- Upload workflow (on contrib recipe PR merge)
 - Download workflow (for CI validation)
 - Authentication and access control (GitHub Actions OIDC recommended)
 - Cache headers and CDN behavior
-- Migration of existing community golden files to R2
+- Migration of existing contrib golden files to R2
 - Cost monitoring and alerts
 
 **Required from review feedback (R2 resilience):**
@@ -859,19 +859,19 @@ testdata/golden/plans/
 - Credential rotation SOP (quarterly)
 - Audit logging for compliance
 
-**Dependency:** Stages 0-4 can proceed independently. Stage 7 unblocks full community recipe validation at scale.
+**Dependency:** Stages 0-4 can proceed independently. Stage 7 unblocks full contrib recipe validation at scale.
 
-**Validation:** Community recipe PR workflow successfully uploads/downloads golden files from R2. R2 outage gracefully degrades to git fallback.
+**Validation:** Contrib recipe PR workflow successfully uploads/downloads golden files from R2. R2 outage gracefully degrades to git fallback.
 
 ## Security Considerations
 
 ### Download Verification
 
-**Critical recipes** (embedded): Binary signature verification for downloaded artifacts remains unchanged. These recipes undergo full execution testing in CI.
+**Embedded recipes** (embedded): Binary signature verification for downloaded artifacts remains unchanged. These recipes undergo full execution testing in CI.
 
-**Community recipes** (fetched): Recipe files themselves are fetched over HTTPS from GitHub. No additional signing is implemented in this design. The fetched recipe content is subject to GitHub's repository integrity guarantees.
+**Contrib recipes** (fetched): Recipe files themselves are fetched over HTTPS from GitHub. No additional signing is implemented in this design. The fetched recipe content is subject to GitHub's repository integrity guarantees.
 
-**Future enhancement**: Recipe signing could add an integrity layer for community recipes, verifying that fetched TOML matches a signed manifest.
+**Future enhancement**: Recipe signing could add an integrity layer for contrib recipes, verifying that fetched TOML matches a signed manifest.
 
 ### Execution Isolation
 
@@ -881,7 +881,7 @@ No change. All recipe steps execute with the same isolation model regardless of 
 
 **Embedded recipes**: Reviewed at PR time, compiled into binary. Attack surface is the PR review process. Changes are visible in git history and require PR approval.
 
-**Community recipes**: Fetched at runtime from GitHub. Attack surface expands to:
+**Contrib recipes**: Fetched at runtime from GitHub. Attack surface expands to:
 - GitHub account compromise
 - Repository compromise
 - Network MITM (mitigated by HTTPS)
@@ -898,8 +898,8 @@ No change. All recipe steps execute with the same isolation model regardless of 
 
 **Account compromise recovery**: If the GitHub repository is compromised:
 - Embedded recipes in released binaries are unaffected
-- Community recipes could be replaced with malicious versions
-- Recovery requires: reverting malicious commits, notifying users to clear cache, potential emergency CLI release if critical recipes affected
+- Contrib recipes could be replaced with malicious versions
+- Recovery requires: reverting malicious commits, notifying users to clear cache, potential emergency CLI release if embedded recipes affected
 
 ### User Data Exposure
 
@@ -909,9 +909,9 @@ No change. This design doesn't affect what data tsuku collects or transmits.
 
 | Risk | Mitigation | Residual Risk |
 |------|------------|---------------|
-| Malicious community recipe | PR review, GitHub HTTPS, cache persistence | Compromised GitHub account could push malicious recipe |
+| Malicious contrib recipe | PR review, GitHub HTTPS, cache persistence | Compromised GitHub account could push malicious recipe |
 | Cache poisoning | Cache-until-clear semantics, local override option | Stale malicious cache persists until explicit clear |
-| Network unavailable | Critical recipes embedded, community cached | First-time installs of community recipes fail offline |
+| Network unavailable | Embedded recipes always available, contrib cached | First-time installs of contrib recipes fail offline |
 | Download tampering | HTTPS to GitHub, binary checksums in recipes | Recipe file itself has no signature |
 
 ## Consequences
@@ -920,13 +920,13 @@ No change. This design doesn't affect what data tsuku collects or transmits.
 
 - Smaller CLI binary (estimated 30-50% recipe content reduction)
 - Recipe updates ship independently of CLI releases
-- CI runs faster for community recipe changes
-- Clear mental model: "critical = CLI needs it to work"
+- CI runs faster for contrib recipe changes
+- Clear mental model: "embedded = CLI needs it to work"
 
 ### Negative
 
 - Two categories to understand instead of one
-- Community recipes may be unavailable during network issues
+- Contrib recipes may be unavailable during network issues
 - Additional infrastructure complexity (registry cache management)
 - Split testing strategy is more complex
 
@@ -934,4 +934,4 @@ No change. This design doesn't affect what data tsuku collects or transmits.
 
 - Migration requires moving files and updating embed directive
 - Documentation needs updating to explain the distinction
-- Contributors need to understand when a recipe should be critical
+- Contributors need to understand when a recipe should be embedded
