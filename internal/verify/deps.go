@@ -255,24 +255,26 @@ func validateSingleDependency(
 }
 
 // validateSystemDep verifies a system library is accessible.
-// On Linux, the file must exist.
-// On macOS, pattern-matched libraries are trusted even if not on disk (dyld cache).
+// For pattern-matched system libraries (libc.so.6, libpthread.so.0, etc.), we trust the
+// pattern match without requiring a file path. The dynamic linker will resolve these at runtime.
+// For non-pattern-matched libraries or libraries with absolute paths, we verify file existence.
 func validateSystemDep(libPath string, targetOS string) error {
-	// On macOS, system libraries may not exist as files (dyld cache)
-	// Trust the pattern match
-	if targetOS == "darwin" {
-		// Check if it matches a system pattern - if so, trust it
-		if IsSystemLibrary(libPath, targetOS) {
-			return nil
-		}
+	// If the library matches a system pattern, trust it without file check.
+	// This handles:
+	// - macOS dyld cache (system libraries not on disk since macOS 11)
+	// - Linux bare sonames (libc.so.6) that the dynamic linker resolves
+	if IsSystemLibrary(libPath, targetOS) {
+		return nil
 	}
 
-	// For Linux or non-pattern-matched macOS libs, check file existence
-	if _, err := os.Stat(libPath); err != nil {
-		if os.IsNotExist(err) {
-			return fmt.Errorf("system library not found: %s", libPath)
+	// For absolute paths or non-pattern-matched libs, check file existence
+	if filepath.IsAbs(libPath) {
+		if _, err := os.Stat(libPath); err != nil {
+			if os.IsNotExist(err) {
+				return fmt.Errorf("system library not found: %s", libPath)
+			}
+			return fmt.Errorf("cannot access system library %s: %v", libPath, err)
 		}
-		return fmt.Errorf("cannot access system library %s: %v", libPath, err)
 	}
 
 	return nil
