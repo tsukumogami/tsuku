@@ -307,8 +307,8 @@ func (a *PipxInstallAction) Decompose(ctx *EvalContext, params map[string]interf
 		return nil, fmt.Errorf("invalid version format '%s'", version)
 	}
 
-	// Check if we have pip constraints for constrained evaluation
-	if ctx.Constraints != nil && len(ctx.Constraints.PipConstraints) > 0 {
+	// Check if we have pip requirements for constrained evaluation
+	if ctx.Constraints != nil && ctx.Constraints.PipRequirements != "" {
 		return a.decomposeWithConstraints(ctx, packageName, version, executables)
 	}
 
@@ -358,16 +358,14 @@ func (a *PipxInstallAction) Decompose(ctx *EvalContext, params map[string]interf
 
 // decomposeWithConstraints generates a pip_exec step using constraints from a golden file.
 // This enables deterministic plan generation for validation by reusing the exact
-// package versions from a previous evaluation instead of querying PyPI.
+// package versions and hashes from a previous evaluation instead of querying PyPI.
 func (a *PipxInstallAction) decomposeWithConstraints(ctx *EvalContext, packageName, version string, executables []string) ([]Step, error) {
-	// Reconstruct locked_requirements from constraints
-	// The format is: "package==version \\\n    --hash=sha256:hash\n"
-	// Since we only have package versions (not hashes), we generate the format
-	// without hashes. The pip_exec action will handle this appropriately.
-	lockedRequirements := generateLockedRequirementsFromConstraints(ctx.Constraints.PipConstraints)
+	// Use the full locked_requirements string from constraints.
+	// This preserves the original hashes from the golden file.
+	lockedRequirements := ctx.Constraints.PipRequirements
 
-	// Detect native addons based on the package list
-	hasNativeAddons := detectNativeAddonsFromConstraints(ctx.Constraints.PipConstraints)
+	// Detect native addons based on the stored requirements
+	hasNativeAddons := detectPythonNativeAddons(lockedRequirements)
 
 	// Get Python version from the installed python-standalone
 	pythonPath := ResolvePythonStandalone()
@@ -396,65 +394,6 @@ func (a *PipxInstallAction) decomposeWithConstraints(ctx *EvalContext, packageNa
 			Params: pipExecParams,
 		},
 	}, nil
-}
-
-// generateLockedRequirementsFromConstraints reconstructs the locked_requirements
-// string from pip constraints. This produces a deterministic output that matches
-// the format expected by pip_exec.
-func generateLockedRequirementsFromConstraints(constraints map[string]string) string {
-	if len(constraints) == 0 {
-		return ""
-	}
-
-	// Sort package names for deterministic output
-	packages := make([]string, 0, len(constraints))
-	for pkg := range constraints {
-		packages = append(packages, pkg)
-	}
-	sortPackageNames(packages)
-
-	// Build requirements string
-	var builder strings.Builder
-	for _, pkg := range packages {
-		version := constraints[pkg]
-		// Format matches what pip download produces: "package==version \\\n    --hash=sha256:hash\n"
-		// For constrained evaluation, we include a placeholder hash that will be
-		// replaced during actual evaluation if needed. The key is that the package
-		// and version match exactly.
-		builder.WriteString(fmt.Sprintf("%s==%s \\\n    --hash=sha256:0\n", pkg, version))
-	}
-
-	return builder.String()
-}
-
-// sortPackageNames sorts package names alphabetically for deterministic output.
-func sortPackageNames(packages []string) {
-	for i := 1; i < len(packages); i++ {
-		for j := i; j > 0 && packages[j] < packages[j-1]; j-- {
-			packages[j], packages[j-1] = packages[j-1], packages[j]
-		}
-	}
-}
-
-// detectNativeAddonsFromConstraints checks if any constrained packages are known
-// to have native extensions.
-func detectNativeAddonsFromConstraints(constraints map[string]string) bool {
-	knownNativePackages := map[string]bool{
-		"numpy":        true,
-		"scipy":        true,
-		"pandas":       true,
-		"cryptography": true,
-		"pillow":       true,
-		"lxml":         true,
-	}
-
-	for pkg := range constraints {
-		if knownNativePackages[strings.ToLower(pkg)] {
-			return true
-		}
-	}
-
-	return false
 }
 
 // generateLockedRequirements creates a requirements.txt with SHA256 hashes.

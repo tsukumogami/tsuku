@@ -82,7 +82,12 @@ func extractPipConstraintsFromSteps(steps []ResolvedStep, constraints *actions.E
 			continue
 		}
 
-		// Parse locked_requirements and add to constraints
+		// Store full requirements string (first one wins)
+		if constraints.PipRequirements == "" {
+			constraints.PipRequirements = lockedReqs
+		}
+
+		// Also parse and store versions for lookup
 		parsed := ParsePipRequirements(lockedReqs)
 		for pkg, ver := range parsed {
 			constraints.PipConstraints[pkg] = ver
@@ -125,6 +130,11 @@ func normalizePackageName(name string) string {
 // HasPipConstraints returns true if the constraints contain pip package versions.
 func HasPipConstraints(constraints *actions.EvalConstraints) bool {
 	return constraints != nil && len(constraints.PipConstraints) > 0
+}
+
+// HasPipRequirementsConstraint returns true if the constraints contain pip requirements.
+func HasPipRequirementsConstraint(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && constraints.PipRequirements != ""
 }
 
 // GetPipConstraint returns the version constraint for a package, if any.
