@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: Levels 1-2 of library verification can't confirm a library will actually load; only dlopen() can test this, but it requires native code which conflicts with tsuku's CGO_ENABLED=0 build.
 decision: Use a dedicated Rust helper binary (tsuku-dltest) with JSON protocol and batched invocation.
 rationale: Rust provides memory-safe dlopen bindings, simpler cross-compilation than Go+cgo, and a small binary (~400KB). Implementation requires a separate release process design for multi-platform native builds.
@@ -7,7 +7,64 @@ rationale: Rust provides memory-safe dlopen bindings, simpler cross-compilation 
 
 # DESIGN: dlopen Load Testing for Library Verification (Level 3)
 
-**Status:** Accepted
+**Status:** Planned
+
+## Implementation Issues
+
+### Milestone: [Library Verification Level 3 (dlopen)](https://github.com/tsukumogami/tsuku/milestone/39)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1014](https://github.com/tsukumogami/tsuku/issues/1014) | feat(verify): add minimal dlopen verification skeleton | None | testable |
+| [#1015](https://github.com/tsukumogami/tsuku/issues/1015) | feat(verify): add tsuku-dltest recipe for helper installation | [#1014](https://github.com/tsukumogami/tsuku/issues/1014) | testable |
+| [#1016](https://github.com/tsukumogami/tsuku/issues/1016) | feat(verify): add batch processing and timeout handling | [#1014](https://github.com/tsukumogami/tsuku/issues/1014) | testable |
+| [#1017](https://github.com/tsukumogami/tsuku/issues/1017) | feat(verify): add environment sanitization and path validation | [#1014](https://github.com/tsukumogami/tsuku/issues/1014) | critical |
+| [#1018](https://github.com/tsukumogami/tsuku/issues/1018) | feat(verify): add --skip-dlopen flag and fallback behavior | [#1014](https://github.com/tsukumogami/tsuku/issues/1014), [#1016](https://github.com/tsukumogami/tsuku/issues/1016), [#1017](https://github.com/tsukumogami/tsuku/issues/1017) | testable |
+| [#1019](https://github.com/tsukumogami/tsuku/issues/1019) | test(verify): add integration tests for dlopen verification | [#1014](https://github.com/tsukumogami/tsuku/issues/1014), [#1015](https://github.com/tsukumogami/tsuku/issues/1015), [#1016](https://github.com/tsukumogami/tsuku/issues/1016), [#1017](https://github.com/tsukumogami/tsuku/issues/1017), [#1018](https://github.com/tsukumogami/tsuku/issues/1018) | testable |
+| [#1020](https://github.com/tsukumogami/tsuku/issues/1020) | docs: design native binary release workflow | None | simple |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Foundation["Foundation"]
+        I1014["#1014: Minimal dlopen skeleton"]
+        I1020["#1020: Release workflow design"]
+    end
+
+    subgraph Refinements["Refinements"]
+        I1015["#1015: Recipe installation"]
+        I1016["#1016: Batch/timeout"]
+        I1017["#1017: Security (env/path)"]
+    end
+
+    subgraph Integration["Integration"]
+        I1018["#1018: Skip-dlopen flag"]
+        I1019["#1019: Integration tests"]
+    end
+
+    I1014 --> I1015
+    I1014 --> I1016
+    I1014 --> I1017
+    I1016 --> I1018
+    I1017 --> I1018
+    I1014 --> I1019
+    I1015 --> I1019
+    I1016 --> I1019
+    I1017 --> I1019
+    I1018 --> I1019
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1014 ready
+    class I1020 needsDesign
+    class I1015,I1016,I1017,I1018,I1019 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
