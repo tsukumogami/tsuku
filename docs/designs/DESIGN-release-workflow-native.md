@@ -492,7 +492,38 @@ Modify `.goreleaser.yaml`:
 Create `cmd/tsuku-dltest/`:
 - `Cargo.toml` with release profile (LTO, strip, panic=abort)
 - `rust-toolchain.toml` pinning stable Rust version
-- `src/main.rs` implementing dlopen helper
+- `src/main.rs` implementing minimal version-printing CLI
+
+**Minimal implementation for workflow validation:**
+```rust
+// src/main.rs
+use std::env;
+
+// Version injected via Cargo.toml at build time
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+
+    if args.len() == 2 && args[1] == "--version" {
+        eprintln!("tsuku-dltest v{}", VERSION);
+        std::process::exit(0);
+    }
+
+    // Placeholder: actual dlopen logic added by issue #1014
+    eprintln!("tsuku-dltest v{}", VERSION);
+    eprintln!("dlopen functionality not yet implemented");
+    eprintln!("usage: tsuku-dltest <path>...");
+    std::process::exit(2);
+}
+```
+
+This minimal implementation validates:
+- Rust project builds on all platforms
+- Version injection works correctly
+- Release workflow produces valid binaries
+
+The actual dlopen logic is implemented by issue #1014.
 
 ### Step 4: Create Rust Build Jobs
 
@@ -507,9 +538,20 @@ Add workflow sections for building tsuku-dltest:
 
 Create integration-test job:
 - Download artifacts from draft release
-- Run version checks on each binary
-- Verify tsuku can invoke tsuku-dltest
+- Run version checks on each binary (same version format for Go and Rust CLIs)
 - Runs on each platform in parallel matrix
+
+**Version validation:**
+```bash
+# Both CLIs use same version format: "vX.Y.Z"
+EXPECTED_VERSION="v${GITHUB_REF_NAME#v}"
+./tsuku version | grep "$EXPECTED_VERSION"
+./tsuku-dltest --version 2>&1 | grep "$EXPECTED_VERSION"
+```
+
+Note: `tsuku-dltest` outputs to stderr (like `tsuku version`), ensuring consistent behavior.
+
+**dlopen integration testing deferred**: Testing `tsuku verify` with the dltest helper is deferred to issue #1014 when the dlopen logic is implemented.
 
 ### Step 6: Add Artifact Verification and Checksums
 
