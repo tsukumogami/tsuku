@@ -436,35 +436,89 @@ tsuku-dltest v1.0.0
 
 ### Trust Chain Verification
 
-Checksums are embedded in tsuku source code:
+The helper is installed via tsuku's standard recipe system, but with a version pin embedded in tsuku's source code:
 
 ```go
 // internal/verify/dltest.go
-var dltestVersion = "v1.0.0"
 
-var dltestChecksums = map[string]string{
-    "linux-amd64":  "sha256:abc123...",
-    "linux-arm64":  "sha256:def456...",
-    "darwin-amd64": "sha256:789abc...",
-    "darwin-arm64": "sha256:cde012...",
+// pinnedDltestVersion is updated with each tsuku release
+// to ensure helper version matches tsuku version
+var pinnedDltestVersion = "v1.0.0"
+```
+
+**Recipe**: `recipes/t/tsuku-dltest.toml` (part of the standard registry)
+
+```toml
+[metadata]
+name = "tsuku-dltest"
+description = "dlopen verification helper for tsuku verify"
+homepage = "https://github.com/tsukumogami/tsuku"
+# Internal tool, not listed in search results
+internal = true
+
+[version]
+provider = "github-release"
+owner = "tsukumogami"
+repo = "tsuku"
+asset_pattern = "tsuku-dltest-{os}-{arch}"
+
+[[steps]]
+action = "download"
+url = "https://github.com/tsukumogami/tsuku/releases/download/{version}/tsuku-dltest-{os}-{arch}"
+checksum = "{checksums.tsuku-dltest-{os}-{arch}}"
+checksum_algo = "sha256"
+
+[[steps]]
+action = "chmod"
+path = "tsuku-dltest-{os}-{arch}"
+mode = "755"
+
+[[steps]]
+action = "install_binaries"
+files = ["tsuku-dltest-{os}-{arch}"]
+rename = { "tsuku-dltest-{os}-{arch}" = "tsuku-dltest" }
+```
+
+**Installation flow**:
+
+1. Check if `tsuku-dltest` is installed with correct version (`pinnedDltestVersion`)
+2. If not installed or version mismatch:
+   - Call `tsuku install tsuku-dltest@{pinnedDltestVersion}` internally
+   - This uses the standard recipe flow with checksum verification
+3. Return path to installed helper
+
+```go
+func EnsureDltest() (string, error) {
+    // Check current installation
+    installed, version := state.GetToolVersion("tsuku-dltest")
+    if installed && version == pinnedDltestVersion {
+        return state.GetToolPath("tsuku-dltest"), nil
+    }
+
+    // Install pinned version using standard recipe flow
+    if err := install.InstallTool("tsuku-dltest", pinnedDltestVersion); err != nil {
+        return "", fmt.Errorf("failed to install tsuku-dltest: %w", err)
+    }
+
+    return state.GetToolPath("tsuku-dltest"), nil
 }
 ```
 
-**Verification flow**:
+**Why recipe-based installation:**
+- Uses existing checksum verification infrastructure
+- Follows standard installation patterns (symlinks, state.json tracking)
+- Recipe can be inspected by users (`tsuku info tsuku-dltest`)
+- Checksums are in release checksums.txt file (standard pattern)
 
-1. Acquire exclusive file lock on `$TSUKU_HOME/.dltest/.lock` (prevents race conditions)
-2. Check if `$TSUKU_HOME/.dltest/tsuku-dltest` exists
-3. If exists, verify version file matches expected version
-4. If version mismatch or missing: download from GitHub releases
-5. Verify SHA256 checksum against embedded value
-6. If checksum mismatch: error, do not execute
-7. Atomic rename to install location (prevents partial writes)
-8. Release file lock
-9. Execute helper
+**Why pinned version in tsuku:**
+- Ensures helper version matches tsuku version (security-critical)
+- Version pin is updated in same release workflow that publishes helper
+- Users can't accidentally use mismatched versions
 
-**File locking**: Following the nix-portable pattern, file locking prevents race conditions when multiple tsuku processes attempt to download the helper simultaneously.
-
-**Why embedded checksums**: Updating the helper requires changing tsuku source code, which goes through code review. This prevents a compromised release server from pushing malicious helpers without review.
+**Compatibility guarantee:** The helper API is versioned. Breaking changes require:
+1. New major version of helper
+2. Updated version pin in tsuku
+3. Simultaneous release of both
 
 ### Invocation Protocol
 
@@ -691,106 +745,87 @@ builds:
 
 ### Step 6: Release Workflow
 
-The helper and its checksums must be released atomically to prevent version mismatch. This is achieved through a two-phase release process in a single GitHub Actions workflow:
+The helper and tsuku are released together using the existing goreleaser workflow:
 
-**Phase 1: Build helper and compute checksums**
+**Goreleaser configuration:**
 
 ```yaml
-jobs:
-  build-dltest:
-    strategy:
-      matrix:
-        include:
-          - os: ubuntu-latest
-            goos: linux
-            goarch: amd64
-          - os: ubuntu-latest
-            goos: linux
-            goarch: arm64
-          - os: macos-latest
-            goos: darwin
-            goarch: amd64
-          - os: macos-latest
-            goos: darwin
-            goarch: arm64
-    steps:
-      - uses: actions/checkout@v4
-      - name: Build helper
-        run: |
-          CGO_ENABLED=1 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
-            go build -o tsuku-dltest-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/tsuku-dltest
-      - name: Compute checksum
-        run: sha256sum tsuku-dltest-* > checksums.txt
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dltest-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: |
-            tsuku-dltest-*
-            checksums.txt
+builds:
+  # Main tsuku binary (CGO_ENABLED=0)
+  - id: tsuku
+    main: ./cmd/tsuku
+    binary: tsuku-{{ .Os }}-{{ .Arch }}
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+
+  # Helper binary (CGO_ENABLED=1)
+  - id: tsuku-dltest
+    main: ./cmd/tsuku-dltest
+    binary: tsuku-dltest-{{ .Os }}-{{ .Arch }}
+    env:
+      - CGO_ENABLED=1
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+
+checksum:
+  name_template: checksums.txt
+  algorithm: sha256
 ```
 
-**Phase 2: Embed checksums and build tsuku**
+**Version pin update:**
+
+Before each release, update `pinnedDltestVersion` in `internal/verify/dltest.go`:
+
+```go
+// Updated via release script: scripts/update-dltest-version.sh
+var pinnedDltestVersion = "v1.2.3"  // Matches release tag
+```
+
+This is automated in the release workflow:
 
 ```yaml
-  build-tsuku:
-    needs: build-dltest
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: dltest-*
-          merge-multiple: true
-      - name: Generate checksum map
-        run: |
-          # Generate Go code with embedded checksums
-          ./scripts/generate-dltest-checksums.sh > internal/verify/dltest_checksums.go
-      - name: Build tsuku with embedded checksums
-        run: |
-          CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+- name: Update dltest version pin
+  run: |
+    sed -i "s/pinnedDltestVersion = .*/pinnedDltestVersion = \"${{ github.ref_name }}\"/" \
+      internal/verify/dltest.go
 ```
 
 **Why this works:**
-- Helper binaries are built first, checksums computed
-- Checksums are embedded in tsuku source via code generation
-- Both are released in the same workflow run
-- Users can't get mismatched versions
+- Both binaries built and released in same workflow
+- Checksums in `checksums.txt` (standard goreleaser output)
+- Recipe references checksums via `{checksums.tsuku-dltest-{os}-{arch}}`
+- Version pin ensures users get matching helper version
 
 **Pre-release testing:**
 
-During development, before the helper is released:
+1. **Local testing**: Build helper with `CGO_ENABLED=1 go build ./cmd/tsuku-dltest`, then:
+   ```bash
+   # Install locally for testing
+   cp tsuku-dltest ~/.tsuku/tools/tsuku-dltest-dev/tsuku-dltest
+   ```
 
-1. **Local testing**: Build helper locally with `CGO_ENABLED=1 go build ./cmd/tsuku-dltest`
-2. **Integration tests**: CI builds helper in test job, runs against test libraries
-3. **Checksum placeholder**: Use `dev` as version with special handling:
+2. **CI integration tests**: Use `TSUKU_DLTEST_PATH` environment variable to override:
+   ```yaml
+   - name: Build helper for testing
+     run: CGO_ENABLED=1 go build -o tsuku-dltest ./cmd/tsuku-dltest
+   - name: Test verification
+     run: |
+       TSUKU_DLTEST_PATH=./tsuku-dltest ./tsuku verify gcc-libs
+   ```
+
+3. **Dev version bypass**: When `pinnedDltestVersion == "dev"`, accept any installed version:
    ```go
-   if dltestVersion == "dev" {
-       // Skip checksum verification in development
-       log.Warn("Using development helper without checksum verification")
+   if pinnedDltestVersion == "dev" {
+       // Development mode: use whatever is installed
+       if path := state.GetToolPath("tsuku-dltest"); path != "" {
+           return path, nil
+       }
    }
    ```
-4. **Pre-release workflow**: Tag `v1.0.0-rc.1` triggers full release workflow but marks as pre-release
 
-**Testing strategy:**
-
-```yaml
-  test-dltest:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - name: Build helper for testing
-        run: CGO_ENABLED=1 go build -o tsuku-dltest ./cmd/tsuku-dltest
-      - name: Test helper directly
-        run: |
-          ./tsuku-dltest /lib/x86_64-linux-gnu/libc.so.6 2>&1 | jq .
-      - name: Integration test with tsuku
-        run: |
-          # Build tsuku with dev checksums
-          CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-          # Install a library and verify
-          ./tsuku install gcc-libs
-          ./tsuku verify gcc-libs --skip-dlopen  # First verify without helper
-          TSUKU_DLTEST_PATH=./tsuku-dltest ./tsuku verify gcc-libs  # Then with helper
-```
+4. **Pre-release tags**: `v1.0.0-rc.1` triggers full release workflow, publishes as pre-release
 
 ### Step 7: Tests
 
@@ -834,27 +869,31 @@ This section addresses the security checklist from issue #949. Level 3 verificat
 
 ### Download Verification (Helper Binary Trust Chain)
 
-The `tsuku-dltest` helper is downloaded from GitHub releases and verified before execution.
+The `tsuku-dltest` helper is installed via tsuku's standard recipe system with a pinned version.
 
 **Verification mechanism:**
-1. SHA256 checksums are embedded in tsuku source code (not fetched from URLs)
-2. Checksum verification runs before any execution
-3. Verification failure aborts with error (fail closed)
-4. Atomic rename prevents execution of partially downloaded binaries
+1. Version pin (`pinnedDltestVersion`) is embedded in tsuku source code
+2. Recipe specifies checksums from release `checksums.txt` file
+3. Standard recipe checksum verification runs before execution
+4. Verification failure aborts with error (fail closed)
 
-**Why embedded checksums:**
-- Updating checksums requires a PR to tsuku (code review)
-- No dependency on external checksum files that could be modified
-- Users can audit exactly which helper binary their tsuku version uses
-- Mirrors Go's `go.sum` pattern for module verification
+**Why version-pinned recipe:**
+- Uses existing checksum verification infrastructure
+- Version pin updated in same release that publishes helper
+- Checksums verified via standard recipe flow (same as all other tools)
+- Users can inspect installation via `tsuku info tsuku-dltest`
+
+**Why version pin in source:**
+- Ensures helper version matches tsuku version (security-critical)
+- Pin is updated atomically in release workflow
+- Prevents users from accidentally using mismatched versions
 
 **Failure behavior:**
 ```
-Error: tsuku-dltest checksum verification failed
+Error: Failed to install tsuku-dltest@v1.2.3
+  Checksum verification failed for tsuku-dltest-linux-amd64
   Expected: sha256:abc123...
   Got: sha256:def456...
-  The helper binary may have been tampered with.
-  Please report this at https://github.com/tsukumogami/tsuku/issues
 ```
 
 ### Execution Isolation
