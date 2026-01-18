@@ -70,8 +70,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1025 ready
-    class I1026,I1027 blocked
+    class I1025 done
+    class I1026,I1027 ready
     class I1028 blocked
     class I1030 blocked
     class I1031 blocked
