@@ -263,7 +263,7 @@ func TestDefaultRegistry_PatternCount(t *testing.T) {
 	// Verify the pattern counts match what the design specifies
 	t.Run("linux soname patterns", func(t *testing.T) {
 		got := len(DefaultRegistry.linuxSonamePatterns)
-		want := 18
+		want := 25
 		if got != want {
 			t.Errorf("len(linuxSonamePatterns) = %d, want %d", got, want)
 		}
@@ -307,7 +307,7 @@ func TestDefaultRegistry_PatternCount(t *testing.T) {
 			len(DefaultRegistry.linuxPathPatterns) +
 			len(DefaultRegistry.darwinPathPatterns) +
 			len(DefaultRegistry.pathVariablePrefixes)
-		want := 47
+		want := 54
 		if total != want {
 			t.Errorf("total patterns = %d, want %d", total, want)
 		}
