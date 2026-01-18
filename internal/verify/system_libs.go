@@ -26,10 +26,10 @@ type SystemLibraryRegistry struct {
 	pathVariablePrefixes []string
 }
 
-// DefaultRegistry is the default system library registry with 47 patterns
+// DefaultRegistry is the default system library registry with 54 patterns
 // covering Linux and macOS system libraries.
 var DefaultRegistry = &SystemLibraryRegistry{
-	// Linux soname patterns (18 patterns)
+	// Linux soname patterns (25 patterns)
 	// These match libraries that are part of the base Linux system.
 	linuxSonamePatterns: []string{
 		// Virtual dynamic shared objects (kernel-provided, no files on disk)
@@ -59,6 +59,15 @@ var DefaultRegistry = &SystemLibraryRegistry{
 		"libstdc++.so", // C++ standard library (GNU implementation)
 		"libatomic.so", // Atomic operations library (for architectures without native support)
 		"libgomp.so",   // OpenMP runtime library
+
+		// Security and policy libraries (commonly used by coreutils)
+		"libselinux.so", // SELinux library (used by ls, cat, etc. on SELinux-enabled systems)
+		"libpcre2-8.so", // PCRE2 library (used by libselinux and grep)
+		"libacl.so",     // POSIX ACL library (used by ls, cp, etc.)
+		"libattr.so",    // Extended attributes library
+		"libcap.so",     // POSIX capabilities library
+		"libcap-ng.so",  // Capabilities library (alternate implementation)
+		"libaudit.so",   // Linux Audit library
 	},
 
 	// macOS library patterns (10 patterns)
