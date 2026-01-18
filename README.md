@@ -440,6 +440,23 @@ tsuku verifies downloaded files against checksums computed during plan generatio
 
 This protects against supply chain attacks and detects unauthorized re-tagging of releases.
 
+#### Installation Verification
+
+After installation, use `tsuku verify` to validate tool integrity:
+
+```bash
+tsuku verify kubectl
+```
+
+For libraries, verification includes multiple tiers:
+- **Tier 1: Header validation** - Validates that library files are valid shared libraries (ELF or Mach-O) for the current platform
+- **Tier 2: Dependency checking** - Validates dynamic library dependencies are satisfied, classifying them as:
+  - System libraries (libc, libm, libSystem.B.dylib, etc.)
+  - Tsuku-managed libraries (dependencies installed by tsuku)
+  - Externally-managed libraries (from package managers like apt, brew)
+
+Tier 2 validation also detects ABI mismatches (glibc vs musl) to catch incompatible binary combinations early.
+
 ### Sandbox Testing
 
 Test installations in isolated containers to verify recipes work correctly:
