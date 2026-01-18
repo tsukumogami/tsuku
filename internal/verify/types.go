@@ -54,6 +54,10 @@ const (
 	// ErrABIMismatch indicates the binary's ABI is incompatible with the system
 	// (e.g., glibc binary on musl system, or vice versa)
 	ErrABIMismatch ErrorCategory = 10
+
+	// ErrUnknownDependency indicates a dependency could not be classified.
+	// Pre-GA, this is an error to help identify corner cases that need handling.
+	ErrUnknownDependency ErrorCategory = 11
 )
 
 // String returns a human-readable name for the error category.
@@ -73,6 +77,8 @@ func (c ErrorCategory) String() string {
 		return "corrupted"
 	case ErrABIMismatch:
 		return "ABI mismatch"
+	case ErrUnknownDependency:
+		return "unknown dependency"
 	default:
 		return fmt.Sprintf("unknown(%d)", c)
 	}
