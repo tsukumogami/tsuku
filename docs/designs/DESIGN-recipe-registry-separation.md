@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Planned
 problem: All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
 decision: Separate recipes into embedded (in binary) and registry (registry-fetched) based on directory location. Store registry golden files in Cloudflare R2 for scalability.
 rationale: Location-based categorization is simplest. R2 storage scales to 10K+ recipes without git bloat. testdata/recipes/ ensures integration tests work reliably.
@@ -9,7 +9,84 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 ## Status
 
-**Proposed**
+**Planned**
+
+## Implementation Issues
+
+### Milestone: [M30 - Recipe Separation Foundation](https://github.com/tsukumogami/tsuku/milestone/40)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1032](https://github.com/tsukumogami/tsuku/issues/1032) | Generate embedded recipe list with dependency analysis | None | critical |
+| [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | Migrate registry recipes to recipes/ directory | [#1032](https://github.com/tsukumogami/tsuku/issues/1032) | testable |
+| [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | Reorganize golden files into embedded/registry directories | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable |
+
+### Milestone: [M31 - CI and Testing Adaptation](https://github.com/tsukumogami/tsuku/milestone/41)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | Create testdata/recipes for integration test coverage | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable |
+| [#1036](https://github.com/tsukumogami/tsuku/issues/1036) | Update workflows for split recipe structure | [#1034](https://github.com/tsukumogami/tsuku/issues/1034), [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | testable |
+
+### Milestone: [M32 - Cache Management and Documentation](https://github.com/tsukumogami/tsuku/milestone/42)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1037](https://github.com/tsukumogami/tsuku/issues/1037) | Implement registry recipe cache policy | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable |
+| [#1038](https://github.com/tsukumogami/tsuku/issues/1038) | Document recipe separation for contributors | [#1036](https://github.com/tsukumogami/tsuku/issues/1036), [#1037](https://github.com/tsukumogami/tsuku/issues/1037) | simple |
+
+### Future Work
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1039](https://github.com/tsukumogami/tsuku/issues/1039) | Design R2 storage for registry golden files | [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | critical |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph M30["M30: Recipe Separation Foundation"]
+        I1032["#1032: Generate embedded recipe list"]
+        I1033["#1033: Migrate registry recipes"]
+        I1034["#1034: Reorganize golden files"]
+    end
+
+    subgraph M31["M31: CI and Testing Adaptation"]
+        I1035["#1035: Create testdata/recipes"]
+        I1036["#1036: Update workflows"]
+    end
+
+    subgraph M32["M32: Cache Management and Documentation"]
+        I1037["#1037: Implement cache policy"]
+        I1038["#1038: Document recipe separation"]
+    end
+
+    subgraph Future["Future Work"]
+        I1039["#1039: Design R2 storage"]
+    end
+
+    I1032 --> I1033
+    I1033 --> I1034
+    I1033 --> I1035
+    I1033 --> I1037
+    I1034 --> I1036
+    I1035 --> I1036
+    I1034 --> I1039
+    I1036 --> I1038
+    I1037 --> I1038
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1032 needsDesign
+    class I1033,I1034,I1035,I1036,I1038 blocked
+    class I1037 needsDesign
+    class I1039 needsDesign
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
@@ -20,7 +97,7 @@ As tsuku matures, this approach creates problems:
 1. **Binary bloat**: Every recipe adds to binary size, regardless of whether users need it
 2. **Update coupling**: Recipe improvements require a new CLI release
 3. **CI burden**: All recipes receive the same testing rigor, even rarely-used ones
-4. **Maintenance friction**: Registryutors must rebuild the CLI to test recipe changes
+4. **Maintenance friction**: Contributors must rebuild the CLI to test recipe changes
 
 However, the CLI depends on certain recipes to function. Actions like `go_install`, `cargo_build`, and `homebrew` require tools (Go, Rust, patchelf) that tsuku itself must install. These recipes must remain embedded to ensure tsuku can bootstrap its own dependencies.
 
@@ -46,7 +123,7 @@ However, the CLI depends on certain recipes to function. Actions like `go_instal
 - **Recipe agility**: Registry recipes should update without waiting for CLI releases
 - **CI efficiency**: Embedded recipes warrant exhaustive testing; registry recipes need lighter validation
 - **Backwards compatibility**: Existing workflows must continue working
-- **Registryutor experience**: Recipe development shouldn't require rebuilding the CLI
+- **Contributor experience**: Recipe development shouldn't require rebuilding the CLI
 
 ## Implementation Context
 
@@ -165,7 +242,7 @@ embedded = true
 
 **Pros:**
 - Simple, explicit, easy to understand
-- Registryutors can see and reason about embedding status
+- Contributors can see and reason about embedding status
 - No magic or implicit behavior
 
 **Cons:**
@@ -340,11 +417,11 @@ Update test.yml to fetch registry recipes before running integration tests, ensu
 |--------|--------------|--------------|-------------|
 | Bootstrap reliability | Fair | Good | Good |
 | Maintenance burden | Poor | Good | Good |
-| Registryutor clarity | Good | Poor | Fair |
+| Contributor clarity | Good | Poor | Fair |
 
 | Driver | 2A (Split Dirs) | 2B (Build Filter) |
 |--------|-----------------|-------------------|
-| Registryutor clarity | Good | Fair |
+| Contributor clarity | Good | Fair |
 | Build complexity | Good | Poor |
 | Migration ease | Good | Fair |
 
@@ -950,4 +1027,4 @@ No change. This design doesn't affect what data tsuku collects or transmits.
 
 - Migration requires moving files and updating embed directive
 - Documentation needs updating to explain the distinction
-- Registryutors need to understand when a recipe should be embedded
+- Contributors need to understand when a recipe should be embedded
