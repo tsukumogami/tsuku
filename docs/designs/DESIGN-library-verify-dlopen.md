@@ -689,12 +689,116 @@ builds:
       - arm64
 ```
 
-### Step 6: Tests
+### Step 6: Release Workflow
+
+The helper and its checksums must be released atomically to prevent version mismatch. This is achieved through a two-phase release process in a single GitHub Actions workflow:
+
+**Phase 1: Build helper and compute checksums**
+
+```yaml
+jobs:
+  build-dltest:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build helper
+        run: |
+          CGO_ENABLED=1 GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }} \
+            go build -o tsuku-dltest-${{ matrix.goos }}-${{ matrix.goarch }} ./cmd/tsuku-dltest
+      - name: Compute checksum
+        run: sha256sum tsuku-dltest-* > checksums.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dltest-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: |
+            tsuku-dltest-*
+            checksums.txt
+```
+
+**Phase 2: Embed checksums and build tsuku**
+
+```yaml
+  build-tsuku:
+    needs: build-dltest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: dltest-*
+          merge-multiple: true
+      - name: Generate checksum map
+        run: |
+          # Generate Go code with embedded checksums
+          ./scripts/generate-dltest-checksums.sh > internal/verify/dltest_checksums.go
+      - name: Build tsuku with embedded checksums
+        run: |
+          CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+```
+
+**Why this works:**
+- Helper binaries are built first, checksums computed
+- Checksums are embedded in tsuku source via code generation
+- Both are released in the same workflow run
+- Users can't get mismatched versions
+
+**Pre-release testing:**
+
+During development, before the helper is released:
+
+1. **Local testing**: Build helper locally with `CGO_ENABLED=1 go build ./cmd/tsuku-dltest`
+2. **Integration tests**: CI builds helper in test job, runs against test libraries
+3. **Checksum placeholder**: Use `dev` as version with special handling:
+   ```go
+   if dltestVersion == "dev" {
+       // Skip checksum verification in development
+       log.Warn("Using development helper without checksum verification")
+   }
+   ```
+4. **Pre-release workflow**: Tag `v1.0.0-rc.1` triggers full release workflow but marks as pre-release
+
+**Testing strategy:**
+
+```yaml
+  test-dltest:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - name: Build helper for testing
+        run: CGO_ENABLED=1 go build -o tsuku-dltest ./cmd/tsuku-dltest
+      - name: Test helper directly
+        run: |
+          ./tsuku-dltest /lib/x86_64-linux-gnu/libc.so.6 2>&1 | jq .
+      - name: Integration test with tsuku
+        run: |
+          # Build tsuku with dev checksums
+          CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+          # Install a library and verify
+          ./tsuku install gcc-libs
+          ./tsuku verify gcc-libs --skip-dlopen  # First verify without helper
+          TSUKU_DLTEST_PATH=./tsuku-dltest ./tsuku verify gcc-libs  # Then with helper
+```
+
+### Step 7: Tests
 
 - Unit tests for JSON parsing
 - Integration tests with real dlopen (requires CGO in test)
 - Timeout behavior tests
 - Fallback behavior tests
+- Release workflow tests (checksum generation, embedding)
 
 ## Consequences
 
