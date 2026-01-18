@@ -457,16 +457,7 @@ R2 outage would break all nightly validation with no fallback.
 - Graceful degradation (skip validation with issue creation on R2 failure)
 - Monitoring and alerting for R2 availability
 
-**Gap 5: Contributor Complexity**
-
-Three directories (critical, community, testdata) with unclear categorization rules.
-
-**Decision:** Add to CONTRIBUTING.md:
-- Decision flowchart: "Should my recipe be critical?"
-- Troubleshooting: "My recipe works locally but fails in CI"
-- Add `tsuku validate <recipe>` command for pre-submission checks
-
-**Gap 6: Cache Size Unbounded**
+**Gap 5: Cache Size Unbounded**
 
 No limits on `$TSUKU_HOME/registry/` growth.
 
@@ -832,9 +823,9 @@ testdata/golden/plans/
 - Network failure falls back to stale cache with warning
 - Cache size stays within limit
 
-### Stage 6: Documentation and Migration Guide (Expanded per Review Feedback)
+### Stage 6: Documentation and Migration Guide
 
-**Goal:** Document the new structure for contributors, address DX concerns.
+**Goal:** Document the new structure for contributors.
 
 **Steps:**
 1. Update CONTRIBUTING.md with recipe category guidance:
@@ -845,17 +836,6 @@ testdata/golden/plans/
 3. Document the nightly validation process and failure notification channels
 4. Update troubleshooting for "recipe not found" errors (network issues)
 5. Create incident response playbook for repository compromise
-
-**New tooling (from DX review):**
-6. Add `tsuku validate <recipe>` command that checks:
-   - TOML parses correctly
-   - Download URLs are reachable (optional network check)
-   - Recipe dependencies are satisfied
-7. Add `tsuku doctor` command that reports:
-   - How many recipes are cached
-   - Cache age for each recipe
-   - Network connectivity to registry
-   - Which recipes are critical vs community
 
 ### Stage 7: Community Golden File R2 Storage (Separate Design)
 
