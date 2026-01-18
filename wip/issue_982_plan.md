@@ -22,7 +22,7 @@ This approach was chosen because:
 
 ## Files to Modify
 
-- `internal/verify/types.go` - Add new error categories: `ErrRpathLimitExceeded`, `ErrPathLengthExceeded`, `ErrUnexpandedVariable`, `ErrPathOutsideAllowed` (explicit values 12-15, following design decision #2)
+- `internal/verify/types.go` - Add new error categories: `ErrRpathLimitExceeded`, `ErrPathLengthExceeded`, `ErrUnexpandedVariable`, `ErrPathOutsideAllowed` (explicit values 11-14, following design decision #2)
 
 ## Files to Create
 
@@ -42,13 +42,13 @@ This approach was chosen because:
 
 ## Implementation Steps
 
-- [ ] Add error categories to `types.go` with explicit values (12-15)
-- [ ] Create `rpath.go` with constants and RPATH limit definitions
-- [ ] Implement `extractELFRpaths()` using `debug/elf.DynString(DT_RUNPATH)` with DT_RPATH fallback
-- [ ] Implement `extractMachORpaths()` using `debug/macho.File.Loads` parsing LC_RPATH
-- [ ] Implement `extractFatRpaths()` for fat/universal binaries
-- [ ] Implement `ExtractRpaths()` as format-detection wrapper with panic recovery
-- [ ] Implement `ExpandPathVariables()` with:
+- [x] Add error categories to `types.go` with explicit values (11-14)
+- [x] Create `rpath.go` with constants and RPATH limit definitions
+- [x] Implement `extractELFRpaths()` using `debug/elf.DynString(DT_RUNPATH)` with DT_RPATH fallback
+- [x] Implement `extractMachORpaths()` using `debug/macho.File.Loads` parsing LC_RPATH
+- [x] Implement `extractFatRpaths()` for fat/universal binaries
+- [x] Implement `ExtractRpaths()` as format-detection wrapper with panic recovery
+- [x] Implement `ExpandPathVariables()` with:
   - $ORIGIN expansion (dirname of binaryPath)
   - @rpath expansion (try each rpath in order)
   - @loader_path expansion (same as $ORIGIN)
@@ -57,8 +57,8 @@ This approach was chosen because:
   - Symlink resolution via filepath.EvalSymlinks()
   - Canonical path validation (must resolve to $TSUKU_HOME/tools/)
   - Unexpanded variable detection
-- [ ] Create `rpath_test.go` with comprehensive test coverage
-- [ ] Verify all tests pass with `go test ./internal/verify/...`
+- [x] Create `rpath_test.go` with comprehensive test coverage
+- [x] Verify all tests pass with `go test ./internal/verify/...`
 
 ## Testing Strategy
 
@@ -87,16 +87,16 @@ This approach was chosen because:
 
 ## Success Criteria
 
-- [ ] `go test ./internal/verify/...` passes
-- [ ] `ExtractRpaths()` correctly extracts RPATH from ELF binaries (DT_RUNPATH preferred, DT_RPATH fallback)
-- [ ] `ExtractRpaths()` correctly extracts RPATH from Mach-O binaries (LC_RPATH)
-- [ ] `ExpandPathVariables()` correctly expands $ORIGIN, @rpath, @loader_path, @executable_path
-- [ ] RPATH count limit (100) is enforced
-- [ ] Path length limit (4096) is enforced
-- [ ] Unexpanded variables ($, @) after expansion cause errors
-- [ ] Resolved paths are validated against canonical path requirements
-- [ ] Error categories added to types.go with explicit values
-- [ ] All functions include panic recovery
+- [x] `go test ./internal/verify/...` passes
+- [x] `ExtractRpaths()` correctly extracts RPATH from ELF binaries (DT_RUNPATH preferred, DT_RPATH fallback)
+- [x] `ExtractRpaths()` correctly extracts RPATH from Mach-O binaries (LC_RPATH)
+- [x] `ExpandPathVariables()` correctly expands $ORIGIN, @rpath, @loader_path, @executable_path
+- [x] RPATH count limit (100) is enforced
+- [x] Path length limit (4096) is enforced
+- [x] Unexpanded variables ($, @) after expansion cause errors
+- [x] Resolved paths are validated against canonical path requirements
+- [x] Error categories added to types.go with explicit values
+- [x] All functions include panic recovery
 
 ## Open Questions
 
