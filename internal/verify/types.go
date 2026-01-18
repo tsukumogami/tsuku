@@ -48,6 +48,12 @@ const (
 
 	// ErrCorrupted indicates the file has invalid internal structure
 	ErrCorrupted
+
+	// Tier 2 error categories (explicit values per design decision #2)
+
+	// ErrABIMismatch indicates the binary's ABI is incompatible with the system
+	// (e.g., glibc binary on musl system, or vice versa)
+	ErrABIMismatch ErrorCategory = 10
 )
 
 // String returns a human-readable name for the error category.
@@ -65,6 +71,8 @@ func (c ErrorCategory) String() string {
 		return "truncated"
 	case ErrCorrupted:
 		return "corrupted"
+	case ErrABIMismatch:
+		return "ABI mismatch"
 	default:
 		return fmt.Sprintf("unknown(%d)", c)
 	}

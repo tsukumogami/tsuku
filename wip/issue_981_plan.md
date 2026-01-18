@@ -24,10 +24,10 @@ Follow the existing patterns in `header.go` for ELF validation: use `debug/elf` 
 
 ## Implementation Steps
 
-- [ ] Add `ErrABIMismatch ErrorCategory = 10` to `types.go` with comment noting Tier 2 error categories
-- [ ] Update `ErrorCategory.String()` to handle `ErrABIMismatch` returning "ABI mismatch"
-- [ ] Create `abi.go` with package declaration and imports (`debug/elf`, `os`, `runtime`)
-- [ ] Implement `ValidateABI(path string) error` with:
+- [x] Add `ErrABIMismatch ErrorCategory = 10` to `types.go` with comment noting Tier 2 error categories
+- [x] Update `ErrorCategory.String()` to handle `ErrABIMismatch` returning "ABI mismatch"
+- [x] Create `abi.go` with package declaration and imports (`debug/elf`, `os`, `runtime`)
+- [x] Implement `ValidateABI(path string) error` with:
   - Runtime check for non-Linux (return nil immediately for macOS)
   - Panic recovery defer block (matching `header.go` pattern)
   - Open file with `elf.Open(path)`
@@ -38,7 +38,7 @@ Follow the existing patterns in `header.go` for ELF validation: use `debug/elf` 
   - Check if interpreter path exists with `os.Stat()`
   - Return nil if interpreter exists
   - Return `*ValidationError{Category: ErrABIMismatch, ...}` if interpreter missing
-- [ ] Create `abi_test.go` with test cases:
+- [x] Create `abi_test.go` with test cases:
   - Test with system shared library (should pass - has valid PT_INTERP)
   - Test with static binary (should pass - no PT_INTERP)
   - Test skip on non-Linux systems
