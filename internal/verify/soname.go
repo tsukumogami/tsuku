@@ -200,28 +200,44 @@ func detectFormatForSoname(magic []byte) string {
 	}
 }
 
-// ExtractSonames scans a directory and extracts sonames from all library files.
+// ExtractSonames recursively scans a directory tree and extracts sonames from all library files.
 // Returns a slice of discovered sonames (excluding empty strings).
 // Non-library files and extraction errors are silently skipped.
 func ExtractSonames(libDir string) ([]string, error) {
-	entries, err := os.ReadDir(libDir)
-	if err != nil {
+	// Check that the root directory exists before walking
+	if _, err := os.Stat(libDir); err != nil {
 		return nil, fmt.Errorf("read directory: %w", err)
 	}
 
 	var sonames []string
-	for _, entry := range entries {
-		if entry.IsDir() {
-			continue
+
+	err := filepath.Walk(libDir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			// Skip files/directories we can't access (permission errors, etc.)
+			return nil
 		}
 
-		path := filepath.Join(libDir, entry.Name())
-		soname, err := ExtractSoname(path)
-		if err != nil || soname == "" {
+		// Skip directories
+		if info.IsDir() {
+			return nil
+		}
+
+		// Skip symlinks - only process real files
+		if info.Mode()&os.ModeSymlink != 0 {
+			return nil
+		}
+
+		soname, extractErr := ExtractSoname(path)
+		if extractErr != nil || soname == "" {
 			// Skip non-libraries and libraries without sonames
-			continue
+			return nil
 		}
 		sonames = append(sonames, soname)
+		return nil
+	})
+
+	if err != nil {
+		return nil, fmt.Errorf("walk directory: %w", err)
 	}
 
 	return sonames, nil
