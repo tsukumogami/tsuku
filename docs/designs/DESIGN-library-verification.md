@@ -6,14 +6,15 @@
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#942](https://github.com/tsukumogami/tsuku/issues/942) | feat(state): add checksums field to library version state | None | simple |
-| [#943](https://github.com/tsukumogami/tsuku/issues/943) | feat(verify): add library type detection and flag routing | None | testable |
-| [#946](https://github.com/tsukumogami/tsuku/issues/946) | feat(install): compute and store library checksums at install time | #942 | testable |
+| ~~[#942](https://github.com/tsukumogami/tsuku/issues/942)~~ | ~~feat(state): add checksums field to library version state~~ | ~~None~~ | ~~simple~~ |
+| ~~[#943](https://github.com/tsukumogami/tsuku/issues/943)~~ | ~~feat(verify): add library type detection and flag routing~~ | ~~None~~ | ~~testable~~ |
+| ~~[#946](https://github.com/tsukumogami/tsuku/issues/946)~~ | ~~feat(install): compute and store library checksums at install time~~ | ~~#942~~ | ~~testable~~ |
 | ~~[#947](https://github.com/tsukumogami/tsuku/issues/947)~~ | ~~docs: design header validation for library verification (Tier 1)~~ | ~~#943~~ | ~~critical~~ |
 | ~~[#948](https://github.com/tsukumogami/tsuku/issues/948)~~ | ~~docs: design dependency resolution for library verification (Tier 2)~~ | ~~#947~~ | ~~critical~~ |
-| [M38](https://github.com/tsukumogami/tsuku/milestone/38) | Tier 2 Dependency Validation (12 issues) | #948 | milestone |
-| [#949](https://github.com/tsukumogami/tsuku/issues/949) | docs: design dlopen load testing for library verification (Tier 3) | M38 | critical |
-| [#950](https://github.com/tsukumogami/tsuku/issues/950) | docs: design integrity verification for library verification (Tier 4) | #946, #949 | testable |
+| ~~[M38](https://github.com/tsukumogami/tsuku/milestone/38)~~ | ~~Tier 2 Dependency Validation (12 issues)~~ | ~~#948~~ | ~~milestone~~ |
+| ~~[#949](https://github.com/tsukumogami/tsuku/issues/949)~~ | ~~docs: design dlopen load testing for library verification (Tier 3)~~ | ~~M38~~ | ~~critical~~ |
+| [M39](https://github.com/tsukumogami/tsuku/milestone/39) | Tier 3 dlopen Verification (7 issues) | #949 | milestone |
+| [#950](https://github.com/tsukumogami/tsuku/issues/950) | docs: design integrity verification for library verification (Tier 4) | #946, M39 | testable |
 
 ```mermaid
 graph TD
@@ -27,7 +28,8 @@ graph TD
         I947["#947 Tier 1 Design<br/>(done)"]:::done
         I948["#948 Tier 2 Design<br/>(done)"]:::done
         M38["M38: Tier 2 Implementation<br/>(done)"]:::done
-        I949["#949 Tier 3 Design<br/>(needs-design)"]:::needsdesign
+        I949["#949 Tier 3 Design<br/>(done)"]:::done
+        M39["M39: Tier 3 Implementation<br/>(in progress)"]:::ready
         I950["#950 Tier 4 Design<br/>(needs-design)"]:::needsdesign
     end
 
@@ -36,8 +38,9 @@ graph TD
     I947 --> I948
     I948 --> M38
     M38 --> I949
+    I949 --> M39
     I946 --> I950
-    I949 --> I950
+    M39 --> I950
 
     classDef done fill:#2da44e,color:white
     classDef ready fill:#0969da,color:white
