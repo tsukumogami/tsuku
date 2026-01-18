@@ -70,6 +70,12 @@ const (
 
 	// ErrPathOutsideAllowed indicates an expanded path resolves outside allowed directories
 	ErrPathOutsideAllowed ErrorCategory = 15
+
+	// ErrMaxDepthExceeded indicates the dependency tree exceeds the maximum allowed depth
+	ErrMaxDepthExceeded ErrorCategory = 16
+
+	// ErrMissingSoname indicates a tsuku-managed library doesn't provide the expected soname
+	ErrMissingSoname ErrorCategory = 17
 )
 
 // String returns a human-readable name for the error category.
@@ -99,6 +105,10 @@ func (c ErrorCategory) String() string {
 		return "unexpanded path variable"
 	case ErrPathOutsideAllowed:
 		return "path outside allowed directories"
+	case ErrMaxDepthExceeded:
+		return "max depth exceeded"
+	case ErrMissingSoname:
+		return "missing soname"
 	default:
 		return fmt.Sprintf("unknown(%d)", c)
 	}
@@ -126,4 +136,59 @@ func (e *ValidationError) Error() string {
 // Unwrap returns the underlying error for errors.Is/As support.
 func (e *ValidationError) Unwrap() error {
 	return e.Err
+}
+
+// ValidationStatus represents the outcome of validating a single dependency.
+type ValidationStatus int
+
+const (
+	// ValidationPass indicates the dependency was validated successfully.
+	ValidationPass ValidationStatus = iota
+
+	// ValidationFail indicates the dependency failed validation.
+	ValidationFail
+
+	// ValidationSkip indicates the dependency was skipped (e.g., already visited).
+	ValidationSkip
+)
+
+// String returns a human-readable name for the validation status.
+func (s ValidationStatus) String() string {
+	switch s {
+	case ValidationPass:
+		return "PASS"
+	case ValidationFail:
+		return "FAIL"
+	case ValidationSkip:
+		return "SKIP"
+	default:
+		return fmt.Sprintf("unknown(%d)", s)
+	}
+}
+
+// DepResult represents the validation result for a single dependency.
+type DepResult struct {
+	// Soname is the original dependency name (e.g., "libssl.so.3")
+	Soname string
+
+	// Category is the dependency classification (PURE_SYSTEM, TSUKU_MANAGED, etc.)
+	Category DepCategory
+
+	// Recipe is the recipe name if tsuku-managed (e.g., "openssl")
+	Recipe string
+
+	// Version is the installed version if tsuku-managed
+	Version string
+
+	// Status is the validation outcome (PASS, FAIL, SKIP)
+	Status ValidationStatus
+
+	// Error is the error message if Status == ValidationFail
+	Error string
+
+	// ResolvedPath is the expanded path after variable resolution
+	ResolvedPath string
+
+	// Transitive contains recursive validation results for tsuku-managed deps
+	Transitive []DepResult
 }
