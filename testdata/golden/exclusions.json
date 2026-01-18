@@ -247,6 +247,18 @@
       "platform": {"os": "darwin", "arch": "arm64"},
       "issue": "https://github.com/tsukumogami/tsuku/issues/931",
       "reason": "golden files not yet generated"
+    },
+    {
+      "recipe": "cuda",
+      "platform": {"os": "linux", "arch": "amd64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/773",
+      "reason": "system-required recipe - only validates presence of nvcc, no installation plan"
+    },
+    {
+      "recipe": "cuda",
+      "platform": {"os": "linux", "arch": "arm64"},
+      "issue": "https://github.com/tsukumogami/tsuku/issues/773",
+      "reason": "system-required recipe - only validates presence of nvcc, no installation plan"
     }
   ]
 }

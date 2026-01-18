@@ -264,16 +264,13 @@ func (e *StepValidationError) Error() string {
 	return fmt.Sprintf("step %d: %s", e.StepIndex, e.Message)
 }
 
-// ValidateStepsAgainstPlatforms validates that step mappings and install_guide
-// entries are consistent with the recipe's platform constraints.
+// ValidateStepsAgainstPlatforms validates that step mappings are consistent
+// with the recipe's platform constraints.
 //
 // This validation checks:
 // 1. os_mapping keys exist in the final set of supported OS values
 // 2. arch_mapping keys exist in the final set of supported arch values
-// 3. require_system steps with install_guide:
-//   - Platform tuple keys (os/arch) exist in supported platforms
-//   - OS-only keys exist in supported OS set
-//   - All platforms have coverage via exact tuple, OS key, or fallback
+// 3. when clause platform tuples and OS arrays
 //
 // Returns a slice of errors for any inconsistencies found.
 func (r *Recipe) ValidateStepsAgainstPlatforms() []error {
@@ -314,65 +311,6 @@ func (r *Recipe) ValidateStepsAgainstPlatforms() []error {
 						StepIndex: i,
 						Message:   fmt.Sprintf("arch_mapping contains '%s' which is not in the recipe's supported platforms", arch),
 					})
-				}
-			}
-		}
-
-		// Check install_guide coverage for require_system steps
-		// Supports both platform tuples (os/arch) and OS-only keys with hierarchical fallback
-		if step.Action == "require_system" {
-			if installGuide, ok := step.Params["install_guide"].(map[string]interface{}); ok {
-				// Validate that tuple keys exist in supported platforms
-				for key := range installGuide {
-					if strings.Contains(key, "/") {
-						// Validate tuple format and check against supported platforms
-						if !containsString(platforms, key) && key != "fallback" {
-							errors = append(errors, &StepValidationError{
-								StepIndex: i,
-								Message:   fmt.Sprintf("install_guide contains platform tuple '%s' which is not in the recipe's supported platforms", key),
-							})
-						}
-					} else if key != "fallback" {
-						// Validate OS-only key exists in supported OS set
-						if !supportedOS[key] {
-							errors = append(errors, &StepValidationError{
-								StepIndex: i,
-								Message:   fmt.Sprintf("install_guide contains OS key '%s' which is not in the recipe's supported platforms", key),
-							})
-						}
-					}
-				}
-
-				// Check coverage: each platform must be covered by exact tuple, OS key, or fallback
-				for _, platform := range platforms {
-					parts := strings.Split(platform, "/")
-					if len(parts) != 2 {
-						continue
-					}
-					os := parts[0]
-
-					// Check hierarchical fallback: tuple → OS → fallback
-					hasTupleGuide := false
-					if _, ok := installGuide[platform]; ok {
-						hasTupleGuide = true
-					}
-
-					hasOSGuide := false
-					if _, ok := installGuide[os]; ok {
-						hasOSGuide = true
-					}
-
-					hasFallback := false
-					if _, ok := installGuide["fallback"]; ok {
-						hasFallback = true
-					}
-
-					if !hasTupleGuide && !hasOSGuide && !hasFallback {
-						errors = append(errors, &StepValidationError{
-							StepIndex: i,
-							Message:   fmt.Sprintf("install_guide missing coverage for platform '%s' (no exact tuple, OS key '%s', or fallback)", platform, os),
-						})
-					}
 				}
 			}
 		}

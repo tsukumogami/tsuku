@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
-	"runtime"
 	"sort"
 	"strings"
 
@@ -30,12 +29,11 @@ const (
 
 // DepStatus represents the status of a single dependency
 type DepStatus struct {
-	Name         string `json:"name"`
-	Type         string `json:"type"`   // "provisionable" or "system-required"
-	Status       string `json:"status"` // "installed", "missing", "version_mismatch"
-	Version      string `json:"version,omitempty"`
-	Required     string `json:"required,omitempty"`
-	InstallGuide string `json:"install_guide,omitempty"`
+	Name     string `json:"name"`
+	Type     string `json:"type"`   // "provisionable" or "system-required"
+	Status   string `json:"status"` // "installed", "missing", "version_mismatch"
+	Version  string `json:"version,omitempty"`
+	Required string `json:"required,omitempty"`
 }
 
 // CheckDepsOutput represents the JSON output structure
@@ -196,7 +194,6 @@ func checkSystemDependency(r *recipe.Recipe, status DepStatus) DepStatus {
 		cmdPath, err := exec.LookPath(command)
 		if err != nil {
 			status.Status = "missing"
-			status.InstallGuide = getInstallGuide(step.Params)
 			return status
 		}
 
@@ -220,7 +217,6 @@ func checkSystemDependency(r *recipe.Recipe, status DepStatus) DepStatus {
 				status.Required = minVersion
 				if version.CompareVersions(detectedVersion, minVersion) < 0 {
 					status.Status = "version_mismatch"
-					status.InstallGuide = getInstallGuide(step.Params)
 					return status
 				}
 			}
@@ -250,26 +246,6 @@ func detectSystemVersion(command, versionFlag, versionRegex string) (string, err
 	}
 
 	return strings.TrimSpace(matches[1]), nil
-}
-
-// getInstallGuide extracts the platform-specific install guide from step params
-func getInstallGuide(params map[string]interface{}) string {
-	installGuide, _ := actions.GetMapStringString(params, "install_guide")
-	if installGuide == nil {
-		return ""
-	}
-
-	// Try platform-specific guide
-	if guide, ok := installGuide[runtime.GOOS]; ok {
-		return guide
-	}
-
-	// Try fallback
-	if guide, ok := installGuide["fallback"]; ok {
-		return guide
-	}
-
-	return ""
 }
 
 // checkProvisionableDependency checks if a provisionable dependency is installed
@@ -368,16 +344,6 @@ func printDepLine(s DepStatus) {
 	}
 
 	fmt.Printf("  %s%-20s%s %s%s%s\n", colorBold, s.Name, colorReset, statusColor, statusText, colorReset)
-
-	// Print install guide for missing/mismatched system deps
-	if s.InstallGuide != "" && s.Status != "installed" {
-		lines := strings.Split(s.InstallGuide, "\n")
-		for _, line := range lines {
-			if line != "" {
-				fmt.Printf("      %s\n", line)
-			}
-		}
-	}
 }
 
 // printSummary prints a summary of dependency status

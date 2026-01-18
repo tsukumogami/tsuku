@@ -3,18 +3,21 @@ name = "cuda"
 description = "NVIDIA CUDA Toolkit for GPU computing"
 homepage = "https://developer.nvidia.com/cuda-toolkit"
 version_format = "semver"
+# CUDA requires NVIDIA GPU drivers and cannot be installed via tsuku
+supported_os = ["linux"]
 
+# Manual installation instructions for Linux
 [[steps]]
-action = "require_system"
+action = "manual"
+text = "Visit https://developer.nvidia.com/cuda-downloads for platform-specific installation. CUDA requires NVIDIA GPU drivers."
+
+# Verify CUDA is installed with minimum version
+[[steps]]
+action = "require_command"
 command = "nvcc"
 version_flag = "--version"
 version_regex = "release ([0-9.]+)"
 min_version = "11.0"
-
-[steps.install_guide]
-darwin = "CUDA is not supported on macOS. Consider using cloud GPU instances or Linux."
-linux = "Visit https://developer.nvidia.com/cuda-downloads for platform-specific installation"
-fallback = "CUDA requires NVIDIA GPU drivers and cannot be installed via tsuku. See https://developer.nvidia.com/cuda-toolkit"
 
 [verify]
 command = "nvcc --version"
