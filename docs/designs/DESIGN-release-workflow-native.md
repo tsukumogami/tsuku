@@ -1,8 +1,8 @@
 ---
 status: Proposed
 problem: The current release workflow can't handle native binaries like the Rust dlopen helper because cross-compilation to macOS requires the macOS SDK, which is only legally available on macOS hardware.
-decision: Use parallel matrix builds on native runners with a draft-then-publish pattern, Ubuntu 22.04 for glibc 2.35 compatibility, and ad-hoc code signing for macOS.
-rationale: Draft releases provide atomic publishing semantics. Ubuntu 22.04 balances compatibility with support longevity. Ad-hoc signing eliminates common macOS friction without Apple Developer costs.
+decision: Use parallel matrix builds on native runners with a draft-then-publish pattern, both glibc and musl Linux variants, and ad-hoc code signing for macOS.
+rationale: Draft releases provide atomic publishing semantics. Dual glibc/musl builds cover both modern glibc systems and Alpine/musl distributions. Ad-hoc signing eliminates common macOS friction without Apple Developer costs.
 ---
 
 # DESIGN: Native Binary Release Workflow
@@ -212,11 +212,11 @@ Document code signing as future work, implement Option 3B now.
 
 ## Decision Outcome
 
-**Chosen: 1C (Parallel Draft) + 2B (Ubuntu 22.04) + 3A (Ad-hoc Signing)**
+**Chosen: 1C (Parallel Draft) + 2B+2C (Ubuntu 22.04 + musl) + 3A (Ad-hoc Signing)**
 
 ### Summary
 
-The release workflow creates a draft GitHub release, then builds all binaries in parallel on native runners, uploading artifacts to the draft. After all builds pass integration tests, a final job publishes the release. Linux builds use ubuntu-22.04 for glibc 2.35 compatibility, and macOS binaries receive ad-hoc code signatures.
+The release workflow creates a draft GitHub release, then builds all binaries in parallel on native runners, uploading artifacts to the draft. After all builds pass integration tests, a final job publishes the release. Linux builds include both glibc (ubuntu-22.04) and musl variants for broad compatibility. macOS binaries receive ad-hoc code signatures.
 
 ### Rationale
 
@@ -242,14 +242,16 @@ The release workflow creates a draft GitHub release, then builds all binaries in
 - Goreleaser already handles changelog, checksums, and release notes well
 - Would require reimplementing these features
 
-**musl (2C) rejected because:**
-- Adds build complexity for marginal benefit
-- glibc 2.35 compatibility is sufficient for target audience
+**musl (2C) added as supplementary:**
+- Provides Alpine/musl distribution support
+- Uses Alpine Docker containers for consistent musl toolchain
+- Distributed as separate `-musl` variants (users choose)
 
 ### Trade-offs Accepted
 
-- **glibc 2.35 minimum**: Users on Ubuntu 20.04 or RHEL 8 won't be able to run tsuku binaries. They can build from source.
-- **RHEL 8 enterprise exclusion**: RHEL 8 users (glibc 2.28) are intentionally excluded. RHEL 9 (glibc 2.34) is supported.
+- **glibc 2.35 minimum for glibc variant**: Users on Ubuntu 20.04 or RHEL 8 should use the musl variant or build from source.
+- **musl behavioral differences**: The `-musl` variants may have subtle differences in DNS resolution and thread stack behavior. Users should test on their target systems.
+- **More release artifacts**: Adding musl variants increases Linux binaries from 4 to 8 (glibc + musl for amd64 and arm64, for both tsuku and tsuku-dltest).
 - **Gatekeeper warning**: macOS users will see "unidentified developer" warning on first run. Acceptable because tsuku targets developers who understand this.
 - **Draft release visibility**: The draft is visible in GitHub API during build. "Atomic" means the release fails cleanly at publish time, not that the draft is invisible during build.
 - **Ad-hoc signing limitations**: Ad-hoc signed binaries are machine-specific; users who redistribute the binary will need to re-sign or remove quarantine.
@@ -340,6 +342,7 @@ The release workflow creates a draft GitHub release, then builds all binaries in
 Before publishing, finalize-release checks that all expected binaries exist:
 ```bash
 EXPECTED=(
+  # glibc variants
   tsuku-linux-amd64
   tsuku-linux-arm64
   tsuku-darwin-amd64
@@ -348,6 +351,11 @@ EXPECTED=(
   tsuku-dltest-linux-arm64
   tsuku-dltest-darwin-amd64
   tsuku-dltest-darwin-arm64
+  # musl variants
+  tsuku-linux-amd64-musl
+  tsuku-linux-arm64-musl
+  tsuku-dltest-linux-amd64-musl
+  tsuku-dltest-linux-arm64-musl
 )
 for binary in "${EXPECTED[@]}"; do
   if ! gh release view "$TAG" --json assets -q ".assets[].name" | grep -q "^${binary}$"; then
@@ -424,12 +432,26 @@ The Rust binary reads its version from Cargo.toml at build time via `env!("CARGO
 
 ### Platform Matrix
 
-| Platform | Go Runner | Rust Runner | Signing |
-|----------|-----------|-------------|---------|
-| linux-amd64 | ubuntu-22.04 | ubuntu-22.04 | None |
-| linux-arm64 | ubuntu-24.04-arm | ubuntu-24.04-arm | None |
-| darwin-amd64 | macos-13 | macos-13 | Ad-hoc |
-| darwin-arm64 | macos-latest | macos-latest | Ad-hoc |
+| Platform | Go Runner | Rust Runner | Signing | Libc |
+|----------|-----------|-------------|---------|------|
+| linux-amd64 | ubuntu-22.04 | ubuntu-22.04 | None | glibc 2.35 |
+| linux-amd64-musl | ubuntu-22.04 + Alpine container | ubuntu-22.04 + Alpine container | None | musl |
+| linux-arm64 | ubuntu-24.04-arm | ubuntu-24.04-arm | None | glibc 2.39 |
+| linux-arm64-musl | ubuntu-24.04-arm + Alpine container | ubuntu-24.04-arm + Alpine container | None | musl |
+| darwin-amd64 | macos-13 | macos-13 | Ad-hoc | libSystem |
+| darwin-arm64 | macos-latest | macos-latest | Ad-hoc | libSystem |
+
+**musl builds use Docker:**
+```yaml
+- name: Build musl variant
+  run: |
+    docker run --rm -v "$PWD:/workspace" -w /workspace alpine:3.19 sh -c '
+      apk add --no-cache go rust cargo
+      CGO_ENABLED=0 go build -o tsuku-linux-amd64-musl ./cmd/tsuku
+      cargo build --release --manifest-path cmd/tsuku-dltest/Cargo.toml
+      mv target/release/tsuku-dltest tsuku-dltest-linux-amd64-musl
+    '
+```
 
 ### Version Pin Injection
 
