@@ -26,7 +26,7 @@ graph TD
     subgraph Tiers["Library Verification Tiers"]
         I947["#947 Tier 1 Design<br/>(done)"]:::done
         I948["#948 Tier 2 Design<br/>(done)"]:::done
-        M38["M38: Tier 2 Implementation<br/>(12 issues)"]:::ready
+        M38["M38: Tier 2 Implementation<br/>(done)"]:::done
         I949["#949 Tier 3 Design<br/>(needs-design)"]:::needsdesign
         I950["#950 Tier 4 Design<br/>(needs-design)"]:::needsdesign
     end

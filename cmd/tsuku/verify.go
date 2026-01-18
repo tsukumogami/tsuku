@@ -594,7 +594,8 @@ For hidden tools (execution dependencies), only the verification command is run.
 For libraries, verification is tiered:
   Tier 1: Header validation - validates that library files are valid
           shared libraries (ELF or Mach-O) for the current platform
-  Tier 2: Dependency checking (not yet implemented)
+  Tier 2: Dependency checking - validates dynamic library dependencies
+          are satisfied (system libs, tsuku-managed, or externally-managed)
   Tier 3: dlopen load testing (not yet implemented)
   Tier 4: Integrity verification (not yet implemented)
 

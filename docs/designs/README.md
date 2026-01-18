@@ -20,6 +20,7 @@ These designs are approved with milestones created, but implementation is ongoin
 
 | Design | Description |
 |--------|-------------|
+| [DESIGN-library-verification.md](DESIGN-library-verification.md) | Tiered library verification (Tier 1-2 done, Tier 3-4 pending) |
 | [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) | Sandbox container building and full golden coverage |
 
 ## Current Designs
@@ -86,6 +87,7 @@ These designs are implemented and represent the current system architecture.
 |--------|-------------|
 | [DESIGN-checksum-pinning.md](current/DESIGN-checksum-pinning.md) | Post-installation binary integrity verification |
 | [DESIGN-pgp-verification.md](current/DESIGN-pgp-verification.md) | PGP signature verification for downloads |
+| [DESIGN-library-verify-deps.md](current/DESIGN-library-verify-deps.md) | Tier 2 dependency validation for library verification |
 
 ## Archived Designs
 
