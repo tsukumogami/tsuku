@@ -419,12 +419,58 @@ Only validate "plan generation succeeds", not "plan matches expectation".
 ### Uncertainties
 
 - **Binary size impact**: The 15-20 estimate needs validation. Implementation should measure baseline binary size and compare after separation.
-- **Registry availability**: When GitHub is unavailable, what should happen?
-  - Stale cache fallback (use previously fetched version)?
-  - Hard failure with clear error message?
-  - Graceful degradation showing which recipes are unavailable?
 - **Version drift**: How do we handle community recipe updates that conflict with installed versions?
-- **Cache invalidation**: How long should cached community recipes remain valid? Indefinite caching risks stale recipes; aggressive invalidation increases network dependency.
+
+### Review Feedback Integration
+
+Based on reviews from Release, DevOps, Platform, and DX engineers, the following gaps were identified and decisions made:
+
+**Gap 1: Community Recipe Breakage Detection (24-Hour Blind Spot)**
+
+All reviewers flagged that code changes could break community recipes without detection until nightly runs.
+
+**Decision:** Community recipe PRs MUST pass execution validation before merge, not just plan validation. Nightly runs are for catching *external* drift (URL changes, version rot), not *internal* breakage from code changes.
+
+**Gap 2: Network Failure Handling Undefined**
+
+Reviewers asked: What happens when GitHub is unavailable and cache is expired?
+
+**Decision:** Implement stale cache fallback with warning:
+1. Fetch from GitHub → success: return fresh, cache with timestamp
+2. Fetch timeout (30s) → check local cache
+3. Cache exists → return with warning "Recipe may be stale (cached X hours ago)"
+4. Cache missing → fail with "No network and no cached recipe"
+
+**Gap 3: Critical Recipe List Unvalidated**
+
+The 15-20 estimate relies on manual analysis. Dependencies() infrastructure has known gaps (#644).
+
+**Decision:** BEFORE Stage 1, generate definitive critical recipe list via build-time dependency analysis. Create `CRITICAL_RECIPES.md` with explicit list and dependency rationale. Add CI validation that alerts when action dependencies change.
+
+**Gap 4: R2 Single Point of Failure**
+
+R2 outage would break all nightly validation with no fallback.
+
+**Decision:** R2 tactical design MUST include:
+- Health check before nightly validation starts
+- Git-based fallback cache (compressed last-known-good golden files)
+- Graceful degradation (skip validation with issue creation on R2 failure)
+- Monitoring and alerting for R2 availability
+
+**Gap 5: Contributor Complexity**
+
+Three directories (critical, community, testdata) with unclear categorization rules.
+
+**Decision:** Add to CONTRIBUTING.md:
+- Decision flowchart: "Should my recipe be critical?"
+- Troubleshooting: "My recipe works locally but fails in CI"
+- Add `tsuku validate <recipe>` command for pre-submission checks
+
+**Gap 6: Cache Size Unbounded**
+
+No limits on `$TSUKU_HOME/registry/` growth.
+
+**Decision:** Implement LRU cache with 500MB default limit. Add `tsuku cache-cleanup` subcommand. Warn when approaching limit.
 
 ## Decision Outcome
 
@@ -646,14 +692,36 @@ testdata/golden/plans/
 
 | Scenario | Critical Recipes | Community Recipes |
 |----------|------------------|-------------------|
-| Recipe file changes | Plan + Execution | Plan + Execution |
-| Critical code changes (35 files) | Plan validation | Not tested (wait for nightly) |
+| Recipe file changes | Plan + Execution | Plan + Execution (required for merge) |
+| Critical code changes (35 files) | Plan validation | Not tested (caught by nightly) |
 | Golden file changes | Execution | Execution |
-| Nightly run | Not included | Full validation + Execution |
+| Nightly run | Not included | Full validation + Execution (external drift detection) |
 
-**Note:** Community recipes are still FULLY tested when they change. The only difference is they're excluded from the "code changes" trigger, which catches potential side effects from plan generation code changes.
+**Important (from review feedback):** Community recipe PRs MUST pass execution validation before merge, not just plan validation. This closes the "24-hour blind spot" where broken recipes could merge and affect users before nightly detection.
+
+**Nightly purpose clarified:** Nightly runs catch *external* drift (URL changes, version rot, upstream breakage) - not internal breakage from code changes. If a community recipe breaks from a code change, the recipe maintainer should add that recipe to their PR's test scope.
 
 ## Implementation Approach
+
+### Stage 0: Critical Recipe List Validation (Prerequisite)
+
+**Goal:** Generate and validate the definitive critical recipe list before any migration.
+
+**Steps:**
+1. Create build-time script to extract all `Dependencies()` returns from action code
+2. Compute transitive closure of all action dependencies
+3. Validate against known gaps (issue #644 for homebrew composite actions)
+4. Generate `CRITICAL_RECIPES.md` with:
+   - Explicit list of all critical recipes
+   - Dependency graph showing why each is critical
+   - Which action(s) require each recipe
+5. Add CI validation script: `verify-critical-recipes.sh`
+   - Alerts when action dependencies change
+   - Fails if critical recipe is missing from embedded directory
+
+**Validation:** `CRITICAL_RECIPES.md` exists with complete list. CI script passes.
+
+**Blocking:** Stage 1 cannot proceed until this is complete.
 
 ### Stage 1: Recipe Migration
 
@@ -736,9 +804,9 @@ testdata/golden/plans/
 - Community recipe change PRs still run full validation
 - Nightly workflow runs and reports failures
 
-### Stage 5: Cache Policy Implementation
+### Stage 5: Cache Policy Implementation (Expanded per Review Feedback)
 
-**Goal:** Implement cache TTL and invalidation.
+**Goal:** Implement cache TTL, invalidation, size limits, and network failure handling.
 
 **Steps:**
 1. Add fetch timestamp metadata alongside cached recipes
@@ -746,18 +814,48 @@ testdata/golden/plans/
 3. Add `tsuku update-registry` command to force refresh all cached recipes
 4. Add `--force` flag to `tsuku install` to bypass cache
 
-**Validation:** Cache expires after TTL, fresh recipes fetched.
+**Network failure handling (from review):**
+5. Implement stale cache fallback:
+   - Fetch from GitHub with 30-second timeout
+   - On timeout: check local cache, return with warning if exists
+   - Log: "Recipe may be stale (cached X hours ago)"
+   - If no cache: fail with "No network and no cached recipe available"
 
-### Stage 6: Documentation and Migration Guide
+**Cache size management (from review):**
+6. Implement LRU cache with 500MB default limit (configurable via `TSUKU_CACHE_SIZE_LIMIT`)
+7. Add `tsuku cache-cleanup` subcommand for manual cleanup
+8. Warn user when cache exceeds 80% of limit
+9. Auto-evict least-recently-used recipes when limit exceeded
 
-**Goal:** Document the new structure for contributors.
+**Validation:**
+- Cache expires after TTL, fresh recipes fetched
+- Network failure falls back to stale cache with warning
+- Cache size stays within limit
+
+### Stage 6: Documentation and Migration Guide (Expanded per Review Feedback)
+
+**Goal:** Document the new structure for contributors, address DX concerns.
 
 **Steps:**
-1. Update CONTRIBUTING.md with recipe category guidance
-2. Add authoritative list of critical recipes with dependency rationale
+1. Update CONTRIBUTING.md with recipe category guidance:
+   - Decision flowchart: "Should my recipe be critical?"
+   - Troubleshooting: "My recipe works locally but fails in CI"
+   - Explain three directories (critical, community, testdata)
+2. Reference CRITICAL_RECIPES.md (created in Stage 0)
 3. Document the nightly validation process and failure notification channels
 4. Update troubleshooting for "recipe not found" errors (network issues)
 5. Create incident response playbook for repository compromise
+
+**New tooling (from DX review):**
+6. Add `tsuku validate <recipe>` command that checks:
+   - TOML parses correctly
+   - Download URLs are reachable (optional network check)
+   - Recipe dependencies are satisfied
+7. Add `tsuku doctor` command that reports:
+   - How many recipes are cached
+   - Cache age for each recipe
+   - Network connectivity to registry
+   - Which recipes are critical vs community
 
 ### Stage 7: Community Golden File R2 Storage (Separate Design)
 
@@ -767,15 +865,23 @@ testdata/golden/plans/
 - R2 bucket structure and naming conventions
 - Upload workflow (on community recipe PR merge)
 - Download workflow (for CI validation)
-- Authentication and access control (GitHub Actions OIDC or API tokens)
+- Authentication and access control (GitHub Actions OIDC recommended)
 - Cache headers and CDN behavior
-- Fallback behavior when R2 is unavailable
 - Migration of existing community golden files to R2
 - Cost monitoring and alerts
 
-**Dependency:** Stages 1-4 can proceed independently. Stage 7 unblocks full community recipe validation at scale.
+**Required from review feedback (R2 resilience):**
+- Health check before nightly validation starts
+- Git-based fallback cache (compressed last-known-good golden files in `.github/cache/`)
+- Graceful degradation: if R2 unreachable, skip validation and create GitHub issue
+- Monitoring: alert if R2 unavailable for >1 hour
+- Access control: nightly workflow = READ-ONLY; sync workflow = WRITE
+- Credential rotation SOP (quarterly)
+- Audit logging for compliance
 
-**Validation:** Community recipe PR workflow successfully uploads/downloads golden files from R2.
+**Dependency:** Stages 0-4 can proceed independently. Stage 7 unblocks full community recipe validation at scale.
+
+**Validation:** Community recipe PR workflow successfully uploads/downloads golden files from R2. R2 outage gracefully degrades to git fallback.
 
 ## Security Considerations
 
