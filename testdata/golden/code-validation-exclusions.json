@@ -8,11 +8,6 @@
       "reason": "stale golden file (version field incorrect, needs regeneration)"
     },
     {
-      "recipe": "black",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
-      "reason": "pipx_install constraint bug (hashes not preserved)"
-    },
-    {
       "recipe": "curl",
       "issue": "https://github.com/tsukumogami/tsuku/issues/988",
       "reason": "stale golden file (missing dependencies, needs regeneration)"
@@ -23,19 +18,9 @@
       "reason": "stale golden file (needs regeneration)"
     },
     {
-      "recipe": "httpie",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
-      "reason": "pipx_install constraint bug (hashes not preserved)"
-    },
-    {
       "recipe": "jekyll",
       "issue": "https://github.com/tsukumogami/tsuku/issues/988",
       "reason": "stale golden file (needs regeneration)"
-    },
-    {
-      "recipe": "meson",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
-      "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
       "recipe": "ninja",
@@ -43,19 +28,9 @@
       "reason": "stale golden file (missing dependencies, needs regeneration)"
     },
     {
-      "recipe": "poetry",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
-      "reason": "pipx_install constraint bug (hashes not preserved)"
-    },
-    {
       "recipe": "readline",
       "issue": "https://github.com/tsukumogami/tsuku/issues/988",
       "reason": "stale golden file (needs regeneration)"
-    },
-    {
-      "recipe": "ruff",
-      "issue": "https://github.com/tsukumogami/tsuku/issues/961",
-      "reason": "pipx_install constraint bug (hashes not preserved)"
     },
     {
       "recipe": "sqlite",
