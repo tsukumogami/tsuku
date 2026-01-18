@@ -1,8 +1,8 @@
 ---
 status: Proposed
 problem: All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
-decision: Separate recipes into critical (embedded in internal/recipe/recipes/) and community (fetched from recipes/ at repo root) based on directory location.
-rationale: Location-based categorization is simpler than computed or explicit metadata. Plan-only PR testing with nightly execution for community recipes balances CI speed with regression detection.
+decision: Separate recipes into critical (embedded) and community (registry-fetched) based on directory location, with split golden file directories.
+rationale: Location-based categorization is simplest. Split golden files let code changes validate only critical recipes; community recipes are fully tested on their own PRs plus nightly runs for drift detection.
 ---
 
 # Recipe Registry Separation
@@ -95,15 +95,37 @@ Estimated critical recipes: 15-20 (language toolchains + build tools + their dep
 
 ### Current Testing Architecture
 
-Three-layer golden file validation:
-1. **Recipe validation** (`validate-golden-recipes.yml`): Recipe changes trigger golden file checks
-2. **Code validation** (`validate-golden-code.yml`): Plan generation code changes validate ALL golden files
-3. **Execution validation** (`validate-golden-execution.yml`): Golden files execute on platform matrix
+Tsuku uses four complementary workflows that trigger under different conditions:
 
-Exclusion mechanisms exist:
-- `testdata/golden/exclusions.json`: Platform-specific exclusions (265 entries)
-- `testdata/golden/execution-exclusions.json`: Recipe-level execution exclusions (10 entries)
-- `testdata/golden/code-validation-exclusions.json`: Code bypass exclusions (7 entries)
+**Functional testing (`test-changed-recipes.yml`):**
+- Triggers when: Recipe files change (`internal/recipe/recipes/**/*.toml`)
+- Tests: Only the changed recipes (not all recipes)
+- Actions: Installs recipes on Linux (per-recipe parallel) and macOS (aggregated)
+- Filters: Skips library recipes, system dependencies, and execution-excluded recipes
+
+**Plan validation (`validate-golden-recipes.yml`):**
+- Triggers when: Recipe files change
+- Tests: Only the changed recipes
+- Actions: Regenerates plans with `--pin-from` and compares to golden files
+- Validates: Recipe has golden files for all supported platforms (or exclusions)
+
+**Code validation (`validate-golden-code.yml`):**
+- Triggers when: Critical plan generation code changes (35 files)
+- Tests: ALL recipes with golden files (full suite)
+- Actions: Compares all golden files against regenerated plans
+- Critical files include: `eval.go`, `plan_generator.go`, action decomposers, version providers, recipe parser
+
+**Execution validation (`validate-golden-execution.yml`):**
+- Triggers when: Golden plan files change (`testdata/golden/plans/**/*.json`)
+- Tests: Changed golden files only
+- Actions: Runs `tsuku install --plan <golden-file>` to verify installation
+
+**Key insight:** Only code changes trigger full recipe validation. Recipe changes only test the changed recipe. This means a community recipe can break without CI catching it if the breakage comes from external factors (download URL changes, version drift).
+
+**Three exclusion files:**
+- `exclusions.json`: Platform-specific exclusions (~50 entries) - "can't generate golden file for this platform"
+- `execution-exclusions.json`: Recipe-wide execution exclusions (10 entries) - "can't reliably execute in CI"
+- `code-validation-exclusions.json`: Code validation exclusions (7 entries) - "golden file is stale"
 
 ## Considered Options
 
@@ -196,50 +218,54 @@ All recipes in `recipes/`. Build process filters which to embed based on compute
 
 How should testing differ between critical and community recipes?
 
-#### Option 3A: Full Testing for Critical, Hash-Only for Community
+**Current behavior reminder:**
+- Recipe changes: Only that recipe is tested (plan + execution)
+- Code changes (35 files): ALL recipes' golden files are validated (plan comparison only)
+- Golden file changes: Changed files are executed
 
-Critical recipes get full golden file validation (plan generation + execution). Community recipes only verify their golden file hash matches (no regeneration check).
+The question is: what should change when we split recipes into categories?
 
-**Pros:**
-- Much faster CI for community recipes
-- Critical recipes still exhaustively tested
-- Clear quality difference reflects criticality difference
+#### Option 3A: Broader Triggers for Critical, Unchanged for Community
 
-**Cons:**
-- Community recipe regressions harder to catch
-- Hash-only testing misses functional issues
-- Two different testing systems to maintain
-
-#### Option 3B: Full Testing for All, Different Failure Handling
-
-All recipes get full golden file testing, but:
-- Critical failures block CI
-- Community failures are warnings (non-blocking) or nightly-only
+Critical recipes get tested whenever ANY critical recipe OR critical code changes. Community recipes keep current behavior (only tested when that recipe changes).
 
 **Pros:**
-- Same test infrastructure for all recipes
-- Community issues still detected, just not blocking
-- Simpler mental model
+- Critical recipes are always validated together as a unit
+- Community recipe PRs stay fast
+- No change to community recipe testing on their own PRs
 
 **Cons:**
-- CI still slow for community recipes
-- Warning fatigue risk
-- Doesn't reduce CI time
+- Defining "critical code" vs "community code" adds complexity
+- Doesn't address community recipe drift (broken by external factors)
 
-#### Option 3C: Execution Testing for Critical, Plan-Only for Community (Enhanced)
+#### Option 3B: Current Triggers, Split Execution Scope
 
-Critical recipes: full plan generation + execution on platform matrix. Community recipes: plan generation only during PRs, with nightly full execution runs to catch issues.
+Keep current triggers, but when code changes occur:
+- Critical recipes: Full execution validation (plan + install)
+- Community recipes: Plan validation only (no execution)
 
 **Pros:**
-- Catches most issues without slow PR checks
-- Significant CI time savings for contributors
-- Still validates recipe syntax and plan structure
-- Nightly runs catch download failures before users report
+- Same trigger logic, just different execution scope
+- Critical recipes always fully validated
+- Community recipes still get plan validation on code changes
 
 **Cons:**
-- Issues discovered nightly, not immediately
-- Platform-specific execution bugs may slip through for up to 24 hours
-- Requires nightly workflow maintenance
+- Community recipes may have broken downloads undetected
+- Still runs plan validation for all 150+ community recipes on code changes
+
+#### Option 3C: Split Golden Files with Nightly Community Execution
+
+Split golden file directories by category. On code changes, only validate critical recipes. Community recipes validated only when changed, with nightly full execution run.
+
+**Pros:**
+- Code changes run much faster (15-20 critical vs 150+ community)
+- Community recipe changes still tested (plan + execution)
+- Nightly catches external breakage within 24 hours
+
+**Cons:**
+- Community recipe breakage from code changes not caught until nightly
+- Requires splitting golden file directory structure
+- More complex CI workflow logic
 
 ### Evaluation Against Decision Drivers
 
@@ -255,11 +281,11 @@ Critical recipes: full plan generation + execution on platform matrix. Community
 | Build complexity | Good | Poor |
 | Migration ease | Good | Fair |
 
-| Driver | 3A (Hash-Only) | 3B (Warn-Only) | 3C (Plan-Only) |
-|--------|----------------|----------------|----------------|
-| CI efficiency | Good | Poor | Good |
-| Regression detection | Poor | Good | Fair |
-| Simplicity | Poor | Good | Good |
+| Driver | 3A (Broader Triggers) | 3B (Split Execution) | 3C (Split Golden + Nightly) |
+|--------|----------------------|---------------------|------------------------------|
+| CI efficiency | Fair | Fair | Good |
+| Regression detection | Good (critical) / Poor (community) | Good (critical) / Fair (community) | Good (critical) / Fair (community) |
+| Simplicity | Poor | Good | Fair |
 
 ### Uncertainties
 
@@ -273,11 +299,11 @@ Critical recipes: full plan generation + execution on platform matrix. Community
 
 ## Decision Outcome
 
-**Chosen: Location-based categorization + Plan-only testing with nightly runs**
+**Chosen: Location-based categorization + Split golden files with nightly community execution (3C)**
 
 ### Summary
 
-Recipe criticality is determined by directory location: `internal/recipe/recipes/` = critical (embedded), `recipes/` = community (fetched from registry). This eliminates the need for computed dependency analysis or explicit metadata flags. Testing uses plan-only validation for community recipes in PRs, with nightly full execution runs to catch issues.
+Recipe criticality is determined by directory location: `internal/recipe/recipes/` = critical (embedded), `recipes/` = community (fetched from registry). Golden files are split into `critical/` and `community/` subdirectories. Code changes only validate critical recipes. Community recipes are fully tested when changed, with nightly runs catching external breakage.
 
 ### Rationale
 
@@ -287,17 +313,18 @@ Recipe criticality is determined by directory location: `internal/recipe/recipes
 - **Clear contributor understanding**: Directory location is unambiguous
 - **Aligns with existing loader priority**: The embed directive already uses directory paths
 
-**Plan-only + nightly testing chosen because:**
-- **CI efficiency**: Community recipe PRs run quickly (plan validation only)
-- **Regression detection**: Nightly runs catch download failures and platform issues within 24 hours
-- **Same infrastructure**: Uses existing golden file validation, just at different trigger points
+**Split golden files + nightly testing (3C) chosen because:**
+- **CI efficiency**: Code changes only validate 15-20 critical recipes instead of 170+
+- **Community recipes still fully tested when changed**: Plan validation AND execution on that recipe's PR
+- **Nightly catches external drift**: Download URL changes, version drift detected within 24 hours
+- **Clear trigger logic**: Critical = always validated on code changes; Community = validated on their own changes + nightly
 
 **Alternatives rejected:**
 
 - **1A (Explicit metadata)**: Adds manual maintenance burden with risk of forgetting transitive dependencies
 - **1B/1C (Computed from dependencies)**: Complex build process, harder to predict results, requires fixing Dependencies() infrastructure gaps (#644)
-- **3A (Hash-only)**: Catches zero functional issues - not acceptable for quality
-- **3B (Warn-only)**: CI still slow; warning fatigue is a real problem
+- **3A (Broader triggers)**: Doesn't address community recipe drift; adds complexity defining "critical code"
+- **3B (Split execution)**: Still validates all 150+ community recipes on code changes, slow CI
 
 ### Trade-offs Accepted
 
@@ -305,9 +332,10 @@ By choosing location-based categorization:
 - Moving a recipe between categories requires moving files (accepted: this is an intentional friction)
 - Critical recipe list isn't automatically updated when action dependencies change (accepted: critical recipes change rarely, manual review is appropriate)
 
-By choosing plan-only + nightly testing:
-- Community recipe issues may go undetected for up to 24 hours (accepted: faster contributor feedback is worth this tradeoff)
-- Requires maintaining a nightly workflow (accepted: incremental complexity)
+By choosing split golden files + nightly:
+- Community recipe breakage from code changes not caught until nightly (accepted: code changes rarely break community recipes, and nightly catches it)
+- Community recipe issues from external factors (URL changes) may go undetected for up to 24 hours (accepted: faster contributor feedback is worth this tradeoff)
+- Requires splitting golden file directories and updating workflow triggers (accepted: one-time migration cost)
 
 ## Solution Architecture
 
@@ -404,26 +432,50 @@ testdata/golden/plans/
 ### CI Workflow Changes
 
 **Current workflows:**
-- `validate-golden-recipes.yml` - Validates changed recipes
-- `validate-golden-code.yml` - Validates all when code changes
-- `validate-golden-execution.yml` - Executes golden files
+| Workflow | Trigger | Scope |
+|----------|---------|-------|
+| `test-changed-recipes.yml` | Recipe files change | Changed recipes only |
+| `validate-golden-recipes.yml` | Recipe files change | Changed recipes only |
+| `validate-golden-code.yml` | 35 critical code files change | ALL recipes |
+| `validate-golden-execution.yml` | Golden files change | Changed golden files |
 
-**New workflow structure:**
+**Changes needed:**
 
-1. **Critical recipe changes** (internal/recipe/recipes/**):
-   - Full plan validation
-   - Full execution validation
-   - Blocks merge on failure
+1. **test-changed-recipes.yml** - Update path triggers:
+   - Currently: `internal/recipe/recipes/**/*.toml`
+   - Add: `recipes/**/*.toml` (community recipes)
+   - Behavior unchanged: tests changed recipes on their PRs
 
-2. **Community recipe changes** (recipes/**):
-   - Plan validation only
-   - Does NOT block on execution
-   - Faster PR feedback
+2. **validate-golden-recipes.yml** - Update path triggers:
+   - Currently: `internal/recipe/recipes/**/*.toml`
+   - Add: `recipes/**/*.toml`
+   - Behavior unchanged: validates changed recipes have golden files
 
-3. **Nightly community validation** (new):
-   - Full execution of all community recipes
-   - Reports failures via issue/notification
-   - Doesn't block anything (already merged)
+3. **validate-golden-code.yml** - Scope reduction (key change):
+   - Currently: Validates ALL golden files when code changes
+   - Change to: Only validate `testdata/golden/plans/critical/**`
+   - Rationale: Code changes rarely break community recipes; nightly catches any drift
+
+4. **validate-golden-execution.yml** - No change needed:
+   - Already only executes changed golden files
+   - Will naturally work with split directory structure
+
+5. **nightly-community-validation.yml** (new):
+   - Cron: Daily at 2 AM UTC
+   - Scope: All community recipes (`testdata/golden/plans/community/**`)
+   - Actions: Full plan validation + execution
+   - Reporting: Creates GitHub issue on failure
+
+**Testing behavior by scenario:**
+
+| Scenario | Critical Recipes | Community Recipes |
+|----------|------------------|-------------------|
+| Recipe file changes | Plan + Execution | Plan + Execution |
+| Critical code changes (35 files) | Plan validation | Not tested (wait for nightly) |
+| Golden file changes | Execution | Execution |
+| Nightly run | Not included | Full validation + Execution |
+
+**Note:** Community recipes are still FULLY tested when they change. The only difference is they're excluded from the "code changes" trigger, which catches potential side effects from plan generation code changes.
 
 ## Implementation Approach
 
@@ -453,15 +505,29 @@ testdata/golden/plans/
 
 ### Stage 3: CI Workflow Updates
 
-**Goal:** Differentiate testing based on recipe category.
+**Goal:** Adjust workflow triggers and scope for the split structure.
 
 **Steps:**
-1. Update `validate-golden-recipes.yml` to detect recipe category from path
-2. Update `validate-golden-execution.yml` to only run for critical recipes in PRs
-3. Create `nightly-community-validation.yml` for full community testing
-4. Update exclusions.json schema if needed
+1. **test-changed-recipes.yml**: Add `recipes/**/*.toml` to path triggers (alongside existing `internal/recipe/recipes/**/*.toml`)
 
-**Validation:** PRs with community recipes run faster. Nightly catches issues.
+2. **validate-golden-recipes.yml**: Add `recipes/**/*.toml` to path triggers. Update script to detect recipe category from path and look in appropriate golden file directory.
+
+3. **validate-golden-code.yml**: Change scope from all golden files to `testdata/golden/plans/critical/**` only. This is the key optimization - code changes no longer validate 150+ community recipes.
+
+4. **validate-golden-execution.yml**: Update to handle both `critical/` and `community/` subdirectories in golden file detection.
+
+5. **Create nightly-community-validation.yml**:
+   - Cron trigger: `0 2 * * *`
+   - Runs `validate-all-golden.sh` for `testdata/golden/plans/community/`
+   - Executes all community golden files
+   - Creates GitHub issue on failure with list of broken recipes
+
+6. Update exclusions.json: Add `category` field or split into `critical-exclusions.json` and `community-exclusions.json`
+
+**Validation:**
+- Code change PRs complete faster (only critical recipes)
+- Community recipe change PRs still run full validation
+- Nightly workflow runs and reports failures
 
 ### Stage 4: Cache Policy Implementation
 

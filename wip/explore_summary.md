@@ -31,9 +31,9 @@ As tsuku matures, embedding all 171 recipes in the CLI binary creates unnecessar
 
 **Problem:** All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
 
-**Decision:** Separate recipes into critical (embedded in `internal/recipe/recipes/`) and community (fetched from `recipes/` at repo root) based on directory location, with plan-only PR testing for community recipes and nightly full execution runs.
+**Decision:** Separate recipes into critical (embedded in `internal/recipe/recipes/`) and community (fetched from `recipes/` at repo root) based on directory location. Split golden files into `critical/` and `community/` subdirectories. Code changes only validate critical recipes; community recipes are fully tested on their own PRs plus nightly runs for drift detection.
 
-**Rationale:** Location-based categorization provides maximum simplicity with no metadata to maintain and no computed analysis to debug. Plan-only + nightly testing balances CI speed with regression detection within 24 hours.
+**Rationale:** Location-based categorization provides maximum simplicity with no metadata to maintain and no computed analysis to debug. Split golden files let code-change PRs run faster (15-20 critical recipes vs 170+). Community recipes still get full testing when changed; nightly runs catch external drift (broken URLs, version changes) within 24 hours.
 
 ## Current Status
 
