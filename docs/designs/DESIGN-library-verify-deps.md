@@ -66,8 +66,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I978,I979,I984 done
-    class I980,I981,I982,I983,I985 ready
+    class I978,I979,I980,I984 done
+    class I981,I982,I983,I985 ready
     class I986,I989,I990,I991 blocked
 ```
 
