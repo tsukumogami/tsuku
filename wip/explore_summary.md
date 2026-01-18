@@ -19,12 +19,12 @@ Levels 1-2 of library verification can't definitively confirm a library will loa
 
 **Existing pattern:** nix-portable provides a template—embedded checksums, version tracking, file locking, atomic installs.
 
-**dlopen semantics:** Use RTLD_NOW for verification to catch symbol resolution failures immediately.
+**dlopen semantics:** Use RTLD_NOW for verification to catch symbol resolution failures immediately. Critical: must clear dlerror() before dlopen() to avoid stale errors.
 
 ## Options (Phase 3)
 
 **Decision 1 - dlopen invocation:**
-- 1A: Dedicated helper binary (follows nix-portable pattern)
+- 1A: Dedicated helper binary in Rust
 - 1B: Python ctypes fallback (common but slower)
 - 1C: CGO in main tsuku (simplest but portability issues)
 
@@ -39,11 +39,15 @@ Levels 1-2 of library verification can't definitively confirm a library will loa
 
 ## Decision (Phase 5)
 
-**Problem:** Levels 1-2 of library verification can't confirm a library will actually load; only dlopen() can test this, but it requires cgo which conflicts with tsuku's static build.
-**Decision:** Use a dedicated helper binary (tsuku-dltest) with JSON protocol and batched invocation, following the existing nix-portable pattern.
-**Rationale:** This preserves tsuku's simple distribution model while providing isolated code execution, embedded checksum verification, and good performance through batching.
+**Problem:** Levels 1-2 of library verification can't confirm a library will actually load; only dlopen() can test this, but it requires native code which conflicts with tsuku's CGO_ENABLED=0 build.
+**Decision:** Use a dedicated Rust helper binary (tsuku-dltest) with JSON protocol and batched invocation.
+**Rationale:** Rust provides memory-safe dlopen bindings, simpler cross-compilation than Go+cgo, and a small binary (~400KB). Implementation requires a separate release process design for multi-platform native builds.
+
+## Blocking Dependencies
+
+- **DESIGN-release-workflow-native.md:** Required for multi-runner CI matrix. Cannot release helper binary without this.
 
 ## Current Status
 
-**Phase:** 5 - Decision (complete)
+**Phase:** 8 - Final Review (complete with panel feedback incorporated)
 **Last Updated:** 2026-01-18

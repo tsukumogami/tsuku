@@ -1,13 +1,13 @@
 ---
-status: Proposed
-problem: Levels 1-2 of library verification can't confirm a library will actually load; only dlopen() can test this, but it requires cgo which conflicts with tsuku's static build.
-decision: Use a dedicated helper binary (tsuku-dltest) with JSON protocol and batched invocation, following the existing nix-portable pattern.
-rationale: This preserves tsuku's simple distribution model while providing isolated code execution, embedded checksum verification, and good performance through batching.
+status: Accepted
+problem: Levels 1-2 of library verification can't confirm a library will actually load; only dlopen() can test this, but it requires native code which conflicts with tsuku's CGO_ENABLED=0 build.
+decision: Use a dedicated Rust helper binary (tsuku-dltest) with JSON protocol and batched invocation.
+rationale: Rust provides memory-safe dlopen bindings, simpler cross-compilation than Go+cgo, and a small binary (~400KB). Implementation requires a separate release process design for multi-platform native builds.
 ---
 
 # DESIGN: dlopen Load Testing for Library Verification (Level 3)
 
-**Status:** Proposed
+**Status:** Accepted
 
 ## Upstream Design Reference
 
@@ -83,7 +83,7 @@ An alternative to a helper binary is enabling cgo in the main tsuku build. This 
 
 The current tsuku binary is built with `CGO_ENABLED=0` and runs on any Linux system regardless of libc version. Switching to cgo would either limit portability or require complex build infrastructure (musl static linking, zig cross-compiler).
 
-**Verdict**: The helper binary approach keeps the main tsuku distribution simple while allowing cgo-dependent functionality in a separate, platform-specific binary.
+**Verdict**: The helper binary approach keeps the main tsuku distribution simple while isolating native code (dlopen FFI) in a separate, platform-specific binary.
 
 ### Existing Helper Binary Pattern
 
@@ -130,17 +130,60 @@ Step 3 is the security concern—initialization code runs with the calling proce
 
 For verification, `RTLD_NOW` is preferred to catch symbol resolution failures.
 
+**Critical: dlerror() semantics:**
+
+Per POSIX, `dlerror()` has subtle behavior that must be handled correctly:
+1. `dlerror()` returns error from most recent `dlopen/dlsym/dlclose` call
+2. Calling `dlerror()` **clears** the error state
+3. The returned pointer is to static/thread-local storage that may be overwritten
+
+**Correct pattern:**
+```c
+// Clear any previous error
+dlerror();
+void *handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+char *error = dlerror();  // Capture immediately and clear
+if (handle == NULL) {
+    // error contains the failure reason (or NULL if unknown)
+}
+```
+
+**Incorrect pattern (bug):**
+```c
+void *handle = dlopen(path, RTLD_NOW | RTLD_LOCAL);
+if (handle == NULL) {
+    char *error = dlerror();  // May contain stale error from previous call!
+}
+```
+
+The helper MUST:
+1. Call `dlerror()` before each `dlopen()` to clear stale errors
+2. Copy the error string immediately after `dlerror()` returns
+3. Remain single-threaded to avoid thread-local storage races
+
+**dlclose() return value:**
+
+`dlclose()` returns 0 on success, non-zero on failure. Failure typically means:
+- Invalid handle
+- Library destructor (`DT_FINI`) threw an exception
+
+The helper should check `dlclose()` and report failures, as a library that fails to unload is a red flag.
+
 ### Platform Differences
 
 **Linux:**
 - `dlopen()` via `-ldl` linkage
 - Error messages from `dlerror()`
 - Supports `RTLD_LAZY`, `RTLD_NOW`, `RTLD_GLOBAL`, `RTLD_LOCAL`
+- glibc vs musl: `dlerror()` returns thread-local on glibc, global (with lock) on musl. Helper works with both since it's single-threaded.
+- **glibc version binding**: Binaries link against specific glibc symbols (e.g., `GLIBC_2.34`). Building on ubuntu-latest (glibc 2.35+) may fail on older distros. Release process design should address this.
 
 **macOS:**
-- `dlopen()` built into libSystem (no separate libdl)
+- `dlopen()` built into libSystem (no separate libdl, no `-ldl` needed)
 - Same API as Linux
 - Handles dyld shared cache transparently
+- System Integrity Protection (SIP) strips `DYLD_*` variables for system binaries, but doesn't affect user-installed helpers in `$TSUKU_HOME`
+- **Gatekeeper**: Unsigned binaries trigger security warnings. Users must right-click > Open or run `xattr -d com.apple.quarantine`. Release process design should address code signing.
 
 ### Language Choice for Helper Binary
 
@@ -148,41 +191,33 @@ Since the helper is a separate binary with a JSON interface, any language can im
 
 | Language | Binary Size | Cross-Compilation | Memory Safety | New Toolchain |
 |----------|-------------|-------------------|---------------|---------------|
-| **Go+cgo** | ~5MB | Finicky (needs platform CC) | Yes | No |
-| **Rust** | ~1MB | Excellent (cross-rs) | Yes | Yes |
-| **C** | ~10KB | Needs platform toolchains | Manual | No |
+| **Rust** | ~400KB | Excellent (cross-rs) | Yes | Yes |
+| **Go+cgo** | ~5MB | Broken (requires native runners) | Yes | No |
+| **C** | ~10KB | Requires platform toolchains | Manual | No |
 
-**Honest assessment:**
+**Decision: Rust**
 
-**Go+cgo:**
-- Pro: No new toolchain in repo
-- Con: 5MB is heavy for 50 lines of logic
-- Con: CGO cross-compilation is fragile (needs platform-specific CC)
-- Neutral: Go runtime overhead is meaningless for a one-shot process
+After expert review, Rust is the clear choice for this helper:
 
-**Rust:**
-- Pro: 1MB binary, excellent safety
-- Pro: `cross-rs` makes cross-compilation trivial
-- Con: Adds Rust toolchain dependency to the repo
-- Neutral: cargo can be called from release workflow
+**Why Rust over Go+cgo:**
+- CGO cross-compilation doesn't work in practice. Building darwin-arm64 from Linux requires osxcross and macOS SDK (legally available only on macOS). Go+cgo would require 4 native CI runners regardless.
+- The Go+cgo code has subtle bugs: `dlerror()` returns thread-local storage that can be clobbered if Go's runtime schedules anything between `dlopen` failure and `dlerror` call. Requires explicit `runtime.LockOSThread()` and careful sequencing.
+- 5MB binary for 50 lines of logic is excessive. Rust's 400KB includes everything needed.
 
-**C:**
-- Pro: 10KB binary, direct dlopen access
-- Con: Manual memory management (though the code is trivial)
-- Con: Cross-compilation needs platform-specific toolchains
-- Neutral: No runtime overhead
+**Why Rust over C:**
+- Rust's `CString` handles null-byte validation and automatic deallocation (RAII)
+- Memory safety for dlopen/dlerror sequencing is enforced by the type system
+- No manual memory management for error strings
 
-**Recommendation: Defer to implementation time**
+**What Rust adds to the repo:**
+- `cmd/tsuku-dltest/Cargo.toml` and `src/` directory
+- CI needs `cargo` installed (via rustup action)
+- Separate build step in release workflow
 
-Binary size is irrelevant for a one-time download. The real trade-off is:
-- **Go+cgo**: Keeps repo Go-only, but CGO cross-compilation is awkward
-- **Rust**: Cleaner cross-compilation, adds toolchain dependency
-- **C**: Simplest code, most manual build process
-
-Since the JSON protocol is fixed, this choice can be made during implementation based on what works best for the release workflow. The design doesn't constrain the language.
-
-**For MVP**: Go+cgo with platform-specific CI runners (simplest to set up initially)
-**For optimization**: Consider Rust if CGO cross-compilation proves problematic
+This is acceptable because:
+- The helper is isolated in its own directory
+- Release workflow already builds 4 platform binaries
+- GitHub provides free native runners for all 4 platforms (including ARM64 Linux for public repos)
 
 ### Anti-patterns to Avoid
 
@@ -190,6 +225,9 @@ Since the JSON protocol is fixed, this choice can be made during implementation 
 - **Trying dlopen in tsuku directly**: Would require CGO_ENABLED=1
 - **Unbounded batching**: Process memory grows with loaded libraries; need batch size limits
 - **Ignoring dlerror()**: The error string contains the actual failure reason
+- **Not clearing dlerror() before dlopen()**: Can report stale errors from previous calls
+- **Ignoring dlclose() return value**: A library that fails to unload is worth reporting
+- **Multi-threading**: dlerror() uses thread-local storage; concurrent dlopen calls corrupt error state
 
 ## Considered Options
 
@@ -197,11 +235,13 @@ Since the JSON protocol is fixed, this choice can be made during implementation 
 
 #### Option 1A: Dedicated Helper Binary (tsuku-dltest)
 
-Build a minimal Go+cgo binary that accepts library paths and returns dlopen results. Distributed as GitHub release assets with checksums embedded in tsuku source.
+Build a minimal Rust binary that accepts library paths and returns dlopen results. Distributed as GitHub release assets with checksums verified via tsuku's recipe system.
 
 **Pros:**
 - Full control over behavior, error messages, and output format
-- Follows existing nix-portable pattern
+- Memory-safe FFI bindings (Rust's libc crate)
+- Correct dlerror() handling enforced by type system
+- Small binary (~400KB)
 - Can be versioned and updated with tsuku releases
 - No external dependencies at runtime
 
@@ -209,6 +249,7 @@ Build a minimal Go+cgo binary that accepts library paths and returns dlopen resu
 - Requires building and distributing 4 binaries (linux-amd64, linux-arm64, darwin-amd64, darwin-arm64)
 - Users must download helper on first use
 - Helper binary updates require tsuku release
+- Adds Rust toolchain to release workflow
 
 #### Option 1B: Python ctypes Fallback
 
@@ -335,24 +376,29 @@ Spawn helper once per library file.
 
 - **Batch size limits**: Need to respect ARG_MAX (~128KB-2MB depending on OS). With 256-byte average paths, that's 500-8000 libraries per batch. Will use conservative default (50 libraries) with option to tune.
 - **macOS Gatekeeper**: Unsigned binaries may trigger security warnings on macOS. Code signing may be needed for good UX.
-- **Helper binary size**: Unknown final size. Cgo adds overhead but should be <5MB.
+- **Helper binary size**: Expected ~400KB for release Rust binary with LTO and stripping.
 - **dlopen memory behavior**: Some libraries may not fully unload on dlclose, causing memory growth across batches.
 - **Environment inheritance**: Unclear whether helper should inherit tsuku's environment or run in a clean environment. Libraries with `$ORIGIN` dependencies need the former.
 - **Timeout edge cases**: A library taking 4.9 seconds to initialize will succeed, but is that good? Users may want tighter timeouts for faster feedback.
 
 ## Decision Outcome
 
-**Chosen: 1A (Helper Binary) + 2A (JSON Protocol) + 3A (Batched)**
+**Chosen: 1A (Helper Binary in Rust) + 2A (JSON Protocol) + 3A (Batched)**
 
-A dedicated helper binary with JSON output and batched invocation provides the best balance of security, performance, and debuggability while maintaining tsuku's simple distribution model.
+A dedicated Rust helper binary with JSON output and batched invocation provides the best balance of security, performance, and debuggability while maintaining tsuku's simple distribution model.
 
 ### Rationale
 
 **Helper binary (1A) chosen because:**
 - Preserves tsuku's `CGO_ENABLED=0` build simplicity and portability
-- Follows proven nix-portable pattern already in codebase
-- Trust chain verification through embedded checksums
 - Process isolation comes free (separate process means crashes don't affect tsuku)
+- Trust chain verification through recipe-based installation with version pin
+
+**Rust chosen for helper because:**
+- Memory-safe dlopen bindings with RAII (no manual C.free() calls)
+- Correct dlerror() handling enforced by type system
+- ~400KB binary vs 5MB for Go+cgo
+- No global error state race conditions (unlike Go+cgo with dlerror())
 
 **Python ctypes (1B) rejected because:**
 - Python availability varies (minimal containers, CI environments)
@@ -367,7 +413,7 @@ A dedicated helper binary with JSON output and batched invocation provides the b
 **JSON protocol (2A) chosen because:**
 - Extensible without breaking compatibility (can add fields)
 - Human-readable for debugging failed verifications
-- Standard Go parsing with `encoding/json`
+- serde_json is mature and well-tested
 
 **Batching (3A) chosen because:**
 - 50 libraries × 5ms = 250ms unbatched vs ~10ms batched
@@ -376,7 +422,7 @@ A dedicated helper binary with JSON output and batched invocation provides the b
 
 ### Trade-offs Accepted
 
-- **Helper download on first use**: Users need network access to download ~1-5MB binary. Acceptable because verification is not a critical path and tsuku already downloads tools.
+- **Helper download on first use**: Users need network access to download ~400KB binary. Acceptable because verification is not a critical path and tsuku already downloads tools.
 - **Helper binary maintenance**: Requires building 4 platform-specific binaries. Acceptable because the helper is small and changes rarely.
 - **Batch crash risk**: If a library crashes the helper, partial results are lost. Acceptable because crashes are rare and can be retried with smaller batches.
 - **5-second timeout**: Some legitimate libraries may take longer to initialize. Acceptable because users can retry with `--skip-dlopen` if needed.
@@ -410,7 +456,7 @@ A dedicated helper binary with JSON output and batched invocation provides the b
                               ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                    tsuku-dltest helper                           │
-│                    (separate CGO_ENABLED=1 binary)               │
+│                    (Rust binary with libc FFI)                   │
 ├─────────────────────────────────────────────────────────────────┤
 │  Input: library paths as command-line arguments                  │
 │  Output: JSON array to stdout                                    │
@@ -610,10 +656,14 @@ func invokeHelper(ctx context.Context, paths []string, tsukuHome string) ([]Dlop
 // sanitizeEnvForHelper creates a safe environment for the helper.
 // Strips dangerous loader variables while preserving necessary paths.
 func sanitizeEnvForHelper(tsukuHome string) []string {
-    // Variables that allow code injection - MUST be stripped
+    // Variables that allow code injection or information leakage - MUST be stripped
     dangerous := map[string]bool{
+        // Linux ld.so injection vectors
         "LD_PRELOAD": true, "LD_AUDIT": true, "LD_DEBUG": true,
+        "LD_DEBUG_OUTPUT": true, "LD_PROFILE": true, "LD_PROFILE_OUTPUT": true,
+        // macOS dyld injection vectors
         "DYLD_INSERT_LIBRARIES": true, "DYLD_FORCE_FLAT_NAMESPACE": true,
+        "DYLD_PRINT_LIBRARIES": true, "DYLD_PRINT_LIBRARIES_POST_LAUNCH": true,
     }
 
     var env []string
@@ -636,7 +686,8 @@ func sanitizeEnvForHelper(tsukuHome string) []string {
 ```
 
 **Environment sanitization**: The helper runs with a sanitized environment:
-- **Stripped**: `LD_PRELOAD`, `LD_AUDIT`, `LD_DEBUG`, `DYLD_INSERT_LIBRARIES`, `DYLD_FORCE_FLAT_NAMESPACE` (code injection vectors)
+- **Stripped (Linux)**: `LD_PRELOAD`, `LD_AUDIT`, `LD_DEBUG`, `LD_DEBUG_OUTPUT`, `LD_PROFILE`, `LD_PROFILE_OUTPUT` (code injection and information leakage vectors)
+- **Stripped (macOS)**: `DYLD_INSERT_LIBRARIES`, `DYLD_FORCE_FLAT_NAMESPACE`, `DYLD_PRINT_LIBRARIES`, `DYLD_PRINT_LIBRARIES_POST_LAUNCH`
 - **Preserved**: `LD_LIBRARY_PATH`, `DYLD_LIBRARY_PATH` (needed for dependency resolution)
 - **Added**: `$TSUKU_HOME/libs` prepended to library paths
 
@@ -676,70 +727,115 @@ Warning: tsuku-dltest helper not available, skipping load test
 
 ## Implementation Approach
 
-### Step 1: Helper Binary
+### Step 1: Helper Binary (Rust)
 
-Create `cmd/tsuku-dltest/main.go`:
+Create `cmd/tsuku-dltest/Cargo.toml`:
 
-```go
-package main
+```toml
+[package]
+name = "tsuku-dltest"
+version = "1.0.0"
+edition = "2021"
 
-/*
-#cgo LDFLAGS: -ldl
-#include <dlfcn.h>
-#include <stdlib.h>
-*/
-import "C"
-import (
-    "encoding/json"
-    "fmt"
-    "os"
-    "unsafe"
-)
+[dependencies]
+libc = "0.2"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
 
-type Result struct {
-    Path  string `json:"path"`
-    OK    bool   `json:"ok"`
-    Error string `json:"error,omitempty"`
+[profile.release]
+opt-level = "z"      # Optimize for size
+lto = true           # Link-time optimization
+strip = true         # Strip symbols
+panic = "abort"      # Smaller panic handling
+```
+
+Create `cmd/tsuku-dltest/src/main.rs`:
+
+```rust
+use libc::{c_void, dlclose, dlerror, dlopen, RTLD_LOCAL, RTLD_NOW};
+use serde::Serialize;
+use std::env;
+use std::ffi::{CStr, CString};
+use std::io::{self, Write};
+use std::process::ExitCode;
+
+#[derive(Serialize)]
+struct Output {
+    path: String,
+    ok: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    error: Option<String>,
 }
 
-func main() {
-    if len(os.Args) < 2 {
-        fmt.Fprintln(os.Stderr, "usage: tsuku-dltest <path>...")
-        os.Exit(2)
+fn main() -> ExitCode {
+    let args: Vec<String> = env::args().skip(1).collect();
+
+    if args.is_empty() {
+        eprintln!("usage: tsuku-dltest <path>...");
+        return ExitCode::from(2);
     }
 
-    if os.Args[1] == "--version" {
-        fmt.Fprintln(os.Stderr, "tsuku-dltest v1.0.0")
-        os.Exit(0)
+    if args.len() == 1 && args[0] == "--version" {
+        eprintln!("tsuku-dltest v1.0.0");
+        return ExitCode::from(0);
     }
 
-    results := make([]Result, 0, len(os.Args)-1)
-    exitCode := 0
+    let mut all_ok = true;
+    let mut results = Vec::with_capacity(args.len());
 
-    for _, path := range os.Args[1:] {
-        result := Result{Path: path, OK: true}
+    for path in &args {
+        let result = match try_load(path) {
+            Ok(()) => Output { path: path.clone(), ok: true, error: None },
+            Err(e) => {
+                all_ok = false;
+                Output { path: path.clone(), ok: false, error: Some(e) }
+            }
+        };
+        results.push(result);
+    }
 
-        cpath := C.CString(path)
-        handle := C.dlopen(cpath, C.RTLD_NOW|C.RTLD_LOCAL)
-        C.free(unsafe.Pointer(cpath))
+    serde_json::to_writer(io::stdout(), &results).unwrap();
+    io::stdout().flush().unwrap();
 
-        if handle == nil {
-            result.OK = false
-            result.Error = C.GoString(C.dlerror())
-            exitCode = 1
-        } else {
-            C.dlclose(handle)
+    if all_ok { ExitCode::from(0) } else { ExitCode::from(1) }
+}
+
+/// Attempt to load a library with dlopen, then immediately unload it.
+fn try_load(path: &str) -> Result<(), String> {
+    let c_path = CString::new(path)
+        .map_err(|_| "path contains null byte".to_string())?;
+
+    unsafe {
+        // Clear any previous error (critical for correct error reporting)
+        dlerror();
+
+        let handle = dlopen(c_path.as_ptr(), RTLD_NOW | RTLD_LOCAL);
+
+        if handle.is_null() {
+            let err = dlerror();
+            if err.is_null() {
+                return Err("dlopen failed with unknown error".to_string());
+            }
+            return Err(CStr::from_ptr(err).to_string_lossy().into_owned());
         }
 
-        results = append(results, result)
+        // Check dlclose return value - failure is worth reporting
+        if dlclose(handle) != 0 {
+            let err = dlerror();
+            if !err.is_null() {
+                return Err(format!("dlclose failed: {}",
+                    CStr::from_ptr(err).to_string_lossy()));
+            }
+        }
     }
 
-    json.NewEncoder(os.Stdout).Encode(results)
-    os.Exit(exitCode)
+    Ok(())
 }
 ```
 
-**Build**: `CGO_ENABLED=1 go build -o tsuku-dltest ./cmd/tsuku-dltest`
+**Build**: `cargo build --release` (produces `target/release/tsuku-dltest`)
+
+All 4 platforms build natively on GitHub Actions runners (including `ubuntu-24.04-arm` for Linux ARM64).
 
 ### Step 2: Trust Chain Module
 
@@ -768,114 +864,113 @@ Modify `internal/verify/library.go`:
 
 ### Step 5: Build Infrastructure
 
-Add to `.goreleaser.yaml`:
+**IMPORTANT: This design requires a separate release process design.**
 
-```yaml
-builds:
-  - id: tsuku-dltest
-    main: ./cmd/tsuku-dltest
-    binary: tsuku-dltest-{{ .Os }}-{{ .Arch }}
-    env:
-      - CGO_ENABLED=1
-    goos:
-      - linux
-      - darwin
-    goarch:
-      - amd64
-      - arm64
+The helper binary cannot be cross-compiled via goreleaser. CGO cross-compilation from Linux to macOS requires osxcross and the macOS SDK, which is legally available only on macOS hardware. Similarly, Rust's cross-rs cannot cross-compile to macOS from Linux due to SDK licensing.
+
+**Required: Native matrix runners**
+
+The release workflow must build on native runners for each platform:
+
+| Platform | Runner | Toolchain |
+|----------|--------|-----------|
+| linux-amd64 | ubuntu-latest | rustup |
+| linux-arm64 | ubuntu-24.04-arm | rustup |
+| darwin-amd64 | macos-13 | rustup |
+| darwin-arm64 | macos-latest | rustup |
+
+**Note:** GitHub provides free ARM64 Linux runners for public repos (`ubuntu-24.04-arm`), so all 4 platforms can build natively. cross-rs is not required.
+
+**Blocking dependency:** A separate design document is required to define:
+1. Multi-runner release workflow structure
+2. Artifact aggregation from parallel builds
+3. Draft release + finalize pattern (don't publish partial releases)
+4. Version pin injection via ldflags (not source modification)
+5. Integration test before finalizing release
+6. glibc version considerations (build on ubuntu-20.04 for broader compatibility)
+7. macOS code signing strategy (Gatekeeper warnings without it)
+
+See "Consequences" section for the blocking issue.
+
+### Step 6: Release Workflow (High-Level)
+
+**This section is intentionally high-level.** The detailed workflow is out of scope for this design and will be specified in the release process design.
+
+**Release structure:**
+
+```
+1. [build-dltest] Build helper on matrix runners (parallel)
+   - linux-amd64: ubuntu-latest, cargo build --release
+   - linux-arm64: ubuntu-24.04-arm, cargo build --release
+   - darwin-amd64: macos-13, cargo build --release
+   - darwin-arm64: macos-latest, cargo build --release
+
+2. [build-tsuku] Build main binary with goreleaser (existing workflow)
+
+3. [integration-test] Test tsuku + dltest together
+   - Verify trust chain works
+   - Run dltest on real library
+
+4. [publish] Upload all assets to draft release
+
+5. [finalize] Mark release as published (only if all succeed)
 ```
 
-### Step 6: Release Workflow
-
-The helper and tsuku are released together using the existing goreleaser workflow:
-
-**Goreleaser configuration:**
-
-```yaml
-builds:
-  # Main tsuku binary (CGO_ENABLED=0)
-  - id: tsuku
-    main: ./cmd/tsuku
-    binary: tsuku-{{ .Os }}-{{ .Arch }}
-    env:
-      - CGO_ENABLED=0
-    goos: [linux, darwin]
-    goarch: [amd64, arm64]
-
-  # Helper binary (CGO_ENABLED=1)
-  - id: tsuku-dltest
-    main: ./cmd/tsuku-dltest
-    binary: tsuku-dltest-{{ .Os }}-{{ .Arch }}
-    env:
-      - CGO_ENABLED=1
-    goos: [linux, darwin]
-    goarch: [amd64, arm64]
-
-checksum:
-  name_template: checksums.txt
-  algorithm: sha256
-```
-
-**Version pin update:**
-
-Before each release, update `pinnedDltestVersion` in `internal/verify/dltest.go`:
+**Version pin via ldflags (not source modification):**
 
 ```go
-// Updated via release script: scripts/update-dltest-version.sh
-var pinnedDltestVersion = "v1.2.3"  // Matches release tag
+// internal/verify/dltest.go
+var pinnedDltestVersion = "dev"  // Injected at build time
 ```
-
-This is automated in the release workflow:
 
 ```yaml
-- name: Update dltest version pin
-  run: |
-    sed -i "s/pinnedDltestVersion = .*/pinnedDltestVersion = \"${{ github.ref_name }}\"/" \
-      internal/verify/dltest.go
+ldflags:
+  - -X github.com/tsukumogami/tsuku/internal/verify.pinnedDltestVersion={{.Version}}
 ```
 
-**Why this works:**
-- Both binaries built and released in same workflow
-- Checksums in `checksums.txt` (standard goreleaser output)
-- Recipe references checksums via `{checksums.tsuku-dltest-{os}-{arch}}`
-- Version pin ensures users get matching helper version
+This avoids modifying source during release, preserving reproducibility.
 
 **Pre-release testing:**
 
-1. **Local testing**: Build helper with `CGO_ENABLED=1 go build ./cmd/tsuku-dltest`, then:
+1. **Local testing**: Build helper with `cargo build --release`, then:
    ```bash
-   # Install locally for testing
-   cp tsuku-dltest ~/.tsuku/tools/tsuku-dltest-dev/tsuku-dltest
+   TSUKU_DLTEST_PATH=./target/release/tsuku-dltest ./tsuku verify gcc-libs
    ```
 
-2. **CI integration tests**: Use `TSUKU_DLTEST_PATH` environment variable to override:
-   ```yaml
-   - name: Build helper for testing
-     run: CGO_ENABLED=1 go build -o tsuku-dltest ./cmd/tsuku-dltest
-   - name: Test verification
-     run: |
-       TSUKU_DLTEST_PATH=./tsuku-dltest ./tsuku verify gcc-libs
-   ```
+2. **CI integration tests**: Use `TSUKU_DLTEST_PATH` environment variable to override.
 
-3. **Dev version bypass**: When `pinnedDltestVersion == "dev"`, accept any installed version:
-   ```go
-   if pinnedDltestVersion == "dev" {
-       // Development mode: use whatever is installed
-       if path := state.GetToolPath("tsuku-dltest"); path != "" {
-           return path, nil
-       }
-   }
-   ```
+3. **Dev version bypass**: When `pinnedDltestVersion == "dev"`, accept any installed version.
 
-4. **Pre-release tags**: `v1.0.0-rc.1` triggers full release workflow, publishes as pre-release
+4. **Pre-release tags**: `v1.0.0-rc.1` triggers full release workflow, publishes as pre-release.
 
 ### Step 7: Tests
 
-- Unit tests for JSON parsing
-- Integration tests with real dlopen (requires CGO in test)
+- Unit tests for JSON parsing (Go side)
+- Integration tests invoking the Rust helper on real libraries
 - Timeout behavior tests
 - Fallback behavior tests
-- Release workflow tests (checksum generation, embedding)
+- Release workflow tests (checksum generation, version pin injection)
+
+## Blocking Dependencies
+
+This design cannot be fully implemented until the following design is completed:
+
+### DESIGN-release-workflow-native.md (Required)
+
+**Problem:** The current release workflow uses goreleaser with CGO_ENABLED=0, cross-compiling from a single ubuntu-latest runner. Adding a Rust helper binary (or any native binary) requires a fundamentally different approach with native matrix runners.
+
+**Scope:**
+- Multi-runner CI matrix (linux-amd64, linux-arm64, darwin-amd64, darwin-arm64)
+- Artifact aggregation from parallel build jobs
+- Draft release pattern (don't publish until all builds succeed)
+- Version pin injection via ldflags
+- Integration test gate before release finalization
+- glibc version compatibility strategy (ubuntu-20.04 vs ubuntu-latest)
+- macOS code signing and notarization (Gatekeeper warnings without it)
+
+**Why blocking:** Without this design, the helper binary cannot be released. The current goreleaser configuration cannot produce native macOS binaries from Linux runners.
+
+**Issue tracking:** Create a `needs-design` issue for this work when transitioning to Planned status.
 
 ## Consequences
 
@@ -891,19 +986,23 @@ This is automated in the release workflow:
 
 ### Negative
 
-- **First-use download**: Users must download ~1-5MB helper on first verification
-- **4 platform builds**: Increases release complexity slightly
+- **First-use download**: Users must download ~400KB helper on first verification
+- **4 platform builds**: Requires multi-runner CI matrix (release process design needed)
 - **Library code execution**: Initialization code runs during verification (mitigated by isolation and opt-out)
 - **5-second timeout**: May be too short for some legitimate libraries
+- **Blocking dependency**: Cannot implement until release process design is complete
+- **Rust toolchain in CI**: Release workflow needs rustup and cargo
 
 ### Mitigations
 
 | Negative | Mitigation |
 |----------|------------|
-| First-use download | Cache in `$TSUKU_HOME/.dltest/`; only needed once per version |
-| 4 platform builds | Add to existing goreleaser config; automated |
+| First-use download | Cache in `$TSUKU_HOME/tools/`; only needed once per version |
+| 4 platform builds | Release process design will define CI matrix |
 | Code execution | Process isolation, user opt-out, timeout limit |
 | Timeout too short | Users can skip with `--skip-dlopen` and verify manually |
+| Blocking dependency | Release process design is well-scoped; can proceed in parallel |
+| Rust toolchain in CI | Single `actions/setup-rust` step; toolchain is stable |
 
 ## Security Considerations
 
