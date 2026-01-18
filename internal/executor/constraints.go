@@ -72,6 +72,7 @@ func extractConstraintsFromDependency(dep *DependencyPlan, constraints *actions.
 
 // extractPipConstraintsFromSteps extracts pip constraints from pip_exec steps.
 func extractPipConstraintsFromSteps(steps []ResolvedStep, constraints *actions.EvalConstraints) {
+	firstPipExec := true
 	for _, step := range steps {
 		if step.Action != "pip_exec" {
 			continue
@@ -82,9 +83,15 @@ func extractPipConstraintsFromSteps(steps []ResolvedStep, constraints *actions.E
 			continue
 		}
 
-		// Store full requirements string (first one wins)
+		// Store full requirements string and has_native_addons (first one wins)
 		if constraints.PipRequirements == "" {
 			constraints.PipRequirements = lockedReqs
+		}
+		if firstPipExec {
+			if hasNative, ok := step.Params["has_native_addons"].(bool); ok {
+				constraints.PipHasNativeAddons = hasNative
+			}
+			firstPipExec = false
 		}
 
 		// Also parse and store versions for lookup

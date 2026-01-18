@@ -364,8 +364,9 @@ func (a *PipxInstallAction) decomposeWithConstraints(ctx *EvalContext, packageNa
 	// This preserves the original hashes from the golden file.
 	lockedRequirements := ctx.Constraints.PipRequirements
 
-	// Detect native addons based on the stored requirements
-	hasNativeAddons := detectPythonNativeAddons(lockedRequirements)
+	// Use the stored has_native_addons value from the golden file.
+	// This preserves the original detection result.
+	hasNativeAddons := ctx.Constraints.PipHasNativeAddons
 
 	// Get Python version from the installed python-standalone
 	pythonPath := ResolvePythonStandalone()
