@@ -25,15 +25,15 @@ None.
 
 ## Implementation Steps
 
-- [ ] Add `Sonames []string` field with `json:"sonames,omitempty"` tag to `LibraryVersionState` struct in `state.go`
-- [ ] Add `SetLibrarySonames(libName, libVersion string, sonames []string) error` helper to `state_lib.go`
-- [ ] Add `TestLibraryVersionState_Sonames_SaveAndLoad` test for serialization round-trip
-- [ ] Add `TestLibraryVersionState_Sonames_BackwardCompatibility` test for loading old state format
-- [ ] Add `TestLibraryVersionState_Sonames_OmitsEmpty` test for nil slice omission in JSON
-- [ ] Add `TestStateManager_SetLibrarySonames` test for helper method
-- [ ] Add `TestStateManager_SetLibrarySonames_UpdatesExisting` test for preserving other fields
-- [ ] Run `go vet ./...` and `go test -short ./...`
-- [ ] Run full `go test ./...` to verify no regressions
+- [x] Add `Sonames []string` field with `json:"sonames,omitempty"` tag to `LibraryVersionState` struct in `state.go`
+- [x] Add `SetLibrarySonames(libName, libVersion string, sonames []string) error` helper to `state_lib.go`
+- [x] Add `TestLibraryVersionState_Sonames_SaveAndLoad` test for serialization round-trip
+- [x] Add `TestLibraryVersionState_Sonames_BackwardCompatibility` test for loading old state format
+- [x] Add `TestLibraryVersionState_Sonames_OmitsEmpty` test for nil slice omission in JSON
+- [x] Add `TestStateManager_SetLibrarySonames` test for helper method
+- [x] Add `TestStateManager_SetLibrarySonames_UpdatesExisting` test for preserving other fields
+- [x] Run `go vet ./...` and `go test -short ./...`
+- [x] Run full `go test ./...` to verify no regressions
 
 ## Testing Strategy
 
@@ -55,12 +55,12 @@ None.
 
 ## Success Criteria
 
-- [ ] `LibraryVersionState` struct has `Sonames []string` field with `json:"sonames,omitempty"` tag
-- [ ] `SetLibrarySonames()` helper method exists and follows `SetLibraryChecksums()` pattern
-- [ ] All new tests pass
-- [ ] Existing tests pass (no regression)
-- [ ] `go vet ./...` produces no warnings
-- [ ] `go build ./...` succeeds
+- [x] `LibraryVersionState` struct has `Sonames []string` field with `json:"sonames,omitempty"` tag
+- [x] `SetLibrarySonames()` helper method exists and follows `SetLibraryChecksums()` pattern
+- [x] All new tests pass
+- [x] Existing tests pass (no regression)
+- [x] `go vet ./...` produces no warnings
+- [x] `go build ./...` succeeds
 
 ## Open Questions
 
