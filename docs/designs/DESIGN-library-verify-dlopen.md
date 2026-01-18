@@ -144,35 +144,45 @@ For verification, `RTLD_NOW` is preferred to catch symbol resolution failures.
 
 ### Language Choice for Helper Binary
 
-Since the helper is a separate binary, we're not constrained to Go. Options considered:
+Since the helper is a separate binary with a JSON interface, any language can implement it. The helper logic is minimal (~50 lines): call dlopen, capture dlerror, output JSON.
 
-| Language | Binary Size | Build Complexity | Safety | Contributor Familiarity |
-|----------|-------------|------------------|--------|-------------------------|
-| **Go+cgo** | ~5MB | Low (goreleaser) | High | High (same as tsuku) |
-| **Rust** | ~1MB | Medium (cargo) | High | Medium |
-| **C** | ~10KB | High (cross-compile) | Low | Medium |
+| Language | Binary Size | Cross-Compilation | Memory Safety | New Toolchain |
+|----------|-------------|-------------------|---------------|---------------|
+| **Go+cgo** | ~5MB | Finicky (needs platform CC) | Yes | No |
+| **Rust** | ~1MB | Excellent (cross-rs) | Yes | Yes |
+| **C** | ~10KB | Needs platform toolchains | Manual | No |
 
-**Go+cgo chosen because:**
-- **Same build system**: Fits into existing goreleaser workflow without new toolchains
-- **Contributor familiarity**: tsuku contributors can maintain both binaries
-- **Shared code**: Can import tsuku packages if needed (version constants, etc.)
-- **Safety**: Go's memory safety applies to all non-cgo code
+**Honest assessment:**
 
-**Trade-offs accepted:**
-- Larger binary (~5MB vs ~1MB for Rust or ~10KB for C)
-- CGO cross-compilation requires platform-specific runners in CI
+**Go+cgo:**
+- Pro: No new toolchain in repo
+- Con: 5MB is heavy for 50 lines of logic
+- Con: CGO cross-compilation is fragile (needs platform-specific CC)
+- Neutral: Go runtime overhead is meaningless for a one-shot process
 
-**Why not Rust:**
-- Would add a second toolchain to the project
-- Goreleaser doesn't natively support Rust (would need separate workflow)
-- Binary size savings don't justify the complexity for a ~5MB helper
+**Rust:**
+- Pro: 1MB binary, excellent safety
+- Pro: `cross-rs` makes cross-compilation trivial
+- Con: Adds Rust toolchain dependency to the repo
+- Neutral: cargo can be called from release workflow
 
-**Why not C:**
-- Memory safety risks in security-critical code
-- Cross-compilation requires platform-specific toolchains
-- Harder to maintain for Go-focused contributors
+**C:**
+- Pro: 10KB binary, direct dlopen access
+- Con: Manual memory management (though the code is trivial)
+- Con: Cross-compilation needs platform-specific toolchains
+- Neutral: No runtime overhead
 
-**Future consideration:** If binary size becomes a concern, Rust could be reconsidered. The JSON protocol is language-agnostic, so the helper could be rewritten without changing tsuku.
+**Recommendation: Defer to implementation time**
+
+Binary size is irrelevant for a one-time download. The real trade-off is:
+- **Go+cgo**: Keeps repo Go-only, but CGO cross-compilation is awkward
+- **Rust**: Cleaner cross-compilation, adds toolchain dependency
+- **C**: Simplest code, most manual build process
+
+Since the JSON protocol is fixed, this choice can be made during implementation based on what works best for the release workflow. The design doesn't constrain the language.
+
+**For MVP**: Go+cgo with platform-specific CI runners (simplest to set up initially)
+**For optimization**: Consider Rust if CGO cross-compilation proves problematic
 
 ### Anti-patterns to Avoid
 
