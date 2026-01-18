@@ -330,48 +330,163 @@ To fix: ensure "rust" recipe exists in internal/recipe/recipes/r/rust.toml
 }
 ```
 
+### What Must Be Embedded vs What Doesn't
+
+The `--require-embedded` flag applies selectively based on **why** a recipe is being loaded:
+
+| Recipe Category | Source | Example | Must Be Embedded? |
+|-----------------|--------|---------|-------------------|
+| Target recipe | User requested | `cargo-watch` | No - loads normally |
+| Action dependency | Action's Dependencies() | `rust` (from cargo_install) | **Yes** |
+| Transitive action dep | Dependency of action dep | `libyaml` (dep of ruby) | **Yes** |
+| Recipe-level dependency | Target's `dependencies` field | `zig` (in cargo-watch.toml) | No - loads normally |
+| Recipe-level extra dep | Target's `extra_dependencies` | `openssl` (in some-tool.toml) | No - loads normally |
+
+**Key insight**: The distinction is based on the **source** of the dependency:
+- **Action code** declares deps via `Dependencies()` → must be embedded (tsuku can't function without them)
+- **Recipe TOML** declares deps via `dependencies`/`extra_dependencies` → normal loading (user's choice to install)
+
+**Example with `cargo-watch`:**
+
+```
+User: tsuku eval cargo-watch --require-embedded
+
+cargo-watch.toml:
+  - Uses action: cargo_install
+  - Has: extra_dependencies = ["zig"]  # for native compilation
+
+cargo_install action:
+  - Dependencies() returns: ["rust"]
+
+rust.toml:
+  - Has: dependencies = []  # (hypothetically)
+```
+
+Resolution:
+1. `cargo-watch` → loads normally (target recipe)
+2. `rust` → **must be embedded** (action dependency from cargo_install)
+3. `zig` → loads normally (recipe-level extra_dependency of cargo-watch)
+
 ### Data Flow
 
 1. **User runs**: `tsuku eval cargo-watch --require-embedded`
-2. **Loader resolves recipe**: `cargo-watch` loads normally (it's the target, not an action dep)
-3. **Plan generation**: `cargo_install` action declares dependency on `rust`
-4. **Dependency resolution**: Loader sees `RequireEmbedded=true` for action deps
-5. **Embedded check**: Loader looks for `rust` in embedded FS only
-6. **If found**: Continue normally
-7. **If not found**: Error with actionable message
+2. **Target recipe loading**: `cargo-watch` loads via normal priority chain (it's user-requested)
+3. **Plan generation begins**: Parser sees `cargo_install` action in recipe steps
+4. **Action dependency resolution**:
+   - Resolver calls `cargo_install.Dependencies()` → returns `["rust"]`
+   - Resolver marks `rust` as "action dependency" requiring embedded resolution
+5. **Load action dependency**: Loader receives `rust` with `RequireEmbedded=true`
+   - Only checks embedded FS
+   - Fails if not found: "action dependency 'rust' requires embedded recipe..."
+6. **Transitive action deps**: If `rust` has `dependencies = ["some-lib"]`
+   - `some-lib` inherits the embedded requirement (it's needed to install an action dep)
+   - Recursive embedded-only loading
+7. **Recipe-level deps**: If `cargo-watch` has `extra_dependencies = ["zig"]`
+   - `zig` loads via normal priority chain (not an action dependency)
+   - Can come from registry if not embedded
 
-For transitive dependencies:
-- `rust` recipe has `dependencies = ["some-lib"]`
-- When loading `rust`, its dependencies also use `RequireEmbedded` mode
-- Any missing transitive dependency fails with clear indication
+### Resolver Integration
+
+The resolver (`internal/actions/resolver.go`) already distinguishes dependency sources:
+
+```go
+// ResolveDependencies collects action dependencies from recipe steps
+func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
+    for _, step := range r.Steps {
+        // These are ACTION dependencies - require embedded when flag is set
+        actionDeps := GetActionDeps(step.Action)
+        // ...
+    }
+
+    // Recipe-level deps from metadata are handled separately
+    // These do NOT require embedded - they're user-specified
+    recipeDeps := r.Metadata.Dependencies
+    // ...
+}
+```
+
+The `--require-embedded` flag propagates through the dependency resolution:
+- When resolving action dependencies: `RequireEmbedded=true`
+- When resolving recipe-level dependencies: `RequireEmbedded=false` (normal loading)
+- When resolving transitive deps of action deps: `RequireEmbedded=true` (inherited)
 
 ## Implementation Approach
 
 ### Step 1: Add Flag to Loader
 
-Modify `internal/recipe/loader.go`:
+Modify `internal/recipe/loader.go` to accept a flag that restricts loading to embedded FS:
 
 ```go
 type LoaderOptions struct {
+    // RequireEmbedded restricts this specific load to embedded FS only.
+    // Used when loading action dependencies with --require-embedded flag.
     RequireEmbedded bool
 }
 
 func (l *Loader) LoadRecipe(name string, opts LoaderOptions) (*Recipe, error) {
-    // When RequireEmbedded is set for action dependencies,
-    // only check embedded FS, skip local and registry
     if opts.RequireEmbedded {
+        // Action dependency - must come from embedded FS
         recipe, err := l.loadFromEmbedded(name)
         if err != nil {
             return nil, fmt.Errorf(
-                "action dependency %q requires embedded recipe, but not found in embedded registry: %w",
+                "action dependency %q requires embedded recipe, but not found in embedded registry: %w\n"+
+                "To fix: ensure recipe exists in internal/recipe/recipes/",
                 name, err,
             )
         }
         return recipe, nil
     }
 
-    // Normal priority chain for non-action-dep or when flag not set
+    // Normal priority chain (target recipe or recipe-level deps)
     return l.loadWithPriorityChain(name)
+}
+```
+
+### Step 1b: Propagate Flag Through Resolver
+
+Modify `internal/actions/resolver.go` to use `RequireEmbedded` when loading action dependencies:
+
+```go
+type ResolveOptions struct {
+    RequireEmbedded bool // CLI flag: --require-embedded
+}
+
+func (r *Resolver) ResolveDependencies(recipe *Recipe, opts ResolveOptions) (ResolvedDeps, error) {
+    var result ResolvedDeps
+
+    for _, step := range recipe.Steps {
+        // Get action's declared dependencies
+        actionDeps := GetActionDeps(step.Action)
+
+        // Load each action dependency
+        for _, depName := range actionDeps.InstallTime {
+            // Action deps use RequireEmbedded when flag is set
+            depRecipe, err := r.loader.LoadRecipe(depName, LoaderOptions{
+                RequireEmbedded: opts.RequireEmbedded,
+            })
+            if err != nil {
+                return result, fmt.Errorf("action %s dependency %s: %w", step.Action, depName, err)
+            }
+
+            // Transitive deps of action deps also require embedded
+            transitiveDeps, err := r.resolveTransitive(depRecipe, opts.RequireEmbedded)
+            if err != nil {
+                return result, err
+            }
+            result.AddAll(transitiveDeps)
+        }
+    }
+
+    // Recipe-level dependencies (from metadata) do NOT require embedded
+    // They load via normal priority chain regardless of flag
+    for _, depName := range recipe.Metadata.Dependencies {
+        depRecipe, err := r.loader.LoadRecipe(depName, LoaderOptions{
+            RequireEmbedded: false, // Always normal loading for recipe-level deps
+        })
+        // ...
+    }
+
+    return result, nil
 }
 ```
 
