@@ -55,6 +55,13 @@ func (sm *StateManager) SetLibraryChecksums(libName, libVersion string, checksum
 	})
 }
 
+// SetLibrarySonames sets the auto-discovered sonames for a library version
+func (sm *StateManager) SetLibrarySonames(libName, libVersion string, sonames []string) error {
+	return sm.UpdateLibrary(libName, libVersion, func(ls *LibraryVersionState) {
+		ls.Sonames = sonames
+	})
+}
+
 // RemoveLibraryUsedBy removes a dependent tool from the UsedBy list for a library version
 func (sm *StateManager) RemoveLibraryUsedBy(libName, libVersion, toolNameVersion string) error {
 	return sm.UpdateLibrary(libName, libVersion, func(ls *LibraryVersionState) {
