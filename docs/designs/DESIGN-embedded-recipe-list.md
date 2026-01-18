@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: The recipe registry separation design requires a validated embedded recipe list, but there's no runtime enforcement that action dependencies can actually be resolved from embedded recipes.
 decision: Add a --require-embedded flag to the loader that fails if action dependencies can't be resolved from the embedded registry. Use CI with this flag to iteratively discover and validate the embedded recipe list.
 rationale: Runtime validation is the ground truth - it uses the actual loader to verify embedded recipes work. This enables incremental migration with an exclusions file to track known gaps, rather than building a separate static analysis tool.
@@ -9,7 +9,7 @@ rationale: Runtime validation is the ground truth - it uses the actual loader to
 
 ## Status
 
-**Proposed**
+**Accepted**
 
 ## Upstream Design Reference
 
