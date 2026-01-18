@@ -139,70 +139,14 @@ func TestMergeDeps(t *testing.T) {
 	}
 }
 
-func TestGetInstallGuide(t *testing.T) {
-	tests := []struct {
-		name     string
-		params   map[string]interface{}
-		expected string
-	}{
-		{
-			name:     "nil params",
-			params:   nil,
-			expected: "",
-		},
-		{
-			name:     "no install_guide key",
-			params:   map[string]interface{}{"command": "docker"},
-			expected: "",
-		},
-		{
-			name: "has platform-specific guide",
-			params: map[string]interface{}{
-				"install_guide": map[string]string{
-					"linux":    "apt install docker",
-					"darwin":   "brew install docker",
-					"fallback": "see docs",
-				},
-			},
-			expected: "apt install docker", // Assuming tests run on linux
-		},
-		{
-			name: "fallback when platform not found",
-			params: map[string]interface{}{
-				"install_guide": map[string]string{
-					"windows":  "choco install docker",
-					"fallback": "see docs",
-				},
-			},
-			expected: "see docs",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := getInstallGuide(tt.params)
-			// Note: This test may be platform-dependent
-			if tt.name == "has platform-specific guide" {
-				// Just check it's not empty
-				if result == "" {
-					t.Errorf("getInstallGuide() returned empty, expected non-empty")
-				}
-			} else if result != tt.expected {
-				t.Errorf("getInstallGuide() = %q, want %q", result, tt.expected)
-			}
-		})
-	}
-}
-
 func TestDepStatus(t *testing.T) {
 	// Test DepStatus struct creation
 	status := DepStatus{
-		Name:         "docker",
-		Type:         "system-required",
-		Status:       "installed",
-		Version:      "24.0.0",
-		Required:     "20.0.0",
-		InstallGuide: "apt install docker",
+		Name:     "docker",
+		Type:     "system-required",
+		Status:   "installed",
+		Version:  "24.0.0",
+		Required: "20.0.0",
 	}
 
 	if status.Name != "docker" {
