@@ -10,6 +10,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
+	"github.com/tsukumogami/tsuku/internal/verify"
 )
 
 // installLibrary handles installation of library recipes
@@ -140,6 +141,18 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 
 	if err := mgr.InstallLibrary(libName, version, exec.WorkDir(), opts); err != nil {
 		return fmt.Errorf("failed to install library to permanent location: %w", err)
+	}
+
+	// Extract and store sonames for Tier 2 dependency validation
+	// Errors are logged as warnings but do not fail installation
+	libDir := mgr.LibDir(libName, version)
+	sonames, sonameErr := verify.ExtractSonames(libDir)
+	if sonameErr != nil {
+		fmt.Printf("   Warning: failed to extract sonames: %v\n", sonameErr)
+	} else if len(sonames) > 0 {
+		if err := mgr.GetState().SetLibrarySonames(libName, version, sonames); err != nil {
+			fmt.Printf("   Warning: failed to store sonames: %v\n", err)
+		}
 	}
 
 	// Send telemetry event
