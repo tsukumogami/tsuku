@@ -72,6 +72,7 @@ func extractConstraintsFromDependency(dep *DependencyPlan, constraints *actions.
 
 // extractPipConstraintsFromSteps extracts pip constraints from pip_exec steps.
 func extractPipConstraintsFromSteps(steps []ResolvedStep, constraints *actions.EvalConstraints) {
+	firstPipExec := true
 	for _, step := range steps {
 		if step.Action != "pip_exec" {
 			continue
@@ -82,7 +83,18 @@ func extractPipConstraintsFromSteps(steps []ResolvedStep, constraints *actions.E
 			continue
 		}
 
-		// Parse locked_requirements and add to constraints
+		// Store full requirements string and has_native_addons (first one wins)
+		if constraints.PipRequirements == "" {
+			constraints.PipRequirements = lockedReqs
+		}
+		if firstPipExec {
+			if hasNative, ok := step.Params["has_native_addons"].(bool); ok {
+				constraints.PipHasNativeAddons = hasNative
+			}
+			firstPipExec = false
+		}
+
+		// Also parse and store versions for lookup
 		parsed := ParsePipRequirements(lockedReqs)
 		for pkg, ver := range parsed {
 			constraints.PipConstraints[pkg] = ver
@@ -125,6 +137,11 @@ func normalizePackageName(name string) string {
 // HasPipConstraints returns true if the constraints contain pip package versions.
 func HasPipConstraints(constraints *actions.EvalConstraints) bool {
 	return constraints != nil && len(constraints.PipConstraints) > 0
+}
+
+// HasPipRequirementsConstraint returns true if the constraints contain pip requirements.
+func HasPipRequirementsConstraint(constraints *actions.EvalConstraints) bool {
+	return constraints != nil && constraints.PipRequirements != ""
 }
 
 // GetPipConstraint returns the version constraint for a package, if any.

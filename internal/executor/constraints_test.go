@@ -60,6 +60,30 @@ mypy-extensions==1.1.0 \
 			t.Errorf("Package %q: expected version %q, got %q", pkg, ver, got)
 		}
 	}
+
+	// Verify the full requirements string (with hashes) is stored
+	if constraints.PipRequirements == "" {
+		t.Error("Expected PipRequirements to be non-empty")
+	}
+	// Verify the hash is preserved in the requirements
+	if !containsHash(constraints.PipRequirements, "6bef30dd59ee2f3cead8676fb20b02eb61e2a62242e1687bb487d83b4f2c4f5d") {
+		t.Error("PipRequirements should contain the original hash")
+	}
+}
+
+// containsHash checks if the requirements string contains a specific SHA256 hash
+func containsHash(requirements, hash string) bool {
+	return len(requirements) > 0 && len(hash) > 0 &&
+		(len(requirements) >= len(hash) && containsSubstring(requirements, hash))
+}
+
+func containsSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
 
 func TestExtractConstraints_EmptyPlan(t *testing.T) {
@@ -321,6 +345,51 @@ func TestHasPipConstraints(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			result := HasPipConstraints(tt.constraints)
+			if result != tt.expected {
+				t.Errorf("Expected %v, got %v", tt.expected, result)
+			}
+		})
+	}
+}
+
+func TestHasPipRequirementsConstraint(t *testing.T) {
+	tests := []struct {
+		name        string
+		constraints *actions.EvalConstraints
+		expected    bool
+	}{
+		{
+			name:        "nil constraints",
+			constraints: nil,
+			expected:    false,
+		},
+		{
+			name: "empty pip requirements",
+			constraints: &actions.EvalConstraints{
+				PipRequirements: "",
+			},
+			expected: false,
+		},
+		{
+			name: "with pip requirements",
+			constraints: &actions.EvalConstraints{
+				PipRequirements: "flask==2.3.0 \\\n    --hash=sha256:abc123\n",
+			},
+			expected: true,
+		},
+		{
+			name: "with pip constraints but no requirements",
+			constraints: &actions.EvalConstraints{
+				PipConstraints:  map[string]string{"flask": "2.3.0"},
+				PipRequirements: "",
+			},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := HasPipRequirementsConstraint(tt.constraints)
 			if result != tt.expected {
 				t.Errorf("Expected %v, got %v", tt.expected, result)
 			}

@@ -61,7 +61,18 @@ type EvalConstraints struct {
 	// PipConstraints maps package names to pinned versions.
 	// Extracted from locked_requirements in pip_exec steps.
 	// Keys are normalized package names (lowercase, hyphens).
+	// Used for version lookups by GetPipConstraint.
 	PipConstraints map[string]string
+
+	// PipRequirements contains the full locked_requirements string.
+	// Extracted from pip_exec steps in golden files.
+	// Used during constrained evaluation to preserve hashes.
+	PipRequirements string
+
+	// PipHasNativeAddons indicates whether the pip package has native extensions.
+	// Extracted from has_native_addons param in pip_exec steps.
+	// Used during constrained evaluation to preserve the original detection result.
+	PipHasNativeAddons bool
 
 	// GoSum contains the full go.sum content for go_build steps.
 	// Extracted from go_sum param in golden files.
