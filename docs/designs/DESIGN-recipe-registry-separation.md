@@ -1,7 +1,7 @@
 ---
 status: Proposed
 problem: All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
-decision: Separate recipes into embedded (in binary) and contrib (registry-fetched) based on directory location. Store contrib golden files in Cloudflare R2 for scalability.
+decision: Separate recipes into embedded (in binary) and registry (registry-fetched) based on directory location. Store registry golden files in Cloudflare R2 for scalability.
 rationale: Location-based categorization is simplest. R2 storage scales to 10K+ recipes without git bloat. testdata/recipes/ ensures integration tests work reliably.
 ---
 
@@ -20,18 +20,18 @@ As tsuku matures, this approach creates problems:
 1. **Binary bloat**: Every recipe adds to binary size, regardless of whether users need it
 2. **Update coupling**: Recipe improvements require a new CLI release
 3. **CI burden**: All recipes receive the same testing rigor, even rarely-used ones
-4. **Maintenance friction**: Contributors must rebuild the CLI to test recipe changes
+4. **Maintenance friction**: Registryutors must rebuild the CLI to test recipe changes
 
 However, the CLI depends on certain recipes to function. Actions like `go_install`, `cargo_build`, and `homebrew` require tools (Go, Rust, patchelf) that tsuku itself must install. These recipes must remain embedded to ensure tsuku can bootstrap its own dependencies.
 
 ### Scope
 
 **In scope:**
-- Defining criteria for embedded vs contrib recipes
-- Moving contrib recipes to `recipes/` directory at repo root
-- Updating the loader to fetch contrib recipes from registry
+- Defining criteria for embedded vs registry recipes
+- Moving registry recipes to `recipes/` directory at repo root
+- Updating the loader to fetch registry recipes from registry
 - Restructuring CI to differentiate testing levels
-- Updating golden file testing strategy for contrib recipes
+- Updating golden file testing strategy for registry recipes
 
 **Out of scope:**
 - Version pinning or lockfile features
@@ -43,10 +43,10 @@ However, the CLI depends on certain recipes to function. Actions like `go_instal
 
 - **Bootstrap reliability**: CLI must always install action dependencies without network access to recipe registry
 - **Binary size**: Smaller binaries mean faster downloads and less disk usage
-- **Recipe agility**: Contrib recipes should update without waiting for CLI releases
-- **CI efficiency**: Embedded recipes warrant exhaustive testing; contrib recipes need lighter validation
+- **Recipe agility**: Registry recipes should update without waiting for CLI releases
+- **CI efficiency**: Embedded recipes warrant exhaustive testing; registry recipes need lighter validation
 - **Backwards compatibility**: Existing workflows must continue working
-- **Contributor experience**: Recipe development shouldn't require rebuilding the CLI
+- **Registryutor experience**: Recipe development shouldn't require rebuilding the CLI
 
 ## Implementation Context
 
@@ -120,7 +120,7 @@ Tsuku uses four complementary workflows that trigger under different conditions:
 - Tests: Changed golden files only
 - Actions: Runs `tsuku install --plan <golden-file>` to verify installation
 
-**Key insight:** Only code changes trigger full recipe validation. Recipe changes only test the changed recipe. This means a contrib recipe can break without CI catching it if the breakage comes from external factors (download URL changes, version drift).
+**Key insight:** Only code changes trigger full recipe validation. Recipe changes only test the changed recipe. This means a registry recipe can break without CI catching it if the breakage comes from external factors (download URL changes, version drift).
 
 **Integration testing (`test.yml` via `test-matrix.json`):**
 
@@ -140,7 +140,7 @@ These tests ensure specific actions work (npm_install, cargo_install, gem_instal
 - **Tier 4**: tap, cask (macOS-specific)
 - **Tier 5**: npm_install, pipx_install, cargo_install, gem_install, cpan_install, go_install (using recipes like netlify-cli, ruff, cargo-audit, bundler, ack, gofumpt)
 
-**Important:** Tier 5 recipes (netlify-cli, cargo-audit, bundler, etc.) test action implementations but are NOT action dependencies. After separation, these could become contrib recipes, but integration tests still need them available.
+**Important:** Tier 5 recipes (netlify-cli, cargo-audit, bundler, etc.) test action implementations but are NOT action dependencies. After separation, these could become registry recipes, but integration tests still need them available.
 
 **Three exclusion files:**
 - `exclusions.json`: Platform-specific exclusions (~50 entries) - "can't generate golden file for this platform"
@@ -165,7 +165,7 @@ embedded = true
 
 **Pros:**
 - Simple, explicit, easy to understand
-- Contributors can see and reason about embedding status
+- Registryutors can see and reason about embedding status
 - No magic or implicit behavior
 
 **Cons:**
@@ -191,7 +191,7 @@ Build-time script analyzes action implementations, extracts `Dependencies()` ret
 
 Compute the set automatically, but allow explicit overrides via metadata:
 - `embedded = true` forces a recipe to be embedded
-- `embedded = false` forces a recipe to be contrib (override computed status)
+- `embedded = false` forces a recipe to be registry (override computed status)
 
 **Pros:**
 - Best of both approaches
@@ -204,12 +204,12 @@ Compute the set automatically, but allow explicit overrides via metadata:
 
 ### Decision 2: Directory Structure
 
-Where do embedded and contrib recipes live?
+Where do embedded and registry recipes live?
 
 #### Option 2A: Current Location Split
 
 - Embedded: `internal/recipe/recipes/` (unchanged, embedded)
-- Contrib: `recipes/` at repo root (new, not embedded)
+- Registry: `recipes/` at repo root (new, not embedded)
 
 **Pros:**
 - Minimal changes to existing embed directive
@@ -217,7 +217,7 @@ Where do embedded and contrib recipes live?
 - `recipes/` matches monorepo documentation
 
 **Cons:**
-- Moving a recipe from contrib to embedded requires moving files
+- Moving a recipe from registry to embedded requires moving files
 - Creates a boundary that needs clear criteria for when recipes should move
 
 #### Option 2B: Single Directory with Build Filter
@@ -236,7 +236,7 @@ All recipes in `recipes/`. Build process filters which to embed based on compute
 
 ### Decision 3: Testing Strategy
 
-How should testing differ between embedded and contrib recipes?
+How should testing differ between embedded and registry recipes?
 
 **Current behavior reminder:**
 - Recipe changes: Only that recipe is tested (plan + execution)
@@ -245,45 +245,45 @@ How should testing differ between embedded and contrib recipes?
 
 The question is: what should change when we split recipes into categories?
 
-#### Option 3A: Broader Triggers for Embedded, Unchanged for Contrib
+#### Option 3A: Broader Triggers for Embedded, Unchanged for Registry
 
-Embedded recipes get tested whenever ANY embedded recipe OR plan-critical code changes. Contrib recipes keep current behavior (only tested when that recipe changes).
+Embedded recipes get tested whenever ANY embedded recipe OR plan-critical code changes. Registry recipes keep current behavior (only tested when that recipe changes).
 
 **Pros:**
 - Embedded recipes are always validated together as a unit
-- Contrib recipe PRs stay fast
-- No change to contrib recipe testing on their own PRs
+- Registry recipe PRs stay fast
+- No change to registry recipe testing on their own PRs
 
 **Cons:**
 - Defining which code affects which recipe category adds complexity
-- Doesn't address contrib recipe drift (broken by external factors)
+- Doesn't address registry recipe drift (broken by external factors)
 
 #### Option 3B: Current Triggers, Split Execution Scope
 
 Keep current triggers, but when code changes occur:
 - Embedded recipes: Full execution validation (plan + install)
-- Contrib recipes: Plan validation only (no execution)
+- Registry recipes: Plan validation only (no execution)
 
 **Pros:**
 - Same trigger logic, just different execution scope
 - Embedded recipes always fully validated
-- Contrib recipes still get plan validation on code changes
+- Registry recipes still get plan validation on code changes
 
 **Cons:**
-- Contrib recipes may have broken downloads undetected
-- Still runs plan validation for all 150+ contrib recipes on code changes
+- Registry recipes may have broken downloads undetected
+- Still runs plan validation for all 150+ registry recipes on code changes
 
-#### Option 3C: Split Golden Files with Nightly Contrib Execution
+#### Option 3C: Split Golden Files with Nightly Registry Execution
 
-Split golden file directories by category. On code changes, only validate embedded recipes. Contrib recipes validated only when changed, with nightly full execution run.
+Split golden file directories by category. On code changes, only validate embedded recipes. Registry recipes validated only when changed, with nightly full execution run.
 
 **Pros:**
-- Code changes run much faster (15-20 embedded vs 150+ contrib)
-- Contrib recipe changes still tested (plan + execution)
+- Code changes run much faster (15-20 embedded vs 150+ registry)
+- Registry recipe changes still tested (plan + execution)
 - Nightly catches external breakage within 24 hours
 
 **Cons:**
-- Contrib recipe breakage from code changes not caught until nightly
+- Registry recipe breakage from code changes not caught until nightly
 - Requires splitting golden file directory structure
 - More complex CI workflow logic
 
@@ -312,7 +312,7 @@ Create test-specific recipe variants in `testdata/recipes/` that are always embe
 **Pros:**
 - Clean separation of concerns
 - Test recipes can be simplified versions
-- Production recipes can move to contrib
+- Production recipes can move to registry
 - Already have precedent (waypoint-tap uses testdata/recipes/)
 
 **Cons:**
@@ -320,13 +320,13 @@ Create test-specific recipe variants in `testdata/recipes/` that are always embe
 - Test recipes could drift from production
 - More complex recipe structure
 
-#### Option 4C: Ensure test.yml Fetches Contrib Recipes
+#### Option 4C: Ensure test.yml Fetches Registry Recipes
 
-Update test.yml to fetch contrib recipes before running integration tests, ensuring they're available regardless of embedding.
+Update test.yml to fetch registry recipes before running integration tests, ensuring they're available regardless of embedding.
 
 **Pros:**
 - Clean separation: embedded = action dependencies only
-- Integration tests work with contrib recipes
+- Integration tests work with registry recipes
 - No recipe duplication
 
 **Cons:**
@@ -340,35 +340,35 @@ Update test.yml to fetch contrib recipes before running integration tests, ensur
 |--------|--------------|--------------|-------------|
 | Bootstrap reliability | Fair | Good | Good |
 | Maintenance burden | Poor | Good | Good |
-| Contributor clarity | Good | Poor | Fair |
+| Registryutor clarity | Good | Poor | Fair |
 
 | Driver | 2A (Split Dirs) | 2B (Build Filter) |
 |--------|-----------------|-------------------|
-| Contributor clarity | Good | Fair |
+| Registryutor clarity | Good | Fair |
 | Build complexity | Good | Poor |
 | Migration ease | Good | Fair |
 
 | Driver | 3A (Broader Triggers) | 3B (Split Execution) | 3C (Split Golden + Nightly) |
 |--------|----------------------|---------------------|------------------------------|
 | CI efficiency | Fair | Fair | Good |
-| Regression detection | Good (embedded) / Poor (contrib) | Good (embedded) / Fair (contrib) | Good (embedded) / Fair (contrib) |
+| Regression detection | Good (embedded) / Poor (registry) | Good (embedded) / Fair (registry) | Good (embedded) / Fair (registry) |
 | Simplicity | Poor | Good | Fair |
 
-| Driver | 4A (Keep Test Embedded) | 4B (testdata/recipes) | 4C (Fetch Contrib) |
+| Driver | 4A (Keep Test Embedded) | 4B (testdata/recipes) | 4C (Fetch Registry) |
 |--------|------------------------|----------------------|---------------------|
 | CI reliability | Good | Good | Fair |
 | Maintenance burden | Fair | Poor | Good |
 | Separation of concerns | Poor | Good | Good |
 
-### Decision 5: Contrib Golden File Storage
+### Decision 5: Registry Golden File Storage
 
-At 10K contrib recipes with ~2.4 golden files each (~24K files, ~380MB), storing golden files in git creates unsustainable repo bloat. Git history compounds this - every version bump changes URLs/checksums.
+At 10K registry recipes with ~2.4 golden files each (~24K files, ~380MB), storing golden files in git creates unsustainable repo bloat. Git history compounds this - every version bump changes URLs/checksums.
 
 However, golden files can't be reduced to hashes alone: the `--pin-from` flag requires the full previous plan to extract ecosystem-specific lock information for deterministic regeneration.
 
 #### Option 5A: Full Golden Files in Git
 
-Store all contrib golden files in `testdata/golden/plans/contrib/` like embedded recipes.
+Store all registry golden files in `testdata/golden/plans/registry/` like embedded recipes.
 
 **Pros:**
 - Simple, consistent with embedded recipes
@@ -381,7 +381,7 @@ Store all contrib golden files in `testdata/golden/plans/contrib/` like embedded
 
 #### Option 5B: External Storage (Cloudflare R2)
 
-Store contrib golden files in Cloudflare R2. Only latest version, no history.
+Store registry golden files in Cloudflare R2. Only latest version, no history.
 
 **Pros:**
 - Scales to 10K+ recipes without repo bloat
@@ -394,7 +394,7 @@ Store contrib golden files in Cloudflare R2. Only latest version, no history.
 - Needs upload/download workflow
 - Requires its own tactical design
 
-#### Option 5C: No Golden Files for Contrib
+#### Option 5C: No Golden Files for Registry
 
 Only validate "plan generation succeeds", not "plan matches expectation".
 
@@ -405,7 +405,7 @@ Only validate "plan generation succeeds", not "plan matches expectation".
 **Cons:**
 - Can't detect plan generation regressions
 - Loses determinism validation
-- Lower quality assurance for contrib recipes
+- Lower quality assurance for registry recipes
 
 | Driver | 5A (Git Storage) | 5B (R2 External) | 5C (No Golden) |
 |--------|-----------------|------------------|----------------|
@@ -419,17 +419,17 @@ Only validate "plan generation succeeds", not "plan matches expectation".
 ### Uncertainties
 
 - **Binary size impact**: The 15-20 estimate needs validation. Implementation should measure baseline binary size and compare after separation.
-- **Version drift**: How do we handle contrib recipe updates that conflict with installed versions?
+- **Version drift**: How do we handle registry recipe updates that conflict with installed versions?
 
 ### Review Feedback Integration
 
 Based on reviews from Release, DevOps, Platform, and DX engineers, the following gaps were identified and decisions made:
 
-**Gap 1: Contrib Recipe Breakage Detection (24-Hour Blind Spot)**
+**Gap 1: Registry Recipe Breakage Detection (24-Hour Blind Spot)**
 
-All reviewers flagged that code changes could break contrib recipes without detection until nightly runs.
+All reviewers flagged that code changes could break registry recipes without detection until nightly runs.
 
-**Decision:** Contrib recipe PRs MUST pass execution validation before merge, not just plan validation. Nightly runs are for catching *external* drift (URL changes, version rot), not *internal* breakage from code changes.
+**Decision:** Registry recipe PRs MUST pass execution validation before merge, not just plan validation. Nightly runs are for catching *external* drift (URL changes, version rot), not *internal* breakage from code changes.
 
 **Gap 2: Network Failure Handling Undefined**
 
@@ -463,13 +463,29 @@ No limits on `$TSUKU_HOME/registry/` growth.
 
 **Decision:** Implement LRU cache with 500MB default limit. Add `tsuku cache-cleanup` subcommand. Warn when approaching limit.
 
+**Gap 6: Error Messages Undefined**
+
+Product and DevRel reviewers flagged that network failure error messages are unspecified. First impressions during failures determine whether users file helpful reports or abandon the tool.
+
+**Decision:** Implementation issues MUST include error message templates for all failure modes:
+
+| Failure Mode | Required Message Template |
+|--------------|--------------------------|
+| Network timeout, no cache | "Could not reach recipe registry. Check your internet connection." |
+| Recipe doesn't exist | "No recipe found for '{name}'. Run `tsuku search {name}` to find similar recipes." |
+| GitHub rate limited | "Recipe registry temporarily unavailable (rate limited). Try again in a few minutes." |
+| Stale cache used | "Using cached recipe (last updated {X} hours ago). Run `tsuku update-registry` to refresh." |
+| Recipe parse error | "Recipe '{name}' has syntax errors. This has been reported to maintainers." |
+
+Each implementation issue touching user-facing errors must specify the exact message text.
+
 ## Decision Outcome
 
-**Chosen: Location-based categorization (2A) + Split golden files with nightly contrib execution (3C) + testdata/recipes for integration tests (4B) + Cloudflare R2 for contrib golden files (5B)**
+**Chosen: Location-based categorization (2A) + Split golden files with nightly registry execution (3C) + testdata/recipes for integration tests (4B) + Cloudflare R2 for registry golden files (5B)**
 
 ### Summary
 
-Recipe category is determined by directory location: `internal/recipe/recipes/` = embedded, `recipes/` = contrib (fetched from registry). Embedded golden files stay in git; contrib golden files are stored in Cloudflare R2 (no history, just latest). Code changes only validate embedded recipes. Contrib recipes are fully tested when changed, with nightly runs catching external breakage. Integration tests use `testdata/recipes/` for feature coverage recipes that aren't action dependencies.
+Recipe category is determined by directory location: `internal/recipe/recipes/` = embedded, `recipes/` = registry (fetched from registry). Embedded golden files stay in git; registry golden files are stored in Cloudflare R2 (no history, just latest). Code changes only validate embedded recipes. Registry recipes are fully tested when changed, with nightly runs catching external breakage. Integration tests use `testdata/recipes/` for feature coverage recipes that aren't action dependencies.
 
 ### Rationale
 
@@ -481,9 +497,9 @@ Recipe category is determined by directory location: `internal/recipe/recipes/` 
 
 **Split golden files + nightly testing (3C) chosen because:**
 - **CI efficiency**: Code changes only validate 15-20 embedded recipes instead of 170+
-- **Contrib recipes still fully tested when changed**: Plan validation AND execution on that recipe's PR
+- **Registry recipes still fully tested when changed**: Plan validation AND execution on that recipe's PR
 - **Nightly catches external drift**: Download URL changes, version drift detected within 24 hours
-- **Clear trigger logic**: Embedded = always validated on code changes; Contrib = validated on their own changes + nightly
+- **Clear trigger logic**: Embedded = always validated on code changes; Registry = validated on their own changes + nightly
 
 **testdata/recipes for integration tests (4B) chosen because:**
 - **Clean separation**: Embedded recipes = action dependencies; test recipes = feature coverage
@@ -491,7 +507,7 @@ Recipe category is determined by directory location: `internal/recipe/recipes/` 
 - **CI reliability**: Test recipes are embedded, no network dependency for integration tests
 - **Independent evolution**: Test recipes can be simplified versions focused on CI speed
 
-**Cloudflare R2 for contrib golden files (5B) chosen because:**
+**Cloudflare R2 for registry golden files (5B) chosen because:**
 - **Scalability**: Supports 10K+ recipes without git repo bloat
 - **Existing infrastructure**: Already have Cloudflare for telemetry worker
 - **Cost effective**: 10GB free tier covers initial scale, cheap beyond
@@ -501,12 +517,12 @@ Recipe category is determined by directory location: `internal/recipe/recipes/` 
 
 - **1A (Explicit metadata)**: Adds manual maintenance burden with risk of forgetting transitive dependencies
 - **1B/1C (Computed from dependencies)**: Complex build process, harder to predict results, requires fixing Dependencies() infrastructure gaps (#644)
-- **3A (Broader triggers)**: Doesn't address contrib recipe drift; adds complexity defining code-recipe relationships
-- **3B (Split execution)**: Still validates all 150+ contrib recipes on code changes, slow CI
+- **3A (Broader triggers)**: Doesn't address registry recipe drift; adds complexity defining code-recipe relationships
+- **3B (Split execution)**: Still validates all 150+ registry recipes on code changes, slow CI
 - **4A (Keep test recipes embedded)**: Inflates embedded count, blurs the "action dependency" definition
-- **4C (Fetch contrib)**: Makes integration tests depend on registry availability
-- **5A (Git storage for contrib golden files)**: ~380MB for 10K recipes plus history overhead, doesn't scale
-- **5C (No golden files for contrib)**: Loses plan generation regression detection, lower quality assurance
+- **4C (Fetch registry)**: Makes integration tests depend on registry availability
+- **5A (Git storage for registry golden files)**: ~380MB for 10K recipes plus history overhead, doesn't scale
+- **5C (No golden files for registry)**: Loses plan generation regression detection, lower quality assurance
 
 ### Trade-offs Accepted
 
@@ -515,8 +531,8 @@ By choosing location-based categorization:
 - Embedded recipe list isn't automatically updated when action dependencies change (accepted: embedded recipes change rarely, manual review is appropriate)
 
 By choosing split golden files + nightly:
-- Contrib recipe breakage from code changes not caught until nightly (accepted: code changes rarely break contrib recipes, and nightly catches it)
-- Contrib recipe issues from external factors (URL changes) may go undetected for up to 24 hours (accepted: faster contributor feedback is worth this tradeoff)
+- Registry recipe breakage from code changes not caught until nightly (accepted: code changes rarely break registry recipes, and nightly catches it)
+- Registry recipe issues from external factors (URL changes) may go undetected for up to 24 hours (accepted: faster contributor feedback is worth this tradeoff)
 - Requires splitting golden file directories and updating workflow triggers (accepted: one-time migration cost)
 
 By choosing testdata/recipes for integration tests:
@@ -524,7 +540,7 @@ By choosing testdata/recipes for integration tests:
 - Two copies of some recipes (accepted: test versions are simplified, clear ownership boundary)
 - More complex recipe structure to understand (accepted: well-documented in CONTRIBUTING.md)
 
-By choosing Cloudflare R2 for contrib golden files:
+By choosing Cloudflare R2 for registry golden files:
 - External dependency for CI validation (accepted: Cloudflare has high availability, fallback to skip validation on outage)
 - No git history for golden file changes (accepted: history not needed, only latest matters for validation)
 - Requires separate tactical design for implementation (accepted: complexity warrants dedicated design)
@@ -535,7 +551,7 @@ By choosing Cloudflare R2 for contrib golden files:
 
 The solution separates recipes into two directory locations:
 - **Embedded recipes**: `internal/recipe/recipes/` (embedded via `//go:embed`)
-- **Contrib recipes**: `recipes/` at repo root (fetched from GitHub registry)
+- **Registry recipes**: `recipes/` at repo root (fetched from GitHub registry)
 
 The loader's existing priority chain handles this naturally. No code changes are needed for the basic fetch mechanism - the separation is purely organizational.
 
@@ -551,7 +567,7 @@ tsuku/
 │           ├── r/rust.toml
 │           ├── n/nodejs.toml
 │           └── ...
-├── recipes/                     # Contrib recipes (~150)
+├── recipes/                     # Registry recipes (~150)
 │   ├── a/actionlint.toml
 │   ├── f/fzf.toml
 │   └── ...
@@ -569,20 +585,20 @@ tsuku/
         │   └── embedded/        # Golden files for embedded recipes (in git)
         └── exclusions.json      # Updated with category awareness
 
-# Contrib golden files stored externally:
+# Registry golden files stored externally:
 # Cloudflare R2: tsuku-golden-files bucket
-#   └── contrib/
+#   └── registry/
 #       └── {letter}/{recipe}/{version}-{platform}.json
 ```
 
 **Three recipe locations:**
 1. `internal/recipe/recipes/` - Embedded (action dependencies)
-2. `recipes/` - Contrib (production), fetched from registry
+2. `recipes/` - Registry (production), fetched from registry
 3. `testdata/recipes/` - Integration test recipes, embedded for CI reliability
 
 **Two golden file locations:**
 1. `testdata/golden/plans/embedded/` - In git, versioned
-2. Cloudflare R2 bucket - Contrib golden files, latest only, no history
+2. Cloudflare R2 bucket - Registry golden files, latest only, no history
 
 ### Loader Behavior
 
@@ -595,7 +611,7 @@ User requests recipe "fzf"
     ↓
 2. Check local recipes ($TSUKU_HOME/recipes/fzf.toml) → miss
     ↓
-3. Check embedded recipes (internal/recipe/recipes/) → miss (fzf is contrib)
+3. Check embedded recipes (internal/recipe/recipes/) → miss (fzf is registry)
     ↓
 4. Fetch from registry (GitHub raw URL) → found
     ↓
@@ -617,7 +633,7 @@ User requests recipe "go"
 
 ### Registry URL Structure
 
-Contrib recipes are fetched from GitHub raw URLs:
+Registry recipes are fetched from GitHub raw URLs:
 ```
 https://raw.githubusercontent.com/tsukumogami/tsuku/main/recipes/{letter}/{name}.toml
 ```
@@ -636,7 +652,7 @@ testdata/golden/plans/
 │   ├── g/go/
 │   ├── r/rust/
 │   └── ...
-└── contrib/          # Plan-only validation (nightly execution)
+└── registry/          # Plan-only validation (nightly execution)
     ├── a/actionlint/
     ├── f/fzf/
     └── ...
@@ -656,7 +672,7 @@ testdata/golden/plans/
 
 1. **test-changed-recipes.yml** - Update path triggers:
    - Currently: `internal/recipe/recipes/**/*.toml`
-   - Add: `recipes/**/*.toml` (contrib recipes)
+   - Add: `recipes/**/*.toml` (registry recipes)
    - Behavior unchanged: tests changed recipes on their PRs
 
 2. **validate-golden-recipes.yml** - Update path triggers:
@@ -667,30 +683,30 @@ testdata/golden/plans/
 3. **validate-golden-code.yml** - Scope reduction (key change):
    - Currently: Validates ALL golden files when code changes
    - Change to: Only validate `testdata/golden/plans/embedded/**`
-   - Rationale: Code changes rarely break contrib recipes; nightly catches any drift
+   - Rationale: Code changes rarely break registry recipes; nightly catches any drift
 
 4. **validate-golden-execution.yml** - No change needed:
    - Already only executes changed golden files
    - Will naturally work with split directory structure
 
-5. **nightly-contrib-validation.yml** (new):
+5. **nightly-registry-validation.yml** (new):
    - Cron: Daily at 2 AM UTC
-   - Scope: All contrib recipes (`testdata/golden/plans/contrib/**`)
+   - Scope: All registry recipes (`testdata/golden/plans/registry/**`)
    - Actions: Full plan validation + execution
    - Reporting: Creates GitHub issue on failure
 
 **Testing behavior by scenario:**
 
-| Scenario | Embedded Recipes | Contrib Recipes |
+| Scenario | Embedded Recipes | Registry Recipes |
 |----------|------------------|-------------------|
 | Recipe file changes | Plan + Execution | Plan + Execution (required for merge) |
 | Plan-critical code changes (35 files) | Plan validation | Not tested (caught by nightly) |
 | Golden file changes | Execution | Execution |
 | Nightly run | Not included | Full validation + Execution (external drift detection) |
 
-**Important (from review feedback):** Contrib recipe PRs MUST pass execution validation before merge, not just plan validation. This closes the "24-hour blind spot" where broken recipes could merge and affect users before nightly detection.
+**Important (from review feedback):** Registry recipe PRs MUST pass execution validation before merge, not just plan validation. This closes the "24-hour blind spot" where broken recipes could merge and affect users before nightly detection.
 
-**Nightly purpose clarified:** Nightly runs catch *external* drift (URL changes, version rot, upstream breakage) - not internal breakage from code changes. If a contrib recipe breaks from a code change, the recipe maintainer should add that recipe to their PR's test scope.
+**Nightly purpose clarified:** Nightly runs catch *external* drift (URL changes, version rot, upstream breakage) - not internal breakage from code changes. If a registry recipe breaks from a code change, the recipe maintainer should add that recipe to their PR's test scope.
 
 ## Implementation Approach
 
@@ -716,7 +732,7 @@ testdata/golden/plans/
 
 ### Stage 1: Recipe Migration
 
-**Goal:** Move contrib recipes to `recipes/` directory.
+**Goal:** Move registry recipes to `recipes/` directory.
 
 **Steps:**
 1. Identify embedded recipes (action dependencies + transitive deps)
@@ -724,11 +740,11 @@ testdata/golden/plans/
 3. Update embed directive if needed (should work unchanged)
 4. Update registry URL in `internal/registry/registry.go`
 
-**Validation:** All existing tests pass. `tsuku install <contrib-recipe>` works via registry fetch.
+**Validation:** All existing tests pass. `tsuku install <registry-recipe>` works via registry fetch.
 
 ### Stage 2: Golden File Reorganization
 
-**Goal:** Separate golden files - embedded in git, contrib in R2.
+**Goal:** Separate golden files - embedded in git, registry in R2.
 
 **Steps:**
 1. Create `testdata/golden/plans/embedded/`
@@ -736,7 +752,7 @@ testdata/golden/plans/
 3. Update regeneration scripts to use new paths for embedded recipes
 4. Update validation scripts to use new paths
 
-**Note:** Contrib golden files migration to R2 requires separate tactical design (see Stage 7).
+**Note:** Registry golden files migration to R2 requires separate tactical design (see Stage 7).
 
 **Validation:** Embedded golden file scripts work with new structure.
 
@@ -767,7 +783,7 @@ testdata/golden/plans/
 
 4. Verify integration tests still pass with new recipe paths
 
-**Validation:** `go test ./...` passes. Integration tests use testdata/recipes/ and don't depend on contrib recipes.
+**Validation:** `go test ./...` passes. Integration tests use testdata/recipes/ and don't depend on registry recipes.
 
 ### Stage 4: CI Workflow Updates
 
@@ -778,21 +794,21 @@ testdata/golden/plans/
 
 2. **validate-golden-recipes.yml**: Add `recipes/**/*.toml` to path triggers. Update script to detect recipe category from path and look in appropriate golden file directory.
 
-3. **validate-golden-code.yml**: Change scope from all golden files to `testdata/golden/plans/embedded/**` only. This is the key optimization - code changes no longer validate 150+ contrib recipes.
+3. **validate-golden-code.yml**: Change scope from all golden files to `testdata/golden/plans/embedded/**` only. This is the key optimization - code changes no longer validate 150+ registry recipes.
 
-4. **validate-golden-execution.yml**: Update to handle both `embedded/` and `contrib/` subdirectories in golden file detection.
+4. **validate-golden-execution.yml**: Update to handle both `embedded/` and `registry/` subdirectories in golden file detection.
 
-5. **Create nightly-contrib-validation.yml**:
+5. **Create nightly-registry-validation.yml**:
    - Cron trigger: `0 2 * * *`
-   - Runs `validate-all-golden.sh` for `testdata/golden/plans/contrib/`
-   - Executes all contrib golden files
+   - Runs `validate-all-golden.sh` for `testdata/golden/plans/registry/`
+   - Executes all registry golden files
    - Creates GitHub issue on failure with list of broken recipes
 
-6. Update exclusions.json: Add `category` field or split into `embedded-exclusions.json` and `contrib-exclusions.json`
+6. Update exclusions.json: Add `category` field or split into `embedded-exclusions.json` and `registry-exclusions.json`
 
 **Validation:**
 - Code change PRs complete faster (only embedded recipes)
-- Contrib recipe change PRs still run full validation
+- Registry recipe change PRs still run full validation
 - Nightly workflow runs and reports failures
 
 ### Stage 5: Cache Policy Implementation (Expanded per Review Feedback)
@@ -831,23 +847,23 @@ testdata/golden/plans/
 1. Update CONTRIBUTING.md with recipe category guidance:
    - Decision flowchart: "Should my recipe be embedded?"
    - Troubleshooting: "My recipe works locally but fails in CI"
-   - Explain three directories (embedded, contrib, testdata)
+   - Explain three directories (embedded, registry, testdata)
 2. Reference EMBEDDED_RECIPES.md (created in Stage 0)
 3. Document the nightly validation process and failure notification channels
 4. Update troubleshooting for "recipe not found" errors (network issues)
 5. Create incident response playbook for repository compromise
 
-### Stage 7: Contrib Golden File R2 Storage (Separate Design)
+### Stage 7: Registry Golden File R2 Storage (Separate Design)
 
-**Goal:** Implement Cloudflare R2 storage for contrib golden files.
+**Goal:** Implement Cloudflare R2 storage for registry golden files.
 
 **This stage requires its own tactical design document covering:**
 - R2 bucket structure and naming conventions
-- Upload workflow (on contrib recipe PR merge)
+- Upload workflow (on registry recipe PR merge)
 - Download workflow (for CI validation)
 - Authentication and access control (GitHub Actions OIDC recommended)
 - Cache headers and CDN behavior
-- Migration of existing contrib golden files to R2
+- Migration of existing registry golden files to R2
 - Cost monitoring and alerts
 
 **Required from review feedback (R2 resilience):**
@@ -859,9 +875,9 @@ testdata/golden/plans/
 - Credential rotation SOP (quarterly)
 - Audit logging for compliance
 
-**Dependency:** Stages 0-4 can proceed independently. Stage 7 unblocks full contrib recipe validation at scale.
+**Dependency:** Stages 0-4 can proceed independently. Stage 7 unblocks full registry recipe validation at scale.
 
-**Validation:** Contrib recipe PR workflow successfully uploads/downloads golden files from R2. R2 outage gracefully degrades to git fallback.
+**Validation:** Registry recipe PR workflow successfully uploads/downloads golden files from R2. R2 outage gracefully degrades to git fallback.
 
 ## Security Considerations
 
@@ -869,9 +885,9 @@ testdata/golden/plans/
 
 **Embedded recipes** (embedded): Binary signature verification for downloaded artifacts remains unchanged. These recipes undergo full execution testing in CI.
 
-**Contrib recipes** (fetched): Recipe files themselves are fetched over HTTPS from GitHub. No additional signing is implemented in this design. The fetched recipe content is subject to GitHub's repository integrity guarantees.
+**Registry recipes** (fetched): Recipe files themselves are fetched over HTTPS from GitHub. No additional signing is implemented in this design. The fetched recipe content is subject to GitHub's repository integrity guarantees.
 
-**Future enhancement**: Recipe signing could add an integrity layer for contrib recipes, verifying that fetched TOML matches a signed manifest.
+**Future enhancement**: Recipe signing could add an integrity layer for registry recipes, verifying that fetched TOML matches a signed manifest.
 
 ### Execution Isolation
 
@@ -881,7 +897,7 @@ No change. All recipe steps execute with the same isolation model regardless of 
 
 **Embedded recipes**: Reviewed at PR time, compiled into binary. Attack surface is the PR review process. Changes are visible in git history and require PR approval.
 
-**Contrib recipes**: Fetched at runtime from GitHub. Attack surface expands to:
+**Registry recipes**: Fetched at runtime from GitHub. Attack surface expands to:
 - GitHub account compromise
 - Repository compromise
 - Network MITM (mitigated by HTTPS)
@@ -898,7 +914,7 @@ No change. All recipe steps execute with the same isolation model regardless of 
 
 **Account compromise recovery**: If the GitHub repository is compromised:
 - Embedded recipes in released binaries are unaffected
-- Contrib recipes could be replaced with malicious versions
+- Registry recipes could be replaced with malicious versions
 - Recovery requires: reverting malicious commits, notifying users to clear cache, potential emergency CLI release if embedded recipes affected
 
 ### User Data Exposure
@@ -909,9 +925,9 @@ No change. This design doesn't affect what data tsuku collects or transmits.
 
 | Risk | Mitigation | Residual Risk |
 |------|------------|---------------|
-| Malicious contrib recipe | PR review, GitHub HTTPS, cache persistence | Compromised GitHub account could push malicious recipe |
+| Malicious registry recipe | PR review, GitHub HTTPS, cache persistence | Compromised GitHub account could push malicious recipe |
 | Cache poisoning | Cache-until-clear semantics, local override option | Stale malicious cache persists until explicit clear |
-| Network unavailable | Embedded recipes always available, contrib cached | First-time installs of contrib recipes fail offline |
+| Network unavailable | Embedded recipes always available, registry cached | First-time installs of registry recipes fail offline |
 | Download tampering | HTTPS to GitHub, binary checksums in recipes | Recipe file itself has no signature |
 
 ## Consequences
@@ -920,13 +936,13 @@ No change. This design doesn't affect what data tsuku collects or transmits.
 
 - Smaller CLI binary (estimated 30-50% recipe content reduction)
 - Recipe updates ship independently of CLI releases
-- CI runs faster for contrib recipe changes
+- CI runs faster for registry recipe changes
 - Clear mental model: "embedded = CLI needs it to work"
 
 ### Negative
 
 - Two categories to understand instead of one
-- Contrib recipes may be unavailable during network issues
+- Registry recipes may be unavailable during network issues
 - Additional infrastructure complexity (registry cache management)
 - Split testing strategy is more complex
 
@@ -934,4 +950,4 @@ No change. This design doesn't affect what data tsuku collects or transmits.
 
 - Migration requires moving files and updating embed directive
 - Documentation needs updating to explain the distinction
-- Contributors need to understand when a recipe should be embedded
+- Registryutors need to understand when a recipe should be embedded
