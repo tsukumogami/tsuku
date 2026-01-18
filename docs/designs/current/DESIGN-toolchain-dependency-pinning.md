@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Current
 
 ## Upstream Design Reference
 
