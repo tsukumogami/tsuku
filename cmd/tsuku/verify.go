@@ -31,6 +31,100 @@ func init() {
 	verifyCmd.Flags().BoolVar(&verifySkipDlopenFlag, "skip-dlopen", false, "Skip dlopen load testing for libraries")
 }
 
+// displayDependencyResults formats and prints dependency validation results.
+// Returns true if all dependencies passed, false if any failed.
+func displayDependencyResults(results []verify.DepResult) bool {
+	if len(results) == 0 {
+		printInfo("    No dynamic dependencies (statically linked)\n")
+		return true
+	}
+
+	allPassed := true
+	for _, r := range results {
+		var status string
+		switch r.Category {
+		case verify.DepTsukuManaged:
+			if r.Status == verify.ValidationPass {
+				status = fmt.Sprintf("OK (tsuku:%s@%s)", r.Recipe, r.Version)
+			} else {
+				status = fmt.Sprintf("FAIL (tsuku:%s@%s) - %s", r.Recipe, r.Version, r.Error)
+				allPassed = false
+			}
+		case verify.DepExternallyManaged:
+			if r.Status == verify.ValidationPass {
+				status = fmt.Sprintf("OK (tsuku:%s@%s, external)", r.Recipe, r.Version)
+			} else {
+				status = fmt.Sprintf("FAIL (tsuku:%s@%s, external) - %s", r.Recipe, r.Version, r.Error)
+				allPassed = false
+			}
+		case verify.DepPureSystem:
+			if r.Status == verify.ValidationPass {
+				status = "OK (system)"
+			} else {
+				status = fmt.Sprintf("FAIL (system) - %s", r.Error)
+				allPassed = false
+			}
+		default:
+			status = fmt.Sprintf("UNKNOWN - %s", r.Error)
+			allPassed = false
+		}
+		printInfof("    %s: %s\n", r.Soname, status)
+
+		// Display transitive dependencies (indented further)
+		for _, t := range r.Transitive {
+			var tStatus string
+			switch t.Category {
+			case verify.DepTsukuManaged:
+				if t.Status == verify.ValidationPass {
+					tStatus = fmt.Sprintf("OK (tsuku:%s@%s)", t.Recipe, t.Version)
+				} else {
+					tStatus = fmt.Sprintf("FAIL - %s", t.Error)
+					allPassed = false
+				}
+			case verify.DepPureSystem:
+				if t.Status == verify.ValidationPass {
+					tStatus = "OK (system)"
+				} else {
+					tStatus = fmt.Sprintf("FAIL - %s", t.Error)
+					allPassed = false
+				}
+			default:
+				tStatus = fmt.Sprintf("UNKNOWN - %s", t.Error)
+				allPassed = false
+			}
+			printInfof("      -> %s: %s\n", t.Soname, tStatus)
+		}
+	}
+
+	printInfof("  Tier 2: %d dependencies validated\n", len(results))
+	return allPassed
+}
+
+// findToolBinaries returns absolute paths to binary files for a tool.
+// It looks in the bin/ subdirectory of the install directory.
+func findToolBinaries(installDir string, binaries []string, toolName string) []string {
+	// If no binaries recorded, fall back to tool name
+	if len(binaries) == 0 {
+		binaries = []string{toolName}
+	}
+
+	var paths []string
+	binDir := filepath.Join(installDir, "bin")
+
+	for _, binary := range binaries {
+		// Handle both bare names and paths like "cargo/bin/cargo"
+		name := filepath.Base(binary)
+		path := filepath.Join(binDir, name)
+
+		// Check if file exists
+		if _, err := os.Stat(path); err == nil {
+			paths = append(paths, path)
+		}
+	}
+
+	return paths
+}
+
 // verifyBinaryIntegrity verifies the integrity of installed binaries using stored checksums.
 // Returns true if verification passed, false if there were mismatches or errors.
 // If no checksums are stored (pre-feature installation), prints a skip message and returns true.
@@ -110,10 +204,40 @@ func verifyWithAbsolutePath(r *recipe.Recipe, toolName, version, installDir stri
 	if !verifyBinaryIntegrity(installDir, versionState) {
 		exitWithCode(ExitVerifyFailed)
 	}
+
+	// Tier 2: Dependency validation
+	printInfo("  Tier 2: Validating dependencies...\n")
+	binaries := findToolBinaries(installDir, nil, toolName)
+	if len(binaries) == 0 {
+		// Try the tool name directly in install dir
+		binPath := filepath.Join(installDir, "bin", toolName)
+		if _, err := os.Stat(binPath); err == nil {
+			binaries = []string{binPath}
+		}
+	}
+
+	// Load state for dependency validation
+	cfg, _ := config.DefaultConfig()
+	mgr := install.New(cfg)
+	state, _ := mgr.GetState().Load()
+
+	var allResults []verify.DepResult
+	for _, binPath := range binaries {
+		results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "  Dependency validation failed for %s: %v\n", filepath.Base(binPath), err)
+			exitWithCode(ExitVerifyFailed)
+		}
+		allResults = append(allResults, results...)
+	}
+
+	if !displayDependencyResults(allResults) {
+		exitWithCode(ExitVerifyFailed)
+	}
 }
 
 // verifyVisibleTool performs comprehensive verification for visible tools
-func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.ToolState, versionState *install.VersionState, installDir string, cfg *config.Config) {
+func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.ToolState, versionState *install.VersionState, installDir string, cfg *config.Config, state *install.State) {
 	// Step 1: Verify installation via current/ symlink
 	printInfo("  Step 1: Verifying installation via symlink...")
 
@@ -225,6 +349,28 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 	if !verifyBinaryIntegrity(installDir, versionState) {
 		exitWithCode(ExitVerifyFailed)
 	}
+
+	// Step 5: Tier 2 dependency validation
+	printInfo("\n  Step 5: Validating dependencies...")
+	binaries := findToolBinaries(installDir, toolState.Binaries, toolName)
+	if len(binaries) == 0 {
+		printInfo("\n    No binaries found to validate\n")
+	} else {
+		var allResults []verify.DepResult
+		for _, binPath := range binaries {
+			results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "\n    Dependency validation failed for %s: %v\n", filepath.Base(binPath), err)
+				exitWithCode(ExitVerifyFailed)
+			}
+			allResults = append(allResults, results...)
+		}
+
+		printInfo("\n")
+		if !displayDependencyResults(allResults) {
+			exitWithCode(ExitVerifyFailed)
+		}
+	}
 }
 
 // verifyLibrary performs verification for library recipes.
@@ -292,6 +438,25 @@ func verifyLibrary(name string, state *install.State, cfg *config.Config, opts L
 			printInfof(", %d skipped (wrong arch)", skipped)
 		}
 		printInfo("\n")
+	}
+
+	// Tier 2: Dependency validation
+	printInfo("  Tier 2: Dependency validation...\n")
+	if len(libFiles) == 0 {
+		printInfo("    No library files to validate\n")
+	} else {
+		var allResults []verify.DepResult
+		for _, libFile := range libFiles {
+			results, err := verify.ValidateDependenciesSimple(libFile, state, cfg.HomeDir)
+			if err != nil {
+				return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(libFile), err)
+			}
+			allResults = append(allResults, results...)
+		}
+
+		if !displayDependencyResults(allResults) {
+			return fmt.Errorf("dependency validation failed: one or more dependencies could not be verified")
+		}
 	}
 
 	// Tier 4: Integrity verification (--integrity flag)
@@ -519,7 +684,7 @@ installed before this feature will show "Integrity: SKIPPED".`,
 			verifyWithAbsolutePath(r, name, toolState.Version, installDir, versionState)
 		} else {
 			// Visible tools: comprehensive verification
-			verifyVisibleTool(r, name, &toolState, versionState, installDir, cfg)
+			verifyVisibleTool(r, name, &toolState, versionState, installDir, cfg, state)
 		}
 
 		printInfof("%s is working correctly\n", name)
