@@ -615,11 +615,6 @@ command = "docker"
 version_flag = "--version"
 version_regex = "Docker version ([0-9.]+)"
 
-[steps.install_guide]
-darwin = "brew install --cask docker"
-linux = "See https://docs.docker.com/engine/install/"
-fallback = "Visit https://docs.docker.com/get-docker/"
-
 [verify]
 command = "docker --version"
 pattern = "Docker version {version}"
@@ -635,7 +630,7 @@ name = "cuda"
 description = "NVIDIA CUDA Toolkit"
 homepage = "https://developer.nvidia.com/cuda-toolkit"
 version_format = "semver"
-supported_os = ["darwin", "linux"]
+supported_os = ["linux"]
 
 [[steps]]
 action = "require_system"
@@ -643,10 +638,6 @@ command = "nvcc"
 version_flag = "--version"
 version_regex = "release ([0-9.]+)"
 min_version = "11.0"
-
-[steps.install_guide]
-darwin = "CUDA is not supported on macOS"
-linux = "Visit https://developer.nvidia.com/cuda-downloads"
 
 [verify]
 command = "nvcc --version"
@@ -701,23 +692,6 @@ pattern = "release {version}"
 				minVer, ok := step.Params["min_version"].(string)
 				if !ok || minVer != tt.expectedMinVersion {
 					t.Errorf("expected min_version %q, got %v", tt.expectedMinVersion, minVer)
-				}
-			}
-
-			// Check install_guide exists
-			installGuide, ok := step.Params["install_guide"]
-			if !ok {
-				t.Error("expected install_guide parameter")
-			} else {
-				// Verify it's a map
-				guideMap, ok := installGuide.(map[string]interface{})
-				if !ok {
-					t.Errorf("expected install_guide to be a map, got %T", installGuide)
-				} else {
-					// Check it has at least one platform
-					if len(guideMap) == 0 {
-						t.Error("install_guide should have at least one platform")
-					}
 				}
 			}
 		})

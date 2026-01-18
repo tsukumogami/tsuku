@@ -651,16 +651,17 @@ func TestGemInstallAction_RequiresExecutables(t *testing.T) {
 	}
 }
 
-func TestRequireSystemAction_MissingInstallGuide(t *testing.T) {
+func TestRequireSystemAction_Valid(t *testing.T) {
 	result := ValidateAction("require_system", map[string]interface{}{
 		"command": "gcc",
 	})
-	if !result.HasWarnings() {
-		t.Error("expected warning for missing install_guide")
+	if result.HasErrors() {
+		t.Errorf("expected no errors for valid require_system, got: %v", result.Errors)
 	}
 }
 
-func TestRequireSystemAction_WithInstallGuide(t *testing.T) {
+func TestRequireSystemAction_InstallGuideDeprecated(t *testing.T) {
+	// install_guide is no longer supported - should error
 	result := ValidateAction("require_system", map[string]interface{}{
 		"command": "gcc",
 		"install_guide": map[string]interface{}{
@@ -668,20 +669,26 @@ func TestRequireSystemAction_WithInstallGuide(t *testing.T) {
 			"linux":  "apt install gcc",
 		},
 	})
-	// Should not have install_guide warning
-	for _, w := range result.Warnings {
-		if strings.Contains(w, "install_guide") {
-			t.Errorf("unexpected install_guide warning: %s", w)
+	if !result.HasErrors() {
+		t.Error("expected error for deprecated install_guide")
+	}
+	found := false
+	for _, err := range result.Errors {
+		if strings.Contains(err, "install_guide") && strings.Contains(err, "no longer supported") {
+			found = true
+			break
 		}
+	}
+	if !found {
+		t.Errorf("expected install_guide deprecation error, got: %v", result.Errors)
 	}
 }
 
 func TestRequireSystemAction_MinVersionWithoutDetection(t *testing.T) {
 	// min_version without version_flag
 	result := ValidateAction("require_system", map[string]interface{}{
-		"command":       "gcc",
-		"min_version":   "10.0",
-		"install_guide": map[string]interface{}{"linux": "apt install gcc"},
+		"command":     "gcc",
+		"min_version": "10.0",
 	})
 	if !result.HasErrors() {
 		t.Error("expected error for min_version without version detection")
@@ -689,10 +696,9 @@ func TestRequireSystemAction_MinVersionWithoutDetection(t *testing.T) {
 
 	// min_version with only version_flag (missing regex)
 	result = ValidateAction("require_system", map[string]interface{}{
-		"command":       "gcc",
-		"min_version":   "10.0",
-		"version_flag":  "--version",
-		"install_guide": map[string]interface{}{"linux": "apt install gcc"},
+		"command":      "gcc",
+		"min_version":  "10.0",
+		"version_flag": "--version",
 	})
 	if !result.HasErrors() {
 		t.Error("expected error for min_version without version_regex")
@@ -705,7 +711,6 @@ func TestRequireSystemAction_CompleteVersionDetection(t *testing.T) {
 		"min_version":   "10.0",
 		"version_flag":  "--version",
 		"version_regex": `gcc \(.*\) (\d+\.\d+)`,
-		"install_guide": map[string]interface{}{"linux": "apt install gcc"},
 	})
 	// Should not have version detection error
 	for _, err := range result.Errors {

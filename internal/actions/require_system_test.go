@@ -3,7 +3,6 @@ package actions
 import (
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 )
@@ -142,104 +141,12 @@ func TestVersionSatisfied(t *testing.T) {
 	}
 }
 
-func TestGetPlatformGuide(t *testing.T) {
-	tests := []struct {
-		name         string
-		installGuide map[string]string
-		os           string
-		arch         string
-		want         string
-	}{
-		{
-			name: "exact tuple match",
-			installGuide: map[string]string{
-				"darwin/arm64": "brew install docker (ARM)",
-				"darwin/amd64": "brew install docker (Intel)",
-				"linux/amd64":  "apt install docker",
-			},
-			os:   "darwin",
-			arch: "arm64",
-			want: "brew install docker (ARM)",
-		},
-		{
-			name: "OS fallback when no tuple match",
-			installGuide: map[string]string{
-				"darwin/amd64": "brew install docker (Intel)",
-				"darwin":       "brew install docker",
-				"linux":        "apt install docker",
-			},
-			os:   "darwin",
-			arch: "arm64",
-			want: "brew install docker",
-		},
-		{
-			name: "generic fallback when no OS match",
-			installGuide: map[string]string{
-				"darwin/arm64": "brew install docker",
-				"fallback":     "see https://example.com",
-			},
-			os:   "windows",
-			arch: "amd64",
-			want: "see https://example.com",
-		},
-		{
-			name: "mixed keys - tuple preferred over OS",
-			installGuide: map[string]string{
-				"darwin/arm64": "tuple-specific guide",
-				"darwin":       "os-wide guide",
-			},
-			os:   "darwin",
-			arch: "arm64",
-			want: "tuple-specific guide",
-		},
-		{
-			name: "no match returns empty",
-			installGuide: map[string]string{
-				"darwin/arm64": "brew install docker",
-			},
-			os:   "windows",
-			arch: "amd64",
-			want: "",
-		},
-		{
-			name:         "nil install guide",
-			installGuide: nil,
-			os:           "linux",
-			arch:         "amd64",
-			want:         "",
-		},
-		{
-			name: "OS-only key still works (backwards compat)",
-			installGuide: map[string]string{
-				"darwin": "brew install docker",
-				"linux":  "apt install docker",
-			},
-			os:   "darwin",
-			arch: "arm64",
-			want: "brew install docker",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := getPlatformGuide(tt.installGuide, tt.os, tt.arch)
-			if got != tt.want {
-				t.Errorf("getPlatformGuide() = %q, want %q", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestRequireSystemAction_Execute_MissingCommand(t *testing.T) {
 	action := &RequireSystemAction{}
 	ctx := &ExecutionContext{}
 
 	params := map[string]interface{}{
 		"command": "nonexistent-command-12345",
-		"install_guide": map[string]interface{}{
-			"darwin": "brew install nonexistent",
-			"linux":  "apt install nonexistent",
-		},
 	}
 
 	err := action.Execute(ctx, params)
@@ -255,16 +162,6 @@ func TestRequireSystemAction_Execute_MissingCommand(t *testing.T) {
 
 	if missingErr.Command != "nonexistent-command-12345" {
 		t.Errorf("SystemDepMissingError.Command = %q, want %q", missingErr.Command, "nonexistent-command-12345")
-	}
-
-	// Check platform-specific guide is included
-	expectedGuide := map[string]string{
-		"darwin": "brew install nonexistent",
-		"linux":  "apt install nonexistent",
-	}[runtime.GOOS]
-
-	if missingErr.InstallGuide != expectedGuide {
-		t.Errorf("SystemDepMissingError.InstallGuide = %q, want %q", missingErr.InstallGuide, expectedGuide)
 	}
 }
 
@@ -326,9 +223,6 @@ echo "mocktool version 2.0.0"`
 				"version_flag":  "--version",
 				"version_regex": `version ([0-9.]+)`,
 				"min_version":   "3.0.0",
-				"install_guide": map[string]interface{}{
-					"fallback": "upgrade to 3.0.0+",
-				},
 			},
 			wantErr: true,
 			errType: "SystemDepVersionError",
@@ -377,25 +271,23 @@ func TestRequireSystemAction_Execute_InvalidParams(t *testing.T) {
 
 func TestSystemDepMissingError_Error(t *testing.T) {
 	err := &SystemDepMissingError{
-		Command:      "docker",
-		InstallGuide: "brew install docker",
+		Command: "docker",
 	}
 
 	msg := err.Error()
 	if !strings.Contains(msg, "docker") {
 		t.Errorf("Error message missing command name: %s", msg)
 	}
-	if !strings.Contains(msg, "brew install docker") {
-		t.Errorf("Error message missing install guide: %s", msg)
+	if !strings.Contains(msg, "not found") {
+		t.Errorf("Error message missing 'not found' text: %s", msg)
 	}
 }
 
 func TestSystemDepVersionError_Error(t *testing.T) {
 	err := &SystemDepVersionError{
-		Command:      "docker",
-		Found:        "19.0.0",
-		Required:     "20.10.0",
-		InstallGuide: "brew upgrade docker",
+		Command:  "docker",
+		Found:    "19.0.0",
+		Required: "20.10.0",
 	}
 
 	msg := err.Error()
@@ -407,8 +299,5 @@ func TestSystemDepVersionError_Error(t *testing.T) {
 	}
 	if !strings.Contains(msg, "20.10.0") {
 		t.Errorf("Error message missing required version: %s", msg)
-	}
-	if !strings.Contains(msg, "brew upgrade docker") {
-		t.Errorf("Error message missing install guide: %s", msg)
 	}
 }
