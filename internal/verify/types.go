@@ -58,6 +58,18 @@ const (
 	// ErrUnknownDependency indicates a dependency could not be classified.
 	// Pre-GA, this is an error to help identify corner cases that need handling.
 	ErrUnknownDependency ErrorCategory = 11
+
+	// ErrRpathLimitExceeded indicates the binary has too many RPATH entries
+	ErrRpathLimitExceeded ErrorCategory = 12
+
+	// ErrPathLengthExceeded indicates a path is too long (>4096 characters)
+	ErrPathLengthExceeded ErrorCategory = 13
+
+	// ErrUnexpandedVariable indicates a path contains unexpanded $ORIGIN or @rpath variables
+	ErrUnexpandedVariable ErrorCategory = 14
+
+	// ErrPathOutsideAllowed indicates an expanded path resolves outside allowed directories
+	ErrPathOutsideAllowed ErrorCategory = 15
 )
 
 // String returns a human-readable name for the error category.
@@ -79,6 +91,14 @@ func (c ErrorCategory) String() string {
 		return "ABI mismatch"
 	case ErrUnknownDependency:
 		return "unknown dependency"
+	case ErrRpathLimitExceeded:
+		return "RPATH limit exceeded"
+	case ErrPathLengthExceeded:
+		return "path length exceeded"
+	case ErrUnexpandedVariable:
+		return "unexpanded path variable"
+	case ErrPathOutsideAllowed:
+		return "path outside allowed directories"
 	default:
 		return fmt.Sprintf("unknown(%d)", c)
 	}
