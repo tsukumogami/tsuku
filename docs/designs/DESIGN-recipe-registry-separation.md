@@ -1,8 +1,8 @@
 ---
 status: Proposed
 problem: All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
-decision: Separate recipes into critical (embedded) and community (registry-fetched) based on directory location, with split golden file directories.
-rationale: Location-based categorization is simplest. Split golden files let code changes validate only critical recipes; community recipes are fully tested on their own PRs plus nightly runs for drift detection.
+decision: Separate recipes into critical (embedded) and community (registry-fetched) based on directory location. Use testdata/recipes/ for integration test feature coverage.
+rationale: Location-based categorization is simplest. Split golden files let code changes validate only critical recipes. testdata/recipes/ ensures integration tests work reliably without depending on community recipe availability.
 ---
 
 # Recipe Registry Separation
@@ -121,6 +121,26 @@ Tsuku uses four complementary workflows that trigger under different conditions:
 - Actions: Runs `tsuku install --plan <golden-file>` to verify installation
 
 **Key insight:** Only code changes trigger full recipe validation. Recipe changes only test the changed recipe. This means a community recipe can break without CI catching it if the breakage comes from external factors (download URL changes, version drift).
+
+**Integration testing (`test.yml` via `test-matrix.json`):**
+
+Separate from golden file validation, `test-matrix.json` defines feature coverage tests that actually install tools:
+
+| CI Context | Tests | Trigger |
+|------------|-------|---------|
+| `ci.linux` | 11 tests | Every PR |
+| `ci.macos` | 5 tests | Every PR |
+| `ci.scheduled` | 5 slow tests | Nightly only |
+
+These tests ensure specific actions work (npm_install, cargo_install, gem_install, etc.) by installing real tools. The recipes used are NOT necessarily action dependencies - they're just good test cases for those features.
+
+**Feature coverage by tier:**
+- **Tier 1-2**: github_archive, download_archive (toolchain recipes like golang, nodejs, rust)
+- **Tier 3**: nix_install (hello-nix)
+- **Tier 4**: tap, cask (macOS-specific)
+- **Tier 5**: npm_install, pipx_install, cargo_install, gem_install, cpan_install, go_install (using recipes like netlify-cli, ruff, cargo-audit, bundler, ack, gofumpt)
+
+**Important:** Tier 5 recipes (netlify-cli, cargo-audit, bundler, etc.) test action implementations but are NOT action dependencies. After separation, these could become community recipes, but integration tests still need them available.
 
 **Three exclusion files:**
 - `exclusions.json`: Platform-specific exclusions (~50 entries) - "can't generate golden file for this platform"
@@ -267,6 +287,53 @@ Split golden file directories by category. On code changes, only validate critic
 - Requires splitting golden file directory structure
 - More complex CI workflow logic
 
+### Decision 4: Integration Test Recipe Handling
+
+Integration tests (`test-matrix.json`) need specific recipes to test action implementations. Some tier 5 test recipes (netlify-cli, cargo-audit, bundler) are NOT action dependencies but ARE required for feature coverage testing.
+
+#### Option 4A: Keep Test Recipes Critical
+
+Any recipe referenced in `test-matrix.json` stays in `internal/recipe/recipes/` even if it's not an action dependency.
+
+**Pros:**
+- Integration tests always work (recipes embedded)
+- No changes to test.yml workflow
+- Simple mental model: "test recipe = critical"
+
+**Cons:**
+- Inflates critical recipe count (adds ~10 more recipes)
+- Blurs the "action dependency" definition of critical
+- Test recipes can't be updated without CLI release
+
+#### Option 4B: Use testdata/recipes/ for Test Variants
+
+Create test-specific recipe variants in `testdata/recipes/` that are always embedded, separate from the production recipe registry.
+
+**Pros:**
+- Clean separation of concerns
+- Test recipes can be simplified versions
+- Production recipes can move to community
+- Already have precedent (waypoint-tap uses testdata/recipes/)
+
+**Cons:**
+- Two copies of some recipes to maintain
+- Test recipes could drift from production
+- More complex recipe structure
+
+#### Option 4C: Ensure test.yml Fetches Community Recipes
+
+Update test.yml to fetch community recipes before running integration tests, ensuring they're available regardless of embedding.
+
+**Pros:**
+- Clean separation: critical = action dependencies only
+- Integration tests work with community recipes
+- No recipe duplication
+
+**Cons:**
+- Integration tests depend on network/registry
+- Slower CI (fetch step before test)
+- Registry outage could break all integration tests
+
 ### Evaluation Against Decision Drivers
 
 | Driver | 1A (Explicit) | 1B (Computed) | 1C (Hybrid) |
@@ -287,6 +354,12 @@ Split golden file directories by category. On code changes, only validate critic
 | Regression detection | Good (critical) / Poor (community) | Good (critical) / Fair (community) | Good (critical) / Fair (community) |
 | Simplicity | Poor | Good | Fair |
 
+| Driver | 4A (Keep Test Critical) | 4B (testdata/recipes) | 4C (Fetch Community) |
+|--------|------------------------|----------------------|---------------------|
+| CI reliability | Good | Good | Fair |
+| Maintenance burden | Fair | Poor | Good |
+| Separation of concerns | Poor | Good | Good |
+
 ### Uncertainties
 
 - **Binary size impact**: The 15-20 estimate needs validation. Implementation should measure baseline binary size and compare after separation.
@@ -299,11 +372,11 @@ Split golden file directories by category. On code changes, only validate critic
 
 ## Decision Outcome
 
-**Chosen: Location-based categorization + Split golden files with nightly community execution (3C)**
+**Chosen: Location-based categorization (2A) + Split golden files with nightly community execution (3C) + testdata/recipes for integration tests (4B)**
 
 ### Summary
 
-Recipe criticality is determined by directory location: `internal/recipe/recipes/` = critical (embedded), `recipes/` = community (fetched from registry). Golden files are split into `critical/` and `community/` subdirectories. Code changes only validate critical recipes. Community recipes are fully tested when changed, with nightly runs catching external breakage.
+Recipe criticality is determined by directory location: `internal/recipe/recipes/` = critical (embedded), `recipes/` = community (fetched from registry). Golden files are split into `critical/` and `community/` subdirectories. Code changes only validate critical recipes. Community recipes are fully tested when changed, with nightly runs catching external breakage. Integration tests use `testdata/recipes/` for feature coverage recipes that aren't action dependencies.
 
 ### Rationale
 
@@ -319,12 +392,20 @@ Recipe criticality is determined by directory location: `internal/recipe/recipes
 - **Nightly catches external drift**: Download URL changes, version drift detected within 24 hours
 - **Clear trigger logic**: Critical = always validated on code changes; Community = validated on their own changes + nightly
 
+**testdata/recipes for integration tests (4B) chosen because:**
+- **Clean separation**: Critical recipes = action dependencies; test recipes = feature coverage
+- **Existing precedent**: waypoint-tap already uses testdata/recipes/ pattern
+- **CI reliability**: Test recipes are embedded, no network dependency for integration tests
+- **Independent evolution**: Test recipes can be simplified versions focused on CI speed
+
 **Alternatives rejected:**
 
 - **1A (Explicit metadata)**: Adds manual maintenance burden with risk of forgetting transitive dependencies
 - **1B/1C (Computed from dependencies)**: Complex build process, harder to predict results, requires fixing Dependencies() infrastructure gaps (#644)
 - **3A (Broader triggers)**: Doesn't address community recipe drift; adds complexity defining "critical code"
 - **3B (Split execution)**: Still validates all 150+ community recipes on code changes, slow CI
+- **4A (Keep test recipes critical)**: Inflates critical count, blurs the "action dependency" definition
+- **4C (Fetch community)**: Makes integration tests depend on registry availability
 
 ### Trade-offs Accepted
 
@@ -336,6 +417,11 @@ By choosing split golden files + nightly:
 - Community recipe breakage from code changes not caught until nightly (accepted: code changes rarely break community recipes, and nightly catches it)
 - Community recipe issues from external factors (URL changes) may go undetected for up to 24 hours (accepted: faster contributor feedback is worth this tradeoff)
 - Requires splitting golden file directories and updating workflow triggers (accepted: one-time migration cost)
+
+By choosing testdata/recipes for integration tests:
+- Test recipes could drift from production recipes (accepted: test recipes focus on action coverage, not production quality)
+- Two copies of some recipes (accepted: test versions are simplified, clear ownership boundary)
+- More complex recipe structure to understand (accepted: well-documented in CONTRIBUTING.md)
 
 ## Solution Architecture
 
@@ -364,12 +450,25 @@ tsuku/
 │   ├── f/fzf.toml
 │   └── ...
 └── testdata/
+    ├── recipes/                 # Integration test recipes (embedded)
+    │   ├── netlify-cli.toml     # Tests npm_install action
+    │   ├── ruff.toml            # Tests pipx_install action
+    │   ├── cargo-audit.toml     # Tests cargo_install action
+    │   ├── bundler.toml         # Tests gem_install action
+    │   ├── ack.toml             # Tests cpan_install action
+    │   ├── gofumpt.toml         # Tests go_install action
+    │   └── waypoint-tap.toml    # Tests tap action (already exists)
     └── golden/
         ├── plans/
         │   ├── critical/        # Golden files for critical recipes
         │   └── community/       # Golden files for community recipes
         └── exclusions.json      # Updated with category awareness
 ```
+
+**Three recipe locations:**
+1. `internal/recipe/recipes/` - Critical (action dependencies), embedded
+2. `recipes/` - Community (production), fetched from registry
+3. `testdata/recipes/` - Integration test recipes, embedded for CI reliability
 
 ### Loader Behavior
 
@@ -503,7 +602,36 @@ testdata/golden/plans/
 
 **Validation:** Golden file scripts work with new structure.
 
-### Stage 3: CI Workflow Updates
+### Stage 3: Integration Test Recipe Setup
+
+**Goal:** Create testdata/recipes/ for feature coverage testing.
+
+**Steps:**
+1. Create simplified test recipes for each package manager action:
+   - `testdata/recipes/netlify-cli.toml` - tests npm_install
+   - `testdata/recipes/ruff.toml` - tests pipx_install
+   - `testdata/recipes/cargo-audit.toml` - tests cargo_install
+   - `testdata/recipes/bundler.toml` - tests gem_install
+   - `testdata/recipes/ack.toml` - tests cpan_install
+   - `testdata/recipes/gofumpt.toml` - tests go_install
+
+2. Update `test-matrix.json` to reference `testdata/recipes/` paths:
+   ```json
+   "npm_netlify-cli_basic": { "tool": "netlify-cli", "recipe": "testdata/recipes/netlify-cli.toml", ... }
+   ```
+
+3. Update `internal/recipe/embedded.go` to embed testdata/recipes:
+   ```go
+   //go:embed recipes/*/*.toml
+   //go:embed ../../../testdata/recipes/*.toml
+   var embeddedRecipes embed.FS
+   ```
+
+4. Verify integration tests still pass with new recipe paths
+
+**Validation:** `go test ./...` passes. Integration tests use testdata/recipes/ and don't depend on community recipes.
+
+### Stage 4: CI Workflow Updates
 
 **Goal:** Adjust workflow triggers and scope for the split structure.
 
@@ -529,7 +657,7 @@ testdata/golden/plans/
 - Community recipe change PRs still run full validation
 - Nightly workflow runs and reports failures
 
-### Stage 4: Cache Policy Implementation
+### Stage 5: Cache Policy Implementation
 
 **Goal:** Implement cache TTL and invalidation.
 
@@ -541,7 +669,7 @@ testdata/golden/plans/
 
 **Validation:** Cache expires after TTL, fresh recipes fetched.
 
-### Stage 5: Documentation and Migration Guide
+### Stage 6: Documentation and Migration Guide
 
 **Goal:** Document the new structure for contributors.
 
