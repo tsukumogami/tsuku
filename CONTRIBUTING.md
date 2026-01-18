@@ -740,40 +740,6 @@ go build -o tsuku ./cmd/tsuku
 ./tsuku verify-deps <recipe>
 ```
 
-### Migration from install_guide
-
-The legacy `install_guide` parameter is no longer supported. Migrate to typed actions:
-
-**Before (deprecated):**
-```toml
-[[steps]]
-action = "require_system"
-command = "docker"
-[steps.install_guide]
-linux = "sudo apt install docker.io"
-darwin = "brew install --cask docker"
-```
-
-**After (typed actions):**
-```toml
-# Implicit: linux_family = "debian"
-[[steps]]
-action = "apt_install"
-packages = ["docker.io"]
-
-# Implicit: os = "darwin"
-[[steps]]
-action = "brew_cask"
-packages = ["docker"]
-
-# Verify on all platforms
-[[steps]]
-action = "require_command"
-command = "docker"
-```
-
-For detailed design documentation, see [docs/designs/DESIGN-system-dependency-actions.md](docs/designs/DESIGN-system-dependency-actions.md).
-
 ## Troubleshooting
 
 ### Linter Failures
