@@ -1238,6 +1238,177 @@ func TestStateManager_SetLibraryChecksums_UpdatesExisting(t *testing.T) {
 	}
 }
 
+func TestLibraryVersionState_Sonames_SaveAndLoad(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Create state with library including sonames
+	state := &State{
+		Installed: map[string]ToolState{},
+		Libs: map[string]map[string]LibraryVersionState{
+			"openssl": {
+				"3.0.0": {
+					UsedBy:  []string{"ruby-3.4.0"},
+					Sonames: []string{"libssl.so.3", "libcrypto.so.3"},
+				},
+			},
+		},
+	}
+
+	// Save
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Load
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// Verify sonames are preserved
+	libState := loaded.Libs["openssl"]["3.0.0"]
+	if len(libState.Sonames) != 2 {
+		t.Errorf("Sonames length = %d, want 2", len(libState.Sonames))
+	}
+	if libState.Sonames[0] != "libssl.so.3" || libState.Sonames[1] != "libcrypto.so.3" {
+		t.Errorf("Sonames = %v, want [libssl.so.3, libcrypto.so.3]", libState.Sonames)
+	}
+}
+
+func TestLibraryVersionState_Sonames_BackwardCompatibility(t *testing.T) {
+	cfg, cleanup := testutil.NewTestConfig(t)
+	defer cleanup()
+
+	sm := NewStateManager(cfg)
+
+	// Write state.json without sonames field (old format)
+	oldStateJSON := `{
+  "installed": {},
+  "libs": {
+    "libyaml": {
+      "0.2.5": {"used_by": ["ruby-3.4.0"]}
+    }
+  }
+}`
+	statePath := filepath.Join(cfg.HomeDir, "state.json")
+	if err := os.WriteFile(statePath, []byte(oldStateJSON), 0644); err != nil {
+		t.Fatalf("failed to write old state: %v", err)
+	}
+
+	// Load should succeed
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	// Verify library loaded with nil sonames
+	libState := loaded.Libs["libyaml"]["0.2.5"]
+	if len(libState.UsedBy) != 1 {
+		t.Errorf("UsedBy length = %d, want 1", len(libState.UsedBy))
+	}
+	if libState.Sonames != nil {
+		t.Errorf("Sonames = %v, want nil (field absent in old format)", libState.Sonames)
+	}
+}
+
+func TestLibraryVersionState_Sonames_OmitsEmpty(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// Create state with library but nil sonames
+	state := &State{
+		Installed: map[string]ToolState{},
+		Libs: map[string]map[string]LibraryVersionState{
+			"libyaml": {
+				"0.2.5": {
+					UsedBy:  []string{"ruby-3.4.0"},
+					Sonames: nil, // Nil sonames
+				},
+			},
+		},
+	}
+
+	// Save
+	if err := sm.Save(state); err != nil {
+		t.Fatalf("Save() error = %v", err)
+	}
+
+	// Read raw JSON to verify omitempty works
+	statePath := filepath.Join(sm.config.HomeDir, "state.json")
+	data, err := os.ReadFile(statePath)
+	if err != nil {
+		t.Fatalf("failed to read state file: %v", err)
+	}
+
+	// JSON should not contain "sonames" field when nil (omitempty)
+	jsonStr := string(data)
+	if strings.Contains(jsonStr, "sonames") {
+		t.Errorf("JSON contains 'sonames' field, should be omitted when nil:\n%s", jsonStr)
+	}
+}
+
+func TestStateManager_SetLibrarySonames(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// SetLibrarySonames should work on new or existing library entry
+	sonames := []string{"libyaml-0.so.2", "libyaml.so.0"}
+
+	// Set sonames
+	if err := sm.SetLibrarySonames("libyaml", "0.2.5", sonames); err != nil {
+		t.Fatalf("SetLibrarySonames() error = %v", err)
+	}
+
+	// Load and verify
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	libState := loaded.Libs["libyaml"]["0.2.5"]
+	if len(libState.Sonames) != 2 {
+		t.Errorf("Sonames length = %d, want 2", len(libState.Sonames))
+	}
+	if libState.Sonames[0] != "libyaml-0.so.2" || libState.Sonames[1] != "libyaml.so.0" {
+		t.Errorf("Sonames = %v, want [libyaml-0.so.2, libyaml.so.0]", libState.Sonames)
+	}
+}
+
+func TestStateManager_SetLibrarySonames_UpdatesExisting(t *testing.T) {
+	sm, cleanup := newTestStateManager(t)
+	defer cleanup()
+
+	// First add a library with used_by
+	if err := sm.AddLibraryUsedBy("openssl", "3.0.0", "ruby-3.4.0"); err != nil {
+		t.Fatalf("AddLibraryUsedBy() error = %v", err)
+	}
+
+	// Now set sonames
+	sonames := []string{"libssl.so.3", "libcrypto.so.3"}
+	if err := sm.SetLibrarySonames("openssl", "3.0.0", sonames); err != nil {
+		t.Fatalf("SetLibrarySonames() error = %v", err)
+	}
+
+	// Verify both used_by and sonames are present
+	loaded, err := sm.Load()
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	libState := loaded.Libs["openssl"]["3.0.0"]
+
+	// Sonames should be set
+	if len(libState.Sonames) != 2 {
+		t.Errorf("Sonames count = %d, want 2", len(libState.Sonames))
+	}
+
+	// UsedBy should be preserved
+	if len(libState.UsedBy) != 1 || libState.UsedBy[0] != "ruby-3.4.0" {
+		t.Errorf("UsedBy = %v, want [ruby-3.4.0]", libState.UsedBy)
+	}
+}
+
 func TestStateManager_SaveAndLoad_WithDependencies(t *testing.T) {
 	sm, cleanup := newTestStateManager(t)
 	defer cleanup()
