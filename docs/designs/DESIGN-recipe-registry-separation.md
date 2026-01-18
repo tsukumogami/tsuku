@@ -1,8 +1,8 @@
 ---
 status: Proposed
 problem: All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
-decision: Separate recipes into critical (embedded) and community (registry-fetched) based on directory location. Use testdata/recipes/ for integration test feature coverage.
-rationale: Location-based categorization is simplest. Split golden files let code changes validate only critical recipes. testdata/recipes/ ensures integration tests work reliably without depending on community recipe availability.
+decision: Separate recipes into critical (embedded) and community (registry-fetched) based on directory location. Store community golden files in Cloudflare R2 for scalability.
+rationale: Location-based categorization is simplest. R2 storage scales to 10K+ recipes without git bloat. testdata/recipes/ ensures integration tests work reliably.
 ---
 
 # Recipe Registry Separation
@@ -360,6 +360,62 @@ Update test.yml to fetch community recipes before running integration tests, ens
 | Maintenance burden | Fair | Poor | Good |
 | Separation of concerns | Poor | Good | Good |
 
+### Decision 5: Community Golden File Storage
+
+At 10K community recipes with ~2.4 golden files each (~24K files, ~380MB), storing golden files in git creates unsustainable repo bloat. Git history compounds this - every version bump changes URLs/checksums.
+
+However, golden files can't be reduced to hashes alone: the `--pin-from` flag requires the full previous plan to extract ecosystem-specific lock information for deterministic regeneration.
+
+#### Option 5A: Full Golden Files in Git
+
+Store all community golden files in `testdata/golden/plans/community/` like critical recipes.
+
+**Pros:**
+- Simple, consistent with critical recipes
+- Full git history for debugging
+
+**Cons:**
+- ~380MB for 10K recipes, plus history overhead
+- Slow clones, large diffs on version bumps
+- Doesn't scale
+
+#### Option 5B: External Storage (Cloudflare R2)
+
+Store community golden files in Cloudflare R2. Only latest version, no history.
+
+**Pros:**
+- Scales to 10K+ recipes without repo bloat
+- 10GB free tier, cheap beyond
+- Existing Cloudflare infrastructure (telemetry worker)
+- No git history overhead
+
+**Cons:**
+- External dependency for CI
+- Needs upload/download workflow
+- Requires its own tactical design
+
+#### Option 5C: No Golden Files for Community
+
+Only validate "plan generation succeeds", not "plan matches expectation".
+
+**Pros:**
+- Zero storage
+- Simplest implementation
+
+**Cons:**
+- Can't detect plan generation regressions
+- Loses determinism validation
+- Lower quality assurance for community recipes
+
+| Driver | 5A (Git Storage) | 5B (R2 External) | 5C (No Golden) |
+|--------|-----------------|------------------|----------------|
+| Scalability | Poor | Good | Good |
+| Regression detection | Good | Good | Poor |
+| CI complexity | Low | Medium | Low |
+| Infrastructure dependency | None | Cloudflare | None |
+
+**Note:** Option 5B requires a separate tactical design for R2 bucket structure, upload/download workflows, and cache invalidation.
+
 ### Uncertainties
 
 - **Binary size impact**: The 15-20 estimate needs validation. Implementation should measure baseline binary size and compare after separation.
@@ -372,11 +428,11 @@ Update test.yml to fetch community recipes before running integration tests, ens
 
 ## Decision Outcome
 
-**Chosen: Location-based categorization (2A) + Split golden files with nightly community execution (3C) + testdata/recipes for integration tests (4B)**
+**Chosen: Location-based categorization (2A) + Split golden files with nightly community execution (3C) + testdata/recipes for integration tests (4B) + Cloudflare R2 for community golden files (5B)**
 
 ### Summary
 
-Recipe criticality is determined by directory location: `internal/recipe/recipes/` = critical (embedded), `recipes/` = community (fetched from registry). Golden files are split into `critical/` and `community/` subdirectories. Code changes only validate critical recipes. Community recipes are fully tested when changed, with nightly runs catching external breakage. Integration tests use `testdata/recipes/` for feature coverage recipes that aren't action dependencies.
+Recipe criticality is determined by directory location: `internal/recipe/recipes/` = critical (embedded), `recipes/` = community (fetched from registry). Critical golden files stay in git; community golden files are stored in Cloudflare R2 (no history, just latest). Code changes only validate critical recipes. Community recipes are fully tested when changed, with nightly runs catching external breakage. Integration tests use `testdata/recipes/` for feature coverage recipes that aren't action dependencies.
 
 ### Rationale
 
@@ -398,6 +454,12 @@ Recipe criticality is determined by directory location: `internal/recipe/recipes
 - **CI reliability**: Test recipes are embedded, no network dependency for integration tests
 - **Independent evolution**: Test recipes can be simplified versions focused on CI speed
 
+**Cloudflare R2 for community golden files (5B) chosen because:**
+- **Scalability**: Supports 10K+ recipes without git repo bloat
+- **Existing infrastructure**: Already have Cloudflare for telemetry worker
+- **Cost effective**: 10GB free tier covers initial scale, cheap beyond
+- **Full validation preserved**: Unlike hash-only, retains `--pin-from` capability
+
 **Alternatives rejected:**
 
 - **1A (Explicit metadata)**: Adds manual maintenance burden with risk of forgetting transitive dependencies
@@ -406,6 +468,8 @@ Recipe criticality is determined by directory location: `internal/recipe/recipes
 - **3B (Split execution)**: Still validates all 150+ community recipes on code changes, slow CI
 - **4A (Keep test recipes critical)**: Inflates critical count, blurs the "action dependency" definition
 - **4C (Fetch community)**: Makes integration tests depend on registry availability
+- **5A (Git storage for community golden files)**: ~380MB for 10K recipes plus history overhead, doesn't scale
+- **5C (No golden files for community)**: Loses plan generation regression detection, lower quality assurance
 
 ### Trade-offs Accepted
 
@@ -422,6 +486,11 @@ By choosing testdata/recipes for integration tests:
 - Test recipes could drift from production recipes (accepted: test recipes focus on action coverage, not production quality)
 - Two copies of some recipes (accepted: test versions are simplified, clear ownership boundary)
 - More complex recipe structure to understand (accepted: well-documented in CONTRIBUTING.md)
+
+By choosing Cloudflare R2 for community golden files:
+- External dependency for CI validation (accepted: Cloudflare has high availability, fallback to skip validation on outage)
+- No git history for golden file changes (accepted: history not needed, only latest matters for validation)
+- Requires separate tactical design for implementation (accepted: complexity warrants dedicated design)
 
 ## Solution Architecture
 
@@ -460,15 +529,23 @@ tsuku/
     │   └── waypoint-tap.toml    # Tests tap action (already exists)
     └── golden/
         ├── plans/
-        │   ├── critical/        # Golden files for critical recipes
-        │   └── community/       # Golden files for community recipes
+        │   └── critical/        # Golden files for critical recipes (in git)
         └── exclusions.json      # Updated with category awareness
+
+# Community golden files stored externally:
+# Cloudflare R2: tsuku-golden-files bucket
+#   └── community/
+#       └── {letter}/{recipe}/{version}-{platform}.json
 ```
 
 **Three recipe locations:**
 1. `internal/recipe/recipes/` - Critical (action dependencies), embedded
 2. `recipes/` - Community (production), fetched from registry
 3. `testdata/recipes/` - Integration test recipes, embedded for CI reliability
+
+**Two golden file locations:**
+1. `testdata/golden/plans/critical/` - In git, versioned
+2. Cloudflare R2 bucket - Community golden files, latest only, no history
 
 ### Loader Behavior
 
@@ -592,15 +669,17 @@ testdata/golden/plans/
 
 ### Stage 2: Golden File Reorganization
 
-**Goal:** Separate golden files by category.
+**Goal:** Separate golden files - critical in git, community in R2.
 
 **Steps:**
-1. Create `testdata/golden/plans/critical/` and `testdata/golden/plans/community/`
-2. Move golden files to appropriate directories
-3. Update regeneration scripts to use new paths
+1. Create `testdata/golden/plans/critical/`
+2. Move critical recipe golden files to `critical/` subdirectory
+3. Update regeneration scripts to use new paths for critical recipes
 4. Update validation scripts to use new paths
 
-**Validation:** Golden file scripts work with new structure.
+**Note:** Community golden files migration to R2 requires separate tactical design (see Stage 7).
+
+**Validation:** Critical golden file scripts work with new structure.
 
 ### Stage 3: Integration Test Recipe Setup
 
@@ -679,6 +758,24 @@ testdata/golden/plans/
 3. Document the nightly validation process and failure notification channels
 4. Update troubleshooting for "recipe not found" errors (network issues)
 5. Create incident response playbook for repository compromise
+
+### Stage 7: Community Golden File R2 Storage (Separate Design)
+
+**Goal:** Implement Cloudflare R2 storage for community golden files.
+
+**This stage requires its own tactical design document covering:**
+- R2 bucket structure and naming conventions
+- Upload workflow (on community recipe PR merge)
+- Download workflow (for CI validation)
+- Authentication and access control (GitHub Actions OIDC or API tokens)
+- Cache headers and CDN behavior
+- Fallback behavior when R2 is unavailable
+- Migration of existing community golden files to R2
+- Cost monitoring and alerts
+
+**Dependency:** Stages 1-4 can proceed independently. Stage 7 unblocks full community recipe validation at scale.
+
+**Validation:** Community recipe PR workflow successfully uploads/downloads golden files from R2.
 
 ## Security Considerations
 
