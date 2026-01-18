@@ -570,6 +570,176 @@ These workflows run automatically on pull requests:
 
 For the complete design rationale, validation workflows, and security considerations, see [docs/DESIGN-golden-plan-testing.md](docs/DESIGN-golden-plan-testing.md).
 
+## System Dependency Actions
+
+Some recipes require packages from the system's package manager (apt, brew, dnf, etc.). Tsuku provides typed actions for these cases.
+
+### When to Use System Dependency Actions
+
+Use system dependency actions when:
+- A tool requires external binaries that cannot be provisioned by tsuku (e.g., CUDA drivers, Docker)
+- A tool needs libraries or packages only available via system package managers
+- You want to provide platform-specific installation instructions
+
+**Do NOT use** system dependency actions when tsuku can install the tool directly (download, homebrew bottle, cargo_install, etc.).
+
+### Available Actions
+
+| Action | Purpose | Implicit Platform Constraint |
+|--------|---------|------------------------------|
+| `apt_install` | Install packages via apt-get | `linux_family = "debian"` |
+| `apt_repo` | Add apt repository with GPG key | `linux_family = "debian"` |
+| `apt_ppa` | Add Ubuntu PPA repository | `linux_family = "debian"` |
+| `dnf_install` | Install packages via dnf | `linux_family = "rhel"` |
+| `dnf_repo` | Add dnf repository | `linux_family = "rhel"` |
+| `pacman_install` | Install packages via pacman | `linux_family = "arch"` |
+| `apk_install` | Install packages via apk | `linux_family = "alpine"` |
+| `zypper_install` | Install packages via zypper | `linux_family = "suse"` |
+| `brew_install` | Install Homebrew formula | `os = "darwin"` |
+| `brew_cask` | Install Homebrew cask | `os = "darwin"` |
+| `require_command` | Verify a command exists | None (runs on all platforms) |
+| `manual` | Display manual instructions | None (runs on all platforms) |
+
+### Implicit Constraints
+
+Package manager actions have **implicit platform constraints** that are automatically applied. You don't need to add a `when` clause for these:
+
+```toml
+# apt_install automatically applies linux_family = "debian"
+# No need for when = { linux_family = "debian" }
+[[steps]]
+action = "apt_install"
+packages = ["docker.io"]
+```
+
+The implicit constraints are:
+- **Debian family** (Ubuntu, Debian, Linux Mint): `apt_*` actions
+- **RHEL family** (Fedora, RHEL, CentOS, Rocky): `dnf_*` actions
+- **Arch family** (Arch, Manjaro): `pacman_install`
+- **Alpine family**: `apk_install`
+- **SUSE family** (openSUSE, SLES): `zypper_install`
+- **macOS**: `brew_*` actions
+
+### Action Parameters
+
+**Package installation actions** (`apt_install`, `dnf_install`, etc.):
+```toml
+[[steps]]
+action = "apt_install"
+packages = ["package1", "package2"]  # Required: list of package names
+```
+
+**Repository actions** (`apt_repo`, `dnf_repo`):
+```toml
+[[steps]]
+action = "apt_repo"
+url = "https://example.com/ubuntu"       # Required: repository URL
+key_url = "https://example.com/key.gpg"  # Required: GPG key URL
+key_sha256 = "abc123..."                 # Required: SHA256 of GPG key
+```
+
+**Verification action** (`require_command`):
+```toml
+[[steps]]
+action = "require_command"
+command = "docker"                       # Required: command to check
+version_flag = "--version"               # Optional: flag to get version
+version_regex = "version ([0-9.]+)"      # Optional: regex to extract version
+min_version = "20.10.0"                  # Optional: minimum required version
+```
+
+**Manual instructions** (`manual`):
+```toml
+[[steps]]
+action = "manual"
+text = "Visit https://example.com for installation instructions"
+```
+
+### Recipe Examples
+
+**Simple: Single platform requirement**
+```toml
+[metadata]
+name = "cuda"
+description = "NVIDIA CUDA Toolkit"
+supported_os = ["linux"]
+
+[[steps]]
+action = "manual"
+text = "Visit https://developer.nvidia.com/cuda-downloads for installation"
+
+[[steps]]
+action = "require_command"
+command = "nvcc"
+version_flag = "--version"
+version_regex = "release ([0-9.]+)"
+min_version = "11.0"
+
+[verify]
+command = "nvcc --version"
+pattern = "release {version}"
+```
+
+**Multi-platform: Different package managers**
+```toml
+[metadata]
+name = "docker"
+description = "Docker container runtime"
+
+# macOS via Homebrew Cask
+[[steps]]
+action = "brew_cask"
+packages = ["docker"]
+
+# Debian/Ubuntu
+[[steps]]
+action = "apt_install"
+packages = ["docker.io"]
+
+# Fedora/RHEL
+[[steps]]
+action = "dnf_install"
+packages = ["docker-ce"]
+
+# Verify on all platforms
+[[steps]]
+action = "require_command"
+command = "docker"
+
+[verify]
+command = "docker --version"
+pattern = "{version}"
+```
+
+### Testing System Dependency Recipes
+
+Test recipes with system dependencies using the `--sandbox` flag with family specification:
+
+```bash
+# Build tsuku
+go build -o tsuku ./cmd/tsuku
+
+# Test on different Linux families
+./tsuku install <recipe> --sandbox --linux-family debian
+./tsuku install <recipe> --sandbox --linux-family rhel
+./tsuku install <recipe> --sandbox --linux-family arch
+./tsuku install <recipe> --sandbox --linux-family alpine
+./tsuku install <recipe> --sandbox --linux-family suse
+
+# Test macOS actions (on macOS only)
+./tsuku install <recipe> --sandbox
+```
+
+**Verification commands:**
+
+```bash
+# Check system dependencies for a recipe
+./tsuku check-deps <recipe>
+
+# Verify installed dependencies
+./tsuku verify-deps <recipe>
+```
+
 ## Troubleshooting
 
 ### Linter Failures

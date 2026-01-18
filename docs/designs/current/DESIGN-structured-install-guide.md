@@ -2,7 +2,7 @@
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -82,8 +82,7 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I755,I756,I757,I758,I760,I761,I765,I767,I768,I769,I770,I771,I772,I773,I774 done
-    class I775 ready
+    class I755,I756,I757,I758,I760,I761,I765,I767,I768,I769,I770,I771,I772,I773,I774,I775 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
