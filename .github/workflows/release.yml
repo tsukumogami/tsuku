@@ -274,6 +274,66 @@ jobs:
     if: success()
     runs-on: ubuntu-latest
     steps:
+      - name: Verify all artifacts present
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          EXPECTED_ARTIFACTS=(
+            # Go binaries (from goreleaser)
+            tsuku-linux-amd64
+            tsuku-linux-arm64
+            tsuku-darwin-amd64
+            tsuku-darwin-arm64
+            # Rust binaries - glibc (from build-rust)
+            tsuku-dltest-linux-amd64
+            tsuku-dltest-linux-arm64
+            tsuku-dltest-darwin-amd64
+            tsuku-dltest-darwin-arm64
+            # Rust binaries - musl (from build-rust-musl)
+            tsuku-dltest-linux-amd64-musl
+            tsuku-dltest-linux-arm64-musl
+          )
+
+          echo "Verifying all ${#EXPECTED_ARTIFACTS[@]} artifacts are present..."
+          ASSETS=$(gh release view "$TAG" --json assets -q '.assets[].name')
+
+          for artifact in "${EXPECTED_ARTIFACTS[@]}"; do
+            if ! echo "$ASSETS" | grep -q "^${artifact}$"; then
+              echo "ERROR: Missing artifact: $artifact"
+              exit 1
+            fi
+            echo "Found: $artifact"
+          done
+          echo "All artifacts verified"
+
+      - name: Download artifacts and generate checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          mkdir -p ./artifacts
+          cd ./artifacts
+
+          # Download all binary artifacts (exclude existing checksums.txt from goreleaser)
+          gh release download "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "tsuku-*" \
+            --skip-existing
+
+          # Generate unified checksums for all binaries
+          sha256sum tsuku-* > checksums.txt
+          echo "Generated checksums.txt:"
+          cat checksums.txt
+
+      - name: Upload checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          gh release upload "$TAG" ./artifacts/checksums.txt --clobber
+          echo "Uploaded checksums.txt"
+
       - name: Publish release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
