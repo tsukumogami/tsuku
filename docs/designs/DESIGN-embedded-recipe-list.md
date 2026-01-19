@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: The recipe registry separation design requires a validated embedded recipe list, but there's no runtime enforcement that action dependencies can actually be resolved from embedded recipes.
 decision: Add a --require-embedded flag to the loader that fails if action dependencies can't be resolved from the embedded registry. Use CI with this flag to iteratively discover and validate the embedded recipe list.
 rationale: Runtime validation is the ground truth - it uses the actual loader to verify embedded recipes work. This enables incremental migration with an exclusions file to track known gaps, rather than building a separate static analysis tool.
@@ -9,7 +9,37 @@ rationale: Runtime validation is the ground truth - it uses the actual loader to
 
 ## Status
 
-**Accepted**
+**Planned**
+
+## Implementation Issues
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1043](https://github.com/tsukumogami/tsuku/issues/1043) | feat(loader): add RequireEmbedded option to loader | None | testable |
+| [#1044](https://github.com/tsukumogami/tsuku/issues/1044) | feat(resolver): propagate RequireEmbedded through dependency resolution | [#1043](https://github.com/tsukumogami/tsuku/issues/1043) | testable |
+| [#1045](https://github.com/tsukumogami/tsuku/issues/1045) | feat(cli): add --require-embedded flag to eval and install commands | [#1044](https://github.com/tsukumogami/tsuku/issues/1044) | testable |
+| [#1046](https://github.com/tsukumogami/tsuku/issues/1046) | docs: create EMBEDDED_RECIPES.md with initial embedded recipe list | None | simple |
+| [#1047](https://github.com/tsukumogami/tsuku/issues/1047) | chore: create embedded-validation-exclusions.json for tracking known gaps | None | simple |
+| [#1048](https://github.com/tsukumogami/tsuku/issues/1048) | ci: add embedded dependency validation workflow | [#1045](https://github.com/tsukumogami/tsuku/issues/1045), [#1046](https://github.com/tsukumogami/tsuku/issues/1046), [#1047](https://github.com/tsukumogami/tsuku/issues/1047) | critical |
+
+```mermaid
+graph TD
+    classDef ready fill:#4CAF50,stroke:#2E7D32,color:white
+    classDef blocked fill:#FFC107,stroke:#FFA000,color:black
+
+    1043["#1043: loader RequireEmbedded"]:::ready
+    1044["#1044: resolver propagation"]:::blocked
+    1045["#1045: CLI flag"]:::blocked
+    1046["#1046: EMBEDDED_RECIPES.md"]:::ready
+    1047["#1047: exclusions file"]:::ready
+    1048["#1048: CI workflow"]:::blocked
+
+    1043 --> 1044
+    1044 --> 1045
+    1045 --> 1048
+    1046 --> 1048
+    1047 --> 1048
+```
 
 ## Upstream Design Reference
 
