@@ -24,22 +24,28 @@ rationale: Runtime validation is the ground truth - it uses the actual loader to
 
 ```mermaid
 graph TD
-    classDef ready fill:#4CAF50,stroke:#2E7D32,color:white
-    classDef blocked fill:#FFC107,stroke:#FFA000,color:black
-
-    1043["#1043: loader RequireEmbedded"]:::ready
-    1044["#1044: resolver propagation"]:::blocked
-    1045["#1045: CLI flag"]:::blocked
-    1046["#1046: EMBEDDED_RECIPES.md"]:::ready
-    1047["#1047: exclusions file"]:::ready
-    1048["#1048: CI workflow"]:::blocked
+    1043["#1043: loader RequireEmbedded"]
+    1044["#1044: resolver propagation"]
+    1045["#1045: CLI flag"]
+    1046["#1046: EMBEDDED_RECIPES.md"]
+    1047["#1047: exclusions file"]
+    1048["#1048: CI workflow"]
 
     1043 --> 1044
     1044 --> 1045
     1045 --> 1048
     1046 --> 1048
     1047 --> 1048
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+
+    class 1043,1046,1047 ready
+    class 1044,1045,1048 blocked
 ```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked
 
 ## Upstream Design Reference
 

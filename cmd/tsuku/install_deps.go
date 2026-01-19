@@ -217,7 +217,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	visited[toolName] = true
 
 	// Load recipe
-	r, err := loader.Get(toolName)
+	r, err := loader.Get(toolName, recipe.LoaderOptions{})
 	if err != nil {
 		printError(err)
 		fmt.Fprintf(os.Stderr, "\nTo create a recipe from a package ecosystem:\n")
@@ -513,7 +513,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	toolNameVersion := fmt.Sprintf("%s-%s", toolName, version)
 	for _, dep := range r.Metadata.Dependencies {
 		// Load dependency recipe to check if it's a library
-		depRecipe, err := loader.Get(dep)
+		depRecipe, err := loader.Get(dep, recipe.LoaderOptions{})
 		if err != nil {
 			continue // Skip if recipe not found
 		}

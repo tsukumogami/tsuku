@@ -23,7 +23,7 @@ var (
 // RecipeLoader is an interface for loading recipes by name.
 // This abstraction allows testing without a real registry.
 type RecipeLoader interface {
-	GetWithContext(ctx context.Context, name string) (*recipe.Recipe, error)
+	GetWithContext(ctx context.Context, name string, opts recipe.LoaderOptions) (*recipe.Recipe, error)
 }
 
 // ResolvedDeps contains the resolved dependencies for a recipe.
@@ -385,8 +385,8 @@ func resolveTransitiveSet(
 		// Mark as visited
 		visited[depName] = true
 
-		// Load the dependency's recipe
-		depRecipe, err := loader.GetWithContext(ctx, depName)
+		// Load the dependency's recipe (using default options - no RequireEmbedded)
+		depRecipe, err := loader.GetWithContext(ctx, depName, recipe.LoaderOptions{})
 		if err != nil {
 			// Dependency recipe not found - skip (may be a system dep or not in registry)
 			continue

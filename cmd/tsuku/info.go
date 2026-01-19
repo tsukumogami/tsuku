@@ -46,7 +46,7 @@ var infoCmd = &cobra.Command{
 			toolName = r.Metadata.Name
 		} else {
 			toolName = args[0]
-			r, err = loader.Get(toolName)
+			r, err = loader.Get(toolName, recipe.LoaderOptions{})
 			if err != nil {
 				fmt.Printf("Tool '%s' not found in registry.\n", toolName)
 				return

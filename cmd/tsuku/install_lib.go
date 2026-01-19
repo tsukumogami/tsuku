@@ -8,6 +8,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 	"github.com/tsukumogami/tsuku/internal/validate"
 	"github.com/tsukumogami/tsuku/internal/verify"
@@ -18,7 +19,7 @@ import (
 // Note: used_by tracking is handled by the caller after tool installation completes
 func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, telemetryClient *telemetry.Client) error {
 	// Load recipe
-	r, err := loader.Get(libName)
+	r, err := loader.Get(libName, recipe.LoaderOptions{})
 	if err != nil {
 		return fmt.Errorf("library recipe not found: %w", err)
 	}

@@ -13,6 +13,7 @@ import (
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/platform"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 // CommandCheck represents the result of a require_command check.
@@ -63,7 +64,7 @@ func runVerifyDeps(cmd *cobra.Command, args []string) {
 	jsonOutput, _ := cmd.Flags().GetBool("json")
 
 	// Load recipe
-	r, err := loader.Get(recipeName)
+	r, err := loader.Get(recipeName, recipe.LoaderOptions{})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Recipe '%s' not found in registry.\n", recipeName)
 		exitWithCode(ExitRecipeNotFound)

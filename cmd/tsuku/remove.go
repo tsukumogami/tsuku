@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
@@ -100,7 +101,7 @@ Examples:
 		if targetVersion == "" {
 			// We need to find which tools this tool depended on to clean up references
 			// Load the recipe to get dependencies
-			if r, err := loader.Get(toolName); err == nil {
+			if r, err := loader.Get(toolName, recipe.LoaderOptions{}); err == nil {
 				for _, dep := range r.Metadata.Dependencies {
 					if err := mgr.GetState().RemoveRequiredBy(dep, toolName); err != nil {
 						printInfof("Warning: failed to update dependency state for %s: %v\n", dep, err)
@@ -152,7 +153,7 @@ func cleanupOrphans(mgr *install.Manager, toolName string) {
 	}
 
 	// Recursively clean up its dependencies
-	if r, err := loader.Get(toolName); err == nil {
+	if r, err := loader.Get(toolName, recipe.LoaderOptions{}); err == nil {
 		for _, dep := range r.Metadata.Dependencies {
 			if err := mgr.GetState().RemoveRequiredBy(dep, toolName); err != nil {
 				printInfof("Warning: failed to update dependency state for %s: %v\n", dep, err)

@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
@@ -59,7 +60,7 @@ var outdatedCmd = &cobra.Command{
 
 		for _, tool := range tools {
 			// Load recipe to find repo
-			r, err := loader.Get(tool.Name)
+			r, err := loader.Get(tool.Name, recipe.LoaderOptions{})
 			if err != nil {
 				continue
 			}
