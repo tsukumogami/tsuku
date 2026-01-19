@@ -29,6 +29,8 @@ jobs:
 
       - name: Validate embedded action dependencies
         run: |
+          set +e  # Don't exit on error - we handle failures ourselves
+
           # Test recipes that exercise each action type
           declare -A test_recipes=(
             ["go_install"]="gofumpt"
@@ -60,19 +62,22 @@ jobs:
             # Check if excluded
             if echo "$exclusions" | grep -q "^${recipe}$"; then
               echo "SKIP: $recipe (excluded)"
-              ((skipped++))
+              skipped=$((skipped + 1))
               continue
             fi
 
             echo -n "TEST: $recipe ($action)... "
-            if ./tsuku eval "$recipe" --require-embedded > /dev/null 2>&1; then
+            output=$(./tsuku eval "$recipe" --require-embedded 2>&1)
+            exit_code=$?
+            if [ $exit_code -eq 0 ]; then
               echo "PASS"
-              ((passed++))
+              passed=$((passed + 1))
             else
               echo "FAIL"
-              echo "  Action dependencies for '$recipe' could not be resolved from embedded registry."
-              echo "  Run: ./tsuku eval $recipe --require-embedded"
-              ((failed++))
+              echo "  Exit code: $exit_code"
+              echo "  Output (last 5 lines):"
+              echo "$output" | tail -5 | sed 's/^/    /'
+              failed=$((failed + 1))
             fi
           done
 
