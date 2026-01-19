@@ -61,7 +61,7 @@ jobs:
             artifact: tsuku-dltest-linux-arm64
           # macOS builds
           - platform: darwin-amd64
-            runner: macos-15-xlarge
+            runner: macos-15-intel
             target: x86_64-apple-darwin
             artifact: tsuku-dltest-darwin-amd64
           - platform: darwin-arm64
@@ -166,7 +166,7 @@ jobs:
             tsuku_binary: tsuku-linux-arm64
             dltest_binary: tsuku-dltest-linux-arm64
           - platform: darwin-amd64
-            runner: macos-15-xlarge
+            runner: macos-15-intel
             tsuku_binary: tsuku-darwin-amd64
             dltest_binary: tsuku-dltest-darwin-amd64
           - platform: darwin-arm64
