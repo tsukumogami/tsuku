@@ -33,27 +33,6 @@ jobs:
             exit 1
           fi
 
-      - name: Extract release notes from tag
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          # Fetch tag annotations (not included in checkout)
-          git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" --force
-          # Extract full tag annotation message
-          git tag -l --format='%(contents)' "${TAG}" > /tmp/release-notes.md
-          echo "Release notes extracted:"
-          cat /tmp/release-notes.md
-
-      - name: Create draft release with notes
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          gh release create "$TAG" \
-            --draft \
-            --title "$TAG" \
-            --notes-file /tmp/release-notes.md
-          echo "Created draft release $TAG with release notes"
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -62,6 +41,21 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update release with notes from tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # Fetch tag annotations (not included in checkout)
+          git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" --force
+          # Extract full tag annotation message
+          git tag -l --format='%(contents)' "${TAG}" > /tmp/release-notes.md
+          echo "Release notes extracted:"
+          cat /tmp/release-notes.md
+          # Update the release body with our curated notes
+          gh release edit "$TAG" --notes-file /tmp/release-notes.md
+          echo "Updated release $TAG with release notes"
 
   # Build Rust binary (tsuku-dltest) on native runners
   build-rust:
