@@ -19,6 +19,7 @@ var installPlanPath string
 var installSandbox bool
 var installRecipePath string
 var installTargetFamily string
+var installRequireEmbedded bool
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -179,6 +180,7 @@ func init() {
 	installCmd.Flags().BoolVar(&installSandbox, "sandbox", false, "Run installation in an isolated container for testing")
 	installCmd.Flags().StringVar(&installRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 	installCmd.Flags().StringVar(&installTargetFamily, "target-family", "", "Override detected linux_family (debian, rhel, arch, alpine, suse)")
+	installCmd.Flags().BoolVar(&installRequireEmbedded, "require-embedded", false, "Require action dependencies to resolve from embedded registry")
 }
 
 // isInteractive returns true if stdin is connected to a terminal

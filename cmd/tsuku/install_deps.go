@@ -28,6 +28,7 @@ type planRetrievalConfig struct {
 	RecipeHash        string               // SHA256 hash of recipe TOML
 	DownloadCacheDir  string               // Directory for download cache (enables caching during Decompose)
 	RecipeLoader      actions.RecipeLoader // Recipe loader for dependency resolution (enables self-contained plans)
+	RequireEmbedded   bool                 // Require action dependencies to resolve from embedded registry
 }
 
 // versionResolver abstracts version resolution for testing.
@@ -124,6 +125,7 @@ func getOrGeneratePlanWith(
 		Downloader:         downloader,
 		DownloadCache:      downloadCache,
 		RecipeLoader:       cfg.RecipeLoader,
+		RequireEmbedded:    cfg.RequireEmbedded,
 		AutoAcceptEvalDeps: true, // Auto-install eval-time dependencies during install
 		OnEvalDepsNeeded: func(deps []string, autoAccept bool) error {
 			return installEvalDeps(deps, autoAccept)
@@ -395,6 +397,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 		RecipeHash:        recipeHash,
 		DownloadCacheDir:  cfg.DownloadCacheDir,
 		RecipeLoader:      loader,
+		RequireEmbedded:   installRequireEmbedded,
 	}
 	plan, err := getOrGeneratePlan(globalCtx, exec, mgr.GetState(), planCfg)
 	if err != nil {
