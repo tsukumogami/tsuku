@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Dependencies between tools are handled inconsistently across actions, creating opacity about what each tool needs and making dependency graphs impossible to compute statically.
+decision: Implement fully implicit dependencies where actions declare their install-time and runtime requirements, with step and recipe-level overrides for edge cases.
+rationale: This approach eliminates boilerplate for the common case (95% of recipes need no declarations) while allowing explicit control when needed, and makes dependencies statically analyzable for features like dependency trees and dependant warnings.
+---
+
 # Design: Implicit Dependency Pattern
 
 **Status**: Current

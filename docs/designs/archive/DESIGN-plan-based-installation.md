@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: Users cannot install from externally-provided plans, limiting air-gapped deployments, CI optimization, and team standardization despite having plan generation capabilities.
+decision: Add `tsuku install --plan <file>` to accept installation plans from files or stdin, with comprehensive pre-execution validation and optional tool name specification.
+rationale: This completes the deterministic installation milestone by enabling Unix-style piping workflows (`tsuku eval tool | tsuku install --plan -`) while maintaining safety through platform validation and checksum verification. Reusing existing ExecutePlan() infrastructure minimizes code changes while providing clear error messages.
+---
+
 # Design: Plan-Based Installation
 
 - **Status**: Superseded by [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md)

@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Tsuku recipes are dynamic and non-deterministic; the same tool version can produce different installation results across days or machines due to platform detection, asset selection, and external API responses, preventing reproducible team installations and making recipe testing difficult.
+decision: Separate recipe evaluation (dynamic, produces deterministic installation plans) from plan execution (deterministic, downloads from exact URLs), making all installations plan-based to guarantee reproducibility by architecture.
+rationale: This two-phase model provides reproducible installations by default, enables recipe testing without actual deployment, supports air-gapped deployments, and reuses existing security infrastructure. Installation plans become auditable artifacts that capture exactly what will be downloaded.
+---
+
 # Design: Deterministic Recipe Resolution and Installation Plans
 
 - **Status**: Current

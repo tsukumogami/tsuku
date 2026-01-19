@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Libtool-based autotools projects fail to build with zig cc because libtool calls the compiler with `-print-prog-name=ld` to discover the linker, but zig cc doesn't support this GCC-specific flag.
+decision: Enhance the cc wrapper script to detect and handle `-print-prog-name` introspection flags by returning paths to the corresponding tool wrappers (ld, ar, ranlib).
+rationale: This approach directly fixes the root cause with minimal changes to a single function in util.go. The wrapper enhancement follows existing patterns in the codebase and provides genuine GCC compatibility, enabling libtool-based builds and re-enabling the No-GCC Container CI test.
+---
+
 # DESIGN: Libtool Compatibility with Zig CC
 
 **Status:** Current

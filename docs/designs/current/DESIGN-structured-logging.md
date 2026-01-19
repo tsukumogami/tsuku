@@ -1,6 +1,13 @@
+---
+status: Current
+problem: tsuku lacks structured diagnostic logging, making it difficult for users to troubleshoot installation failures without examining code or using ad-hoc debug patterns scattered across the codebase.
+decision: Implement a unified Logger interface backed by Go stdlib slog, with subsystems receiving the logger via functional options, enabling debug and verbose output controlled by command-line flags.
+rationale: This approach provides zero external dependencies while maintaining testability and matching the existing functional options pattern already established in internal/validate. slog's performance is adequate for CLI workloads where I/O dominates, and the interface design allows gradual migration of ~200+ existing fmt.Printf calls without requiring a big-bang rewrite.
+---
+
 # DESIGN: Structured Logging Framework
 
-**Status:** Completed
+**Status:** Current
 
 ## Context and Problem Statement
 

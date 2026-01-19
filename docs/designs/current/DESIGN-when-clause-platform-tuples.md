@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Recipe steps cannot express OR conditions across multiple platform tuples without duplicating entire steps.
+decision: Implement a structured WhenClause type to replace map[string]string, supporting platform arrays with proper type safety.
+rationale: With only 2 recipes currently using when clauses, the breaking change is minimal. The structured type provides type safety, clean APIs, and a strong foundation for future filtering conditions like environment variables.
+---
+
 # Platform Tuple Support in `when` Clauses
 
 ## Status

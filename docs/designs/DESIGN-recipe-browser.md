@@ -1,3 +1,10 @@
+---
+status: Planned
+problem: Users cannot discover what tools tsuku can install without installing the CLI and running `tsuku recipes`, despite the marketing claim of "150+ tools".
+decision: Build a static recipe browser page at `/recipes/` that fetches recipe metadata via client-side JavaScript and provides search/filter functionality.
+rationale: This approach maintains tsuku.dev's static-file architecture without adding a build step, enables instant updates when the registry publishes, and provides sufficient functionality for discovery and search needs. A framework-based solution would be overkill for a filtered list, and build-time HTML generation would introduce complexity and delays.
+---
+
 # Design: Recipe Browser Page
 
 **Status**: Planned

@@ -1,3 +1,10 @@
+---
+status: Planned
+problem: The install_binaries action's binaries parameter conflates two separate concerns (files to export vs files to make executable) and uses misleading semantics, creating confusion for recipe authors and blocking static analysis.
+decision: Rename binaries parameter to outputs and infer executability from path prefix (bin/ = executable) with an optional executables parameter for edge cases.
+rationale: This approach provides semantic clarity while maintaining backward compatibility through convention-based inference. Path prefix inference works for all 35 existing recipes and aligns with Unix conventions that developers already understand. The optional executables override handles future edge cases without burdening typical recipes.
+---
+
 # DESIGN: install_binaries Parameter Semantics
 
 ## Status

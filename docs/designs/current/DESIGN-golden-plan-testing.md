@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Recipe changes and code updates can cause silent regressions in plan generation, and integration tests are slow and non-deterministic due to network dependencies on external services.
+decision: Implement comprehensive golden plan testing by generating and validating deterministic installation plans for every recipe across all supported platforms, with CI workflows to detect and enforce updates.
+rationale: Golden plans provide complete regression coverage, enable meaningful code review through visible diffs, and eliminate silent regressions while being faster and more reliable than network-dependent integration tests. This approach mirrors existing testing patterns and leverages the deterministic `tsuku eval --recipe` command.
+---
+
 # DESIGN: Golden Plan Testing
 
 ## Status
