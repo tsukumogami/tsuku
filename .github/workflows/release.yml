@@ -243,7 +243,7 @@ jobs:
           )
 
           echo "Verifying all ${#EXPECTED_ARTIFACTS[@]} artifacts are present..."
-          ASSETS=$(gh release view "$TAG" --json assets -q '.assets[].name')
+          ASSETS=$(gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets -q '.assets[].name')
 
           for artifact in "${EXPECTED_ARTIFACTS[@]}"; do
             if ! echo "$ASSETS" | grep -q "^${artifact}$"; then
@@ -278,7 +278,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          gh release upload "$TAG" ./artifacts/checksums.txt --clobber
+          gh release upload "$TAG" --repo "$GITHUB_REPOSITORY" ./artifacts/checksums.txt --clobber
           echo "Uploaded checksums.txt"
 
       - name: Publish release
@@ -286,5 +286,5 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          gh release edit "$TAG" --draft=false
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
           echo "Published release $TAG"
