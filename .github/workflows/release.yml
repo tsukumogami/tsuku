@@ -9,47 +9,43 @@ permissions:
   contents: write
 
 jobs:
-  create-draft-release:
-    name: Create Draft Release
+  # GoReleaser creates the draft release and builds Go binaries
+  release:
+    name: Release (Go)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Need full history for tag annotations
+          fetch-depth: 0
 
-      - name: Create draft release
-        id: create
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: "go.mod"
+          cache-dependency-path: go.sum
+
+      - name: Verify go.mod is tidy
         run: |
-          TAG="${GITHUB_REF_NAME}"
-
-          # Extract release notes from annotated tag message
-          TAG_MESSAGE=$(git for-each-ref --format='%(contents)' "refs/tags/${TAG}")
-
-          if [ -z "$TAG_MESSAGE" ]; then
-            echo "::warning::No tag annotation found, using auto-generated notes"
-            NOTES_FLAG="--generate-notes"
-          else
-            # Write to temp file to preserve formatting
-            echo "$TAG_MESSAGE" > /tmp/release-notes.md
-            NOTES_FLAG="--notes-file /tmp/release-notes.md"
+          go mod tidy
+          if ! git diff --exit-code go.mod go.sum; then
+            echo "::error::go.mod or go.sum is not tidy. Cannot release with untidy module files."
+            exit 1
           fi
 
-          # Create draft release
-          gh release create "$TAG" \
-            --draft \
-            $NOTES_FLAG \
-            --title "$TAG"
-
-          echo "Created draft release $TAG"
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          distribution: goreleaser
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Build Rust binary (tsuku-dltest) on native runners
   build-rust:
     name: "Build Rust (${{ matrix.platform }})"
-    needs: [create-draft-release]
-    if: needs.create-draft-release.result == 'success'
+    needs: [release]
     strategy:
       fail-fast: false
       matrix:
@@ -113,8 +109,7 @@ jobs:
   # Build Rust binary with musl (Alpine container)
   build-rust-musl:
     name: "Build Rust (${{ matrix.platform }}-musl)"
-    needs: [create-draft-release]
-    if: needs.create-draft-release.result == 'success'
+    needs: [release]
     strategy:
       fail-fast: false
       matrix:
@@ -154,45 +149,10 @@ jobs:
           cp cmd/tsuku-dltest/target/release/tsuku-dltest "${{ matrix.artifact }}"
           gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
 
-  release:
-    name: Release
-    needs: [create-draft-release]
-    if: needs.create-draft-release.result == 'success'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: "go.mod"
-          cache-dependency-path: go.sum
-
-      - name: Verify go.mod is tidy
-        run: |
-          go mod tidy
-          if ! git diff --exit-code go.mod go.sum; then
-            echo "::error::go.mod or go.sum is not tidy. Cannot release with untidy module files."
-            exit 1
-          fi
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
-        with:
-          distribution: goreleaser
-          version: "~> v2"
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   # Integration tests on native platforms
   integration-test:
     name: "Integration Test (${{ matrix.platform }})"
-    needs: [create-draft-release, release, build-rust, build-rust-musl]
-    if: success()
+    needs: [release, build-rust, build-rust-musl]
     strategy:
       fail-fast: false
       matrix:
@@ -259,7 +219,6 @@ jobs:
   finalize-release:
     name: Finalize Release
     needs: [integration-test]
-    if: success()
     runs-on: ubuntu-latest
     steps:
       - name: Verify all artifacts present
