@@ -12,9 +12,6 @@ jobs:
   create-draft-release:
     name: Create Draft Release
     runs-on: ubuntu-latest
-    outputs:
-      release_id: ${{ steps.create.outputs.release_id }}
-      upload_url: ${{ steps.create.outputs.upload_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,20 +37,13 @@ jobs:
             NOTES_FLAG="--notes-file /tmp/release-notes.md"
           fi
 
-          # Create draft release and capture the response
-          RESPONSE=$(gh release create "$TAG" \
+          # Create draft release
+          gh release create "$TAG" \
             --draft \
             $NOTES_FLAG \
-            --title "$TAG" \
-            --json id,uploadUrl)
+            --title "$TAG"
 
-          # Extract outputs
-          RELEASE_ID=$(echo "$RESPONSE" | jq -r '.id')
-          UPLOAD_URL=$(echo "$RESPONSE" | jq -r '.uploadUrl')
-
-          echo "release_id=$RELEASE_ID" >> "$GITHUB_OUTPUT"
-          echo "upload_url=$UPLOAD_URL" >> "$GITHUB_OUTPUT"
-          echo "Created draft release $TAG (ID: $RELEASE_ID)"
+          echo "Created draft release $TAG"
 
   # Build Rust binary (tsuku-dltest) on native runners
   build-rust:
@@ -169,8 +159,6 @@ jobs:
     needs: [create-draft-release]
     if: needs.create-draft-release.result == 'success'
     runs-on: ubuntu-latest
-    env:
-      RELEASE_ID: ${{ needs.create-draft-release.outputs.release_id }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
