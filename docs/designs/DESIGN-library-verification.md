@@ -1,5 +1,5 @@
 ---
-status: Current
+status: Planned
 problem: The tsuku verify command does not support library recipes, failing when users run `tsuku verify gcc-libs` because libraries have no executables to verify and the command assumes all tools produce executable output for verification.
 decision: Implement tiered library verification combining header validation, dependency resolution, and dlopen load testing with optional integrity checksums, allowing users to choose verification depth via flags while keeping the default fast and practical.
 rationale: Tiered verification answers "will this library work?" instead of just "does the file exist?" by using fast Go stdlib header parsing for format and architecture validation, dependency checks, and optional dlopen load testing. This approach gracefully degrades if the dlopen helper is unavailable and avoids false confidence from single-layer approaches like checksums alone.
