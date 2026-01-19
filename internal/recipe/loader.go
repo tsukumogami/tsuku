@@ -10,6 +10,15 @@ import (
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
+// LoaderOptions configures recipe loading behavior.
+type LoaderOptions struct {
+	// RequireEmbedded restricts this specific load to embedded FS only.
+	// When true, the loader skips local recipes and registry lookups,
+	// returning an error if the recipe is not found in embedded recipes.
+	// Used for validating action dependencies with --require-embedded flag.
+	RequireEmbedded bool
+}
+
 // Loader handles loading and discovering recipes from the registry
 type Loader struct {
 	recipes          map[string]*Recipe
@@ -63,14 +72,21 @@ func (l *Loader) SetConstraintLookup(lookup ConstraintLookup) {
 }
 
 // Get retrieves a recipe by name
-// Priority: 1. In-memory cache, 2. Local recipes, 3. Registry (disk cache or remote)
-func (l *Loader) Get(name string) (*Recipe, error) {
-	return l.GetWithContext(context.Background(), name)
+// Priority: 1. In-memory cache, 2. Local recipes, 3. Embedded recipes, 4. Registry (disk cache or remote)
+// When opts.RequireEmbedded is true, only checks embedded recipes (skips local and registry).
+func (l *Loader) Get(name string, opts LoaderOptions) (*Recipe, error) {
+	return l.GetWithContext(context.Background(), name, opts)
 }
 
 // GetWithContext retrieves a recipe by name with context support
 // Priority: 1. In-memory cache, 2. Local recipes, 3. Embedded recipes, 4. Registry (disk cache or remote)
-func (l *Loader) GetWithContext(ctx context.Context, name string) (*Recipe, error) {
+// When opts.RequireEmbedded is true, only checks embedded recipes (skips local and registry).
+func (l *Loader) GetWithContext(ctx context.Context, name string, opts LoaderOptions) (*Recipe, error) {
+	// When RequireEmbedded is set, only check embedded recipes
+	if opts.RequireEmbedded {
+		return l.getEmbeddedOnly(name)
+	}
+
 	// Check in-memory cache first
 	if recipe, ok := l.recipes[name]; ok {
 		return recipe, nil
@@ -112,6 +128,37 @@ func (l *Loader) GetWithContext(ctx context.Context, name string) (*Recipe, erro
 
 	l.recipes[name] = recipe
 	return recipe, nil
+}
+
+// getEmbeddedOnly loads a recipe from embedded FS only, returning a clear error if not found.
+// This is used when opts.RequireEmbedded is true.
+func (l *Loader) getEmbeddedOnly(name string) (*Recipe, error) {
+	// Check in-memory cache first (recipe may have been loaded previously)
+	if recipe, ok := l.recipes[name]; ok {
+		return recipe, nil
+	}
+
+	// Check embedded recipes only
+	if l.embedded != nil {
+		if data, ok := l.embedded.Get(name); ok {
+			recipe, err := l.parseBytes(data)
+			if err != nil {
+				return nil, fmt.Errorf("failed to parse embedded recipe %s: %w", name, err)
+			}
+			l.recipes[name] = recipe
+			return recipe, nil
+		}
+	}
+
+	// Recipe not found in embedded FS - return actionable error
+	return nil, fmt.Errorf(
+		"recipe %q not found in embedded registry\n\n"+
+			"This error occurs because RequireEmbedded is set, which restricts recipe\n"+
+			"loading to the embedded registry only. The recipe must be available without\n"+
+			"network access.\n\n"+
+			"To fix: ensure the recipe exists in internal/recipe/recipes/",
+		name,
+	)
 }
 
 // loadLocalRecipe attempts to load a recipe from the local recipes directory

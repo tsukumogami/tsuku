@@ -17,7 +17,7 @@ func newMockLoader() *mockLoader {
 	return &mockLoader{recipes: make(map[string]*recipe.Recipe)}
 }
 
-func (m *mockLoader) GetWithContext(ctx context.Context, name string) (*recipe.Recipe, error) {
+func (m *mockLoader) GetWithContext(ctx context.Context, name string, opts recipe.LoaderOptions) (*recipe.Recipe, error) {
 	if r, ok := m.recipes[name]; ok {
 		return r, nil
 	}

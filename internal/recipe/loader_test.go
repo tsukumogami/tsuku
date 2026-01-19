@@ -56,7 +56,7 @@ command = "test-tool --version"
 
 	loader := New(reg)
 
-	recipe, err := loader.Get("test-tool")
+	recipe, err := loader.Get("test-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("Get() failed: %v", err)
 	}
@@ -66,7 +66,7 @@ command = "test-tool --version"
 	}
 
 	// Second call should use in-memory cache
-	recipe2, err := loader.Get("test-tool")
+	recipe2, err := loader.Get("test-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("Get() second call failed: %v", err)
 	}
@@ -87,7 +87,7 @@ func TestLoader_Get_NotFound(t *testing.T) {
 
 	loader := New(reg)
 
-	_, err := loader.Get("nonexistent")
+	_, err := loader.Get("nonexistent", LoaderOptions{})
 	if err == nil {
 		t.Error("Get() should fail for nonexistent recipe")
 	}
@@ -123,7 +123,7 @@ command = "ctx-tool --version"
 	loader := New(reg)
 
 	ctx := context.Background()
-	recipe, err := loader.GetWithContext(ctx, "ctx-tool")
+	recipe, err := loader.GetWithContext(ctx, "ctx-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("GetWithContext() failed: %v", err)
 	}
@@ -165,7 +165,7 @@ command = "list-tool --version"
 	}
 
 	// Load a recipe
-	_, _ = loader.Get("list-tool")
+	_, _ = loader.Get("list-tool", LoaderOptions{})
 
 	// Now should have one
 	names = loader.List()
@@ -203,7 +203,7 @@ command = "count-tool --version"
 		t.Errorf("Count() = %d, want 0", loader.Count())
 	}
 
-	_, _ = loader.Get("count-tool")
+	_, _ = loader.Get("count-tool", LoaderOptions{})
 
 	if loader.Count() != 1 {
 		t.Errorf("Count() = %d, want 1", loader.Count())
@@ -245,7 +245,7 @@ command = "cache-tool --version"
 	loader := New(reg)
 
 	// Load a recipe
-	_, _ = loader.Get("cache-tool")
+	_, _ = loader.Get("cache-tool", LoaderOptions{})
 	if loader.Count() != 1 {
 		t.Fatalf("Expected 1 recipe after Get, got %d", loader.Count())
 	}
@@ -339,7 +339,7 @@ command = "local-tool --version"
 	loader := NewWithLocalRecipes(reg, recipesDir)
 
 	// Should load from local recipes directory
-	recipe, err := loader.Get("local-tool")
+	recipe, err := loader.Get("local-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("Get() failed: %v", err)
 	}
@@ -402,7 +402,7 @@ command = "priority-tool --version"
 	loader := NewWithLocalRecipes(reg, recipesDir)
 
 	// Should load from local recipes directory, not registry
-	recipe, err := loader.Get("priority-tool")
+	recipe, err := loader.Get("priority-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("Get() failed: %v", err)
 	}
@@ -446,7 +446,7 @@ command = "registry-tool --version"
 	loader := NewWithLocalRecipes(reg, recipesDir)
 
 	// Should fall back to registry when local doesn't exist
-	recipe, err := loader.Get("registry-tool")
+	recipe, err := loader.Get("registry-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("Get() failed: %v", err)
 	}
@@ -476,7 +476,7 @@ func TestLoader_Get_LocalRecipeParseError(t *testing.T) {
 	loader := NewWithLocalRecipes(reg, recipesDir)
 
 	// Should return parse error, not fallback to registry
-	_, err := loader.Get("invalid-tool")
+	_, err := loader.Get("invalid-tool", LoaderOptions{})
 	if err == nil {
 		t.Error("Get() should fail for invalid local recipe TOML")
 	}
@@ -938,7 +938,7 @@ command = "echo ok"
 	loader := NewWithLocalRecipes(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
-	recipe, err := loader.Get("constrained-tool")
+	recipe, err := loader.Get("constrained-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("Get() failed: %v", err)
 	}
@@ -997,7 +997,7 @@ command = "echo ok"
 	// Don't set constraint lookup - analysis should be skipped
 	loader := NewWithLocalRecipes(reg, recipesDir)
 
-	recipe, err := loader.Get("no-analysis-tool")
+	recipe, err := loader.Get("no-analysis-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("Get() failed: %v", err)
 	}
@@ -1049,7 +1049,7 @@ command = "echo ok"
 	loader := NewWithLocalRecipes(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
-	recipe, err := loader.Get("varying-tool")
+	recipe, err := loader.Get("varying-tool", LoaderOptions{})
 	if err != nil {
 		t.Fatalf("Get() failed: %v", err)
 	}
@@ -1106,7 +1106,7 @@ command = "echo ok"
 	loader := NewWithLocalRecipes(reg, recipesDir)
 	loader.SetConstraintLookup(mockLookup)
 
-	_, err := loader.Get("conflict-tool")
+	_, err := loader.Get("conflict-tool", LoaderOptions{})
 	if err == nil {
 		t.Fatal("Expected error for conflicting constraints")
 	}
@@ -1114,5 +1114,33 @@ command = "echo ok"
 	// Should contain error about OS conflict
 	if !strings.Contains(err.Error(), "conflict") {
 		t.Errorf("Expected error about conflict, got: %v", err)
+	}
+}
+
+func TestLoader_Get_RequireEmbedded(t *testing.T) {
+	// Test that RequireEmbedded=true only checks embedded recipes
+	reg := registry.New(t.TempDir())
+	loader := New(reg)
+
+	// Test 1: Embedded recipe should be found with RequireEmbedded=true
+	// Use a known embedded recipe like "golang"
+	recipe, err := loader.Get("golang", LoaderOptions{RequireEmbedded: true})
+	if err != nil {
+		t.Fatalf("Get() with RequireEmbedded=true failed for embedded recipe: %v", err)
+	}
+	if recipe.Metadata.Name != "golang" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "golang")
+	}
+
+	// Test 2: Non-embedded recipe should fail with RequireEmbedded=true
+	// Use a loader without embedded recipes to simulate this
+	loaderNoEmbed := NewWithoutEmbedded(reg, "")
+	_, err = loaderNoEmbed.Get("nonexistent-recipe", LoaderOptions{RequireEmbedded: true})
+	if err == nil {
+		t.Error("Get() with RequireEmbedded=true should fail for non-embedded recipe")
+	}
+	// Check error message contains helpful information
+	if !strings.Contains(err.Error(), "not found in embedded registry") {
+		t.Errorf("error message should mention 'not found in embedded registry', got: %v", err)
 	}
 }

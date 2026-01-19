@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 var searchCmd = &cobra.Command{
@@ -47,7 +48,7 @@ var searchCmd = &cobra.Command{
 		}
 
 		for _, name := range names {
-			r, err := loader.Get(name)
+			r, err := loader.Get(name, recipe.LoaderOptions{})
 			if err != nil {
 				continue
 			}
