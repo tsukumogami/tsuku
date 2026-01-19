@@ -29,6 +29,37 @@ func (m *mockLoader) addRecipe(name string, r *recipe.Recipe) {
 	m.recipes[name] = r
 }
 
+// trackingMockLoader tracks LoaderOptions passed to each call for testing RequireEmbedded propagation
+type trackingMockLoader struct {
+	recipes map[string]*recipe.Recipe
+	calls   []loaderCall
+}
+
+type loaderCall struct {
+	name            string
+	requireEmbedded bool
+}
+
+func newTrackingMockLoader() *trackingMockLoader {
+	return &trackingMockLoader{
+		recipes: make(map[string]*recipe.Recipe),
+		calls:   make([]loaderCall, 0),
+	}
+}
+
+func (m *trackingMockLoader) GetWithContext(ctx context.Context, name string, opts recipe.LoaderOptions) (*recipe.Recipe, error) {
+	m.calls = append(m.calls, loaderCall{name: name, requireEmbedded: opts.RequireEmbedded})
+	if r, ok := m.recipes[name]; ok {
+		return r, nil
+	}
+	return nil, errors.New("recipe not found")
+}
+
+func (m *trackingMockLoader) addRecipe(name string, r *recipe.Recipe) {
+	r.Metadata.Name = name
+	m.recipes[name] = r
+}
+
 func TestResolveDependencies_NpmInstall(t *testing.T) {
 	t.Parallel()
 	r := &recipe.Recipe{
@@ -507,7 +538,7 @@ func TestResolveTransitive_EmptyDeps(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	result, err := ResolveTransitive(ctx, loader, deps, "root", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitive() error = %v", err)
 	}
@@ -536,7 +567,7 @@ func TestResolveTransitive_NoDepsRecipe(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	result, err := ResolveTransitive(ctx, loader, deps, "root", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitive() error = %v", err)
 	}
@@ -573,7 +604,7 @@ func TestResolveTransitive_LinearChain(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	result, err := ResolveTransitive(ctx, loader, deps, "A")
+	result, err := ResolveTransitive(ctx, loader, deps, "A", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitive() error = %v", err)
 	}
@@ -620,7 +651,7 @@ func TestResolveTransitive_Diamond(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	result, err := ResolveTransitive(ctx, loader, deps, "A")
+	result, err := ResolveTransitive(ctx, loader, deps, "A", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitive() error = %v", err)
 	}
@@ -671,7 +702,7 @@ func TestResolveTransitive_CycleDetection(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	_, err := ResolveTransitive(ctx, loader, deps, "A")
+	_, err := ResolveTransitive(ctx, loader, deps, "A", false)
 	if err == nil {
 		t.Fatal("ResolveTransitive() expected error for cycle, got nil")
 	}
@@ -703,7 +734,7 @@ func TestResolveTransitive_SelfCycle(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	_, err := ResolveTransitive(ctx, loader, deps, "root")
+	_, err := ResolveTransitive(ctx, loader, deps, "root", false)
 	if err == nil {
 		t.Fatal("ResolveTransitive() expected error for self-cycle, got nil")
 	}
@@ -737,7 +768,7 @@ func TestResolveTransitive_MaxDepthExceeded(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	_, err := ResolveTransitive(ctx, loader, deps, "root")
+	_, err := ResolveTransitive(ctx, loader, deps, "root", false)
 	if err == nil {
 		t.Fatal("ResolveTransitive() expected error for max depth, got nil")
 	}
@@ -770,7 +801,7 @@ func TestResolveTransitive_VersionPreservation(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	result, err := ResolveTransitive(ctx, loader, deps, "root", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitive() error = %v", err)
 	}
@@ -792,7 +823,7 @@ func TestResolveTransitive_MissingRecipe(t *testing.T) {
 		Runtime:     make(map[string]string),
 	}
 
-	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	result, err := ResolveTransitive(ctx, loader, deps, "root", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitive() error = %v, want nil (missing recipe should be skipped)", err)
 	}
@@ -825,7 +856,7 @@ func TestResolveTransitive_RuntimeDeps(t *testing.T) {
 		Runtime:     map[string]string{"B": "latest"},
 	}
 
-	result, err := ResolveTransitive(ctx, loader, deps, "root")
+	result, err := ResolveTransitive(ctx, loader, deps, "root", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitive() error = %v", err)
 	}
@@ -836,6 +867,59 @@ func TestResolveTransitive_RuntimeDeps(t *testing.T) {
 	}
 	if result.Runtime["C"] != "latest" {
 		t.Errorf("Runtime[C] = %q, want %q", result.Runtime["C"], "latest")
+	}
+}
+
+func TestResolveTransitive_RequireEmbeddedPropagation(t *testing.T) {
+	t.Parallel()
+	// Test that requireEmbedded flag is properly propagated to loader
+	loader := newTrackingMockLoader()
+
+	// A depends on B via step-level extra_dependencies (transitive chain)
+	loader.addRecipe("A", &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "download", Params: map[string]interface{}{
+				"extra_dependencies": []interface{}{"B"},
+			}},
+		},
+	})
+	loader.addRecipe("B", &recipe.Recipe{
+		Steps: []recipe.Step{
+			{Action: "download", Params: map[string]interface{}{}},
+		},
+	})
+	ctx := context.Background()
+
+	deps := ResolvedDeps{
+		InstallTime: map[string]string{"A": "latest"},
+		Runtime:     make(map[string]string),
+	}
+
+	// Test with requireEmbedded = true
+	_, err := ResolveTransitive(ctx, loader, deps, "root", true)
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v", err)
+	}
+
+	// Verify all calls had RequireEmbedded=true
+	for _, call := range loader.calls {
+		if !call.requireEmbedded {
+			t.Errorf("Expected RequireEmbedded=true for %q, got false", call.name)
+		}
+	}
+
+	// Reset and test with requireEmbedded = false
+	loader.calls = nil
+	_, err = ResolveTransitive(ctx, loader, deps, "root", false)
+	if err != nil {
+		t.Fatalf("ResolveTransitive() error = %v", err)
+	}
+
+	// Verify all calls had RequireEmbedded=false
+	for _, call := range loader.calls {
+		if call.requireEmbedded {
+			t.Errorf("Expected RequireEmbedded=false for %q, got true", call.name)
+		}
 	}
 }
 
@@ -1196,7 +1280,7 @@ func TestResolveTransitiveForPlatform_PlatformFiltering(t *testing.T) {
 				Runtime:     make(map[string]string),
 			}
 
-			result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", tt.targetOS)
+			result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", tt.targetOS, false)
 			if err != nil {
 				t.Fatalf("ResolveTransitiveForPlatform() error = %v", err)
 			}
@@ -1256,7 +1340,7 @@ func TestResolveTransitiveForPlatform_NestedDependencies(t *testing.T) {
 	}
 
 	// Resolve for darwin - nested patchelf should NOT be included
-	result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", "darwin")
+	result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", "darwin", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitiveForPlatform() error = %v", err)
 	}
@@ -1312,7 +1396,7 @@ func TestResolveTransitiveForPlatform_RuntimeDeps(t *testing.T) {
 	}
 
 	// Resolve for darwin
-	result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", "darwin")
+	result, err := ResolveTransitiveForPlatform(ctx, loader, deps, "root", "darwin", false)
 	if err != nil {
 		t.Fatalf("ResolveTransitiveForPlatform() error = %v", err)
 	}

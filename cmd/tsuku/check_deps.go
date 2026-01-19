@@ -75,7 +75,7 @@ func runCheckDeps(cmd *cobra.Command, args []string) {
 	directDeps := actions.ResolveDependencies(r)
 
 	// Resolve transitive dependencies
-	resolvedDeps, err := actions.ResolveTransitive(globalCtx, loader, directDeps, toolName)
+	resolvedDeps, err := actions.ResolveTransitive(globalCtx, loader, directDeps, toolName, false)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Failed to resolve dependencies: %v\n", err)
 		exitWithCode(ExitDependencyFailed)

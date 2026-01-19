@@ -276,6 +276,7 @@ func aggregatePrimitiveDeps(action string, params map[string]interface{}) Action
 //   - loader: RecipeLoader to fetch dependency recipes
 //   - deps: Direct dependencies to expand (from ResolveDependencies)
 //   - rootName: Name of the root recipe (used for cycle detection)
+//   - requireEmbedded: If true, dependencies must resolve from embedded recipes only
 //
 // The function:
 //   - Resolves each dependency's own dependencies recursively
@@ -290,8 +291,9 @@ func ResolveTransitive(
 	loader RecipeLoader,
 	deps ResolvedDeps,
 	rootName string,
+	requireEmbedded bool,
 ) (ResolvedDeps, error) {
-	return ResolveTransitiveForPlatform(ctx, loader, deps, rootName, runtime.GOOS)
+	return ResolveTransitiveForPlatform(ctx, loader, deps, rootName, runtime.GOOS, requireEmbedded)
 }
 
 // ResolveTransitiveForPlatform expands dependencies transitively for a specific target OS.
@@ -303,6 +305,7 @@ func ResolveTransitive(
 //   - deps: Direct dependencies to expand (from ResolveDependencies)
 //   - rootName: Name of the root recipe (used for cycle detection)
 //   - targetOS: Target operating system for platform-specific dependency filtering
+//   - requireEmbedded: If true, dependencies must resolve from embedded recipes only
 //
 // Returns the fully expanded dependencies or an error if a cycle is detected
 // or max depth is exceeded.
@@ -312,6 +315,7 @@ func ResolveTransitiveForPlatform(
 	deps ResolvedDeps,
 	rootName string,
 	targetOS string,
+	requireEmbedded bool,
 ) (ResolvedDeps, error) {
 	result := ResolvedDeps{
 		InstallTime: make(map[string]string),
@@ -328,13 +332,13 @@ func ResolveTransitiveForPlatform(
 
 	// Resolve install-time deps transitively
 	installVisited := make(map[string]bool)
-	if err := resolveTransitiveSet(ctx, loader, result.InstallTime, []string{rootName}, 0, installVisited, false, targetOS); err != nil {
+	if err := resolveTransitiveSet(ctx, loader, result.InstallTime, []string{rootName}, 0, installVisited, false, targetOS, requireEmbedded); err != nil {
 		return ResolvedDeps{}, err
 	}
 
 	// Resolve runtime deps transitively
 	runtimeVisited := make(map[string]bool)
-	if err := resolveTransitiveSet(ctx, loader, result.Runtime, []string{rootName}, 0, runtimeVisited, true, targetOS); err != nil {
+	if err := resolveTransitiveSet(ctx, loader, result.Runtime, []string{rootName}, 0, runtimeVisited, true, targetOS, requireEmbedded); err != nil {
 		return ResolvedDeps{}, err
 	}
 
@@ -347,6 +351,7 @@ func ResolveTransitiveForPlatform(
 // The visited map tracks already-processed deps to avoid redundant work.
 // The forRuntime flag indicates whether to use Runtime or InstallTime deps.
 // The targetOS parameter specifies the target platform for filtering platform-specific deps.
+// The requireEmbedded flag is passed to the loader to restrict resolution to embedded recipes.
 func resolveTransitiveSet(
 	ctx context.Context,
 	loader RecipeLoader,
@@ -356,6 +361,7 @@ func resolveTransitiveSet(
 	visited map[string]bool,
 	forRuntime bool,
 	targetOS string,
+	requireEmbedded bool,
 ) error {
 	if depth >= MaxTransitiveDepth {
 		return fmt.Errorf("%w: exceeded depth %d at path %s",
@@ -385,8 +391,8 @@ func resolveTransitiveSet(
 		// Mark as visited
 		visited[depName] = true
 
-		// Load the dependency's recipe (using default options - no RequireEmbedded)
-		depRecipe, err := loader.GetWithContext(ctx, depName, recipe.LoaderOptions{})
+		// Load the dependency's recipe with RequireEmbedded flag
+		depRecipe, err := loader.GetWithContext(ctx, depName, recipe.LoaderOptions{RequireEmbedded: requireEmbedded})
 		if err != nil {
 			// Dependency recipe not found - skip (may be a system dep or not in registry)
 			continue
@@ -430,7 +436,7 @@ func resolveTransitiveSet(
 		// but all additions still go to the main deps map via the parent's deps[transName] assignments
 		if len(newDeps) > 0 {
 			newPath := append(path, depName)
-			if err := resolveTransitiveSet(ctx, loader, newDeps, newPath, depth+1, visited, forRuntime, targetOS); err != nil {
+			if err := resolveTransitiveSet(ctx, loader, newDeps, newPath, depth+1, visited, forRuntime, targetOS, requireEmbedded); err != nil {
 				return err
 			}
 			// Merge recursive results back into main deps map
