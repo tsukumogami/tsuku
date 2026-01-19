@@ -36,6 +36,7 @@ var evalInstallDeps bool
 var evalRecipePath string
 var evalVersion string
 var evalPinFrom string
+var evalRequireEmbedded bool
 
 var evalCmd = &cobra.Command{
 	Use:   "eval <tool>[@version]",
@@ -89,6 +90,7 @@ func init() {
 	evalCmd.Flags().StringVar(&evalRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 	evalCmd.Flags().StringVar(&evalVersion, "version", "", "Version to use (only with --recipe)")
 	evalCmd.Flags().StringVar(&evalPinFrom, "pin-from", "", "Path to golden file for constrained evaluation")
+	evalCmd.Flags().BoolVar(&evalRequireEmbedded, "require-embedded", false, "Require action dependencies to resolve from embedded registry")
 }
 
 // ValidateOS validates an OS value against the whitelist.
@@ -277,6 +279,7 @@ func runEval(cmd *cobra.Command, args []string) {
 		AutoAcceptEvalDeps: evalInstallDeps,
 		RecipeLoader:       loader,
 		Constraints:        constraints,
+		RequireEmbedded:    evalRequireEmbedded,
 		OnWarning: func(action, message string) {
 			// Output warnings to stderr so they don't mix with JSON
 			fmt.Fprintf(os.Stderr, "Warning: %s\n", message)
