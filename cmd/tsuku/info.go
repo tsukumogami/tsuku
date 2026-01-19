@@ -89,7 +89,7 @@ var infoCmd = &cobra.Command{
 			if status == "not_installed" {
 				directDeps := actions.ResolveDependencies(r)
 				// Resolve transitive dependencies
-				resolvedDeps, err := actions.ResolveTransitive(context.Background(), loader, directDeps, toolName)
+				resolvedDeps, err := actions.ResolveTransitive(context.Background(), loader, directDeps, toolName, false)
 				if err == nil {
 					installDeps = sortedKeys(resolvedDeps.InstallTime)
 					runtimeDeps = sortedKeys(resolvedDeps.Runtime)
