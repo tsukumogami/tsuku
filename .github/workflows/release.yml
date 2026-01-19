@@ -33,12 +33,20 @@ jobs:
             exit 1
           fi
 
+      - name: Extract release notes from tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          # Extract tag annotation message (excludes the commit info at the end)
+          git for-each-ref --format='%(contents)' "refs/tags/${TAG}" > /tmp/release-notes.md
+          echo "Release notes extracted:"
+          cat /tmp/release-notes.md
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean
+          args: release --clean --release-notes /tmp/release-notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
