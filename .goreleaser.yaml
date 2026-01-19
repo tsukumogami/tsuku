@@ -17,7 +17,7 @@ builds:
       - -trimpath
       - -buildvcs=false
     ldflags:
-      - -s -w -X github.com/tsukumogami/tsuku/internal/buildinfo.version={{.Version}} -X github.com/tsukumogami/tsuku/internal/buildinfo.commit={{.Commit}}
+      - -s -w -X github.com/tsukumogami/tsuku/internal/buildinfo.version={{.Version}} -X github.com/tsukumogami/tsuku/internal/buildinfo.commit={{.Commit}} -X github.com/tsukumogami/tsuku/internal/verify.pinnedDltestVersion={{.Version}}
     mod_timestamp: "{{ .CommitTimestamp }}"
     no_unique_dist_dir: true
 
@@ -40,7 +40,9 @@ release:
   github:
     owner: tsukumogami
     name: tsuku
-  draft: false
+  draft: true
+  make_latest: true
+  mode: keep-existing
   prerelease: auto
 
 snapshot:
