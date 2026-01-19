@@ -138,20 +138,50 @@ if [ "$MODIFY_PATH" = true ]; then
     SHELL_NAME=$(basename "$SHELL")
     SHELL_CONFIG=""
 
+    # Helper function to add source line to a config file (idempotent)
+    add_to_config() {
+        local config_file="$1"
+        local source_line=". \"$ENV_FILE\""
+
+        if [ -f "$config_file" ] && grep -qF "$ENV_FILE" "$config_file" 2>/dev/null; then
+            echo "  Already configured: $config_file"
+            return 0
+        fi
+
+        # Append source line
+        {
+            echo ""
+            echo "# tsuku"
+            echo "$source_line"
+        } >> "$config_file"
+        echo "  Configured: $config_file"
+    }
+
     case "$SHELL_NAME" in
         bash)
-            # Prefer .bash_profile for login shells, fall back to .profile
+            # Add to both .bashrc (interactive non-login) and .bash_profile (login)
+            # This matches rustup's approach for cross-platform compatibility
+            echo "Configuring bash..."
+
+            # .bashrc for interactive non-login shells (most Linux terminals)
+            if [ -f "$HOME/.bashrc" ]; then
+                add_to_config "$HOME/.bashrc"
+            fi
+
+            # .bash_profile or .profile for login shells (macOS Terminal, SSH)
             if [ -f "$HOME/.bash_profile" ]; then
-                SHELL_CONFIG="$HOME/.bash_profile"
+                add_to_config "$HOME/.bash_profile"
             elif [ -f "$HOME/.profile" ]; then
-                SHELL_CONFIG="$HOME/.profile"
+                add_to_config "$HOME/.profile"
             else
                 # Create .bash_profile if neither exists
-                SHELL_CONFIG="$HOME/.bash_profile"
+                add_to_config "$HOME/.bash_profile"
             fi
             ;;
         zsh)
-            SHELL_CONFIG="$HOME/.zshenv"
+            echo "Configuring zsh..."
+            # .zshenv is always sourced (login and non-login shells)
+            add_to_config "$HOME/.zshenv"
             ;;
         *)
             echo "Unknown shell: $SHELL_NAME"
@@ -162,20 +192,7 @@ if [ "$MODIFY_PATH" = true ]; then
             ;;
     esac
 
-    if [ -n "$SHELL_CONFIG" ]; then
-        # Check if source line already exists (idempotent)
-        SOURCE_LINE=". \"$ENV_FILE\""
-        if [ -f "$SHELL_CONFIG" ] && grep -qF "$ENV_FILE" "$SHELL_CONFIG" 2>/dev/null; then
-            echo "Shell already configured: $SHELL_CONFIG"
-        else
-            # Append source line
-            {
-                echo ""
-                echo "# tsuku"
-                echo "$SOURCE_LINE"
-            } >> "$SHELL_CONFIG"
-            echo "Configured shell: $SHELL_CONFIG"
-        fi
+    if [ "$SHELL_NAME" = "bash" ] || [ "$SHELL_NAME" = "zsh" ]; then
         echo ""
         echo "Restart your shell or run:"
         echo "  source \"$ENV_FILE\""
