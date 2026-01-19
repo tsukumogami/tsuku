@@ -200,9 +200,77 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Integration tests on native platforms
+  integration-test:
+    name: "Integration Test (${{ matrix.platform }})"
+    needs: [create-draft-release, release, build-rust, build-rust-musl]
+    if: success()
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-amd64
+            runner: ubuntu-22.04
+            tsuku_binary: tsuku-linux-amd64
+            dltest_binary: tsuku-dltest-linux-amd64
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            tsuku_binary: tsuku-linux-arm64
+            dltest_binary: tsuku-dltest-linux-arm64
+          - platform: darwin-amd64
+            runner: macos-13
+            tsuku_binary: tsuku-darwin-amd64
+            dltest_binary: tsuku-dltest-darwin-amd64
+          - platform: darwin-arm64
+            runner: macos-latest
+            tsuku_binary: tsuku-darwin-arm64
+            dltest_binary: tsuku-dltest-darwin-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Download binaries from draft release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          mkdir -p ./artifacts
+          gh release download "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "${{ matrix.tsuku_binary }}" \
+            --pattern "${{ matrix.dltest_binary }}" \
+            --dir ./artifacts
+          chmod +x ./artifacts/*
+
+      - name: Validate tsuku version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          EXPECTED_VERSION="${TAG#v}"
+          TSUKU_VERSION=$(./artifacts/${{ matrix.tsuku_binary }} --version 2>&1)
+          echo "tsuku version output: $TSUKU_VERSION"
+          if ! echo "$TSUKU_VERSION" | grep -q "$EXPECTED_VERSION"; then
+            echo "ERROR: tsuku version mismatch"
+            echo "Expected to contain: $EXPECTED_VERSION"
+            echo "Got: $TSUKU_VERSION"
+            exit 1
+          fi
+          echo "tsuku version check passed"
+
+      - name: Validate tsuku-dltest version
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          EXPECTED_VERSION="${TAG#v}"
+          DLTEST_VERSION=$(./artifacts/${{ matrix.dltest_binary }} --version 2>&1)
+          echo "tsuku-dltest version output: $DLTEST_VERSION"
+          if ! echo "$DLTEST_VERSION" | grep -q "$EXPECTED_VERSION"; then
+            echo "ERROR: tsuku-dltest version mismatch"
+            echo "Expected to contain: $EXPECTED_VERSION"
+            echo "Got: $DLTEST_VERSION"
+            exit 1
+          fi
+          echo "tsuku-dltest version check passed"
+
   finalize-release:
     name: Finalize Release
-    needs: [create-draft-release, release, build-rust, build-rust-musl]
+    needs: [integration-test]
     if: success()
     runs-on: ubuntu-latest
     steps:
