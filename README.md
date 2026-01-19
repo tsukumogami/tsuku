@@ -457,6 +457,18 @@ For libraries, verification includes multiple tiers:
 
 Tier 2 validation also detects ABI mismatches (glibc vs musl) to catch incompatible binary combinations early.
 
+Library verification supports additional options:
+
+```bash
+# Enable checksum verification (Tier 4)
+tsuku verify gcc-libs --integrity
+
+# Skip dlopen load testing (useful for headless environments)
+tsuku verify gcc-libs --skip-dlopen
+```
+
+When a library is installed, tsuku computes and stores SHA256 checksums of all library files. The `--integrity` flag compares current checksums against these stored values to detect post-installation tampering.
+
 ### Sandbox Testing
 
 Test installations in isolated containers to verify recipes work correctly:

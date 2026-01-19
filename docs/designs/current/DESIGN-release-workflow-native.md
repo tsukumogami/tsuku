@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: The current release workflow can't handle native binaries like the Rust dlopen helper because cross-compilation to macOS requires the macOS SDK, which is only legally available on macOS hardware.
 decision: Use parallel matrix builds on native runners with a draft-then-publish pattern, both glibc and musl Linux variants, and ad-hoc code signing for macOS.
 rationale: Draft releases provide atomic publishing semantics. Dual glibc/musl builds cover both modern glibc systems and Alpine/musl distributions. Ad-hoc signing eliminates common macOS friction without Apple Developer costs.
@@ -7,7 +7,7 @@ rationale: Draft releases provide atomic publishing semantics. Dual glibc/musl b
 
 # DESIGN: Native Binary Release Workflow
 
-**Status:** Planned
+**Status:** Current
 
 ## Implementation Issues
 
@@ -70,8 +70,7 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1025,I1026,I1027,I1028,I1030,I1031 done
-    class I1040 ready
+    class I1025,I1026,I1027,I1028,I1030,I1031,I1040 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
