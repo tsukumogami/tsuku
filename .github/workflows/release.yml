@@ -55,6 +55,115 @@ jobs:
           echo "upload_url=$UPLOAD_URL" >> "$GITHUB_OUTPUT"
           echo "Created draft release $TAG (ID: $RELEASE_ID)"
 
+  # Build Rust binary (tsuku-dltest) on native runners
+  build-rust:
+    name: "Build Rust (${{ matrix.platform }})"
+    needs: [create-draft-release]
+    if: needs.create-draft-release.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux glibc builds
+          - platform: linux-amd64
+            runner: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            artifact: tsuku-dltest-linux-amd64
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            artifact: tsuku-dltest-linux-arm64
+          # macOS builds
+          - platform: darwin-amd64
+            runner: macos-13
+            target: x86_64-apple-darwin
+            artifact: tsuku-dltest-darwin-amd64
+          - platform: darwin-arm64
+            runner: macos-latest
+            target: aarch64-apple-darwin
+            artifact: tsuku-dltest-darwin-arm64
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            cmd/tsuku-dltest
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.75"
+
+      - name: Inject version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/^version = .*/version = \"$VERSION\"/" cmd/tsuku-dltest/Cargo.toml
+          else
+            sed -i "s/^version = .*/version = \"$VERSION\"/" cmd/tsuku-dltest/Cargo.toml
+          fi
+          echo "Building version: $VERSION"
+
+      - name: Build release binary
+        working-directory: cmd/tsuku-dltest
+        run: cargo build --release
+
+      - name: Sign binary (macOS)
+        if: startsWith(matrix.runner, 'macos')
+        run: codesign -s - cmd/tsuku-dltest/target/release/tsuku-dltest
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp cmd/tsuku-dltest/target/release/tsuku-dltest "${{ matrix.artifact }}"
+          gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
+
+  # Build Rust binary with musl (Alpine container)
+  build-rust-musl:
+    name: "Build Rust (${{ matrix.platform }}-musl)"
+    needs: [create-draft-release]
+    if: needs.create-draft-release.result == 'success'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-amd64
+            runner: ubuntu-22.04
+            artifact: tsuku-dltest-linux-amd64-musl
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            artifact: tsuku-dltest-linux-arm64-musl
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            cmd/tsuku-dltest
+
+      - name: Inject version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/^version = .*/version = \"$VERSION\"/" cmd/tsuku-dltest/Cargo.toml
+          echo "Building version: $VERSION"
+
+      - name: Build in Alpine container
+        run: |
+          docker run --rm -v "$PWD:/workspace" -w /workspace alpine:3.19 sh -c '
+            apk add --no-cache rust cargo
+            cd cmd/tsuku-dltest
+            cargo build --release
+          '
+
+      - name: Upload to release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp cmd/tsuku-dltest/target/release/tsuku-dltest "${{ matrix.artifact }}"
+          gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
+
   release:
     name: Release
     needs: [create-draft-release]
@@ -93,7 +202,7 @@ jobs:
 
   finalize-release:
     name: Finalize Release
-    needs: [create-draft-release, release]
+    needs: [create-draft-release, release, build-rust, build-rust-musl]
     if: success()
     runs-on: ubuntu-latest
     steps:
