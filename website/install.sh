@@ -136,7 +136,6 @@ fi
 if [ "$MODIFY_PATH" = true ]; then
     # Determine shell config file based on $SHELL
     SHELL_NAME=$(basename "$SHELL")
-    SHELL_CONFIG=""
 
     # Helper function to add source line to a config file (idempotent)
     add_to_config() {
