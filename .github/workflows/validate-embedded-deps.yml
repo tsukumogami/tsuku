@@ -1,0 +1,93 @@
+name: Validate Embedded Dependencies
+
+on:
+  push:
+    paths:
+      - 'internal/recipe/recipes/**'
+      - 'internal/actions/**'
+      - 'internal/recipe/loader.go'
+      - 'embedded-validation-exclusions.json'
+  pull_request:
+    paths:
+      - 'internal/recipe/recipes/**'
+      - 'internal/actions/**'
+      - 'internal/recipe/loader.go'
+      - 'embedded-validation-exclusions.json'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Validate embedded action dependencies
+        run: |
+          # Test recipes that exercise each action type
+          declare -A test_recipes=(
+            ["go_install"]="gofumpt"
+            ["cargo_install"]="cargo-audit"
+            ["npm_install"]="netlify-cli"
+            ["pipx_install"]="ruff"
+            ["gem_install"]="bundler"
+            ["cpan_install"]="ack"
+            ["homebrew"]="make"
+          )
+
+          # Load exclusions
+          if [ -f embedded-validation-exclusions.json ]; then
+            exclusions=$(jq -r '.exclusions[].recipe // empty' embedded-validation-exclusions.json 2>/dev/null || echo "")
+          else
+            exclusions=""
+          fi
+
+          failed=0
+          passed=0
+          skipped=0
+
+          echo "=== Embedded Dependency Validation ==="
+          echo ""
+
+          for action in "${!test_recipes[@]}"; do
+            recipe="${test_recipes[$action]}"
+
+            # Check if excluded
+            if echo "$exclusions" | grep -q "^${recipe}$"; then
+              echo "SKIP: $recipe (excluded)"
+              ((skipped++))
+              continue
+            fi
+
+            echo -n "TEST: $recipe ($action)... "
+            if ./tsuku eval "$recipe" --require-embedded > /dev/null 2>&1; then
+              echo "PASS"
+              ((passed++))
+            else
+              echo "FAIL"
+              echo "  Action dependencies for '$recipe' could not be resolved from embedded registry."
+              echo "  Run: ./tsuku eval $recipe --require-embedded"
+              ((failed++))
+            fi
+          done
+
+          echo ""
+          echo "=== Summary ==="
+          echo "Passed: $passed"
+          echo "Failed: $failed"
+          echo "Skipped: $skipped"
+
+          if [ $failed -gt 0 ]; then
+            echo ""
+            echo "ERROR: $failed recipe(s) failed embedded dependency validation."
+            echo "Ensure all action dependencies are in internal/recipe/recipes/"
+            exit 1
+          fi
+
+          echo ""
+          echo "All non-excluded recipes passed embedded dependency validation."
