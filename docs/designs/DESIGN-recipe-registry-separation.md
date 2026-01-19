@@ -17,8 +17,8 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1032](https://github.com/tsukumogami/tsuku/issues/1032) | Generate embedded recipe list with dependency analysis | None | critical |
-| [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | Migrate registry recipes to recipes/ directory | [#1032](https://github.com/tsukumogami/tsuku/issues/1032) | testable |
+| [Embedded Recipe List Validation](https://github.com/tsukumogami/tsuku/milestone/44) | Validate embedded recipes with --require-embedded flag | None | milestone |
+| [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | Migrate registry recipes to recipes/ directory | [Embedded Recipe List Validation](https://github.com/tsukumogami/tsuku/milestone/44) | testable |
 | [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | Reorganize golden files into embedded/registry directories | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable |
 
 ### Milestone: [M31 - CI and Testing Adaptation](https://github.com/tsukumogami/tsuku/milestone/41)
@@ -46,7 +46,7 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 ```mermaid
 graph TD
     subgraph M30["M30: Recipe Separation Foundation"]
-        I1032["#1032: Generate embedded recipe list"]
+        ERLV["Embedded Recipe List Validation"]
         I1033["#1033: Migrate registry recipes"]
         I1034["#1034: Reorganize golden files"]
     end
@@ -65,7 +65,7 @@ graph TD
         I1039["#1039: Design R2 storage"]
     end
 
-    I1032 --> I1033
+    ERLV --> I1033
     I1033 --> I1034
     I1033 --> I1035
     I1033 --> I1037
@@ -80,7 +80,7 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1032 needsDesign
+    class ERLV ready
     class I1033,I1034,I1035,I1036,I1038 blocked
     class I1037 needsDesign
     class I1039 needsDesign
