@@ -38,7 +38,7 @@ release:
     name: tsuku
   draft: true
   make_latest: true
-  mode: keep-existing
+  mode: append
   prerelease: auto
 
 snapshot:

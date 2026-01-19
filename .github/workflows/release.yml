@@ -38,8 +38,8 @@ jobs:
           TAG="${GITHUB_REF_NAME}"
           # Fetch tag annotations (not included in checkout)
           git fetch origin "refs/tags/${TAG}:refs/tags/${TAG}" --force
-          # Extract tag annotation message (body only, not the header)
-          git tag -l --format='%(contents:body)' "${TAG}" > /tmp/release-notes.md
+          # Extract full tag annotation message
+          git tag -l --format='%(contents)' "${TAG}" > /tmp/release-notes.md
           echo "Release notes extracted:"
           cat /tmp/release-notes.md
 
