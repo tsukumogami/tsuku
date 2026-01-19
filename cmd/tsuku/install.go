@@ -205,7 +205,7 @@ func confirmInstall() bool {
 // runDryRun shows what would be installed without making changes
 func runDryRun(toolName, reqVersion string) error {
 	// Load recipe
-	r, err := loader.Get(toolName)
+	r, err := loader.Get(toolName, recipe.LoaderOptions{})
 	if err != nil {
 		return fmt.Errorf("recipe not found: %w", err)
 	}

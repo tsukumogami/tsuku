@@ -7,6 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/version"
 )
 
@@ -21,7 +22,7 @@ var versionsCmd = &cobra.Command{
 		refresh, _ := cmd.Flags().GetBool("refresh")
 
 		// Load recipe
-		r, err := loader.Get(toolName)
+		r, err := loader.Get(toolName, recipe.LoaderOptions{})
 		if err != nil {
 			printError(err)
 			exitWithCode(ExitRecipeNotFound)

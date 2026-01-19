@@ -697,8 +697,8 @@ func generateSingleDependencyPlan(
 	cfg PlanConfig,
 	processed map[string]bool,
 ) (*DependencyPlan, error) {
-	// Load the dependency recipe
-	depRecipe, err := cfg.RecipeLoader.GetWithContext(ctx, depName)
+	// Load the dependency recipe (using default options - no RequireEmbedded)
+	depRecipe, err := cfg.RecipeLoader.GetWithContext(ctx, depName, recipe.LoaderOptions{})
 	if err != nil {
 		// Dependency recipe not found - skip
 		// This could be a system dependency or something not in the registry

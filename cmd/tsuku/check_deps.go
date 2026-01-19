@@ -65,7 +65,7 @@ func runCheckDeps(cmd *cobra.Command, args []string) {
 	jsonOutput, _ := cmd.Flags().GetBool("json")
 
 	// Load recipe
-	r, err := loader.Get(toolName)
+	r, err := loader.Get(toolName, recipe.LoaderOptions{})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Recipe '%s' not found in registry.\n", toolName)
 		exitWithCode(ExitRecipeNotFound)
@@ -148,7 +148,7 @@ func checkDependency(ctx context.Context, recipeLoader *recipe.Loader, mgr *inst
 	}
 
 	// Load the dependency's recipe to classify it
-	depRecipe, err := recipeLoader.GetWithContext(ctx, depName)
+	depRecipe, err := recipeLoader.GetWithContext(ctx, depName, recipe.LoaderOptions{})
 	if err != nil {
 		// Recipe not found - mark as unknown
 		status.Type = "unknown"

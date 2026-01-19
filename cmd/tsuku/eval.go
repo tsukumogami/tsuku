@@ -192,7 +192,7 @@ func runEval(cmd *cobra.Command, args []string) {
 		}
 
 		var err error
-		r, err = loader.Get(toolName)
+		r, err = loader.Get(toolName, recipe.LoaderOptions{})
 		if err != nil {
 			printError(err)
 			fmt.Fprintf(os.Stderr, "\nTo create a recipe from a package ecosystem:\n")

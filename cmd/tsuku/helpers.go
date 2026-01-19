@@ -86,7 +86,7 @@ func generateInstallPlan(
 		r, err = recipe.ParseFile(recipePath, constraintLookup)
 		recipeSource = "local"
 	} else {
-		r, err = loader.Get(toolName)
+		r, err = loader.Get(toolName, recipe.LoaderOptions{})
 		recipeSource = "registry"
 	}
 	if err != nil {

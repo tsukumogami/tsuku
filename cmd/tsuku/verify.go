@@ -627,7 +627,7 @@ installed before this feature will show "Integrity: SKIPPED".`,
 		}
 
 		// Load recipe to determine type
-		r, err := loader.Get(name)
+		r, err := loader.Get(name, recipe.LoaderOptions{})
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Failed to load recipe: %v\n", err)
 			exitWithCode(ExitRecipeNotFound)
