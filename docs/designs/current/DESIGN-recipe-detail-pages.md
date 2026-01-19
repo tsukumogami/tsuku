@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Users cannot see detailed information about recipes before installing them, including hidden dependencies, and there is no way to link directly to specific tool pages.
+decision: Implement recipe detail pages using client-side routing with the History API, extending recipes.json to include dependency information.
+rationale: This approach maintains architectural consistency with the existing client-side recipe grid, requires no build step changes, and provides instant navigation while delivering dependency visibility and shareable URLs for individual tools.
+---
+
 # Design: Recipe Detail Pages with Dependency Visualization
 
 **Status**: Current

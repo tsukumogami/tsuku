@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Version providers return versions in inconsistent and arbitrary order, making it impossible to reliably identify the latest version through programmatic access or CLI output.
+decision: Implement a centralized SortVersionsDescending() function that all version providers call before returning results, combined with test-time validation to catch providers that forget to sort.
+rationale: This approach provides the right balance of simplicity and correctness by avoiding wrapper complexity (Option B), ensuring complete coverage for programmatic access (unlike Option C), and minimizing refactoring effort (compared to Option D). It explicitly sorts results at the provider level for transparency and debuggability.
+---
+
 # DESIGN: Consistent Version Sorting
 
 **Status:** Current

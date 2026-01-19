@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Recipe verification currently uses inconsistent patterns to match version output, causing mismatches between version provider formats and tool output formats, weak verification for tools without version support, and inadequate validation coverage in CI.
+decision: Implement version format transforms and an output mode fallback to provide flexible yet robust verification that covers all tools while maintaining security through required justification fields and validator enforcement.
+rationale: Version format transforms (semver, strip_v, etc.) cover ~95% of real-world cases with explicit configuration, while output mode with required reason fields ensures weak verification is documented and intentional. This layered approach provides the foundation for future verification methods like functional testing and cryptographic verification.
+---
+
 # Design: Flexible Recipe Verification
 
 - **Status**: Current

@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Sandbox testing fails for tools with declared dependencies because the plan generation duplicates code from normal install mode and doesn't pass RecipeLoader, causing dependencies to be omitted from container execution.
+decision: Eliminate code duplication by extracting plan generation to a shared function that both normal and sandbox install modes can use, ensuring dependencies are included in all sandbox plans.
+rationale: The sandbox executor already runs the same installation code path inside containers that normal mode uses, so plan generation should use unified infrastructure. Sharing the proven pattern from PR #808 automatically fixes both explicit and implicit dependency handling while reducing code duplication.
+---
+
 # Sandbox Testing Doesn't Include Dependency Installation
 
 ## Status

@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: Tsuku recipes resolve dynamically at runtime, making recipe testing difficult, preventing audit trails of what was installed, and rendering reproducible re-installation impossible without recording the resolved URLs and checksums.
+decision: Introduce an installation plan concept generated via `tsuku eval` that captures fully-resolved recipe steps with checksums computed from actual downloads, stored inline in state.json with export capability for standalone use.
+rationale: Plans enable golden file testing for recipe validation, provide users with complete visibility into installations, and establish the foundation for deterministic re-installation. Downloading during evaluation (rather than URL-only resolution) is essential because checksums must be real to detect upstream changes and support plan verification, aligning with the upstream design recommendation to reuse the PreDownloader infrastructure.
+---
+
 # Design: Installation Plans and tsuku eval Command
 
 - **Status**: Superseded by [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md)

@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: Sandbox execution fails for recipes with implicit action dependencies because installation plans are not truly self-contained—different code paths (install, eval, install --plan) generate plans differently, with some omitting dependency information.
+decision: Enable dependency embedding in the install command by providing RecipeLoader during plan generation, making all installation plans self-contained with embedded dependency trees.
+rationale: Leverages existing format v3 infrastructure that already supports recursive dependency trees (#621), achieves a single code path across all installation modes, and enables sandbox tests to validate the same execution path used in production. Minimal implementation cost (3-5 lines changed, ~109 lines of workaround code deleted).
+---
+
 # Design: Self-Contained Installation Plans
 
 ## Status

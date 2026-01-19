@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Native libraries required by tools like Ruby are embedded as 30+ lines of shell script in tool recipes, causing maintenance burden from hardcoded SHA256s, code duplication across tools, tight coupling to Homebrew internals, and inability to resolve library versions at runtime.
+decision: Libraries become first-class recipes with type = "library", installed via a suite of actions (homebrew, install_libraries, link_dependencies, set_rpath) that handle downloading, extraction, linking, and RPATH modification.
+rationale: This approach aligns library handling with tsuku's existing dependency model (similar to how tools depend on language runtimes), eliminates hardcoded values, enables reuse across multiple tools, and provides security benefits through per-binary RPATH control instead of environment variables. It also establishes a foundation for expanding to other library-dependent tools like Python and Perl.
+---
+
 # Design Document: Relocatable Library Dependency System
 
 **Status**: Current

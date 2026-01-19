@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Recipes with system dependencies use free-form `install_guide` text that cannot be machine-executed, and platform filtering is inconsistent between step-level `when` clauses and embedded parameter keys.
+decision: Replace `install_guide` with typed actions (`apt_install`, `brew_cask`, etc.) and enforce platform filtering exclusively through step-level `when` clauses with `linux_family` support.
+rationale: Typed actions enable sandbox testing of all recipes, ensure consistent platform handling across the action vocabulary, and allow static analysis of what recipes will do without arbitrary shell commands. The minimal base container forces explicit dependency declarations, eliminating hidden assumptions that mask recipe bugs at scale.
+---
+
 # DESIGN: Sandbox Container Building for System Dependencies
 
 ## Status
