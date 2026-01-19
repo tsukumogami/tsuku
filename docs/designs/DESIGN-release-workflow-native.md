@@ -70,8 +70,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1025 ready
-    class I1026,I1027 blocked
+    class I1025 done
+    class I1026,I1027 ready
     class I1028 blocked
     class I1030 blocked
     class I1031 blocked
@@ -378,11 +378,11 @@ The release workflow creates a draft GitHub release, then builds all binaries in
 - Runs on ubuntu-latest
 - Creates a draft GitHub release for the tag
 - Outputs the release ID for artifact uploads
-- Extracts changelog from CHANGELOG.md or generates from commits
+- Extracts release notes from the annotated tag message (falls back to auto-generated notes if no annotation)
 
 **2. build-go job (matrix)**
-- Uses goreleaser with the current .goreleaser.yaml
-- Uploads to draft release via `gh release upload --clobber`
+- Uses goreleaser with `use_existing_draft: true` to upload to the draft created by job 1
+- Goreleaser configured with `mode: keep-existing` to preserve release notes from the draft
 - Runs on appropriate native runner per platform:
   - linux-amd64: ubuntu-22.04
   - linux-arm64: ubuntu-24.04-arm
@@ -479,12 +479,22 @@ build-go:
     RELEASE_ID: ${{ needs.create-draft-release.outputs.release_id }}
 ```
 
-**Artifact upload to draft:**
+**Release notes from annotated tag:**
 ```bash
-gh release upload "v${{ github.ref_name }}" \
-  ./dist/tsuku-* \
-  --clobber
+# Creating a release with custom notes:
+git tag -a v0.3.0 -m "## What's New
+
+- Feature A
+- Feature B
+
+## Bug Fixes
+
+- Fixed issue X"
+
+git push origin v0.3.0  # Triggers release workflow
 ```
+
+The `create-draft-release` job extracts the tag annotation and uses it as release notes. If no annotation exists (lightweight tag), it falls back to auto-generated notes.
 
 **Version injection:**
 ```yaml
@@ -554,9 +564,22 @@ This is the foundational change that other steps build on.
 ### Step 2: Update goreleaser Configuration
 
 Modify `.goreleaser.yaml`:
-- Change `draft: false` to `draft: true` (now handled by workflow)
+- Add `use_existing_draft: true` to upload artifacts to the draft created by create-draft-release job
+- Add `mode: keep-existing` to preserve release notes from the annotated tag
+- Change `draft: true` so goreleaser doesn't publish (finalize-release handles that)
 - Add ldflags for pinnedDltestVersion: `-X .../verify.pinnedDltestVersion={{.Version}}`
 - Keep existing platform matrix
+
+```yaml
+release:
+  github:
+    owner: tsukumogami
+    name: tsuku
+  draft: true
+  use_existing_draft: true  # Find draft by tag name, don't create new
+  mode: keep-existing       # Preserve release notes from draft
+  prerelease: auto
+```
 
 ### Step 3: Create Rust Project Structure
 
