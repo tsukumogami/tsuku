@@ -57,6 +57,10 @@ type PlanConfig struct {
 	// already known from the golden file. This avoids version provider calls
 	// that may not support specific version lookup.
 	PinnedVersion string
+	// RequireEmbedded restricts action dependency loading to embedded recipes only.
+	// When true, dependency resolution fails if a dependency is not in the embedded registry.
+	// Used with --require-embedded CLI flag to validate embedded recipe completeness.
+	RequireEmbedded bool
 }
 
 // GeneratePlan evaluates a recipe and produces an installation plan.
@@ -697,8 +701,10 @@ func generateSingleDependencyPlan(
 	cfg PlanConfig,
 	processed map[string]bool,
 ) (*DependencyPlan, error) {
-	// Load the dependency recipe (using default options - no RequireEmbedded)
-	depRecipe, err := cfg.RecipeLoader.GetWithContext(ctx, depName, recipe.LoaderOptions{})
+	// Load the dependency recipe
+	depRecipe, err := cfg.RecipeLoader.GetWithContext(ctx, depName, recipe.LoaderOptions{
+		RequireEmbedded: cfg.RequireEmbedded,
+	})
 	if err != nil {
 		// Dependency recipe not found - skip
 		// This could be a system dependency or something not in the registry
