@@ -41,9 +41,8 @@ graph TD
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
 
-    class 1043,1044,1045,1046 done
-    class 1047 ready
-    class 1048 blocked
+    class 1043,1044,1045,1046,1047 done
+    class 1048 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked
