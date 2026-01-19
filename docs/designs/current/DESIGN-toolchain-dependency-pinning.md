@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Constrained evaluation pins lockfile content but not recipe dependencies, causing golden file validation failures when toolchain versions change upstream.
+decision: Extend EvalConstraints with a DependencyVersions map to extract and apply toolchain version pinning from golden files.
+rationale: This approach minimizes changes to existing infrastructure while leveraging data already present in golden files. It follows established constraint application patterns and gracefully handles version unavailability.
+---
+
 # DESIGN: Toolchain Dependency Pinning for Constrained Evaluation
 
 ## Status

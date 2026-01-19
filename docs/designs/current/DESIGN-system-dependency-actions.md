@@ -1,3 +1,10 @@
+---
+status: Current
+problem: The current require_system action is polymorphic and conflates multiple concerns (checking, installing, filtering, configuring), uses free-form text that cannot be machine-executed, and relies on implicit platform assumptions that don't account for Linux family diversity.
+decision: Replace require_system with granular typed actions (apt_install, brew_cask, etc.) that use linux_family as a targeting dimension for plan generation, idempotent installation with final verification, separate actions for post-install configuration, and implicit constraints on package manager actions.
+rationale: Typed actions enable static analysis and auditable behavior, linux_family as a targeting dimension keeps the when clause generic while enabling family-specific plan generation, and implicit constraints on PM actions prevent mistakes while reducing recipe noise. This creates a consistent system suitable for both documentation generation and sandbox container building.
+---
+
 # DESIGN: System Dependency Actions
 
 ## Status

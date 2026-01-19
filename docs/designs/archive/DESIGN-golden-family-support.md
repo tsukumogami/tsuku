@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: Golden file validation does not account for Linux family variation—recipes with family-constrained actions produce different plans per family (debian, rhel, arch, alpine, suse) but the workflow generates only one generic linux-amd64 file, failing to validate family-specific behavior.
+decision: Extend recipe metadata to expose family awareness via supported_platforms in tsuku info, use optional family component in filenames (e.g., linux-debian-amd64.json vs linux-amd64.json), and drive generation and validation using metadata to determine which platform+family combinations require golden files.
+rationale: This approach derives family awareness from static recipe analysis rather than runtime detection or manual metadata, remains backwards compatible with existing non-family-aware recipes, and enables complete validation of recipes with system dependencies. Metadata becomes the single source of truth for platform support across the tooling.
+---
+
 # DESIGN: Linux Family Support for Golden Files
 
 ## Status

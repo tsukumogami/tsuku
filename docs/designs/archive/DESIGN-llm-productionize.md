@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: LLM-based recipe generation lacks production-ready safety controls, cost visibility, and user confirmation mechanisms, preventing safe exposure to users.
+decision: Implement cost tracking, rate limiting, daily budgets, mandatory recipe preview, progress indicators, and actionable error messages to productionize the LLM builder feature.
+rationale: These controls ensure users can see and control LLM costs, review generated recipes before installation, and understand what's happening during generation. Together they enable safe GA launch of the feature.
+---
+
 # Design Document: LLM Builder Productionization (Slice 4)
 
 **Status**: Superseded by [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)

@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Tsuku lacks support for installing Perl/CPAN CLI tools despite Perl being prevalent in DevOps contexts.
+decision: Implement cpan_install action with explicit Perl dependency, following the go_install and npm_install patterns.
+rationale: This approach balances self-contained operation with consistency, transparency, and implementation simplicity. Users can see Perl is installed and understand the dependency chain, while the existing dependency resolution handles bootstrap automatically.
+---
+
 # Design Document: Perl Ecosystem Support
 
 **Status**: Current

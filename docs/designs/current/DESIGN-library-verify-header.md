@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Determine if a file is a valid shared library for the current platform, with cross-platform complexity across Linux (ELF) and macOS (Mach-O, including universal binaries).
+decision: Implement a unified ValidateHeader function with early magic number detection that efficiently dispatches to format-specific validators for ELF, Mach-O, and fat binary formats.
+rationale: This approach balances simplicity with performance, providing a single entry point API while avoiding wasted parsing attempts through efficient magic detection. It naturally handles fat binaries, enables clear error categorization, and establishes patterns reusable across higher verification tiers.
+---
+
 # DESIGN: Library Verification Header Validation (Tier 1)
 
 **Status:** Current

@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Thousands of CLI tools exist across package ecosystems that are not included in tsuku's embedded recipes, preventing users from installing them without manually writing recipes.
+decision: Implement ecosystem-specific recipe builders as a thin layer that generates recipes by querying package registry APIs, returning pure Recipe structs that are written to local storage and executed through existing actions.
+rationale: This pure-function approach enables determinism, leverages existing infrastructure, provides transparency by allowing users to inspect recipes before installation, and establishes a pattern for future LLM-assisted builders without changing the action model or executor.
+---
+
 # Design Document: Ecosystem-Specific Recipe Builders
 
 **Status**: Current

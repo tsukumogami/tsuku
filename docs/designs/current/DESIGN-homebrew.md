@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Homebrew is the dominant package manager for developer tools on macOS with 6,000+ formulas, but requires a self-contained, reliable integration to provide tsuku users access without system dependencies.
+decision: Implement a `homebrew` action that downloads and installs pre-built Homebrew bottles with platform-specific binary patching and relocation, plus a HomebrewBuilder for deterministic recipe generation with LLM fallback.
+rationale: Research shows 99.94% of Homebrew formulas have bottles available, making them the only viable production option. This design uses deterministic inspection (~85-90% success) first for cost efficiency, with LLM analysis and repair loops for edge cases, enabling automatic recipe generation for complex tool ecosystems.
+---
+
 # Design: Homebrew Integration
 
 **Status**: Current

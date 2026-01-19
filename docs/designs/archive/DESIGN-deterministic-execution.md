@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: Installation lacks determinism—tsuku install and tsuku eval can produce different results, cached plans are not reused, and checksum mismatches are not detected during execution.
+decision: Implement two-phase plan generation (version resolution + artifact verification) with plan caching by resolution output, hard-failure checksum verification, and ExecutePlan as the sole execution path.
+rationale: This design ensures all installations are deterministic by default, detects supply chain changes via checksums, aligns with Nix's evaluation/realization model, and provides a clean architecture that naturally enables the --plan flag feature.
+---
+
 # Design: Deterministic Execution (Plan-Based Installation)
 
 - **Status**: Superseded by [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md)

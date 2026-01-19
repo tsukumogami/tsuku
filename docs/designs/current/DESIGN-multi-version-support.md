@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Tsuku currently supports only one installed version per tool, forcing developers to reinstall when switching between projects that require different versions.
+decision: Implement multi-version support with automatic state.json migration, new activate command, and modified install/remove/list behaviors to keep existing versions while managing an active version via symlinks.
+rationale: Developers working with language runtimes frequently need multiple versions for different projects. This approach minimizes breaking changes through automatic migration while maintaining security with atomic operations and file locking.
+---
+
 # Design Document: Multi-Version Tool Support
 
 **Status**: Current

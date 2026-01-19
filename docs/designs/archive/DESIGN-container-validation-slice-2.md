@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: Container-based validation requires isolating untrusted LLM-generated recipes, but rootless containers need system-level configuration that cannot be installed without root privileges.
+decision: Auto-detect available container runtimes in preference order with graceful degradation when unavailable, using a hybrid detection approach and Alpine as the base image.
+rationale: This approach respects tsuku's self-contained philosophy by working with existing system configuration rather than requiring installation, provides the best user experience without blocking those without containers, and balances detection speed with accuracy for reliable validation.
+---
+
 # Design Document: Container Validation (Slice 2)
 
 **Status**: Superseded by [DESIGN-install-sandbox.md](../current/DESIGN-install-sandbox.md)

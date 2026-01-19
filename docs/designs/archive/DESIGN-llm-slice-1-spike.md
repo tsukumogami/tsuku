@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: Tsuku needs a way to generate installation recipes automatically from GitHub releases to reduce manual recipe creation effort.
+decision: Implement an end-to-end spike of LLM recipe generation from GitHub releases using Claude API with multi-turn tool use before building supporting infrastructure.
+rationale: Building the critical path first surfaces integration issues early and informs the design of container validation, repair loops, and multi-provider support. The production code written here evolves through later slices rather than being thrown away.
+---
+
 # Design Document: LLM Slice 1 - End-to-End Spike
 
 **Status**: Superseded by [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)

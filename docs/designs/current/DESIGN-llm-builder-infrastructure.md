@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Tsuku's ecosystem-specific builders only work for tools with structured metadata (Cargo, npm, PyPI), but fail for the majority of tools distributed via GitHub releases or documentation without standard metadata, limiting coverage.
+decision: Build LLM-based builder infrastructure using provider abstraction, container-based validation, and repair loops to generate recipes from unstructured sources like GitHub release assets and documentation.
+rationale: Modern LLMs with tool use capabilities can reliably analyze release assets and documentation to infer recipe structure. Container validation provides security by default, while provider abstraction enables multi-provider support (Claude and Gemini) to avoid single-vendor lock-in. Repair loops improve success rates while remaining cost-efficient at $0.05-0.10 per recipe.
+---
+
 # Design Document: LLM Builder Infrastructure
 
 **Status**: Current

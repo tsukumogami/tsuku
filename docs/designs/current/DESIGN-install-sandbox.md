@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Sandbox testing behavior is scattered across individual builders rather than being a unified recipe-driven operation, preventing independent invocation, surfacing implicit network requirements, and creating duplicated action knowledge.
+decision: Implement a NetworkValidator interface on actions returning their network requirements and a separate SandboxRequirements struct that derives container configuration from plan content, enabling unified sandbox testing via a single Sandbox() entry point.
+rationale: Centralizing sandbox logic with metadata co-located in action code provides compile-time enforcement and a single source of truth. The separate SandboxRequirements struct maintains backwards compatibility with existing plans while enabling independent invocation via tsuku install --sandbox.
+---
+
 # Design: Centralize Sandbox Testing
 
 ## Status

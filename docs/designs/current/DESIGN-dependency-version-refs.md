@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Recipes must hardcode dependency versions in action parameters like RPATH configuration, creating maintenance burden when dependency versions change and contradicting tsuku's version-aware design.
+decision: Extend variable expansion syntax to support dot-notation references like `{deps.openssl.version}` by flattening resolved dependency versions into the existing variable map.
+rationale: This approach maintains consistency with existing `{variable}` syntax, requires minimal code changes by reusing `ExecutionContext.Dependencies`, and allows recipe authors to construct flexible path formats while automatically staying in sync with resolved dependency versions.
+---
+
 # Dependency Version References in Action Parameters
 
 ## Status

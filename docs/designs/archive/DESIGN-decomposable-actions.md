@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: Composite actions in plans can execute differently than evaluated, violating determinism guarantees because they contain runtime logic that resolves wildcards and constructs URLs.
+decision: Composite actions implement a Decomposable interface to decompose into primitive steps during plan generation, ensuring plans contain only primitives that execute deterministically.
+rationale: This approach provides clean architectural separation between recipe DSL and execution model. Plans become self-describing, the executor only understands primitives, and complexity is localized to composite action implementations rather than the plan generator.
+---
+
 # Design: Decomposable Actions and Primitive Operations
 
 - **Status**: Superseded by [DESIGN-deterministic-resolution.md](../current/DESIGN-deterministic-resolution.md)

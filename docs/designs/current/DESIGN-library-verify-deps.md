@@ -1,3 +1,10 @@
+---
+status: Current
+problem: Tools and libraries can have valid binary headers yet fail at runtime if their dependencies are missing or unresolvable, preventing proactive detection of these issues.
+decision: Implement hybrid dependency validation using soname extraction, pattern-based system library detection, RPATH-aware resolution, and recursive dependency checking to verify all runtime dependencies are available and compatible.
+rationale: This approach handles platform differences (Linux ELF and macOS Mach-O), correctly identifies system vs. tsuku-managed dependencies, and validates the entire dependency tree including transitive dependencies. Combining pattern matching with RPATH resolution provides both correctness and maintainability.
+---
+
 # Dependency Resolution for Library Verification (Tier 2)
 
 **Status:** Current

@@ -1,3 +1,10 @@
+---
+status: Superseded
+problem: LLM-based recipe generation lacks automatic recovery from validation failures and relies on a single provider, creating single points of failure and requiring manual iteration.
+decision: Implement a repair loop that feeds validation errors back to the LLM for automatic recovery, and add Gemini as a second provider with per-provider circuit breakers for resilience.
+rationale: Repair loops improve success rates by allowing the LLM to learn from failures within a conversation, while multi-provider support with circuit breakers eliminates dependency on a single API. These features are paired because provider abstraction enables clean repair logic and circuit breaker failover validates the abstraction works correctly.
+---
+
 # Design Document: LLM Slice 3 - Repair Loop + Second Provider
 
 **Status**: Superseded by [DESIGN-llm-builder-infrastructure.md](../current/DESIGN-llm-builder-infrastructure.md)
