@@ -1,0 +1,18 @@
+[package]
+name = "tsuku-dltest"
+version = "0.0.0"
+edition = "2021"
+description = "dlopen verification helper for tsuku"
+license = "MIT"
+repository = "https://github.com/tsukumogami/tsuku"
+
+[[bin]]
+name = "tsuku-dltest"
+path = "src/main.rs"
+
+[profile.release]
+lto = true
+strip = true
+panic = "abort"
+codegen-units = 1
+opt-level = "z"
