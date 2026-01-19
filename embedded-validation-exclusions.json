@@ -1,0 +1,4 @@
+{
+  "description": "Recipes excluded from --require-embedded validation during migration",
+  "exclusions": []
+}
