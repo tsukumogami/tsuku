@@ -109,6 +109,54 @@ jobs:
       - name: Run lint tests
         run: go test -v -run 'Test(GolangCILint|GoFmt|GoModTidy|GoVet|Govulncheck)' .
 
+  # Build and test tsuku-dltest Rust binary
+  rust-test:
+    name: "Rust: ${{ matrix.os }}"
+    needs: matrix
+    if: ${{ needs.matrix.outputs.rust == 'true' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+          - os: macos-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.75"
+
+      - name: Build tsuku-dltest
+        working-directory: cmd/tsuku-dltest
+        run: cargo build --release
+
+      - name: Verify version output
+        working-directory: cmd/tsuku-dltest
+        run: |
+          VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
+          OUTPUT=$(./target/release/tsuku-dltest --version 2>&1)
+          if ! echo "$OUTPUT" | grep -q "tsuku-dltest v$VERSION"; then
+            echo "::error::Version mismatch. Expected 'tsuku-dltest v$VERSION', got: $OUTPUT"
+            exit 1
+          fi
+          echo "Version check passed: $OUTPUT"
+
+      - name: Verify exit codes
+        working-directory: cmd/tsuku-dltest
+        run: |
+          # --version should exit 0
+          ./target/release/tsuku-dltest --version 2>/dev/null && echo "PASS: --version exits 0"
+
+          # No args should exit 2
+          if ./target/release/tsuku-dltest 2>/dev/null; then
+            echo "::error::Expected exit code 2 without arguments"
+            exit 1
+          fi
+          echo "PASS: no args exits non-zero"
+
   # Detect changes and generate test matrices
   # Skip integration tests when only documentation files change
   matrix:
@@ -121,6 +169,8 @@ jobs:
       macos: ${{ steps.matrix.outputs.macos }}
       # true when code files (not just docs) are modified
       code: ${{ steps.filter.outputs.code }}
+      # true when Rust code is modified
+      rust: ${{ steps.filter.outputs.rust }}
       # true when recipe files are modified
       recipes: ${{ steps.filter.outputs.recipes }}
       # true when validator code is modified
@@ -139,6 +189,8 @@ jobs:
               - 'go.mod'
               - 'go.sum'
               - '.github/workflows/**'
+            rust:
+              - 'cmd/tsuku-dltest/**'
             recipes:
               - 'internal/recipe/recipes/**/*.toml'
             validator:
