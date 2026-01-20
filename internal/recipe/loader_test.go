@@ -1123,13 +1123,13 @@ func TestLoader_Get_RequireEmbedded(t *testing.T) {
 	loader := New(reg)
 
 	// Test 1: Embedded recipe should be found with RequireEmbedded=true
-	// Use a known embedded recipe like "golang"
-	recipe, err := loader.Get("golang", LoaderOptions{RequireEmbedded: true})
+	// Use a known embedded recipe (go toolchain)
+	recipe, err := loader.Get("go", LoaderOptions{RequireEmbedded: true})
 	if err != nil {
 		t.Fatalf("Get() with RequireEmbedded=true failed for embedded recipe: %v", err)
 	}
-	if recipe.Metadata.Name != "golang" {
-		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "golang")
+	if recipe.Metadata.Name != "go" {
+		t.Errorf("recipe.Metadata.Name = %q, want %q", recipe.Metadata.Name, "go")
 	}
 
 	// Test 2: Non-embedded recipe should fail with RequireEmbedded=true
