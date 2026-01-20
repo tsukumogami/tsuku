@@ -4,12 +4,14 @@ on:
   push:
     paths:
       - 'internal/recipe/recipes/**'
+      - 'recipes/**'
       - 'internal/actions/**'
       - 'internal/recipe/loader.go'
       - 'embedded-validation-exclusions.json'
   pull_request:
     paths:
       - 'internal/recipe/recipes/**'
+      - 'recipes/**'
       - 'internal/actions/**'
       - 'internal/recipe/loader.go'
       - 'embedded-validation-exclusions.json'
@@ -17,6 +19,9 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      # Point to repo's recipes/ directory so test recipes can be found
+      TSUKU_LOCAL_RECIPES: ${{ github.workspace }}/recipes
     steps:
       - uses: actions/checkout@v4
 
