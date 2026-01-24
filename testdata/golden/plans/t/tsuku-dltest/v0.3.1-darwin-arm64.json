@@ -1,0 +1,54 @@
+{
+  "format_version": 3,
+  "tool": "tsuku-dltest",
+  "version": "0.3.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "ae934a4721c925317bc910ef7e997cd839ab6751eff0f9836f2b5c6266c2c8e0",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "93066f0d9f498ed2287154f3c193301ea711cc313ee2d6a649357fc0363da8ac",
+        "checksum_algo": "sha256",
+        "dest": "tsuku-dltest-darwin-arm64",
+        "url": "https://github.com/tsukumogami/tsuku/releases/download/v0.3.1/tsuku-dltest-darwin-arm64"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://github.com/tsukumogami/tsuku/releases/download/v0.3.1/tsuku-dltest-darwin-arm64",
+      "checksum": "93066f0d9f498ed2287154f3c193301ea711cc313ee2d6a649357fc0363da8ac",
+      "size": 303936
+    },
+    {
+      "action": "chmod",
+      "params": {
+        "files": [
+          "tsuku-dltest-darwin-arm64"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "binaries": [
+          {
+            "dest": "bin/tsuku-dltest",
+            "src": "tsuku-dltest-{os}-{arch}"
+          }
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "tsuku-dltest --version",
+    "pattern": "tsuku-dltest v{version}"
+  }
+}
