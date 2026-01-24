@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -459,6 +460,44 @@ func verifyLibrary(name string, state *install.State, cfg *config.Config, opts L
 		}
 	}
 
+	// Tier 3: dlopen load testing
+	if !opts.SkipDlopen && len(libFiles) > 0 {
+		printInfo("  Tier 3: dlopen load testing...\n")
+		result, err := verify.RunDlopenVerification(
+			context.Background(),
+			cfg,
+			libFiles,
+			false, // skipDlopen already handled by the condition above
+		)
+		if err != nil {
+			return fmt.Errorf("dlopen verification failed: %w", err)
+		}
+		if result.Warning != "" {
+			fmt.Fprintf(os.Stderr, "  %s\n", result.Warning)
+		}
+		if !result.Skipped {
+			// Display results
+			passed, failed := 0, 0
+			for _, r := range result.Results {
+				if r.OK {
+					passed++
+				} else {
+					failed++
+					relPath, _ := filepath.Rel(libDir, r.Path)
+					if relPath == "" {
+						relPath = filepath.Base(r.Path)
+					}
+					printInfof("    %s: FAIL - %s\n", relPath, r.Error)
+				}
+			}
+			if failed > 0 {
+				return fmt.Errorf("dlopen failed for %d of %d libraries", failed, passed+failed)
+			}
+			printInfof("  Tier 3: %d libraries loaded successfully\n", passed)
+		}
+	}
+	// When --skip-dlopen is passed, we skip silently (no output)
+
 	// Tier 4: Integrity verification (--integrity flag)
 	// Note: This is a basic implementation for CI validation. Production-grade
 	// verification with detailed reporting will be implemented in issue #950.
@@ -466,11 +505,6 @@ func verifyLibrary(name string, state *install.State, cfg *config.Config, opts L
 		if err := verifyLibraryIntegrity(libDir, &libState); err != nil {
 			return err
 		}
-	}
-
-	// Log options for future tiers
-	if !opts.SkipDlopen {
-		printInfo("  Tier 3 (dlopen): not yet implemented\n")
 	}
 
 	return nil
