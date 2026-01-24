@@ -1,0 +1,22 @@
+# Test recipe for npm_install action
+#
+# This recipe tests the npm_install implementation in tsuku's action system.
+# It installs netlify-cli to verify npm package installation works correctly,
+# including multiple executables and version detection from npm registry.
+#
+# Related production recipe: recipes/n/netlify-cli.toml
+
+[metadata]
+name = "netlify-cli"
+description = "Netlify command line tool"
+homepage = "https://www.netlify.com/products/cli/"
+version_format = "semver"
+
+[[steps]]
+action = "npm_install"
+package = "netlify-cli"
+executables = ["netlify", "ntl"]
+
+[verify]
+command = "netlify --version"
+pattern = "{version}"

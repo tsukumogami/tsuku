@@ -57,9 +57,29 @@ When adding a test recipe:
 3. Consider whether the feature could instead be tested via the production recipe
 4. Update relevant test matrix entries if the recipe is part of CI
 
+## Feature Coverage Test Recipes
+
+These recipes test specific package manager action implementations and are used in `test-matrix.json` for CI feature coverage tests:
+
+| Recipe | Action | Purpose |
+|--------|--------|---------|
+| `netlify-cli.toml` | npm_install | Tests npm package installation with multiple executables |
+| `ruff.toml` | pipx_install | Tests pipx package installation |
+| `cargo-audit.toml` | cargo_install | Tests cargo crate installation |
+| `bundler.toml` | gem_install | Tests gem installation with multiple executables |
+| `ack.toml` | cpan_install | Tests CPAN module installation |
+| `gofumpt.toml` | go_install | Tests Go module installation |
+
+These recipes mirror their production counterparts (in `recipes/`) but exist separately to:
+1. Ensure CI tests use stable, embedded recipes rather than registry recipes that may move to external storage
+2. Allow test-specific customization if needed
+3. Provide clear documentation of what action each recipe tests
+
+Each test recipe includes a header comment explaining the action being tested and a reference to the related production recipe.
+
 ## Relationship to Production Registry
 
-The production registry at `internal/recipe/recipes/` contains the canonical recipes for end users. If a tool exists in both locations:
+The production registry at `recipes/` contains the canonical recipes for end users. Embedded recipes at `internal/recipe/recipes/` are action dependencies required for the CLI to function. If a tool exists in both locations:
 
 - **Production**: Optimized for reliability and user experience
 - **Testdata**: Optimized for testing specific tsuku capabilities
