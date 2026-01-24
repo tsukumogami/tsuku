@@ -1,0 +1,20 @@
+[metadata]
+name = "tsuku-dltest"
+description = "dlopen verification helper for tsuku verify"
+homepage = "https://github.com/tsukumogami/tsuku"
+# Note: internal = true is not yet supported in MetadataSection
+# The tool is hidden via IsHidden flag when installed programmatically
+
+[version]
+github_repo = "tsukumogami/tsuku"
+tag_prefix = "v"
+
+[[steps]]
+action = "github_file"
+repo = "tsukumogami/tsuku"
+asset_pattern = "tsuku-dltest-{os}-{arch}"
+binaries = [{src = "tsuku-dltest-{os}-{arch}", dest = "bin/tsuku-dltest"}]
+
+[verify]
+command = "tsuku-dltest --version"
+pattern = "tsuku-dltest v{version}"
