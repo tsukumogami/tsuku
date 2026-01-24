@@ -15,31 +15,31 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 ### Milestone: [M30 - Recipe Separation Foundation](https://github.com/tsukumogami/tsuku/milestone/40)
 
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [Embedded Recipe List Validation](https://github.com/tsukumogami/tsuku/milestone/44) | Validate embedded recipes with --require-embedded flag | None | milestone |
-| [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | Migrate registry recipes to recipes/ directory | [Embedded Recipe List Validation](https://github.com/tsukumogami/tsuku/milestone/44) | testable |
-| [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | Reorganize golden files into embedded/registry directories | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable |
+| Issue | Title | Dependencies | Tier | Status |
+|-------|-------|--------------|------|--------|
+| [Embedded Recipe List Validation](https://github.com/tsukumogami/tsuku/milestone/44) | Validate embedded recipes with --require-embedded flag | None | milestone | Done |
+| [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | Migrate registry recipes to recipes/ directory | [Embedded Recipe List Validation](https://github.com/tsukumogami/tsuku/milestone/44) | testable | Done |
+| [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | Reorganize golden files into embedded/registry directories | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable | Done |
 
 ### Milestone: [M31 - CI and Testing Adaptation](https://github.com/tsukumogami/tsuku/milestone/41)
 
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | Create testdata/recipes for integration test coverage | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable |
-| [#1036](https://github.com/tsukumogami/tsuku/issues/1036) | Update workflows for split recipe structure | [#1034](https://github.com/tsukumogami/tsuku/issues/1034), [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | testable |
+| Issue | Title | Dependencies | Tier | Status |
+|-------|-------|--------------|------|--------|
+| [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | Create testdata/recipes for integration test coverage | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable | |
+| [#1036](https://github.com/tsukumogami/tsuku/issues/1036) | Update workflows for split recipe structure | [#1034](https://github.com/tsukumogami/tsuku/issues/1034), [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | testable | |
 
 ### Milestone: [M32 - Cache Management and Documentation](https://github.com/tsukumogami/tsuku/milestone/42)
 
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [#1037](https://github.com/tsukumogami/tsuku/issues/1037) | Implement registry recipe cache policy | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable |
-| [#1038](https://github.com/tsukumogami/tsuku/issues/1038) | Document recipe separation for contributors | [#1036](https://github.com/tsukumogami/tsuku/issues/1036), [#1037](https://github.com/tsukumogami/tsuku/issues/1037) | simple |
+| Issue | Title | Dependencies | Tier | Status |
+|-------|-------|--------------|------|--------|
+| [#1037](https://github.com/tsukumogami/tsuku/issues/1037) | Implement registry recipe cache policy | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable | |
+| [#1038](https://github.com/tsukumogami/tsuku/issues/1038) | Document recipe separation for contributors | [#1036](https://github.com/tsukumogami/tsuku/issues/1036), [#1037](https://github.com/tsukumogami/tsuku/issues/1037) | simple | |
 
 ### Future Work
 
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [#1039](https://github.com/tsukumogami/tsuku/issues/1039) | Design R2 storage for registry golden files | [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | critical |
+| Issue | Title | Dependencies | Tier | Status |
+|-------|-------|--------------|------|--------|
+| [#1039](https://github.com/tsukumogami/tsuku/issues/1039) | Design R2 storage for registry golden files | [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | critical | |
 
 ### Dependency Graph
 
@@ -81,10 +81,12 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class ERLV done
-    class I1033 ready
-    class I1034,I1035,I1036,I1038 blocked
+    class I1033 done
+    class I1034 done
+    class I1035 ready
+    class I1036,I1038 blocked
     class I1037 needsDesign
-    class I1039 needsDesign
+    class I1039 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

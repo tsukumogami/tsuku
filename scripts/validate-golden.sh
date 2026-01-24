@@ -1,12 +1,18 @@
 #!/usr/bin/env bash
 # Validate golden files for a single recipe
-# Usage: ./scripts/validate-golden.sh <recipe> [--recipe <path>] [--os <linux|darwin>]
+# Usage: ./scripts/validate-golden.sh <recipe> [--recipe <path>] [--os <linux|darwin>] [--category <embedded|registry>]
 #
 # Compares current plan generation output against stored golden files.
 # Uses fast hash comparison first, then shows diff on mismatch.
 #
+# Golden files are organized by category:
+#   - Embedded recipes: testdata/golden/plans/embedded/<recipe>/
+#   - Registry recipes: testdata/golden/plans/<letter>/<recipe>/
+#
 # Examples:
-#   ./scripts/validate-golden.sh fzf
+#   ./scripts/validate-golden.sh go                    # auto-detects embedded
+#   ./scripts/validate-golden.sh fzf                   # auto-detects registry
+#   ./scripts/validate-golden.sh go --category embedded
 #   ./scripts/validate-golden.sh fzf --os linux
 #   ./scripts/validate-golden.sh build-tools-system --recipe testdata/recipes/build-tools-system.toml
 #
@@ -43,19 +49,22 @@ TSUKU="$REPO_ROOT/tsuku"
 RECIPE=""
 CUSTOM_RECIPE_PATH=""
 FILTER_OS=""
+CATEGORY=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --recipe)  CUSTOM_RECIPE_PATH="$2"; shift 2 ;;
-        --os)      FILTER_OS="$2"; shift 2 ;;
+        --recipe)    CUSTOM_RECIPE_PATH="$2"; shift 2 ;;
+        --os)        FILTER_OS="$2"; shift 2 ;;
+        --category)  CATEGORY="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: $0 <recipe> [--recipe <path>] [--os <linux|darwin>]"
+            echo "Usage: $0 <recipe> [--recipe <path>] [--os <linux|darwin>] [--category <embedded|registry>]"
             echo ""
             echo "Validate golden files for a recipe."
             echo ""
             echo "Options:"
-            echo "  --recipe <path>   Use custom recipe path (e.g., testdata/recipes/foo.toml)"
-            echo "  --os <os>         Only validate golden files for the specified OS (linux or darwin)"
+            echo "  --recipe <path>       Use custom recipe path (e.g., testdata/recipes/foo.toml)"
+            echo "  --os <os>             Only validate golden files for the specified OS (linux or darwin)"
+            echo "  --category <cat>      Force category (embedded or registry). Auto-detected if not specified."
             exit 0
             ;;
         -*)        echo "Unknown flag: $1" >&2; exit 2 ;;
@@ -75,6 +84,40 @@ if [[ ! -x "$TSUKU" ]]; then
     (cd "$REPO_ROOT" && go build -o tsuku ./cmd/tsuku)
 fi
 
+# Detect recipe category (embedded or registry)
+# Embedded recipes are in internal/recipe/recipes/<name>.toml (flat)
+# Registry recipes are in recipes/<letter>/<name>.toml
+detect_category() {
+    local recipe="$1"
+    local embedded_path="$REPO_ROOT/internal/recipe/recipes/$recipe.toml"
+    local first_letter="${recipe:0:1}"
+    local registry_path="$REPO_ROOT/recipes/$first_letter/$recipe.toml"
+
+    if [[ -f "$embedded_path" ]]; then
+        echo "embedded"
+    elif [[ -f "$registry_path" ]]; then
+        echo "registry"
+    else
+        # Default to registry for unknown recipes (testdata, etc.)
+        echo "registry"
+    fi
+}
+
+# Get golden directory path based on category
+# Embedded: testdata/golden/plans/embedded/<recipe>/
+# Registry: testdata/golden/plans/<letter>/<recipe>/
+get_golden_dir() {
+    local recipe="$1"
+    local category="$2"
+    local first_letter="${recipe:0:1}"
+
+    if [[ "$category" == "embedded" ]]; then
+        echo "$GOLDEN_BASE/embedded/$recipe"
+    else
+        echo "$GOLDEN_BASE/$first_letter/$recipe"
+    fi
+}
+
 # Compute paths
 FIRST_LETTER="${RECIPE:0:1}"
 if [[ -n "$CUSTOM_RECIPE_PATH" ]]; then
@@ -85,9 +128,22 @@ if [[ -n "$CUSTOM_RECIPE_PATH" ]]; then
         RECIPE_PATH="$REPO_ROOT/$CUSTOM_RECIPE_PATH"
     fi
 else
-    RECIPE_PATH="$RECIPE_BASE/$FIRST_LETTER/$RECIPE.toml"
+    # Try embedded first (flat), then registry (letter-based)
+    EMBEDDED_PATH="$REPO_ROOT/internal/recipe/recipes/$RECIPE.toml"
+    REGISTRY_PATH="$REPO_ROOT/recipes/$FIRST_LETTER/$RECIPE.toml"
+    if [[ -f "$EMBEDDED_PATH" ]]; then
+        RECIPE_PATH="$EMBEDDED_PATH"
+    else
+        RECIPE_PATH="$REGISTRY_PATH"
+    fi
 fi
-GOLDEN_DIR="$GOLDEN_BASE/$FIRST_LETTER/$RECIPE"
+
+# Auto-detect category if not specified
+if [[ -z "$CATEGORY" ]]; then
+    CATEGORY=$(detect_category "$RECIPE")
+fi
+
+GOLDEN_DIR=$(get_golden_dir "$RECIPE" "$CATEGORY")
 
 # Validate recipe exists
 if [[ ! -f "$RECIPE_PATH" ]]; then
