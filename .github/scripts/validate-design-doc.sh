@@ -1,25 +1,37 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2310
+# shellcheck disable=SC2310,SC2312
 #
 # validate-design-doc.sh - Validate a design document
 #
-# Checks:
-# 1. File is under docs/designs/ directory
-# 2. Filename starts with DESIGN-
-# 3. File has YAML frontmatter (starts with ---, has closing ---)
+# This is the orchestrator for modular design document validation.
+# It runs location/naming checks inline and delegates category-specific
+# checks to scripts in the checks/ directory.
+#
+# Check categories:
+#   - frontmatter.sh  : Frontmatter validation
+#   - sections.sh     : Required sections (future)
+#   - status-directory.sh : Status/directory alignment (future)
+#   - implementation-issues.sh : Issues table format (future)
+#   - mermaid.sh      : Diagram syntax (future)
 #
 # Usage:
 #   validate-design-doc.sh <doc-path>
 #
 # Exit codes:
-#   0 - Valid
-#   1 - Invalid (failed one or more checks)
+#   0 - Valid (all checks passed)
+#   1 - Invalid (one or more checks failed)
 #   2 - Operational error (missing argument, file not found)
 #
 # Example:
 #   validate-design-doc.sh docs/designs/DESIGN-foo.md
 
 set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+CHECKS_DIR="$SCRIPT_DIR/checks"
+
+# Source common utilities
+source "$CHECKS_DIR/common.sh"
 
 usage() {
     cat >&2 <<'EOF'
@@ -28,14 +40,14 @@ Usage: validate-design-doc.sh <doc-path>
 Validates a design document for:
 - Location: must be under docs/designs/
 - Naming: filename must start with DESIGN-
-- Frontmatter: must have YAML frontmatter (--- delimiters)
+- Frontmatter: must have valid YAML frontmatter
 
 Exit codes:
   0 - Valid
   1 - Invalid
   2 - Operational error
 EOF
-    exit 2
+    exit $EXIT_ERROR
 }
 
 # Check arguments
@@ -49,75 +61,76 @@ DOC_PATH="$1"
 # Check file exists
 if [[ ! -f "$DOC_PATH" ]]; then
     echo "Error: file not found: $DOC_PATH" >&2
-    exit 2
+    exit $EXIT_ERROR
 fi
 
 echo "Validating $DOC_PATH..."
 
 FAILED=0
 
-# Check 1: Location - must be under docs/designs/
+# Inline check: Location - must be under docs/designs/
 check_location() {
     local path="$1"
     if [[ "$path" == docs/designs/* ]] || [[ "$path" == ./docs/designs/* ]]; then
-        echo "  [PASS] Location: under docs/designs/"
+        emit_pass "Location: under docs/designs/"
         return 0
     else
-        echo "  [FAIL] Location: not under docs/designs/ (got: $path)" >&2
+        emit_fail "Location: not under docs/designs/ (got: $path)"
         return 1
     fi
 }
 
-# Check 2: Naming - filename must start with DESIGN-
+# Inline check: Naming - filename must start with DESIGN-
 check_naming() {
     local path="$1"
     local filename
     filename=$(basename "$path")
     if [[ "$filename" == DESIGN-* ]]; then
-        echo "  [PASS] Naming: starts with DESIGN-"
+        emit_pass "Naming: starts with DESIGN-"
         return 0
     else
-        echo "  [FAIL] Naming: filename must start with DESIGN- (got: $filename)" >&2
+        emit_fail "Naming: filename must start with DESIGN- (got: $filename)"
         return 1
     fi
 }
 
-# Check 3: Frontmatter - must start with --- and have closing ---
-check_frontmatter() {
-    local path="$1"
-
-    # Read first line
-    local first_line
-    first_line=$(head -1 "$path")
-
-    if [[ "$first_line" != "---" ]]; then
-        echo "  [FAIL] Frontmatter: file must start with ---" >&2
-        return 1
-    fi
-
-    # Look for closing --- (must be after line 1)
-    # Use awk to find if there's a --- after the first line
-    local has_closing
-    has_closing=$(awk 'NR > 1 && /^---$/ { found=1; exit } END { print found+0 }' "$path")
-
-    if [[ "$has_closing" -eq 1 ]]; then
-        echo "  [PASS] Frontmatter: present"
-        return 0
-    else
-        echo "  [FAIL] Frontmatter: missing closing ---" >&2
-        return 1
-    fi
-}
-
-# Run checks
+# Run inline checks
 check_location "$DOC_PATH" || FAILED=1
 check_naming "$DOC_PATH" || FAILED=1
-check_frontmatter "$DOC_PATH" || FAILED=1
 
+# Run modular checks from checks/ directory
+# Each check script is called as a subprocess
+run_check() {
+    local check_script="$1"
+    local check_name
+    check_name=$(basename "$check_script" .sh)
+
+    if [[ -x "$check_script" ]]; then
+        # Run check and capture output
+        # Check scripts output [PASS]/[FAIL] messages
+        if ! "$check_script" "$DOC_PATH"; then
+            return 1
+        fi
+    fi
+    return 0
+}
+
+# Run frontmatter check (the only modular check in skeleton)
+if [[ -x "$CHECKS_DIR/frontmatter.sh" ]]; then
+    run_check "$CHECKS_DIR/frontmatter.sh" || FAILED=1
+fi
+
+# Future: Run all check scripts dynamically
+# for check_script in "$CHECKS_DIR"/*.sh; do
+#     [[ "$check_script" == */common.sh ]] && continue
+#     run_check "$check_script" || FAILED=1
+# done
+
+# Report final result
 if [[ "$FAILED" -eq 0 ]]; then
     echo "Result: VALID"
-    exit 0
+    exit $EXIT_PASS
 else
     echo "Result: INVALID"
-    exit 1
+    exit $EXIT_FAIL
 fi
