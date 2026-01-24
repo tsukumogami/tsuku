@@ -122,7 +122,7 @@ rm "$DOCKERFILE"
 echo ""
 echo "--- Test 1: Checksums are stored after installation ---"
 # Install fzf and verify checksums are in state.json
-RESULT=$(docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" "$IMAGE_TAG" bash -c '
+RESULT=$(docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" -e TSUKU_REGISTRY_URL="$TSUKU_REGISTRY_URL" "$IMAGE_TAG" bash -c '
     ./tsuku install fzf --force 2>&1
 
     # Check that state.json exists and has binary_checksums
@@ -154,7 +154,7 @@ echo ""
 echo "--- Test 2: Stored checksums match actual binary ---"
 # Verify checksums directly by comparing stored hash with computed hash
 # This tests the core checksum functionality without relying on PATH integration
-RESULT=$(docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" "$IMAGE_TAG" bash -c '
+RESULT=$(docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" -e TSUKU_REGISTRY_URL="$TSUKU_REGISTRY_URL" "$IMAGE_TAG" bash -c '
     ./tsuku install fzf --force 2>&1 > /dev/null
 
     # Find the fzf binary
@@ -205,7 +205,7 @@ fi
 echo ""
 echo "--- Test 3: Tamper detection works ---"
 # Note: verify exits non-zero when tampering detected, so we use || true
-RESULT=$(docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" "$IMAGE_TAG" bash -c '
+RESULT=$(docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" -e TSUKU_REGISTRY_URL="$TSUKU_REGISTRY_URL" "$IMAGE_TAG" bash -c '
     # Install fzf
     ./tsuku install fzf --force 2>&1 > /dev/null
 
