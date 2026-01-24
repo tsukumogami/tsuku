@@ -21,7 +21,7 @@ rationale: Rust provides memory-safe dlopen bindings, simpler cross-compilation 
 | [#1017](https://github.com/tsukumogami/tsuku/issues/1017) | feat(verify): add environment sanitization and path validation | [#1014](https://github.com/tsukumogami/tsuku/issues/1014) | critical |
 | [#1018](https://github.com/tsukumogami/tsuku/issues/1018) | feat(verify): add --skip-dlopen flag and fallback behavior | [#1014](https://github.com/tsukumogami/tsuku/issues/1014), [#1016](https://github.com/tsukumogami/tsuku/issues/1016), [#1017](https://github.com/tsukumogami/tsuku/issues/1017) | testable |
 | [#1019](https://github.com/tsukumogami/tsuku/issues/1019) | test(verify): add integration tests for dlopen verification | [#1014](https://github.com/tsukumogami/tsuku/issues/1014), [#1015](https://github.com/tsukumogami/tsuku/issues/1015), [#1016](https://github.com/tsukumogami/tsuku/issues/1016), [#1017](https://github.com/tsukumogami/tsuku/issues/1017), [#1018](https://github.com/tsukumogami/tsuku/issues/1018) | testable |
-| [Native Binary Release Workflow](https://github.com/tsukumogami/tsuku/milestone/43) | Design and implement native binary release process | None | milestone |
+| ~~[Native Binary Release Workflow](https://github.com/tsukumogami/tsuku/milestone/43)~~ | ~~Design and implement native binary release process~~ | ~~None~~ | ~~milestone~~ |
 
 ### Dependency Graph
 
@@ -60,7 +60,7 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1014 ready
-    class NBRW ready
+    class NBRW done
     class I1015,I1016,I1017,I1018,I1019 blocked
 ```
 
