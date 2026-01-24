@@ -78,7 +78,19 @@ type DlopenResult struct {
 // Version behavior:
 // - When pinnedDltestVersion is "dev": accept any installed version, or install latest
 // - When pinnedDltestVersion is a specific version: require that exact version
+//
+// Environment override:
+// - If TSUKU_DLTEST_PATH is set, use that path directly (for integration testing)
 func EnsureDltest(cfg *config.Config) (string, error) {
+	// Check for test override first
+	if envPath := os.Getenv("TSUKU_DLTEST_PATH"); envPath != "" {
+		if _, err := os.Stat(envPath); err == nil {
+			return envPath, nil
+		}
+		// Path specified but not found - return error rather than fallback
+		return "", fmt.Errorf("%w: TSUKU_DLTEST_PATH set to %q but file not found", ErrHelperUnavailable, envPath)
+	}
+
 	stateManager := install.NewStateManager(cfg)
 
 	// Check current installation state
