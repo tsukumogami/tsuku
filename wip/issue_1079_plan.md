@@ -18,15 +18,15 @@ None
 
 ## Implementation Steps
 
-- [ ] Add "Validate recipes are in correct letter directory" step after line 83
-- [ ] Find all `.toml` files in `recipes/` with depth 2 (`recipes/<letter>/<name>.toml`)
-- [ ] For each file, extract parent directory name and file basename
-- [ ] Check if filename starts with directory letter
-- [ ] Collect mismatches and report all at once with clear error message
-- [ ] Test with intentionally misplaced recipe
+- [x] Add "Validate recipes are in correct letter directory" step after line 83
+- [x] Find all `.toml` files in `recipes/` with depth 2 (`recipes/<letter>/<name>.toml`)
+- [x] For each file, extract parent directory name and file basename
+- [x] Check if filename starts with directory letter
+- [x] Collect mismatches and report all at once with clear error message
+- [x] Test with intentionally misplaced recipe
 
 ## Success Criteria
 
-- [ ] CI fails when `recipes/a/fzf.toml` exists (misplaced)
-- [ ] CI passes with existing correct structure
-- [ ] Error message shows recipe path and expected directory
+- [x] CI fails when `recipes/a/fzf.toml` exists (misplaced)
+- [x] CI passes with existing correct structure
+- [x] Error message shows recipe path and expected directory
