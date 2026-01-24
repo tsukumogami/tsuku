@@ -59,6 +59,8 @@ jobs:
       - name: "Generate plan: ${{ matrix.test.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Point registry to current branch so PR tests can access migrated recipes
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           # Use recipe path if specified (for testdata recipes), otherwise use tool name
           if [ -n "${{ matrix.test.recipe }}" ]; then

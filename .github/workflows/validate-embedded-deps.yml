@@ -19,9 +19,6 @@ on:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    env:
-      # Point to repo's recipes/ directory so test recipes can be found
-      TSUKU_LOCAL_RECIPES: ${{ github.workspace }}/recipes
     steps:
       - uses: actions/checkout@v4
 
@@ -37,14 +34,17 @@ jobs:
           set +e  # Don't exit on error - we handle failures ourselves
 
           # Test recipes that exercise each action type
-          declare -A test_recipes=(
-            ["go_install"]="gofumpt"
-            ["cargo_install"]="cargo-audit"
-            ["npm_install"]="netlify-cli"
-            ["pipx_install"]="ruff"
-            ["gem_install"]="bundler"
-            ["cpan_install"]="ack"
-            ["homebrew"]="make"
+          # Format: action:recipe:location where location is "embedded" or "registry"
+          # Embedded recipes are at internal/recipe/recipes/<letter>/<name>.toml
+          # Registry recipes are at recipes/<letter>/<name>.toml
+          test_recipes=(
+            "go_install:gofumpt:registry"
+            "cargo_install:cargo-audit:registry"
+            "npm_install:netlify-cli:registry"
+            "pipx_install:ruff:registry"
+            "gem_install:bundler:registry"
+            "cpan_install:ack:registry"
+            "homebrew:make:embedded"
           )
 
           # Load exclusions
@@ -61,8 +61,9 @@ jobs:
           echo "=== Embedded Dependency Validation ==="
           echo ""
 
-          for action in "${!test_recipes[@]}"; do
-            recipe="${test_recipes[$action]}"
+          for entry in "${test_recipes[@]}"; do
+            IFS=':' read -r action recipe location <<< "$entry"
+            first_letter="${recipe:0:1}"
 
             # Check if excluded
             if echo "$exclusions" | grep -q "^${recipe}$"; then
@@ -71,8 +72,22 @@ jobs:
               continue
             fi
 
+            # Determine recipe path based on location
+            if [ "$location" = "embedded" ]; then
+              recipe_path="internal/recipe/recipes/${first_letter}/${recipe}.toml"
+            else
+              recipe_path="recipes/${first_letter}/${recipe}.toml"
+            fi
+
+            # Verify recipe file exists
+            if [ ! -f "$recipe_path" ]; then
+              echo "FAIL: $recipe ($action) - recipe file not found at $recipe_path"
+              failed=$((failed + 1))
+              continue
+            fi
+
             echo -n "TEST: $recipe ($action)... "
-            output=$(./tsuku eval "$recipe" --require-embedded --install-deps 2>&1)
+            output=$(./tsuku eval --recipe "$recipe_path" --require-embedded --install-deps 2>&1)
             exit_code=$?
             if [ $exit_code -eq 0 ]; then
               echo "PASS"
