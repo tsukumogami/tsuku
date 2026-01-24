@@ -2,7 +2,12 @@ package verify
 
 import (
 	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/install"
 )
 
 func TestDlopenResult_JSONParsing_Success(t *testing.T) {
@@ -93,5 +98,207 @@ func TestDlopenResult_JSONParsing_Empty(t *testing.T) {
 
 	if len(results) != 0 {
 		t.Errorf("got %d results, want 0", len(results))
+	}
+}
+
+func TestEnsureDltest_NotInstalled(t *testing.T) {
+	// Create a temp directory for test
+	tmpDir, err := os.MkdirTemp("", "tsuku-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create config with temp directory
+	cfg := &config.Config{
+		HomeDir:  tmpDir,
+		ToolsDir: filepath.Join(tmpDir, "tools"),
+	}
+
+	// Test the state check logic directly instead of calling EnsureDltest,
+	// which would try to invoke tsuku to install (causing test recursion).
+	// When nothing is installed, GetToolState should return nil (not an error).
+	stateManager := install.NewStateManager(cfg)
+	toolState, err := stateManager.GetToolState("tsuku-dltest")
+	if err != nil {
+		t.Fatalf("GetToolState failed unexpectedly: %v", err)
+	}
+	if toolState != nil {
+		t.Error("expected nil toolState for uninstalled tool")
+	}
+
+	// Verify the version check logic: when no state exists, installedVersion is empty
+	var installedVersion string
+	if toolState != nil {
+		if toolState.ActiveVersion != "" {
+			installedVersion = toolState.ActiveVersion
+		} else {
+			installedVersion = toolState.Version
+		}
+	}
+	if installedVersion != "" {
+		t.Errorf("installedVersion = %q, want empty string", installedVersion)
+	}
+
+	// Verify this is NOT the pinned version (so installation would be triggered)
+	if installedVersion == pinnedDltestVersion {
+		t.Error("empty version should not match pinnedDltestVersion")
+	}
+}
+
+func TestEnsureDltest_CorrectVersionInstalled(t *testing.T) {
+	// Create a temp directory for test
+	tmpDir, err := os.MkdirTemp("", "tsuku-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create config with temp directory
+	cfg := &config.Config{
+		HomeDir:  tmpDir,
+		ToolsDir: filepath.Join(tmpDir, "tools"),
+	}
+
+	// Create the tool directory and binary
+	version := pinnedDltestVersion
+	binDir := cfg.ToolBinDir("tsuku-dltest", version)
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create a fake binary
+	binaryPath := filepath.Join(binDir, "tsuku-dltest")
+	if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("failed to create fake binary: %v", err)
+	}
+
+	// Set up state to show tool is installed
+	stateManager := install.NewStateManager(cfg)
+	if err := stateManager.UpdateTool("tsuku-dltest", func(ts *install.ToolState) {
+		ts.ActiveVersion = version
+		ts.IsHidden = true
+	}); err != nil {
+		t.Fatalf("failed to update state: %v", err)
+	}
+
+	// EnsureDltest should return path without trying to install
+	path, err := EnsureDltest(cfg)
+	if err != nil {
+		t.Fatalf("EnsureDltest failed: %v", err)
+	}
+
+	if path != binaryPath {
+		t.Errorf("path = %q, want %q", path, binaryPath)
+	}
+}
+
+func TestEnsureDltest_WrongVersionInstalled(t *testing.T) {
+	// Skip in dev mode since dev mode accepts any version
+	if pinnedDltestVersion == "dev" {
+		t.Skip("skipping wrong version test in dev mode (any version accepted)")
+	}
+
+	// Create a temp directory for test
+	tmpDir, err := os.MkdirTemp("", "tsuku-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create config with temp directory
+	cfg := &config.Config{
+		HomeDir:  tmpDir,
+		ToolsDir: filepath.Join(tmpDir, "tools"),
+	}
+
+	// Set up state with wrong version
+	stateManager := install.NewStateManager(cfg)
+	wrongVersion := "v0.0.0-wrong"
+	if err := stateManager.UpdateTool("tsuku-dltest", func(ts *install.ToolState) {
+		ts.ActiveVersion = wrongVersion
+		ts.IsHidden = true
+	}); err != nil {
+		t.Fatalf("failed to update state: %v", err)
+	}
+
+	// Test the version check logic directly instead of calling EnsureDltest,
+	// which would try to invoke tsuku to install (causing test recursion).
+	toolState, err := stateManager.GetToolState("tsuku-dltest")
+	if err != nil {
+		t.Fatalf("GetToolState failed: %v", err)
+	}
+	if toolState == nil {
+		t.Fatal("expected non-nil toolState for installed tool")
+	}
+
+	// Verify the version detection logic works
+	var installedVersion string
+	if toolState.ActiveVersion != "" {
+		installedVersion = toolState.ActiveVersion
+	} else {
+		installedVersion = toolState.Version
+	}
+
+	if installedVersion != wrongVersion {
+		t.Errorf("installedVersion = %q, want %q", installedVersion, wrongVersion)
+	}
+
+	// Verify wrong version does NOT match pinned version (so installation would be triggered)
+	if installedVersion == pinnedDltestVersion {
+		t.Errorf("wrong version %q should not match pinnedDltestVersion %q",
+			installedVersion, pinnedDltestVersion)
+	}
+}
+
+func TestEnsureDltest_DevMode_AcceptsAnyVersion(t *testing.T) {
+	// This test validates dev mode behavior: any installed version is accepted
+	if pinnedDltestVersion != "dev" {
+		t.Skip("skipping dev mode test when not in dev mode")
+	}
+
+	// Create a temp directory for test
+	tmpDir, err := os.MkdirTemp("", "tsuku-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create config with temp directory
+	cfg := &config.Config{
+		HomeDir:  tmpDir,
+		ToolsDir: filepath.Join(tmpDir, "tools"),
+	}
+
+	// Install an arbitrary version (simulating a previous release)
+	arbitraryVersion := "v0.3.0"
+	binDir := cfg.ToolBinDir("tsuku-dltest", arbitraryVersion)
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create a fake binary
+	binaryPath := filepath.Join(binDir, "tsuku-dltest")
+	if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("failed to create fake binary: %v", err)
+	}
+
+	// Set up state with the arbitrary version
+	stateManager := install.NewStateManager(cfg)
+	if err := stateManager.UpdateTool("tsuku-dltest", func(ts *install.ToolState) {
+		ts.ActiveVersion = arbitraryVersion
+		ts.IsHidden = true
+	}); err != nil {
+		t.Fatalf("failed to update state: %v", err)
+	}
+
+	// In dev mode, EnsureDltest should accept the arbitrary version
+	path, err := EnsureDltest(cfg)
+	if err != nil {
+		t.Fatalf("EnsureDltest failed: %v", err)
+	}
+
+	if path != binaryPath {
+		t.Errorf("path = %q, want %q", path, binaryPath)
 	}
 }
