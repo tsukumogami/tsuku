@@ -7,7 +7,9 @@ rationale: This approach eliminates boilerplate for the common case (95% of reci
 
 # Design: Implicit Dependency Pattern
 
-**Status**: Current
+## Status
+
+Current
 **Created**: 2025-12-07
 **Milestone**: [Implicit Dependency Pattern](https://github.com/tsukumogami/tsuku/milestone/11)
 

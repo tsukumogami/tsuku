@@ -7,7 +7,9 @@ rationale: Rust provides memory-safe dlopen bindings, simpler cross-compilation 
 
 # DESIGN: dlopen Load Testing for Library Verification (Level 3)
 
-**Status:** Planned
+## Status
+
+Planned
 
 ## Implementation Issues
 

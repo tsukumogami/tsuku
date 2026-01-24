@@ -7,7 +7,9 @@ rationale: Usage data enables evidence-based decisions on recipe maintenance pri
 
 # Design: Telemetry CLI Integration
 
-**Status**: Current
+## Status
+
+Current
 
 ## Context and Problem Statement
 

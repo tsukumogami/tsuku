@@ -7,7 +7,9 @@ rationale: This two-phase model provides reproducible installations by default, 
 
 # Design: Deterministic Recipe Resolution and Installation Plans
 
-- **Status**: Current
+## Status
+
+Current
 - **Issue**: #227
 - **Author**: @dangazineu
 - **Created**: 2025-12-09

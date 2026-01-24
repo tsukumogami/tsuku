@@ -7,7 +7,9 @@ rationale: This approach maintains self-contained operation while providing tran
 
 # Design Document: Go Ecosystem Support
 
-**Status**: Current
+## Status
+
+Current
 
 ## Context and Problem Statement
 

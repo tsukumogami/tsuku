@@ -7,7 +7,9 @@ rationale: This approach balances self-contained operation with consistency, tra
 
 # Design Document: Perl Ecosystem Support
 
-**Status**: Current
+## Status
+
+Current
 
 ## Context and Problem Statement
 

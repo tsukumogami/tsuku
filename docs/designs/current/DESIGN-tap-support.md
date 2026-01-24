@@ -7,7 +7,9 @@ rationale: A dedicated provider cleanly separates concerns and signals to users 
 
 # Design: Homebrew Tap Support
 
-**Status**: Current
+## Status
+
+Current
 
 ## Implementation Issues
 

@@ -7,7 +7,9 @@ rationale: This pure-function approach enables determinism, leverages existing i
 
 # Design Document: Ecosystem-Specific Recipe Builders
 
-**Status**: Current
+## Status
+
+Current
 
 ## Context and Problem Statement
 
