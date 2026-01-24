@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'internal/recipe/recipes/**/*.toml'
+      - 'recipes/**/*.toml'
       - 'testdata/golden/execution-exclusions.json'
       - '.github/workflows/test-changed-recipes.yml'
   workflow_dispatch:
@@ -48,7 +49,8 @@ jobs:
           }
 
           # Get list of changed recipe files (exclude deleted files)
-          CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml')
+          # Check both embedded (internal/recipe/recipes) and registry (recipes/) locations
+          CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml' 'recipes/**/*.toml')
 
           if [ -z "$CHANGED" ]; then
             echo "No recipe files changed"
