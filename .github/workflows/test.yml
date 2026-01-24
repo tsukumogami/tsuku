@@ -157,51 +157,51 @@ jobs:
           fi
           echo "PASS: no args exits non-zero"
 
-  # Build and test tsuku-dltest on Alpine (musl libc)
-  rust-test-musl:
-    name: "Rust: alpine-musl"
-    needs: matrix
-    if: ${{ needs.matrix.outputs.rust == 'true' }}
-    runs-on: ubuntu-latest
-    container:
-      image: alpine:3.19
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install build dependencies
-        run: |
-          apk add --no-cache curl gcc musl-dev
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.80
-
-      - name: Build tsuku-dltest
-        working-directory: cmd/tsuku-dltest
-        run: |
-          source $HOME/.cargo/env
-          cargo build --release
-
-      - name: Verify version output
-        working-directory: cmd/tsuku-dltest
-        run: |
-          VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
-          OUTPUT=$(./target/release/tsuku-dltest --version 2>&1)
-          if ! echo "$OUTPUT" | grep -q "tsuku-dltest v$VERSION"; then
-            echo "::error::Version mismatch. Expected 'tsuku-dltest v$VERSION', got: $OUTPUT"
-            exit 1
-          fi
-          echo "Version check passed: $OUTPUT"
-
-      - name: Verify exit codes
-        working-directory: cmd/tsuku-dltest
-        run: |
-          # --version should exit 0
-          ./target/release/tsuku-dltest --version 2>/dev/null && echo "PASS: --version exits 0"
-
-          # No args should exit 2
-          if ./target/release/tsuku-dltest 2>/dev/null; then
-            echo "::error::Expected exit code 2 without arguments"
-            exit 1
-          fi
-          echo "PASS: no args exits non-zero"
+  # NOTE: musl tests disabled - embedded libraries are glibc-only (see #1092)
+  # rust-test-musl:
+  #   name: "Rust: alpine-musl"
+  #   needs: matrix
+  #   if: ${{ needs.matrix.outputs.rust == 'true' }}
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: alpine:3.19
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #
+  #     - name: Install build dependencies
+  #       run: |
+  #         apk add --no-cache curl gcc musl-dev
+  #         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.80
+  #
+  #     - name: Build tsuku-dltest
+  #       working-directory: cmd/tsuku-dltest
+  #       run: |
+  #         source $HOME/.cargo/env
+  #         cargo build --release
+  #
+  #     - name: Verify version output
+  #       working-directory: cmd/tsuku-dltest
+  #       run: |
+  #         VERSION=$(grep '^version' Cargo.toml | head -1 | cut -d'"' -f2)
+  #         OUTPUT=$(./target/release/tsuku-dltest --version 2>&1)
+  #         if ! echo "$OUTPUT" | grep -q "tsuku-dltest v$VERSION"; then
+  #           echo "::error::Version mismatch. Expected 'tsuku-dltest v$VERSION', got: $OUTPUT"
+  #           exit 1
+  #         fi
+  #         echo "Version check passed: $OUTPUT"
+  #
+  #     - name: Verify exit codes
+  #       working-directory: cmd/tsuku-dltest
+  #       run: |
+  #         # --version should exit 0
+  #         ./target/release/tsuku-dltest --version 2>/dev/null && echo "PASS: --version exits 0"
+  #
+  #         # No args should exit 2
+  #         if ./target/release/tsuku-dltest 2>/dev/null; then
+  #           echo "::error::Expected exit code 2 without arguments"
+  #           exit 1
+  #         fi
+  #         echo "PASS: no args exits non-zero"
 
   # Detect changes and generate test matrices
   # Skip integration tests when only documentation files change
