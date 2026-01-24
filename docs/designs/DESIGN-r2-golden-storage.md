@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: Registry recipes scaling to 10K+ makes git-based golden file storage unsustainable due to repo bloat and slow clones.
 decision: Migrate registry golden files to Cloudflare R2 with CI-generated files on merge, two-tier degradation (R2 or skip), and 6-phase rollout.
 rationale: R2 eliminates git bloat while two-tier degradation keeps CI simple; CI generation removes contributor friction; free tier covers projected costs.
@@ -9,7 +9,84 @@ rationale: R2 eliminates git bloat while two-tier degradation keeps CI simple; C
 
 ## Status
 
-**Accepted**
+**Planned**
+
+## Implementation Issues
+
+### Milestone: [R2 Golden Core](https://github.com/tsukumogami/tsuku/milestone/45)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1093](https://github.com/tsukumogami/tsuku/issues/1093) | docs: create R2 golden storage infrastructure setup guide | None | simple |
+| [#1094](https://github.com/tsukumogami/tsuku/issues/1094) | ci: add R2 health check and helper scripts | [#1093](https://github.com/tsukumogami/tsuku/issues/1093) | testable |
+| [#1095](https://github.com/tsukumogami/tsuku/issues/1095) | ci: add post-merge golden file generation workflow | [#1094](https://github.com/tsukumogami/tsuku/issues/1094) | testable |
+| [#1096](https://github.com/tsukumogami/tsuku/issues/1096) | ci: integrate R2 golden files into nightly validation | [#1094](https://github.com/tsukumogami/tsuku/issues/1094), [#1095](https://github.com/tsukumogami/tsuku/issues/1095) | testable |
+| [#1097](https://github.com/tsukumogami/tsuku/issues/1097) | ci: migrate existing golden files to R2 | [#1095](https://github.com/tsukumogami/tsuku/issues/1095) | testable |
+| [#1098](https://github.com/tsukumogami/tsuku/issues/1098) | ci: enable parallel R2 and git golden file operation | [#1096](https://github.com/tsukumogami/tsuku/issues/1096), [#1097](https://github.com/tsukumogami/tsuku/issues/1097) | testable |
+| [#1099](https://github.com/tsukumogami/tsuku/issues/1099) | ci: update PR validation to use R2 golden files | [#1098](https://github.com/tsukumogami/tsuku/issues/1098) | testable |
+| [#1100](https://github.com/tsukumogami/tsuku/issues/1100) | chore: remove git-based registry golden files | [#1099](https://github.com/tsukumogami/tsuku/issues/1099) | simple |
+
+### Milestone: [R2 Golden Operations](https://github.com/tsukumogami/tsuku/milestone/46)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1101](https://github.com/tsukumogami/tsuku/issues/1101) | ci: add orphan detection for R2 golden files | [#1100](https://github.com/tsukumogami/tsuku/issues/1100) | testable |
+| [#1102](https://github.com/tsukumogami/tsuku/issues/1102) | ci: add version retention and cleanup workflow | [#1101](https://github.com/tsukumogami/tsuku/issues/1101) | testable |
+| [#1103](https://github.com/tsukumogami/tsuku/issues/1103) | ci: add R2 health monitoring workflow | [#1100](https://github.com/tsukumogami/tsuku/issues/1100) | testable |
+| [#1104](https://github.com/tsukumogami/tsuku/issues/1104) | ci: add R2 cost monitoring alerts | [#1100](https://github.com/tsukumogami/tsuku/issues/1100) | testable |
+| [#1105](https://github.com/tsukumogami/tsuku/issues/1105) | docs: create R2 golden files operational runbook | [#1100](https://github.com/tsukumogami/tsuku/issues/1100), [#1103](https://github.com/tsukumogami/tsuku/issues/1103), [#1104](https://github.com/tsukumogami/tsuku/issues/1104) | simple |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph M1["M1: R2 Golden Core"]
+        I1093["#1093: R2 infrastructure setup"]
+        I1094["#1094: Health check scripts"]
+        I1095["#1095: Post-merge generation"]
+        I1096["#1096: Nightly validation"]
+        I1097["#1097: Migrate golden files"]
+        I1098["#1098: Parallel R2/git operation"]
+        I1099["#1099: PR validation with R2"]
+        I1100["#1100: Remove git golden files"]
+    end
+
+    subgraph M2["M2: R2 Golden Operations"]
+        I1101["#1101: Orphan detection"]
+        I1102["#1102: Version retention"]
+        I1103["#1103: Health monitoring"]
+        I1104["#1104: Cost monitoring"]
+        I1105["#1105: Operational runbook"]
+    end
+
+    I1093 --> I1094
+    I1094 --> I1095
+    I1094 --> I1096
+    I1095 --> I1096
+    I1095 --> I1097
+    I1096 --> I1098
+    I1097 --> I1098
+    I1098 --> I1099
+    I1099 --> I1100
+    I1100 --> I1101
+    I1101 --> I1102
+    I1100 --> I1103
+    I1100 --> I1104
+    I1103 --> I1105
+    I1104 --> I1105
+    I1100 --> I1105
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1093 ready
+    class I1094,I1095,I1096,I1097,I1098,I1099,I1100 blocked
+    class I1101,I1102,I1103,I1104,I1105 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
