@@ -87,7 +87,7 @@ echo ""
 # Build tsuku binary
 echo "Building tsuku..."
 cd "$REPO_ROOT"
-go build -o tsuku ./cmd/tsuku
+go build -buildvcs=false -o tsuku ./cmd/tsuku
 echo ""
 
 # Install the library
