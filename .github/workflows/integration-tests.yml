@@ -138,13 +138,19 @@ jobs:
         library: [zlib, libyaml, openssl, gcc-libs]
     steps:
       - name: Install dependencies
-        run: apk add --no-cache git go gcc musl-dev rust cargo curl bash
+        run: apk add --no-cache git go gcc musl-dev curl bash
+
+      - name: Install Rust via rustup
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
 
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Build tsuku-dltest
         run: |
+          . "$HOME/.cargo/env"
           cd cmd/tsuku-dltest
           cargo build --release
 
