@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'internal/recipe/recipes/**/*.toml'
+      - 'recipes/**/*.toml'
       - 'testdata/golden/exclusions.json'
       - '.github/workflows/validate-golden-recipes.yml'
   workflow_dispatch:
@@ -39,7 +40,8 @@ jobs:
         id: changed
         run: |
           # Get list of changed recipe files (exclude deleted files)
-          CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml')
+          # Check both embedded (internal/recipe/recipes) and registry (recipes/) locations
+          CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml' 'recipes/**/*.toml')
 
           if [ -z "$CHANGED" ]; then
             echo "No recipe files changed"
@@ -51,7 +53,7 @@ jobs:
           echo "Changed recipes:"
           echo "$CHANGED"
 
-          # Build JSON array of recipe names
+          # Build JSON array of {recipe, category} objects
           # All recipes must have golden files - fail if any are missing
           JSON="["
           FIRST=true
@@ -63,8 +65,16 @@ jobs:
             fi
 
             recipe=$(basename "$path" .toml)
-            first_letter="${recipe:0:1}"
-            golden_dir="testdata/golden/plans/$first_letter/$recipe"
+
+            # Detect category from path and determine golden directory
+            if [[ "$path" == internal/recipe/recipes/* ]]; then
+              category="embedded"
+              golden_dir="testdata/golden/plans/embedded/$recipe"
+            else
+              category="registry"
+              first_letter="${recipe:0:1}"
+              golden_dir="testdata/golden/plans/$first_letter/$recipe"
+            fi
 
             # Check if recipe has golden files
             if [ ! -d "$golden_dir" ]; then
@@ -74,7 +84,7 @@ jobs:
                 echo "Recipe '$recipe' has no golden files but is excluded ($exclusion_count exclusion(s))"
                 continue
               fi
-              echo "::error::Recipe '$recipe' has no golden files. Run './scripts/regenerate-golden.sh $recipe' to generate them."
+              echo "::error::Recipe '$recipe' has no golden files. Run './scripts/regenerate-golden.sh $recipe --category $category' to generate them."
               echo "::error::Or add exclusions to testdata/golden/exclusions.json with a tracking issue."
               exit 1
             fi
@@ -84,7 +94,7 @@ jobs:
             else
               JSON="$JSON,"
             fi
-            JSON="$JSON\"$recipe\""
+            JSON="$JSON{\"recipe\":\"$recipe\",\"category\":\"$category\"}"
           done
           JSON="$JSON]"
 
@@ -97,7 +107,7 @@ jobs:
           echo "recipes=$JSON" >> $GITHUB_OUTPUT
 
   validate-golden:
-    name: "Validate: ${{ matrix.recipe }}"
+    name: "Validate: ${{ matrix.item.recipe }}"
     needs: detect-changes
     if: needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
@@ -105,7 +115,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        recipe: ${{ fromJson(needs.detect-changes.outputs.recipes) }}
+        item: ${{ fromJson(needs.detect-changes.outputs.recipes) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -120,9 +130,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.tsuku/cache/downloads
-          key: golden-downloads-${{ matrix.recipe }}-${{ hashFiles(format('testdata/golden/plans/{0}/{1}/*.json', 'a]b]c]d]e]f]g]h]i]j]k]l]m]n]o]p]q]r]s]t]u]v]w]x]y]z', matrix.recipe)) }}
+          key: golden-downloads-${{ matrix.item.recipe }}-${{ matrix.item.category }}
           restore-keys: |
-            golden-downloads-${{ matrix.recipe }}-
+            golden-downloads-${{ matrix.item.recipe }}-
             golden-downloads-
 
       - name: Build tsuku
@@ -132,10 +142,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Validating golden files for ${{ matrix.recipe }}..."
-          if ! ./scripts/validate-golden.sh "${{ matrix.recipe }}"; then
+          echo "Validating golden files for ${{ matrix.item.recipe }} (${{ matrix.item.category }})..."
+          if ! ./scripts/validate-golden.sh "${{ matrix.item.recipe }}" --category "${{ matrix.item.category }}"; then
             echo ""
-            echo "::error::Golden files are out of date for recipe '${{ matrix.recipe }}'."
-            echo "::error::Run './scripts/regenerate-golden.sh ${{ matrix.recipe }}' and commit the changes."
+            echo "::error::Golden files are out of date for recipe '${{ matrix.item.recipe }}'."
+            echo "::error::Run './scripts/regenerate-golden.sh ${{ matrix.item.recipe }} --category ${{ matrix.item.category }}' and commit the changes."
             exit 1
           fi

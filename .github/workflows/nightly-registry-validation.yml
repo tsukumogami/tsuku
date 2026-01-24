@@ -1,0 +1,265 @@
+name: Nightly Registry Validation
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  # Allow manual trigger
+  workflow_dispatch:
+
+jobs:
+  # Validate all registry recipe golden files (plan generation)
+  validate-plans-linux:
+    name: Validate Plans (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    outputs:
+      failed: ${{ steps.validate.outputs.failed }}
+      failed_recipes: ${{ steps.validate.outputs.failed_recipes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.tsuku/cache/downloads
+          key: nightly-registry-${{ github.run_id }}
+          restore-keys: |
+            nightly-registry-
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Validate registry golden files
+        id: validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Validating registry recipe golden files..."
+          FAILED_RECIPES=""
+          if ! ./scripts/validate-all-golden.sh --os linux --category registry 2>&1 | tee validation.log; then
+            # Extract failed recipe names from output
+            FAILED_RECIPES=$(grep -oP '(?<=FAIL: )\S+' validation.log | sort -u | tr '\n' ' ' || true)
+            echo "failed=true" >> $GITHUB_OUTPUT
+            echo "failed_recipes=$FAILED_RECIPES" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "failed=false" >> $GITHUB_OUTPUT
+
+  validate-plans-macos:
+    name: Validate Plans (macOS)
+    runs-on: macos-latest
+    timeout-minutes: 60
+    outputs:
+      failed: ${{ steps.validate.outputs.failed }}
+      failed_recipes: ${{ steps.validate.outputs.failed_recipes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Validate registry golden files
+        id: validate
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Validating registry recipe golden files..."
+          FAILED_RECIPES=""
+          if ! ./scripts/validate-all-golden.sh --os darwin --category registry 2>&1 | tee validation.log; then
+            FAILED_RECIPES=$(grep -oP '(?<=FAIL: )\S+' validation.log | sort -u | tr '\n' ' ' || true)
+            echo "failed=true" >> $GITHUB_OUTPUT
+            echo "failed_recipes=$FAILED_RECIPES" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "failed=false" >> $GITHUB_OUTPUT
+
+  # Execute a sample of registry recipe golden files
+  execute-sample-linux:
+    name: Execute Sample (Linux)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      failed: ${{ steps.execute.outputs.failed }}
+      failed_recipes: ${{ steps.execute.outputs.failed_recipes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.tsuku/cache/downloads
+          key: nightly-execution-${{ github.run_id }}
+          restore-keys: |
+            nightly-execution-
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: Execute sample registry recipes
+        id: execute
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Sample execution: pick one golden file per letter directory (excluding embedded/)
+          # This provides coverage without running all 150+ recipes
+          FAILED=()
+          EXCLUSIONS_FILE="testdata/golden/execution-exclusions.json"
+
+          is_excluded() {
+            local recipe="$1"
+            if [ ! -f "$EXCLUSIONS_FILE" ]; then
+              return 1
+            fi
+            local match
+            match=$(jq -r --arg r "$recipe" '.exclusions[] | select(.recipe == $r) | .issue' "$EXCLUSIONS_FILE" 2>/dev/null | head -1)
+            [ -n "$match" ]
+          }
+
+          for letter_dir in testdata/golden/plans/[a-z]; do
+            [ -d "$letter_dir" ] || continue
+            letter=$(basename "$letter_dir")
+
+            # Pick first non-excluded recipe in this letter
+            for recipe_dir in "$letter_dir"/*/; do
+              [ -d "$recipe_dir" ] || continue
+              recipe=$(basename "$recipe_dir")
+
+              if is_excluded "$recipe"; then
+                echo "Skipping excluded recipe: $recipe"
+                continue
+              fi
+
+              # Find a linux-amd64 golden file
+              golden_file=$(find "$recipe_dir" -name '*-linux-amd64.json' -o -name '*-linux-debian-amd64.json' | head -1)
+              if [ -z "$golden_file" ]; then
+                continue
+              fi
+
+              echo "::group::Executing $recipe"
+              # Fresh TSUKU_HOME per recipe
+              export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe"
+              mkdir -p "$TSUKU_HOME/bin"
+              echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
+
+              if ! ./tsuku install --plan "$golden_file" --force; then
+                FAILED+=("$recipe")
+              fi
+              echo "::endgroup::"
+
+              # Only test one recipe per letter for sample execution
+              break
+            done
+          done
+
+          if [ ${#FAILED[@]} -gt 0 ]; then
+            echo "failed=true" >> $GITHUB_OUTPUT
+            echo "failed_recipes=${FAILED[*]}" >> $GITHUB_OUTPUT
+            echo "::error::Failed recipes: ${FAILED[*]}"
+            exit 1
+          fi
+          echo "failed=false" >> $GITHUB_OUTPUT
+          echo "Sample execution completed successfully"
+
+  # Create issue on failure
+  create-issue:
+    name: Create Issue on Failure
+    needs: [validate-plans-linux, validate-plans-macos, execute-sample-linux]
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create failure issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Collect failure information
+          LINUX_PLAN_FAILED="${{ needs.validate-plans-linux.outputs.failed }}"
+          LINUX_PLAN_RECIPES="${{ needs.validate-plans-linux.outputs.failed_recipes }}"
+          MACOS_PLAN_FAILED="${{ needs.validate-plans-macos.outputs.failed }}"
+          MACOS_PLAN_RECIPES="${{ needs.validate-plans-macos.outputs.failed_recipes }}"
+          EXEC_FAILED="${{ needs.execute-sample-linux.outputs.failed }}"
+          EXEC_RECIPES="${{ needs.execute-sample-linux.outputs.failed_recipes }}"
+
+          # Build issue body
+          BODY="## Nightly Registry Validation Failed
+
+          The nightly validation workflow detected issues with registry recipes.
+
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          ### Failures
+
+          "
+
+          if [ "$LINUX_PLAN_FAILED" = "true" ]; then
+            BODY="$BODY
+          #### Linux Plan Validation
+          Failed recipes: $LINUX_PLAN_RECIPES
+          "
+          fi
+
+          if [ "$MACOS_PLAN_FAILED" = "true" ]; then
+            BODY="$BODY
+          #### macOS Plan Validation
+          Failed recipes: $MACOS_PLAN_RECIPES
+          "
+          fi
+
+          if [ "$EXEC_FAILED" = "true" ]; then
+            BODY="$BODY
+          #### Execution Validation
+          Failed recipes: $EXEC_RECIPES
+          "
+          fi
+
+          BODY="$BODY
+          ### Next Steps
+
+          1. Check the workflow run for detailed logs
+          2. Determine if failures are due to:
+             - External changes (upstream URL, version format)
+             - Transient network issues (re-run workflow)
+             - Recipe bugs (fix and regenerate golden files)
+          3. Update affected recipes and regenerate golden files as needed
+          "
+
+          # Check if similar issue already exists
+          EXISTING=$(gh issue list --label "nightly-failure" --state open --json number --limit 1 | jq -r '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Adding comment to existing issue #$EXISTING"
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            echo "Creating new issue"
+            gh issue create \
+              --title "chore: nightly registry validation failed ($(date +%Y-%m-%d))" \
+              --body "$BODY" \
+              --label "nightly-failure,recipes"
+          fi
