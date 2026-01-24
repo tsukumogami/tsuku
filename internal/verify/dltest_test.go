@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -442,7 +443,7 @@ func TestBatchError_Unwrap(t *testing.T) {
 
 func TestInvokeDltest_EmptyPaths(t *testing.T) {
 	ctx := context.Background()
-	results, err := InvokeDltest(ctx, "/nonexistent", nil)
+	results, err := InvokeDltest(ctx, "/nonexistent", nil, "/fake/tsuku")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -452,8 +453,20 @@ func TestInvokeDltest_EmptyPaths(t *testing.T) {
 }
 
 func TestInvokeDltest_HelperNotFound(t *testing.T) {
+	// Create a temp dir with libs subdirectory for path validation
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	// Create a valid library path
+	libPath := filepath.Join(libsDir, "a.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
+
 	ctx := context.Background()
-	_, err := InvokeDltest(ctx, "/nonexistent/helper", []string{"a.so"})
+	_, err := InvokeDltest(ctx, "/nonexistent/helper", []string{libPath}, tmpDir)
 
 	if err == nil {
 		t.Fatal("expected error for missing helper")
@@ -467,10 +480,21 @@ func TestInvokeDltest_HelperNotFound(t *testing.T) {
 }
 
 func TestInvokeDltest_ContextCancellation(t *testing.T) {
+	// Create a temp dir with libs subdirectory for path validation
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	libPath := filepath.Join(libsDir, "a.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
 	cancel() // Cancel immediately
 
-	_, err := InvokeDltest(ctx, "/nonexistent", []string{"a.so"})
+	_, err := InvokeDltest(ctx, "/nonexistent", []string{libPath}, tmpDir)
 	if err == nil {
 		t.Fatal("expected error for canceled context")
 	}
@@ -481,9 +505,13 @@ func TestInvokeDltest_ContextCancellation(t *testing.T) {
 
 // Test with a mock helper script that outputs valid JSON
 func TestInvokeDltest_MockHelper_Success(t *testing.T) {
-	// Create temp script that outputs valid JSON
+	// Create temp directory structure
 	tmpDir := t.TempDir()
 	helperPath := filepath.Join(tmpDir, "mock-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
 
 	// Script outputs JSON for all arguments
 	script := `#!/bin/sh
@@ -504,9 +532,19 @@ exit 0
 		t.Fatalf("failed to write mock helper: %v", err)
 	}
 
+	// Create library files in the libs directory
+	paths := []string{
+		filepath.Join(libsDir, "a.so"),
+		filepath.Join(libsDir, "b.so"),
+	}
+	for _, p := range paths {
+		if err := os.WriteFile(p, []byte{}, 0644); err != nil {
+			t.Fatalf("failed to create lib file: %v", err)
+		}
+	}
+
 	ctx := context.Background()
-	paths := []string{"/lib/a.so", "/lib/b.so"}
-	results, err := InvokeDltest(ctx, helperPath, paths)
+	results, err := InvokeDltest(ctx, helperPath, paths, tmpDir)
 	if err != nil {
 		t.Fatalf("InvokeDltest failed: %v", err)
 	}
@@ -526,9 +564,13 @@ exit 0
 
 // Test batch splitting with many paths
 func TestInvokeDltest_MockHelper_ManyPaths(t *testing.T) {
-	// Create temp script that counts arguments
+	// Create temp directory structure
 	tmpDir := t.TempDir()
 	helperPath := filepath.Join(tmpDir, "mock-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
 
 	// Script outputs JSON for all arguments
 	script := `#!/bin/sh
@@ -549,14 +591,17 @@ exit 0
 		t.Fatalf("failed to write mock helper: %v", err)
 	}
 
-	// Create 75 paths - should be split into 2 batches
+	// Create 75 paths in libs directory - should be split into 2 batches
 	paths := make([]string, 75)
 	for i := range paths {
-		paths[i] = "/lib/lib" + string(rune('a'+i%26)) + ".so"
+		paths[i] = filepath.Join(libsDir, "lib"+string(rune('a'+i%26))+string(rune('0'+i/26))+".so")
+		if err := os.WriteFile(paths[i], []byte{}, 0644); err != nil {
+			t.Fatalf("failed to create lib file: %v", err)
+		}
 	}
 
 	ctx := context.Background()
-	results, err := InvokeDltest(ctx, helperPath, paths)
+	results, err := InvokeDltest(ctx, helperPath, paths, tmpDir)
 	if err != nil {
 		t.Fatalf("InvokeDltest failed: %v", err)
 	}
@@ -572,10 +617,17 @@ func TestInvokeDltest_Timeout(t *testing.T) {
 		t.Skip("skipping timeout test in short mode")
 	}
 
-	// Create a helper that uses exec to replace the shell process with sleep
-	// This ensures the SIGKILL from context timeout actually kills the process
+	// Create temp directory structure
 	tmpDir := t.TempDir()
 	helperPath := filepath.Join(tmpDir, "slow-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	libPath := filepath.Join(libsDir, "a.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
 
 	// Use exec to replace shell process - this ensures timeout kills the right process
 	script := `#!/bin/sh
@@ -587,7 +639,7 @@ exec sleep 10
 
 	ctx := context.Background()
 	start := time.Now()
-	_, err := InvokeDltest(ctx, helperPath, []string{"a.so"})
+	_, err := InvokeDltest(ctx, helperPath, []string{libPath}, tmpDir)
 	elapsed := time.Since(start)
 
 	if err == nil {
@@ -612,6 +664,21 @@ func TestInvokeDltest_RetryOnCrash(t *testing.T) {
 	tmpDir := t.TempDir()
 	counterFile := filepath.Join(tmpDir, "count")
 	helperPath := filepath.Join(tmpDir, "crash-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Create library files
+	paths := []string{
+		filepath.Join(libsDir, "a.so"),
+		filepath.Join(libsDir, "b.so"),
+	}
+	for _, p := range paths {
+		if err := os.WriteFile(p, []byte{}, 0644); err != nil {
+			t.Fatalf("failed to create lib file: %v", err)
+		}
+	}
 
 	// Script that crashes on first call (with 2+ args), succeeds on retry
 	// Uses a file to track call count since each invocation is a new process
@@ -648,8 +715,7 @@ exit 0
 	}
 
 	ctx := context.Background()
-	paths := []string{"a.so", "b.so"}
-	results, err := InvokeDltest(ctx, helperPath, paths)
+	results, err := InvokeDltest(ctx, helperPath, paths, tmpDir)
 
 	if err != nil {
 		t.Fatalf("InvokeDltest failed (should have retried): %v", err)
@@ -672,10 +738,18 @@ exit 0
 func TestInvokeDltest_ExitCode1_NotCrash(t *testing.T) {
 	tmpDir := t.TempDir()
 	helperPath := filepath.Join(tmpDir, "fail-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	libPath := filepath.Join(libsDir, "bad.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
 
 	// Script exits with code 1 but provides valid JSON
 	script := `#!/bin/sh
-echo '[{"path":"bad.so","ok":false,"error":"cannot load"}]'
+echo '[{"path":"` + libPath + `","ok":false,"error":"cannot load"}]'
 exit 1
 `
 	if err := os.WriteFile(helperPath, []byte(script), 0755); err != nil {
@@ -683,7 +757,7 @@ exit 1
 	}
 
 	ctx := context.Background()
-	results, err := InvokeDltest(ctx, helperPath, []string{"bad.so"})
+	results, err := InvokeDltest(ctx, helperPath, []string{libPath}, tmpDir)
 
 	// Should succeed (exit 1 is expected for dlopen failures)
 	if err != nil {
@@ -706,4 +780,264 @@ func stringContains(s, substr string) bool {
 		}
 	}
 	return false
+}
+
+// Tests for environment sanitization
+
+func TestSanitizeEnvForHelper_StripsDangerousLinuxVars(t *testing.T) {
+	// Set dangerous environment variables
+	dangerousVars := []string{
+		"LD_PRELOAD=/evil.so",
+		"LD_AUDIT=/evil.so",
+		"LD_DEBUG=all",
+		"LD_DEBUG_OUTPUT=/tmp/debug",
+		"LD_PROFILE=libc.so",
+		"LD_PROFILE_OUTPUT=/tmp/profile",
+	}
+
+	for _, v := range dangerousVars {
+		parts := strings.SplitN(v, "=", 2)
+		os.Setenv(parts[0], parts[1])
+		defer os.Unsetenv(parts[0])
+	}
+
+	env := sanitizeEnvForHelper("/fake/tsuku")
+
+	// Check that dangerous vars are NOT in the result
+	for _, e := range env {
+		key := strings.SplitN(e, "=", 2)[0]
+		switch key {
+		case "LD_PRELOAD", "LD_AUDIT", "LD_DEBUG", "LD_DEBUG_OUTPUT", "LD_PROFILE", "LD_PROFILE_OUTPUT":
+			t.Errorf("dangerous variable %s should have been stripped", key)
+		}
+	}
+}
+
+func TestSanitizeEnvForHelper_StripsDangerousMacOSVars(t *testing.T) {
+	// Set dangerous macOS environment variables
+	dangerousVars := []string{
+		"DYLD_INSERT_LIBRARIES=/evil.dylib",
+		"DYLD_FORCE_FLAT_NAMESPACE=1",
+		"DYLD_PRINT_LIBRARIES=1",
+		"DYLD_PRINT_LIBRARIES_POST_LAUNCH=1",
+	}
+
+	for _, v := range dangerousVars {
+		parts := strings.SplitN(v, "=", 2)
+		os.Setenv(parts[0], parts[1])
+		defer os.Unsetenv(parts[0])
+	}
+
+	env := sanitizeEnvForHelper("/fake/tsuku")
+
+	// Check that dangerous vars are NOT in the result
+	for _, e := range env {
+		key := strings.SplitN(e, "=", 2)[0]
+		switch key {
+		case "DYLD_INSERT_LIBRARIES", "DYLD_FORCE_FLAT_NAMESPACE", "DYLD_PRINT_LIBRARIES", "DYLD_PRINT_LIBRARIES_POST_LAUNCH":
+			t.Errorf("dangerous variable %s should have been stripped", key)
+		}
+	}
+}
+
+func TestSanitizeEnvForHelper_PreservesSafeVars(t *testing.T) {
+	// Set some safe variables
+	os.Setenv("HOME", "/home/test")
+	os.Setenv("PATH", "/usr/bin:/bin")
+	os.Setenv("TSUKU_TEST_VAR", "safe")
+	defer os.Unsetenv("TSUKU_TEST_VAR")
+
+	env := sanitizeEnvForHelper("/fake/tsuku")
+
+	// Check that safe vars are preserved
+	found := make(map[string]bool)
+	for _, e := range env {
+		key := strings.SplitN(e, "=", 2)[0]
+		found[key] = true
+	}
+
+	if !found["HOME"] {
+		t.Error("HOME should have been preserved")
+	}
+	if !found["PATH"] {
+		t.Error("PATH should have been preserved")
+	}
+	if !found["TSUKU_TEST_VAR"] {
+		t.Error("TSUKU_TEST_VAR should have been preserved")
+	}
+}
+
+func TestSanitizeEnvForHelper_AddsLibraryPaths(t *testing.T) {
+	env := sanitizeEnvForHelper("/fake/tsuku")
+
+	var foundLDPath, foundDYLDPath bool
+	for _, e := range env {
+		if strings.HasPrefix(e, "LD_LIBRARY_PATH=") {
+			foundLDPath = true
+			if !strings.Contains(e, "/fake/tsuku/libs:") {
+				t.Errorf("LD_LIBRARY_PATH should contain /fake/tsuku/libs: got %s", e)
+			}
+		}
+		if strings.HasPrefix(e, "DYLD_LIBRARY_PATH=") {
+			foundDYLDPath = true
+			if !strings.Contains(e, "/fake/tsuku/libs:") {
+				t.Errorf("DYLD_LIBRARY_PATH should contain /fake/tsuku/libs: got %s", e)
+			}
+		}
+	}
+
+	if !foundLDPath {
+		t.Error("LD_LIBRARY_PATH should have been added")
+	}
+	if !foundDYLDPath {
+		t.Error("DYLD_LIBRARY_PATH should have been added")
+	}
+}
+
+// Tests for path validation
+
+func TestValidateLibraryPaths_ValidPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Create a valid library file
+	libPath := filepath.Join(libsDir, "valid.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
+
+	err := validateLibraryPaths([]string{libPath}, libsDir)
+	if err != nil {
+		t.Errorf("unexpected error for valid path: %v", err)
+	}
+}
+
+func TestValidateLibraryPaths_PathTraversal(t *testing.T) {
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Create a file outside libs
+	outsidePath := filepath.Join(tmpDir, "outside.so")
+	if err := os.WriteFile(outsidePath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create outside file: %v", err)
+	}
+
+	// Try to access it via path traversal
+	traversalPath := filepath.Join(libsDir, "..", "outside.so")
+	err := validateLibraryPaths([]string{traversalPath}, libsDir)
+	if err == nil {
+		t.Error("expected error for path traversal")
+	}
+	if !strings.Contains(err.Error(), "outside libs directory") {
+		t.Errorf("error should mention 'outside libs directory', got: %v", err)
+	}
+}
+
+func TestValidateLibraryPaths_SymlinkEscape(t *testing.T) {
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Create a file outside libs
+	outsidePath := filepath.Join(tmpDir, "outside.so")
+	if err := os.WriteFile(outsidePath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create outside file: %v", err)
+	}
+
+	// Create symlink inside libs pointing outside
+	linkPath := filepath.Join(libsDir, "escape.so")
+	if err := os.Symlink(outsidePath, linkPath); err != nil {
+		t.Fatalf("failed to create symlink: %v", err)
+	}
+
+	err := validateLibraryPaths([]string{linkPath}, libsDir)
+	if err == nil {
+		t.Error("expected error for symlink escape")
+	}
+	if !strings.Contains(err.Error(), "outside libs directory") {
+		t.Errorf("error should mention 'outside libs directory', got: %v", err)
+	}
+}
+
+func TestValidateLibraryPaths_NonexistentPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	nonexistentPath := filepath.Join(libsDir, "nonexistent.so")
+	err := validateLibraryPaths([]string{nonexistentPath}, libsDir)
+	if err == nil {
+		t.Error("expected error for nonexistent path")
+	}
+	if !strings.Contains(err.Error(), "invalid library path") {
+		t.Errorf("error should mention 'invalid library path', got: %v", err)
+	}
+}
+
+func TestValidateLibraryPaths_LibsDirNotExist(t *testing.T) {
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "nonexistent-libs")
+
+	err := validateLibraryPaths([]string{"/some/path.so"}, libsDir)
+	if err == nil {
+		t.Error("expected error for nonexistent libs dir")
+	}
+	if !strings.Contains(err.Error(), "libs directory not accessible") {
+		t.Errorf("error should mention 'libs directory not accessible', got: %v", err)
+	}
+}
+
+func TestValidateLibraryPaths_NestedPath(t *testing.T) {
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "libs")
+	nestedDir := filepath.Join(libsDir, "subdir", "deep")
+	if err := os.MkdirAll(nestedDir, 0755); err != nil {
+		t.Fatalf("failed to create nested dir: %v", err)
+	}
+
+	// Create a valid library file in nested path
+	libPath := filepath.Join(nestedDir, "nested.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
+
+	err := validateLibraryPaths([]string{libPath}, libsDir)
+	if err != nil {
+		t.Errorf("unexpected error for valid nested path: %v", err)
+	}
+}
+
+// Test InvokeDltest path validation integration
+
+func TestInvokeDltest_RejectsInvalidPaths(t *testing.T) {
+	tmpDir := t.TempDir()
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Try to invoke with a path outside libs
+	outsidePath := filepath.Join(tmpDir, "outside.so")
+	if err := os.WriteFile(outsidePath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create outside file: %v", err)
+	}
+
+	ctx := context.Background()
+	_, err := InvokeDltest(ctx, "/fake/helper", []string{outsidePath}, tmpDir)
+	if err == nil {
+		t.Error("expected error for path outside libs")
+	}
+	if !strings.Contains(err.Error(), "outside libs directory") {
+		t.Errorf("error should mention 'outside libs directory', got: %v", err)
+	}
 }
