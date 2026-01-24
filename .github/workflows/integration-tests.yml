@@ -90,14 +90,14 @@ jobs:
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-library-integrity.sh ${{ matrix.library }} ${{ matrix.family }}
 
-  library-dlopen:
+  library-dlopen-linux:
     name: "Library dlopen: ${{ matrix.library }} (${{ matrix.family }})"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        library: [zlib, libyaml]
-        family: [debian]
+        library: [zlib, libyaml, openssl, gcc-libs]
+        family: [debian, rhel, arch, alpine, suse]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -127,3 +127,40 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} ${{ matrix.family }}
+
+  library-dlopen-macos:
+    name: "Library dlopen: ${{ matrix.library }} (darwin)"
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        library: [zlib, libyaml, openssl, gcc-libs]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            cmd/tsuku-dltest/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: rust-dltest-${{ runner.os }}-${{ hashFiles('cmd/tsuku-dltest/Cargo.lock') }}
+          restore-keys: |
+            rust-dltest-${{ runner.os }}-
+
+      - name: Run library dlopen test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} darwin
