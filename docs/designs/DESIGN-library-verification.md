@@ -7,7 +7,9 @@ rationale: Tiered verification answers "will this library work?" instead of just
 
 # DESIGN: Library Verification for tsuku verify Command
 
-**Status:** Planned
+## Status
+
+Planned
 
 ## Implementation Issues
 

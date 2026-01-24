@@ -9,7 +9,7 @@ rationale: Runtime validation is the ground truth - it uses the actual loader to
 
 ## Status
 
-**Planned**
+Current
 
 ## Implementation Issues
 

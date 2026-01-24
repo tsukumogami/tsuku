@@ -7,7 +7,9 @@ rationale: This closes a security gap where Layer 2 (version verification) detec
 
 # Design: Post-Install Checksum Pinning (Layer 3)
 
-- **Status**: Current
+## Status
+
+Current
 - **Issue**: #203
 - **Author**: @dangazineu
 - **Created**: 2025-12-27

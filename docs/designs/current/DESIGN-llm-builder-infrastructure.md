@@ -7,7 +7,9 @@ rationale: Modern LLMs with tool use capabilities can reliably analyze release a
 
 # Design Document: LLM Builder Infrastructure
 
-**Status**: Current
+## Status
+
+Current
 
 **Milestone**: [LLM Builder Infrastructure](https://github.com/tsukumogami/tsuku/milestone/12)
 

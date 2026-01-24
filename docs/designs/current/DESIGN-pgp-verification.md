@@ -7,7 +7,9 @@ rationale: This approach provides strong cryptographic verification (fingerprint
 
 # Design: PGP Signature Verification for Downloads
 
-- **Status**: Current
+## Status
+
+Current
 - **Issue**: #682
 - **Author**: @dangazineu
 - **Created**: 2025-12-27

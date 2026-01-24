@@ -7,7 +7,9 @@ rationale: This approach maintains architectural consistency with the existing c
 
 # Design: Recipe Detail Pages with Dependency Visualization
 
-**Status**: Current
+## Status
+
+Current
 
 ## Context and Problem Statement
 

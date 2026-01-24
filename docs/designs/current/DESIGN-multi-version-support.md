@@ -7,7 +7,9 @@ rationale: Developers working with language runtimes frequently need multiple ve
 
 # Design Document: Multi-Version Tool Support
 
-**Status**: Current
+## Status
+
+Current
 
 <a id="implementation-issues"></a>
 **Implementation Issues**:

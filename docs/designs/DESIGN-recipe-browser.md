@@ -7,7 +7,9 @@ rationale: This approach maintains tsuku.dev's static-file architecture without 
 
 # Design: Recipe Browser Page
 
-**Status**: Planned
+## Status
+
+Planned
 
 ## Context and Problem Statement
 

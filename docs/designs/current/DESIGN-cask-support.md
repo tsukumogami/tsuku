@@ -7,7 +7,9 @@ rationale: This approach provides Homebrew integration for automatic version upd
 
 # Design: Homebrew Cask Support
 
-**Status**: Current
+## Status
+
+Current
 
 ## Implementation Issues
 

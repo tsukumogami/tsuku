@@ -7,7 +7,9 @@ rationale: This approach aligns library handling with tsuku's existing dependenc
 
 # Design Document: Relocatable Library Dependency System
 
-**Status**: Current
+## Status
+
+Current
 
 ## Context and Problem Statement
 
