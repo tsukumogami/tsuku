@@ -7,7 +7,9 @@ rationale: Research shows 99.94% of Homebrew formulas have bottles available, ma
 
 # Design: Homebrew Integration
 
-**Status**: Current
+## Status
+
+Current
 
 ## Context and Problem Statement
 

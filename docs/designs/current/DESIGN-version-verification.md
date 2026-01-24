@@ -7,7 +7,9 @@ rationale: Version format transforms (semver, strip_v, etc.) cover ~95% of real-
 
 # Design: Flexible Recipe Verification
 
-- **Status**: Current
+## Status
+
+Current
 - **Issue**: #192
 - **Author**: @dangazineu
 - **Created**: 2025-12-06
