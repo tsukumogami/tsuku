@@ -25,8 +25,8 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
-| [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | Create testdata/recipes for integration test coverage | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable | |
-| [#1036](https://github.com/tsukumogami/tsuku/issues/1036) | Update workflows for split recipe structure | [#1034](https://github.com/tsukumogami/tsuku/issues/1034), [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | testable | |
+| [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | Create testdata/recipes for integration test coverage | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable | Done |
+| [#1036](https://github.com/tsukumogami/tsuku/issues/1036) | Update workflows for split recipe structure | [#1034](https://github.com/tsukumogami/tsuku/issues/1034), [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | testable | Done |
 
 ### Milestone: [M32 - Cache Management and Documentation](https://github.com/tsukumogami/tsuku/milestone/42)
 
@@ -83,8 +83,9 @@ graph TD
     class ERLV done
     class I1033 done
     class I1034 done
-    class I1035 ready
-    class I1036,I1038 blocked
+    class I1035 done
+    class I1036 done
+    class I1038 blocked
     class I1037 needsDesign
     class I1039 ready
 ```
