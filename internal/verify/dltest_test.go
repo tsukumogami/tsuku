@@ -797,8 +797,7 @@ func TestSanitizeEnvForHelper_StripsDangerousLinuxVars(t *testing.T) {
 
 	for _, v := range dangerousVars {
 		parts := strings.SplitN(v, "=", 2)
-		os.Setenv(parts[0], parts[1])
-		defer os.Unsetenv(parts[0])
+		t.Setenv(parts[0], parts[1])
 	}
 
 	env := sanitizeEnvForHelper("/fake/tsuku")
@@ -824,8 +823,7 @@ func TestSanitizeEnvForHelper_StripsDangerousMacOSVars(t *testing.T) {
 
 	for _, v := range dangerousVars {
 		parts := strings.SplitN(v, "=", 2)
-		os.Setenv(parts[0], parts[1])
-		defer os.Unsetenv(parts[0])
+		t.Setenv(parts[0], parts[1])
 	}
 
 	env := sanitizeEnvForHelper("/fake/tsuku")
@@ -841,11 +839,8 @@ func TestSanitizeEnvForHelper_StripsDangerousMacOSVars(t *testing.T) {
 }
 
 func TestSanitizeEnvForHelper_PreservesSafeVars(t *testing.T) {
-	// Set some safe variables
-	os.Setenv("HOME", "/home/test")
-	os.Setenv("PATH", "/usr/bin:/bin")
-	os.Setenv("TSUKU_TEST_VAR", "safe")
-	defer os.Unsetenv("TSUKU_TEST_VAR")
+	// Set some safe variables (HOME and PATH are already set, just add test var)
+	t.Setenv("TSUKU_TEST_VAR", "safe")
 
 	env := sanitizeEnvForHelper("/fake/tsuku")
 
