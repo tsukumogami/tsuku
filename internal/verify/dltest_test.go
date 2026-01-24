@@ -194,6 +194,11 @@ func TestEnsureDltest_CorrectVersionInstalled(t *testing.T) {
 }
 
 func TestEnsureDltest_WrongVersionInstalled(t *testing.T) {
+	// Skip in dev mode since dev mode accepts any version
+	if pinnedDltestVersion == "dev" {
+		t.Skip("skipping wrong version test in dev mode (any version accepted)")
+	}
+
 	// Create a temp directory for test
 	tmpDir, err := os.MkdirTemp("", "tsuku-test-*")
 	if err != nil {
@@ -243,5 +248,57 @@ func TestEnsureDltest_WrongVersionInstalled(t *testing.T) {
 	if installedVersion == pinnedDltestVersion {
 		t.Errorf("wrong version %q should not match pinnedDltestVersion %q",
 			installedVersion, pinnedDltestVersion)
+	}
+}
+
+func TestEnsureDltest_DevMode_AcceptsAnyVersion(t *testing.T) {
+	// This test validates dev mode behavior: any installed version is accepted
+	if pinnedDltestVersion != "dev" {
+		t.Skip("skipping dev mode test when not in dev mode")
+	}
+
+	// Create a temp directory for test
+	tmpDir, err := os.MkdirTemp("", "tsuku-test-*")
+	if err != nil {
+		t.Fatalf("failed to create temp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Create config with temp directory
+	cfg := &config.Config{
+		HomeDir:  tmpDir,
+		ToolsDir: filepath.Join(tmpDir, "tools"),
+	}
+
+	// Install an arbitrary version (simulating a previous release)
+	arbitraryVersion := "v0.3.0"
+	binDir := cfg.ToolBinDir("tsuku-dltest", arbitraryVersion)
+	if err := os.MkdirAll(binDir, 0755); err != nil {
+		t.Fatalf("failed to create bin dir: %v", err)
+	}
+
+	// Create a fake binary
+	binaryPath := filepath.Join(binDir, "tsuku-dltest")
+	if err := os.WriteFile(binaryPath, []byte("#!/bin/sh\necho test"), 0755); err != nil {
+		t.Fatalf("failed to create fake binary: %v", err)
+	}
+
+	// Set up state with the arbitrary version
+	stateManager := install.NewStateManager(cfg)
+	if err := stateManager.UpdateTool("tsuku-dltest", func(ts *install.ToolState) {
+		ts.ActiveVersion = arbitraryVersion
+		ts.IsHidden = true
+	}); err != nil {
+		t.Fatalf("failed to update state: %v", err)
+	}
+
+	// In dev mode, EnsureDltest should accept the arbitrary version
+	path, err := EnsureDltest(cfg)
+	if err != nil {
+		t.Fatalf("EnsureDltest failed: %v", err)
+	}
+
+	if path != binaryPath {
+		t.Errorf("path = %q, want %q", path, binaryPath)
 	}
 }

@@ -34,12 +34,13 @@ type DlopenResult struct {
 // - Version tracking in state.json
 // - Standard installation patterns
 //
-// Installation happens automatically when the helper is missing or has a
-// version mismatch with pinnedDltestVersion.
+// Version behavior:
+// - When pinnedDltestVersion is "dev": accept any installed version, or install latest
+// - When pinnedDltestVersion is a specific version: require that exact version
 func EnsureDltest(cfg *config.Config) (string, error) {
 	stateManager := install.NewStateManager(cfg)
 
-	// Check if correct version is already installed
+	// Check current installation state
 	toolState, err := stateManager.GetToolState("tsuku-dltest")
 	if err != nil {
 		return "", fmt.Errorf("failed to check tsuku-dltest state: %w", err)
@@ -55,9 +56,42 @@ func EnsureDltest(cfg *config.Config) (string, error) {
 		}
 	}
 
-	// Check if we have the correct version
+	// Dev mode: accept any installed version
+	if pinnedDltestVersion == "dev" {
+		if installedVersion != "" {
+			// Use whatever version is installed
+			dltestPath := filepath.Join(cfg.ToolBinDir("tsuku-dltest", installedVersion), "tsuku-dltest")
+			if _, err := os.Stat(dltestPath); err == nil {
+				return dltestPath, nil
+			}
+			// State says installed but binary missing - fall through to install latest
+		}
+		// Nothing installed, install latest
+		if err := installDltest(""); err != nil {
+			return "", err
+		}
+		// Re-check state to get the installed version
+		toolState, err = stateManager.GetToolState("tsuku-dltest")
+		if err != nil {
+			return "", fmt.Errorf("failed to check tsuku-dltest state after install: %w", err)
+		}
+		if toolState == nil {
+			return "", fmt.Errorf("tsuku-dltest install succeeded but no state found")
+		}
+		if toolState.ActiveVersion != "" {
+			installedVersion = toolState.ActiveVersion
+		} else {
+			installedVersion = toolState.Version
+		}
+		dltestPath := filepath.Join(cfg.ToolBinDir("tsuku-dltest", installedVersion), "tsuku-dltest")
+		if _, err := os.Stat(dltestPath); err != nil {
+			return "", fmt.Errorf("tsuku-dltest installed but binary not found at %s", dltestPath)
+		}
+		return dltestPath, nil
+	}
+
+	// Release mode: require exact pinned version
 	if installedVersion == pinnedDltestVersion {
-		// Correct version installed, return path
 		dltestPath := filepath.Join(cfg.ToolBinDir("tsuku-dltest", pinnedDltestVersion), "tsuku-dltest")
 		if _, err := os.Stat(dltestPath); err == nil {
 			return dltestPath, nil
@@ -65,12 +99,11 @@ func EnsureDltest(cfg *config.Config) (string, error) {
 		// State says installed but binary missing - fall through to reinstall
 	}
 
-	// Need to install: either missing or wrong version
+	// Need to install the pinned version
 	if err := installDltest(pinnedDltestVersion); err != nil {
 		return "", err
 	}
 
-	// Return path to newly installed binary
 	dltestPath := filepath.Join(cfg.ToolBinDir("tsuku-dltest", pinnedDltestVersion), "tsuku-dltest")
 	if _, err := os.Stat(dltestPath); err != nil {
 		return "", fmt.Errorf("tsuku-dltest installed but binary not found at %s", dltestPath)
@@ -81,6 +114,7 @@ func EnsureDltest(cfg *config.Config) (string, error) {
 
 // installDltest installs tsuku-dltest using the standard recipe flow.
 // This invokes tsuku as a subprocess to reuse all installation infrastructure.
+// If version is empty, installs the latest available version.
 func installDltest(version string) error {
 	// Find tsuku binary - should be in PATH or we can use os.Executable
 	tsukuPath, err := os.Executable()
@@ -92,8 +126,13 @@ func installDltest(version string) error {
 		}
 	}
 
-	// Build install command
-	toolSpec := fmt.Sprintf("tsuku-dltest@%s", version)
+	// Build install command - use version spec if provided, otherwise install latest
+	var toolSpec string
+	if version != "" {
+		toolSpec = fmt.Sprintf("tsuku-dltest@%s", version)
+	} else {
+		toolSpec = "tsuku-dltest"
+	}
 	cmd := exec.Command(tsukuPath, "install", toolSpec)
 
 	var stdout, stderr bytes.Buffer
@@ -102,8 +141,8 @@ func installDltest(version string) error {
 
 	// Run installation
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to install tsuku-dltest@%s: %w\nstderr: %s",
-			version, err, strings.TrimSpace(stderr.String()))
+		return fmt.Errorf("failed to install %s: %w\nstderr: %s",
+			toolSpec, err, strings.TrimSpace(stderr.String()))
 	}
 
 	return nil
