@@ -128,40 +128,7 @@ jobs:
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} debian
 
-  library-dlopen-musl:
-    name: "Library dlopen: ${{ matrix.library }} (musl)"
-    runs-on: ubuntu-latest
-    container:
-      image: golang:1.23-alpine
-    strategy:
-      fail-fast: false
-      matrix:
-        # openssl excluded: system libcrypto conflicts with tsuku-installed version (see #1090)
-        library: [zlib, libyaml, gcc-libs]
-    steps:
-      - name: Install dependencies
-        run: apk add --no-cache git gcc musl-dev curl bash
-
-      - name: Install Rust via rustup
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Build tsuku-dltest
-        run: |
-          . "$HOME/.cargo/env"
-          cd cmd/tsuku-dltest
-          cargo build --release
-
-      - name: Run library dlopen test
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-          GOTOOLCHAIN: auto
-        run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} alpine
+  # NOTE: musl/Alpine dlopen tests removed - embedded libraries are glibc-only (see #1092)
 
   library-dlopen-macos:
     name: "Library dlopen: ${{ matrix.library }} (darwin)"
