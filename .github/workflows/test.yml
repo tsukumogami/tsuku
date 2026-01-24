@@ -277,8 +277,20 @@ jobs:
           passed=0
           failed_recipes=""
 
-          for recipe in internal/recipe/recipes/*/*.toml; do
+          # Validate embedded recipes (flat structure)
+          for recipe in internal/recipe/recipes/*.toml; do
             # Disable errexit for command substitution to capture non-zero exit codes
+            output=$(./tsuku validate --strict "$recipe" 2>&1) && rc=0 || rc=$?
+            if [ $rc -ne 0 ]; then
+              failed=$((failed + 1))
+              failed_recipes="$failed_recipes$output"$'\n\n'
+            else
+              passed=$((passed + 1))
+            fi
+          done
+
+          # Validate registry recipes (letter subdirectories)
+          for recipe in recipes/*/*.toml; do
             output=$(./tsuku validate --strict "$recipe" 2>&1) && rc=0 || rc=$?
             if [ $rc -ne 0 ]; then
               failed=$((failed + 1))

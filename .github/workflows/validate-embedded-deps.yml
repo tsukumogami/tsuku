@@ -35,7 +35,7 @@ jobs:
 
           # Test recipes that exercise each action type
           # Format: action:recipe:location where location is "embedded" or "registry"
-          # Embedded recipes are at internal/recipe/recipes/<letter>/<name>.toml
+          # Embedded recipes are at internal/recipe/recipes/<name>.toml (flat)
           # Registry recipes are at recipes/<letter>/<name>.toml
           test_recipes=(
             "go_install:gofumpt:registry"
@@ -74,7 +74,7 @@ jobs:
 
             # Determine recipe path based on location
             if [ "$location" = "embedded" ]; then
-              recipe_path="internal/recipe/recipes/${first_letter}/${recipe}.toml"
+              recipe_path="internal/recipe/recipes/${recipe}.toml"
             else
               recipe_path="recipes/${first_letter}/${recipe}.toml"
             fi

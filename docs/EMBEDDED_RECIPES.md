@@ -62,7 +62,7 @@ During migration, known gaps are tracked in `embedded-validation-exclusions.json
 
 To add a recipe to the embedded list:
 
-1. Add the recipe file to `internal/recipe/recipes/<first-letter>/<name>.toml`
+1. Add the recipe file to `internal/recipe/recipes/<name>.toml`
 2. Run `go generate ./...` to rebuild the embedded filesystem
 3. Update this document to include the recipe with its rationale
 4. Ensure all transitive dependencies are also embedded

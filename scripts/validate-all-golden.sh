@@ -58,10 +58,12 @@ for letter_dir in "$GOLDEN_BASE"/*/; do
         fi
 
         # Check if this is a testdata recipe (not in main recipes directory)
+        # Embedded recipes are flat, registry recipes use letter subdirectories
+        EMBEDDED_RECIPE="$REPO_ROOT/internal/recipe/recipes/$recipe.toml"
         first_letter="${recipe:0:1}"
-        MAIN_RECIPE="$REPO_ROOT/internal/recipe/recipes/$first_letter/$recipe.toml"
+        REGISTRY_RECIPE="$REPO_ROOT/recipes/$first_letter/$recipe.toml"
         TESTDATA_RECIPE="$REPO_ROOT/testdata/recipes/$recipe.toml"
-        if [[ ! -f "$MAIN_RECIPE" && -f "$TESTDATA_RECIPE" ]]; then
+        if [[ ! -f "$EMBEDDED_RECIPE" && ! -f "$REGISTRY_RECIPE" && -f "$TESTDATA_RECIPE" ]]; then
             VALIDATE_ARGS+=("--recipe" "$TESTDATA_RECIPE")
         fi
 

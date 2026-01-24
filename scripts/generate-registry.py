@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Generate recipes.json from TOML recipe files.
 
-This script parses all recipe TOML files in recipes/*/*.toml,
-validates metadata, and outputs a JSON file for the recipe browser.
+This script parses all recipe TOML files, validates metadata, and outputs
+a JSON file for the recipe browser. Registry recipes are in recipes/*/*.toml
+and embedded recipes are in internal/recipe/recipes/*.toml.
 
 Requirements:
 - Python 3.11+ (uses tomllib from standard library)
@@ -29,8 +30,8 @@ OUTPUT_FILE = OUTPUT_DIR / "recipes.json"
 
 # Validation patterns
 NAME_PATTERN = re.compile(r"^[a-z0-9-]+$")
-# Accept paths from either recipes/ or internal/recipe/recipes/
-PATH_PATTERN = re.compile(r"^(recipes|internal/recipe/recipes)/[a-z]/[a-z0-9-]+\.toml$")
+# Accept paths from registry (recipes/<letter>/<name>.toml) or embedded (internal/recipe/recipes/<name>.toml)
+PATH_PATTERN = re.compile(r"^(recipes/[a-z]/[a-z0-9-]+\.toml|internal/recipe/recipes/[a-z0-9-]+\.toml)$")
 
 
 class ValidationError:
@@ -45,11 +46,20 @@ class ValidationError:
 
 
 def discover_recipes() -> list[Path]:
-    """Find all recipe TOML files in recipes/*/*.toml and internal/recipe/recipes/*/*.toml."""
+    """Find all recipe TOML files.
+
+    Registry recipes: recipes/<letter>/<name>.toml
+    Embedded recipes: internal/recipe/recipes/<name>.toml (flat structure)
+    """
     recipes = []
-    for recipes_dir in RECIPES_DIRS:
-        if recipes_dir.exists():
-            recipes.extend(recipes_dir.glob("*/*.toml"))
+    # Registry recipes use letter subdirectories
+    registry_dir = Path("recipes")
+    if registry_dir.exists():
+        recipes.extend(registry_dir.glob("*/*.toml"))
+    # Embedded recipes are flat (no letter subdirectories)
+    embedded_dir = Path("internal/recipe/recipes")
+    if embedded_dir.exists():
+        recipes.extend(embedded_dir.glob("*.toml"))
     return sorted(recipes)
 
 
@@ -59,7 +69,7 @@ def validate_path(file_path: Path) -> list[ValidationError]:
     path_str = str(file_path)
 
     if not PATH_PATTERN.match(path_str):
-        errors.append(ValidationError(path_str, f"path does not match pattern (recipes|internal/recipe/recipes)/[a-z]/[a-z0-9-]+.toml"))
+        errors.append(ValidationError(path_str, "path does not match expected pattern"))
 
     # Check file is within one of the recipes directories (path traversal protection)
     try:

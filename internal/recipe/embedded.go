@@ -10,7 +10,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-//go:embed recipes/*/*.toml
+//go:embed recipes/*.toml
 var embeddedRecipes embed.FS
 
 // EmbeddedRegistry provides access to recipes embedded in the binary
@@ -40,7 +40,7 @@ func NewEmbeddedRegistry() (*EmbeddedRegistry, error) {
 			return fmt.Errorf("failed to read embedded recipe %s: %w", path, err)
 		}
 
-		// Extract recipe name from path (e.g., "recipes/a/actionlint.toml" -> "actionlint")
+		// Extract recipe name from path (e.g., "recipes/go.toml" -> "go")
 		name := strings.TrimSuffix(filepath.Base(path), ".toml")
 		er.recipes[name] = data
 
