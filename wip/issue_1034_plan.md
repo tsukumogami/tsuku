@@ -48,29 +48,29 @@ Note: 3 embedded recipes (nodejs, rust, zlib) don't have golden files yet (rust 
 
 ## Implementation Steps
 
-- [ ] Create `testdata/golden/plans/embedded/` directory
-- [ ] Move 14 embedded recipe golden directories to flat structure under `embedded/`
-- [ ] Update `validate-golden.sh`:
+- [x] Create `testdata/golden/plans/embedded/` directory
+- [x] Move 14 embedded recipe golden directories to flat structure under `embedded/`
+- [x] Update `validate-golden.sh`:
   - Add `--category embedded|registry` flag
   - Add `detect_category()` function (checks `internal/recipe/recipes/` for embedded, `recipes/` for registry)
   - Add `get_golden_dir()` function that returns correct path based on category
   - Update `GOLDEN_DIR` assignment to use `get_golden_dir()`
-- [ ] Update `validate-all-golden.sh`:
+- [x] Update `validate-all-golden.sh`:
   - Add `--category embedded|registry` flag
   - When `--category embedded`: iterate over `testdata/golden/plans/embedded/*/`
   - When `--category registry`: iterate over `testdata/golden/plans/{letter}/*/` (skip `embedded/`)
   - When no category: iterate over both (current behavior, updated for new structure)
-- [ ] Update `regenerate-golden.sh`:
+- [x] Update `regenerate-golden.sh`:
   - Add `--category embedded|registry` flag
   - Add same `detect_category()` and `get_golden_dir()` functions
   - Update `GOLDEN_DIR` assignment to use `get_golden_dir()`
-- [ ] Update `regenerate-all-golden.sh`:
+- [x] Update `regenerate-all-golden.sh`:
   - Add `--category` flag
   - When `--category embedded`: iterate over embedded recipes from `internal/recipe/recipes/`
   - When `--category registry`: iterate over existing golden dirs in letter structure
   - When no category: iterate over both
-- [ ] Verify all golden file tests pass with new structure
-- [ ] Update `docs/designs/DESIGN-recipe-registry-separation.md`:
+- [x] Verify all golden file tests pass with new structure
+- [x] Update `docs/designs/DESIGN-recipe-registry-separation.md`:
   - Mark #1034 as completed in the implementation issues table
   - Also mark any other completed issues (#1033, #1071 if listed)
 
