@@ -46,16 +46,42 @@ echo ""
 echo "Building tsuku-dltest helper..."
 cd "$REPO_ROOT/cmd/tsuku-dltest"
 cargo build --release --quiet
-DLTEST_PATH="$REPO_ROOT/cmd/tsuku-dltest/target/release/tsuku-dltest"
-if [ ! -f "$DLTEST_PATH" ]; then
+DLTEST_BUILD_PATH="$REPO_ROOT/cmd/tsuku-dltest/target/release/tsuku-dltest"
+if [ ! -f "$DLTEST_BUILD_PATH" ]; then
     echo "ERROR: Failed to build tsuku-dltest"
     exit 1
 fi
-echo "Built: $DLTEST_PATH"
+echo "Built: $DLTEST_BUILD_PATH"
 
-# Export the path for tsuku to use
-export TSUKU_DLTEST_PATH="$DLTEST_PATH"
-echo "Set TSUKU_DLTEST_PATH=$TSUKU_DLTEST_PATH"
+# Pre-install tsuku-dltest to TSUKU_HOME so tsuku finds it through normal code path
+# This avoids the need for any special env var overrides
+DLTEST_VERSION="dev"
+DLTEST_INSTALL_DIR="$TSUKU_HOME/tools/tsuku-dltest-$DLTEST_VERSION/bin"
+mkdir -p "$DLTEST_INSTALL_DIR"
+cp "$DLTEST_BUILD_PATH" "$DLTEST_INSTALL_DIR/tsuku-dltest"
+chmod +x "$DLTEST_INSTALL_DIR/tsuku-dltest"
+echo "Installed tsuku-dltest to: $DLTEST_INSTALL_DIR/tsuku-dltest"
+
+# Create state.json with tsuku-dltest entry so EnsureDltest() finds it
+INSTALLED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+cat > "$TSUKU_HOME/state.json" << EOF
+{
+  "installed": {
+    "tsuku-dltest": {
+      "active_version": "$DLTEST_VERSION",
+      "versions": {
+        "$DLTEST_VERSION": {
+          "requested": "",
+          "binaries": ["tsuku-dltest"],
+          "installed_at": "$INSTALLED_AT"
+        }
+      },
+      "is_explicit": true
+    }
+  }
+}
+EOF
+echo "Created state.json with tsuku-dltest entry"
 echo ""
 
 # Build tsuku binary
@@ -137,7 +163,8 @@ echo "Testing dlopen on shared libraries:"
 echo "$SO_FILES"
 echo ""
 
-# Run dlopen test directly
+# Run dlopen test directly using the pre-installed helper
+DLTEST_PATH="$DLTEST_INSTALL_DIR/tsuku-dltest"
 echo "Running: $DLTEST_PATH <library-files>"
 # Set library path for dlopen to find dependencies
 export LD_LIBRARY_PATH="$LIB_DIR:${LD_LIBRARY_PATH:-}"
