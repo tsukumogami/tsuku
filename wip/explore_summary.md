@@ -83,7 +83,7 @@ Eight specialist agents analyzed different aspects of the problem:
 
 **Decision:** Migrate registry golden files to Cloudflare R2 with CI-generated files on merge, two-tier degradation (R2 or skip), and 6-phase rollout.
 
-**Rationale:** R2 eliminates git bloat while the fallback cache ensures CI reliability; CI generation removes contributor friction; free tier covers projected costs.
+**Rationale:** R2 eliminates git bloat while two-tier degradation keeps CI simple; CI generation removes contributor friction; free tier covers projected costs.
 
 ## Current Status
 
