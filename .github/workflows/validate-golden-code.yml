@@ -99,8 +99,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Validating linux golden files..."
-          if ! ./scripts/validate-all-golden.sh --os linux; then
+          echo "Validating linux golden files for embedded recipes..."
+          if ! ./scripts/validate-all-golden.sh --os linux --category embedded; then
             echo ""
             echo "::error::Golden files are out of date due to code changes."
             echo "::error::See output above for which recipes failed and regeneration commands."
