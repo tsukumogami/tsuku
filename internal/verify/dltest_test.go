@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1128,5 +1129,363 @@ func TestDlopenVerificationResult_Fields(t *testing.T) {
 	}
 	if result.Results[1].OK != false {
 		t.Error("expected second result OK=false")
+	}
+}
+
+// =============================================================================
+// Integration Tests (Issue #1019)
+//
+// These tests complement the unit tests added in issues #1014-#1018.
+// They focus on end-to-end scenarios and edge cases not covered by unit tests.
+// =============================================================================
+
+// TestInvokeDltest_MixedResults tests a batch with mixed success/failure results.
+// Verifies that all results are returned and error messages are correctly associated.
+func TestInvokeDltest_MixedResults(t *testing.T) {
+	tmpDir := t.TempDir()
+	helperPath := filepath.Join(tmpDir, "mixed-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Create multiple library files
+	paths := []string{
+		filepath.Join(libsDir, "good1.so"),
+		filepath.Join(libsDir, "bad1.so"),
+		filepath.Join(libsDir, "good2.so"),
+		filepath.Join(libsDir, "bad2.so"),
+		filepath.Join(libsDir, "good3.so"),
+	}
+	for _, p := range paths {
+		if err := os.WriteFile(p, []byte{}, 0644); err != nil {
+			t.Fatalf("failed to create lib file: %v", err)
+		}
+	}
+
+	// Script returns mixed results - some ok, some fail
+	script := `#!/bin/sh
+echo '['
+echo '{"path":"` + paths[0] + `","ok":true},'
+echo '{"path":"` + paths[1] + `","ok":false,"error":"missing symbol: foo"},'
+echo '{"path":"` + paths[2] + `","ok":true},'
+echo '{"path":"` + paths[3] + `","ok":false,"error":"missing dependency: libbar.so"},'
+echo '{"path":"` + paths[4] + `","ok":true}'
+echo ']'
+exit 1
+`
+	if err := os.WriteFile(helperPath, []byte(script), 0755); err != nil {
+		t.Fatalf("failed to write helper: %v", err)
+	}
+
+	ctx := context.Background()
+	results, err := InvokeDltest(ctx, helperPath, paths, tmpDir)
+	if err != nil {
+		t.Fatalf("InvokeDltest failed: %v", err)
+	}
+
+	// Verify all 5 results returned
+	if len(results) != 5 {
+		t.Fatalf("got %d results, want 5", len(results))
+	}
+
+	// Verify correct success/failure pattern
+	expectedOK := []bool{true, false, true, false, true}
+	for i, r := range results {
+		if r.OK != expectedOK[i] {
+			t.Errorf("result[%d].OK = %v, want %v", i, r.OK, expectedOK[i])
+		}
+		// Verify error message present only for failures
+		if !r.OK && r.Error == "" {
+			t.Errorf("result[%d] failed but has no error message", i)
+		}
+		if r.OK && r.Error != "" {
+			t.Errorf("result[%d] succeeded but has error message: %s", i, r.Error)
+		}
+	}
+
+	// Verify specific error messages
+	if !strings.Contains(results[1].Error, "missing symbol") {
+		t.Errorf("result[1].Error should contain 'missing symbol', got: %s", results[1].Error)
+	}
+	if !strings.Contains(results[3].Error, "missing dependency") {
+		t.Errorf("result[3].Error should contain 'missing dependency', got: %s", results[3].Error)
+	}
+}
+
+// TestInvokeDltest_MultiBatchWithFailures tests batch processing with failures
+// spanning multiple batches. Verifies results are correctly aggregated.
+func TestInvokeDltest_MultiBatchWithFailures(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping multi-batch test in short mode")
+	}
+
+	tmpDir := t.TempDir()
+	helperPath := filepath.Join(tmpDir, "batch-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Create 75 paths - will be split into 50 + 25
+	// Name libraries without leading zeros to avoid shell arithmetic issues
+	paths := make([]string, 75)
+	for i := range paths {
+		paths[i] = filepath.Join(libsDir, fmt.Sprintf("lib_%d.so", i))
+		if err := os.WriteFile(paths[i], []byte{}, 0644); err != nil {
+			t.Fatalf("failed to create lib file: %v", err)
+		}
+	}
+
+	// Track calls to verify batching
+	callCountFile := filepath.Join(tmpDir, "calls")
+
+	// Script that fails libraries with _0, _10, _20, etc. in the name
+	script := `#!/bin/sh
+# Increment call counter
+count=$(cat "` + callCountFile + `" 2>/dev/null || echo 0)
+count=$((count + 1))
+echo $count > "` + callCountFile + `"
+
+# Output results for all arguments
+echo '['
+first=true
+for arg in "$@"; do
+    if [ "$first" = "true" ]; then
+        first=false
+    else
+        echo ','
+    fi
+    # Check if this is a multiple of 10 by looking for _X0.so or _0.so pattern
+    if echo "$arg" | grep -qE '_[0-9]*0\.so$'; then
+        echo "{\"path\":\"$arg\",\"ok\":false,\"error\":\"test failure\"}"
+    else
+        echo "{\"path\":\"$arg\",\"ok\":true}"
+    fi
+done
+echo ']'
+# Exit 1 if any failures
+exit 1
+`
+	if err := os.WriteFile(helperPath, []byte(script), 0755); err != nil {
+		t.Fatalf("failed to write helper: %v", err)
+	}
+	if err := os.WriteFile(callCountFile, []byte("0"), 0644); err != nil {
+		t.Fatalf("failed to write call counter: %v", err)
+	}
+
+	ctx := context.Background()
+	results, err := InvokeDltest(ctx, helperPath, paths, tmpDir)
+	if err != nil {
+		t.Fatalf("InvokeDltest failed: %v", err)
+	}
+
+	// Verify all 75 results returned
+	if len(results) != 75 {
+		t.Fatalf("got %d results, want 75", len(results))
+	}
+
+	// Verify helper was called twice (50 + 25 batches)
+	callData, _ := os.ReadFile(callCountFile)
+	callCount := strings.TrimSpace(string(callData))
+	if callCount != "2" {
+		t.Errorf("expected 2 batch calls, got %s", callCount)
+	}
+
+	// Count successes and failures
+	successCount := 0
+	failCount := 0
+	for _, r := range results {
+		if r.OK {
+			successCount++
+		} else {
+			failCount++
+		}
+	}
+
+	// Libraries 0, 10, 20, 30, 40, 50, 60, 70 should fail (8 total)
+	expectedFails := 8
+	if failCount != expectedFails {
+		t.Errorf("got %d failures, want %d", failCount, expectedFails)
+	}
+	if successCount != 75-expectedFails {
+		t.Errorf("got %d successes, want %d", successCount, 75-expectedFails)
+	}
+}
+
+// TestInvokeDltest_ExitCode2_UsageError tests that exit code 2 (usage error)
+// is handled as an error, not a normal failure.
+func TestInvokeDltest_ExitCode2_UsageError(t *testing.T) {
+	tmpDir := t.TempDir()
+	helperPath := filepath.Join(tmpDir, "usage-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	libPath := filepath.Join(libsDir, "test.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
+
+	// Script exits with code 2 (usage error) - no valid JSON output
+	script := `#!/bin/sh
+echo "usage: tsuku-dltest <path>..." >&2
+exit 2
+`
+	if err := os.WriteFile(helperPath, []byte(script), 0755); err != nil {
+		t.Fatalf("failed to write helper: %v", err)
+	}
+
+	ctx := context.Background()
+	_, err := InvokeDltest(ctx, helperPath, []string{libPath}, tmpDir)
+
+	// Exit code 2 should result in an error (BatchError)
+	if err == nil {
+		t.Fatal("expected error for exit code 2")
+	}
+
+	var batchErr *BatchError
+	if !errors.As(err, &batchErr) {
+		t.Errorf("expected BatchError, got %T: %v", err, err)
+	}
+}
+
+// TestInvokeDltest_OrderPreserved verifies that result order matches input order.
+func TestInvokeDltest_OrderPreserved(t *testing.T) {
+	tmpDir := t.TempDir()
+	helperPath := filepath.Join(tmpDir, "order-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+
+	// Create paths with distinct names
+	paths := []string{
+		filepath.Join(libsDir, "alpha.so"),
+		filepath.Join(libsDir, "beta.so"),
+		filepath.Join(libsDir, "gamma.so"),
+		filepath.Join(libsDir, "delta.so"),
+	}
+	for _, p := range paths {
+		if err := os.WriteFile(p, []byte{}, 0644); err != nil {
+			t.Fatalf("failed to create lib file: %v", err)
+		}
+	}
+
+	// Script outputs results in same order as input
+	script := `#!/bin/sh
+echo '['
+first=true
+for arg in "$@"; do
+    if [ "$first" = "true" ]; then
+        first=false
+    else
+        echo ','
+    fi
+    echo "{\"path\":\"$arg\",\"ok\":true}"
+done
+echo ']'
+exit 0
+`
+	if err := os.WriteFile(helperPath, []byte(script), 0755); err != nil {
+		t.Fatalf("failed to write helper: %v", err)
+	}
+
+	ctx := context.Background()
+	results, err := InvokeDltest(ctx, helperPath, paths, tmpDir)
+	if err != nil {
+		t.Fatalf("InvokeDltest failed: %v", err)
+	}
+
+	// Verify order is preserved
+	if len(results) != len(paths) {
+		t.Fatalf("got %d results, want %d", len(results), len(paths))
+	}
+	for i, r := range results {
+		if r.Path != paths[i] {
+			t.Errorf("result[%d].Path = %q, want %q", i, r.Path, paths[i])
+		}
+	}
+}
+
+// TestInvokeDltest_EmptyErrorMessage tests handling of failures without error messages.
+func TestInvokeDltest_EmptyErrorMessage(t *testing.T) {
+	tmpDir := t.TempDir()
+	helperPath := filepath.Join(tmpDir, "noerrormsg-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	libPath := filepath.Join(libsDir, "test.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
+
+	// Script returns failure with empty error (dlerror returned NULL)
+	script := `#!/bin/sh
+echo '[{"path":"` + libPath + `","ok":false}]'
+exit 1
+`
+	if err := os.WriteFile(helperPath, []byte(script), 0755); err != nil {
+		t.Fatalf("failed to write helper: %v", err)
+	}
+
+	ctx := context.Background()
+	results, err := InvokeDltest(ctx, helperPath, []string{libPath}, tmpDir)
+	if err != nil {
+		t.Fatalf("InvokeDltest failed: %v", err)
+	}
+
+	if len(results) != 1 {
+		t.Fatalf("got %d results, want 1", len(results))
+	}
+
+	// Failure without error message should still be reported as failure
+	if results[0].OK {
+		t.Error("expected OK=false")
+	}
+	// Error field should be empty (omitted in JSON)
+	if results[0].Error != "" {
+		t.Errorf("expected empty error, got: %s", results[0].Error)
+	}
+}
+
+// TestInvokeDltest_LongErrorMessage tests handling of verbose error messages.
+func TestInvokeDltest_LongErrorMessage(t *testing.T) {
+	tmpDir := t.TempDir()
+	helperPath := filepath.Join(tmpDir, "longerr-dltest")
+	libsDir := filepath.Join(tmpDir, "libs")
+	if err := os.MkdirAll(libsDir, 0755); err != nil {
+		t.Fatalf("failed to create libs dir: %v", err)
+	}
+	libPath := filepath.Join(libsDir, "test.so")
+	if err := os.WriteFile(libPath, []byte{}, 0644); err != nil {
+		t.Fatalf("failed to create lib file: %v", err)
+	}
+
+	// Realistic long error message from dlerror
+	longError := "/path/to/lib.so: undefined symbol: _ZN4llvm2cl6Option16setArgStr8Ev (version LLVM_15)"
+
+	script := `#!/bin/sh
+echo '[{"path":"` + libPath + `","ok":false,"error":"` + longError + `"}]'
+exit 1
+`
+	if err := os.WriteFile(helperPath, []byte(script), 0755); err != nil {
+		t.Fatalf("failed to write helper: %v", err)
+	}
+
+	ctx := context.Background()
+	results, err := InvokeDltest(ctx, helperPath, []string{libPath}, tmpDir)
+	if err != nil {
+		t.Fatalf("InvokeDltest failed: %v", err)
+	}
+
+	if len(results) != 1 {
+		t.Fatalf("got %d results, want 1", len(results))
+	}
+
+	// Verify full error message is preserved
+	if results[0].Error != longError {
+		t.Errorf("error message not preserved:\ngot:  %s\nwant: %s", results[0].Error, longError)
 	}
 }

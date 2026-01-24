@@ -121,53 +121,53 @@ jobs:
           cp cmd/tsuku-dltest/target/release/tsuku-dltest "${{ matrix.artifact }}"
           gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
 
-  # Build Rust binary with musl (Alpine container)
-  build-rust-musl:
-    name: "Build Rust (${{ matrix.platform }}-musl)"
-    needs: [release]
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: linux-amd64
-            runner: ubuntu-22.04
-            artifact: tsuku-dltest-linux-amd64-musl
-          - platform: linux-arm64
-            runner: ubuntu-24.04-arm
-            artifact: tsuku-dltest-linux-arm64-musl
-    runs-on: ${{ matrix.runner }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          sparse-checkout: |
-            cmd/tsuku-dltest
-
-      - name: Inject version
-        run: |
-          VERSION="${GITHUB_REF_NAME#v}"
-          sed -i "s/^version = .*/version = \"$VERSION\"/" cmd/tsuku-dltest/Cargo.toml
-          echo "Building version: $VERSION"
-
-      - name: Build in Alpine container
-        run: |
-          docker run --rm -v "$PWD:/workspace" -w /workspace alpine:3.19 sh -c '
-            apk add --no-cache rust cargo
-            cd cmd/tsuku-dltest
-            cargo build --release
-          '
-
-      - name: Upload to release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          cp cmd/tsuku-dltest/target/release/tsuku-dltest "${{ matrix.artifact }}"
-          gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
+  # NOTE: musl builds disabled - embedded libraries are glibc-only (see #1092)
+  # build-rust-musl:
+  #   name: "Build Rust (${{ matrix.platform }}-musl)"
+  #   needs: [release]
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       include:
+  #         - platform: linux-amd64
+  #           runner: ubuntu-22.04
+  #           artifact: tsuku-dltest-linux-amd64-musl
+  #         - platform: linux-arm64
+  #           runner: ubuntu-24.04-arm
+  #           artifact: tsuku-dltest-linux-arm64-musl
+  #   runs-on: ${{ matrix.runner }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #       with:
+  #         sparse-checkout: |
+  #           cmd/tsuku-dltest
+  #
+  #     - name: Inject version
+  #       run: |
+  #         VERSION="${GITHUB_REF_NAME#v}"
+  #         sed -i "s/^version = .*/version = \"$VERSION\"/" cmd/tsuku-dltest/Cargo.toml
+  #         echo "Building version: $VERSION"
+  #
+  #     - name: Build in Alpine container
+  #       run: |
+  #         docker run --rm -v "$PWD:/workspace" -w /workspace alpine:3.19 sh -c '
+  #           apk add --no-cache rust cargo
+  #           cd cmd/tsuku-dltest
+  #           cargo build --release
+  #         '
+  #
+  #     - name: Upload to release
+  #       env:
+  #         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       run: |
+  #         cp cmd/tsuku-dltest/target/release/tsuku-dltest "${{ matrix.artifact }}"
+  #         gh release upload "${GITHUB_REF_NAME}" "${{ matrix.artifact }}" --clobber
 
   # Integration tests on native platforms
   integration-test:
     name: "Integration Test (${{ matrix.platform }})"
-    needs: [release, build-rust, build-rust-musl]
+    needs: [release, build-rust]
     strategy:
       fail-fast: false
       matrix:
@@ -265,9 +265,7 @@ jobs:
             tsuku-dltest-linux-arm64
             tsuku-dltest-darwin-amd64
             tsuku-dltest-darwin-arm64
-            # Rust binaries - musl (from build-rust-musl)
-            tsuku-dltest-linux-amd64-musl
-            tsuku-dltest-linux-arm64-musl
+            # NOTE: musl binaries disabled - embedded libraries are glibc-only (see #1092)
           )
 
           echo "Verifying all ${#EXPECTED_ARTIFACTS[@]} artifacts are present..."
