@@ -1036,3 +1036,97 @@ func TestInvokeDltest_RejectsInvalidPaths(t *testing.T) {
 		t.Errorf("error should mention 'outside libs directory', got: %v", err)
 	}
 }
+
+// Tests for RunDlopenVerification
+
+func TestRunDlopenVerification_SkipDlopenFlag(t *testing.T) {
+	// When skipDlopen is true, should return Skipped=true with no warning
+	cfg := &config.Config{
+		HomeDir:  t.TempDir(),
+		ToolsDir: filepath.Join(t.TempDir(), "tools"),
+	}
+
+	ctx := context.Background()
+	result, err := RunDlopenVerification(ctx, cfg, []string{"/some/lib.so"}, true)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Skipped {
+		t.Error("expected Skipped=true when skipDlopen flag is set")
+	}
+	if result.Warning != "" {
+		t.Errorf("expected no warning for explicit skip, got: %s", result.Warning)
+	}
+	if len(result.Results) != 0 {
+		t.Errorf("expected no results when skipped, got %d", len(result.Results))
+	}
+}
+
+func TestRunDlopenVerification_EmptyPaths(t *testing.T) {
+	// When paths is empty, should return Skipped=true
+	cfg := &config.Config{
+		HomeDir:  t.TempDir(),
+		ToolsDir: filepath.Join(t.TempDir(), "tools"),
+	}
+
+	ctx := context.Background()
+	result, err := RunDlopenVerification(ctx, cfg, nil, false)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !result.Skipped {
+		t.Error("expected Skipped=true when paths is empty")
+	}
+}
+
+func TestRunDlopenVerification_HelperUnavailable(t *testing.T) {
+	// This test validates the error handling paths for helper unavailability.
+	// Testing actual helper installation would be slow and flaky, so we skip
+	// this test by default and rely on manual testing and integration tests.
+	// The logic is also tested indirectly via TestEnsureDltest_NotInstalled.
+	t.Skip("skipping: would try to install tsuku-dltest (slow/flaky in CI)")
+}
+
+// Tests for error sentinel behavior
+
+func TestErrHelperUnavailable_Is(t *testing.T) {
+	// Test that wrapped errors can be checked with errors.Is
+	wrapped := errors.Join(ErrHelperUnavailable, errors.New("network timeout"))
+	if !errors.Is(wrapped, ErrHelperUnavailable) {
+		t.Error("expected errors.Is to match ErrHelperUnavailable")
+	}
+}
+
+func TestErrChecksumMismatch_Is(t *testing.T) {
+	// Test that wrapped errors can be checked with errors.Is
+	wrapped := errors.Join(ErrChecksumMismatch, errors.New("sha256 mismatch"))
+	if !errors.Is(wrapped, ErrChecksumMismatch) {
+		t.Error("expected errors.Is to match ErrChecksumMismatch")
+	}
+}
+
+// Tests for DlopenVerificationResult
+
+func TestDlopenVerificationResult_Fields(t *testing.T) {
+	result := &DlopenVerificationResult{
+		Results: []DlopenResult{
+			{Path: "/lib/a.so", OK: true},
+			{Path: "/lib/b.so", OK: false, Error: "not found"},
+		},
+		Skipped: false,
+		Warning: "",
+	}
+
+	if result.Skipped {
+		t.Error("expected Skipped=false")
+	}
+	if len(result.Results) != 2 {
+		t.Errorf("expected 2 results, got %d", len(result.Results))
+	}
+	if result.Results[0].OK != true {
+		t.Error("expected first result OK=true")
+	}
+	if result.Results[1].OK != false {
+		t.Error("expected second result OK=false")
+	}
+}

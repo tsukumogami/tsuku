@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -13,6 +14,17 @@ import (
 
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+)
+
+var (
+	// ErrHelperUnavailable indicates the helper could not be obtained
+	// but for a recoverable reason (network failure, not installed, etc.).
+	// Callers should skip Level 3 verification with a warning.
+	ErrHelperUnavailable = errors.New("tsuku-dltest helper unavailable")
+
+	// ErrChecksumMismatch indicates the helper checksum verification failed.
+	// This is a security-critical error that should NOT be handled as fallback.
+	ErrChecksumMismatch = errors.New("helper binary checksum verification failed")
 )
 
 const (
@@ -144,6 +156,9 @@ func EnsureDltest(cfg *config.Config) (string, error) {
 // installDltest installs tsuku-dltest using the standard recipe flow.
 // This invokes tsuku as a subprocess to reuse all installation infrastructure.
 // If version is empty, installs the latest available version.
+//
+// Returns ErrChecksumMismatch if checksum verification fails (security-critical).
+// Returns ErrHelperUnavailable for other installation failures (network, etc.).
 func installDltest(version string) error {
 	// Find tsuku binary - should be in PATH or we can use os.Executable
 	tsukuPath, err := os.Executable()
@@ -151,7 +166,7 @@ func installDltest(version string) error {
 		// Fall back to looking in PATH
 		tsukuPath, err = exec.LookPath("tsuku")
 		if err != nil {
-			return fmt.Errorf("cannot find tsuku binary to install helper: %w", err)
+			return fmt.Errorf("%w: cannot find tsuku binary to install helper: %v", ErrHelperUnavailable, err)
 		}
 	}
 
@@ -170,8 +185,16 @@ func installDltest(version string) error {
 
 	// Run installation
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to install %s: %w\nstderr: %s",
-			toolSpec, err, strings.TrimSpace(stderr.String()))
+		errMsg := strings.TrimSpace(stderr.String())
+		// Check for checksum failure - security-critical error
+		lowerMsg := strings.ToLower(errMsg)
+		if strings.Contains(lowerMsg, "checksum") ||
+			strings.Contains(lowerMsg, "verification failed") {
+			return fmt.Errorf("%w: %s", ErrChecksumMismatch, errMsg)
+		}
+		// Other failures are recoverable (network, not found, etc.)
+		return fmt.Errorf("%w: failed to install %s: %v\nstderr: %s",
+			ErrHelperUnavailable, toolSpec, err, errMsg)
 	}
 
 	return nil
@@ -380,4 +403,58 @@ func invokeBatch(ctx context.Context, helperPath string, batch []string, tsukuHo
 	}
 
 	return results, nil
+}
+
+// DlopenVerificationResult holds the outcome of dlopen verification.
+type DlopenVerificationResult struct {
+	// Results contains the dlopen test results for each library.
+	Results []DlopenResult
+
+	// Skipped is true if Level 3 verification was skipped.
+	Skipped bool
+
+	// Warning contains a warning message if verification was skipped
+	// due to helper unavailability (not user opt-out).
+	Warning string
+}
+
+// RunDlopenVerification performs Level 3 dlopen verification with fallback behavior.
+//
+// Behavior:
+//   - If skipDlopen is true, returns immediately with Skipped=true (no warning).
+//   - If the helper is unavailable (non-checksum reason), returns Skipped=true with warning.
+//   - If the helper checksum fails, returns an error (security-critical, no fallback).
+//   - Otherwise, runs dlopen verification and returns results.
+func RunDlopenVerification(ctx context.Context, cfg *config.Config, paths []string, skipDlopen bool) (*DlopenVerificationResult, error) {
+	// User explicitly requested skip - silent, no warning
+	if skipDlopen {
+		return &DlopenVerificationResult{Skipped: true}, nil
+	}
+
+	// No paths to verify
+	if len(paths) == 0 {
+		return &DlopenVerificationResult{Skipped: true}, nil
+	}
+
+	// Try to get the helper
+	helperPath, err := EnsureDltest(cfg)
+	if err != nil {
+		// Checksum mismatch is security-critical - must error
+		if errors.Is(err, ErrChecksumMismatch) {
+			return nil, fmt.Errorf("helper binary checksum verification failed, refusing to execute")
+		}
+		// Other failures (network, not installed, etc.) - skip with warning
+		return &DlopenVerificationResult{
+			Skipped: true,
+			Warning: "Warning: tsuku-dltest helper not available, skipping load test\n  Run 'tsuku install tsuku-dltest' to enable full verification",
+		}, nil
+	}
+
+	// Run dlopen verification
+	results, err := InvokeDltest(ctx, helperPath, paths, cfg.HomeDir)
+	if err != nil {
+		return nil, err
+	}
+
+	return &DlopenVerificationResult{Results: results}, nil
 }
