@@ -127,7 +127,7 @@ jobs:
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.75"
+          toolchain: "1.80"
 
       - name: Build tsuku-dltest
         working-directory: cmd/tsuku-dltest
