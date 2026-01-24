@@ -522,6 +522,32 @@ Examples:
 
 **Dependencies:** Phase 1
 
+**Fallback Cache Structure:**
+
+```
+.github/cache/golden-fallback/
+├── manifest.json              # Index with sync timestamp and checksums
+└── plans.tar.zst              # Compressed golden files (~40 MB at 10K recipes)
+```
+
+The cache lives in git (not workflow artifacts) because:
+- GitHub Actions artifacts expire after 90 days; the fallback must be permanent
+- Cloning the repo includes the fallback automatically
+- A single compressed archive is acceptable overhead compared to 30K individual files
+
+**Weekly Sync Workflow:**
+1. Download latest golden files from R2
+2. Compress using zstd (70-80% compression, fast decompression)
+3. Commit compressed archive if changed
+4. Update manifest with sync timestamp
+
+**Validation Integration:**
+1. Health check R2 (HEAD request, 5s timeout, <2000ms latency)
+2. R2 healthy → download directly from R2
+3. R2 slow/down → check fallback freshness (7-day TTL)
+4. Fallback fresh → extract from archive, use for validation
+5. Fallback stale → skip validation, create GitHub issue
+
 ### Phase 4: Validation Integration
 
 **Deliverables:**
