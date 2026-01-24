@@ -96,7 +96,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        library: [zlib, libyaml, openssl, gcc-libs]
+        # openssl excluded: system libcrypto.so.3 conflicts with tsuku-installed version (see #1090)
+        library: [zlib, libyaml, gcc-libs]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -135,7 +136,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        library: [zlib, libyaml, openssl, gcc-libs]
+        # openssl excluded: system libcrypto conflicts with tsuku-installed version (see #1090)
+        library: [zlib, libyaml, gcc-libs]
     steps:
       - name: Install dependencies
         run: apk add --no-cache git go gcc musl-dev curl bash
@@ -166,7 +168,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        library: [zlib, libyaml, openssl, gcc-libs]
+        # openssl excluded: system libcrypto conflicts with tsuku-installed version (see #1090)
+        library: [zlib, libyaml, gcc-libs]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
