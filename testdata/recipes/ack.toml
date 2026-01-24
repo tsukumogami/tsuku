@@ -1,0 +1,23 @@
+# Test recipe for cpan_install action
+#
+# This recipe tests the cpan_install implementation in tsuku's action system.
+# It installs ack to verify CPAN module installation works correctly,
+# including version detection from MetaCPAN registry.
+#
+# Related production recipe: recipes/a/ack.toml
+
+[metadata]
+name = "ack"
+description = "A grep-like program for searching source code"
+homepage = "https://beyondgrep.com/"
+version_format = "semver"
+
+[[steps]]
+action = "cpan_install"
+distribution = "ack"
+module = "App::Ack"
+executables = ["ack"]
+
+[verify]
+command = "ack --version"
+pattern = "{version}"

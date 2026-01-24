@@ -1,0 +1,22 @@
+# Test recipe for go_install action
+#
+# This recipe tests the go_install implementation in tsuku's action system.
+# It installs gofumpt to verify Go module installation works correctly,
+# including version detection from Go proxy registry.
+#
+# Related production recipe: recipes/g/gofumpt.toml
+
+[metadata]
+name = "gofumpt"
+description = "A stricter gofmt"
+homepage = "https://github.com/mvdan/gofumpt"
+version_format = "semver"
+
+[[steps]]
+action = "go_install"
+module = "mvdan.cc/gofumpt"
+executables = ["gofumpt"]
+
+[verify]
+command = "gofumpt --version"
+pattern = "{version}"

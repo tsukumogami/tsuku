@@ -1,0 +1,23 @@
+# Test recipe for cargo_install action
+#
+# This recipe tests the cargo_install implementation in tsuku's action system.
+# It installs cargo-audit to verify cargo crate installation works correctly,
+# including version detection from crates.io registry.
+#
+# Related production recipe: recipes/c/cargo-audit.toml
+
+[metadata]
+name = "cargo-audit"
+description = "Security audit for Cargo.lock"
+homepage = "https://crates.io/crates/cargo-audit"
+version_format = "semver"
+extra_dependencies = ["zig"]
+
+[[steps]]
+action = "cargo_install"
+crate = "cargo-audit"
+executables = ["cargo-audit"]
+
+[verify]
+command = "cargo-audit --version"
+pattern = "cargo-audit {version}"

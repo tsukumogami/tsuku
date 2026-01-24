@@ -1,0 +1,25 @@
+# Test recipe for pipx_install action
+#
+# This recipe tests the pipx_install implementation in tsuku's action system.
+# It installs ruff to verify pipx package installation works correctly,
+# including version detection from PyPI registry.
+#
+# Note: Ruff is a compiled Rust binary distributed via PyPI - no Python needed at runtime.
+#
+# Related production recipe: recipes/r/ruff.toml
+
+[metadata]
+name = "ruff"
+description = "An extremely fast Python linter, written in Rust"
+homepage = "https://github.com/astral-sh/ruff"
+version_format = "semver"
+runtime_dependencies = []
+
+[[steps]]
+action = "pipx_install"
+package = "ruff"
+executables = ["ruff"]
+
+[verify]
+command = "ruff --version"
+pattern = "ruff {version}"
