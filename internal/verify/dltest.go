@@ -186,10 +186,12 @@ func installDltest(version string) error {
 	// Run installation
 	if err := cmd.Run(); err != nil {
 		errMsg := strings.TrimSpace(stderr.String())
-		// Check for checksum failure - security-critical error
+		// Check for checksum mismatch - security-critical error
+		// Only match the specific "checksum mismatch" error message from executor,
+		// not generic phrases like "verification failed" which could appear in
+		// other error contexts (e.g., "recipe not found").
 		lowerMsg := strings.ToLower(errMsg)
-		if strings.Contains(lowerMsg, "checksum") ||
-			strings.Contains(lowerMsg, "verification failed") {
+		if strings.Contains(lowerMsg, "checksum mismatch") {
 			return fmt.Errorf("%w: %s", ErrChecksumMismatch, errMsg)
 		}
 		// Other failures are recoverable (network, not found, etc.)
