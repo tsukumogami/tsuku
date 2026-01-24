@@ -183,16 +183,25 @@ func installDltest(version string) error {
 // Paths are processed in batches of up to 50 to avoid ARG_MAX limits and limit
 // the impact of crashes. Each batch has a 5-second timeout. If a batch crashes,
 // it is retried with halved batch size until the problematic library is isolated.
-func InvokeDltest(ctx context.Context, helperPath string, paths []string) ([]DlopenResult, error) {
+//
+// Security: All paths are validated to be within $TSUKU_HOME/libs/ before invocation,
+// and the helper runs with a sanitized environment (dangerous loader variables stripped).
+func InvokeDltest(ctx context.Context, helperPath string, paths []string, tsukuHome string) ([]DlopenResult, error) {
 	if len(paths) == 0 {
 		return nil, nil
+	}
+
+	// Validate all paths before processing
+	libsDir := filepath.Join(tsukuHome, "libs")
+	if err := validateLibraryPaths(paths, libsDir); err != nil {
+		return nil, err
 	}
 
 	batches := splitIntoBatches(paths, DefaultBatchSize)
 	var allResults []DlopenResult
 
 	for _, batch := range batches {
-		results, err := invokeBatchWithRetry(ctx, helperPath, batch)
+		results, err := invokeBatchWithRetry(ctx, helperPath, batch, tsukuHome)
 		if err != nil {
 			return nil, err
 		}
@@ -219,8 +228,8 @@ func splitIntoBatches(paths []string, batchSize int) [][]string {
 }
 
 // invokeBatchWithRetry executes a batch, retrying with halved size on crash.
-func invokeBatchWithRetry(ctx context.Context, helperPath string, batch []string) ([]DlopenResult, error) {
-	results, err := invokeBatch(ctx, helperPath, batch)
+func invokeBatchWithRetry(ctx context.Context, helperPath string, batch []string, tsukuHome string) ([]DlopenResult, error) {
+	results, err := invokeBatch(ctx, helperPath, batch, tsukuHome)
 	if err == nil {
 		return results, nil
 	}
@@ -248,13 +257,13 @@ func invokeBatchWithRetry(ctx context.Context, helperPath string, batch []string
 
 	var allResults []DlopenResult
 
-	firstResults, err := invokeBatchWithRetry(ctx, helperPath, firstHalf)
+	firstResults, err := invokeBatchWithRetry(ctx, helperPath, firstHalf, tsukuHome)
 	if err != nil {
 		return nil, err
 	}
 	allResults = append(allResults, firstResults...)
 
-	secondResults, err := invokeBatchWithRetry(ctx, helperPath, secondHalf)
+	secondResults, err := invokeBatchWithRetry(ctx, helperPath, secondHalf, tsukuHome)
 	if err != nil {
 		return nil, err
 	}
@@ -263,14 +272,72 @@ func invokeBatchWithRetry(ctx context.Context, helperPath string, batch []string
 	return allResults, nil
 }
 
+// sanitizeEnvForHelper creates a safe environment for the helper process.
+// It strips dangerous loader variables that could enable code injection,
+// and prepends $TSUKU_HOME/libs to library search paths.
+func sanitizeEnvForHelper(tsukuHome string) []string {
+	dangerous := map[string]bool{
+		// Linux ld.so injection vectors
+		"LD_PRELOAD": true, "LD_AUDIT": true, "LD_DEBUG": true,
+		"LD_DEBUG_OUTPUT": true, "LD_PROFILE": true, "LD_PROFILE_OUTPUT": true,
+		// macOS dyld injection vectors
+		"DYLD_INSERT_LIBRARIES": true, "DYLD_FORCE_FLAT_NAMESPACE": true,
+		"DYLD_PRINT_LIBRARIES": true, "DYLD_PRINT_LIBRARIES_POST_LAUNCH": true,
+	}
+
+	var env []string
+	for _, e := range os.Environ() {
+		key := strings.SplitN(e, "=", 2)[0]
+		if !dangerous[key] {
+			env = append(env, e)
+		}
+	}
+
+	// Prepend tsuku libs to library search paths
+	libsDir := filepath.Join(tsukuHome, "libs")
+	env = append(env, fmt.Sprintf("LD_LIBRARY_PATH=%s:%s", libsDir, os.Getenv("LD_LIBRARY_PATH")))
+	env = append(env, fmt.Sprintf("DYLD_LIBRARY_PATH=%s:%s", libsDir, os.Getenv("DYLD_LIBRARY_PATH")))
+
+	return env
+}
+
+// validateLibraryPaths ensures all paths are within the allowed libs directory.
+// It canonicalizes paths via EvalSymlinks before checking the prefix,
+// preventing path traversal and symlink escape attacks.
+func validateLibraryPaths(paths []string, libsDir string) error {
+	// Canonicalize the libs dir itself for consistent prefix checking
+	canonicalLibsDir, err := filepath.EvalSymlinks(libsDir)
+	if err != nil {
+		return fmt.Errorf("libs directory not accessible: %w", err)
+	}
+	// Ensure trailing separator for correct prefix matching
+	if !strings.HasSuffix(canonicalLibsDir, string(filepath.Separator)) {
+		canonicalLibsDir += string(filepath.Separator)
+	}
+
+	for _, p := range paths {
+		canonical, err := filepath.EvalSymlinks(p)
+		if err != nil {
+			return fmt.Errorf("invalid library path %q: %w", p, err)
+		}
+		// Path must be within libs directory (or be the libs directory itself)
+		if canonical != strings.TrimSuffix(canonicalLibsDir, string(filepath.Separator)) &&
+			!strings.HasPrefix(canonical, canonicalLibsDir) {
+			return fmt.Errorf("library path %q resolves outside libs directory", p)
+		}
+	}
+	return nil
+}
+
 // invokeBatch executes the helper on a single batch with timeout.
 // Returns results, or error if timeout/crash occurred.
-func invokeBatch(ctx context.Context, helperPath string, batch []string) ([]DlopenResult, error) {
+func invokeBatch(ctx context.Context, helperPath string, batch []string, tsukuHome string) ([]DlopenResult, error) {
 	// Create timeout context for this batch
 	batchCtx, cancel := context.WithTimeout(ctx, BatchTimeout)
 	defer cancel()
 
 	cmd := exec.CommandContext(batchCtx, helperPath, batch...)
+	cmd.Env = sanitizeEnvForHelper(tsukuHome)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
