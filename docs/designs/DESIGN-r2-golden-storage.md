@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: Registry recipes scaling to 10K+ makes git-based golden file storage unsustainable due to repo bloat and slow clones.
 decision: Migrate registry golden files to Cloudflare R2 with CI-generated files on merge, two-tier degradation (R2 or skip), and 6-phase rollout.
 rationale: R2 eliminates git bloat while the fallback cache ensures CI reliability; CI generation removes contributor friction; free tier covers projected costs.
@@ -9,7 +9,7 @@ rationale: R2 eliminates git bloat while the fallback cache ensures CI reliabili
 
 ## Status
 
-**Proposed**
+**Accepted**
 
 ## Upstream Design Reference
 
@@ -507,10 +507,25 @@ Examples:
 ### Phase 2: Post-Merge Generation Workflow
 
 **Deliverables:**
-- `publish-golden-to-r2.yml` workflow
-- Cross-platform generation matrix
-- Upload with verification
+- `publish-golden-to-r2.yml` workflow with dual triggers:
+  - Automatic: on push to main when `recipes/**/*.toml` changes
+  - Manual: `workflow_dispatch` with `recipes` input (comma-separated list)
+- Cross-platform generation matrix (linux, darwin-arm64, darwin-amd64)
+- Upload with verification (read-back checksum comparison)
 - Manifest update logic
+- `force` option to regenerate even if version already exists
+
+**Manual trigger usage:**
+```bash
+# Single recipe
+gh workflow run publish-golden-to-r2.yml -f recipes=fzf
+
+# Multiple recipes
+gh workflow run publish-golden-to-r2.yml -f recipes="fzf,ripgrep,bat"
+
+# Force regeneration
+gh workflow run publish-golden-to-r2.yml -f recipes=fzf -f force=true
+```
 
 **Dependencies:** Phase 1
 
