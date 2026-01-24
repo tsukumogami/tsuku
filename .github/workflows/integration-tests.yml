@@ -132,7 +132,7 @@ jobs:
     name: "Library dlopen: ${{ matrix.library }} (musl)"
     runs-on: ubuntu-latest
     container:
-      image: alpine:3.19
+      image: golang:1.23-alpine
     strategy:
       fail-fast: false
       matrix:
@@ -140,7 +140,7 @@ jobs:
         library: [zlib, libyaml, gcc-libs]
     steps:
       - name: Install dependencies
-        run: apk add --no-cache git go gcc musl-dev curl bash
+        run: apk add --no-cache git gcc musl-dev curl bash
 
       - name: Install Rust via rustup
         run: |
@@ -160,6 +160,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+          GOTOOLCHAIN: auto
         run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} alpine
 
   library-dlopen-macos:
