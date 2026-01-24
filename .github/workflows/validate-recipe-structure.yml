@@ -82,6 +82,35 @@ jobs:
           recipe_count=$(find recipes -mindepth 2 -maxdepth 2 -name "*.toml" | wc -l)
           echo "Found $recipe_count registry recipes in letter directories"
 
+      - name: Validate recipes are in correct letter directory
+        run: |
+          # Each recipe must be in the directory matching its first letter
+          # e.g., fzf.toml must be in recipes/f/, not recipes/a/
+          echo "Checking recipes are in correct letter directories..."
+
+          misplaced=""
+          while IFS= read -r recipe; do
+            [ -z "$recipe" ] && continue
+            dir_letter=$(basename "$(dirname "$recipe")")
+            file_name=$(basename "$recipe" .toml)
+            expected_letter="${file_name:0:1}"
+
+            if [ "$dir_letter" != "$expected_letter" ]; then
+              misplaced="${misplaced}  ${recipe} -> should be in recipes/${expected_letter}/\n"
+            fi
+          done < <(find recipes -mindepth 2 -maxdepth 2 -name "*.toml" 2>/dev/null)
+
+          if [ -n "$misplaced" ]; then
+            echo "::error::Found recipes in wrong letter directories."
+            echo "Misplaced recipes:"
+            printf "%b" "$misplaced"
+            echo ""
+            echo "Move each recipe to recipes/<first-letter-of-name>/<name>.toml"
+            exit 1
+          fi
+
+          echo "All recipes are in correct letter directories"
+
       - name: Check for duplicate recipes
         run: |
           # No recipe should exist in both embedded and registry
