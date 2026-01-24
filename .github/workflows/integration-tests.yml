@@ -39,6 +39,8 @@ jobs:
       - name: Run checksum pinning tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Point registry to current branch so PR tests can access migrated recipes
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-checksum-pinning.sh ${{ matrix.family }}
 
   homebrew-linux:
@@ -61,6 +63,7 @@ jobs:
       - name: Run homebrew recipe test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-homebrew-recipe.sh pkg-config ${{ matrix.family }}
 
   library-integrity:
@@ -84,4 +87,5 @@ jobs:
       - name: Run library integrity test
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-library-integrity.sh ${{ matrix.library }} ${{ matrix.family }}

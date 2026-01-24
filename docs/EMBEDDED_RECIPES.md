@@ -37,6 +37,7 @@ Transitive dependencies of embedded toolchains and build tools.
 
 | Recipe | Required By | Rationale |
 |--------|-------------|-----------|
+| gcc-libs | nodejs | libstdc++ and libgcc_s runtime libraries (nodejs dependency) |
 | libyaml | ruby | YAML parsing library (ruby dependency) |
 | openssl | cmake | TLS/crypto library (cmake dependency) |
 | zlib | openssl | Compression library (openssl dependency) |

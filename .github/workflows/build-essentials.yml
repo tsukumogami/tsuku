@@ -72,6 +72,7 @@ jobs:
       - name: "Install ${{ matrix.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./tsuku install --force ${{ matrix.tool }}
 
       - name: "Verify tool functionality"
@@ -100,6 +101,7 @@ jobs:
       - name: Install gdbm-source (tests configure_make)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./tsuku install --recipe testdata/recipes/gdbm-source.toml --force
 
       - name: "Verify tool functionality"
@@ -125,6 +127,7 @@ jobs:
       - name: Install libsixel-source (tests meson_build)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./tsuku install --recipe testdata/recipes/libsixel-source.toml --force
 
       - name: "Verify tool functionality"
@@ -150,6 +153,7 @@ jobs:
       - name: Install ninja (tests cmake_build)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./tsuku install --force ninja
 
       - name: "Verify tool functionality"
@@ -175,6 +179,7 @@ jobs:
       - name: "Install sqlite-source (tests dependency chain: sqlite -> readline -> ncurses)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./tsuku install --recipe testdata/recipes/sqlite-source.toml --force
 
       - name: "Verify tool functionality"
@@ -205,6 +210,7 @@ jobs:
       - name: "Install git-source (tests multi-dependency chain: git -> curl -> openssl/zlib + expat)"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./tsuku install --recipe testdata/recipes/git-source.toml --force
 
       - name: "Verify tool functionality"
@@ -230,6 +236,7 @@ jobs:
       - name: Install zig
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./tsuku install --force zig
 
       - name: "Verify tool functionality"
@@ -290,11 +297,13 @@ jobs:
       - name: Install zig (provides compiler)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./tsuku install --force zig
 
       - name: Build gdbm from source (uses zig cc)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           # Don't add tsuku tools to PATH - the Go code handles zig setup internally
           # and we want configure to detect system make, not the Homebrew make
@@ -330,6 +339,7 @@ jobs:
       - name: "Generate plan for ${{ matrix.tool }} (${{ matrix.family }})"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           ./tsuku eval ${{ matrix.tool }} --os linux --linux-family ${{ matrix.family }} --install-deps > plan.json
 
@@ -356,6 +366,7 @@ jobs:
       - name: Run all macOS tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           FAILED=()
           CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
@@ -446,6 +457,7 @@ jobs:
       - name: Run all macOS tests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           FAILED=()
           CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"

@@ -22,13 +22,15 @@ from pathlib import Path
 SCHEMA_VERSION = "1.1.0"
 MAX_DESCRIPTION_LENGTH = 200
 MAX_FILE_SIZE = 100 * 1024  # 100KB
-RECIPES_DIR = Path("recipes")
+# Recipe directories: registry recipes and embedded recipes
+RECIPES_DIRS = [Path("recipes"), Path("internal/recipe/recipes")]
 OUTPUT_DIR = Path("_site")
 OUTPUT_FILE = OUTPUT_DIR / "recipes.json"
 
 # Validation patterns
 NAME_PATTERN = re.compile(r"^[a-z0-9-]+$")
-PATH_PATTERN = re.compile(r"^recipes/[a-z]/[a-z0-9-]+\.toml$")
+# Accept paths from either recipes/ or internal/recipe/recipes/
+PATH_PATTERN = re.compile(r"^(recipes|internal/recipe/recipes)/[a-z]/[a-z0-9-]+\.toml$")
 
 
 class ValidationError:
@@ -43,8 +45,12 @@ class ValidationError:
 
 
 def discover_recipes() -> list[Path]:
-    """Find all recipe TOML files in recipes/*/*.toml."""
-    return sorted(RECIPES_DIR.glob("*/*.toml"))
+    """Find all recipe TOML files in recipes/*/*.toml and internal/recipe/recipes/*/*.toml."""
+    recipes = []
+    for recipes_dir in RECIPES_DIRS:
+        if recipes_dir.exists():
+            recipes.extend(recipes_dir.glob("*/*.toml"))
+    return sorted(recipes)
 
 
 def validate_path(file_path: Path) -> list[ValidationError]:
@@ -53,13 +59,19 @@ def validate_path(file_path: Path) -> list[ValidationError]:
     path_str = str(file_path)
 
     if not PATH_PATTERN.match(path_str):
-        errors.append(ValidationError(path_str, f"path does not match pattern recipes/[a-z]/[a-z0-9-]+.toml"))
+        errors.append(ValidationError(path_str, f"path does not match pattern (recipes|internal/recipe/recipes)/[a-z]/[a-z0-9-]+.toml"))
 
-    # Check file is within recipes directory (path traversal protection)
+    # Check file is within one of the recipes directories (path traversal protection)
     try:
         resolved = file_path.resolve()
-        recipes_resolved = RECIPES_DIR.resolve()
-        if not str(resolved).startswith(str(recipes_resolved)):
+        in_valid_dir = False
+        for recipes_dir in RECIPES_DIRS:
+            if recipes_dir.exists():
+                recipes_resolved = recipes_dir.resolve()
+                if str(resolved).startswith(str(recipes_resolved)):
+                    in_valid_dir = True
+                    break
+        if not in_valid_dir:
             errors.append(ValidationError(path_str, "path traversal detected"))
     except Exception as e:
         errors.append(ValidationError(path_str, f"could not resolve path: {e}"))
