@@ -1,0 +1,22 @@
+# Test recipe for gem_install action
+#
+# This recipe tests the gem_install implementation in tsuku's action system.
+# It installs bundler to verify gem installation works correctly,
+# including multiple executables and version detection from RubyGems registry.
+#
+# Related production recipe: recipes/b/bundler.toml
+
+[metadata]
+name = "bundler"
+description = "Ruby dependency manager"
+homepage = "https://bundler.io/"
+version_format = "semver"
+
+[[steps]]
+action = "gem_install"
+gem = "bundler"
+executables = ["bundle", "bundler"]
+
+[verify]
+command = "bundle --version"
+pattern = "{version}"
