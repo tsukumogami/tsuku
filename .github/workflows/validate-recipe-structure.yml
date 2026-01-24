@@ -1,0 +1,114 @@
+name: Validate Recipe Structure
+
+on:
+  push:
+    paths:
+      - 'internal/recipe/recipes/**'
+      - 'recipes/**'
+  pull_request:
+    paths:
+      - 'internal/recipe/recipes/**'
+      - 'recipes/**'
+
+jobs:
+  validate-structure:
+    name: Validate Recipe Structure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate embedded recipes are flat
+        run: |
+          # Embedded recipes must be directly in internal/recipe/recipes/
+          # No subdirectories allowed
+          echo "Checking embedded recipes structure..."
+
+          if [ ! -d "internal/recipe/recipes" ]; then
+            echo "Embedded recipes directory not found"
+            exit 1
+          fi
+
+          # Find any subdirectories (excluding . entries)
+          subdirs=$(find internal/recipe/recipes -mindepth 1 -maxdepth 1 -type d 2>/dev/null || true)
+          if [ -n "$subdirs" ]; then
+            echo "::error::Embedded recipes must be in a flat structure (no subdirectories)."
+            echo "Found subdirectories:"
+            echo "$subdirs"
+            echo ""
+            echo "Move recipe files directly to internal/recipe/recipes/<name>.toml"
+            exit 1
+          fi
+
+          # Verify .toml files exist at the root
+          toml_count=$(find internal/recipe/recipes -maxdepth 1 -name "*.toml" | wc -l)
+          if [ "$toml_count" -eq 0 ]; then
+            echo "::error::No embedded recipes found in internal/recipe/recipes/"
+            exit 1
+          fi
+
+          echo "Found $toml_count embedded recipes in flat structure"
+
+      - name: Validate registry recipes use letter directories
+        run: |
+          # Registry recipes must be in recipes/<letter>/<name>.toml
+          echo "Checking registry recipes structure..."
+
+          if [ ! -d "recipes" ]; then
+            echo "Registry recipes directory not found"
+            exit 1
+          fi
+
+          # Check for .toml files at root level (should not exist)
+          root_tomls=$(find recipes -maxdepth 1 -name "*.toml" 2>/dev/null || true)
+          if [ -n "$root_tomls" ]; then
+            echo "::error::Registry recipes must be in letter subdirectories (recipes/<letter>/<name>.toml)."
+            echo "Found .toml files at root level:"
+            echo "$root_tomls"
+            echo ""
+            echo "Move these files to recipes/<first-letter>/<name>.toml"
+            exit 1
+          fi
+
+          # Verify all subdirectories are single lowercase letters
+          invalid_dirs=$(find recipes -mindepth 1 -maxdepth 1 -type d ! -name '[a-z]' 2>/dev/null || true)
+          if [ -n "$invalid_dirs" ]; then
+            echo "::error::Registry recipe subdirectories must be single lowercase letters."
+            echo "Found invalid directories:"
+            echo "$invalid_dirs"
+            exit 1
+          fi
+
+          # Count recipes in letter directories
+          recipe_count=$(find recipes -mindepth 2 -maxdepth 2 -name "*.toml" | wc -l)
+          echo "Found $recipe_count registry recipes in letter directories"
+
+      - name: Check for duplicate recipes
+        run: |
+          # No recipe should exist in both embedded and registry
+          echo "Checking for duplicate recipes..."
+
+          # Get embedded recipe names (without path and extension)
+          embedded_names=$(find internal/recipe/recipes -maxdepth 1 -name "*.toml" -exec basename {} .toml \; | sort)
+
+          # Get registry recipe names
+          registry_names=$(find recipes -mindepth 2 -maxdepth 2 -name "*.toml" -exec basename {} .toml \; | sort)
+
+          # Find duplicates
+          duplicates=$(comm -12 <(echo "$embedded_names") <(echo "$registry_names"))
+
+          if [ -n "$duplicates" ]; then
+            echo "::error::Found recipes that exist in both embedded and registry locations."
+            echo "Duplicate recipes:"
+            echo "$duplicates"
+            echo ""
+            echo "Each recipe must exist in only one location:"
+            echo "  - Embedded (compiled into binary): internal/recipe/recipes/<name>.toml"
+            echo "  - Registry (fetched at runtime): recipes/<letter>/<name>.toml"
+            exit 1
+          fi
+
+          echo "No duplicate recipes found"
+          echo ""
+          echo "Summary:"
+          echo "  Embedded recipes: $(echo "$embedded_names" | wc -w)"
+          echo "  Registry recipes: $(echo "$registry_names" | wc -w)"
