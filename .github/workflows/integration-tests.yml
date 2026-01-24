@@ -128,7 +128,34 @@ jobs:
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} debian
 
-  # NOTE: musl/Alpine dlopen tests removed - embedded libraries are glibc-only (see #1092)
+  # NOTE: musl/Alpine dlopen tests disabled - embedded libraries are glibc-only (see #1092)
+  # library-dlopen-musl:
+  #   name: "Library dlopen: ${{ matrix.library }} (musl)"
+  #   runs-on: ubuntu-latest
+  #   container:
+  #     image: golang:1.23-alpine
+  #   strategy:
+  #     fail-fast: false
+  #     matrix:
+  #       library: [zlib, libyaml, gcc-libs]
+  #   env:
+  #     GOTOOLCHAIN: auto
+  #   steps:
+  #     - name: Checkout code
+  #       uses: actions/checkout@v4
+  #
+  #     - name: Install build dependencies
+  #       run: |
+  #         apk add --no-cache curl gcc musl-dev bash git
+  #         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain stable
+  #
+  #     - name: Run library dlopen test
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+  #       run: |
+  #         source $HOME/.cargo/env
+  #         ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} alpine
 
   library-dlopen-macos:
     name: "Library dlopen: ${{ matrix.library }} (darwin)"
