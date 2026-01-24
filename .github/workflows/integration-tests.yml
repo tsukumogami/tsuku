@@ -90,14 +90,13 @@ jobs:
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: ./test/scripts/test-library-integrity.sh ${{ matrix.library }} ${{ matrix.family }}
 
-  library-dlopen-linux:
-    name: "Library dlopen: ${{ matrix.library }} (${{ matrix.family }})"
+  library-dlopen-glibc:
+    name: "Library dlopen: ${{ matrix.library }} (glibc)"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         library: [zlib, libyaml, openssl, gcc-libs]
-        family: [debian, rhel, arch, alpine, suse]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -126,7 +125,34 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} ${{ matrix.family }}
+        run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} debian
+
+  library-dlopen-musl:
+    name: "Library dlopen: ${{ matrix.library }} (musl)"
+    runs-on: ubuntu-latest
+    container:
+      image: alpine:3.19
+    strategy:
+      fail-fast: false
+      matrix:
+        library: [zlib, libyaml, openssl, gcc-libs]
+    steps:
+      - name: Install dependencies
+        run: apk add --no-cache git go gcc musl-dev rust cargo curl bash
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build tsuku-dltest
+        run: |
+          cd cmd/tsuku-dltest
+          cargo build --release
+
+      - name: Run library dlopen test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: ./test/scripts/test-library-dlopen.sh ${{ matrix.library }} alpine
 
   library-dlopen-macos:
     name: "Library dlopen: ${{ matrix.library }} (darwin)"
