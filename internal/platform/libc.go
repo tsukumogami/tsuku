@@ -1,6 +1,11 @@
 package platform
 
-import "path/filepath"
+import (
+	"bytes"
+	"debug/elf"
+	"path/filepath"
+	"strings"
+)
 
 // ValidLibcTypes lists the recognized libc values.
 // The libc affects binary compatibility and package availability:
@@ -9,12 +14,46 @@ import "path/filepath"
 var ValidLibcTypes = []string{"glibc", "musl"}
 
 // DetectLibc returns the libc implementation for the current system.
-// Returns "musl" if the musl dynamic linker is present, "glibc" otherwise.
+// Returns "musl" if the system uses musl libc, "glibc" otherwise.
 //
-// Detection checks for /lib/ld-musl-*.so.1 which is the standard location
-// for the musl dynamic linker across all architectures (x86_64, aarch64, etc.).
+// Detection examines the ELF interpreter of /bin/sh, which definitively
+// identifies the system's libc. Falls back to checking for the musl
+// dynamic linker at /lib/ld-musl-*.so.1 if ELF parsing fails.
 func DetectLibc() string {
+	// Check /bin/sh's interpreter - this definitively answers
+	// "what libc do dynamically-linked binaries use on this system?"
+	if libc := detectLibcFromBinary("/bin/sh"); libc != "" {
+		return libc
+	}
+	// Fallback for unusual systems where /bin/sh isn't readable
 	return DetectLibcWithRoot("")
+}
+
+// detectLibcFromBinary reads the ELF interpreter from a binary.
+// Returns "musl" if interpreter contains "musl", "glibc" for other
+// Linux interpreters, or "" if detection fails.
+func detectLibcFromBinary(path string) string {
+	f, err := elf.Open(path)
+	if err != nil {
+		return ""
+	}
+	defer func() { _ = f.Close() }()
+
+	for _, prog := range f.Progs {
+		if prog.Type == elf.PT_INTERP {
+			data := make([]byte, prog.Filesz)
+			if _, err := prog.ReadAt(data, 0); err != nil {
+				return ""
+			}
+			interp := string(bytes.TrimRight(data, "\x00"))
+			if strings.Contains(interp, "musl") {
+				return "musl"
+			}
+			return "glibc"
+		}
+	}
+	// No PT_INTERP means static binary - can't determine from this file
+	return ""
 }
 
 // DetectLibcWithRoot detects libc with a custom root path for testing.

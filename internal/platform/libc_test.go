@@ -46,6 +46,32 @@ func TestDetectLibc(t *testing.T) {
 	}
 }
 
+func TestDetectLibcFromBinary(t *testing.T) {
+	// Test with /bin/sh which should exist on all Linux systems
+	libc := detectLibcFromBinary("/bin/sh")
+
+	// On Linux, should return a valid libc type
+	// On other systems or if /bin/sh isn't ELF, returns ""
+	if libc != "" && libc != "glibc" && libc != "musl" {
+		t.Errorf("detectLibcFromBinary(/bin/sh) = %q, want empty or valid libc", libc)
+	}
+}
+
+func TestDetectLibcFromBinary_NonExistent(t *testing.T) {
+	libc := detectLibcFromBinary("/nonexistent/binary")
+	if libc != "" {
+		t.Errorf("detectLibcFromBinary(nonexistent) = %q, want empty", libc)
+	}
+}
+
+func TestDetectLibcFromBinary_NotELF(t *testing.T) {
+	// Test with a non-ELF file (this test file itself)
+	libc := detectLibcFromBinary("libc_test.go")
+	if libc != "" {
+		t.Errorf("detectLibcFromBinary(non-ELF) = %q, want empty", libc)
+	}
+}
+
 func TestValidLibcTypes(t *testing.T) {
 	expected := []string{"glibc", "musl"}
 	if len(ValidLibcTypes) != len(expected) {
