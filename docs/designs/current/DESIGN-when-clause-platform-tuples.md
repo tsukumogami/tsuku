@@ -652,3 +652,25 @@ Note: All matching steps execute (additive semantics)
 
 Platform tuple support in `when` clauses introduces **minimal security risk**. The feature is purely deterministic filtering logic with no external I/O, no new privileges, and no user data access. The primary security consideration is correctness of platform matching (to avoid skipping intended steps), which is mitigated through comprehensive testing and load-time validation.
 
+## Consequences
+
+### Positive
+
+- **Clean, maintainable codebase**: The structured `WhenClause` type eliminates technical debt from CSV string hacks or loose map types.
+- **Type-safe APIs**: Compile-time guarantees prevent entire class of bugs from malformed when clauses.
+- **Ecosystem alignment**: Additive matching semantics align with precedents from Cargo, Homebrew, and other package managers.
+- **Consistency with install_guide**: Uses the same platform tuple format (`os/arch`), providing a unified mental model for recipe authors.
+- **Future extensibility**: Adding new filter types (environment variables, runtime conditions) is straightforward with the structured type approach.
+- **Go idiom compliance**: Structured types over string maps aligns with Go best practices and enables better IDE support.
+
+### Negative
+
+- **Breaking change**: Existing recipes using `when` clauses need migration (2 recipes: gcc-libs.toml, nodejs.toml).
+- **Syntax change required**: Single string values must become arrays (`os = "linux"` becomes `os = ["linux"]`).
+- **Broader code changes**: All code paths that read `Step.When` must be updated to use the new struct type.
+
+### Mitigations
+
+- The 2 affected recipes are migrated in the same PR, making the breaking change transparent to users.
+- All recipes are in this repository, so there's no external ecosystem impact to manage.
+- The migration is a simple syntax change with no semantic differences for existing use cases.

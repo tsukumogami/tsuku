@@ -311,6 +311,49 @@ runtime_dependencies = ["go"]  # Override: interpreter
 ```
 Result: `install_deps=["go"]`, `runtime_deps=["go"]`
 
+## Implementation Approach
+
+### Code Organization
+
+The implementation extends the actions package and modifies the install package:
+
+```
+internal/
+├── actions/
+│   ├── action.go            # ActionDeps struct, Action interface with Dependencies() method
+│   ├── dependencies.go      # GetActionDeps helper, DetectShadowedDeps validation
+│   └── resolver.go          # ResolveDependencies, ResolveTransitive, cycle detection
+├── install/
+│   ├── manager.go           # createWrappersForBinaries for runtime PATH injection
+│   └── state.go             # InstallDependencies, RuntimeDependencies in ToolState
+└── recipe/
+    └── types.go             # Dependencies, RuntimeDependencies, Extra* fields in MetadataSection
+```
+
+### High-Level Steps
+
+1. **Create the action dependency interface** - Define `ActionDeps` struct in `action.go` with `InstallTime`, `Runtime`, `EvalTime`, and platform-specific fields. Each action implements `Dependencies()` returning its requirements.
+
+2. **Implement the resolution algorithm** - `ResolveDependencies()` in `resolver.go` walks recipe steps, calls `GetActionDeps()` for each action, aggregates implicit deps from primitives, and applies step-level and recipe-level overrides per precedence rules.
+
+3. **Add transitive resolution** - `ResolveTransitive()` recursively loads dependency recipes and resolves their dependencies, with cycle detection via path tracking and `MaxTransitiveDepth` (10) enforcement.
+
+4. **Wire into the installer** - The install command resolves dependencies before installation and passes `RuntimeDependencies` to `InstallOptions`. The manager uses this to decide between symlinks and wrappers.
+
+5. **Update wrapper generation** - `createWrappersForBinaries()` in `manager.go` creates shell scripts that prepend runtime dependency bin directories to PATH before exec'ing the actual binary.
+
+6. **Extend state tracking** - `ToolState` in `state.go` includes `InstallDependencies` and `RuntimeDependencies` fields ([]string). These are recorded during install and used by `tsuku info` and `tsuku remove`.
+
+7. **Add user-facing features** - `tsuku info` displays dependency trees by calling `ResolveDependencies()` and `ResolveTransitive()`. `tsuku remove` warns when `RequiredBy` is non-empty.
+
+8. **Remove legacy bootstrap code** - The `EnsureNpm()`, `EnsurePipx()`, and similar functions have been removed from action implementations. The `bootstrap.go` file now only contains `CheckAndExposeHidden()` for exposing hidden execution dependencies.
+
+### Migration Strategy
+
+Existing recipes continue working without changes. The resolver computes implicit dependencies from actions, so recipes that relied on internal bootstrap logic get the same behavior through the new system.
+
+Edge-case recipes (like esbuild) need explicit `runtime_dependencies = []` overrides. These are identified during Phase 4 recipe audit and updated before removing legacy code.
+
 ## Security Considerations
 
 ### Dependency Injection Risk
@@ -340,6 +383,34 @@ Result: `install_deps=["go"]`, `runtime_deps=["go"]`
 - Wrapper scripts use absolute paths
 - Dependencies only prepend to PATH
 
+## Consequences
+
+### Positive
+
+- **Zero boilerplate for common case**: Recipe authors don't need to declare dependencies that actions already know about. An npm package recipe just specifies `npm_install` and gets nodejs dependency automatically.
+
+- **Static analyzability**: Dependency graphs can be computed without executing recipes. This enables `tsuku info` dependency trees, pre-install validation, and future features like parallel installation of independent deps.
+
+- **Consistent behavior**: All ecosystem actions handle dependencies the same way through the resolver. No more surprises where some actions auto-install deps and others error.
+
+- **Clear separation of install vs runtime**: The model explicitly distinguishes tools needed to build (Go compiler) from tools needed to run (Node.js runtime). This prevents unnecessary runtime dependencies for compiled binaries.
+
+- **Explicit override escape hatches**: Edge cases like compiled npm binaries (esbuild) or Go interpreters (yaegi) can override the defaults without special-casing in action code.
+
+- **Improved user experience**: Users can see what will be installed before running a command. Uninstall warns about dependent tools. The system is transparent rather than magical.
+
+### Negative
+
+- **Hidden complexity**: Dependencies aren't visible in recipes without tooling support. Users might not realize an npm package depends on nodejs unless they run `tsuku info`.
+
+- **Override learning curve**: Recipe authors need to understand when to use `runtime_dependencies`, `extra_runtime_dependencies`, and recipe-level variants. The precedence rules add cognitive load.
+
+- **Migration effort**: Existing recipes work unchanged, but edge cases need auditing. Some recipes may need override declarations that weren't needed with the old bootstrap approach.
+
+- **Transitive depth limit**: The max depth of 10 is arbitrary. Deep dependency chains are unlikely in practice but the limit could cause issues for complex tool ecosystems.
+
+- **No version constraint solving**: Only simple pinning is supported (e.g., `nodejs@20`). Complex constraints like `>=18 <21` are out of scope. Users needing this must manage versions manually.
+
 ## Implementation Plan
 
 ### Implementation Structure
@@ -350,7 +421,7 @@ This feature is delivered as a **single milestone** with multiple implementation
 
 Build the foundation for dependency resolution.
 
-- `ActionDeps` struct and `ActionDependencies` registry
+- `ActionDeps` struct and `Action.Dependencies()` interface method
 - Resolution algorithm with precedence rules
 - Transitive resolution with cycle detection (max depth 10)
 - Version constraint parsing

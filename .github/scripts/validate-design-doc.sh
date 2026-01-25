@@ -115,9 +115,14 @@ run_check() {
     return 0
 }
 
-# Run frontmatter check (the only modular check in skeleton)
+# Run frontmatter check
 if [[ -x "$CHECKS_DIR/frontmatter.sh" ]]; then
     run_check "$CHECKS_DIR/frontmatter.sh" || FAILED=1
+fi
+
+# Run sections check
+if [[ -x "$CHECKS_DIR/sections.sh" ]]; then
+    run_check "$CHECKS_DIR/sections.sh" || FAILED=1
 fi
 
 # Future: Run all check scripts dynamically

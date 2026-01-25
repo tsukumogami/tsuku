@@ -556,7 +556,6 @@ Install all with:
 Then retry:
     tsuku install complex-tool
 ```
-```
 
 ### Component 5: Platform Support Matrix
 

@@ -7,7 +7,9 @@ rationale: This approach balances simplicity with performance, providing a singl
 
 # DESIGN: Library Verification Header Validation (Tier 1)
 
-**Status:** Current
+## Status
+
+Current
 
 ## Upstream Design Reference
 

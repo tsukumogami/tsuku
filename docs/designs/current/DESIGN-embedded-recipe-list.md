@@ -675,28 +675,6 @@ jobs:
 5. **Fix**: Either migrate recipe back to embedded or update exclusion with issue link
 6. **Repeat**: Until exclusions list is empty or contains only documented exceptions
 
-## Consequences
-
-### Positive
-
-- **Ground truth validation**: Uses actual loader, not parallel logic
-- **Incremental migration**: Exclusions enable gradual improvement
-- **Clear failures**: Error messages indicate exactly what's missing
-- **No new tools**: Flag added to existing commands
-- **Self-documenting**: Exclusions file shows exactly what's incomplete
-
-### Negative
-
-- **Manual documentation**: EMBEDDED_RECIPES.md must be maintained by hand
-- **Exclusions discipline**: Team must actively shrink exclusions list
-- **Build required**: Can't validate without compiling tsuku
-
-### Mitigations
-
-- **Documentation drift**: Runtime validation is the enforcement; docs are supplementary
-- **Exclusions growth**: CI job can warn when exclusions exceed threshold
-- **Build time**: Module cache makes builds fast; validation runs only on relevant changes
-
 ## Security Considerations
 
 ### Download Verification
@@ -732,3 +710,25 @@ jobs:
 | Execution Isolation | Low | Restricts behavior |
 | Supply Chain | Positive | Improves bootstrap integrity |
 | User Data | N/A | No user data involved |
+
+## Consequences
+
+### Positive
+
+- **Ground truth validation**: Uses actual loader, not parallel logic
+- **Incremental migration**: Exclusions enable gradual improvement
+- **Clear failures**: Error messages indicate exactly what's missing
+- **No new tools**: Flag added to existing commands
+- **Self-documenting**: Exclusions file shows exactly what's incomplete
+
+### Negative
+
+- **Manual documentation**: EMBEDDED_RECIPES.md must be maintained by hand
+- **Exclusions discipline**: Team must actively shrink exclusions list
+- **Build required**: Can't validate without compiling tsuku
+
+### Mitigations
+
+- **Documentation drift**: Runtime validation is the enforcement; docs are supplementary
+- **Exclusions growth**: CI job can warn when exclusions exceed threshold
+- **Build time**: Module cache makes builds fast; validation runs only on relevant changes

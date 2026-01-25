@@ -652,31 +652,6 @@ registry.Register(NewGoBuilder(resolver))
 
 **Validation:** All tools install and verify successfully.
 
-## Consequences
-
-### Positive
-
-1. **Complete Go ecosystem coverage**: Any public Go module can be installed via `go install`.
-2. **Self-contained**: Users don't need Go pre-installed; tsuku handles bootstrapping.
-3. **Consistent patterns**: Follows existing npm_install/nodejs pattern.
-4. **Version resolution**: Go proxy integration enables `tsuku versions` and `@version` syntax.
-5. **Builder compatibility**: Go builder follows recipe-builders design, enabling future `tsuku create` UX.
-6. **Shared toolchain**: Single Go installation serves all Go tools.
-
-### Negative
-
-1. **Compilation time**: First install of a Go tool requires compilation (1-5 minutes depending on tool size).
-2. **Disk usage**: Go toolchain is ~500MB plus module cache growth over time.
-3. **Go version coupling**: All Go tools share one Go version; can't have tool-specific Go versions.
-4. **CGO limitation**: Tools requiring cgo won't work (hard constraint).
-
-### Mitigations
-
-1. **Compilation time**: Display progress during compilation. Future LLM layer could prefer pre-built binaries when available.
-2. **Disk usage**: Document in user guide. Add `tsuku gc` command to clean module cache (future work).
-3. **Go version coupling**: Document limitation. In practice, Go has excellent backward compatibility, so this rarely matters.
-4. **CGO limitation**: Document clearly. Suggest users install cgo-dependent tools via system package manager.
-
 ## Security Considerations
 
 ### Download Verification
@@ -789,6 +764,31 @@ registry.Register(NewGoBuilder(resolver))
 - Users in corporate environments may have custom GOPROXY settings
 - The go_install action explicitly sets GOPROXY to the official proxy
 - Users who need custom proxies must configure at the recipe level (future work)
+
+## Consequences
+
+### Positive
+
+1. **Complete Go ecosystem coverage**: Any public Go module can be installed via `go install`.
+2. **Self-contained**: Users don't need Go pre-installed; tsuku handles bootstrapping.
+3. **Consistent patterns**: Follows existing npm_install/nodejs pattern.
+4. **Version resolution**: Go proxy integration enables `tsuku versions` and `@version` syntax.
+5. **Builder compatibility**: Go builder follows recipe-builders design, enabling future `tsuku create` UX.
+6. **Shared toolchain**: Single Go installation serves all Go tools.
+
+### Negative
+
+1. **Compilation time**: First install of a Go tool requires compilation (1-5 minutes depending on tool size).
+2. **Disk usage**: Go toolchain is ~500MB plus module cache growth over time.
+3. **Go version coupling**: All Go tools share one Go version; can't have tool-specific Go versions.
+4. **CGO limitation**: Tools requiring cgo won't work (hard constraint).
+
+### Mitigations
+
+1. **Compilation time**: Display progress during compilation. Future LLM layer could prefer pre-built binaries when available.
+2. **Disk usage**: Document in user guide. Add `tsuku gc` command to clean module cache (future work).
+3. **Go version coupling**: Document limitation. In practice, Go has excellent backward compatibility, so this rarely matters.
+4. **CGO limitation**: Document clearly. Suggest users install cgo-dependent tools via system package manager.
 
 ## Implementation Issues
 

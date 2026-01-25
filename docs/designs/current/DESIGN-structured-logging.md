@@ -5,9 +5,11 @@ decision: Implement a unified Logger interface backed by Go stdlib slog, with su
 rationale: This approach provides zero external dependencies while maintaining testability and matching the existing functional options pattern already established in internal/validate. slog's performance is adequate for CLI workloads where I/O dominates, and the interface design allows gradual migration of ~200+ existing fmt.Printf calls without requiring a big-bang rewrite.
 ---
 
-# DESIGN: Structured Logging Framework
+## Status
 
-**Status:** Current
+Current
+
+# DESIGN: Structured Logging Framework
 
 ## Context and Problem Statement
 
@@ -540,29 +542,6 @@ Extend to other internal packages as needed:
 
 **No automated linting:** The interface pattern makes missing loggers visible in function signatures. We rely on code review rather than linters.
 
-## Consequences
-
-### Positive
-
-- **Zero external dependencies:** stdlib slog means no version management or supply chain concerns
-- **Improved troubleshooting:** Users can enable `--debug` to see what tsuku is doing
-- **Testable logging:** Tests can inject mock logger and verify log calls
-- **Matches existing pattern:** Builds on established functional options pattern in `internal/validate`
-- **Gradual migration:** No big-bang rewrite; migrate one package at a time
-- **Future-proof:** If we ever need OTel, a custom slog handler bridges the gap
-
-### Negative
-
-- **API surface increase:** New `internal/log` package and Logger interface to maintain
-- **Migration effort:** ~200+ `fmt.Printf` calls need eventual review and migration
-- **Not OTel-native:** If tsuku ever becomes a service or needs distributed tracing, we'll need additional work
-
-### Mitigations
-
-- **API surface:** Interface is intentionally small (4 methods + With). Keep it stable.
-- **Migration:** Phase the work. High-value targets first (actions, install). Rest can be opportunistic.
-- **OTel compatibility:** slog's handler abstraction allows bridging to OTel later via custom handler.
-
 ## Security Considerations
 
 ### Download Verification
@@ -645,6 +624,29 @@ This feature has low security impact because it:
 3. Downloads nothing
 
 The main consideration is preventing sensitive data leakage in debug output, mitigated through logging hygiene guidelines and user awareness.
+
+## Consequences
+
+### Positive
+
+- **Zero external dependencies:** stdlib slog means no version management or supply chain concerns
+- **Improved troubleshooting:** Users can enable `--debug` to see what tsuku is doing
+- **Testable logging:** Tests can inject mock logger and verify log calls
+- **Matches existing pattern:** Builds on established functional options pattern in `internal/validate`
+- **Gradual migration:** No big-bang rewrite; migrate one package at a time
+- **Future-proof:** If we ever need OTel, a custom slog handler bridges the gap
+
+### Negative
+
+- **API surface increase:** New `internal/log` package and Logger interface to maintain
+- **Migration effort:** ~200+ `fmt.Printf` calls need eventual review and migration
+- **Not OTel-native:** If tsuku ever becomes a service or needs distributed tracing, we'll need additional work
+
+### Mitigations
+
+- **API surface:** Interface is intentionally small (4 methods + With). Keep it stable.
+- **Migration:** Phase the work. High-value targets first (actions, install). Rest can be opportunistic.
+- **OTel compatibility:** slog's handler abstraction allows bridging to OTel later via custom handler.
 
 ## Implementation Issues
 

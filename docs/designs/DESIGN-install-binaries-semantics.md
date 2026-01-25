@@ -513,27 +513,6 @@ After migration is complete (all recipes updated), the deprecation warning can b
 ### Phase 4: Cleanup (Future)
 - Remove deprecated `binaries` support (post-migration, after release cycle)
 
-## Consequences
-
-### Positive
-
-- **Semantic clarity**: Parameter names accurately describe their contents
-- **Static analyzability**: Tools can reliably identify executables via path prefix or explicit list
-- **Zero migration burden**: Path inference means recipes work without changes beyond renaming
-- **Future flexibility**: The `executables` override handles edge cases without recipe verbosity
-
-### Negative
-
-- **Implicit behavior**: New recipe authors must understand the `bin/` convention
-- **Two code paths**: Supporting both inference and explicit list adds minor complexity
-- **Deprecation churn**: All 35+ recipes need renaming (automated)
-
-### Mitigations
-
-- **Documentation**: Add clear guidance in CONTRIBUTING.md about `outputs` semantics
-- **Lint checks**: Add preflight validation to warn about outputs not in `bin/` or `lib/`
-- **Automation**: Provide script for `binaries` → `outputs` migration
-
 ## Security Considerations
 
 ### Download Verification
@@ -582,3 +561,24 @@ No network access, no user data access, no telemetry impact.
 | Incorrect permission on executables | Path inference defaults to conservative (only `bin/`) | Edge cases need explicit `executables` |
 | Migration script errors | PR review, automated tests, diffable changes | Human error possible |
 | Confusion about executable status | Clear documentation, lint warnings | New users may be confused initially |
+
+## Consequences
+
+### Positive
+
+- **Semantic clarity**: Parameter names accurately describe their contents
+- **Static analyzability**: Tools can reliably identify executables via path prefix or explicit list
+- **Zero migration burden**: Path inference means recipes work without changes beyond renaming
+- **Future flexibility**: The `executables` override handles edge cases without recipe verbosity
+
+### Negative
+
+- **Implicit behavior**: New recipe authors must understand the `bin/` convention
+- **Two code paths**: Supporting both inference and explicit list adds minor complexity
+- **Deprecation churn**: All 35+ recipes need renaming (automated)
+
+### Mitigations
+
+- **Documentation**: Add clear guidance in CONTRIBUTING.md about `outputs` semantics
+- **Lint checks**: Add preflight validation to warn about outputs not in `bin/` or `lib/`
+- **Automation**: Provide script for `binaries` → `outputs` migration

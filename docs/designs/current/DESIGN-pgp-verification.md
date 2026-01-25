@@ -558,30 +558,6 @@ Update recipes and validation:
 
 **Dependencies**: Phase 2 complete
 
-## Consequences
-
-### Positive
-
-- **Stronger verification**: Recipes can use cryptographic signatures instead of (or in addition to) checksums
-- **Curl support**: The curl recipe can now have upstream verification
-- **Future-proof**: Framework supports any project that uses PGP signatures
-- **Auditable**: Fingerprints in recipes are version-controlled and inspectable
-- **No central registry**: tsuku doesn't need to maintain a list of trusted keys
-
-### Negative
-
-- **Increased binary size**: gopenpgp adds ~2MB to the tsuku binary
-- **Recipe complexity**: Authors must find and verify key fingerprints
-- **Network dependency**: Key fetch required on first install of each tool
-- **Error complexity**: PGP errors can be cryptic; need good error messages
-
-### Mitigations
-
-- **Binary size**: Acceptable trade-off for security feature; 2MB is negligible for a CLI tool
-- **Recipe complexity**: Provide documentation and examples; fingerprint is a one-time effort
-- **Network dependency**: Keys are cached; subsequent installs use cache
-- **Error complexity**: Wrap gopenpgp errors with user-friendly messages; include troubleshooting guide
-
 ## Security Considerations
 
 ### Download Verification
@@ -657,4 +633,28 @@ This feature directly improves download verification by adding cryptographic sig
 | Expired signing key | Verify signature math only, not key expiration | Old keys with poor crypto could be weak (mitigated by fingerprint) |
 | gopenpgp vulnerability | Use stable v2, monitor for security advisories | Zero-day in library |
 | Key URL unavailable | Cache keys after first successful fetch | First install of new tool requires network |
+
+## Consequences
+
+### Positive
+
+- **Stronger verification**: Recipes can use cryptographic signatures instead of (or in addition to) checksums
+- **Curl support**: The curl recipe can now have upstream verification
+- **Future-proof**: Framework supports any project that uses PGP signatures
+- **Auditable**: Fingerprints in recipes are version-controlled and inspectable
+- **No central registry**: tsuku doesn't need to maintain a list of trusted keys
+
+### Negative
+
+- **Increased binary size**: gopenpgp adds ~2MB to the tsuku binary
+- **Recipe complexity**: Authors must find and verify key fingerprints
+- **Network dependency**: Key fetch required on first install of each tool
+- **Error complexity**: PGP errors can be cryptic; need good error messages
+
+### Mitigations
+
+- **Binary size**: Acceptable trade-off for security feature; 2MB is negligible for a CLI tool
+- **Recipe complexity**: Provide documentation and examples; fingerprint is a one-time effort
+- **Network dependency**: Keys are cached; subsequent installs use cache
+- **Error complexity**: Wrap gopenpgp errors with user-friendly messages; include troubleshooting guide
 

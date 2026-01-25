@@ -377,33 +377,6 @@ Update all four affected workflows to aggregate macOS items:
 - Confirm failure visibility via log groups is acceptable
 - Monitor queue times before/after
 
-## Consequences
-
-### Positive
-
-- **Eliminated queue contention:** 5 macOS jobs (one per workflow) vs 170+ jobs competing for 5 runners
-- **Lower job overhead:** Single job amortizes checkout, Go setup, tsuku build across all items
-- **Simpler GitHub UI:** 5 macOS jobs instead of 170+ makes PR checks easy to scan
-- **Cross-workflow safety:** Multiple workflows can run concurrently without exceeding runner limits
-- **Simpler implementation:** No batch calculation logic needed
-
-### Negative
-
-- **Reduced failure granularity:** Must inspect logs to find specific failing recipe
-- **Longer individual jobs:** Single macOS job runs longer (all items sequential)
-- **No parallelism within architecture:** Items within darwin-arm64 run sequentially
-
-### Mitigations
-
-- **Failure granularity:** Use `::group::` markers for each recipe, report all failures at end
-  ```bash
-  echo "::group::Testing $recipe"
-  ./tsuku install --force "$recipe"
-  echo "::endgroup::"
-  ```
-- **Longer jobs:** Acceptable trade-off; total wall-clock time decreases dramatically
-- **No parallelism:** Sequential execution is simpler and sufficient given reduced queue time
-
 ## Security Considerations
 
 ### Download Verification
@@ -442,3 +415,30 @@ The batching logic itself runs in shell within the workflow file, using only sta
 ### Summary
 
 This is a CI orchestration change that reduces the number of macOS jobs without modifying the security properties of individual recipe execution. The trust model, isolation boundaries, and verification mechanisms remain unchanged.
+
+## Consequences
+
+### Positive
+
+- **Eliminated queue contention:** 5 macOS jobs (one per workflow) vs 170+ jobs competing for 5 runners
+- **Lower job overhead:** Single job amortizes checkout, Go setup, tsuku build across all items
+- **Simpler GitHub UI:** 5 macOS jobs instead of 170+ makes PR checks easy to scan
+- **Cross-workflow safety:** Multiple workflows can run concurrently without exceeding runner limits
+- **Simpler implementation:** No batch calculation logic needed
+
+### Negative
+
+- **Reduced failure granularity:** Must inspect logs to find specific failing recipe
+- **Longer individual jobs:** Single macOS job runs longer (all items sequential)
+- **No parallelism within architecture:** Items within darwin-arm64 run sequentially
+
+### Mitigations
+
+- **Failure granularity:** Use `::group::` markers for each recipe, report all failures at end
+  ```bash
+  echo "::group::Testing $recipe"
+  ./tsuku install --force "$recipe"
+  echo "::endgroup::"
+  ```
+- **Longer jobs:** Acceptable trade-off; total wall-clock time decreases dramatically
+- **No parallelism:** Sequential execution is simpler and sufficient given reduced queue time

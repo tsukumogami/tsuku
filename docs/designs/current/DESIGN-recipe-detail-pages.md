@@ -500,28 +500,6 @@ Cloudflare Pages ignores splat patterns (like `/recipes/*`) in `_redirects` when
 
 **Future resolution:** If Cloudflare fixes the bug, the workaround can be removed and the `_redirects` rule will work as intended.
 
-## Consequences
-
-### Positive
-
-- **Dependency visibility**: Users can see all prerequisites before installing
-- **Direct linking**: Tools can be referenced with shareable URLs
-- **Architectural consistency**: Same client-rendering pattern as grid
-- **Instant navigation**: No page reloads when switching between views
-- **Simple deployment**: No generated files, just one HTML page
-
-### Negative
-
-- **No SEO**: Individual recipes not indexed by search engines
-- **Requires JavaScript**: No content without JS (but grid already requires it)
-- **Loading state on direct links**: Brief spinner before content appears
-
-### Mitigations
-
-- **SEO**: Not a priority - users search for "tsuku" not individual recipes
-- **JavaScript requirement**: Existing `<noscript>` fallback links to GitHub
-- **Loading state**: Minimal impact; same UX as current grid page
-
 ## Security Considerations
 
 ### Download Verification
@@ -563,3 +541,25 @@ Recipe metadata originates from TOML files in the tsuku repository, controlled b
 **Data transmitted**: Standard HTTP request for `recipes.json`. No cookies, localStorage, or analytics.
 
 **Privacy implications**: None.
+
+## Consequences
+
+### Positive
+
+- **Dependency visibility**: Users can see all prerequisites before installing
+- **Direct linking**: Tools can be referenced with shareable URLs
+- **Architectural consistency**: Same client-rendering pattern as grid
+- **Instant navigation**: No page reloads when switching between views
+- **Simple deployment**: No generated files, just one HTML page
+
+### Negative
+
+- **No SEO**: Individual recipes not indexed by search engines
+- **Requires JavaScript**: No content without JS (but grid already requires it)
+- **Loading state on direct links**: Brief spinner before content appears
+
+### Mitigations
+
+- **SEO**: Not a priority - users search for "tsuku" not individual recipes
+- **JavaScript requirement**: Existing `<noscript>` fallback links to GitHub
+- **Loading state**: Minimal impact; same UX as current grid page

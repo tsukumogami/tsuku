@@ -5,9 +5,11 @@ decision: Implement a centralized SortVersionsDescending() function that all ver
 rationale: This approach provides the right balance of simplicity and correctness by avoiding wrapper complexity (Option B), ensuring complete coverage for programmatic access (unlike Option C), and minimizing refactoring effort (compared to Option D). It explicitly sorts results at the provider level for transparency and debuggability.
 ---
 
-# DESIGN: Consistent Version Sorting
+## Status
 
-**Status:** Current
+Current
+
+# DESIGN: Consistent Version Sorting
 
 ## Context and Problem Statement
 

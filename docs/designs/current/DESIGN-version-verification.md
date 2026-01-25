@@ -73,6 +73,54 @@ Recipes should verify the exact installed version matches the requested version,
 5. **Minimal configuration**: Prefer convention over configuration where possible
 6. **Validation coverage**: CI should catch recipes with inadequate verification
 
+## Considered Options
+
+### Option 1: Automatic Heuristic-Based Version Normalization
+
+Apply automatic heuristics to normalize version strings without explicit configuration. The system would detect common patterns (leading `v`, tool prefixes like `biome@`, etc.) and strip them automatically before matching.
+
+**Pros:**
+- Zero configuration for most recipes
+- Works out of the box without recipe authors needing to learn new concepts
+- Reduces boilerplate in recipe definitions
+
+**Cons:**
+- Magic behavior that is hard to debug when it fails
+- Heuristics may incorrectly transform versions in edge cases
+- Package managers require correctness over convenience; implicit behavior can mask real issues
+- Difficult to predict what transformation will be applied to a given version string
+
+### Option 2: Explicit Format Transforms with Verification Modes
+
+Introduce explicit `version_format` transforms (semver, strip_v, raw) and verification `mode` fields (version, output) that recipe authors configure intentionally. Defaults remain unchanged (raw format, version mode) so existing recipes continue to work.
+
+**Pros:**
+- Predictable, self-documenting behavior
+- Recipe authors control exactly how version strings are normalized
+- Fails explicitly rather than silently applying wrong transforms
+- Supports fallback for tools without version output via output mode with required justification
+- Enables validator to enforce documentation of weak verification
+
+**Cons:**
+- Introduces two new concepts (mode and version_format) that recipe authors must learn
+- More verbose recipes for edge cases with unusual version formats
+- Requires migration effort for ~40 existing recipes with version mismatches
+
+### Option 3: Pattern-Side Inline Transforms
+
+Allow transforms to be specified inline within the pattern using pipe syntax, such as `{version|semver}` or `{version|strip_v}`. The transformation would be co-located with its usage.
+
+**Pros:**
+- Transformation logic is visible directly in the pattern where it's applied
+- No separate field needed
+- Familiar syntax for users accustomed to template languages
+
+**Cons:**
+- Requires custom parsing of the pattern syntax
+- Less discoverable than a dedicated field
+- Harder to validate and provide good error messages
+- Doesn't address the fallback problem for tools without version support
+
 ## External Research
 
 ### Homebrew
@@ -587,27 +635,6 @@ source_repo = "github.com/org/tool"
 
 **Dependencies**: Download infrastructure changes
 
-## Consequences
-
-### Positive
-
-- **Correctness**: Recipes explicitly declare their verification strategy
-- **Debuggability**: When verification fails, the mode and format are visible
-- **Flexibility**: Three modes cover all known use cases
-- **Gradual adoption**: Existing recipes work unchanged
-
-### Negative
-
-- **Complexity**: Two new concepts (mode, format) to document and teach
-- **Migration work**: ~40 recipes need updates for proper version verification
-- **Validator strictness**: Strict mode will flag more recipes initially
-
-### Mitigations
-
-- Clear documentation with examples for each mode
-- Migration can be phased; start with highest-value recipes
-- Validator warnings (not errors) for backward compatibility initially
-
 ## Security Considerations
 
 ### Download Verification
@@ -672,6 +699,27 @@ No new data is collected or transmitted.
 | Version format transforms hide issues | Transforms are explicit and auditable in recipe | None - transforms are visible |
 | Command injection via version strings | Version string validation (allowlist chars, max length) | Compromised provider could still serve malicious content within constraints |
 | Conditional execution in verify commands | Expanded pattern detection for `\|\|`, `&&`, `eval`, `$()` | Novel obfuscation techniques may evade detection |
+
+## Consequences
+
+### Positive
+
+- **Correctness**: Recipes explicitly declare their verification strategy
+- **Debuggability**: When verification fails, the mode and format are visible
+- **Flexibility**: Three modes cover all known use cases
+- **Gradual adoption**: Existing recipes work unchanged
+
+### Negative
+
+- **Complexity**: Two new concepts (mode, format) to document and teach
+- **Migration work**: ~40 recipes need updates for proper version verification
+- **Validator strictness**: Strict mode will flag more recipes initially
+
+### Mitigations
+
+- Clear documentation with examples for each mode
+- Migration can be phased; start with highest-value recipes
+- Validator warnings (not errors) for backward compatibility initially
 
 ## Future Verification Methods
 
