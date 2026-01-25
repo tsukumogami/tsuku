@@ -54,7 +54,7 @@ func TestSandboxIntegration_SystemDependencies(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	target := platform.NewTarget("linux/amd64", "debian")
+	target := platform.NewTarget("linux/amd64", "debian", "glibc")
 
 	t.Log("Sandbox will:")
 	t.Log("  1. Extract system requirements from plan via ExtractSystemRequirements()")
@@ -141,7 +141,7 @@ func TestSandboxIntegration_WithRepository(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	target := platform.NewTarget("linux/amd64", "debian")
+	target := platform.NewTarget("linux/amd64", "debian", "glibc")
 
 	t.Log("Sandbox will:")
 	t.Log("  1. Extract repository config from apt_ppa action")
@@ -213,7 +213,7 @@ func TestSandboxIntegration_ContainerCaching(t *testing.T) {
 	}
 
 	ctx := context.Background()
-	target := platform.NewTarget("linux/amd64", "debian")
+	target := platform.NewTarget("linux/amd64", "debian", "glibc")
 
 	t.Log("=== Testing Container Image Caching ===")
 	t.Log("")

@@ -17,8 +17,8 @@ import "strings"
 var ValidLinuxFamilies = []string{"debian", "rhel", "arch", "alpine", "suse"}
 
 // Target represents the platform being targeted for plan generation.
-// It combines platform (os/arch) with linux_family for filtering
-// package manager actions.
+// It combines platform (os/arch) with linux_family and libc for filtering
+// package manager actions and binary compatibility.
 type Target struct {
 	// Platform is the combined os/arch string (e.g., "linux/amd64", "darwin/arm64").
 	Platform string
@@ -28,13 +28,20 @@ type Target struct {
 	// (darwin, windows), this field is empty.
 	// Access via LinuxFamily() method.
 	linuxFamily string
+
+	// libc identifies the C library implementation (e.g., "glibc", "musl").
+	// This is only set when OS is "linux". For other operating systems
+	// (darwin, windows), this field is empty.
+	// Access via Libc() method.
+	libc string
 }
 
-// NewTarget creates a Target with the given platform and linux family.
-func NewTarget(platform, linuxFamily string) Target {
+// NewTarget creates a Target with the given platform, linux family, and libc.
+func NewTarget(platform, linuxFamily, libc string) Target {
 	return Target{
 		Platform:    platform,
 		linuxFamily: linuxFamily,
+		libc:        libc,
 	}
 }
 
@@ -67,4 +74,10 @@ func (t Target) Arch() string {
 // Returns empty string for non-Linux platforms.
 func (t Target) LinuxFamily() string {
 	return t.linuxFamily
+}
+
+// Libc returns the C library implementation.
+// Returns empty string for non-Linux platforms.
+func (t Target) Libc() string {
+	return t.libc
 }

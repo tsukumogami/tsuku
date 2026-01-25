@@ -218,7 +218,7 @@ func TestShouldExecuteForPlatform(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := recipe.NewMatchTarget(tt.targetOS, tt.targetArch, "")
+			target := recipe.NewMatchTarget(tt.targetOS, tt.targetArch, "", "")
 			got := shouldExecuteForPlatform(tt.when, target)
 			if got != tt.want {
 				t.Errorf("shouldExecuteForPlatform() = %v, want %v", got, tt.want)
@@ -1084,7 +1084,7 @@ func TestShouldExecuteForPlatform_CombinedConditions(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := recipe.NewMatchTarget(tt.targetOS, tt.targetArch, "")
+			target := recipe.NewMatchTarget(tt.targetOS, tt.targetArch, "", "")
 			got := shouldExecuteForPlatform(tt.when, target)
 			if got != tt.want {
 				t.Errorf("shouldExecuteForPlatform() = %v, want %v", got, tt.want)
