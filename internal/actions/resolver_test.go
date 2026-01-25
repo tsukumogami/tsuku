@@ -1414,3 +1414,206 @@ func TestResolveTransitiveForPlatform_RuntimeDeps(t *testing.T) {
 		t.Errorf("Runtime should not contain linux-runtime on Darwin target, got %v", result.Runtime)
 	}
 }
+
+// Tests for step-level dependencies with target filtering (issue #1111)
+
+func TestResolveDependenciesForTarget_StepDependenciesWithMatchingWhen(t *testing.T) {
+	t.Parallel()
+	// Step with Dependencies field and matching When clause
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action:       "homebrew",
+				Dependencies: []string{"openssl", "zlib"},
+				When:         &recipe.WhenClause{Libc: []string{"glibc"}},
+				Params:       map[string]interface{}{"formula": "curl"},
+			},
+		},
+	}
+
+	// Create a target that matches (glibc Linux)
+	target := recipe.NewMatchTarget("linux", "amd64", "debian", "glibc")
+
+	deps := ResolveDependenciesForTarget(r, "linux", target)
+
+	// Dependencies should be resolved since step matches
+	if deps.InstallTime["openssl"] != "latest" {
+		t.Errorf("InstallTime[openssl] = %q, want %q", deps.InstallTime["openssl"], "latest")
+	}
+	if deps.InstallTime["zlib"] != "latest" {
+		t.Errorf("InstallTime[zlib] = %q, want %q", deps.InstallTime["zlib"], "latest")
+	}
+}
+
+func TestResolveDependenciesForTarget_StepDependenciesWithNonMatchingWhen(t *testing.T) {
+	t.Parallel()
+	// Step with Dependencies field but non-matching When clause
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action:       "homebrew",
+				Dependencies: []string{"openssl", "zlib"},
+				When:         &recipe.WhenClause{Libc: []string{"glibc"}},
+				Params:       map[string]interface{}{"formula": "curl"},
+			},
+		},
+	}
+
+	// Create a target that doesn't match (musl Linux)
+	target := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl")
+
+	deps := ResolveDependenciesForTarget(r, "linux", target)
+
+	// Dependencies should NOT be resolved since step doesn't match
+	if _, has := deps.InstallTime["openssl"]; has {
+		t.Errorf("InstallTime should not contain openssl when step doesn't match, got %v", deps.InstallTime)
+	}
+	if _, has := deps.InstallTime["zlib"]; has {
+		t.Errorf("InstallTime should not contain zlib when step doesn't match, got %v", deps.InstallTime)
+	}
+}
+
+func TestResolveDependenciesForTarget_MultipleStepsSelectiveMatching(t *testing.T) {
+	t.Parallel()
+	// Multiple steps, only one matches the target
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action:       "homebrew",
+				Dependencies: []string{"openssl-glibc"},
+				When:         &recipe.WhenClause{Libc: []string{"glibc"}},
+				Params:       map[string]interface{}{"formula": "curl"},
+			},
+			{
+				Action: "system_dependency",
+				When:   &recipe.WhenClause{Libc: []string{"musl"}},
+				Params: map[string]interface{}{"name": "curl"},
+				// No dependencies - system package manager handles them
+			},
+		},
+	}
+
+	// On glibc: should only see openssl-glibc
+	glibcTarget := recipe.NewMatchTarget("linux", "amd64", "debian", "glibc")
+	glibcDeps := ResolveDependenciesForTarget(r, "linux", glibcTarget)
+
+	if glibcDeps.InstallTime["openssl-glibc"] != "latest" {
+		t.Errorf("glibc: InstallTime[openssl-glibc] = %q, want %q", glibcDeps.InstallTime["openssl-glibc"], "latest")
+	}
+
+	// On musl: should have no dependencies (musl step has no deps)
+	muslTarget := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl")
+	muslDeps := ResolveDependenciesForTarget(r, "linux", muslTarget)
+
+	if _, has := muslDeps.InstallTime["openssl-glibc"]; has {
+		t.Errorf("musl: InstallTime should not contain openssl-glibc, got %v", muslDeps.InstallTime)
+	}
+	if len(muslDeps.InstallTime) != 0 {
+		t.Errorf("musl: InstallTime should be empty, got %v", muslDeps.InstallTime)
+	}
+}
+
+func TestResolveDependenciesForTarget_NilTargetProcessesAllSteps(t *testing.T) {
+	t.Parallel()
+	// When target is nil, all steps contribute their dependencies (backward compatibility)
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action:       "homebrew",
+				Dependencies: []string{"openssl"},
+				When:         &recipe.WhenClause{Libc: []string{"glibc"}},
+				Params:       map[string]interface{}{"formula": "curl"},
+			},
+			{
+				Action:       "download",
+				Dependencies: []string{"wget"},
+				When:         &recipe.WhenClause{Libc: []string{"musl"}},
+				Params:       map[string]interface{}{},
+			},
+		},
+	}
+
+	// With nil target, all steps contribute
+	deps := ResolveDependenciesForTarget(r, "linux", nil)
+
+	// Should have deps from both steps
+	if deps.InstallTime["openssl"] != "latest" {
+		t.Errorf("InstallTime[openssl] = %q, want %q", deps.InstallTime["openssl"], "latest")
+	}
+	if deps.InstallTime["wget"] != "latest" {
+		t.Errorf("InstallTime[wget] = %q, want %q", deps.InstallTime["wget"], "latest")
+	}
+}
+
+func TestResolveDependenciesForTarget_StepWithNoWhenAlwaysMatches(t *testing.T) {
+	t.Parallel()
+	// Step without When clause should always contribute its dependencies
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action:       "download",
+				Dependencies: []string{"curl"},
+				// No When clause
+				Params: map[string]interface{}{},
+			},
+		},
+	}
+
+	// Even with a target, step with no When should match
+	target := recipe.NewMatchTarget("linux", "amd64", "alpine", "musl")
+	deps := ResolveDependenciesForTarget(r, "linux", target)
+
+	if deps.InstallTime["curl"] != "latest" {
+		t.Errorf("InstallTime[curl] = %q, want %q", deps.InstallTime["curl"], "latest")
+	}
+}
+
+func TestResolveDependenciesForTarget_StructFieldTakesPrecedenceOverParams(t *testing.T) {
+	t.Parallel()
+	// When both struct field and Params have dependencies, struct field wins
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action:       "homebrew",
+				Dependencies: []string{"openssl-struct"},
+				Params: map[string]interface{}{
+					"formula":      "curl",
+					"dependencies": []interface{}{"openssl-params"}, // Should be ignored
+				},
+			},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	// Should have struct field value, not Params value
+	if deps.InstallTime["openssl-struct"] != "latest" {
+		t.Errorf("InstallTime[openssl-struct] = %q, want %q", deps.InstallTime["openssl-struct"], "latest")
+	}
+	if _, has := deps.InstallTime["openssl-params"]; has {
+		t.Errorf("InstallTime should not contain openssl-params, got %v", deps.InstallTime)
+	}
+}
+
+func TestResolveDependenciesForTarget_StepDependenciesWithVersions(t *testing.T) {
+	t.Parallel()
+	// Step dependencies can have version constraints
+	r := &recipe.Recipe{
+		Steps: []recipe.Step{
+			{
+				Action:       "homebrew",
+				Dependencies: []string{"openssl@3.1", "zlib@1.2.13"},
+				Params:       map[string]interface{}{"formula": "curl"},
+			},
+		},
+	}
+
+	deps := ResolveDependencies(r)
+
+	if deps.InstallTime["openssl"] != "3.1" {
+		t.Errorf("InstallTime[openssl] = %q, want %q", deps.InstallTime["openssl"], "3.1")
+	}
+	if deps.InstallTime["zlib"] != "1.2.13" {
+		t.Errorf("InstallTime[zlib] = %q, want %q", deps.InstallTime["zlib"], "1.2.13")
+	}
+}
