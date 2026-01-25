@@ -318,11 +318,12 @@ func (w *WhenClause) Matches(target Matchable) bool {
 // Step represents a single action step
 // We use interface{} for the full step data and extract fields manually
 type Step struct {
-	Action      string
-	When        *WhenClause
-	Note        string
-	Description string
-	Params      map[string]interface{}
+	Action       string
+	When         *WhenClause
+	Note         string
+	Description  string
+	Params       map[string]interface{}
+	Dependencies []string // Step-level dependencies, only resolved if this step matches target
 
 	// Pre-computed during loading - never nil after construction via NewStep
 	analysis *StepAnalysis
@@ -454,10 +455,26 @@ func (s *Step) UnmarshalTOML(data interface{}) error {
 		s.Description = desc
 	}
 
+	// Parse step-level dependencies array
+	if depsData, ok := stepMap["dependencies"]; ok {
+		switch v := depsData.(type) {
+		case []interface{}:
+			s.Dependencies = make([]string, 0, len(v))
+			for _, item := range v {
+				if str, ok := item.(string); ok {
+					s.Dependencies = append(s.Dependencies, str)
+				}
+			}
+		case string:
+			// Single string value, convert to array
+			s.Dependencies = []string{v}
+		}
+	}
+
 	// All other fields go into Params
 	s.Params = make(map[string]interface{})
 	for k, v := range stepMap {
-		if k != "action" && k != "when" && k != "note" && k != "description" {
+		if k != "action" && k != "when" && k != "note" && k != "description" && k != "dependencies" {
 			s.Params[k] = v
 		}
 	}
@@ -501,6 +518,11 @@ func (s Step) ToMap() map[string]interface{} {
 			whenMap["libc"] = s.When.Libc
 		}
 		result["when"] = whenMap
+	}
+
+	// Add step-level dependencies if set
+	if len(s.Dependencies) > 0 {
+		result["dependencies"] = s.Dependencies
 	}
 
 	// Add all params
