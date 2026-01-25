@@ -458,7 +458,7 @@ Note: The `timeline_tag` option is used here because SpatiaLite may use a differ
 
 | Task | Description |
 |------|-------------|
-| Register provider | Add `FossilSourceStrategy` to provider factory |
+| Register provider | Add `InferredFossilStrategy` to provider factory |
 | Register action | Add to action registry |
 | Unit tests | Test timeline parsing, URL construction, version mapping |
 | Integration tests | Test with real Fossil repos (SQLite, Fossil, Tcl) |

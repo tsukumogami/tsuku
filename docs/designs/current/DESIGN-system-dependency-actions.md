@@ -528,9 +528,9 @@ The `internal/platform` package provides target detection:
 
 ```
 internal/platform/
-├── family.go       # Linux family detection from /etc/os-release
+├── family.go       # Linux family detection and DetectTarget()
 ├── target.go       # Target struct (Platform, LinuxFamily)
-└── detect.go       # Host detection via DetectTarget()
+└── family_test.go  # Tests for family detection
 ```
 
 The `Target` struct captures both platform (os/arch) and Linux family:
@@ -550,35 +550,37 @@ Actions live in `internal/actions/` with one file per action category:
 
 ```
 internal/actions/
-├── action.go       # Action interface definition
-├── apt.go          # apt_install, apt_repo, apt_ppa
-├── dnf.go          # dnf_install, dnf_repo
-├── brew.go         # brew_install, brew_cask
-├── pacman.go       # pacman_install
-├── apk.go          # apk_install
-├── zypper.go       # zypper_install
-├── config.go       # group_add, service_enable, service_start
-├── verify.go       # require_command
-└── manual.go       # manual
+├── action.go           # Action interface definition
+├── system_action.go    # SystemAction interface and Constraint type
+├── apt_actions.go      # apt_install, apt_repo, apt_ppa
+├── dnf_actions.go      # dnf_install, dnf_repo
+├── brew_actions.go     # brew_install, brew_cask
+├── linux_pm_actions.go # pacman_install, apk_install, zypper_install
+├── system_config.go    # group_add, service_enable, service_start, require_command, manual
+└── preflight.go        # Preflight validation types
 ```
 
-Each action implements the `Action` interface:
+System actions implement the `SystemAction` interface, which extends the base `Action`:
 
 ```go
-type Action interface {
+type SystemAction interface {
+    Action  // Embeds base Action (Name, Execute, IsDeterministic, Dependencies)
+
+    // Validate checks that parameters are valid for this action.
+    Validate(params map[string]interface{}) error
+
     // ImplicitConstraint returns the built-in platform constraint (nil if none)
     ImplicitConstraint() *Constraint
 
-    // MatchesTarget checks if this action applies to the given target
-    MatchesTarget(target Target) bool
-
     // Describe generates human-readable instructions
-    Describe() string
+    Describe(params map[string]interface{}) string
 
-    // Validate performs preflight parameter validation
-    Validate() error
+    // IsExternallyManaged returns true if this action delegates to a package manager
+    IsExternallyManaged() bool
 }
 ```
+
+The `Constraint` type provides `MatchesTarget(target Target) bool` to check if a constraint is satisfied by a target.
 
 Package manager actions (apt_install, brew_cask, etc.) return non-nil constraints from `ImplicitConstraint()`. Other actions (require_command, group_add) return nil and rely on explicit `when` clauses.
 
@@ -587,26 +589,28 @@ Package manager actions (apt_install, brew_cask, etc.) return non-nil constraint
 Plan generation filters recipe steps against a target:
 
 ```go
-func FilterPlan(recipe *Recipe, target Target) *Plan {
-    var steps []Step
-    for _, step := range recipe.Steps {
-        action := ParseAction(step)
+func FilterStepsByTarget(steps []recipe.Step, target platform.Target) []recipe.Step {
+    var result []recipe.Step
+    for _, step := range steps {
+        action := actions.Get(step.Action)
 
         // Check action's implicit constraint
-        if c := action.ImplicitConstraint(); c != nil {
-            if !c.MatchesTarget(target) {
-                continue
+        if sysAction, ok := action.(actions.SystemAction); ok {
+            if constraint := sysAction.ImplicitConstraint(); constraint != nil {
+                if !constraint.MatchesTarget(target) {
+                    continue
+                }
             }
         }
 
         // Check explicit when clause
-        if step.When != nil && !step.When.Matches(target.Platform) {
+        if step.When != nil && !step.When.Matches(target) {
             continue
         }
 
-        steps = append(steps, step)
+        result = append(result, step)
     }
-    return &Plan{Steps: steps}
+    return result
 }
 ```
 
@@ -616,13 +620,13 @@ func FilterPlan(recipe *Recipe, target Target) *Plan {
 Recipe TOML
     │
     ▼
-ParseRecipe() ─────────────────────────────┐
+recipe.Load() ─────────────────────────────┐
     │                                      │
     ▼                                      │
 DetectTarget() ─► Target{linux/amd64, debian}
     │                                      │
     ▼                                      │
-FilterPlan(recipe, target) ◄───────────────┘
+FilterStepsByTarget(steps, target) ◄───────┘
     │
     ├──► Documentation: action.Describe() for each step
     │

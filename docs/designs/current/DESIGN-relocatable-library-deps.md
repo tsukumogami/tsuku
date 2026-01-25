@@ -439,16 +439,15 @@ This enables garbage collection when tools are removed.
 **RPATH Security:**
 - Never use bare `$ORIGIN` (allows library injection if binary is copied)
 - Always use subdirectory: `$ORIGIN/../lib`
-- tsuku controls `$TSUKU_HOME/` (user-private, mode 700)
+- tsuku controls `$TSUKU_HOME/` (user-private, mode 755)
 - Always inspect and strip existing RPATH values before setting new ones (prevents malicious bottles from injecting attacker-controlled paths)
 
 **Placeholder Relocation:**
 - `@@HOMEBREW_PREFIX@@` placeholder is exactly 19 characters
 - Replacement path must be <= 19 characters or use symlink workaround
 - Binary relocation uses null-padding to preserve file structure
-- Validate `$TSUKU_HOME` is an absolute path without `..` components
-- Reject paths containing shell metacharacters (`;`, `|`, `&`, `$`, backticks)
-- Use atomic file operations (write to temp, verify, rename) for binary patching
+- Validate individual inputs (formula names, RPATH values, patterns) for path traversal and shell metacharacters
+- Binary patching writes directly to files after making them writable; files are not executed during relocation
 
 ### Supply Chain Risks
 

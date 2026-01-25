@@ -172,10 +172,11 @@ On first telemetry-enabled command, display a notice to stderr:
 tsuku collects anonymous usage statistics to improve the tool.
 No personal information is collected. See: https://tsuku.dev/telemetry
 
-To opt out: export TSUKU_NO_TELEMETRY=1
+To opt out: tsuku config set telemetry false
+         or export TSUKU_NO_TELEMETRY=1
 ```
 
-State is persisted via a marker file (`~/.tsuku/telemetry_notice_shown`). The notice uses stderr to avoid interfering with command output (e.g., `tsuku list --json`).
+State is persisted via a marker file (`$TSUKU_HOME/telemetry_notice_shown`). The notice uses stderr to avoid interfering with command output (e.g., `tsuku list --json`).
 
 ### Integration Guidelines
 

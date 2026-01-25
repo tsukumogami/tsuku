@@ -315,40 +315,38 @@ Result: `install_deps=["go"]`, `runtime_deps=["go"]`
 
 ### Code Organization
 
-The implementation introduces new packages and modifies existing ones:
+The implementation extends the actions package and modifies the install package:
 
 ```
 internal/
 ├── actions/
-│   └── dependencies.go      # New: ActionDeps registry
-├── deps/
-│   ├── resolver.go          # New: Resolution algorithm
-│   ├── transitive.go        # New: Transitive resolution with cycle detection
-│   └── parser.go            # New: Version constraint parsing
+│   ├── action.go            # ActionDeps struct, Action interface with Dependencies() method
+│   ├── dependencies.go      # GetActionDeps helper, DetectShadowedDeps validation
+│   └── resolver.go          # ResolveDependencies, ResolveTransitive, cycle detection
 ├── install/
-│   ├── installer.go         # Modified: Use resolver before executing steps
-│   └── wrapper.go           # Modified: Generate wrappers with runtime PATH
-└── state/
-    └── state.go             # Modified: Track install/runtime deps
+│   ├── manager.go           # createWrappersForBinaries for runtime PATH injection
+│   └── state.go             # InstallDependencies, RuntimeDependencies in ToolState
+└── recipe/
+    └── types.go             # Dependencies, RuntimeDependencies, Extra* fields in MetadataSection
 ```
 
 ### High-Level Steps
 
-1. **Create the action dependency registry** - Define `ActionDeps` struct and populate `ActionDependencies` map with all ecosystem actions and their install-time/runtime requirements.
+1. **Create the action dependency interface** - Define `ActionDeps` struct in `action.go` with `InstallTime`, `Runtime`, `EvalTime`, and platform-specific fields. Each action implements `Dependencies()` returning its requirements.
 
-2. **Implement the resolution algorithm** - Build `resolve_dependencies()` that walks recipe steps, collects implicit deps from the registry, and applies overrides per the precedence rules.
+2. **Implement the resolution algorithm** - `ResolveDependencies()` in `resolver.go` walks recipe steps, calls `GetActionDeps()` for each action, aggregates implicit deps from primitives, and applies step-level and recipe-level overrides per precedence rules.
 
-3. **Add transitive resolution** - Recursively resolve dependencies up to depth 10, detecting cycles and returning clear errors.
+3. **Add transitive resolution** - `ResolveTransitive()` recursively loads dependency recipes and resolves their dependencies, with cycle detection via path tracking and `MaxTransitiveDepth` (10) enforcement.
 
-4. **Wire into the installer** - Before executing recipe steps, resolve all dependencies and ensure they're installed. Pass runtime deps to wrapper generation.
+4. **Wire into the installer** - The install command resolves dependencies before installation and passes `RuntimeDependencies` to `InstallOptions`. The manager uses this to decide between symlinks and wrappers.
 
-5. **Update wrapper generation** - Modify `GenerateWrapper()` to accept runtime dependencies and prepend their bin directories to PATH in the wrapper script.
+5. **Update wrapper generation** - `createWrappersForBinaries()` in `manager.go` creates shell scripts that prepend runtime dependency bin directories to PATH before exec'ing the actual binary.
 
-6. **Extend state tracking** - Add `install_dependencies` and `runtime_dependencies` fields to the state.json schema. Record dependencies during install.
+6. **Extend state tracking** - `ToolState` in `state.go` includes `InstallDependencies` and `RuntimeDependencies` fields ([]string). These are recorded during install and used by `tsuku info` and `tsuku remove`.
 
-7. **Add user-facing features** - Update `tsuku info` to display dependency trees. Update `tsuku remove` to warn about dependent tools.
+7. **Add user-facing features** - `tsuku info` displays dependency trees by calling `ResolveDependencies()` and `ResolveTransitive()`. `tsuku remove` warns when `RequiredBy` is non-empty.
 
-8. **Remove legacy bootstrap code** - Delete `EnsureNpm()`, `EnsurePipx()`, and similar functions from action implementations. The resolver now handles this uniformly.
+8. **Remove legacy bootstrap code** - The `EnsureNpm()`, `EnsurePipx()`, and similar functions have been removed from action implementations. The `bootstrap.go` file now only contains `CheckAndExposeHidden()` for exposing hidden execution dependencies.
 
 ### Migration Strategy
 
@@ -423,7 +421,7 @@ This feature is delivered as a **single milestone** with multiple implementation
 
 Build the foundation for dependency resolution.
 
-- `ActionDeps` struct and `ActionDependencies` registry
+- `ActionDeps` struct and `Action.Dependencies()` interface method
 - Resolution algorithm with precedence rules
 - Transitive resolution with cycle detection (max depth 10)
 - Version constraint parsing

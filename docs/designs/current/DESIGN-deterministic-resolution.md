@@ -108,7 +108,7 @@ The installation plan is the key artifact - a fully-resolved, deterministic spec
 **Deliverables**:
 - Refactor executor so all installations go through plan generation and execution
 - Re-install uses stored plan when version constraint exactly matches resolved version
-- `--refresh` flag to force fresh evaluation
+- `--fresh` flag to force fresh evaluation
 - Checksum verification during plan execution
 - Clear error on checksum mismatch (indicates upstream change)
 
@@ -122,7 +122,7 @@ The installation plan is the key artifact - a fully-resolved, deterministic spec
 - Dynamic constraint (`ripgrep`, `ripgrep@latest`, `go@1.x`): Always re-evaluate to resolve current version
 - When dynamic resolution yields a new version, inform user of the change
 
-**Behavior change**: For pinned versions, users must use `--refresh` to pick up upstream changes. This is intentional - determinism is the default for exact version pins.
+**Behavior change**: For pinned versions, users must use `--fresh` to pick up upstream changes. This is intentional - determinism is the default for exact version pins.
 
 ### Milestone 3: Plan-Based Installation
 
@@ -284,6 +284,7 @@ Plans are JSON documents containing:
 - `tsuku install <tool>`: Generate plan, then execute (current behavior, refactored internally)
 - `tsuku install --plan <file>`: Execute pre-computed plan
 - `tsuku plan show <tool>`: Display stored plan for installed tool
+- `tsuku plan export <tool>`: Export stored plan to a file for sharing or air-gapped use
 
 ### Plan Storage
 
@@ -311,7 +312,7 @@ Refactor the executor to use plans internally. All installations become plan-bas
 1. Split executor into `PlanGenerator` and `PlanExecutor` components
 2. Modify `tsuku install` to generate a plan, then execute it
 3. Store plans in state.json for installed tools
-4. Add `--refresh` flag to force re-evaluation for pinned versions
+4. Add `--fresh` flag to force re-evaluation for pinned versions
 5. Implement checksum verification with failure on mismatch
 
 After this milestone, re-installing a tool with a pinned version reuses the stored plan.
@@ -374,7 +375,7 @@ After this milestone, teams can generate plans on connected machines and execute
 
 - **Increased complexity**: The executor refactoring adds a new abstraction layer. Contributors must understand the plan concept when modifying installation logic.
 
-- **Behavior change for pinned versions**: Users expecting `tsuku install ripgrep@14.1.0` to pick up upstream fixes must now use `--refresh`. This trades convenience for security.
+- **Behavior change for pinned versions**: Users expecting `tsuku install ripgrep@14.1.0` to pick up upstream fixes must now use `--fresh`. This trades convenience for security.
 
 - **Storage overhead**: Plans stored in state.json increase its size. For users with many installed tools, this may become noticeable.
 
