@@ -1,19 +1,21 @@
 #!/usr/bin/env bash
 # Validate all golden files
-# Usage: ./scripts/validate-all-golden.sh [--os <linux|darwin>] [--category <embedded|registry>]
+# Usage: ./scripts/validate-all-golden.sh [--os <linux|darwin>] [--category <embedded|registry>] [--golden-dir <path>]
 #
 # Runs validate-golden.sh for each recipe with golden files.
 # Reports which recipes failed so you can investigate and selectively regenerate.
 #
 # Golden files are organized by category:
-#   - Embedded recipes: testdata/golden/plans/embedded/<recipe>/
-#   - Registry recipes: testdata/golden/plans/<letter>/<recipe>/
+#   - Embedded recipes: <golden-base>/embedded/<recipe>/
+#   - Registry recipes: <golden-base>/<letter>/<recipe>/
 #
 # Options:
 #   --os <os>          Only validate golden files for the specified OS (linux or darwin)
 #                      This is useful for platform-specific CI runners.
 #   --category <cat>   Only validate recipes of the specified category (embedded or registry)
 #                      If not specified, validates both categories.
+#   --golden-dir <dir> Use custom golden files directory instead of testdata/golden/plans
+#                      Useful for validating against R2-downloaded golden files.
 #
 # Exit codes:
 #   0: All golden files match
@@ -24,18 +26,21 @@ set -euo pipefail
 # Parse arguments
 FILTER_OS=""
 FILTER_CATEGORY=""
+CUSTOM_GOLDEN_DIR=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --os)       FILTER_OS="$2"; shift 2 ;;
-        --category) FILTER_CATEGORY="$2"; shift 2 ;;
+        --os)         FILTER_OS="$2"; shift 2 ;;
+        --category)   FILTER_CATEGORY="$2"; shift 2 ;;
+        --golden-dir) CUSTOM_GOLDEN_DIR="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: $0 [--os <linux|darwin>] [--category <embedded|registry>]"
+            echo "Usage: $0 [--os <linux|darwin>] [--category <embedded|registry>] [--golden-dir <path>]"
             echo ""
             echo "Validate all golden files."
             echo ""
             echo "Options:"
             echo "  --os <os>          Only validate golden files for the specified OS"
             echo "  --category <cat>   Only validate embedded or registry recipes"
+            echo "  --golden-dir <dir> Use custom golden files directory"
             exit 0
             ;;
         *)         echo "Unknown argument: $1" >&2; exit 1 ;;
@@ -52,8 +57,17 @@ fi
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-# Paths
-GOLDEN_BASE="$REPO_ROOT/testdata/golden/plans"
+# Paths - use custom golden dir if specified
+if [[ -n "$CUSTOM_GOLDEN_DIR" ]]; then
+    # Convert to absolute path if relative
+    if [[ "$CUSTOM_GOLDEN_DIR" = /* ]]; then
+        GOLDEN_BASE="$CUSTOM_GOLDEN_DIR"
+    else
+        GOLDEN_BASE="$REPO_ROOT/$CUSTOM_GOLDEN_DIR"
+    fi
+else
+    GOLDEN_BASE="$REPO_ROOT/testdata/golden/plans"
+fi
 
 # Check golden directory exists
 if [[ ! -d "$GOLDEN_BASE" ]]; then
@@ -82,6 +96,9 @@ validate_embedded() {
         if [[ -n "$FILTER_OS" ]]; then
             VALIDATE_ARGS+=("--os" "$FILTER_OS")
         fi
+        if [[ -n "$CUSTOM_GOLDEN_DIR" ]]; then
+            VALIDATE_ARGS+=("--golden-dir" "$CUSTOM_GOLDEN_DIR")
+        fi
 
         if ! "$SCRIPT_DIR/validate-golden.sh" "${VALIDATE_ARGS[@]}"; then
             FAILED+=("$recipe")
@@ -105,6 +122,9 @@ validate_registry() {
             VALIDATE_ARGS=("$recipe" "--category" "registry")
             if [[ -n "$FILTER_OS" ]]; then
                 VALIDATE_ARGS+=("--os" "$FILTER_OS")
+            fi
+            if [[ -n "$CUSTOM_GOLDEN_DIR" ]]; then
+                VALIDATE_ARGS+=("--golden-dir" "$CUSTOM_GOLDEN_DIR")
             fi
 
             # Check if this is a testdata recipe (not in main recipes directory)

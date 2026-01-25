@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Validate golden files for a single recipe
-# Usage: ./scripts/validate-golden.sh <recipe> [--recipe <path>] [--os <linux|darwin>] [--category <embedded|registry>]
+# Usage: ./scripts/validate-golden.sh <recipe> [--recipe <path>] [--os <linux|darwin>] [--category <embedded|registry>] [--golden-dir <path>]
 #
 # Compares current plan generation output against stored golden files.
 # Uses fast hash comparison first, then shows diff on mismatch.
 #
 # Golden files are organized by category:
-#   - Embedded recipes: testdata/golden/plans/embedded/<recipe>/
-#   - Registry recipes: testdata/golden/plans/<letter>/<recipe>/
+#   - Embedded recipes: <golden-base>/embedded/<recipe>/
+#   - Registry recipes: <golden-base>/<letter>/<recipe>/
 #
 # Examples:
 #   ./scripts/validate-golden.sh go                    # auto-detects embedded
@@ -15,6 +15,7 @@
 #   ./scripts/validate-golden.sh go --category embedded
 #   ./scripts/validate-golden.sh fzf --os linux
 #   ./scripts/validate-golden.sh build-tools-system --recipe testdata/recipes/build-tools-system.toml
+#   ./scripts/validate-golden.sh fzf --golden-dir r2-golden-files/plans
 #
 # Exit codes:
 #   0: All golden files match
@@ -42,22 +43,25 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Paths
 RECIPE_BASE="$REPO_ROOT/internal/recipe/recipes"
-GOLDEN_BASE="$REPO_ROOT/testdata/golden/plans"
 TSUKU="$REPO_ROOT/tsuku"
+
+# Golden base - use custom dir if specified (set after argument parsing)
 
 # Parse arguments
 RECIPE=""
 CUSTOM_RECIPE_PATH=""
 FILTER_OS=""
 CATEGORY=""
+CUSTOM_GOLDEN_DIR=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
-        --recipe)    CUSTOM_RECIPE_PATH="$2"; shift 2 ;;
-        --os)        FILTER_OS="$2"; shift 2 ;;
-        --category)  CATEGORY="$2"; shift 2 ;;
+        --recipe)     CUSTOM_RECIPE_PATH="$2"; shift 2 ;;
+        --os)         FILTER_OS="$2"; shift 2 ;;
+        --category)   CATEGORY="$2"; shift 2 ;;
+        --golden-dir) CUSTOM_GOLDEN_DIR="$2"; shift 2 ;;
         -h|--help)
-            echo "Usage: $0 <recipe> [--recipe <path>] [--os <linux|darwin>] [--category <embedded|registry>]"
+            echo "Usage: $0 <recipe> [--recipe <path>] [--os <linux|darwin>] [--category <embedded|registry>] [--golden-dir <path>]"
             echo ""
             echo "Validate golden files for a recipe."
             echo ""
@@ -65,6 +69,7 @@ while [[ $# -gt 0 ]]; do
             echo "  --recipe <path>       Use custom recipe path (e.g., testdata/recipes/foo.toml)"
             echo "  --os <os>             Only validate golden files for the specified OS (linux or darwin)"
             echo "  --category <cat>      Force category (embedded or registry). Auto-detected if not specified."
+            echo "  --golden-dir <dir>    Use custom golden files directory"
             exit 0
             ;;
         -*)        echo "Unknown flag: $1" >&2; exit 2 ;;
@@ -76,6 +81,18 @@ done
 if [[ -z "$RECIPE" ]]; then
     echo "Usage: $0 <recipe> [--recipe <path>] [--os <linux|darwin>]" >&2
     exit 2
+fi
+
+# Set golden base directory
+if [[ -n "$CUSTOM_GOLDEN_DIR" ]]; then
+    # Convert to absolute path if relative
+    if [[ "$CUSTOM_GOLDEN_DIR" = /* ]]; then
+        GOLDEN_BASE="$CUSTOM_GOLDEN_DIR"
+    else
+        GOLDEN_BASE="$REPO_ROOT/$CUSTOM_GOLDEN_DIR"
+    fi
+else
+    GOLDEN_BASE="$REPO_ROOT/testdata/golden/plans"
 fi
 
 # Build tsuku if not present
