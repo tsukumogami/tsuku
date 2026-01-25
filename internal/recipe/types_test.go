@@ -2295,7 +2295,7 @@ func TestRecipe_IsExternallyManagedFor_AllExternallyManaged(t *testing.T) {
 		return mockExternalAction{}
 	}
 
-	target := NewMatchTarget("darwin", "arm64", "")
+	target := NewMatchTarget("darwin", "arm64", "", "")
 
 	if !recipe.IsExternallyManagedFor(target, lookup) {
 		t.Error("IsExternallyManagedFor() = false for all externally managed actions, want true")
@@ -2318,7 +2318,7 @@ func TestRecipe_IsExternallyManagedFor_MixedActions(t *testing.T) {
 		return mockNonSystemAction{} // download doesn't implement SystemAction
 	}
 
-	target := NewMatchTarget("darwin", "arm64", "")
+	target := NewMatchTarget("darwin", "arm64", "", "")
 
 	if recipe.IsExternallyManagedFor(target, lookup) {
 		t.Error("IsExternallyManagedFor() = true for mixed actions, want false")
@@ -2334,7 +2334,7 @@ func TestRecipe_IsExternallyManagedFor_NoSteps(t *testing.T) {
 		return nil
 	}
 
-	target := NewMatchTarget("darwin", "arm64", "")
+	target := NewMatchTarget("darwin", "arm64", "", "")
 
 	// Empty recipe is considered externally managed (nothing to recurse into)
 	if !recipe.IsExternallyManagedFor(target, lookup) {
@@ -2363,13 +2363,13 @@ func TestRecipe_IsExternallyManagedFor_WhenClauseFiltering(t *testing.T) {
 	}
 
 	// Test darwin target - only brew_install applies
-	darwinTarget := NewMatchTarget("darwin", "arm64", "")
+	darwinTarget := NewMatchTarget("darwin", "arm64", "", "")
 	if !recipe.IsExternallyManagedFor(darwinTarget, lookup) {
 		t.Error("IsExternallyManagedFor(darwin) = false, want true")
 	}
 
 	// Test linux target - only apt_install applies
-	linuxTarget := NewMatchTarget("linux", "amd64", "debian")
+	linuxTarget := NewMatchTarget("linux", "amd64", "debian", "glibc")
 	if !recipe.IsExternallyManagedFor(linuxTarget, lookup) {
 		t.Error("IsExternallyManagedFor(linux) = false, want true")
 	}
@@ -2399,13 +2399,13 @@ func TestRecipe_IsExternallyManagedFor_WhenClauseFiltersOut(t *testing.T) {
 	}
 
 	// Test darwin target - download step is filtered out, only brew_install applies
-	darwinTarget := NewMatchTarget("darwin", "arm64", "")
+	darwinTarget := NewMatchTarget("darwin", "arm64", "", "")
 	if !recipe.IsExternallyManagedFor(darwinTarget, lookup) {
 		t.Error("IsExternallyManagedFor(darwin) = false, want true (download filtered out)")
 	}
 
 	// Test linux target - brew_install filtered out, download applies
-	linuxTarget := NewMatchTarget("linux", "amd64", "debian")
+	linuxTarget := NewMatchTarget("linux", "amd64", "debian", "glibc")
 	if recipe.IsExternallyManagedFor(linuxTarget, lookup) {
 		t.Error("IsExternallyManagedFor(linux) = true, want false (download applies)")
 	}
@@ -2422,7 +2422,7 @@ func TestRecipe_IsExternallyManagedFor_UnknownAction(t *testing.T) {
 		return nil // Unknown action
 	}
 
-	target := NewMatchTarget("darwin", "arm64", "")
+	target := NewMatchTarget("darwin", "arm64", "", "")
 
 	// Unknown action should return false (conservative)
 	if recipe.IsExternallyManagedFor(target, lookup) {
@@ -2441,7 +2441,7 @@ func TestRecipe_IsExternallyManagedFor_NonExternalSystemAction(t *testing.T) {
 		return mockNonExternalAction{} // Implements SystemAction but IsExternallyManaged() == false
 	}
 
-	target := NewMatchTarget("darwin", "arm64", "")
+	target := NewMatchTarget("darwin", "arm64", "", "")
 
 	if recipe.IsExternallyManagedFor(target, lookup) {
 		t.Error("IsExternallyManagedFor() = true for non-external SystemAction, want false")
@@ -2464,7 +2464,7 @@ func TestRecipe_IsExternallyManagedFor_AllStepsFilteredOut(t *testing.T) {
 	}
 
 	// Test darwin target - all steps are filtered out
-	darwinTarget := NewMatchTarget("darwin", "arm64", "")
+	darwinTarget := NewMatchTarget("darwin", "arm64", "", "")
 	if !recipe.IsExternallyManagedFor(darwinTarget, lookup) {
 		t.Error("IsExternallyManagedFor() = false when all steps filtered out, want true")
 	}

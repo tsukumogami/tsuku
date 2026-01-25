@@ -98,7 +98,12 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 
 	// Construct target for step filtering
 	// This target is used to filter steps by both explicit When clauses and implicit action constraints
-	target := platform.NewTarget(targetOS+"/"+targetArch, linuxFamily)
+	// Detect libc on Linux platforms
+	var libc string
+	if targetOS == "linux" {
+		libc = platform.DetectLibc()
+	}
+	target := platform.NewTarget(targetOS+"/"+targetArch, linuxFamily, libc)
 
 	// Create version resolver
 	resolver := version.New()

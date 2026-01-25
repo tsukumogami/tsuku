@@ -91,7 +91,7 @@ func TestGetSystemDepsForTarget(t *testing.T) {
 				{Action: "apt_install", Params: map[string]interface{}{"packages": []interface{}{"docker-ce"}}},
 				{Action: "brew_install", Params: map[string]interface{}{"formula": "docker"}},
 			},
-			target:     platform.NewTarget("linux/amd64", "debian"),
+			target:     platform.NewTarget("linux/amd64", "debian", "glibc"),
 			wantCount:  1,
 			wantAction: "apt_install",
 		},
@@ -101,7 +101,7 @@ func TestGetSystemDepsForTarget(t *testing.T) {
 				{Action: "apt_install", Params: map[string]interface{}{"packages": []interface{}{"docker-ce"}}},
 				{Action: "brew_install", Params: map[string]interface{}{"formula": "docker"}},
 			},
-			target:     platform.NewTarget("darwin/arm64", ""),
+			target:     platform.NewTarget("darwin/arm64", "", ""),
 			wantCount:  1,
 			wantAction: "brew_install",
 		},
@@ -111,7 +111,7 @@ func TestGetSystemDepsForTarget(t *testing.T) {
 				{Action: "download"},
 				{Action: "extract"},
 			},
-			target:    platform.NewTarget("linux/amd64", "debian"),
+			target:    platform.NewTarget("linux/amd64", "debian", "glibc"),
 			wantCount: 0,
 		},
 	}
@@ -138,42 +138,42 @@ func TestGetTargetDisplayName(t *testing.T) {
 	}{
 		{
 			name:   "darwin returns macOS",
-			target: platform.NewTarget("darwin/arm64", ""),
+			target: platform.NewTarget("darwin/arm64", "", ""),
 			want:   "macOS",
 		},
 		{
 			name:   "debian family",
-			target: platform.NewTarget("linux/amd64", "debian"),
+			target: platform.NewTarget("linux/amd64", "debian", "glibc"),
 			want:   "Ubuntu/Debian",
 		},
 		{
 			name:   "rhel family",
-			target: platform.NewTarget("linux/amd64", "rhel"),
+			target: platform.NewTarget("linux/amd64", "rhel", "glibc"),
 			want:   "Fedora/RHEL/CentOS",
 		},
 		{
 			name:   "arch family",
-			target: platform.NewTarget("linux/amd64", "arch"),
+			target: platform.NewTarget("linux/amd64", "arch", "glibc"),
 			want:   "Arch Linux",
 		},
 		{
 			name:   "alpine family",
-			target: platform.NewTarget("linux/amd64", "alpine"),
+			target: platform.NewTarget("linux/amd64", "alpine", "musl"),
 			want:   "Alpine Linux",
 		},
 		{
 			name:   "suse family",
-			target: platform.NewTarget("linux/amd64", "suse"),
+			target: platform.NewTarget("linux/amd64", "suse", "glibc"),
 			want:   "openSUSE/SLES",
 		},
 		{
 			name:   "unknown family returns raw value",
-			target: platform.NewTarget("linux/amd64", "gentoo"),
+			target: platform.NewTarget("linux/amd64", "gentoo", "glibc"),
 			want:   "gentoo",
 		},
 		{
 			name:   "linux without family returns os",
-			target: platform.NewTarget("linux/amd64", ""),
+			target: platform.NewTarget("linux/amd64", "", "glibc"),
 			want:   "linux",
 		},
 	}

@@ -123,49 +123,49 @@ func TestTarget_LinuxFamily(t *testing.T) {
 	}{
 		{
 			name:        "debian family on linux",
-			target:      NewTarget("linux/amd64", "debian"),
+			target:      NewTarget("linux/amd64", "debian", "glibc"),
 			wantOS:      "linux",
 			wantFamily:  "debian",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
 			name:        "rhel family on linux",
-			target:      NewTarget("linux/arm64", "rhel"),
+			target:      NewTarget("linux/arm64", "rhel", "glibc"),
 			wantOS:      "linux",
 			wantFamily:  "rhel",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
 			name:        "arch family on linux",
-			target:      NewTarget("linux/amd64", "arch"),
+			target:      NewTarget("linux/amd64", "arch", "glibc"),
 			wantOS:      "linux",
 			wantFamily:  "arch",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
 			name:        "alpine family on linux",
-			target:      NewTarget("linux/amd64", "alpine"),
+			target:      NewTarget("linux/amd64", "alpine", "musl"),
 			wantOS:      "linux",
 			wantFamily:  "alpine",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
 			name:        "suse family on linux",
-			target:      NewTarget("linux/amd64", "suse"),
+			target:      NewTarget("linux/amd64", "suse", "glibc"),
 			wantOS:      "linux",
 			wantFamily:  "suse",
 			description: "LinuxFamily set for Linux platform",
 		},
 		{
 			name:        "darwin has no family",
-			target:      NewTarget("darwin/arm64", ""),
+			target:      NewTarget("darwin/arm64", "", ""),
 			wantOS:      "darwin",
 			wantFamily:  "",
 			description: "LinuxFamily empty for non-Linux",
 		},
 		{
 			name:        "windows has no family",
-			target:      NewTarget("windows/amd64", ""),
+			target:      NewTarget("windows/amd64", "", ""),
 			wantOS:      "windows",
 			wantFamily:  "",
 			description: "LinuxFamily empty for non-Linux",
@@ -179,6 +179,43 @@ func TestTarget_LinuxFamily(t *testing.T) {
 			}
 			if got := tt.target.LinuxFamily(); got != tt.wantFamily {
 				t.Errorf("Target.LinuxFamily() = %q, want %q", got, tt.wantFamily)
+			}
+		})
+	}
+}
+
+func TestTarget_Libc(t *testing.T) {
+	tests := []struct {
+		name     string
+		target   Target
+		wantLibc string
+	}{
+		{
+			name:     "glibc on debian",
+			target:   NewTarget("linux/amd64", "debian", "glibc"),
+			wantLibc: "glibc",
+		},
+		{
+			name:     "musl on alpine",
+			target:   NewTarget("linux/amd64", "alpine", "musl"),
+			wantLibc: "musl",
+		},
+		{
+			name:     "empty libc on darwin",
+			target:   NewTarget("darwin/arm64", "", ""),
+			wantLibc: "",
+		},
+		{
+			name:     "empty libc on windows",
+			target:   NewTarget("windows/amd64", "", ""),
+			wantLibc: "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.target.Libc(); got != tt.wantLibc {
+				t.Errorf("Target.Libc() = %q, want %q", got, tt.wantLibc)
 			}
 		})
 	}

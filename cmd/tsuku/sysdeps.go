@@ -204,10 +204,12 @@ func resolveTarget(familyOverride string) (platform.Target, error) {
 		}
 
 		// For family override, assume linux platform
+		// Detect libc for linux targets
+		libc := platform.DetectLibc()
 		if runtime.GOOS != "linux" {
-			return platform.NewTarget("linux/amd64", familyOverride), nil
+			return platform.NewTarget("linux/amd64", familyOverride, libc), nil
 		}
-		return platform.NewTarget(platformStr, familyOverride), nil
+		return platform.NewTarget(platformStr, familyOverride, libc), nil
 	}
 
 	// Use platform detection

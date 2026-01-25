@@ -119,7 +119,7 @@ func DetectFamily() (string, error) {
 }
 
 // DetectTarget returns the full target tuple for the current host.
-// For non-Linux platforms, returns Target with empty LinuxFamily.
+// For non-Linux platforms, returns Target with empty LinuxFamily and Libc.
 func DetectTarget() (Target, error) {
 	platform := runtime.GOOS + "/" + runtime.GOARCH
 	if runtime.GOOS != "linux" {
@@ -131,5 +131,6 @@ func DetectTarget() (Target, error) {
 		return Target{}, err
 	}
 
-	return NewTarget(platform, family), nil
+	libc := DetectLibc()
+	return NewTarget(platform, family, libc), nil
 }
