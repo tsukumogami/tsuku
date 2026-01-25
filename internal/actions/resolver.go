@@ -59,7 +59,23 @@ func ResolveDependencies(r *recipe.Recipe) ResolvedDeps {
 
 // ResolveDependenciesForPlatform resolves dependencies for a specific target OS.
 // This allows testing platform-specific behavior without mocking runtime.GOOS.
+// Note: This function resolves dependencies from ALL steps regardless of When clauses.
+// For platform-filtered step-level dependencies, use ResolveDependenciesForTarget instead.
 func ResolveDependenciesForPlatform(r *recipe.Recipe, targetOS string) ResolvedDeps {
+	return ResolveDependenciesForTarget(r, targetOS, nil)
+}
+
+// ResolveDependenciesForTarget resolves dependencies for a specific target.
+// When target is non-nil, step-level dependencies are only resolved if the step's
+// When clause matches the target. This prevents "phantom dependencies" where
+// platform-incompatible dependencies appear in installation plans.
+//
+// Parameters:
+//   - r: Recipe to resolve dependencies for
+//   - targetOS: Target operating system (used for platform-specific action deps)
+//   - target: Optional Matchable target for filtering step-level dependencies.
+//     If nil, all steps contribute their dependencies (backward-compatible behavior).
+func ResolveDependenciesForTarget(r *recipe.Recipe, targetOS string, target recipe.Matchable) ResolvedDeps {
 	result := ResolvedDeps{
 		InstallTime: make(map[string]string),
 		Runtime:     make(map[string]string),
@@ -67,6 +83,13 @@ func ResolveDependenciesForPlatform(r *recipe.Recipe, targetOS string) ResolvedD
 
 	// Phase 1: Collect from steps
 	for _, step := range r.Steps {
+		// Check if step matches target when target filtering is enabled
+		// If target is nil, process all steps (backward compatibility)
+		// If target is provided and step has a When clause, skip non-matching steps
+		if target != nil && step.When != nil && !step.When.Matches(target) {
+			continue // Step doesn't match target, skip its dependencies
+		}
+
 		actionDeps := GetActionDeps(step.Action)
 
 		// Aggregate dependencies from primitive actions if this is a composite action
@@ -86,7 +109,12 @@ func ResolveDependenciesForPlatform(r *recipe.Recipe, targetOS string) ResolvedD
 		actionDeps = combinedDeps
 
 		// Install-time: step replace OR (action implicit + platform-specific + step extend)
-		if stepDeps := getStringSliceParam(step.Params, "dependencies"); stepDeps != nil {
+		// Check struct field first (new approach), then Params (backward compatibility)
+		stepDeps := step.Dependencies
+		if stepDeps == nil {
+			stepDeps = getStringSliceParam(step.Params, "dependencies")
+		}
+		if stepDeps != nil {
 			// Step-level replace: use only what's declared
 			for _, dep := range stepDeps {
 				name, version := parseDependency(dep)

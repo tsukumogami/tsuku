@@ -365,6 +365,139 @@ when = { os = ["linux"] }
 	}
 }
 
+func TestStep_UnmarshalTOML_Dependencies(t *testing.T) {
+	tests := []struct {
+		name     string
+		toml     string
+		wantDeps []string
+	}{
+		{
+			name: "dependencies array",
+			toml: `
+[[steps]]
+action = "homebrew"
+formula = "curl"
+dependencies = ["openssl", "zlib"]
+`,
+			wantDeps: []string{"openssl", "zlib"},
+		},
+		{
+			name: "single dependency string",
+			toml: `
+[[steps]]
+action = "homebrew"
+formula = "curl"
+dependencies = "openssl"
+`,
+			wantDeps: []string{"openssl"},
+		},
+		{
+			name: "no dependencies",
+			toml: `
+[[steps]]
+action = "homebrew"
+formula = "curl"
+`,
+			wantDeps: nil,
+		},
+		{
+			name: "dependencies with version",
+			toml: `
+[[steps]]
+action = "homebrew"
+formula = "curl"
+dependencies = ["openssl@3.1", "zlib@1.2.13"]
+`,
+			wantDeps: []string{"openssl@3.1", "zlib@1.2.13"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var recipe struct {
+				Steps []Step `toml:"steps"`
+			}
+
+			err := toml.Unmarshal([]byte(tt.toml), &recipe)
+			if err != nil {
+				t.Fatalf("Unmarshal() error = %v", err)
+			}
+
+			if len(recipe.Steps) != 1 {
+				t.Fatalf("Steps length = %d, want 1", len(recipe.Steps))
+			}
+
+			step := recipe.Steps[0]
+
+			// Dependencies should be in struct field, not Params
+			if !equalStringSlice(step.Dependencies, tt.wantDeps) {
+				t.Errorf("Dependencies = %v, want %v", step.Dependencies, tt.wantDeps)
+			}
+
+			// 'dependencies' should not be in Params
+			if _, ok := step.Params["dependencies"]; ok {
+				t.Error("'dependencies' should not be in Params")
+			}
+		})
+	}
+}
+
+func TestStep_ToMap_Dependencies(t *testing.T) {
+	step := Step{
+		Action:       "homebrew",
+		Dependencies: []string{"openssl", "zlib"},
+		Params: map[string]interface{}{
+			"formula": "curl",
+		},
+	}
+
+	m := step.ToMap()
+
+	// Check dependencies is serialized
+	deps, ok := m["dependencies"]
+	if !ok {
+		t.Fatal("dependencies should be in ToMap result")
+	}
+
+	depsSlice, ok := deps.([]string)
+	if !ok {
+		t.Fatalf("dependencies should be []string, got %T", deps)
+	}
+
+	if !equalStringSlice(depsSlice, []string{"openssl", "zlib"}) {
+		t.Errorf("dependencies = %v, want [openssl, zlib]", depsSlice)
+	}
+}
+
+func TestStep_ToMap_NoDependencies(t *testing.T) {
+	step := Step{
+		Action: "run_command",
+		Params: map[string]interface{}{
+			"command": "echo hello",
+		},
+	}
+
+	m := step.ToMap()
+
+	// Check dependencies is NOT serialized when empty
+	if _, ok := m["dependencies"]; ok {
+		t.Error("dependencies should not be in ToMap result when empty")
+	}
+}
+
+// equalStringSlice compares two string slices for equality
+func equalStringSlice(a, b []string) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
+}
+
 func TestRecipe_UnmarshalTOML_InvalidTOML(t *testing.T) {
 	tomlData := `
 [metadata

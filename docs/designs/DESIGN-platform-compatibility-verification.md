@@ -31,7 +31,7 @@ graph TD
     subgraph "M47 - Platform Compatibility Verification"
         I1109["#1109: libc detection"]:::done
         I1110["#1110: libc filter"]:::done
-        I1111["#1111: step-level deps"]:::ready
+        I1111["#1111: step-level deps"]:::done
         I1112["#1112: system_dependency action"]:::ready
         I1113["#1113: supported_libc constraint"]:::ready
         I1114["#1114: recipe migration"]:::blocked
