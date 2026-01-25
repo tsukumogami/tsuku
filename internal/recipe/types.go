@@ -239,13 +239,15 @@ type WhenClause struct {
 	Arch           string   `toml:"arch,omitempty"`            // Architecture filter: "amd64", "arm64"
 	LinuxFamily    string   `toml:"linux_family,omitempty"`    // Linux family filter: "debian", "rhel", etc.
 	PackageManager string   `toml:"package_manager,omitempty"` // Runtime check (brew, apt, etc.)
+	Libc           []string `toml:"libc,omitempty"`            // Libc filter: ["glibc"], ["musl"], or both
 }
 
 // IsEmpty returns true if the when clause has no conditions (matches all platforms).
 func (w *WhenClause) IsEmpty() bool {
 	return w == nil ||
 		(len(w.Platform) == 0 && len(w.OS) == 0 &&
-			w.Arch == "" && w.LinuxFamily == "" && w.PackageManager == "")
+			w.Arch == "" && w.LinuxFamily == "" && w.PackageManager == "" &&
+			len(w.Libc) == 0)
 }
 
 // Matches returns true if the when clause conditions are satisfied for the given target.
@@ -293,6 +295,21 @@ func (w *WhenClause) Matches(target Matchable) bool {
 	// Check LinuxFamily filter
 	if w.LinuxFamily != "" && w.LinuxFamily != linuxFamily {
 		return false
+	}
+
+	// Check Libc filter (only applicable on Linux)
+	if len(w.Libc) > 0 && os == "linux" {
+		libc := target.Libc()
+		libcMatch := false
+		for _, l := range w.Libc {
+			if l == libc {
+				libcMatch = true
+				break
+			}
+		}
+		if !libcMatch {
+			return false
+		}
 	}
 
 	return true
@@ -407,6 +424,22 @@ func (s *Step) UnmarshalTOML(data interface{}) error {
 			s.When.LinuxFamily = linuxFamily
 		}
 
+		// Parse libc array
+		if libcData, ok := whenData["libc"]; ok {
+			switch v := libcData.(type) {
+			case []interface{}:
+				s.When.Libc = make([]string, 0, len(v))
+				for _, item := range v {
+					if str, ok := item.(string); ok {
+						s.When.Libc = append(s.When.Libc, str)
+					}
+				}
+			case string:
+				// Single string value, convert to array
+				s.When.Libc = []string{v}
+			}
+		}
+
 		// Validate mutual exclusivity
 		if len(s.When.Platform) > 0 && len(s.When.OS) > 0 {
 			return fmt.Errorf("when clause cannot have both 'platform' and 'os' fields")
@@ -463,6 +496,9 @@ func (s Step) ToMap() map[string]interface{} {
 		}
 		if s.When.PackageManager != "" {
 			whenMap["package_manager"] = s.When.PackageManager
+		}
+		if len(s.When.Libc) > 0 {
+			whenMap["libc"] = s.When.Libc
 		}
 		result["when"] = whenMap
 	}

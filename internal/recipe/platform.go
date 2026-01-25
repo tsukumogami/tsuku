@@ -3,7 +3,10 @@ package recipe
 import (
 	"fmt"
 	"runtime"
+	"slices"
 	"strings"
+
+	"github.com/tsukumogami/tsuku/internal/platform"
 )
 
 // UnsupportedPlatformError is returned when a recipe doesn't support the current platform
@@ -318,21 +321,21 @@ func (r *Recipe) ValidateStepsAgainstPlatforms() []error {
 		// Validate when clause platform tuples and OS arrays
 		if step.When != nil {
 			// Validate platform tuples exist in supported platforms
-			for _, platform := range step.When.Platform {
+			for _, p := range step.When.Platform {
 				// Check tuple format
-				if !strings.Contains(platform, "/") {
+				if !strings.Contains(p, "/") {
 					errors = append(errors, &StepValidationError{
 						StepIndex: i,
-						Message:   fmt.Sprintf("when.platform contains invalid tuple '%s' (must be 'os/arch' format)", platform),
+						Message:   fmt.Sprintf("when.platform contains invalid tuple '%s' (must be 'os/arch' format)", p),
 					})
 					continue
 				}
 
 				// Check against supported platforms
-				if !containsString(platforms, platform) {
+				if !containsString(platforms, p) {
 					errors = append(errors, &StepValidationError{
 						StepIndex: i,
-						Message:   fmt.Sprintf("when.platform contains '%s' which is not in the recipe's supported platforms", platform),
+						Message:   fmt.Sprintf("when.platform contains '%s' which is not in the recipe's supported platforms", p),
 					})
 				}
 			}
@@ -344,6 +347,27 @@ func (r *Recipe) ValidateStepsAgainstPlatforms() []error {
 						StepIndex: i,
 						Message:   fmt.Sprintf("when.os contains '%s' which is not in the recipe's supported platforms", os),
 					})
+				}
+			}
+
+			// Validate libc filter
+			if len(step.When.Libc) > 0 {
+				// libc filter is only valid when OS is omitted or includes "linux"
+				if len(step.When.OS) > 0 && !slices.Contains(step.When.OS, "linux") {
+					errors = append(errors, &StepValidationError{
+						StepIndex: i,
+						Message:   "when.libc is only valid when os includes 'linux' or is omitted",
+					})
+				}
+
+				// Validate libc values
+				for _, libc := range step.When.Libc {
+					if !slices.Contains(platform.ValidLibcTypes, libc) {
+						errors = append(errors, &StepValidationError{
+							StepIndex: i,
+							Message:   fmt.Sprintf("when.libc contains invalid value '%s'; must be one of: %v", libc, platform.ValidLibcTypes),
+						})
+					}
 				}
 			}
 		}
