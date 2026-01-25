@@ -239,13 +239,15 @@ Step-level dependencies provide clean semantics:
 
 ### Overview
 
-The solution has five components:
+The solution has seven components:
 
 1. **Libc detection** - Detect glibc vs musl at runtime
 2. **Libc recipe filter** - Add `libc` to recipe conditional system
 3. **Step-level dependencies** - Dependencies declared per-step, only resolved if step matches
 4. **System dependency action** - For musl systems, guide users to install system packages
-5. **Hybrid CI test matrix** - Native runners + containers for comprehensive coverage
+5. **Platform support matrix** - Clear three-way split (glibc/musl/darwin)
+6. **Dependency precedence rules** - How recipe-level and step-level deps interact
+7. **Hybrid CI test matrix** - Native runners + containers for comprehensive coverage
 
 ### Component 1: Libc Detection
 
@@ -368,6 +370,31 @@ func (g *PlanGenerator) resolveStepDependencies(step *Step, target *Target) ([]P
 
 For musl systems, a new action that checks for system packages and guides installation.
 
+**Structured error type:**
+
+```go
+// DependencyMissingError is a sentinel error type for missing system dependencies.
+// The CLI uses this to provide specialized output (colored, formatted).
+type DependencyMissingError struct {
+    Library string
+    Package string
+    Command string
+    Family  string
+}
+
+func (e *DependencyMissingError) Error() string {
+    return fmt.Sprintf("missing system dependency: %s (install with: %s)", e.Library, e.Command)
+}
+
+// IsDependencyMissing checks if an error is a missing dependency error.
+func IsDependencyMissing(err error) bool {
+    var depErr *DependencyMissingError
+    return errors.As(err, &depErr)
+}
+```
+
+**Action implementation:**
+
 ```go
 type SystemDependencyAction struct{ BaseAction }
 
@@ -387,12 +414,13 @@ func (a *SystemDependencyAction) Execute(ctx *ExecutionContext, params map[strin
         return nil
     }
 
-    // Show install command
+    // Show install command with root detection
     cmd := getInstallCommand(pkgName, family)
     return &DependencyMissingError{
         Library: name,
         Package: pkgName,
         Command: cmd,
+        Family:  family,
     }
 }
 ```
@@ -415,7 +443,134 @@ func isInstalled(pkg string, family string) bool {
 }
 ```
 
-### Component 5: Hybrid Recipe Format
+**Root detection for install commands:**
+
+```go
+func getInstallCommand(pkg string, family string) string {
+    prefix := ""
+    if os.Getuid() != 0 {
+        // Not running as root, add sudo/doas prefix
+        if _, err := exec.LookPath("doas"); err == nil {
+            prefix = "doas "
+        } else {
+            prefix = "sudo "
+        }
+    }
+
+    switch family {
+    case "alpine":
+        return prefix + "apk add " + pkg
+    case "debian":
+        return prefix + "apt install " + pkg
+    // ... other families
+    }
+    return ""
+}
+```
+
+**Aggregate missing deps at plan time:**
+
+The plan generator collects ALL missing dependencies before failing, so users see everything they need to install:
+
+```go
+func (g *PlanGenerator) collectMissingDeps(steps []Step, target *Target) []DependencyMissingError {
+    var missing []DependencyMissingError
+    for _, step := range steps {
+        if step.Action == "system_dependency" && step.When.Matches(target) {
+            if err := checkSystemDep(step, target); err != nil {
+                var depErr *DependencyMissingError
+                if errors.As(err, &depErr) {
+                    missing = append(missing, *depErr)
+                }
+            }
+        }
+    }
+    return missing
+}
+```
+
+**CLI output for aggregated missing deps:**
+
+```
+$ tsuku install complex-tool
+Planning complex-tool v1.0.0
+
+Missing system dependencies:
+
+    libcurl is required but not installed.
+    openssl is required but not installed.
+
+Install all with:
+    sudo apk add curl-dev openssl-dev
+
+Then retry:
+    tsuku install complex-tool
+```
+```
+
+### Component 5: Platform Support Matrix
+
+The hybrid approach creates a three-way split for library dependencies:
+
+| Platform | Libc | Library Source | Version Control | User Action |
+|----------|------|----------------|-----------------|-------------|
+| Linux (Debian, Fedora, Arch, SUSE) | glibc | Homebrew bottles | Hermetic (tsuku controls) | None |
+| Linux (Alpine) | musl | System packages | Non-hermetic (apk controls) | `apk add` before tsuku |
+| macOS | libSystem | Homebrew | Homebrew controls | None |
+
+**macOS behavior:** macOS uses a single libc (libSystem) and continues using Homebrew via `brew_install` action. The `libc` filter is only relevant on Linux - macOS steps should use `when = { os = ["darwin"] }`.
+
+**Recipe pattern for all three platforms:**
+
+```toml
+# glibc Linux: Homebrew bottles with full dependency tree
+[[steps]]
+action = "homebrew"
+formula = "curl"
+when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["openssl", "zlib"]
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "system_dependency"
+name = "curl"
+packages = { alpine = "curl-dev" }
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew (brew handles deps)
+[[steps]]
+action = "brew_install"
+packages = ["curl"]
+when = { os = ["darwin"] }
+```
+
+### Component 6: Dependency Precedence Rules
+
+Recipe-level and step-level dependencies can coexist. The resolution rules are:
+
+1. **Recipe-level dependencies** (in `[metadata]`) are resolved for ALL matching steps
+2. **Step-level dependencies** (in `[[steps]]`) are resolved ONLY if that step matches the target
+3. Dependencies are **additive** - a step inherits recipe-level deps plus its own step-level deps
+4. **Deduplication** happens after aggregation - if both levels declare the same dep, it's resolved once
+
+**Example:**
+
+```toml
+[metadata]
+dependencies = ["zlib"]  # Resolved for all paths
+
+[[steps]]
+action = "homebrew"
+when = { libc = ["glibc"] }
+dependencies = ["openssl"]  # Only resolved on glibc
+
+# On glibc: resolves zlib + openssl
+# On musl: resolves zlib only (no homebrew step matches)
+```
+
+**Recommendation:** For hybrid recipes, prefer step-level dependencies only. This makes each path's requirements explicit and avoids phantom dependencies.
+
+### Component 7: Hybrid Recipe Format
 
 Library recipes use conditional steps with step-level dependencies:
 
@@ -524,8 +679,27 @@ User runs: tsuku install cmake (depends on libcurl)
 1. Add `Libc []string` field to `WhenClause` struct
 2. Update `WhenClause.Matches()` to check libc
 3. Update `WhenClause.IsEmpty()` and serialization
-4. Add validation: libc only valid when os includes "linux"
+4. Add validation rules (see below)
 5. Add unit tests for libc filtering
+
+**Validation rules:**
+
+```go
+func (w *WhenClause) Validate() error {
+    // libc filter only valid on Linux
+    if len(w.Libc) > 0 {
+        if len(w.OS) > 0 && !slices.Contains(w.OS, "linux") {
+            return fmt.Errorf("libc filter only valid when os includes 'linux'")
+        }
+        for _, libc := range w.Libc {
+            if libc != "glibc" && libc != "musl" {
+                return fmt.Errorf("libc must be 'glibc' or 'musl', got %q", libc)
+            }
+        }
+    }
+    return nil
+}
+```
 
 **Estimated LOC:** ~100
 
@@ -573,6 +747,115 @@ User runs: tsuku install cmake (depends on libcurl)
 5. Update tool recipes that depend on libraries
 6. Add CI tests for both paths
 
+**Recipe migration templates:**
+
+**Template A: Library with no dependencies (e.g., zlib, brotli)**
+
+```toml
+# Before (glibc-only)
+[[steps]]
+action = "homebrew"
+formula = "zlib"
+
+# After (hybrid)
+# glibc Linux
+[[steps]]
+action = "homebrew"
+formula = "zlib"
+when = { os = ["linux"], libc = ["glibc"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+when = { os = ["linux"], libc = ["glibc"] }
+outputs = ["lib/libz.so", "lib/libz.so.1"]
+
+# musl Linux
+[[steps]]
+action = "system_dependency"
+name = "zlib"
+packages = { alpine = "zlib-dev" }
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS
+[[steps]]
+action = "homebrew"
+formula = "zlib"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+when = { os = ["darwin"] }
+outputs = ["lib/libz.dylib", "lib/libz.1.dylib"]
+```
+
+**Template B: Library with dependencies (e.g., openssl depends on zlib)**
+
+```toml
+# glibc Linux - deps declared at step level
+[[steps]]
+action = "homebrew"
+formula = "openssl@3"
+when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["zlib"]  # Only resolved on glibc
+
+# musl Linux - no deps, apk handles them
+[[steps]]
+action = "system_dependency"
+name = "openssl"
+packages = { alpine = "openssl-dev" }
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS
+[[steps]]
+action = "homebrew"
+formula = "openssl@3"
+when = { os = ["darwin"] }
+```
+
+**Template C: Tool that depends on libraries (e.g., cmake depends on openssl)**
+
+```toml
+[metadata]
+name = "cmake"
+# No recipe-level deps for hybrid recipes
+
+# glibc Linux - build with hermetic deps
+[[steps]]
+action = "download"
+when = { os = ["linux"], libc = ["glibc"] }
+# ... download params
+
+[[steps]]
+action = "configure_make"
+when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["openssl", "zlib"]  # Only resolved on glibc
+# ... configure params
+
+# musl Linux - require system libraries
+[[steps]]
+action = "system_dependency"
+name = "openssl"
+packages = { alpine = "openssl-dev" }
+when = { os = ["linux"], libc = ["musl"] }
+
+[[steps]]
+action = "download"
+when = { os = ["linux"], libc = ["musl"] }
+# ... download params
+
+[[steps]]
+action = "configure_make"
+when = { os = ["linux"], libc = ["musl"] }
+# ... configure params (no step-level deps)
+```
+
+**Acceptance criteria:**
+- All 4 library recipes migrated with tests passing on both glibc and musl
+- Tool recipes that depend on libraries updated
+- CI validates both paths
+
 **Dependencies:** Phases 2, 3, 4
 
 ### Phase 6: ARM64 Native Testing
@@ -601,13 +884,61 @@ User runs: tsuku install cmake (depends on libcurl)
 
 **Goal:** Document the hybrid approach.
 
-**Changes:**
-1. Update README with platform support
-2. Document `libc` filter in recipe format docs
-3. Document step-level dependencies
-4. Add troubleshooting guide
+**Required documentation:**
+
+1. **Platform Support Matrix** (README)
+   - Clear statement of supported platforms
+   - Explanation of glibc vs musl behavior differences
+   - Link to troubleshooting guide
+
+2. **Recipe Authoring Guide: Hybrid Libraries**
+   - When to use glibc vs musl steps
+   - How step-level dependencies work
+   - Migration templates (A, B, C from Phase 5)
+   - Common pitfalls
+
+3. **Troubleshooting: Alpine/musl**
+   - "Why do I need to install system packages?"
+   - "How do I find the right package name?"
+   - "Can I use hermetic versions on Alpine?" (Answer: Use nix-portable)
+
+4. **Recipe Reference: New Fields**
+   - `libc` filter in `when` clause
+   - `dependencies` field at step level
+   - `system_dependency` action parameters
+   - Validation rules
 
 **Dependencies:** All previous phases
+
+### Recipe Validation Rules
+
+CI validates recipes with these rules:
+
+**WhenClause validation:**
+- `libc` filter only valid when `os` is omitted or includes `"linux"`
+- `libc` values must be `"glibc"` or `"musl"` only
+- Error if `libc` specified with `os = ["darwin"]`
+
+**Step-level dependency validation:**
+- Step dependencies must reference valid recipe names
+- Circular dependency detection at step level
+
+**Coverage validation (warnings, not errors):**
+- For library recipes (`type = "library"`), warn if no musl path exists
+- For tool recipes with library deps, warn if musl case isn't handled
+- Allow explicit opt-out via `unsupported_libc = ["musl"]` in metadata
+
+**system_dependency action validation:**
+- `packages` map must include `alpine` key when `when = { libc = ["musl"] }`
+- Package names should follow naming conventions (`-dev` suffix for library packages)
+
+**CI integration:**
+
+```yaml
+- name: Validate recipes
+  run: |
+    tsuku validate-recipes --check-libc-coverage --warn-only
+```
 
 ## Security Considerations
 
@@ -686,7 +1017,13 @@ Package manager detection uses `exec.LookPath()`. In a hostile environment with 
 - `wip/research/hybrid_libcurl-example.md` - Complex dependency example
 - `wip/research/hybrid_dependency-resolution.md` - Dependency resolution architecture
 
-### Reviews
+### Reviews (Initial - System Packages Everywhere)
 - `wip/research/review_platform-architecture.md` - Platform architecture review
 - `wip/research/review_security.md` - Security review
 - `wip/research/review_developer-experience.md` - Developer experience review
+
+### Reviews (Revised - Hybrid Approach)
+- `wip/research/review2_platform-architecture.md` - Platform architecture review (approved)
+- `wip/research/review2_security.md` - Security review (approved)
+- `wip/research/review2_developer-experience.md` - Developer experience review (approved)
+- `wip/research/review2_recipe-maintainer.md` - Recipe maintainer review (approved)
