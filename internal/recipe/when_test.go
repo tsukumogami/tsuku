@@ -44,6 +44,16 @@ func TestWhenClause_IsEmpty(t *testing.T) {
 			when: &WhenClause{Platform: []string{}, OS: []string{}},
 			want: true,
 		},
+		{
+			name: "clause with libc is not empty",
+			when: &WhenClause{Libc: []string{"glibc"}},
+			want: false,
+		},
+		{
+			name: "clause with empty libc array is empty",
+			when: &WhenClause{Libc: []string{}},
+			want: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -274,6 +284,113 @@ func TestWhenClause_Matches_ArchAndLinuxFamily(t *testing.T) {
 	}
 }
 
+// TestWhenClause_Matches_Libc tests the libc filter in Matches method
+func TestWhenClause_Matches_Libc(t *testing.T) {
+	tests := []struct {
+		name        string
+		when        *WhenClause
+		os          string
+		arch        string
+		linuxFamily string
+		libc        string
+		want        bool
+	}{
+		{
+			name: "empty libc matches glibc",
+			when: &WhenClause{},
+			os:   "linux", arch: "amd64", linuxFamily: "debian", libc: "glibc",
+			want: true,
+		},
+		{
+			name: "empty libc matches musl",
+			when: &WhenClause{},
+			os:   "linux", arch: "amd64", linuxFamily: "alpine", libc: "musl",
+			want: true,
+		},
+		{
+			name: "libc=glibc matches glibc target",
+			when: &WhenClause{Libc: []string{"glibc"}},
+			os:   "linux", arch: "amd64", linuxFamily: "debian", libc: "glibc",
+			want: true,
+		},
+		{
+			name: "libc=glibc does not match musl target",
+			when: &WhenClause{Libc: []string{"glibc"}},
+			os:   "linux", arch: "amd64", linuxFamily: "alpine", libc: "musl",
+			want: false,
+		},
+		{
+			name: "libc=musl matches musl target",
+			when: &WhenClause{Libc: []string{"musl"}},
+			os:   "linux", arch: "amd64", linuxFamily: "alpine", libc: "musl",
+			want: true,
+		},
+		{
+			name: "libc=musl does not match glibc target",
+			when: &WhenClause{Libc: []string{"musl"}},
+			os:   "linux", arch: "amd64", linuxFamily: "debian", libc: "glibc",
+			want: false,
+		},
+		{
+			name: "libc=[glibc,musl] matches glibc",
+			when: &WhenClause{Libc: []string{"glibc", "musl"}},
+			os:   "linux", arch: "amd64", linuxFamily: "debian", libc: "glibc",
+			want: true,
+		},
+		{
+			name: "libc=[glibc,musl] matches musl",
+			when: &WhenClause{Libc: []string{"glibc", "musl"}},
+			os:   "linux", arch: "amd64", linuxFamily: "alpine", libc: "musl",
+			want: true,
+		},
+		{
+			name: "libc filter ignored on darwin",
+			when: &WhenClause{Libc: []string{"glibc"}},
+			os:   "darwin", arch: "arm64", linuxFamily: "", libc: "",
+			want: true,
+		},
+		{
+			name: "combined OS and libc filter - both match",
+			when: &WhenClause{OS: []string{"linux"}, Libc: []string{"glibc"}},
+			os:   "linux", arch: "amd64", linuxFamily: "debian", libc: "glibc",
+			want: true,
+		},
+		{
+			name: "combined OS and libc filter - OS matches, libc does not",
+			when: &WhenClause{OS: []string{"linux"}, Libc: []string{"glibc"}},
+			os:   "linux", arch: "amd64", linuxFamily: "alpine", libc: "musl",
+			want: false,
+		},
+		{
+			name: "combined OS and libc filter - OS does not match",
+			when: &WhenClause{OS: []string{"darwin"}, Libc: []string{"glibc"}},
+			os:   "linux", arch: "amd64", linuxFamily: "debian", libc: "glibc",
+			want: false,
+		},
+		{
+			name: "all filters combined - all match",
+			when: &WhenClause{OS: []string{"linux"}, Arch: "amd64", LinuxFamily: "debian", Libc: []string{"glibc"}},
+			os:   "linux", arch: "amd64", linuxFamily: "debian", libc: "glibc",
+			want: true,
+		},
+		{
+			name: "all filters combined - libc does not match",
+			when: &WhenClause{OS: []string{"linux"}, Arch: "amd64", LinuxFamily: "debian", Libc: []string{"glibc"}},
+			os:   "linux", arch: "amd64", linuxFamily: "debian", libc: "musl",
+			want: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			target := NewMatchTarget(tt.os, tt.arch, tt.linuxFamily, tt.libc)
+			if got := tt.when.Matches(target); got != tt.want {
+				t.Errorf("Matches() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 // TestMatchTarget tests the MatchTarget struct and NewMatchTarget constructor
 func TestMatchTarget(t *testing.T) {
 	t.Run("NewMatchTarget creates correct values", func(t *testing.T) {
@@ -287,12 +404,18 @@ func TestMatchTarget(t *testing.T) {
 		if target.LinuxFamily() != "debian" {
 			t.Errorf("LinuxFamily() = %q, want %q", target.LinuxFamily(), "debian")
 		}
+		if target.Libc() != "glibc" {
+			t.Errorf("Libc() = %q, want %q", target.Libc(), "glibc")
+		}
 	})
 
 	t.Run("MatchTarget with empty linux_family", func(t *testing.T) {
 		target := NewMatchTarget("darwin", "arm64", "", "")
 		if target.LinuxFamily() != "" {
 			t.Errorf("LinuxFamily() = %q, want empty", target.LinuxFamily())
+		}
+		if target.Libc() != "" {
+			t.Errorf("Libc() = %q, want empty", target.Libc())
 		}
 	})
 }
@@ -404,6 +527,84 @@ command = "echo test"
 	}
 }
 
+// TestWhenClause_UnmarshalTOML_Libc tests unmarshaling libc arrays
+func TestWhenClause_UnmarshalTOML_Libc(t *testing.T) {
+	tests := []struct {
+		name     string
+		tomlData string
+		wantLibc []string
+	}{
+		{
+			name: "single value array",
+			tomlData: `
+[[steps]]
+action = "run_command"
+when = { libc = ["glibc"] }
+command = "echo test"
+`,
+			wantLibc: []string{"glibc"},
+		},
+		{
+			name: "multiple values",
+			tomlData: `
+[[steps]]
+action = "run_command"
+when = { libc = ["glibc", "musl"] }
+command = "echo test"
+`,
+			wantLibc: []string{"glibc", "musl"},
+		},
+		{
+			name: "single string converted to array",
+			tomlData: `
+[[steps]]
+action = "run_command"
+when = { libc = "musl" }
+command = "echo test"
+`,
+			wantLibc: []string{"musl"},
+		},
+		{
+			name: "combined with os filter",
+			tomlData: `
+[[steps]]
+action = "run_command"
+when = { os = ["linux"], libc = ["glibc"] }
+command = "echo test"
+`,
+			wantLibc: []string{"glibc"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var recipe struct {
+				Steps []Step `toml:"steps"`
+			}
+
+			err := toml.Unmarshal([]byte(tt.tomlData), &recipe)
+			if err != nil {
+				t.Fatalf("Unmarshal() error = %v", err)
+			}
+
+			step := recipe.Steps[0]
+			if step.When == nil {
+				t.Fatal("When should not be nil")
+			}
+
+			if len(step.When.Libc) != len(tt.wantLibc) {
+				t.Fatalf("Libc length = %d, want %d", len(step.When.Libc), len(tt.wantLibc))
+			}
+
+			for i, want := range tt.wantLibc {
+				if step.When.Libc[i] != want {
+					t.Errorf("Libc[%d] = %s, want %s", i, step.When.Libc[i], want)
+				}
+			}
+		})
+	}
+}
+
 // TestWhenClause_UnmarshalTOML_MutualExclusivity tests that platform and OS cannot coexist
 func TestWhenClause_UnmarshalTOML_MutualExclusivity(t *testing.T) {
 	tomlData := `
@@ -462,6 +663,44 @@ func TestWhenClause_ToMap(t *testing.T) {
 
 	if platform[1] != "linux/amd64" {
 		t.Errorf("platform[1] = %s, want linux/amd64", platform[1])
+	}
+}
+
+// TestWhenClause_ToMap_Libc tests serialization of libc field
+func TestWhenClause_ToMap_Libc(t *testing.T) {
+	step := Step{
+		Action: "run_command",
+		When: &WhenClause{
+			OS:   []string{"linux"},
+			Libc: []string{"glibc", "musl"},
+		},
+		Params: map[string]interface{}{
+			"command": "echo test",
+		},
+	}
+
+	m := step.ToMap()
+
+	whenMap, ok := m["when"].(map[string]interface{})
+	if !ok {
+		t.Fatal("when field should be a map")
+	}
+
+	libc, ok := whenMap["libc"].([]string)
+	if !ok {
+		t.Fatal("libc should be a []string")
+	}
+
+	if len(libc) != 2 {
+		t.Fatalf("libc length = %d, want 2", len(libc))
+	}
+
+	if libc[0] != "glibc" {
+		t.Errorf("libc[0] = %s, want glibc", libc[0])
+	}
+
+	if libc[1] != "musl" {
+		t.Errorf("libc[1] = %s, want musl", libc[1])
 	}
 }
 
@@ -538,6 +777,100 @@ func TestWhenClause_ValidationErrors(t *testing.T) {
 					{
 						Action: "run_command",
 						When:   &WhenClause{OS: []string{"darwin", "linux"}},
+					},
+				},
+			},
+			wantErrs: 0,
+		},
+		// Libc validation tests
+		{
+			name: "libc with darwin-only OS is invalid",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{OS: []string{"darwin"}, Libc: []string{"glibc"}},
+					},
+				},
+			},
+			wantErrs: 1,
+		},
+		{
+			name: "libc with darwin,freebsd OS (no linux) is invalid",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				// Note: using freebsd which doesn't exist in supported platforms,
+				// but the test will hit the libc check first since darwin does exist
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{OS: []string{"darwin"}, Libc: []string{"glibc"}},
+					},
+				},
+			},
+			wantErrs: 1, // only libc error, darwin is valid
+		},
+		{
+			name: "invalid libc value",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{Libc: []string{"invalid"}},
+					},
+				},
+			},
+			wantErrs: 1,
+		},
+		{
+			name: "valid libc with os=linux",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{OS: []string{"linux"}, Libc: []string{"glibc"}},
+					},
+				},
+			},
+			wantErrs: 0,
+		},
+		{
+			name: "valid libc with no OS (implies linux compatibility)",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{Libc: []string{"musl"}},
+					},
+				},
+			},
+			wantErrs: 0,
+		},
+		{
+			name: "valid libc with os includes linux",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{OS: []string{"linux", "darwin"}, Libc: []string{"glibc"}},
+					},
+				},
+			},
+			wantErrs: 0,
+		},
+		{
+			name: "multiple libc values are valid",
+			recipe: &Recipe{
+				Metadata: MetadataSection{Name: "test"},
+				Steps: []Step{
+					{
+						Action: "run_command",
+						When:   &WhenClause{OS: []string{"linux"}, Libc: []string{"glibc", "musl"}},
 					},
 				},
 			},
