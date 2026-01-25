@@ -202,4 +202,7 @@ func init() {
 	Register(&ServiceStartAction{})
 	Register(&RequireCommandAction{})
 	Register(&ManualAction{})
+
+	// System dependency checking (for musl/Alpine)
+	Register(&SystemDependencyAction{})
 }
