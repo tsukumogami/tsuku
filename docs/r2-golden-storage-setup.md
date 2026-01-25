@@ -24,32 +24,33 @@ After creation, the bucket should appear in your R2 dashboard with 0 objects.
 
 ## Step 2: Create API Tokens
 
-Create two API tokens with different permission levels.
+Create two API tokens with different permission levels. Tokens are managed from the R2 Overview page, not from individual bucket settings.
 
 ### 2.1 Read-Only Token
 
-1. In the Cloudflare dashboard, go to **R2 Object Storage**
-2. Click on the `tsuku-golden-registry` bucket
-3. Click **Settings** tab, then **Manage R2 API Tokens**
-4. Click **Create API token**
+1. In the Cloudflare dashboard, go to **R2 Object Storage** > **Overview**
+2. Click **Manage R2 API Tokens** (in the right sidebar or API section)
+3. Click **Create API token**
+4. Choose token type:
+   - **Account API token** (recommended) - tied to the account, remains valid until revoked
+   - **User API token** - tied to your user, inherits your permissions
 5. Configure:
    - **Token name**: `tsuku-golden-readonly`
-   - **Permissions**: Object Read only
+   - **Permissions**: Object Read
    - **Specify bucket(s)**: Select `tsuku-golden-registry` only
-   - **TTL**: No expiration (we'll rotate manually every 90 days)
 6. Click **Create API Token**
-7. **Important**: Copy and save the **Access Key ID** and **Secret Access Key** securely. These will not be shown again.
+7. **Important**: Copy and save the **Access Key ID** and **Secret Access Key** immediately. The Secret Access Key will not be shown again.
 
 ### 2.2 Read-Write Token
 
-1. Click **Create API token** again
-2. Configure:
+1. Return to **R2 Object Storage** > **Overview** > **Manage R2 API Tokens**
+2. Click **Create API token**
+3. Configure:
    - **Token name**: `tsuku-golden-readwrite`
    - **Permissions**: Object Read & Write
    - **Specify bucket(s)**: Select `tsuku-golden-registry` only
-   - **TTL**: No expiration (we'll rotate manually every 90 days)
-3. Click **Create API Token**
-4. **Important**: Copy and save the **Access Key ID** and **Secret Access Key** securely.
+4. Click **Create API Token**
+5. **Important**: Copy and save the **Access Key ID** and **Secret Access Key** immediately.
 
 ### Verification
 
@@ -95,14 +96,17 @@ Create a GitHub Environment to protect write operations:
 1. Go to **Settings** > **Environments**
 2. Click **New environment**
 3. Name it: `registry-write`
-4. Configure protection rules:
-   - **Required reviewers**: Add at least one reviewer (recommended: repository maintainers)
-   - **Deployment branches**: Select "Selected branches" and add `main`
-5. Click **Save protection rules**
+4. Click **Configure environment**
+5. Configure protection rules:
+   - **Required reviewers** (optional): Add reviewers if you want manual approval before each write operation. For solo projects, this can be skipped.
+   - **Deployment branches and tags**: Select "Selected branches and tags", then add `main`
+6. Click **Save protection rules**
+
+The branch restriction ensures only workflows running on `main` can access write credentials, which is the primary security control.
 
 ### Verification
 
-The `registry-write` environment should appear in the Environments list with protection rules configured.
+The `registry-write` environment should appear in the Environments list with branch protection configured.
 
 ## Step 6: Create Health Check Object
 
