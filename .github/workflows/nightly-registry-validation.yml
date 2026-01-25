@@ -1,3 +1,13 @@
+# Nightly validation of registry recipe golden files.
+#
+# This workflow validates all registry recipes by downloading golden files
+# from R2 storage and comparing freshly generated plans against them.
+#
+# Two-tier degradation:
+# - R2 available: download golden files, run validation
+# - R2 unavailable: skip validation, create tracking issue
+#
+# See docs/designs/DESIGN-r2-golden-storage.md for architecture details.
 name: Nightly Registry Validation
 
 on:
@@ -8,9 +18,111 @@ on:
   workflow_dispatch:
 
 jobs:
+  # Check R2 availability before validation
+  health-check:
+    name: R2 Health Check
+    runs-on: ubuntu-latest
+    outputs:
+      r2_available: ${{ steps.check.outputs.r2_available }}
+      health_status: ${{ steps.check.outputs.health_status }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check R2 health
+        id: check
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        run: |
+          echo "Checking R2 health..."
+
+          # Run health check script
+          if ./scripts/r2-health-check.sh; then
+            echo "r2_available=true" >> $GITHUB_OUTPUT
+            echo "health_status=healthy" >> $GITHUB_OUTPUT
+          else
+            EXIT_CODE=$?
+            echo "r2_available=false" >> $GITHUB_OUTPUT
+            if [ $EXIT_CODE -eq 2 ]; then
+              echo "health_status=degraded" >> $GITHUB_OUTPUT
+            else
+              echo "health_status=unavailable" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+  # Download golden files from R2 when available
+  download-golden-files:
+    name: Download Golden Files
+    needs: health-check
+    if: needs.health-check.outputs.r2_available == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download from R2
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+          AWS_ENDPOINT_URL: ${{ secrets.R2_BUCKET_URL }}
+        run: |
+          echo "Downloading golden files from R2..."
+
+          mkdir -p r2-raw r2-golden-files/plans
+
+          # Download all plans from R2 (excluding embedded/ for now - registry only)
+          # Use AWS CLI s3 sync for efficiency
+          aws s3 sync s3://tsuku-golden-registry/plans/ r2-raw/ \
+            --exclude "embedded/*" \
+            2>&1 || {
+              echo "::warning::Some files failed to download, continuing..."
+            }
+
+          # Transform R2 structure to git-compatible structure
+          # R2:  plans/<letter>/<recipe>/v<version>/<platform>.json
+          # Git: plans/<letter>/<recipe>/v<version>-<platform>.json
+          echo "Transforming R2 structure to git-compatible format..."
+          find r2-raw -name "*.json" -type f | while read -r file; do
+            # Extract path components
+            # Example: r2-raw/s/serve/v14.2.5/linux-amd64.json
+            rel_path="${file#r2-raw/}"
+            dir_part=$(dirname "$rel_path")      # s/serve/v14.2.5
+            platform=$(basename "$file" .json)   # linux-amd64
+
+            # Split dir_part into letter/recipe/version
+            letter=$(echo "$dir_part" | cut -d'/' -f1)
+            recipe=$(echo "$dir_part" | cut -d'/' -f2)
+            version=$(echo "$dir_part" | cut -d'/' -f3)
+
+            # Create target directory and filename
+            target_dir="r2-golden-files/plans/$letter/$recipe"
+            target_file="$target_dir/${version}-${platform}.json"
+
+            mkdir -p "$target_dir"
+            cp "$file" "$target_file"
+          done
+
+          echo "Downloaded and transformed files:"
+          find r2-golden-files -name "*.json" | wc -l
+          find r2-golden-files -name "*.json" | head -20
+
+      - name: Upload golden files artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: r2-golden-files
+          path: r2-golden-files/
+          retention-days: 1
+
   # Validate all registry recipe golden files (plan generation)
   validate-plans-linux:
     name: Validate Plans (Linux)
+    needs: [health-check, download-golden-files]
+    if: needs.health-check.outputs.r2_available == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     outputs:
@@ -18,16 +130,22 @@ jobs:
       failed_recipes: ${{ steps.validate.outputs.failed_recipes }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download golden files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: r2-golden-files
+          path: r2-golden-files/
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
       - name: Cache downloads
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.tsuku/cache/downloads
           key: nightly-registry-${{ github.run_id }}
@@ -41,10 +159,13 @@ jobs:
         id: validate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOLDEN_DIR: r2-golden-files/plans
         run: |
-          echo "Validating registry recipe golden files..."
+          echo "Validating registry recipe golden files from R2..."
           FAILED_RECIPES=""
-          if ! ./scripts/validate-all-golden.sh --os linux --category registry 2>&1 | tee validation.log; then
+
+          # Use R2 golden files instead of git-based ones
+          if ! ./scripts/validate-all-golden.sh --os linux --category registry --golden-dir "$GOLDEN_DIR" 2>&1 | tee validation.log; then
             # Extract failed recipe names from output
             FAILED_RECIPES=$(grep -oP '(?<=FAIL: )\S+' validation.log | sort -u | tr '\n' ' ' || true)
             echo "failed=true" >> $GITHUB_OUTPUT
@@ -55,6 +176,8 @@ jobs:
 
   validate-plans-macos:
     name: Validate Plans (macOS)
+    needs: [health-check, download-golden-files]
+    if: needs.health-check.outputs.r2_available == 'true'
     runs-on: macos-latest
     timeout-minutes: 60
     outputs:
@@ -62,10 +185,16 @@ jobs:
       failed_recipes: ${{ steps.validate.outputs.failed_recipes }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download golden files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: r2-golden-files
+          path: r2-golden-files/
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
@@ -77,10 +206,12 @@ jobs:
         id: validate
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GOLDEN_DIR: r2-golden-files/plans
         run: |
-          echo "Validating registry recipe golden files..."
+          echo "Validating registry recipe golden files from R2..."
           FAILED_RECIPES=""
-          if ! ./scripts/validate-all-golden.sh --os darwin --category registry 2>&1 | tee validation.log; then
+
+          if ! ./scripts/validate-all-golden.sh --os darwin --category registry --golden-dir "$GOLDEN_DIR" 2>&1 | tee validation.log; then
             FAILED_RECIPES=$(grep -oP '(?<=FAIL: )\S+' validation.log | sort -u | tr '\n' ' ' || true)
             echo "failed=true" >> $GITHUB_OUTPUT
             echo "failed_recipes=$FAILED_RECIPES" >> $GITHUB_OUTPUT
@@ -91,6 +222,8 @@ jobs:
   # Execute a sample of registry recipe golden files
   execute-sample-linux:
     name: Execute Sample (Linux)
+    needs: [health-check, download-golden-files]
+    if: needs.health-check.outputs.r2_available == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     outputs:
@@ -98,16 +231,22 @@ jobs:
       failed_recipes: ${{ steps.execute.outputs.failed_recipes }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download golden files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: r2-golden-files
+          path: r2-golden-files/
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@d35c59abb061a4a6fb18e82ac0862c26744d6ab5 # v5.5.0
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
       - name: Cache downloads
-        uses: actions/cache@v4
+        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
         with:
           path: ~/.tsuku/cache/downloads
           key: nightly-execution-${{ github.run_id }}
@@ -125,10 +264,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Sample execution: pick one golden file per letter directory (excluding embedded/)
+          # Sample execution: pick one golden file per letter directory
           # This provides coverage without running all 150+ recipes
           FAILED=()
           EXCLUSIONS_FILE="testdata/golden/execution-exclusions.json"
+          GOLDEN_BASE="r2-golden-files/plans"
 
           is_excluded() {
             local recipe="$1"
@@ -140,7 +280,8 @@ jobs:
             [ -n "$match" ]
           }
 
-          for letter_dir in testdata/golden/plans/[a-z]; do
+          # R2 structure: plans/<letter>/<recipe>/v<version>/<platform>.json
+          for letter_dir in "$GOLDEN_BASE"/[a-z]; do
             [ -d "$letter_dir" ] || continue
             letter=$(basename "$letter_dir")
 
@@ -154,8 +295,8 @@ jobs:
                 continue
               fi
 
-              # Find a linux-amd64 golden file
-              golden_file=$(find "$recipe_dir" -name '*-linux-amd64.json' -o -name '*-linux-debian-amd64.json' | head -1)
+              # Find a linux-amd64 golden file in any version directory
+              golden_file=$(find "$recipe_dir" -name 'linux-amd64.json' -o -name 'linux-debian-amd64.json' | head -1)
               if [ -z "$golden_file" ]; then
                 continue
               fi
@@ -185,15 +326,68 @@ jobs:
           echo "failed=false" >> $GITHUB_OUTPUT
           echo "Sample execution completed successfully"
 
-  # Create issue on failure
-  create-issue:
-    name: Create Issue on Failure
-    needs: [validate-plans-linux, validate-plans-macos, execute-sample-linux]
-    if: failure()
+  # Create issue when R2 is unavailable (validation skipped)
+  create-skip-issue:
+    name: Create Skip Issue
+    needs: health-check
+    if: needs.health-check.outputs.r2_available == 'false'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Create R2 unavailable issue
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          HEALTH_STATUS="${{ needs.health-check.outputs.health_status }}"
+
+          BODY="## Nightly Validation Skipped - R2 Unavailable
+
+          The nightly validation workflow was skipped because R2 storage is unavailable.
+
+          **Run:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          ### Health Check Result
+
+          - **Status:** $HEALTH_STATUS
+          - **Time:** $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+
+          ### Impact
+
+          - Registry golden file validation was not performed
+          - Recipe execution tests were not performed
+
+          ### Next Steps
+
+          1. Check Cloudflare R2 status: https://www.cloudflarestatus.com/
+          2. Verify R2 credentials are correctly configured
+          3. Re-run workflow manually once R2 is available
+          "
+
+          # Check if similar issue already exists
+          EXISTING=$(gh issue list --label "r2-unavailable" --state open --json number --limit 1 | jq -r '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Adding comment to existing issue #$EXISTING"
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            echo "Creating new issue"
+            gh issue create \
+              --title "chore: nightly validation skipped - R2 unavailable ($(date +%Y-%m-%d))" \
+              --body "$BODY" \
+              --label "r2-unavailable"
+          fi
+
+  # Create issue on validation failure (when R2 is available)
+  create-failure-issue:
+    name: Create Failure Issue
+    needs: [health-check, validate-plans-linux, validate-plans-macos, execute-sample-linux]
+    if: failure() && needs.health-check.outputs.r2_available == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Create failure issue
         env:
