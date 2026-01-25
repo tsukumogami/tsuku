@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: tsuku claims support for multiple platforms and Linux families but testing doesn't verify actual compatibility, as discovered when musl-based systems couldn't load embedded libraries.
 decision: Adopt a hybrid approach - keep Homebrew bottles for glibc systems (preserving hermetic version control) while using system packages for musl systems (fixing Alpine compatibility).
 rationale: Homebrew bottles work well on glibc and provide valuable version control. The musl problem is Alpine-specific, and Alpine doesn't retain old packages anyway, so system packages are the right solution there. This fixes Alpine without breaking anything for existing glibc users.
@@ -9,7 +9,57 @@ rationale: Homebrew bottles work well on glibc and provide valuable version cont
 
 ## Status
 
-**Proposed**
+**Planned**
+
+## Implementation Issues
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1109](https://github.com/tsukumogami/tsuku/issues/1109) | feat(platform): add libc detection for glibc vs musl | None | testable |
+| [#1110](https://github.com/tsukumogami/tsuku/issues/1110) | feat(recipe): add libc filter to recipe conditional system | #1109 | testable |
+| [#1111](https://github.com/tsukumogami/tsuku/issues/1111) | feat(recipe): add step-level dependency resolution | #1110 | testable |
+| [#1112](https://github.com/tsukumogami/tsuku/issues/1112) | feat(actions): add system_dependency action for musl support | #1109 | testable |
+| [#1113](https://github.com/tsukumogami/tsuku/issues/1113) | feat(recipe): add supported_libc platform constraint | #1110 | testable |
+| [#1114](https://github.com/tsukumogami/tsuku/issues/1114) | feat(recipe): migrate library recipes to hybrid approach | #1111, #1112, #1113 | testable |
+| [#1115](https://github.com/tsukumogami/tsuku/issues/1115) | feat(verify): add recipe coverage validation for libc support | #1110, #1113 | testable |
+| [#1116](https://github.com/tsukumogami/tsuku/issues/1116) | ci: add container integration tests for glibc and musl | #1114 | testable |
+| [#1117](https://github.com/tsukumogami/tsuku/issues/1117) | docs: document hybrid libc approach for recipe authors | #1114, #1115 | simple |
+| [#1118](https://github.com/tsukumogami/tsuku/issues/1118) | ci: add recipe coverage to PR validation workflow | #1115 | testable |
+
+```mermaid
+graph TD
+    subgraph "M47 - Platform Compatibility Verification"
+        I1109["#1109: libc detection"]:::ready
+        I1110["#1110: libc filter"]:::blocked
+        I1111["#1111: step-level deps"]:::blocked
+        I1112["#1112: system_dependency action"]:::blocked
+        I1113["#1113: supported_libc constraint"]:::blocked
+        I1114["#1114: recipe migration"]:::blocked
+        I1115["#1115: coverage validation"]:::blocked
+        I1116["#1116: container tests"]:::blocked
+        I1117["#1117: docs"]:::blocked
+        I1118["#1118: PR validation"]:::blocked
+
+        I1109 --> I1110
+        I1109 --> I1112
+        I1110 --> I1111
+        I1110 --> I1113
+        I1110 --> I1115
+        I1111 --> I1114
+        I1112 --> I1114
+        I1113 --> I1114
+        I1113 --> I1115
+        I1114 --> I1116
+        I1114 --> I1117
+        I1115 --> I1117
+        I1115 --> I1118
+    end
+
+    classDef done fill:#28a745,color:#fff
+    classDef ready fill:#0366d6,color:#fff
+    classDef blocked fill:#ffc107,color:#000
+    classDef needsDesign fill:#6f42c1,color:#fff
+```
 
 ## Context and Problem Statement
 
