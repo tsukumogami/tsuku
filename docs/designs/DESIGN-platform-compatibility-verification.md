@@ -28,8 +28,8 @@ The current approach creates false confidence: tests pass on simulated environme
 
 **In scope:**
 - Ensuring tests run on real target environments (actual containers/runners, not simulation)
-- Verifying embedded library compatibility across libc implementations (glibc vs musl)
-- Expanding dlopen verification to all supported Linux families
+- Solving library compatibility across libc implementations (glibc vs musl) via system packages
+- Expanding dlopen verification to all supported Linux families (including Alpine)
 - Testing ARM64 Linux binaries
 - Establishing a verification matrix that matches release targets
 
@@ -737,15 +737,17 @@ Restructure CI to use the appropriate test environment for each verification typ
 **Container jobs (family verification):**
 | Family | Base Image | Tests |
 |--------|------------|-------|
-| debian | `debian:bookworm-slim` | Checksum, homebrew, dlopen |
-| rhel | `fedora:41` | Checksum, homebrew, dlopen |
-| arch | `archlinux:base` | Checksum, homebrew, dlopen |
-| alpine | `alpine:3.19` | Checksum, homebrew (no dlopen - musl) |
-| suse | `opensuse/leap:15` | Checksum, homebrew, dlopen |
+| debian | `debian:bookworm-slim` | Checksum, system_dependency, dlopen |
+| rhel | `fedora:41` | Checksum, system_dependency, dlopen |
+| arch | `archlinux:base` | Checksum, system_dependency, dlopen |
+| alpine | `alpine:3.19` | Checksum, system_dependency, dlopen |
+| suse | `opensuse/leap:15` | Checksum, system_dependency, dlopen |
+
+Note: With system packages, dlopen verification now works on ALL families including Alpine.
 
 ### Component 4: Verification Coverage Parity
 
-Expand dlopen tests to all glibc families and ARM64:
+Expand dlopen tests to ALL Linux families (including Alpine) and ARM64:
 
 ```yaml
 # Current state
@@ -754,7 +756,7 @@ library-dlopen-glibc:
     library: [zlib, libyaml, gcc-libs]
     # Only runs on ubuntu-latest (debian family, amd64)
 
-# Target state
+# Target state (with system packages, ALL families work)
 library-dlopen:
   strategy:
     matrix:
@@ -778,7 +780,9 @@ library-dlopen:
         - runner: ubuntu-latest
           container: opensuse/leap:15
           family: suse
-        # Alpine skipped - musl incompatible
+        - runner: ubuntu-latest
+          container: alpine:3.19
+          family: alpine  # Now works with system packages!
 ```
 
 ### Data Flow
