@@ -30,6 +30,11 @@ func CheckEvalDeps(deps []string) []string {
 		return deps
 	}
 
+	return checkEvalDepsInDir(deps, toolsDir)
+}
+
+// checkEvalDepsInDir checks which dependencies are missing from the given tools directory.
+func checkEvalDepsInDir(deps []string, toolsDir string) []string {
 	var missing []string
 	for _, dep := range deps {
 		if !isToolInstalled(toolsDir, dep) {
