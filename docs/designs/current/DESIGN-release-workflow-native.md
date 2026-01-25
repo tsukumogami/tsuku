@@ -7,7 +7,9 @@ rationale: Draft releases provide atomic publishing semantics. Dual glibc/musl b
 
 # DESIGN: Native Binary Release Workflow
 
-**Status:** Current
+## Status
+
+Current
 
 ## Implementation Issues
 

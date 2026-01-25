@@ -56,6 +56,86 @@ The existing verification system (Layer 2) confirms that the correct version was
 4. **Backward compatibility**: Existing installations should gracefully degrade
 5. **User clarity**: Verification failures should be actionable
 
+## Considered Options
+
+### Option 1: Post-Install Binary Checksums (Chosen)
+
+Compute SHA256 checksums of installed binaries immediately after installation completes, store them in `state.json`, and verify on demand via `tsuku verify`.
+
+**Pros:**
+- Reuses existing SHA256 infrastructure from download verification
+- Minimal storage overhead (~100-200 bytes per version)
+- Fast verification (only binaries, not entire directory)
+- No impact on normal operations (verification is opt-in)
+- Backward compatible with existing installations
+
+**Cons:**
+- Only protects binaries, not libraries or configuration files
+- State file can be modified alongside binaries by an attacker with write access
+- Requires explicit `tsuku verify` invocation to detect tampering
+
+### Option 2: Full Directory Manifest
+
+Compute checksums for all files in the tool installation directory, not just binaries.
+
+**Pros:**
+- Complete coverage of all installed files
+- Detects tampering of libraries, configs, and data files
+- More thorough security posture
+
+**Cons:**
+- Significantly larger storage footprint in state.json
+- Slower verification, especially for tools with many files
+- Many files (logs, caches) may change legitimately, causing false positives
+- More complex implementation to handle file exclusions
+
+### Option 3: Signed State File
+
+Store checksums in a cryptographically signed manifest using a key stored outside `$TSUKU_HOME`.
+
+**Pros:**
+- Prevents attacker from modifying both binary and checksum
+- Higher security guarantee
+- Tamper-evident state storage
+
+**Cons:**
+- Requires key management infrastructure
+- Where to store the signing key securely is a difficult problem
+- Significantly more complex implementation
+- May require user interaction for key setup
+
+### Option 4: Continuous Verification
+
+Automatically verify checksums on every tool invocation or periodically via background daemon.
+
+**Pros:**
+- Immediate detection of tampering
+- No user action required
+
+**Cons:**
+- Performance overhead on every tool run
+- Complexity of daemon management
+- May slow down common operations unacceptably
+- Battery/resource impact on laptops
+
+## Decision Outcome
+
+**Chosen option: Option 1 - Post-Install Binary Checksums**
+
+This approach was selected because it provides meaningful tamper detection while maintaining simplicity and performance. The decision balances security benefits against implementation complexity:
+
+1. **Closes the security gap**: Layer 2 (version verification) confirms correct installation but cannot detect post-installation modifications. This feature adds that missing capability.
+
+2. **Minimal disruption**: Checksums are computed once at install time and verified only on explicit request. Normal tsuku operations (install, list, remove) see no performance impact.
+
+3. **Reuses existing code**: The SHA256 implementation from download verification can be reused, reducing implementation risk and maintenance burden.
+
+4. **Graceful degradation**: Existing installations without checksums continue to work, with `tsuku verify` simply reporting that integrity checking was skipped.
+
+5. **Clear threat model**: The design explicitly documents what it protects against (post-installation tampering, corruption) and what it doesn't (compromised state file, kernel-level attacks). Users can make informed decisions about their security posture.
+
+The more comprehensive options (full directory manifest, signed state, continuous verification) can be considered for future enhancements if users require stronger guarantees.
+
 ## Upstream Design Reference
 
 The upstream design (DESIGN-version-verification.md Phase 6, lines 464-478) provides high-level scope:

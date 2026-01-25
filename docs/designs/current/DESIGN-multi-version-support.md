@@ -63,12 +63,127 @@ Developers working with language runtimes (Java, Node.js, Go) frequently need mu
 - **Leverage existing patterns**: Libraries already support multi-version
 - **Security first**: Atomic operations, input validation, file locking
 
+## Considered Options
+
+### Option 1: Version Suffixed Directories (Selected)
+
+Store each version in a separate directory (`$TSUKU_HOME/tools/<tool>-<version>/`) and use symlinks in `$TSUKU_HOME/bin/` to point to the active version. Track all versions in state.json with an `active_version` field.
+
+**Pros:**
+- Clean separation between versions
+- Easy to remove individual versions
+- Matches existing directory structure (`tools/<tool>-<version>`)
+- Simple symlink switching for activation
+
+**Cons:**
+- Requires state.json migration
+- Increases disk usage when multiple versions installed
+
+### Option 2: Per-Version Bin Directories
+
+Create separate bin directories per version (`$TSUKU_HOME/bin/<tool>/<version>/`) and modify PATH per-project.
+
+**Pros:**
+- No symlink management needed
+- Supports truly parallel execution
+
+**Cons:**
+- Requires PATH manipulation
+- Complex shell integration
+- Breaks existing user workflows
+
+### Option 3: Copy-on-Activate
+
+Keep only active version in `tools/`, copy from a cache directory on activate.
+
+**Pros:**
+- Minimal disk usage in tools/
+- Simple state model
+
+**Cons:**
+- Slow activation (file copy)
+- Requires separate cache management
+- Risk of cache corruption
+
+## Decision Outcome
+
+**Selected Option:** Version Suffixed Directories
+
+This approach best balances minimal disruption with clear version isolation. The existing directory structure already uses versioned directories, so no layout changes are needed. State.json migration is straightforward and can be automated on first load. Symlink-based activation is fast and atomic.
+
+The key trade-off is increased disk usage when multiple versions are installed, but this aligns with user expectations since they explicitly chose to keep both versions.
+
 ## Assumptions
 
 1. Single active version is sufficient for v1
 2. Dependencies use whatever version is currently active
 3. Migration is one-way (no downgrade support)
 4. Users manage disk space by removing old versions manually
+
+## Solution Architecture
+
+The multi-version system consists of three layers:
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Command Layer                         │
+│   install │ remove │ activate │ list                    │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                    State Manager                         │
+│   Version tracking │ Migration │ File locking           │
+└─────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────────────────────────────────────────────────────┐
+│                   Symlink Manager                        │
+│   Atomic updates │ Target validation │ Activation       │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Command Layer:** User-facing commands that orchestrate version operations. Each command validates input, acquires locks, performs operations, and updates state atomically.
+
+**State Manager:** Handles state.json read/write with automatic migration, file locking for concurrent access, and version metadata tracking.
+
+**Symlink Manager:** Manages `$TSUKU_HOME/bin/` symlinks with atomic update semantics. Validates that targets are within the tools directory.
+
+### Key Invariants
+
+1. State.json always reflects actual filesystem state
+2. Symlinks in bin/ always point to valid tool binaries
+3. `active_version` always exists in the `versions` map
+4. Concurrent operations are serialized via file locking
+
+## Implementation Approach
+
+Implementation follows a bottom-up order to establish foundational components before building dependent features.
+
+### Phase 1: Foundation (Issues #294, #295, #296)
+
+1. **Schema migration (#294):** Update state.go to detect old format and migrate on load. Add version metadata fields.
+
+2. **File locking (#295):** Implement flock-based locking in state manager. All state modifications acquire exclusive lock.
+
+3. **Atomic symlinks (#296):** Add symlink utility functions that create temp symlink and rename atomically.
+
+### Phase 2: Commands (Issues #297, #298, #299, #300)
+
+4. **Activate command (#297):** New command to switch active version. Uses atomic symlink updates.
+
+5. **Install modification (#298):** Change install to preserve existing versions. New version becomes active.
+
+6. **Remove modification (#299):** Support `tool@version` syntax. Handle active version removal gracefully.
+
+7. **List modification (#300):** Update output format to show all versions with active indicator.
+
+### Testing Strategy
+
+- Unit tests for schema migration (old to new format)
+- Unit tests for concurrent access (lock contention)
+- Integration tests for full install/activate/remove cycles
+- Regression tests for existing single-version workflows
 
 ## Solution Design
 
@@ -176,6 +291,27 @@ nodejs        20.10.0 (active)
 **Risk:** Multiple tsuku processes modifying state.json simultaneously.
 
 **Mitigation:** File locking with flock(2), atomic write pattern.
+
+## Consequences
+
+### Positive
+
+- **Developer productivity:** No more reinstalling when switching between projects requiring different tool versions.
+- **Faster context switching:** `tsuku activate` is near-instantaneous since binaries are already downloaded.
+- **Offline capability:** Once installed, any version can be activated without network access.
+- **Backward compatible:** Existing single-version state files migrate automatically with no user action.
+
+### Negative
+
+- **Increased disk usage:** Multiple versions consume more space. Users must manually remove old versions.
+- **Behavioral changes:** `tsuku remove tool` now removes all versions, which could surprise users expecting single-version removal.
+- **State complexity:** The versions map adds complexity to state.json parsing and validation.
+
+### Risks
+
+- **Migration edge cases:** Corrupted or hand-edited state.json files may fail migration. Mitigation: validate before migrating, provide clear error messages.
+- **Symlink race conditions:** Addressed by atomic operations but requires careful implementation.
+- **User confusion:** The new list output and remove semantics differ from before. Clear documentation and release notes are essential.
 
 ## Breaking Changes
 
