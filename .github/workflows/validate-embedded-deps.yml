@@ -30,6 +30,8 @@ jobs:
         run: go build -o tsuku ./cmd/tsuku
 
       - name: Validate embedded action dependencies
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set +e  # Don't exit on error - we handle failures ourselves
 
