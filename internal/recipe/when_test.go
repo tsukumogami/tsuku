@@ -166,7 +166,7 @@ func TestWhenClause_Matches(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := NewMatchTarget(tt.os, tt.arch, "")
+			target := NewMatchTarget(tt.os, tt.arch, "", "")
 			if got := tt.when.Matches(target); got != tt.want {
 				t.Errorf("Matches(%s, %s) = %v, want %v", tt.os, tt.arch, got, tt.want)
 			}
@@ -266,7 +266,7 @@ func TestWhenClause_Matches_ArchAndLinuxFamily(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			target := NewMatchTarget(tt.os, tt.arch, tt.linuxFamily)
+			target := NewMatchTarget(tt.os, tt.arch, tt.linuxFamily, "")
 			if got := tt.when.Matches(target); got != tt.want {
 				t.Errorf("Matches() = %v, want %v", got, tt.want)
 			}
@@ -277,7 +277,7 @@ func TestWhenClause_Matches_ArchAndLinuxFamily(t *testing.T) {
 // TestMatchTarget tests the MatchTarget struct and NewMatchTarget constructor
 func TestMatchTarget(t *testing.T) {
 	t.Run("NewMatchTarget creates correct values", func(t *testing.T) {
-		target := NewMatchTarget("linux", "amd64", "debian")
+		target := NewMatchTarget("linux", "amd64", "debian", "glibc")
 		if target.OS() != "linux" {
 			t.Errorf("OS() = %q, want %q", target.OS(), "linux")
 		}
@@ -290,7 +290,7 @@ func TestMatchTarget(t *testing.T) {
 	})
 
 	t.Run("MatchTarget with empty linux_family", func(t *testing.T) {
-		target := NewMatchTarget("darwin", "arm64", "")
+		target := NewMatchTarget("darwin", "arm64", "", "")
 		if target.LinuxFamily() != "" {
 			t.Errorf("LinuxFamily() = %q, want empty", target.LinuxFamily())
 		}
