@@ -29,10 +29,10 @@ rationale: Homebrew bottles work well on glibc and provide valuable version cont
 ```mermaid
 graph TD
     subgraph "M47 - Platform Compatibility Verification"
-        I1109["#1109: libc detection"]:::ready
-        I1110["#1110: libc filter"]:::blocked
+        I1109["#1109: libc detection"]:::done
+        I1110["#1110: libc filter"]:::ready
         I1111["#1111: step-level deps"]:::blocked
-        I1112["#1112: system_dependency action"]:::blocked
+        I1112["#1112: system_dependency action"]:::ready
         I1113["#1113: supported_libc constraint"]:::blocked
         I1114["#1114: recipe migration"]:::blocked
         I1115["#1115: coverage validation"]:::blocked
