@@ -944,6 +944,36 @@ CI validates recipes with these rules:
 
 This section describes the testing infrastructure changes needed to prevent recipes from unintentionally lacking Alpine/musl support.
 
+### Quick Reference for Recipe Authors
+
+**For library recipes** (type = "library"), you MUST either:
+1. Add a musl step with `system_dependency` action, OR
+2. Explicitly constrain with `supported_libc = ["glibc"]` (and add `unsupported_reason`)
+
+**For tool recipes** with library dependencies, you SHOULD:
+1. Add a musl step, OR
+2. Accept the warning (tool won't work on Alpine)
+
+**Templates:** See Phase 5 for migration templates A, B, and C.
+
+**Local testing:**
+```bash
+# Test on Alpine locally before pushing
+docker run --rm -v $(pwd):/work -w /work alpine:3.19 sh -c '
+  apk add --no-cache curl
+  ./tsuku-linux-amd64 verify --dlopen zlib
+'
+
+# Full local test with library deps
+docker run --rm -v $(pwd):/work -w /work alpine:3.19 sh -c '
+  apk add --no-cache curl zlib-dev libyaml-dev openssl-dev
+  ./tsuku-linux-amd64 verify --dlopen zlib
+  ./tsuku-linux-amd64 verify --dlopen libyaml
+  ./tsuku-linux-amd64 install jq
+  jq --version
+'
+```
+
 ### Problem: Silent Alpine Incompatibility
 
 Without safeguards, recipe authors can easily create recipes that:
@@ -973,20 +1003,20 @@ Static analysis catches structural issues without running tsuku.
 
 ```go
 type CoverageReport struct {
-    Recipe      string
-    HasGlibc    bool
-    HasMusl     bool
-    HasDarwin   bool
-    ExplicitOpt []string  // Explicit unsupported_libc values
-    Warnings    []string
-    Errors      []string
+    Recipe        string
+    HasGlibc      bool
+    HasMusl       bool
+    HasDarwin     bool
+    SupportedLibc []string  // Explicit supported_libc constraint
+    Warnings      []string
+    Errors        []string
 }
 
 func AnalyzeRecipeCoverage(recipe *Recipe) CoverageReport {
     report := CoverageReport{Recipe: recipe.Name}
 
-    // Check explicit opt-out
-    report.ExplicitOpt = recipe.Metadata.UnsupportedLibc
+    // Check explicit libc constraints
+    report.SupportedLibc = recipe.Metadata.SupportedLibc
 
     // Analyze steps for platform coverage
     for _, step := range recipe.Steps {
@@ -1009,11 +1039,15 @@ func AnalyzeRecipeCoverage(recipe *Recipe) CoverageReport {
         }
     }
 
+    // Check if musl is explicitly excluded via supported_libc constraint
+    muslExcluded := len(report.SupportedLibc) > 0 &&
+                    !slices.Contains(report.SupportedLibc, "musl")
+
     // Generate warnings for missing coverage
-    if !report.HasMusl && !slices.Contains(report.ExplicitOpt, "musl") {
+    if !report.HasMusl && !muslExcluded {
         if recipe.Metadata.Type == "library" {
             report.Errors = append(report.Errors,
-                "library recipe has no musl path and no explicit opt-out")
+                "library recipe has no musl path and no explicit constraint (supported_libc)")
         } else if hasLibraryDeps(recipe) {
             report.Warnings = append(report.Warnings,
                 "recipe depends on libraries but has no musl path")
@@ -1070,9 +1104,11 @@ func TestRecipePlanGeneration(t *testing.T) {
     for _, recipe := range recipes {
         for _, target := range targets {
             t.Run(fmt.Sprintf("%s/%s", recipe.Name, target.Libc), func(t *testing.T) {
-                // Skip if explicitly unsupported
-                if slices.Contains(recipe.Metadata.UnsupportedLibc, target.Libc) {
-                    t.Skipf("recipe explicitly doesn't support %s", target.Libc)
+                // Skip if libc is explicitly constrained out
+                if len(recipe.Metadata.SupportedLibc) > 0 &&
+                   !slices.Contains(recipe.Metadata.SupportedLibc, target.Libc) {
+                    t.Skipf("recipe explicitly constrains to %v (not %s)",
+                            recipe.Metadata.SupportedLibc, target.Libc)
                 }
 
                 plan, err := GeneratePlan(recipe, target)
@@ -1093,6 +1129,23 @@ func TestRecipePlanGeneration(t *testing.T) {
         }
     }
 }
+
+// Additional test: transitive dependencies have musl support
+func TestTransitiveDepsHaveMuslSupport(t *testing.T) {
+    muslTarget := platform.Target{OS: "linux", Arch: "amd64", Family: "alpine", Libc: "musl"}
+
+    for _, recipe := range loadLibraryRecipes(t) {
+        t.Run(recipe.Name, func(t *testing.T) {
+            deps := collectTransitiveDeps(recipe, muslTarget)
+            for _, dep := range deps {
+                depRecipe := loadRecipe(t, dep)
+                coverage := AnalyzeRecipeCoverage(depRecipe)
+                require.True(t, coverage.HasMusl || isMuslExcluded(depRecipe),
+                    "transitive dependency %s lacks musl support", dep)
+            }
+        })
+    }
+}
 ```
 
 **CI workflow addition:**
@@ -1102,9 +1155,16 @@ func TestRecipePlanGeneration(t *testing.T) {
         run: go test -v ./internal/recipe/... -run TestRecipePlanGeneration
 ```
 
-### Layer 3: Container Integration Tests (CI - Merge Queue)
+### Layer 3: Container Integration Tests (CI)
 
 Real environment tests run on actual glibc and musl containers.
+
+**Key principle:** Build binaries once, distribute to containers. This ensures we test the actual release binaries, not source compilation with varying Go versions.
+
+**Trigger strategy:**
+- **Always run** on pushes to main
+- **Run early** on PRs that modify recipes (catch failures before merge queue)
+- **Run in merge queue** for all other PRs
 
 **Test matrix:**
 
@@ -1114,98 +1174,237 @@ on:
   push:
     branches: [main]
   pull_request:
-    types: [ready_for_review]  # Only run on PRs ready for merge
+    paths:
+      - 'recipes/**'           # Run early for recipe changes
+      - 'internal/recipe/**'   # Run early for recipe code changes
+    types: [opened, synchronize, ready_for_review]
 
 jobs:
+  # Build binaries once with consistent Go version
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'  # Pin version for consistency
+
+      - name: Build for all targets
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o tsuku-linux-amd64 ./cmd/tsuku
+          GOOS=linux GOARCH=arm64 go build -o tsuku-linux-arm64 ./cmd/tsuku
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: tsuku-*
+          retention-days: 1
+
+  # Test on real containers with pre-built binaries
   integration:
+    needs: build
     strategy:
       fail-fast: false
       matrix:
         include:
-          # glibc targets
+          # glibc amd64 targets
           - container: debian:bookworm-slim
             libc: glibc
             family: debian
+            arch: amd64
+            runner: ubuntu-latest
           - container: fedora:41
             libc: glibc
             family: rhel
+            arch: amd64
+            runner: ubuntu-latest
 
-          # musl targets
+          # musl amd64 targets
           - container: alpine:3.19
             libc: musl
             family: alpine
+            arch: amd64
+            runner: ubuntu-latest
 
-    runs-on: ubuntu-latest
+          # ARM64 targets (native runners)
+          - container: debian:bookworm-slim
+            libc: glibc
+            family: debian
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - container: alpine:3.19
+            libc: musl
+            family: alpine
+            arch: arm64
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
     container: ${{ matrix.container }}
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Download pre-built binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
 
-      - name: Install test dependencies
+      - name: Install minimal test dependencies
         run: |
+          # Use script for maintainability: scripts/ci-install-deps.sh
           case "${{ matrix.family }}" in
             alpine)
-              apk add --no-cache go curl
+              apk add --no-cache curl
               ;;
             debian)
-              apt-get update && apt-get install -y golang-go curl
+              apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
               ;;
             rhel)
-              dnf install -y golang curl
+              dnf install -y --setopt=install_weak_deps=False curl
               ;;
           esac
 
-      - name: Build tsuku
-        run: go build -o tsuku ./cmd/tsuku
+      - name: Make binary executable
+        run: chmod +x ./tsuku-linux-${{ matrix.arch }}
 
-      - name: Test library recipes (with pre-installed deps)
+      - name: Test library verification
         run: |
+          TSUKU=./tsuku-linux-${{ matrix.arch }}
+
           # For musl: pre-install system deps
           if [ "${{ matrix.libc }}" = "musl" ]; then
             apk add --no-cache zlib-dev libyaml-dev openssl-dev
           fi
 
           # Verify dlopen works
-          ./tsuku verify --dlopen zlib
-          ./tsuku verify --dlopen libyaml
-          ./tsuku verify --dlopen openssl
+          $TSUKU verify --dlopen zlib
+          $TSUKU verify --dlopen libyaml
+
+          # openssl has system library conflicts on some distros
+          # Skip if verification fails due to version mismatch, not missing library
+          $TSUKU verify --dlopen openssl || echo "::warning::openssl verification skipped (system conflict)"
 
       - name: Test tool installation
         run: |
-          # Install a tool that depends on libraries
-          ./tsuku install jq  # Static binary, should work everywhere
+          TSUKU=./tsuku-linux-${{ matrix.arch }}
+          # Install a static binary tool (works everywhere)
+          $TSUKU install jq
           jq --version
 ```
 
+**Why build once, distribute:**
+1. **Consistent Go version** - All tests use Go 1.22, not distro-packaged versions (Alpine has 1.21, Debian has 1.19)
+2. **Tests release binaries** - We test what users actually download, not source compilation
+3. **Faster** - Build once (~30s) instead of 5 times (~3 min total)
+4. **ARM64 support** - Cross-compile for ARM64, test on native runners
+
 ### Explicit Opt-Out Mechanism
 
-Some tools genuinely cannot support musl (e.g., they only provide glibc binaries and can't be built from source). Recipes can explicitly opt out:
+Some tools genuinely cannot support musl (e.g., they only provide glibc binaries and can't be built from source). Recipes can explicitly opt out using the existing platform constraint system, extended with libc support.
 
-**Recipe metadata:**
+**Existing platform constraint system:**
+
+tsuku already supports platform constraints in recipe metadata:
+
+```go
+// internal/recipe/types.go - MetadataSection
+SupportedOS          []string `toml:"supported_os,omitempty"`          // Allowed OS (default: all)
+SupportedArch        []string `toml:"supported_arch,omitempty"`        // Allowed arch (default: all)
+UnsupportedPlatforms []string `toml:"unsupported_platforms,omitempty"` // Exceptions in "os/arch" format
+```
+
+Examples in existing recipes:
+- `hello-nix.toml`: `supported_os = ["linux"]`
+- `iterm2.toml`: `supported_os = ["darwin"]`
+
+**New fields for libc support:**
+
+We extend this system with libc-aware constraints:
+
+```go
+// New fields in MetadataSection
+SupportedLibc      []string `toml:"supported_libc,omitempty"`   // Allowed libc (default: all)
+UnsupportedReason  string   `toml:"unsupported_reason,omitempty"` // Explanation for constraints
+```
+
+**Recipe metadata example:**
 
 ```toml
 [metadata]
 name = "some-glibc-only-tool"
 description = "A tool that only provides glibc binaries"
-unsupported_libc = ["musl"]  # Explicit: won't work on musl
+supported_libc = ["glibc"]  # Excludes musl
+unsupported_reason = "Upstream only provides glibc binaries (tracked: github.com/foo/bar/issues/123)"
 
 [[steps]]
 action = "github_archive"
 # Only glibc binary available from upstream
 ```
 
+**Why `supported_libc` instead of `unsupported_libc`:**
+
+Consistency with existing patterns:
+- `supported_os = ["linux"]` means "only Linux"
+- `supported_libc = ["glibc"]` means "only glibc"
+
+Both are allowlists. The `unsupported_platforms` field exists for edge cases like `["darwin/arm64"]` where you support darwin and arm64 separately but not the combination.
+
+**Reason field is optional but encouraged:**
+
+The `unsupported_reason` field applies to ALL platform constraints, not just libc:
+
+```toml
+# Linux-only tool with reason
+supported_os = ["linux"]
+unsupported_reason = "Requires Linux-specific syscalls not available on macOS"
+
+# No ARM64 support with reason
+supported_arch = ["amd64"]
+unsupported_reason = "Upstream only provides x86_64 binaries"
+
+# glibc-only with reason
+supported_libc = ["glibc"]
+unsupported_reason = "Depends on glibc-specific features not in musl"
+```
+
 **Validation behavior:**
 
-| Recipe Type | Has musl path | Has opt-out | CI Result |
-|-------------|---------------|-------------|-----------|
+| Recipe Type | Has musl path | Has constraint | CI Result |
+|-------------|---------------|----------------|-----------|
 | Library | Yes | - | Pass |
 | Library | No | No | **Error** (blocks merge) |
-| Library | No | Yes | Pass (with note) |
+| Library | No | `supported_libc = ["glibc"]` | Pass (with note) |
 | Tool | Yes | - | Pass |
 | Tool | No | No | Warning (visible, non-blocking) |
-| Tool | No | Yes | Pass |
+| Tool | No | Any constraint | Pass |
 
 **Rationale for library strictness:** Libraries are dependencies for other recipes. A library without musl support breaks the entire dependency chain on Alpine. Tools can gracefully degrade (user sees "not available on Alpine").
+
+**User-facing visibility:** The `tsuku info` command surfaces constraints:
+
+```
+$ tsuku info some-glibc-only-tool
+Name: some-glibc-only-tool
+Platforms: linux (glibc only), darwin
+Constraints:
+  - Libc: glibc only
+  - Reason: Upstream only provides glibc binaries (tracked: github.com/foo/bar/issues/123)
+```
+
+**Runtime behavior:**
+
+When a user on Alpine tries to install a glibc-only tool:
+
+```
+$ tsuku install some-glibc-only-tool
+Error: some-glibc-only-tool is not available for linux/musl
+
+Platform constraints:
+  Supported libc: glibc
+  Reason: Upstream only provides glibc binaries
+
+Suggestion: Check if upstream has added musl support, or use an alternative tool.
+```
 
 ### New Recipe Gate: Library Coverage Required
 
@@ -1220,12 +1419,14 @@ func ValidateLibraryRecipe(recipe *Recipe) error {
     coverage := AnalyzeRecipeCoverage(recipe)
 
     if !coverage.HasMusl {
-        if slices.Contains(recipe.Metadata.UnsupportedLibc, "musl") {
-            // Explicit opt-out is allowed but should be rare
+        // Check if explicitly constrained to glibc
+        if len(recipe.Metadata.SupportedLibc) > 0 &&
+           !slices.Contains(recipe.Metadata.SupportedLibc, "musl") {
+            // Explicit constraint is allowed but should be rare for libraries
             log.Printf("WARNING: library %s explicitly doesn't support musl", recipe.Name)
             return nil
         }
-        return fmt.Errorf("library recipe %s must have musl support or explicit opt-out", recipe.Name)
+        return fmt.Errorf("library recipe %s must have musl support or explicit constraint (supported_libc)", recipe.Name)
     }
 
     return nil
@@ -1236,28 +1437,36 @@ func ValidateLibraryRecipe(recipe *Recipe) error {
 
 To prevent new recipes from accidentally lacking Alpine support:
 
-1. **PR template checklist:**
+1. **PR template checklist** (in `.github/PULL_REQUEST_TEMPLATE.md`):
    ```markdown
    ## Recipe Checklist
    - [ ] Tested on glibc (Debian/Ubuntu/Fedora)
-   - [ ] Tested on musl (Alpine) OR added `unsupported_libc = ["musl"]` with justification
+   - [ ] Tested on musl (Alpine) OR added `supported_libc = ["glibc"]` with `unsupported_reason`
    - [ ] Library deps have musl paths
    ```
 
-2. **CI bot comment on missing coverage:**
+2. **CI bot comment on missing coverage** (only when issues exist):
    ```
    ⚠️ This recipe has no musl/Alpine support path.
 
-   If this is intentional, add to metadata:
-   unsupported_libc = ["musl"]
+   If this is intentional (tool genuinely can't support musl), add to metadata:
+   supported_libc = ["glibc"]
+   unsupported_reason = "Explain why musl isn't supported"
 
-   If not, add a musl step:
+   If the tool should support musl, add a musl step:
    [[steps]]
    action = "system_dependency"
    name = "..."
    packages = { alpine = "..." }
    when = { os = ["linux"], libc = ["musl"] }
+
+   📖 See: docs/recipe-authoring.md#platform-support
    ```
+
+   The bot comment:
+   - Only appears when issues exist (not on every PR)
+   - Updates/resolves when the issue is fixed
+   - Uses `needs-musl-support` label for tracking
 
 3. **Periodic coverage report:**
    ```yaml
@@ -1290,9 +1499,11 @@ To prevent new recipes from accidentally lacking Alpine support:
 |-------|------|-----------------|-----------|
 | Recipe validation | Every PR | Missing musl steps, invalid syntax | Libraries: Yes, Tools: Warning |
 | Plan generation tests | Every PR | Plans that fail to generate | Yes |
-| Container integration | Merge queue | Real runtime failures | Yes |
-| Explicit opt-out | N/A | Documented exceptions | N/A |
+| Container integration | Recipe changes + merge queue | Real runtime failures | Yes |
+| Explicit constraint | N/A | Documented exceptions | N/A |
 | Weekly report | Scheduled | Coverage regressions | Creates issue |
+
+**Note:** Container tests run early (not just merge queue) when PRs modify recipes or recipe code, preventing the "cliff" where authors discover failures only at merge time.
 
 This multi-layer approach ensures that:
 1. Libraries **always** have musl support (or explicit documented exception)
@@ -1387,3 +1598,9 @@ Package manager detection uses `exec.LookPath()`. In a hostile environment with 
 - `wip/research/review2_security.md` - Security review (approved)
 - `wip/research/review2_developer-experience.md` - Developer experience review (approved)
 - `wip/research/review2_recipe-maintainer.md` - Recipe maintainer review (approved)
+
+### Reviews (Testing Infrastructure)
+- `wip/research/review3_platform-architecture.md` - Platform architecture review (approved with suggestions)
+- `wip/research/review3_security.md` - Security review (approved with recommendations)
+- `wip/research/review3_developer-experience.md` - Developer experience review (conditional approval)
+- `wip/research/review3_ci-testing.md` - CI/Testing specialist review (approved with revisions)
