@@ -940,6 +940,366 @@ CI validates recipes with these rules:
     tsuku validate-recipes --check-libc-coverage --warn-only
 ```
 
+## Testing Infrastructure
+
+This section describes the testing infrastructure changes needed to prevent recipes from unintentionally lacking Alpine/musl support.
+
+### Problem: Silent Alpine Incompatibility
+
+Without safeguards, recipe authors can easily create recipes that:
+1. Work on glibc but silently fail on musl (no matching steps)
+2. Have Homebrew steps without corresponding musl alternatives
+3. Depend on libraries that lack musl support
+
+The testing infrastructure must catch these issues before they reach users.
+
+### Solution: Multi-Layer Protection
+
+Protection happens at three layers:
+
+```
+Layer 1: Recipe Validation (static analysis)
+    ↓
+Layer 2: Plan Generation Tests (simulated targets)
+    ↓
+Layer 3: Container Integration Tests (real environments)
+```
+
+### Layer 1: Recipe Validation (CI - All PRs)
+
+Static analysis catches structural issues without running tsuku.
+
+**Coverage analyzer:**
+
+```go
+type CoverageReport struct {
+    Recipe      string
+    HasGlibc    bool
+    HasMusl     bool
+    HasDarwin   bool
+    ExplicitOpt []string  // Explicit unsupported_libc values
+    Warnings    []string
+    Errors      []string
+}
+
+func AnalyzeRecipeCoverage(recipe *Recipe) CoverageReport {
+    report := CoverageReport{Recipe: recipe.Name}
+
+    // Check explicit opt-out
+    report.ExplicitOpt = recipe.Metadata.UnsupportedLibc
+
+    // Analyze steps for platform coverage
+    for _, step := range recipe.Steps {
+        if step.When == nil {
+            // Unconditional step - counts for all platforms
+            report.HasGlibc = true
+            report.HasMusl = true
+            report.HasDarwin = true
+            continue
+        }
+
+        if matchesGlibc(step.When) {
+            report.HasGlibc = true
+        }
+        if matchesMusl(step.When) {
+            report.HasMusl = true
+        }
+        if matchesDarwin(step.When) {
+            report.HasDarwin = true
+        }
+    }
+
+    // Generate warnings for missing coverage
+    if !report.HasMusl && !slices.Contains(report.ExplicitOpt, "musl") {
+        if recipe.Metadata.Type == "library" {
+            report.Errors = append(report.Errors,
+                "library recipe has no musl path and no explicit opt-out")
+        } else if hasLibraryDeps(recipe) {
+            report.Warnings = append(report.Warnings,
+                "recipe depends on libraries but has no musl path")
+        }
+    }
+
+    return report
+}
+```
+
+**CI workflow:**
+
+```yaml
+name: Recipe Validation
+on: [push, pull_request]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Validate recipe syntax
+        run: ./tsuku validate-recipes
+
+      - name: Check libc coverage
+        run: ./tsuku validate-recipes --check-libc-coverage
+        # Errors for libraries without musl
+        # Warnings for tools without musl (visible but non-blocking)
+
+      - name: Verify no orphaned dependencies
+        run: ./tsuku validate-recipes --check-deps
+```
+
+### Layer 2: Plan Generation Tests (CI - All PRs)
+
+Test that plans generate correctly for all target platforms.
+
+**Simulated target testing:**
+
+```go
+func TestRecipePlanGeneration(t *testing.T) {
+    targets := []platform.Target{
+        {OS: "linux", Arch: "amd64", Family: "debian", Libc: "glibc"},
+        {OS: "linux", Arch: "amd64", Family: "alpine", Libc: "musl"},
+        {OS: "darwin", Arch: "arm64", Family: "", Libc: ""},
+    }
+
+    recipes := loadAllRecipes(t)
+
+    for _, recipe := range recipes {
+        for _, target := range targets {
+            t.Run(fmt.Sprintf("%s/%s", recipe.Name, target.Libc), func(t *testing.T) {
+                // Skip if explicitly unsupported
+                if slices.Contains(recipe.Metadata.UnsupportedLibc, target.Libc) {
+                    t.Skipf("recipe explicitly doesn't support %s", target.Libc)
+                }
+
+                plan, err := GeneratePlan(recipe, target)
+
+                // For libraries: MUST have a valid plan
+                if recipe.Metadata.Type == "library" {
+                    require.NoError(t, err, "library must generate plan for %s", target.Libc)
+                    require.NotEmpty(t, plan.Steps, "library plan must have steps for %s", target.Libc)
+                }
+
+                // For tools with library deps: should have valid plan or system_dependency
+                if hasLibraryDeps(recipe) {
+                    if err != nil {
+                        t.Logf("WARNING: tool %s has no plan for %s: %v", recipe.Name, target.Libc, err)
+                    }
+                }
+            })
+        }
+    }
+}
+```
+
+**CI workflow addition:**
+
+```yaml
+      - name: Test plan generation for all targets
+        run: go test -v ./internal/recipe/... -run TestRecipePlanGeneration
+```
+
+### Layer 3: Container Integration Tests (CI - Merge Queue)
+
+Real environment tests run on actual glibc and musl containers.
+
+**Test matrix:**
+
+```yaml
+name: Platform Integration Tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [ready_for_review]  # Only run on PRs ready for merge
+
+jobs:
+  integration:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # glibc targets
+          - container: debian:bookworm-slim
+            libc: glibc
+            family: debian
+          - container: fedora:41
+            libc: glibc
+            family: rhel
+
+          # musl targets
+          - container: alpine:3.19
+            libc: musl
+            family: alpine
+
+    runs-on: ubuntu-latest
+    container: ${{ matrix.container }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install test dependencies
+        run: |
+          case "${{ matrix.family }}" in
+            alpine)
+              apk add --no-cache go curl
+              ;;
+            debian)
+              apt-get update && apt-get install -y golang-go curl
+              ;;
+            rhel)
+              dnf install -y golang curl
+              ;;
+          esac
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Test library recipes (with pre-installed deps)
+        run: |
+          # For musl: pre-install system deps
+          if [ "${{ matrix.libc }}" = "musl" ]; then
+            apk add --no-cache zlib-dev libyaml-dev openssl-dev
+          fi
+
+          # Verify dlopen works
+          ./tsuku verify --dlopen zlib
+          ./tsuku verify --dlopen libyaml
+          ./tsuku verify --dlopen openssl
+
+      - name: Test tool installation
+        run: |
+          # Install a tool that depends on libraries
+          ./tsuku install jq  # Static binary, should work everywhere
+          jq --version
+```
+
+### Explicit Opt-Out Mechanism
+
+Some tools genuinely cannot support musl (e.g., they only provide glibc binaries and can't be built from source). Recipes can explicitly opt out:
+
+**Recipe metadata:**
+
+```toml
+[metadata]
+name = "some-glibc-only-tool"
+description = "A tool that only provides glibc binaries"
+unsupported_libc = ["musl"]  # Explicit: won't work on musl
+
+[[steps]]
+action = "github_archive"
+# Only glibc binary available from upstream
+```
+
+**Validation behavior:**
+
+| Recipe Type | Has musl path | Has opt-out | CI Result |
+|-------------|---------------|-------------|-----------|
+| Library | Yes | - | Pass |
+| Library | No | No | **Error** (blocks merge) |
+| Library | No | Yes | Pass (with note) |
+| Tool | Yes | - | Pass |
+| Tool | No | No | Warning (visible, non-blocking) |
+| Tool | No | Yes | Pass |
+
+**Rationale for library strictness:** Libraries are dependencies for other recipes. A library without musl support breaks the entire dependency chain on Alpine. Tools can gracefully degrade (user sees "not available on Alpine").
+
+### New Recipe Gate: Library Coverage Required
+
+For library recipes (`type = "library"`), CI enforces musl coverage:
+
+```go
+func ValidateLibraryRecipe(recipe *Recipe) error {
+    if recipe.Metadata.Type != "library" {
+        return nil  // Only enforce for libraries
+    }
+
+    coverage := AnalyzeRecipeCoverage(recipe)
+
+    if !coverage.HasMusl {
+        if slices.Contains(recipe.Metadata.UnsupportedLibc, "musl") {
+            // Explicit opt-out is allowed but should be rare
+            log.Printf("WARNING: library %s explicitly doesn't support musl", recipe.Name)
+            return nil
+        }
+        return fmt.Errorf("library recipe %s must have musl support or explicit opt-out", recipe.Name)
+    }
+
+    return nil
+}
+```
+
+### Preventing Regression
+
+To prevent new recipes from accidentally lacking Alpine support:
+
+1. **PR template checklist:**
+   ```markdown
+   ## Recipe Checklist
+   - [ ] Tested on glibc (Debian/Ubuntu/Fedora)
+   - [ ] Tested on musl (Alpine) OR added `unsupported_libc = ["musl"]` with justification
+   - [ ] Library deps have musl paths
+   ```
+
+2. **CI bot comment on missing coverage:**
+   ```
+   ⚠️ This recipe has no musl/Alpine support path.
+
+   If this is intentional, add to metadata:
+   unsupported_libc = ["musl"]
+
+   If not, add a musl step:
+   [[steps]]
+   action = "system_dependency"
+   name = "..."
+   packages = { alpine = "..." }
+   when = { os = ["linux"], libc = ["musl"] }
+   ```
+
+3. **Periodic coverage report:**
+   ```yaml
+   name: Weekly Coverage Report
+   on:
+     schedule:
+       - cron: '0 0 * * 0'  # Weekly
+
+   jobs:
+     report:
+       runs-on: ubuntu-latest
+       steps:
+         - name: Generate coverage report
+           run: ./tsuku validate-recipes --coverage-report > coverage.md
+
+         - name: Create issue if coverage dropped
+           if: # coverage decreased
+           uses: actions/github-script@v7
+           with:
+             script: |
+               github.rest.issues.create({
+                 title: 'Recipe coverage regression detected',
+                 body: 'Some recipes lost musl support...'
+               })
+   ```
+
+### Summary: Defense in Depth
+
+| Layer | When | What it catches | Blocking? |
+|-------|------|-----------------|-----------|
+| Recipe validation | Every PR | Missing musl steps, invalid syntax | Libraries: Yes, Tools: Warning |
+| Plan generation tests | Every PR | Plans that fail to generate | Yes |
+| Container integration | Merge queue | Real runtime failures | Yes |
+| Explicit opt-out | N/A | Documented exceptions | N/A |
+| Weekly report | Scheduled | Coverage regressions | Creates issue |
+
+This multi-layer approach ensures that:
+1. Libraries **always** have musl support (or explicit documented exception)
+2. Tools **visibly** lack musl support (warnings in CI)
+3. No recipe silently fails on Alpine
+4. Regressions are caught before reaching users
+
 ## Security Considerations
 
 ### Download Verification
