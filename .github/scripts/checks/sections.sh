@@ -64,7 +64,6 @@ FM_STATUS=$(get_frontmatter_status "$DOC_PATH")
 
 # Skip validation for Superseded documents (legacy format allowed per design)
 if [[ "$FM_STATUS" == "Superseded" ]]; then
-    emit_pass "Sections: skipped for Superseded status (legacy format allowed)"
     exit $EXIT_PASS
 fi
 
@@ -118,9 +117,7 @@ for section in "${REQUIRED_SECTIONS[@]}"; do
     fi
 done
 
-if [[ "$MISSING_COUNT" -eq 0 ]]; then
-    emit_pass "SC01: all 9 required sections present"
-else
+if [[ "$MISSING_COUNT" -gt 0 ]]; then
     emit_fail "SC01: Missing $MISSING_COUNT of 9 required sections:"
     for section in "${MISSING_SECTIONS[@]}"; do
         echo "       - ## $section" >&2
@@ -146,9 +143,6 @@ if [[ "$MISSING_COUNT" -eq 0 ]]; then
         PREV_SECTION=$section
     done
 
-    if [[ "$ORDER_FAILED" -eq 0 ]]; then
-        emit_pass "SC02: sections appear in correct order"
-    fi
 fi
 
 # SC03: Security Considerations section has meaningful content
@@ -180,8 +174,6 @@ if [[ -n "${FOUND_SECTIONS["Security Considerations"]:-}" ]]; then
     elif [[ "${STRIPPED_CONTENT,,}" =~ ^n/?a\.?$ ]]; then
         emit_fail "SC03: Security Considerations section contains only 'N/A' (must provide analysis or justification)"
         FAILED=1
-    else
-        emit_pass "SC03: Security Considerations section has content"
     fi
 fi
 

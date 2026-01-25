@@ -47,8 +47,6 @@ if ! has_frontmatter "$DOC_PATH"; then
     exit $EXIT_FAIL
 fi
 
-emit_pass "Frontmatter: present"
-
 # Extract frontmatter content
 FRONTMATTER=$(extract_frontmatter "$DOC_PATH")
 
@@ -67,10 +65,6 @@ for field in "${REQUIRED_FIELDS[@]}"; do
     fi
 done
 
-if [[ "$FAILED" -eq 0 ]]; then
-    emit_pass "FM01: all required fields present"
-fi
-
 # FM02: Validate status value
 FM_STATUS=$(get_field "status")
 if [[ -n "$FM_STATUS" ]]; then
@@ -84,16 +78,12 @@ if [[ -n "$FM_STATUS" ]]; then
     if [[ "$valid" -eq 0 ]]; then
         emit_fail "Invalid frontmatter status: $FM_STATUS. Must be: Proposed, Accepted, Planned, Current, Superseded"
         FAILED=1
-    else
-        emit_pass "FM02: status value valid ($FM_STATUS)"
     fi
 fi
 
 # FM03: Check frontmatter status matches body status
 # Skip for Superseded docs (per design: "validation is relaxed to not block archival of legacy formats")
-if [[ "$FM_STATUS" == "Superseded" ]]; then
-    emit_pass "FM03: skipped for Superseded status (legacy format allowed)"
-else
+if [[ "$FM_STATUS" != "Superseded" ]]; then
     # Body status is in "## Status" section, formatted as **Status** (preferred) or just Status
     # Also handles inline **Status: Value** format
     extract_body_status() {
@@ -154,8 +144,6 @@ else
     elif [[ -n "$FM_STATUS" && "$FM_STATUS" != "$BODY_STATUS" ]]; then
         emit_fail "Frontmatter status '$FM_STATUS' doesn't match body status '$BODY_STATUS'"
         FAILED=1
-    elif [[ -n "$FM_STATUS" ]]; then
-        emit_pass "FM03: frontmatter and body status match ($FM_STATUS)"
     fi
 fi
 
