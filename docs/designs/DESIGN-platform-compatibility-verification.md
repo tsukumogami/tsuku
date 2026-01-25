@@ -1,8 +1,8 @@
 ---
 status: Proposed
 problem: tsuku claims support for multiple platforms and Linux families but testing doesn't verify actual compatibility, as discovered when musl-based systems couldn't load embedded libraries.
-decision: Implement runtime musl detection with user guidance, hybrid testing (native runners + containers), and test coverage matching the release matrix exactly.
-rationale: This balances accuracy with maintainability by using native runners for platform verification and containers for family-specific testing, while runtime detection provides fail-fast behavior for Alpine users without requiring immediate musl binary support.
+decision: Adopt "self-contained tools, system-managed dependencies" philosophy - tools remain self-contained binaries, but library dependencies use system package managers rather than embedded Homebrew bottles.
+rationale: System packages are available on all Linux families (including Alpine), are security-reviewed by distro teams, and eliminate the glibc/musl incompatibility. This trades hermetic version control for working tools across all platforms.
 ---
 
 # Platform Compatibility Verification
@@ -35,9 +35,10 @@ The current approach creates false confidence: tests pass on simulated environme
 
 **Out of scope:**
 - Adding new platform targets beyond current release matrix
-- Changing the glibc Homebrew bottle approach (bottles remain the primary source for glibc systems)
 - Windows support
 - Non-Linux/macOS platforms
+
+**Scope clarification:** This design DOES change the approach for library dependencies. The original assumption that "bottles remain the primary source" is revisited based on research findings.
 
 ## Decision Drivers
 
@@ -46,6 +47,95 @@ The current approach creates false confidence: tests pass on simulated environme
 - **Fail-fast discovery**: Platform incompatibilities should be caught in CI, not by users
 - **Maintainability**: Test infrastructure should be sustainable as platforms evolve
 - **CI resource constraints**: GitHub Actions has limited ARM64 runners and container support varies by runner type
+- **Self-contained philosophy**: tsuku should remain self-contained for tools, but "self-contained" should not mean unnecessary duplication of system-provided libraries
+
+## Research Findings
+
+Analysis of competing package managers (Homebrew, Nix, asdf/mise, Cargo, Docker) and tsuku's own architecture revealed key insights that reshape the approach to this problem. Extended research into Alpine's market position and the viability of hermetic APK extraction further reinforced these conclusions.
+
+### Alpine's Strategic Importance
+
+Research into Alpine Linux's market position found:
+
+- **~20% of all Docker containers use Alpine** as their base image
+- **Over 100 million container image downloads per month** with significant Alpine usage
+- Alpine is ~30x smaller than Debian (5 MB vs 75+ MB)
+- **95%+ of musl Linux users are on Alpine** - other musl distros (Void, Chimera, Adelie) are statistically negligible
+- mise (a direct competitor to tsuku) explicitly provides native Alpine/musl support
+
+This makes Alpine a first-class citizen that tsuku must support, not a niche target.
+
+### The Value of Embedded Libraries Was Misunderstood
+
+The original assumption was that Homebrew bottles provide value through:
+- Fresher versions than distro packages
+- Hermetic, reproducible builds
+- Self-contained installation without system dependencies
+
+**Research found this is not the case:**
+
+| Library | Homebrew | Ubuntu 24.04 | Fedora 41 | Alpine |
+|---------|----------|--------------|-----------|--------|
+| zlib | ~1.3 | 1.3 | 2.2.3 | 1.3.1 |
+| openssl | ~3.x | 3.0.13 | 3.2.2 | 3.1.8 |
+
+Distro packages are often as current or newer than Homebrew. Arch and Fedora frequently lead. The real value of Homebrew bottles is **"no build tools required"** - users don't need gcc/make/etc. But for library dependencies, this is unnecessary complexity.
+
+### Hermetic APK Extraction Was Considered and Rejected
+
+We investigated whether to build a custom APK extraction system (~500 LOC) that would download Alpine packages directly from Alpine's CDN - essentially "Homebrew bottles for musl." This would have provided hermetic version control on Alpine.
+
+**Research found this approach is flawed:**
+
+1. **Alpine doesn't retain old package versions.** Version-pinned Docker builds break within days/weeks when packages are updated. There's no snapshot service like Debian's snapshot.debian.org.
+
+2. **APK extraction only works on Alpine.** Other musl distros use different package formats:
+   - Void Linux uses xbps
+   - Chimera Linux uses APKv3 (incompatible with Alpine's APKv2)
+   - Each distro maintains separate repositories
+
+3. **True reproducibility requires infrastructure tsuku doesn't have.** Users who need hermetic builds on Alpine already use Nix, which works on Alpine.
+
+4. **The value proposition doesn't hold.** Homebrew bottles work across glibc distros because glibc provides ABI stability. No equivalent exists for musl - APK packages are Alpine-specific.
+
+This research reinforced the system packages approach: `apk_install` already exists, works immediately, and solves the problem with zero new code.
+
+### System Packages Are Security-Reviewed
+
+Distro security teams:
+- Actively monitor for CVEs and backport fixes
+- Sign packages with institutional key management
+- Have rapid-response patching infrastructure (6-24 hours for critical CVEs)
+
+Homebrew bottles are rebuilt from source but lack the institutional security review that distros provide. For library dependencies that users don't directly interact with, distro security teams provide better ongoing protection.
+
+### The Dependency Graph Is Shallow
+
+tsuku only has 4 embedded library recipes:
+- zlib (no deps)
+- libyaml (no deps)
+- openssl (depends on zlib)
+- gcc-libs (Linux only)
+
+Only 4 tool recipes depend on these: ruby, nodejs, cmake, and tools using openssl. Maximum dependency depth is 2 (cmake → openssl → zlib). This makes migration straightforward.
+
+### tsuku Already Has System Package Support
+
+The `apk_install`, `apt_install`, `dnf_install`, `pacman_install` actions exist in `internal/actions/`. They're currently stub implementations that describe commands to users. The infrastructure exists; recipes just don't use it.
+
+### Philosophy Shift: Self-Contained Tools, System-Managed Dependencies
+
+Based on this research, we adopt a new philosophy:
+
+| Component | Source | Rationale |
+|-----------|--------|-----------|
+| **Tools** (what users install) | Pre-built binaries | Self-contained, version-controlled by tsuku |
+| **Library dependencies** | System packages | Security-reviewed, native to each platform |
+
+This means:
+- `tsuku install nodejs` downloads the pre-built Node.js binary (self-contained)
+- If nodejs needs libstdc++, tsuku guides the user to `apt install libstdc++6` (system-managed)
+- Tools work on all platforms because dependencies come from native package managers
 
 ## Implementation Context
 
@@ -122,18 +212,71 @@ Maintain separate library binaries for musl targets, either by building from sou
 
 #### Option 1C: Runtime detection with user guidance
 
-Detect musl at runtime and provide actionable guidance. When a user on Alpine tries to install or use embedded libraries, tsuku would warn them about the incompatibility and suggest alternatives (build from source, use system packages).
+Detect musl at runtime and provide actionable guidance. When a user on Alpine tries to install or use embedded libraries, tsuku would warn them about the incompatibility and suggest alternatives.
+
+This option is complementary to 1D - it provides the error handling when system packages can't be installed (e.g., user lacks sudo, package not available).
 
 **Pros:**
-- Preserves value for non-library recipes on Alpine
-- Honest about limitations without hiding them in documentation
-- Fail-fast with clear user guidance
-- No additional binary maintenance
+- Fail-fast with clear, actionable error messages
+- Works as fallback when system packages unavailable
+- No silent failures or cryptic dlopen errors
+- Guides users toward solutions (system packages, build from source)
 
 **Cons:**
-- Doesn't solve the underlying compatibility gap
+- Doesn't solve the problem by itself (needs 1D for actual fix)
 - Requires runtime detection logic
-- May frustrate users who expected full Alpine support
+- Only useful as error handling, not as primary solution
+
+#### Option 1D: System package fallback (Recommended)
+
+Replace embedded library recipes with system package dependencies across ALL Linux families, not just Alpine. This aligns with the "self-contained tools, system-managed dependencies" philosophy.
+
+**Package name mapping:**
+
+| Library | Debian | RHEL/Fedora | Arch | Alpine | SUSE |
+|---------|--------|-------------|------|--------|------|
+| zlib | zlib1g-dev | zlib-devel | zlib | zlib-dev | zlib-devel |
+| libyaml | libyaml-dev | libyaml-devel | libyaml | yaml-dev | libyaml-devel |
+| openssl | libssl-dev | openssl-devel | openssl | openssl-dev | openssl-devel |
+| gcc-libs | libstdc++6 | libstdc++ | gcc-libs | libstdc++ | libstdc++6 |
+
+**Implementation approach:**
+
+Introduce a new `system_dependency` action that abstracts package manager differences:
+
+```toml
+[[steps]]
+action = "system_dependency"
+name = "openssl"
+packages = {
+    debian = "libssl-dev",
+    rhel = "openssl-devel",
+    arch = "openssl",
+    alpine = "openssl-dev",
+    suse = "openssl-devel"
+}
+```
+
+The action:
+1. Detects the system package manager (apt, dnf, pacman, apk, zypper)
+2. Maps the library name to the correct package name
+3. Checks if already installed; if not, shows the install command
+4. User runs the command (tsuku doesn't require sudo)
+
+**Pros:**
+- Tools work on ALL Linux families, including Alpine/musl
+- Leverages distro security teams for library updates
+- No binary maintenance burden for libraries
+- Consistent user experience across distributions
+- Native packages are optimized for each platform
+- Reduces tsuku's attack surface (fewer binaries to distribute)
+
+**Cons:**
+- Trades hermetic version control for working tools
+- Library versions vary by distro (but distros backport security fixes)
+- Requires user to have package manager access or pre-installed packages
+- Adds package name mapping maintenance
+- macOS still needs Homebrew for library deps (no system package manager)
 
 ### Decision 2: How to ensure tests run on real environments?
 
@@ -227,95 +370,218 @@ Test all combinations: 2 macOS platforms + 10 Linux configurations (5 families x
 
 ### Evaluation Against Decision Drivers
 
-| Option | Accuracy | Release Parity | Fail-Fast | Maintainability | CI Resources |
-|--------|----------|----------------|-----------|-----------------|--------------|
-| 1A (Document) | Good | Good | Fair | Good | Good |
-| 1B (Musl binaries) | Good | Good | Good | Fair | Fair |
-| 1C (Runtime detect) | Good | Good | Good | Good | Good |
-| 2A (Containers) | Good | Good | Good | Fair | Good |
-| 2B (Native only) | Good | Good | Good | Fair | Good |
-| 2C (Hybrid) | Good | Good | Good | Fair | Good |
-| 3A (Match release) | Good | Good | Good | Good | Good |
-| 3B (Representative) | Fair | Fair | Fair | Good | Good |
-| 3C (Full matrix) | Good | Good | Good | Poor | Poor |
+| Option | Accuracy | Release Parity | Fail-Fast | Maintainability | CI Resources | Platform Coverage |
+|--------|----------|----------------|-----------|-----------------|--------------|-------------------|
+| 1A (Document) | Fair | Good | Poor | Good | Good | Poor (Alpine broken) |
+| 1B (Musl binaries) | Good | Good | Good | Poor | Fair | Good |
+| 1C (Runtime detect) | Good | Good | Good | Good | Good | Poor (error only) |
+| 1D (System fallback) | Good | Good | Good | Good | Good | **Good (all families)** |
+| **1D+1C (Combined)** | **Good** | **Good** | **Good** | **Good** | **Good** | **Good** |
+| 2A (Containers) | Good | Good | Good | Fair | Good | - |
+| 2B (Native only) | Good | Good | Good | Fair | Good | - |
+| 2C (Hybrid) | Good | Good | Good | Fair | Good | - |
+| 3A (Match release) | Good | Good | Good | Good | Good | - |
+| 3B (Representative) | Fair | Fair | Fair | Good | Good | - |
+| 3C (Full matrix) | Good | Good | Good | Poor | Poor | - |
+
+**Key insight**: 1D (system packages) provides platform coverage that no other option achieves. Combined with 1C (runtime detection for errors), it provides both working tools AND clear guidance when things go wrong.
 
 Note: Option 2B rates "Good" for release parity because GitHub provides native runners for all 4 release targets (linux-amd64, linux-arm64, darwin-amd64, darwin-arm64). Family-specific testing is a separate concern addressed by containers.
 
 ### Uncertainties
 
-- **Homebrew musl bottles**: It's unclear if Homebrew provides musl-compatible bottles or if they would need to be built from source
 - **ARM64 container behavior**: Running ARM64 containers on amd64 runners via QEMU may have different behavior than native ARM64
 - **CI time impact**: Adding container-based tests for all families could significantly increase CI time; actual impact depends on parallelization
-- **Alpine user impact**: We don't have data on how many users run tsuku on Alpine or how critical embedded libraries are to those users
 - **openssl conflict scope**: The system library conflict (#1090) may be addressable with better LD_LIBRARY_PATH isolation during verification
+- **Recipe conditional logic complexity**: Adding family-aware conditionals to recipes may complicate the recipe format and validation
+
+### Resolved Through Research
+
+- **Homebrew musl bottles**: Research confirmed Homebrew does NOT provide musl bottles - they're glibc-only
+- **Alpine user impact**: Research found Alpine represents ~20% of container market share - significant enough to require first-class support
+- **System package acceptability**: Research found hermetic APK extraction wouldn't actually provide reproducibility (Alpine removes old packages), making system packages the pragmatic choice
+- **Hermetic APK extraction viability**: Research found this wouldn't work - Alpine doesn't retain old package versions, and APK is Alpine-only (not portable to other musl distros)
 
 ## Decision Outcome
 
-**Chosen: 1C (Runtime detection) + 2C (Hybrid testing) + 3A (Match release matrix)**
+**Chosen: 1D+1C (System packages + Runtime detection) + 2C (Hybrid testing) + 3A (Match release matrix)**
 
 ### Summary
 
-We will implement runtime detection to warn musl users about embedded library incompatibility, use a hybrid testing approach combining native runners (for release platforms) with containers (for family-specific verification), and ensure every released binary has corresponding integration tests. This combination balances accuracy with maintainability while being honest about current limitations.
+We adopt the philosophy of **"self-contained tools, system-managed dependencies"**. Tool binaries remain self-contained (downloaded from upstream), but library dependencies use system package managers rather than embedded Homebrew bottles. Runtime detection provides clear error messages when system packages aren't available. This approach makes tools work on ALL Linux families, including Alpine/musl, while leveraging distro security teams for library maintenance.
 
 ### Rationale
 
-**Decision 1 - Runtime detection (1C):**
-This provides the best balance of user experience and maintenance burden. Documenting glibc requirements (1A) hides the limitation where users won't see it. Providing musl binaries (1B) doubles maintenance burden without clear user demand data. Runtime detection catches the problem early with actionable guidance, preserves value for non-library recipes on Alpine, and can be upgraded to full musl support (1B) later if demand justifies it.
+**Decision 1 - System packages with runtime detection (1D+1C):**
+
+The research findings fundamentally changed our approach:
+
+1. **Homebrew bottles don't provide version freshness** - distro packages are often as current
+2. **System packages are security-reviewed** - distros have dedicated security teams
+3. **The dependency graph is shallow** - only 4 libraries, easy to migrate
+4. **tsuku already has package manager support** - apt_install, apk_install, etc. exist
+
+System packages (1D) solve the musl problem completely - Alpine's packages are built for musl. Runtime detection (1C) provides the error handling layer when system packages can't be installed.
+
+This trades hermetic version control for working tools across all platforms. Given that:
+- Distros backport security fixes (often faster than Homebrew)
+- Library versions rarely matter for compatibility
+- Users expect tools to work on their platform
+
+...this trade-off is acceptable.
 
 **Decision 2 - Hybrid testing (2C):**
-This maximizes coverage with available resources. Native runners provide ground-truth verification for release platforms (critical for accuracy), while containers enable family-specific testing that would otherwise be impossible. The inconsistent methodology is acceptable because we're verifying different aspects: native tests verify platform behavior, container tests verify family-specific package manager integration.
+This maximizes coverage with available resources. Native runners provide ground-truth verification for release platforms, while containers enable family-specific testing. With system packages, container tests now verify that the `system_dependency` action correctly maps library names to distro-specific package names.
 
 **Decision 3 - Match release matrix (3A):**
-This establishes a clear contract: if we release it, we test it. The representative subset approach (3B) requires subjective judgments about what's "representative." Full matrix testing (3C) has diminishing returns and significant CI cost. Matching the release matrix (linux-amd64, linux-arm64, darwin-amd64, darwin-arm64) focuses effort on what matters most.
+This establishes a clear contract: if we release it, we test it. Matching the release matrix (linux-amd64, linux-arm64, darwin-amd64, darwin-arm64) focuses effort on what matters most.
 
 **Alternatives rejected:**
-- **1A (Document only)**: Doesn't provide fail-fast behavior; users discover the problem too late
-- **1B (Musl binaries)**: Premature without Alpine user demand data; can add later
-- **2A (Containers only)**: Misses platform-level verification; ARM64 emulation has known issues
-- **2B (Native only)**: Can't verify family-specific behavior (RHEL, Arch, Alpine, SUSE)
-- **3B (Representative)**: Too subjective; doesn't give clear coverage guarantees
-- **3C (Full matrix)**: 12+ configurations with diminishing returns; unmaintainable
+- **1A (Document only)**: Doesn't solve the problem; users still can't use tools on Alpine
+- **1B (Musl binaries)**: Unnecessary complexity; system packages solve the same problem with less maintenance
+- **1C alone**: Error messages without a solution; frustrating user experience
+- **Embedded libraries (current approach)**: Creates glibc/musl split; unnecessary duplication of system-provided packages
 
 ### Trade-offs Accepted
 
 By choosing this approach, we accept:
 
-1. **Alpine embedded library support deferred**: Users on Alpine won't have working embedded libraries until musl binaries are added (if ever). This is acceptable because we don't have evidence of significant Alpine user demand, and runtime detection provides clear guidance.
+1. **Loss of hermetic library versions**: Library versions are controlled by distros, not tsuku. This is acceptable because distros provide security backports and version differences rarely cause compatibility issues.
 
-2. **Container tests may not catch all issues**: Containers on Ubuntu runners may behave differently than bare-metal RHEL, Arch, or SUSE systems. This is acceptable because container tests catch family-specific package manager behavior, which is the primary variation.
+2. **Package manager dependency**: Users need access to their system package manager (or pre-installed packages). This is acceptable because most users have this access, and the `system_dependency` action provides clear guidance for those who don't.
 
-3. **No ARM64 family-specific testing**: We test ARM64 on native runners (Ubuntu only), not containers for other families. This is acceptable because family differences are primarily in package managers and paths, which are architecture-independent.
+3. **macOS still uses Homebrew**: macOS lacks a system package manager, so library deps on macOS continue to use Homebrew. This is acceptable because macOS uses a single libc (no glibc/musl split).
+
+4. **Package name mapping maintenance**: We maintain a mapping of library names to distro-specific package names. This is acceptable because the list is small (4 libraries) and changes infrequently.
 
 ## Solution Architecture
 
 ### Overview
 
-The solution has three components that work together:
+The solution has four components that work together:
 
-1. **Runtime musl detection** - Go code that detects musl libc and warns users attempting to use embedded libraries
-2. **Hybrid CI test matrix** - Native runners for release platforms + container jobs for family verification
-3. **Verification coverage parity** - Ensuring dlopen tests run on all tested configurations
+1. **System dependency action** - New action that abstracts package manager differences for library dependencies
+2. **Runtime detection and guidance** - Detects platform/libc and provides actionable guidance when system packages unavailable
+3. **Hybrid CI test matrix** - Native runners for release platforms + container jobs for family verification
+4. **Verification coverage parity** - Ensuring dlopen tests run on all tested configurations
 
-### Component 1: Runtime musl Detection
+### Component 1: System Dependency Action
 
-Add musl detection to the library installation and verification paths. When tsuku detects musl:
-- Embedded library recipes will fail with a clear error message
-- Non-library recipes continue to work normally
-- The error message suggests alternatives (system packages, build from source)
+Introduce a new `system_dependency` action that replaces embedded library recipes with system package guidance.
+
+```
+internal/actions/
+├── system_dependency.go  # New: abstracts package manager differences
+├── linux_pm_actions.go   # Existing: apt_install, dnf_install, etc.
+└── brew_actions.go       # Existing: brew_install for macOS
+```
+
+**Action interface:**
+
+```go
+type SystemDependencyAction struct{ BaseAction }
+
+func (a *SystemDependencyAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+    // 1. Detect system package manager
+    pm := platform.DetectPackageManager()
+
+    // 2. Look up package name for this library
+    libraryName := params["name"].(string)
+    pkgName := ResolvePackageName(libraryName, pm)
+
+    // 3. Check if already installed
+    if isInstalled(pkgName, pm) {
+        return nil // Already satisfied
+    }
+
+    // 4. Show install command (tsuku doesn't run sudo)
+    cmd := getInstallCommand(pkgName, pm)
+    return fmt.Errorf("missing dependency %s: run '%s'", libraryName, cmd)
+}
+```
+
+**Package name mapping** (internal/actions/system_deps.go):
+
+```go
+var systemPackageNames = map[string]map[string]string{
+    "zlib": {
+        "debian": "zlib1g-dev",
+        "rhel":   "zlib-devel",
+        "arch":   "zlib",
+        "alpine": "zlib-dev",
+        "suse":   "zlib-devel",
+    },
+    "openssl": {
+        "debian": "libssl-dev",
+        "rhel":   "openssl-devel",
+        "arch":   "openssl",
+        "alpine": "openssl-dev",
+        "suse":   "openssl-devel",
+    },
+    // ... libyaml, gcc-libs
+}
+```
+
+**Recipe changes:**
+
+```toml
+# Before (embedded library)
+[[steps]]
+action = "homebrew"
+formula = "openssl@3"
+
+# After (system dependency)
+[[steps]]
+action = "system_dependency"
+name = "openssl"
+when = { os = ["linux"] }
+
+[[steps]]
+action = "brew_install"
+packages = ["openssl@3"]
+when = { os = ["darwin"] }
+```
+
+### Component 2: Runtime Detection and Guidance
+
+Add platform detection for error handling when system packages can't be installed.
 
 ```
 internal/platform/
 ├── libc.go          # New: libc detection (glibc vs musl)
+├── pm.go            # New: package manager detection
 └── family.go        # Existing: Linux family detection
 ```
 
-Detection approach: Check if `/lib/ld-musl-*.so.1` exists (primary), with `ldd --version` parsing as fallback. This is more reliable than checking for the absence of glibc.
+**Libc detection:** Check if `/lib/ld-musl-*.so.1` exists (primary), with `ldd --version` parsing as fallback.
 
-Interface: `DetectLibc() string` returns "glibc", "musl", or "unknown". A helper `RequireGlibc() error` returns a sentinel `ErrMuslNotSupported` error for callers that need glibc.
+**Package manager detection:**
 
-Integration points:
-- `internal/actions/homebrew.go` - Check in `Decompose()` (runs during plan generation, provides better error context)
-- `internal/verify/dltest.go` - Check in `RunDlopenVerification()` (existing skip patterns return `Skipped=true` with warning)
+```go
+func DetectPackageManager() PackageManager {
+    if _, err := exec.LookPath("apt"); err == nil {
+        return Apt
+    }
+    if _, err := exec.LookPath("dnf"); err == nil {
+        return Dnf
+    }
+    // ... pacman, apk, zypper, brew
+    return Unknown
+}
+```
+
+**Error messages:**
+
+When a system dependency is missing:
+```
+Error: nodejs requires libstdc++ which is not installed.
+
+To install on Debian/Ubuntu:
+  sudo apt install libstdc++6
+
+To install on Alpine:
+  sudo apk add libstdc++
+```
 
 ### Component 2: Hybrid CI Test Matrix
 
@@ -379,45 +645,102 @@ library-dlopen:
 ### Data Flow
 
 ```
-User runs: tsuku install zlib
+User runs: tsuku install nodejs (which depends on gcc-libs)
 
 1. Platform detection
    └─> Detect OS, arch, family
-   └─> Detect libc (glibc vs musl)
+   └─> Detect package manager (apt, dnf, apk, etc.)
 
 2. Recipe resolution
-   └─> If embedded library recipe:
-       └─> If musl: ERROR with guidance
-       └─> If glibc: Continue to Homebrew bottle
+   └─> Parse nodejs recipe
+   └─> Find system_dependency step for gcc-libs
 
-3. Installation
-   └─> Download bottle from GHCR
+3. System dependency check
+   └─> Map "gcc-libs" to package name for detected family
+       - debian: libstdc++6
+       - alpine: libstdc++
+       - etc.
+   └─> Check if package installed
+       └─> If yes: Continue
+       └─> If no: Show install command, halt
+
+4. Tool installation
+   └─> Download nodejs binary from upstream
    └─> Verify checksum
-   └─> Extract and relocate (patchelf on Linux)
+   └─> Extract to $TSUKU_HOME/tools/
 
-4. Verification
+5. Verification
    └─> Level 1: File existence
-   └─> Level 2: Dependency resolution
-   └─> Level 3: dlopen test (glibc only)
+   └─> Level 2: Dependency resolution (ldd check)
+   └─> Level 3: dlopen test (works on all libc now!)
+```
+
+**macOS flow** (unchanged):
+
+```
+User runs: tsuku install cmake (which depends on openssl)
+
+1. Platform detection
+   └─> OS = darwin, no package manager detection needed
+
+2. Recipe resolution
+   └─> Find brew_install step for openssl (darwin-only)
+
+3. Homebrew installation
+   └─> Download openssl bottle from GHCR
+   └─> Verify checksum
+   └─> Extract to $TSUKU_HOME/libs/
+
+4. Tool installation
+   └─> Download cmake, link to openssl
+
+5. Verification
+   └─> Standard verification chain
 ```
 
 ## Implementation Approach
 
-### Phase 1A: Runtime musl Detection
+### Phase 1: Platform Detection Infrastructure
 
-**Goal**: Prevent confusing failures on Alpine by detecting musl early.
+**Goal**: Add infrastructure to detect package managers and provide guidance.
 
 **Changes**:
-1. Add `internal/platform/libc.go` with `DetectLibc() string` returning "glibc", "musl", or "unknown"
-2. Add `RequireGlibc() error` helper returning `ErrMuslNotSupported`
-3. Add check in `internal/actions/homebrew.go` Decompose() before bottle planning
-4. Add check in `internal/verify/dltest.go` RunDlopenVerification() returning skip with warning
-5. Clear error message: "Embedded libraries require glibc. Alpine/musl users can: (1) use system packages, (2) build from source"
-6. Add unit tests using mocked file paths (similar to existing `testdata/os-release/` pattern)
+1. Add `internal/platform/pm.go` with `DetectPackageManager() PackageManager`
+2. Add `internal/platform/libc.go` with `DetectLibc() string` (for error messages)
+3. Add unit tests using mocked command lookups
+4. Map package managers to Linux families (apt→debian, dnf→rhel, pacman→arch, apk→alpine, zypper→suse)
 
 **Dependencies**: None
 
-### Phase 1B: ARM64 Native Testing (parallel with 1A)
+### Phase 2: System Dependency Action
+
+**Goal**: Create the `system_dependency` action that abstracts package manager differences.
+
+**Changes**:
+1. Add `internal/actions/system_dependency.go` implementing the new action
+2. Add `internal/actions/system_deps.go` with package name mapping table
+3. Implement `isInstalled()` check for each package manager
+4. Implement `getInstallCommand()` for clear user guidance
+5. Register action in action registry
+6. Add comprehensive tests for each Linux family
+
+**Dependencies**: Phase 1
+
+### Phase 3: Recipe Migration
+
+**Goal**: Migrate embedded library recipes to use system_dependency.
+
+**Changes**:
+1. Update `zlib.toml`: Replace homebrew action with system_dependency (Linux) + brew_install (macOS)
+2. Update `libyaml.toml`: Same pattern
+3. Update `openssl.toml`: Same pattern
+4. Update `gcc-libs.toml`: Same pattern (Linux-only, no macOS equivalent needed)
+5. Update dependent recipes (ruby, nodejs, cmake) to use new library recipes
+6. Add CI tests verifying system_dependency works on each family
+
+**Dependencies**: Phase 2
+
+### Phase 4: ARM64 Native Testing (parallel with Phase 3)
 
 **Goal**: Verify ARM64 Linux binaries with real native tests.
 
@@ -426,87 +749,135 @@ User runs: tsuku install zlib
 2. Add ARM64 to library-dlopen test matrix
 3. Update release workflow to run integration tests on ARM64
 
-**Dependencies**: None (ARM64 runners use Ubuntu/glibc, not Alpine/musl)
+**Dependencies**: None
 
-### Phase 2: Container-based Family Tests
+### Phase 5: Container-based Family Tests
 
-**Goal**: Run dlopen verification in real family environments.
-
-**Changes**:
-1. Create container job variants for dlopen tests (Fedora, Arch, openSUSE)
-2. Skip Alpine container dlopen tests (musl incompatible, graceful skip via Phase 1A detection)
-3. Install Go via distro package managers (dnf, pacman, zypper) in containers
-4. Build tsuku-dltest from source in each container
-
-**Dependencies**: Phase 1A (musl detection for graceful Alpine handling)
-
-### Phase 4: Documentation and Cleanup
-
-**Goal**: Document the verification matrix and clean up related issues.
+**Goal**: Verify system_dependency action works on all Linux families.
 
 **Changes**:
-1. Update README with platform support matrix
-2. Close #1092 (musl support) with runtime detection solution
-3. Re-enable musl CI jobs with appropriate skip conditions
-4. Document how to add musl binary support in future if demand justifies
+1. Create container job variants for dlopen tests (Fedora, Arch, openSUSE, Alpine)
+2. Install system packages in each container before running tests
+3. Build tsuku-dltest from source in each container
+4. Verify dlopen works on ALL families including Alpine (no more skips!)
+
+**Dependencies**: Phase 3 (recipes migrated to system_dependency)
+
+### Phase 6: Documentation and Cleanup
+
+**Goal**: Document the new philosophy and clean up.
+
+**Changes**:
+1. Update README with platform support matrix (now includes Alpine fully!)
+2. Close #1092 (musl support) with system dependency solution
+3. Archive embedded library recipes or mark as deprecated
+4. Document the "self-contained tools, system-managed dependencies" philosophy
+5. Add troubleshooting guide for users who can't install system packages
 
 ## Security Considerations
 
 ### Download Verification
 
-**Impact**: This design does not introduce new download paths. The existing Homebrew bottle download mechanism with SHA256 checksum verification remains unchanged. The musl detection feature blocks downloads that would fail anyway, improving user experience without changing the security model.
+**Tool binaries**: Tool binaries continue to be downloaded from upstream sources with SHA256 checksum verification. This is unchanged.
 
-**CI containers**: Container images used in testing (Fedora, Arch, Alpine, openSUSE) are pulled from official Docker Hub repositories. These are used only in CI, not in user-facing code. Image pinning by digest could be added for reproducibility but is not strictly necessary for test infrastructure.
+**Library dependencies (Linux)**: Library dependencies now come from system package managers (apt, dnf, apk, etc.) rather than Homebrew bottles. This changes the security model:
+
+- **Before**: tsuku downloaded and verified library binaries from Homebrew GHCR
+- **After**: Users install libraries via their distro's package manager, which has its own verification (GPG signatures, repo checksums)
+
+This is a security improvement because distro package managers have institutional security review and rapid CVE response infrastructure.
+
+**Library dependencies (macOS)**: macOS continues to use Homebrew for library deps. The existing checksum verification remains unchanged.
 
 ### Execution Isolation
 
-**Runtime musl detection**: The libc detection code reads system files (`/lib/ld-musl-*.so.1` or `ldd --version` output) with normal user permissions. No privilege escalation is required or introduced.
+**System dependency action**: The new `system_dependency` action does NOT execute package manager commands with elevated privileges. It:
+1. Checks if a package is installed (read-only operation)
+2. If missing, displays the command the user should run (e.g., `sudo apt install libssl-dev`)
+3. The user runs the command themselves (tsuku never runs sudo)
 
-**CI test isolation**: Container-based tests run with default container isolation. The tsuku-dltest helper runs with sanitized environment variables (LD_PRELOAD, DYLD_INSERT_LIBRARIES stripped), which is existing behavior unchanged by this design.
+This preserves tsuku's principle of not requiring or using elevated privileges.
 
-**ARM64 native runners**: GitHub-hosted ARM64 runners have the same security posture as existing amd64 runners. No additional permissions or isolation changes are needed.
+**Package manager detection**: Detection reads command availability (`which apt`, `which dnf`, etc.) with normal user permissions. No privilege escalation.
+
+**CI test isolation**: Container-based tests run with default container isolation. The tsuku-dltest helper runs with sanitized environment variables, which is existing behavior unchanged by this design.
 
 ### Supply Chain Risks
 
-**No new binary sources**: This design does not introduce new sources of binaries. Embedded libraries continue to come from Homebrew GHCR (already checksummed). The tsuku-dltest helper continues to be built from source in CI.
+**Shift to distro packages**: By using system packages instead of Homebrew bottles, we shift supply chain trust from Homebrew to distribution maintainers.
 
-**CI container images**: Using official distribution images (fedora, archlinux, alpine, opensuse/leap) introduces a supply chain dependency on Docker Hub and the distributions' container image pipelines. This is acceptable for CI testing purposes. A compromise of these images could cause CI failures or false test passes, but would not affect user-installed binaries.
+| Aspect | Homebrew | Distro Packages |
+|--------|----------|-----------------|
+| Binary source | Homebrew GHCR | Distro mirrors |
+| Signing | Homebrew bottle checksums | GPG-signed packages |
+| Security review | Homebrew maintainers | Distro security teams |
+| CVE response | Homebrew rebuild | Distro backport (often faster) |
+| Auditability | Recipe git history | Distro package changelogs |
 
-**Mitigation**: For higher assurance, images could be pinned by digest and periodically audited, but this adds maintenance burden for limited benefit in a test-only context.
+For library dependencies (which users don't directly interact with), distro packages provide better institutional security guarantees.
+
+**CI container images**: Using official distribution images introduces a supply chain dependency on Docker Hub. This is acceptable for CI testing purposes. A compromise would affect CI results, not user-installed binaries.
 
 ### User Data Exposure
 
-**No new data collection**: This design does not introduce new data collection or transmission. The musl detection runs entirely locally. CI tests don't transmit user data - they run on GitHub's infrastructure with test fixtures.
-
-**libc detection**: The detection reads system files to determine libc type. This is purely local and doesn't expose any user data.
+**No new data collection**: This design does not introduce new data collection or transmission. Package manager detection runs entirely locally.
 
 ### Mitigations Summary
 
 | Risk | Mitigation | Residual Risk |
 |------|------------|---------------|
-| Compromised CI container image | Use official distribution images; CI failures don't affect user binaries | CI could pass falsely; periodic image audit recommended |
-| libc detection could be tricked | Detection uses multiple signals (file presence + ldd output) | Exotic environments might misdetect; acceptable given rarity |
-| ARM64 runner security | Use GitHub-hosted runners with standard isolation | Same trust model as existing amd64 runners |
+| Distro package compromised | Distro security teams + GPG signing | Same risk as any system software |
+| Package manager detection tricked | Multiple detection methods | Exotic environments might misdetect |
+| User can't install system packages | Clear error message with exact command | User may need IT help in locked-down environments |
+| Compromised CI container image | Use official distribution images | CI could pass falsely; periodic audit recommended |
 
 ## Consequences
 
 ### Positive
 
-- **Accurate platform coverage**: Every released binary (linux-amd64, linux-arm64, darwin-amd64, darwin-arm64) will have corresponding integration tests, eliminating untested release artifacts
-- **Fail-fast for musl users**: Alpine users discover the embedded library limitation immediately with actionable guidance, rather than encountering cryptic dlopen failures
-- **Family-specific verification**: dlopen tests run in real distribution environments (Fedora, Arch, openSUSE), catching family-specific issues like path differences or package manager quirks
-- **Clear support contract**: The verification matrix exactly matches the release matrix, making support claims verifiable
+- **Full Alpine/musl support**: Tools now work on Alpine Linux. The glibc/musl incompatibility is solved by using native system packages
+- **Accurate platform coverage**: Every released binary (linux-amd64, linux-arm64, darwin-amd64, darwin-arm64) will have corresponding integration tests
+- **Reduced maintenance burden**: No need to maintain embedded library binaries. Distros handle library updates and security patches
+- **Better security posture**: Library dependencies are managed by distro security teams with institutional review processes
+- **Family-specific verification**: dlopen tests run on ALL distribution families including Alpine
+- **Clear philosophy**: "Self-contained tools, system-managed dependencies" provides clear guidance for future recipe development
 
 ### Negative
 
-- **Alpine embedded libraries deferred**: Users on Alpine/musl systems cannot use embedded library recipes. They must use system packages or build from source
+- **Loss of hermetic library versions**: Library versions are controlled by distros, not tsuku. Version may differ across systems
+- **Package manager dependency**: Users need access to system package managers (or pre-installed packages)
+- **macOS asymmetry**: macOS still uses Homebrew for library deps since there's no system package manager
+- **Package name mapping maintenance**: Must maintain a table mapping library names to distro-specific package names
 - **Increased CI time**: Container-based family tests add overhead, though parallelization mitigates this
-- **Container test limitations**: Container tests on Ubuntu runners may not catch kernel-level or hardware-level issues specific to other distributions
-- **Maintenance burden**: More test configurations to maintain as families evolve (new Fedora versions, Arch changes, etc.)
 
 ### Mitigations
 
-- **Alpine limitation**: Runtime detection provides clear guidance; the limitation can be lifted later if musl binaries are added
-- **CI time**: Tests run in parallel across matrix; container setup is cached where possible
-- **Container limitations**: Focus container tests on package manager and path behavior, which containers do represent accurately
-- **Maintenance**: Use latest/rolling tags where appropriate (e.g., `archlinux:base`) to reduce version pinning burden
+- **Version differences**: Distros backport security fixes; version differences rarely cause compatibility issues for common libraries
+- **Package manager access**: Most users have this. For locked-down environments, the `system_dependency` action provides clear install commands that users can request from IT
+- **macOS asymmetry**: macOS has a single libc (no glibc/musl split), so Homebrew works fine there
+- **Package name mapping**: The list is small (4 libraries currently) and changes infrequently. CI tests verify the mapping works
+- **CI time**: Tests run in parallel; container setup is cached
+
+## Research References
+
+The following research documents informed this design:
+
+### Core Research
+- `wip/research/explore_full_synthesis.md` - Initial synthesis of Homebrew vs system packages
+- `wip/research/explore_apk-synthesis.md` - APK extraction viability analysis
+
+### APK Deep Dive
+- `wip/research/explore_apk-format.md` - APK file format (3 gzip streams, no placeholders)
+- `wip/research/explore_apk-infrastructure.md` - Alpine CDN, APKINDEX parsing
+- `wip/research/explore_apk-portability.md` - Cross-musl-distro compatibility (Alpine-only)
+- `wip/research/explore_apk-download.md` - Implementation gap analysis (~500 LOC)
+- `wip/research/explore_apk-relocation.md` - RPATH and dlopen verification
+
+### Market and Value Analysis
+- `wip/research/explore_alpine-market.md` - Alpine market share (~20% of containers)
+- `wip/research/explore_musl-landscape.md` - musl distro comparison (Alpine 95%+)
+- `wip/research/explore_hermetic-value.md` - Why hermetic APK extraction doesn't provide value
+
+### Phase 8 Reviews
+- `wip/research/explore_phase8_architecture-review.md` - Architecture clarity review
+- `wip/research/explore_phase8_security-review.md` - Security analysis
