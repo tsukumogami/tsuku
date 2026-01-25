@@ -500,6 +500,33 @@ func (a *SystemDependencyAction) Execute(ctx *ExecutionContext, params map[strin
 }
 ```
 
+**Package installation detection per package manager:**
+
+```go
+func isInstalled(pkg string, pm PackageManager) bool {
+    var cmd *exec.Cmd
+    switch pm {
+    case Apt:
+        // dpkg-query returns 0 only if package is fully installed
+        cmd = exec.Command("dpkg-query", "-W", "-f=${Status}", pkg)
+        out, err := cmd.Output()
+        return err == nil && strings.Contains(string(out), "install ok installed")
+    case Dnf, Zypper:
+        // rpm -q returns 0 if package is installed
+        cmd = exec.Command("rpm", "-q", pkg)
+    case Pacman:
+        // pacman -Q returns 0 if package is installed
+        cmd = exec.Command("pacman", "-Q", pkg)
+    case Apk:
+        // apk info -e returns 0 if package is installed
+        cmd = exec.Command("apk", "info", "-e", pkg)
+    default:
+        return false
+    }
+    return cmd.Run() == nil
+}
+```
+
 **Package name mapping** (internal/actions/system_deps.go):
 
 ```go
@@ -570,20 +597,132 @@ func DetectPackageManager() PackageManager {
 }
 ```
 
-**Error messages:**
+**Root detection for sudo prefix:**
 
-When a system dependency is missing:
+```go
+func getInstallCommand(pkg string, pm PackageManager) string {
+    // Skip sudo prefix if running as root (common in containers)
+    prefix := "sudo "
+    if os.Getuid() == 0 {
+        prefix = ""
+    }
+
+    switch pm {
+    case Apt:
+        return prefix + "apt install " + pkg
+    case Dnf:
+        return prefix + "dnf install " + pkg
+    case Pacman:
+        return prefix + "pacman -S " + pkg
+    case Apk:
+        return prefix + "apk add " + pkg
+    case Zypper:
+        return prefix + "zypper install " + pkg
+    }
+    return ""
+}
 ```
-Error: nodejs requires libstdc++ which is not installed.
+
+**Standardized error message format:**
+
+All dependency errors use a consistent multi-line format:
+
+```
+Dependency missing: <library>
+
+<tool> requires <library> for <purpose>.
+
+To install on <distro>:
+  <command>
+
+Need help? See: https://tsuku.dev/docs/dependencies
+```
+
+Example (when not root):
+```
+Dependency missing: libstdc++
+
+nodejs requires libstdc++ for C++ runtime support.
 
 To install on Debian/Ubuntu:
   sudo apt install libstdc++6
 
-To install on Alpine:
-  sudo apk add libstdc++
+Need help? See: https://tsuku.dev/docs/dependencies
 ```
 
-### Component 2: Hybrid CI Test Matrix
+Example (when running as root in container):
+```
+Dependency missing: libstdc++
+
+nodejs requires libstdc++ for C++ runtime support.
+
+To install on Alpine:
+  apk add libstdc++
+
+Need help? See: https://tsuku.dev/docs/dependencies
+```
+
+**Graceful degradation for no-sudo environments:**
+
+When a user can't install system packages (rootless containers, locked-down corporate environments), the action falls back to library path detection:
+
+```go
+func checkDependency(lib string, pm PackageManager) error {
+    pkg := ResolvePackageName(lib, pm)
+
+    // First, check if package is installed via package manager
+    if isInstalled(pkg, pm) {
+        return nil
+    }
+
+    // Fallback: check if library exists in standard paths
+    // (covers cases where library is present but not "installed" per package manager)
+    if path, found := findLibraryInStandardPaths(lib); found {
+        log.Printf("Found %s at %s (not installed via package manager)", lib, path)
+        return nil
+    }
+
+    // Library truly not available - show install guidance
+    return fmt.Errorf(formatDependencyError(lib, pkg, pm))
+}
+
+func findLibraryInStandardPaths(lib string) (string, bool) {
+    paths := []string{
+        "/usr/lib/lib" + lib + ".so",
+        "/lib/lib" + lib + ".so",
+        "/usr/lib64/lib" + lib + ".so",
+        "/usr/lib/x86_64-linux-gnu/lib" + lib + ".so",
+        "/usr/lib/aarch64-linux-gnu/lib" + lib + ".so",
+    }
+    for _, p := range paths {
+        if _, err := os.Stat(p); err == nil {
+            return p, true
+        }
+    }
+    return "", false
+}
+```
+
+**Graceful detection failure:**
+
+When package manager detection fails (minimal containers, chroot environments), provide fallback instructions for all families:
+
+```
+Unable to detect system package manager.
+
+nodejs requires libstdc++ for C++ runtime support.
+
+Install with your package manager:
+  Debian/Ubuntu:  apt install libstdc++6
+  Fedora/RHEL:    dnf install libstdc++
+  Arch:           pacman -S gcc-libs
+  Alpine:         apk add libstdc++
+  openSUSE:       zypper install libstdc++6
+
+Need help? See: https://tsuku.dev/docs/dependencies
+```
+
+### Component 3: Hybrid CI Test Matrix
 
 Restructure CI to use the appropriate test environment for each verification type:
 
@@ -604,7 +743,7 @@ Restructure CI to use the appropriate test environment for each verification typ
 | alpine | `alpine:3.19` | Checksum, homebrew (no dlopen - musl) |
 | suse | `opensuse/leap:15` | Checksum, homebrew, dlopen |
 
-### Component 3: Verification Coverage Parity
+### Component 4: Verification Coverage Parity
 
 Expand dlopen tests to all glibc families and ARM64:
 
@@ -719,10 +858,33 @@ User runs: tsuku install cmake (which depends on openssl)
 **Changes**:
 1. Add `internal/actions/system_dependency.go` implementing the new action
 2. Add `internal/actions/system_deps.go` with package name mapping table
-3. Implement `isInstalled()` check for each package manager
-4. Implement `getInstallCommand()` for clear user guidance
-5. Register action in action registry
-6. Add comprehensive tests for each Linux family
+3. Implement `isInstalled()` check for each package manager (dpkg-query, rpm -q, pacman -Q, apk info -e)
+4. Implement `getInstallCommand()` for clear user guidance with root detection
+5. Implement `findLibraryInStandardPaths()` for graceful degradation
+6. Register action in action registry
+7. Add comprehensive tests for each Linux family
+
+**Pre-flight dependency checking**: The `system_dependency` action runs during recipe pre-flight analysis (before any downloads occur). This ensures users see all missing dependencies upfront, rather than discovering them mid-install:
+
+```
+$ tsuku install cmake
+
+Checking dependencies...
+  openssl - not found
+  zlib    - not found
+
+cmake requires system packages that are not installed:
+
+  openssl-dev   (TLS/SSL library)
+  zlib-dev      (compression library)
+
+Install with:
+  apk add openssl-dev zlib-dev
+
+Then retry: tsuku install cmake
+```
+
+This avoids the frustrating install-fail-retry loop identified in UX review.
 
 **Dependencies**: Phase 1
 
@@ -737,6 +899,30 @@ User runs: tsuku install cmake (which depends on openssl)
 4. Update `gcc-libs.toml`: Same pattern (Linux-only, no macOS equivalent needed)
 5. Update dependent recipes (ruby, nodejs, cmake) to use new library recipes
 6. Add CI tests verifying system_dependency works on each family
+
+**Migration strategy with deprecation warnings:**
+
+To avoid breaking existing users, the migration proceeds in stages:
+
+1. **Phase 3a - Add system_dependency alongside homebrew (v1.x)**
+   - Recipes include both actions; system_dependency takes precedence on Linux
+   - Existing homebrew action remains as fallback
+   - No user-visible warnings yet
+
+2. **Phase 3b - Deprecation warning (v1.y)**
+   - Homebrew action for libraries on Linux emits deprecation warning:
+     ```
+     Warning: homebrew action for libraries is deprecated on Linux.
+     Migrate to system_dependency. See: https://tsuku.dev/docs/migration
+     ```
+   - Warning includes documentation link
+
+3. **Phase 3c - Remove homebrew for libraries (v2.0)**
+   - Homebrew action no longer processes library recipes on Linux
+   - Returns error directing users to migrate
+   - macOS continues using homebrew unchanged
+
+This staged approach gives users time to update cached recipes and custom configurations.
 
 **Dependencies**: Phase 2
 
@@ -800,6 +986,12 @@ This preserves tsuku's principle of not requiring or using elevated privileges.
 
 **Package manager detection**: Detection reads command availability (`which apt`, `which dnf`, etc.) with normal user permissions. No privilege escalation.
 
+**PATH trust assumption**: Package manager detection uses `exec.LookPath()` which searches the user's PATH. In a hostile environment where an attacker has modified PATH to include a fake `apt` or `apk` binary, tsuku could display incorrect install commands. This is an accepted risk because:
+
+1. An attacker with PATH modification capability already has code execution ability
+2. The displayed command is informational; the user must choose to run it
+3. No precedent exists for package managers to verify PATH integrity
+
 **CI test isolation**: Container-based tests run with default container isolation. The tsuku-dltest helper runs with sanitized environment variables, which is existing behavior unchanged by this design.
 
 ### Supply Chain Risks
@@ -858,6 +1050,25 @@ For library dependencies (which users don't directly interact with), distro pack
 - **Package name mapping**: The list is small (4 libraries currently) and changes infrequently. CI tests verify the mapping works
 - **CI time**: Tests run in parallel; container setup is cached
 
+### Future Enhancements
+
+These improvements are out of scope for this design but could enhance the user experience:
+
+- **`tsuku deps <tool>` command**: Let users query dependencies before installing. This would show all system packages required for a tool, with distro-specific package names, allowing users to batch-install dependencies:
+  ```
+  $ tsuku deps cmake
+  cmake dependencies:
+    openssl - libssl-dev (Debian), openssl-dev (Alpine), ...
+    zlib    - zlib1g-dev (Debian), zlib-dev (Alpine), ...
+
+  On this system (Alpine), run:
+    apk add openssl-dev zlib-dev
+  ```
+
+- **Nix alternative path**: For users who need hermetic builds on Alpine, document that recipes can use `nix_install` as an alternative to `system_dependency`. tsuku already has nix-portable support.
+
+- **CI mode**: A `--ci` flag that suppresses informational dependency messages, assuming packages are pre-installed (useful in CI/CD pipelines with pre-configured images).
+
 ## Research References
 
 The following research documents informed this design:
@@ -881,3 +1092,8 @@ The following research documents informed this design:
 ### Phase 8 Reviews
 - `wip/research/explore_phase8_architecture-review.md` - Architecture clarity review
 - `wip/research/explore_phase8_security-review.md` - Security analysis
+
+### Panel Reviews
+- `wip/research/review_platform-architecture.md` - Platform architecture specialist (Approve with changes)
+- `wip/research/review_security.md` - Security specialist (Approve)
+- `wip/research/review_developer-experience.md` - Developer experience specialist (Approve with changes)
