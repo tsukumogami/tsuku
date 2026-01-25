@@ -41,3 +41,8 @@ tmp/
 # Test progress state
 .test-progress
 tmp/
+
+# Local environment files with secrets
+.local.env
+.env.local
+.env
