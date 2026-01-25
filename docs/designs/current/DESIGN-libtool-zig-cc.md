@@ -5,9 +5,11 @@ decision: Enhance the cc wrapper script to detect and handle `-print-prog-name` 
 rationale: This approach directly fixes the root cause with minimal changes to a single function in util.go. The wrapper enhancement follows existing patterns in the codebase and provides genuine GCC compatibility, enabling libtool-based builds and re-enabling the No-GCC Container CI test.
 ---
 
-# DESIGN: Libtool Compatibility with Zig CC
+## Status
 
-**Status:** Current
+Current
+
+# DESIGN: Libtool Compatibility with Zig CC
 
 **Upstream Tracking:** [ziglang/zig#17273](https://github.com/ziglang/zig/issues/17273) - When this is resolved, we can remove our wrapper workaround.
 

@@ -619,36 +619,6 @@ Add test coverage:
 
 **Dependencies**: Phase 6 complete
 
-## Consequences
-
-### Positive
-
-- **Enables golden plan testing**: Scripts can query supported platforms from uncommitted recipes without network calls or version resolution
-- **Consistent command interface**: Follows established patterns (--recipe like eval/install, --json like existing commands)
-- **Backward compatible**: Existing `tsuku info <tool>` usage works exactly as before
-- **Performance optimization**: `--metadata-only` provides fast path for static queries
-- **Complete information**: Expanded schema serves both human exploration and automation needs
-- **Simple implementation**: Builds on existing code patterns and infrastructure
-- **Platform computation exposed**: Automation doesn't need to reimplement platform matching logic
-- **Fast static queries**: No network calls, no version resolution when using `--metadata-only`
-
-### Negative
-
-- **Flag interaction complexity**: Three flags (--recipe, --metadata-only, --json) create multiple modes to document and test
-- **Expanded output schema**: More fields increase maintenance burden as recipe schema evolves
-- **Redundant platform data**: Both raw constraints and computed platforms increase output size slightly
-- **No field filtering**: Users wanting a single field must parse full JSON (mitigated by jq)
-- **Output schema becomes API**: Breaking changes to JSON structure could break automation scripts
-- **Mode confusion**: Users must understand when to use --metadata-only vs default behavior
-
-### Mitigations
-
-- **Schema stability commitment**: Document the JSON schema and treat it as a versioned API surface; breaking changes require major version bump or versioning flag
-- **Testing coverage**: Comprehensive tests ensure expanded schema and flag combinations work correctly
-- **Documentation**: Provide clear examples showing use cases for each flag combination
-- **Backward compatibility tests**: Automated tests ensure existing `tsuku info` usage continues working
-- **Clear flag descriptions**: Help text explains when to use --metadata-only and --recipe
-
 ## Security Considerations
 
 ### Download Verification
@@ -761,3 +731,33 @@ The primary risk is **misleading metadata in malicious recipes**, which is mitig
 - Recipe trust model is inherited from broader tsuku security design (registry integrity)
 
 Residual risk: Automation scripts relying on metadata output could be misled by false metadata claims. This is acceptable because the alternative (parsing TOML directly or running `tsuku plan`) has equivalent or greater risk.
+
+## Consequences
+
+### Positive
+
+- **Enables golden plan testing**: Scripts can query supported platforms from uncommitted recipes without network calls or version resolution
+- **Consistent command interface**: Follows established patterns (--recipe like eval/install, --json like existing commands)
+- **Backward compatible**: Existing `tsuku info <tool>` usage works exactly as before
+- **Performance optimization**: `--metadata-only` provides fast path for static queries
+- **Complete information**: Expanded schema serves both human exploration and automation needs
+- **Simple implementation**: Builds on existing code patterns and infrastructure
+- **Platform computation exposed**: Automation doesn't need to reimplement platform matching logic
+- **Fast static queries**: No network calls, no version resolution when using `--metadata-only`
+
+### Negative
+
+- **Flag interaction complexity**: Three flags (--recipe, --metadata-only, --json) create multiple modes to document and test
+- **Expanded output schema**: More fields increase maintenance burden as recipe schema evolves
+- **Redundant platform data**: Both raw constraints and computed platforms increase output size slightly
+- **No field filtering**: Users wanting a single field must parse full JSON (mitigated by jq)
+- **Output schema becomes API**: Breaking changes to JSON structure could break automation scripts
+- **Mode confusion**: Users must understand when to use --metadata-only vs default behavior
+
+### Mitigations
+
+- **Schema stability commitment**: Document the JSON schema and treat it as a versioned API surface; breaking changes require major version bump or versioning flag
+- **Testing coverage**: Comprehensive tests ensure expanded schema and flag combinations work correctly
+- **Documentation**: Provide clear examples showing use cases for each flag combination
+- **Backward compatibility tests**: Automated tests ensure existing `tsuku info` usage continues working
+- **Clear flag descriptions**: Help text explains when to use --metadata-only and --recipe

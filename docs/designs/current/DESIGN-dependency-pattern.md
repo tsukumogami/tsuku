@@ -311,6 +311,51 @@ runtime_dependencies = ["go"]  # Override: interpreter
 ```
 Result: `install_deps=["go"]`, `runtime_deps=["go"]`
 
+## Implementation Approach
+
+### Code Organization
+
+The implementation introduces new packages and modifies existing ones:
+
+```
+internal/
+├── actions/
+│   └── dependencies.go      # New: ActionDeps registry
+├── deps/
+│   ├── resolver.go          # New: Resolution algorithm
+│   ├── transitive.go        # New: Transitive resolution with cycle detection
+│   └── parser.go            # New: Version constraint parsing
+├── install/
+│   ├── installer.go         # Modified: Use resolver before executing steps
+│   └── wrapper.go           # Modified: Generate wrappers with runtime PATH
+└── state/
+    └── state.go             # Modified: Track install/runtime deps
+```
+
+### High-Level Steps
+
+1. **Create the action dependency registry** - Define `ActionDeps` struct and populate `ActionDependencies` map with all ecosystem actions and their install-time/runtime requirements.
+
+2. **Implement the resolution algorithm** - Build `resolve_dependencies()` that walks recipe steps, collects implicit deps from the registry, and applies overrides per the precedence rules.
+
+3. **Add transitive resolution** - Recursively resolve dependencies up to depth 10, detecting cycles and returning clear errors.
+
+4. **Wire into the installer** - Before executing recipe steps, resolve all dependencies and ensure they're installed. Pass runtime deps to wrapper generation.
+
+5. **Update wrapper generation** - Modify `GenerateWrapper()` to accept runtime dependencies and prepend their bin directories to PATH in the wrapper script.
+
+6. **Extend state tracking** - Add `install_dependencies` and `runtime_dependencies` fields to the state.json schema. Record dependencies during install.
+
+7. **Add user-facing features** - Update `tsuku info` to display dependency trees. Update `tsuku remove` to warn about dependent tools.
+
+8. **Remove legacy bootstrap code** - Delete `EnsureNpm()`, `EnsurePipx()`, and similar functions from action implementations. The resolver now handles this uniformly.
+
+### Migration Strategy
+
+Existing recipes continue working without changes. The resolver computes implicit dependencies from actions, so recipes that relied on internal bootstrap logic get the same behavior through the new system.
+
+Edge-case recipes (like esbuild) need explicit `runtime_dependencies = []` overrides. These are identified during Phase 4 recipe audit and updated before removing legacy code.
+
 ## Security Considerations
 
 ### Dependency Injection Risk
@@ -339,6 +384,34 @@ Result: `install_deps=["go"]`, `runtime_deps=["go"]`
 - PATH constructed by tsuku, not recipes
 - Wrapper scripts use absolute paths
 - Dependencies only prepend to PATH
+
+## Consequences
+
+### Positive
+
+- **Zero boilerplate for common case**: Recipe authors don't need to declare dependencies that actions already know about. An npm package recipe just specifies `npm_install` and gets nodejs dependency automatically.
+
+- **Static analyzability**: Dependency graphs can be computed without executing recipes. This enables `tsuku info` dependency trees, pre-install validation, and future features like parallel installation of independent deps.
+
+- **Consistent behavior**: All ecosystem actions handle dependencies the same way through the resolver. No more surprises where some actions auto-install deps and others error.
+
+- **Clear separation of install vs runtime**: The model explicitly distinguishes tools needed to build (Go compiler) from tools needed to run (Node.js runtime). This prevents unnecessary runtime dependencies for compiled binaries.
+
+- **Explicit override escape hatches**: Edge cases like compiled npm binaries (esbuild) or Go interpreters (yaegi) can override the defaults without special-casing in action code.
+
+- **Improved user experience**: Users can see what will be installed before running a command. Uninstall warns about dependent tools. The system is transparent rather than magical.
+
+### Negative
+
+- **Hidden complexity**: Dependencies aren't visible in recipes without tooling support. Users might not realize an npm package depends on nodejs unless they run `tsuku info`.
+
+- **Override learning curve**: Recipe authors need to understand when to use `runtime_dependencies`, `extra_runtime_dependencies`, and recipe-level variants. The precedence rules add cognitive load.
+
+- **Migration effort**: Existing recipes work unchanged, but edge cases need auditing. Some recipes may need override declarations that weren't needed with the old bootstrap approach.
+
+- **Transitive depth limit**: The max depth of 10 is arbitrary. Deep dependency chains are unlikely in practice but the limit could cause issues for complex tool ecosystems.
+
+- **No version constraint solving**: Only simple pinning is supported (e.g., `nodejs@20`). Complex constraints like `>=18 <21` are out of scope. Users needing this must manage versions manually.
 
 ## Implementation Plan
 

@@ -103,6 +103,143 @@ SpatiaLite's dependencies use production Homebrew bottle recipes:
 - **Minimal configuration**: Infer as much as possible from repo URL
 - **Expand coverage**: Support Fossil-hosted projects
 
+## Considered Options
+
+### Option 1: Dedicated `fossil_archive` Action
+
+Create a new action specifically for Fossil repositories that handles both version resolution (via timeline API) and tarball downloads.
+
+**Pros:**
+- Mirrors the existing `github_archive` pattern, maintaining consistency
+- Single action handles the complete workflow (version lookup + download + extract)
+- Encapsulates Fossil-specific URL conventions and timeline parsing
+- Straightforward recipe syntax for recipe authors
+
+**Cons:**
+- Introduces a new action to maintain
+- Depends on Fossil's HTML timeline format (not a formal API)
+- Limited reuse if other VCS platforms need similar support
+
+### Option 2: Generic `vcs_archive` Action with Provider Plugins
+
+Create a generalized archive action that delegates version resolution and URL construction to pluggable providers.
+
+**Pros:**
+- Single action could support GitHub, Fossil, GitLab, etc.
+- Reduces total number of actions
+- More flexible for future VCS additions
+
+**Cons:**
+- Significantly more complex implementation
+- Configuration becomes more verbose
+- Over-engineered for current needs (only GitHub and Fossil)
+- Different VCS platforms have incompatible conventions that don't abstract cleanly
+
+### Option 3: Reuse `download` + `extract` Actions with External Version Resolution
+
+Use existing primitive actions and have recipe authors manually construct URLs.
+
+**Pros:**
+- No new code required
+- Maximum flexibility for edge cases
+
+**Cons:**
+- Recipes become verbose and error-prone
+- Version resolution must be handled separately
+- Duplicates URL construction logic across recipes
+- Poor developer experience
+
+## Decision Outcome
+
+**Chosen option: Option 1 - Dedicated `fossil_archive` Action**
+
+This approach was selected because:
+
+1. **Proven pattern**: The `github_archive` action already demonstrates this pattern works well. Following the same design reduces cognitive load for recipe authors and maintainers.
+
+2. **Right level of abstraction**: A dedicated action encapsulates Fossil-specific details (timeline parsing, URL conventions, tag formats) without over-generalizing.
+
+3. **Practical scope**: Only two VCS platforms (GitHub and Fossil) currently need archive support. A generic abstraction would add complexity without clear benefit.
+
+4. **Maintainability**: Fossil's timeline format has been stable for years. The maintenance burden is low and the action is self-contained.
+
+The implementation follows the `github_archive` model: a single action that resolves versions via `FossilTimelineProvider`, constructs the tarball URL, and delegates to existing download/extract infrastructure.
+
+## Solution Architecture
+
+### Component Overview
+
+The `fossil_archive` action integrates with Tsuku's existing architecture through two primary components:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Recipe Layer                            │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │ [[steps]]                                                ││
+│  │ action = "fossil_archive"                                ││
+│  │ repo = "https://sqlite.org/src"                          ││
+│  │ project_name = "sqlite"                                  ││
+│  └─────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Action Layer                              │
+│  ┌─────────────────────┐    ┌─────────────────────────────┐│
+│  │  FossilArchiveAction│───▶│  Existing Download/Extract  ││
+│  │  (fossil_archive.go)│    │  Infrastructure             ││
+│  └─────────────────────┘    └─────────────────────────────┘│
+│             │                                                │
+│             ▼                                                │
+│  ┌─────────────────────┐                                    │
+│  │ URL Construction    │                                    │
+│  │ {repo}/tarball/{tag}/{project}.tar.gz                   │
+│  └─────────────────────┘                                    │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Version Layer                              │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │              FossilTimelineProvider                      ││
+│  │  ┌─────────────────┐    ┌─────────────────────────────┐ ││
+│  │  │ Timeline Fetch  │───▶│  Version Extraction         │ ││
+│  │  │ ?t=release&n=all│    │  tag_prefix + separator     │ ││
+│  │  └─────────────────┘    └─────────────────────────────┘ ││
+│  └─────────────────────────────────────────────────────────┘│
+│                              │                               │
+│                              ▼                               │
+│  ┌─────────────────────────────────────────────────────────┐│
+│  │            CachedVersionLister (wrapper)                 ││
+│  └─────────────────────────────────────────────────────────┘│
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Key Components
+
+**FossilTimelineProvider** (`internal/version/fossil_provider.go`):
+- Fetches the Fossil timeline page: `{repo}/timeline?t={timeline_tag}&n=all&y=ci`
+- Parses HTML to extract version tags matching the configured `tag_prefix`
+- Converts tags to semantic versions using `version_separator` (e.g., `core-9-0-0` → `9.0.0`)
+- Wrapped with `CachedVersionLister` for timeline caching
+
+**FossilArchiveAction** (`internal/actions/fossil_archive.go`):
+- Constructs tarball URL: `{repo}/tarball/{tag}/{project_name}.tar.gz`
+- Maps user-requested version to Fossil tag format
+- Delegates download and extraction to existing infrastructure
+- Implements `Decomposable` interface for deterministic installation plans
+
+### Data Flow
+
+1. User requests `tsuku install sqlite@3.46.0`
+2. Recipe loader finds `sqlite.toml` with `fossil_archive` action
+3. `FossilTimelineProvider` validates version `3.46.0` exists
+4. Action constructs tag: `version-3.46.0` (using `tag_prefix`)
+5. Action builds URL: `https://sqlite.org/src/tarball/version-3.46.0/sqlite.tar.gz`
+6. Existing download infrastructure fetches tarball over HTTPS
+7. Existing extract infrastructure unpacks to work directory
+8. Subsequent build steps (`configure_make`) proceed normally
+
 ## Background
 
 ### Fossil SCM Capabilities
@@ -375,24 +512,6 @@ Create testdata recipes to showcase `fossil_archive` capability:
 | `internal/recipe/recipes/s/spatialite.toml` | New: SpatiaLite production recipe (Homebrew) |
 | `docs/BUILD-ESSENTIALS.md` | Add fossil_archive to build essentials reference |
 
-## Consequences
-
-### Positive
-
-- **Concise recipes**: Single action handles version + download
-- **Consistent pattern**: Mirrors `github_archive` approach
-- **Expanded coverage**: Fossil projects now supported
-
-### Negative
-
-- **New action to maintain**: Additional code surface
-- **HTML parsing**: Depends on Fossil timeline structure
-
-### Mitigations
-
-- Timeline format has been stable for years
-- Action is self-contained, minimal maintenance
-
 ## Security Considerations
 
 ### Trust Model
@@ -445,3 +564,21 @@ Standard archive protections apply:
 ### User Data Exposure
 
 **Not applicable** - only fetches public pages.
+
+## Consequences
+
+### Positive
+
+- **Concise recipes**: Single action handles version + download
+- **Consistent pattern**: Mirrors `github_archive` approach
+- **Expanded coverage**: Fossil projects now supported
+
+### Negative
+
+- **New action to maintain**: Additional code surface
+- **HTML parsing**: Depends on Fossil timeline structure
+
+### Mitigations
+
+- Timeline format has been stable for years
+- Action is self-contained, minimal maintenance

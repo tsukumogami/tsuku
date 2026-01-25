@@ -563,30 +563,6 @@ Auto-generate recipes from cask metadata.
 
 **Dependencies:** Slices 1-4
 
-## Consequences
-
-### Positive
-
-- **Unified tool management**: Users can manage GUI applications alongside CLI tools
-- **Automatic updates**: Cask version provider enables `tsuku update` for apps
-- **Flexibility**: `app_bundle` action works for any macOS app, not just Homebrew casks
-- **Security**: Checksum verification for all downloads, clear audit trail
-- **Self-contained**: No Homebrew installation required on user's machine
-
-### Negative
-
-- **macOS-only**: The `app_bundle` action only works on macOS (DMG/hdiutil dependency)
-- **Recipe verbosity**: Cask recipes are more verbose than a hypothetical single-action approach
-- **URL instability**: Vendor URLs change; recipes may break between Homebrew cask updates
-- **Auto-update conflicts**: Apps that self-update may conflict with tsuku's version tracking
-
-### Mitigations
-
-- **macOS-only**: Document clearly in recipe metadata (`supported_os = ["darwin"]`). Use `when` clause to skip on Linux.
-- **Recipe verbosity**: Provide CaskBuilder (Slice 5) to auto-generate recipes. Document template syntax clearly.
-- **URL instability**: Recipes should use version provider (not hardcoded URLs) for automatic healing.
-- **Auto-update conflicts**: Document best practice (disable in-app auto-update for tsuku-managed apps). Consider `app_bundle` option to block app self-update mechanisms.
-
 ## Security Considerations
 
 ### Download Verification
@@ -721,3 +697,26 @@ Unlike formula bottles (all from `ghcr.io`), cask downloads come from arbitrary 
 3. **Codesigning verification**: Consider adding optional `codesign --verify` in future enhancement
 4. **Quarantine handling**: Downloaded apps will have macOS quarantine attribute by default (first-run Gatekeeper check)
 
+## Consequences
+
+### Positive
+
+- **Unified tool management**: Users can manage GUI applications alongside CLI tools
+- **Automatic updates**: Cask version provider enables `tsuku update` for apps
+- **Flexibility**: `app_bundle` action works for any macOS app, not just Homebrew casks
+- **Security**: Checksum verification for all downloads, clear audit trail
+- **Self-contained**: No Homebrew installation required on user's machine
+
+### Negative
+
+- **macOS-only**: The `app_bundle` action only works on macOS (DMG/hdiutil dependency)
+- **Recipe verbosity**: Cask recipes are more verbose than a hypothetical single-action approach
+- **URL instability**: Vendor URLs change; recipes may break between Homebrew cask updates
+- **Auto-update conflicts**: Apps that self-update may conflict with tsuku's version tracking
+
+### Mitigations
+
+- **macOS-only**: Document clearly in recipe metadata (`supported_os = ["darwin"]`). Use `when` clause to skip on Linux.
+- **Recipe verbosity**: Provide CaskBuilder (Slice 5) to auto-generate recipes. Document template syntax clearly.
+- **URL instability**: Recipes should use version provider (not hardcoded URLs) for automatic healing.
+- **Auto-update conflicts**: Document best practice (disable in-app auto-update for tsuku-managed apps). Consider `app_bundle` option to block app self-update mechanisms.

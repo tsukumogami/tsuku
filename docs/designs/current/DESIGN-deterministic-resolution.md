@@ -17,6 +17,20 @@ Current
 - **Archived**: 2025-12-19
 - **See Also**: docs/GUIDE-plan-based-installation.md (user guide)
 
+## Context and Problem Statement
+
+Tsuku installs developer tools by evaluating recipes at runtime. These recipes contain templates, version providers, and platform-specific logic that resolve dynamically during installation. While this flexibility enables recipes to work across platforms and versions, it creates a reproducibility problem: the same `tsuku install` command can produce different results depending on when and where it runs.
+
+This non-determinism affects three key user scenarios:
+
+1. **Team installations**: Different team members running `tsuku install ripgrep` may get different binaries if upstream assets change between installations.
+
+2. **Recipe testing**: Recipe authors cannot verify their changes without performing actual installations. There's no way to see what a recipe would download without downloading it.
+
+3. **Air-gapped environments**: Installations require network access at execution time. Organizations with strict security requirements cannot pre-approve specific downloads or install in isolated environments.
+
+The root cause is that recipe evaluation and installation execution are interleaved. Platform detection, URL expansion, and asset downloads happen as a single operation with no intermediate representation. We need an architecture that separates "what to install" from "how to install it."
+
 ## Vision
 
 **A recipe is a program that produces a deterministic installation plan.**
@@ -181,6 +195,138 @@ The executor should be refactored to:
 3. **Reuse**: Leverage existing download and validation infrastructure
 4. **Security**: Checksum verification is mandatory, mismatches are failures
 
+## Considered Options
+
+### Option A: Checksum-only verification (rejected)
+
+Add checksum verification to the existing installation flow. Recipes would include optional checksums, and installation would fail on mismatch.
+
+**Pros**: Minimal changes to existing architecture.
+
+**Cons**: Doesn't solve testability. Doesn't enable air-gapped installations. Checksums must be maintained manually in recipes. Non-determinism remains the default.
+
+### Option B: Lock file approach (deferred)
+
+Introduce a `tsuku.lock` file that captures resolved versions and checksums for a project's tools. Similar to `package-lock.json` or `Cargo.lock`.
+
+**Pros**: Familiar pattern. Good for project-level reproducibility.
+
+**Cons**: Requires project context. Doesn't help with single-tool installations. Doesn't address recipe testing. Lock file generation still needs the underlying infrastructure this design provides.
+
+### Option C: Two-phase eval/exec model (selected)
+
+Separate recipe evaluation (produces deterministic plan) from plan execution (deterministic by construction). All installations go through plan generation, making determinism architectural.
+
+**Pros**: Determinism by default. Enables recipe testing via plan comparison. Supports air-gapped installation. Plans are auditable artifacts. Lock files become a thin layer on top.
+
+**Cons**: Requires executor refactoring. Introduces new concept (plans) users may need to understand.
+
+## Decision Outcome
+
+We chose the two-phase eval/exec model (Option C). This approach makes determinism the default behavior rather than an opt-in feature. By refactoring the executor so that every installation generates a plan before execution, we guarantee reproducibility by architecture.
+
+The key insight is that an installation plan is a fully-resolved, immutable specification. Once generated, a plan contains exact URLs, checksums, and installation steps. Re-executing the same plan produces identical results. This model also enables lock files (Option B) as a future enhancement that stores plans for project-level coordination.
+
+## Solution Architecture
+
+The solution introduces an installation plan as the intermediate representation between recipe evaluation and execution.
+
+### Installation Plan Format
+
+Plans are JSON documents containing:
+
+- **Tool metadata**: Name, resolved version, platform
+- **Download specifications**: Exact URLs with SHA256 checksums
+- **Installation steps**: Ordered list of actions (extract, chmod, install_binaries)
+- **Provenance**: Recipe version, evaluation timestamp
+
+### Data Flow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Recipe Evaluation                         │
+│  Recipe + Version + Platform → Installation Plan             │
+│  - Queries version providers (GitHub, PyPI, etc.)           │
+│  - Expands URL templates                                    │
+│  - Downloads assets to compute checksums                    │
+│  - Resolves platform-specific paths                         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                   Installation Plan                          │
+│  {                                                           │
+│    "tool": "ripgrep",                                       │
+│    "version": "14.1.0",                                     │
+│    "platform": {"os": "linux", "arch": "amd64"},           │
+│    "downloads": [{                                          │
+│      "url": "https://github.com/.../rg-14.1.0.tar.gz",     │
+│      "sha256": "abc123..."                                  │
+│    }],                                                      │
+│    "steps": [...]                                           │
+│  }                                                          │
+└─────────────────────────────────────────────────────────────┘
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    Plan Execution                            │
+│  Installation Plan → Installed Tool                          │
+│  - Downloads from exact URLs                                │
+│  - Verifies SHA256 checksums (fails on mismatch)           │
+│  - Executes installation steps                              │
+│  - No version resolution or template expansion              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Command Interface
+
+- `tsuku eval <tool>[@version]`: Generate plan without installing
+- `tsuku install <tool>`: Generate plan, then execute (current behavior, refactored internally)
+- `tsuku install --plan <file>`: Execute pre-computed plan
+- `tsuku plan show <tool>`: Display stored plan for installed tool
+
+### Plan Storage
+
+Plans are stored inline in `$TSUKU_HOME/state.json` alongside version information. The `tsuku plan export` command extracts plans for sharing or air-gapped use.
+
+## Implementation Approach
+
+Implementation proceeds in three milestones, each delivering incremental value.
+
+### Milestone 1: Installation Plans and `tsuku eval`
+
+Introduce the plan concept and the `tsuku eval` command. This milestone focuses on plan generation without changing installation behavior.
+
+1. Define the installation plan JSON schema in `internal/plan/`
+2. Implement plan generation by extracting evaluation logic from the executor
+3. Add `tsuku eval` command that outputs plans to stdout
+4. Reuse `PreDownloader` from `internal/validate/predownload.go` for checksum computation
+
+After this milestone, recipe authors can test changes by comparing `tsuku eval` output against expected plans.
+
+### Milestone 2: Deterministic Execution
+
+Refactor the executor to use plans internally. All installations become plan-based, making determinism architectural.
+
+1. Split executor into `PlanGenerator` and `PlanExecutor` components
+2. Modify `tsuku install` to generate a plan, then execute it
+3. Store plans in state.json for installed tools
+4. Add `--refresh` flag to force re-evaluation for pinned versions
+5. Implement checksum verification with failure on mismatch
+
+After this milestone, re-installing a tool with a pinned version reuses the stored plan.
+
+### Milestone 3: Plan-Based Installation
+
+Enable installation from externally-provided plans for air-gapped environments.
+
+1. Add `--plan` flag to `tsuku install`
+2. Support reading plans from file or stdin
+3. Implement offline installation when cached assets are available
+4. Add `tsuku plan show` and `tsuku plan export` commands
+
+After this milestone, teams can generate plans on connected machines and execute them in isolated environments.
+
 ## Open Questions
 
 1. **Checksum source**: Should `tsuku eval` download files to compute checksums, or rely on upstream-provided checksums where available?
@@ -207,6 +353,36 @@ The executor should be refactored to:
 - Plans provide audit trail of intended downloads
 - Upstream changes detected via checksum mismatch
 - Residual risk: initial plan creation inherits existing compromise
+
+## Consequences
+
+### Positive
+
+- **Reproducibility by default**: Teams get identical installations without extra configuration. The architecture guarantees determinism rather than relying on careful implementation.
+
+- **Testable recipes**: Recipe changes can be validated by comparing `tsuku eval` output. Golden file testing becomes possible without performing actual installations.
+
+- **Air-gapped support**: Organizations with strict security requirements can pre-approve plans and execute them in isolated environments.
+
+- **Audit trail**: Plans document exactly what will be downloaded. Security teams can review plans before approving installations.
+
+- **Detection of upstream changes**: Checksum mismatches surface when upstream maintainers re-tag releases or modify assets. This converts a silent supply chain risk into a visible failure.
+
+- **Foundation for lock files**: Lock files become a thin layer that stores plans for project-level coordination. The complex work (plan generation) is already done.
+
+### Negative
+
+- **Increased complexity**: The executor refactoring adds a new abstraction layer. Contributors must understand the plan concept when modifying installation logic.
+
+- **Behavior change for pinned versions**: Users expecting `tsuku install ripgrep@14.1.0` to pick up upstream fixes must now use `--refresh`. This trades convenience for security.
+
+- **Storage overhead**: Plans stored in state.json increase its size. For users with many installed tools, this may become noticeable.
+
+- **Initial download during eval**: Computing checksums requires downloading assets during evaluation. This means `tsuku eval` is slower than a simple dry-run and requires network access.
+
+### Neutral
+
+- **Plan format is internal**: The JSON plan format is an implementation detail. We may change it between versions without breaking user workflows, since plans are typically consumed immediately after generation.
 
 ## Success Criteria
 

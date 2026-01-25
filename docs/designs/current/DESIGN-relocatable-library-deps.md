@@ -376,72 +376,6 @@ The `libs` section in state.json tracks library versions and which tools use the
 
 This enables garbage collection when tools are removed.
 
-### Security Considerations
-
-#### RPATH Security
-
-Security best practices for RPATH:
-- Never use bare `$ORIGIN` (allows library injection if binary is copied)
-- Always use subdirectory: `$ORIGIN/../lib`
-- tsuku controls `$TSUKU_HOME/` (user-private, mode 700)
-- Always inspect and strip existing RPATH values before setting new ones (prevents malicious bottles from injecting attacker-controlled paths)
-
-#### Download Verification
-
-**Homebrew Bottle Downloads:**
-- **Source:** GHCR (ghcr.io), operated by GitHub
-- **Verification:** SHA256 from GHCR manifest annotations verified against downloaded content
-- **Trust model:** GHCR manifest annotations are not cryptographically signed by Homebrew; integrity relies on HTTPS transport security. This is the same trust model as using Homebrew directly.
-- **Failure behavior:** Installation aborts if checksum doesn't match
-
-**Homebrew API Queries:**
-- **Source:** formulae.brew.sh (official Homebrew API)
-- **Transport:** HTTPS only
-- **Validation:** JSON response structure validated before parsing
-
-#### Placeholder Relocation
-
-**Path length validation:**
-- `@@HOMEBREW_PREFIX@@` placeholder is exactly 19 characters
-- Replacement path must be <= 19 characters or use symlink workaround
-- Binary relocation uses null-padding to preserve file structure
-
-**Path sanitization:**
-- Validate `$TSUKU_HOME` is an absolute path without `..` components
-- Reject paths containing shell metacharacters (`;`, `|`, `&`, `$`, backticks)
-- Use atomic file operations (write to temp, verify, rename) for binary patching
-
-#### Execution Isolation
-
-- **No system paths:** Libraries written only to `$TSUKU_HOME/libs/`
-- **No elevated privileges:** All operations run as current user
-- **Limited code execution:** Don't run Homebrew postinst scripts. However, libraries execute when loaded by tools. Relocation process performs binary patching but does not execute downloaded code.
-
-#### Supply Chain Risks
-
-- **Trust model:** Trust Homebrew maintainers and GitHub's GHCR infrastructure
-- **Compromise scenario:** If Homebrew or GHCR compromised, malicious libraries could be distributed
-- **Detection:** No built-in detection mechanism; relies on community detection of Homebrew compromises
-- **Future mitigation:** Checksum pinning (record first-install checksums, alert on changes) could be added
-
-#### User Data Exposure
-
-- Formula names sent to formulae.brew.sh and ghcr.io
-- Platform and architecture information implicit in bottle selection
-- Same privacy model as using Homebrew directly
-- Installation paths are not transmitted externally
-
-### Mitigations Summary
-
-| Risk | Mitigation | Residual Risk |
-|------|------------|---------------|
-| Malicious bottle | SHA256 verification from GHCR manifest | Compromise of Homebrew/GHCR |
-| Library injection via RPATH | Strip existing RPATH; use `$ORIGIN/../lib` | Local privilege escalation |
-| Man-in-the-middle | HTTPS for all connections | Compromised CA certificates |
-| Path traversal | Validate extraction paths | Novel traversal patterns |
-| Placeholder overflow | Validate path length <= 19 chars | Symlink workaround complexity |
-| Library collisions | Check for existing files before symlinking | Edge cases in collision detection |
-
 ## Implementation Approach
 
 ### Phase 1: Dependency Model Foundation
@@ -480,6 +414,66 @@ Security best practices for RPATH:
 
 - Prevent direct library installation with helpful error message
 - Hide libraries from `tsuku list` (or show with marker)
+
+## Security Considerations
+
+### Download Verification
+
+**Homebrew Bottle Downloads:**
+- **Source:** GHCR (ghcr.io), operated by GitHub
+- **Verification:** SHA256 from GHCR manifest annotations verified against downloaded content
+- **Trust model:** GHCR manifest annotations are not cryptographically signed by Homebrew; integrity relies on HTTPS transport security. This is the same trust model as using Homebrew directly.
+- **Failure behavior:** Installation aborts if checksum doesn't match
+
+**Homebrew API Queries:**
+- **Source:** formulae.brew.sh (official Homebrew API)
+- **Transport:** HTTPS only
+- **Validation:** JSON response structure validated before parsing
+
+### Execution Isolation
+
+- **No system paths:** Libraries written only to `$TSUKU_HOME/libs/`
+- **No elevated privileges:** All operations run as current user
+- **Limited code execution:** Don't run Homebrew postinst scripts. However, libraries execute when loaded by tools. Relocation process performs binary patching but does not execute downloaded code.
+
+**RPATH Security:**
+- Never use bare `$ORIGIN` (allows library injection if binary is copied)
+- Always use subdirectory: `$ORIGIN/../lib`
+- tsuku controls `$TSUKU_HOME/` (user-private, mode 700)
+- Always inspect and strip existing RPATH values before setting new ones (prevents malicious bottles from injecting attacker-controlled paths)
+
+**Placeholder Relocation:**
+- `@@HOMEBREW_PREFIX@@` placeholder is exactly 19 characters
+- Replacement path must be <= 19 characters or use symlink workaround
+- Binary relocation uses null-padding to preserve file structure
+- Validate `$TSUKU_HOME` is an absolute path without `..` components
+- Reject paths containing shell metacharacters (`;`, `|`, `&`, `$`, backticks)
+- Use atomic file operations (write to temp, verify, rename) for binary patching
+
+### Supply Chain Risks
+
+- **Trust model:** Trust Homebrew maintainers and GitHub's GHCR infrastructure
+- **Compromise scenario:** If Homebrew or GHCR compromised, malicious libraries could be distributed
+- **Detection:** No built-in detection mechanism; relies on community detection of Homebrew compromises
+- **Future mitigation:** Checksum pinning (record first-install checksums, alert on changes) could be added
+
+### User Data Exposure
+
+- Formula names sent to formulae.brew.sh and ghcr.io
+- Platform and architecture information implicit in bottle selection
+- Same privacy model as using Homebrew directly
+- Installation paths are not transmitted externally
+
+### Mitigations Summary
+
+| Risk | Mitigation | Residual Risk |
+|------|------------|---------------|
+| Malicious bottle | SHA256 verification from GHCR manifest | Compromise of Homebrew/GHCR |
+| Library injection via RPATH | Strip existing RPATH; use `$ORIGIN/../lib` | Local privilege escalation |
+| Man-in-the-middle | HTTPS for all connections | Compromised CA certificates |
+| Path traversal | Validate extraction paths | Novel traversal patterns |
+| Placeholder overflow | Validate path length <= 19 chars | Symlink workaround complexity |
+| Library collisions | Check for existing files before symlinking | Edge cases in collision detection |
 
 ## Consequences
 

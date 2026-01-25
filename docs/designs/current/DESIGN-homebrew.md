@@ -28,7 +28,92 @@ This means bottles are the only viable option for production recipes. Tsuku's Ho
 
 Some dependencies fundamentally cannot be relocated or installed without system privileges. Tsuku uses the `require_system` action for these unprovisionable dependencies.
 
-## Homebrew Integration Architecture
+## Decision Drivers
+
+1. **User demand for Homebrew tools**: Many developer tools are distributed exclusively through Homebrew, making it essential for comprehensive coverage
+2. **Self-contained installation**: Tsuku's core promise is installing tools without sudo or system dependencies
+3. **Cross-platform support**: Solutions must work on both macOS and Linux
+4. **Reliability over flexibility**: 99.94% of formulas have bottles; focusing on this path maximizes success rate
+5. **Recipe authoring cost**: Manual recipe creation is time-consuming; automation enables scaling to thousands of tools
+6. **Cost efficiency**: LLM-based generation has per-recipe costs; deterministic approaches should handle the common case
+
+## Considered Options
+
+### Option 1: Source Build Integration
+
+Build formulas from source using Homebrew's Ruby DSL and build instructions.
+
+**Pros:**
+- Works for all formulas, including the 0.06% without bottles
+- Matches Homebrew's exact build process
+
+**Cons:**
+- Requires Ruby interpreter and Homebrew infrastructure
+- Build times range from seconds to hours
+- System dependencies often required (compilers, SDKs)
+- Non-deterministic: different machines may produce different results
+- Contradicts tsuku's "no system dependencies" principle
+
+### Option 2: Wrap Homebrew CLI
+
+Shell out to `brew install` and copy installed files to tsuku's directory.
+
+**Pros:**
+- Simple implementation
+- Leverages Homebrew's mature dependency resolution
+
+**Cons:**
+- Requires Homebrew to be installed (circular dependency)
+- Cannot relocate binaries with hardcoded paths
+- Homebrew's global state conflicts with tsuku's version isolation
+- Not available on Linux without Linuxbrew setup
+
+### Option 3: Bottle-Only with Direct GHCR Access (Selected)
+
+Download pre-built bottles directly from GitHub Container Registry, applying binary relocation patches.
+
+**Pros:**
+- No Homebrew installation required
+- Sub-second downloads vs minutes for source builds
+- Deterministic: same bottle on all machines
+- Bottles are built by Homebrew's trusted CI
+- Works on both macOS and Linux
+
+**Cons:**
+- Cannot support the 5 formulas without bottles (internal bootstrapping formulas)
+- Requires binary patching for relocation
+- Depends on Homebrew's bottle infrastructure availability
+
+### Option 4: LLM-Only Recipe Generation
+
+Use LLM analysis for all recipe generation from Homebrew formulas.
+
+**Pros:**
+- Handles complex edge cases well
+- Can interpret build instructions and infer behavior
+
+**Cons:**
+- Per-recipe cost (~$0.02-0.10)
+- Slower than deterministic inspection
+- Overkill for simple formulas with obvious structure
+
+## Decision Outcome
+
+**Selected: Option 3 (Bottle-Only) with deterministic-first recipe generation and LLM fallback**
+
+This hybrid approach combines:
+- Direct GHCR bottle access for installation
+- Deterministic bottle inspection for ~85-90% of recipe generation
+- LLM fallback with repair loops for complex formulas
+
+The decision prioritizes reliability and user experience. The 5 formulas without bottles are internal Homebrew bootstrapping tools that users should never install directly. For the remaining 99.94%, bottles provide fast, verified, pre-built binaries.
+
+Recipe generation uses deterministic inspection first because:
+- Simple formulas (single binary, obvious verify command) don't need LLM analysis
+- Cost savings compound when generating thousands of recipes
+- LLM fallback ensures complex formulas still get handled
+
+## Solution Architecture
 
 ### The `homebrew` Action
 
@@ -221,41 +306,7 @@ Proceed? [y/N]
 
 Recipes are generated in topological order (dependencies first) to ensure deps are ready when parent is validated.
 
-### Security Considerations
-
-**Trusted Binary Sources:**
-- Bottles use pre-built binaries from Homebrew's trusted CI
-- SHA256 verification via GHCR manifest annotations
-- Bottles signed by Homebrew infrastructure
-- No build logic executed
-
-**URL Allowlist:**
-Generated recipes can only reference:
-- `ghcr.io/homebrew/core/*` - Homebrew bottles
-- `formulae.brew.sh/*` - Homebrew API
-
-**Schema Enforcement:**
-LLM output schema does NOT include:
-- Checksums (obtained from GHCR at runtime)
-- Arbitrary URLs (constructed programmatically)
-- Shell commands beyond verification
-
-**Container Validation:**
-All generated recipes are validated in isolated containers:
-- `--network=none` - No network access
-- Resource limits (2GB RAM, 2 CPU, 5min timeout)
-- Pre-downloaded bottles mounted read-only
-- Verification command executed in isolation
-
-**homebrew-core Only:**
-MVP restricts to official homebrew-core tap:
-- Vetted by Homebrew maintainers
-- Required CI checks before merge
-- Open source, auditable
-
-Third-party tap support requires explicit opt-in with security warnings.
-
-## Alternative: Manual Recipe Authoring
+### Alternative: Manual Recipe Authoring
 
 For formulas without bottles or complex source builds, tsuku provides build system primitives for manual recipe authoring:
 - `configure_make` - Autotools builds
@@ -264,6 +315,145 @@ For formulas without bottles or complex source builds, tsuku provides build syst
 - `apply_patch` - Patch application
 
 These actions can be composed in manually authored recipes for edge cases not covered by HomebrewBuilder's bottle-only approach.
+
+## Implementation Approach
+
+### Phase 1: Core `homebrew` Action (M15)
+
+1. **GHCR client implementation**
+   - Anonymous token acquisition from `ghcr.io/token`
+   - Manifest fetching with platform-specific tag resolution
+   - Blob download with SHA256 verification from annotations
+
+2. **Bottle extraction and relocation**
+   - Tar/gzip extraction to tool directory
+   - Placeholder replacement: `@@HOMEBREW_PREFIX@@` → `$TSUKU_HOME/tools/<name>-<version>`
+   - Text file scanning for path references
+
+3. **Binary patching**
+   - Linux: `patchelf --set-rpath` for ELF binaries
+   - macOS: `install_name_tool -change` for Mach-O binaries
+   - Dependency resolution for bundled libraries
+
+### Phase 2: HomebrewBuilder (M17)
+
+1. **Deterministic generator**
+   - Download and inspect bottle contents
+   - Identify executables in `bin/` directory
+   - Infer verify command from binary name or `--version` pattern
+   - Generate recipe without LLM involvement
+
+2. **Container validation harness**
+   - Docker-based validation with `--network=none`
+   - Resource limits: 2GB RAM, 2 CPU, 5 minute timeout
+   - Pre-downloaded bottle mounted read-only
+   - Exit code and output verification
+
+3. **LLM fallback pipeline**
+   - Tool definitions: `fetch_formula_json`, `inspect_bottle`, `extract_recipe`
+   - Context assembly: formula JSON, dependency tree, failure messages
+   - Repair loop: up to 2 attempts with validation feedback
+
+### Phase 3: Dependency Resolution (M18)
+
+1. **Dependency tree traversal**
+   - Query Homebrew JSON API for formula dependencies
+   - Build directed graph of transitive dependencies
+   - Detect existing tsuku recipes to avoid regeneration
+
+2. **Topological generation**
+   - Generate recipes in dependency order
+   - Validate each before proceeding to dependents
+   - Aggregate costs and warnings for user confirmation
+
+3. **Batch operations**
+   - `tsuku create --from homebrew:<formula> --batch` for automated pipelines
+   - Cost estimation before execution
+   - Partial success handling with clear status reporting
+
+## Security Considerations
+
+### Download Verification
+
+Bottles are verified through multiple mechanisms:
+
+1. **SHA256 from GHCR manifest**: Each bottle blob's SHA256 is recorded in the OCI manifest annotations. The `homebrew` action verifies downloaded content matches this hash before extraction.
+
+2. **Manifest signature**: GHCR manifests are signed by Homebrew's CI infrastructure. While tsuku doesn't independently verify signatures (that would require Homebrew's signing keys), the SHA256 chain ensures content integrity.
+
+3. **HTTPS transport**: All downloads use HTTPS to prevent man-in-the-middle attacks during transit.
+
+### Execution Isolation
+
+The `homebrew` action operates with minimal privileges:
+
+1. **No sudo required**: All files are written to `$TSUKU_HOME` (default `~/.tsuku`), which is user-writable
+2. **No network at runtime**: Installed tools don't require network access for basic operation
+3. **User-level PATH**: Binaries are symlinked to `$TSUKU_HOME/bin`, which users add to their PATH voluntarily
+
+**HomebrewBuilder validation** runs in isolated containers:
+- `--network=none`: No network access during validation
+- Resource limits: 2GB RAM, 2 CPU cores, 5 minute timeout
+- Read-only bottle mount: Validation cannot modify source artifacts
+- Ephemeral containers: Destroyed after each validation run
+
+### Supply Chain Risks
+
+**Trusted sources:**
+- Bottles originate from Homebrew's official CI (`ghcr.io/homebrew/core/*`)
+- Homebrew-core formulas are reviewed by maintainers before merge
+- CI builds are reproducible and auditable
+
+**Mitigation measures:**
+1. **URL allowlist**: Generated recipes can only reference `ghcr.io/homebrew/core/*` and `formulae.brew.sh/*`
+2. **homebrew-core only**: Third-party taps require explicit opt-in with security warnings
+3. **No arbitrary shell**: LLM-generated recipes have limited schema; no arbitrary command execution beyond verify commands
+4. **Schema enforcement**: LLM output cannot include checksums (obtained from GHCR) or arbitrary URLs (constructed programmatically)
+
+**Residual risks:**
+- Compromise of Homebrew's CI infrastructure would affect all bottles
+- Homebrew maintainer accounts could be compromised
+- These risks are inherent to using pre-built binaries and apply equally to direct Homebrew usage
+
+### User Data Exposure
+
+**Data accessed:**
+- `$TSUKU_HOME/state.json`: Installation state (tool names, versions, timestamps)
+- Recipe files: TOML definitions downloaded from tsuku registry
+
+**Data transmitted:**
+- Anonymous telemetry (if enabled): Install counts, tool names, platform
+- GHCR API requests: Formula names, platform tags (no user identification)
+
+**Data NOT transmitted:**
+- File contents from user's system
+- Environment variables or credentials
+- Usage patterns of installed tools
+
+## Consequences
+
+### Positive
+
+1. **Massive tool catalog**: Access to 8,000+ Homebrew formulas without manual recipe authoring
+2. **Fast installation**: Bottle downloads complete in seconds vs minutes for source builds
+3. **Cross-platform consistency**: Same recipe works on macOS and Linux
+4. **No Homebrew dependency**: Users don't need Homebrew installed to use Homebrew-sourced tools
+5. **Automated recipe generation**: HomebrewBuilder reduces recipe authoring from hours to seconds
+6. **Cost-efficient generation**: Deterministic-first approach minimizes LLM costs
+
+### Negative
+
+1. **Binary patching complexity**: RPATH and install_name_tool modifications can fail for unusual binaries
+2. **Platform tag churn**: Homebrew's macOS version tags (sonoma, ventura) require ongoing maintenance
+3. **GHCR dependency**: Homebrew's bottle hosting infrastructure must remain available
+4. **Relocation limitations**: Some tools hardcode absolute paths that cannot be patched
+5. **No source fallback**: The 0.06% of formulas without bottles cannot be supported
+
+### Neutral
+
+1. **Manual recipes still needed**: Complex tools with unprovisionable dependencies require hand-authored recipes
+2. **Version lag**: New Homebrew releases appear before bottles are built; tsuku users may experience brief delays
+3. **Dependency duplication**: Homebrew's shared dependencies become per-tool copies in tsuku's isolated model
 
 ## References
 

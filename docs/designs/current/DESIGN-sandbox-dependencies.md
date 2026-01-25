@@ -549,29 +549,6 @@ golangci-lint run --timeout=5m ./...
 
 **Complexity**: Medium refactoring, but well-scoped and testable at each step.
 
-## Consequences
-
-### Positive
-
-- **Unblocks issue #806**: Multi-family sandbox CI testing can now use complex tools with dependencies
-- **Code simplification**: Removes need for any sandbox-specific dependency handling workarounds
-- **Plan portability**: Sandbox plans are now truly self-contained and can be executed on different machines
-- **Consistency**: Sandbox mode behaves identically to normal install mode for dependencies
-- **Future-proof**: Any improvements to dependency resolution automatically apply to sandbox mode
-- **Minimal maintenance**: Reuses existing, tested infrastructure from PR #808
-
-### Negative
-
-- **Eval-time dependency installation**: Tools like python-standalone may need to be installed on host during plan generation
-- **Plan generation time**: Slight increase (<1s per dependency) due to dependency resolution
-- **Code duplication**: Need to either extract `installEvalDeps()` to shared location or duplicate the logic
-
-### Mitigations
-
-- **Eval-time deps acceptable**: This is required for correct plan generation and matches normal install behavior
-- **Plan caching**: Generated plans can be reused, so generation overhead is one-time
-- **Extract to shared helper**: Move `installEvalDeps()` to `cmd/tsuku/helpers.go` to eliminate duplication and improve code organization
-
 ## Security Considerations
 
 ### Download Verification
@@ -711,3 +688,26 @@ golangci-lint run --timeout=5m ./...
 4. **Container security**: Users are responsible for configuring their container runtime securely. Tsuku provides the isolation mechanism but doesn't enforce container security policies.
 
 All other residual risks are inherited from the existing tsuku trust model (trust recipe registry maintainers, verify checksums, no sudo). This feature extends the existing model to dependencies in sandbox mode without introducing fundamentally new attack vectors.
+
+## Consequences
+
+### Positive
+
+- **Unblocks issue #806**: Multi-family sandbox CI testing can now use complex tools with dependencies
+- **Code simplification**: Removes need for any sandbox-specific dependency handling workarounds
+- **Plan portability**: Sandbox plans are now truly self-contained and can be executed on different machines
+- **Consistency**: Sandbox mode behaves identically to normal install mode for dependencies
+- **Future-proof**: Any improvements to dependency resolution automatically apply to sandbox mode
+- **Minimal maintenance**: Reuses existing, tested infrastructure from PR #808
+
+### Negative
+
+- **Eval-time dependency installation**: Tools like python-standalone may need to be installed on host during plan generation
+- **Plan generation time**: Slight increase (<1s per dependency) due to dependency resolution
+- **Code duplication**: Need to either extract `installEvalDeps()` to shared location or duplicate the logic
+
+### Mitigations
+
+- **Eval-time deps acceptable**: This is required for correct plan generation and matches normal install behavior
+- **Plan caching**: Generated plans can be reused, so generation overhead is one-time
+- **Extract to shared helper**: Move `installEvalDeps()` to `cmd/tsuku/helpers.go` to eliminate duplication and improve code organization

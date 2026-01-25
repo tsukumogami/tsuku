@@ -446,6 +446,60 @@ when = { arch = "amd64" }  # Explicit: architecture filter
 
 **Note:** This constraint applies only to package manager actions. Other actions (`require_command`, `group_add`, `manual`, etc.) have no implicit constraint - they rely solely on explicit `when` clauses.
 
+## Decision Drivers
+
+The following factors influenced the design decisions:
+
+1. **Static analyzability**: Recipes must be auditable without execution - no arbitrary shell commands or polymorphic action schemas
+2. **Linux distro diversity**: The old `os = "linux"` assumption ignores the reality that Ubuntu, Fedora, and Arch require different package managers
+3. **Recipe author ergonomics**: Common constraints (apt requires Debian family) should be implicit to reduce noise and prevent mistakes
+4. **Separation of concerns**: Platform filtering (`WhenClause`) should remain generic; package manager constraints belong to action types
+5. **Dual-use format**: The same structured data must support both documentation generation and sandbox container building
+6. **Incremental adoption**: New action vocabulary must coexist with existing recipes during migration
+
+## Considered Options
+
+### Option A: Granular Typed Actions (Chosen)
+
+Each operation gets its own action type: `apt_install`, `apt_repo`, `brew_cask`, `group_add`, etc.
+
+**Pros:**
+- Each action has exactly one schema, simplifying validation
+- Self-documenting naming pattern: `<manager>_<operation>`
+- Adding new package managers is purely additive
+- Precise error messages like "apt_install requires 'packages' field"
+
+**Cons:**
+- More action types to maintain
+- Slightly more verbose recipes
+
+### Option B: One Action Per Manager with Sub-operations
+
+A single `apt` action with an `operation` field: `apt { operation = "install", packages = [...] }` or `apt { operation = "add_repo", url = "..." }`.
+
+**Pros:**
+- Fewer top-level action types
+- Groups related operations
+
+**Cons:**
+- Polymorphic schema where valid fields depend on operation
+- Validation logic becomes conditional
+- Error messages less specific
+
+### Option C: Unified Action with Manager Field
+
+A single `system_package` action: `system_package { manager = "apt", packages = [...] }`.
+
+**Pros:**
+- Single action type
+- Familiar to users of cross-platform tools
+
+**Cons:**
+- Recreates the original polymorphic problem
+- Platform filtering logic embedded in action parameters
+- Validation must handle all manager variants
+- Contradicts goal of explicit, typed actions
+
 ## Decision Outcome
 
 **Chosen: D1-A + D2 + D3-C + D4-A + D5-Hybrid + D6**
@@ -463,6 +517,117 @@ These choices work together to create a consistent, auditable system:
 - Separate post-install actions (D4) maintain single-responsibility and clear failure isolation
 - Hybrid fallback (D5) covers both "automation not possible" and "automation might fail" scenarios
 - Implicit constraints (D6) prevent mistakes and reduce recipe noise - PM actions know their valid targets
+
+## Solution Architecture
+
+The architecture consists of three layers: a platform detection layer, an action vocabulary layer, and a plan generation layer.
+
+### Platform Detection Layer
+
+The `internal/platform` package provides target detection:
+
+```
+internal/platform/
+├── family.go       # Linux family detection from /etc/os-release
+├── target.go       # Target struct (Platform, LinuxFamily)
+└── detect.go       # Host detection via DetectTarget()
+```
+
+The `Target` struct captures both platform (os/arch) and Linux family:
+
+```go
+type Target struct {
+    Platform    string // e.g., "linux/amd64", "darwin/arm64"
+    LinuxFamily string // e.g., "debian", "rhel" (empty for non-Linux)
+}
+```
+
+Family detection parses `/etc/os-release`, mapping distro IDs to families via a lookup table with `ID_LIKE` fallback for unknown distros.
+
+### Action Vocabulary Layer
+
+Actions live in `internal/actions/` with one file per action category:
+
+```
+internal/actions/
+├── action.go       # Action interface definition
+├── apt.go          # apt_install, apt_repo, apt_ppa
+├── dnf.go          # dnf_install, dnf_repo
+├── brew.go         # brew_install, brew_cask
+├── pacman.go       # pacman_install
+├── apk.go          # apk_install
+├── zypper.go       # zypper_install
+├── config.go       # group_add, service_enable, service_start
+├── verify.go       # require_command
+└── manual.go       # manual
+```
+
+Each action implements the `Action` interface:
+
+```go
+type Action interface {
+    // ImplicitConstraint returns the built-in platform constraint (nil if none)
+    ImplicitConstraint() *Constraint
+
+    // MatchesTarget checks if this action applies to the given target
+    MatchesTarget(target Target) bool
+
+    // Describe generates human-readable instructions
+    Describe() string
+
+    // Validate performs preflight parameter validation
+    Validate() error
+}
+```
+
+Package manager actions (apt_install, brew_cask, etc.) return non-nil constraints from `ImplicitConstraint()`. Other actions (require_command, group_add) return nil and rely on explicit `when` clauses.
+
+### Plan Generation Layer
+
+Plan generation filters recipe steps against a target:
+
+```go
+func FilterPlan(recipe *Recipe, target Target) *Plan {
+    var steps []Step
+    for _, step := range recipe.Steps {
+        action := ParseAction(step)
+
+        // Check action's implicit constraint
+        if c := action.ImplicitConstraint(); c != nil {
+            if !c.MatchesTarget(target) {
+                continue
+            }
+        }
+
+        // Check explicit when clause
+        if step.When != nil && !step.When.Matches(target.Platform) {
+            continue
+        }
+
+        steps = append(steps, step)
+    }
+    return &Plan{Steps: steps}
+}
+```
+
+### Data Flow
+
+```
+Recipe TOML
+    │
+    ▼
+ParseRecipe() ─────────────────────────────┐
+    │                                      │
+    ▼                                      │
+DetectTarget() ─► Target{linux/amd64, debian}
+    │                                      │
+    ▼                                      │
+FilterPlan(recipe, target) ◄───────────────┘
+    │
+    ├──► Documentation: action.Describe() for each step
+    │
+    └──► Sandbox: ExtractPackages() for container building
+```
 
 ## Action Vocabulary
 

@@ -57,6 +57,63 @@ The telemetry backend (tsuku-telemetry) is being designed now. Defining the CLI 
 7. **Testability**: Must be testable without sending real events (mock/dry-run mode)
 8. **Debuggability**: Should support debug mode to inspect events before sending
 
+## Considered Options
+
+### Option 1: Opt-In Telemetry
+
+Telemetry disabled by default, requiring users to explicitly enable it.
+
+**Pros:**
+- Maximum user consent and control
+- No friction for privacy-conscious users
+- Aligns with strictest privacy interpretations
+
+**Cons:**
+- Very low adoption rates (typically <5% based on industry data)
+- Insufficient data volume for meaningful analysis
+- Can't achieve success criteria of identifying top recipes
+
+### Option 2: Opt-Out Telemetry with First-Run Notice (Chosen)
+
+Telemetry enabled by default with clear notice on first run and easy opt-out via environment variable.
+
+**Pros:**
+- Meaningful data volume for analysis
+- Users are informed before any data is sent
+- Single environment variable for immediate opt-out
+- Respects user choice while gathering useful data
+
+**Cons:**
+- Some users prefer opt-in as default
+- Requires careful communication about what's collected
+
+### Option 3: Anonymous Client ID with Opt-Out
+
+Generate a random client UUID (no PII) to correlate events across sessions, enabling cohort analysis.
+
+**Pros:**
+- Enables understanding of user journeys
+- Can track retention and update patterns
+- Still anonymous (random ID, not fingerprinting)
+
+**Cons:**
+- UUID feels more invasive even if not PII
+- Adds complexity to privacy documentation
+- May trigger concerns even when technically anonymous
+- Not needed for initial success criteria
+
+## Decision Outcome
+
+We chose **Option 2: Opt-Out Telemetry with First-Run Notice**. This approach balances data collection needs with user privacy and control.
+
+The decision prioritizes:
+- **Transparency**: Users see a clear notice before any telemetry is sent, explaining what's collected and how to opt out
+- **Simplicity**: A single environment variable (`TSUKU_NO_TELEMETRY=1`) provides immediate opt-out
+- **Data minimization**: Collecting only action type, recipe name, version, and platform without any user identifiers
+- **Non-interference**: Fire-and-forget design ensures telemetry never blocks or slows commands
+
+Option 1 was rejected because opt-in models typically achieve <5% adoption, making data statistically unreliable. Option 3 was rejected as unnecessary for initial success criteria and adds perceived privacy concerns despite technical anonymity.
+
 ## Assumptions
 
 - **Network reliability**: Most users have internet when running commands. Users in airgapped environments can use `TSUKU_NO_TELEMETRY=1`.
@@ -141,6 +198,102 @@ When `TSUKU_TELEMETRY_DEBUG=1`:
 - Print event JSON to stderr instead of sending
 - Useful for users to verify what would be collected
 
+## Implementation Approach
+
+### Package Structure
+
+Create a new `internal/telemetry` package containing:
+
+```
+internal/telemetry/
+├── client.go      # TelemetryClient with Send() method
+├── event.go       # Event struct and schema definitions
+├── notice.go      # First-run notice logic and state file
+└── client_test.go # Unit tests with mock HTTP
+```
+
+### Client Implementation
+
+The `TelemetryClient` is initialized once during CLI startup:
+
+```go
+type TelemetryClient struct {
+    endpoint    string
+    httpClient  *http.Client
+    enabled     bool
+    debug       bool
+}
+
+func NewClient() *TelemetryClient {
+    // Check TSUKU_NO_TELEMETRY early and return disabled client
+    // Set 2-second timeout on HTTP client
+    // Check TSUKU_TELEMETRY_DEBUG for debug mode
+}
+
+func (c *TelemetryClient) Send(event Event) {
+    if !c.enabled {
+        return
+    }
+    if c.debug {
+        // Print JSON to stderr and return
+    }
+    // Fire goroutine for async send, never block caller
+    go c.sendAsync(event)
+}
+```
+
+### Command Integration
+
+Each command (install, update, remove) calls telemetry after successful completion:
+
+1. Capture pre-operation state (previous version for update/remove)
+2. Execute the operation
+3. On success, construct event with resolved values
+4. Call `telemetryClient.Send(event)`
+
+The `is_dependency` field is determined by tracking call context through the install chain.
+
+### First-Run Notice Flow
+
+1. On CLI startup, check for marker file `$TSUKU_HOME/telemetry_notice_shown`
+2. If not exists and telemetry enabled:
+   - Print notice to stderr (not stdout to preserve command output)
+   - Create marker file
+3. Marker file is a zero-byte file; existence is the only check
+
+### Testing Strategy
+
+- **Unit tests**: Mock HTTP transport to verify request format and timeout behavior
+- **Integration tests**: Use `TSUKU_TELEMETRY_DEBUG=1` to capture events without network
+- **Manual verification**: Debug mode allows developers to inspect exact payloads
+
+### Rollout Plan
+
+1. Merge Phase 1 issues with telemetry disabled in tests
+2. Verify backend (tsuku-telemetry) is production-ready
+3. Release CLI version with telemetry enabled
+4. Monitor backend for data quality and volume
+5. Phase 2 adds config-based opt-out as alternative to env var
+
+## Implementation Phases
+
+### Phase 1: Telemetry Client
+
+Core telemetry functionality with environment variable opt-out:
+- `internal/telemetry` package with client and event types
+- Fire-and-forget HTTP client with 2-second timeout
+- `TSUKU_NO_TELEMETRY=1` environment variable opt-out
+- First-run notice with state file
+- Integration into install/update/remove commands
+- Debug mode via `TSUKU_TELEMETRY_DEBUG=1`
+
+### Phase 2: Config System
+
+General configuration infrastructure with telemetry setting:
+- `tsuku config get/set` commands
+- `~/.tsuku/config.toml` file
+- `tsuku config set telemetry false` as alternative opt-out
+
 ## Security Considerations
 
 ### Data Minimization
@@ -199,25 +352,6 @@ This feature does not affect tsuku's core security model:
 | MITM on telemetry | Low | HTTPS required; no sensitive data in transit |
 | Event injection | Low | Backend validates schema; no privilege escalation possible |
 | DoS via telemetry | Low | Fire-and-forget; failures don't affect CLI |
-
-## Implementation Phases
-
-### Phase 1: Telemetry Client
-
-Core telemetry functionality with environment variable opt-out:
-- `internal/telemetry` package with client and event types
-- Fire-and-forget HTTP client with 2-second timeout
-- `TSUKU_NO_TELEMETRY=1` environment variable opt-out
-- First-run notice with state file
-- Integration into install/update/remove commands
-- Debug mode via `TSUKU_TELEMETRY_DEBUG=1`
-
-### Phase 2: Config System
-
-General configuration infrastructure with telemetry setting:
-- `tsuku config get/set` commands
-- `~/.tsuku/config.toml` file
-- `tsuku config set telemetry false` as alternative opt-out
 
 ## Consequences
 

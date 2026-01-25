@@ -617,29 +617,6 @@ Examples:
 
 **Dependencies:** Slice 1
 
-## Consequences
-
-### Positive
-
-- **Extended ecosystem access**: Users can install tools from any public Homebrew tap
-- **Consistent pattern**: Follows the cask design's provider + action separation
-- **Self-contained**: No Homebrew installation required on user's machine
-- **Cacheable**: Local caching reduces API calls and improves performance
-
-### Negative
-
-- **Rate limiting**: GitHub API limits may affect users with many tap-based tools (mitigated by caching and optional auth)
-- **Parse fragility**: Ruby formula parsing via regex is brittle (mitigated by targeting stable patterns)
-- **No source builds**: Source-only formulas cannot be installed (explicit limitation)
-- **Bottle URL variability**: Different taps host bottles differently (mitigated by clear error messages)
-
-### Mitigations
-
-- **Rate limiting**: Aggressive caching, optional GitHub token support, clear error messages
-- **Parse fragility**: Target only stable Homebrew formula patterns, comprehensive test suite
-- **Source-only formulas**: Clear documentation that tsuku requires pre-built bottles
-- **Bottle variability**: Recipe-level URL override support for non-standard hosting
-
 ## Security Considerations
 
 ### Download Verification
@@ -727,3 +704,26 @@ Same as core Homebrew support:
 2. **Prefer official taps**: When available, use homebrew-maintained taps (cask-versions, cask-fonts)
 3. **Monitor for tampering**: Checksums from third-party sources may be compromised; consider pinning versions
 4. **GitHub token**: Use fine-grained tokens with minimal permissions if rate limits are an issue
+
+## Consequences
+
+### Positive
+
+- **Extended ecosystem access**: Users can install tools from any public Homebrew tap
+- **Consistent pattern**: Follows the cask design's provider + action separation
+- **Self-contained**: No Homebrew installation required on user's machine
+- **Cacheable**: Local caching reduces API calls and improves performance
+
+### Negative
+
+- **Rate limiting**: GitHub API limits may affect users with many tap-based tools (mitigated by caching and optional auth)
+- **Parse fragility**: Ruby formula parsing via regex is brittle (mitigated by targeting stable patterns)
+- **No source builds**: Source-only formulas cannot be installed (explicit limitation)
+- **Bottle URL variability**: Different taps host bottles differently (mitigated by clear error messages)
+
+### Mitigations
+
+- **Rate limiting**: Aggressive caching, optional GitHub token support, clear error messages
+- **Parse fragility**: Target only stable Homebrew formula patterns, comprehensive test suite
+- **Source-only formulas**: Clear documentation that tsuku requires pre-built bottles
+- **Bottle variability**: Recipe-level URL override support for non-standard hosting

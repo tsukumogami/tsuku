@@ -1029,38 +1029,6 @@ This design cannot be fully implemented until the following design is completed:
 
 **Issue tracking:** Create a `needs-design` issue for this work when transitioning to Planned status.
 
-## Consequences
-
-### Positive
-
-- **Definitive "does it load?" answer**: dlopen is what the OS uses; if it works here, it'll work at runtime
-- **Process isolation for free**: Crashes in library initialization don't affect tsuku
-- **Preserves distribution simplicity**: Main tsuku binary stays CGO_ENABLED=0
-- **Batched performance**: ~10ms for 50 libraries vs ~250ms unbatched
-- **Debuggable errors**: JSON output includes actual dlerror() messages
-- **User opt-out**: `--skip-dlopen` for paranoid users or CI pipelines
-- **Graceful degradation**: Verification works (Levels 1-2) even without helper
-
-### Negative
-
-- **First-use download**: Users must download ~400KB helper on first verification
-- **4 platform builds**: Requires multi-runner CI matrix (release process design needed)
-- **Library code execution**: Initialization code runs during verification (mitigated by isolation and opt-out)
-- **5-second timeout**: May be too short for some legitimate libraries
-- **Blocking dependency**: Cannot implement until release process design is complete
-- **Rust toolchain in CI**: Release workflow needs rustup and cargo
-
-### Mitigations
-
-| Negative | Mitigation |
-|----------|------------|
-| First-use download | Cache in `$TSUKU_HOME/tools/`; only needed once per version |
-| 4 platform builds | Release process design will define CI matrix |
-| Code execution | Process isolation, user opt-out, timeout limit |
-| Timeout too short | Users can skip with `--skip-dlopen` and verify manually |
-| Blocking dependency | Release process design is well-scoped; can proceed in parallel |
-| Rust toolchain in CI | Single `actions/setup-rust` step; toolchain is stable |
-
 ## Security Considerations
 
 This section addresses the security checklist from issue #949. Level 3 verification is security-sensitive because it executes code during `dlopen()`.
@@ -1192,3 +1160,35 @@ Per issue #949 requirements:
 - [x] **Process isolation ensured**: Helper is separate process; crashes don't affect tsuku
 - [x] **Timeout handling defined**: 5-second timeout with context cancellation
 - [x] **User opt-out mechanism**: `--skip-dlopen` flag documented
+
+## Consequences
+
+### Positive
+
+- **Definitive "does it load?" answer**: dlopen is what the OS uses; if it works here, it'll work at runtime
+- **Process isolation for free**: Crashes in library initialization don't affect tsuku
+- **Preserves distribution simplicity**: Main tsuku binary stays CGO_ENABLED=0
+- **Batched performance**: ~10ms for 50 libraries vs ~250ms unbatched
+- **Debuggable errors**: JSON output includes actual dlerror() messages
+- **User opt-out**: `--skip-dlopen` for paranoid users or CI pipelines
+- **Graceful degradation**: Verification works (Levels 1-2) even without helper
+
+### Negative
+
+- **First-use download**: Users must download ~400KB helper on first verification
+- **4 platform builds**: Requires multi-runner CI matrix (release process design needed)
+- **Library code execution**: Initialization code runs during verification (mitigated by isolation and opt-out)
+- **5-second timeout**: May be too short for some legitimate libraries
+- **Blocking dependency**: Cannot implement until release process design is complete
+- **Rust toolchain in CI**: Release workflow needs rustup and cargo
+
+### Mitigations
+
+| Negative | Mitigation |
+|----------|------------|
+| First-use download | Cache in `$TSUKU_HOME/tools/`; only needed once per version |
+| 4 platform builds | Release process design will define CI matrix |
+| Code execution | Process isolation, user opt-out, timeout limit |
+| Timeout too short | Users can skip with `--skip-dlopen` and verify manually |
+| Blocking dependency | Release process design is well-scoped; can proceed in parallel |
+| Rust toolchain in CI | Single `actions/setup-rust` step; toolchain is stable |

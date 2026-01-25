@@ -5,9 +5,11 @@ decision: Implement hybrid dependency validation using soname extraction, patter
 rationale: This approach handles platform differences (Linux ELF and macOS Mach-O), correctly identifies system vs. tsuku-managed dependencies, and validates the entire dependency tree including transitive dependencies. Combining pattern matching with RPATH resolution provides both correctness and maintainability.
 ---
 
-# Dependency Resolution for Library Verification (Tier 2)
+## Status
 
-**Status:** Current
+Current
+
+# Dependency Resolution for Library Verification (Tier 2)
 
 ## Implementation Issues
 

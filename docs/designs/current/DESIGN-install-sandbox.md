@@ -1104,28 +1104,6 @@ Before merging each phase:
 - [ ] Integration tests skip gracefully when no runtime
 - [ ] Existing validation tests still pass (no regressions)
 
-## Consequences
-
-### Positive
-
-- **Single source of truth**: Validation requirements live with each action's code
-- **Compile-time enforcement**: Compiler catches missing interface implementations
-- **Independent sandbox testing**: Users can run `tsuku install <tool> --sandbox` or pipe from eval
-- **Reduced duplication**: No more `detectRequiredBuildTools()` switch statement
-- **Consistent behavior**: All builders use the same validation logic
-- **Extensible**: Adding new metadata dimensions adds methods to the interface
-- **Backwards compatible**: Existing plans work without regeneration
-
-### Negative
-
-- **Modify all action files**: Each action needs RequiresNetwork() method (mitigated by embedding)
-- **Runtime computation**: Requirements computed on each validation (not cached)
-
-### Mitigations
-
-- **Modify all action files**: Use `BaseAction` embedding to provide defaults. Only actions that need network must explicitly override.
-- **Runtime computation**: Computation is O(n) where n is number of steps. For typical recipes (<10 steps), this is negligible.
-
 ## Security Considerations
 
 ### Download Verification
@@ -1196,4 +1174,26 @@ This design does not change supply chain trust model:
 | Network-enabled builds have broader attack surface | Network enabled only when RequiresNetwork()=true; use bridge networking in future | Data exfiltration via network, compromised dependencies |
 | Incorrect RequiresNetwork() implementation | Code review per action, default to false, interface makes it visible | Malicious or buggy action returns true unnecessarily |
 | Arbitrary user-provided recipes | Container isolation, read-only mounts, clear warnings | Resource exhaustion within limits |
+
+## Consequences
+
+### Positive
+
+- **Single source of truth**: Validation requirements live with each action's code
+- **Compile-time enforcement**: Compiler catches missing interface implementations
+- **Independent sandbox testing**: Users can run `tsuku install <tool> --sandbox` or pipe from eval
+- **Reduced duplication**: No more `detectRequiredBuildTools()` switch statement
+- **Consistent behavior**: All builders use the same validation logic
+- **Extensible**: Adding new metadata dimensions adds methods to the interface
+- **Backwards compatible**: Existing plans work without regeneration
+
+### Negative
+
+- **Modify all action files**: Each action needs RequiresNetwork() method (mitigated by embedding)
+- **Runtime computation**: Requirements computed on each validation (not cached)
+
+### Mitigations
+
+- **Modify all action files**: Use `BaseAction` embedding to provide defaults. Only actions that need network must explicitly override.
+- **Runtime computation**: Computation is O(n) where n is number of steps. For typical recipes (<10 steps), this is negligible.
 

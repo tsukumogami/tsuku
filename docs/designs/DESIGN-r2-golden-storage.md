@@ -647,34 +647,6 @@ gh workflow run publish-golden-to-r2.yml -f recipes=fzf -f force=true
 
 **Dependencies:** Phase 4
 
-## Consequences
-
-### Positive
-
-- **Scalability achieved**: 10K+ recipes without repo bloat
-- **Faster clones**: No large golden file directory to fetch
-- **Simplified contribution**: No need to generate golden files locally
-- **Cross-platform coverage**: Automatic generation on all platforms
-- **Resilient validation**: Two-tier degradation prevents development blocks
-
-### Negative
-
-- **Infrastructure dependency**: R2 becomes critical infrastructure
-- **Credential overhead**: Quarterly token rotation required
-- **Debugging friction**: Can't inspect golden files with `git diff`
-- **Migration complexity**: 6-phase rollout with parallel operation
-- **Observability gap**: Need explicit logging for change tracking
-
-### Mitigations
-
-| Negative Consequence | Mitigation |
-|---------------------|------------|
-| R2 dependency | Two-tier degradation (skip + issue); R2 has 99.99% uptime SLA |
-| Credential overhead | Documented SOP; potential future OIDC support |
-| Debugging friction | CLI tooling to fetch from R2; fallback cache accessible |
-| Migration complexity | Phased approach with per-phase rollback capability |
-| Observability gap | Object metadata with timestamps; manifest tracking |
-
 ## Security Considerations
 
 ### Credential Management
@@ -790,4 +762,32 @@ Golden files are not executed. They are JSON data used for plan comparison.
 | GitHub Actions compromise | Write environment requires reviewer approval | Compromised reviewer account |
 | Cloudflare outage/corruption | Two-tier degradation skips validation + creates issue; R2 has 99.99% uptime (~52 min/year) | Validation skipped during rare outages |
 | Stale credentials after personnel change | Documented rotation SOP; tokens tied to account not individuals | Delayed rotation |
+
+## Consequences
+
+### Positive
+
+- **Scalability achieved**: 10K+ recipes without repo bloat
+- **Faster clones**: No large golden file directory to fetch
+- **Simplified contribution**: No need to generate golden files locally
+- **Cross-platform coverage**: Automatic generation on all platforms
+- **Resilient validation**: Two-tier degradation prevents development blocks
+
+### Negative
+
+- **Infrastructure dependency**: R2 becomes critical infrastructure
+- **Credential overhead**: Quarterly token rotation required
+- **Debugging friction**: Can't inspect golden files with `git diff`
+- **Migration complexity**: 6-phase rollout with parallel operation
+- **Observability gap**: Need explicit logging for change tracking
+
+### Mitigations
+
+| Negative Consequence | Mitigation |
+|---------------------|------------|
+| R2 dependency | Two-tier degradation (skip + issue); R2 has 99.99% uptime SLA |
+| Credential overhead | Documented SOP; potential future OIDC support |
+| Debugging friction | CLI tooling to fetch from R2; fallback cache accessible |
+| Migration complexity | Phased approach with per-phase rollback capability |
+| Observability gap | Object metadata with timestamps; manifest tracking |
 
