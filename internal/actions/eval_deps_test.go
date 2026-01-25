@@ -40,22 +40,13 @@ func TestCheckEvalDeps_AllMissing(t *testing.T) {
 	t.Parallel()
 
 	// Use a temp directory that doesn't have any installed tools
-	tmpDir := t.TempDir()
-	toolsDir := filepath.Join(tmpDir, "tools")
-	if err := os.MkdirAll(toolsDir, 0755); err != nil {
-		t.Fatalf("failed to create tools dir: %v", err)
-	}
-
-	// Override TSUKU_HOME for this test
-	origHome := os.Getenv("TSUKU_HOME")
-	os.Setenv("TSUKU_HOME", tmpDir)
-	defer os.Setenv("TSUKU_HOME", origHome)
+	toolsDir := t.TempDir()
 
 	deps := []string{"nodejs", "go"}
-	missing := CheckEvalDeps(deps)
+	missing := checkEvalDepsInDir(deps, toolsDir)
 
 	if len(missing) != 2 {
-		t.Errorf("CheckEvalDeps() returned %d missing, want 2", len(missing))
+		t.Errorf("checkEvalDepsInDir() returned %d missing, want 2", len(missing))
 	}
 }
 
@@ -63,26 +54,20 @@ func TestCheckEvalDeps_SomeInstalled(t *testing.T) {
 	t.Parallel()
 
 	// Use a temp directory with one installed tool
-	tmpDir := t.TempDir()
-	toolsDir := filepath.Join(tmpDir, "tools")
+	toolsDir := t.TempDir()
 	nodejsDir := filepath.Join(toolsDir, "nodejs-20.0.0")
 	if err := os.MkdirAll(nodejsDir, 0755); err != nil {
 		t.Fatalf("failed to create nodejs dir: %v", err)
 	}
 
-	// Override TSUKU_HOME for this test
-	origHome := os.Getenv("TSUKU_HOME")
-	os.Setenv("TSUKU_HOME", tmpDir)
-	defer os.Setenv("TSUKU_HOME", origHome)
-
 	deps := []string{"nodejs", "go"}
-	missing := CheckEvalDeps(deps)
+	missing := checkEvalDepsInDir(deps, toolsDir)
 
 	if len(missing) != 1 {
-		t.Errorf("CheckEvalDeps() returned %d missing, want 1", len(missing))
+		t.Errorf("checkEvalDepsInDir() returned %d missing, want 1", len(missing))
 	}
 	if len(missing) > 0 && missing[0] != "go" {
-		t.Errorf("CheckEvalDeps() missing[0] = %q, want 'go'", missing[0])
+		t.Errorf("checkEvalDepsInDir() missing[0] = %q, want 'go'", missing[0])
 	}
 }
 
@@ -90,8 +75,7 @@ func TestCheckEvalDeps_AllInstalled(t *testing.T) {
 	t.Parallel()
 
 	// Use a temp directory with both tools installed
-	tmpDir := t.TempDir()
-	toolsDir := filepath.Join(tmpDir, "tools")
+	toolsDir := t.TempDir()
 	nodejsDir := filepath.Join(toolsDir, "nodejs-20.0.0")
 	goDir := filepath.Join(toolsDir, "go-1.21.0")
 	if err := os.MkdirAll(nodejsDir, 0755); err != nil {
@@ -101,16 +85,11 @@ func TestCheckEvalDeps_AllInstalled(t *testing.T) {
 		t.Fatalf("failed to create go dir: %v", err)
 	}
 
-	// Override TSUKU_HOME for this test
-	origHome := os.Getenv("TSUKU_HOME")
-	os.Setenv("TSUKU_HOME", tmpDir)
-	defer os.Setenv("TSUKU_HOME", origHome)
-
 	deps := []string{"nodejs", "go"}
-	missing := CheckEvalDeps(deps)
+	missing := checkEvalDepsInDir(deps, toolsDir)
 
 	if len(missing) != 0 {
-		t.Errorf("CheckEvalDeps() returned %d missing, want 0", len(missing))
+		t.Errorf("checkEvalDepsInDir() returned %d missing, want 0", len(missing))
 	}
 }
 
