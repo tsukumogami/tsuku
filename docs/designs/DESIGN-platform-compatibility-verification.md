@@ -34,9 +34,9 @@ graph TD
         I1111["#1111: step-level deps"]:::done
         I1112["#1112: enhanced *_install"]:::done
         I1113["#1113: supported_libc constraint"]:::done
-        I1114["#1114: recipe migration"]:::ready
+        I1114["#1114: recipe migration"]:::done
         I1115["#1115: coverage validation"]:::ready
-        I1116["#1116: container tests"]:::blocked
+        I1116["#1116: container tests"]:::ready
         I1117["#1117: docs"]:::blocked
         I1118["#1118: PR validation"]:::blocked
 

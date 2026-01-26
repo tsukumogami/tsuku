@@ -3,12 +3,14 @@ name = "openssl"
 description = "Cryptography and SSL/TLS Toolkit"
 homepage = "https://openssl-library.org/"
 type = "library"
-dependencies = ["zlib"]
 binaries = ["bin/openssl"]
 
+# glibc Linux: Homebrew bottles with step-level dependencies
 [[steps]]
 action = "homebrew"
 formula = "openssl@3"
+when = { os = ["linux"], libc = ["glibc"] }
+dependencies = ["zlib"]
 
 [[steps]]
 action = "install_binaries"
@@ -17,13 +19,34 @@ outputs = [
     "bin/openssl",
     "lib/libssl.so",
     "lib/libssl.so.3",
-    "lib/libssl.dylib",
-    "lib/libssl.3.dylib",
     "lib/libcrypto.so",
     "lib/libcrypto.so.3",
+]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["openssl-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "openssl@3"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = [
+    "bin/openssl",
+    "lib/libssl.dylib",
+    "lib/libssl.3.dylib",
     "lib/libcrypto.dylib",
     "lib/libcrypto.3.dylib",
 ]
+when = { os = ["darwin"] }
 
 [verify]
 command = "openssl version"

@@ -4,11 +4,32 @@ description = "General-purpose lossless data-compression library"
 homepage = "https://zlib.net/"
 type = "library"
 
+# glibc Linux: Homebrew bottles
 [[steps]]
 action = "homebrew"
 formula = "zlib"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-outputs = ["lib/libz.a", "lib/libz.dylib", "lib/libz.so", "include/zlib.h", "include/zconf.h"]
+outputs = ["lib/libz.a", "lib/libz.so", "lib/libz.so.1", "include/zlib.h", "include/zconf.h"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["zlib-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "zlib"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_binaries"
+install_mode = "directory"
+outputs = ["lib/libz.a", "lib/libz.dylib", "lib/libz.1.dylib", "include/zlib.h", "include/zconf.h"]
+when = { os = ["darwin"] }
