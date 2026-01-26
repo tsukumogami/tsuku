@@ -4,13 +4,48 @@ on:
   pull_request:
     branches: [main]
     paths:
-      - 'testdata/golden/plans/**/*.json'
+      # Embedded golden files (still in git)
+      - 'testdata/golden/plans/embedded/**/*.json'
+      # Recipe changes trigger R2-based validation for registry recipes
+      - 'recipes/**/*.toml'
       - 'scripts/validate-golden.sh'
       - 'scripts/regenerate-golden.sh'
       - '.github/workflows/validate-golden-execution.yml'
   workflow_dispatch:
 
 jobs:
+  # Check R2 availability for registry recipe execution validation
+  r2-health-check:
+    name: R2 Health Check
+    runs-on: ubuntu-latest
+    outputs:
+      r2_available: ${{ steps.check.outputs.r2_available }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check R2 health
+        id: check
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        run: |
+          # Check if R2 credentials are configured
+          if [[ -z "$R2_BUCKET_URL" ]] || [[ -z "$R2_ACCESS_KEY_ID" ]] || [[ -z "$R2_SECRET_ACCESS_KEY" ]]; then
+            echo "::warning::R2 credentials not configured"
+            echo "r2_available=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Checking R2 health..."
+          if ./scripts/r2-health-check.sh; then
+            echo "r2_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::R2 health check failed"
+            echo "r2_available=false" >> $GITHUB_OUTPUT
+          fi
+
   detect-changes:
     name: Detect Changes
     runs-on: ubuntu-latest
@@ -21,6 +56,8 @@ jobs:
       has_macos: ${{ steps.build-matrix.outputs.has_macos }}
       recipes: ${{ steps.build-matrix.outputs.recipes }}
       has_changes: ${{ steps.build-matrix.outputs.has_changes }}
+      registry_recipes: ${{ steps.build-matrix.outputs.registry_recipes }}
+      has_registry_changes: ${{ steps.build-matrix.outputs.has_registry_changes }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -70,29 +107,63 @@ jobs:
             return 1
           }
 
-          # Get list of changed golden files (exclude deleted files)
-          CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'testdata/golden/plans/**/*.json')
+          # Get list of changed embedded golden files (exclude deleted files)
+          # Note: Registry golden files are now in R2, not git
+          CHANGED_EMBEDDED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'testdata/golden/plans/embedded/**/*.json')
 
-          if [ -z "$CHANGED" ]; then
-            echo "No golden files changed"
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "has_linux=false" >> $GITHUB_OUTPUT
-            echo "has_macos=false" >> $GITHUB_OUTPUT
-            echo "linux_matrix={\"include\":[]}" >> $GITHUB_OUTPUT
-            echo "macos_files=[]" >> $GITHUB_OUTPUT
-            exit 0
+          # Get list of changed registry recipes (for R2-based execution)
+          CHANGED_REGISTRY_RECIPES=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'recipes/**/*.toml')
+
+          # Process embedded golden file changes (existing logic)
+          if [ -z "$CHANGED_EMBEDDED" ]; then
+            echo "No embedded golden files changed"
+          else
+            echo "Changed embedded golden files:"
+            echo "$CHANGED_EMBEDDED"
           fi
 
-          echo "Changed golden files:"
-          echo "$CHANGED"
+          # Process registry recipe changes
+          REGISTRY_RECIPES='['
+          REGISTRY_FIRST=true
+          if [ -n "$CHANGED_REGISTRY_RECIPES" ]; then
+            echo "Changed registry recipes:"
+            echo "$CHANGED_REGISTRY_RECIPES"
+
+            for path in $CHANGED_REGISTRY_RECIPES; do
+              [ -f "$path" ] || continue
+              recipe=$(basename "$path" .toml)
+
+              exec_exclusion=$(is_execution_excluded "$recipe" || true)
+              if [ -n "$exec_exclusion" ]; then
+                echo "Skipping excluded recipe: $recipe ($exec_exclusion)"
+                continue
+              fi
+
+              if [ "$REGISTRY_FIRST" = true ]; then
+                REGISTRY_FIRST=false
+              else
+                REGISTRY_RECIPES="$REGISTRY_RECIPES,"
+              fi
+              REGISTRY_RECIPES="$REGISTRY_RECIPES\"$recipe\""
+            done
+          fi
+          REGISTRY_RECIPES="$REGISTRY_RECIPES]"
+
+          if [ "$REGISTRY_RECIPES" = '[]' ]; then
+            echo "has_registry_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_registry_changes=true" >> $GITHUB_OUTPUT
+          fi
+          echo "registry_recipes=$REGISTRY_RECIPES" >> $GITHUB_OUTPUT
 
           # Build separate outputs for Linux (per-file matrix) and macOS (aggregated)
+          # This processes embedded golden files only (registry uses R2)
           LINUX_MATRIX='{"include":['
           MACOS_FILES='['
           LINUX_FIRST=true
           MACOS_FIRST=true
 
-          for path in $CHANGED; do
+          for path in $CHANGED_EMBEDDED; do
             # Skip if file doesn't exist (deleted in later commit)
             if [ ! -f "$path" ]; then
               echo "Skipping deleted file: $path"
@@ -196,7 +267,7 @@ jobs:
           fi
           echo "macos_files=$MACOS_FILES" >> $GITHUB_OUTPUT
 
-          # Overall has_changes
+          # Overall has_changes (embedded golden files)
           if [ "$LINUX_MATRIX" = '{"include":[]}' ] && [ "$MACOS_FILES" = '[]' ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
@@ -204,7 +275,8 @@ jobs:
           fi
 
           # Extract unique recipe names for coverage validation (excluding execution-excluded recipes)
-          ALL_RECIPES=$(echo "$CHANGED" | while read -r path; do
+          # Note: This is for embedded recipes only
+          ALL_RECIPES=$(echo "$CHANGED_EMBEDDED" | while read -r path; do
             if [ -n "$path" ]; then
               basename "$(dirname "$path")"
             fi
@@ -227,9 +299,10 @@ jobs:
           done
           RECIPES="$RECIPES]"
 
-          echo "Affected recipes: $RECIPES"
+          echo "Affected embedded recipes: $RECIPES"
           echo "recipes=$RECIPES" >> $GITHUB_OUTPUT
 
+  # Validate coverage for embedded recipes only
   validate-coverage:
     name: "Coverage: ${{ matrix.recipe }}"
     needs: detect-changes
@@ -257,9 +330,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           RECIPE="${{ matrix.recipe }}"
-          FIRST_LETTER="${RECIPE:0:1}"
-          RECIPE_PATH="internal/recipe/recipes/$FIRST_LETTER/$RECIPE.toml"
-          GOLDEN_DIR="testdata/golden/plans/$FIRST_LETTER/$RECIPE"
+
+          # Embedded recipes use embedded path
+          RECIPE_PATH="internal/recipe/recipes/$RECIPE.toml"
+          GOLDEN_DIR="testdata/golden/plans/embedded/$RECIPE"
           EXCLUSIONS_FILE="testdata/golden/exclusions.json"
 
           # Function to check if a recipe/platform is excluded
@@ -274,7 +348,6 @@ jobs:
             fi
 
             # Build jq filter for matching exclusions
-            # Match: recipe AND os AND arch AND (family matches OR no family in exclusion)
             local filter
             if [ -n "$family" ]; then
               filter=".exclusions[] | select(.recipe == \"$recipe\" and .platform.os == \"$os\" and .platform.arch == \"$arch\" and (.platform.linux_family == \"$family\" or .platform.linux_family == null))"
@@ -291,8 +364,7 @@ jobs:
             return 1
           }
 
-          # Get supported platforms as JSON objects (preserving linux_family if present)
-          # Build platform descriptors (os:arch:family)
+          # Get supported platforms as JSON objects
           PLATFORMS=""
           while IFS= read -r platform_json; do
             os=$(echo "$platform_json" | jq -r '.os')
@@ -309,19 +381,14 @@ jobs:
           PLATFORMS=$(echo "$PLATFORMS" | xargs)
 
           # Get versions from existing golden files
-          # Family-aware: v1.0.0-linux-debian-amd64.json -> version before last 3 components
-          # Family-agnostic: v0.60.0-linux-amd64.json -> version before last 2 components
           VERSIONS=$(for f in "$GOLDEN_DIR"/*.json; do
             filename=$(basename "$f" .json)
             num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
             if [[ $num_parts -ge 4 ]]; then
-              # Check second-from-last component for family (e.g., "debian" in linux-debian-amd64)
               second_from_last=$(echo "$filename" | rev | cut -d'-' -f2 | rev)
               if [[ "$second_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
-                # Family-aware: version is everything before os-family-arch
                 echo "$filename" | rev | cut -d'-' -f4- | rev
               else
-                # Family-agnostic: version is everything before os-arch
                 echo "$filename" | rev | cut -d'-' -f3- | rev
               fi
             else
@@ -339,13 +406,11 @@ jobs:
           EXCLUDED_COUNT=0
           for version in $VERSIONS; do
             for platform_desc in $PLATFORMS; do
-              # Parse platform descriptor (os:arch:family)
               os="${platform_desc%%:*}"
               rest="${platform_desc#*:}"
               arch="${rest%%:*}"
               family="${rest#*:}"
 
-              # Build expected filename
               if [[ -n "$family" ]]; then
                 expected_file="${version}-${os}-${family}-${arch}.json"
               else
@@ -353,7 +418,6 @@ jobs:
               fi
 
               if [ ! -f "$GOLDEN_DIR/$expected_file" ]; then
-                # Check if this recipe/platform is excluded
                 if is_excluded "$RECIPE" "$os" "$arch" "$family"; then
                   EXCLUDED_COUNT=$((EXCLUDED_COUNT + 1))
                 else
@@ -368,9 +432,6 @@ jobs:
             for f in "${MISSING[@]}"; do
               echo "  - $f"
             done
-            echo ""
-            echo "Generate missing files with:"
-            echo "  gh workflow run generate-golden-files.yml -f recipe=$RECIPE -f commit_back=true -f branch=\$(git branch --show-current)"
             exit 1
           fi
 
@@ -380,7 +441,7 @@ jobs:
             echo "All platforms covered for $RECIPE"
           fi
 
-  # Validate Linux golden files (per-file matrix for visibility)
+  # Validate embedded Linux golden files (per-file matrix for visibility)
   validate-linux:
     name: "${{ matrix.tool }} (${{ matrix.platform }})"
     needs: detect-changes
@@ -418,7 +479,7 @@ jobs:
           echo "Executing: ${{ matrix.file }}"
           ./tsuku install --plan "${{ matrix.file }}" --force
 
-  # Validate macOS golden files (aggregated into single job to reduce runner queue pressure)
+  # Validate embedded macOS golden files (aggregated into single job)
   validate-macos:
     name: "macOS (darwin-arm64)"
     needs: detect-changes
@@ -447,7 +508,6 @@ jobs:
           CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
           mkdir -p "$CACHE_DIR"
 
-          # Use while loop with process substitution to handle JSON objects with spaces
           while IFS= read -r item; do
             file=$(echo "$item" | jq -r '.file')
             tool=$(echo "$item" | jq -r '.tool')
@@ -455,7 +515,6 @@ jobs:
 
             echo "::group::Executing $tool ($version)"
 
-            # Fresh TSUKU_HOME per golden file with shared download cache
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool-$version"
             mkdir -p "$TSUKU_HOME/cache"
             ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
@@ -466,10 +525,105 @@ jobs:
             echo "::endgroup::"
           done < <(echo "$FILES" | jq -c '.[]')
 
-          # Report failures at end (don't fail fast)
           if [ ${#FAILED[@]} -gt 0 ]; then
             echo "::error::Failed golden files: ${FAILED[*]}"
             exit 1
           fi
 
           echo "All macOS golden files passed"
+
+  # Execute registry recipes using golden files from R2
+  execute-registry-linux:
+    name: "Registry: ${{ matrix.recipe }} (Linux)"
+    needs: [detect-changes, r2-health-check]
+    if: needs.detect-changes.outputs.has_registry_changes == 'true' && needs.r2-health-check.outputs.r2_available == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJson(needs.detect-changes.outputs.registry_recipes) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Cache downloads
+        uses: actions/cache@v4
+        with:
+          path: ~/.tsuku/cache/downloads
+          key: golden-execution-registry-${{ matrix.recipe }}
+          restore-keys: |
+            golden-execution-registry-
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Download golden file from R2
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+          AWS_ENDPOINT_URL: ${{ secrets.R2_BUCKET_URL }}
+        run: |
+          RECIPE="${{ matrix.recipe }}"
+          FIRST_LETTER="${RECIPE:0:1}"
+
+          mkdir -p r2-golden
+
+          # Find and download the latest linux-amd64 golden file
+          # List versions available for this recipe
+          VERSIONS=$(aws s3 ls "s3://tsuku-golden-registry/plans/$FIRST_LETTER/$RECIPE/" | grep 'PRE v' | awk '{print $2}' | sed 's|/$||' | sort -V | tail -1)
+
+          if [ -z "$VERSIONS" ]; then
+            echo "::warning::No golden files found in R2 for $RECIPE, skipping execution"
+            exit 0
+          fi
+
+          echo "Latest version: $VERSIONS"
+
+          # Download linux-amd64 golden file (prefer debian variant)
+          GOLDEN_FILE=""
+          for platform in "linux-debian-amd64" "linux-amd64"; do
+            KEY="plans/$FIRST_LETTER/$RECIPE/$VERSIONS/$platform.json"
+            if aws s3 cp "s3://tsuku-golden-registry/$KEY" "r2-golden/$platform.json" 2>/dev/null; then
+              GOLDEN_FILE="r2-golden/$platform.json"
+              echo "Downloaded: $KEY"
+              break
+            fi
+          done
+
+          if [ -z "$GOLDEN_FILE" ]; then
+            echo "::warning::No Linux golden file found in R2 for $RECIPE $VERSIONS"
+            exit 0
+          fi
+
+          echo "GOLDEN_FILE=$GOLDEN_FILE" >> $GITHUB_ENV
+
+      - name: Execute golden file
+        if: env.GOLDEN_FILE != ''
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Executing: $GOLDEN_FILE"
+          ./tsuku install --plan "$GOLDEN_FILE" --force
+
+  # Skip registry execution when R2 is unavailable
+  skip-registry-execution:
+    name: "Registry Execution (R2 Unavailable)"
+    needs: [detect-changes, r2-health-check]
+    if: needs.detect-changes.outputs.has_registry_changes == 'true' && needs.r2-health-check.outputs.r2_available == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Report R2 unavailable
+        run: |
+          echo "::warning::R2 is unavailable - skipping registry recipe execution validation"
+          echo "Registry recipes changed: ${{ needs.detect-changes.outputs.registry_recipes }}"
+          echo "Execution validation for these recipes will be performed by nightly workflow"

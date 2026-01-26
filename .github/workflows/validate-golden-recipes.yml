@@ -23,6 +23,38 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: ./scripts/validate-golden-exclusions.sh --check-issues
 
+  # Check R2 availability for registry recipe validation
+  r2-health-check:
+    name: R2 Health Check
+    runs-on: ubuntu-latest
+    outputs:
+      r2_available: ${{ steps.check.outputs.r2_available }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check R2 health
+        id: check
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        run: |
+          # Check if R2 credentials are configured
+          if [[ -z "$R2_BUCKET_URL" ]] || [[ -z "$R2_ACCESS_KEY_ID" ]] || [[ -z "$R2_SECRET_ACCESS_KEY" ]]; then
+            echo "::warning::R2 credentials not configured, registry validation will use git fallback"
+            echo "r2_available=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "Checking R2 health..."
+          if ./scripts/r2-health-check.sh; then
+            echo "r2_available=true" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::R2 health check failed, registry validation will use git fallback"
+            echo "r2_available=false" >> $GITHUB_OUTPUT
+          fi
+
   detect-changes:
     name: Detect Changes
     needs: validate-exclusions
@@ -76,8 +108,9 @@ jobs:
               golden_dir="testdata/golden/plans/$first_letter/$recipe"
             fi
 
-            # Check if recipe has golden files
-            if [ ! -d "$golden_dir" ]; then
+            # Check if recipe has golden files (for embedded recipes only - registry uses R2)
+            # For registry recipes, we'll validate using TSUKU_GOLDEN_SOURCE=r2
+            if [[ "$category" == "embedded" ]] && [ ! -d "$golden_dir" ]; then
               # Check if recipe is fully excluded (has exclusions for all platforms)
               exclusion_count=$(jq --arg r "$recipe" '[.exclusions[] | select(.recipe == $r)] | length' testdata/golden/exclusions.json)
               if [ "$exclusion_count" -gt 0 ]; then
@@ -108,7 +141,7 @@ jobs:
 
   validate-golden:
     name: "Validate: ${{ matrix.item.recipe }}"
-    needs: detect-changes
+    needs: [detect-changes, r2-health-check]
     if: needs.detect-changes.outputs.has_changes == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -141,11 +174,40 @@ jobs:
       - name: Validate golden files
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+          R2_AVAILABLE: ${{ needs.r2-health-check.outputs.r2_available }}
         run: |
-          echo "Validating golden files for ${{ matrix.item.recipe }} (${{ matrix.item.category }})..."
-          if ! ./scripts/validate-golden.sh "${{ matrix.item.recipe }}" --category "${{ matrix.item.category }}"; then
+          RECIPE="${{ matrix.item.recipe }}"
+          CATEGORY="${{ matrix.item.category }}"
+
+          echo "Validating golden files for $RECIPE ($CATEGORY)..."
+
+          # Determine golden source based on category and R2 availability
+          if [[ "$CATEGORY" == "embedded" ]]; then
+            # Embedded recipes always use git
+            export TSUKU_GOLDEN_SOURCE=git
+          elif [[ "$R2_AVAILABLE" == "true" ]]; then
+            # Registry recipes use R2 when available
+            export TSUKU_GOLDEN_SOURCE=r2
+          else
+            # R2 unavailable - skip registry recipe validation with warning
+            echo "::warning::Skipping $RECIPE validation - R2 unavailable (registry recipes require R2 golden files)"
+            echo "Registry recipe validation will be performed by nightly workflow when R2 is available"
+            exit 0
+          fi
+
+          echo "Using TSUKU_GOLDEN_SOURCE=$TSUKU_GOLDEN_SOURCE"
+
+          if ! ./scripts/validate-golden.sh "$RECIPE" --category "$CATEGORY"; then
             echo ""
-            echo "::error::Golden files are out of date for recipe '${{ matrix.item.recipe }}'."
-            echo "::error::Run './scripts/regenerate-golden.sh ${{ matrix.item.recipe }} --category ${{ matrix.item.category }}' and commit the changes."
+            echo "::error::Golden files are out of date for recipe '$RECIPE'."
+            if [[ "$CATEGORY" == "embedded" ]]; then
+              echo "::error::Run './scripts/regenerate-golden.sh $RECIPE --category $CATEGORY' and commit the changes."
+            else
+              echo "::error::Golden files in R2 don't match. The post-merge workflow will regenerate them after merge."
+              echo "::error::If this is unexpected, check that the recipe changes are correct."
+            fi
             exit 1
           fi
