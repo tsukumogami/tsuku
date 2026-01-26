@@ -2,6 +2,8 @@ package recipe
 
 import (
 	"testing"
+
+	"github.com/BurntSushi/toml"
 )
 
 func TestAnalyzeRecipeCoverage_UnconditionalSteps(t *testing.T) {
@@ -418,5 +420,85 @@ func TestValidateCoverageForRecipes(t *testing.T) {
 		t.Error("expected report for bad-lib")
 	} else if len(badLibReport.Errors) != 1 {
 		t.Errorf("expected 1 error for bad-lib, got %d", len(badLibReport.Errors))
+	}
+}
+
+// TestTransitiveDepsHavePlatformCoverage verifies that all embedded library recipes
+// and their transitive dependencies have proper platform coverage.
+func TestTransitiveDepsHavePlatformCoverage(t *testing.T) {
+	registry, err := NewEmbeddedRegistry()
+	if err != nil {
+		t.Fatalf("failed to create embedded registry: %v", err)
+	}
+
+	// Parse all recipes into a map for dependency lookup
+	recipes := make(map[string]*Recipe)
+	for _, name := range registry.List() {
+		data, ok := registry.Get(name)
+		if !ok {
+			continue
+		}
+		var r Recipe
+		if err := toml.Unmarshal(data, &r); err != nil {
+			t.Errorf("failed to parse recipe %s: %v", name, err)
+			continue
+		}
+		recipes[name] = &r
+	}
+
+	// Check each library recipe and its transitive dependencies
+	for name, r := range recipes {
+		if !r.IsLibrary() {
+			continue
+		}
+
+		// Analyze coverage for the library itself
+		report := AnalyzeRecipeCoverage(r)
+		if len(report.Errors) > 0 {
+			t.Errorf("library %s has coverage errors: %v", name, report.Errors)
+		}
+
+		// Walk transitive dependencies and check their coverage
+		visited := make(map[string]bool)
+		checkTransitiveDeps(t, name, r, recipes, visited)
+	}
+}
+
+// checkTransitiveDeps recursively checks that all dependencies have proper platform coverage.
+func checkTransitiveDeps(t *testing.T, rootName string, r *Recipe, recipes map[string]*Recipe, visited map[string]bool) {
+	t.Helper()
+
+	// Collect all dependencies (recipe-level and step-level)
+	deps := make(map[string]bool)
+	for _, d := range r.Metadata.Dependencies {
+		deps[d] = true
+	}
+	for _, step := range r.Steps {
+		for _, d := range step.Dependencies {
+			deps[d] = true
+		}
+	}
+
+	// Check each dependency
+	for depName := range deps {
+		if visited[depName] {
+			continue
+		}
+		visited[depName] = true
+
+		depRecipe, ok := recipes[depName]
+		if !ok {
+			// Dependency not in embedded registry - skip
+			// (it may be an external or system dependency)
+			continue
+		}
+
+		report := AnalyzeRecipeCoverage(depRecipe)
+		if len(report.Errors) > 0 {
+			t.Errorf("dependency %s (of %s) has coverage errors: %v", depName, rootName, report.Errors)
+		}
+
+		// Recurse into the dependency's dependencies
+		checkTransitiveDeps(t, rootName, depRecipe, recipes, visited)
 	}
 }
