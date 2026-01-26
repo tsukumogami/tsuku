@@ -220,6 +220,9 @@ jobs:
           }
           EOF
 
+      # Install library dependencies
+      # For musl: install system packages (tsuku verify will detect these)
+      # For glibc: tsuku install handles everything
       - name: Install library dependencies (musl only)
         if: matrix.libc == 'musl'
         run: apk add --no-cache zlib-dev yaml-dev
@@ -234,6 +237,9 @@ jobs:
           $TSUKU install zlib --force
           $TSUKU install libyaml --force
 
+      # Verify dlopen works for libraries
+      # For glibc: verifies tsuku-managed libraries in $TSUKU_HOME/libs
+      # For musl: verifies externally-managed libraries via apk (detected from recipe)
       - name: Verify dlopen - zlib
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -334,6 +340,7 @@ jobs:
               TSUKU=./tsuku-linux-arm64
 
               # Verify dlopen - zlib
+              # tsuku verify detects externally-managed libraries from recipe
               echo "=== Verifying zlib ==="
               $TSUKU verify zlib
 
