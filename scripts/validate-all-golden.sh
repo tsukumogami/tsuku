@@ -17,6 +17,16 @@
 #   --golden-dir <dir> Use custom golden files directory instead of testdata/golden/plans
 #                      Useful for validating against R2-downloaded golden files.
 #
+# Environment Variables:
+#   TSUKU_GOLDEN_SOURCE  Select golden file source (passed to validate-golden.sh):
+#                        - git (default): Use git-based golden files
+#                        - r2: Download from R2 and validate against those
+#                        - both: Validate against git, then compare with R2
+#
+#   R2_BUCKET_URL        Required for r2/both modes
+#   R2_ACCESS_KEY_ID     Required for r2/both modes
+#   R2_SECRET_ACCESS_KEY Required for r2/both modes
+#
 # Exit codes:
 #   0: All golden files match
 #   1: One or more recipes have mismatches

@@ -47,6 +47,12 @@ TSUKU="$REPO_ROOT/tsuku"
 
 # Golden base - use custom dir if specified (set after argument parsing)
 
+# TSUKU_GOLDEN_SOURCE: git (default), r2, or both
+# - git: Use git-based golden files (testdata/golden/plans)
+# - r2: Download from R2 and validate against those
+# - both: Validate against both sources and compare results
+GOLDEN_SOURCE="${TSUKU_GOLDEN_SOURCE:-git}"
+
 # Parse arguments
 RECIPE=""
 CUSTOM_RECIPE_PATH=""
@@ -95,11 +101,112 @@ else
     GOLDEN_BASE="$REPO_ROOT/testdata/golden/plans"
 fi
 
+# Validate TSUKU_GOLDEN_SOURCE
+if [[ "$GOLDEN_SOURCE" != "git" && "$GOLDEN_SOURCE" != "r2" && "$GOLDEN_SOURCE" != "both" ]]; then
+    echo "Invalid TSUKU_GOLDEN_SOURCE: $GOLDEN_SOURCE (must be git, r2, or both)" >&2
+    exit 2
+fi
+
+# For R2 sources, validate credentials are available
+if [[ "$GOLDEN_SOURCE" == "r2" || "$GOLDEN_SOURCE" == "both" ]]; then
+    if [[ -z "${R2_BUCKET_URL:-}" ]] || [[ -z "${R2_ACCESS_KEY_ID:-}" ]] || [[ -z "${R2_SECRET_ACCESS_KEY:-}" ]]; then
+        echo "Error: R2 credentials required for TSUKU_GOLDEN_SOURCE=$GOLDEN_SOURCE" >&2
+        echo "Required: R2_BUCKET_URL, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY" >&2
+        exit 2
+    fi
+fi
+
 # Build tsuku if not present
 if [[ ! -x "$TSUKU" ]]; then
     echo "Building tsuku..."
     (cd "$REPO_ROOT" && go build -o tsuku ./cmd/tsuku)
 fi
+
+# Download golden files from R2 for a recipe
+# Creates directory structure compatible with git golden files
+# Returns path to the downloaded golden directory
+download_r2_golden_files() {
+    local recipe="$1"
+    local category="$2"
+    local target_base="$3"
+    local first_letter="${recipe:0:1}"
+
+    # Determine R2 category prefix (embedded or first letter)
+    local r2_category
+    if [[ "$category" == "embedded" ]]; then
+        r2_category="embedded"
+    else
+        r2_category="$first_letter"
+    fi
+
+    # Create target directory
+    local target_dir
+    if [[ "$category" == "embedded" ]]; then
+        target_dir="$target_base/embedded/$recipe"
+    else
+        target_dir="$target_base/$first_letter/$recipe"
+    fi
+    mkdir -p "$target_dir"
+
+    # Export AWS credentials for aws cli
+    export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+    export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+    export AWS_ENDPOINT_URL="$R2_BUCKET_URL"
+
+    local bucket_name="${R2_BUCKET_NAME:-tsuku-golden-registry}"
+    local prefix="plans/${r2_category}/${recipe}/"
+
+    # List all objects for this recipe and download them
+    local objects
+    objects=$(aws s3api list-objects-v2 \
+        --bucket "$bucket_name" \
+        --prefix "$prefix" \
+        --query 'Contents[].Key' \
+        --output text 2>/dev/null) || {
+        echo "Warning: Could not list R2 objects for $recipe" >&2
+        return 1
+    }
+
+    if [[ -z "$objects" || "$objects" == "None" ]]; then
+        echo "Warning: No golden files found in R2 for $recipe" >&2
+        return 1
+    fi
+
+    local count=0
+    for key in $objects; do
+        # Skip if not a .json file
+        [[ "$key" == *.json ]] || continue
+
+        # Parse key: plans/{category}/{recipe}/v{version}/{platform}.json
+        # Extract version and platform
+        local filename
+        filename=$(basename "$key")
+        local version_dir
+        version_dir=$(basename "$(dirname "$key")")
+
+        # Convert R2 structure to git structure
+        # R2: plans/f/fzf/v0.60.0/linux-amd64.json
+        # Git: testdata/golden/plans/f/fzf/v0.60.0-linux-amd64.json
+        local version="${version_dir#v}"
+        local platform="${filename%.json}"
+        local git_filename="${version_dir}-${platform}.json"
+
+        # Download file
+        aws s3 cp "s3://${bucket_name}/${key}" "$target_dir/$git_filename" --quiet 2>/dev/null || {
+            echo "Warning: Failed to download $key" >&2
+            continue
+        }
+        ((count++))
+    done
+
+    if [[ $count -eq 0 ]]; then
+        echo "Warning: No golden files downloaded from R2 for $recipe" >&2
+        return 1
+    fi
+
+    echo "$target_dir"
+    return 0
+}
 
 # Detect recipe category (embedded or registry)
 # Embedded recipes are in internal/recipe/recipes/<name>.toml (flat)
@@ -168,15 +275,51 @@ if [[ ! -f "$RECIPE_PATH" ]]; then
     exit 2
 fi
 
-# Validate golden directory exists
-if [[ ! -d "$GOLDEN_DIR" ]]; then
+# Create temp directory for generated files (and R2 downloads if needed)
+TEMP_DIR=$(mktemp -d)
+trap 'rm -rf "$TEMP_DIR"' EXIT
+
+# Handle R2 golden source
+R2_GOLDEN_DIR=""
+GIT_GOLDEN_DIR="$GOLDEN_DIR"
+
+if [[ "$GOLDEN_SOURCE" == "r2" || "$GOLDEN_SOURCE" == "both" ]]; then
+    R2_TEMP_BASE="$TEMP_DIR/r2-golden"
+    mkdir -p "$R2_TEMP_BASE"
+
+    echo "Downloading golden files from R2 for $RECIPE..."
+    R2_GOLDEN_DIR=$(download_r2_golden_files "$RECIPE" "$CATEGORY" "$R2_TEMP_BASE") || {
+        if [[ "$GOLDEN_SOURCE" == "r2" ]]; then
+            echo "Error: Failed to download golden files from R2" >&2
+            exit 2
+        else
+            echo "Warning: R2 download failed, will only validate against git" >&2
+            R2_GOLDEN_DIR=""
+        fi
+    }
+fi
+
+# Set GOLDEN_DIR based on source
+if [[ "$GOLDEN_SOURCE" == "r2" ]]; then
+    if [[ -z "$R2_GOLDEN_DIR" ]]; then
+        echo "Error: R2 golden files required but not available" >&2
+        exit 2
+    fi
+    GOLDEN_DIR="$R2_GOLDEN_DIR"
+elif [[ "$GOLDEN_SOURCE" == "git" ]]; then
+    # Validate git golden directory exists
+    if [[ ! -d "$GOLDEN_DIR" ]]; then
+        echo "No golden files found for $RECIPE" >&2
+        exit 2
+    fi
+fi
+# For "both" mode, we validate against git first, then compare with R2 later
+
+# Validate golden directory exists (for git and both modes)
+if [[ "$GOLDEN_SOURCE" != "r2" && ! -d "$GOLDEN_DIR" ]]; then
     echo "No golden files found for $RECIPE" >&2
     exit 2
 fi
-
-# Create temp directory for generated files
-TEMP_DIR=$(mktemp -d)
-trap 'rm -rf "$TEMP_DIR"' EXIT
 
 # Get supported platforms as JSON objects (preserving linux_family if present)
 PLATFORMS_JSON=$("$TSUKU" info --recipe "$RECIPE_PATH" --metadata-only --json | \
@@ -408,6 +551,54 @@ if [[ $MISMATCH -eq 1 ]]; then
     echo "  2. Generate via CI (for cross-platform generation):"
     echo "     gh workflow run generate-golden-files.yml -f recipe=$RECIPE -f commit_back=true -f branch=\$(git branch --show-current)"
     exit 1
+fi
+
+# For "both" mode, compare git and R2 golden files for consistency
+if [[ "$GOLDEN_SOURCE" == "both" && -n "$R2_GOLDEN_DIR" && -d "$GIT_GOLDEN_DIR" ]]; then
+    echo ""
+    echo "Comparing git vs R2 golden files for $RECIPE..."
+    CONSISTENCY_MISMATCH=0
+
+    # Compare all files that exist in both sources
+    for git_file in "$GIT_GOLDEN_DIR"/*.json; do
+        [[ -f "$git_file" ]] || continue
+        filename=$(basename "$git_file")
+        r2_file="$R2_GOLDEN_DIR/$filename"
+
+        if [[ ! -f "$r2_file" ]]; then
+            echo "  GIT_ONLY: $filename"
+            continue
+        fi
+
+        git_hash=$(sha256sum "$git_file" | cut -d' ' -f1)
+        r2_hash=$(sha256sum "$r2_file" | cut -d' ' -f1)
+
+        if [[ "$git_hash" != "$r2_hash" ]]; then
+            CONSISTENCY_MISMATCH=1
+            echo "  MISMATCH: $filename"
+            echo "    Git:  $git_hash"
+            echo "    R2:   $r2_hash"
+        else
+            echo "  MATCH: $filename"
+        fi
+    done
+
+    # Check for files only in R2
+    for r2_file in "$R2_GOLDEN_DIR"/*.json; do
+        [[ -f "$r2_file" ]] || continue
+        filename=$(basename "$r2_file")
+        git_file="$GIT_GOLDEN_DIR/$filename"
+
+        if [[ ! -f "$git_file" ]]; then
+            echo "  R2_ONLY: $filename"
+        fi
+    done
+
+    if [[ $CONSISTENCY_MISMATCH -eq 1 ]]; then
+        echo ""
+        echo "Warning: Git and R2 golden files differ for $RECIPE"
+        echo "This may be expected if R2 has newer generated versions."
+    fi
 fi
 
 echo "Golden files for $RECIPE are up to date."

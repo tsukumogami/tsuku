@@ -81,9 +81,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1093,I1094,I1095,I1096 done
-    class I1097 ready
-    class I1098,I1099,I1100 blocked
+    class I1093,I1094,I1095,I1096,I1097,I1098 done
+    class I1099 ready
+    class I1100 blocked
     class I1101,I1102,I1103,I1104,I1105 blocked
 ```
 
