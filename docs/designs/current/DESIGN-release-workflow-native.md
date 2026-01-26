@@ -23,7 +23,7 @@ Current
 | [#1028](https://github.com/tsukumogami/tsuku/issues/1028) | add Rust build jobs with native runners | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1027](https://github.com/tsukumogami/tsuku/issues/1027) | testable |
 | [#1030](https://github.com/tsukumogami/tsuku/issues/1030) | add integration test job | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1028](https://github.com/tsukumogami/tsuku/issues/1028) | testable |
 | [#1031](https://github.com/tsukumogami/tsuku/issues/1031) | add artifact verification and checksums | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1028](https://github.com/tsukumogami/tsuku/issues/1028), [#1030](https://github.com/tsukumogami/tsuku/issues/1030) | critical |
-| [#1040](https://github.com/tsukumogami/tsuku/issues/1040) | validate workflow with v0.3.0 release | All previous | testable |
+| [#1040](https://github.com/tsukumogami/tsuku/issues/1040) | validate workflow with v0.3.0 release | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1026](https://github.com/tsukumogami/tsuku/issues/1026), [#1027](https://github.com/tsukumogami/tsuku/issues/1027), [#1028](https://github.com/tsukumogami/tsuku/issues/1028), [#1030](https://github.com/tsukumogami/tsuku/issues/1030), [#1031](https://github.com/tsukumogami/tsuku/issues/1031) | testable |
 
 ### Dependency Graph
 

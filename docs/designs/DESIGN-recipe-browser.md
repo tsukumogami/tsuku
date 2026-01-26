@@ -392,4 +392,8 @@ Deliverable: Users can navigate to recipe browser from any page.
 
 ## Implementation Issues
 
-The recipe browser feature has been implemented as part of the monorepo consolidation. The website now lives at `website/` in the tsuku repository.
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| N/A | Implemented as part of monorepo consolidation | None | N/A |
+
+The recipe browser feature was implemented as part of the monorepo consolidation without formal issue tracking. The website now lives at `website/` in the tsuku repository.
