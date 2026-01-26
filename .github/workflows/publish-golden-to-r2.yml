@@ -249,27 +249,39 @@ jobs:
             filename=$(basename "$file" .json)
 
             # Parse version and platform from filename
-            # Format: v1.0.0-linux-amd64 or v1.0.0-linux-debian-amd64
-            # Version is everything before the OS, platform is everything after version
+            # Format: v{version}-{os}[-{family}]-{arch}.json
+            # Examples:
+            #   v0.60.0-linux-amd64.json -> version=0.60.0, platform=linux-amd64
+            #   v2.11.0-beta.2-darwin-arm64.json -> version=2.11.0-beta.2, platform=darwin-arm64
+            #   vbun-v1.3.6-darwin-amd64.json -> version=bun-v1.3.6, platform=darwin-amd64
+            #   v1.0.0-linux-debian-amd64.json -> version=1.0.0, platform=linux-debian-amd64
+            #
+            # Strategy: Find the OS marker (linux/darwin) to split version from platform
 
-            # Count parts to detect family-aware vs family-agnostic
-            num_parts=$(echo "$filename" | tr '-' '\n' | wc -l)
-            if [ "$num_parts" -ge 4 ]; then
-              # Check if second-from-last is a linux family
-              second_from_last=$(echo "$filename" | rev | cut -d'-' -f2 | rev)
-              if [[ "$second_from_last" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
-                # Family-aware: v1.0.0-linux-debian-amd64
-                version=$(echo "$filename" | rev | cut -d'-' -f4- | rev)
-                platform=$(echo "$filename" | rev | cut -d'-' -f1,2,3 | rev)
+            # Find platform by looking for -linux- or -darwin-
+            if [[ "$filename" =~ -linux- ]]; then
+              # Extract everything after -linux- (including linux itself)
+              # Handle family-aware: -linux-debian-amd64
+              after_linux="${filename#*-linux-}"
+              # Check if first part after linux is a family
+              first_part=$(echo "$after_linux" | cut -d'-' -f1)
+              if [[ "$first_part" =~ ^(debian|rhel|arch|alpine|suse)$ ]]; then
+                # Family-aware: linux-family-arch
+                platform="linux-${first_part}-$(echo "$after_linux" | cut -d'-' -f2)"
               else
-                # Family-agnostic: v1.0.0-linux-amd64
-                version=$(echo "$filename" | rev | cut -d'-' -f3- | rev)
-                platform=$(echo "$filename" | rev | cut -d'-' -f1,2 | rev)
+                # Family-agnostic: linux-arch
+                platform="linux-${first_part}"
               fi
+              # Version is everything before -linux-
+              version="${filename%-linux-*}"
+            elif [[ "$filename" =~ -darwin- ]]; then
+              # darwin is always family-agnostic
+              after_darwin="${filename#*-darwin-}"
+              platform="darwin-${after_darwin}"
+              version="${filename%-darwin-*}"
             else
-              # Family-agnostic: v1.0.0-linux-amd64
-              version=$(echo "$filename" | rev | cut -d'-' -f3- | rev)
-              platform=$(echo "$filename" | rev | cut -d'-' -f1,2 | rev)
+              echo "::warning::Could not parse platform from filename: $filename"
+              continue
             fi
 
             # Remove 'v' prefix from version for upload script
