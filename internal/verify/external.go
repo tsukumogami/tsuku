@@ -200,10 +200,17 @@ func listPackageFiles(pkg string, family string) ([]string, error) {
 			}
 		}
 
-		// apk info -L format: first line is package name, then paths
-		// Skip the package name header line
-		if family == "alpine" && !strings.HasPrefix(line, "/") {
-			continue
+		// apk info -L format: first line is "pkgname-version contains:", then paths
+		// Paths may or may not have leading slash
+		if family == "alpine" {
+			// Skip the header line (contains "contains:")
+			if strings.Contains(line, " contains:") {
+				continue
+			}
+			// Prepend / if path doesn't start with it
+			if !strings.HasPrefix(line, "/") {
+				line = "/" + line
+			}
 		}
 
 		files = append(files, line)
