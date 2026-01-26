@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,6 +12,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/verify"
 )
@@ -378,13 +380,48 @@ func verifyVisibleTool(r *recipe.Recipe, toolName string, toolState *install.Too
 // Implements Tier 1 header validation: validates that library files are valid
 // shared libraries for the current platform. Additional tiers (dependency checking,
 // dlopen testing, integrity) will be implemented in subsequent issues.
+//
+// For externally-managed libraries (installed via system package managers like apk, apt),
+// the function discovers library files from the package manager rather than looking
+// in $TSUKU_HOME/libs.
 func verifyLibrary(name string, state *install.State, cfg *config.Config, opts LibraryVerifyOptions) error {
-	// Look up library in state.Libs (not state.Installed)
+	// Look up library in state.Libs (tsuku-managed libraries)
 	libVersions, ok := state.Libs[name]
-	if !ok {
+	if ok {
+		return verifyTsukuManagedLibrary(name, libVersions, state, cfg, opts)
+	}
+
+	// Not in state.Libs - check if it's an externally-managed library
+	r, err := loader.Get(name, recipe.LoaderOptions{})
+	if err != nil {
+		return fmt.Errorf("library '%s' is not installed (not in state and recipe not found)", name)
+	}
+
+	if !r.IsLibrary() {
+		return fmt.Errorf("'%s' is not a library recipe", name)
+	}
+
+	// Detect current platform
+	target, err := platform.DetectTarget()
+	if err != nil {
+		return fmt.Errorf("failed to detect platform: %w", err)
+	}
+
+	// Check if library is provided by system packages
+	extInfo, err := verify.CheckExternalLibrary(r, target)
+	if err != nil {
+		return fmt.Errorf("failed to check external library: %w", err)
+	}
+
+	if extInfo == nil {
 		return fmt.Errorf("library '%s' is not installed", name)
 	}
 
+	return verifyExternalLibrary(name, extInfo, state, cfg, opts)
+}
+
+// verifyTsukuManagedLibrary verifies a library installed by tsuku into $TSUKU_HOME/libs.
+func verifyTsukuManagedLibrary(name string, libVersions map[string]install.LibraryVersionState, state *install.State, cfg *config.Config, opts LibraryVerifyOptions) error {
 	// Get the first version (libraries typically have one active version)
 	var version string
 	var libState install.LibraryVersionState
@@ -413,94 +450,21 @@ func verifyLibrary(name string, state *install.State, cfg *config.Config, opts L
 		return fmt.Errorf("failed to scan library directory: %w", err)
 	}
 
-	if len(libFiles) == 0 {
-		printInfo("    No shared library files found (may be header-only)\n")
-	} else {
-		var validated, skipped int
-		for _, libFile := range libFiles {
-			relPath, _ := filepath.Rel(libDir, libFile)
-			info, err := verify.ValidateHeader(libFile)
-			if err != nil {
-				// Check if it's a wrong architecture error - this is acceptable for cross-platform recipes
-				if verr, ok := err.(*verify.ValidationError); ok {
-					if verr.Category == verify.ErrWrongArch {
-						printInfof("    %s: SKIPPED (%s)\n", relPath, verr.Message)
-						skipped++
-						continue
-					}
-				}
-				return fmt.Errorf("header validation failed for %s: %w", relPath, err)
-			}
-			printInfof("    %s: OK (%s %s, %s)\n", relPath, info.Format, info.Type, info.Architecture)
-			validated++
-		}
-		printInfof("  Tier 1: %d validated", validated)
-		if skipped > 0 {
-			printInfof(", %d skipped (wrong arch)", skipped)
-		}
-		printInfo("\n")
+	if err := runTier1Validation(libFiles, libDir); err != nil {
+		return err
 	}
 
 	// Tier 2: Dependency validation
-	printInfo("  Tier 2: Dependency validation...\n")
-	if len(libFiles) == 0 {
-		printInfo("    No library files to validate\n")
-	} else {
-		var allResults []verify.DepResult
-		for _, libFile := range libFiles {
-			results, err := verify.ValidateDependenciesSimple(libFile, state, cfg.HomeDir)
-			if err != nil {
-				return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(libFile), err)
-			}
-			allResults = append(allResults, results...)
-		}
-
-		if !displayDependencyResults(allResults) {
-			return fmt.Errorf("dependency validation failed: one or more dependencies could not be verified")
-		}
+	if err := runTier2Validation(libFiles, state, cfg); err != nil {
+		return err
 	}
 
 	// Tier 3: dlopen load testing
-	if !opts.SkipDlopen && len(libFiles) > 0 {
-		printInfo("  Tier 3: dlopen load testing...\n")
-		result, err := verify.RunDlopenVerification(
-			context.Background(),
-			cfg,
-			libFiles,
-			false, // skipDlopen already handled by the condition above
-		)
-		if err != nil {
-			return fmt.Errorf("dlopen verification failed: %w", err)
-		}
-		if result.Warning != "" {
-			fmt.Fprintf(os.Stderr, "  %s\n", result.Warning)
-		}
-		if !result.Skipped {
-			// Display results
-			passed, failed := 0, 0
-			for _, r := range result.Results {
-				if r.OK {
-					passed++
-				} else {
-					failed++
-					relPath, _ := filepath.Rel(libDir, r.Path)
-					if relPath == "" {
-						relPath = filepath.Base(r.Path)
-					}
-					printInfof("    %s: FAIL - %s\n", relPath, r.Error)
-				}
-			}
-			if failed > 0 {
-				return fmt.Errorf("dlopen failed for %d of %d libraries", failed, passed+failed)
-			}
-			printInfof("  Tier 3: %d libraries loaded successfully\n", passed)
-		}
+	if err := runTier3Validation(libFiles, libDir, cfg, opts); err != nil {
+		return err
 	}
-	// When --skip-dlopen is passed, we skip silently (no output)
 
 	// Tier 4: Integrity verification (--integrity flag)
-	// Note: This is a basic implementation for CI validation. Production-grade
-	// verification with detailed reporting will be implemented in issue #950.
 	if opts.CheckIntegrity {
 		if err := verifyLibraryIntegrity(libDir, &libState); err != nil {
 			return err
@@ -508,6 +472,236 @@ func verifyLibrary(name string, state *install.State, cfg *config.Config, opts L
 	}
 
 	return nil
+}
+
+// verifyExternalLibrary verifies a library installed via system package manager.
+func verifyExternalLibrary(name string, extInfo *verify.ExternalLibraryInfo, state *install.State, cfg *config.Config, opts LibraryVerifyOptions) error {
+	printInfof("Verifying library %s (external: %s packages %v)...\n", name, extInfo.Family, extInfo.Packages)
+	printInfo("  Source: system package manager\n")
+
+	libFiles := extInfo.LibraryFiles
+
+	if len(libFiles) == 0 {
+		printInfo("  No shared library files found in packages\n")
+		return nil
+	}
+
+	// Tier 1: Header validation
+	if err := runTier1Validation(libFiles, ""); err != nil {
+		return err
+	}
+
+	// Tier 2: Dependency validation
+	// For externally-managed libraries, we skip dependency validation because:
+	// 1. The system package manager (apk, apt, etc.) handles dependencies
+	// 2. Dependencies are in system paths that tsuku's validator doesn't track
+	// 3. If Tier 3 (dlopen) passes, dependencies are implicitly satisfied
+	printInfo("  Tier 2: Dependency validation...\n")
+	printInfo("    Skipped (system package manager handles dependencies)\n")
+
+	// Tier 3: dlopen load testing
+	// For external libraries, we test the actual system paths
+	if err := runTier3ValidationDirect(libFiles, cfg, opts); err != nil {
+		return err
+	}
+
+	// Tier 4: Integrity - not applicable for externally-managed libraries
+	// System packages have their own integrity verification mechanisms
+
+	return nil
+}
+
+// runTier1Validation performs header validation on library files.
+func runTier1Validation(libFiles []string, baseDir string) error {
+	printInfo("  Tier 1: Header validation...\n")
+
+	if len(libFiles) == 0 {
+		printInfo("    No shared library files found (may be header-only)\n")
+		return nil
+	}
+
+	var validated, skipped int
+	for _, libFile := range libFiles {
+		displayPath := libFile
+		if baseDir != "" {
+			if rel, err := filepath.Rel(baseDir, libFile); err == nil {
+				displayPath = rel
+			}
+		} else {
+			displayPath = filepath.Base(libFile)
+		}
+
+		info, err := verify.ValidateHeader(libFile)
+		if err != nil {
+			// Check if it's a wrong architecture error - this is acceptable for cross-platform recipes
+			if verr, ok := err.(*verify.ValidationError); ok {
+				if verr.Category == verify.ErrWrongArch {
+					printInfof("    %s: SKIPPED (%s)\n", displayPath, verr.Message)
+					skipped++
+					continue
+				}
+			}
+			return fmt.Errorf("header validation failed for %s: %w", displayPath, err)
+		}
+		printInfof("    %s: OK (%s %s, %s)\n", displayPath, info.Format, info.Type, info.Architecture)
+		validated++
+	}
+	printInfof("  Tier 1: %d validated", validated)
+	if skipped > 0 {
+		printInfof(", %d skipped (wrong arch)", skipped)
+	}
+	printInfo("\n")
+
+	return nil
+}
+
+// runTier2Validation performs dependency validation on library files.
+func runTier2Validation(libFiles []string, state *install.State, cfg *config.Config) error {
+	printInfo("  Tier 2: Dependency validation...\n")
+	if len(libFiles) == 0 {
+		printInfo("    No library files to validate\n")
+		return nil
+	}
+
+	var allResults []verify.DepResult
+	for _, libFile := range libFiles {
+		results, err := verify.ValidateDependenciesSimple(libFile, state, cfg.HomeDir)
+		if err != nil {
+			return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(libFile), err)
+		}
+		allResults = append(allResults, results...)
+	}
+
+	if !displayDependencyResults(allResults) {
+		return fmt.Errorf("dependency validation failed: one or more dependencies could not be verified")
+	}
+
+	return nil
+}
+
+// runTier3Validation performs dlopen load testing for tsuku-managed libraries.
+func runTier3Validation(libFiles []string, libDir string, cfg *config.Config, opts LibraryVerifyOptions) error {
+	if opts.SkipDlopen || len(libFiles) == 0 {
+		return nil
+	}
+
+	printInfo("  Tier 3: dlopen load testing...\n")
+	result, err := verify.RunDlopenVerification(
+		context.Background(),
+		cfg,
+		libFiles,
+		false,
+	)
+	if err != nil {
+		return fmt.Errorf("dlopen verification failed: %w", err)
+	}
+	if result.Warning != "" {
+		fmt.Fprintf(os.Stderr, "  %s\n", result.Warning)
+	}
+	if !result.Skipped {
+		passed, failed := 0, 0
+		for _, r := range result.Results {
+			if r.OK {
+				passed++
+			} else {
+				failed++
+				relPath, _ := filepath.Rel(libDir, r.Path)
+				if relPath == "" {
+					relPath = filepath.Base(r.Path)
+				}
+				printInfof("    %s: FAIL - %s\n", relPath, r.Error)
+			}
+		}
+		if failed > 0 {
+			return fmt.Errorf("dlopen failed for %d of %d libraries", failed, passed+failed)
+		}
+		printInfof("  Tier 3: %d libraries loaded successfully\n", passed)
+	}
+
+	return nil
+}
+
+// runTier3ValidationDirect performs dlopen load testing using the dltest helper directly.
+// This is used for externally-managed libraries where paths are outside $TSUKU_HOME/libs.
+func runTier3ValidationDirect(libFiles []string, cfg *config.Config, opts LibraryVerifyOptions) error {
+	if opts.SkipDlopen || len(libFiles) == 0 {
+		return nil
+	}
+
+	printInfo("  Tier 3: dlopen load testing...\n")
+
+	// Get the dltest helper path
+	helperPath, err := verify.EnsureDltest(cfg)
+	if err != nil {
+		// Helper unavailable - skip with warning
+		fmt.Fprintf(os.Stderr, "  Warning: tsuku-dltest helper not available, skipping load test\n")
+		fmt.Fprintf(os.Stderr, "    Run 'tsuku install tsuku-dltest' to enable full verification\n")
+		return nil
+	}
+
+	// Invoke dltest directly (bypassing path validation since these are system paths)
+	results, err := invokeDltestDirect(helperPath, libFiles)
+	if err != nil {
+		return fmt.Errorf("dlopen verification failed: %w", err)
+	}
+
+	passed, failed := 0, 0
+	for _, r := range results {
+		if r.OK {
+			passed++
+		} else {
+			failed++
+			printInfof("    %s: FAIL - %s\n", filepath.Base(r.Path), r.Error)
+		}
+	}
+	if failed > 0 {
+		return fmt.Errorf("dlopen failed for %d of %d libraries", failed, passed+failed)
+	}
+	printInfof("  Tier 3: %d libraries loaded successfully\n", passed)
+
+	return nil
+}
+
+// invokeDltestDirect calls the dltest helper directly without path validation.
+// This is needed for external libraries that live outside $TSUKU_HOME/libs.
+func invokeDltestDirect(helperPath string, paths []string) ([]verify.DlopenResult, error) {
+	if len(paths) == 0 {
+		return nil, nil
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), verify.BatchTimeout)
+	defer cancel()
+
+	cmd := exec.CommandContext(ctx, helperPath, paths...)
+
+	var stdout, stderr strings.Builder
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	runErr := cmd.Run()
+
+	// Check for timeout
+	if ctx.Err() == context.DeadlineExceeded {
+		return nil, fmt.Errorf("dltest timed out after %v", verify.BatchTimeout)
+	}
+
+	// Parse JSON output
+	var results []verify.DlopenResult
+	if parseErr := parseJSONOutput(stdout.String(), &results); parseErr != nil {
+		if runErr != nil {
+			return nil, fmt.Errorf("dltest failed: %v (stderr: %s)", runErr, stderr.String())
+		}
+		return nil, fmt.Errorf("failed to parse dltest output: %w", parseErr)
+	}
+
+	return results, nil
+}
+
+// parseJSONOutput parses the JSON output from dltest.
+func parseJSONOutput(output string, results *[]verify.DlopenResult) error {
+	reader := strings.NewReader(output)
+	decoder := json.NewDecoder(reader)
+	return decoder.Decode(results)
 }
 
 // verifyLibraryIntegrity verifies the integrity of installed library files using stored checksums.
