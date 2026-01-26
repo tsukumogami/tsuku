@@ -1,0 +1,231 @@
+name: Platform Integration Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - 'recipes/**'
+      - 'internal/recipe/**'
+      - '.github/workflows/platform-integration.yml'
+
+jobs:
+  # Build binaries once with consistent Go version
+  build:
+    name: Build Binaries
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build for all targets
+        run: |
+          GOOS=linux GOARCH=amd64 go build -o tsuku-linux-amd64 ./cmd/tsuku
+          GOOS=linux GOARCH=arm64 go build -o tsuku-linux-arm64 ./cmd/tsuku
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: binaries
+          path: tsuku-*
+          retention-days: 1
+
+  # Build tsuku-dltest helper for testing
+  build-dltest:
+    name: Build dltest Helper
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-gnu,aarch64-unknown-linux-gnu
+
+      - name: Install cross-compilation tools
+        run: sudo apt-get update && sudo apt-get install -y gcc-aarch64-linux-gnu
+
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            cmd/tsuku-dltest/target
+            ~/.cargo/registry
+            ~/.cargo/git
+          key: rust-dltest-${{ runner.os }}-${{ hashFiles('cmd/tsuku-dltest/Cargo.lock') }}
+          restore-keys: |
+            rust-dltest-${{ runner.os }}-
+
+      - name: Build dltest for amd64
+        working-directory: cmd/tsuku-dltest
+        run: cargo build --release --target x86_64-unknown-linux-gnu
+
+      - name: Build dltest for arm64
+        working-directory: cmd/tsuku-dltest
+        env:
+          CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+        run: cargo build --release --target aarch64-unknown-linux-gnu
+
+      - name: Prepare artifacts
+        run: |
+          cp cmd/tsuku-dltest/target/x86_64-unknown-linux-gnu/release/tsuku-dltest tsuku-dltest-linux-amd64
+          cp cmd/tsuku-dltest/target/aarch64-unknown-linux-gnu/release/tsuku-dltest tsuku-dltest-linux-arm64
+
+      - name: Upload dltest binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: dltest-binaries
+          path: tsuku-dltest-*
+          retention-days: 1
+
+  # Test on real containers with pre-built binaries
+  integration:
+    name: "${{ matrix.family }} (${{ matrix.libc }}, ${{ matrix.arch }})"
+    needs: [build, build-dltest]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # glibc amd64 targets
+          - container: debian:bookworm-slim
+            libc: glibc
+            family: debian
+            arch: amd64
+            runner: ubuntu-latest
+          - container: fedora:41
+            libc: glibc
+            family: rhel
+            arch: amd64
+            runner: ubuntu-latest
+
+          # musl amd64 targets
+          - container: alpine:3.19
+            libc: musl
+            family: alpine
+            arch: amd64
+            runner: ubuntu-latest
+
+          # ARM64 targets (native runners)
+          - container: debian:bookworm-slim
+            libc: glibc
+            family: debian
+            arch: arm64
+            runner: ubuntu-24.04-arm
+          - container: alpine:3.19
+            libc: musl
+            family: alpine
+            arch: arm64
+            runner: ubuntu-24.04-arm
+
+    runs-on: ${{ matrix.runner }}
+    container: ${{ matrix.container }}
+
+    steps:
+      - name: Download pre-built binary
+        uses: actions/download-artifact@v4
+        with:
+          name: binaries
+
+      - name: Download dltest helper
+        uses: actions/download-artifact@v4
+        with:
+          name: dltest-binaries
+
+      - name: Install minimal test dependencies
+        run: |
+          case "${{ matrix.family }}" in
+            alpine)
+              apk add --no-cache curl bash
+              ;;
+            debian)
+              apt-get update && apt-get install -y --no-install-recommends curl ca-certificates
+              ;;
+            rhel)
+              dnf install -y --setopt=install_weak_deps=False curl
+              ;;
+          esac
+
+      - name: Make binaries executable
+        run: |
+          chmod +x ./tsuku-linux-${{ matrix.arch }}
+          chmod +x ./tsuku-dltest-linux-${{ matrix.arch }}
+
+      - name: Set up TSUKU_HOME
+        run: |
+          export TSUKU_HOME="$HOME/.tsuku"
+          mkdir -p "$TSUKU_HOME/bin" "$TSUKU_HOME/tools" "$TSUKU_HOME/libs"
+          echo "TSUKU_HOME=$TSUKU_HOME" >> "$GITHUB_ENV"
+
+      - name: Pre-install dltest helper
+        run: |
+          # Install dltest to TSUKU_HOME so tsuku finds it
+          DLTEST_VERSION="dev"
+          DLTEST_DIR="$TSUKU_HOME/tools/tsuku-dltest-$DLTEST_VERSION/bin"
+          mkdir -p "$DLTEST_DIR"
+          cp ./tsuku-dltest-linux-${{ matrix.arch }} "$DLTEST_DIR/tsuku-dltest"
+          chmod +x "$DLTEST_DIR/tsuku-dltest"
+
+          # Create state.json so tsuku finds it
+          INSTALLED_AT=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          cat > "$TSUKU_HOME/state.json" << EOF
+          {
+            "installed": {
+              "tsuku-dltest": {
+                "active_version": "$DLTEST_VERSION",
+                "versions": {
+                  "$DLTEST_VERSION": {
+                    "requested": "",
+                    "binaries": ["tsuku-dltest"],
+                    "installed_at": "$INSTALLED_AT"
+                  }
+                },
+                "is_explicit": true
+              }
+            }
+          }
+          EOF
+
+      - name: Install library dependencies (musl only)
+        if: matrix.libc == 'musl'
+        run: apk add --no-cache zlib-dev libyaml-dev
+
+      - name: Install library recipes (glibc only)
+        if: matrix.libc == 'glibc'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: |
+          TSUKU=./tsuku-linux-${{ matrix.arch }}
+          $TSUKU install zlib --force
+          $TSUKU install libyaml --force
+
+      - name: Verify dlopen - zlib
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: |
+          TSUKU=./tsuku-linux-${{ matrix.arch }}
+          $TSUKU verify zlib
+
+      - name: Verify dlopen - libyaml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: |
+          TSUKU=./tsuku-linux-${{ matrix.arch }}
+          $TSUKU verify libyaml
+
+      - name: Test tool installation (jq)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+        run: |
+          TSUKU=./tsuku-linux-${{ matrix.arch }}
+          $TSUKU install jq
+          # Add tsuku bin to PATH and verify
+          export PATH="$TSUKU_HOME/bin:$PATH"
+          jq --version
