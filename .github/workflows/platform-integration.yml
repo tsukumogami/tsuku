@@ -103,20 +103,15 @@ jobs:
             arch: amd64
             runner: ubuntu-latest
 
-          # ARM64 targets (native runners)
-          - container: debian:bookworm-slim
+          # ARM64 glibc (native runner, no container - container JS actions don't work on ARM64)
+          - container: ""
             libc: glibc
             family: debian
             arch: arm64
             runner: ubuntu-24.04-arm
-          - container: alpine:3.19
-            libc: musl
-            family: alpine
-            arch: arm64
-            runner: ubuntu-24.04-arm
 
     runs-on: ${{ matrix.runner }}
-    container: ${{ matrix.container }}
+    container: ${{ matrix.container || null }}
 
     steps:
       - name: Download pre-built binary
@@ -130,6 +125,7 @@ jobs:
           name: dltest-${{ matrix.arch }}
 
       - name: Install minimal test dependencies
+        if: matrix.container != ''
         run: |
           case "${{ matrix.family }}" in
             alpine)
@@ -185,7 +181,7 @@ jobs:
 
       - name: Install library dependencies (musl only)
         if: matrix.libc == 'musl'
-        run: apk add --no-cache zlib-dev libyaml-dev
+        run: apk add --no-cache zlib-dev yaml-dev
 
       - name: Install library recipes (glibc only)
         if: matrix.libc == 'glibc'
@@ -213,13 +209,13 @@ jobs:
           TSUKU=./tsuku-linux-${{ matrix.arch }}
           $TSUKU verify libyaml
 
-      - name: Test tool installation (jq)
+      - name: Test tool installation (just)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           TSUKU=./tsuku-linux-${{ matrix.arch }}
-          $TSUKU install jq
+          $TSUKU install just
           # Add tsuku bin to PATH and verify
           export PATH="$TSUKU_HOME/bin:$PATH"
-          jq --version
+          just --version
