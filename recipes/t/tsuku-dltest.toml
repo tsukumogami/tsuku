@@ -6,7 +6,6 @@ homepage = "https://github.com/tsukumogami/tsuku"
 # The tool is hidden via IsHidden flag when installed programmatically
 
 [version]
-github_repo = "tsukumogami/tsuku"
 tag_prefix = "v"
 
 [[steps]]
