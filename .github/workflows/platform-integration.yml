@@ -24,8 +24,8 @@ jobs:
 
       - name: Build for all targets
         run: |
-          GOOS=linux GOARCH=amd64 go build -o tsuku-linux-amd64 ./cmd/tsuku
-          GOOS=linux GOARCH=arm64 go build -o tsuku-linux-arm64 ./cmd/tsuku
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o tsuku-linux-amd64 ./cmd/tsuku
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o tsuku-linux-arm64 ./cmd/tsuku
 
       - name: Upload binaries
         uses: actions/upload-artifact@v4
@@ -262,7 +262,7 @@ jobs:
           TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
         run: |
           TSUKU=./tsuku-linux-${{ matrix.arch }}
-          $TSUKU install just
+          $TSUKU install just --force
           # Add tsuku bin to PATH and verify
           export PATH="$TSUKU_HOME/bin:$PATH"
           just --version
@@ -350,7 +350,7 @@ jobs:
 
               # Test tool installation
               echo "=== Installing just ==="
-              $TSUKU install just
+              $TSUKU install just --force
               export PATH="$TSUKU_HOME/bin:$PATH"
               just --version
             '
