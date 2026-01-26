@@ -111,7 +111,9 @@ var infoCmd = &cobra.Command{
 				VersionSource        string            `json:"version_source"`
 				SupportedOS          []string          `json:"supported_os,omitempty"`
 				SupportedArch        []string          `json:"supported_arch,omitempty"`
+				SupportedLibc        []string          `json:"supported_libc,omitempty"`
 				UnsupportedPlatforms []string          `json:"unsupported_platforms,omitempty"`
+				UnsupportedReason    string            `json:"unsupported_reason,omitempty"`
 				SupportedPlatforms   []recipe.Platform `json:"supported_platforms"`
 				Tier                 int               `json:"tier"`
 				Type                 string            `json:"type"`
@@ -130,7 +132,9 @@ var infoCmd = &cobra.Command{
 				VersionSource:        r.Version.Source,
 				SupportedOS:          r.Metadata.SupportedOS,
 				SupportedArch:        r.Metadata.SupportedArch,
+				SupportedLibc:        r.Metadata.SupportedLibc,
 				UnsupportedPlatforms: r.Metadata.UnsupportedPlatforms,
+				UnsupportedReason:    r.Metadata.UnsupportedReason,
 				SupportedPlatforms:   recipe.SupportedPlatforms(r),
 				Tier:                 r.Metadata.Tier,
 				Type:                 r.Metadata.Type,
@@ -162,6 +166,7 @@ var infoCmd = &cobra.Command{
 		// Show platform constraints if present
 		hasConstraints := len(r.Metadata.SupportedOS) > 0 ||
 			len(r.Metadata.SupportedArch) > 0 ||
+			len(r.Metadata.SupportedLibc) > 0 ||
 			len(r.Metadata.UnsupportedPlatforms) > 0
 		if hasConstraints {
 			fmt.Printf("Platforms:      %s\n", r.FormatPlatformConstraints())
