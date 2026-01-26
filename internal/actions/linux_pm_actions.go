@@ -47,15 +47,24 @@ func (a *PacmanInstallAction) ImplicitConstraint() *Constraint {
 	return archConstraint
 }
 
-// Execute logs what would be installed (stub implementation).
+// Execute checks if packages are installed and returns an error if any are missing.
 func (a *PacmanInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	packages, ok := GetStringSlice(params, "packages")
 	if !ok {
 		return fmt.Errorf("pacman_install action requires 'packages' parameter")
 	}
 
-	fmt.Printf("   Would install via pacman: %v\n", packages)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	// Check which packages are missing
+	missing := checkMissingPackages(packages, "arch")
+	if len(missing) > 0 {
+		return &DependencyMissingError{
+			Packages: missing,
+			Command:  buildInstallCommand("pacman -S --noconfirm", missing),
+			Family:   "arch",
+		}
+	}
+
+	fmt.Printf("   System packages verified: %v\n", packages)
 	return nil
 }
 
@@ -105,15 +114,24 @@ func (a *ApkInstallAction) ImplicitConstraint() *Constraint {
 	return alpineConstraint
 }
 
-// Execute logs what would be installed (stub implementation).
+// Execute checks if packages are installed and returns an error if any are missing.
 func (a *ApkInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	packages, ok := GetStringSlice(params, "packages")
 	if !ok {
 		return fmt.Errorf("apk_install action requires 'packages' parameter")
 	}
 
-	fmt.Printf("   Would install via apk: %v\n", packages)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	// Check which packages are missing
+	missing := checkMissingPackages(packages, "alpine")
+	if len(missing) > 0 {
+		return &DependencyMissingError{
+			Packages: missing,
+			Command:  buildInstallCommand("apk add", missing),
+			Family:   "alpine",
+		}
+	}
+
+	fmt.Printf("   System packages verified: %v\n", packages)
 	return nil
 }
 
@@ -164,15 +182,24 @@ func (a *ZypperInstallAction) ImplicitConstraint() *Constraint {
 	return suseConstraint
 }
 
-// Execute logs what would be installed (stub implementation).
+// Execute checks if packages are installed and returns an error if any are missing.
 func (a *ZypperInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	packages, ok := GetStringSlice(params, "packages")
 	if !ok {
 		return fmt.Errorf("zypper_install action requires 'packages' parameter")
 	}
 
-	fmt.Printf("   Would install via zypper: %v\n", packages)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	// Check which packages are missing
+	missing := checkMissingPackages(packages, "suse")
+	if len(missing) > 0 {
+		return &DependencyMissingError{
+			Packages: missing,
+			Command:  buildInstallCommand("zypper install -y", missing),
+			Family:   "suse",
+		}
+	}
+
+	fmt.Printf("   System packages verified: %v\n", packages)
 	return nil
 }
 

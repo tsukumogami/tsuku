@@ -86,8 +86,25 @@ func TestAptInstallAction_Execute(t *testing.T) {
 	err := action.Execute(ctx, map[string]interface{}{
 		"packages": []interface{}{"build-essential", "libssl-dev"},
 	})
+
+	// On non-Debian systems, packages won't be installed, so we expect DependencyMissingError.
+	// On Debian systems with the packages installed, we expect nil.
 	if err != nil {
-		t.Errorf("Execute() error = %v", err)
+		depErr := AsDependencyMissing(err)
+		if depErr == nil {
+			t.Errorf("Execute() error = %v, want DependencyMissingError or nil", err)
+		} else {
+			// Verify error contains expected information
+			if depErr.Family != "debian" {
+				t.Errorf("DependencyMissingError.Family = %q, want %q", depErr.Family, "debian")
+			}
+			if len(depErr.Packages) == 0 {
+				t.Error("DependencyMissingError.Packages should not be empty")
+			}
+			if !strings.Contains(depErr.Command, "apt-get install") {
+				t.Errorf("DependencyMissingError.Command = %q, want to contain 'apt-get install'", depErr.Command)
+			}
+		}
 	}
 }
 

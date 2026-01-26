@@ -18,7 +18,7 @@ rationale: Homebrew bottles work well on glibc and provide valuable version cont
 | [#1109](https://github.com/tsukumogami/tsuku/issues/1109) | feat(platform): add libc detection for glibc vs musl | None | testable |
 | [#1110](https://github.com/tsukumogami/tsuku/issues/1110) | feat(recipe): add libc filter to recipe conditional system | #1109 | testable |
 | [#1111](https://github.com/tsukumogami/tsuku/issues/1111) | feat(recipe): add step-level dependency resolution | #1110 | testable |
-| [#1112](https://github.com/tsukumogami/tsuku/issues/1112) | feat(actions): add system_dependency action for musl support | #1109 | testable |
+| [#1112](https://github.com/tsukumogami/tsuku/issues/1112) | feat(actions): enhance *_install actions with package detection | #1109 | testable |
 | [#1113](https://github.com/tsukumogami/tsuku/issues/1113) | feat(recipe): add supported_libc platform constraint | #1110 | testable |
 | [#1114](https://github.com/tsukumogami/tsuku/issues/1114) | feat(recipe): migrate library recipes to hybrid approach | #1111, #1112, #1113 | testable |
 | [#1115](https://github.com/tsukumogami/tsuku/issues/1115) | feat(verify): add recipe coverage validation for libc support | #1110, #1113 | testable |
@@ -32,7 +32,7 @@ graph TD
         I1109["#1109: libc detection"]:::done
         I1110["#1110: libc filter"]:::done
         I1111["#1111: step-level deps"]:::done
-        I1112["#1112: system_dependency action"]:::ready
+        I1112["#1112: enhanced *_install"]:::done
         I1113["#1113: supported_libc constraint"]:::ready
         I1114["#1114: recipe migration"]:::blocked
         I1115["#1115: coverage validation"]:::blocked
@@ -229,10 +229,10 @@ when = { libc = ["glibc"] }
 dependencies = ["openssl", "zlib", "brotli"]  # Only resolved if this step matches
 
 [[steps]]
-action = "system_dependency"
-name = "curl"
+action = "apk_install"
+packages = ["curl-dev"]
 when = { libc = ["musl"] }
-# No dependencies - apk handles it
+# No dependencies - apk handles transitive deps
 ```
 
 **Pros:**
@@ -416,69 +416,47 @@ func (g *PlanGenerator) resolveStepDependencies(step *Step, target *Target) ([]P
 }
 ```
 
-### Component 4: System Dependency Action
+### Component 4: Enhanced Package Manager Actions
 
-For musl systems, a new action that checks for system packages and guides installation.
+Rather than creating a new `system_dependency` action, the existing package manager install actions (`apk_install`, `apt_install`, `dnf_install`, `pacman_install`, `zypper_install`) are enhanced to detect missing packages and return structured errors.
+
+**Rationale for this approach:**
+
+The existing `*_install` actions already have:
+- `ImplicitConstraint()` limiting them to their respective distro families
+- `Describe()` returning the install command (e.g., `"sudo apk add zlib-dev"`)
+- `IsExternallyManaged()` indicating they delegate to system package managers
+
+What they lack is package detection - they currently print "Would install... (Skipped)" and return nil. Enhancing these actions provides a consistent interface without introducing a new action.
 
 **Structured error type:**
 
 ```go
-// DependencyMissingError is a sentinel error type for missing system dependencies.
-// The CLI uses this to provide specialized output (colored, formatted).
+// DependencyMissingError indicates required system packages are not installed.
+// The CLI uses this to provide specialized output with aggregated install commands.
 type DependencyMissingError struct {
-    Library string
-    Package string
-    Command string
-    Family  string
+    Packages []string  // Missing package names
+    Command  string    // Install command (from Describe())
+    Family   string    // Linux family (alpine, debian, rhel, arch, suse)
 }
 
 func (e *DependencyMissingError) Error() string {
-    return fmt.Sprintf("missing system dependency: %s (install with: %s)", e.Library, e.Command)
+    return fmt.Sprintf("missing system packages: %v (install with: %s)", e.Packages, e.Command)
 }
 
-// IsDependencyMissing checks if an error is a missing dependency error.
+// IsDependencyMissing checks if an error is a DependencyMissingError.
 func IsDependencyMissing(err error) bool {
     var depErr *DependencyMissingError
     return errors.As(err, &depErr)
 }
 ```
 
-**Action implementation:**
+**Package detection functions:**
 
 ```go
-type SystemDependencyAction struct{ BaseAction }
-
-func (a *SystemDependencyAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
-    name := params["name"].(string)
-    packages := params["packages"].(map[string]string)
-
-    // Get package name for this family
-    family := ctx.Target.LinuxFamily()
-    pkgName, ok := packages[family]
-    if !ok {
-        return fmt.Errorf("no package mapping for family %s", family)
-    }
-
-    // Check if installed
-    if isInstalled(pkgName, family) {
-        return nil
-    }
-
-    // Show install command with root detection
-    cmd := getInstallCommand(pkgName, family)
-    return &DependencyMissingError{
-        Library: name,
-        Package: pkgName,
-        Command: cmd,
-        Family:  family,
-    }
-}
-```
-
-**Package installation detection:**
-
-```go
-func isInstalled(pkg string, family string) bool {
+// isPackageInstalled checks if a package is installed using read-only queries.
+// These commands do not require elevated privileges.
+func isPackageInstalled(pkg string, family string) bool {
     switch family {
     case "alpine":
         cmd := exec.Command("apk", "info", "-e", pkg)
@@ -487,55 +465,45 @@ func isInstalled(pkg string, family string) bool {
         cmd := exec.Command("dpkg-query", "-W", "-f=${Status}", pkg)
         out, err := cmd.Output()
         return err == nil && strings.Contains(string(out), "install ok installed")
-    // ... other families
+    case "rhel", "suse":
+        cmd := exec.Command("rpm", "-q", pkg)
+        return cmd.Run() == nil
+    case "arch":
+        cmd := exec.Command("pacman", "-Q", pkg)
+        return cmd.Run() == nil
     }
     return false
 }
 ```
 
-**Root detection for install commands:**
+**Enhanced Execute() pattern:**
 
 ```go
-func getInstallCommand(pkg string, family string) string {
-    prefix := ""
-    if os.Getuid() != 0 {
-        // Not running as root, add sudo/doas prefix
-        if _, err := exec.LookPath("doas"); err == nil {
-            prefix = "doas "
-        } else {
-            prefix = "sudo "
+// Execute checks if packages are installed and returns an error if any are missing.
+func (a *ApkInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
+    packages, ok := GetStringSlice(params, "packages")
+    if !ok {
+        return fmt.Errorf("apk_install action requires 'packages' parameter")
+    }
+
+    // Check which packages are missing
+    var missing []string
+    for _, pkg := range packages {
+        if !isPackageInstalled(pkg, "alpine") {
+            missing = append(missing, pkg)
         }
     }
 
-    switch family {
-    case "alpine":
-        return prefix + "apk add " + pkg
-    case "debian":
-        return prefix + "apt install " + pkg
-    // ... other families
-    }
-    return ""
-}
-```
-
-**Aggregate missing deps at plan time:**
-
-The plan generator collects ALL missing dependencies before failing, so users see everything they need to install:
-
-```go
-func (g *PlanGenerator) collectMissingDeps(steps []Step, target *Target) []DependencyMissingError {
-    var missing []DependencyMissingError
-    for _, step := range steps {
-        if step.Action == "system_dependency" && step.When.Matches(target) {
-            if err := checkSystemDep(step, target); err != nil {
-                var depErr *DependencyMissingError
-                if errors.As(err, &depErr) {
-                    missing = append(missing, *depErr)
-                }
-            }
+    if len(missing) > 0 {
+        return &DependencyMissingError{
+            Packages: missing,
+            Command:  a.Describe(params),  // "sudo apk add pkg1 pkg2..."
+            Family:   "alpine",
         }
     }
-    return missing
+
+    fmt.Printf("   System packages verified: %v\n", packages)
+    return nil
 }
 ```
 
@@ -545,12 +513,9 @@ func (g *PlanGenerator) collectMissingDeps(steps []Step, target *Target) []Depen
 $ tsuku install complex-tool
 Planning complex-tool v1.0.0
 
-Missing system dependencies:
+Missing system packages: [curl-dev openssl-dev]
 
-    libcurl is required but not installed.
-    openssl is required but not installed.
-
-Install all with:
+Install with:
     sudo apk add curl-dev openssl-dev
 
 Then retry:
@@ -581,9 +546,8 @@ dependencies = ["openssl", "zlib"]
 
 # musl Linux: System packages (apk handles transitive deps)
 [[steps]]
-action = "system_dependency"
-name = "curl"
-packages = { alpine = "curl-dev" }
+action = "apk_install"
+packages = ["curl-dev"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS: Homebrew (brew handles deps)
@@ -638,9 +602,8 @@ dependencies = ["brotli", "libnghttp2", "libssh2", "openssl", "zlib", "zstd"]
 
 # musl: System packages (apk handles transitive deps)
 [[steps]]
-action = "system_dependency"
-name = "curl"
-packages = { alpine = "curl-dev" }
+action = "apk_install"
+packages = ["curl-dev"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS: Homebrew (brew handles deps)
@@ -688,7 +651,7 @@ User runs: tsuku install cmake (depends on libcurl)
 
 2. Load cmake recipe
    └─> Step: homebrew action, when={libc=["glibc"]} - SKIP (doesn't match)
-   └─> Step: system_dependency, when={libc=["musl"]}, no deps
+   └─> Step: apk_install, when={libc=["musl"]}, no deps
    └─> Step matches! No dependencies to resolve.
 
 3. Check system package
@@ -769,18 +732,18 @@ func (w *WhenClause) Validate() error {
 
 **Dependencies:** Phase 2
 
-### Phase 4: System Dependency Action
+### Phase 4: Enhanced Package Manager Actions
 
-**Goal:** Create action for musl systems to check/guide system packages.
+**Goal:** Enhance existing `*_install` actions to check for installed packages and return structured errors.
 
 **Changes:**
-1. Add `internal/actions/system_dependency.go`
-2. Implement `isInstalled()` for apk (Alpine-only scope initially)
-3. Implement `getInstallCommand()` with root detection
-4. Register action in registry
-5. Add tests
+1. Add `DependencyMissingError` type and `isPackageInstalled()` helper
+2. Enhance `ApkInstallAction.Execute()` with package detection
+3. Enhance other `*_install` actions (apt, dnf, pacman, zypper)
+4. Add root detection for install commands in `Describe()`
+5. Add tests for all enhanced actions
 
-**Estimated LOC:** ~200
+**Estimated LOC:** ~250
 
 **Dependencies:** Phase 1 (needs libc detection)
 
@@ -821,9 +784,8 @@ outputs = ["lib/libz.so", "lib/libz.so.1"]
 
 # musl Linux
 [[steps]]
-action = "system_dependency"
-name = "zlib"
-packages = { alpine = "zlib-dev" }
+action = "apk_install"
+packages = ["zlib-dev"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS
@@ -851,9 +813,8 @@ dependencies = ["zlib"]  # Only resolved on glibc
 
 # musl Linux - no deps, apk handles them
 [[steps]]
-action = "system_dependency"
-name = "openssl"
-packages = { alpine = "openssl-dev" }
+action = "apk_install"
+packages = ["openssl-dev"]
 when = { os = ["linux"], libc = ["musl"] }
 
 # macOS
@@ -884,9 +845,8 @@ dependencies = ["openssl", "zlib"]  # Only resolved on glibc
 
 # musl Linux - require system libraries
 [[steps]]
-action = "system_dependency"
-name = "openssl"
-packages = { alpine = "openssl-dev" }
+action = "apk_install"
+packages = ["openssl-dev"]
 when = { os = ["linux"], libc = ["musl"] }
 
 [[steps]]
@@ -954,7 +914,7 @@ when = { os = ["linux"], libc = ["musl"] }
 4. **Recipe Reference: New Fields**
    - `libc` filter in `when` clause
    - `dependencies` field at step level
-   - `system_dependency` action parameters
+   - Enhanced `*_install` action behavior
    - Validation rules
 
 **Dependencies:** All previous phases
@@ -977,9 +937,9 @@ CI validates recipes with these rules:
 - For tool recipes with library deps, warn if musl case isn't handled
 - Allow explicit opt-out via `unsupported_libc = ["musl"]` in metadata
 
-**system_dependency action validation:**
-- `packages` map must include `alpine` key when `when = { libc = ["musl"] }`
-- Package names should follow naming conventions (`-dev` suffix for library packages)
+**Package manager action validation:**
+- Actions are constrained to their respective families via `ImplicitConstraint()`
+- Package names should follow family conventions (`-dev` suffix for Alpine/Debian library packages)
 
 **CI integration:**
 
@@ -996,7 +956,7 @@ This section describes the testing infrastructure changes needed to prevent reci
 ### Quick Reference for Recipe Authors
 
 **For library recipes** (type = "library"), you MUST either:
-1. Add a musl step with `system_dependency` action, OR
+1. Add a musl step with `apk_install` action, OR
 2. Explicitly constrain with `supported_libc = ["glibc"]` (and add `unsupported_reason`)
 
 **For tool recipes** with library dependencies, you SHOULD:
@@ -1168,7 +1128,7 @@ func TestRecipePlanGeneration(t *testing.T) {
                     require.NotEmpty(t, plan.Steps, "library plan must have steps for %s", target.Libc)
                 }
 
-                // For tools with library deps: should have valid plan or system_dependency
+                // For tools with library deps: should have valid plan or apk_install step
                 if hasLibraryDeps(recipe) {
                     if err != nil {
                         t.Logf("WARNING: tool %s has no plan for %s: %v", recipe.Name, target.Libc, err)
@@ -1504,9 +1464,8 @@ To prevent new recipes from accidentally lacking Alpine support:
 
    If the tool should support musl, add a musl step:
    [[steps]]
-   action = "system_dependency"
-   name = "..."
-   packages = { alpine = "..." }
+   action = "apk_install"
+   packages = ["..."]
    when = { os = ["linux"], libc = ["musl"] }
 
    📖 See: docs/recipe-authoring.md#platform-support

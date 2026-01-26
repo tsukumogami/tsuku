@@ -43,15 +43,24 @@ func (a *AptInstallAction) ImplicitConstraint() *Constraint {
 	return debianConstraint
 }
 
-// Execute logs what would be installed (stub implementation).
+// Execute checks if packages are installed and returns an error if any are missing.
 func (a *AptInstallAction) Execute(ctx *ExecutionContext, params map[string]interface{}) error {
 	packages, ok := GetStringSlice(params, "packages")
 	if !ok {
 		return fmt.Errorf("apt_install action requires 'packages' parameter")
 	}
 
-	fmt.Printf("   Would install via apt: %v\n", packages)
-	fmt.Printf("   (Skipped - requires sudo and system modification)\n")
+	// Check which packages are missing
+	missing := checkMissingPackages(packages, "debian")
+	if len(missing) > 0 {
+		return &DependencyMissingError{
+			Packages: missing,
+			Command:  buildInstallCommand("apt-get install -y", missing),
+			Family:   "debian",
+		}
+	}
+
+	fmt.Printf("   System packages verified: %v\n", packages)
 	return nil
 }
 

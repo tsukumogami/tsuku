@@ -86,8 +86,25 @@ func TestDnfInstallAction_Execute(t *testing.T) {
 	err := action.Execute(ctx, map[string]interface{}{
 		"packages": []interface{}{"gcc", "openssl-devel"},
 	})
+
+	// On non-RHEL systems, packages won't be installed, so we expect DependencyMissingError.
+	// On RHEL systems with the packages installed, we expect nil.
 	if err != nil {
-		t.Errorf("Execute() error = %v", err)
+		depErr := AsDependencyMissing(err)
+		if depErr == nil {
+			t.Errorf("Execute() error = %v, want DependencyMissingError or nil", err)
+		} else {
+			// Verify error contains expected information
+			if depErr.Family != "rhel" {
+				t.Errorf("DependencyMissingError.Family = %q, want %q", depErr.Family, "rhel")
+			}
+			if len(depErr.Packages) == 0 {
+				t.Error("DependencyMissingError.Packages should not be empty")
+			}
+			if !strings.Contains(depErr.Command, "dnf install") {
+				t.Errorf("DependencyMissingError.Command = %q, want to contain 'dnf install'", depErr.Command)
+			}
+		}
 	}
 }
 
