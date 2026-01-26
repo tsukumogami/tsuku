@@ -492,9 +492,12 @@ func verifyExternalLibrary(name string, extInfo *verify.ExternalLibraryInfo, sta
 	}
 
 	// Tier 2: Dependency validation
-	if err := runTier2Validation(libFiles, state, cfg); err != nil {
-		return err
-	}
+	// For externally-managed libraries, we skip dependency validation because:
+	// 1. The system package manager (apk, apt, etc.) handles dependencies
+	// 2. Dependencies are in system paths that tsuku's validator doesn't track
+	// 3. If Tier 3 (dlopen) passes, dependencies are implicitly satisfied
+	printInfo("  Tier 2: Dependency validation...\n")
+	printInfo("    Skipped (system package manager handles dependencies)\n")
 
 	// Tier 3: dlopen load testing
 	// For external libraries, we test the actual system paths
