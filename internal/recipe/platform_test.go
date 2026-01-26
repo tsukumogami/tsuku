@@ -555,6 +555,359 @@ func TestFormatPlatformConstraints(t *testing.T) {
 	}
 }
 
+func TestSupportsPlatformWithLibc(t *testing.T) {
+	tests := []struct {
+		name            string
+		supportedOS     []string
+		supportedArch   []string
+		supportedLibc   []string
+		unsupportedPlat []string
+		targetOS        string
+		targetArch      string
+		targetLibc      string
+		expectedSupport bool
+		description     string
+	}{
+		{
+			name:            "no libc constraint - all allowed",
+			supportedOS:     nil,
+			supportedArch:   nil,
+			supportedLibc:   nil,
+			unsupportedPlat: nil,
+			targetOS:        "linux",
+			targetArch:      "amd64",
+			targetLibc:      "musl",
+			expectedSupport: true,
+			description:     "Empty supported_libc should allow all libc types",
+		},
+		{
+			name:            "glibc-only constraint - glibc allowed",
+			supportedOS:     nil,
+			supportedArch:   nil,
+			supportedLibc:   []string{"glibc"},
+			unsupportedPlat: nil,
+			targetOS:        "linux",
+			targetArch:      "amd64",
+			targetLibc:      "glibc",
+			expectedSupport: true,
+			description:     "glibc should be allowed when in supported_libc",
+		},
+		{
+			name:            "glibc-only constraint - musl rejected",
+			supportedOS:     nil,
+			supportedArch:   nil,
+			supportedLibc:   []string{"glibc"},
+			unsupportedPlat: nil,
+			targetOS:        "linux",
+			targetArch:      "amd64",
+			targetLibc:      "musl",
+			expectedSupport: false,
+			description:     "musl should be rejected when only glibc is supported",
+		},
+		{
+			name:            "musl-only constraint - musl allowed",
+			supportedOS:     nil,
+			supportedArch:   nil,
+			supportedLibc:   []string{"musl"},
+			unsupportedPlat: nil,
+			targetOS:        "linux",
+			targetArch:      "amd64",
+			targetLibc:      "musl",
+			expectedSupport: true,
+			description:     "musl should be allowed when in supported_libc",
+		},
+		{
+			name:            "musl-only constraint - glibc rejected",
+			supportedOS:     nil,
+			supportedArch:   nil,
+			supportedLibc:   []string{"musl"},
+			unsupportedPlat: nil,
+			targetOS:        "linux",
+			targetArch:      "amd64",
+			targetLibc:      "glibc",
+			expectedSupport: false,
+			description:     "glibc should be rejected when only musl is supported",
+		},
+		{
+			name:            "both libc allowed",
+			supportedOS:     nil,
+			supportedArch:   nil,
+			supportedLibc:   []string{"glibc", "musl"},
+			unsupportedPlat: nil,
+			targetOS:        "linux",
+			targetArch:      "amd64",
+			targetLibc:      "musl",
+			expectedSupport: true,
+			description:     "musl should be allowed when both are in supported_libc",
+		},
+		{
+			name:            "libc constraint ignored on darwin",
+			supportedOS:     nil,
+			supportedArch:   nil,
+			supportedLibc:   []string{"glibc"},
+			unsupportedPlat: nil,
+			targetOS:        "darwin",
+			targetArch:      "arm64",
+			targetLibc:      "",
+			expectedSupport: true,
+			description:     "libc constraint should be ignored on non-Linux platforms",
+		},
+		{
+			name:            "combined OS and libc constraint",
+			supportedOS:     []string{"linux"},
+			supportedArch:   nil,
+			supportedLibc:   []string{"glibc"},
+			unsupportedPlat: nil,
+			targetOS:        "linux",
+			targetArch:      "amd64",
+			targetLibc:      "glibc",
+			expectedSupport: true,
+			description:     "Both OS and libc constraints should pass",
+		},
+		{
+			name:            "combined OS and libc constraint - wrong OS",
+			supportedOS:     []string{"linux"},
+			supportedArch:   nil,
+			supportedLibc:   []string{"glibc"},
+			unsupportedPlat: nil,
+			targetOS:        "darwin",
+			targetArch:      "amd64",
+			targetLibc:      "",
+			expectedSupport: false,
+			description:     "OS constraint should fail even if libc would pass",
+		},
+		{
+			name:            "combined OS and libc constraint - wrong libc",
+			supportedOS:     []string{"linux"},
+			supportedArch:   nil,
+			supportedLibc:   []string{"glibc"},
+			unsupportedPlat: nil,
+			targetOS:        "linux",
+			targetArch:      "amd64",
+			targetLibc:      "musl",
+			expectedSupport: false,
+			description:     "Libc constraint should fail even if OS passes",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Recipe{
+				Metadata: MetadataSection{
+					SupportedOS:          tt.supportedOS,
+					SupportedArch:        tt.supportedArch,
+					SupportedLibc:        tt.supportedLibc,
+					UnsupportedPlatforms: tt.unsupportedPlat,
+				},
+			}
+
+			result := r.SupportsPlatformWithLibc(tt.targetOS, tt.targetArch, tt.targetLibc)
+			if result != tt.expectedSupport {
+				t.Errorf("%s: expected %v, got %v", tt.description, tt.expectedSupport, result)
+			}
+		})
+	}
+}
+
+func TestValidatePlatformConstraintsLibc(t *testing.T) {
+	tests := []struct {
+		name           string
+		supportedLibc  []string
+		expectError    bool
+		expectWarnings int
+		description    string
+	}{
+		{
+			name:           "valid single libc (glibc)",
+			supportedLibc:  []string{"glibc"},
+			expectError:    false,
+			expectWarnings: 0,
+			description:    "Single valid libc value should pass",
+		},
+		{
+			name:           "valid single libc (musl)",
+			supportedLibc:  []string{"musl"},
+			expectError:    false,
+			expectWarnings: 0,
+			description:    "Single valid libc value should pass",
+		},
+		{
+			name:           "valid both libc",
+			supportedLibc:  []string{"glibc", "musl"},
+			expectError:    false,
+			expectWarnings: 0,
+			description:    "Both valid libc values should pass",
+		},
+		{
+			name:           "invalid libc value",
+			supportedLibc:  []string{"uclibc"},
+			expectError:    true,
+			expectWarnings: 0,
+			description:    "Invalid libc value should error",
+		},
+		{
+			name:           "mixed valid and invalid libc",
+			supportedLibc:  []string{"glibc", "bionic"},
+			expectError:    true,
+			expectWarnings: 0,
+			description:    "Invalid libc value should error even if valid ones present",
+		},
+		{
+			name:           "empty libc (valid)",
+			supportedLibc:  nil,
+			expectError:    false,
+			expectWarnings: 0,
+			description:    "Empty supported_libc should be valid",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Recipe{
+				Metadata: MetadataSection{
+					SupportedLibc: tt.supportedLibc,
+				},
+			}
+
+			warnings, err := r.ValidatePlatformConstraints()
+
+			if tt.expectError && err == nil {
+				t.Errorf("%s: expected error, got nil", tt.description)
+			}
+			if !tt.expectError && err != nil {
+				t.Errorf("%s: expected no error, got: %v", tt.description, err)
+			}
+			if len(warnings) != tt.expectWarnings {
+				t.Errorf("%s: expected %d warnings, got %d", tt.description, tt.expectWarnings, len(warnings))
+			}
+		})
+	}
+}
+
+func TestFormatPlatformConstraintsWithLibc(t *testing.T) {
+	tests := []struct {
+		name              string
+		supportedLibc     []string
+		unsupportedReason string
+		expectedSubstr    []string
+		description       string
+	}{
+		{
+			name:           "libc constraint shown",
+			supportedLibc:  []string{"glibc"},
+			expectedSubstr: []string{"Libc: glibc"},
+			description:    "Should show libc constraint",
+		},
+		{
+			name:           "multiple libc shown",
+			supportedLibc:  []string{"glibc", "musl"},
+			expectedSubstr: []string{"Libc: glibc, musl"},
+			description:    "Should show all libc values",
+		},
+		{
+			name:              "reason shown",
+			supportedLibc:     []string{"glibc"},
+			unsupportedReason: "Upstream only provides glibc binaries",
+			expectedSubstr:    []string{"Libc: glibc", "Reason: Upstream only provides glibc binaries"},
+			description:       "Should show reason when present",
+		},
+		{
+			name:              "reason without libc constraint",
+			supportedLibc:     nil,
+			unsupportedReason: "Some other constraint",
+			expectedSubstr:    []string{"Reason: Some other constraint"},
+			description:       "Should show reason even without libc constraint",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Recipe{
+				Metadata: MetadataSection{
+					SupportedOS:       []string{"linux"}, // Need at least one constraint to show
+					SupportedLibc:     tt.supportedLibc,
+					UnsupportedReason: tt.unsupportedReason,
+				},
+			}
+
+			result := r.FormatPlatformConstraints()
+			for _, substr := range tt.expectedSubstr {
+				if !contains(result, substr) {
+					t.Errorf("%s: expected substring '%s' in '%s'",
+						tt.description, substr, result)
+				}
+			}
+		})
+	}
+}
+
+func TestUnsupportedPlatformErrorWithLibc(t *testing.T) {
+	tests := []struct {
+		name               string
+		currentOS          string
+		currentLibc        string
+		supportedLibc      []string
+		unsupportedReason  string
+		expectedSubstrings []string
+		description        string
+	}{
+		{
+			name:          "libc shown in error",
+			currentOS:     "linux",
+			currentLibc:   "musl",
+			supportedLibc: []string{"glibc"},
+			expectedSubstrings: []string{
+				"(musl)",
+				"Libc: glibc",
+			},
+			description: "Error should show current libc and constraint",
+		},
+		{
+			name:              "reason shown in error",
+			currentOS:         "linux",
+			currentLibc:       "musl",
+			supportedLibc:     []string{"glibc"},
+			unsupportedReason: "Upstream only provides glibc binaries",
+			expectedSubstrings: []string{
+				"Libc: glibc",
+				"Reason: Upstream only provides glibc binaries",
+			},
+			description: "Error should show reason when present",
+		},
+		{
+			name:        "no libc on darwin",
+			currentOS:   "darwin",
+			currentLibc: "",
+			expectedSubstrings: []string{
+				"darwin/arm64",
+			},
+			description: "Non-Linux should not show libc",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := &UnsupportedPlatformError{
+				RecipeName:        "test-tool",
+				CurrentOS:         tt.currentOS,
+				CurrentArch:       "arm64",
+				CurrentLibc:       tt.currentLibc,
+				SupportedLibc:     tt.supportedLibc,
+				UnsupportedReason: tt.unsupportedReason,
+			}
+
+			errMsg := err.Error()
+
+			for _, substr := range tt.expectedSubstrings {
+				if !contains(errMsg, substr) {
+					t.Errorf("%s: expected substring '%s' in error message:\n%s",
+						tt.description, substr, errMsg)
+				}
+			}
+		})
+	}
+}
+
 func TestValidateStepsAgainstPlatforms(t *testing.T) {
 	tests := []struct {
 		name            string

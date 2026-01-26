@@ -14,18 +14,27 @@ type UnsupportedPlatformError struct {
 	RecipeName           string
 	CurrentOS            string
 	CurrentArch          string
+	CurrentLibc          string
 	SupportedOS          []string
 	SupportedArch        []string
+	SupportedLibc        []string
 	UnsupportedPlatforms []string
+	UnsupportedReason    string
 }
 
 func (e *UnsupportedPlatformError) Error() string {
 	var msg strings.Builder
-	fmt.Fprintf(&msg, "recipe '%s' is not available for %s/%s\n\n",
-		e.RecipeName, e.CurrentOS, e.CurrentArch)
+
+	// Include libc in platform identifier for Linux
+	platformID := fmt.Sprintf("%s/%s", e.CurrentOS, e.CurrentArch)
+	if e.CurrentOS == "linux" && e.CurrentLibc != "" {
+		platformID = fmt.Sprintf("%s/%s (%s)", e.CurrentOS, e.CurrentArch, e.CurrentLibc)
+	}
+	fmt.Fprintf(&msg, "recipe '%s' is not available for %s\n\n",
+		e.RecipeName, platformID)
 
 	// Determine if we have constraints to show
-	hasAllowlist := len(e.SupportedOS) > 0 || len(e.SupportedArch) > 0
+	hasAllowlist := len(e.SupportedOS) > 0 || len(e.SupportedArch) > 0 || len(e.SupportedLibc) > 0
 	hasDenylist := len(e.UnsupportedPlatforms) > 0
 
 	if hasAllowlist || hasDenylist {
@@ -44,10 +53,20 @@ func (e *UnsupportedPlatformError) Error() string {
 
 		fmt.Fprintf(&msg, "  Allowed: %s OS, %s arch\n", osStr, archStr)
 
+		// Show libc constraint if present
+		if len(e.SupportedLibc) > 0 {
+			fmt.Fprintf(&msg, "  Libc: %s\n", strings.Join(e.SupportedLibc, ", "))
+		}
+
 		// Show denylist if present
 		if hasDenylist {
 			fmt.Fprintf(&msg, "  Except: %s\n", strings.Join(e.UnsupportedPlatforms, ", "))
 		}
+	}
+
+	// Show reason if present
+	if e.UnsupportedReason != "" {
+		fmt.Fprintf(&msg, "\nReason: %s\n", e.UnsupportedReason)
 	}
 
 	return msg.String()
@@ -113,21 +132,59 @@ func (r *Recipe) SupportsPlatform(targetOS, targetArch string) bool {
 	return !inDenylist
 }
 
+// SupportsPlatformWithLibc returns true if the recipe supports the given OS, architecture, and libc.
+// This extends SupportsPlatform with libc constraint checking.
+//
+// Libc constraint semantics:
+//   - Empty supported_libc: all libc types allowed (glibc and musl)
+//   - Non-empty: only listed types allowed (allowlist)
+//   - Libc constraint only applies when targetOS is "linux"
+func (r *Recipe) SupportsPlatformWithLibc(targetOS, targetArch, targetLibc string) bool {
+	// First check OS/arch constraints
+	if !r.SupportsPlatform(targetOS, targetArch) {
+		return false
+	}
+
+	// Libc constraint only applies to Linux
+	if targetOS != "linux" {
+		return true
+	}
+
+	// Empty supported_libc means all libc types allowed
+	if len(r.Metadata.SupportedLibc) == 0 {
+		return true
+	}
+
+	// Check if target libc is in the allowlist
+	return containsString(r.Metadata.SupportedLibc, targetLibc)
+}
+
 // SupportsPlatformRuntime is a convenience method that checks platform support
-// using the current runtime's GOOS and GOARCH values.
+// using the current runtime's GOOS, GOARCH, and detected libc.
 func (r *Recipe) SupportsPlatformRuntime() bool {
-	return r.SupportsPlatform(runtime.GOOS, runtime.GOARCH)
+	libc := ""
+	if runtime.GOOS == "linux" {
+		libc = platform.DetectLibc()
+	}
+	return r.SupportsPlatformWithLibc(runtime.GOOS, runtime.GOARCH, libc)
 }
 
 // NewUnsupportedPlatformError creates an UnsupportedPlatformError for the current platform
 func (r *Recipe) NewUnsupportedPlatformError() *UnsupportedPlatformError {
+	libc := ""
+	if runtime.GOOS == "linux" {
+		libc = platform.DetectLibc()
+	}
 	return &UnsupportedPlatformError{
 		RecipeName:           r.Metadata.Name,
 		CurrentOS:            runtime.GOOS,
 		CurrentArch:          runtime.GOARCH,
+		CurrentLibc:          libc,
 		SupportedOS:          r.Metadata.SupportedOS,
 		SupportedArch:        r.Metadata.SupportedArch,
+		SupportedLibc:        r.Metadata.SupportedLibc,
 		UnsupportedPlatforms: r.Metadata.UnsupportedPlatforms,
+		UnsupportedReason:    r.Metadata.UnsupportedReason,
 	}
 }
 
@@ -141,14 +198,25 @@ func (w *PlatformConstraintWarning) Error() string {
 }
 
 // ValidatePlatformConstraints performs edge case validation on platform fields.
-// Returns warnings for no-op constraints, errors for empty result sets.
+// Returns warnings for no-op constraints, errors for empty result sets or invalid values.
 //
 // Warnings (fail in strict mode):
 //   - unsupported_platforms contains entry not in (supported_os × supported_arch)
 //
 // Errors:
 //   - Result set of supported platforms is empty (all platforms excluded)
+//   - supported_libc contains invalid values (must be "glibc" or "musl")
 func (r *Recipe) ValidatePlatformConstraints() (warnings []PlatformConstraintWarning, err error) {
+	// Validate libc constraint values
+	for _, libc := range r.Metadata.SupportedLibc {
+		if !slices.Contains(platform.ValidLibcTypes, libc) {
+			return warnings, fmt.Errorf(
+				"supported_libc contains invalid value '%s'; must be one of: %v",
+				libc, platform.ValidLibcTypes,
+			)
+		}
+	}
+
 	// Compute effective supported platforms
 	// nil = use defaults (tsuku-supported platforms)
 	// empty slice [] = explicit empty set (no platforms)
@@ -227,6 +295,7 @@ func (r *Recipe) GetSupportedPlatforms() []string {
 func (r *Recipe) FormatPlatformConstraints() string {
 	hasConstraints := len(r.Metadata.SupportedOS) > 0 ||
 		len(r.Metadata.SupportedArch) > 0 ||
+		len(r.Metadata.SupportedLibc) > 0 ||
 		len(r.Metadata.UnsupportedPlatforms) > 0
 
 	if !hasConstraints {
@@ -249,9 +318,19 @@ func (r *Recipe) FormatPlatformConstraints() string {
 		parts = append(parts, "Arch: all")
 	}
 
+	// Show libc constraints
+	if len(r.Metadata.SupportedLibc) > 0 {
+		parts = append(parts, fmt.Sprintf("Libc: %s", strings.Join(r.Metadata.SupportedLibc, ", ")))
+	}
+
 	// Show exceptions
 	if len(r.Metadata.UnsupportedPlatforms) > 0 {
 		parts = append(parts, fmt.Sprintf("Except: %s", strings.Join(r.Metadata.UnsupportedPlatforms, ", ")))
+	}
+
+	// Show reason if present
+	if r.Metadata.UnsupportedReason != "" {
+		parts = append(parts, fmt.Sprintf("Reason: %s", r.Metadata.UnsupportedReason))
 	}
 
 	return strings.Join(parts, " | ")

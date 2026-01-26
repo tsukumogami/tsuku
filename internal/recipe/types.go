@@ -163,7 +163,9 @@ type MetadataSection struct {
 	// Platform constraints (optional, defaults provide universal support)
 	SupportedOS          []string `toml:"supported_os,omitempty"`          // Allowed OS values (default: all OS)
 	SupportedArch        []string `toml:"supported_arch,omitempty"`        // Allowed architecture values (default: all arch)
+	SupportedLibc        []string `toml:"supported_libc,omitempty"`        // Allowed libc types: "glibc", "musl" (default: all)
 	UnsupportedPlatforms []string `toml:"unsupported_platforms,omitempty"` // Platform exceptions in "os/arch" format (default: empty)
+	UnsupportedReason    string   `toml:"unsupported_reason,omitempty"`    // Explanation for platform constraints
 }
 
 // VersionSection specifies how to resolve versions
