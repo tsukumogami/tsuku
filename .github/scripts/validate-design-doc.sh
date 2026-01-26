@@ -125,6 +125,11 @@ if [[ -x "$CHECKS_DIR/sections.sh" ]]; then
     run_check "$CHECKS_DIR/sections.sh" || FAILED=1
 fi
 
+# Run status-directory check
+if [[ -x "$CHECKS_DIR/status-directory.sh" ]]; then
+    run_check "$CHECKS_DIR/status-directory.sh" || FAILED=1
+fi
+
 # Future: Run all check scripts dynamically
 # for check_script in "$CHECKS_DIR"/*.sh; do
 #     [[ "$check_script" == */common.sh ]] && continue
