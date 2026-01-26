@@ -225,7 +225,7 @@ jobs:
       # For glibc: tsuku install handles everything
       - name: Install library dependencies (musl only)
         if: matrix.libc == 'musl'
-        run: apk add --no-cache zlib-dev yaml-dev
+        run: apk add --no-cache zlib-dev yaml-dev libgcc
 
       - name: Install library recipes (glibc only)
         if: matrix.libc == 'glibc'
@@ -263,8 +263,8 @@ jobs:
         run: |
           TSUKU=./tsuku-linux-${{ matrix.arch }}
           $TSUKU install just --force
-          # Add tsuku bin to PATH and verify
-          export PATH="$TSUKU_HOME/bin:$PATH"
+          # Add tsuku current symlinks to PATH and verify
+          export PATH="$TSUKU_HOME/tools/current:$PATH"
           just --version
 
   # ARM64 musl requires manual Docker (JS actions don't work in Alpine ARM64 containers)
@@ -351,6 +351,6 @@ jobs:
               # Test tool installation
               echo "=== Installing just ==="
               $TSUKU install just --force
-              export PATH="$TSUKU_HOME/bin:$PATH"
+              export PATH="$TSUKU_HOME/tools/current:$PATH"
               just --version
             '
