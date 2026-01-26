@@ -1,6 +1,6 @@
 # GCC Runtime Libraries - libstdc++ and libgcc_s
 # These are needed by binaries compiled with GCC (like nodejs)
-# Extracted from Homebrew's gcc bottle
+# Extracted from Homebrew's gcc bottle on glibc, system packages on musl
 # Only needed on Linux - macOS provides these via system frameworks
 
 [metadata]
@@ -8,12 +8,13 @@ name = "gcc-libs"
 description = "GCC runtime libraries (libstdc++, libgcc_s)"
 homepage = "https://gcc.gnu.org/"
 type = "library"
+supported_os = ["linux"]
 
-# Linux: download gcc bottle and extract runtime libraries
+# glibc Linux: Download gcc bottle and extract runtime libraries
 [[steps]]
 action = "homebrew"
 formula = "gcc"
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
 
 # Flatten library files to lib/ directory for easy linking
 # The homebrew bottle has libs in lib/gcc/{version}/ subdirectories
@@ -32,9 +33,15 @@ ln -sf libstdc++.so.6 libstdc++.so
 ln -sf libgcc_s.so.1 libgcc_s.so
 '''
 description = "Flattening library files to lib/"
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_libraries"
 patterns = ["lib/libstdc++.so*", "lib/libgcc_s.so*"]
-when = { os = ["linux"] }
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["libstdc++"]
+when = { os = ["linux"], libc = ["musl"] }
