@@ -4,10 +4,30 @@ description = "YAML 1.1 parser and emitter library"
 homepage = "https://pyyaml.org/wiki/LibYAML"
 type = "library"
 
+# glibc Linux: Homebrew bottles
 [[steps]]
 action = "homebrew"
 formula = "libyaml"
+when = { os = ["linux"], libc = ["glibc"] }
 
 [[steps]]
 action = "install_libraries"
-patterns = ["lib/*.so*", "lib/*.dylib"]
+patterns = ["lib/*.so*"]
+when = { os = ["linux"], libc = ["glibc"] }
+
+# musl Linux: System packages (apk handles transitive deps)
+[[steps]]
+action = "apk_install"
+packages = ["yaml-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+
+# macOS: Homebrew
+[[steps]]
+action = "homebrew"
+formula = "libyaml"
+when = { os = ["darwin"] }
+
+[[steps]]
+action = "install_libraries"
+patterns = ["lib/*.dylib"]
+when = { os = ["darwin"] }
