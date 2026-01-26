@@ -77,9 +77,21 @@ func TestPacmanInstallAction_Execute(t *testing.T) {
 	err := action.Execute(ctx, map[string]interface{}{
 		"packages": []interface{}{"base-devel"},
 	})
+	// On non-Arch systems, this returns DependencyMissingError
+	// (pacman command not available, so packages are reported as missing)
 	if err != nil {
-		t.Errorf("Execute() error = %v", err)
+		if !IsDependencyMissing(err) {
+			t.Errorf("Execute() error = %v, want DependencyMissingError", err)
+		}
+		depErr := AsDependencyMissing(err)
+		if depErr.Family != "arch" {
+			t.Errorf("DependencyMissingError.Family = %q, want %q", depErr.Family, "arch")
+		}
+		if !strings.Contains(depErr.Command, "pacman -S") {
+			t.Errorf("DependencyMissingError.Command = %q, want to contain 'pacman -S'", depErr.Command)
+		}
 	}
+	// If no error, packages are installed (running on Arch)
 }
 
 func TestPacmanInstallAction_RequiresNetwork(t *testing.T) {
@@ -211,9 +223,24 @@ func TestApkInstallAction_Execute(t *testing.T) {
 	err := action.Execute(ctx, map[string]interface{}{
 		"packages": []interface{}{"curl"},
 	})
+	// On non-Alpine systems, this returns DependencyMissingError
+	// (apk command not available, so packages are reported as missing)
 	if err != nil {
-		t.Errorf("Execute() error = %v", err)
+		if !IsDependencyMissing(err) {
+			t.Errorf("Execute() error = %v, want DependencyMissingError", err)
+		}
+		depErr := AsDependencyMissing(err)
+		if depErr.Family != "alpine" {
+			t.Errorf("DependencyMissingError.Family = %q, want %q", depErr.Family, "alpine")
+		}
+		if len(depErr.Packages) == 0 {
+			t.Error("DependencyMissingError.Packages should not be empty")
+		}
+		if !strings.Contains(depErr.Command, "apk add") {
+			t.Errorf("DependencyMissingError.Command = %q, want to contain 'apk add'", depErr.Command)
+		}
 	}
+	// If no error, packages are installed (running on Alpine)
 }
 
 func TestApkInstallAction_RequiresNetwork(t *testing.T) {
@@ -345,9 +372,21 @@ func TestZypperInstallAction_Execute(t *testing.T) {
 	err := action.Execute(ctx, map[string]interface{}{
 		"packages": []interface{}{"curl"},
 	})
+	// On non-SUSE systems, this returns DependencyMissingError
+	// (rpm command not available, so packages are reported as missing)
 	if err != nil {
-		t.Errorf("Execute() error = %v", err)
+		if !IsDependencyMissing(err) {
+			t.Errorf("Execute() error = %v, want DependencyMissingError", err)
+		}
+		depErr := AsDependencyMissing(err)
+		if depErr.Family != "suse" {
+			t.Errorf("DependencyMissingError.Family = %q, want %q", depErr.Family, "suse")
+		}
+		if !strings.Contains(depErr.Command, "zypper install") {
+			t.Errorf("DependencyMissingError.Command = %q, want to contain 'zypper install'", depErr.Command)
+		}
 	}
+	// If no error, packages are installed (running on SUSE)
 }
 
 func TestZypperInstallAction_RequiresNetwork(t *testing.T) {
