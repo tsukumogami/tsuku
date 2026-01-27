@@ -12,7 +12,7 @@
     {
       "tool": "libyaml",
       "version": "0.2.5",
-      "recipe_hash": "6924285a8102a97d956d36b71c96a935b4171727fc79f855d3dddb61aaed1eab",
+      "recipe_hash": "38af9602184e059c38e9bc4c00bc8b82b0608e168fc3bf7f6baf771ce42fe237",
       "dependencies": [
         {
           "tool": "patchelf",
@@ -103,8 +103,7 @@
           "action": "install_libraries",
           "params": {
             "patterns": [
-              "lib/*.so*",
-              "lib/*.dylib"
+              "lib/*.so*"
             ]
           },
           "evaluable": true,

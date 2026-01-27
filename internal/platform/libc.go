@@ -13,6 +13,16 @@ import (
 //   - musl: musl libc (Alpine Linux, Void Linux musl variant)
 var ValidLibcTypes = []string{"glibc", "musl"}
 
+// LibcForFamily returns the libc implementation used by a Linux family.
+// Alpine uses musl, all other families use glibc.
+// Returns "glibc" for unknown or empty family values.
+func LibcForFamily(family string) string {
+	if family == "alpine" {
+		return "musl"
+	}
+	return "glibc"
+}
+
 // DetectLibc returns the libc implementation for the current system.
 // Returns "musl" if the system uses musl libc, "glibc" otherwise.
 //

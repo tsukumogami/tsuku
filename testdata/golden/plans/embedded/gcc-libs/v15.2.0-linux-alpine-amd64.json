@@ -1,0 +1,25 @@
+{
+  "format_version": 3,
+  "tool": "gcc-libs",
+  "version": "15.2.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "recipe_hash": "d2c433fc9ea29dc16586557d1a4d5f4efc7b8b02229636687084faf09cfdac10",
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "libstdc++"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "recipe_type": "library"
+}

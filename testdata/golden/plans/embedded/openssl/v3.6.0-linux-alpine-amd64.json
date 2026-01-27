@@ -1,0 +1,29 @@
+{
+  "format_version": 3,
+  "tool": "openssl",
+  "version": "3.6.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "recipe_hash": "3c1319b74192a4b885e8d6e822039d72377d99b99d2a2d01521523d3ebbf0bd8",
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "openssl-dev"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "verify": {
+    "command": "openssl version",
+    "pattern": "OpenSSL {version}"
+  },
+  "recipe_type": "library"
+}
