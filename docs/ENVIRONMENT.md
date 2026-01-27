@@ -70,6 +70,53 @@ Enable telemetry debug mode.
 
 When set, telemetry events are printed to stderr instead of being sent to the telemetry server. Useful for seeing what data would be collected without actually sending it.
 
+## Recipe Cache
+
+These variables control the behavior of the recipe cache, which stores downloaded recipes locally to reduce network requests and provide offline capabilities.
+
+### TSUKU_RECIPE_CACHE_TTL
+
+Time duration until a cached recipe is considered stale and needs refresh.
+
+- **Default:** `24h`
+- **Valid range:** `1m` to `720h` (30 days)
+- **Format:** Go duration string (e.g., `1h`, `24h`, `7d`)
+- **Example:** `export TSUKU_RECIPE_CACHE_TTL=12h`
+
+After this duration, tsuku will attempt to refresh the recipe from the registry on next access. If the refresh fails, stale-if-error fallback may serve the cached version.
+
+### TSUKU_RECIPE_CACHE_SIZE_LIMIT
+
+Maximum total size of the recipe cache before LRU eviction is triggered.
+
+- **Default:** `50MB` (52428800 bytes)
+- **Valid range:** `1MB` to `1GB`
+- **Format:** Integer (bytes) or size string (e.g., `50MB`, `100MB`)
+- **Example:** `export TSUKU_RECIPE_CACHE_SIZE_LIMIT=100MB`
+
+When the cache exceeds 80% of this limit, least-recently-used entries are evicted until the cache is below 60%.
+
+### TSUKU_RECIPE_CACHE_MAX_STALE
+
+Maximum age for a cached recipe to be used as a stale-if-error fallback when the registry is unavailable.
+
+- **Default:** `168h` (7 days)
+- **Valid range:** `1h` to `720h` (30 days)
+- **Format:** Go duration string (e.g., `24h`, `168h`)
+- **Example:** `export TSUKU_RECIPE_CACHE_MAX_STALE=72h`
+
+If a registry request fails and the cached recipe is within this age limit, tsuku will use the cached version with a warning. This provides resilience against temporary network issues.
+
+### TSUKU_RECIPE_CACHE_STALE_FALLBACK
+
+Enable or disable stale-if-error fallback behavior.
+
+- **Default:** `true`
+- **Valid values:** `true`, `false`, `1`, `0`
+- **Example:** `export TSUKU_RECIPE_CACHE_STALE_FALLBACK=false`
+
+When enabled, tsuku will fall back to cached recipes when the registry is unavailable (subject to `TSUKU_RECIPE_CACHE_MAX_STALE`). Disable this for strict freshness requirements.
+
 ## Development and Debugging
 
 ### TSUKU_DEBUG
@@ -110,6 +157,10 @@ To create a token:
 | `TSUKU_HOME` | `~/.tsuku` | Base directory for tsuku data |
 | `TSUKU_API_TIMEOUT` | `30s` | HTTP API request timeout |
 | `TSUKU_REGISTRY_URL` | GitHub | Remote registry URL |
+| `TSUKU_RECIPE_CACHE_TTL` | `24h` | Recipe cache freshness duration |
+| `TSUKU_RECIPE_CACHE_SIZE_LIMIT` | `50MB` | Recipe cache size limit |
+| `TSUKU_RECIPE_CACHE_MAX_STALE` | `168h` | Maximum stale cache age for fallback |
+| `TSUKU_RECIPE_CACHE_STALE_FALLBACK` | `true` | Enable stale-if-error fallback |
 | `TSUKU_NO_TELEMETRY` | (unset) | Disable telemetry when set |
 | `TSUKU_TELEMETRY_DEBUG` | (unset) | Print telemetry to stderr |
 | `TSUKU_DEBUG` | (unset) | Enable verbose debug output |
