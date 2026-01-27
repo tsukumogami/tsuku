@@ -1,0 +1,238 @@
+# R2 Golden File Cleanup Workflow
+#
+# Performs automated cleanup of orphaned and excess golden files in R2 storage.
+# Runs weekly on Sunday at 4 AM UTC with manual dispatch option.
+#
+# The workflow uses a safe multi-stage approach:
+# 1. Detection - Identify orphaned files and versions exceeding retention
+# 2. Soft delete - Move files to quarantine/ prefix
+# 3. Hard delete - Remove quarantined files older than 7 days
+#
+# See docs/designs/DESIGN-r2-golden-storage.md for architecture details.
+name: R2 Cleanup
+
+on:
+  schedule:
+    # Weekly on Sunday at 4 AM UTC
+    - cron: '0 4 * * 0'
+
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run mode (report without acting)'
+        type: boolean
+        default: true
+      hard_delete:
+        description: 'Hard delete quarantined files older than 7 days'
+        type: boolean
+        default: false
+      max_deletions:
+        description: 'Maximum files to quarantine per run'
+        type: number
+        default: 100
+
+# Prevent concurrent runs
+concurrency:
+  group: r2-cleanup
+  cancel-in-progress: false
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    outputs:
+      healthy: ${{ steps.check.outputs.healthy }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check R2 availability
+        id: check
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        run: |
+          if ./scripts/r2-health-check.sh; then
+            echo "healthy=true" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::R2 health check failed"
+            echo "healthy=false" >> $GITHUB_OUTPUT
+          fi
+
+  detect:
+    name: Detect Cleanup Candidates
+    needs: health-check
+    if: needs.health-check.outputs.healthy == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      orphan_count: ${{ steps.detect.outputs.orphan_count }}
+      retention_count: ${{ steps.detect.outputs.retention_count }}
+      total_count: ${{ steps.detect.outputs.total_count }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Detect orphans and excess versions
+        id: detect
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+        run: |
+          echo "=== Orphan Detection ==="
+          ORPHANS=$(./scripts/r2-orphan-detection.sh 2>&1 | tee orphans.txt | wc -l || echo "0")
+          echo "orphan_count=$ORPHANS" >> $GITHUB_OUTPUT
+
+          echo ""
+          echo "=== Retention Check ==="
+          RETENTION=$(./scripts/r2-retention-check.sh 2>&1 | tee retention.txt | wc -l || echo "0")
+          echo "retention_count=$RETENTION" >> $GITHUB_OUTPUT
+
+          # Combine and deduplicate
+          TOTAL=$(cat orphans.txt retention.txt | sort -u | wc -l)
+          echo "total_count=$TOTAL" >> $GITHUB_OUTPUT
+
+          echo ""
+          echo "=== Summary ==="
+          echo "Orphans: $ORPHANS"
+          echo "Excess versions: $RETENTION"
+          echo "Total unique: $TOTAL"
+
+      - name: Upload detection results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cleanup-detection
+          path: |
+            orphans.txt
+            retention.txt
+          retention-days: 7
+
+  cleanup:
+    name: Execute Cleanup
+    needs: [health-check, detect]
+    if: |
+      needs.health-check.outputs.healthy == 'true' &&
+      needs.detect.outputs.total_count != '0' &&
+      (github.event_name == 'workflow_dispatch' && inputs.dry_run == false)
+    runs-on: ubuntu-latest
+    environment: registry-write
+    outputs:
+      quarantined: ${{ steps.cleanup.outputs.quarantined }}
+      hard_deleted: ${{ steps.cleanup.outputs.hard_deleted }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Execute cleanup
+        id: cleanup
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_WRITE }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_WRITE }}
+        run: |
+          ARGS="--execute --max-deletions ${{ inputs.max_deletions || 100 }} --json"
+
+          if [ "${{ inputs.hard_delete }}" = "true" ]; then
+            ARGS="$ARGS --hard-delete"
+          fi
+
+          echo "Running: ./scripts/r2-cleanup.sh $ARGS"
+          RESULT=$(./scripts/r2-cleanup.sh $ARGS 2>&1 | tee cleanup-result.json)
+
+          # Extract counts from JSON
+          QUARANTINED=$(echo "$RESULT" | jq -r '.summary.files_quarantined // 0')
+          HARD_DELETED=$(echo "$RESULT" | jq -r '.summary.files_hard_deleted // 0')
+
+          echo "quarantined=$QUARANTINED" >> $GITHUB_OUTPUT
+          echo "hard_deleted=$HARD_DELETED" >> $GITHUB_OUTPUT
+
+      - name: Upload cleanup results
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: cleanup-results
+          path: cleanup-result.json
+          retention-days: 30
+
+  report:
+    name: Create Summary Issue
+    needs: [detect, cleanup]
+    if: always() && needs.detect.result == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Download detection results
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: cleanup-detection
+          path: detection/
+        continue-on-error: true
+
+      - name: Create summary
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ORPHAN_COUNT: ${{ needs.detect.outputs.orphan_count }}
+          RETENTION_COUNT: ${{ needs.detect.outputs.retention_count }}
+          TOTAL_COUNT: ${{ needs.detect.outputs.total_count }}
+          QUARANTINED: ${{ needs.cleanup.outputs.quarantined || '0' }}
+          HARD_DELETED: ${{ needs.cleanup.outputs.hard_deleted || '0' }}
+          DRY_RUN: ${{ github.event_name == 'schedule' || inputs.dry_run }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          MODE="Dry Run"
+          [ "$DRY_RUN" = "false" ] && MODE="Execute"
+
+          # Only create issue if there's something to report
+          if [ "$TOTAL_COUNT" = "0" ]; then
+            echo "No cleanup candidates found, skipping issue creation"
+            exit 0
+          fi
+
+          # Build issue body
+          BODY="## R2 Cleanup Report - $DATE
+
+          **Mode**: $MODE
+          **Trigger**: ${{ github.event_name }}
+
+          ### Detection Summary
+
+          | Category | Count |
+          |----------|-------|
+          | Orphaned files (deleted recipes) | $ORPHAN_COUNT |
+          | Excess versions (retention policy) | $RETENTION_COUNT |
+          | **Total unique candidates** | **$TOTAL_COUNT** |
+
+          ### Actions Taken
+
+          | Action | Count |
+          |--------|-------|
+          | Files quarantined | $QUARANTINED |
+          | Files hard deleted | $HARD_DELETED |
+
+          ### Run Details
+
+          - Workflow run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          - Max deletions: ${{ inputs.max_deletions || 100 }}
+          - Hard delete: ${{ inputs.hard_delete || false }}
+
+          ---
+          *This issue was automatically created by the R2 cleanup workflow.*"
+
+          # Create or update issue
+          TITLE="R2 Cleanup Report - $DATE"
+
+          # Check for existing issue today
+          EXISTING=$(gh issue list --search "\"$TITLE\" in:title" --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            echo "Updating existing issue #$EXISTING"
+            gh issue comment "$EXISTING" --body "$BODY"
+          else
+            echo "Creating new issue"
+            gh issue create \
+              --title "$TITLE" \
+              --body "$BODY" \
+              --label "automation"
+          fi
