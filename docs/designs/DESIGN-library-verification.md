@@ -23,7 +23,7 @@ Planned
 | ~~[M38](https://github.com/tsukumogami/tsuku/milestone/38)~~ | ~~Tier 2 Dependency Validation (12 issues)~~ | ~~[#948](https://github.com/tsukumogami/tsuku/issues/948)~~ | ~~milestone~~ |
 | ~~[#949](https://github.com/tsukumogami/tsuku/issues/949)~~ | ~~docs: design dlopen load testing for library verification (Tier 3)~~ | ~~[M38](https://github.com/tsukumogami/tsuku/milestone/38)~~ | ~~critical~~ |
 | ~~[M39](https://github.com/tsukumogami/tsuku/milestone/39)~~ | ~~Tier 3 dlopen Verification (7 issues)~~ | ~~[#949](https://github.com/tsukumogami/tsuku/issues/949)~~ | ~~milestone~~ |
-| [#950](https://github.com/tsukumogami/tsuku/issues/950) | docs: design integrity verification for library verification (Tier 4) | ~~[#946](https://github.com/tsukumogami/tsuku/issues/946)~~, ~~[M39](https://github.com/tsukumogami/tsuku/milestone/39)~~ | testable |
+| ~~[#950](https://github.com/tsukumogami/tsuku/issues/950)~~ | ~~docs: design integrity verification for library verification (Tier 4)~~ | ~~[#946](https://github.com/tsukumogami/tsuku/issues/946)~~, ~~[M39](https://github.com/tsukumogami/tsuku/milestone/39)~~ | ~~testable~~ |
 
 ```mermaid
 graph TD
@@ -39,7 +39,7 @@ graph TD
         M38["M38: Tier 2 Implementation<br/>(done)"]:::done
         I949["#949 Tier 3 Design<br/>(done)"]:::done
         M39["M39: Tier 3 Implementation<br/>(done)"]:::done
-        I950["#950 Tier 4 Design<br/>(needs-design)"]:::needsdesign
+        I950["#950 Tier 4 Design<br/>(done)"]:::done
     end
 
     I942 --> I946
