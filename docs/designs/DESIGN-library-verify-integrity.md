@@ -54,6 +54,29 @@ Checksum verification detects all of these by comparing current file contents ag
 - Signed checksum storage (future enhancement)
 - Periodic automatic verification (future enhancement)
 - Verification of non-library files in the library directory
+- Verification of externally-managed libraries (see below)
+
+### External Dependencies
+
+Tier 4 **only verifies tsuku-managed libraries** - those installed to `$TSUKU_HOME/libs/`. It does not verify libraries installed by system package managers (apt, dnf, brew, etc.).
+
+When a tsuku-managed library depends on external libraries, the dependency relationship is handled by earlier tiers:
+- **Tier 2** discovers and classifies dependencies as system, tsuku-managed, or externally-managed
+- **Tier 3** validates the library loads correctly with all dependencies
+
+But Tier 4 integrity verification only applies to files tsuku installed because:
+1. External libraries aren't in `$TSUKU_HOME/libs/`
+2. They don't have a `LibraryVersionState` in tsuku's state.json
+3. Tsuku has no stored checksums to compare against
+4. Verifying files tsuku didn't install would be overstepping responsibility
+
+**Users who want integrity verification for external libraries should use their package manager's tools:**
+- `dpkg --verify <package>` (Debian/Ubuntu)
+- `rpm -V <package>` (Fedora/RHEL)
+- `pacman -Qkk <package>` (Arch)
+- Homebrew doesn't have built-in verification, but bottles have checksums in formulae
+
+This separation of concerns keeps tsuku focused on what it manages while respecting the system package manager's domain
 
 ## Decision Drivers
 
