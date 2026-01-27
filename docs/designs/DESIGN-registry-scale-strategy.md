@@ -68,27 +68,22 @@ Analysis of existing tsuku builders reveals which are ready for scale and which 
 | NPM | Active | Yes | Yes | None |
 | PyPI | Active | Yes | Yes | None |
 | RubyGems | Active | Yes | Yes | None |
+| Go (proxy.golang.org) | Active | Yes | Yes | None |
+| CPAN (metacpan.org) | Active | Yes | Yes | None |
 | Homebrew | Active | Hybrid (85-90% deterministic) | Partial | LLM fallback for ~10-15% |
 | Homebrew Cask | Active | Yes | Yes | None |
 | GitHub Release | Active | **No (LLM-only)** | **No** | Major: no deterministic path |
-| Go (proxy.golang.org) | Implemented, not registered | Yes | No | Integration needed |
-| CPAN (metacpan.org) | Implemented, not registered | Yes | No | Integration needed |
 
 **Key findings:**
-- 6 builders are fully deterministic and ready for batch generation
+- 8 builders are fully deterministic and ready for batch generation
 - Homebrew is 85-90% deterministic via bottle inspection; LLM fallback handles edge cases
 - **GitHub Release builder is LLM-only** - significant gap since many tools distribute via GitHub releases
-- Go and CPAN builders exist in code but aren't registered in the builder registry
 
 ### Builder Gaps Requiring Tactical Work
 
 1. **GitHub Release Deterministic Path**: The GitHub Release builder currently requires LLM for every generation (~$0.10/recipe). A deterministic path analyzing release asset naming patterns could handle many common cases (tools that follow `{name}-{version}-{os}-{arch}.tar.gz` conventions).
 
-2. **Go Builder Integration**: Deterministic builder exists at `internal/create/go.go` but isn't registered. Needs `RequiresLLM()` method and registration in `create.go`.
-
-3. **CPAN Builder Integration**: Same situation as Go builder. Code exists but needs integration.
-
-4. **Homebrew Deterministic Success Rate**: Current 85-90% success rate means 10-15% of formulas still need LLM. Improving bottle inspection heuristics could reduce LLM dependency.
+2. **Homebrew Deterministic Success Rate**: Current 85-90% success rate means 10-15% of formulas still need LLM. Improving bottle inspection heuristics could reduce LLM dependency.
 
 ### Ecosystem Scale Analysis
 
@@ -357,8 +352,8 @@ The registry scale strategy operates as four parallel workstreams coordinated by
 │  │ - NPM ✓           │  │ first, LLM       │  │   path design    │        │
 │  │ - PyPI ✓          │  │ fallback for     │  │                  │        │
 │  │ - RubyGems ✓      │  │ complex formulas │  │                  │        │
-│  │ - Go (integrate)  │  │                  │  │                  │        │
-│  │ - CPAN (integrate)│  │                  │  │                  │        │
+│  │ - Go ✓            │  │                  │  │                  │        │
+│  │ - CPAN ✓          │  │                  │  │                  │        │
 │  │ - Cask ✓          │  │                  │  │                  │        │
 │  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘        │
 │           │                     │                     │                   │
@@ -379,7 +374,7 @@ The registry scale strategy operates as four parallel workstreams coordinated by
 └──────────────────────────────────────────────────────────────────────────┘
 ```
 
-**Legend**: ✓ = ready for scale, (integrate) = code exists but not registered, ⚠ = gap needs tactical design
+**Legend**: ✓ = ready for scale, ⚠ = gap needs tactical design
 
 ### Priority Queue
 
@@ -444,15 +439,7 @@ Priority Queue → Select Package → Route by Source
 
 This is a strategic design. Implementation details are delegated to tactical designs.
 
-### Phase 0a: Builder Integration (Quick Wins)
-
-Register existing deterministic builders that are implemented but not active:
-
-1. **DESIGN-go-cpan-builder-integration.md**: Add `RequiresLLM()` method, wrap with `DeterministicSession`, register in builder registry
-
-Estimated effort: 1-2 days. Can start Phase 1 after this completes.
-
-### Phase 0b: GitHub Release Deterministic Path (R&D, Parallel)
+### Phase 0: GitHub Release Deterministic Path (R&D, Parallel)
 
 Reduce LLM dependency for GitHub releases - this is exploratory:
 
@@ -472,7 +459,7 @@ This runs in parallel with Phase 1; batch generation can proceed with LLM-based 
 
 ### Milestones
 
-- **M-BuilderReadiness**: Go/CPAN integration, GitHub Release deterministic path
+- **M-GitHubDeterministic**: GitHub Release deterministic path (R&D)
 - **M-Priority**: Priority queue implementation (scoring, data ingestion, API)
 - **M-BatchGen**: CI pipeline for batch generation (scheduler, validation, PR creation)
 - **M-LibBackfill**: First 20 library recipes added (compression, data, crypto categories)
