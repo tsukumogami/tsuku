@@ -19,7 +19,7 @@ rationale: Follows existing version cache patterns for consistency, provides bes
 |-------|-------|--------------|------|
 | ~~[#1156](https://github.com/tsukumogami/tsuku/issues/1156)~~ | Add registry cache metadata infrastructure | None | testable |
 | ~~[#1157](https://github.com/tsukumogami/tsuku/issues/1157)~~ | Implement TTL-based cache expiration | ~~[#1156](https://github.com/tsukumogami/tsuku/issues/1156)~~ | testable |
-| [#1159](https://github.com/tsukumogami/tsuku/issues/1159) | Add stale-if-error fallback | ~~[#1157](https://github.com/tsukumogami/tsuku/issues/1157)~~ | testable |
+| ~~[#1159](https://github.com/tsukumogami/tsuku/issues/1159)~~ | Add stale-if-error fallback | ~~[#1157](https://github.com/tsukumogami/tsuku/issues/1157)~~ | testable |
 | ~~[#1158](https://github.com/tsukumogami/tsuku/issues/1158)~~ | Implement LRU cache size management | ~~[#1156](https://github.com/tsukumogami/tsuku/issues/1156)~~ | testable |
 | [#1160](https://github.com/tsukumogami/tsuku/issues/1160) | Enhance update-registry with status and selective refresh | ~~[#1157](https://github.com/tsukumogami/tsuku/issues/1157)~~ | testable |
 | [#1162](https://github.com/tsukumogami/tsuku/issues/1162) | Add cache cleanup command | ~~[#1158](https://github.com/tsukumogami/tsuku/issues/1158)~~ | testable |
@@ -57,8 +57,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1156,I1157,I1158 done
-    class I1159,I1160,I1162,I1163 ready
+    class I1156,I1157,I1158,I1159 done
+    class I1160,I1162,I1163 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
