@@ -34,6 +34,19 @@ type CacheMetadata struct {
 	ContentHash string `json:"content_hash"`
 }
 
+// firstLetter returns the lowercase first letter of a name for directory bucketing.
+// Non-letter first characters are bucketed under "_".
+func firstLetter(name string) string {
+	if name == "" {
+		return "_"
+	}
+	first := strings.ToLower(string(name[0]))
+	if first >= "a" && first <= "z" {
+		return first
+	}
+	return "_"
+}
+
 // metaPath returns the path to a cached recipe's metadata sidecar file.
 // For recipe path "registry/f/fzf.toml", returns "registry/f/fzf.meta.json".
 func (r *Registry) metaPath(name string) string {
@@ -46,16 +59,16 @@ func (r *Registry) WriteMeta(name string, meta *CacheMetadata) error {
 	dir := filepath.Dir(path)
 
 	if err := os.MkdirAll(dir, 0755); err != nil {
-		return &Error{Type: ErrTypeCacheWrite, Recipe: name, Cause: err, Message: "failed to create metadata directory"}
+		return &RegistryError{Type: ErrTypeCacheWrite, Recipe: name, Err: err, Message: "failed to create metadata directory"}
 	}
 
 	data, err := json.MarshalIndent(meta, "", "  ")
 	if err != nil {
-		return &Error{Type: ErrTypeCacheWrite, Recipe: name, Cause: err, Message: "failed to marshal metadata"}
+		return &RegistryError{Type: ErrTypeCacheWrite, Recipe: name, Err: err, Message: "failed to marshal metadata"}
 	}
 
 	if err := os.WriteFile(path, data, 0644); err != nil {
-		return &Error{Type: ErrTypeCacheWrite, Recipe: name, Cause: err, Message: "failed to write metadata"}
+		return &RegistryError{Type: ErrTypeCacheWrite, Recipe: name, Err: err, Message: "failed to write metadata"}
 	}
 
 	return nil
@@ -72,13 +85,13 @@ func (r *Registry) ReadMeta(name string) (*CacheMetadata, error) {
 		if os.IsNotExist(err) {
 			return nil, nil // Metadata doesn't exist yet
 		}
-		return nil, &Error{Type: ErrTypeCacheRead, Recipe: name, Cause: err, Message: "failed to read metadata"}
+		return nil, &RegistryError{Type: ErrTypeCacheRead, Recipe: name, Err: err, Message: "failed to read metadata"}
 	}
 
 	var meta CacheMetadata
 	if err := json.Unmarshal(data, &meta); err != nil {
 		// Invalid metadata file, treat as cache miss but log the error
-		return nil, &Error{Type: ErrTypeCacheRead, Recipe: name, Cause: err, Message: "failed to parse metadata"}
+		return nil, &RegistryError{Type: ErrTypeCacheRead, Recipe: name, Err: err, Message: "failed to parse metadata"}
 	}
 
 	return &meta, nil
@@ -142,7 +155,7 @@ func (r *Registry) DeleteMeta(name string) error {
 	path := r.metaPath(name)
 	err := os.Remove(path)
 	if err != nil && !os.IsNotExist(err) {
-		return &Error{Type: ErrTypeCacheWrite, Recipe: name, Cause: err, Message: "failed to delete metadata"}
+		return &RegistryError{Type: ErrTypeCacheWrite, Recipe: name, Err: err, Message: "failed to delete metadata"}
 	}
 	return nil
 }

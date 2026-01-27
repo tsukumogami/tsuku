@@ -10,7 +10,7 @@ import (
 
 func TestCacheMetadata_WriteMeta(t *testing.T) {
 	cacheDir := t.TempDir()
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	meta := &CacheMetadata{
 		CachedAt:    time.Now().Truncate(time.Second),
@@ -51,7 +51,7 @@ func TestCacheMetadata_WriteMeta(t *testing.T) {
 
 func TestCacheMetadata_ReadMeta(t *testing.T) {
 	cacheDir := t.TempDir()
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	// Test reading non-existent metadata
 	meta, err := r.ReadMeta("nonexistent")
@@ -81,6 +81,7 @@ func TestCacheMetadata_ReadMeta(t *testing.T) {
 	}
 	if readMeta == nil {
 		t.Fatal("expected metadata, got nil")
+		return
 	}
 
 	if readMeta.Size != originalMeta.Size {
@@ -93,7 +94,7 @@ func TestCacheMetadata_ReadMeta(t *testing.T) {
 
 func TestCacheMetadata_ReadMeta_InvalidJSON(t *testing.T) {
 	cacheDir := t.TempDir()
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	// Create invalid JSON metadata file
 	metaDir := filepath.Join(cacheDir, "b")
@@ -115,7 +116,7 @@ func TestCacheMetadata_ReadMeta_InvalidJSON(t *testing.T) {
 
 func TestCacheRecipe_WritesMetadata(t *testing.T) {
 	cacheDir := t.TempDir()
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	content := []byte(`[metadata]
 name = "test-tool"
@@ -144,6 +145,7 @@ name = "test-tool"
 	}
 	if meta == nil {
 		t.Fatal("expected metadata, got nil")
+		return
 	}
 
 	if meta.Size != int64(len(content)) {
@@ -169,7 +171,7 @@ name = "test-tool"
 
 func TestGetCached_MigratesMetadata(t *testing.T) {
 	cacheDir := t.TempDir()
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	// Create a cached recipe without metadata (simulating pre-existing cache)
 	content := []byte(`[metadata]
@@ -211,6 +213,7 @@ name = "old-tool"
 	}
 	if meta == nil {
 		t.Fatal("expected metadata, got nil")
+		return
 	}
 
 	if meta.Size != int64(len(content)) {
@@ -225,7 +228,7 @@ name = "old-tool"
 
 func TestGetCached_UpdatesLastAccess(t *testing.T) {
 	cacheDir := t.TempDir()
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	content := []byte(`[metadata]
 name = "access-test"
@@ -292,7 +295,7 @@ func TestComputeContentHash(t *testing.T) {
 
 func TestMetaPath(t *testing.T) {
 	cacheDir := "/test/cache"
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	tests := []struct {
 		name string
@@ -315,7 +318,7 @@ func TestMetaPath(t *testing.T) {
 
 func TestDeleteMeta(t *testing.T) {
 	cacheDir := t.TempDir()
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	// Create metadata
 	meta := &CacheMetadata{
@@ -356,7 +359,7 @@ func TestDeleteMeta(t *testing.T) {
 
 func TestListCachedWithMeta(t *testing.T) {
 	cacheDir := t.TempDir()
-	r := NewRegistry(cacheDir, "", nil, nil)
+	r := New(cacheDir)
 
 	// Cache some recipes
 	if err := r.CacheRecipe("tool-a", []byte("content a")); err != nil {
