@@ -95,8 +95,8 @@ GITHUB_STATUS=$("$CI_DIR/get-github-status.sh" --from-doc "$DOC_PATH") || {
 
 FAILED=0
 
-# Process each entry in the design doc
-ENTRIES=$(echo "$DESIGN_ISSUES" | jq -c '.entries[]')
+# Process each entry in the design doc (flatten all milestones)
+ENTRIES=$(echo "$DESIGN_ISSUES" | jq -c '.milestones[].entries[]')
 
 while IFS= read -r entry; do
     [[ -z "$entry" ]] && continue
