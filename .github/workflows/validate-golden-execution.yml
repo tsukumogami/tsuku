@@ -599,67 +599,49 @@ jobs:
             *)      echo "Unknown family: $FAMILY"; exit 1 ;;
           esac
 
-          # Filter files for this family
-          FAMILY_FILES=$(echo "$FILES" | jq -c "[.[] | select(.family == \"$FAMILY\")]")
+          # Filter and format files for this family (parse JSON outside container)
+          # Output format: file|tool|version (one per line)
+          FILE_LIST=$(echo "$FILES" | jq -r ".[] | select(.family == \"$FAMILY\") | \"\(.file)|\(.tool)|\(.version)\"")
 
-          if [ "$FAMILY_FILES" = "[]" ]; then
+          if [ -z "$FILE_LIST" ]; then
             echo "No files to validate for $FAMILY"
             exit 0
           fi
 
           echo "Validating in $CONTAINER_IMAGE:"
-          echo "$FAMILY_FILES" | jq -r '.[].file'
+          echo "$FILE_LIST" | cut -d'|' -f1
 
           # Run all golden files for this family in a single container
+          # Pass file list via environment variable to avoid shell escaping issues
           docker run --rm \
             -v "$PWD:/workspace" \
             -e GITHUB_TOKEN="$GITHUB_TOKEN" \
+            -e FILE_LIST="$FILE_LIST" \
             -w /workspace \
             "$CONTAINER_IMAGE" \
-            sh -c "
+            sh -c '
               set -e
+              FAILED=""
 
-              # Install minimal dependencies based on distro
-              case '$FAMILY' in
-                alpine)
-                  apk add --no-cache curl bash ca-certificates
-                  ;;
-                rhel)
-                  dnf install -y --setopt=install_weak_deps=False curl ca-certificates
-                  ;;
-                arch)
-                  pacman -Sy --noconfirm curl ca-certificates
-                  ;;
-                suse)
-                  zypper --non-interactive install curl ca-certificates
-                  ;;
-              esac
-
-              # Execute each golden file
-              FAILED=''
-              for item in \$(echo '$FAMILY_FILES' | jq -c '.[]'); do
-                file=\$(echo \"\$item\" | jq -r '.file')
-                tool=\$(echo \"\$item\" | jq -r '.tool')
-                version=\$(echo \"\$item\" | jq -r '.version')
-
-                echo \"=== Executing \$tool (\$version) ===\"
+              echo "$FILE_LIST" | while IFS="|" read -r file tool version; do
+                echo "=== Executing $tool ($version) ==="
 
                 # Use isolated TSUKU_HOME per tool
-                export TSUKU_HOME=\"/tmp/tsuku-\$tool-\$version\"
-                mkdir -p \"\$TSUKU_HOME\"
+                export TSUKU_HOME="/tmp/tsuku-$tool-$version"
+                mkdir -p "$TSUKU_HOME"
 
-                if ! ./tsuku install --plan \"\$file\" --force; then
-                  FAILED=\"\$FAILED \$tool\"
+                if ! ./tsuku install --plan "$file" --force; then
+                  echo "$tool" >> /tmp/failed_tools
                 fi
               done
 
-              if [ -n \"\$FAILED\" ]; then
-                echo \"Failed:$FAILED\"
+              if [ -f /tmp/failed_tools ]; then
+                echo "Failed: $(cat /tmp/failed_tools | tr "\n" " ")"
                 exit 1
               fi
 
-              echo \"All $FAMILY golden files passed\"
-            "
+              echo "All golden files passed"
+            '
 
   # Execute registry recipes using golden files from R2
   execute-registry-linux:
