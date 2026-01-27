@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: The registry recipe cache stores recipes indefinitely with no TTL, no size limits, and no metadata tracking, causing network failures to result in hard failures instead of graceful degradation.
 decision: Implement TTL-based caching with JSON metadata sidecars, stale-if-error fallback, and LRU eviction.
 rationale: Follows existing version cache patterns for consistency, provides best user experience during network issues, and enables configurable cache management.
@@ -9,7 +9,60 @@ rationale: Follows existing version cache patterns for consistency, provides bes
 
 ## Status
 
-**Accepted**
+**Planned**
+
+## Implementation Issues
+
+### Milestone: [M33 - Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1156](https://github.com/tsukumogami/tsuku/issues/1156) | Add registry cache metadata infrastructure | None | testable |
+| [#1157](https://github.com/tsukumogami/tsuku/issues/1157) | Implement TTL-based cache expiration | [#1156](https://github.com/tsukumogami/tsuku/issues/1156) | testable |
+| [#1159](https://github.com/tsukumogami/tsuku/issues/1159) | Add stale-if-error fallback | [#1157](https://github.com/tsukumogami/tsuku/issues/1157) | testable |
+| [#1158](https://github.com/tsukumogami/tsuku/issues/1158) | Implement LRU cache size management | [#1156](https://github.com/tsukumogami/tsuku/issues/1156) | testable |
+| [#1160](https://github.com/tsukumogami/tsuku/issues/1160) | Enhance update-registry with status and selective refresh | [#1157](https://github.com/tsukumogami/tsuku/issues/1157) | testable |
+| [#1162](https://github.com/tsukumogami/tsuku/issues/1162) | Add cache cleanup command | [#1158](https://github.com/tsukumogami/tsuku/issues/1158) | testable |
+| [#1163](https://github.com/tsukumogami/tsuku/issues/1163) | Enhance cache info with registry statistics | [#1158](https://github.com/tsukumogami/tsuku/issues/1158) | simple |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Foundation"]
+        I1156["#1156: Cache metadata infrastructure"]
+    end
+
+    subgraph Phase2["Phase 2: Core Caching"]
+        I1157["#1157: TTL-based expiration"]
+        I1158["#1158: LRU size management"]
+    end
+
+    subgraph Phase3["Phase 3: Resilience & CLI"]
+        I1159["#1159: Stale-if-error fallback"]
+        I1160["#1160: update-registry enhancement"]
+        I1162["#1162: Cache cleanup command"]
+        I1163["#1163: Cache info enhancement"]
+    end
+
+    I1156 --> I1157
+    I1156 --> I1158
+    I1157 --> I1159
+    I1157 --> I1160
+    I1158 --> I1162
+    I1158 --> I1163
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1156 ready
+    class I1157,I1158 blocked
+    class I1159,I1160,I1162,I1163 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
