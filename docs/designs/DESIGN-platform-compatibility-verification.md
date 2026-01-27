@@ -37,7 +37,7 @@ graph TD
         I1114["#1114: recipe migration"]:::done
         I1115["#1115: coverage validation"]:::done
         I1116["#1116: container tests"]:::done
-        I1117["#1117: docs"]:::ready
+        I1117["#1117: docs"]:::done
         I1118["#1118: PR validation"]:::ready
 
         I1109 --> I1110
