@@ -25,29 +25,6 @@ rationale: This completes the deterministic installation milestone by enabling U
 | [#507](https://github.com/tsukumogami/tsuku/issues/507) | feat(cli): add --plan flag to install command | [#506](https://github.com/tsukumogami/tsuku/issues/506) |
 | [#508](https://github.com/tsukumogami/tsuku/issues/508) | docs(cli): document plan-based installation workflow | [#507](https://github.com/tsukumogami/tsuku/issues/507) |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    I506["#506: plan loading utilities"]
-    I507["#507: --plan flag"]
-    I508["#508: documentation"]
-
-    I506 --> I507
-    I507 --> I508
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I506 done
-    class I507 done
-    class I508 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Upstream Design Reference
 
 This design implements Milestone 3 of [DESIGN-deterministic-resolution.md](DESIGN-deterministic-resolution.md).
