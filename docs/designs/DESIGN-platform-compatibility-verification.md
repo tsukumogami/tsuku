@@ -35,10 +35,10 @@ graph TD
         I1112["#1112: enhanced *_install"]:::done
         I1113["#1113: supported_libc constraint"]:::done
         I1114["#1114: recipe migration"]:::done
-        I1115["#1115: coverage validation"]:::ready
+        I1115["#1115: coverage validation"]:::done
         I1116["#1116: container tests"]:::done
-        I1117["#1117: docs"]:::blocked
-        I1118["#1118: PR validation"]:::blocked
+        I1117["#1117: docs"]:::done
+        I1118["#1118: PR validation"]:::done
 
         I1109 --> I1110
         I1109 --> I1112

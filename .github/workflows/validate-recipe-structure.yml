@@ -141,3 +141,69 @@ jobs:
           echo "Summary:"
           echo "  Embedded recipes: $(echo "$embedded_names" | wc -w)"
           echo "  Registry recipes: $(echo "$registry_names" | wc -w)"
+
+  validate-coverage:
+    name: Validate Libc Coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Check libc coverage for embedded recipes
+        run: |
+          echo "Checking libc coverage for embedded library recipes..."
+          echo ""
+
+          # Track overall status
+          has_errors=false
+          has_warnings=false
+
+          # Check each embedded recipe
+          for recipe in internal/recipe/recipes/*.toml; do
+            output=$(./tsuku validate --check-libc-coverage --json "$recipe" 2>/dev/null || true)
+
+            # Parse JSON for errors/warnings
+            errors=$(echo "$output" | jq -r '.errors[]?.message // empty' 2>/dev/null || true)
+            warnings=$(echo "$output" | jq -r '.warnings[]?.message // empty' 2>/dev/null || true)
+
+            name=$(basename "$recipe" .toml)
+
+            if [ -n "$errors" ]; then
+              echo "::error file=$recipe::$name: $errors"
+              has_errors=true
+            fi
+
+            if [ -n "$warnings" ]; then
+              # Warnings are informational, not blocking
+              echo "::warning file=$recipe::$name: $warnings"
+              has_warnings=true
+            fi
+          done
+
+          if [ "$has_errors" = true ]; then
+            echo ""
+            echo "::error::Library recipes must have musl support or explicit supported_libc constraint."
+            echo ""
+            echo "To fix, either:"
+            echo "  1. Add a musl step: [[steps]] action = \"apk_install\" packages = [\"...\"] when = { os = [\"linux\"], libc = [\"musl\"] }"
+            echo "  2. Add explicit constraint: supported_libc = [\"glibc\"] with unsupported_reason"
+            echo ""
+            echo "See docs/GUIDE-hybrid-libc-recipes.md for details."
+            exit 1
+          fi
+
+          if [ "$has_warnings" = true ]; then
+            echo ""
+            echo "Some recipes have missing musl coverage (warnings only, not blocking)."
+            echo "Consider adding musl support for better Alpine compatibility."
+          fi
+
+          echo ""
+          echo "Libc coverage validation passed."
