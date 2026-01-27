@@ -4,9 +4,10 @@
   "version": "15.2.0",
   "platform": {
     "os": "linux",
-    "arch": "amd64"
+    "arch": "amd64",
+    "linux_family": "rhel"
   },
-  "recipe_hash": "a8b2419fb5b1c5ff9a243fdd9f25f84c06c938c21b37620225a189a8f435a907",
+  "recipe_hash": "d2c433fc9ea29dc16586557d1a4d5f4efc7b8b02229636687084faf09cfdac10",
   "deterministic": false,
   "dependencies": [
     {

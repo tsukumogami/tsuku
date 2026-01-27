@@ -1,0 +1,119 @@
+{
+  "format_version": 3,
+  "tool": "gcc-libs",
+  "version": "15.2.0",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "suse"
+  },
+  "recipe_hash": "d2c433fc9ea29dc16586557d1a4d5f4efc7b8b02229636687084faf09cfdac10",
+  "deterministic": false,
+  "dependencies": [
+    {
+      "tool": "patchelf",
+      "version": "0.18.0",
+      "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
+      "steps": [
+        {
+          "action": "download_file",
+          "params": {
+            "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+            "dest": "patchelf.tar.gz",
+            "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b"
+          },
+          "evaluable": true,
+          "deterministic": true,
+          "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+          "checksum": "fe8a76cdde4a5666cccbcdfc328bfb77f5d05b63a52ce103b487166be696ac6b",
+          "size": 130124
+        },
+        {
+          "action": "extract",
+          "params": {
+            "archive": "patchelf.tar.gz",
+            "format": "tar.gz",
+            "strip_dirs": 2
+          },
+          "evaluable": true,
+          "deterministic": true
+        },
+        {
+          "action": "homebrew_relocate",
+          "params": {
+            "formula": "patchelf"
+          },
+          "evaluable": false,
+          "deterministic": true
+        },
+        {
+          "action": "install_binaries",
+          "params": {
+            "outputs": [
+              "bin/patchelf"
+            ]
+          },
+          "evaluable": true,
+          "deterministic": true
+        }
+      ],
+      "verify": {
+        "command": "patchelf --version",
+        "pattern": "patchelf {version}"
+      }
+    }
+  ],
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
+        "dest": "gcc.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
+      "checksum": "eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
+      "size": 161971540
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "gcc.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "gcc"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "run_command",
+      "params": {
+        "command": "mkdir -p lib\n# Copy the actual library files (find the real files, not symlinks)\ncp lib/gcc/current/libstdc++.so.6.0.* lib/\ncp lib/gcc/current/libgcc_s.so.1 lib/\n# Create standard symlinks with explicit targets\ncd lib\nSTDCXX=$(ls libstdc++.so.6.0.* 2>/dev/null | head -1)\nln -sf \"$STDCXX\" libstdc++.so.6\nln -sf libstdc++.so.6 libstdc++.so\nln -sf libgcc_s.so.1 libgcc_s.so\n"
+      },
+      "evaluable": false,
+      "deterministic": false
+    },
+    {
+      "action": "install_libraries",
+      "params": {
+        "patterns": [
+          "lib/libstdc++.so*",
+          "lib/libgcc_s.so*"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "recipe_type": "library"
+}

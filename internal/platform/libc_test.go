@@ -83,3 +83,27 @@ func TestValidLibcTypes(t *testing.T) {
 		}
 	}
 }
+
+func TestLibcForFamily(t *testing.T) {
+	tests := []struct {
+		family string
+		want   string
+	}{
+		{"alpine", "musl"},
+		{"debian", "glibc"},
+		{"rhel", "glibc"},
+		{"arch", "glibc"},
+		{"suse", "glibc"},
+		{"", "glibc"},
+		{"unknown", "glibc"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.family, func(t *testing.T) {
+			got := LibcForFamily(tt.family)
+			if got != tt.want {
+				t.Errorf("LibcForFamily(%q) = %q, want %q", tt.family, got, tt.want)
+			}
+		})
+	}
+}

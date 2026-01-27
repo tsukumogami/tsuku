@@ -54,6 +54,8 @@ jobs:
       has_linux: ${{ steps.build-matrix.outputs.has_linux }}
       macos_files: ${{ steps.build-matrix.outputs.macos_files }}
       has_macos: ${{ steps.build-matrix.outputs.has_macos }}
+      container_files: ${{ steps.build-matrix.outputs.container_files }}
+      has_container: ${{ steps.build-matrix.outputs.has_container }}
       recipes: ${{ steps.build-matrix.outputs.recipes }}
       has_changes: ${{ steps.build-matrix.outputs.has_changes }}
       registry_recipes: ${{ steps.build-matrix.outputs.registry_recipes }}
@@ -156,12 +158,14 @@ jobs:
           fi
           echo "registry_recipes=$REGISTRY_RECIPES" >> $GITHUB_OUTPUT
 
-          # Build separate outputs for Linux (per-file matrix) and macOS (aggregated)
+          # Build separate outputs for Linux (per-file matrix), macOS (aggregated), and containers (aggregated)
           # This processes embedded golden files only (registry uses R2)
           LINUX_MATRIX='{"include":['
           MACOS_FILES='['
+          CONTAINER_FILES='['
           LINUX_FIRST=true
           MACOS_FIRST=true
+          CONTAINER_FIRST=true
 
           for path in $CHANGED_EMBEDDED; do
             # Skip if file doesn't exist (deleted in later commit)
@@ -211,8 +215,21 @@ jobs:
                 LINUX_MATRIX="$LINUX_MATRIX{\"file\":\"$path\",\"os\":\"ubuntu-latest\",\"platform\":\"$platform\",\"tool\":\"$tool\",\"version\":\"$filename\"}"
                 ;;
               linux-rhel-amd64|linux-arch-amd64|linux-alpine-amd64|linux-suse-amd64)
-                # Skip: no matching GitHub-hosted runners
-                echo "Skipping $path ($platform no matching runner)"
+                # Check if excluded from execution validation entirely
+                exec_exclusion=$(is_execution_excluded "$tool" || true)
+                if [ -n "$exec_exclusion" ]; then
+                  echo "Skipping $path (execution excluded: $exec_exclusion)"
+                  continue
+                fi
+                # Extract family from platform (e.g., linux-alpine-amd64 -> alpine)
+                family=$(echo "$platform" | cut -d'-' -f2)
+                # Add to container aggregated list (runs in Docker)
+                if [ "$CONTAINER_FIRST" = true ]; then
+                  CONTAINER_FIRST=false
+                else
+                  CONTAINER_FILES="$CONTAINER_FILES,"
+                fi
+                CONTAINER_FILES="$CONTAINER_FILES{\"file\":\"$path\",\"tool\":\"$tool\",\"version\":\"$filename\",\"family\":\"$family\"}"
                 ;;
               darwin-arm64)
                 # Check if excluded from execution validation entirely
@@ -251,6 +268,7 @@ jobs:
 
           LINUX_MATRIX="$LINUX_MATRIX]}"
           MACOS_FILES="$MACOS_FILES]"
+          CONTAINER_FILES="$CONTAINER_FILES]"
 
           # Set outputs
           if [ "$LINUX_MATRIX" = '{"include":[]}' ]; then
@@ -267,8 +285,15 @@ jobs:
           fi
           echo "macos_files=$MACOS_FILES" >> $GITHUB_OUTPUT
 
+          if [ "$CONTAINER_FILES" = '[]' ]; then
+            echo "has_container=false" >> $GITHUB_OUTPUT
+          else
+            echo "has_container=true" >> $GITHUB_OUTPUT
+          fi
+          echo "container_files=$CONTAINER_FILES" >> $GITHUB_OUTPUT
+
           # Overall has_changes (embedded golden files)
-          if [ "$LINUX_MATRIX" = '{"include":[]}' ] && [ "$MACOS_FILES" = '[]' ]; then
+          if [ "$LINUX_MATRIX" = '{"include":[]}' ] && [ "$MACOS_FILES" = '[]' ] && [ "$CONTAINER_FILES" = '[]' ]; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
@@ -531,6 +556,100 @@ jobs:
           fi
 
           echo "All macOS golden files passed"
+
+  # Validate embedded Linux golden files for non-Debian families (via Docker containers)
+  # Uses docker run directly because GitHub Actions container: directive has issues with Alpine
+  # (JavaScript actions don't work in musl-based containers)
+  validate-linux-containers:
+    name: "Linux Containers (${{ matrix.family }})"
+    needs: detect-changes
+    if: needs.detect-changes.outputs.has_container == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        family: [alpine, rhel, arch, suse]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku (static binary for containers)
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Execute golden files in container
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          FAMILY="${{ matrix.family }}"
+          FILES='${{ needs.detect-changes.outputs.container_files }}'
+
+          # Map family to container image
+          case "$FAMILY" in
+            alpine) CONTAINER_IMAGE="alpine:3.21" ;;
+            rhel)   CONTAINER_IMAGE="fedora:41" ;;
+            arch)   CONTAINER_IMAGE="archlinux:base" ;;
+            suse)   CONTAINER_IMAGE="opensuse/tumbleweed" ;;
+            *)      echo "Unknown family: $FAMILY"; exit 1 ;;
+          esac
+
+          # Filter and format files for this family (parse JSON outside container)
+          # Output format: file|tool|version (one per line)
+          FILE_LIST=$(echo "$FILES" | jq -r ".[] | select(.family == \"$FAMILY\") | \"\(.file)|\(.tool)|\(.version)\"")
+
+          if [ -z "$FILE_LIST" ]; then
+            echo "No files to validate for $FAMILY"
+            exit 0
+          fi
+
+          echo "Validating in $CONTAINER_IMAGE:"
+          echo "$FILE_LIST" | cut -d'|' -f1
+
+          # Run all golden files for this family in a single container
+          # Pass file list via environment variable to avoid shell escaping issues
+          docker run --rm \
+            -v "$PWD:/workspace" \
+            -e GITHUB_TOKEN="$GITHUB_TOKEN" \
+            -e FILE_LIST="$FILE_LIST" \
+            -e FAMILY="$FAMILY" \
+            -w /workspace \
+            "$CONTAINER_IMAGE" \
+            sh -c '
+              set -e
+              FAILED=""
+
+              # Pre-install system packages that apk_install actions will verify
+              # This is needed because apk_install only checks packages, does not install them
+              if [ "$FAMILY" = "alpine" ]; then
+                echo "Pre-installing system packages for Alpine validation..."
+                apk add --no-cache libstdc++ yaml-dev openssl-dev
+              fi
+
+              echo "$FILE_LIST" | while IFS="|" read -r file tool version; do
+                echo "=== Executing $tool ($version) ==="
+
+                # Use isolated TSUKU_HOME per tool
+                export TSUKU_HOME="/tmp/tsuku-$tool-$version"
+                mkdir -p "$TSUKU_HOME"
+
+                if ! ./tsuku install --plan "$file" --force; then
+                  echo "$tool" >> /tmp/failed_tools
+                fi
+              done
+
+              if [ -f /tmp/failed_tools ]; then
+                echo "Failed: $(cat /tmp/failed_tools | tr "\n" " ")"
+                exit 1
+              fi
+
+              echo "All golden files passed"
+            '
 
   # Execute registry recipes using golden files from R2
   execute-registry-linux:

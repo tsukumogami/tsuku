@@ -161,16 +161,6 @@ func (e *Executor) Sandbox(
 		effectiveFamily = target.LinuxFamily()
 	}
 
-	// Skip Alpine sandbox tests - the tsuku binary is dynamically linked against
-	// glibc, but Alpine uses musl libc. See issue #860 for tracking.
-	if effectiveFamily == "alpine" {
-		e.logger.Warn("Skipping Alpine sandbox test - musl/glibc incompatibility.",
-			"issue", "https://github.com/tsukumogami/tsuku/issues/860")
-		return &SandboxResult{
-			Skipped: true,
-		}, nil
-	}
-
 	// Add infrastructure packages needed for sandbox execution
 	sysReqs = augmentWithInfrastructurePackages(sysReqs, plan, reqs, effectiveFamily)
 

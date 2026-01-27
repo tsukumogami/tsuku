@@ -98,10 +98,17 @@ func (e *Executor) GeneratePlan(ctx context.Context, cfg PlanConfig) (*Installat
 
 	// Construct target for step filtering
 	// This target is used to filter steps by both explicit When clauses and implicit action constraints
-	// Detect libc on Linux platforms
+	// Determine libc on Linux platforms
 	var libc string
 	if targetOS == "linux" {
-		libc = platform.DetectLibc()
+		if cfg.LinuxFamily != "" {
+			// LinuxFamily was explicitly provided (e.g., via --linux-family flag)
+			// Infer libc from the family to support cross-platform plan generation
+			libc = platform.LibcForFamily(cfg.LinuxFamily)
+		} else {
+			// No explicit family - detect libc from the local system
+			libc = platform.DetectLibc()
+		}
 	}
 	target := platform.NewTarget(targetOS+"/"+targetArch, linuxFamily, libc)
 
@@ -664,7 +671,22 @@ func generateDependencyPlans(
 	if targetOS == "" {
 		targetOS = runtime.GOOS
 	}
-	deps := actions.ResolveDependenciesForPlatform(r, targetOS)
+
+	// Construct a target for filtering step-level dependencies
+	// This prevents phantom dependencies from platform-incompatible steps
+	targetArch := cfg.Arch
+	if targetArch == "" {
+		targetArch = runtime.GOARCH
+	}
+	var libc string
+	if targetOS == "linux" && cfg.LinuxFamily != "" {
+		libc = platform.LibcForFamily(cfg.LinuxFamily)
+	} else if targetOS == "linux" {
+		libc = platform.DetectLibc()
+	}
+	target := platform.NewTarget(targetOS+"/"+targetArch, cfg.LinuxFamily, libc)
+
+	deps := actions.ResolveDependenciesForTarget(r, targetOS, target)
 
 	if len(deps.InstallTime) == 0 {
 		return nil, nil
