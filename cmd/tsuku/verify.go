@@ -466,8 +466,28 @@ func verifyTsukuManagedLibrary(name string, libVersions map[string]install.Libra
 
 	// Tier 4: Integrity verification (--integrity flag)
 	if opts.CheckIntegrity {
-		if err := verifyLibraryIntegrity(libDir, &libState); err != nil {
-			return err
+		result, err := verify.VerifyIntegrity(libDir, libState.Checksums)
+		if err != nil {
+			return fmt.Errorf("integrity verification error: %w", err)
+		}
+
+		if result.Skipped {
+			printInfof("  Integrity: SKIPPED (%s)\n", result.Reason)
+		} else if len(result.Missing) > 0 || len(result.Mismatches) > 0 {
+			fmt.Fprintf(os.Stderr, "  Integrity: MODIFIED\n")
+			for _, m := range result.Mismatches {
+				fmt.Fprintf(os.Stderr, "    %s: expected %s..., got %s...\n",
+					m.Path, truncateChecksum(m.Expected), truncateChecksum(m.Actual))
+			}
+			for _, path := range result.Missing {
+				fmt.Fprintf(os.Stderr, "    %s: MISSING\n", path)
+			}
+			fmt.Fprintf(os.Stderr, "    WARNING: Library files may have been modified after installation.\n")
+			fmt.Fprintf(os.Stderr, "    Run 'tsuku install <library> --reinstall' to restore original.\n")
+			return fmt.Errorf("integrity verification failed: %d file(s) modified, %d file(s) missing",
+				len(result.Mismatches), len(result.Missing))
+		} else {
+			printInfof("  Integrity: OK (%d files verified)\n", result.Verified)
 		}
 	}
 
@@ -702,42 +722,6 @@ func parseJSONOutput(output string, results *[]verify.DlopenResult) error {
 	reader := strings.NewReader(output)
 	decoder := json.NewDecoder(reader)
 	return decoder.Decode(results)
-}
-
-// verifyLibraryIntegrity verifies the integrity of installed library files using stored checksums.
-// Note: This is a basic implementation for CI validation. Production-grade verification
-// with detailed reporting will be implemented in issue #950.
-func verifyLibraryIntegrity(libDir string, libState *install.LibraryVersionState) error {
-	if len(libState.Checksums) == 0 {
-		printInfo("  Integrity: SKIPPED (no stored checksums - pre-feature installation)\n")
-		return nil
-	}
-
-	printInfof("  Integrity: Verifying %d files...\n", len(libState.Checksums))
-
-	mismatches, err := install.VerifyLibraryChecksums(libDir, libState.Checksums)
-	if err != nil {
-		return fmt.Errorf("integrity verification error: %w", err)
-	}
-
-	if len(mismatches) == 0 {
-		printInfof("  Integrity: OK (%d files verified)\n", len(libState.Checksums))
-		return nil
-	}
-
-	// Report mismatches
-	fmt.Fprintf(os.Stderr, "  Integrity: MODIFIED\n")
-	for _, m := range mismatches {
-		if m.Error != nil {
-			fmt.Fprintf(os.Stderr, "    %s: ERROR - %v\n", m.Path, m.Error)
-		} else {
-			fmt.Fprintf(os.Stderr, "    %s: expected %s..., got %s...\n",
-				m.Path, truncateChecksum(m.Expected), truncateChecksum(m.Actual))
-		}
-	}
-	fmt.Fprintf(os.Stderr, "    WARNING: Library files may have been modified after installation.\n")
-	fmt.Fprintf(os.Stderr, "    Run 'tsuku install <library> --reinstall' to restore original.\n")
-	return fmt.Errorf("integrity verification failed: %d file(s) modified", len(mismatches))
 }
 
 // findLibraryFiles walks a directory and returns paths to shared library files.

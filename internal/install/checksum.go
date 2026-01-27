@@ -182,8 +182,9 @@ func ComputeLibraryChecksums(libDir string) (map[string]string, error) {
 // stored is a map of relative path to expected hex-encoded checksum.
 // Returns a slice of mismatches (empty if all verified), or an error for unexpected failures.
 //
-// Note: This is a basic implementation for CI validation. Production-grade verification
-// with detailed reporting will be implemented in issue #950.
+// Deprecated: Use verify.VerifyIntegrity() for structured results with separate
+// handling of mismatches vs missing files. This function is kept for backward
+// compatibility but may be removed in a future version.
 func VerifyLibraryChecksums(libDir string, stored map[string]string) ([]ChecksumMismatch, error) {
 	if len(stored) == 0 {
 		return nil, nil
