@@ -33,17 +33,7 @@ if [[ ! -f "$DOC_PATH" ]]; then
     exit $EXIT_ERROR
 fi
 
-# Extract status from frontmatter
-get_frontmatter_status() {
-    local doc="$1"
-    if ! has_frontmatter "$doc"; then
-        echo ""
-        return
-    fi
-    local frontmatter
-    frontmatter=$(extract_frontmatter "$doc")
-    echo "$frontmatter" | awk -F': ' '$1 == "status" { print $2 }'
-}
+# Note: get_frontmatter_status is now in common.sh with case normalization
 
 # Get expected directory for a given status
 # Returns the directory suffix after docs/designs

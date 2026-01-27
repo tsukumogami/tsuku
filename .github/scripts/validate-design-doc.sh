@@ -162,6 +162,13 @@ if [[ -x "$CHECKS_DIR/implementation-issues.sh" ]]; then
     fi
 fi
 
+# Run mermaid diagram check (skip status validation for all-docs check)
+if [[ -x "$CHECKS_DIR/mermaid.sh" ]]; then
+    if ! "$CHECKS_DIR/mermaid.sh" --skip-status-check "$DOC_PATH"; then
+        FAILED=1
+    fi
+fi
+
 # Future: Run all check scripts dynamically
 # for check_script in "$CHECKS_DIR"/*.sh; do
 #     [[ "$check_script" == */common.sh ]] && continue

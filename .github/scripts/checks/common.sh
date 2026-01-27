@@ -71,6 +71,34 @@ extract_frontmatter() {
     ' "$doc_path"
 }
 
+# get_frontmatter_status - Extract and normalize status from frontmatter
+# Usage: status=$(get_frontmatter_status "/path/to/doc.md")
+# Returns: Normalized status (Proposed, Accepted, Planned, Current, Superseded)
+#          Empty string if no frontmatter or status field
+# Note: Normalizes case (e.g., "proposed" -> "Proposed", "PLANNED" -> "Planned")
+get_frontmatter_status() {
+    local doc_path="$1"
+
+    if ! has_frontmatter "$doc_path"; then
+        echo ""
+        return
+    fi
+
+    local frontmatter raw_status normalized
+    frontmatter=$(extract_frontmatter "$doc_path")
+    raw_status=$(echo "$frontmatter" | awk -F': ' '$1 == "status" { print $2 }')
+
+    # Normalize to title case
+    if [[ -n "$raw_status" ]]; then
+        # Convert to lowercase, then capitalize first letter
+        normalized=$(echo "$raw_status" | tr '[:upper:]' '[:lower:]')
+        normalized="${normalized^}"
+        echo "$normalized"
+    else
+        echo ""
+    fi
+}
+
 # has_frontmatter - Check if document has valid frontmatter structure
 # Usage: if has_frontmatter "/path/to/doc.md"; then ...
 # Returns: 0 if frontmatter exists, 1 if not
