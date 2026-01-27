@@ -29,36 +29,34 @@ Planned
 ```mermaid
 graph TD
     subgraph Infrastructure["Library Verification Infrastructure"]
-        I942["#942 State schema<br/>(simple)"]:::done
-        I943["#943 Verify command<br/>(testable)"]:::done
-        I946["#946 Install checksums<br/>(testable)"]:::done
+        I942["#942 State schema<br/>(simple)"]
+        I943["#943 Verify command<br/>(testable)"]
+        I946["#946 Install checksums<br/>(testable)"]
     end
 
     subgraph Tiers["Library Verification Tiers"]
-        I947["#947 Tier 1 Design<br/>(done)"]:::done
-        I948["#948 Tier 2 Design<br/>(done)"]:::done
-        M38["M38: Tier 2 Implementation<br/>(done)"]:::done
-        I949["#949 Tier 3 Design<br/>(done)"]:::done
-        M39["M39: Tier 3 Implementation<br/>(done)"]:::done
-        I950["#950 Tier 4 Design<br/>(done)"]:::done
-        M49["M49: Tier 4 Implementation<br/>(ready)"]:::ready
+        I947["#947 Tier 1 Design<br/>(done)"]
+        I948["#948 Tier 2 Design<br/>(done)"]
+        I949["#949 Tier 3 Design<br/>(done)"]
+        I950["#950 Tier 4 Design<br/>(done)"]
     end
 
     I942 --> I946
     I943 --> I947
     I947 --> I948
-    I948 --> M38
-    M38 --> I949
-    I949 --> M39
+    I948 --> I949
+    I949 --> I950
     I946 --> I950
-    M39 --> I950
-    I950 --> M49
 
-    classDef done fill:#2da44e,color:white
-    classDef ready fill:#0969da,color:white
-    classDef blocked fill:#d4a72c,color:white
-    classDef needsdesign fill:#8250df,color:white
+    classDef done fill:#c8e6c9,color:black
+    classDef ready fill:#bbdefb,color:black
+    classDef blocked fill:#fff9c4,color:black
+    classDef needsDesign fill:#e1bee7,color:black
+
+    class I942,I943,I946,I947,I948,I949,I950 done
 ```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 

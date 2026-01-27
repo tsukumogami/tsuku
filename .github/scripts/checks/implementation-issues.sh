@@ -3,6 +3,7 @@
 # implementation-issues.sh - Validate design document Implementation Issues section
 #
 # Implements implementation issues validation rules:
+#   II00: Section must NOT exist for Proposed/Accepted status
 #   II01: Section exists for Planned status (optional for Current)
 #   II02: Table has correct columns (Issue, Title, Dependencies, Tier)
 #   II03: Issue/milestone links use valid format [#N](url) or [Name](milestone-url)
@@ -36,21 +37,20 @@ if [[ ! -f "$DOC_PATH" ]]; then
     exit $EXIT_ERROR
 fi
 
-# Extract status from frontmatter
-get_frontmatter_status() {
-    local doc="$1"
-    if ! has_frontmatter "$doc"; then
-        echo ""
-        return
-    fi
-    local frontmatter
-    frontmatter=$(extract_frontmatter "$doc")
-    echo "$frontmatter" | awk -F': ' '$1 == "status" { print $2 }'
-}
-
+# Get normalized status from frontmatter (uses shared function from common.sh)
 FM_STATUS=$(get_frontmatter_status "$DOC_PATH")
 
-# Only validate for Planned and Current status (per design matrix)
+# II00: Implementation Issues section must NOT exist for Proposed/Accepted status
+# These statuses indicate issues haven't been created yet via /plan
+if [[ "$FM_STATUS" == "Proposed" || "$FM_STATUS" == "Accepted" ]]; then
+    if grep -q "^## Implementation Issues" "$DOC_PATH"; then
+        emit_fail "II00: Implementation Issues section not allowed in '$FM_STATUS' status. See: .github/scripts/docs/II00.md"
+        exit $EXIT_FAIL
+    fi
+    exit $EXIT_PASS
+fi
+
+# Only validate table format for Planned and Current status
 if [[ "$FM_STATUS" != "Planned" && "$FM_STATUS" != "Current" ]]; then
     exit $EXIT_PASS
 fi

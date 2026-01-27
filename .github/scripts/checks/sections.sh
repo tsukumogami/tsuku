@@ -47,19 +47,8 @@ if [[ ! -f "$DOC_PATH" ]]; then
     exit $EXIT_ERROR
 fi
 
-# Extract frontmatter status to determine if we should run
+# Get normalized status from frontmatter (uses shared function from common.sh)
 # Skip sections check for Superseded status (legacy format allowed)
-get_frontmatter_status() {
-    local doc="$1"
-    if ! has_frontmatter "$doc"; then
-        echo ""
-        return
-    fi
-    local frontmatter
-    frontmatter=$(extract_frontmatter "$doc")
-    echo "$frontmatter" | awk -F': ' '$1 == "status" { print $2 }'
-}
-
 FM_STATUS=$(get_frontmatter_status "$DOC_PATH")
 
 # Skip validation for Superseded documents (legacy format allowed per design)

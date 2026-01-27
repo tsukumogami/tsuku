@@ -31,26 +31,6 @@ rationale: This design ensures all installations are deterministic by default, d
 | [#478](https://github.com/tsukumogami/tsuku/issues/478) | feat(cli): wire up plan-based installation flow | [#473](https://github.com/tsukumogami/tsuku/issues/473), [#477](https://github.com/tsukumogami/tsuku/issues/477) |
 | [#479](https://github.com/tsukumogami/tsuku/issues/479) | refactor(executor): remove legacy Execute method | [#478](https://github.com/tsukumogami/tsuku/issues/478) |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    classDef done fill:#90EE90,stroke:#333
-    classDef ready fill:#87CEEB,stroke:#333
-    classDef blocked fill:#FFB6C1,stroke:#333
-
-    I470[#470: plan cache infrastructure]:::done --> I473[#473: ExecutePlan with checksum]:::done
-    I470 --> I475[#475: plan conversion helpers]:::done
-    I470 --> I477[#477: getOrGeneratePlan]:::done
-    I471[#471: GetCachedPlan]:::done --> I477
-    I472[#472: ResolveVersion]:::done --> I477
-    I474[#474: --fresh flag]:::done --> I477
-    I475 --> I477
-    I473 --> I478[#478: wire up installation]:::done
-    I477 --> I478
-    I478 --> I479[#479: remove legacy Execute]:::done
-```
-
 ## Upstream Design Reference
 
 This design implements Milestone 2 of [DESIGN-deterministic-resolution.md](DESIGN-deterministic-resolution.md).

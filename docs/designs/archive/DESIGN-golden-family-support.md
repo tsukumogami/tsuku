@@ -33,47 +33,6 @@ Superseded by [DESIGN-golden-plan-testing.md](../current/DESIGN-golden-plan-test
 | [#830](https://github.com/tsukumogami/tsuku/issues/830) | Update workflow for family files | [#829](https://github.com/tsukumogami/tsuku/issues/829) | simple |
 | [#831](https://github.com/tsukumogami/tsuku/issues/831) | Add family guidance to CONTRIBUTING | [#829](https://github.com/tsukumogami/tsuku/issues/829) | simple |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph M32["Milestone 32: Recipe Analysis"]
-        I822["#822: Constraint types"]
-        I823["#823: WhenClause extension"]
-        I824["#824: Step analysis"]
-        I825["#825: Loader integration"]
-        I826["#826: Recipe policy"]
-        I827["#827: Matchable interface"]
-        I828["#828: Info metadata"]
-    end
-
-    subgraph M33["Milestone 33: Golden Files"]
-        I829["#829: Script updates"]
-        I830["#830: Workflow updates"]
-        I831["#831: Documentation"]
-    end
-
-    I822 --> I823
-    I822 --> I824
-    I823 --> I824
-    I823 --> I827
-    I824 --> I825
-    I825 --> I826
-    I826 --> I828
-    I828 --> I829
-    I829 --> I830
-    I829 --> I831
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I822,I823,I824,I825,I826,I827,I828,I829,I830,I831 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Upstream Design Reference
 
 This design extends [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md) to support Linux family-specific plans introduced in [DESIGN-structured-install-guide.md](DESIGN-structured-install-guide.md) and [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md).

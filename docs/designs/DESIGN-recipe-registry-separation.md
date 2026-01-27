@@ -46,7 +46,6 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 ```mermaid
 graph TD
     subgraph M30["M30: Recipe Separation Foundation"]
-        ERLV["Embedded Recipe List Validation"]
         I1033["#1033: Migrate registry recipes"]
         I1034["#1034: Reorganize golden files"]
     end
@@ -57,7 +56,6 @@ graph TD
     end
 
     subgraph M32["M32: Cache Management and Documentation"]
-        M33["Registry Cache Policy (7 issues)"]
         I1038["#1038: Document recipe separation"]
     end
 
@@ -65,28 +63,24 @@ graph TD
         I1039["#1039: Design R2 storage"]
     end
 
-    ERLV --> I1033
     I1033 --> I1034
     I1033 --> I1035
-    I1033 --> M33
+    I1033 --> I1038
     I1034 --> I1036
     I1035 --> I1036
     I1034 --> I1039
     I1036 --> I1038
-    M33 --> I1038
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class ERLV done
     class I1033 done
     class I1034 done
     class I1035 done
     class I1036 done
     class I1038 blocked
-    class M33 ready
     class I1039 done
 ```
 
