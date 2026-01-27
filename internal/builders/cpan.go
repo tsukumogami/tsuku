@@ -62,10 +62,15 @@ func (b *CPANBuilder) Name() string {
 	return "cpan"
 }
 
+// RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
+func (b *CPANBuilder) RequiresLLM() bool {
+	return false
+}
+
 // CanBuild checks if the distribution exists on MetaCPAN
-func (b *CPANBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
+func (b *CPANBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
 	// Normalize module name to distribution name if needed
-	distribution := normalizeToDistribution(packageName)
+	distribution := normalizeToDistribution(req.Package)
 
 	if !isValidCPANDistribution(distribution) {
 		return false, nil
@@ -82,6 +87,11 @@ func (b *CPANBuilder) CanBuild(ctx context.Context, packageName string) (bool, e
 	}
 
 	return true, nil
+}
+
+// NewSession creates a new build session for the given request.
+func (b *CPANBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	return NewDeterministicSession(b.Build, req), nil
 }
 
 // Build generates a recipe for the CPAN distribution

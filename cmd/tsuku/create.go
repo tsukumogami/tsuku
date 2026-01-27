@@ -65,6 +65,7 @@ Supported sources:
   pypi                Python packages from pypi.org
   npm                 Node.js packages from npmjs.com
   go:module           Go modules from proxy.golang.org
+  cpan                Perl distributions from metacpan.org
   github:owner/repo      GitHub releases (uses LLM to analyze assets)
   homebrew:formula       Homebrew formulas (uses LLM to generate recipes)
   homebrew:formula:source  Force source build even if bottles available
@@ -79,6 +80,7 @@ Examples:
   tsuku create gh --from github:cli/cli
   tsuku create age --from github:FiloSottile/age
   tsuku create lazygit --from go:github.com/jesseduffield/lazygit
+  tsuku create ack --from cpan
   tsuku create jq --from homebrew:jq
   tsuku create ripgrep --from homebrew:ripgrep
   tsuku create vscode --from cask:visual-studio-code
@@ -170,6 +172,8 @@ func normalizeEcosystem(name string) string {
 		return "npm"
 	case "go", "golang", "goproxy":
 		return "go"
+	case "cpan", "metacpan", "perl":
+		return "cpan"
 	default:
 		return normalized
 	}
@@ -207,6 +211,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 	builderRegistry.Register(builders.NewPyPIBuilder(nil))
 	builderRegistry.Register(builders.NewNpmBuilder(nil))
 	builderRegistry.Register(builders.NewGoBuilder(nil))
+	builderRegistry.Register(builders.NewCPANBuilder(nil))
 	builderRegistry.Register(builders.NewGitHubReleaseBuilder())
 	builderRegistry.Register(builders.NewHomebrewBuilder())
 	builderRegistry.Register(builders.NewCaskBuilder(nil))
