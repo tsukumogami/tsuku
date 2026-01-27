@@ -792,15 +792,24 @@ registry.Register(NewGoBuilder(resolver))
 
 ## Implementation Issues
 
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#117](https://github.com/tsukumogami/tsuku/issues/117) | feat(version): add Go toolchain version provider | None | simple |
+| [#118](https://github.com/tsukumogami/tsuku/issues/118) | feat(version): add Go module version provider | None | simple |
+| [#120](https://github.com/tsukumogami/tsuku/issues/120) | feat(actions): add go_install action | #117 | medium |
+| [#121](https://github.com/tsukumogami/tsuku/issues/121) | feat(builders): add Go builder | #118, #120 | medium |
+| [#123](https://github.com/tsukumogami/tsuku/issues/123) | test: add integration test for Go tool installation | #120, #121 | simple |
+| [#110](https://github.com/tsukumogami/tsuku/issues/110) | feat(recipes): add popular Go tool recipes | #120 | simple |
+
 ### Milestone: [Go Ecosystem Support](https://github.com/tsukumogami/tsuku/milestone/5)
 
 **Completed:**
-- [#117](https://github.com/tsukumogami/tsuku/issues/117): feat(version): add Go toolchain version provider
-- [#118](https://github.com/tsukumogami/tsuku/issues/118): feat(version): add Go module version provider
-- [#120](https://github.com/tsukumogami/tsuku/issues/120): feat(actions): add go_install action
-- [#121](https://github.com/tsukumogami/tsuku/issues/121): feat(builders): add Go builder
-- [#123](https://github.com/tsukumogami/tsuku/issues/123): test: add integration test for Go tool installation
+- #117: feat(version): add Go toolchain version provider
+- #118: feat(version): add Go module version provider
+- #120: feat(actions): add go_install action
+- #121: feat(builders): add Go builder
+- #123: test: add integration test for Go tool installation
 
 **Remaining:**
 - Go toolchain recipe exists at `internal/recipe/recipes/g/go.toml`
-- Popular Go tool recipes needed (tracked in milestone issue [#110](https://github.com/tsukumogami/tsuku/issues/110))
+- Popular Go tool recipes needed (tracked in milestone issue #110)

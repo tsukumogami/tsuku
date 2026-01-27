@@ -2,7 +2,7 @@
 #
 # status-directory.sh - Validate design document status-directory alignment
 #
-# Implements status-directory validation rules from DESIGN-enhanced-validation-rules.md:
+# Implements status-directory validation rules:
 #   SD01: File is in correct directory for its status
 #   SD02: Superseded documents have "Superseded by" link
 #

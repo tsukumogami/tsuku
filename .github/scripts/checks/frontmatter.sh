@@ -2,7 +2,7 @@
 #
 # frontmatter.sh - Validate design document frontmatter
 #
-# Implements frontmatter validation rules from DESIGN-enhanced-validation-rules.md:
+# Implements frontmatter validation rules:
 #   FM01: All 4 required fields present (status, problem, decision, rationale)
 #   FM02: Status is valid value (Proposed, Accepted, Planned, Current, Superseded)
 #   FM03: Frontmatter status matches body status section

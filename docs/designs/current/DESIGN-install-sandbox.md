@@ -15,15 +15,15 @@ Current
 
 ### Milestone: [Centralize Sandbox Testing](https://github.com/tsukumogami/tsuku/milestone/22)
 
-| Issue | Title | Status | Dependencies |
-|-------|-------|--------|--------------|
-| [#568](https://github.com/tsukumogami/tsuku/issues/568) | feat(actions): add NetworkValidator interface | Done | None |
-| [#569](https://github.com/tsukumogami/tsuku/issues/569) | feat(actions): implement RequiresNetwork on actions | Done | #568 |
-| [#570](https://github.com/tsukumogami/tsuku/issues/570) | feat(sandbox): add SandboxRequirements computation | Done | #569 |
-| [#571](https://github.com/tsukumogami/tsuku/issues/571) | refactor(sandbox): unify Sandbox and SandboxSourceBuild | Done | #570 |
-| [#572](https://github.com/tsukumogami/tsuku/issues/572) | refactor(builders): use centralized sandbox testing | Done | #571 |
-| [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --sandbox and --recipe flags to install | Done | #571 |
-| [#594](https://github.com/tsukumogami/tsuku/issues/594) | refactor: rename validation terminology to sandbox | Done | None |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#568](https://github.com/tsukumogami/tsuku/issues/568) | feat(actions): add NetworkValidator interface | None | simple |
+| [#569](https://github.com/tsukumogami/tsuku/issues/569) | feat(actions): implement RequiresNetwork on actions | [#568](https://github.com/tsukumogami/tsuku/issues/568) | testable |
+| [#570](https://github.com/tsukumogami/tsuku/issues/570) | feat(sandbox): add SandboxRequirements computation | [#569](https://github.com/tsukumogami/tsuku/issues/569) | testable |
+| [#571](https://github.com/tsukumogami/tsuku/issues/571) | refactor(sandbox): unify Sandbox and SandboxSourceBuild | [#570](https://github.com/tsukumogami/tsuku/issues/570) | critical |
+| [#572](https://github.com/tsukumogami/tsuku/issues/572) | refactor(builders): use centralized sandbox testing | [#571](https://github.com/tsukumogami/tsuku/issues/571) | testable |
+| [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --sandbox and --recipe flags to install | [#571](https://github.com/tsukumogami/tsuku/issues/571) | milestone |
+| [#594](https://github.com/tsukumogami/tsuku/issues/594) | refactor: rename validation terminology to sandbox | None | simple |
 
 ### Dependency Graph
 

@@ -907,14 +907,16 @@ func inferExecutable(distribution string) string {
 
 ## Implementation Issues
 
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#129](https://github.com/tsukumogami/tsuku/issues/129) | feat(version): add CPAN version provider | None | simple |
+| [#130](https://github.com/tsukumogami/tsuku/issues/130) | feat(actions): add cpan_install action | #129 | simple |
+| [#131](https://github.com/tsukumogami/tsuku/issues/131) | feat(builders): add CPAN builder | #129, #130 | simple |
+
 ### Milestone: [Perl Ecosystem Support](https://github.com/tsukumogami/tsuku/milestone/6)
 
-**Completed:**
-- [#129](https://github.com/tsukumogami/tsuku/issues/129): feat(version): add CPAN version provider
-- [#130](https://github.com/tsukumogami/tsuku/issues/130): feat(actions): add cpan_install action
-- [#131](https://github.com/tsukumogami/tsuku/issues/131): feat(builders): add CPAN builder
-
-**Remaining:**
+**Status:**
+- All implementation issues are complete
 - Perl runtime recipe exists at `internal/recipe/recipes/p/perl.toml`
 - Popular Perl tool recipes: perlcritic, perltidy, carton at `internal/recipe/recipes/`
 - Additional tools (ack, cpanm, plenv, cpm, prove) may be added as needed

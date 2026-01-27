@@ -395,10 +395,13 @@ After this milestone, teams can generate plans on connected machines and execute
 
 ## Implementation Issues
 
-- Milestone: [Deterministic Recipe Execution](https://github.com/tsukumogami/tsuku/milestone/15)
-- #367: Installation plans and tsuku eval command
-- #368: Deterministic execution for pinned versions
-- #370: Plan-based installation
+Milestone: [Deterministic Recipe Execution](https://github.com/tsukumogami/tsuku/milestone/15)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#367](https://github.com/tsukumogami/tsuku/issues/367) | Installation plans and tsuku eval command | None | simple |
+| [#368](https://github.com/tsukumogami/tsuku/issues/368) | Deterministic execution for pinned versions | #367 | simple |
+| [#370](https://github.com/tsukumogami/tsuku/issues/370) | Plan-based installation | #368 | simple |
 
 ## Future Work
 
