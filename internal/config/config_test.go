@@ -407,3 +407,167 @@ func TestGetRecipeCacheTTL_TooHigh(t *testing.T) {
 		t.Errorf("GetRecipeCacheTTL() = %v, want 168h (maximum)", ttl)
 	}
 }
+
+func TestParseByteSize(t *testing.T) {
+	tests := []struct {
+		input   string
+		want    int64
+		wantErr bool
+	}{
+		// Plain numbers
+		{"0", 0, false},
+		{"1024", 1024, false},
+		{"52428800", 52428800, false},
+
+		// Bytes
+		{"100B", 100, false},
+		{"100b", 100, false},
+
+		// Kilobytes
+		{"1K", 1024, false},
+		{"1KB", 1024, false},
+		{"1k", 1024, false},
+		{"1kb", 1024, false},
+		{"50K", 51200, false},
+
+		// Megabytes
+		{"1M", 1024 * 1024, false},
+		{"1MB", 1024 * 1024, false},
+		{"1m", 1024 * 1024, false},
+		{"1mb", 1024 * 1024, false},
+		{"50M", 50 * 1024 * 1024, false},
+		{"50MB", 50 * 1024 * 1024, false},
+
+		// Gigabytes
+		{"1G", 1024 * 1024 * 1024, false},
+		{"1GB", 1024 * 1024 * 1024, false},
+		{"1g", 1024 * 1024 * 1024, false},
+		{"2GB", 2 * 1024 * 1024 * 1024, false},
+
+		// Decimal values
+		{"1.5M", int64(1.5 * 1024 * 1024), false},
+		{"0.5G", int64(0.5 * 1024 * 1024 * 1024), false},
+
+		// Invalid inputs
+		{"", 0, true},
+		{"abc", 0, true},
+		{"50TB", 0, true},
+		{"MB", 0, true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.input, func(t *testing.T) {
+			got, err := ParseByteSize(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ParseByteSize(%q) error = %v, wantErr %v", tt.input, err, tt.wantErr)
+				return
+			}
+			if !tt.wantErr && got != tt.want {
+				t.Errorf("ParseByteSize(%q) = %d, want %d", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestGetRecipeCacheSizeLimit_Default(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheSizeLimit)
+	defer os.Setenv(EnvRecipeCacheSizeLimit, original)
+
+	// Ensure env var is not set
+	_ = os.Unsetenv(EnvRecipeCacheSizeLimit)
+
+	limit := GetRecipeCacheSizeLimit()
+	if limit != DefaultRecipeCacheSizeLimit {
+		t.Errorf("GetRecipeCacheSizeLimit() = %d, want %d", limit, DefaultRecipeCacheSizeLimit)
+	}
+}
+
+func TestGetRecipeCacheSizeLimit_CustomValue(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheSizeLimit)
+	defer os.Setenv(EnvRecipeCacheSizeLimit, original)
+
+	// Set custom value (100MB as bytes)
+	os.Setenv(EnvRecipeCacheSizeLimit, "104857600")
+
+	limit := GetRecipeCacheSizeLimit()
+	expected := int64(100 * 1024 * 1024)
+	if limit != expected {
+		t.Errorf("GetRecipeCacheSizeLimit() = %d, want %d", limit, expected)
+	}
+}
+
+func TestGetRecipeCacheSizeLimit_HumanReadable(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheSizeLimit)
+	defer os.Setenv(EnvRecipeCacheSizeLimit, original)
+
+	tests := []struct {
+		envValue string
+		expected int64
+	}{
+		{"100MB", 100 * 1024 * 1024},
+		{"100M", 100 * 1024 * 1024},
+		{"1GB", 1024 * 1024 * 1024},
+		{"1G", 1024 * 1024 * 1024},
+		{"5M", 5 * 1024 * 1024},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.envValue, func(t *testing.T) {
+			os.Setenv(EnvRecipeCacheSizeLimit, tt.envValue)
+			limit := GetRecipeCacheSizeLimit()
+			if limit != tt.expected {
+				t.Errorf("GetRecipeCacheSizeLimit() with %q = %d, want %d", tt.envValue, limit, tt.expected)
+			}
+		})
+	}
+}
+
+func TestGetRecipeCacheSizeLimit_InvalidValue(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheSizeLimit)
+	defer os.Setenv(EnvRecipeCacheSizeLimit, original)
+
+	// Set invalid value
+	os.Setenv(EnvRecipeCacheSizeLimit, "invalid")
+
+	limit := GetRecipeCacheSizeLimit()
+	// Should return default on invalid input
+	if limit != DefaultRecipeCacheSizeLimit {
+		t.Errorf("GetRecipeCacheSizeLimit() = %d, want %d (default)", limit, DefaultRecipeCacheSizeLimit)
+	}
+}
+
+func TestGetRecipeCacheSizeLimit_TooLow(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheSizeLimit)
+	defer os.Setenv(EnvRecipeCacheSizeLimit, original)
+
+	// Set too low value (minimum is 1MB)
+	os.Setenv(EnvRecipeCacheSizeLimit, "100K")
+
+	limit := GetRecipeCacheSizeLimit()
+	// Should return minimum 1MB
+	expected := int64(1 * 1024 * 1024)
+	if limit != expected {
+		t.Errorf("GetRecipeCacheSizeLimit() = %d, want %d (minimum)", limit, expected)
+	}
+}
+
+func TestGetRecipeCacheSizeLimit_TooHigh(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheSizeLimit)
+	defer os.Setenv(EnvRecipeCacheSizeLimit, original)
+
+	// Set too high value (maximum is 10GB)
+	os.Setenv(EnvRecipeCacheSizeLimit, "20GB")
+
+	limit := GetRecipeCacheSizeLimit()
+	// Should return maximum 10GB
+	expected := int64(10 * 1024 * 1024 * 1024)
+	if limit != expected {
+		t.Errorf("GetRecipeCacheSizeLimit() = %d, want %d (maximum)", limit, expected)
+	}
+}

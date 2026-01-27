@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -20,6 +22,9 @@ const (
 	// EnvRecipeCacheTTL is the environment variable to configure recipe cache TTL
 	EnvRecipeCacheTTL = "TSUKU_RECIPE_CACHE_TTL"
 
+	// EnvRecipeCacheSizeLimit is the environment variable to configure recipe cache size limit
+	EnvRecipeCacheSizeLimit = "TSUKU_RECIPE_CACHE_SIZE_LIMIT"
+
 	// DefaultAPITimeout is the default timeout for API requests (30 seconds)
 	DefaultAPITimeout = 30 * time.Second
 
@@ -28,6 +33,9 @@ const (
 
 	// DefaultRecipeCacheTTL is the default TTL for cached recipes (24 hours)
 	DefaultRecipeCacheTTL = 24 * time.Hour
+
+	// DefaultRecipeCacheSizeLimit is the default size limit for the recipe cache (50MB)
+	DefaultRecipeCacheSizeLimit = 50 * 1024 * 1024
 )
 
 // GetAPITimeout returns the configured API timeout from TSUKU_API_TIMEOUT environment variable.
@@ -124,6 +132,96 @@ func GetRecipeCacheTTL() time.Duration {
 	}
 
 	return duration
+}
+
+// ParseByteSize parses a human-readable byte size string into bytes.
+// Accepts formats: plain numbers (52428800), KB/K (50K, 50KB), MB/M (50M, 50MB), GB/G (1G, 1GB).
+// Case-insensitive. Returns an error for invalid formats.
+func ParseByteSize(s string) (int64, error) {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return 0, fmt.Errorf("empty size string")
+	}
+
+	s = strings.ToUpper(s)
+
+	// Try to parse as plain number first
+	if n, err := strconv.ParseInt(s, 10, 64); err == nil {
+		return n, nil
+	}
+
+	// Try to extract numeric prefix and suffix
+	var numStr string
+	var suffix string
+	for i, c := range s {
+		if c >= '0' && c <= '9' || c == '.' {
+			numStr += string(c)
+		} else {
+			suffix = s[i:]
+			break
+		}
+	}
+
+	if numStr == "" {
+		return 0, fmt.Errorf("invalid size format: %q", s)
+	}
+
+	// Parse the numeric part
+	num, err := strconv.ParseFloat(numStr, 64)
+	if err != nil {
+		return 0, fmt.Errorf("invalid size number: %q", numStr)
+	}
+
+	// Apply multiplier based on suffix
+	var multiplier float64
+	switch suffix {
+	case "", "B":
+		multiplier = 1
+	case "K", "KB":
+		multiplier = 1024
+	case "M", "MB":
+		multiplier = 1024 * 1024
+	case "G", "GB":
+		multiplier = 1024 * 1024 * 1024
+	default:
+		return 0, fmt.Errorf("invalid size suffix: %q", suffix)
+	}
+
+	return int64(num * multiplier), nil
+}
+
+// GetRecipeCacheSizeLimit returns the configured recipe cache size limit from TSUKU_RECIPE_CACHE_SIZE_LIMIT.
+// If not set or invalid, returns DefaultRecipeCacheSizeLimit (50MB).
+// Accepts human-readable sizes like "50MB", "50M", "52428800".
+func GetRecipeCacheSizeLimit() int64 {
+	envValue := os.Getenv(EnvRecipeCacheSizeLimit)
+	if envValue == "" {
+		return DefaultRecipeCacheSizeLimit
+	}
+
+	size, err := ParseByteSize(envValue)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: invalid %s value %q, using default %dMB\n",
+			EnvRecipeCacheSizeLimit, envValue, DefaultRecipeCacheSizeLimit/(1024*1024))
+		return DefaultRecipeCacheSizeLimit
+	}
+
+	// Validate reasonable range (1MB to 10GB)
+	minSize := int64(1 * 1024 * 1024)         // 1MB
+	maxSize := int64(10 * 1024 * 1024 * 1024) // 10GB
+
+	if size < minSize {
+		fmt.Fprintf(os.Stderr, "Warning: %s too low (%d bytes), using minimum 1MB\n",
+			EnvRecipeCacheSizeLimit, size)
+		return minSize
+	}
+	if size > maxSize {
+		fmt.Fprintf(os.Stderr, "Warning: %s too high (%d bytes), using maximum 10GB\n",
+			EnvRecipeCacheSizeLimit, size)
+		return maxSize
+	}
+
+	return size
 }
 
 // Config holds tsuku configuration

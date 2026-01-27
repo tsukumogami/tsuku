@@ -271,3 +271,81 @@ func TestCachedRegistry_Registry(t *testing.T) {
 		t.Error("Registry() should return underlying registry")
 	}
 }
+
+func TestCachedRegistry_WithCacheManager(t *testing.T) {
+	cacheDir := t.TempDir()
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Return 1KB of content
+		content := make([]byte, 1024)
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(content)
+	}))
+	defer server.Close()
+
+	reg := New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Set up CacheManager with small limit to trigger eviction
+	// 2KB limit, 80% high water = 1638 bytes
+	cm := NewCacheManager(cacheDir, 2048)
+
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+	cached.SetCacheManager(cm)
+
+	// Verify CacheManager is set
+	if cached.CacheManager() != cm {
+		t.Error("CacheManager() should return configured manager")
+	}
+
+	// First fetch - should cache successfully
+	_, err := cached.GetRecipe(context.Background(), "tool1")
+	if err != nil {
+		t.Fatalf("First GetRecipe failed: %v", err)
+	}
+
+	// Second fetch - will push cache above high water mark, triggering eviction
+	_, err = cached.GetRecipe(context.Background(), "tool2")
+	if err != nil {
+		t.Fatalf("Second GetRecipe failed: %v", err)
+	}
+
+	// Cache should now be at or below low water mark (60% = 1228 bytes)
+	size, _ := cm.Size()
+	lowWater := int64(2048 * 60 / 100)
+	if size > lowWater {
+		t.Errorf("Cache size %d should be <= low water mark %d after eviction", size, lowWater)
+	}
+}
+
+func TestCachedRegistry_NoCacheManager(t *testing.T) {
+	cacheDir := t.TempDir()
+	content := []byte("[metadata]\nname = \"test\"\n")
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(content)
+	}))
+	defer server.Close()
+
+	reg := New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// CachedRegistry without CacheManager should work normally
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// CacheManager should be nil
+	if cached.CacheManager() != nil {
+		t.Error("CacheManager() should be nil by default")
+	}
+
+	// GetRecipe should still work
+	result, err := cached.GetRecipe(context.Background(), "test")
+	if err != nil {
+		t.Fatalf("GetRecipe failed: %v", err)
+	}
+
+	if string(result) != string(content) {
+		t.Errorf("content mismatch: got %q, want %q", result, content)
+	}
+}

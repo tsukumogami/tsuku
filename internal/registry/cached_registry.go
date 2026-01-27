@@ -9,8 +9,9 @@ import (
 // It checks cache freshness before returning recipes and refreshes
 // expired entries from the network.
 type CachedRegistry struct {
-	registry *Registry
-	ttl      time.Duration
+	registry     *Registry
+	ttl          time.Duration
+	cacheManager *CacheManager
 }
 
 // NewCachedRegistry creates a CachedRegistry that wraps the given Registry.
@@ -19,7 +20,19 @@ func NewCachedRegistry(reg *Registry, ttl time.Duration) *CachedRegistry {
 	return &CachedRegistry{
 		registry: reg,
 		ttl:      ttl,
+		// CacheManager is nil by default - call SetCacheManager to enable size management
 	}
+}
+
+// SetCacheManager configures size-based cache management.
+// When set, EnforceLimit() is called after each cache write.
+func (c *CachedRegistry) SetCacheManager(cm *CacheManager) {
+	c.cacheManager = cm
+}
+
+// CacheManager returns the configured CacheManager, or nil if not set.
+func (c *CachedRegistry) CacheManager() *CacheManager {
+	return c.cacheManager
 }
 
 // GetRecipe returns a recipe by name, using cache when fresh.
@@ -111,5 +124,15 @@ func (c *CachedRegistry) cacheWithTTL(name string, content []byte) error {
 
 	// Update metadata with our configured TTL
 	meta := newCacheMetadata(content, c.ttl)
-	return c.registry.WriteMeta(name, meta)
+	if err := c.registry.WriteMeta(name, meta); err != nil {
+		return err
+	}
+
+	// Enforce size limit if CacheManager is configured
+	if c.cacheManager != nil {
+		// Errors from EnforceLimit are non-fatal - cache write succeeded
+		_, _ = c.cacheManager.EnforceLimit()
+	}
+
+	return nil
 }
