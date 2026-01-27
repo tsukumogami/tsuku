@@ -32,7 +32,7 @@ func TestGoBuilder_CanBuild_ValidModule(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "github.com/jesseduffield/lazygit")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "github.com/jesseduffield/lazygit"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -50,7 +50,7 @@ func TestGoBuilder_CanBuild_NotFound(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "github.com/nonexistent/module")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "github.com/nonexistent/module"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -64,7 +64,7 @@ func TestGoBuilder_CanBuild_InvalidName(t *testing.T) {
 	ctx := context.Background()
 
 	// Invalid module path should return false without making any HTTP requests
-	canBuild, err := builder.CanBuild(ctx, "invalid;module")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "invalid;module"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -83,7 +83,7 @@ func TestGoBuilder_CanBuild_Gone(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "github.com/retracted/module")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "github.com/retracted/module"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -412,7 +412,7 @@ func TestGoBuilder_CanBuild_UppercaseModule(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "github.com/User/Repo")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "github.com/User/Repo"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
