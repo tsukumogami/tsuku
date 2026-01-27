@@ -17,11 +17,17 @@ const (
 	// EnvVersionCacheTTL is the environment variable to configure version cache TTL
 	EnvVersionCacheTTL = "TSUKU_VERSION_CACHE_TTL"
 
+	// EnvRecipeCacheTTL is the environment variable to configure recipe cache TTL
+	EnvRecipeCacheTTL = "TSUKU_RECIPE_CACHE_TTL"
+
 	// DefaultAPITimeout is the default timeout for API requests (30 seconds)
 	DefaultAPITimeout = 30 * time.Second
 
 	// DefaultVersionCacheTTL is the default TTL for cached version lists (1 hour)
 	DefaultVersionCacheTTL = 1 * time.Hour
+
+	// DefaultRecipeCacheTTL is the default TTL for cached recipes (24 hours)
+	DefaultRecipeCacheTTL = 24 * time.Hour
 )
 
 // GetAPITimeout returns the configured API timeout from TSUKU_API_TIMEOUT environment variable.
@@ -82,6 +88,38 @@ func GetVersionCacheTTL() time.Duration {
 	if duration > 7*24*time.Hour {
 		fmt.Fprintf(os.Stderr, "Warning: %s too high (%v), using maximum 7d\n",
 			EnvVersionCacheTTL, duration)
+		return 7 * 24 * time.Hour
+	}
+
+	return duration
+}
+
+// GetRecipeCacheTTL returns the configured recipe cache TTL from TSUKU_RECIPE_CACHE_TTL.
+// If not set or invalid, returns DefaultRecipeCacheTTL (24 hours).
+// Accepts duration strings like "30m", "1h", "24h".
+func GetRecipeCacheTTL() time.Duration {
+	envValue := os.Getenv(EnvRecipeCacheTTL)
+	if envValue == "" {
+		return DefaultRecipeCacheTTL
+	}
+
+	duration, err := time.ParseDuration(envValue)
+	if err != nil {
+		// Invalid duration format, use default
+		fmt.Fprintf(os.Stderr, "Warning: invalid %s value %q, using default %v\n",
+			EnvRecipeCacheTTL, envValue, DefaultRecipeCacheTTL)
+		return DefaultRecipeCacheTTL
+	}
+
+	// Validate reasonable range (5 minutes to 7 days)
+	if duration < 5*time.Minute {
+		fmt.Fprintf(os.Stderr, "Warning: %s too low (%v), using minimum 5m\n",
+			EnvRecipeCacheTTL, duration)
+		return 5 * time.Minute
+	}
+	if duration > 7*24*time.Hour {
+		fmt.Fprintf(os.Stderr, "Warning: %s too high (%v), using maximum 7d\n",
+			EnvRecipeCacheTTL, duration)
 		return 7 * 24 * time.Hour
 	}
 
