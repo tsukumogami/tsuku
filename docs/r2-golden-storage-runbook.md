@@ -100,18 +100,15 @@ Tokens rotate every 90 days (quarterly). Set calendar reminders for:
 
 ### Rotation Tracking
 
-Create a recurring GitHub issue or use external calendar reminders. Example issue template:
+**Workflow**: `.github/workflows/r2-credential-rotation-reminder.yml`
+**Schedule**: Quarterly (Jan 1, Apr 1, Jul 1, Oct 1) at 9 AM UTC
+**Issue Label**: `maintenance`
 
-```markdown
-## Quarterly R2 Token Rotation - Q1 2026
+The rotation reminder workflow automatically creates a GitHub issue with a rotation checklist at the start of each quarter.
 
-- [ ] Generate new read-only tokens in Cloudflare
-- [ ] Generate new read-write tokens in Cloudflare
-- [ ] Update GitHub Secrets
-- [ ] Verify read access (health check workflow)
-- [ ] Verify write access (dry-run cleanup)
-- [ ] Revoke old tokens in Cloudflare
-- [ ] Close this issue and create next quarter's
+**Manual trigger** (for testing):
+```bash
+gh workflow run r2-credential-rotation-reminder.yml -f quarter="Q1 2026"
 ```
 
 ## Monitoring
@@ -366,6 +363,7 @@ For urgent situations requiring immediate write access:
 | `r2-health-monitor.yml` | Every 6 hours | Health check |
 | `r2-cost-monitoring.yml` | Weekly (Mon 6 AM) | Storage usage |
 | `r2-cleanup.yml` | Weekly (Sun 4 AM) | Orphan/retention cleanup |
+| `r2-credential-rotation-reminder.yml` | Quarterly | Rotation reminder |
 | `publish-golden-to-r2.yml` | On merge | Upload golden files |
 
 ### Issue Labels
@@ -375,6 +373,7 @@ For urgent situations requiring immediate write access:
 | `r2-degradation` | r2-health-monitor.yml | Health issues |
 | `r2-cost-alert` | r2-cost-monitoring.yml | Storage alerts |
 | `automation` | r2-cleanup.yml | Cleanup reports |
+| `maintenance` | r2-credential-rotation-reminder.yml | Rotation reminders |
 
 ### Useful Commands
 
