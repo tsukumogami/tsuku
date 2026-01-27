@@ -23,15 +23,21 @@ Checks include:
   - Action parameter requirements
   - Security checks (URL schemes, path traversal)
 
+Use --check-libc-coverage to validate that recipes have proper glibc/musl coverage:
+  - Library recipes without musl support (and no explicit constraint) generate errors
+  - Tool recipes with library deps but no musl path generate warnings
+
 Examples:
   tsuku validate recipes/mytool.toml
   tsuku validate ~/.tsuku/recipes/custom-tool.toml --json
-  tsuku validate recipes/mytool.toml --strict`,
+  tsuku validate recipes/mytool.toml --strict
+  tsuku validate recipes/zlib.toml --check-libc-coverage`,
 	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		filePath := args[0]
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		strictMode, _ := cmd.Flags().GetBool("strict")
+		checkLibcCoverage, _ := cmd.Flags().GetBool("check-libc-coverage")
 
 		// Check file exists
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
@@ -94,6 +100,24 @@ Examples:
 				result.Warnings = append(result.Warnings, recipe.ValidationWarning{
 					Field:   fmt.Sprintf("steps[%d].url", m.Step-1),
 					Message: m.String(),
+				})
+			}
+		}
+
+		// Check for libc coverage if requested
+		if checkLibcCoverage && result.Recipe != nil {
+			coverage := recipe.AnalyzeRecipeCoverage(result.Recipe)
+			for _, err := range coverage.Errors {
+				result.Errors = append(result.Errors, recipe.ValidationError{
+					Field:   "coverage",
+					Message: err,
+				})
+				result.Valid = false
+			}
+			for _, warn := range coverage.Warnings {
+				result.Warnings = append(result.Warnings, recipe.ValidationWarning{
+					Field:   "coverage",
+					Message: warn,
 				})
 			}
 		}
@@ -209,4 +233,5 @@ func formatList(items []string) string {
 func init() {
 	validateCmd.Flags().Bool("json", false, "Output in JSON format")
 	validateCmd.Flags().Bool("strict", false, "Treat warnings as errors")
+	validateCmd.Flags().Bool("check-libc-coverage", false, "Check for glibc/musl platform coverage")
 }
