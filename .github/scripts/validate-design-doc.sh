@@ -33,6 +33,29 @@ CHECKS_DIR="$SCRIPT_DIR/checks"
 # Source common utilities
 source "$CHECKS_DIR/common.sh"
 
+# Grandfathering: Files created before a check was introduced are exempt
+# Cutoff dates for each check category (ISO 8601 format)
+readonly II_CHECK_CUTOFF="2026-01-01"  # Implementation Issues validation introduced
+
+# Check if file was created before a cutoff date
+# Usage: file_predates_check "$DOC_PATH" "$CUTOFF_DATE"
+# Returns: 0 if file predates cutoff (should skip), 1 if file is newer (should check)
+file_predates_check() {
+    local file="$1"
+    local cutoff="$2"
+
+    # Get file creation info
+    local creation_info
+    creation_info=$("$SCRIPT_DIR/get-file-creation-commit.sh" "$file" 2>/dev/null) || return 1
+
+    # Extract date (format: 2026-01-24T10:30:00-05:00, we just need YYYY-MM-DD)
+    local file_date
+    file_date=$(echo "$creation_info" | sed 's/.*"date": "\([0-9-]*\)T.*/\1/')
+
+    # Compare dates (lexicographic comparison works for ISO dates)
+    [[ "$file_date" < "$cutoff" ]]
+}
+
 usage() {
     cat >&2 <<'EOF'
 Usage: validate-design-doc.sh <doc-path>
@@ -128,6 +151,15 @@ fi
 # Run status-directory check
 if [[ -x "$CHECKS_DIR/status-directory.sh" ]]; then
     run_check "$CHECKS_DIR/status-directory.sh" || FAILED=1
+fi
+
+# Run implementation-issues check (with grandfathering)
+if [[ -x "$CHECKS_DIR/implementation-issues.sh" ]]; then
+    if file_predates_check "$DOC_PATH" "$II_CHECK_CUTOFF"; then
+        : # Grandfathered - skip silently
+    else
+        run_check "$CHECKS_DIR/implementation-issues.sh" || FAILED=1
+    fi
 fi
 
 # Future: Run all check scripts dynamically

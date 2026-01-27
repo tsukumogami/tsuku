@@ -16,15 +16,15 @@ rationale: Homebrew bottles work well on glibc and provide valuable version cont
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | [#1109](https://github.com/tsukumogami/tsuku/issues/1109) | feat(platform): add libc detection for glibc vs musl | None | testable |
-| [#1110](https://github.com/tsukumogami/tsuku/issues/1110) | feat(recipe): add libc filter to recipe conditional system | #1109 | testable |
-| [#1111](https://github.com/tsukumogami/tsuku/issues/1111) | feat(recipe): add step-level dependency resolution | #1110 | testable |
-| [#1112](https://github.com/tsukumogami/tsuku/issues/1112) | feat(actions): enhance *_install actions with package detection | #1109 | testable |
-| [#1113](https://github.com/tsukumogami/tsuku/issues/1113) | feat(recipe): add supported_libc platform constraint | #1110 | testable |
-| [#1114](https://github.com/tsukumogami/tsuku/issues/1114) | feat(recipe): migrate library recipes to hybrid approach | #1111, #1112, #1113 | testable |
-| [#1115](https://github.com/tsukumogami/tsuku/issues/1115) | feat(verify): add recipe coverage validation for libc support | #1110, #1113 | testable |
-| [#1116](https://github.com/tsukumogami/tsuku/issues/1116) | ci: add container integration tests for glibc and musl | #1114 | testable |
-| [#1117](https://github.com/tsukumogami/tsuku/issues/1117) | docs: document hybrid libc approach for recipe authors | #1114, #1115 | simple |
-| [#1118](https://github.com/tsukumogami/tsuku/issues/1118) | ci: add recipe coverage to PR validation workflow | #1115 | testable |
+| [#1110](https://github.com/tsukumogami/tsuku/issues/1110) | feat(recipe): add libc filter to recipe conditional system | [#1109](https://github.com/tsukumogami/tsuku/issues/1109) | testable |
+| [#1111](https://github.com/tsukumogami/tsuku/issues/1111) | feat(recipe): add step-level dependency resolution | [#1110](https://github.com/tsukumogami/tsuku/issues/1110) | testable |
+| [#1112](https://github.com/tsukumogami/tsuku/issues/1112) | feat(actions): enhance *_install actions with package detection | [#1109](https://github.com/tsukumogami/tsuku/issues/1109) | testable |
+| [#1113](https://github.com/tsukumogami/tsuku/issues/1113) | feat(recipe): add supported_libc platform constraint | [#1110](https://github.com/tsukumogami/tsuku/issues/1110) | testable |
+| [#1114](https://github.com/tsukumogami/tsuku/issues/1114) | feat(recipe): migrate library recipes to hybrid approach | [#1111](https://github.com/tsukumogami/tsuku/issues/1111), [#1112](https://github.com/tsukumogami/tsuku/issues/1112), [#1113](https://github.com/tsukumogami/tsuku/issues/1113) | testable |
+| [#1115](https://github.com/tsukumogami/tsuku/issues/1115) | feat(verify): add recipe coverage validation for libc support | [#1110](https://github.com/tsukumogami/tsuku/issues/1110), [#1113](https://github.com/tsukumogami/tsuku/issues/1113) | testable |
+| [#1116](https://github.com/tsukumogami/tsuku/issues/1116) | ci: add container integration tests for glibc and musl | [#1114](https://github.com/tsukumogami/tsuku/issues/1114) | testable |
+| [#1117](https://github.com/tsukumogami/tsuku/issues/1117) | docs: document hybrid libc approach for recipe authors | [#1114](https://github.com/tsukumogami/tsuku/issues/1114), [#1115](https://github.com/tsukumogami/tsuku/issues/1115) | simple |
+| [#1118](https://github.com/tsukumogami/tsuku/issues/1118) | ci: add recipe coverage to PR validation workflow | [#1115](https://github.com/tsukumogami/tsuku/issues/1115) | testable |
 
 ```mermaid
 graph TD

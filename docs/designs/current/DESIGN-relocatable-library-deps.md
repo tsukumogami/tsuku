@@ -508,25 +508,20 @@ This enables garbage collection when tools are removed.
 
 ## Implementation Issues
 
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#214](https://github.com/tsukumogami/tsuku/issues/214) | Add type field to recipe metadata schema | None | simple |
+| [#215](https://github.com/tsukumogami/tsuku/issues/215) | Add libs directory to tsuku home | None | simple |
+| [#216](https://github.com/tsukumogami/tsuku/issues/216) | Add libs section with used_by tracking | None | simple |
+| [#217](https://github.com/tsukumogami/tsuku/issues/217) | Implement set_rpath action | None | standard |
+| [#218](https://github.com/tsukumogami/tsuku/issues/218) | Implement homebrew version provider | None | standard |
+| [#219](https://github.com/tsukumogami/tsuku/issues/219) | Implement install_libraries action | #214, #215, #216 | standard |
+| [#220](https://github.com/tsukumogami/tsuku/issues/220) | Implement link_dependencies action | #214, #215, #216 | standard |
+| [#221](https://github.com/tsukumogami/tsuku/issues/221) | Resolve library dependencies during tool installation | #214, #215, #216 | standard |
+| [#222](https://github.com/tsukumogami/tsuku/issues/222) | Implement homebrew action | #217, #218 | complex |
+| [#223](https://github.com/tsukumogami/tsuku/issues/223) | Add libyaml library recipe | #219, #220, #221, #222 | simple |
+| [#224](https://github.com/tsukumogami/tsuku/issues/224) | Migrate recipes to use library dependencies | #223 | simple |
+| [#225](https://github.com/tsukumogami/tsuku/issues/225) | Prevent direct library installation | #214, #215, #216 | simple |
+| [#226](https://github.com/tsukumogami/tsuku/issues/226) | Filter libraries from tsuku list output | #214, #215, #216 | simple |
+
 ### Milestone: [Relocatable Library Dependencies](https://github.com/tsukumogami/tsuku/milestone/10)
-
-**Foundation (no dependencies):**
-- [#214](https://github.com/tsukumogami/tsuku/issues/214): feat(recipe): add type field to recipe metadata schema
-- [#215](https://github.com/tsukumogami/tsuku/issues/215): feat(config): add libs directory to tsuku home
-- [#216](https://github.com/tsukumogami/tsuku/issues/216): feat(state): add libs section with used_by tracking
-- [#217](https://github.com/tsukumogami/tsuku/issues/217): feat(action): implement set_rpath action
-- [#218](https://github.com/tsukumogami/tsuku/issues/218): feat(version): implement homebrew version provider
-
-**Actions (blocked by foundation):**
-- [#219](https://github.com/tsukumogami/tsuku/issues/219): feat(action): implement install_libraries action
-- [#220](https://github.com/tsukumogami/tsuku/issues/220): feat(action): implement link_dependencies action
-- [#221](https://github.com/tsukumogami/tsuku/issues/221): feat(install): resolve library dependencies during tool installation
-- [#222](https://github.com/tsukumogami/tsuku/issues/222): feat(action): implement homebrew action
-
-**Migration (blocked by actions):**
-- [#223](https://github.com/tsukumogami/tsuku/issues/223): feat(recipe): add libyaml library recipe
-- [#224](https://github.com/tsukumogami/tsuku/issues/224): feat(recipe): migrate recipes to use library dependencies
-
-**UX Polish (blocked by foundation):**
-- [#225](https://github.com/tsukumogami/tsuku/issues/225): feat(cli): prevent direct library installation
-- [#226](https://github.com/tsukumogami/tsuku/issues/226): feat(cli): filter libraries from tsuku list output

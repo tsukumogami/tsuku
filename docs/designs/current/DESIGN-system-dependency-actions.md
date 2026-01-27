@@ -15,21 +15,21 @@ Current
 
 ### Milestone: [System Dependency Action Vocabulary](https://github.com/tsukumogami/tsuku/milestone/30)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#754](https://github.com/tsukumogami/tsuku/issues/754) | feat(platform): define target struct for plan generation | None |
-| [#755](https://github.com/tsukumogami/tsuku/issues/755) | feat(actions): define package installation action structs | None |
-| [#756](https://github.com/tsukumogami/tsuku/issues/756) | feat(actions): define configuration and verification action structs | None |
-| [#759](https://github.com/tsukumogami/tsuku/issues/759) | feat(platform): implement linux_family detection | [#754](https://github.com/tsukumogami/tsuku/issues/754) |
-| [#760](https://github.com/tsukumogami/tsuku/issues/760) | feat(actions): implement implicit constraints for PM actions | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#755](https://github.com/tsukumogami/tsuku/issues/755) |
-| [#761](https://github.com/tsukumogami/tsuku/issues/761) | feat(executor): implement plan filtering by target | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
-| [#762](https://github.com/tsukumogami/tsuku/issues/762) | feat(actions): implement action preflight validation | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) |
-| [#763](https://github.com/tsukumogami/tsuku/issues/763) | feat(actions): implement Describe() for documentation generation | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) |
-| [#764](https://github.com/tsukumogami/tsuku/issues/764) | feat(cli): add --verify flag for system dependency check | [#756](https://github.com/tsukumogami/tsuku/issues/756) |
-| [#765](https://github.com/tsukumogami/tsuku/issues/765) | feat(sandbox): implement ExtractPackages() for sandbox integration | [#755](https://github.com/tsukumogami/tsuku/issues/755) |
-| [#766](https://github.com/tsukumogami/tsuku/issues/766) | feat(cli): update CLI to display system dependency instructions | [#759](https://github.com/tsukumogami/tsuku/issues/759), [#761](https://github.com/tsukumogami/tsuku/issues/761), [#763](https://github.com/tsukumogami/tsuku/issues/763), [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) |
-| [#793](https://github.com/tsukumogami/tsuku/issues/793) | test(fixtures): add testdata recipes for M30 system dependency actions | None |
-| [#794](https://github.com/tsukumogami/tsuku/issues/794) | test(cli): add integration tests for system dependency instruction display | [#793](https://github.com/tsukumogami/tsuku/issues/793) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#754](https://github.com/tsukumogami/tsuku/issues/754) | feat(platform): define target struct for plan generation | None | simple |
+| [#755](https://github.com/tsukumogami/tsuku/issues/755) | feat(actions): define package installation action structs | None | simple |
+| [#756](https://github.com/tsukumogami/tsuku/issues/756) | feat(actions): define configuration and verification action structs | None | simple |
+| [#759](https://github.com/tsukumogami/tsuku/issues/759) | feat(platform): implement linux_family detection | [#754](https://github.com/tsukumogami/tsuku/issues/754) | testable |
+| [#760](https://github.com/tsukumogami/tsuku/issues/760) | feat(actions): implement implicit constraints for PM actions | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#755](https://github.com/tsukumogami/tsuku/issues/755) | testable |
+| [#761](https://github.com/tsukumogami/tsuku/issues/761) | feat(executor): implement plan filtering by target | [#754](https://github.com/tsukumogami/tsuku/issues/754), [#760](https://github.com/tsukumogami/tsuku/issues/760) | testable |
+| [#762](https://github.com/tsukumogami/tsuku/issues/762) | feat(actions): implement action preflight validation | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) | testable |
+| [#763](https://github.com/tsukumogami/tsuku/issues/763) | feat(actions): implement Describe() for documentation generation | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) | testable |
+| [#764](https://github.com/tsukumogami/tsuku/issues/764) | feat(cli): add --verify flag for system dependency check | [#756](https://github.com/tsukumogami/tsuku/issues/756) | testable |
+| [#765](https://github.com/tsukumogami/tsuku/issues/765) | feat(sandbox): implement ExtractPackages() for sandbox integration | [#755](https://github.com/tsukumogami/tsuku/issues/755) | testable |
+| [#766](https://github.com/tsukumogami/tsuku/issues/766) | feat(cli): update CLI to display system dependency instructions | [#759](https://github.com/tsukumogami/tsuku/issues/759), [#761](https://github.com/tsukumogami/tsuku/issues/761), [#763](https://github.com/tsukumogami/tsuku/issues/763), [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756) | testable |
+| [#793](https://github.com/tsukumogami/tsuku/issues/793) | test(fixtures): add testdata recipes for M30 system dependency actions | None | testable |
+| [#794](https://github.com/tsukumogami/tsuku/issues/794) | test(cli): add integration tests for system dependency instruction display | [#793](https://github.com/tsukumogami/tsuku/issues/793) | testable |
 
 ### Dependency Graph
 

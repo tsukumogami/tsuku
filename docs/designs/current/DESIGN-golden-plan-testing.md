@@ -15,33 +15,33 @@ Current
 
 ### Milestone: [Golden Plan Validation (Local)](https://github.com/tsukumogami/tsuku/milestone/24)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#712](https://github.com/tsukumogami/tsuku/issues/712) | fix(eval): support cross-platform plan generation | None |
-| [#713](https://github.com/tsukumogami/tsuku/issues/713) | feat(eval): add --version flag for recipe mode | [#712](https://github.com/tsukumogami/tsuku/issues/712) |
-| [#714](https://github.com/tsukumogami/tsuku/issues/714) | feat(scripts): add golden file regeneration and validation scripts | [#713](https://github.com/tsukumogami/tsuku/issues/713) |
-| [#715](https://github.com/tsukumogami/tsuku/issues/715) | feat(scripts): add batch golden file validation and regeneration | [#714](https://github.com/tsukumogami/tsuku/issues/714) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#712](https://github.com/tsukumogami/tsuku/issues/712) | fix(eval): support cross-platform plan generation | None | simple |
+| [#713](https://github.com/tsukumogami/tsuku/issues/713) | feat(eval): add --version flag for recipe mode | [#712](https://github.com/tsukumogami/tsuku/issues/712) | simple |
+| [#714](https://github.com/tsukumogami/tsuku/issues/714) | feat(scripts): add golden file regeneration and validation scripts | [#713](https://github.com/tsukumogami/tsuku/issues/713) | testable |
+| [#715](https://github.com/tsukumogami/tsuku/issues/715) | feat(scripts): add batch golden file validation and regeneration | [#714](https://github.com/tsukumogami/tsuku/issues/714) | testable |
 
 ### Milestone: [Initial Golden File Coverage](https://github.com/tsukumogami/tsuku/milestone/25)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#716](https://github.com/tsukumogami/tsuku/issues/716) | chore(golden): generate pilot golden files for representative recipes | [#714](https://github.com/tsukumogami/tsuku/issues/714) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#716](https://github.com/tsukumogami/tsuku/issues/716) | chore(golden): generate pilot golden files for representative recipes | [#714](https://github.com/tsukumogami/tsuku/issues/714) | milestone |
 
 ### Milestone: [Golden Plan CI Enforcement](https://github.com/tsukumogami/tsuku/milestone/26)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#717](https://github.com/tsukumogami/tsuku/issues/717) | ci(golden): add workflow to validate golden files on recipe changes | [#716](https://github.com/tsukumogami/tsuku/issues/716) |
-| [#718](https://github.com/tsukumogami/tsuku/issues/718) | ci(golden): add workflow to validate golden files on code changes | [#715](https://github.com/tsukumogami/tsuku/issues/715), [#717](https://github.com/tsukumogami/tsuku/issues/717) |
-| [#719](https://github.com/tsukumogami/tsuku/issues/719) | ci(golden): add execution validation for changed golden files | [#717](https://github.com/tsukumogami/tsuku/issues/717) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#717](https://github.com/tsukumogami/tsuku/issues/717) | ci(golden): add workflow to validate golden files on recipe changes | [#716](https://github.com/tsukumogami/tsuku/issues/716) | testable |
+| [#718](https://github.com/tsukumogami/tsuku/issues/718) | ci(golden): add workflow to validate golden files on code changes | [#715](https://github.com/tsukumogami/tsuku/issues/715), [#717](https://github.com/tsukumogami/tsuku/issues/717) | testable |
+| [#719](https://github.com/tsukumogami/tsuku/issues/719) | ci(golden): add execution validation for changed golden files | [#717](https://github.com/tsukumogami/tsuku/issues/717) | critical |
 
 ### Milestone: [Cross-Platform Generation and Documentation](https://github.com/tsukumogami/tsuku/milestone/27)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#720](https://github.com/tsukumogami/tsuku/issues/720) | ci(golden): add cross-platform generation workflow | [#714](https://github.com/tsukumogami/tsuku/issues/714) |
-| [#721](https://github.com/tsukumogami/tsuku/issues/721) | docs: add golden file workflow to CONTRIBUTING.md | [#717](https://github.com/tsukumogami/tsuku/issues/717), [#718](https://github.com/tsukumogami/tsuku/issues/718), [#720](https://github.com/tsukumogami/tsuku/issues/720) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#720](https://github.com/tsukumogami/tsuku/issues/720) | ci(golden): add cross-platform generation workflow | [#714](https://github.com/tsukumogami/tsuku/issues/714) | testable |
+| [#721](https://github.com/tsukumogami/tsuku/issues/721) | docs: add golden file workflow to CONTRIBUTING.md | [#717](https://github.com/tsukumogami/tsuku/issues/717), [#718](https://github.com/tsukumogami/tsuku/issues/718), [#720](https://github.com/tsukumogami/tsuku/issues/720) | milestone |
 
 ### Milestone: [System Dependency Action Vocabulary](https://github.com/tsukumogami/tsuku/milestone/30)
 
@@ -53,13 +53,13 @@ Current
 
 ### Milestone: [Full Golden Coverage](https://github.com/tsukumogami/tsuku/milestone/29) (continued)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#758](https://github.com/tsukumogami/tsuku/issues/758) | chore(recipes): discover recipes requiring migration | None |
-| [#772](https://github.com/tsukumogami/tsuku/issues/772) | chore(recipes): migrate existing recipes to typed actions | [#758](https://github.com/tsukumogami/tsuku/issues/758), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#771](https://github.com/tsukumogami/tsuku/issues/771), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
-| [#773](https://github.com/tsukumogami/tsuku/issues/773) | refactor(actions): remove legacy install_guide support | [#772](https://github.com/tsukumogami/tsuku/issues/772) |
-| [#774](https://github.com/tsukumogami/tsuku/issues/774) | feat(golden): enable golden files for system dependency recipes | [#772](https://github.com/tsukumogami/tsuku/issues/772), [#770](https://github.com/tsukumogami/tsuku/issues/770) |
-| [#745](https://github.com/tsukumogami/tsuku/issues/745) | chore(golden): enforce golden files for all recipes | [#721](https://github.com/tsukumogami/tsuku/issues/721), [#774](https://github.com/tsukumogami/tsuku/issues/774) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#758](https://github.com/tsukumogami/tsuku/issues/758) | chore(recipes): discover recipes requiring migration | None | simple |
+| [#772](https://github.com/tsukumogami/tsuku/issues/772) | chore(recipes): migrate existing recipes to typed actions | [#758](https://github.com/tsukumogami/tsuku/issues/758), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#771](https://github.com/tsukumogami/tsuku/issues/771), [#760](https://github.com/tsukumogami/tsuku/issues/760) | critical |
+| [#773](https://github.com/tsukumogami/tsuku/issues/773) | refactor(actions): remove legacy install_guide support | [#772](https://github.com/tsukumogami/tsuku/issues/772) | simple |
+| [#774](https://github.com/tsukumogami/tsuku/issues/774) | feat(golden): enable golden files for system dependency recipes | [#772](https://github.com/tsukumogami/tsuku/issues/772), [#770](https://github.com/tsukumogami/tsuku/issues/770) | testable |
+| [#745](https://github.com/tsukumogami/tsuku/issues/745) | chore(golden): enforce golden files for all recipes | [#721](https://github.com/tsukumogami/tsuku/issues/721), [#774](https://github.com/tsukumogami/tsuku/issues/774) | milestone |
 
 ### Dependency Graph
 

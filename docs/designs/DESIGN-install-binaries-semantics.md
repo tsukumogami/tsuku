@@ -582,3 +582,11 @@ No network access, no user data access, no telemetry impact.
 - **Documentation**: Add clear guidance in CONTRIBUTING.md about `outputs` semantics
 - **Lint checks**: Add preflight validation to warn about outputs not in `bin/` or `lib/`
 - **Automation**: Provide script for `binaries` → `outputs` migration
+
+## Implementation Issues
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| - | - | - | - |
+
+Issues to be created during /plan execution.

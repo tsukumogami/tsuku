@@ -15,11 +15,11 @@ Current
 
 ### Milestone: [Fossil Archive Action](https://github.com/tsukumogami/tsuku/milestone/28)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#724](https://github.com/tsukumogami/tsuku/issues/724) | feat(actions): add fossil_archive action with sqlite-source recipe | None |
-| [#725](https://github.com/tsukumogami/tsuku/issues/725) | feat(recipes): add fossil-source, tcl-source, tk-source testdata recipes | [#724](https://github.com/tsukumogami/tsuku/issues/724) |
-| [#726](https://github.com/tsukumogami/tsuku/issues/726) | feat(recipes): add spatialite and supporting testdata recipes | [#724](https://github.com/tsukumogami/tsuku/issues/724), [#725](https://github.com/tsukumogami/tsuku/issues/725) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#724](https://github.com/tsukumogami/tsuku/issues/724) | feat(actions): add fossil_archive action with sqlite-source recipe | None | critical |
+| [#725](https://github.com/tsukumogami/tsuku/issues/725) | feat(recipes): add fossil-source, tcl-source, tk-source testdata recipes | [#724](https://github.com/tsukumogami/tsuku/issues/724) | testable |
+| [#726](https://github.com/tsukumogami/tsuku/issues/726) | feat(recipes): add spatialite and supporting testdata recipes | [#724](https://github.com/tsukumogami/tsuku/issues/724), [#725](https://github.com/tsukumogami/tsuku/issues/725) | milestone |
 
 ### Dependency Graph
 

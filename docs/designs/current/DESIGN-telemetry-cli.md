@@ -371,13 +371,11 @@ This feature does not affect tsuku's core security model:
 
 ## Implementation Issues
 
-- [#79](https://github.com/tsukumogami/tsuku/issues/79): Umbrella issue
-
-### Phase 1: Core Telemetry
-- [#82](https://github.com/tsukumogami/tsuku/issues/82): feat(telemetry): add client with schema and env var opt-out
-- [#83](https://github.com/tsukumogami/tsuku/issues/83): feat(telemetry): add first-run notice
-- [#84](https://github.com/tsukumogami/tsuku/issues/84): feat(telemetry): integrate into install/update/remove commands
-
-### Phase 2: Config System
-- [#85](https://github.com/tsukumogami/tsuku/issues/85): feat(config): add config system with telemetry setting
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#79](https://github.com/tsukumogami/tsuku/issues/79) | Umbrella issue | None | simple |
+| [#82](https://github.com/tsukumogami/tsuku/issues/82) | feat(telemetry): add client with schema and env var opt-out | None | simple |
+| [#83](https://github.com/tsukumogami/tsuku/issues/83) | feat(telemetry): add first-run notice | #82 | simple |
+| [#84](https://github.com/tsukumogami/tsuku/issues/84) | feat(telemetry): integrate into install/update/remove commands | #82, #83 | simple |
+| [#85](https://github.com/tsukumogami/tsuku/issues/85) | feat(config): add config system with telemetry setting | #84 | simple |
 

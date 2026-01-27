@@ -15,24 +15,24 @@ Current
 
 ### Milestone: [Sandbox Container Building](https://github.com/tsukumogami/tsuku/milestone/31)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#757](https://github.com/tsukumogami/tsuku/issues/757) | ci(sandbox): create container build CI workflow | None |
-| [#767](https://github.com/tsukumogami/tsuku/issues/767) | feat(sandbox): create minimal base container Dockerfile | [#757](https://github.com/tsukumogami/tsuku/issues/757) |
-| [#768](https://github.com/tsukumogami/tsuku/issues/768) | feat(sandbox): implement container spec derivation | [#765](https://github.com/tsukumogami/tsuku/issues/765) |
-| [#769](https://github.com/tsukumogami/tsuku/issues/769) | feat(sandbox): implement container image caching | [#768](https://github.com/tsukumogami/tsuku/issues/768) |
-| [#770](https://github.com/tsukumogami/tsuku/issues/770) | feat(sandbox): integrate container building with sandbox executor | [#761](https://github.com/tsukumogami/tsuku/issues/761), [#767](https://github.com/tsukumogami/tsuku/issues/767), [#768](https://github.com/tsukumogami/tsuku/issues/768), [#769](https://github.com/tsukumogami/tsuku/issues/769), [#765](https://github.com/tsukumogami/tsuku/issues/765) |
-| [#771](https://github.com/tsukumogami/tsuku/issues/771) | feat(sandbox): implement action execution in sandbox context | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#761](https://github.com/tsukumogami/tsuku/issues/761) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#757](https://github.com/tsukumogami/tsuku/issues/757) | ci(sandbox): create container build CI workflow | None | simple |
+| [#767](https://github.com/tsukumogami/tsuku/issues/767) | feat(sandbox): create minimal base container Dockerfile | [#757](https://github.com/tsukumogami/tsuku/issues/757) | testable |
+| [#768](https://github.com/tsukumogami/tsuku/issues/768) | feat(sandbox): implement container spec derivation | [#765](https://github.com/tsukumogami/tsuku/issues/765) | testable |
+| [#769](https://github.com/tsukumogami/tsuku/issues/769) | feat(sandbox): implement container image caching | [#768](https://github.com/tsukumogami/tsuku/issues/768) | testable |
+| [#770](https://github.com/tsukumogami/tsuku/issues/770) | feat(sandbox): integrate container building with sandbox executor | [#761](https://github.com/tsukumogami/tsuku/issues/761), [#767](https://github.com/tsukumogami/tsuku/issues/767), [#768](https://github.com/tsukumogami/tsuku/issues/768), [#769](https://github.com/tsukumogami/tsuku/issues/769), [#765](https://github.com/tsukumogami/tsuku/issues/765) | critical |
+| [#771](https://github.com/tsukumogami/tsuku/issues/771) | feat(sandbox): implement action execution in sandbox context | [#755](https://github.com/tsukumogami/tsuku/issues/755), [#756](https://github.com/tsukumogami/tsuku/issues/756), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#761](https://github.com/tsukumogami/tsuku/issues/761) | milestone |
 
 ### Milestone: [Full Golden Coverage](https://github.com/tsukumogami/tsuku/milestone/29)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#758](https://github.com/tsukumogami/tsuku/issues/758) | chore(recipes): discover recipes requiring migration | None |
-| [#772](https://github.com/tsukumogami/tsuku/issues/772) | chore(recipes): migrate existing recipes to typed actions | [#758](https://github.com/tsukumogami/tsuku/issues/758), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#771](https://github.com/tsukumogami/tsuku/issues/771), [#760](https://github.com/tsukumogami/tsuku/issues/760) |
-| [#773](https://github.com/tsukumogami/tsuku/issues/773) | refactor(actions): remove legacy install_guide support | [#772](https://github.com/tsukumogami/tsuku/issues/772) |
-| [#774](https://github.com/tsukumogami/tsuku/issues/774) | feat(golden): enable golden files for system dependency recipes | [#772](https://github.com/tsukumogami/tsuku/issues/772), [#770](https://github.com/tsukumogami/tsuku/issues/770) |
-| [#775](https://github.com/tsukumogami/tsuku/issues/775) | chore(golden): unblock #745 - enforce golden files for all recipes | [#774](https://github.com/tsukumogami/tsuku/issues/774) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#758](https://github.com/tsukumogami/tsuku/issues/758) | chore(recipes): discover recipes requiring migration | None | simple |
+| [#772](https://github.com/tsukumogami/tsuku/issues/772) | chore(recipes): migrate existing recipes to typed actions | [#758](https://github.com/tsukumogami/tsuku/issues/758), [#770](https://github.com/tsukumogami/tsuku/issues/770), [#771](https://github.com/tsukumogami/tsuku/issues/771), [#760](https://github.com/tsukumogami/tsuku/issues/760) | testable |
+| [#773](https://github.com/tsukumogami/tsuku/issues/773) | refactor(actions): remove legacy install_guide support | [#772](https://github.com/tsukumogami/tsuku/issues/772) | simple |
+| [#774](https://github.com/tsukumogami/tsuku/issues/774) | feat(golden): enable golden files for system dependency recipes | [#772](https://github.com/tsukumogami/tsuku/issues/772), [#770](https://github.com/tsukumogami/tsuku/issues/770) | testable |
+| [#775](https://github.com/tsukumogami/tsuku/issues/775) | chore(golden): unblock #745 - enforce golden files for all recipes | [#774](https://github.com/tsukumogami/tsuku/issues/774) | milestone |
 
 ### Dependency Graph
 

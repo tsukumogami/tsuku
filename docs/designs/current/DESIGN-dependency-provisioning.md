@@ -17,16 +17,16 @@ Current
 
 ### Milestone: [Dependency Provisioning: Build Foundation](https://github.com/tsukumogami/tsuku/milestone/18)
 
-| Issue | Title | Dependencies | Status |
-|-------|-------|--------------|--------|
-| [#539](https://github.com/tsukumogami/tsuku/issues/539) | ci(build): add 4-platform test matrix for build essentials | None | Done |
-| [#540](https://github.com/tsukumogami/tsuku/issues/540) | feat(recipes): add zlib recipe using homebrew | None | Done |
-| [#541](https://github.com/tsukumogami/tsuku/issues/541) | feat(recipes): add make recipe using homebrew | None | Done |
-| [#542](https://github.com/tsukumogami/tsuku/issues/542) | feat(recipes): add zig recipe and validate cc wrapper | None | Done |
-| [#543](https://github.com/tsukumogami/tsuku/issues/543) | feat(scripts): add build essential validation scripts | None | Done |
-| [#544](https://github.com/tsukumogami/tsuku/issues/544) | feat(recipes): add pngcrush recipe to validate zlib dependency | [#540](https://github.com/tsukumogami/tsuku/issues/540) | Done |
-| [#545](https://github.com/tsukumogami/tsuku/issues/545) | feat(recipes): add gdbm recipe to validate configure_make | [#541](https://github.com/tsukumogami/tsuku/issues/541) | Done |
-| [#546](https://github.com/tsukumogami/tsuku/issues/546) | feat(recipes): validate compilation without system gcc | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542) | Done (via gdbm-source) |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#539](https://github.com/tsukumogami/tsuku/issues/539) | ci(build): add 4-platform test matrix for build essentials | None | testable |
+| [#540](https://github.com/tsukumogami/tsuku/issues/540) | feat(recipes): add zlib recipe using homebrew | None | simple |
+| [#541](https://github.com/tsukumogami/tsuku/issues/541) | feat(recipes): add make recipe using homebrew | None | simple |
+| [#542](https://github.com/tsukumogami/tsuku/issues/542) | feat(recipes): add zig recipe and validate cc wrapper | None | simple |
+| [#543](https://github.com/tsukumogami/tsuku/issues/543) | feat(scripts): add build essential validation scripts | None | simple |
+| [#544](https://github.com/tsukumogami/tsuku/issues/544) | feat(recipes): add pngcrush recipe to validate zlib dependency | [#540](https://github.com/tsukumogami/tsuku/issues/540) | testable |
+| [#545](https://github.com/tsukumogami/tsuku/issues/545) | feat(recipes): add gdbm recipe to validate configure_make | [#541](https://github.com/tsukumogami/tsuku/issues/541) | testable |
+| [#546](https://github.com/tsukumogami/tsuku/issues/546) | feat(recipes): validate compilation without system gcc | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542) | milestone |
 
 ```mermaid
 graph LR
@@ -53,18 +53,18 @@ graph LR
 
 ### Milestone: [Dependency Provisioning: Build Environment](https://github.com/tsukumogami/tsuku/milestone/19)
 
-| Issue | Title | Dependencies | Status |
-|-------|-------|--------------|--------|
-| [#547](https://github.com/tsukumogami/tsuku/issues/547) | feat(actions): declare implicit dependencies for build actions | None | Done |
-| [#548](https://github.com/tsukumogami/tsuku/issues/548) | feat(recipes): add pkg-config recipe using homebrew | None | Done |
-| [#549](https://github.com/tsukumogami/tsuku/issues/549) | feat(recipes): add cmake recipe using homebrew | None | Done |
-| [#550](https://github.com/tsukumogami/tsuku/issues/550) | feat(actions): enhance buildAutotoolsEnv with dependency paths | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542), [#548](https://github.com/tsukumogami/tsuku/issues/548) | Done |
-| [#551](https://github.com/tsukumogami/tsuku/issues/551) | feat(actions): implement setup_build_env action | [#550](https://github.com/tsukumogami/tsuku/issues/550) | Done |
-| [#552](https://github.com/tsukumogami/tsuku/issues/552) | feat(recipes): add openssl recipe using homebrew | [#540](https://github.com/tsukumogami/tsuku/issues/540) | Done |
-| [#553](https://github.com/tsukumogami/tsuku/issues/553) | feat(recipes): add ncurses recipe to validate pkg-config | [#551](https://github.com/tsukumogami/tsuku/issues/551) | Done |
-| [#554](https://github.com/tsukumogami/tsuku/issues/554) | feat(recipes): add curl recipe to validate openssl | [#551](https://github.com/tsukumogami/tsuku/issues/551), [#552](https://github.com/tsukumogami/tsuku/issues/552) | Done |
-| [#555](https://github.com/tsukumogami/tsuku/issues/555) | feat(actions): implement cmake_build action | [#549](https://github.com/tsukumogami/tsuku/issues/549) | Done |
-| [#556](https://github.com/tsukumogami/tsuku/issues/556) | feat(recipes): add ninja recipe to validate cmake_build | [#555](https://github.com/tsukumogami/tsuku/issues/555) | Done |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#547](https://github.com/tsukumogami/tsuku/issues/547) | feat(actions): declare implicit dependencies for build actions | None | simple |
+| [#548](https://github.com/tsukumogami/tsuku/issues/548) | feat(recipes): add pkg-config recipe using homebrew | None | simple |
+| [#549](https://github.com/tsukumogami/tsuku/issues/549) | feat(recipes): add cmake recipe using homebrew | None | simple |
+| [#550](https://github.com/tsukumogami/tsuku/issues/550) | feat(actions): enhance buildAutotoolsEnv with dependency paths | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542), [#548](https://github.com/tsukumogami/tsuku/issues/548) | critical |
+| [#551](https://github.com/tsukumogami/tsuku/issues/551) | feat(actions): implement setup_build_env action | [#550](https://github.com/tsukumogami/tsuku/issues/550) | critical |
+| [#552](https://github.com/tsukumogami/tsuku/issues/552) | feat(recipes): add openssl recipe using homebrew | [#540](https://github.com/tsukumogami/tsuku/issues/540) | simple |
+| [#553](https://github.com/tsukumogami/tsuku/issues/553) | feat(recipes): add ncurses recipe to validate pkg-config | [#551](https://github.com/tsukumogami/tsuku/issues/551) | testable |
+| [#554](https://github.com/tsukumogami/tsuku/issues/554) | feat(recipes): add curl recipe to validate openssl | [#551](https://github.com/tsukumogami/tsuku/issues/551), [#552](https://github.com/tsukumogami/tsuku/issues/552) | testable |
+| [#555](https://github.com/tsukumogami/tsuku/issues/555) | feat(actions): implement cmake_build action | [#549](https://github.com/tsukumogami/tsuku/issues/549) | critical |
+| [#556](https://github.com/tsukumogami/tsuku/issues/556) | feat(recipes): add ninja recipe to validate cmake_build | [#555](https://github.com/tsukumogami/tsuku/issues/555) | testable |
 
 ```mermaid
 graph LR
@@ -103,11 +103,11 @@ graph LR
 
 ### Milestone: [Dependency Provisioning: Full Integration](https://github.com/tsukumogami/tsuku/milestone/20)
 
-| Issue | Title | Dependencies | Status |
-|-------|-------|--------------|--------|
-| [#557](https://github.com/tsukumogami/tsuku/issues/557) | feat(recipes): add readline recipe using homebrew | [#553](https://github.com/tsukumogami/tsuku/issues/553) | Done |
-| [#558](https://github.com/tsukumogami/tsuku/issues/558) | feat(recipes): add sqlite recipe to validate readline | [#557](https://github.com/tsukumogami/tsuku/issues/557) | Done |
-| [#559](https://github.com/tsukumogami/tsuku/issues/559) | feat(recipes): add git recipe to validate complete toolchain | [#554](https://github.com/tsukumogami/tsuku/issues/554) | Done |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#557](https://github.com/tsukumogami/tsuku/issues/557) | feat(recipes): add readline recipe using homebrew | [#553](https://github.com/tsukumogami/tsuku/issues/553) | simple |
+| [#558](https://github.com/tsukumogami/tsuku/issues/558) | feat(recipes): add sqlite recipe to validate readline | [#557](https://github.com/tsukumogami/tsuku/issues/557) | testable |
+| [#559](https://github.com/tsukumogami/tsuku/issues/559) | feat(recipes): add git recipe to validate complete toolchain | [#554](https://github.com/tsukumogami/tsuku/issues/554) | milestone |
 
 ```mermaid
 graph LR
@@ -131,14 +131,14 @@ graph LR
 
 ### Milestone: [Dependency Provisioning: System-Required](https://github.com/tsukumogami/tsuku/milestone/21)
 
-| Issue | Title | Dependencies | Status |
-|-------|-------|--------------|--------|
-| [#560](https://github.com/tsukumogami/tsuku/issues/560) | feat(actions): implement require_system action with detection | None | Done |
-| [#561](https://github.com/tsukumogami/tsuku/issues/561) | feat(recipes): add docker recipe using require_system | [#560](https://github.com/tsukumogami/tsuku/issues/560) | Done |
-| [#562](https://github.com/tsukumogami/tsuku/issues/562) | feat(recipes): add cuda recipe using require_system | [#560](https://github.com/tsukumogami/tsuku/issues/560) | Done |
-| [#563](https://github.com/tsukumogami/tsuku/issues/563) | feat(cli): add tsuku check-deps command | [#560](https://github.com/tsukumogami/tsuku/issues/560) | Done |
-| [#643](https://github.com/tsukumogami/tsuku/issues/643) | feat(actions): add platform-conditional dependencies | None | Done |
-| [#644](https://github.com/tsukumogami/tsuku/issues/644) | feat(actions): aggregate primitive action dependencies in composites | None | Done |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#560](https://github.com/tsukumogami/tsuku/issues/560) | feat(actions): implement require_system action with detection | None | critical |
+| [#561](https://github.com/tsukumogami/tsuku/issues/561) | feat(recipes): add docker recipe using require_system | [#560](https://github.com/tsukumogami/tsuku/issues/560) | testable |
+| [#562](https://github.com/tsukumogami/tsuku/issues/562) | feat(recipes): add cuda recipe using require_system | [#560](https://github.com/tsukumogami/tsuku/issues/560) | simple |
+| [#563](https://github.com/tsukumogami/tsuku/issues/563) | feat(cli): add tsuku check-deps command | [#560](https://github.com/tsukumogami/tsuku/issues/560) | milestone |
+| [#643](https://github.com/tsukumogami/tsuku/issues/643) | feat(actions): add platform-conditional dependencies | None | simple |
+| [#644](https://github.com/tsukumogami/tsuku/issues/644) | feat(actions): aggregate primitive action dependencies in composites | None | simple |
 
 ```mermaid
 graph LR

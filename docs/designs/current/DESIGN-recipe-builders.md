@@ -729,15 +729,15 @@ When fetching Cargo.toml for executable discovery:
 
 Milestone: [Recipe Builders](https://github.com/tsukumogami/tsuku/milestone/4)
 
-| Issue | Phase | Description |
-|-------|-------|-------------|
-| #93 | Phase 1a | Recipe writer with atomic file operations |
-| #40 | Phase 1b | Local recipe support + Cargo builder |
-| #41 | Phase 2 | Gem builder for RubyGems |
-| #42 | Phase 3 | PyPI builder for Python packages |
-| #43 | Phase 3 | npm builder for Node.js packages |
-| #44 | Phase 4 | Recipe management UX improvements |
-| #45 | Phase 5 | Toolchain bootstrapping |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#93](https://github.com/tsukumogami/tsuku/issues/93) | Recipe writer with atomic file operations | None | simple |
+| [#40](https://github.com/tsukumogami/tsuku/issues/40) | Local recipe support + Cargo builder | [#93](https://github.com/tsukumogami/tsuku/issues/93) | testable |
+| [#41](https://github.com/tsukumogami/tsuku/issues/41) | Gem builder for RubyGems | [#40](https://github.com/tsukumogami/tsuku/issues/40) | testable |
+| [#42](https://github.com/tsukumogami/tsuku/issues/42) | PyPI builder for Python packages | [#40](https://github.com/tsukumogami/tsuku/issues/40) | testable |
+| [#43](https://github.com/tsukumogami/tsuku/issues/43) | npm builder for Node.js packages | [#40](https://github.com/tsukumogami/tsuku/issues/40) | testable |
+| [#44](https://github.com/tsukumogami/tsuku/issues/44) | Recipe management UX improvements | [#41](https://github.com/tsukumogami/tsuku/issues/41), [#42](https://github.com/tsukumogami/tsuku/issues/42), [#43](https://github.com/tsukumogami/tsuku/issues/43) | simple |
+| [#45](https://github.com/tsukumogami/tsuku/issues/45) | Toolchain bootstrapping | [#44](https://github.com/tsukumogami/tsuku/issues/44) | testable |
 
 ### Dependency Graph
 

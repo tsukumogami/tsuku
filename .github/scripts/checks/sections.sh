@@ -2,7 +2,7 @@
 #
 # sections.sh - Validate design document required sections
 #
-# Implements section validation rules from DESIGN-enhanced-validation-rules.md:
+# Implements section validation rules:
 #   SC01: All 9 required sections exist
 #   SC02: Sections appear in correct order
 #   SC03: Security Considerations section has meaningful content

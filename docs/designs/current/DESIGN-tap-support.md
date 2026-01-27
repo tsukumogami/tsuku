@@ -15,10 +15,10 @@ Current
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#872](https://github.com/tsukumogami/tsuku/issues/872) | feat(version): implement tap version provider core | #862 | testable |
-| [#873](https://github.com/tsukumogami/tsuku/issues/873) | feat(version): add tap metadata cache | #872 | testable |
-| [#874](https://github.com/tsukumogami/tsuku/issues/874) | feat(version): integrate tap provider with factory | #872, #862 | testable |
-| [#875](https://github.com/tsukumogami/tsuku/issues/875) | feat(version): add GitHub token support for tap provider | #872 | testable |
+| [#872](https://github.com/tsukumogami/tsuku/issues/872) | feat(version): implement tap version provider core | [#862](https://github.com/tsukumogami/tsuku/issues/862) | testable |
+| [#873](https://github.com/tsukumogami/tsuku/issues/873) | feat(version): add tap metadata cache | [#872](https://github.com/tsukumogami/tsuku/issues/872) | testable |
+| [#874](https://github.com/tsukumogami/tsuku/issues/874) | feat(version): integrate tap provider with factory | [#872](https://github.com/tsukumogami/tsuku/issues/872), [#862](https://github.com/tsukumogami/tsuku/issues/862) | testable |
+| [#875](https://github.com/tsukumogami/tsuku/issues/875) | feat(version): add GitHub token support for tap provider | [#872](https://github.com/tsukumogami/tsuku/issues/872) | testable |
 
 ```mermaid
 graph TD

@@ -913,21 +913,18 @@ When adding verification methods:
 
 ## Implementation Issues
 
-### Milestone: Version Verification
-
-- [#196](https://github.com/tsukumogami/tsuku/issues/196): feat(recipe): add verification mode and version format fields
-- [#197](https://github.com/tsukumogami/tsuku/issues/197): feat(version): implement version format transforms with validation
-- [#198](https://github.com/tsukumogami/tsuku/issues/198): feat(validator): enforce verification mode rules and security checks
-- [#199](https://github.com/tsukumogami/tsuku/issues/199): feat(executor): apply version format transforms during verification
-- [#200](https://github.com/tsukumogami/tsuku/issues/200): chore(recipes): migrate recipes to use verification modes
-- [#201](https://github.com/tsukumogami/tsuku/issues/201): docs: document verification modes and version format transforms
-
-### Milestone: Defense-in-Depth Verification
-
-- [#202](https://github.com/tsukumogami/tsuku/issues/202): feat(verify): version verification (Layer 2) [umbrella]
-- [#203](https://github.com/tsukumogami/tsuku/issues/203): feat(verify): post-install checksum pinning (Layer 3) [needs-design]
-- [#204](https://github.com/tsukumogami/tsuku/issues/204): feat(verify): functional testing framework (Layer 4) [needs-design]
-- [#205](https://github.com/tsukumogami/tsuku/issues/205): feat(verify): import tests from Homebrew formulas (Layer 4) [needs-design]
-- [#207](https://github.com/tsukumogami/tsuku/issues/207): feat(verify): import tests from Nix derivations (Layer 4) [needs-design]
-- [#208](https://github.com/tsukumogami/tsuku/issues/208): feat(verify): signature and SLSA provenance verification (Layer 1) [needs-design]
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#196](https://github.com/tsukumogami/tsuku/issues/196) | feat(recipe): add verification mode and version format fields | None | simple |
+| [#197](https://github.com/tsukumogami/tsuku/issues/197) | feat(version): implement version format transforms with validation | #196 | simple |
+| [#198](https://github.com/tsukumogami/tsuku/issues/198) | feat(validator): enforce verification mode rules and security checks | #196 | simple |
+| [#199](https://github.com/tsukumogami/tsuku/issues/199) | feat(executor): apply version format transforms during verification | #197 | simple |
+| [#200](https://github.com/tsukumogami/tsuku/issues/200) | chore(recipes): migrate recipes to use verification modes | #199 | simple |
+| [#201](https://github.com/tsukumogami/tsuku/issues/201) | docs: document verification modes and version format transforms | #199, #198 | simple |
+| [#202](https://github.com/tsukumogami/tsuku/issues/202) | feat(verify): version verification (Layer 2) [umbrella] | #196, #197, #198, #199, #200, #201 | umbrella |
+| [#203](https://github.com/tsukumogami/tsuku/issues/203) | feat(verify): post-install checksum pinning (Layer 3) [needs-design] | #202 | needs-design |
+| [#204](https://github.com/tsukumogami/tsuku/issues/204) | feat(verify): functional testing framework (Layer 4) [needs-design] | #202 | needs-design |
+| [#205](https://github.com/tsukumogami/tsuku/issues/205) | feat(verify): import tests from Homebrew formulas (Layer 4) [needs-design] | #204 | needs-design |
+| [#207](https://github.com/tsukumogami/tsuku/issues/207) | feat(verify): import tests from Nix derivations (Layer 4) [needs-design] | #204 | needs-design |
+| [#208](https://github.com/tsukumogami/tsuku/issues/208) | feat(verify): signature and SLSA provenance verification (Layer 1) [needs-design] | None | needs-design |
 

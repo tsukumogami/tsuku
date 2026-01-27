@@ -652,14 +652,14 @@ The main consideration is preventing sensitive data leakage in debug output, mit
 
 ### Milestone: [Structured Logging Framework](https://github.com/tsukumogami/tsuku/milestone/16)
 
-| Issue | Title | Dependencies |
-|-------|-------|--------------|
-| [#417](https://github.com/tsukumogami/tsuku/issues/417) | feat(log): add Logger interface and slog implementation | None |
-| [#418](https://github.com/tsukumogami/tsuku/issues/418) | feat(log): add URL sanitizer for safe logging | None |
-| [#419](https://github.com/tsukumogami/tsuku/issues/419) | feat(log): add CLI handler with verbosity support | Blocked by #417 |
-| [#420](https://github.com/tsukumogami/tsuku/issues/420) | refactor(validate): migrate to unified Logger interface | Blocked by #417 |
-| [#421](https://github.com/tsukumogami/tsuku/issues/421) | feat(cli): add verbosity flags and environment variable support | Blocked by #417, #419 |
-| [#422](https://github.com/tsukumogami/tsuku/issues/422) | feat(actions): add ExecutionContext logger and migrate high-value actions | Blocked by #417, #418, #421 |
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#417](https://github.com/tsukumogami/tsuku/issues/417) | feat(log): add Logger interface and slog implementation | None | critical |
+| [#418](https://github.com/tsukumogami/tsuku/issues/418) | feat(log): add URL sanitizer for safe logging | None | testable |
+| [#419](https://github.com/tsukumogami/tsuku/issues/419) | feat(log): add CLI handler with verbosity support | [#417](https://github.com/tsukumogami/tsuku/issues/417) | testable |
+| [#420](https://github.com/tsukumogami/tsuku/issues/420) | refactor(validate): migrate to unified Logger interface | [#417](https://github.com/tsukumogami/tsuku/issues/417) | simple |
+| [#421](https://github.com/tsukumogami/tsuku/issues/421) | feat(cli): add verbosity flags and environment variable support | [#417](https://github.com/tsukumogami/tsuku/issues/417), [#419](https://github.com/tsukumogami/tsuku/issues/419) | testable |
+| [#422](https://github.com/tsukumogami/tsuku/issues/422) | feat(actions): add ExecutionContext logger and migrate high-value actions | [#417](https://github.com/tsukumogami/tsuku/issues/417), [#418](https://github.com/tsukumogami/tsuku/issues/418), [#421](https://github.com/tsukumogami/tsuku/issues/421) | milestone |
 
 ### Dependency Graph
 
