@@ -36,7 +36,7 @@ func TestCPANBuilder_CanBuild_ValidDistribution(t *testing.T) {
 	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "App-Ack")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "App-Ack"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -68,7 +68,7 @@ func TestCPANBuilder_CanBuild_ModuleName(t *testing.T) {
 	ctx := context.Background()
 
 	// Pass module name with ::
-	canBuild, err := builder.CanBuild(ctx, "App::Ack")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "App::Ack"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -86,7 +86,7 @@ func TestCPANBuilder_CanBuild_NotFound(t *testing.T) {
 	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	canBuild, err := builder.CanBuild(ctx, "Nonexistent-Distribution")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "Nonexistent-Distribution"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
@@ -100,7 +100,7 @@ func TestCPANBuilder_CanBuild_InvalidName(t *testing.T) {
 	ctx := context.Background()
 
 	// Invalid distribution name should return false without making any HTTP requests
-	canBuild, err := builder.CanBuild(ctx, "invalid distribution!")
+	canBuild, err := builder.CanBuild(ctx, BuildRequest{Package: "invalid distribution!"})
 	if err != nil {
 		t.Fatalf("CanBuild() error = %v", err)
 	}
