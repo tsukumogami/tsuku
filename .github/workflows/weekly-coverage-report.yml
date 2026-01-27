@@ -1,0 +1,199 @@
+name: Weekly Coverage Report
+
+on:
+  schedule:
+    # Run every Sunday at midnight UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  coverage-report:
+    name: Generate Coverage Report
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+          cache: true
+
+      - name: Build tsuku
+        run: go build -o tsuku ./cmd/tsuku
+
+      - name: Generate coverage report
+        id: coverage
+        run: |
+          echo "# Recipe Platform Coverage Report" > coverage-report.md
+          echo "" >> coverage-report.md
+          echo "Generated: $(date -u '+%Y-%m-%d %H:%M UTC')" >> coverage-report.md
+          echo "" >> coverage-report.md
+
+          # Track statistics
+          total=0
+          with_musl=0
+          without_musl=0
+          constrained=0
+          errors=""
+
+          echo "## Embedded Recipes" >> coverage-report.md
+          echo "" >> coverage-report.md
+          echo "| Recipe | Type | glibc | musl | darwin | Status |" >> coverage-report.md
+          echo "|--------|------|-------|------|--------|--------|" >> coverage-report.md
+
+          for recipe in internal/recipe/recipes/*.toml; do
+            name=$(basename "$recipe" .toml)
+            total=$((total + 1))
+
+            # Get validation output
+            output=$(./tsuku validate --check-libc-coverage --json "$recipe" 2>/dev/null || true)
+
+            # Parse recipe type from file
+            type=$(grep -m1 'type\s*=' "$recipe" | sed 's/.*=\s*"\([^"]*\)".*/\1/' || echo "tool")
+
+            # Check for explicit constraint
+            has_constraint=$(grep -c 'supported_libc' "$recipe" || true)
+
+            # Parse coverage flags (simplified - based on validation output)
+            has_errors=$(echo "$output" | jq -r '.errors | length' 2>/dev/null || echo "0")
+            has_warnings=$(echo "$output" | jq -r '.warnings | length' 2>/dev/null || echo "0")
+
+            # Determine status
+            if [ "$has_errors" -gt 0 ]; then
+              status="Missing musl"
+              without_musl=$((without_musl + 1))
+              errors="${errors}- ${name}: library missing musl support\n"
+            elif [ "$has_constraint" -gt 0 ]; then
+              status="Constrained"
+              constrained=$((constrained + 1))
+            else
+              status="OK"
+              with_musl=$((with_musl + 1))
+            fi
+
+            echo "| $name | $type | Y | $([ "$status" = "OK" ] && echo "Y" || echo "N") | Y | $status |" >> coverage-report.md
+          done
+
+          echo "" >> coverage-report.md
+          echo "## Summary" >> coverage-report.md
+          echo "" >> coverage-report.md
+          echo "- Total recipes: $total" >> coverage-report.md
+          echo "- Full coverage: $with_musl" >> coverage-report.md
+          echo "- Constrained (glibc-only): $constrained" >> coverage-report.md
+          echo "- Missing musl: $without_musl" >> coverage-report.md
+
+          # Set outputs for issue creation
+          echo "total=$total" >> $GITHUB_OUTPUT
+          echo "without_musl=$without_musl" >> $GITHUB_OUTPUT
+
+          if [ "$without_musl" -gt 0 ]; then
+            echo "has_regressions=true" >> $GITHUB_OUTPUT
+            {
+              echo "errors<<EOF"
+              printf "%b" "$errors"
+              echo "EOF"
+            } >> $GITHUB_OUTPUT
+          else
+            echo "has_regressions=false" >> $GITHUB_OUTPUT
+          fi
+
+          cat coverage-report.md
+
+      - name: Create issue if coverage regressed
+        if: steps.coverage.outputs.has_regressions == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const errors = `${{ steps.coverage.outputs.errors }}`;
+
+            // Check for existing open issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'coverage-regression',
+              state: 'open'
+            });
+
+            const title = 'Recipe coverage regression detected';
+            const body = `## Coverage Regression Report
+
+            The weekly coverage check found library recipes missing musl support:
+
+            ${errors}
+
+            ### How to Fix
+
+            For each recipe listed above, either:
+
+            1. **Add musl support** with an \`apk_install\` step:
+               \`\`\`toml
+               [[steps]]
+               action = "apk_install"
+               packages = ["<package>-dev"]
+               when = { os = ["linux"], libc = ["musl"] }
+               \`\`\`
+
+            2. **Add explicit constraint** if musl cannot be supported:
+               \`\`\`toml
+               [metadata]
+               supported_libc = ["glibc"]
+               unsupported_reason = "Upstream only provides glibc binaries"
+               \`\`\`
+
+            See [GUIDE-hybrid-libc-recipes.md](../docs/GUIDE-hybrid-libc-recipes.md) for details.
+
+            ---
+            *This issue was automatically created by the weekly coverage report workflow.*`;
+
+            if (issues.length > 0) {
+              // Update existing issue
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issues[0].number,
+                body: body
+              });
+              console.log(`Updated existing issue #${issues[0].number}`);
+            } else {
+              // Create new issue
+              const { data: newIssue } = await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: title,
+                body: body,
+                labels: ['coverage-regression', 'documentation']
+              });
+              console.log(`Created new issue #${newIssue.number}`);
+            }
+
+      - name: Close regression issue if resolved
+        if: steps.coverage.outputs.has_regressions == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Check for existing open issue
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              labels: 'coverage-regression',
+              state: 'open'
+            });
+
+            for (const issue of issues) {
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                state: 'closed',
+                state_reason: 'completed'
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body: 'All coverage regressions have been resolved. Closing this issue.'
+              });
+              console.log(`Closed resolved issue #${issue.number}`);
+            }
