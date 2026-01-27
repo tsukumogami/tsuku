@@ -61,14 +61,19 @@ func (b *GoBuilder) Name() string {
 	return "go"
 }
 
+// RequiresLLM returns false as this builder uses ecosystem APIs, not LLM.
+func (b *GoBuilder) RequiresLLM() bool {
+	return false
+}
+
 // CanBuild checks if the module exists on proxy.golang.org
-func (b *GoBuilder) CanBuild(ctx context.Context, packageName string) (bool, error) {
-	if !isValidGoModule(packageName) {
+func (b *GoBuilder) CanBuild(ctx context.Context, req BuildRequest) (bool, error) {
+	if !isValidGoModule(req.Package) {
 		return false, nil
 	}
 
 	// Query Go proxy to check if module exists
-	_, err := b.fetchModuleInfo(ctx, packageName)
+	_, err := b.fetchModuleInfo(ctx, req.Package)
 	if err != nil {
 		// Not found is not an error - just means we can't build it
 		if strings.Contains(err.Error(), "not found") || strings.Contains(err.Error(), "gone") {
@@ -78,6 +83,11 @@ func (b *GoBuilder) CanBuild(ctx context.Context, packageName string) (bool, err
 	}
 
 	return true, nil
+}
+
+// NewSession creates a new build session for the given request.
+func (b *GoBuilder) NewSession(ctx context.Context, req BuildRequest, opts *SessionOptions) (BuildSession, error) {
+	return NewDeterministicSession(b.Build, req), nil
 }
 
 // Build generates a recipe for the Go module
