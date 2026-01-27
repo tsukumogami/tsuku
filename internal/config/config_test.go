@@ -333,3 +333,77 @@ func TestGetVersionCacheTTL_TooHigh(t *testing.T) {
 		t.Errorf("GetVersionCacheTTL() = %v, want 168h (maximum)", ttl)
 	}
 }
+
+func TestGetRecipeCacheTTL_Default(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheTTL)
+	defer os.Setenv(EnvRecipeCacheTTL, original)
+
+	// Ensure env var is not set
+	_ = os.Unsetenv(EnvRecipeCacheTTL)
+
+	ttl := GetRecipeCacheTTL()
+	if ttl != DefaultRecipeCacheTTL {
+		t.Errorf("GetRecipeCacheTTL() = %v, want %v", ttl, DefaultRecipeCacheTTL)
+	}
+}
+
+func TestGetRecipeCacheTTL_CustomValue(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheTTL)
+	defer os.Setenv(EnvRecipeCacheTTL, original)
+
+	// Set custom TTL
+	os.Setenv(EnvRecipeCacheTTL, "12h")
+
+	ttl := GetRecipeCacheTTL()
+	expected := 12 * time.Hour
+	if ttl != expected {
+		t.Errorf("GetRecipeCacheTTL() = %v, want %v", ttl, expected)
+	}
+}
+
+func TestGetRecipeCacheTTL_InvalidValue(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheTTL)
+	defer os.Setenv(EnvRecipeCacheTTL, original)
+
+	// Set invalid value
+	os.Setenv(EnvRecipeCacheTTL, "invalid")
+
+	ttl := GetRecipeCacheTTL()
+	// Should return default on invalid input
+	if ttl != DefaultRecipeCacheTTL {
+		t.Errorf("GetRecipeCacheTTL() = %v, want %v (default)", ttl, DefaultRecipeCacheTTL)
+	}
+}
+
+func TestGetRecipeCacheTTL_TooLow(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheTTL)
+	defer os.Setenv(EnvRecipeCacheTTL, original)
+
+	// Set too low value (minimum is 5m)
+	os.Setenv(EnvRecipeCacheTTL, "1m")
+
+	ttl := GetRecipeCacheTTL()
+	// Should return minimum 5m
+	if ttl != 5*time.Minute {
+		t.Errorf("GetRecipeCacheTTL() = %v, want 5m (minimum)", ttl)
+	}
+}
+
+func TestGetRecipeCacheTTL_TooHigh(t *testing.T) {
+	// Save original env value
+	original := os.Getenv(EnvRecipeCacheTTL)
+	defer os.Setenv(EnvRecipeCacheTTL, original)
+
+	// Set too high value (maximum is 7 days)
+	os.Setenv(EnvRecipeCacheTTL, "200h")
+
+	ttl := GetRecipeCacheTTL()
+	// Should return maximum 7 days
+	if ttl != 7*24*time.Hour {
+		t.Errorf("GetRecipeCacheTTL() = %v, want 168h (maximum)", ttl)
+	}
+}
