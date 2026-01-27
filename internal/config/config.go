@@ -25,6 +25,12 @@ const (
 	// EnvRecipeCacheSizeLimit is the environment variable to configure recipe cache size limit
 	EnvRecipeCacheSizeLimit = "TSUKU_RECIPE_CACHE_SIZE_LIMIT"
 
+	// EnvRecipeCacheMaxStale is the environment variable to configure maximum cache staleness
+	EnvRecipeCacheMaxStale = "TSUKU_RECIPE_CACHE_MAX_STALE"
+
+	// EnvRecipeCacheStaleFallback is the environment variable to enable/disable stale fallback
+	EnvRecipeCacheStaleFallback = "TSUKU_RECIPE_CACHE_STALE_FALLBACK"
+
 	// DefaultAPITimeout is the default timeout for API requests (30 seconds)
 	DefaultAPITimeout = 30 * time.Second
 
@@ -36,6 +42,9 @@ const (
 
 	// DefaultRecipeCacheSizeLimit is the default size limit for the recipe cache (50MB)
 	DefaultRecipeCacheSizeLimit = 50 * 1024 * 1024
+
+	// DefaultRecipeCacheMaxStale is the default maximum staleness for cache fallback (7 days)
+	DefaultRecipeCacheMaxStale = 7 * 24 * time.Hour
 )
 
 // GetAPITimeout returns the configured API timeout from TSUKU_API_TIMEOUT environment variable.
@@ -222,6 +231,83 @@ func GetRecipeCacheSizeLimit() int64 {
 	}
 
 	return size
+}
+
+// GetRecipeCacheMaxStale returns the configured maximum cache staleness from TSUKU_RECIPE_CACHE_MAX_STALE.
+// If not set or invalid, returns DefaultRecipeCacheMaxStale (7 days).
+// If set to 0, stale fallback is disabled.
+// Accepts duration strings like "24h", "7d", "168h".
+func GetRecipeCacheMaxStale() time.Duration {
+	envValue := os.Getenv(EnvRecipeCacheMaxStale)
+	if envValue == "" {
+		return DefaultRecipeCacheMaxStale
+	}
+
+	// Handle "Xd" format for days (Go's time.ParseDuration doesn't support days)
+	if len(envValue) > 1 && (envValue[len(envValue)-1] == 'd' || envValue[len(envValue)-1] == 'D') {
+		daysStr := envValue[:len(envValue)-1]
+		days, err := strconv.ParseFloat(daysStr, 64)
+		if err == nil {
+			duration := time.Duration(days * 24 * float64(time.Hour))
+			// Allow 0 to disable, otherwise clamp to range
+			if duration == 0 {
+				return 0
+			}
+			if duration > 30*24*time.Hour {
+				fmt.Fprintf(os.Stderr, "Warning: %s too high (%v), using maximum 30d\n",
+					EnvRecipeCacheMaxStale, duration)
+				return 30 * 24 * time.Hour
+			}
+			return duration
+		}
+	}
+
+	duration, err := time.ParseDuration(envValue)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: invalid %s value %q, using default %v\n",
+			EnvRecipeCacheMaxStale, envValue, DefaultRecipeCacheMaxStale)
+		return DefaultRecipeCacheMaxStale
+	}
+
+	// Allow 0 to disable stale fallback
+	if duration == 0 {
+		return 0
+	}
+
+	// Validate reasonable range (minimum 1 hour, maximum 30 days)
+	if duration < 1*time.Hour {
+		fmt.Fprintf(os.Stderr, "Warning: %s too low (%v), using minimum 1h\n",
+			EnvRecipeCacheMaxStale, duration)
+		return 1 * time.Hour
+	}
+	if duration > 30*24*time.Hour {
+		fmt.Fprintf(os.Stderr, "Warning: %s too high (%v), using maximum 30d\n",
+			EnvRecipeCacheMaxStale, duration)
+		return 30 * 24 * time.Hour
+	}
+
+	return duration
+}
+
+// GetRecipeCacheStaleFallback returns whether stale-if-error fallback is enabled.
+// Reads from TSUKU_RECIPE_CACHE_STALE_FALLBACK environment variable.
+// Accepts "true", "1", "false", "0" (case-insensitive). Default is true.
+func GetRecipeCacheStaleFallback() bool {
+	envValue := os.Getenv(EnvRecipeCacheStaleFallback)
+	if envValue == "" {
+		return true // Default enabled
+	}
+
+	switch strings.ToLower(envValue) {
+	case "true", "1", "yes", "on":
+		return true
+	case "false", "0", "no", "off":
+		return false
+	default:
+		fmt.Fprintf(os.Stderr, "Warning: invalid %s value %q, using default true\n",
+			EnvRecipeCacheStaleFallback, envValue)
+		return true
+	}
 }
 
 // Config holds tsuku configuration

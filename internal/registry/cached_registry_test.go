@@ -1,11 +1,14 @@
 package registry
 
 import (
+	"bytes"
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 )
@@ -32,13 +35,21 @@ func TestCachedRegistry_FreshCacheHit(t *testing.T) {
 	cached := NewCachedRegistry(reg, 1*time.Hour)
 
 	// GetRecipe should return cached content without network call
-	result, err := cached.GetRecipe(context.Background(), "test-tool")
+	result, info, err := cached.GetRecipe(context.Background(), "test-tool")
 	if err != nil {
 		t.Fatalf("GetRecipe failed: %v", err)
 	}
 
 	if string(result) != string(content) {
 		t.Errorf("content mismatch: got %q, want %q", result, content)
+	}
+
+	// CacheInfo should indicate fresh cache
+	if info == nil {
+		t.Fatal("expected CacheInfo, got nil")
+	}
+	if info.IsStale {
+		t.Error("expected IsStale=false for fresh cache hit")
 	}
 }
 
@@ -81,13 +92,21 @@ func TestCachedRegistry_ExpiredCacheRefresh(t *testing.T) {
 	cached := NewCachedRegistry(reg, 1*time.Hour)
 
 	// GetRecipe should refresh from network since cache is expired
-	result, err := cached.GetRecipe(context.Background(), "test-tool")
+	result, info, err := cached.GetRecipe(context.Background(), "test-tool")
 	if err != nil {
 		t.Fatalf("GetRecipe failed: %v", err)
 	}
 
 	if string(result) != string(networkContent) {
 		t.Errorf("content mismatch: got %q, want %q", result, networkContent)
+	}
+
+	// CacheInfo should indicate fresh content
+	if info == nil {
+		t.Fatal("expected CacheInfo, got nil")
+	}
+	if info.IsStale {
+		t.Error("expected IsStale=false after successful refresh")
 	}
 
 	// Verify cache was updated
@@ -97,7 +116,7 @@ func TestCachedRegistry_ExpiredCacheRefresh(t *testing.T) {
 	}
 }
 
-func TestCachedRegistry_ExpiredCacheNetworkFailure(t *testing.T) {
+func TestCachedRegistry_StaleFallbackWithinMaxStale(t *testing.T) {
 	cacheDir := t.TempDir()
 
 	// Server returns 500 error
@@ -109,7 +128,133 @@ func TestCachedRegistry_ExpiredCacheNetworkFailure(t *testing.T) {
 	reg := New(cacheDir)
 	reg.BaseURL = server.URL
 
-	// Pre-populate cache with old content
+	// Pre-populate cache with content cached 2 hours ago (within 7-day max stale)
+	oldContent := []byte("[metadata]\nname = \"test-tool\"\n")
+	recipePath := filepath.Join(cacheDir, "t", "test-tool.toml")
+	if err := os.MkdirAll(filepath.Dir(recipePath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(recipePath, oldContent, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create expired metadata (cached 2 hours ago, TTL 1 hour, but within 7-day max stale)
+	meta := &CacheMetadata{
+		CachedAt:    time.Now().Add(-2 * time.Hour),
+		ExpiresAt:   time.Now().Add(-1 * time.Hour),
+		LastAccess:  time.Now().Add(-2 * time.Hour),
+		Size:        int64(len(oldContent)),
+		ContentHash: computeContentHash(oldContent),
+	}
+	if err := reg.WriteMeta("test-tool", meta); err != nil {
+		t.Fatalf("WriteMeta failed: %v", err)
+	}
+
+	// Create cached registry with 1 hour TTL, default 7-day max stale
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// Capture stderr to verify warning
+	oldStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	// GetRecipe should return stale content with warning
+	result, info, err := cached.GetRecipe(context.Background(), "test-tool")
+
+	// Restore stderr
+	w.Close()
+	os.Stderr = oldStderr
+	var stderrBuf bytes.Buffer
+	_, _ = stderrBuf.ReadFrom(r)
+	stderrOutput := stderrBuf.String()
+
+	if err != nil {
+		t.Fatalf("GetRecipe should succeed with stale fallback, got error: %v", err)
+	}
+
+	if string(result) != string(oldContent) {
+		t.Errorf("content mismatch: got %q, want %q", result, oldContent)
+	}
+
+	// CacheInfo should indicate stale content
+	if info == nil {
+		t.Fatal("expected CacheInfo, got nil")
+	}
+	if !info.IsStale {
+		t.Error("expected IsStale=true for stale fallback")
+	}
+
+	// Verify warning was printed
+	if !strings.Contains(stderrOutput, "Warning: Using cached recipe 'test-tool'") {
+		t.Errorf("expected warning message, got: %q", stderrOutput)
+	}
+}
+
+func TestCachedRegistry_StaleFallbackExceedsMaxStale(t *testing.T) {
+	cacheDir := t.TempDir()
+
+	// Server returns 500 error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	reg := New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Pre-populate cache with very old content (10 days ago, exceeds 7-day max stale)
+	oldContent := []byte("[metadata]\nname = \"test-tool\"\n")
+	recipePath := filepath.Join(cacheDir, "t", "test-tool.toml")
+	if err := os.MkdirAll(filepath.Dir(recipePath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(recipePath, oldContent, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create expired metadata (cached 10 days ago, exceeds 7-day max stale)
+	meta := &CacheMetadata{
+		CachedAt:    time.Now().Add(-10 * 24 * time.Hour),
+		ExpiresAt:   time.Now().Add(-10*24*time.Hour + 1*time.Hour),
+		LastAccess:  time.Now().Add(-10 * 24 * time.Hour),
+		Size:        int64(len(oldContent)),
+		ContentHash: computeContentHash(oldContent),
+	}
+	if err := reg.WriteMeta("test-tool", meta); err != nil {
+		t.Fatalf("WriteMeta failed: %v", err)
+	}
+
+	// Create cached registry with default max stale (7 days)
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// GetRecipe should fail with ErrTypeCacheTooStale
+	_, _, err := cached.GetRecipe(context.Background(), "test-tool")
+	if err == nil {
+		t.Fatal("expected error for cache exceeding max stale")
+	}
+
+	var regErr *RegistryError
+	if !errors.As(err, &regErr) {
+		t.Fatalf("expected *RegistryError, got %T", err)
+	}
+	if regErr.Type != ErrTypeCacheTooStale {
+		t.Errorf("expected ErrTypeCacheTooStale, got %v", regErr.Type)
+	}
+}
+
+func TestCachedRegistry_StaleFallbackDisabled(t *testing.T) {
+	cacheDir := t.TempDir()
+
+	// Server returns 500 error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	reg := New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Pre-populate cache with content (within max stale normally)
 	oldContent := []byte("[metadata]\nname = \"test-tool\"\n")
 	recipePath := filepath.Join(cacheDir, "t", "test-tool.toml")
 	if err := os.MkdirAll(filepath.Dir(recipePath), 0755); err != nil {
@@ -131,13 +276,59 @@ func TestCachedRegistry_ExpiredCacheNetworkFailure(t *testing.T) {
 		t.Fatalf("WriteMeta failed: %v", err)
 	}
 
-	// Create cached registry with 1 hour TTL
+	// Create cached registry with stale fallback disabled
 	cached := NewCachedRegistry(reg, 1*time.Hour)
+	cached.SetStaleFallback(false)
 
-	// GetRecipe should fail - no stale fallback in this issue
-	_, err := cached.GetRecipe(context.Background(), "test-tool")
+	// GetRecipe should fail - stale fallback is disabled
+	_, _, err := cached.GetRecipe(context.Background(), "test-tool")
 	if err == nil {
-		t.Error("expected error for expired cache with network failure")
+		t.Error("expected error when stale fallback is disabled")
+	}
+}
+
+func TestCachedRegistry_StaleFallbackDisabledViaMaxStaleZero(t *testing.T) {
+	cacheDir := t.TempDir()
+
+	// Server returns 500 error
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	reg := New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Pre-populate cache with content
+	oldContent := []byte("[metadata]\nname = \"test-tool\"\n")
+	recipePath := filepath.Join(cacheDir, "t", "test-tool.toml")
+	if err := os.MkdirAll(filepath.Dir(recipePath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(recipePath, oldContent, 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	// Create expired metadata
+	meta := &CacheMetadata{
+		CachedAt:    time.Now().Add(-2 * time.Hour),
+		ExpiresAt:   time.Now().Add(-1 * time.Hour),
+		LastAccess:  time.Now().Add(-2 * time.Hour),
+		Size:        int64(len(oldContent)),
+		ContentHash: computeContentHash(oldContent),
+	}
+	if err := reg.WriteMeta("test-tool", meta); err != nil {
+		t.Fatalf("WriteMeta failed: %v", err)
+	}
+
+	// Create cached registry with maxStale=0 (disables stale fallback)
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+	cached.SetMaxStale(0)
+
+	// GetRecipe should fail - max stale is 0 means disabled
+	_, _, err := cached.GetRecipe(context.Background(), "test-tool")
+	if err == nil {
+		t.Error("expected error when max stale is 0")
 	}
 }
 
@@ -157,13 +348,21 @@ func TestCachedRegistry_CacheMissNetworkSuccess(t *testing.T) {
 	cached := NewCachedRegistry(reg, 1*time.Hour)
 
 	// GetRecipe should fetch from network
-	result, err := cached.GetRecipe(context.Background(), "new-tool")
+	result, info, err := cached.GetRecipe(context.Background(), "new-tool")
 	if err != nil {
 		t.Fatalf("GetRecipe failed: %v", err)
 	}
 
 	if string(result) != string(networkContent) {
 		t.Errorf("content mismatch: got %q, want %q", result, networkContent)
+	}
+
+	// CacheInfo should indicate fresh content
+	if info == nil {
+		t.Fatal("expected CacheInfo, got nil")
+	}
+	if info.IsStale {
+		t.Error("expected IsStale=false for fresh fetch")
 	}
 
 	// Verify content was cached
@@ -199,7 +398,7 @@ func TestCachedRegistry_CacheMissNetworkFailure(t *testing.T) {
 	cached := NewCachedRegistry(reg, 1*time.Hour)
 
 	// GetRecipe should fail
-	_, err := cached.GetRecipe(context.Background(), "nonexistent")
+	_, _, err := cached.GetRecipe(context.Background(), "nonexistent")
 	if err == nil {
 		t.Error("expected error for cache miss with network failure")
 	}
@@ -231,7 +430,7 @@ func TestCachedRegistry_TTLRespected(t *testing.T) {
 	cached := NewCachedRegistry(reg, 100*time.Millisecond)
 
 	// First call - should fetch
-	_, err := cached.GetRecipe(context.Background(), "test")
+	_, _, err := cached.GetRecipe(context.Background(), "test")
 	if err != nil {
 		t.Fatalf("first GetRecipe failed: %v", err)
 	}
@@ -240,7 +439,7 @@ func TestCachedRegistry_TTLRespected(t *testing.T) {
 	}
 
 	// Immediate second call - should use cache
-	_, err = cached.GetRecipe(context.Background(), "test")
+	_, _, err = cached.GetRecipe(context.Background(), "test")
 	if err != nil {
 		t.Fatalf("second GetRecipe failed: %v", err)
 	}
@@ -252,7 +451,7 @@ func TestCachedRegistry_TTLRespected(t *testing.T) {
 	time.Sleep(150 * time.Millisecond)
 
 	// Third call - should refresh
-	_, err = cached.GetRecipe(context.Background(), "test")
+	_, _, err = cached.GetRecipe(context.Background(), "test")
 	if err != nil {
 		t.Fatalf("third GetRecipe failed: %v", err)
 	}
@@ -299,13 +498,13 @@ func TestCachedRegistry_WithCacheManager(t *testing.T) {
 	}
 
 	// First fetch - should cache successfully
-	_, err := cached.GetRecipe(context.Background(), "tool1")
+	_, _, err := cached.GetRecipe(context.Background(), "tool1")
 	if err != nil {
 		t.Fatalf("First GetRecipe failed: %v", err)
 	}
 
 	// Second fetch - will push cache above high water mark, triggering eviction
-	_, err = cached.GetRecipe(context.Background(), "tool2")
+	_, _, err = cached.GetRecipe(context.Background(), "tool2")
 	if err != nil {
 		t.Fatalf("Second GetRecipe failed: %v", err)
 	}
@@ -340,12 +539,62 @@ func TestCachedRegistry_NoCacheManager(t *testing.T) {
 	}
 
 	// GetRecipe should still work
-	result, err := cached.GetRecipe(context.Background(), "test")
+	result, _, err := cached.GetRecipe(context.Background(), "test")
 	if err != nil {
 		t.Fatalf("GetRecipe failed: %v", err)
 	}
 
 	if string(result) != string(content) {
 		t.Errorf("content mismatch: got %q, want %q", result, content)
+	}
+}
+
+func TestCachedRegistry_SetMaxStale(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// Test SetMaxStale
+	cached.SetMaxStale(24 * time.Hour)
+
+	// Verify it was set by testing behavior - we'd need to expose the field or test indirectly
+	// For now, just verify the method doesn't panic
+}
+
+func TestCachedRegistry_SetStaleFallback(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// Test SetStaleFallback
+	cached.SetStaleFallback(false)
+
+	// Verify it was set by testing behavior - we'd need to expose the field or test indirectly
+	// For now, just verify the method doesn't panic
+}
+
+func TestFormatDuration(t *testing.T) {
+	tests := []struct {
+		duration time.Duration
+		expected string
+	}{
+		{30 * time.Minute, "30 minutes"},
+		{1 * time.Hour, "1 hour"},
+		{2 * time.Hour, "2 hours"},
+		{23 * time.Hour, "23 hours"},
+		{24 * time.Hour, "1 day"},
+		{48 * time.Hour, "2 days"},
+		{7 * 24 * time.Hour, "7 days"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.expected, func(t *testing.T) {
+			result := formatDuration(tt.duration)
+			if result != tt.expected {
+				t.Errorf("formatDuration(%v) = %q, want %q", tt.duration, result, tt.expected)
+			}
+		})
 	}
 }
