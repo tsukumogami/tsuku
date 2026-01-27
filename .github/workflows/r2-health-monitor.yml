@@ -1,0 +1,190 @@
+# R2 Health Monitoring Workflow
+#
+# Periodically checks R2 storage health and creates/updates GitHub issues
+# when degradation or failures are detected.
+#
+# Schedule: Every 6 hours (4 times daily)
+#
+# Health Check Contract:
+#   - Endpoint: HEAD request to health/ping.json
+#   - Timeout: 5 seconds
+#   - Success: HTTP 200 with latency < 2000ms
+#   - Degraded: HTTP 200 with latency >= 2000ms
+#   - Failure: Any other response or timeout
+#
+# Issue Management:
+#   - Creates issue with r2-degradation label on first failure
+#   - Updates existing issue with comment on subsequent failures
+#   - Adds recovery comment and closes issue when healthy
+#
+# See docs/designs/DESIGN-r2-golden-storage.md for architecture details.
+name: R2 Health Monitor
+
+on:
+  schedule:
+    # Every 6 hours: midnight, 6am, noon, 6pm UTC
+    - cron: '0 */6 * * *'
+
+  workflow_dispatch:
+    inputs:
+      force_issue:
+        description: 'Force issue creation for testing (simulates failure)'
+        type: boolean
+        default: false
+
+# Prevent concurrent runs
+concurrency:
+  group: r2-health-monitor
+  cancel-in-progress: false
+
+jobs:
+  health-check:
+    name: Health Check
+    runs-on: ubuntu-latest
+    outputs:
+      status: ${{ steps.check.outputs.status }}
+      latency: ${{ steps.check.outputs.latency }}
+      message: ${{ steps.check.outputs.message }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Check R2 availability
+        id: check
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+          FORCE_ISSUE: ${{ inputs.force_issue }}
+        run: |
+          # Handle force_issue for testing
+          if [ "$FORCE_ISSUE" = "true" ]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "latency=0" >> $GITHUB_OUTPUT
+            echo "message=Forced failure for testing" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Run health check and capture output
+          set +e
+          OUTPUT=$(./scripts/r2-health-check.sh 2>&1)
+          EXIT_CODE=$?
+          set -e
+
+          # Extract latency from output
+          LATENCY=$(echo "$OUTPUT" | grep -oP 'Latency: \K[0-9]+' || echo "0")
+          echo "latency=$LATENCY" >> $GITHUB_OUTPUT
+
+          # Set status based on exit code
+          case $EXIT_CODE in
+            0)
+              echo "status=healthy" >> $GITHUB_OUTPUT
+              echo "message=R2 health check passed" >> $GITHUB_OUTPUT
+              ;;
+            1)
+              echo "status=failure" >> $GITHUB_OUTPUT
+              echo "message=R2 is unavailable or returned an error" >> $GITHUB_OUTPUT
+              ;;
+            2)
+              echo "status=degraded" >> $GITHUB_OUTPUT
+              echo "message=R2 is responding slowly (latency >= 2000ms)" >> $GITHUB_OUTPUT
+              ;;
+            *)
+              echo "status=failure" >> $GITHUB_OUTPUT
+              echo "message=Unexpected health check error (exit code: $EXIT_CODE)" >> $GITHUB_OUTPUT
+              ;;
+          esac
+
+          echo "Health check completed with exit code $EXIT_CODE"
+          echo "$OUTPUT"
+
+  issue-management:
+    name: Issue Management
+    needs: health-check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Handle health status
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STATUS: ${{ needs.health-check.outputs.status }}
+          LATENCY: ${{ needs.health-check.outputs.latency }}
+          MESSAGE: ${{ needs.health-check.outputs.message }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          ISSUE_TITLE="R2 Storage Degradation Detected"
+          LABEL="r2-degradation"
+
+          # Search for existing open issue with r2-degradation label
+          EXISTING_ISSUE=$(gh issue list \
+            --label "$LABEL" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          if [ "$STATUS" = "healthy" ]; then
+            echo "R2 is healthy"
+
+            if [ -n "$EXISTING_ISSUE" ]; then
+              echo "Closing existing issue #$EXISTING_ISSUE with recovery comment"
+
+              RECOVERY_COMMENT="## Service Recovered - $TIMESTAMP
+
+          R2 health check passed. Closing issue.
+
+          **Latency**: ${LATENCY}ms
+
+          [Workflow run]($WORKFLOW_URL)
+
+          ---
+          *Automatically closed by R2 health monitoring workflow.*"
+
+              gh issue comment "$EXISTING_ISSUE" --body "$RECOVERY_COMMENT"
+              gh issue close "$EXISTING_ISSUE" --reason completed
+            else
+              echo "No open degradation issue found, nothing to do"
+            fi
+
+          else
+            echo "R2 health issue detected: $STATUS"
+
+            ISSUE_BODY="## R2 Health Issue
+
+          **Status**: $STATUS
+          **Detected**: $TIMESTAMP
+          **Latency**: ${LATENCY}ms (threshold: 2000ms)
+
+          ### Details
+
+          $MESSAGE
+
+          ### Workflow Run
+
+          [View workflow run]($WORKFLOW_URL)
+
+          ---
+          *This issue was automatically created by the R2 health monitoring workflow.*"
+
+            UPDATE_COMMENT="## Health Check Update - $TIMESTAMP
+
+          **Status**: $STATUS
+          **Latency**: ${LATENCY}ms
+
+          $MESSAGE
+
+          [Workflow run]($WORKFLOW_URL)"
+
+            if [ -n "$EXISTING_ISSUE" ]; then
+              echo "Updating existing issue #$EXISTING_ISSUE with new failure"
+              gh issue comment "$EXISTING_ISSUE" --body "$UPDATE_COMMENT"
+            else
+              echo "Creating new issue"
+              gh issue create \
+                --title "$ISSUE_TITLE" \
+                --body "$ISSUE_BODY" \
+                --label "$LABEL"
+            fi
+          fi
