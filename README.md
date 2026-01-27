@@ -454,6 +454,7 @@ For libraries, verification includes multiple tiers:
   - System libraries (libc, libm, libSystem.B.dylib, etc.)
   - Tsuku-managed libraries (dependencies installed by tsuku)
   - Externally-managed libraries (from package managers like apt, brew)
+- **Tier 3: dlopen load testing** - Loads the library with dlopen() to verify it can be dynamically loaded at runtime
 
 Tier 2 validation also detects ABI mismatches (glibc vs musl) to catch incompatible binary combinations early.
 

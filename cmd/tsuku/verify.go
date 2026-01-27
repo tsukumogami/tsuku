@@ -824,8 +824,10 @@ For libraries, verification is tiered:
           shared libraries (ELF or Mach-O) for the current platform
   Tier 2: Dependency checking - validates dynamic library dependencies
           are satisfied (system libs, tsuku-managed, or externally-managed)
-  Tier 3: dlopen load testing (not yet implemented)
-  Tier 4: Integrity verification (not yet implemented)
+  Tier 3: dlopen load testing - loads the library with dlopen() to verify
+          it can be dynamically loaded and all dependencies are satisfied
+  Tier 4: Integrity verification - compares current SHA256 checksums
+          against those stored at installation time
 
   Flags:
     --integrity     Enable checksum verification (Tier 4)
