@@ -54,6 +54,28 @@ when = { os = ["darwin"] }
 # Executes on macOS (Intel or ARM)
 ```
 
+### Libc Filter
+
+Execute based on C library implementation (Linux only):
+
+```toml
+[[steps]]
+action = "homebrew"
+formula = "zlib"
+when = { os = ["linux"], libc = ["glibc"] }
+# Executes only on glibc-based Linux (Debian, Fedora, Arch, SUSE)
+
+[[steps]]
+action = "apk_install"
+packages = ["zlib-dev"]
+when = { os = ["linux"], libc = ["musl"] }
+# Executes only on musl-based Linux (Alpine)
+```
+
+Valid values: `glibc`, `musl`
+
+The `libc` filter is only valid when `os` includes `"linux"` or is omitted.
+
 ### Package Manager
 
 Execute only when a specific package manager is available:
@@ -228,5 +250,6 @@ Difference: `install_guide` uses hierarchical fallback (lookup table), while `wh
 
 ## See Also
 
+- [Hybrid Libc Recipes Guide](GUIDE-hybrid-libc-recipes.md) - How to write recipes for glibc and musl
 - [Platform Tuple Support in install_guide](platform-tuple-support.md)
-- [Design: When Clause Platform Tuples](DESIGN-when-clause-platform-tuples.md)
+- [Design: When Clause Platform Tuples](designs/current/DESIGN-when-clause-platform-tuples.md)
