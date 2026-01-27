@@ -1,8 +1,8 @@
 ---
 status: Proposed
 problem: Tsuku has 155 registry recipes but thousands of developer tools exist across ecosystems (8K+ Homebrew formulas, 200K+ Rust crates, 11M+ npm packages). Manual recipe creation doesn't scale, and missing system dependencies block many formulas.
-decision: Adopt hybrid generation (deterministic auto-merge, LLM human-review), popularity-based prioritization, and defer tools requiring missing system libraries while building library recipes as a parallel workstream.
-rationale: Hybrid generation maximizes automation for zero-cost ecosystem recipes while maintaining quality gates for LLM-generated content. Popularity-based prioritization delivers user value quickly. Deferring system-dep tools avoids blocking progress while library coverage expands incrementally.
+decision: Adopt fully deterministic batch generation with structured failure analysis. Failures reveal capability gaps that drive manual fixes. LLM builders remain a user feature, not part of automation.
+rationale: A deterministic-only pipeline produces consistent, analyzable results. Failures are valuable data that identify which capabilities to build next. Keeping LLM out of automation ensures predictable costs and enables systematic gap analysis.
 ---
 
 # DESIGN: Registry Scale Strategy
@@ -290,15 +290,20 @@ Try tsuku-provided libs first; fall back to system packages if unavailable.
 
 ## Decision Outcome
 
-**Chosen: 1C (Hybrid Generation) + 2A (Popularity-Based) + 3B (Skip System Deps Initially)**
+**Chosen: Deterministic-Only Pipeline + 2A (Popularity-Based) + 3B (Skip System Deps Initially)**
 
 ### Summary
 
-Adopt a hybrid generation strategy that auto-merges deterministic ecosystem recipes while requiring human review for LLM-generated Homebrew recipes. Prioritize by popularity to maximize user value per recipe. Initially skip tools requiring system libraries tsuku doesn't provide, building out library recipes as a separate workstream.
+Adopt a fully deterministic batch generation pipeline. All failures are recorded with structured data for analysis. LLM builders remain a user-facing feature for manual recipe creation, not part of automation. Prioritize by popularity to maximize user value per recipe. Initially skip tools requiring system libraries tsuku doesn't provide, building out library recipes as a separate workstream.
 
 ### Rationale
 
-**Generation Strategy (1C)**: The hybrid approach directly addresses the "deterministic generation preferred" driver. Ecosystem builders (crates.io, npm, pypi, rubygems) can auto-merge after validation because their output is entirely deterministic. Homebrew recipes need human review because LLM-generated content varies and bottle inspection covers only ~85-90% of formulas. This focuses human attention where it adds most value.
+**Generation Strategy (Deterministic-Only)**: The automated pipeline uses only deterministic builders. When a tool can't be generated deterministically, it's recorded as a failure with structured metadata. This produces:
+- Predictable costs ($0 for the pipeline itself)
+- Consistent, analyzable results
+- Clear signal about which capabilities to build next
+
+LLM builders (GitHub Release, Homebrew fallback) remain available for users running `tsuku create` interactively, but are excluded from batch automation.
 
 **Prioritization (2A)**: Popularity-based ordering aligns with "popular tools first" and "quality over quantity" drivers. Users get terraform, kubectl, and ripgrep before obscure tools. Popularity data is readily available from ecosystem APIs without building complex dependency analysis infrastructure.
 
@@ -307,7 +312,8 @@ Adopt a hybrid generation strategy that auto-merges deterministic ecosystem reci
 ### Alternatives Rejected
 
 - **1A (Manual)**: Doesn't scale to thousands; developer time is finite
-- **1B (Full CI)**: Significant tooling investment before proving the approach works
+- **1B (Full CI with LLM)**: LLM costs are unpredictable at scale; failures become expensive instead of informative
+- **1C (Hybrid with LLM fallback)**: Mixing LLM into automation obscures capability gaps; we want failures to be data, not fallback triggers
 - **1D (Event-Driven)**: Delays curated experience; harder to market
 - **2B (Dependency-Driven)**: Requires dependency infrastructure that doesn't exist (#644)
 - **2C (Ecosystem Sweep)**: Ignores cross-ecosystem popularity; delays high-value tools
@@ -317,64 +323,81 @@ Adopt a hybrid generation strategy that auto-merges deterministic ecosystem reci
 ### Trade-offs Accepted
 
 By choosing this approach, we accept:
-- **Limited coverage initially**: Tools needing system libs (imagemagick, ffmpeg) are deferred
-- **Two code paths**: Deterministic vs LLM generation require different handling
+- **Lower initial coverage**: Tools that fail deterministic generation won't be in the registry automatically
+- **Manual work for complex tools**: GitHub releases, complex Homebrew formulas require manual `tsuku create`
 - **Popularity bias**: Rising tools may be underrepresented vs established ones
 
 These are acceptable because:
-- Library recipes can be added incrementally as a parallel workstream
-- The code path split is bounded (review-required vs auto-merge) and auditable
+- Failures produce actionable data (capability gap reports) instead of LLM costs
+- Manual creation with LLM remains available as a user feature
+- The pipeline becomes a forcing function to improve deterministic builders
 - Popularity metrics can be augmented with user requests over time
 
 ## Solution Architecture
 
 ### Overview
 
-The registry scale strategy operates as four parallel workstreams coordinated by a CI pipeline:
+The registry scale strategy is a **fully deterministic pipeline** that generates recipes and records failures for analysis. LLM builders are excluded from automation.
 
-1. **Ecosystem Recipe Generation**: Deterministic builders for crates.io, npm, pypi, rubygems, Go, CPAN auto-generate and validate recipes, merging automatically on success
-2. **Homebrew Recipe Generation**: Bottle inspection handles 85-90% deterministically; LLM fallback for complex formulas requires human review
-3. **GitHub Release Generation**: Currently LLM-only; tactical design needed for deterministic path
-4. **Library Backfill**: Separate workstream adding tsuku recipes for common system libraries, gradually expanding the set of tools that can be generated
+**Automated pipeline workstreams:**
+
+1. **Ecosystem Recipe Generation**: Deterministic builders (Cargo, NPM, PyPI, RubyGems, Go, CPAN, Cask) auto-generate and validate recipes, merging automatically on success
+2. **Homebrew Recipe Generation**: Bottle inspection only (deterministic path). Formulas that fail bottle inspection are recorded as failures, not sent to LLM
+3. **Failure Collection**: All failures recorded with structured metadata for gap analysis
+4. **Library Backfill**: Separate workstream adding tsuku recipes for common system libraries
+
+**Not part of automation:**
+- GitHub Release builder (LLM-only) - users can run `tsuku create --from github:org/repo` manually
+- Homebrew LLM fallback - users can run `tsuku create --from homebrew:formula` manually for complex formulas
 
 ### Components
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────┐
-│                        CI Pipeline (GitHub Actions)                       │
+│                   Automated CI Pipeline (Deterministic Only)              │
 ├──────────────────────────────────────────────────────────────────────────┤
 │                                                                           │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐        │
-│  │ Ecosystem Builders│  │ Homebrew Builder │  │ GitHub Release   │        │
-│  │ (deterministic)   │  │ (85-90% determ.) │  │ (LLM-only today) │        │
-│  │                   │  │                  │  │                  │        │
-│  │ - Cargo ✓         │  │ Bottle inspect   │  │ ⚠ Needs determ.  │        │
-│  │ - NPM ✓           │  │ first, LLM       │  │   path design    │        │
-│  │ - PyPI ✓          │  │ fallback for     │  │                  │        │
-│  │ - RubyGems ✓      │  │ complex formulas │  │                  │        │
-│  │ - Go ✓            │  │                  │  │                  │        │
-│  │ - CPAN ✓          │  │                  │  │                  │        │
-│  │ - Cask ✓          │  │                  │  │                  │        │
-│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────────┘        │
-│           │                     │                     │                   │
-│           ▼                     ▼                     ▼                   │
+│  ┌────────────────────────────────────┐  ┌─────────────────────────────┐ │
+│  │       Deterministic Builders        │  │     Homebrew (bottle only)  │ │
+│  │                                     │  │                             │ │
+│  │  - Cargo ✓    - Go ✓               │  │  Bottle inspection only     │ │
+│  │  - NPM ✓      - CPAN ✓             │  │  (~85-90% of formulas)      │ │
+│  │  - PyPI ✓     - Cask ✓             │  │                             │ │
+│  │  - RubyGems ✓                      │  │  Failures → analysis        │ │
+│  └──────────────┬─────────────────────┘  └──────────────┬──────────────┘ │
+│                 │                                       │                 │
+│                 ▼                                       ▼                 │
 │  ┌───────────────────────────────────────────────────────────────┐       │
 │  │                    Validation Gates                            │       │
 │  │  - Recipe schema validation                                    │       │
 │  │  - Sandbox install test                                        │       │
 │  │  - Binary execution check                                      │       │
 │  └───────────────────────────────────────────────────────────────┘       │
-│           │                     │                     │                   │
-│           ▼                     ▼                     ▼                   │
-│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐           │
-│  │   Auto-Merge    │  │ Auto/Review     │  │  Human Review   │           │
-│  │   (deterministic)│  │ (by LLM usage) │  │   (LLM recipes) │           │
-│  └─────────────────┘  └─────────────────┘  └─────────────────┘           │
+│                 │                                       │                 │
+│          ┌──────┴──────┐                         ┌──────┴──────┐         │
+│          ▼             ▼                         ▼             ▼         │
+│    ┌──────────┐  ┌──────────┐              ┌──────────┐  ┌──────────┐    │
+│    │ Success  │  │ Failure  │              │ Success  │  │ Failure  │    │
+│    │ → Merge  │  │ → Record │              │ → Merge  │  │ → Record │    │
+│    └──────────┘  └──────────┘              └──────────┘  └──────────┘    │
+│                       │                                       │          │
+│                       └───────────────┬───────────────────────┘          │
+│                                       ▼                                  │
+│                          ┌─────────────────────┐                         │
+│                          │   Failure Analysis  │                         │
+│                          │   (JSONL reports)   │                         │
+│                          └─────────────────────┘                         │
+└──────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    Manual/Interactive (User Feature)                      │
+├──────────────────────────────────────────────────────────────────────────┤
+│  Users can run these manually to create recipes for tools that failed:   │
 │                                                                           │
+│  - tsuku create --from github:org/repo     (LLM-based)                   │
+│  - tsuku create --from homebrew:formula    (LLM fallback for failures)   │
 └──────────────────────────────────────────────────────────────────────────┘
 ```
-
-**Legend**: ✓ = ready for scale, ⚠ = gap needs tactical design
 
 ### Priority Queue
 
@@ -416,36 +439,45 @@ The batch pipeline runs in **deterministic-only mode** (no LLM fallback). Failur
 ```
 Priority Queue → Select Package → Route by Source
                                         │
-        ┌───────────────────────────────┼───────────────────────────────┐
-        ▼                               ▼                               ▼
-  Ecosystem Builder              Homebrew Builder               GitHub Release
-  (cargo, npm, pypi,             (bottle inspection)            (LLM today)
-   rubygems, go, cpan)                  │                               │
-        │                        ┌──────┴──────┐                        │
-        ▼                        ▼             ▼                        ▼
-  Deterministic Recipe    Deterministic   LLM Fallback           LLM Recipe
-        │                  (85-90%)        (10-15%)                    │
-        ▼                       │              │                        ▼
-  Validation Gates              └──────┬───────┘                 Validation Gates
-        │                              ▼                                │
-        ▼                       Validation Gates                        ▼
-  Auto-Merge PR                        │                         Human Review PR
-                                       ▼
-                              Auto-Merge or Review
-                              (based on LLM usage)
+              ┌─────────────────────────┴─────────────────────────┐
+              ▼                                                   ▼
+      Ecosystem Builder                                   Homebrew Builder
+      (cargo, npm, pypi,                                  (bottle inspection
+       rubygems, go, cpan, cask)                           ONLY - no LLM)
+              │                                                   │
+              ▼                                                   ▼
+      Deterministic Recipe                                Deterministic Recipe
+              │                                            OR Failure Record
+              ▼                                                   │
+      Validation Gates ◄──────────────────────────────────────────┘
+              │
+       ┌──────┴──────┐
+       ▼             ▼
+   Success       Failure
+   → Merge       → Record
+                     │
+                     ▼
+              Failure Analysis
+              (capability gaps)
+                     │
+                     ▼
+              Manual fixes using
+              LLM builders (user feature)
 ```
+
+**Note**: GitHub Release packages are NOT in the automated queue. Users create these manually via `tsuku create --from github:org/repo`.
 
 ## Implementation Approach
 
 This is a strategic design. Implementation details are delegated to tactical designs.
 
-### Phase 0: GitHub Release Deterministic Path (R&D, Parallel)
+### Phase 0: Prerequisites
 
-Reduce LLM dependency for GitHub releases - this is exploratory:
+Add the `--deterministic-only` flag to `tsuku create` to enable batch mode:
 
-1. **DESIGN-github-release-deterministic.md**: Analyze release asset naming patterns, build heuristics for common conventions
+1. **DESIGN-deterministic-only-flag.md**: Flag disables LLM fallback, ensuring failures are recorded instead of triggering LLM
 
-This runs in parallel with Phase 1; batch generation can proceed with LLM-based GitHub releases while the deterministic path is developed.
+This is required before batch generation can run.
 
 ### Phase 1: Batch Generation Infrastructure
 
@@ -459,19 +491,21 @@ This runs in parallel with Phase 1; batch generation can proceed with LLM-based 
 
 ### Milestones
 
-- **M-GitHubDeterministic**: GitHub Release deterministic path (R&D)
+- **M-DeterministicFlag**: Add `--deterministic-only` flag to `tsuku create`
 - **M-Priority**: Priority queue implementation (scoring, data ingestion, API)
 - **M-BatchGen**: CI pipeline for batch generation (scheduler, validation, PR creation)
+- **M-FailureAnalysis**: Failure collection and gap analysis tooling
 - **M-LibBackfill**: First 20 library recipes added (compression, data, crypto categories)
 
 ## Required Tactical Designs
 
-### Builder Gaps (Prerequisites for Scale)
+### Builder Configuration
 
 | Design | Target Repo | Purpose |
 |--------|-------------|---------|
-| DESIGN-github-release-deterministic.md | tsuku | Deterministic path for GitHub Release builder to reduce LLM dependency |
 | DESIGN-deterministic-only-flag.md | tsuku | Add `--deterministic-only` flag to disable LLM fallback for batch runs |
+
+**Note**: GitHub Release deterministic path is a nice-to-have, not a prerequisite. GitHub releases are handled manually via user-facing LLM builder.
 
 ### Failure Analysis Infrastructure
 
@@ -509,13 +543,9 @@ Batch generation runs in GitHub Actions CI. Generated recipes are validated in s
 
 **Mitigation**: Only generate from established ecosystems (Homebrew, crates.io, npm, PyPI, RubyGems) that have their own supply chain protections. These ecosystems have malware scanning, maintainer verification, and incident response processes.
 
-**Risk 2**: LLM generates recipe from malicious GitHub repo.
+**Risk 2**: Auto-merge introduces vulnerable recipe without human oversight.
 
-**Mitigation**: LLM-generated recipes require human review before merge. Reviewers check source repo reputation, commit history, and recipe contents.
-
-**Risk 3**: Auto-merge introduces vulnerable recipe without human oversight.
-
-**Mitigation**: Auto-merge only applies to deterministic ecosystem recipes where tsuku just packages upstream artifacts. The vulnerability would exist in the upstream ecosystem regardless of tsuku.
+**Mitigation**: Auto-merge only applies to deterministic ecosystem recipes where tsuku just packages upstream artifacts. The vulnerability would exist in the upstream ecosystem regardless of tsuku. LLM-based recipe creation is a manual user action, not part of automated pipeline.
 
 ### User Data Exposure
 
@@ -523,29 +553,25 @@ Batch generation runs in GitHub Actions CI. Generated recipes are validated in s
 
 ### Additional Risks Identified During Review
 
-**Risk 4**: Typosquatted packages in ecosystems (npm, PyPI, crates.io).
+**Risk 3**: Typosquatted packages in ecosystems (npm, PyPI, crates.io).
 
 **Mitigation**: Tactical design should include popularity/age gates - require human review for packages with <1000 downloads or <90 days old.
 
-**Risk 5**: `run_command` actions execute arbitrary shell commands at install time with user privileges.
+**Risk 4**: `run_command` actions execute arbitrary shell commands at install time with user privileges.
 
 **Mitigation**: This is an existing tsuku risk, not specific to batch generation. Tactical design should consider a 24-72 hour cooldown before auto-merge to allow community detection of malicious recipes.
-
-**Risk 6**: LLM prompt injection via malicious package metadata (READMEs, descriptions).
-
-**Mitigation**: Human review for LLM-generated recipes catches most cases. Tactical design should consider input sanitization.
 
 ### Mitigations Summary
 
 | Risk | Mitigation | Residual Risk |
 |------|------------|---------------|
 | Compromised upstream package | Rely on ecosystem's own protections | Ecosystem-level compromise bypasses all defenses |
-| Malicious LLM-generated recipe | Human review required | Reviewer may miss subtle issues |
 | Sandbox escape | Container isolation, no network | Container runtime vulnerability |
 | Recipe enables privilege escalation | Sandbox validation catches obvious cases | Sophisticated attacks may pass validation |
 | Typosquatted packages | Popularity/age gates (tactical design) | New popular packages could still be malicious |
 | `run_command` abuse | Cooldown period before auto-merge | Sophisticated time-delayed attacks |
-| LLM prompt injection | Human review + input sanitization | Novel injection techniques |
+
+**Note**: LLM-related risks (prompt injection, malicious generated recipes) are not applicable to the automated pipeline since LLM is excluded from automation.
 
 ## Consequences
 
