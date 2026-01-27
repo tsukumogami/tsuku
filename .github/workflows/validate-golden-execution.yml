@@ -617,11 +617,19 @@ jobs:
             -v "$PWD:/workspace" \
             -e GITHUB_TOKEN="$GITHUB_TOKEN" \
             -e FILE_LIST="$FILE_LIST" \
+            -e FAMILY="$FAMILY" \
             -w /workspace \
             "$CONTAINER_IMAGE" \
             sh -c '
               set -e
               FAILED=""
+
+              # Pre-install system packages that apk_install actions will verify
+              # This is needed because apk_install only checks packages, does not install them
+              if [ "$FAMILY" = "alpine" ]; then
+                echo "Pre-installing system packages for Alpine validation..."
+                apk add --no-cache libstdc++ yaml-dev openssl-dev
+              fi
 
               echo "$FILE_LIST" | while IFS="|" read -r file tool version; do
                 echo "=== Executing $tool ($version) ==="
