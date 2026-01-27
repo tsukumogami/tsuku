@@ -1,0 +1,247 @@
+# R2 Cost Monitoring Workflow
+#
+# Monitors R2 storage usage and creates GitHub issues when approaching
+# free tier limits (10 GB storage).
+#
+# Schedule: Weekly on Monday at 6 AM UTC
+#
+# Alert Threshold: 80% of free tier limit (8 GB)
+#
+# Metrics Tracked:
+#   - Total storage size (sum of all object sizes)
+#   - Object count (indicative of operations volume)
+#
+# See docs/designs/DESIGN-r2-golden-storage.md for architecture details.
+name: R2 Cost Monitoring
+
+on:
+  schedule:
+    # Weekly on Monday at 6 AM UTC
+    - cron: '0 6 * * 1'
+
+  workflow_dispatch:
+    inputs:
+      force_alert:
+        description: 'Force alert creation for testing (ignores threshold)'
+        type: boolean
+        default: false
+
+# Prevent concurrent runs
+concurrency:
+  group: r2-cost-monitoring
+  cancel-in-progress: false
+
+env:
+  # R2 Free Tier Limits
+  STORAGE_LIMIT_GB: 10
+  ALERT_THRESHOLD_PERCENT: 80
+  BUCKET_NAME: tsuku-golden-registry
+
+jobs:
+  usage-check:
+    name: Check R2 Usage
+    runs-on: ubuntu-latest
+    outputs:
+      storage_bytes: ${{ steps.metrics.outputs.storage_bytes }}
+      storage_gb: ${{ steps.metrics.outputs.storage_gb }}
+      object_count: ${{ steps.metrics.outputs.object_count }}
+      storage_percent: ${{ steps.metrics.outputs.storage_percent }}
+      threshold_exceeded: ${{ steps.metrics.outputs.threshold_exceeded }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Calculate R2 usage
+        id: metrics
+        env:
+          R2_BUCKET_URL: ${{ secrets.R2_BUCKET_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID_READONLY }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY_READONLY }}
+          FORCE_ALERT: ${{ inputs.force_alert }}
+        run: |
+          # Export AWS credentials for aws cli
+          export AWS_ACCESS_KEY_ID="$R2_ACCESS_KEY_ID"
+          export AWS_SECRET_ACCESS_KEY="$R2_SECRET_ACCESS_KEY"
+          export AWS_ENDPOINT_URL="$R2_BUCKET_URL"
+
+          echo "Calculating R2 bucket usage..."
+
+          # List all objects and calculate totals using pagination
+          TOTAL_SIZE=0
+          TOTAL_COUNT=0
+          CONTINUATION_TOKEN=""
+
+          while true; do
+            if [[ -z "$CONTINUATION_TOKEN" ]]; then
+              RESPONSE=$(aws s3api list-objects-v2 \
+                --bucket "$BUCKET_NAME" \
+                --output json 2>&1) || {
+                echo "Error listing objects: $RESPONSE"
+                exit 1
+              }
+            else
+              RESPONSE=$(aws s3api list-objects-v2 \
+                --bucket "$BUCKET_NAME" \
+                --continuation-token "$CONTINUATION_TOKEN" \
+                --output json 2>&1) || {
+                echo "Error listing objects: $RESPONSE"
+                exit 1
+              }
+            fi
+
+            # Sum sizes and count objects from this page
+            PAGE_SIZE=$(echo "$RESPONSE" | jq '[.Contents[]?.Size // 0] | add // 0')
+            PAGE_COUNT=$(echo "$RESPONSE" | jq '[.Contents[]?.Size // 0] | length')
+
+            TOTAL_SIZE=$((TOTAL_SIZE + PAGE_SIZE))
+            TOTAL_COUNT=$((TOTAL_COUNT + PAGE_COUNT))
+
+            # Check for more pages
+            IS_TRUNCATED=$(echo "$RESPONSE" | jq -r '.IsTruncated // false')
+            if [[ "$IS_TRUNCATED" == "true" ]]; then
+              CONTINUATION_TOKEN=$(echo "$RESPONSE" | jq -r '.NextContinuationToken')
+            else
+              break
+            fi
+          done
+
+          # Calculate metrics
+          STORAGE_GB=$(echo "scale=2; $TOTAL_SIZE / 1073741824" | bc)
+          STORAGE_PERCENT=$(echo "scale=0; ($TOTAL_SIZE * 100) / ($STORAGE_LIMIT_GB * 1073741824)" | bc)
+
+          # Determine if threshold exceeded
+          if [[ "$FORCE_ALERT" == "true" ]]; then
+            THRESHOLD_EXCEEDED="true"
+          elif [[ "$STORAGE_PERCENT" -ge "$ALERT_THRESHOLD_PERCENT" ]]; then
+            THRESHOLD_EXCEEDED="true"
+          else
+            THRESHOLD_EXCEEDED="false"
+          fi
+
+          # Set outputs
+          echo "storage_bytes=$TOTAL_SIZE" >> $GITHUB_OUTPUT
+          echo "storage_gb=$STORAGE_GB" >> $GITHUB_OUTPUT
+          echo "object_count=$TOTAL_COUNT" >> $GITHUB_OUTPUT
+          echo "storage_percent=$STORAGE_PERCENT" >> $GITHUB_OUTPUT
+          echo "threshold_exceeded=$THRESHOLD_EXCEEDED" >> $GITHUB_OUTPUT
+
+          # Log summary
+          echo ""
+          echo "=== R2 Usage Summary ==="
+          echo "Storage: ${STORAGE_GB} GB / ${STORAGE_LIMIT_GB} GB (${STORAGE_PERCENT}%)"
+          echo "Objects: ${TOTAL_COUNT} files"
+          echo "Threshold: ${ALERT_THRESHOLD_PERCENT}% ($(echo "scale=1; $STORAGE_LIMIT_GB * $ALERT_THRESHOLD_PERCENT / 100" | bc) GB)"
+          echo "Alert needed: ${THRESHOLD_EXCEEDED}"
+
+      - name: Create job summary
+        env:
+          STORAGE_GB: ${{ steps.metrics.outputs.storage_gb }}
+          STORAGE_PERCENT: ${{ steps.metrics.outputs.storage_percent }}
+          OBJECT_COUNT: ${{ steps.metrics.outputs.object_count }}
+          THRESHOLD_EXCEEDED: ${{ steps.metrics.outputs.threshold_exceeded }}
+        run: |
+          DATE=$(date -u +"%Y-%m-%d")
+
+          if [[ "$THRESHOLD_EXCEEDED" == "true" ]]; then
+            STATUS_ICON="⚠️"
+            STATUS_TEXT="Threshold exceeded"
+          else
+            STATUS_ICON="✅"
+            STATUS_TEXT="Within limits"
+          fi
+
+          cat >> $GITHUB_STEP_SUMMARY << EOF
+          ## R2 Usage Report - $DATE
+
+          | Metric | Value |
+          |--------|-------|
+          | Storage | ${STORAGE_GB} GB (${STORAGE_PERCENT}%) |
+          | Objects | ${OBJECT_COUNT} files |
+          | Limit | ${STORAGE_LIMIT_GB} GB |
+          | Threshold | ${ALERT_THRESHOLD_PERCENT}% ($(echo "scale=1; $STORAGE_LIMIT_GB * $ALERT_THRESHOLD_PERCENT / 100" | bc) GB) |
+
+          **Status**: ${STATUS_ICON} ${STATUS_TEXT}
+          EOF
+
+  alert:
+    name: Create Alert
+    needs: usage-check
+    if: needs.usage-check.outputs.threshold_exceeded == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Create or update usage alert issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          STORAGE_GB: ${{ needs.usage-check.outputs.storage_gb }}
+          STORAGE_PERCENT: ${{ needs.usage-check.outputs.storage_percent }}
+          OBJECT_COUNT: ${{ needs.usage-check.outputs.object_count }}
+        run: |
+          TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          WORKFLOW_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          ISSUE_TITLE="R2 Storage Usage Alert"
+          LABEL="r2-cost-alert"
+
+          # Ensure label exists
+          gh label create "$LABEL" --description "R2 storage cost alert" --color "d93f0b" 2>/dev/null || true
+
+          # Search for existing open issue
+          EXISTING_ISSUE=$(gh issue list \
+            --label "$LABEL" \
+            --state open \
+            --json number \
+            --jq '.[0].number // empty')
+
+          ISSUE_BODY="## R2 Storage Usage Alert
+
+          **Current Usage**: ${STORAGE_GB} GB / ${STORAGE_LIMIT_GB} GB (${STORAGE_PERCENT}%)
+          **Object Count**: ${OBJECT_COUNT} files
+          **Checked**: ${TIMESTAMP}
+
+          ### Thresholds
+
+          | Metric | Current | Limit | Status |
+          |--------|---------|-------|--------|
+          | Storage | ${STORAGE_GB} GB | ${STORAGE_LIMIT_GB} GB | ⚠️ ${STORAGE_PERCENT}% |
+
+          ### Recommendations
+
+          1. **Run cleanup workflow** to remove orphaned and excess files:
+             \`\`\`bash
+             gh workflow run r2-cleanup.yml -f dry_run=false
+             \`\`\`
+
+          2. **Review version retention policy** - currently keeping 2 versions per recipe per platform
+
+          3. **Check for large files** - identify unexpectedly large golden files
+
+          4. **Consider archiving** unused recipes if storage remains high
+
+          ### Workflow Run
+
+          [View workflow run](${WORKFLOW_URL})
+
+          ---
+          *This issue was automatically created by the R2 cost monitoring workflow.*"
+
+          UPDATE_COMMENT="## Usage Update - ${TIMESTAMP}
+
+          | Metric | Value |
+          |--------|-------|
+          | Storage | ${STORAGE_GB} GB (${STORAGE_PERCENT}%) |
+          | Objects | ${OBJECT_COUNT} files |
+
+          [Workflow run](${WORKFLOW_URL})"
+
+          if [ -n "$EXISTING_ISSUE" ]; then
+            echo "Updating existing issue #$EXISTING_ISSUE"
+            gh issue comment "$EXISTING_ISSUE" --body "$UPDATE_COMMENT"
+          else
+            echo "Creating new alert issue"
+            gh issue create \
+              --title "$ISSUE_TITLE" \
+              --body "$ISSUE_BODY" \
+              --label "$LABEL"
+          fi
