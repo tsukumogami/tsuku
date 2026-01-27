@@ -15,6 +15,23 @@ type CacheInfo struct {
 	CachedAt time.Time
 }
 
+// RefreshStats contains statistics from a refresh operation.
+type RefreshStats struct {
+	Total     int
+	Refreshed int
+	Fresh     int
+	Errors    int
+	Details   []RefreshDetail
+}
+
+// RefreshDetail contains information about a single recipe refresh.
+type RefreshDetail struct {
+	Name   string
+	Status string // "refreshed", "already fresh", "error"
+	Age    time.Duration
+	Error  error
+}
+
 // CachedRegistry wraps a Registry with TTL-based cache expiration.
 // It checks cache freshness before returning recipes and refreshes
 // expired entries from the network. Supports stale-if-error fallback
@@ -219,4 +236,143 @@ func (c *CachedRegistry) cacheWithTTL(name string, content []byte) error {
 	}
 
 	return nil
+}
+
+// GetCacheStatus returns the cache status for a recipe without fetching.
+// Returns nil if the recipe is not cached.
+func (c *CachedRegistry) GetCacheStatus(name string) (*RefreshDetail, error) {
+	if !c.registry.IsCached(name) {
+		return nil, nil
+	}
+
+	meta, err := c.registry.ReadMeta(name)
+	if err != nil {
+		return nil, err
+	}
+
+	age := time.Since(meta.CachedAt)
+	status := "already fresh"
+	if !c.isFresh(meta) {
+		status = "expired"
+	}
+
+	return &RefreshDetail{
+		Name:   name,
+		Status: status,
+		Age:    age,
+	}, nil
+}
+
+// Refresh forces a refresh of a single recipe from the registry.
+// Returns the refreshed content and details about the operation.
+// Returns an error if the recipe is not cached.
+func (c *CachedRegistry) Refresh(ctx context.Context, name string) (*RefreshDetail, error) {
+	// Check if recipe is cached
+	if !c.registry.IsCached(name) {
+		return &RefreshDetail{
+			Name:   name,
+			Status: "error",
+			Error:  fmt.Errorf("recipe '%s' is not cached", name),
+		}, fmt.Errorf("recipe '%s' is not cached", name)
+	}
+
+	// Get current metadata for age reporting
+	var age time.Duration
+	meta, err := c.registry.ReadMeta(name)
+	if err == nil && meta != nil {
+		age = time.Since(meta.CachedAt)
+	}
+
+	// Fetch fresh content from network
+	content, fetchErr := c.registry.FetchRecipe(ctx, name)
+	if fetchErr != nil {
+		return &RefreshDetail{
+			Name:   name,
+			Status: "error",
+			Age:    age,
+			Error:  fetchErr,
+		}, fetchErr
+	}
+
+	// Update cache
+	if cacheErr := c.cacheWithTTL(name, content); cacheErr != nil {
+		return &RefreshDetail{
+			Name:   name,
+			Status: "error",
+			Age:    age,
+			Error:  cacheErr,
+		}, cacheErr
+	}
+
+	return &RefreshDetail{
+		Name:   name,
+		Status: "refreshed",
+		Age:    age,
+	}, nil
+}
+
+// RefreshAll refreshes all cached recipes from the registry.
+// Continues on individual recipe errors and returns aggregated statistics.
+func (c *CachedRegistry) RefreshAll(ctx context.Context) (*RefreshStats, error) {
+	cachedMeta, err := c.registry.ListCachedWithMeta()
+	if err != nil {
+		return nil, err
+	}
+
+	stats := &RefreshStats{
+		Total:   len(cachedMeta),
+		Details: make([]RefreshDetail, 0, len(cachedMeta)),
+	}
+
+	for name, meta := range cachedMeta {
+		var age time.Duration
+		if meta != nil {
+			age = time.Since(meta.CachedAt)
+		}
+
+		// Check if fresh - skip refresh for fresh entries
+		if meta != nil && c.isFresh(meta) {
+			stats.Fresh++
+			stats.Details = append(stats.Details, RefreshDetail{
+				Name:   name,
+				Status: "already fresh",
+				Age:    age,
+			})
+			continue
+		}
+
+		// Expired - refresh from network
+		content, fetchErr := c.registry.FetchRecipe(ctx, name)
+		if fetchErr != nil {
+			stats.Errors++
+			stats.Details = append(stats.Details, RefreshDetail{
+				Name:   name,
+				Status: "error",
+				Age:    age,
+				Error:  fetchErr,
+			})
+			continue
+		}
+
+		// Update cache
+		if cacheErr := c.cacheWithTTL(name, content); cacheErr != nil {
+			stats.Errors++
+			stats.Details = append(stats.Details, RefreshDetail{
+				Name:   name,
+				Status: "error",
+				Age:    age,
+				Error:  cacheErr,
+			})
+			continue
+		}
+
+		stats.Refreshed++
+		stats.Details = append(stats.Details, RefreshDetail{
+			Name:   name,
+			Status: "refreshed",
+			Age:    age,
+		})
+	}
+
+	return stats, nil
 }
