@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: The install_binaries action's binaries parameter conflates two separate concerns (files to export vs files to make executable) and uses misleading semantics, creating confusion for recipe authors and blocking static analysis.
 decision: Rename binaries parameter to outputs and infer executability from path prefix (bin/ = executable) with an optional executables parameter for edge cases.
 rationale: This approach provides semantic clarity while maintaining backward compatibility through convention-based inference. Path prefix inference works for all 35 existing recipes and aligns with Unix conventions that developers already understand. The optional executables override handles future edge cases without burdening typical recipes.
@@ -9,7 +9,7 @@ rationale: This approach provides semantic clarity while maintaining backward co
 
 ## Status
 
-Planned
+Current
 
 ## Upstream Design Reference
 
@@ -587,6 +587,6 @@ No network access, no user data access, no telemetry impact.
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| - | - | - | - |
+| ~~[#648](https://github.com/tsukumogami/tsuku/issues/648)~~ | ~~refactor(actions): install_binaries parameter name is semantically misleading~~ | ~~None~~ | ~~testable~~ |
 
-Issues to be created during /plan execution.
+Implementation completed inline via the upstream issue.
