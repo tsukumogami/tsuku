@@ -43,7 +43,7 @@ FAILED=0
 
 # Check: Frontmatter exists (prerequisite for other checks)
 if ! has_frontmatter "$DOC_PATH"; then
-    emit_fail "Frontmatter: missing or malformed (must start with --- and have closing ---)"
+    emit_fail "FM01: Frontmatter missing or malformed. See: .github/scripts/docs/FM01.md"
     exit $EXIT_FAIL
 fi
 
@@ -60,7 +60,7 @@ get_field() {
 for field in "${REQUIRED_FIELDS[@]}"; do
     value=$(get_field "$field")
     if [[ -z "$value" ]]; then
-        emit_fail "Missing frontmatter field: $field. Required: status, problem, decision, rationale"
+        emit_fail "FM01: Missing frontmatter field: $field. See: .github/scripts/docs/FM01.md"
         FAILED=1
     fi
 done
@@ -76,7 +76,7 @@ if [[ -n "$FM_STATUS" ]]; then
         fi
     done
     if [[ "$valid" -eq 0 ]]; then
-        emit_fail "Invalid frontmatter status: $FM_STATUS. Must be: Proposed, Accepted, Planned, Current, Superseded"
+        emit_fail "FM02: Invalid frontmatter status: $FM_STATUS. See: .github/scripts/docs/FM02.md"
         FAILED=1
     fi
 fi
@@ -139,10 +139,10 @@ if [[ "$FM_STATUS" != "Superseded" ]]; then
 
     BODY_STATUS=$(extract_body_status "$DOC_PATH")
     if [[ -z "$BODY_STATUS" ]]; then
-        emit_fail "Could not extract body status from ## Status section (expected **Status** format)"
+        emit_fail "FM03: Could not extract body status from ## Status section. See: .github/scripts/docs/FM03.md"
         FAILED=1
     elif [[ -n "$FM_STATUS" && "$FM_STATUS" != "$BODY_STATUS" ]]; then
-        emit_fail "Frontmatter status '$FM_STATUS' doesn't match body status '$BODY_STATUS'"
+        emit_fail "FM03: Frontmatter status '$FM_STATUS' doesn't match body status '$BODY_STATUS'. See: .github/scripts/docs/FM03.md"
         FAILED=1
     fi
 fi

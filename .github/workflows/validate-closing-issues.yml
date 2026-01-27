@@ -1,0 +1,32 @@
+name: Validate Closing Issues in Design Docs
+
+on:
+  pull_request:
+    types: [opened, synchronize, edited]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate closing issues are marked complete
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PR_NUMBER=${{ github.event.pull_request.number }}
+
+          echo "Checking that issues closed by PR #$PR_NUMBER are marked complete in all design docs..."
+
+          if ! .github/scripts/checks/strikethrough-all-docs.sh --pr "$PR_NUMBER" 2>&1; then
+            echo ""
+            echo "::error::Issues being closed are not marked complete in all design docs that reference them."
+            exit 1
+          fi
+
+          echo "All closing issues are properly marked in design docs"

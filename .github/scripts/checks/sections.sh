@@ -118,7 +118,7 @@ for section in "${REQUIRED_SECTIONS[@]}"; do
 done
 
 if [[ "$MISSING_COUNT" -gt 0 ]]; then
-    emit_fail "SC01: Missing $MISSING_COUNT of 9 required sections:"
+    emit_fail "SC01: Missing $MISSING_COUNT of 9 required sections. See: .github/scripts/docs/SC01.md"
     for section in "${MISSING_SECTIONS[@]}"; do
         echo "       - ## $section" >&2
     done
@@ -135,7 +135,7 @@ if [[ "$MISSING_COUNT" -eq 0 ]]; then
     for section in "${REQUIRED_SECTIONS[@]}"; do
         CURRENT_LINE=${SECTION_LINES[$section]}
         if [[ "$PREV_LINE" -gt 0 ]] && [[ "$CURRENT_LINE" -lt "$PREV_LINE" ]]; then
-            emit_fail "SC02: Wrong section order - '## $section' (line $CURRENT_LINE) appears before '## $PREV_SECTION' (line $PREV_LINE)"
+            emit_fail "SC02: Wrong section order - '## $section' (line $CURRENT_LINE) appears before '## $PREV_SECTION' (line $PREV_LINE). See: .github/scripts/docs/SC02.md"
             FAILED=1
             ORDER_FAILED=1
         fi
@@ -169,10 +169,10 @@ if [[ -n "${FOUND_SECTIONS["Security Considerations"]:-}" ]]; then
 
     # Check if empty or only N/A (case insensitive)
     if [[ -z "$STRIPPED_CONTENT" ]]; then
-        emit_fail "SC03: Security Considerations section is empty (must address security dimensions)"
+        emit_fail "SC03: Security Considerations section is empty. See: .github/scripts/docs/SC03.md"
         FAILED=1
     elif [[ "${STRIPPED_CONTENT,,}" =~ ^n/?a\.?$ ]]; then
-        emit_fail "SC03: Security Considerations section contains only 'N/A' (must provide analysis or justification)"
+        emit_fail "SC03: Security Considerations section contains only 'N/A'. See: .github/scripts/docs/SC03.md"
         FAILED=1
     fi
 fi

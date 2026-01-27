@@ -62,7 +62,7 @@ FAILED=0
 # - Current status: MAY have this section (Accepted→Current direct path doesn't create it)
 if ! grep -q "^## Implementation Issues" "$DOC_PATH"; then
     if [[ "$FM_STATUS" == "Planned" ]]; then
-        emit_fail "II01: Planned status requires '## Implementation Issues' section"
+        emit_fail "II01: Planned status requires '## Implementation Issues' section. See: .github/scripts/docs/II01.md"
         FAILED=1
         exit $EXIT_FAIL
     else
@@ -84,7 +84,7 @@ ISSUES_SECTION=$(awk '
 TABLE_HEADER=$(echo "$ISSUES_SECTION" | grep -E "^\| *Issue" | head -1 || true)
 
 if [[ -z "$TABLE_HEADER" ]]; then
-    emit_fail "II02: Implementation Issues section missing issues table"
+    emit_fail "II02: Implementation Issues section missing issues table. See: .github/scripts/docs/II02.md"
     FAILED=1
     exit $EXIT_FAIL
 fi
@@ -95,7 +95,7 @@ for col in "${REQUIRED_COLUMNS[@]}"; do
     if ! echo "$TABLE_HEADER" | grep -qiE "\| *$col *\|"; then
         # Check if it's the last column (no trailing |)
         if ! echo "$TABLE_HEADER" | grep -qiE "\| *$col *$"; then
-            emit_fail "II02: Issues table missing required column: $col"
+            emit_fail "II02: Issues table missing required column: $col. See: .github/scripts/docs/II02.md"
             FAILED=1
         fi
     fi
@@ -179,13 +179,13 @@ while IFS= read -r row; do
         if [[ "$IS_MILESTONE_ROW" == true ]]; then
             # Milestone row: must be a valid markdown link
             if ! is_markdown_link "$ISSUE_VAL"; then
-                emit_fail "II03: Invalid milestone link format: '$ISSUE_VAL'. Expected: [Name](url)"
+                emit_fail "II03: Invalid milestone link format: '$ISSUE_VAL'. See: .github/scripts/docs/II03.md"
                 FAILED=1
             fi
         else
             # Issue row: must be [#N](url) format
             if ! is_issue_link "$ISSUE_VAL"; then
-                emit_fail "II03: Invalid issue link format: '$ISSUE_VAL'. Expected: [#N](url)"
+                emit_fail "II03: Invalid issue link format: '$ISSUE_VAL'. See: .github/scripts/docs/II03.md"
                 FAILED=1
             fi
         fi
@@ -205,15 +205,15 @@ while IFS= read -r row; do
                 dep_clean=$(strip_strikethrough "$dep")
                 # Check for plain text issue reference (e.g., #123)
                 if [[ "$dep_clean" =~ ^#[0-9]+$ ]]; then
-                    emit_fail "II04: Dependencies must use link format, not plain text: '$dep'. Expected: [#N](url)"
+                    emit_fail "II04: Dependencies must use link format, not plain text: '$dep'. See: .github/scripts/docs/II04.md"
                     FAILED=1
                 # Check for plain text milestone reference (e.g., M38)
                 elif [[ "$dep_clean" =~ ^M[0-9]+$ ]]; then
-                    emit_fail "II04: Dependencies must use link format, not plain text: '$dep'. Expected: [MN](url)"
+                    emit_fail "II04: Dependencies must use link format, not plain text: '$dep'. See: .github/scripts/docs/II04.md"
                     FAILED=1
                 # Must be a valid markdown link (issue or milestone)
                 elif ! is_markdown_link "$dep"; then
-                    emit_fail "II04: Invalid dependency format: '$dep'. Expected: None or [text](url)"
+                    emit_fail "II04: Invalid dependency format: '$dep'. See: .github/scripts/docs/II04.md"
                     FAILED=1
                 fi
             done
@@ -227,7 +227,7 @@ while IFS= read -r row; do
                 # Valid
                 ;;
             *)
-                emit_fail "II05: Invalid tier value: '$TIER_VAL'. Must be: simple, testable, critical, milestone"
+                emit_fail "II05: Invalid tier value: '$TIER_VAL'. See: .github/scripts/docs/II05.md"
                 FAILED=1
                 ;;
         esac

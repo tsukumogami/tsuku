@@ -81,7 +81,7 @@ case "$1" in
             echo '{"issues": {}, "milestones": {}}'
             exit 0
         }
-        INPUT_JSON=$(echo "$DESIGN_DATA" | jq '[.entries[] | {type, number, url}]')
+        INPUT_JSON=$(echo "$DESIGN_DATA" | jq '[.milestones[].entries[] | {type, number, url}]')
         ;;
     --stdin)
         INPUT_JSON=$(cat)
