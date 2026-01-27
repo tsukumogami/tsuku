@@ -6,62 +6,8 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "6924285a8102a97d956d36b71c96a935b4171727fc79f855d3dddb61aaed1eab",
+  "recipe_hash": "38af9602184e059c38e9bc4c00bc8b82b0608e168fc3bf7f6baf771ce42fe237",
   "deterministic": true,
-  "dependencies": [
-    {
-      "tool": "patchelf",
-      "version": "0.18.0",
-      "recipe_hash": "bc34310d75089a4b61515c263dcbbf112270d583a31325eca37bfbfbe1be2a58",
-      "steps": [
-        {
-          "action": "download_file",
-          "params": {
-            "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-            "dest": "patchelf.tar.gz",
-            "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef"
-          },
-          "evaluable": true,
-          "deterministic": true,
-          "url": "https://ghcr.io/v2/homebrew/core/patchelf/blobs/sha256:730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-          "checksum": "730a1f960f0965576c25edf1525ac57c14177ff4ee5fa74d731f6892c0f519ef",
-          "size": 122324
-        },
-        {
-          "action": "extract",
-          "params": {
-            "archive": "patchelf.tar.gz",
-            "format": "tar.gz",
-            "strip_dirs": 2
-          },
-          "evaluable": true,
-          "deterministic": true
-        },
-        {
-          "action": "homebrew_relocate",
-          "params": {
-            "formula": "patchelf"
-          },
-          "evaluable": false,
-          "deterministic": true
-        },
-        {
-          "action": "install_binaries",
-          "params": {
-            "outputs": [
-              "bin/patchelf"
-            ]
-          },
-          "evaluable": true,
-          "deterministic": true
-        }
-      ],
-      "verify": {
-        "command": "patchelf --version",
-        "pattern": "patchelf {version}"
-      }
-    }
-  ],
   "steps": [
     {
       "action": "download_file",
@@ -98,7 +44,6 @@
       "action": "install_libraries",
       "params": {
         "patterns": [
-          "lib/*.so*",
           "lib/*.dylib"
         ]
       },

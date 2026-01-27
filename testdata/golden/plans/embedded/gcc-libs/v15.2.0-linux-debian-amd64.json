@@ -1,13 +1,14 @@
 {
   "format_version": 3,
-  "tool": "libyaml",
-  "version": "0.2.5",
+  "tool": "gcc-libs",
+  "version": "15.2.0",
   "platform": {
     "os": "linux",
-    "arch": "amd64"
+    "arch": "amd64",
+    "linux_family": "debian"
   },
-  "recipe_hash": "6924285a8102a97d956d36b71c96a935b4171727fc79f855d3dddb61aaed1eab",
-  "deterministic": true,
+  "recipe_hash": "d2c433fc9ea29dc16586557d1a4d5f4efc7b8b02229636687084faf09cfdac10",
+  "deterministic": false,
   "dependencies": [
     {
       "tool": "patchelf",
@@ -66,20 +67,20 @@
     {
       "action": "download_file",
       "params": {
-        "checksum": "354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8",
-        "dest": "libyaml.tar.gz",
-        "url": "https://ghcr.io/v2/homebrew/core/libyaml/blobs/sha256:354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8"
+        "checksum": "eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
+        "dest": "gcc.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58"
       },
       "evaluable": true,
       "deterministic": true,
-      "url": "https://ghcr.io/v2/homebrew/core/libyaml/blobs/sha256:354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8",
-      "checksum": "354677a745b6c62109e792ddbd0cbdaf9e6a471d84fdbde3a7d9bae36d832da8",
-      "size": 125801
+      "url": "https://ghcr.io/v2/homebrew/core/gcc/blobs/sha256:eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
+      "checksum": "eebab9738ff2c231ec19c5da5725a830d89322914f8aa84d58728c6b45f84a58",
+      "size": 161971540
     },
     {
       "action": "extract",
       "params": {
-        "archive": "libyaml.tar.gz",
+        "archive": "gcc.tar.gz",
         "format": "tar.gz",
         "strip_dirs": 2
       },
@@ -89,17 +90,25 @@
     {
       "action": "homebrew_relocate",
       "params": {
-        "formula": "libyaml"
+        "formula": "gcc"
       },
       "evaluable": false,
       "deterministic": true
     },
     {
+      "action": "run_command",
+      "params": {
+        "command": "mkdir -p lib\n# Copy the actual library files (find the real files, not symlinks)\ncp lib/gcc/current/libstdc++.so.6.0.* lib/\ncp lib/gcc/current/libgcc_s.so.1 lib/\n# Create standard symlinks with explicit targets\ncd lib\nSTDCXX=$(ls libstdc++.so.6.0.* 2>/dev/null | head -1)\nln -sf \"$STDCXX\" libstdc++.so.6\nln -sf libstdc++.so.6 libstdc++.so\nln -sf libgcc_s.so.1 libgcc_s.so\n"
+      },
+      "evaluable": false,
+      "deterministic": false
+    },
+    {
       "action": "install_libraries",
       "params": {
         "patterns": [
-          "lib/*.so*",
-          "lib/*.dylib"
+          "lib/libstdc++.so*",
+          "lib/libgcc_s.so*"
         ]
       },
       "evaluable": true,
