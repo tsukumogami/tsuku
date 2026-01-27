@@ -571,3 +571,148 @@ func TestGetRecipeCacheSizeLimit_TooHigh(t *testing.T) {
 		t.Errorf("GetRecipeCacheSizeLimit() = %d, want %d (maximum)", limit, expected)
 	}
 }
+
+func TestGetRecipeCacheMaxStale_Default(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheMaxStale)
+	defer os.Setenv(EnvRecipeCacheMaxStale, original)
+
+	_ = os.Unsetenv(EnvRecipeCacheMaxStale)
+
+	maxStale := GetRecipeCacheMaxStale()
+	if maxStale != DefaultRecipeCacheMaxStale {
+		t.Errorf("GetRecipeCacheMaxStale() = %v, want %v", maxStale, DefaultRecipeCacheMaxStale)
+	}
+}
+
+func TestGetRecipeCacheMaxStale_CustomValue(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheMaxStale)
+	defer os.Setenv(EnvRecipeCacheMaxStale, original)
+
+	tests := []struct {
+		envValue string
+		expected time.Duration
+	}{
+		{"24h", 24 * time.Hour},
+		{"48h", 48 * time.Hour},
+		{"168h", 168 * time.Hour},
+		{"3d", 3 * 24 * time.Hour},
+		{"7d", 7 * 24 * time.Hour},
+		{"14D", 14 * 24 * time.Hour},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.envValue, func(t *testing.T) {
+			os.Setenv(EnvRecipeCacheMaxStale, tt.envValue)
+			maxStale := GetRecipeCacheMaxStale()
+			if maxStale != tt.expected {
+				t.Errorf("GetRecipeCacheMaxStale() with %q = %v, want %v", tt.envValue, maxStale, tt.expected)
+			}
+		})
+	}
+}
+
+func TestGetRecipeCacheMaxStale_Zero(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheMaxStale)
+	defer os.Setenv(EnvRecipeCacheMaxStale, original)
+
+	// Setting to 0 should disable stale fallback
+	os.Setenv(EnvRecipeCacheMaxStale, "0")
+
+	maxStale := GetRecipeCacheMaxStale()
+	if maxStale != 0 {
+		t.Errorf("GetRecipeCacheMaxStale() = %v, want 0", maxStale)
+	}
+}
+
+func TestGetRecipeCacheMaxStale_InvalidValue(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheMaxStale)
+	defer os.Setenv(EnvRecipeCacheMaxStale, original)
+
+	os.Setenv(EnvRecipeCacheMaxStale, "invalid")
+
+	maxStale := GetRecipeCacheMaxStale()
+	if maxStale != DefaultRecipeCacheMaxStale {
+		t.Errorf("GetRecipeCacheMaxStale() = %v, want %v (default)", maxStale, DefaultRecipeCacheMaxStale)
+	}
+}
+
+func TestGetRecipeCacheMaxStale_TooLow(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheMaxStale)
+	defer os.Setenv(EnvRecipeCacheMaxStale, original)
+
+	// Set too low value (minimum is 1h, unless 0 for disabled)
+	os.Setenv(EnvRecipeCacheMaxStale, "5m")
+
+	maxStale := GetRecipeCacheMaxStale()
+	if maxStale != 1*time.Hour {
+		t.Errorf("GetRecipeCacheMaxStale() = %v, want 1h (minimum)", maxStale)
+	}
+}
+
+func TestGetRecipeCacheMaxStale_TooHigh(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheMaxStale)
+	defer os.Setenv(EnvRecipeCacheMaxStale, original)
+
+	// Set too high value (maximum is 30 days)
+	os.Setenv(EnvRecipeCacheMaxStale, "60d")
+
+	maxStale := GetRecipeCacheMaxStale()
+	expected := 30 * 24 * time.Hour
+	if maxStale != expected {
+		t.Errorf("GetRecipeCacheMaxStale() = %v, want %v (maximum)", maxStale, expected)
+	}
+}
+
+func TestGetRecipeCacheStaleFallback_Default(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheStaleFallback)
+	defer os.Setenv(EnvRecipeCacheStaleFallback, original)
+
+	_ = os.Unsetenv(EnvRecipeCacheStaleFallback)
+
+	fallback := GetRecipeCacheStaleFallback()
+	if !fallback {
+		t.Errorf("GetRecipeCacheStaleFallback() = false, want true (default)")
+	}
+}
+
+func TestGetRecipeCacheStaleFallback_Enabled(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheStaleFallback)
+	defer os.Setenv(EnvRecipeCacheStaleFallback, original)
+
+	for _, value := range []string{"true", "TRUE", "True", "1", "yes", "YES", "on", "ON"} {
+		t.Run(value, func(t *testing.T) {
+			os.Setenv(EnvRecipeCacheStaleFallback, value)
+			fallback := GetRecipeCacheStaleFallback()
+			if !fallback {
+				t.Errorf("GetRecipeCacheStaleFallback() with %q = false, want true", value)
+			}
+		})
+	}
+}
+
+func TestGetRecipeCacheStaleFallback_Disabled(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheStaleFallback)
+	defer os.Setenv(EnvRecipeCacheStaleFallback, original)
+
+	for _, value := range []string{"false", "FALSE", "False", "0", "no", "NO", "off", "OFF"} {
+		t.Run(value, func(t *testing.T) {
+			os.Setenv(EnvRecipeCacheStaleFallback, value)
+			fallback := GetRecipeCacheStaleFallback()
+			if fallback {
+				t.Errorf("GetRecipeCacheStaleFallback() with %q = true, want false", value)
+			}
+		})
+	}
+}
+
+func TestGetRecipeCacheStaleFallback_InvalidValue(t *testing.T) {
+	original := os.Getenv(EnvRecipeCacheStaleFallback)
+	defer os.Setenv(EnvRecipeCacheStaleFallback, original)
+
+	os.Setenv(EnvRecipeCacheStaleFallback, "invalid")
+
+	fallback := GetRecipeCacheStaleFallback()
+	if !fallback {
+		t.Errorf("GetRecipeCacheStaleFallback() with invalid value = false, want true (default)")
+	}
+}

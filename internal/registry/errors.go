@@ -36,6 +36,10 @@ const (
 	ErrTypeCacheRead
 	// ErrTypeCacheWrite indicates a cache write operation failed
 	ErrTypeCacheWrite
+	// ErrTypeCacheTooStale indicates cache exists but exceeds max staleness
+	ErrTypeCacheTooStale
+	// ErrTypeCacheStaleUsed indicates stale cache was used (warning context)
+	ErrTypeCacheStaleUsed
 )
 
 // RegistryError provides structured error information for registry operations
@@ -77,6 +81,8 @@ func (e *RegistryError) Suggestion() string {
 		return "Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes"
 	case ErrTypeNetwork:
 		return "Check your internet connection and try again"
+	case ErrTypeCacheTooStale:
+		return "Run 'tsuku update-registry' when you have internet connectivity to refresh the cache"
 	default:
 		return ""
 	}
