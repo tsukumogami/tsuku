@@ -2,7 +2,7 @@
 
 This runbook documents operational procedures for the R2 golden storage system used by tsuku's CI validation.
 
-**Design Reference**: [DESIGN-r2-golden-storage.md](designs/DESIGN-r2-golden-storage.md)
+**Design Reference**: [DESIGN-r2-golden-storage.md](designs/current/DESIGN-r2-golden-storage.md)
 
 ## Overview
 
