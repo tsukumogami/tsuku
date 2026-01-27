@@ -598,3 +598,257 @@ func TestFormatDuration(t *testing.T) {
 		})
 	}
 }
+
+func TestCachedRegistry_Refresh(t *testing.T) {
+	cacheDir := t.TempDir()
+	networkContent := []byte("[metadata]\nname = \"test-tool\"\nversion = \"2.0\"\n")
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(networkContent)
+	}))
+	defer server.Close()
+
+	reg := New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Pre-populate cache with old content
+	oldContent := []byte("[metadata]\nname = \"test-tool\"\nversion = \"1.0\"\n")
+	if err := reg.CacheRecipe("test-tool", oldContent); err != nil {
+		t.Fatalf("CacheRecipe failed: %v", err)
+	}
+
+	// Update metadata to show it was cached 2 hours ago
+	meta := &CacheMetadata{
+		CachedAt:    time.Now().Add(-2 * time.Hour),
+		ExpiresAt:   time.Now().Add(-1 * time.Hour),
+		LastAccess:  time.Now().Add(-2 * time.Hour),
+		Size:        int64(len(oldContent)),
+		ContentHash: computeContentHash(oldContent),
+	}
+	if err := reg.WriteMeta("test-tool", meta); err != nil {
+		t.Fatalf("WriteMeta failed: %v", err)
+	}
+
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// Refresh should force fetch from network
+	detail, err := cached.Refresh(context.Background(), "test-tool")
+	if err != nil {
+		t.Fatalf("Refresh failed: %v", err)
+	}
+
+	if detail.Status != "refreshed" {
+		t.Errorf("expected status 'refreshed', got %q", detail.Status)
+	}
+	if detail.Name != "test-tool" {
+		t.Errorf("expected name 'test-tool', got %q", detail.Name)
+	}
+	// Age should be approximately 2 hours
+	if detail.Age < 1*time.Hour || detail.Age > 3*time.Hour {
+		t.Errorf("expected age around 2 hours, got %v", detail.Age)
+	}
+
+	// Verify cache was updated
+	newCached, _ := reg.GetCached("test-tool")
+	if string(newCached) != string(networkContent) {
+		t.Errorf("cache should be updated with network content")
+	}
+}
+
+func TestCachedRegistry_RefreshNotCached(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// Refresh should fail for non-cached recipe
+	detail, err := cached.Refresh(context.Background(), "nonexistent")
+	if err == nil {
+		t.Error("expected error for non-cached recipe")
+	}
+
+	if detail == nil {
+		t.Fatal("expected detail even on error")
+	}
+	if detail.Status != "error" {
+		t.Errorf("expected status 'error', got %q", detail.Status)
+	}
+}
+
+func TestCachedRegistry_RefreshAll(t *testing.T) {
+	cacheDir := t.TempDir()
+	networkContent := []byte("[metadata]\nname = \"tool\"\n")
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write(networkContent)
+	}))
+	defer server.Close()
+
+	reg := New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Create two cached recipes - one fresh, one expired
+	freshContent := []byte("[metadata]\nname = \"fresh-tool\"\n")
+	expiredContent := []byte("[metadata]\nname = \"expired-tool\"\n")
+
+	if err := reg.CacheRecipe("fresh-tool", freshContent); err != nil {
+		t.Fatalf("CacheRecipe failed: %v", err)
+	}
+	if err := reg.CacheRecipe("expired-tool", expiredContent); err != nil {
+		t.Fatalf("CacheRecipe failed: %v", err)
+	}
+
+	// Mark expired-tool as expired
+	expiredMeta := &CacheMetadata{
+		CachedAt:    time.Now().Add(-2 * time.Hour),
+		ExpiresAt:   time.Now().Add(-1 * time.Hour),
+		LastAccess:  time.Now().Add(-2 * time.Hour),
+		Size:        int64(len(expiredContent)),
+		ContentHash: computeContentHash(expiredContent),
+	}
+	if err := reg.WriteMeta("expired-tool", expiredMeta); err != nil {
+		t.Fatalf("WriteMeta failed: %v", err)
+	}
+
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// RefreshAll should refresh only expired recipes
+	stats, err := cached.RefreshAll(context.Background())
+	if err != nil {
+		t.Fatalf("RefreshAll failed: %v", err)
+	}
+
+	if stats.Total != 2 {
+		t.Errorf("expected total=2, got %d", stats.Total)
+	}
+	if stats.Refreshed != 1 {
+		t.Errorf("expected refreshed=1, got %d", stats.Refreshed)
+	}
+	if stats.Fresh != 1 {
+		t.Errorf("expected fresh=1, got %d", stats.Fresh)
+	}
+	if stats.Errors != 0 {
+		t.Errorf("expected errors=0, got %d", stats.Errors)
+	}
+	if len(stats.Details) != 2 {
+		t.Errorf("expected 2 details, got %d", len(stats.Details))
+	}
+}
+
+func TestCachedRegistry_RefreshAll_PartialFailure(t *testing.T) {
+	cacheDir := t.TempDir()
+
+	requestCount := 0
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		requestCount++
+		// First request succeeds, second fails
+		if requestCount == 1 {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte("[metadata]\nname = \"tool\"\n"))
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer server.Close()
+
+	reg := New(cacheDir)
+	reg.BaseURL = server.URL
+
+	// Create two expired recipes
+	for _, name := range []string{"tool1", "tool2"} {
+		content := []byte("[metadata]\nname = \"" + name + "\"\n")
+		if err := reg.CacheRecipe(name, content); err != nil {
+			t.Fatalf("CacheRecipe failed: %v", err)
+		}
+		meta := &CacheMetadata{
+			CachedAt:    time.Now().Add(-2 * time.Hour),
+			ExpiresAt:   time.Now().Add(-1 * time.Hour),
+			LastAccess:  time.Now().Add(-2 * time.Hour),
+			Size:        int64(len(content)),
+			ContentHash: computeContentHash(content),
+		}
+		if err := reg.WriteMeta(name, meta); err != nil {
+			t.Fatalf("WriteMeta failed: %v", err)
+		}
+	}
+
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// RefreshAll should continue on individual errors
+	stats, err := cached.RefreshAll(context.Background())
+	if err != nil {
+		t.Fatalf("RefreshAll should not fail on partial errors: %v", err)
+	}
+
+	if stats.Total != 2 {
+		t.Errorf("expected total=2, got %d", stats.Total)
+	}
+	if stats.Refreshed != 1 {
+		t.Errorf("expected refreshed=1, got %d", stats.Refreshed)
+	}
+	if stats.Errors != 1 {
+		t.Errorf("expected errors=1, got %d", stats.Errors)
+	}
+}
+
+func TestCachedRegistry_GetCacheStatus(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Cache a fresh recipe
+	freshContent := []byte("[metadata]\nname = \"fresh-tool\"\n")
+	if err := reg.CacheRecipe("fresh-tool", freshContent); err != nil {
+		t.Fatalf("CacheRecipe failed: %v", err)
+	}
+
+	// Cache an expired recipe
+	expiredContent := []byte("[metadata]\nname = \"expired-tool\"\n")
+	if err := reg.CacheRecipe("expired-tool", expiredContent); err != nil {
+		t.Fatalf("CacheRecipe failed: %v", err)
+	}
+	expiredMeta := &CacheMetadata{
+		CachedAt:    time.Now().Add(-2 * time.Hour),
+		ExpiresAt:   time.Now().Add(-1 * time.Hour),
+		LastAccess:  time.Now().Add(-2 * time.Hour),
+		Size:        int64(len(expiredContent)),
+		ContentHash: computeContentHash(expiredContent),
+	}
+	if err := reg.WriteMeta("expired-tool", expiredMeta); err != nil {
+		t.Fatalf("WriteMeta failed: %v", err)
+	}
+
+	cached := NewCachedRegistry(reg, 1*time.Hour)
+
+	// Check fresh recipe status
+	freshStatus, err := cached.GetCacheStatus("fresh-tool")
+	if err != nil {
+		t.Fatalf("GetCacheStatus failed for fresh-tool: %v", err)
+	}
+	if freshStatus.Status != "already fresh" {
+		t.Errorf("expected 'already fresh', got %q", freshStatus.Status)
+	}
+
+	// Check expired recipe status
+	expiredStatus, err := cached.GetCacheStatus("expired-tool")
+	if err != nil {
+		t.Fatalf("GetCacheStatus failed for expired-tool: %v", err)
+	}
+	if expiredStatus.Status != "expired" {
+		t.Errorf("expected 'expired', got %q", expiredStatus.Status)
+	}
+	// Age should be around 2 hours
+	if expiredStatus.Age < 1*time.Hour || expiredStatus.Age > 3*time.Hour {
+		t.Errorf("expected age around 2 hours, got %v", expiredStatus.Age)
+	}
+
+	// Check non-cached recipe
+	notCachedStatus, err := cached.GetCacheStatus("not-cached")
+	if err != nil {
+		t.Fatalf("GetCacheStatus failed for not-cached: %v", err)
+	}
+	if notCachedStatus != nil {
+		t.Error("expected nil for non-cached recipe")
+	}
+}
