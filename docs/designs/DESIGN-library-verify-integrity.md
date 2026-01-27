@@ -19,7 +19,7 @@ Planned
 |-------|-------|--------------|------|
 | ~~[#1168](https://github.com/tsukumogami/tsuku/issues/1168)~~ | ~~feat(verify): add integrity verification module for Tier 4~~ | ~~None~~ | ~~testable~~ |
 | ~~[#1169](https://github.com/tsukumogami/tsuku/issues/1169)~~ | ~~test(verify): add comprehensive tests for integrity verification~~ | ~~[#1168](https://github.com/tsukumogami/tsuku/issues/1168)~~ | ~~testable~~ |
-| [#1170](https://github.com/tsukumogami/tsuku/issues/1170) | docs(verify): update documentation for Tier 4 integrity verification | [#1168](https://github.com/tsukumogami/tsuku/issues/1168) | simple |
+| ~~[#1170](https://github.com/tsukumogami/tsuku/issues/1170)~~ | ~~docs(verify): update documentation for Tier 4 integrity verification~~ | ~~[#1168](https://github.com/tsukumogami/tsuku/issues/1168)~~ | ~~simple~~ |
 
 ### Dependency Graph
 
@@ -37,8 +37,7 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1168,I1169 done
-    class I1170 ready
+    class I1168,I1169,I1170 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
