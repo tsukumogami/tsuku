@@ -336,3 +336,131 @@ func TestCacheManager_Info_EmptyCache(t *testing.T) {
 		t.Errorf("NewestAccess should be zero for empty cache")
 	}
 }
+
+func TestCacheManager_CleanupWithDetails(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Create an old entry
+	oldContent := []byte("old-content-here")
+	if err := reg.CacheRecipe("old-tool", oldContent); err != nil {
+		t.Fatal(err)
+	}
+	meta, _ := reg.ReadMeta("old-tool")
+	if meta != nil {
+		meta.LastAccess = time.Now().Add(-48 * time.Hour)
+		_ = reg.WriteMeta("old-tool", meta)
+	}
+
+	// Create a recent entry
+	newContent := []byte("new-content-here")
+	if err := reg.CacheRecipe("new-tool", newContent); err != nil {
+		t.Fatal(err)
+	}
+
+	cm := NewCacheManager(cacheDir, 50*1024*1024)
+
+	// Cleanup entries older than 24 hours (not dry-run)
+	details, freedBytes, err := cm.CleanupWithDetails(24*time.Hour, false)
+	if err != nil {
+		t.Fatalf("CleanupWithDetails() error: %v", err)
+	}
+
+	if len(details) != 1 {
+		t.Errorf("CleanupWithDetails() returned %d details, want 1", len(details))
+	}
+
+	if len(details) > 0 {
+		if details[0].Name != "old-tool" {
+			t.Errorf("detail.Name = %q, want 'old-tool'", details[0].Name)
+		}
+		if details[0].Age < 24*time.Hour {
+			t.Errorf("detail.Age = %v, should be >= 24h", details[0].Age)
+		}
+	}
+
+	if freedBytes == 0 {
+		t.Error("freedBytes should be > 0")
+	}
+
+	// Verify old entry is actually deleted
+	oldPath := filepath.Join(cacheDir, "o", "old-tool.toml")
+	if _, err := os.Stat(oldPath); !os.IsNotExist(err) {
+		t.Error("old entry should have been deleted")
+	}
+}
+
+func TestCacheManager_CleanupWithDetails_DryRun(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Create an old entry
+	oldContent := []byte("old-content")
+	if err := reg.CacheRecipe("old-tool", oldContent); err != nil {
+		t.Fatal(err)
+	}
+	meta, _ := reg.ReadMeta("old-tool")
+	if meta != nil {
+		meta.LastAccess = time.Now().Add(-48 * time.Hour)
+		_ = reg.WriteMeta("old-tool", meta)
+	}
+
+	cm := NewCacheManager(cacheDir, 50*1024*1024)
+
+	// Cleanup with dry-run
+	details, freedBytes, err := cm.CleanupWithDetails(24*time.Hour, true)
+	if err != nil {
+		t.Fatalf("CleanupWithDetails() error: %v", err)
+	}
+
+	if len(details) != 1 {
+		t.Errorf("CleanupWithDetails() returned %d details, want 1", len(details))
+	}
+
+	if freedBytes == 0 {
+		t.Error("freedBytes should be > 0 (reports would-be freed)")
+	}
+
+	// Verify entry is NOT deleted (dry-run)
+	oldPath := filepath.Join(cacheDir, "o", "old-tool.toml")
+	if _, err := os.Stat(oldPath); os.IsNotExist(err) {
+		t.Error("old entry should NOT be deleted in dry-run mode")
+	}
+}
+
+func TestCacheManager_CleanupWithDetails_NoOldEntries(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Create only a recent entry
+	content := []byte("recent-content")
+	if err := reg.CacheRecipe("recent-tool", content); err != nil {
+		t.Fatal(err)
+	}
+
+	cm := NewCacheManager(cacheDir, 50*1024*1024)
+
+	// Cleanup entries older than 24 hours (none exist)
+	details, freedBytes, err := cm.CleanupWithDetails(24*time.Hour, false)
+	if err != nil {
+		t.Fatalf("CleanupWithDetails() error: %v", err)
+	}
+
+	if len(details) != 0 {
+		t.Errorf("CleanupWithDetails() returned %d details, want 0", len(details))
+	}
+
+	if freedBytes != 0 {
+		t.Errorf("freedBytes = %d, want 0", freedBytes)
+	}
+}
+
+func TestCacheManager_SizeLimit(t *testing.T) {
+	cacheDir := t.TempDir()
+	limit := int64(100 * 1024 * 1024)
+
+	cm := NewCacheManager(cacheDir, limit)
+	if cm.SizeLimit() != limit {
+		t.Errorf("SizeLimit() = %d, want %d", cm.SizeLimit(), limit)
+	}
+}
