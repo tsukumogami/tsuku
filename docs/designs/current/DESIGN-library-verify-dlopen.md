@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: Levels 1-2 of library verification can't confirm a library will actually load; only dlopen() can test this, but it requires native code which conflicts with tsuku's CGO_ENABLED=0 build.
 decision: Use a dedicated Rust helper binary (tsuku-dltest) with JSON protocol and batched invocation.
 rationale: Rust provides memory-safe dlopen bindings, simpler cross-compilation than Go+cgo, and a small binary (~400KB). Implementation requires a separate release process design for multi-platform native builds.
@@ -9,7 +9,7 @@ rationale: Rust provides memory-safe dlopen bindings, simpler cross-compilation 
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
