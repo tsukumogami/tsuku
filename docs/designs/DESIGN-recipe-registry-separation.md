@@ -32,8 +32,8 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
-| [#1037](https://github.com/tsukumogami/tsuku/issues/1037) | Implement registry recipe cache policy | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable | |
-| [#1038](https://github.com/tsukumogami/tsuku/issues/1038) | Document recipe separation for contributors | [#1036](https://github.com/tsukumogami/tsuku/issues/1036), [#1037](https://github.com/tsukumogami/tsuku/issues/1037) | simple | |
+| [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48) | Implement registry recipe cache policy (7 issues) | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | milestone | |
+| [#1038](https://github.com/tsukumogami/tsuku/issues/1038) | Document recipe separation for contributors | [#1036](https://github.com/tsukumogami/tsuku/issues/1036), [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48) | simple | |
 
 ### Future Work
 
@@ -57,7 +57,7 @@ graph TD
     end
 
     subgraph M32["M32: Cache Management and Documentation"]
-        I1037["#1037: Implement cache policy"]
+        M33["Registry Cache Policy (7 issues)"]
         I1038["#1038: Document recipe separation"]
     end
 
@@ -68,12 +68,12 @@ graph TD
     ERLV --> I1033
     I1033 --> I1034
     I1033 --> I1035
-    I1033 --> I1037
+    I1033 --> M33
     I1034 --> I1036
     I1035 --> I1036
     I1034 --> I1039
     I1036 --> I1038
-    I1037 --> I1038
+    M33 --> I1038
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -86,7 +86,7 @@ graph TD
     class I1035 done
     class I1036 done
     class I1038 blocked
-    class I1037 needsDesign
+    class M33 ready
     class I1039 done
 ```
 
