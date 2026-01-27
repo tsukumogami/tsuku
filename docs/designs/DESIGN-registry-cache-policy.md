@@ -13,7 +13,7 @@ rationale: Follows existing version cache patterns for consistency, provides bes
 
 ## Implementation Issues
 
-### Milestone: [M33 - Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48)
+### Milestone: [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
