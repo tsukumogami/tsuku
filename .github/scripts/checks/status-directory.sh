@@ -96,7 +96,7 @@ if [[ -n "$EXPECTED_DIR" ]]; then
     # Check if actual directory ends with expected pattern
     # This handles both relative (docs/designs/) and absolute (/path/to/docs/designs/) paths
     if [[ "$ACTUAL_DIR" != "$EXPECTED_DIR" && "$ACTUAL_DIR" != */"$EXPECTED_DIR" ]]; then
-        emit_fail "SD01: Status '$FM_STATUS' requires directory '$EXPECTED_DIR', found in '$ACTUAL_DIR'"
+        emit_fail "SD01: Status '$FM_STATUS' requires directory '$EXPECTED_DIR', found in '$ACTUAL_DIR'. See: .github/scripts/docs/SD01.md"
         FAILED=1
     fi
 fi
@@ -106,7 +106,7 @@ if [[ "$FM_STATUS" == "Superseded" ]]; then
     # Search for "Superseded by" followed by markdown link pattern
     # Pattern: Superseded by [anything](anything)
     if ! grep -qE "Superseded by \[.+\]\(.+\)" "$DOC_PATH"; then
-        emit_fail "SD02: Superseded status requires 'Superseded by [DESIGN-...](path)' link in body"
+        emit_fail "SD02: Superseded status requires 'Superseded by [DESIGN-...](path)' link in body. See: .github/scripts/docs/SD02.md"
         FAILED=1
     fi
 fi

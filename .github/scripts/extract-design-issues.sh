@@ -2,17 +2,22 @@
 #
 # extract-design-issues.sh - Extract Implementation Issues from a design doc as JSON
 #
-# Parses the Implementation Issues table from a design document and outputs
-# structured JSON with all issues and milestones, their status, dependencies, and tier.
+# Parses the Implementation Issues tables from a design document and outputs
+# structured JSON with all milestones and their issues, status, dependencies, and tier.
 #
 # Usage:
 #   extract-design-issues.sh <doc-path>
 #
 # Output (JSON):
 #   {
-#     "milestone": { "name": "...", "url": "..." },
-#     "entries": [
-#       { "type": "issue", "number": 123, "url": "...", "title": "...", ... }
+#     "milestones": [
+#       {
+#         "name": "...",
+#         "url": "...",
+#         "entries": [
+#           { "type": "issue", "number": 123, "url": "...", "title": "...", ... }
+#         ]
+#       }
 #     ]
 #   }
 #
@@ -51,58 +56,6 @@ ISSUES_SECTION=$(awk '
     in_section && /^## / { exit }
     in_section { print }
 ' "$DOC_PATH")
-
-# Extract milestone info from heading: ### Milestone: [Name](url)
-MILESTONE_LINE=$(echo "$ISSUES_SECTION" | grep -E "^### Milestone:" | head -1 || true)
-MILESTONE_JSON="null"
-
-if [[ -n "$MILESTONE_LINE" ]]; then
-    # Extract [Name](url) pattern
-    MILESTONE_NAME=$(echo "$MILESTONE_LINE" | sed -n 's/.*\[\([^]]*\)\].*/\1/p')
-    MILESTONE_URL=$(echo "$MILESTONE_LINE" | sed -n 's/.*(\([^)]*\)).*/\1/p')
-    if [[ -n "$MILESTONE_NAME" && -n "$MILESTONE_URL" ]]; then
-        MILESTONE_JSON=$(jq -n --arg name "$MILESTONE_NAME" --arg url "$MILESTONE_URL" \
-            '{ "name": $name, "url": $url }')
-    fi
-fi
-
-# Find the issues table (first table after section heading)
-TABLE_HEADER=$(echo "$ISSUES_SECTION" | grep -E "^\| *Issue" | head -1 || true)
-
-if [[ -z "$TABLE_HEADER" ]]; then
-    # No table found, output with empty entries
-    jq -n --argjson milestone "$MILESTONE_JSON" \
-        '{ "milestone": $milestone, "entries": [] }'
-    exit 0
-fi
-
-# Get column positions
-get_column_position() {
-    local header="$1"
-    local col_name="$2"
-    echo "$header" | awk -v col="$col_name" '
-    BEGIN { FS = "|" }
-    {
-        for (i = 1; i <= NF; i++) {
-            gsub(/^[ \t]+|[ \t]+$/, "", $i)
-            if (tolower($i) == tolower(col)) {
-                print i
-                exit
-            }
-        }
-    }
-    '
-}
-
-ISSUE_COL=$(get_column_position "$TABLE_HEADER" "Issue")
-TITLE_COL=$(get_column_position "$TABLE_HEADER" "Title")
-DEP_COL=$(get_column_position "$TABLE_HEADER" "Dependencies")
-TIER_COL=$(get_column_position "$TABLE_HEADER" "Tier")
-
-# Extract table data rows (skip header and separator)
-TABLE_ROWS=$(echo "$ISSUES_SECTION" | awk '
-    /^\|/ && !/^\| *-/ && !/^\| *Issue/ { print }
-')
 
 # Helper to strip strikethrough: ~~text~~ -> text
 strip_strikethrough() {
@@ -190,64 +143,162 @@ parse_dependencies() {
     printf '%s\n' "${deps[@]}" | jq -R -s 'split("\n") | map(select(length > 0))'
 }
 
-# Build entries array
-ENTRIES="[]"
+# Get column positions from header
+get_column_position() {
+    local header="$1"
+    local col_name="$2"
+    echo "$header" | awk -v col="$col_name" '
+    BEGIN { FS = "|" }
+    {
+        for (i = 1; i <= NF; i++) {
+            gsub(/^[ \t]+|[ \t]+$/, "", $i)
+            if (tolower($i) == tolower(col)) {
+                print i
+                exit
+            }
+        }
+    }
+    '
+}
 
-while IFS= read -r row; do
-    [[ -z "$row" ]] && continue
+# Parse a table and return its entries as JSON array
+parse_table() {
+    local table_content="$1"
+    local header
+    header=$(echo "$table_content" | grep -E "^\| *Issue" | head -1 || true)
 
-    # Extract column values
-    ISSUE_VAL=$(echo "$row" | awk -F'|' -v col="$ISSUE_COL" '{ gsub(/^[ \t]+|[ \t]+$/, "", $col); print $col }')
-    TITLE_VAL=$(echo "$row" | awk -F'|' -v col="$TITLE_COL" '{ gsub(/^[ \t]+|[ \t]+$/, "", $col); print $col }')
-    DEP_VAL=$(echo "$row" | awk -F'|' -v col="$DEP_COL" '{ gsub(/^[ \t]+|[ \t]+$/, "", $col); print $col }')
-    TIER_VAL=$(echo "$row" | awk -F'|' -v col="$TIER_COL" '{ gsub(/^[ \t]+|[ \t]+$/, "", $col); print $col }')
-
-    [[ -z "$ISSUE_VAL" ]] && continue
-
-    # Determine type, number, URL, completion status
-    ENTRY_TYPE=$(get_entry_type "$ISSUE_VAL" "$TIER_VAL")
-    ENTRY_NUMBER=$(extract_number "$ISSUE_VAL" "$ENTRY_TYPE")
-    ENTRY_URL=$(extract_link_url "$ISSUE_VAL")
-    ENTRY_TITLE=$(strip_strikethrough "$TITLE_VAL")
-    ENTRY_TIER=$(strip_strikethrough "$TIER_VAL")
-    ENTRY_DEPS=$(parse_dependencies "$DEP_VAL")
-
-    # Check if completed (strikethrough on issue column)
-    if has_strikethrough "$ISSUE_VAL"; then
-        COMPLETED="true"
-    else
-        COMPLETED="false"
+    if [[ -z "$header" ]]; then
+        echo "[]"
+        return
     fi
 
-    # Handle null number for named milestones without numeric ID
-    if [[ -z "$ENTRY_NUMBER" ]]; then
-        NUMBER_JSON="null"
-    else
-        NUMBER_JSON="$ENTRY_NUMBER"
+    local issue_col title_col dep_col tier_col
+    issue_col=$(get_column_position "$header" "Issue")
+    title_col=$(get_column_position "$header" "Title")
+    dep_col=$(get_column_position "$header" "Dependencies")
+    tier_col=$(get_column_position "$header" "Tier")
+
+    # Extract table data rows (skip header and separator)
+    local rows
+    rows=$(echo "$table_content" | awk '
+        /^\|/ && !/^\| *-/ && !/^\| *Issue/ { print }
+    ')
+
+    local entries="[]"
+
+    while IFS= read -r row; do
+        [[ -z "$row" ]] && continue
+
+        # Extract column values
+        local issue_val title_val dep_val tier_val
+        issue_val=$(echo "$row" | awk -F'|' -v col="$issue_col" '{ gsub(/^[ \t]+|[ \t]+$/, "", $col); print $col }')
+        title_val=$(echo "$row" | awk -F'|' -v col="$title_col" '{ gsub(/^[ \t]+|[ \t]+$/, "", $col); print $col }')
+        dep_val=$(echo "$row" | awk -F'|' -v col="$dep_col" '{ gsub(/^[ \t]+|[ \t]+$/, "", $col); print $col }')
+        tier_val=$(echo "$row" | awk -F'|' -v col="$tier_col" '{ gsub(/^[ \t]+|[ \t]+$/, "", $col); print $col }')
+
+        [[ -z "$issue_val" ]] && continue
+
+        # Determine type, number, URL, completion status
+        local entry_type entry_number entry_url entry_title entry_tier entry_deps completed number_json
+        entry_type=$(get_entry_type "$issue_val" "$tier_val")
+        entry_number=$(extract_number "$issue_val" "$entry_type")
+        entry_url=$(extract_link_url "$issue_val")
+        entry_title=$(strip_strikethrough "$title_val")
+        entry_tier=$(strip_strikethrough "$tier_val")
+        entry_deps=$(parse_dependencies "$dep_val")
+
+        # Check if completed (strikethrough on issue column)
+        if has_strikethrough "$issue_val"; then
+            completed="true"
+        else
+            completed="false"
+        fi
+
+        # Handle null number for named milestones without numeric ID
+        if [[ -z "$entry_number" ]]; then
+            number_json="null"
+        else
+            number_json="$entry_number"
+        fi
+
+        # Build entry JSON
+        local entry
+        entry=$(jq -n \
+            --arg type "$entry_type" \
+            --argjson number "$number_json" \
+            --arg url "$entry_url" \
+            --arg title "$entry_title" \
+            --argjson deps "$entry_deps" \
+            --arg tier "$entry_tier" \
+            --argjson completed "$completed" \
+            '{
+                "type": $type,
+                "number": $number,
+                "url": $url,
+                "title": $title,
+                "dependencies": $deps,
+                "tier": $tier,
+                "completed": $completed
+            }')
+
+        entries=$(echo "$entries" | jq --argjson entry "$entry" '. + [$entry]')
+    done <<< "$rows"
+
+    echo "$entries"
+}
+
+# Split content by milestone headings and parse each section
+MILESTONES="[]"
+
+# Find all milestone headings with their line numbers
+MILESTONE_LINES=$(echo "$ISSUES_SECTION" | grep -n "^### Milestone:" || true)
+
+if [[ -z "$MILESTONE_LINES" ]]; then
+    # No milestone headings - treat entire section as unnamed milestone
+    TABLE_HEADER=$(echo "$ISSUES_SECTION" | grep -E "^\| *Issue" | head -1 || true)
+    if [[ -n "$TABLE_HEADER" ]]; then
+        entries=$(parse_table "$ISSUES_SECTION")
+        milestone_obj=$(jq -n --arg name "" --arg url "" --argjson entries "$entries" \
+            '{ "name": $name, "url": $url, "entries": $entries }')
+        MILESTONES=$(echo "$MILESTONES" | jq --argjson m "$milestone_obj" '. + [$m]')
     fi
+else
+    # Multiple milestones - split by heading
+    TOTAL_LINES=$(echo "$ISSUES_SECTION" | wc -l)
 
-    # Build entry JSON
-    ENTRY=$(jq -n \
-        --arg type "$ENTRY_TYPE" \
-        --argjson number "$NUMBER_JSON" \
-        --arg url "$ENTRY_URL" \
-        --arg title "$ENTRY_TITLE" \
-        --argjson deps "$ENTRY_DEPS" \
-        --arg tier "$ENTRY_TIER" \
-        --argjson completed "$COMPLETED" \
-        '{
-            "type": $type,
-            "number": $number,
-            "url": $url,
-            "title": $title,
-            "dependencies": $deps,
-            "tier": $tier,
-            "completed": $completed
-        }')
+    # Parse each milestone section
+    while IFS= read -r line_info; do
+        [[ -z "$line_info" ]] && continue
 
-    ENTRIES=$(echo "$ENTRIES" | jq --argjson entry "$ENTRY" '. + [$entry]')
-done <<< "$TABLE_ROWS"
+        LINE_NUM=$(echo "$line_info" | cut -d: -f1)
+        MILESTONE_LINE=$(echo "$line_info" | cut -d: -f2-)
+
+        # Extract milestone name and URL
+        MILESTONE_NAME=$(echo "$MILESTONE_LINE" | sed -n 's/.*\[\([^]]*\)\].*/\1/p')
+        MILESTONE_URL=$(echo "$MILESTONE_LINE" | sed -n 's/.*(\([^)]*\)).*/\1/p')
+
+        # Find the end of this milestone section (next milestone or end of section)
+        NEXT_LINE=$(echo "$MILESTONE_LINES" | awk -F: -v current="$LINE_NUM" '$1 > current { print $1; exit }')
+        if [[ -z "$NEXT_LINE" ]]; then
+            NEXT_LINE=$((TOTAL_LINES + 1))
+        fi
+
+        # Extract content for this milestone (from heading to next heading)
+        SECTION_CONTENT=$(echo "$ISSUES_SECTION" | sed -n "${LINE_NUM},$((NEXT_LINE - 1))p")
+
+        # Parse the table in this section
+        entries=$(parse_table "$SECTION_CONTENT")
+
+        # Build milestone object
+        milestone_obj=$(jq -n \
+            --arg name "$MILESTONE_NAME" \
+            --arg url "$MILESTONE_URL" \
+            --argjson entries "$entries" \
+            '{ "name": $name, "url": $url, "entries": $entries }')
+
+        MILESTONES=$(echo "$MILESTONES" | jq --argjson m "$milestone_obj" '. + [$m]')
+    done <<< "$MILESTONE_LINES"
+fi
 
 # Output final JSON
-jq -n --argjson milestone "$MILESTONE_JSON" --argjson entries "$ENTRIES" \
-    '{ "milestone": $milestone, "entries": $entries }'
+jq -n --argjson milestones "$MILESTONES" '{ "milestones": $milestones }'
