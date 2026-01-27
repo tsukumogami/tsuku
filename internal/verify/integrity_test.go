@@ -255,3 +255,97 @@ func TestVerifyIntegrity_Mixed(t *testing.T) {
 		t.Errorf("Expected 1 missing, got %d", len(result.Missing))
 	}
 }
+
+func TestVerifyIntegrity_SymlinkChain(t *testing.T) {
+	// Test multi-hop symlink chains like: libstdc++.so -> libstdc++.so.6 -> libstdc++.so.6.0.33
+	tmpDir := t.TempDir()
+
+	libDir := filepath.Join(tmpDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatalf("Failed to create directory: %v", err)
+	}
+
+	// Create the real file (end of chain)
+	realFile := filepath.Join(libDir, "libtest.so.1.0.0")
+	if err := os.WriteFile(realFile, []byte("real library content"), 0644); err != nil {
+		t.Fatalf("Failed to create real file: %v", err)
+	}
+
+	// Create middle symlink: libtest.so.1 -> libtest.so.1.0.0
+	middleLink := filepath.Join(libDir, "libtest.so.1")
+	if err := os.Symlink("libtest.so.1.0.0", middleLink); err != nil {
+		t.Fatalf("Failed to create middle symlink: %v", err)
+	}
+
+	// Create top symlink: libtest.so -> libtest.so.1
+	topLink := filepath.Join(libDir, "libtest.so")
+	if err := os.Symlink("libtest.so.1", topLink); err != nil {
+		t.Fatalf("Failed to create top symlink: %v", err)
+	}
+
+	// Compute checksum of the real file
+	checksum, err := install.ComputeFileChecksum(realFile)
+	if err != nil {
+		t.Fatalf("Failed to compute checksum: %v", err)
+	}
+
+	// Store checksum for the top-level symlink (should resolve through chain)
+	stored := map[string]string{
+		"lib/libtest.so": checksum,
+	}
+
+	result, err := VerifyIntegrity(tmpDir, stored)
+	if err != nil {
+		t.Fatalf("VerifyIntegrity failed: %v", err)
+	}
+
+	if result.Verified != 1 {
+		t.Errorf("Expected Verified=1, got %d", result.Verified)
+	}
+	if len(result.Mismatches) != 0 {
+		t.Errorf("Expected no mismatches, got %d", len(result.Mismatches))
+	}
+	if len(result.Missing) != 0 {
+		t.Errorf("Expected no missing files, got %d", len(result.Missing))
+	}
+}
+
+func TestVerifyIntegrity_BrokenSymlink(t *testing.T) {
+	// Test symlink pointing to non-existent target (should report as missing)
+	tmpDir := t.TempDir()
+
+	libDir := filepath.Join(tmpDir, "lib")
+	if err := os.MkdirAll(libDir, 0755); err != nil {
+		t.Fatalf("Failed to create directory: %v", err)
+	}
+
+	// Create a broken symlink pointing to non-existent file
+	brokenLink := filepath.Join(libDir, "libbroken.so")
+	if err := os.Symlink("libnonexistent.so.1.0", brokenLink); err != nil {
+		t.Fatalf("Failed to create broken symlink: %v", err)
+	}
+
+	// Store checksum for the broken symlink
+	stored := map[string]string{
+		"lib/libbroken.so": "0000000000000000000000000000000000000000000000000000000000000000",
+	}
+
+	result, err := VerifyIntegrity(tmpDir, stored)
+	if err != nil {
+		t.Fatalf("VerifyIntegrity failed: %v", err)
+	}
+
+	// Broken symlinks should be reported as missing
+	if result.Verified != 0 {
+		t.Errorf("Expected Verified=0, got %d", result.Verified)
+	}
+	if len(result.Mismatches) != 0 {
+		t.Errorf("Expected no mismatches, got %d", len(result.Mismatches))
+	}
+	if len(result.Missing) != 1 {
+		t.Fatalf("Expected 1 missing file, got %d", len(result.Missing))
+	}
+	if result.Missing[0] != "lib/libbroken.so" {
+		t.Errorf("Expected missing file 'lib/libbroken.so', got '%s'", result.Missing[0])
+	}
+}

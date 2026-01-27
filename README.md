@@ -455,20 +455,21 @@ For libraries, verification includes multiple tiers:
   - Tsuku-managed libraries (dependencies installed by tsuku)
   - Externally-managed libraries (from package managers like apt, brew)
 - **Tier 3: dlopen load testing** - Loads the library with dlopen() to verify it can be dynamically loaded at runtime
+- **Tier 4: Integrity verification** (opt-in via `--integrity`) - Compares current SHA256 checksums against values stored at installation time to detect post-installation tampering
 
 Tier 2 validation also detects ABI mismatches (glibc vs musl) to catch incompatible binary combinations early.
 
-Library verification supports additional options:
+Library verification supports additional flags:
 
 ```bash
-# Enable checksum verification (Tier 4)
+# Enable Tier 4 integrity verification
 tsuku verify gcc-libs --integrity
 
-# Skip dlopen load testing (useful for headless environments)
+# Skip Tier 3 dlopen load testing (useful for headless environments)
 tsuku verify gcc-libs --skip-dlopen
 ```
 
-When a library is installed, tsuku computes and stores SHA256 checksums of all library files. The `--integrity` flag compares current checksums against these stored values to detect post-installation tampering.
+Libraries installed before the integrity feature was added will show "Integrity: SKIPPED" when verified with `--integrity`. Reinstalling the library will store checksums and enable full verification.
 
 ### Sandbox Testing
 
