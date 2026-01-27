@@ -389,6 +389,33 @@ The pipeline maintains a priority queue of packages to generate, ordered by:
 2. **Dependency availability**: Penalize tools requiring unavailable system libs
 3. **Request count**: User requests via telemetry or issues
 
+### Failure Analysis System
+
+The batch pipeline runs in **deterministic-only mode** (no LLM fallback). Failures are valuable data that reveal capability gaps.
+
+**Design principles:**
+- Failures are a forcing function, not errors to suppress
+- Collect structured data for systematic analysis
+- Prioritize capabilities by "popularity-weighted impact" (what capability would unblock the most popular tools?)
+
+**Failure categories mapped to capabilities:**
+
+| Category | Capability Needed | Example |
+|----------|-------------------|---------|
+| `no_bottles` | Homebrew source fallback | formulas without bottles |
+| `build_from_source` | Source build action | tools requiring compilation |
+| `no_platform_assets` | Platform matrix expansion | tools missing Linux/macOS builds |
+| `missing_dependency` | System library recipes | tools needing libpng, sqlite |
+| `binary_not_found` | Improved executable discovery | non-standard binary locations |
+| `complex_archive` | Advanced archive inspection | nested or unusual structures |
+
+**Storage:** JSONL files per batch run, enabling:
+- `tsuku batch analyze` to generate capability gap reports
+- Feedback loop to re-prioritize the queue (skip structural failures, retry transient ones)
+- Historical tracking of gap closure over time
+
+**Required flag:** Add `--deterministic-only` to `tsuku create` to disable LLM fallback. This enables fully deterministic batch runs where failures produce analyzable data rather than triggering expensive LLM calls.
+
 ### Generation Flow
 
 ```
@@ -457,7 +484,13 @@ This runs in parallel with Phase 1; batch generation can proceed with LLM-based 
 | Design | Target Repo | Purpose |
 |--------|-------------|---------|
 | DESIGN-github-release-deterministic.md | tsuku | Deterministic path for GitHub Release builder to reduce LLM dependency |
-| DESIGN-go-cpan-builder-integration.md | tsuku | Register existing Go and CPAN builders |
+| DESIGN-deterministic-only-flag.md | tsuku | Add `--deterministic-only` flag to disable LLM fallback for batch runs |
+
+### Failure Analysis Infrastructure
+
+| Design | Target Repo | Purpose |
+|--------|-------------|---------|
+| DESIGN-batch-failure-analysis.md | tsuku | Structured failure collection and capability gap analysis |
 
 ### Batch Generation Infrastructure
 
