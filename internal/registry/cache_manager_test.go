@@ -309,6 +309,63 @@ func TestCacheManager_Info(t *testing.T) {
 	if !stats.NewestAccess.Equal(expectedNewest) {
 		t.Errorf("NewestAccess = %v, want %v", stats.NewestAccess, expectedNewest)
 	}
+
+	// Check names
+	if stats.OldestName != "tool-a" {
+		t.Errorf("OldestName = %q, want 'tool-a'", stats.OldestName)
+	}
+	if stats.NewestName != "tool-c" {
+		t.Errorf("NewestName = %q, want 'tool-c'", stats.NewestName)
+	}
+}
+
+func TestCacheManager_InfoWithTTL_StaleCount(t *testing.T) {
+	cacheDir := t.TempDir()
+	reg := New(cacheDir)
+
+	// Create entries with different ages
+	entries := []struct {
+		name       string
+		content    []byte
+		lastAccess time.Time
+	}{
+		{"stale-1", []byte("content"), time.Now().Add(-48 * time.Hour)}, // 2 days old - stale
+		{"stale-2", []byte("content"), time.Now().Add(-36 * time.Hour)}, // 1.5 days old - stale
+		{"fresh-1", []byte("content"), time.Now().Add(-12 * time.Hour)}, // 12 hours old - fresh
+	}
+
+	for _, e := range entries {
+		if err := reg.CacheRecipe(e.name, e.content); err != nil {
+			t.Fatal(err)
+		}
+		meta, _ := reg.ReadMeta(e.name)
+		if meta != nil {
+			meta.LastAccess = e.lastAccess
+			_ = reg.WriteMeta(e.name, meta)
+		}
+	}
+
+	cm := NewCacheManager(cacheDir, 50*1024*1024)
+
+	// TTL of 24 hours - 2 entries should be stale
+	stats, err := cm.InfoWithTTL(24 * time.Hour)
+	if err != nil {
+		t.Fatalf("InfoWithTTL() error: %v", err)
+	}
+
+	if stats.StaleCount != 2 {
+		t.Errorf("StaleCount = %d, want 2", stats.StaleCount)
+	}
+
+	// TTL of 0 - stale count should be 0 (not calculated)
+	stats, err = cm.InfoWithTTL(0)
+	if err != nil {
+		t.Fatalf("InfoWithTTL(0) error: %v", err)
+	}
+
+	if stats.StaleCount != 0 {
+		t.Errorf("StaleCount with TTL=0 = %d, want 0", stats.StaleCount)
+	}
 }
 
 func TestCacheManager_Info_EmptyCache(t *testing.T) {
@@ -334,6 +391,18 @@ func TestCacheManager_Info_EmptyCache(t *testing.T) {
 
 	if !stats.NewestAccess.IsZero() {
 		t.Errorf("NewestAccess should be zero for empty cache")
+	}
+
+	if stats.OldestName != "" {
+		t.Errorf("OldestName should be empty for empty cache")
+	}
+
+	if stats.NewestName != "" {
+		t.Errorf("NewestName should be empty for empty cache")
+	}
+
+	if stats.StaleCount != 0 {
+		t.Errorf("StaleCount should be 0 for empty cache")
 	}
 }
 

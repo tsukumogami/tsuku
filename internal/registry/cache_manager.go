@@ -25,6 +25,18 @@ type CacheStats struct {
 	// NewestAccess is the newest last_access timestamp among all entries.
 	// Zero if cache is empty.
 	NewestAccess time.Time
+
+	// OldestName is the name of the recipe with the oldest last_access.
+	// Empty if cache is empty.
+	OldestName string
+
+	// NewestName is the name of the recipe with the newest last_access.
+	// Empty if cache is empty.
+	NewestName string
+
+	// StaleCount is the number of entries older than the configured TTL.
+	// Only populated when using InfoWithTTL().
+	StaleCount int
 }
 
 // CleanupDetail contains information about a single entry cleanup.
@@ -314,6 +326,12 @@ func (m *CacheManager) SizeLimit() int64 {
 
 // Info returns statistics about the cache.
 func (m *CacheManager) Info() (*CacheStats, error) {
+	return m.InfoWithTTL(0)
+}
+
+// InfoWithTTL returns statistics about the cache, including stale count.
+// If ttl is 0, StaleCount is not calculated.
+func (m *CacheManager) InfoWithTTL(ttl time.Duration) (*CacheStats, error) {
 	entries, err := m.listEntries()
 	if err != nil {
 		return nil, err
@@ -323,14 +341,22 @@ func (m *CacheManager) Info() (*CacheStats, error) {
 		EntryCount: len(entries),
 	}
 
+	now := time.Now()
 	for _, entry := range entries {
 		stats.TotalSize += entry.size
 
 		if stats.OldestAccess.IsZero() || entry.lastAccess.Before(stats.OldestAccess) {
 			stats.OldestAccess = entry.lastAccess
+			stats.OldestName = entry.name
 		}
 		if stats.NewestAccess.IsZero() || entry.lastAccess.After(stats.NewestAccess) {
 			stats.NewestAccess = entry.lastAccess
+			stats.NewestName = entry.name
+		}
+
+		// Count stale entries (last access older than TTL)
+		if ttl > 0 && now.Sub(entry.lastAccess) > ttl {
+			stats.StaleCount++
 		}
 	}
 
