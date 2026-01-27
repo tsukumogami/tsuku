@@ -24,6 +24,7 @@ Planned
 | ~~[#949](https://github.com/tsukumogami/tsuku/issues/949)~~ | ~~docs: design dlopen load testing for library verification (Tier 3)~~ | ~~[M38](https://github.com/tsukumogami/tsuku/milestone/38)~~ | ~~critical~~ |
 | ~~[M39](https://github.com/tsukumogami/tsuku/milestone/39)~~ | ~~Tier 3 dlopen Verification (7 issues)~~ | ~~[#949](https://github.com/tsukumogami/tsuku/issues/949)~~ | ~~milestone~~ |
 | ~~[#950](https://github.com/tsukumogami/tsuku/issues/950)~~ | ~~docs: design integrity verification for library verification (Tier 4)~~ | ~~[#946](https://github.com/tsukumogami/tsuku/issues/946)~~, ~~[M39](https://github.com/tsukumogami/tsuku/milestone/39)~~ | ~~testable~~ |
+| [M49](https://github.com/tsukumogami/tsuku/milestone/49) | Tier 4 Implementation (3 issues) | [#950](https://github.com/tsukumogami/tsuku/issues/950) | milestone |
 
 ```mermaid
 graph TD
@@ -40,6 +41,7 @@ graph TD
         I949["#949 Tier 3 Design<br/>(done)"]:::done
         M39["M39: Tier 3 Implementation<br/>(done)"]:::done
         I950["#950 Tier 4 Design<br/>(done)"]:::done
+        M49["M49: Tier 4 Implementation<br/>(ready)"]:::ready
     end
 
     I942 --> I946
@@ -50,6 +52,7 @@ graph TD
     I949 --> M39
     I946 --> I950
     M39 --> I950
+    I950 --> M49
 
     classDef done fill:#2da44e,color:white
     classDef ready fill:#0969da,color:white
