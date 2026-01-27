@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: Registry recipes scaling to 10K+ makes git-based golden file storage unsustainable due to repo bloat and slow clones.
 decision: Migrate registry golden files to Cloudflare R2 with CI-generated files on merge, two-tier degradation (R2 or skip), and 6-phase rollout.
 rationale: R2 eliminates git bloat while two-tier degradation keeps CI simple; CI generation removes contributor friction; free tier covers projected costs.
@@ -9,7 +9,7 @@ rationale: R2 eliminates git bloat while two-tier degradation keeps CI simple; C
 
 ## Status
 
-**Planned**
+**Current**
 
 ## Implementation Issues
 

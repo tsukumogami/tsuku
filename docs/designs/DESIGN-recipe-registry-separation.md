@@ -39,7 +39,7 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
-| [#1039](https://github.com/tsukumogami/tsuku/issues/1039) | Design R2 storage for registry golden files | [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | critical | |
+| [#1039](https://github.com/tsukumogami/tsuku/issues/1039) | Design R2 storage for registry golden files | [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | critical | Done |
 
 ### Dependency Graph
 
@@ -87,7 +87,7 @@ graph TD
     class I1036 done
     class I1038 blocked
     class I1037 needsDesign
-    class I1039 ready
+    class I1039 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
