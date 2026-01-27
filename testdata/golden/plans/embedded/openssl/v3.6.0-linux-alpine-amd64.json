@@ -8,7 +8,6 @@
     "linux_family": "alpine"
   },
   "recipe_hash": "3c1319b74192a4b885e8d6e822039d72377d99b99d2a2d01521523d3ebbf0bd8",
-  "recipe_source": "registry",
   "deterministic": false,
   "steps": [
     {
