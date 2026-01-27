@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: Libraries can be modified after installation (malware injection, disk corruption, unauthorized changes) but tsuku verify's Tiers 1-3 only check validity and loadability, not whether files match their original state.
 decision: Add optional Tier 4 integrity verification that compares SHA256 checksums of library files against values stored at installation time, enabled via the --integrity flag.
 rationale: This follows the proven pattern from binary checksum verification (DESIGN-checksum-pinning.md), reuses existing checksum infrastructure, and complements rather than duplicates Tiers 1-3. Making it opt-in keeps default verification fast while giving security-conscious users tamper detection.
@@ -9,7 +9,7 @@ rationale: This follows the proven pattern from binary checksum verification (DE
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
