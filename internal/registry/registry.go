@@ -147,7 +147,9 @@ func (r *Registry) FetchRecipe(ctx context.Context, name string) ([]byte, error)
 	return data, nil
 }
 
-// GetCached returns a cached recipe if it exists
+// GetCached returns a cached recipe if it exists.
+// It also updates the LastAccess timestamp and creates metadata for
+// pre-existing cached recipes (migration case).
 func (r *Registry) GetCached(name string) ([]byte, error) {
 	path := r.cachePath(name)
 	if path == "" {
@@ -162,10 +164,23 @@ func (r *Registry) GetCached(name string) ([]byte, error) {
 		return nil, fmt.Errorf("failed to read cached recipe: %w", err)
 	}
 
+	// Check if metadata exists; if not, create it (migration case)
+	meta, _ := r.ReadMeta(name)
+	if meta == nil {
+		// Create metadata for existing cached recipe using file mtime
+		meta, err = newCacheMetadataFromFile(path, data, DefaultCacheTTL)
+		if err == nil {
+			_ = r.WriteMeta(name, meta) // Best effort, don't fail the read
+		}
+	} else {
+		// Update last access time
+		_ = r.UpdateLastAccess(name) // Best effort
+	}
+
 	return data, nil
 }
 
-// CacheRecipe saves a recipe to the local cache
+// CacheRecipe saves a recipe to the local cache and writes metadata sidecar.
 func (r *Registry) CacheRecipe(name string, data []byte) error {
 	path := r.cachePath(name)
 	if path == "" {
@@ -181,6 +196,10 @@ func (r *Registry) CacheRecipe(name string, data []byte) error {
 	if err := os.WriteFile(path, data, 0644); err != nil {
 		return fmt.Errorf("failed to write cached recipe: %w", err)
 	}
+
+	// Write metadata sidecar (best effort - don't fail the cache operation)
+	meta := newCacheMetadata(data, DefaultCacheTTL)
+	_ = r.WriteMeta(name, meta)
 
 	return nil
 }

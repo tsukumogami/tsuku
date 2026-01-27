@@ -32,6 +32,10 @@ const (
 	ErrTypeConnection
 	// ErrTypeTLS indicates TLS/SSL certificate errors
 	ErrTypeTLS
+	// ErrTypeCacheRead indicates a cache read operation failed
+	ErrTypeCacheRead
+	// ErrTypeCacheWrite indicates a cache write operation failed
+	ErrTypeCacheWrite
 )
 
 // RegistryError provides structured error information for registry operations
