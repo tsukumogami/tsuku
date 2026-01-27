@@ -27,6 +27,14 @@ type CacheStats struct {
 	NewestAccess time.Time
 }
 
+// CleanupDetail contains information about a single entry cleanup.
+type CleanupDetail struct {
+	Name       string
+	LastAccess time.Time
+	Age        time.Duration
+	Size       int64
+}
+
 // CacheManager handles cache size management with LRU eviction.
 type CacheManager struct {
 	cacheDir  string
@@ -261,6 +269,47 @@ func (m *CacheManager) Cleanup(maxAge time.Duration) (int, error) {
 	}
 
 	return removed, nil
+}
+
+// CleanupWithDetails removes cache entries not accessed within maxAge and
+// returns detailed information about each removed entry. If dryRun is true,
+// returns entries that would be removed without actually deleting them.
+// Returns the cleanup details, total bytes freed, and any error.
+func (m *CacheManager) CleanupWithDetails(maxAge time.Duration, dryRun bool) ([]CleanupDetail, int64, error) {
+	entries, err := m.listEntries()
+	if err != nil {
+		return nil, 0, err
+	}
+
+	now := time.Now()
+	cutoff := now.Add(-maxAge)
+	var details []CleanupDetail
+	var freedBytes int64
+
+	for _, entry := range entries {
+		if entry.lastAccess.Before(cutoff) {
+			detail := CleanupDetail{
+				Name:       entry.name,
+				LastAccess: entry.lastAccess,
+				Age:        now.Sub(entry.lastAccess),
+				Size:       entry.size,
+			}
+			details = append(details, detail)
+			freedBytes += entry.size
+
+			if !dryRun {
+				// Errors are non-fatal - continue with other entries
+				_ = m.deleteEntry(entry.name)
+			}
+		}
+	}
+
+	return details, freedBytes, nil
+}
+
+// SizeLimit returns the configured cache size limit.
+func (m *CacheManager) SizeLimit() int64 {
+	return m.sizeLimit
 }
 
 // Info returns statistics about the cache.

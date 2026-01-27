@@ -140,6 +140,7 @@ func formatBytes(bytes int64) string {
 func init() {
 	// Add subcommands
 	cacheCmd.AddCommand(cacheClearCmd)
+	cacheCmd.AddCommand(cacheCleanupCmd)
 	cacheCmd.AddCommand(cacheInfoCmd)
 
 	// Flags for cache clear
