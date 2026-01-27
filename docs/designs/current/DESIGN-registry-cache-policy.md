@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: The registry recipe cache stores recipes indefinitely with no TTL, no size limits, and no metadata tracking, causing network failures to result in hard failures instead of graceful degradation.
 decision: Implement TTL-based caching with JSON metadata sidecars, stale-if-error fallback, and LRU eviction.
 rationale: Follows existing version cache patterns for consistency, provides best user experience during network issues, and enables configurable cache management.
@@ -9,7 +9,7 @@ rationale: Follows existing version cache patterns for consistency, provides bes
 
 ## Status
 
-**Planned**
+**Current**
 
 ## Implementation Issues
 
