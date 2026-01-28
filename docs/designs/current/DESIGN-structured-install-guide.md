@@ -34,66 +34,6 @@ Current
 | [#774](https://github.com/tsukumogami/tsuku/issues/774) | feat(golden): enable golden files for system dependency recipes | [#772](https://github.com/tsukumogami/tsuku/issues/772), [#770](https://github.com/tsukumogami/tsuku/issues/770) | testable |
 | [#775](https://github.com/tsukumogami/tsuku/issues/775) | chore(golden): unblock #745 - enforce golden files for all recipes | [#774](https://github.com/tsukumogami/tsuku/issues/774) | milestone |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Actions["M-Actions (prerequisite)"]
-        I755["#755: Install actions"]
-        I756["#756: Config actions"]
-        I760["#760: Implicit constraints"]
-        I761["#761: Plan filtering"]
-        I765["#765: ExtractPackages"]
-    end
-
-    subgraph Sandbox["M-Sandbox: Container Building"]
-        I757["#757: Container CI"]
-        I767["#767: Base container"]
-        I768["#768: Container spec"]
-        I769["#769: Image caching"]
-        I770["#770: Executor integration"]
-        I771["#771: Action execution"]
-    end
-
-    subgraph Coverage["M-Coverage: Golden Coverage"]
-        I758["#758: Discover recipes"]
-        I772["#772: Migrate recipes"]
-        I773["#773: Remove install_guide"]
-        I774["#774: Golden files"]
-        I775["#775: Unblock #745"]
-    end
-
-    I757 --> I767
-    I765 --> I768
-    I768 --> I769
-    I761 --> I770
-    I767 --> I770
-    I768 --> I770
-    I769 --> I770
-    I765 --> I770
-    I755 --> I771
-    I756 --> I771
-    I770 --> I771
-    I761 --> I771
-    I758 --> I772
-    I770 --> I772
-    I771 --> I772
-    I760 --> I772
-    I772 --> I773
-    I772 --> I774
-    I770 --> I774
-    I774 --> I775
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I755,I756,I757,I758,I760,I761,I765,I767,I768,I769,I770,I771,I772,I773,I774,I775 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Scope
 
 This design addresses **sandbox container building** for recipes with system dependencies. It complements [DESIGN-system-dependency-actions.md](DESIGN-system-dependency-actions.md) which defines the action vocabulary.

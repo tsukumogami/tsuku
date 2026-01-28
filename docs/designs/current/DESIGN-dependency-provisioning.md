@@ -28,29 +28,6 @@ Current
 | [#545](https://github.com/tsukumogami/tsuku/issues/545) | feat(recipes): add gdbm recipe to validate configure_make | [#541](https://github.com/tsukumogami/tsuku/issues/541) | testable |
 | [#546](https://github.com/tsukumogami/tsuku/issues/546) | feat(recipes): validate compilation without system gcc | [#541](https://github.com/tsukumogami/tsuku/issues/541), [#542](https://github.com/tsukumogami/tsuku/issues/542) | milestone |
 
-```mermaid
-graph LR
-    I539["#539: CI test matrix"]
-    I540["#540: zlib recipe"]
-    I541["#541: make recipe"]
-    I542["#542: zig recipe"]
-    I543["#543: validation scripts"]
-    I544["#544: pngcrush recipe"]
-    I545["#545: gdbm recipe"]
-    I546["#546: no-gcc validation"]
-
-    I540 --> I544
-    I541 --> I545
-    I541 --> I546
-    I542 --> I546
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-
-    class I539,I540,I541,I542,I543,I544,I545,I546 done
-```
-
 ### Milestone: [Dependency Provisioning: Build Environment](https://github.com/tsukumogami/tsuku/milestone/19)
 
 | Issue | Title | Dependencies | Tier |
@@ -66,41 +43,6 @@ graph LR
 | [#555](https://github.com/tsukumogami/tsuku/issues/555) | feat(actions): implement cmake_build action | [#549](https://github.com/tsukumogami/tsuku/issues/549) | critical |
 | [#556](https://github.com/tsukumogami/tsuku/issues/556) | feat(recipes): add ninja recipe to validate cmake_build | [#555](https://github.com/tsukumogami/tsuku/issues/555) | testable |
 
-```mermaid
-graph LR
-    I540["#540: zlib (M1)"]
-    I541["#541: make (M1)"]
-    I542["#542: zig (M1)"]
-    I547["#547: action implicit deps"]
-    I548["#548: pkg-config recipe"]
-    I549["#549: cmake recipe"]
-    I550["#550: buildAutotoolsEnv"]
-    I551["#551: setup_build_env"]
-    I552["#552: openssl recipe"]
-    I553["#553: ncurses recipe"]
-    I554["#554: curl recipe"]
-    I555["#555: cmake_build action"]
-    I556["#556: ninja recipe"]
-
-    I541 --> I550
-    I542 --> I550
-    I548 --> I550
-    I550 --> I551
-    I540 --> I552
-    I551 --> I553
-    I551 --> I554
-    I552 --> I554
-    I549 --> I555
-    I555 --> I556
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef external fill:#e0e0e0
-
-    class I540,I541,I542,I547,I548,I549,I550,I551,I552,I553,I554,I555,I556 done
-```
-
 ### Milestone: [Dependency Provisioning: Full Integration](https://github.com/tsukumogami/tsuku/milestone/20)
 
 | Issue | Title | Dependencies | Tier |
@@ -108,26 +50,6 @@ graph LR
 | [#557](https://github.com/tsukumogami/tsuku/issues/557) | feat(recipes): add readline recipe using homebrew | [#553](https://github.com/tsukumogami/tsuku/issues/553) | simple |
 | [#558](https://github.com/tsukumogami/tsuku/issues/558) | feat(recipes): add sqlite recipe to validate readline | [#557](https://github.com/tsukumogami/tsuku/issues/557) | testable |
 | [#559](https://github.com/tsukumogami/tsuku/issues/559) | feat(recipes): add git recipe to validate complete toolchain | [#554](https://github.com/tsukumogami/tsuku/issues/554) | milestone |
-
-```mermaid
-graph LR
-    I553["#553: ncurses (M2)"]
-    I554["#554: curl (M2)"]
-    I557["#557: readline recipe"]
-    I558["#558: sqlite recipe"]
-    I559["#559: git recipe"]
-
-    I553 --> I557
-    I557 --> I558
-    I554 --> I559
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef external fill:#e0e0e0
-
-    class I553,I554,I557,I558,I559 done
-```
 
 ### Milestone: [Dependency Provisioning: System-Required](https://github.com/tsukumogami/tsuku/milestone/21)
 
@@ -139,26 +61,6 @@ graph LR
 | [#563](https://github.com/tsukumogami/tsuku/issues/563) | feat(cli): add tsuku check-deps command | [#560](https://github.com/tsukumogami/tsuku/issues/560) | milestone |
 | [#643](https://github.com/tsukumogami/tsuku/issues/643) | feat(actions): add platform-conditional dependencies | None | simple |
 | [#644](https://github.com/tsukumogami/tsuku/issues/644) | feat(actions): aggregate primitive action dependencies in composites | None | simple |
-
-```mermaid
-graph LR
-    I560["#560: require_system action"]
-    I561["#561: docker recipe"]
-    I562["#562: cuda recipe"]
-    I563["#563: check-deps command"]
-    I643["#643: platform-conditional deps"]
-    I644["#644: aggregate primitive deps"]
-
-    I560 --> I561
-    I560 --> I562
-    I560 --> I563
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-
-    class I560,I561,I562,I563,I643,I644 done
-```
 
 ## Context and Problem Statement
 

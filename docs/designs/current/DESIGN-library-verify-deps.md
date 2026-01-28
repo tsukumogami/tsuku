@@ -30,56 +30,6 @@ Current
 | [#990](https://github.com/tsukumogami/tsuku/issues/990) | Integrate Tier 2 dependency validation | [#989](https://github.com/tsukumogami/tsuku/issues/989) | testable |
 | [#991](https://github.com/tsukumogami/tsuku/issues/991) | Add Tier 2 integration tests | [#990](https://github.com/tsukumogami/tsuku/issues/990) | testable |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph TrackA["Track A: State + Extraction"]
-        I978["#978: Add Sonames field"]
-        I983["#983: Soname extraction"]
-        I985["#985: Store sonames on install"]
-    end
-
-    subgraph TrackB["Track B: Actions"]
-        I979["#979: IsExternallyManaged()"]
-        I984["#984: IsExternallyManagedFor()"]
-    end
-
-    subgraph TrackC["Track C: Verify Infrastructure"]
-        I980["#980: System lib patterns"]
-        I981["#981: PT_INTERP ABI check"]
-        I982["#982: RPATH expansion"]
-    end
-
-    subgraph Integration["Integration"]
-        I986["#986: SonameIndex + classify"]
-        I989["#989: Recursive validation"]
-        I990["#990: Verify integration"]
-        I991["#991: Integration tests"]
-    end
-
-    I978 --> I983
-    I983 --> I985
-    I979 --> I984
-    I978 --> I986
-    I980 --> I986
-    I981 --> I989
-    I982 --> I989
-    I984 --> I989
-    I986 --> I989
-    I989 --> I990
-    I990 --> I991
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I978,I979,I980,I981,I982,I983,I984,I985,I986,I989,I990,I991 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 **Upstream Design Reference:** This design implements Tier 2 of [DESIGN-library-verification.md](./DESIGN-library-verification.md).
 
 ## Context and Problem Statement

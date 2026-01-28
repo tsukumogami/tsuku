@@ -25,47 +25,6 @@ Current
 | [#1019](https://github.com/tsukumogami/tsuku/issues/1019) | test(verify): add integration tests for dlopen verification | [#1014](https://github.com/tsukumogami/tsuku/issues/1014), [#1015](https://github.com/tsukumogami/tsuku/issues/1015), [#1016](https://github.com/tsukumogami/tsuku/issues/1016), [#1017](https://github.com/tsukumogami/tsuku/issues/1017), [#1018](https://github.com/tsukumogami/tsuku/issues/1018) | testable |
 | ~~[Native Binary Release Workflow](https://github.com/tsukumogami/tsuku/milestone/43)~~ | ~~Design and implement native binary release process~~ | ~~None~~ | ~~milestone~~ |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Foundation["Foundation"]
-        I1014["#1014: Minimal dlopen skeleton"]
-        NBRW["Native Binary Release Workflow"]
-    end
-
-    subgraph Refinements["Refinements"]
-        I1015["#1015: Recipe installation"]
-        I1016["#1016: Batch/timeout"]
-        I1017["#1017: Security (env/path)"]
-    end
-
-    subgraph Integration["Integration"]
-        I1018["#1018: Skip-dlopen flag"]
-        I1019["#1019: Integration tests"]
-    end
-
-    I1014 --> I1015
-    I1014 --> I1016
-    I1014 --> I1017
-    I1016 --> I1018
-    I1017 --> I1018
-    I1014 --> I1019
-    I1015 --> I1019
-    I1016 --> I1019
-    I1017 --> I1019
-    I1018 --> I1019
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1014,I1015,I1016,I1017,I1018,I1019,NBRW done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Upstream Design Reference
 
 This design implements Level 3 (Load Test) from [DESIGN-library-verification.md](DESIGN-library-verification.md).

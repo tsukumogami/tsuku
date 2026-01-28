@@ -21,27 +21,6 @@ Current
 | ~~[#1169](https://github.com/tsukumogami/tsuku/issues/1169)~~ | ~~test(verify): add comprehensive tests for integrity verification~~ | ~~[#1168](https://github.com/tsukumogami/tsuku/issues/1168)~~ | ~~testable~~ |
 | ~~[#1170](https://github.com/tsukumogami/tsuku/issues/1170)~~ | ~~docs(verify): update documentation for Tier 4 integrity verification~~ | ~~[#1168](https://github.com/tsukumogami/tsuku/issues/1168)~~ | ~~simple~~ |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    I1168["#1168: Add integrity verification module"]
-    I1169["#1169: Add comprehensive tests"]
-    I1170["#1170: Update documentation"]
-
-    I1168 --> I1169
-    I1168 --> I1170
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1168,I1169,I1170 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Upstream Design Reference
 
 This design implements Level 4 of the tiered library verification system defined in [DESIGN-library-verification.md](docs/designs/DESIGN-library-verification.md).

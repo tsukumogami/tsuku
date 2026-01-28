@@ -27,46 +27,6 @@ Current
 | [#928](https://github.com/tsukumogami/tsuku/issues/928) | ci(golden): re-enable validate-golden-code.yml | [#927](https://github.com/tsukumogami/tsuku/issues/927) | critical |
 | [#929](https://github.com/tsukumogami/tsuku/issues/929) | docs: add constrained evaluation documentation | [#928](https://github.com/tsukumogami/tsuku/issues/928) | simple |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Skeleton"]
-        I921["#921: Constrained eval skeleton (pip)"]
-    end
-
-    subgraph Phase2["Phase 2: Ecosystem Support"]
-        I922["#922: go_build constraint"]
-        I923["#923: cargo_install constraint"]
-        I924["#924: npm_install constraint"]
-        I925["#925: gem_install constraint"]
-        I926["#926: cpan_install constraint"]
-    end
-
-    subgraph Phase3["Phase 3: Integration"]
-        I927["#927: Update validate-golden.sh"]
-        I928["#928: Re-enable CI workflow"]
-        I929["#929: Documentation"]
-    end
-
-    I921 --> I922
-    I921 --> I923
-    I921 --> I924
-    I921 --> I925
-    I921 --> I926
-    I921 --> I927
-    I922 --> I927
-    I923 --> I927
-    I927 --> I928
-    I928 --> I929
-
-    classDef done fill:#c8e6c9
-
-    class I921,I922,I923,I924,I925,I926,I927,I928,I929 done
-```
-
-**Legend**: Green = done
-
 ## Context and Problem Statement
 
 Golden files for ecosystem recipes (pip_exec, cargo_install, go_build, cpan_install, gem_install, npm_install, etc.) drift over time because dependency resolution happens at eval time and picks up new transitive dependency versions from upstream registries. This causes CI failures in `validate-golden-code.yml` that require manual regeneration, even when neither the recipe nor tsuku code has changed.

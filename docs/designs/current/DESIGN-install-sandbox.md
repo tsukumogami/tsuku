@@ -25,22 +25,6 @@ Current
 | [#573](https://github.com/tsukumogami/tsuku/issues/573) | feat(cli): add --sandbox and --recipe flags to install | [#571](https://github.com/tsukumogami/tsuku/issues/571) | milestone |
 | [#594](https://github.com/tsukumogami/tsuku/issues/594) | refactor: rename validation terminology to sandbox | None | simple |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    classDef done fill:#90EE90,stroke:#333
-    classDef ready fill:#87CEEB,stroke:#333
-    classDef blocked fill:#FFB6C1,stroke:#333
-
-    I568[#568: Add NetworkValidator interface]:::done --> I569[#569: Implement RequiresNetwork]:::done
-    I569 --> I570[#570: Add SandboxRequirements]:::done
-    I570 --> I571[#571: Unify Sandbox methods]:::done
-    I571 --> I572[#572: Update builders]:::done
-    I571 --> I573[#573: Add CLI flags]:::done
-    I594[#594: Rename validation to sandbox]:::done
-```
-
 ## Context and Problem Statement
 
 Tsuku's container-based sandbox testing ensures recipes work correctly by executing them in isolated containers. The eval+plan architecture (PR #530) enables offline sandbox testing by caching downloads during plan generation on the host, then running `tsuku install --plan` in a container with cached assets.
