@@ -29,9 +29,18 @@ The recipe registry separation (M30-M32) is nearing completion. The infrastructu
 
 ### Success Criteria
 
+**User-centric metrics (primary):**
+- **Install success rate**: >95% of user install attempts for tools in the registry succeed on the user's platform
+- **Coverage of requests**: >80% of user-requested tools (via telemetry/issues) available within 30 days
+- **Discovery success**: Users can find and install 8 of 10 tools they commonly use
+- **Platform coverage**: >90% of recipes work on linux-glibc and darwin; musl coverage is best-effort
+
+**Infrastructure metrics (secondary):**
 - **Short term**: 500 validated recipes covering the most-requested developer tools
 - **Medium term**: 2,000+ recipes across all major ecosystems (Homebrew, crates.io, npm, PyPI)
 - **Quality bar**: <1% installation failure rate for validated recipes
+
+**Note**: Recipe count is a proxy metric. The real goal is that users can install the tools they need.
 
 ### Scope
 
@@ -51,10 +60,11 @@ The recipe registry separation (M30-M32) is nearing completion. The infrastructu
 
 - **Deterministic generation preferred**: Ecosystem builders (crates.io, npm, pypi, rubygems) are zero-cost and scale linearly; LLM-based generation costs ~$0.10/recipe
 - **Quality over quantity**: Broken recipes damage user trust; every generated recipe must be tested
-- **Bottle availability**: Homebrew bottle inspection is ~85-90% deterministic; remaining formulas need LLM analysis
+- **Bottle availability**: Homebrew bottle inspection is estimated at ~85-90% deterministic; remaining formulas need LLM analysis. **Note: This estimate requires validation with actual data before relying on it for capacity planning.**
 - **System dependencies**: Many tools need libraries; adding deps unlocks entire categories of recipes
 - **Popular tools first**: Users need common tools (terraform, kubectl, ripgrep) before obscure ones
 - **Tap support matters**: Vendor taps (hashicorp/tap, mongodb/brew) contain actively-maintained formulas
+- **Platform diversity**: Recipes must work across target environments (linux-glibc, linux-musl, darwin); partial coverage is acceptable with graceful degradation
 
 ## External Research
 
@@ -350,6 +360,35 @@ The registry scale strategy is a **fully deterministic pipeline** that generates
 - GitHub Release builder (LLM-only) - users can run `tsuku create --from github:org/repo` manually
 - Homebrew LLM fallback - users can run `tsuku create --from homebrew:formula` manually for complex formulas
 
+### Target Environments
+
+Validation runs across a matrix of target environments. Recipes can have **partial platform coverage** - a recipe that works on 3 of 5 environments is still valuable and should merge with appropriate platform constraints.
+
+**Target environment matrix:**
+
+| Environment | Runner | Priority | Notes |
+|-------------|--------|----------|-------|
+| `linux-glibc-x86_64` | ubuntu-latest | High | Primary Linux target |
+| `linux-glibc-arm64` | ubuntu-24.04-arm | Medium | Growing ARM server adoption |
+| `darwin-x86_64` | macos-13 | High | Intel Macs (legacy but common) |
+| `darwin-arm64` | macos-14 | High | Apple Silicon (primary Mac target) |
+| `linux-musl-x86_64` | alpine container | Low | Alpine/container use cases |
+
+**Platform-specific considerations:**
+
+- **Homebrew bottles**: Only available for glibc Linux and macOS. Musl users need alternative sources or source builds.
+- **Ecosystem builders**: Cargo/Go binaries built on the runner match the runner's libc. Musl requires explicit cross-compilation.
+- **macOS costs**: 10x Linux CI minutes. May sample or defer to nightly for cost control.
+
+**Graceful degradation principle:** A recipe is useful even with partial coverage. If ripgrep works on 4 environments but fails on linux-musl, the recipe merges with `platforms: [linux-glibc-x86_64, linux-glibc-arm64, darwin-x86_64, darwin-arm64]`. Users on musl see "not available for your platform" instead of a broken install.
+
+**Contributor backfill path:** When a recipe doesn't support an environment, contributors can:
+1. Add an alternative source that works (e.g., `--from cargo:ripgrep` might build a musl-compatible binary)
+2. Add platform-specific download URLs if upstream provides musl binaries
+3. Add source build steps for environments without pre-built binaries
+
+This allows the automated pipeline to handle the common cases while community contributions fill gaps for niche environments.
+
 ### Components
 
 ```
@@ -368,10 +407,11 @@ The registry scale strategy is a **fully deterministic pipeline** that generates
 │                 │                                       │                 │
 │                 ▼                                       ▼                 │
 │  ┌───────────────────────────────────────────────────────────────┐       │
-│  │                    Validation Gates                            │       │
+│  │                    Validation Gates (per environment)          │       │
 │  │  - Recipe schema validation                                    │       │
-│  │  - Sandbox install test                                        │       │
-│  │  - Binary execution check                                      │       │
+│  │  - Sandbox install test (on each target environment)           │       │
+│  │  - Binary execution check (on each target environment)         │       │
+│  │  - Aggregate results → derive supported platforms              │       │
 │  └───────────────────────────────────────────────────────────────┘       │
 │                 │                                       │                 │
 │          ┌──────┴──────┐                         ┌──────┴──────┐         │
@@ -385,7 +425,7 @@ The registry scale strategy is a **fully deterministic pipeline** that generates
 │                                       ▼                                  │
 │                          ┌─────────────────────┐                         │
 │                          │   Failure Analysis  │                         │
-│                          │   (JSONL reports)   │                         │
+│                          │   (backend service) │                         │
 │                          └─────────────────────┘                         │
 └──────────────────────────────────────────────────────────────────────────┘
 
@@ -407,6 +447,13 @@ The pipeline maintains a priority queue of packages to generate, ordered by:
 2. **Dependency availability**: Penalize tools requiring unavailable system libs
 3. **Request count**: User requests via telemetry or issues
 
+**User request mechanism**: When `tsuku install <tool>` fails because no recipe exists, the CLI should:
+1. Record the request to telemetry (if opt-in enabled)
+2. Provide user guidance: "Tool not found. You can create a recipe with `tsuku create --from <source>` or request it via GitHub issues."
+3. Show alternatives if similar-named recipes exist
+
+This creates a feedback loop where actual user demand informs prioritization, avoiding the cold-start problem of popularity-only ordering.
+
 ### Failure Analysis System
 
 The batch pipeline runs in **deterministic-only mode** (no LLM fallback). Failures are valuable data that reveal capability gaps.
@@ -415,6 +462,7 @@ The batch pipeline runs in **deterministic-only mode** (no LLM fallback). Failur
 - Failures are a forcing function, not errors to suppress
 - Collect structured data for systematic analysis
 - Prioritize capabilities by "popularity-weighted impact" (what capability would unblock the most popular tools?)
+- **Track failures per environment, not per recipe** - a recipe may succeed on some platforms and fail on others
 
 **Failure categories mapped to capabilities:**
 
@@ -427,12 +475,73 @@ The batch pipeline runs in **deterministic-only mode** (no LLM fallback). Failur
 | `binary_not_found` | Improved executable discovery | non-standard binary locations |
 | `complex_archive` | Advanced archive inspection | nested or unusual structures |
 
-**Storage:** JSONL files per batch run, enabling:
-- `tsuku batch analyze` to generate capability gap reports
+**Storage:** Backend storage (R2, D1, or similar) with JSONL ingestion per batch run, enabling:
+- Capability gap reports showing which dependencies block the most popular packages
 - Feedback loop to re-prioritize the queue (skip structural failures, retry transient ones)
 - Historical tracking of gap closure over time
+- Query interface for operators to analyze patterns
 
-**Required flag:** Add `--deterministic-only` to `tsuku create` to disable LLM fallback. This enables fully deterministic batch runs where failures produce analyzable data rather than triggering expensive LLM calls.
+**No API key = deterministic-only:** Running `tsuku create` without LLM API keys (ANTHROPIC_API_KEY, GOOGLE_API_KEY) naturally produces deterministic-only behavior for ecosystem builders. The Homebrew builder requires refactoring to support this pattern - currently it fails early if no LLM is available, even when deterministic bottle inspection would succeed. After refactoring, Homebrew should attempt deterministic generation first and only fail if both deterministic fails AND no LLM is available.
+
+### Per-Environment Validation Results
+
+Validation produces a result matrix, not a single pass/fail. Each (package, environment) pair has its own outcome.
+
+**Validation result structure:**
+```jsonl
+{"package": "ripgrep", "source": "cargo", "popularity": 9500, "timestamp": "2026-01-27T10:00:00Z", "results": {
+  "linux-glibc-x86_64": {"status": "pass"},
+  "linux-glibc-arm64": {"status": "pass"},
+  "darwin-x86_64": {"status": "pass"},
+  "darwin-arm64": {"status": "pass"},
+  "linux-musl-x86_64": {"status": "fail", "category": "binary_incompatible", "reason": "requires glibc"}
+}}
+```
+
+**Recipe output:** When a recipe passes on at least one environment, it merges with a `platforms` field derived from the validation results:
+```toml
+[metadata]
+platforms = ["linux-glibc-x86_64", "linux-glibc-arm64", "darwin-x86_64", "darwin-arm64"]
+```
+
+**Failure tracking:** Failures are recorded per environment, enabling:
+- "Which environments fail most often for Homebrew recipes?" (answer: musl)
+- "What capability would unlock linux-arm64 for the most packages?"
+- Targeted backfill work for specific environments
+
+### Dependency Resolution and Retry
+
+When a package fails due to missing dependencies, the failure record must track which specific dependencies blocked it. This enables automatic retry when dependencies become available.
+
+**Per-environment failure record:**
+```jsonl
+{"package": "imagemagick", "source": "homebrew", "environment": "linux-glibc-x86_64", "category": "missing_dependency", "blocked_by": ["libpng", "libjpeg"], "popularity": 8500, "timestamp": "2026-01-27T10:00:00Z"}
+```
+
+**Note:** A package may be blocked by different dependencies on different environments. The `blocked_by` field is environment-specific.
+
+**Backend service capabilities:**
+- Query packages blocked by a specific dependency
+- Generate reports: which dependencies block the most popular packages
+- Re-queue blocked packages when dependencies become available
+
+**Re-queue triggers:**
+
+| Trigger | When | Action |
+|---------|------|--------|
+| Manual | After adding library recipe | Operator queries blocked packages, triggers re-queue |
+| Automatic | CI hook on recipe merge | Backend detects new recipe, re-queues blocked packages |
+
+**Automatic trigger flow:**
+1. New recipe merged (e.g., `libpng.toml`)
+2. CI notifies backend service of new recipe
+3. Backend queries failure store for packages blocked by `libpng`
+4. Blocked packages added back to priority queue with original popularity scores
+5. Next batch run picks them up
+
+This creates a feedback loop: failures identify missing capabilities, capabilities are added, blocked packages automatically retry.
+
+**Implementation note:** This is backend infrastructure (similar to telemetry worker), not part of the tsuku CLI. **Architecture constraint:** Must be Cloudflare-based (Worker + D1/R2) to maintain consistency with existing telemetry infrastructure and avoid new operational surface area.
 
 ### Generation Flow
 
@@ -454,18 +563,27 @@ Priority Queue → Select Package → Route by Source
        ┌──────┴──────┐
        ▼             ▼
    Success       Failure
-   → Merge       → Record
-                     │
-                     ▼
-              Failure Analysis
-              (capability gaps)
-                     │
-                     ▼
-              Manual fixes using
-              LLM builders (user feature)
+   → Merge       → Record ──────────────────┐
+       │                                    │
+       │                                    ▼
+       │                          Failure Analysis
+       │                          (backend service)
+       │                                    │
+       │              ┌─────────────────────┴─────────────────────┐
+       │              ▼                                           ▼
+       │     Dependency missing?                          Other failure?
+       │              │                                           │
+       │              ▼                                           ▼
+       │     Wait for dep recipe                         Capability gap report
+       │     (auto re-queue when                         (informs manual fixes)
+       │      dep becomes available)
+       │              │
+       └──────────────┴─────► Re-queue to Priority Queue
 ```
 
-**Note**: GitHub Release packages are NOT in the automated queue. Users create these manually via `tsuku create --from github:org/repo`.
+**Notes:**
+- GitHub Release packages are NOT in the automated queue. Users create these manually via `tsuku create --from github:org/repo`.
+- When a dependency recipe is added, the backend service automatically re-queues packages that were blocked by it.
 
 ## Implementation Approach
 
@@ -473,11 +591,11 @@ This is a strategic design. Implementation details are delegated to tactical des
 
 ### Phase 0: Prerequisites
 
-Add the `--deterministic-only` flag to `tsuku create` to enable batch mode:
+Refactor Homebrew builder to support running without LLM API keys:
 
-1. **DESIGN-deterministic-only-flag.md**: Flag disables LLM fallback, ensuring failures are recorded instead of triggering LLM
+1. **DESIGN-homebrew-deterministic-mode.md**: Refactor Homebrew builder to defer LLM initialization until needed. When no API key is available, deterministic bottle inspection should succeed or fail on its own merits, not fail early due to missing LLM.
 
-This is required before batch generation can run.
+This is required before batch generation can run. Ecosystem builders (Cargo, npm, PyPI, etc.) already work without API keys.
 
 ### Phase 1: Batch Generation Infrastructure
 
@@ -491,7 +609,7 @@ This is required before batch generation can run.
 
 ### Milestones
 
-- **M-DeterministicFlag**: Add `--deterministic-only` flag to `tsuku create`
+- **M-HomebrewDeterministic**: Refactor Homebrew builder to work without API keys when deterministic succeeds
 - **M-Priority**: Priority queue implementation (scoring, data ingestion, API)
 - **M-BatchGen**: CI pipeline for batch generation (scheduler, validation, PR creation)
 - **M-FailureAnalysis**: Failure collection and gap analysis tooling
@@ -503,15 +621,15 @@ This is required before batch generation can run.
 
 | Design | Target Repo | Purpose |
 |--------|-------------|---------|
-| DESIGN-deterministic-only-flag.md | tsuku | Add `--deterministic-only` flag to disable LLM fallback for batch runs |
+| DESIGN-homebrew-deterministic-mode.md | tsuku | Refactor Homebrew builder to defer LLM initialization, enabling deterministic-only runs without API keys |
 
-**Note**: GitHub Release deterministic path is a nice-to-have, not a prerequisite. GitHub releases are handled manually via user-facing LLM builder.
+**Note**: GitHub Release deterministic path is a nice-to-have, not a prerequisite. GitHub releases are handled manually via user-facing LLM builder. Ecosystem builders (Cargo, npm, PyPI, Go, CPAN, Cask) already work without API keys.
 
 ### Failure Analysis Infrastructure
 
 | Design | Target Repo | Purpose |
 |--------|-------------|---------|
-| DESIGN-batch-failure-analysis.md | tsuku | Structured failure collection and capability gap analysis |
+| DESIGN-batch-failure-analysis.md | tsuku | Structured failure collection, capability gap analysis, and dependency-based retry triggers |
 
 ### Batch Generation Infrastructure
 
@@ -559,7 +677,11 @@ Batch generation runs in GitHub Actions CI. Generated recipes are validated in s
 
 **Risk 4**: `run_command` actions execute arbitrary shell commands at install time with user privileges.
 
-**Mitigation**: This is an existing tsuku risk, not specific to batch generation. Tactical design should consider a 24-72 hour cooldown before auto-merge to allow community detection of malicious recipes.
+**Mitigation**: This is an existing tsuku risk, but batch generation amplifies the attack surface. **Auto-merge scope restriction:** Recipes containing `run_command` actions MUST NOT auto-merge. They require human review regardless of deterministic generation. Tactical design should implement this gate in the validation pipeline.
+
+**Risk 5**: Dependency re-queue could enable supply chain attacks via name-squatting (adding a malicious recipe that satisfies a dependency name).
+
+**Mitigation**: When a new library recipe is added, the tactical design must verify the recipe is the correct/intended library before re-queuing blocked packages. This should not be pure name-matching.
 
 ### Mitigations Summary
 
@@ -569,9 +691,19 @@ Batch generation runs in GitHub Actions CI. Generated recipes are validated in s
 | Sandbox escape | Container isolation, no network | Container runtime vulnerability |
 | Recipe enables privilege escalation | Sandbox validation catches obvious cases | Sophisticated attacks may pass validation |
 | Typosquatted packages | Popularity/age gates (tactical design) | New popular packages could still be malicious |
-| `run_command` abuse | Cooldown period before auto-merge | Sophisticated time-delayed attacks |
+| `run_command` abuse | **Block auto-merge for recipes with `run_command`** | Manual review required but humans can miss issues |
+| Dependency re-queue injection | Verify library identity, not just name | Sophisticated typosquatting could still succeed |
 
 **Note**: LLM-related risks (prompt injection, malicious generated recipes) are not applicable to the automated pipeline since LLM is excluded from automation.
+
+### Security Requirements for Tactical Designs
+
+The following security requirements MUST be addressed in tactical designs:
+
+1. **Auto-merge gates**: Recipes with `run_command` actions must require human review (DESIGN-batch-recipe-generation.md)
+2. **Dependency verification**: New library recipes must be verified as correct before triggering re-queue (DESIGN-batch-failure-analysis.md)
+3. **Post-merge monitoring**: Detect if upstream checksums change after a recipe is merged (DESIGN-batch-operations.md)
+4. **Incident response**: Define rollback procedures for compromised recipes (DESIGN-batch-operations.md)
 
 ## Consequences
 
@@ -592,3 +724,73 @@ Batch generation runs in GitHub Actions CI. Generated recipes are validated in s
 
 - **Cost**: LLM generation costs are bounded by prioritization
 - **Time**: Generating 5,000 recipes takes weeks, not days
+
+## Open Questions for Tactical Designs
+
+Analysis by specialized agents identified the following unknowns that must be resolved during tactical design.
+
+### High Priority (Blocks Implementation)
+
+| Question | Context | Tactical Design |
+|----------|---------|-----------------|
+| Validate Homebrew deterministic rate | The 85-90% estimate drives capacity planning but is unverified. Run bottle inspection against a sample of 500 formulas to validate. | Pre-work before tactical designs |
+| What storage backend for priority queue? | Options: D1 database, R2 JSON files, SQLite in repo. Affects query capability and concurrency. | DESIGN-priority-queue.md |
+| How to coordinate rate limits across parallel CI jobs? | RubyGems has 300/5min limit. GitHub Actions runners share IPs. | DESIGN-batch-recipe-generation.md |
+| What batch size per CI job? | Trade-off: more recipes = higher timeout risk. Estimate: 50-100 for Linux, 20-30 for macOS. | DESIGN-batch-recipe-generation.md |
+| How to map Homebrew deps to tsuku recipe names? | Formula depends on `libyaml`, tsuku might call it `yaml`. Enables `blocked_by` tracking. | DESIGN-batch-failure-analysis.md |
+| How to distinguish structural vs transient failures? | Structural: missing capability. Transient: network error. Affects retry logic. | DESIGN-batch-failure-analysis.md |
+| How to run validation matrix efficiently? | 5 environments × N packages = 5N CI jobs. Parallelize? Sequential? Sample low-priority environments? | DESIGN-batch-recipe-generation.md |
+| What's the minimum platform coverage to merge? | Must pass on at least 1 environment? At least linux+darwin? Configurable per ecosystem? | DESIGN-batch-recipe-generation.md |
+
+### Medium Priority (Needed for Scale)
+
+| Question | Context | Tactical Design |
+|----------|---------|-----------------|
+| How to aggregate popularity across ecosystems? | npm downloads vs crates.io downloads vs GitHub stars. Different scales. | DESIGN-priority-queue.md |
+| What failure record schema fields? | Per-environment results, blocked_by per environment, aggregation for reporting. Schema versioning? | DESIGN-batch-failure-analysis.md |
+| How to handle partial CI run recovery? | If batch fails after 50 of 100 packages, how to resume without re-processing? | DESIGN-batch-recipe-generation.md |
+| Platform validation cost strategy? | macOS costs 10x Linux ($400/month at scale). Musl requires container setup. ARM runners may have limited availability. How to balance coverage vs cost? | DESIGN-batch-recipe-generation.md |
+| What reports do operators need? | Gap reports, coverage dashboards, trend analysis. Format: JSON API? Markdown? | DESIGN-batch-failure-analysis.md |
+
+### Lower Priority (Can Iterate)
+
+| Question | Context |
+|----------|---------|
+| What is "stale" for a recipe? | Upstream version changes but recipe was generated for older version. |
+| How do user requests (telemetry/issues) feed into queue? | Integration between telemetry worker and priority queue. |
+| What emergency stop procedures are needed? | Halt batch processing, rollback merged recipes, disable ecosystem. |
+| What access control for manual intervention? | Who can pause/resume ecosystems, adjust priorities? |
+
+### Required Operations Designs
+
+Based on critique analysis, operations designs are elevated to required status:
+
+| Design | Target Repo | Purpose |
+|--------|-------------|---------|
+| DESIGN-batch-operations.md | tsuku | Runbooks, emergency procedures, cost controls, incident response, rollback capabilities |
+
+**Why required**: Operations readiness is not optional for a system that auto-merges recipes. Without runbooks and emergency procedures, operators will improvise during incidents. This design must define: cost caps, SLIs/SLOs, alerting thresholds, and manual intervention tooling.
+
+### Proposed Additional Tactical Designs
+
+The following design is recommended but not required:
+
+1. **DESIGN-operator-dashboard.md**: Minimum viable reports, dashboard infrastructure, success metrics, alerting
+
+### Research Artifacts
+
+Detailed analysis is available in:
+- `wip/research/scale_panel_infrastructure.md` - Queue scale, rate limits, batch sizing, costs
+- `wip/research/scale_panel_data_model.md` - Failure schema, dependency graph, storage options
+- `wip/research/scale_panel_operations.md` - Scheduling, monitoring, recovery scenarios
+- `wip/research/scale_panel_analysis.md` - Gap prioritization, trend analysis, success metrics
+
+### Critique Review Artifacts
+
+Design critiques from specialized reviewers:
+- `wip/research/critique_architecture.md` - Architecture clarity, integration points, assumptions
+- `wip/research/critique_security.md` - Attack vectors, mitigations, residual risks
+- `wip/research/critique_operations.md` - Runbooks, observability, cost controls
+- `wip/research/critique_product.md` - User value, success metrics, request mechanisms
+
+**Critique outcome**: All four reviewers recommended "Approve with modifications." Modifications have been incorporated into this design.
