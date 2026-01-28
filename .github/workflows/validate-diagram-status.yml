@@ -25,7 +25,6 @@ jobs:
           # Use existing script to extract closing issues, compact to single line
           ISSUES=$(.github/scripts/extract-closing-issues.sh --pr "$PR_NUMBER" | jq -c '.')
           echo "issues=$ISSUES" >> $GITHUB_OUTPUT
-          echo "Closing issues: $ISSUES"
 
       - name: Validate diagram status for closed issues
         if: steps.closed-issues.outputs.issues != '[]'
@@ -37,25 +36,15 @@ jobs:
 
           # Parse JSON array to iterate over issue numbers
           for issue_num in $(echo "$ISSUES" | jq -r '.[]'); do
-            echo "Checking issue #$issue_num..."
-
             # Find all design docs referencing this issue in Implementation Issues section
             # Search both active and current design doc directories
             DOCS=$(grep -l "\[#${issue_num}\]" docs/designs/DESIGN-*.md docs/designs/current/DESIGN-*.md 2>/dev/null || true)
 
-            if [[ -z "$DOCS" ]]; then
-              echo "  No design docs reference issue #$issue_num, skipping"
-              continue
-            fi
+            [[ -z "$DOCS" ]] && continue
 
             for doc in $DOCS; do
-              echo "  Checking $doc..."
-
               # Skip docs without mermaid diagrams
-              if ! grep -q '```mermaid' "$doc"; then
-                echo "    No Mermaid diagram in $doc, skipping"
-                continue
-              fi
+              grep -q '```mermaid' "$doc" || continue
 
               # Verify issue is marked as 'done' in the Mermaid diagram
               if ! .github/scripts/check-issue-status.sh "$doc" "$issue_num" "done"; then
@@ -66,10 +55,8 @@ jobs:
           done
 
           if [[ $FAILED -eq 1 ]]; then
-            echo ""
             echo "Some issues being closed are not marked 'done' in their design doc diagrams."
             echo "Update the Mermaid diagram class assignments before merging."
             exit 1
           fi
-
           echo "All closing issues have correct status in design docs"

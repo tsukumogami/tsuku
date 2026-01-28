@@ -30,9 +30,6 @@ jobs:
             'docs/designs/DESIGN-*.md' \
             'docs/designs/current/DESIGN-*.md' 2>/dev/null || true)
 
-          echo "Changed design docs:"
-          echo "$CHANGED"
-
           # Save for next step
           echo "docs<<EOF" >> $GITHUB_OUTPUT
           echo "$CHANGED" >> $GITHUB_OUTPUT
@@ -52,33 +49,27 @@ jobs:
             [[ -z "$doc" ]] && continue
             [[ ! -f "$doc" ]] && continue
 
-            echo "Checking $doc..."
-
             # Skip if no mermaid diagram
             if ! grep -q '```mermaid' "$doc"; then
-              echo "  No Mermaid diagram, skipping"
               continue
             fi
 
             # Skip archived/superseded docs
             STATUS=$(get_frontmatter_status "$doc")
             if [[ "$STATUS" == "Superseded" ]]; then
-              echo "  Superseded document, skipping"
               continue
             fi
 
-            # Run MM15 validation (without --skip-status-check)
-            if ! .github/scripts/checks/mermaid.sh "$doc"; then
+            # Run MM15 validation (without --skip-status-check, with quiet mode)
+            if ! .github/scripts/checks/mermaid.sh -q "$doc"; then
               echo "::error file=$doc::Diagram class validation failed (MM15)"
               FAILED=1
             fi
           done <<< "${{ steps.changed.outputs.docs }}"
 
           if [[ $FAILED -eq 1 ]]; then
-            echo ""
             echo "One or more design docs have incorrect diagram classes."
             echo "Update the Mermaid diagram class assignments to match issue status."
             exit 1
           fi
-
-          echo "All changed design docs have correct diagram classes"
+          echo "All diagram classes valid"
