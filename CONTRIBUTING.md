@@ -230,7 +230,31 @@ gh pr checks --watch
 
 ## Adding Recipes
 
-Recipes are embedded in the monorepo at `internal/recipe/recipes/`.
+Tsuku has three recipe directories, each serving a different purpose:
+
+| Directory | Purpose | Embedded in Binary | When to Use |
+|-----------|---------|-------------------|-------------|
+| `internal/recipe/recipes/` | Action dependencies | Yes | Only recipes in [EMBEDDED_RECIPES.md](docs/EMBEDDED_RECIPES.md) |
+| `recipes/` | User-installable tools | No (fetched from registry) | Most new recipes |
+| `testdata/recipes/` | CI feature coverage | Yes | Testing package manager actions |
+
+### Choosing the Right Directory
+
+Use this flowchart to determine where your recipe belongs:
+
+```
+Is this recipe required by a tsuku action?
+└─ Yes → Check docs/EMBEDDED_RECIPES.md
+   └─ Listed there? → Embedded (internal/recipe/recipes/)
+   └─ Not listed? → Open issue - action dependency missing
+└─ No → Is this recipe for integration testing only?
+   └─ Yes → testdata/recipes/
+   └─ No → Registry (recipes/)
+```
+
+**Most contributors should add recipes to `recipes/`** - the registry directory. Embedded recipes are reserved for action dependencies (Go, Rust, Node.js, etc.) that tsuku needs to bootstrap itself.
+
+For the complete list of embedded recipes and their rationale, see [docs/EMBEDDED_RECIPES.md](docs/EMBEDDED_RECIPES.md).
 
 ### Using Recipe Builders
 
@@ -394,16 +418,19 @@ tsuku create <tool> --from <source> --skip-sandbox
 
 ### Submitting Recipes
 
-1. Create your recipe in `internal/recipe/recipes/<first-letter>/<tool-name>.toml`
-2. Test locally:
+1. Determine the correct directory using the flowchart above
+2. Create your recipe in the appropriate location:
+   - Registry recipes: `recipes/<first-letter>/<tool-name>.toml`
+   - Embedded recipes: `internal/recipe/recipes/<tool-name>.toml` (only if listed in EMBEDDED_RECIPES.md)
+3. Test locally:
    ```bash
    go build -o tsuku ./cmd/tsuku
    ./tsuku install <tool-name>
    ./tsuku install <tool-name> --sandbox  # Test in isolated container
    ```
-3. Submit a PR to this repository
+4. Submit a PR to this repository
 
-See the existing recipes in `internal/recipe/recipes/` for examples.
+See the existing recipes in `recipes/` for examples of registry recipes.
 
 ## Golden File Testing
 
@@ -742,6 +769,32 @@ go build -o tsuku ./cmd/tsuku
 
 ## Troubleshooting
 
+### Recipe Works Locally But Fails in CI
+
+**Symptom**: `tsuku install <tool>` works on your machine but CI fails with "recipe not found"
+
+**Causes**:
+1. Recipe in wrong directory (registry recipe but CI expects embedded)
+2. Missing from EMBEDDED_RECIPES.md (if action dependency)
+3. Network timeout during registry fetch
+
+**Solutions**:
+1. Check if your recipe is an action dependency (see [docs/EMBEDDED_RECIPES.md](docs/EMBEDDED_RECIPES.md)) - if so, use `internal/recipe/recipes/`
+2. For registry recipes, ensure CI has network access to GitHub
+3. Run `./tsuku install --verbose <tool>` to see fetch attempts
+
+### Recipe Not Found (Network Issues)
+
+**Error messages**:
+- "Could not reach recipe registry. Check your internet connection."
+- "Recipe may be stale (cached X hours ago)"
+
+**Solutions**:
+1. Check internet connectivity
+2. Run `tsuku update-registry` to refresh cache
+3. Use `tsuku install --fresh <tool>` to bypass cache
+4. For offline use, pre-cache recipes or use local overrides in `$TSUKU_HOME/recipes/`
+
 ### Linter Failures
 
 If golangci-lint fails in CI:
@@ -754,6 +807,68 @@ If tests fail:
 - Check test logs for specific failures
 - Run with race detection: `go test -race ./...`
 - Check if the failure is in CI-specific environment
+
+## Nightly Registry Validation
+
+Registry recipes are validated nightly to catch external drift (URL changes, version rot, upstream breakage).
+
+### How It Works
+
+- **Schedule**: Daily at 2 AM UTC
+- **Scope**: All recipes in `recipes/` directory
+- **Actions**: Generates fresh plans and compares against stored golden files
+- **Reporting**: Creates a GitHub issue on failure with the list of broken recipes
+
+### What Contributors Should Do
+
+1. **Subscribe to notifications**: Watch the repository to receive nightly failure issue notifications
+2. **Check nightly status before major changes**: If nightly validation is failing, your recipe PR may be blocked
+3. **Reference nightly issues when fixing recipes**: Link to the nightly failure issue when submitting a fix
+
+### Why This Matters
+
+Unlike embedded recipes (validated on every code change), registry recipes are only validated when they change or during nightly runs. This means:
+- External changes (upstream URL moves, new release formats) are caught within 24 hours
+- If your recipe suddenly fails, check if upstream made changes
+
+## Security Incident Response
+
+This section outlines the response procedures for a repository compromise affecting recipes.
+
+### Detection
+
+Signs of a potential compromise:
+- Unexpected recipe changes in git history (malicious URLs, checksums)
+- User reports of suspicious behavior after `tsuku install`
+- Automated alerts from commit signature verification (if enabled)
+- Unusual patterns in CI logs or workflow runs
+
+### Immediate Actions
+
+1. **Revert malicious commits**: Use `git revert` to remove the compromised content from main branch
+2. **Post security advisory**: Create a GitHub security advisory with affected recipes and timeframe
+3. **Notify users**: Instruct users to clear their cache:
+   ```bash
+   rm -rf $TSUKU_HOME/registry/
+   ```
+
+### Recovery Steps
+
+1. **Audit changes**: Review all recipe changes since last known good state
+2. **Verify embedded recipes**: Compare embedded recipes against known-good checksums
+3. **Issue emergency CLI release**: If embedded recipes were affected, release a new CLI version immediately
+4. **Document timeline**: Create a post-mortem with:
+   - Timeline of compromise
+   - Affected recipes
+   - Impact assessment
+   - Lessons learned
+
+### Prevention
+
+- **Branch protection**: Require signed commits for recipe changes
+- **Review all recipe changes**: Check URLs and checksums for suspicious patterns
+- **Monitor for unexpected changes**: Set up alerts for recipe file modifications outside normal PR flow
+- **Regular credential rotation**: Rotate any secrets used in CI workflows quarterly
 
 ## Releases
 
