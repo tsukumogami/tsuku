@@ -21,26 +21,6 @@ Current
 | [#865](https://github.com/tsukumogami/tsuku/issues/865) | feat(cask): add binary symlinks and applications integration | [#862](https://github.com/tsukumogami/tsuku/issues/862) | testable |
 | [#866](https://github.com/tsukumogami/tsuku/issues/866) | feat(builder): add CaskBuilder for recipe generation | [#863](https://github.com/tsukumogami/tsuku/issues/863), [#864](https://github.com/tsukumogami/tsuku/issues/864), [#865](https://github.com/tsukumogami/tsuku/issues/865) | testable |
 
-```mermaid
-graph TD
-    I862["#862 Walking Skeleton"]:::done
-    I863["#863 Cask API"]:::done
-    I864["#864 DMG Extraction"]:::done
-    I865["#865 Symlinks"]:::done
-    I866["#866 CaskBuilder"]:::done
-
-    I862 --> I863
-    I862 --> I864
-    I862 --> I865
-    I863 --> I866
-    I864 --> I866
-    I865 --> I866
-
-    classDef done fill:#28a745,stroke:#1e7e34,color:white
-    classDef ready fill:#007bff,stroke:#0056b3,color:white
-    classDef blocked fill:#ffc107,stroke:#d39e00,color:black
-```
-
 ## Upstream Design Reference
 
 This design extends [DESIGN-homebrew.md](designs/current/DESIGN-homebrew.md) which describes tsuku's Homebrew integration architecture for formula bottles.

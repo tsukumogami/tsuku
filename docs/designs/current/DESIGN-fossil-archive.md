@@ -21,28 +21,6 @@ Current
 | [#725](https://github.com/tsukumogami/tsuku/issues/725) | feat(recipes): add fossil-source, tcl-source, tk-source testdata recipes | [#724](https://github.com/tsukumogami/tsuku/issues/724) | testable |
 | [#726](https://github.com/tsukumogami/tsuku/issues/726) | feat(recipes): add spatialite and supporting testdata recipes | [#724](https://github.com/tsukumogami/tsuku/issues/724), [#725](https://github.com/tsukumogami/tsuku/issues/725) | milestone |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    I724["#724: fossil_archive action + sqlite"]
-    I725["#725: fossil, tcl, tk recipes"]
-    I726["#726: spatialite + supporting recipes"]
-
-    I724 --> I725
-    I724 --> I726
-    I725 --> I726
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I724,I725,I726 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Context and Problem Statement
 
 Tsuku's [Build Essentials](BUILD-ESSENTIALS.md) infrastructure enables building tools from source when pre-built binaries aren't available. This design extends that capability to support [Fossil SCM](https://fossil-scm.org/), a distributed version control system used by several important open-source projects.

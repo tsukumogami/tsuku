@@ -25,58 +25,6 @@ Current
 | [#1031](https://github.com/tsukumogami/tsuku/issues/1031) | add artifact verification and checksums | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1028](https://github.com/tsukumogami/tsuku/issues/1028), [#1030](https://github.com/tsukumogami/tsuku/issues/1030) | critical |
 | [#1040](https://github.com/tsukumogami/tsuku/issues/1040) | validate workflow with v0.3.0 release | [#1025](https://github.com/tsukumogami/tsuku/issues/1025), [#1026](https://github.com/tsukumogami/tsuku/issues/1026), [#1027](https://github.com/tsukumogami/tsuku/issues/1027), [#1028](https://github.com/tsukumogami/tsuku/issues/1028), [#1030](https://github.com/tsukumogami/tsuku/issues/1030), [#1031](https://github.com/tsukumogami/tsuku/issues/1031) | testable |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Foundation"]
-        I1025["#1025: draft-finalize structure"]
-    end
-
-    subgraph Phase2["Phase 2: Parallel Refinements"]
-        I1026["#1026: goreleaser config"]
-        I1027["#1027: Rust project"]
-    end
-
-    subgraph Phase3["Phase 3: Build Infrastructure"]
-        I1028["#1028: Rust build jobs"]
-    end
-
-    subgraph Phase4["Phase 4: Quality Gates"]
-        I1030["#1030: integration tests"]
-        I1031["#1031: artifact verification"]
-    end
-
-    subgraph Phase5["Phase 5: Validation"]
-        I1040["#1040: v0.3.0 release"]
-    end
-
-    I1025 --> I1026
-    I1025 --> I1027
-    I1027 --> I1028
-    I1025 --> I1028
-    I1028 --> I1030
-    I1025 --> I1030
-    I1030 --> I1031
-    I1028 --> I1031
-    I1025 --> I1031
-    I1026 --> I1040
-    I1027 --> I1040
-    I1028 --> I1040
-    I1030 --> I1040
-    I1031 --> I1040
-    I1025 --> I1040
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1025,I1026,I1027,I1028,I1030,I1031,I1040 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Context and Problem Statement
 
 Tsuku's current release workflow uses goreleaser with `CGO_ENABLED=0`, cross-compiling all four platform binaries (linux-amd64, linux-arm64, darwin-amd64, darwin-arm64) from a single ubuntu-latest runner. This works because pure Go binaries are fully portable when cgo is disabled.
