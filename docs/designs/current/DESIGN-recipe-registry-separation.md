@@ -9,7 +9,7 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 ## Status
 
-**Planned**
+**Current**
 
 ## Implementation Issues
 
@@ -40,51 +40,6 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
 | [#1039](https://github.com/tsukumogami/tsuku/issues/1039) | Design R2 storage for registry golden files | [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | critical | Done |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph M30["M30: Recipe Separation Foundation"]
-        I1033["#1033: Migrate registry recipes"]
-        I1034["#1034: Reorganize golden files"]
-    end
-
-    subgraph M31["M31: CI and Testing Adaptation"]
-        I1035["#1035: Create testdata/recipes"]
-        I1036["#1036: Update workflows"]
-    end
-
-    subgraph M32["M32: Cache Management and Documentation"]
-        I1038["#1038: Document recipe separation"]
-    end
-
-    subgraph Future["Future Work"]
-        I1039["#1039: Design R2 storage"]
-    end
-
-    I1033 --> I1034
-    I1033 --> I1035
-    I1033 --> I1038
-    I1034 --> I1036
-    I1035 --> I1036
-    I1034 --> I1039
-    I1036 --> I1038
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1033 done
-    class I1034 done
-    class I1035 done
-    class I1036 done
-    class I1038 done
-    class I1039 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
