@@ -17,8 +17,8 @@ Planned
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1186](https://github.com/tsukumogami/tsuku/issues/1186) | design priority queue and failure record schemas | None | testable |
-| [#1187](https://github.com/tsukumogami/tsuku/issues/1187) | design batch operations and rollback procedures | None | testable |
+| ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | design priority queue and failure record schemas | None | testable |
+| ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~ | design batch operations and rollback procedures | None | testable |
 
 ### Milestone: [M50: Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)
 
@@ -29,6 +29,14 @@ Planned
 | [#1201](https://github.com/tsukumogami/tsuku/issues/1201) | feat(scripts): add schema validation scripts | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
 | [#1202](https://github.com/tsukumogami/tsuku/issues/1202) | feat(scripts): add queue seed script for Homebrew | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
 | [#1203](https://github.com/tsukumogami/tsuku/issues/1203) | feat(scripts): add gap analysis script | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
+
+### Milestone: [Batch Operations Control Plane](https://github.com/tsukumogami/tsuku/milestone/55)
+
+Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](DESIGN-batch-operations.md) for issue details.
+
+### Milestone: [Batch Operations Observability](https://github.com/tsukumogami/tsuku/milestone/56)
+
+Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](DESIGN-batch-operations.md) for issue details.
 
 ### Milestone: [M-HomebrewBuilder](https://github.com/tsukumogami/tsuku/milestone/51)
 
@@ -104,10 +112,11 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1186,I1187 ready
-    class I1199,I1200 blocked
+    class I1186,I1187 done
+    class I1199,I1200 ready
+    class I1188 needsDesign
     class I1201,I1202,I1203 blocked
-    class I1188,I1189,I1190,I1191 blocked
+    class I1189,I1190,I1191 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
