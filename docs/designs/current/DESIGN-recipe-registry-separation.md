@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: All 171 recipes are embedded in the CLI binary, causing unnecessary bloat and coupling recipe updates to CLI releases.
 decision: Separate recipes into embedded (in binary) and registry (registry-fetched) based on directory location. Store registry golden files in Cloudflare R2 for scalability.
 rationale: Location-based categorization is simplest. R2 storage scales to 10K+ recipes without git bloat. testdata/recipes/ ensures integration tests work reliably.
@@ -32,7 +32,7 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
-| [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48) | Implement registry recipe cache policy (7 issues) | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | milestone | |
+| [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48) | Implement registry recipe cache policy (7 issues) | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | milestone | Done |
 | ~~[#1038](https://github.com/tsukumogami/tsuku/issues/1038)~~ | Document recipe separation for contributors | [#1036](https://github.com/tsukumogami/tsuku/issues/1036), [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48) | simple | Done |
 
 ### Future Work

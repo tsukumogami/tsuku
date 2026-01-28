@@ -471,6 +471,40 @@ tsuku verify gcc-libs --skip-dlopen
 
 Libraries installed before the integrity feature was added will show "Integrity: SKIPPED" when verified with `--integrity`. Reinstalling the library will store checksums and enable full verification.
 
+### Cache Management
+
+tsuku caches recipes and version information locally. These commands help manage the cache:
+
+```bash
+# View cache statistics
+tsuku cache info
+
+# Remove cache entries older than 7 days
+tsuku cache cleanup --max-age 7d
+
+# Preview what would be removed without deleting
+tsuku cache cleanup --dry-run
+
+# Force LRU eviction to enforce size limit
+tsuku cache cleanup --force-limit
+```
+
+Registry recipe cache configuration is available via environment variables. See [ENVIRONMENT.md](docs/ENVIRONMENT.md) for details on `TSUKU_RECIPE_CACHE_TTL`, `TSUKU_RECIPE_CACHE_SIZE_LIMIT`, and other cache settings.
+
+```bash
+# Refresh recipe cache
+tsuku update-registry
+
+# Preview what would be refreshed
+tsuku update-registry --dry-run
+
+# Refresh a specific recipe only
+tsuku update-registry --recipe fzf
+
+# Force refresh all cached recipes
+tsuku update-registry --all
+```
+
 ### Sandbox Testing
 
 Test installations in isolated containers to verify recipes work correctly:
