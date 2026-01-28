@@ -31,66 +31,6 @@ Current
 | [#793](https://github.com/tsukumogami/tsuku/issues/793) | test(fixtures): add testdata recipes for M30 system dependency actions | None | testable |
 | [#794](https://github.com/tsukumogami/tsuku/issues/794) | test(cli): add integration tests for system dependency instruction display | [#793](https://github.com/tsukumogami/tsuku/issues/793) | testable |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph Phase1["Phase 1: Infrastructure"]
-        I754["#754: Target struct"]
-        I755["#755: Install action structs"]
-        I756["#756: Config/verify structs"]
-    end
-
-    subgraph Phase2["Phase 2: Core Features"]
-        I759["#759: linux_family detection"]
-        I760["#760: Implicit constraints"]
-        I761["#761: Plan filtering"]
-    end
-
-    subgraph Phase3["Phase 3: Validation & Docs"]
-        I762["#762: Preflight validation"]
-        I763["#763: Describe() method"]
-        I764["#764: --verify flag"]
-        I765["#765: ExtractPackages()"]
-    end
-
-    subgraph Phase4["Phase 4: CLI Integration"]
-        I766["#766: CLI instructions"]
-    end
-
-    subgraph Phase5["Phase 5: Validation"]
-        I793["#793: Testdata fixtures"]
-        I794["#794: Integration tests"]
-    end
-
-    I754 --> I759
-    I754 --> I760
-    I755 --> I760
-    I754 --> I761
-    I760 --> I761
-    I755 --> I762
-    I756 --> I762
-    I755 --> I763
-    I756 --> I763
-    I756 --> I764
-    I755 --> I765
-    I759 --> I766
-    I761 --> I766
-    I763 --> I766
-    I755 --> I766
-    I756 --> I766
-    I793 --> I794
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I754,I755,I756,I759,I760,I761,I762,I763,I764,I765,I766,I793,I794 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Upstream Design Reference
 
 This design addresses issue [#722](https://github.com/tsukumogami/tsuku/issues/722), which resolves the "Structured System Dependencies" blocker in [DESIGN-golden-plan-testing.md](DESIGN-golden-plan-testing.md).

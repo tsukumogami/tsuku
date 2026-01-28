@@ -660,17 +660,3 @@ The main consideration is preventing sensitive data leakage in debug output, mit
 | [#420](https://github.com/tsukumogami/tsuku/issues/420) | refactor(validate): migrate to unified Logger interface | [#417](https://github.com/tsukumogami/tsuku/issues/417) | simple |
 | [#421](https://github.com/tsukumogami/tsuku/issues/421) | feat(cli): add verbosity flags and environment variable support | [#417](https://github.com/tsukumogami/tsuku/issues/417), [#419](https://github.com/tsukumogami/tsuku/issues/419) | testable |
 | [#422](https://github.com/tsukumogami/tsuku/issues/422) | feat(actions): add ExecutionContext logger and migrate high-value actions | [#417](https://github.com/tsukumogami/tsuku/issues/417), [#418](https://github.com/tsukumogami/tsuku/issues/418), [#421](https://github.com/tsukumogami/tsuku/issues/421) | milestone |
-
-### Dependency Graph
-
-```mermaid
-graph LR
-    I417[#417: Logger interface] --> I419[#419: CLI handler]
-    I417 --> I420[#420: Migrate validate]
-    I417 --> I421[#421: Verbosity flags]
-    I419 --> I421
-    I418[#418: URL sanitizer] --> I422[#422: Migrate actions]
-    I417 --> I422
-    I421 --> I422
-```
-

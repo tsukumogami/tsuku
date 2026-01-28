@@ -36,56 +36,6 @@ rationale: R2 eliminates git bloat while two-tier degradation keeps CI simple; C
 | [#1104](https://github.com/tsukumogami/tsuku/issues/1104) | ci: add R2 cost monitoring alerts | [#1100](https://github.com/tsukumogami/tsuku/issues/1100) | testable |
 | [#1105](https://github.com/tsukumogami/tsuku/issues/1105) | docs: create R2 golden files operational runbook | [#1100](https://github.com/tsukumogami/tsuku/issues/1100), [#1103](https://github.com/tsukumogami/tsuku/issues/1103), [#1104](https://github.com/tsukumogami/tsuku/issues/1104) | simple |
 
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph M1["M1: R2 Golden Core"]
-        I1093["#1093: R2 infrastructure setup"]
-        I1094["#1094: Health check scripts"]
-        I1095["#1095: Post-merge generation"]
-        I1096["#1096: Nightly validation"]
-        I1097["#1097: Migrate golden files"]
-        I1098["#1098: Parallel R2/git operation"]
-        I1099["#1099: PR validation with R2"]
-        I1100["#1100: Remove git golden files"]
-    end
-
-    subgraph M2["M2: R2 Golden Operations"]
-        I1101["#1101: Orphan detection"]
-        I1102["#1102: Version retention"]
-        I1103["#1103: Health monitoring"]
-        I1104["#1104: Cost monitoring"]
-        I1105["#1105: Operational runbook"]
-    end
-
-    I1093 --> I1094
-    I1094 --> I1095
-    I1094 --> I1096
-    I1095 --> I1096
-    I1095 --> I1097
-    I1096 --> I1098
-    I1097 --> I1098
-    I1098 --> I1099
-    I1099 --> I1100
-    I1100 --> I1101
-    I1101 --> I1102
-    I1100 --> I1103
-    I1100 --> I1104
-    I1103 --> I1105
-    I1104 --> I1105
-    I1100 --> I1105
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1093,I1094,I1095,I1096,I1097,I1098,I1099,I1100,I1101,I1102,I1103,I1104,I1105 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Upstream Design Reference
 
 This design implements Stage 7 of [DESIGN-recipe-registry-separation.md](./DESIGN-recipe-registry-separation.md).

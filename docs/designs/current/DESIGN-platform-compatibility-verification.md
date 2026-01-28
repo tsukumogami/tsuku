@@ -26,41 +26,6 @@ rationale: Homebrew bottles work well on glibc and provide valuable version cont
 | [#1117](https://github.com/tsukumogami/tsuku/issues/1117) | docs: document hybrid libc approach for recipe authors | [#1114](https://github.com/tsukumogami/tsuku/issues/1114), [#1115](https://github.com/tsukumogami/tsuku/issues/1115) | simple |
 | [#1118](https://github.com/tsukumogami/tsuku/issues/1118) | ci: add recipe coverage to PR validation workflow | [#1115](https://github.com/tsukumogami/tsuku/issues/1115) | testable |
 
-```mermaid
-graph TD
-    subgraph "M47 - Platform Compatibility Verification"
-        I1109["#1109: libc detection"]:::done
-        I1110["#1110: libc filter"]:::done
-        I1111["#1111: step-level deps"]:::done
-        I1112["#1112: enhanced *_install"]:::done
-        I1113["#1113: supported_libc constraint"]:::done
-        I1114["#1114: recipe migration"]:::done
-        I1115["#1115: coverage validation"]:::done
-        I1116["#1116: container tests"]:::done
-        I1117["#1117: docs"]:::done
-        I1118["#1118: PR validation"]:::done
-
-        I1109 --> I1110
-        I1109 --> I1112
-        I1110 --> I1111
-        I1110 --> I1113
-        I1110 --> I1115
-        I1111 --> I1114
-        I1112 --> I1114
-        I1113 --> I1114
-        I1113 --> I1115
-        I1114 --> I1116
-        I1114 --> I1117
-        I1115 --> I1117
-        I1115 --> I1118
-    end
-
-    classDef done fill:#28a745,color:#fff
-    classDef ready fill:#0366d6,color:#fff
-    classDef blocked fill:#ffc107,color:#000
-    classDef needsDesign fill:#6f42c1,color:#fff
-```
-
 ## Context and Problem Statement
 
 tsuku builds and releases binaries for 4 platform combinations (Linux/macOS x amd64/arm64) and claims support for 5 Linux distribution families (Debian, RHEL, Arch, Alpine, SUSE). However, the testing infrastructure doesn't adequately verify that tsuku actually works on all these targets.
