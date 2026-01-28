@@ -84,46 +84,60 @@ FM_STATUS=$(get_frontmatter_status "$DOC_PATH")
 # Note: grep -c returns 0 count with exit 1, so fallback must be outside subshell
 MERMAID_COUNT=$(grep -c '```mermaid' "$DOC_PATH" 2>/dev/null) || MERMAID_COUNT=0
 
-# MM07: Diagram required for "Planned" status, allowed in "Current" (historical)
-# Rules:
-# 1. Planned status MUST have a diagram
-# 2. Current status MAY have a diagram (kept for historical reference)
-# 3. Other statuses (Proposed, Accepted, Superseded) must NOT have a diagram
-if [[ "$MERMAID_COUNT" -gt 0 && "$FM_STATUS" != "Planned" && "$FM_STATUS" != "Current" ]]; then
-    emit_fail "MM07: Mermaid diagram only allowed in 'Planned' or 'Current' status, found in '$FM_STATUS'. See: .github/scripts/docs/MM07.md"
-    exit $EXIT_FAIL
-fi
-
-if [[ "$MERMAID_COUNT" -eq 0 && "$FM_STATUS" == "Planned" ]]; then
-    emit_fail "MM07: 'Planned' status requires a Mermaid dependency diagram. See: .github/scripts/docs/MM07.md"
-    exit $EXIT_FAIL
-fi
-
-# If no mermaid diagram, nothing more to validate
+# If no mermaid diagram, check if Planned status requires one
 if [[ "$MERMAID_COUNT" -eq 0 ]]; then
+    if [[ "$FM_STATUS" == "Planned" ]]; then
+        emit_fail "MM07: 'Planned' status requires an issue dependency diagram. See: .github/scripts/docs/MM07.md"
+        exit $EXIT_FAIL
+    fi
     exit $EXIT_PASS
 fi
 
-# MM08: Only one diagram per doc (for Planned status only)
-# Current status docs may have multiple diagrams for documentation/examples
-if [[ "$MERMAID_COUNT" -gt 1 && "$FM_STATUS" == "Planned" ]]; then
-    emit_fail "MM08: Only one mermaid diagram allowed per document, found $MERMAID_COUNT. See: .github/scripts/docs/MM08.md"
-    exit $EXIT_FAIL
-fi
-
-# For Current docs, skip detailed validation
-# Current status docs are historical records that may not follow newer conventions
-# We only enforce MM07 (diagram allowed) and MM08 (not applicable - relaxed for Current)
-if [[ "$FM_STATUS" == "Current" ]]; then
-    exit $EXIT_PASS
-fi
-
-# Extract the mermaid block content
-MERMAID_CONTENT=$(awk '
+# Extract all mermaid block content to check for issue dependency nodes
+ALL_MERMAID_CONTENT=$(awk '
     /^```mermaid/ { in_mermaid = 1; next }
     /^```/ && in_mermaid { in_mermaid = 0; next }
     in_mermaid { print }
 ' "$DOC_PATH")
+
+# Check if any diagram contains I<number> nodes (issue dependency diagram)
+# Pattern: I followed by one or more digits, as a word boundary
+ISSUE_NODES=$(echo "$ALL_MERMAID_CONTENT" | grep -oE '\bI[0-9]+\b' | sort -u || true)
+HAS_ISSUE_DIAGRAM=0
+if [[ -n "$ISSUE_NODES" ]]; then
+    HAS_ISSUE_DIAGRAM=1
+fi
+
+# MM07: Issue dependency diagram rules
+# - Issue dependency diagrams (with I<number> nodes) ONLY allowed in Planned status
+# - Non-issue diagrams (documentation, examples) allowed in any status
+# - Planned status MUST have exactly one issue dependency diagram
+if [[ "$HAS_ISSUE_DIAGRAM" -eq 1 ]]; then
+    if [[ "$FM_STATUS" != "Planned" ]]; then
+        emit_fail "MM07: Issue dependency diagram (with I<number> nodes) only allowed in 'Planned' status, found in '$FM_STATUS'. See: .github/scripts/docs/MM07.md"
+        exit $EXIT_FAIL
+    fi
+else
+    # No issue dependency diagram - check if Planned status requires one
+    if [[ "$FM_STATUS" == "Planned" ]]; then
+        emit_fail "MM07: 'Planned' status requires an issue dependency diagram (with I<number> nodes). See: .github/scripts/docs/MM07.md"
+        exit $EXIT_FAIL
+    fi
+    # Non-issue diagrams in non-Planned status - skip all further validation
+    exit $EXIT_PASS
+fi
+
+# At this point: we have an issue dependency diagram in Planned status
+# Continue with detailed validation
+
+# MM08: Only one diagram per doc (for issue dependency diagrams)
+if [[ "$MERMAID_COUNT" -gt 1 ]]; then
+    emit_fail "MM08: Only one mermaid diagram allowed per document, found $MERMAID_COUNT. See: .github/scripts/docs/MM08.md"
+    exit $EXIT_FAIL
+fi
+
+# Use the already extracted mermaid content
+MERMAID_CONTENT="$ALL_MERMAID_CONTENT"
 
 FAILED=0
 
@@ -224,7 +238,8 @@ done <<< "$MERMAID_CONTENT"
 
 # Extract all node definitions (I<number>["..."])
 # Pattern: I followed by digits, optionally with label in brackets
-DIAGRAM_NODES=$(echo "$MERMAID_CONTENT" | grep -oE '\bI[0-9]+\b' | sort -u)
+# Use the already extracted issue nodes
+DIAGRAM_NODES="$ISSUE_NODES"
 
 # MM10: Validate node naming convention
 # Find any node definitions that don't follow I<number> pattern
