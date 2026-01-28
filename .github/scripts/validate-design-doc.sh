@@ -15,7 +15,10 @@
 #   - mermaid.sh      : Diagram syntax (future)
 #
 # Usage:
-#   validate-design-doc.sh <doc-path>
+#   validate-design-doc.sh [-q|--quiet] <doc-path>
+#
+# Options:
+#   -q, --quiet  Suppress [PASS] messages, only show failures
 #
 # Exit codes:
 #   0 - Valid (all checks passed)
@@ -58,12 +61,15 @@ file_predates_check() {
 
 usage() {
     cat >&2 <<'EOF'
-Usage: validate-design-doc.sh <doc-path>
+Usage: validate-design-doc.sh [-q|--quiet] <doc-path>
 
 Validates a design document for:
 - Location: must be under docs/designs/
 - Naming: filename must start with DESIGN-
 - Frontmatter: must have valid YAML frontmatter
+
+Options:
+  -q, --quiet  Suppress [PASS] messages, only show failures
 
 Exit codes:
   0 - Valid
@@ -73,13 +79,29 @@ EOF
     exit $EXIT_ERROR
 }
 
-# Check arguments
-if [[ $# -lt 1 ]]; then
+# Parse arguments
+DOC_PATH=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -q|--quiet)
+            export QUIET_MODE=1
+            shift
+            ;;
+        -*)
+            echo "Error: unknown option: $1" >&2
+            usage
+            ;;
+        *)
+            DOC_PATH="$1"
+            shift
+            ;;
+    esac
+done
+
+if [[ -z "$DOC_PATH" ]]; then
     echo "Error: missing required argument <doc-path>" >&2
     usage
 fi
-
-DOC_PATH="$1"
 
 # Check file exists
 if [[ ! -f "$DOC_PATH" ]]; then
@@ -87,7 +109,7 @@ if [[ ! -f "$DOC_PATH" ]]; then
     exit $EXIT_ERROR
 fi
 
-echo "Validating $DOC_PATH..."
+[[ "${QUIET_MODE:-0}" -ne 1 ]] && echo "Validating $DOC_PATH..."
 
 FAILED=0
 
@@ -177,7 +199,7 @@ fi
 
 # Report final result
 if [[ "$FAILED" -eq 0 ]]; then
-    echo "Result: VALID"
+    [[ "${QUIET_MODE:-0}" -ne 1 ]] && echo "Result: VALID"
     exit $EXIT_PASS
 else
     echo "Result: INVALID"

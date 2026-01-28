@@ -20,9 +20,10 @@
 #   MM15: Class must match actual issue status (requires gh CLI)
 #
 # Usage:
-#   mermaid.sh [--skip-status-check] <doc-path>
+#   mermaid.sh [-q|--quiet] [--skip-status-check] <doc-path>
 #
 # Options:
+#   -q, --quiet          Suppress [PASS] messages, only show failures
 #   --skip-status-check  Skip MM15 (GitHub API status validation)
 #
 # Exit codes:
@@ -51,6 +52,10 @@ DOC_PATH=""
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
+        -q|--quiet)
+            export QUIET_MODE=1
+            shift
+            ;;
         --skip-status-check)
             SKIP_STATUS_CHECK=1
             shift

@@ -31,9 +31,14 @@ readonly EXIT_PASS=0
 readonly EXIT_FAIL=1
 readonly EXIT_ERROR=2
 
-# emit_pass - Output a passing check message
+# Quiet mode - when set to 1, suppress [PASS] messages
+# Can be set via: export QUIET_MODE=1
+: "${QUIET_MODE:=0}"
+
+# emit_pass - Output a passing check message (suppressed in quiet mode)
 # Usage: emit_pass "Check passed"
 emit_pass() {
+    [[ "$QUIET_MODE" -eq 1 ]] && return 0
     echo "[PASS] $1"
 }
 
