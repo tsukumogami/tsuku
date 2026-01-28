@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: Batch recipe generation needs visibility infrastructure to track which packages to generate (priority queue) and what went wrong (failure records), but no structured schemas exist.
 decision: Use single JSON files with tiered priority scoring and latest-only failure records, prioritizing simplicity for Phase 0.
 rationale: The simplest viable schemas satisfy Phase 0 requirements (gap analysis, downstream consumers). Complexity like multi-file sharding, continuous scoring, and history tracking can be added during Phase 2 D1 migration if needed.
@@ -9,7 +9,49 @@ rationale: The simplest viable schemas satisfy Phase 0 requirements (gap analysi
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [M50: Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | feat(data): add priority queue and failure record schemas | None | testable |
+| [#1200](https://github.com/tsukumogami/tsuku/issues/1200) | feat(data): add dependency name mapping structure | None | simple |
+| [#1201](https://github.com/tsukumogami/tsuku/issues/1201) | feat(scripts): add schema validation scripts | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
+| [#1202](https://github.com/tsukumogami/tsuku/issues/1202) | feat(scripts): add queue seed script for Homebrew | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
+| [#1203](https://github.com/tsukumogami/tsuku/issues/1203) | feat(scripts): add gap analysis script | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Schemas"]
+        I1199["#1199: Priority queue and failure schemas"]
+        I1200["#1200: Dependency name mapping"]
+    end
+
+    subgraph Phase2["Phase 2: Scripts"]
+        I1201["#1201: Schema validation scripts"]
+        I1202["#1202: Queue seed script"]
+        I1203["#1203: Gap analysis script"]
+    end
+
+    I1199 --> I1201
+    I1199 --> I1202
+    I1199 --> I1203
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1199,I1200 ready
+    class I1201,I1202,I1203 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
