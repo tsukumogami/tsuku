@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: Tsuku has 155 registry recipes but thousands of developer tools exist across ecosystems (8K+ Homebrew formulas, 200K+ Rust crates, 11M+ npm packages). Manual recipe creation doesn't scale, and missing system dependencies block many formulas.
 decision: Adopt fully deterministic batch generation with structured failure analysis. Failures reveal capability gaps that drive manual fixes. LLM builders remain a user feature, not part of automation.
 rationale: A deterministic-only pipeline produces consistent, analyzable results. Failures are valuable data that identify which capabilities to build next. Keeping LLM out of automation ensures predictable costs and enables systematic gap analysis.
@@ -9,7 +9,7 @@ rationale: A deterministic-only pipeline produces consistent, analyzable results
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
