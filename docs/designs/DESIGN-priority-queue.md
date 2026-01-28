@@ -592,27 +592,6 @@ Script to query failure data:
 # Output: Packages blocked by libpng, sorted by tier
 ```
 
-## Consequences
-
-### Positive
-
-- **Immediate downstream enablement**: #1188 and #1189 can consume these schemas immediately
-- **Human-readable data**: JSON files are inspectable without tooling
-- **Git-friendly**: Changes are diffable, auditable, and reversible
-- **Migration-ready**: Schema version field enables future D1 migration
-
-### Negative
-
-- **Single-file bottleneck**: All queue updates modify one file
-- **No real-time queries**: Gap analysis requires loading entire failure dataset
-- **Manual tier assignment**: Tier 1 requires human curation
-
-### Mitigations
-
-- **Bottleneck**: Phase 0-1 scale (100-500 packages) is manageable; Phase 2 D1 migration addresses this
-- **Query performance**: At expected scale (~10K failure records), loading all data is sub-second
-- **Manual curation**: Tier 1 is intentionally small (20-100 tools); automation handles Tier 2-3
-
 ## Security Considerations
 
 ### Download Verification
@@ -670,4 +649,25 @@ No scripts require elevated privileges. The seed script is the only component wi
 | Execution Isolation | Minimal scope | Seed script runs in CI sandbox |
 | Supply Chain | Partially applicable | Mitigated by review process and mapping validation |
 | User Data | Minimal exposure | Public data only |
+
+## Consequences
+
+### Positive
+
+- **Immediate downstream enablement**: #1188 and #1189 can consume these schemas immediately
+- **Human-readable data**: JSON files are inspectable without tooling
+- **Git-friendly**: Changes are diffable, auditable, and reversible
+- **Migration-ready**: Schema version field enables future D1 migration
+
+### Negative
+
+- **Single-file bottleneck**: All queue updates modify one file
+- **No real-time queries**: Gap analysis requires loading entire failure dataset
+- **Manual tier assignment**: Tier 1 requires human curation
+
+### Mitigations
+
+- **Bottleneck**: Phase 0-1 scale (100-500 packages) is manageable; Phase 2 D1 migration addresses this
+- **Query performance**: At expected scale (~10K failure records), loading all data is sub-second
+- **Manual curation**: Tier 1 is intentionally small (20-100 tools); automation handles Tier 2-3
 
