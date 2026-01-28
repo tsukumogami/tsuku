@@ -20,6 +20,16 @@ Planned
 | [#1186](https://github.com/tsukumogami/tsuku/issues/1186) | design priority queue and failure record schemas | None | testable |
 | [#1187](https://github.com/tsukumogami/tsuku/issues/1187) | design batch operations and rollback procedures | None | testable |
 
+### Milestone: [M50: Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | feat(data): add priority queue and failure record schemas | [#1186](https://github.com/tsukumogami/tsuku/issues/1186) | testable |
+| [#1200](https://github.com/tsukumogami/tsuku/issues/1200) | feat(data): add dependency name mapping structure | [#1186](https://github.com/tsukumogami/tsuku/issues/1186) | simple |
+| [#1201](https://github.com/tsukumogami/tsuku/issues/1201) | feat(scripts): add schema validation scripts | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
+| [#1202](https://github.com/tsukumogami/tsuku/issues/1202) | feat(scripts): add queue seed script for Homebrew | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
+| [#1203](https://github.com/tsukumogami/tsuku/issues/1203) | feat(scripts): add gap analysis script | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
+
 ### Milestone: [M-HomebrewBuilder](https://github.com/tsukumogami/tsuku/milestone/51)
 
 | Issue | Title | Dependencies | Tier |
@@ -53,6 +63,14 @@ graph TD
         I1187["#1187: Batch operations and rollback"]
     end
 
+    subgraph M50["M50: Visibility Infrastructure Schemas"]
+        I1199["#1199: Priority queue and failure schemas"]
+        I1200["#1200: Dependency name mapping"]
+        I1201["#1201: Schema validation scripts"]
+        I1202["#1202: Queue seed script"]
+        I1203["#1203: Gap analysis script"]
+    end
+
     subgraph M_HomebrewBuilder["M-HomebrewBuilder"]
         I1188["#1188: Homebrew deterministic mode"]
     end
@@ -69,6 +87,11 @@ graph TD
         I1191["#1191: System library backfill"]
     end
 
+    I1186 --> I1199
+    I1186 --> I1200
+    I1199 --> I1201
+    I1199 --> I1202
+    I1199 --> I1203
     I1186 --> I1188
     I1186 --> I1189
     I1187 --> I1189
@@ -82,6 +105,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1186,I1187 needsDesign
+    class I1199,I1200 blocked
+    class I1201,I1202,I1203 blocked
     class I1188,I1189,I1190,I1191 needsDesign
 ```
 
