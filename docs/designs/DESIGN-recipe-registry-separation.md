@@ -33,7 +33,7 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
 | [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48) | Implement registry recipe cache policy (7 issues) | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | milestone | |
-| [#1038](https://github.com/tsukumogami/tsuku/issues/1038) | Document recipe separation for contributors | [#1036](https://github.com/tsukumogami/tsuku/issues/1036), [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48) | simple | |
+| ~~[#1038](https://github.com/tsukumogami/tsuku/issues/1038)~~ | Document recipe separation for contributors | [#1036](https://github.com/tsukumogami/tsuku/issues/1036), [Registry Cache Policy](https://github.com/tsukumogami/tsuku/milestone/48) | simple | Done |
 
 ### Future Work
 
@@ -80,7 +80,7 @@ graph TD
     class I1034 done
     class I1035 done
     class I1036 done
-    class I1038 blocked
+    class I1038 done
     class I1039 done
 ```
 
