@@ -1,0 +1,84 @@
+name: Validate Diagram Classes for Changed Docs
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'docs/designs/DESIGN-*.md'
+      - 'docs/designs/current/DESIGN-*.md'
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get changed design docs
+        id: changed
+        run: |
+          BASE="${{ github.event.pull_request.base.sha }}"
+
+          # Find changed DESIGN-*.md files (not in archive)
+          CHANGED=$(git diff --name-only "$BASE"...HEAD -- \
+            'docs/designs/DESIGN-*.md' \
+            'docs/designs/current/DESIGN-*.md' 2>/dev/null || true)
+
+          echo "Changed design docs:"
+          echo "$CHANGED"
+
+          # Save for next step
+          echo "docs<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGED" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Validate diagram classes (MM15)
+        if: steps.changed.outputs.docs != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Source common utilities for get_frontmatter_status
+          source .github/scripts/checks/common.sh
+
+          FAILED=0
+
+          while IFS= read -r doc; do
+            [[ -z "$doc" ]] && continue
+            [[ ! -f "$doc" ]] && continue
+
+            echo "Checking $doc..."
+
+            # Skip if no mermaid diagram
+            if ! grep -q '```mermaid' "$doc"; then
+              echo "  No Mermaid diagram, skipping"
+              continue
+            fi
+
+            # Skip archived/superseded docs
+            STATUS=$(get_frontmatter_status "$doc")
+            if [[ "$STATUS" == "Superseded" ]]; then
+              echo "  Superseded document, skipping"
+              continue
+            fi
+
+            # Run MM15 validation (without --skip-status-check)
+            if ! .github/scripts/checks/mermaid.sh "$doc"; then
+              echo "::error file=$doc::Diagram class validation failed (MM15)"
+              FAILED=1
+            fi
+          done <<< "${{ steps.changed.outputs.docs }}"
+
+          if [[ $FAILED -eq 1 ]]; then
+            echo ""
+            echo "One or more design docs have incorrect diagram classes."
+            echo "Update the Mermaid diagram class assignments to match issue status."
+            exit 1
+          fi
+
+          echo "All changed design docs have correct diagram classes"
