@@ -21,12 +21,8 @@ jobs:
         run: |
           PR_NUMBER=${{ github.event.pull_request.number }}
 
-          echo "Checking that issues closed by PR #$PR_NUMBER are marked complete in all design docs..."
-
           if ! .github/scripts/checks/strikethrough-all-docs.sh --pr "$PR_NUMBER" 2>&1; then
-            echo ""
             echo "::error::Issues being closed are not marked complete in all design docs that reference them."
             exit 1
           fi
-
           echo "All closing issues are properly marked in design docs"

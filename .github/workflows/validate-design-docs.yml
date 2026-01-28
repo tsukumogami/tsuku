@@ -32,14 +32,13 @@ jobs:
           FAILED=0
           while IFS= read -r file; do
             [ -z "$file" ] && continue
-            echo "---"
-            if ! .github/scripts/validate-design-doc.sh "$file"; then
+            if ! .github/scripts/validate-design-doc.sh -q "$file"; then
               FAILED=1
             fi
           done <<< "${{ steps.find.outputs.files }}"
 
           if [ "$FAILED" -eq 1 ]; then
-            echo "---"
             echo "One or more design docs failed validation"
             exit 1
           fi
+          echo "All design docs valid"
