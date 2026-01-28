@@ -587,57 +587,287 @@ Priority Queue → Select Package → Route by Source
 
 ## Implementation Approach
 
-This is a strategic design. Implementation details are delegated to tactical designs.
+This is a strategic design. Implementation follows a **walking skeleton** approach where each phase delivers functional end-to-end value. Phases build vertically through the stack rather than completing horizontal layers.
 
-### Phase 0: Prerequisites
+**Guiding principles:**
+1. Build visibility/tracking infrastructure FIRST (failures are data, not waste)
+2. Implement ONE ecosystem end-to-end before expanding
+3. Group work by shared implementation effort, not just value out
+4. Each phase delivers a functional increment
+5. Validate assumptions before building on them
 
-Refactor Homebrew builder to support running without LLM API keys:
+### Validation Spike: Homebrew Deterministic Rate (Pre-Phase 0)
 
-1. **DESIGN-homebrew-deterministic-mode.md**: Refactor Homebrew builder to defer LLM initialization until needed. When no API key is available, deterministic bottle inspection should succeed or fail on its own merits, not fail early due to missing LLM.
+**Goal**: Validate the 85-90% Homebrew deterministic success rate before building infrastructure that depends on it.
 
-This is required before batch generation can run. Ecosystem builders (Cargo, npm, PyPI, etc.) already work without API keys.
+**Rationale**: The entire phasing assumes this rate is accurate. If actual rate is 60%, Phase 1 scope and backend sizing change significantly. This is 2-3 days of work that could save weeks of rework.
 
-### Phase 1: Batch Generation Infrastructure
+**Method**: Run bottle inspection against 500 Homebrew formulas (random sample). Record success/failure categories.
 
-1. **DESIGN-priority-queue.md**: Define scoring algorithm and data sources
-2. **DESIGN-batch-recipe-generation.md**: Build the CI pipeline
+**Gate**: If deterministic rate <70%, revisit Phase 1 scope before proceeding.
 
-### Phase 2: Parallel Workstreams
+**Deliverable**: Report documenting actual deterministic rate with failure category breakdown.
 
-1. **DESIGN-system-lib-backfill.md**: Add library recipes to unblock more tools
-2. **Homebrew deterministic improvements**: Increase bottle inspection success rate
+### Day 1 Batch: Quick User Value (Parallel Track)
+
+**Goal**: Deliver user value immediately while infrastructure is being built.
+
+**Rationale**: Users don't care about failure schemas - they care about installing tools. The top 20 most-requested tools are known. Generate these manually in parallel with Phase 0-1.
+
+**Method**: Hand-pick 20 high-impact tools (ripgrep, jq, bat, fd, terraform, kubectl, etc.). Generate manually via `tsuku create`. Validate on Linux AND macOS (sampled). Merge via normal PR process.
+
+**Platform**: linux-glibc-x86_64 + darwin-arm64 (sampled - top 20 only catches obvious macOS issues early)
+
+**Deliverables**:
+1. 20 high-impact recipes merged
+2. Early macOS validation data (informs Phase 2 cost planning)
+
+**Timing**: Runs in parallel with Phase 0 and Phase 1a. No dependencies on batch infrastructure.
+
+### Phase 0: Visibility Infrastructure (No Batch Recipes)
+
+**Goal**: Build the tracking system before generating anything. See the scope, understand the gap.
+
+**Rationale**: Without failure tracking, work in later phases is thrown away. A visibility system lets us understand the problem space before committing to solutions.
+
+**Components**:
+- Package entity schema with `schema_version` field (enables future migration)
+- Failure record schema definition with versioning
+- Recipe registry integration (know what already exists)
+- Scripts to populate queue from Homebrew API (popularity data)
+- Basic reports: "X packages in queue, Y already have recipes"
+- Rollback scripts (tested against manually-created recipes)
+
+**Deliverables**:
+1. `data/priority-queue.json` - Static queue seeded with 100 Homebrew formulas
+2. `data/failure-schema.json` - Versioned failure record schema (v1)
+3. Scripts to query ecosystem APIs for popularity data
+4. `scripts/rollback-recipe.sh` - Tested rollback procedure
+
+**Exit Criteria**:
+- Queue seeded with 100 packages from Homebrew API
+- Rollback script tested against a manually-created test recipe
+- Schema includes `schema_version: 1` field
+- Report shows existing recipe overlap
+
+**What's NOT in Phase 0**: No batch recipe generation, no CI workflows, no backend services.
+
+### Phase 1a: Homebrew Builder Validation (Single Formula)
+
+**Goal**: Validate the Homebrew builder produces correct deterministic output or structured failure before attempting batch generation.
+
+**Rationale**: The Homebrew builder refactor is a prerequisite, not an inline deliverable. Proving it works for single formulas de-risks the batch integration.
+
+**Components**:
+- **Homebrew builder refactor** (DESIGN-homebrew-deterministic-mode.md): Defer LLM initialization, enable deterministic-only mode
+- **Failure categorization**: `DeterministicFailedError` with structured category field
+
+**Deliverables**:
+1. Modified Homebrew builder with deterministic-only mode
+2. Unit tests for deterministic success path
+3. Unit tests for failure categorization (returns structured error, not crash)
+
+**Exit Criteria**:
+- 3 hand-picked Homebrew formulas generate deterministically OR produce categorized `DeterministicFailedError`
+- No LLM API calls made during deterministic-only generation
+- Failure records match schema from Phase 0
+
+**What's NOT in Phase 1a**: No batch workflow, no CI pipeline, no queue integration.
+
+### Phase 1b: Batch Pipeline Integration (Homebrew, Linux Only)
+
+**Goal**: Integrate Homebrew builder with batch workflow. Generate, validate, track failures, and merge for ONE ecosystem.
+
+**Ecosystem choice**: Homebrew (chosen to stress-test failure tracking - 10-15% failure rate produces meaningful data)
+
+**Platform choice**: linux-glibc-x86_64 (cheapest CI, fastest feedback)
+
+**Components**:
+- **Batch generation workflow**: Manual trigger, static queue, Homebrew routing only
+- **Validation gates**: Schema, plan generation, sandbox install (Linux only)
+- **Failure tracking**: File-based JSONL with blocked-by extraction
+- **Operational controls**: Emergency stop, recipe rollback, runbooks
+- **Basic SLI collection**: Success rate, validation pass rate (JSONL-based)
+- **Circuit breaker**: Auto-pause ecosystem if success rate <50% for 10 consecutive attempts
+- **Rate limiting (RATE-1)**: Conservative defaults (1 req/sec for GitHub API)
+
+**Deliverables**:
+1. Batch generation workflow for Homebrew + Linux
+2. Failure records in `data/failures/homebrew-linux.jsonl`
+3. Manual PR creation (no auto-merge yet)
+4. Gap report: "X Homebrew formulas succeeded, Y failed (by category)"
+5. Success rate metric tracked per batch run
+6. Circuit breaker tested (manually trigger low success scenario)
+
+**Exit Criteria**:
+- 50+ Homebrew recipes merged via batch pipeline
+- Success rate metric operational and matches expected 85-90%
+- Circuit breaker tested (auto-pauses on simulated failure storm)
+- Emergency stop tested
+- Rollback tested on a batch-generated recipe
+
+**What's NOT in Phase 1b**: No other ecosystems, no macOS, no auto-merge, no backend services.
+
+### Phase 2: Failure Analysis Backend + macOS Platform
+
+**Goal**: Move from files to backend service. Add macOS platform validation.
+
+**Rationale**: Now that we have failure data, we need to query it efficiently. Adding macOS is minimal incremental effort once the pipeline exists.
+
+**Components**:
+- **Failure storage backend** (DESIGN-batch-failure-analysis.md): Cloudflare Worker + D1
+- **Query API**: Packages blocked by X, top gaps by impact
+- **Priority queue migration**: Move from static JSON to D1
+- **Platform matrix**: Add darwin-arm64 validation
+- **Cost controls**: macOS budget caps, sampling strategy (validate in dry-run first)
+- **Observability**: SLI metrics, SLO definitions, alerting
+
+**Deliverables**:
+1. Cloudflare Worker + D1 for failure and queue storage
+2. Query API for gap analysis
+3. macOS validation with cost controls
+4. Per-environment failure tracking
+5. Alerting on success rate drops
+
+**Exit Criteria**:
+- D1 migration complete with rollback plan tested
+- Query API returns "packages blocked by X" in <1s
+- macOS budget cap validated (dry-run mode) before enabling real runs
+- Alerting fires on simulated success rate drop
+- 200+ recipes validated on both Linux and macOS
+
+### Phase 3: Multi-Ecosystem Deterministic
+
+**Goal**: Add remaining deterministic ecosystems. All use the same infrastructure.
+
+**Components**:
+- **Ecosystem builders**: Cargo, NPM, PyPI, RubyGems, Go, CPAN, Cask
+- **Cross-ecosystem scoring**: Popularity normalization, data ingestion
+- **Ecosystem rate limiting**: Per-ecosystem throttling (RATE-1 applied to all)
+- **Ecosystem pause/resume**: Per-ecosystem operational controls
+
+**Deliverables**:
+1. All deterministic ecosystem builders integrated
+2. Cross-ecosystem priority queue with popularity scoring
+3. Per-ecosystem failure tracking and controls
+
+**Exit Criteria**:
+- Each ecosystem generates at least 50 recipes
+- Per-ecosystem pause/resume tested
+- Rate limiting prevents API throttling (no 429 errors in logs)
+- 1000+ total recipes in registry
+
+### Phase 4: Automation & Intelligence
+
+**Goal**: Auto-merge, re-queue triggers, advanced analysis.
+
+**Components**:
+- **Auto-merge** (DESIGN-batch-recipe-generation.md): For recipes passing all gates
+- **Re-queue triggers** (DESIGN-batch-failure-analysis.md): Auto re-queue when deps available
+- **Structural vs transient classification**: Don't retry structural failures
+- **Post-merge monitoring**: Checksum drift detection
+- **Request-based priority**: Boost packages users are requesting
+
+**Deliverables**:
+1. Auto-merge for safe recipes (no `run_command`)
+2. Automatic re-queue when dependencies merge
+3. Gap analysis with dependency impact scoring
+4. Post-merge security monitoring
+
+**Exit Criteria**:
+- Auto-merge enabled for deterministic recipes without `run_command`
+- Re-queue trigger tested: add library recipe, verify blocked packages re-queued
+- Post-merge monitoring detects simulated checksum change
+- 5000+ recipes in registry
+
+### Phase 5: Platform Matrix Completion + Operational Polish
+
+**Goal**: Complete platform coverage, operational dashboards.
+
+**Components**:
+- **Remaining platforms**: linux-glibc-arm64, darwin-x86_64, linux-musl-x86_64
+- **Cross-job coordination**: Distributed rate limiting (RATE-2)
+- **Dashboards**: Historical trends, operator visibility
+- **Advanced alerting**: Fatigue prevention, severity tuning
+- **State reconciliation**: Detect/repair queue inconsistencies
+
+**Deliverables**:
+1. Full 5-environment validation matrix
+2. Historical trend analysis
+3. Operator dashboards
+4. State reconciliation tools
+
+**Exit Criteria**:
+- All 5 target environments validated in CI matrix
+- State reconciliation tool detects and repairs simulated inconsistency
+- Dashboard shows real-time queue depth and success rates
+- 10000+ recipes in registry
+
+### Phase Summary
+
+| Phase | Goal | Recipes Out | Key Infrastructure |
+|-------|------|-------------|-------------------|
+| Spike | Validate assumption | 0 | Homebrew deterministic rate measurement |
+| Day 1 | Quick user value | ~20 | Manual generation, sampled macOS |
+| 0 | Visibility | 0 | Queue + schema + rollback scripts |
+| 1a | Builder validation | 0 | Homebrew deterministic mode |
+| 1b | Homebrew E2E | ~100 | Batch pipeline + SLIs + circuit breaker |
+| 2 | Backend + macOS | ~200 | D1 + query API + observability |
+| 3 | Multi-ecosystem | ~1000 | All deterministic builders |
+| 4 | Automation | ~5000 | Auto-merge + re-queue |
+| 5 | Full platform | ~10000+ | Complete matrix + dashboards |
 
 ### Milestones
 
-- **M-HomebrewDeterministic**: Refactor Homebrew builder to work without API keys when deterministic succeeds
-- **M-Priority**: Priority queue implementation (scoring, data ingestion, API)
-- **M-BatchGen**: CI pipeline for batch generation (scheduler, validation, PR creation)
-- **M-FailureAnalysis**: Failure collection and gap analysis tooling
-- **M-LibBackfill**: First 20 library recipes added (compression, data, crypto categories)
+Milestones align with phases:
+
+- **M-ValidationSpike**: Pre-Phase 0 - Validate Homebrew deterministic rate (gate: >70% to proceed)
+- **M-Day1Batch**: Parallel track - 20 high-impact tools manually generated and merged
+- **M-Visibility**: Phase 0 - Queue schema, failure schema, rollback scripts, seeded data
+- **M-HomebrewBuilder**: Phase 1a - Homebrew deterministic mode validated on single formulas
+- **M-BatchPipeline**: Phase 1b - Batch workflow, SLIs, circuit breaker, 50+ recipes merged
+- **M-FailureBackend**: Phase 2 - Cloudflare Worker + D1, query API, macOS validation, observability
+- **M-MultiEcosystem**: Phase 3 - All ecosystem builders, cross-ecosystem scoring, ecosystem controls
+- **M-Automation**: Phase 4 - Auto-merge, re-queue triggers, post-merge monitoring
+- **M-PlatformComplete**: Phase 5 - Full platform matrix, dashboards, state reconciliation
 
 ## Required Tactical Designs
 
-### Builder Configuration
+Tactical designs are organized by phase, reflecting the walking skeleton approach.
 
-| Design | Target Repo | Purpose |
-|--------|-------------|---------|
-| DESIGN-homebrew-deterministic-mode.md | tsuku | Refactor Homebrew builder to defer LLM initialization, enabling deterministic-only runs without API keys |
+### Pre-Phase 0 (Validation)
 
-**Note**: GitHub Release deterministic path is a nice-to-have, not a prerequisite. GitHub releases are handled manually via user-facing LLM builder. Ecosystem builders (Cargo, npm, PyPI, Go, CPAN, Cask) already work without API keys.
+| Design | Phase | Purpose |
+|--------|-------|---------|
+| (No design needed) | Spike | Run bottle inspection on 500 formulas to validate deterministic rate |
 
-### Failure Analysis Infrastructure
+### Phase 0-1b Prerequisites (Required for First Batch Recipe)
 
-| Design | Target Repo | Purpose |
-|--------|-------------|---------|
-| DESIGN-batch-failure-analysis.md | tsuku | Structured failure collection, capability gap analysis, and dependency-based retry triggers |
+| Design | Phase | Purpose |
+|--------|-------|---------|
+| DESIGN-homebrew-deterministic-mode.md | 1a | Refactor Homebrew builder to defer LLM initialization, enabling deterministic-only runs |
+| DESIGN-priority-queue.md | 0 | Package entity schema, scoring algorithm, static file format, schema versioning |
+| DESIGN-batch-recipe-generation.md | 1b | CI pipeline for batch generation, validation gates, SLIs, circuit breaker |
+| DESIGN-batch-operations.md | 0-1b | Rollback scripts (Phase 0), emergency stop, runbooks (Phase 1b) |
 
-### Batch Generation Infrastructure
+### Phase 2+ Infrastructure (Required for Scale)
 
-| Design | Target Repo | Purpose |
-|--------|-------------|---------|
-| DESIGN-batch-recipe-generation.md | tsuku | CI pipeline for automated recipe generation |
-| DESIGN-priority-queue.md | tsuku | Criteria and data sources for prioritization |
-| DESIGN-system-lib-backfill.md | tsuku | Strategy for adding common library recipes |
+| Design | Phase | Purpose |
+|--------|-------|---------|
+| DESIGN-batch-failure-analysis.md | 2 | Backend failure storage, query API, re-queue triggers |
+| DESIGN-system-lib-backfill.md | 3+ | Strategy for adding common library recipes (parallel workstream) |
+
+### Design Notes
+
+**Validation spike is blocking**: Do not proceed to Phase 1 if Homebrew deterministic rate is <70%. The entire phasing assumes 85-90%.
+
+**Phase 1 is split for risk reduction**: Phase 1a validates the Homebrew builder in isolation. Phase 1b integrates with batch pipeline. This prevents "big bang" integration risk.
+
+**Operational controls are front-loaded**: Rollback scripts are Phase 0 (before any recipes). SLIs and circuit breaker are Phase 1b (before scale). This addresses critique that observability came too late.
+
+**Day 1 batch is independent**: The parallel track of 20 high-impact tools requires no tactical designs. It uses existing `tsuku create` workflow with manual validation.
+
+**GitHub Release deterministic path**: Not included - GitHub releases are handled manually via user-facing LLM builder. This is explicitly out of scope for the automated pipeline.
 
 ## Security Considerations
 
@@ -776,21 +1006,3 @@ Based on critique analysis, operations designs are elevated to required status:
 The following design is recommended but not required:
 
 1. **DESIGN-operator-dashboard.md**: Minimum viable reports, dashboard infrastructure, success metrics, alerting
-
-### Research Artifacts
-
-Detailed analysis is available in:
-- `wip/research/scale_panel_infrastructure.md` - Queue scale, rate limits, batch sizing, costs
-- `wip/research/scale_panel_data_model.md` - Failure schema, dependency graph, storage options
-- `wip/research/scale_panel_operations.md` - Scheduling, monitoring, recovery scenarios
-- `wip/research/scale_panel_analysis.md` - Gap prioritization, trend analysis, success metrics
-
-### Critique Review Artifacts
-
-Design critiques from specialized reviewers:
-- `wip/research/critique_architecture.md` - Architecture clarity, integration points, assumptions
-- `wip/research/critique_security.md` - Attack vectors, mitigations, residual risks
-- `wip/research/critique_operations.md` - Runbooks, observability, cost controls
-- `wip/research/critique_product.md` - User value, success metrics, request mechanisms
-
-**Critique outcome**: All four reviewers recommended "Approve with modifications." Modifications have been incorporated into this design.
