@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: Tsuku has 155 registry recipes but thousands of developer tools exist across ecosystems (8K+ Homebrew formulas, 200K+ Rust crates, 11M+ npm packages). Manual recipe creation doesn't scale, and missing system dependencies block many formulas.
 decision: Adopt fully deterministic batch generation with structured failure analysis. Failures reveal capability gaps that drive manual fixes. LLM builders remain a user feature, not part of automation.
 rationale: A deterministic-only pipeline produces consistent, analyzable results. Failures are valuable data that identify which capabilities to build next. Keeping LLM out of automation ensures predictable costs and enables systematic gap analysis.
@@ -9,7 +9,83 @@ rationale: A deterministic-only pipeline produces consistent, analyzable results
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [M-Visibility](https://github.com/tsukumogami/tsuku/milestone/50)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1186](https://github.com/tsukumogami/tsuku/issues/1186) | design priority queue and failure record schemas | None | testable |
+| [#1187](https://github.com/tsukumogami/tsuku/issues/1187) | design batch operations and rollback procedures | None | testable |
+
+### Milestone: [M-HomebrewBuilder](https://github.com/tsukumogami/tsuku/milestone/51)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1188](https://github.com/tsukumogami/tsuku/issues/1188) | design homebrew deterministic mode | [#1186](https://github.com/tsukumogami/tsuku/issues/1186) | testable |
+
+### Milestone: [M-BatchPipeline](https://github.com/tsukumogami/tsuku/milestone/52)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | design batch recipe generation CI pipeline | [#1186](https://github.com/tsukumogami/tsuku/issues/1186), [#1187](https://github.com/tsukumogami/tsuku/issues/1187), [#1188](https://github.com/tsukumogami/tsuku/issues/1188) | testable |
+
+### Milestone: [M-FailureBackend](https://github.com/tsukumogami/tsuku/milestone/53)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1190](https://github.com/tsukumogami/tsuku/issues/1190) | design failure analysis backend | [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | testable |
+
+### Milestone: [M-MultiEcosystem](https://github.com/tsukumogami/tsuku/milestone/54)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1191](https://github.com/tsukumogami/tsuku/issues/1191) | design system library backfill strategy | [#1190](https://github.com/tsukumogami/tsuku/issues/1190) | simple |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph M_Visibility["M-Visibility"]
+        I1186["#1186: Priority queue and failure schemas"]
+        I1187["#1187: Batch operations and rollback"]
+    end
+
+    subgraph M_HomebrewBuilder["M-HomebrewBuilder"]
+        I1188["#1188: Homebrew deterministic mode"]
+    end
+
+    subgraph M_BatchPipeline["M-BatchPipeline"]
+        I1189["#1189: Batch recipe generation CI"]
+    end
+
+    subgraph M_FailureBackend["M-FailureBackend"]
+        I1190["#1190: Failure analysis backend"]
+    end
+
+    subgraph M_MultiEcosystem["M-MultiEcosystem"]
+        I1191["#1191: System library backfill"]
+    end
+
+    I1186 --> I1188
+    I1186 --> I1189
+    I1187 --> I1189
+    I1188 --> I1189
+    I1189 --> I1190
+    I1190 --> I1191
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1186,I1187 needsDesign
+    class I1188,I1189,I1190,I1191 needsDesign
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
