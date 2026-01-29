@@ -1,0 +1,16 @@
+{
+  "enabled": true,
+  "disabled_ecosystems": [],
+  "reason": "",
+  "incident_url": "",
+  "disabled_by": "",
+  "disabled_at": "",
+  "expected_resume": "",
+  "circuit_breaker": {},
+  "budget": {
+    "macos_minutes_used": 0,
+    "linux_minutes_used": 0,
+    "week_start": "",
+    "sampling_active": false
+  }
+}
