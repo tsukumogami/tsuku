@@ -28,16 +28,16 @@ The most direct approach: widen the regex/grep patterns in mermaid.sh wherever `
 
 ## Implementation Steps
 
-- [ ] Update `ISSUE_NODES` extraction (line 105) to also capture `M<number>` nodes; rename variable to `DIAGRAM_NODES_ALL` or similar
-- [ ] Introduce `HAS_DEPENDENCY_DIAGRAM` check that looks for either `I` or `M` prefix nodes
-- [ ] Update MM07 messages to mention both `I<number>` and `M<number>`
-- [ ] Update MM10 validation (line 251) to allow `M<number>` alongside `I<number>` in `OTHER_NODES` filter
-- [ ] Split nodes: `ISSUE_NODES` (I-prefix only) for MM06/MM09 table cross-ref, `ALL_NODES` (I+M) for MM11 class check
-- [ ] Update MM15 loop to skip `M<number>` nodes (no GitHub issue to query for milestones)
-- [ ] Update MM10.md to document milestone node format
-- [ ] Create golden file fixtures (4 files)
-- [ ] Create test runner script that runs `mermaid.sh --skip-status-check` on each fixture and checks exit code
-- [ ] Run test runner to verify all golden files produce expected results
+- [x] Update `ISSUE_NODES` extraction to also capture `M<number>` nodes via `MILESTONE_NODES` and `ALL_DEPENDENCY_NODES`
+- [x] Update `HAS_ISSUE_DIAGRAM` check to look for either `I` or `M` prefix nodes
+- [x] Update MM07 messages to mention both `I<number>` and `M<number>`
+- [x] Update MM10 validation to allow `M<number>` alongside `I<number>` in `OTHER_NODES` filter
+- [x] Split nodes: `ISSUE_NODES` (I-prefix only) for MM06/MM09 table cross-ref, `ALL_DEPENDENCY_NODES` (I+M) for MM11 class check
+- [x] Update MM15 loop to skip `M<number>` nodes (no GitHub issue to query for milestones)
+- [x] Update MM10.md to document milestone node format
+- [x] Create golden file fixtures (4 files)
+- [x] Create test runner script that runs `mermaid.sh --skip-status-check` on each fixture and checks exit code
+- [x] Run test runner to verify all golden files produce expected results
 
 ## Testing Strategy
 
