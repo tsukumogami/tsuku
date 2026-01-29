@@ -12,7 +12,7 @@
 #   MM07: Diagram only allowed in "Planned" status
 #   MM08: Only one mermaid diagram per document
 #   MM09: Issue in diagram must appear in table (no orphans)
-#   MM10: Node naming convention: I<number>
+#   MM10: Node naming convention: I<number> or M<number>
 #   MM11: Every node must have a class assigned
 #   MM12: If classDef present, colors must be standardized
 #   MM13: If subgraph styling present, colors must be standardized
@@ -105,11 +105,26 @@ ALL_MERMAID_CONTENT=$(awk '
     in_mermaid { print }
 ' "$DOC_PATH")
 
-# Check if any diagram contains I<number> nodes (issue dependency diagram)
-# Pattern: I followed by one or more digits, as a word boundary
+# Check if any diagram contains I<number> or M<number> nodes (issue/milestone dependency diagram)
+# Pattern: I or M followed by one or more digits, as a word boundary
+# Note: M<N> used as subgraph names (subgraph M50["..."]) are excluded from milestone nodes
 ISSUE_NODES=$(echo "$ALL_MERMAID_CONTENT" | grep -oE '\bI[0-9]+\b' | sort -u || true)
+SUBGRAPH_IDS=$(echo "$ALL_MERMAID_CONTENT" | grep -E '^\s*subgraph\s+' | \
+    sed 's/^\s*subgraph\s*//' | sed 's/\[.*$//' | tr -d ' ' || true)
+MILESTONE_NODES_RAW=$(echo "$ALL_MERMAID_CONTENT" | grep -oE '\bM[0-9]+\b' | sort -u || true)
+MILESTONE_NODES=""
+if [[ -n "$MILESTONE_NODES_RAW" ]]; then
+    while IFS= read -r mnode; do
+        [[ -z "$mnode" ]] && continue
+        if [[ -z "$SUBGRAPH_IDS" ]] || ! echo "$SUBGRAPH_IDS" | grep -qE "^${mnode}$"; then
+            MILESTONE_NODES=$(printf '%s\n%s' "$MILESTONE_NODES" "$mnode")
+        fi
+    done <<< "$MILESTONE_NODES_RAW"
+    MILESTONE_NODES=$(echo "$MILESTONE_NODES" | grep -v '^$' | sort -u || true)
+fi
+ALL_DEPENDENCY_NODES=$(printf '%s\n%s' "$ISSUE_NODES" "$MILESTONE_NODES" | grep -v '^$' | sort -u || true)
 HAS_ISSUE_DIAGRAM=0
-if [[ -n "$ISSUE_NODES" ]]; then
+if [[ -n "$ALL_DEPENDENCY_NODES" ]]; then
     HAS_ISSUE_DIAGRAM=1
 fi
 
@@ -119,13 +134,13 @@ fi
 # - Planned status MUST have exactly one issue dependency diagram
 if [[ "$HAS_ISSUE_DIAGRAM" -eq 1 ]]; then
     if [[ "$FM_STATUS" != "Planned" ]]; then
-        emit_fail "MM07: Issue dependency diagram (with I<number> nodes) only allowed in 'Planned' status, found in '$FM_STATUS'. See: .github/scripts/docs/MM07.md"
+        emit_fail "MM07: Issue dependency diagram (with I<number> or M<number> nodes) only allowed in 'Planned' status, found in '$FM_STATUS'. See: .github/scripts/docs/MM07.md"
         exit $EXIT_FAIL
     fi
 else
     # No issue dependency diagram - check if Planned status requires one
     if [[ "$FM_STATUS" == "Planned" ]]; then
-        emit_fail "MM07: 'Planned' status requires an issue dependency diagram (with I<number> nodes). See: .github/scripts/docs/MM07.md"
+        emit_fail "MM07: 'Planned' status requires an issue dependency diagram (with I<number> or M<number> nodes). See: .github/scripts/docs/MM07.md"
         exit $EXIT_FAIL
     fi
     # Non-issue diagrams in non-Planned status - skip all further validation
@@ -241,29 +256,28 @@ while IFS= read -r line; do
     fi
 done <<< "$MERMAID_CONTENT"
 
-# Extract all node definitions (I<number>["..."])
-# Pattern: I followed by digits, optionally with label in brackets
-# Use the already extracted issue nodes
-DIAGRAM_NODES="$ISSUE_NODES"
+# Extract all node definitions (I<number>["..."] or M<number>["..."])
+# Use the already extracted dependency nodes (issues + milestones)
+DIAGRAM_NODES="$ALL_DEPENDENCY_NODES"
 
 # MM10: Validate node naming convention
-# Find any node definitions that don't follow I<number> pattern
-# First, extract subgraph names to exclude them (subgraphs are not issue nodes)
+# Find any node definitions that don't follow I<number> or M<number> pattern
+# First, extract subgraph names to exclude them (subgraphs are not issue/milestone nodes)
 SUBGRAPH_NAMES=$(echo "$MERMAID_CONTENT" | grep -E '^\s*subgraph\s+' | \
     sed 's/^\s*subgraph\s*//' | sed 's/\[.*$//' | tr -d ' ' || true)
 
 # Look for node definitions like: NodeName["label"]
-OTHER_NODES=$(echo "$MERMAID_CONTENT" | grep -oE '\b[A-Za-z][A-Za-z0-9_]*\[' | sed 's/\[$//' | grep -vE '^I[0-9]+$' || true)
+OTHER_NODES=$(echo "$MERMAID_CONTENT" | grep -oE '\b[A-Za-z][A-Za-z0-9_]*\[' | sed 's/\[$//' | grep -vE '^[IM][0-9]+$' || true)
 if [[ -n "$OTHER_NODES" ]]; then
     while IFS= read -r node; do
         [[ -z "$node" ]] && continue
         # Skip known keywords
         [[ "$node" == "subgraph" || "$node" == "graph" || "$node" == "end" ]] && continue
-        # Skip subgraph names (they're allowed to be non-I<number>)
+        # Skip subgraph names (they're allowed to be non-I/M<number>)
         if [[ -n "$SUBGRAPH_NAMES" ]] && echo "$SUBGRAPH_NAMES" | grep -qE "^${node}$"; then
             continue
         fi
-        emit_fail "MM10: Node '$node' doesn't follow naming convention I<number>. See: .github/scripts/docs/MM10.md"
+        emit_fail "MM10: Node '$node' doesn't follow naming convention I<number> or M<number>. See: .github/scripts/docs/MM10.md"
         FAILED=1
     done <<< "$OTHER_NODES"
 fi
@@ -288,7 +302,8 @@ if [[ -n "$TABLE_ISSUES" ]]; then
 fi
 
 # MM09: Issue in diagram must appear in table (no orphans)
-if [[ -n "$DIAGRAM_NODES" ]]; then
+# Only check I-prefix nodes; M-prefix milestone nodes don't require table entries
+if [[ -n "$ISSUE_NODES" ]]; then
     while IFS= read -r node; do
         [[ -z "$node" ]] && continue
         # Extract issue number from node ID (I123 -> 123)
@@ -299,7 +314,7 @@ if [[ -n "$DIAGRAM_NODES" ]]; then
                 FAILED=1
             fi
         fi
-    done <<< "$DIAGRAM_NODES"
+    done <<< "$ISSUE_NODES"
 fi
 
 # MM11: Every node must have a class assigned
@@ -358,11 +373,11 @@ if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && command -v gh &>/dev/null && [[ -n "$DIAG
     # Edge A --> B means A blocks B (B depends on A)
     declare -A BLOCKERS
     while IFS= read -r line; do
-        # Match edges: I123 --> I456 or I123 --- I456
-        if echo "$line" | grep -qE -- 'I[0-9]+\s*(-->|---)\s*I[0-9]+'; then
+        # Match edges: I/M nodes connected by --> or ---
+        if echo "$line" | grep -qE -- '[IM][0-9]+\s*(-->|---)\s*[IM][0-9]+'; then
             # Extract source and target
-            SOURCE=$(echo "$line" | grep -oE 'I[0-9]+' | head -1)
-            TARGET=$(echo "$line" | grep -oE 'I[0-9]+' | tail -1)
+            SOURCE=$(echo "$line" | grep -oE '[IM][0-9]+' | head -1)
+            TARGET=$(echo "$line" | grep -oE '[IM][0-9]+' | tail -1)
             if [[ -n "$SOURCE" && -n "$TARGET" && "$SOURCE" != "$TARGET" ]]; then
                 # Add source as a blocker of target
                 BLOCKERS[$TARGET]="${BLOCKERS[$TARGET]:-} $SOURCE"
@@ -384,9 +399,12 @@ if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && command -v gh &>/dev/null && [[ -n "$DIAG
         fi
     done <<< "$MERMAID_CONTENT"
 
-    # Query GitHub for each issue and compute expected class
+    # Query GitHub for each issue node and compute expected class
+    # Skip milestone nodes (M-prefix) - they don't have GitHub issues to query
     while IFS= read -r node; do
         [[ -z "$node" ]] && continue
+        # Skip milestone nodes
+        [[ "$node" =~ ^M[0-9]+$ ]] && continue
         ISSUE_NUM=$(echo "$node" | sed 's/^I//')
 
         # Get issue state and labels from GitHub
@@ -424,10 +442,23 @@ if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && command -v gh &>/dev/null && [[ -n "$DIAG
             fi
         fi
 
+        # Build reason string for error context
+        REASON=""
+        if [[ "$ISSUE_STATE" == "CLOSED" ]]; then
+            REASON="(issue is closed)"
+        elif [[ "$HAS_OPEN_BLOCKER" == "true" ]]; then
+            # Format blocker list as "#123, #456"
+            REASON="(blocked by $(echo "$BLOCKER_LIST" | sed 's/I\([0-9]*\)/#\1/g; s/ /, /g'))"
+        elif [[ "$HAS_NEEDS_DESIGN" == "true" ]]; then
+            REASON="(is not blocked and has 'needs-design' label)"
+        else
+            REASON="(issue is open, no blocking dependencies)"
+        fi
+
         # Compare with actual class
         ACTUAL="${ACTUAL_CLASS[$node]:-}"
         if [[ -n "$EXPECTED_CLASS" && -n "$ACTUAL" && "$ACTUAL" != "$EXPECTED_CLASS" ]]; then
-            emit_fail "MM15: Node $node has class '$ACTUAL' but issue #$ISSUE_NUM status requires '$EXPECTED_CLASS'. See: .github/scripts/docs/MM15.md"
+            emit_fail "MM15: Node $node has class '$ACTUAL' but issue #$ISSUE_NUM requires '$EXPECTED_CLASS' $REASON. See: .github/scripts/docs/MM15.md"
             FAILED=1
         fi
     done <<< "$DIAGRAM_NODES"
