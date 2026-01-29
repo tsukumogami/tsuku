@@ -107,8 +107,21 @@ ALL_MERMAID_CONTENT=$(awk '
 
 # Check if any diagram contains I<number> or M<number> nodes (issue/milestone dependency diagram)
 # Pattern: I or M followed by one or more digits, as a word boundary
+# Note: M<N> used as subgraph names (subgraph M50["..."]) are excluded from milestone nodes
 ISSUE_NODES=$(echo "$ALL_MERMAID_CONTENT" | grep -oE '\bI[0-9]+\b' | sort -u || true)
-MILESTONE_NODES=$(echo "$ALL_MERMAID_CONTENT" | grep -oE '\bM[0-9]+\b' | sort -u || true)
+SUBGRAPH_IDS=$(echo "$ALL_MERMAID_CONTENT" | grep -E '^\s*subgraph\s+' | \
+    sed 's/^\s*subgraph\s*//' | sed 's/\[.*$//' | tr -d ' ' || true)
+MILESTONE_NODES_RAW=$(echo "$ALL_MERMAID_CONTENT" | grep -oE '\bM[0-9]+\b' | sort -u || true)
+MILESTONE_NODES=""
+if [[ -n "$MILESTONE_NODES_RAW" ]]; then
+    while IFS= read -r mnode; do
+        [[ -z "$mnode" ]] && continue
+        if [[ -z "$SUBGRAPH_IDS" ]] || ! echo "$SUBGRAPH_IDS" | grep -qE "^${mnode}$"; then
+            MILESTONE_NODES=$(printf '%s\n%s' "$MILESTONE_NODES" "$mnode")
+        fi
+    done <<< "$MILESTONE_NODES_RAW"
+    MILESTONE_NODES=$(echo "$MILESTONE_NODES" | grep -v '^$' | sort -u || true)
+fi
 ALL_DEPENDENCY_NODES=$(printf '%s\n%s' "$ISSUE_NODES" "$MILESTONE_NODES" | grep -v '^$' | sort -u || true)
 HAS_ISSUE_DIAGRAM=0
 if [[ -n "$ALL_DEPENDENCY_NODES" ]]; then
