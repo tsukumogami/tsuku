@@ -11,82 +11,26 @@
   "dependencies": [
     {
       "tool": "cmake",
-      "version": "4.2.1",
-      "recipe_hash": "cbbeeebdcd07623ef64ebabb2ac6a0c8732051969b50029d7d33a4c87640a356",
+      "version": "4.2.3",
+      "recipe_hash": "c36e6b8935620d155ada6b9e9b06dc902a5b93ccf80da5b83293376dfed64196",
       "dependencies": [
         {
           "tool": "openssl",
-          "version": "3.6.0",
-          "recipe_hash": "588f4d7c1dc27ca08660bcef58a10e34034517935f9050149450058b19fa401e",
-          "dependencies": [
-            {
-              "tool": "zlib",
-              "version": "1.3.1",
-              "recipe_hash": "1cb26974336ea947b3ebf9a6b21747d0fdd3fdf9a5f2d94cc9ec18e59b682b29",
-              "steps": [
-                {
-                  "action": "download_file",
-                  "params": {
-                    "checksum": "217f4245cd1da65a3388f512530089f526cd63a38d49ee5f29a90576dfeb3bb7",
-                    "dest": "zlib.tar.gz",
-                    "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:217f4245cd1da65a3388f512530089f526cd63a38d49ee5f29a90576dfeb3bb7"
-                  },
-                  "evaluable": true,
-                  "deterministic": true,
-                  "url": "https://ghcr.io/v2/homebrew/core/zlib/blobs/sha256:217f4245cd1da65a3388f512530089f526cd63a38d49ee5f29a90576dfeb3bb7",
-                  "checksum": "217f4245cd1da65a3388f512530089f526cd63a38d49ee5f29a90576dfeb3bb7",
-                  "size": 158015
-                },
-                {
-                  "action": "extract",
-                  "params": {
-                    "archive": "zlib.tar.gz",
-                    "format": "tar.gz",
-                    "strip_dirs": 2
-                  },
-                  "evaluable": true,
-                  "deterministic": true
-                },
-                {
-                  "action": "homebrew_relocate",
-                  "params": {
-                    "formula": "zlib"
-                  },
-                  "evaluable": false,
-                  "deterministic": true
-                },
-                {
-                  "action": "install_binaries",
-                  "params": {
-                    "install_mode": "directory",
-                    "outputs": [
-                      "lib/libz.a",
-                      "lib/libz.dylib",
-                      "lib/libz.so",
-                      "include/zlib.h",
-                      "include/zconf.h"
-                    ]
-                  },
-                  "evaluable": true,
-                  "deterministic": true
-                }
-              ],
-              "recipe_type": "library"
-            }
-          ],
+          "version": "3.6.1",
+          "recipe_hash": "3c1319b74192a4b885e8d6e822039d72377d99b99d2a2d01521523d3ebbf0bd8",
           "steps": [
             {
               "action": "download_file",
               "params": {
-                "checksum": "cdf6125ff77ed7709a44a0ad95918801a3cfaadedbb66c781db7ccf9ab4fae58",
+                "checksum": "9e28f179957b34d64a95c6de7912f0262fb3b42d2c0fb7607aacfa278c42deb8",
                 "dest": "openssl@3.tar.gz",
-                "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:cdf6125ff77ed7709a44a0ad95918801a3cfaadedbb66c781db7ccf9ab4fae58"
+                "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:9e28f179957b34d64a95c6de7912f0262fb3b42d2c0fb7607aacfa278c42deb8"
               },
               "evaluable": true,
               "deterministic": true,
-              "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:cdf6125ff77ed7709a44a0ad95918801a3cfaadedbb66c781db7ccf9ab4fae58",
-              "checksum": "cdf6125ff77ed7709a44a0ad95918801a3cfaadedbb66c781db7ccf9ab4fae58",
-              "size": 10046453
+              "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:9e28f179957b34d64a95c6de7912f0262fb3b42d2c0fb7607aacfa278c42deb8",
+              "checksum": "9e28f179957b34d64a95c6de7912f0262fb3b42d2c0fb7607aacfa278c42deb8",
+              "size": 10050052
             },
             {
               "action": "extract",
@@ -112,12 +56,8 @@
                 "install_mode": "directory",
                 "outputs": [
                   "bin/openssl",
-                  "lib/libssl.so",
-                  "lib/libssl.so.3",
                   "lib/libssl.dylib",
                   "lib/libssl.3.dylib",
-                  "lib/libcrypto.so",
-                  "lib/libcrypto.so.3",
                   "lib/libcrypto.dylib",
                   "lib/libcrypto.3.dylib"
                 ]
@@ -189,15 +129,15 @@
         {
           "action": "download_file",
           "params": {
-            "checksum": "e4cb6757bef63855fa0969e7f5507de92cd74d739e67cf3e9d40ae6938cb9183",
+            "checksum": "4cc8034607d8d7c835debef687dfcf5c3fe316fd767fce86ca14979d81a221fe",
             "dest": "cmake.tar.gz",
-            "url": "https://ghcr.io/v2/homebrew/core/cmake/blobs/sha256:e4cb6757bef63855fa0969e7f5507de92cd74d739e67cf3e9d40ae6938cb9183"
+            "url": "https://ghcr.io/v2/homebrew/core/cmake/blobs/sha256:4cc8034607d8d7c835debef687dfcf5c3fe316fd767fce86ca14979d81a221fe"
           },
           "evaluable": true,
           "deterministic": true,
-          "url": "https://ghcr.io/v2/homebrew/core/cmake/blobs/sha256:e4cb6757bef63855fa0969e7f5507de92cd74d739e67cf3e9d40ae6938cb9183",
-          "checksum": "e4cb6757bef63855fa0969e7f5507de92cd74d739e67cf3e9d40ae6938cb9183",
-          "size": 20210745
+          "url": "https://ghcr.io/v2/homebrew/core/cmake/blobs/sha256:4cc8034607d8d7c835debef687dfcf5c3fe316fd767fce86ca14979d81a221fe",
+          "checksum": "4cc8034607d8d7c835debef687dfcf5c3fe316fd767fce86ca14979d81a221fe",
+          "size": 20205285
         },
         {
           "action": "extract",
@@ -226,7 +166,7 @@
               "bin/cpack",
               "bin/ccmake"
             ],
-            "rpath": "$ORIGIN/../lib:{libs_dir}/openssl-3.6.0/lib"
+            "rpath": "$ORIGIN/../lib:{libs_dir}/openssl-{deps.openssl.version}/lib"
           },
           "evaluable": true,
           "deterministic": true

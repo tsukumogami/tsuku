@@ -23,12 +23,12 @@ The immediate fix addresses two problems: (1) the cmake recipe rpath may referen
 None.
 
 ## Implementation Steps
-- [ ] Determine the current OpenSSL version that Homebrew bottles for cmake 4.2.3 expect (check Homebrew formula dependencies)
-- [ ] Update `internal/recipe/recipes/cmake.toml` rpath from `openssl-3.6.0` to the correct OpenSSL version that tsuku's openssl recipe installs
-- [ ] Verify the openssl recipe (`internal/recipe/recipes/openssl.toml`) resolves to a version whose libraries provide `OPENSSL_3.2.0` symbols
-- [ ] Add `go.mod` to the `paths` trigger list in `.github/workflows/build-essentials.yml` for both push and pull_request events
-- [ ] Update golden plan files to match the recipe changes
-- [ ] Run `go test ./...` to confirm all unit tests pass
+- [x] Determine the current OpenSSL version that Homebrew bottles for cmake 4.2.3 expect (check Homebrew formula dependencies)
+- [x] Update `internal/recipe/recipes/cmake.toml` rpath from `openssl-3.6.0` to `{deps.openssl.version}` template variable
+- [x] Verify the openssl recipe (`internal/recipe/recipes/openssl.toml`) resolves to a version whose libraries provide `OPENSSL_3.2.0` symbols
+- [x] Add `go.mod` to the `paths` trigger list in `.github/workflows/build-essentials.yml` for both push and pull_request events
+- [x] Update golden plan files to match the recipe changes (cmake + ninja)
+- [x] Run `go test ./...` to confirm all unit tests pass
 - [ ] Push branch and verify Build Essentials workflow runs and passes
 
 ## Testing Strategy
