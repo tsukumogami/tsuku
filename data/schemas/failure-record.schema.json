@@ -1,0 +1,67 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Failure Record",
+  "description": "Per-ecosystem-environment failure records from batch recipe generation",
+  "type": "object",
+  "required": ["schema_version", "ecosystem", "environment", "updated_at", "failures"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "ecosystem": {
+      "type": "string",
+      "description": "Ecosystem name (e.g., homebrew, cargo)"
+    },
+    "environment": {
+      "type": "string",
+      "description": "Target environment (e.g., linux-glibc, darwin-arm64)"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["package_id", "category", "message", "timestamp"],
+        "properties": {
+          "package_id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+:[a-z0-9_@.+-]+$",
+            "description": "References a package in the priority queue"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "missing_dep",
+              "no_bottles",
+              "build_from_source",
+              "complex_archive",
+              "api_error",
+              "validation_failed"
+            ],
+            "description": "Failure classification"
+          },
+          "blocked_by": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "Tsuku recipe names blocking this package (for missing_dep category)"
+          },
+          "message": {
+            "type": "string",
+            "description": "Human-readable failure description"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When this failure was recorded"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

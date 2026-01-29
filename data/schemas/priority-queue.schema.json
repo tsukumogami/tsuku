@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Priority Queue",
+  "description": "Packages awaiting recipe generation, ordered by tier",
+  "type": "object",
+  "required": ["schema_version", "updated_at", "packages"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tiers": {
+      "type": "object",
+      "description": "Human-readable tier descriptions",
+      "properties": {
+        "1": { "type": "string" },
+        "2": { "type": "string" },
+        "3": { "type": "string" }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "source", "name", "tier", "status", "added_at"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_-]+:[a-z0-9_@.+-]+$",
+            "description": "Globally unique identifier: {source}:{name}"
+          },
+          "source": {
+            "type": "string",
+            "description": "Ecosystem builder name (e.g., homebrew, cargo, npm)"
+          },
+          "name": {
+            "type": "string",
+            "description": "Package name within ecosystem"
+          },
+          "tier": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3,
+            "description": "Priority tier: 1 (critical), 2 (popular), 3 (standard)"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in_progress", "success", "failed", "skipped"],
+            "description": "Current processing status"
+          },
+          "added_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 timestamp when added to queue"
+          },
+          "metadata": {
+            "type": "object",
+            "description": "Source-specific data (optional)"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}
