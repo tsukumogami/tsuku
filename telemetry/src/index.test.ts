@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from "vitest";
 import { env, SELF, fetchMock } from "cloudflare:test";
+import type { Env } from "./index";
 
 describe("tsuku-telemetry worker", () => {
   beforeEach(() => {
@@ -1143,7 +1144,7 @@ describe("tsuku-telemetry worker", () => {
 
   describe("POST /batch-metrics", () => {
     beforeAll(async () => {
-      const db = env.BATCH_METRICS;
+      const db = (env as unknown as Env).BATCH_METRICS;
       await db.exec("CREATE TABLE IF NOT EXISTS batch_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_id TEXT NOT NULL, ecosystem TEXT NOT NULL, started_at TEXT NOT NULL, completed_at TEXT, total_recipes INTEGER NOT NULL DEFAULT 0, passed INTEGER NOT NULL DEFAULT 0, failed INTEGER NOT NULL DEFAULT 0, skipped INTEGER NOT NULL DEFAULT 0, success_rate REAL NOT NULL DEFAULT 0.0, macos_minutes REAL NOT NULL DEFAULT 0.0, linux_minutes REAL NOT NULL DEFAULT 0.0)");
       await db.exec("CREATE TABLE IF NOT EXISTS recipe_results (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_run_id INTEGER NOT NULL, recipe_name TEXT NOT NULL, ecosystem TEXT NOT NULL, result TEXT NOT NULL, error_category TEXT, error_message TEXT, duration_seconds REAL NOT NULL DEFAULT 0.0, FOREIGN KEY (batch_run_id) REFERENCES batch_runs(id))");
     });
