@@ -17,10 +17,10 @@ Add a single SQL migration file under `telemetry/migrations/` and update `wrangl
 - `telemetry/migrations/0001_batch_metrics_schema.sql` - Initial schema migration with batch_runs and recipe_results tables
 
 ## Implementation Steps
-- [ ] Create `telemetry/migrations/` directory
-- [ ] Create `telemetry/migrations/0001_batch_metrics_schema.sql` with CREATE TABLE statements for `batch_runs` and `recipe_results`, including foreign key constraint and indexes
-- [ ] Add `[[d1_databases]]` binding to `telemetry/wrangler.toml` referencing the D1 database name and binding name
-- [ ] Verify SQL syntax is valid by reviewing against D1/SQLite constraints (e.g., no unsupported column types)
+- [x] Create `telemetry/migrations/` directory
+- [x] Create `telemetry/migrations/0001_batch_metrics_schema.sql` with CREATE TABLE statements for `batch_runs` and `recipe_results`, including foreign key constraint and indexes
+- [x] Add `[[d1_databases]]` binding to `telemetry/wrangler.toml` referencing the D1 database name and binding name
+- [x] Verify SQL syntax is valid by reviewing against D1/SQLite constraints (e.g., no unsupported column types)
 
 ## Testing Strategy
 - Unit tests: Not applicable (pure SQL schema, no Go/TS logic changes)
