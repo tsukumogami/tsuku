@@ -22,6 +22,7 @@ on:
       - 'test/scripts/verify-*.sh'
       - 'test/scripts/test-*-provisioning.sh'
       - '.github/workflows/build-essentials.yml'
+      - 'go.mod'
   pull_request:
     branches: [main]
     paths:
@@ -41,6 +42,7 @@ on:
       - 'test/scripts/verify-*.sh'
       - 'test/scripts/test-*-provisioning.sh'
       - '.github/workflows/build-essentials.yml'
+      - 'go.mod'
 
 jobs:
   # Test homebrew action with make, gdbm, and pngcrush (Linux only - macOS aggregated below)
