@@ -60,8 +60,8 @@ jobs:
               continue
             fi
 
-            # Run MM15 validation (without --skip-status-check, with quiet mode)
-            if ! .github/scripts/checks/mermaid.sh -q "$doc"; then
+            # Run MM15 validation with PR context for closing-issue awareness
+            if ! .github/scripts/checks/mermaid.sh -q --pr "${{ github.event.pull_request.number }}" "$doc"; then
               echo "::error file=$doc::Diagram class validation failed (MM15)"
               FAILED=1
             fi
