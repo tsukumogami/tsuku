@@ -42,8 +42,41 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check circuit breaker
+        id: breaker
+        run: ./scripts/check_breaker.sh "${{ matrix.ecosystem || 'default' }}"
 
       - name: Run batch processing
+        if: steps.breaker.outputs.skip != 'true'
+        id: validate
         run: |
           echo "Batch processing placeholder"
           echo "Disabled ecosystems: ${{ needs.pre-flight.outputs.disabled_ecosystems }}"
+
+      - name: Update circuit breaker state
+        if: always() && steps.breaker.outputs.skip != 'true'
+        run: |
+          outcome="success"
+          if [ "${{ steps.validate.outcome }}" != "success" ]; then
+            outcome="failure"
+          fi
+          ./scripts/update_breaker.sh "${{ matrix.ecosystem || 'default' }}" "$outcome"
+
+      - name: Persist control file
+        if: always() && steps.breaker.outputs.skip != 'true'
+        run: |
+          if git diff --quiet batch-control.json; then
+            echo "No changes to persist"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add batch-control.json
+          git commit -m "chore: update circuit breaker state [skip ci]" || true
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            sleep $((i * 2))
+          done || echo "::warning::Control file update failed, will self-heal on next run"
