@@ -17,7 +17,7 @@ Planned
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1197](https://github.com/tsukumogami/tsuku/issues/1197) | feat(ops): add batch-control.json schema and initial file | None | simple |
+| ~~[#1197](https://github.com/tsukumogami/tsuku/issues/1197)~~ | ~~feat(ops): add batch-control.json schema and initial file~~ | ~~None~~ | ~~simple~~ |
 | [#1204](https://github.com/tsukumogami/tsuku/issues/1204) | feat(ci): add pre-flight control file check to batch workflow | [#1197](https://github.com/tsukumogami/tsuku/issues/1197) | testable |
 | [#1205](https://github.com/tsukumogami/tsuku/issues/1205) | feat(ops): implement circuit breaker state transitions | [#1197](https://github.com/tsukumogami/tsuku/issues/1197), [#1204](https://github.com/tsukumogami/tsuku/issues/1204) | testable |
 | [#1206](https://github.com/tsukumogami/tsuku/issues/1206) | feat(ops): add rollback-batch.sh script | [#1197](https://github.com/tsukumogami/tsuku/issues/1197) | testable |
@@ -62,8 +62,10 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1197,I1208,I1209 ready
-    class I1204,I1205,I1206,I1207,I1210 blocked
+    class I1197 done
+    class I1208,I1209 ready
+    class I1204,I1206 ready
+    class I1205,I1207,I1210 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
