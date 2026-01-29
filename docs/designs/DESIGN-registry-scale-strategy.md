@@ -24,7 +24,7 @@ Planned
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | feat(data): add priority queue and failure record schemas | [#1186](https://github.com/tsukumogami/tsuku/issues/1186) | testable |
+| ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~feat(data): add priority queue and failure record schemas~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
 | ~~[#1200](https://github.com/tsukumogami/tsuku/issues/1200)~~ | ~~feat(data): add dependency name mapping structure~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~simple~~ |
 | [#1201](https://github.com/tsukumogami/tsuku/issues/1201) | feat(scripts): add schema validation scripts | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
 | [#1202](https://github.com/tsukumogami/tsuku/issues/1202) | feat(scripts): add queue seed script for Homebrew | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
@@ -114,9 +114,9 @@ graph TD
 
     class I1186,I1187 done
     class I1200 done
-    class I1199 ready
+    class I1199 done
     class I1188 needsDesign
-    class I1201,I1202,I1203 blocked
+    class I1201,I1202,I1203 ready
     class I1189,I1190,I1191 blocked
 ```
 

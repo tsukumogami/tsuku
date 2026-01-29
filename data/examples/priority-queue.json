@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-01-27T10:00:00Z",
+  "tiers": {
+    "1": "Critical - manually curated high-impact tools",
+    "2": "Popular - >10K weekly downloads or >1K GitHub stars",
+    "3": "Standard - all other packages"
+  },
+  "packages": [
+    {
+      "id": "homebrew:ripgrep",
+      "source": "homebrew",
+      "name": "ripgrep",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-01-20T10:00:00Z",
+      "metadata": {
+        "formula": "ripgrep",
+        "tap": "homebrew/core"
+      }
+    },
+    {
+      "id": "homebrew:fd",
+      "source": "homebrew",
+      "name": "fd",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-20T10:00:00Z",
+      "metadata": {
+        "formula": "fd",
+        "tap": "homebrew/core"
+      }
+    },
+    {
+      "id": "homebrew:tree",
+      "source": "homebrew",
+      "name": "tree",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-01-25T14:30:00Z"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "ecosystem": "homebrew",
+  "environment": "linux-glibc",
+  "updated_at": "2026-01-27T10:00:00Z",
+  "failures": [
+    {
+      "package_id": "homebrew:imagemagick",
+      "category": "missing_dep",
+      "blocked_by": ["libpng", "libjpeg-turbo"],
+      "message": "Depends on libpng which is not in tsuku registry",
+      "timestamp": "2026-01-27T10:00:00Z"
+    },
+    {
+      "package_id": "homebrew:ffmpeg",
+      "category": "no_bottles",
+      "message": "No pre-built bottles available for linux-glibc",
+      "timestamp": "2026-01-27T10:05:00Z"
+    },
+    {
+      "package_id": "homebrew:gcc",
+      "category": "build_from_source",
+      "message": "Formula requires compilation from source",
+      "timestamp": "2026-01-27T10:10:00Z"
+    }
+  ]
+}
