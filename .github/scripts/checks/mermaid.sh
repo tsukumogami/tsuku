@@ -424,10 +424,23 @@ if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && command -v gh &>/dev/null && [[ -n "$DIAG
             fi
         fi
 
+        # Build reason string for error context
+        REASON=""
+        if [[ "$ISSUE_STATE" == "CLOSED" ]]; then
+            REASON="(issue is closed)"
+        elif [[ "$HAS_OPEN_BLOCKER" == "true" ]]; then
+            # Format blocker list as "#123, #456"
+            REASON="(blocked by $(echo "$BLOCKER_LIST" | sed 's/I\([0-9]*\)/#\1/g; s/ /, /g'))"
+        elif [[ "$HAS_NEEDS_DESIGN" == "true" ]]; then
+            REASON="(is not blocked and has 'needs-design' label)"
+        else
+            REASON="(issue is open, no blocking dependencies)"
+        fi
+
         # Compare with actual class
         ACTUAL="${ACTUAL_CLASS[$node]:-}"
         if [[ -n "$EXPECTED_CLASS" && -n "$ACTUAL" && "$ACTUAL" != "$EXPECTED_CLASS" ]]; then
-            emit_fail "MM15: Node $node has class '$ACTUAL' but issue #$ISSUE_NUM status requires '$EXPECTED_CLASS'. See: .github/scripts/docs/MM15.md"
+            emit_fail "MM15: Node $node has class '$ACTUAL' but issue #$ISSUE_NUM requires '$EXPECTED_CLASS' $REASON. See: .github/scripts/docs/MM15.md"
             FAILED=1
         fi
     done <<< "$DIAGRAM_NODES"
