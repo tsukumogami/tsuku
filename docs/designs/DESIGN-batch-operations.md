@@ -27,7 +27,7 @@ Planned
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1208](https://github.com/tsukumogami/tsuku/issues/1208) | feat(telemetry): deploy D1 schema for batch metrics | None | testable |
+| ~~[#1208](https://github.com/tsukumogami/tsuku/issues/1208)~~ | ~~feat(telemetry): deploy D1 schema for batch metrics~~ | ~~None~~ | ~~testable~~ |
 | [#1209](https://github.com/tsukumogami/tsuku/issues/1209) | feat(ci): add checksum drift monitoring workflow | None | critical |
 | [#1210](https://github.com/tsukumogami/tsuku/issues/1210) | feat(ci): add post-batch metrics upload to workflow | [#1208](https://github.com/tsukumogami/tsuku/issues/1208) | testable |
 
@@ -62,10 +62,11 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1197,I1204 done
-    class I1208,I1209 ready
+    class I1197,I1204,I1208 done
+    class I1209 ready
     class I1205,I1206 ready
-    class I1207,I1210 blocked
+    class I1207 blocked
+    class I1210 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

@@ -13,5 +13,11 @@ CF_ACCOUNT_ID = "3c4fa2269fc145e89553adc332dc9546"
 # VERSION_TOKEN should be set via wrangler secret
 # COMMIT_SHA and DEPLOY_TIME are set by CI during deployment
 
+[[d1_databases]]
+binding = "BATCH_METRICS"
+database_name = "tsuku-batch-metrics"
+database_id = "placeholder-configure-after-d1-create"
+migrations_dir = "migrations"
+
 # Custom domain: telemetry.tsuku.dev
 # Configured via Cloudflare Dashboard (Workers > tsuku-telemetry > Settings > Domains & Routes)
