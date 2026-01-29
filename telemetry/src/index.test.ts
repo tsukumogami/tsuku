@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { SELF, fetchMock } from "cloudflare:test";
+import { describe, it, expect, beforeAll, beforeEach, afterEach } from "vitest";
+import { env, SELF, fetchMock } from "cloudflare:test";
 
 describe("tsuku-telemetry worker", () => {
   beforeEach(() => {
@@ -1138,6 +1138,178 @@ describe("tsuku-telemetry worker", () => {
       });
       expect(response.status).toBe(400);
       expect(await response.text()).toContain("failures is required");
+    });
+  });
+
+  describe("POST /batch-metrics", () => {
+    beforeAll(async () => {
+      const db = env.BATCH_METRICS;
+      await db.exec("CREATE TABLE IF NOT EXISTS batch_runs (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_id TEXT NOT NULL, ecosystem TEXT NOT NULL, started_at TEXT NOT NULL, completed_at TEXT, total_recipes INTEGER NOT NULL DEFAULT 0, passed INTEGER NOT NULL DEFAULT 0, failed INTEGER NOT NULL DEFAULT 0, skipped INTEGER NOT NULL DEFAULT 0, success_rate REAL NOT NULL DEFAULT 0.0, macos_minutes REAL NOT NULL DEFAULT 0.0, linux_minutes REAL NOT NULL DEFAULT 0.0)");
+      await db.exec("CREATE TABLE IF NOT EXISTS recipe_results (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_run_id INTEGER NOT NULL, recipe_name TEXT NOT NULL, ecosystem TEXT NOT NULL, result TEXT NOT NULL, error_category TEXT, error_message TEXT, duration_seconds REAL NOT NULL DEFAULT 0.0, FOREIGN KEY (batch_run_id) REFERENCES batch_runs(id))");
+    });
+
+    const validPayload = {
+      batch_id: "2026-01-28-001",
+      ecosystem: "homebrew",
+      started_at: "2026-01-28T10:00:00Z",
+      completed_at: "2026-01-28T10:30:00Z",
+      total_recipes: 3,
+      passed: 2,
+      failed: 1,
+      skipped: 0,
+      success_rate: 0.667,
+      macos_minutes: 15.5,
+      linux_minutes: 8.2,
+      results: [
+        {
+          recipe_name: "wget",
+          ecosystem: "homebrew",
+          result: "passed",
+          duration_seconds: 45.2,
+        },
+        {
+          recipe_name: "curl",
+          ecosystem: "homebrew",
+          result: "passed",
+          duration_seconds: 30.1,
+        },
+        {
+          recipe_name: "jq",
+          ecosystem: "homebrew",
+          result: "failed",
+          error_category: "validation",
+          error_message: "checksum mismatch",
+          duration_seconds: 12.0,
+        },
+      ],
+    };
+
+    const authHeaders = {
+      "Content-Type": "application/json",
+      Authorization: "Bearer test-batch-metrics-token",
+    };
+
+    it("returns 401 without authorization header", async () => {
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(validPayload),
+      });
+      expect(response.status).toBe(401);
+      expect(await response.text()).toBe("Unauthorized");
+    });
+
+    it("returns 401 with invalid token", async () => {
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer wrong-token",
+        },
+        body: JSON.stringify(validPayload),
+      });
+      expect(response.status).toBe(401);
+      expect(await response.text()).toBe("Unauthorized");
+    });
+
+    it("returns 400 for invalid JSON", async () => {
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: "not json",
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("invalid JSON");
+    });
+
+    it("returns 400 for missing batch_id", async () => {
+      const { batch_id, ...payload } = validPayload;
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(payload),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("batch_id is required");
+    });
+
+    it("returns 400 for missing ecosystem", async () => {
+      const { ecosystem, ...payload } = validPayload;
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(payload),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("ecosystem is required");
+    });
+
+    it("returns 400 for missing started_at", async () => {
+      const { started_at, ...payload } = validPayload;
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(payload),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("started_at is required");
+    });
+
+    it("returns 400 for missing results array", async () => {
+      const { results, ...payload } = validPayload;
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(payload),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("results array is required");
+    });
+
+    it("returns 400 for recipe result missing recipe_name", async () => {
+      const payload = {
+        ...validPayload,
+        results: [{ ecosystem: "homebrew", result: "passed" }],
+      };
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(payload),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("recipe_name is required");
+    });
+
+    it("returns 201 for valid payload with results", async () => {
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(validPayload),
+      });
+      expect(response.status).toBe(201);
+      const data = (await response.json()) as { batch_run_id: number };
+      expect(data.batch_run_id).toBeDefined();
+      expect(typeof data.batch_run_id).toBe("number");
+    });
+
+    it("returns 201 for valid payload with empty results", async () => {
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({ ...validPayload, results: [] }),
+      });
+      expect(response.status).toBe(201);
+      const data = (await response.json()) as { batch_run_id: number };
+      expect(data.batch_run_id).toBeDefined();
+    });
+
+    it("includes CORS headers", async () => {
+      const response = await SELF.fetch("http://localhost/batch-metrics", {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify(validPayload),
+      });
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
     });
   });
 

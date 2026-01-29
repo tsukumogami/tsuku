@@ -19,7 +19,7 @@ jobs:
 
       - name: Inject D1 database ID
         run: |
-          sed -i 's/BATCH_METRICS_DATABASE_ID/${{ vars.BATCH_METRICS_DATABASE_ID }}/' wrangler.toml
+          sed -i 's/00000000-0000-0000-0000-000000000000/${{ vars.BATCH_METRICS_DATABASE_ID }}/' wrangler.toml
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
