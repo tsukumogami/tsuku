@@ -399,27 +399,49 @@ if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && command -v gh &>/dev/null && [[ -n "$DIAG
         fi
     done <<< "$MERMAID_CONTENT"
 
-    # Query GitHub for each issue node and compute expected class
-    # Skip milestone nodes (M-prefix) - they don't have GitHub issues to query
+    # Get repo name for milestone API queries
+    REPO_NWO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || true)
+
+    # Query GitHub for each node (issues and milestones) and compute expected class
     while IFS= read -r node; do
         [[ -z "$node" ]] && continue
-        # Skip milestone nodes
-        [[ "$node" =~ ^M[0-9]+$ ]] && continue
-        ISSUE_NUM=$(echo "$node" | sed 's/^I//')
 
-        # Get issue state and labels from GitHub
-        ISSUE_DATA=$(gh issue view "$ISSUE_NUM" --json state,labels 2>/dev/null || true)
-        if [[ -z "$ISSUE_DATA" ]]; then
-            # Skip if we can't fetch issue data (might not exist or be in different repo)
-            continue
+        NODE_STATE=""
+        HAS_NEEDS_DESIGN="false"
+        NODE_LABEL=""
+
+        if [[ "$node" =~ ^M[0-9]+$ ]]; then
+            # Milestone node: query milestone API for open/closed state
+            MILESTONE_NUM=$(echo "$node" | sed 's/^M//')
+            if [[ -z "$REPO_NWO" ]]; then
+                continue
+            fi
+            MILESTONE_DATA=$(gh api "repos/${REPO_NWO}/milestones/${MILESTONE_NUM}" 2>/dev/null || true)
+            if [[ -z "$MILESTONE_DATA" ]]; then
+                continue
+            fi
+            MS_STATE=$(echo "$MILESTONE_DATA" | jq -r '.state')
+            if [[ "$MS_STATE" == "closed" ]]; then
+                NODE_STATE="CLOSED"
+            else
+                NODE_STATE="OPEN"
+            fi
+            NODE_LABEL="milestone #$MILESTONE_NUM"
+        else
+            # Issue node: query issue API
+            ISSUE_NUM=$(echo "$node" | sed 's/^I//')
+            ISSUE_DATA=$(gh issue view "$ISSUE_NUM" --json state,labels 2>/dev/null || true)
+            if [[ -z "$ISSUE_DATA" ]]; then
+                continue
+            fi
+            NODE_STATE=$(echo "$ISSUE_DATA" | jq -r '.state')
+            HAS_NEEDS_DESIGN=$(echo "$ISSUE_DATA" | jq -r '.labels[]?.name' 2>/dev/null | grep -qE '^needs-design$' && echo "true" || echo "false")
+            NODE_LABEL="issue #$ISSUE_NUM"
         fi
-
-        ISSUE_STATE=$(echo "$ISSUE_DATA" | jq -r '.state')
-        HAS_NEEDS_DESIGN=$(echo "$ISSUE_DATA" | jq -r '.labels[]?.name' 2>/dev/null | grep -qE '^needs-design$' && echo "true" || echo "false")
 
         # Determine expected class
         EXPECTED_CLASS=""
-        if [[ "$ISSUE_STATE" == "CLOSED" ]]; then
+        if [[ "$NODE_STATE" == "CLOSED" ]]; then
             EXPECTED_CLASS="done"
         else
             # Check if any blocker is not done
@@ -444,21 +466,21 @@ if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && command -v gh &>/dev/null && [[ -n "$DIAG
 
         # Build reason string for error context
         REASON=""
-        if [[ "$ISSUE_STATE" == "CLOSED" ]]; then
-            REASON="(issue is closed)"
+        if [[ "$NODE_STATE" == "CLOSED" ]]; then
+            REASON="($NODE_LABEL is closed)"
         elif [[ "$HAS_OPEN_BLOCKER" == "true" ]]; then
-            # Format blocker list as "#123, #456"
-            REASON="(blocked by $(echo "$BLOCKER_LIST" | sed 's/I\([0-9]*\)/#\1/g; s/ /, /g'))"
+            # Format blocker list as "I123, M456" etc.
+            REASON="(blocked by $(echo "$BLOCKER_LIST" | sed 's/^ //; s/ /, /g'))"
         elif [[ "$HAS_NEEDS_DESIGN" == "true" ]]; then
             REASON="(is not blocked and has 'needs-design' label)"
         else
-            REASON="(issue is open, no blocking dependencies)"
+            REASON="($NODE_LABEL is open, no blocking dependencies)"
         fi
 
         # Compare with actual class
         ACTUAL="${ACTUAL_CLASS[$node]:-}"
         if [[ -n "$EXPECTED_CLASS" && -n "$ACTUAL" && "$ACTUAL" != "$EXPECTED_CLASS" ]]; then
-            emit_fail "MM15: Node $node has class '$ACTUAL' but issue #$ISSUE_NUM requires '$EXPECTED_CLASS' $REASON. See: .github/scripts/docs/MM15.md"
+            emit_fail "MM15: Node $node has class '$ACTUAL' but $NODE_LABEL requires '$EXPECTED_CLASS' $REASON. See: .github/scripts/docs/MM15.md"
             FAILED=1
         fi
     done <<< "$DIAGRAM_NODES"
