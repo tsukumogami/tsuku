@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: Batch recipe generation needs visibility infrastructure to track which packages to generate (priority queue) and what went wrong (failure records), but no structured schemas exist.
 decision: Use single JSON files with tiered priority scoring and latest-only failure records, prioritizing simplicity for Phase 0.
 rationale: The simplest viable schemas satisfy Phase 0 requirements (gap analysis, downstream consumers). Complexity like multi-file sharding, continuous scoring, and history tracking can be added during Phase 2 D1 migration if needed.
@@ -9,7 +9,7 @@ rationale: The simplest viable schemas satisfy Phase 0 requirements (gap analysi
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
