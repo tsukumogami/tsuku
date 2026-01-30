@@ -1,8 +1,46 @@
 ---
 status: Proposed
-problem: The batch generation pipeline has no data to process because data/priority-queue.json doesn't exist and no CI workflow runs the seed script.
-decision: Create a GitHub Actions workflow that runs seed-queue.sh and commits the output, starting with workflow_dispatch and graduating to a cron schedule after reliability is proven.
-rationale: The seed script already works for Homebrew. Wrapping it in a workflow and adding merge logic is the smallest step that produces a working automated pipeline. Multi-ecosystem support can follow the same pattern later.
+problem: >
+  The batch generation pipeline reads from data/priority-queue.json to decide which packages
+  to generate recipes for, but that file doesn't exist yet. The seed script can create it from
+  Homebrew analytics data, but there's no CI workflow to run it and no merge logic to prevent
+  re-seeding from clobbering packages the pipeline has already processed.
+
+  Beyond the initial bootstrapping gap, the queue needs a clear lifecycle model. Items move
+  through statuses (pending, in_progress, success, failed) as they're consumed by the batch
+  pipeline. The seed script must understand this lifecycle so it only adds genuinely new
+  packages and leaves existing entries untouched regardless of their processing state.
+
+  Without automation, the queue becomes stale as Homebrew popularity rankings shift over time.
+  A tool that's the 50th most downloaded formula this month might be the 20th next month, and
+  new tools appear regularly. Manual seeding doesn't scale.
+decision: >
+  Create a GitHub Actions workflow that runs seed-queue.sh with a new --merge flag and commits
+  the output directly to main. The workflow starts with workflow_dispatch for manual control
+  and graduates to a weekly cron schedule after meeting reliability criteria.
+
+  The --merge flag implements additive semantics: the script reads the existing queue, fetches
+  fresh data from Homebrew, and adds only packages whose IDs aren't already present. Existing
+  entries keep their status, tier, and metadata regardless of what the Homebrew API returns.
+  This ensures the batch pipeline's state is never disrupted by a re-seed.
+
+  The queue lifecycle is explicitly modeled with clear ownership boundaries. The seed script
+  only creates pending entries. The batch pipeline owns all status transitions. Operators can
+  manually re-queue failed items after fixes. Items are never removed from the file -- success
+  and skipped entries serve as deduplication records.
+rationale: >
+  Extending the existing seed script preserves its proven retry logic and tier assignment
+  pattern. Adding merge logic to the script (rather than the workflow) keeps it testable
+  locally and avoids splitting responsibilities across YAML and bash.
+
+  Direct commits to main are acceptable because the output is a JSON data file validated
+  against a strict schema. PR-based updates would block the automation path since cron-triggered
+  runs can't wait for human review. The graduation criteria (3 successful manual runs, merge
+  verified, batch pipeline tested) provide confidence before enabling automation.
+
+  Scoping to Homebrew only keeps the initial implementation focused. The same --source flag
+  pattern and merge logic will support additional ecosystems (Cargo, npm, PyPI) when their
+  seed functions are added later.
 ---
 
 # DESIGN: Seed Priority Queue Pipeline
