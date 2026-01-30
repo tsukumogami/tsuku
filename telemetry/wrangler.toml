@@ -16,7 +16,7 @@ CF_ACCOUNT_ID = "3c4fa2269fc145e89553adc332dc9546"
 [[d1_databases]]
 binding = "BATCH_METRICS"
 database_name = "tsuku-batch-metrics"
-database_id = "BATCH_METRICS_DATABASE_ID" # Injected by CI from vars.BATCH_METRICS_DATABASE_ID
+database_id = "00000000-0000-0000-0000-000000000000" # Overridden by CI from vars.BATCH_METRICS_DATABASE_ID
 migrations_dir = "migrations"
 
 # Custom domain: telemetry.tsuku.dev
