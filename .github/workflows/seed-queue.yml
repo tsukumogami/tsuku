@@ -49,13 +49,13 @@ jobs:
 
       - name: Commit and push
         run: |
-          git diff --quiet data/priority-queue.json && {
+          git add data/priority-queue.json
+          git diff --cached --quiet && {
             echo "No changes to priority queue"
             exit 0
           }
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add data/priority-queue.json
           git commit -m "chore(data): seed priority queue from ${{ inputs.source }} [skip ci]"
           for i in 1 2 3; do
             git pull --rebase origin main && git push && break
