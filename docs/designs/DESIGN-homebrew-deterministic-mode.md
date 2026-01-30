@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: The Homebrew builder declares RequiresLLM()=true and fails when deterministic generation can't fall back to LLM, blocking the batch pipeline which must operate without API keys at $0 cost.
 decision: Add a DeterministicOnly session option that prevents LLM fallback and returns structured DeterministicFailedError on failure, with failure categories matching the failure-record schema.
 rationale: The builder already tries deterministic first. The change is small (new option, new error type, conditional in Generate) and doesn't alter the existing interactive flow. Structured errors feed directly into the batch pipeline's failure analysis system.
@@ -9,7 +9,7 @@ rationale: The builder already tries deterministic first. The change is small (n
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
