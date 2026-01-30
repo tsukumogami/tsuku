@@ -163,7 +163,7 @@ The workflow has four steps:
 1. **Build**: `go build -o seed-queue ./cmd/seed-queue` (line 33)
 2. **Run**: invokes the built binary with the input parameters (line 36)
 3. **Validate**: checks that `data/priority-queue.json` exists and has `schema_version == 1` with at least one package, using a `jq -e` assertion (line 42). This is a basic structural check, not full JSON Schema validation.
-4. **Commit and push**: diffs the queue file, skips if unchanged, otherwise commits with retry logic (3 attempts with exponential backoff, lines 50-63). Uses `github-actions[bot]` identity and `[skip ci]` in the commit message.
+4. **Commit and push**: stages the queue file, checks the staging area for changes (`git diff --cached --quiet`), skips if unchanged, otherwise commits with retry logic (3 attempts with exponential backoff, lines 50-63). Staging before diffing is necessary because `git diff` alone doesn't detect new untracked files on the first run. Uses `github-actions[bot]` identity and `[skip ci]` in the commit message.
 
 The workflow requests `contents: write` permission for pushing commits.
 
