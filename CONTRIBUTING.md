@@ -599,7 +599,7 @@ When a recipe's family awareness changes (e.g., adding `apt_install` to a previo
 
 The reverse transition (removing family-aware actions) shows 5 deletions and 1 addition.
 
-For technical details on family detection logic and platform metadata, see [docs/DESIGN-golden-family-support.md](docs/DESIGN-golden-family-support.md).
+For technical details on family detection logic and platform metadata, see [docs/designs/current/DESIGN-golden-plan-testing.md](docs/designs/current/DESIGN-golden-plan-testing.md).
 
 ### CI Validation Workflows
 
