@@ -119,7 +119,7 @@ graph TD
     class I1201 done
     class I1202 done
     class I1203 done
-    class I1189 ready
+    class I1189 needsDesign
     class I1190,I1191 blocked
 ```
 
