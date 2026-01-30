@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: >
   The batch generation pipeline reads from data/priority-queue.json to decide which packages
   to generate recipes for, but that file doesn't exist yet. The seed script can create it from
@@ -50,7 +50,7 @@ rationale: >
 
 ## Status
 
-Accepted
+Current
 
 ## Upstream Design Reference
 
