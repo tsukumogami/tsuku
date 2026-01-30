@@ -13,7 +13,7 @@ Planned
 
 ## Implementation Issues
 
-### Milestone: [M-Visibility](https://github.com/tsukumogami/tsuku/milestone/50)
+### Milestone: [Tool Backlog Visibility](https://github.com/tsukumogami/tsuku/milestone/50)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
@@ -28,7 +28,7 @@ Planned
 | ~~[#1200](https://github.com/tsukumogami/tsuku/issues/1200)~~ | ~~feat(data): add dependency name mapping structure~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~simple~~ |
 | ~~[#1201](https://github.com/tsukumogami/tsuku/issues/1201)~~ | ~~feat(scripts): add schema validation scripts~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
 | ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~feat(scripts): add queue seed script for Homebrew~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
-| [#1203](https://github.com/tsukumogami/tsuku/issues/1203) | feat(scripts): add gap analysis script | [#1199](https://github.com/tsukumogami/tsuku/issues/1199) | testable |
+| ~~[#1203](https://github.com/tsukumogami/tsuku/issues/1203)~~ | ~~feat(scripts): add gap analysis script~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
 
 ### Milestone: [Batch Operations Control Plane](https://github.com/tsukumogami/tsuku/milestone/55)
 
@@ -118,7 +118,7 @@ graph TD
     class I1188 needsDesign
     class I1201 done
     class I1202 done
-    class I1203 ready
+    class I1203 done
     class I1189,I1190,I1191 blocked
 ```
 
