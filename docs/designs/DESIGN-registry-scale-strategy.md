@@ -42,13 +42,13 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1188](https://github.com/tsukumogami/tsuku/issues/1188) | design homebrew deterministic mode | [#1186](https://github.com/tsukumogami/tsuku/issues/1186) | testable |
+| ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~design homebrew deterministic mode~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
 
 ### Milestone: [M-BatchPipeline](https://github.com/tsukumogami/tsuku/milestone/52)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | design batch recipe generation CI pipeline | [#1186](https://github.com/tsukumogami/tsuku/issues/1186), [#1187](https://github.com/tsukumogami/tsuku/issues/1187), [#1188](https://github.com/tsukumogami/tsuku/issues/1188) | testable |
+| [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | design batch recipe generation CI pipeline | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | testable |
 
 ### Milestone: [M-FailureBackend](https://github.com/tsukumogami/tsuku/milestone/53)
 
@@ -115,11 +115,12 @@ graph TD
     class I1186,I1187 done
     class I1200 done
     class I1199 done
-    class I1188 needsDesign
+    class I1188 done
     class I1201 done
     class I1202 done
     class I1203 done
-    class I1189,I1190,I1191 blocked
+    class I1189 ready
+    class I1190,I1191 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
