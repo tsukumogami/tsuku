@@ -48,8 +48,8 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1241](https://github.com/tsukumogami/tsuku/issues/1241) | seed priority queue pipeline | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~, ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | testable |
-| [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | design batch recipe generation CI pipeline | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, [#1241](https://github.com/tsukumogami/tsuku/issues/1241) | testable |
+| ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~seed priority queue pipeline~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~, ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~testable~~ |
+| [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | design batch recipe generation CI pipeline | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | testable |
 
 ### Milestone: [M-FailureBackend](https://github.com/tsukumogami/tsuku/milestone/53)
 
@@ -124,7 +124,7 @@ graph TD
     class I1201 done
     class I1202 done
     class I1203 done
-    class I1241 ready
+    class I1241 done
     class I1189 needsDesign
     class I1190,I1191 blocked
 ```
