@@ -35,6 +35,13 @@ JSON Schema (draft-07) definitions for data files:
 - **priority-queue.schema.json** - Validates `data/priority-queue.json`. Defines the package queue structure with tiered priority (1-3), status tracking, and source metadata.
 - **failure-record.schema.json** - Validates `data/failures/*.json`. Defines per-ecosystem-environment failure records with categorized failure types and optional `blocked_by` dependencies.
 
+### Validation
+
+Schema validation scripts in `scripts/`:
+
+- `scripts/validate-queue.sh` - Validates `data/priority-queue.json` against the queue schema
+- `scripts/validate-failures.sh` - Validates `data/failures/*.json` against the failure record schema
+
 ### examples/
 
 Sample data files demonstrating valid structure:
