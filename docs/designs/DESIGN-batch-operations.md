@@ -21,7 +21,7 @@ Planned
 | ~~[#1204](https://github.com/tsukumogami/tsuku/issues/1204)~~ | ~~feat(ci): add pre-flight control file check to batch workflow~~ | ~~[#1197](https://github.com/tsukumogami/tsuku/issues/1197)~~ | ~~testable~~ |
 | ~~[#1205](https://github.com/tsukumogami/tsuku/issues/1205)~~ | ~~feat(ops): implement circuit breaker state transitions~~ | ~~[#1197](https://github.com/tsukumogami/tsuku/issues/1197), [#1204](https://github.com/tsukumogami/tsuku/issues/1204)~~ | ~~testable~~ |
 | ~~[#1206](https://github.com/tsukumogami/tsuku/issues/1206)~~ | ~~feat(ops): add rollback-batch.sh script~~ | ~~[#1197](https://github.com/tsukumogami/tsuku/issues/1197)~~ | ~~testable~~ |
-| [#1207](https://github.com/tsukumogami/tsuku/issues/1207) | docs(ops): create batch operations runbook | [#1205](https://github.com/tsukumogami/tsuku/issues/1205), [#1206](https://github.com/tsukumogami/tsuku/issues/1206) | simple |
+| ~~[#1207](https://github.com/tsukumogami/tsuku/issues/1207)~~ | ~~docs(ops): create batch operations runbook~~ | ~~[#1205](https://github.com/tsukumogami/tsuku/issues/1205), [#1206](https://github.com/tsukumogami/tsuku/issues/1206)~~ | ~~simple~~ |
 
 ### Milestone: [Batch Operations Observability](https://github.com/tsukumogami/tsuku/milestone/56)
 
@@ -62,8 +62,7 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1197,I1204,I1205,I1206,I1208,I1209,I1210 done
-    class I1207 ready
+    class I1197,I1204,I1205,I1206,I1207,I1208,I1209,I1210 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
