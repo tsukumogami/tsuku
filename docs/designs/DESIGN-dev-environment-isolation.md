@@ -280,6 +280,12 @@ Each checkout gets its own `.tsuku-dev`:
 └── ...
 ```
 
+### PATH and Multi-Step Recipes
+
+The executor manages PATH internally for sub-processes. When installing a tool with dependencies (e.g., build-essentials installs ninja, then cmake needs ninja), the executor builds `ExecPaths` from each dependency's install directory and prepends them to PATH in spawned processes. This happens at the code level (`internal/actions/cmake_build.go`, `configure_make.go`, etc.), not via the shell's PATH. Multi-step recipes work correctly regardless of which directory is on the shell's PATH.
+
+The one place that references the shell's PATH is `tsuku verify`, which checks whether `tools/current` is in the user's PATH and prints a warning if not. For dev builds using `.tsuku-dev`, this check would report that `.tsuku-dev/tools/current` isn't in PATH. That's an informational message, not a functional failure. Developers who want to run installed tools directly (outside of tsuku) would need to add `.tsuku-dev/tools/current` to their PATH manually, but this is an uncommon workflow during development.
+
 ### Data Flow
 
 1. Developer runs `make build` in checkout directory
