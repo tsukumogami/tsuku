@@ -540,6 +540,17 @@ tsuku install cmake --sandbox --linux-family rhel
 
 For technical details, see [DESIGN-install-sandbox.md](docs/DESIGN-install-sandbox.md).
 
+## Operations
+
+tsuku includes a batch operations control plane for managing automated recipe imports:
+
+- **Control file** (`batch-control.json`): Enable/disable batch processing, manage per-ecosystem circuit breakers, and track CI budget usage
+- **Circuit breaker** (`scripts/check_breaker.sh`, `scripts/update_breaker.sh`): Automatic pause and recovery when failure rates exceed thresholds
+- **Rollback** (`scripts/rollback-batch.sh`): Remove all recipes from a specific batch import by batch ID
+- **Runbook** (`docs/runbooks/batch-operations.md`): Incident response procedures for batch success rate drops, emergency stops, rollbacks, budget alerts, and security incidents
+
+See the [batch operations runbook](docs/runbooks/batch-operations.md) for detailed operational procedures.
+
 ## Testing
 
 tsuku has comprehensive test coverage for critical components:

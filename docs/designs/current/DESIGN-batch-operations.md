@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: The batch recipe generation pipeline can auto-merge recipes into the registry, but without operational controls, operators have no way to halt runaway generation, revert problematic recipes, or respond to incidents.
 decision: Batch ID metadata + git revert for rollback; Circuit breaker + control file for emergency stop; Time-windowed budget + sampling for cost control; Per-ecosystem SLIs with severity alerting; Hybrid storage (repository-primary)
 rationale: Combines automatic response (circuit breaker) with manual override (control file). Batch IDs solve commit identification. Per-ecosystem metrics enable targeted response. Repository-primary storage avoids external dependencies for critical control path.
@@ -9,7 +9,7 @@ rationale: Combines automatic response (circuit breaker) with manual override (c
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 

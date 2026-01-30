@@ -1,0 +1,20 @@
+{
+  "milestone": 55,
+  "milestone_title": "Batch Operations Control Plane",
+  "started_at": "2026-01-29T00:00:00Z",
+  "phase": "validate",
+  "head_commit": "e67c95a47fd6b12f0b62020923a10a36c824941d",
+  "design_doc": "docs/designs/DESIGN-batch-operations.md",
+  "pre_flight_completed_at": "2026-01-29T00:00:00Z",
+  "validators": {
+    "design-goals": {"status": "pending", "findings": null},
+    "documentation": {"status": "pending", "findings": null},
+    "dead-code": {"status": "pending", "findings": null},
+    "metadata": {"status": "pending", "findings": null}
+  },
+  "batches": {
+    "documentation": {"approved": false, "applied": false},
+    "code": {"approved": false, "applied": false},
+    "metadata": {"approved": false, "applied": false}
+  }
+}
