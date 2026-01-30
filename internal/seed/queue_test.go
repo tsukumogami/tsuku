@@ -117,7 +117,9 @@ func TestMerge_empty(t *testing.T) {
 func TestSave_createsDirectory(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "sub", "queue.json")
-	os.MkdirAll(filepath.Dir(path), 0755)
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
 
 	q := &PriorityQueue{SchemaVersion: 1, Packages: []Package{}}
 	if err := q.Save(path); err != nil {
