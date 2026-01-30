@@ -99,7 +99,7 @@ The tradeoffs accepted:
 - `seed-queue.sh` becomes a reference artifact rather than the production tool.
 - Direct commits to main for a data file. If this becomes a concern, PR-based updates can be added later.
 
-## Architecture
+## Solution Architecture
 
 ### Queue Lifecycle
 
@@ -151,6 +151,8 @@ All fetched packages get `status: "pending"` and an ID of `homebrew:<formula-nam
 
 - **No in-tool schema validation.** The tool doesn't validate its output against the JSON schema before writing. Validation happens in the workflow via a `jq` check. Full JSON Schema validation could be added later if the basic check proves insufficient.
 - **Merge is always-on.** There's no `--merge` flag or overwrite mode. Every invocation loads the existing queue and adds to it. This was a deliberate choice: there's no use case for overwrite mode in CI, and making merge the default eliminates a class of operator errors.
+
+## Implementation Approach
 
 ### Workflow
 
