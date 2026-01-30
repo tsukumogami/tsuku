@@ -89,6 +89,10 @@ At execution time, `validatePlatform()` (`internal/executor/executor.go`, line 7
 
 Platform constraints are inherited by all nested dependencies - the entire dependency tree is resolved for the same platform.
 
+## Implementation Approach
+
+The fix required passing `RecipeLoader` to `GeneratePlan()` in the sandbox code path, mirroring what PR #808 did for normal install mode. Rather than duplicating the fix, the duplicate `generatePlanFromRecipe()` in `install_sandbox.go` was deleted and replaced with the shared `generateInstallPlan()` in `cmd/tsuku/helpers.go`. No changes were needed to the executor or plan format - the existing format v3 dependency embedding worked once the plan generator received the recipe loader.
+
 ## Security Considerations
 
 ### Download Verification
