@@ -208,6 +208,10 @@ type SessionOptions struct {
 
 	// ForceInit bypasses rate limit and budget checks.
 	ForceInit bool
+
+	// DeterministicOnly when true, skip LLM fallback and return
+	// DeterministicFailedError on failure.
+	DeterministicOnly bool
 }
 
 // BuildFunc is a function that generates a recipe for a package.
