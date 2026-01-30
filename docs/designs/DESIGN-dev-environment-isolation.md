@@ -1,8 +1,8 @@
 ---
 status: Proposed
-problem: Developers working on tsuku lack a low-ceremony way to run against isolated environments without interfering with their real installation or each other.
-decision: Add --env flag and TSUKU_ENV environment variable that create named environments under $TSUKU_HOME/envs/ with automatic download cache sharing.
-rationale: The combined flag + env var pattern eliminates manual TSUKU_HOME juggling, provides discoverability through tsuku env list, and shares cache automatically without requiring per-environment config files.
+problem: Developers and QA agents working on tsuku lack a zero-ceremony way to run against isolated environments without interfering with each other or the host's real installation.
+decision: Use build-time ldflags to give Makefile-built binaries a different default home directory, and stop exporting TSUKU_HOME from the install script so the override takes effect.
+rationale: Build-time defaults require no new CLI flags, no wrapper scripts, and no manual env var setup. A developer runs make build then uses tsuku normally. Parallel agents in separate checkouts get isolation automatically because each checkout's .tsuku-dev is a different absolute path.
 ---
 
 # DESIGN: Dev Environment Isolation
@@ -15,353 +15,337 @@ Proposed
 
 When developing tsuku, you need to run your local build to test recipe changes, action modifications, and CLI behavior. Right now, that means either running against your real `$TSUKU_HOME` (risking your working installation) or manually setting `TSUKU_HOME` to a temp directory every time.
 
-Neither approach works well. Running against your real home pollutes it with test artifacts. Manually exporting a new `TSUKU_HOME` is tedious, easy to forget, and doesn't solve the parallel execution problem. If two terminal sessions both run `./tsuku install cmake` against the same directory, the file lock prevents corruption but one process blocks until the other finishes. For CI and automated testing, that serialization is unacceptable.
+Neither approach works well. Running against your real home pollutes it with test artifacts. Manually exporting a new `TSUKU_HOME` is tedious, easy to forget, and doesn't solve the parallel execution problem.
 
-The Build Essentials workflow already demonstrates this need: each macOS test creates a fresh `TSUKU_HOME` per tool to avoid interference. That pattern works but it's ad-hoc and not available to developers outside CI.
+The problem gets worse with QA agents. Multiple agents may run in parallel across different checkouts, each testing a different feature branch. Some branches change tsuku's internal storage format, so agents can't share any state -- not even the download cache. Each agent needs a fully independent `$TSUKU_HOME` without any manual setup.
 
-The primary audience is tsuku contributors (developing the CLI, testing recipes) and CI workflows. End users managing project-specific toolchains may also benefit, but that's a secondary concern.
+The Build Essentials workflow already demonstrates this need: each macOS test creates a fresh `TSUKU_HOME` per tool to avoid interference. That pattern works but it's ad-hoc.
+
+There's also a complication: the install script (`website/install.sh`) writes an env file that exports `TSUKU_HOME` in every shell session. Any mechanism that relies on "not having `TSUKU_HOME` set" won't work for developers who have tsuku installed.
 
 ### Scope
 
 **In scope:**
-- A CLI mechanism for running tsuku against an isolated, named environment
-- Cache sharing between environments (downloads)
-- Parallel-safe execution across environments
-- State persistence across invocations of the same environment
-- Throwaway environments for quick one-off tests
+- A build-time mechanism for running tsuku against an isolated home directory
+- Parallel-safe execution across separate checkouts
+- A fix to the install script so it doesn't block the mechanism
+- State persistence across invocations within the same checkout
 
 **Out of scope:**
+- Per-directory tool version activation (future feature, separate design)
 - Container-based isolation (the sandbox feature already covers that)
-- Changes to the file locking mechanism
-- Multi-user isolation or security boundaries
+- Shared download cache across environments (agents may change cache format)
+- New CLI flags or environment variables
 
 ## Decision Drivers
 
-- **Zero-conflict isolation**: A dev environment must never read or write the user's real `$TSUKU_HOME/state.json`
-- **Parallel safety**: Multiple environments must be usable concurrently without blocking each other on locks
-- **Cache reuse**: Downloaded bottles and tarballs shouldn't be re-downloaded per environment
-- **Low ceremony**: Creating and using an environment shouldn't require more than one extra flag or env var
-- **Discoverability**: Users should be able to tell which environment they're operating in, both via CLI output and via management subcommands
-- **Stateful across runs**: Installing a tool in a dev environment should persist until the environment is cleaned up
+- **Zero-conflict isolation**: A dev build must never read or write the host's real `$TSUKU_HOME/state.json`
+- **Parallel safety**: Multiple agents in separate checkouts must not interfere with each other
+- **Zero ceremony**: Building and running should require no extra flags, env vars, or wrapper scripts
+- **No new CLI surface**: The production binary shouldn't grow features that only serve contributors
+- **Format independence**: Agents changing tsuku's storage format must not corrupt other agents' state
 
 ## Implementation Context
 
 ### Existing Patterns
 
-The codebase already has two isolation patterns:
+**CI test isolation** (Build Essentials macOS jobs): Each test sets `TSUKU_HOME` to a fresh temp directory and symlinks the download cache. Full isolation with cache reuse, but manual shell scripting.
 
-**CI test isolation** (Build Essentials macOS jobs): Each test sets `TSUKU_HOME` to a fresh temp directory and symlinks the download cache from a shared location. This gives full isolation with cache reuse, but it's manual shell scripting not accessible through the CLI.
-
-**Sandbox isolation** (`--sandbox` flag): Runs installation inside a Docker/Podman container with a fresh `TSUKU_HOME` at `/workspace/tsuku` and the download cache mounted read-only. Full isolation, but heavyweight (requires a container runtime) and doesn't persist state across runs.
+**Sandbox isolation** (`--sandbox` flag): Runs installation inside a container with a fresh `$TSUKU_HOME`. Full isolation, but heavyweight and doesn't persist state across runs.
 
 ### Conventions to follow
 
 - All paths derive from `$TSUKU_HOME` via `DefaultConfig()` in `internal/config/config.go`
-- Download cache uses content-addressed hashing (`sha256(url).data`) making it safe to share
-- Cache directory rejects symlinks for write operations but allows read-only mounts
-- State file uses advisory file locking (`flock`) for concurrent access
-- `EnsureDirectories()` creates all subdirectories from `$TSUKU_HOME` on first use
+- `DefaultConfig()` reads `TSUKU_HOME` env var, falls back to `~/.tsuku`
+- Go supports build-time variable injection via `ldflags -X`
 
-### Anti-patterns to avoid
+### The install script problem
 
-- Don't bypass `DefaultConfig()` for path resolution. All directory layout decisions flow from `$TSUKU_HOME`.
-- Don't hard-share `state.json` across environments. The file lock prevents corruption, but sharing state between a dev and production environment defeats the isolation purpose.
+The install script creates `$TSUKU_HOME/env` which is sourced by shell init files:
+
+```bash
+export TSUKU_HOME="${TSUKU_HOME:-$HOME/.tsuku}"
+export PATH="$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH"
+```
+
+This means every shell session has `TSUKU_HOME` set, which would override any build-time default. The install script needs to stop exporting `TSUKU_HOME` and instead inline the fallback in the `PATH` setup.
 
 ## Considered Options
 
-### Option 1: `--env` flag + `TSUKU_ENV` variable (combined)
+### Option 1: Build-time ldflags default
 
-Support both a `--env <name>` global CLI flag and a `TSUKU_ENV` environment variable. The flag takes precedence when both are set. When active, tsuku uses `$TSUKU_HOME/envs/<name>/` as its effective home, sharing the download cache from the parent.
+Use Go's `-ldflags -X` to inject a different default home directory at build time. The Makefile sets the default to `.tsuku-dev` (relative to working directory). Release builds via GoReleaser don't set the flag, so they fall back to `~/.tsuku`.
 
-This follows the `kubectl --context` / `KUBECONFIG` pattern where a flag handles single invocations and the env var handles session-wide activation.
+Precedence: `TSUKU_HOME` env var > ldflags default > `~/.tsuku`
+
+Requires a one-time fix to the install script to stop exporting `TSUKU_HOME`.
 
 Example usage:
 ```bash
-# Single command
+make build
+./tsuku install cmake    # uses .tsuku-dev/ in current directory
+```
+
+**Pros:**
+- Zero ceremony: `make build` then use tsuku normally
+- No new CLI flags or env vars
+- Each checkout gets its own `.tsuku-dev` automatically
+- Parallel agents in separate checkouts are fully isolated
+- `TSUKU_HOME` override still works for explicit control
+- Release binary behavior is unchanged
+
+**Cons:**
+- Requires using `make build` instead of bare `go build` (or remembering the ldflags)
+- `.tsuku-dev` is relative to the working directory, not the binary location
+- Install script change is a one-time migration for existing users
+
+### Option 2: `--env` flag + `TSUKU_ENV` variable
+
+Add a global `--env <name>` flag and `TSUKU_ENV` env var. When active, tsuku uses `$TSUKU_HOME/envs/<name>/` as its effective home, sharing the download cache from the parent.
+
+Example usage:
+```bash
 ./tsuku --env dev install cmake
-
-# Session-wide
-export TSUKU_ENV=dev
-./tsuku install cmake
-./tsuku list
-
-# Management
-./tsuku env list
-./tsuku env clean dev
 ```
 
 **Pros:**
-- Covers both single-command and session-wide workflows
-- Named environments are discoverable via `tsuku env list`
-- State persists naturally (just a directory)
-- Parallel-safe: different names = different lock files, different state files
+- Self-documenting in command history and logs
+- Named environments are discoverable via management subcommands
 - Download cache shared automatically
-- Visible in `--help`, env var works with direnv
-- Flag appears in command history, making bug reports reproducible
 
 **Cons:**
-- Adds a global flag and an env var, slightly more surface area
-- Cache sharing mechanism needs to handle the symlink security check
-- Environment directories inside `$TSUKU_HOME` could confuse users who `ls ~/.tsuku`
+- Adds permanent CLI surface area for a contributor problem
+- Shared cache assumes stable cache format across branches (breaks with format changes)
+- Environments inside `$TSUKU_HOME` means agents share state by default
+- Doesn't move toward per-directory version activation (orthogonal feature)
+- Requires environment name validation, path traversal prevention, new subcommands
 
-### Option 2: Standalone `$TSUKU_HOME` with shared cache config
+### Option 3: Wrapper script (`scripts/dev-env`)
 
-Keep the existing `TSUKU_HOME` override as the only isolation primitive. Add a `cache.shared_downloads` config key in `$TSUKU_HOME/config.toml` pointing to an external download cache.
-
-This is essentially the status quo with one addition: a way to share cached downloads across independent `TSUKU_HOME` directories without symlinks.
+A shell script that sets `TSUKU_HOME` to an isolated directory and execs tsuku.
 
 Example usage:
 ```bash
-export TSUKU_HOME=/tmp/tsuku-dev
-mkdir -p /tmp/tsuku-dev
-cat > /tmp/tsuku-dev/config.toml <<EOF
-[cache]
-shared_downloads = "/home/user/.tsuku/cache/downloads"
-EOF
-./tsuku install cmake
+./scripts/dev-env install cmake
 ```
 
 **Pros:**
-- Uses existing `TSUKU_HOME` mechanism, no new abstraction
-- Maximum flexibility: environments can be anywhere
-- Cache sharing is explicit and configurable
-- Clear mental model: `TSUKU_HOME` is a complete, self-contained root
+- No binary changes at all
+- Simple to understand and modify
 
 **Cons:**
-- High ceremony: two steps (set env var + write config) for cache sharing
-- No discovery mechanism (`tsuku env list` can't exist)
-- No visual indicator of which environment you're in
-- Users manage directory cleanup themselves
-- Reproduces the manual pattern developers already find tedious
-- Env vars are invisible in command history, making bugs harder to reproduce
+- Changes the invocation syntax (`./scripts/dev-env` instead of `./tsuku`)
+- Agents must know to use the script instead of the binary
+- Easy to forget and run `./tsuku` directly
 
 ### Evaluation Against Drivers
 
-| Driver | Option 1 (--env + TSUKU_ENV) | Option 2 (Standalone TSUKU_HOME) |
-|--------|------------------------------|----------------------------------|
-| Zero-conflict | Good: separate state per name | Good: separate TSUKU_HOME |
-| Parallel safety | Good: separate lock files | Good: separate lock files |
-| Cache reuse | Good: automatic sharing | Fair: manual config needed |
-| Low ceremony | Good: one flag or env var | Poor: multi-step setup |
-| Discoverability | Good: env list, --help | Poor: no discovery |
-| Stateful | Good: named dirs persist | Good: any dir persists |
+| Driver | Option 1 (ldflags) | Option 2 (--env) | Option 3 (script) |
+|--------|-------------------|-------------------|-------------------|
+| Zero-conflict | Good: separate home per checkout | Good: separate state per name | Good: separate home |
+| Parallel safety | Good: different directories | Fair: same TSUKU_HOME, shared cache | Good: different directories |
+| Zero ceremony | Good: make build, then use normally | Poor: extra flag every invocation | Fair: different command |
+| No new CLI surface | Good: no changes | Poor: flag + env var + subcommands | Good: no changes |
+| Format independence | Good: nothing shared | Poor: shared download cache | Good: nothing shared |
 
 ## Decision Outcome
 
-**Chosen option: `--env` flag + `TSUKU_ENV` variable (Option 1)**
+**Chosen option: Build-time ldflags default (Option 1)**
 
-Option 1 addresses every decision driver at "Good" while Option 2 only matches on isolation and statefulness. The combined flag + env var pattern is well-established (kubectl, terraform, aws-cli) and eliminates the main usability gap: developers shouldn't need to manually set up config files to get cache sharing.
+Option 1 is the only option that scores "Good" on every driver. It requires no new CLI surface, provides full isolation (no shared state of any kind), and makes the common case (`make build && ./tsuku install cmake`) work without extra flags or wrapper scripts.
 
 ### Rationale
 
-This option was chosen because:
-- **Low ceremony** is the primary driver. The whole point is to replace manual `TSUKU_HOME` juggling with something that takes a single flag. Option 2 doesn't move the needle on ceremony.
-- **Discoverability** matters for contributors who don't work on tsuku daily. `tsuku env list` and `tsuku --env dev` are self-documenting. A bare `TSUKU_HOME` override is not.
-- **Cache sharing must be automatic.** Requiring a config file per environment means developers will skip it and re-download everything, or they'll symlink the cache and hit the security check.
+Option 2 (`--env`) was the original proposal but was rejected after analysis revealed three problems:
+- It adds permanent CLI surface area to solve a contributor/QA problem. The production binary shouldn't carry features that don't serve end users.
+- Its shared download cache assumes format stability across branches. QA agents testing storage format changes would corrupt each other's cache.
+- It's orthogonal to per-directory version activation (a confirmed future goal). Building `--env` now doesn't move toward that feature and could create API commitments that constrain its design.
 
-Option 2 was rejected because it formalizes the status quo rather than solving the problem. The only addition (a config key for shared downloads) doesn't remove enough friction.
+Option 3 (wrapper script) was rejected because it changes the invocation syntax. Agents and developers must remember to use `./scripts/dev-env` instead of `./tsuku`. That's easy to forget and adds friction.
 
 ### Trade-offs Accepted
 
-By choosing this option, we accept:
-- **Slightly more CLI surface area**: A new global flag and env var. This is acceptable because the feature is opt-in and zero-impact for users who don't use it.
-- **Environments live inside `$TSUKU_HOME`**: The `envs/` directory may surprise users exploring `~/.tsuku`. This is acceptable because `ls ~/.tsuku` already shows internal directories (cache, registry, tools), and `envs/` is self-explanatory.
-- **Shared cache increases blast radius**: A poisoned cache entry affects all environments, not just one. This is the same trust model as the current single-`TSUKU_HOME` setup, so no regression, but worth noting.
+- **Requires `make build` instead of `go build`**: Developers who run bare `go build` won't get the dev default. This is acceptable because the Makefile is the standard build entry point, and `go build` still works -- it just uses the production default.
+- **`.tsuku-dev` is relative to working directory**: Running `cd /tmp && /path/to/checkout/tsuku install cmake` creates `/tmp/.tsuku-dev`. This is acceptable because the normal workflow is running from the checkout root.
+- **Install script migration**: Existing users who reinstall will get the updated env file that no longer exports `TSUKU_HOME`. The `PATH` setup still works via inline fallback. Users who explicitly set `TSUKU_HOME` in their own shell config are unaffected.
 
 ## Solution Architecture
 
 ### Overview
 
-When `--env <name>` or `TSUKU_ENV=<name>` is active, `DefaultConfig()` rewrites the home directory to `$TSUKU_HOME/envs/<name>/` and sets the download cache to the parent's `$TSUKU_HOME/cache/downloads/`. Every other path (tools, libs, state, registry) derives from the environment's home directory as usual.
+Two changes work together:
 
-### Environment Name Validation
+1. **Build-time default**: A Go variable `defaultHomeOverride` is set via ldflags during `make build`. `DefaultConfig()` checks this variable when `TSUKU_HOME` isn't set in the environment.
 
-Environment names must match `^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$`. This prevents:
-- **Path traversal**: Names like `../../tools` that escape the `envs/` directory
-- **Empty names**: The regex requires at least one character
-- **Hidden directories**: Names can't start with `.`
-- **Special characters**: No slashes, backslashes, or spaces
+2. **Install script fix**: The env file stops exporting `TSUKU_HOME`, using an inline fallback in the `PATH` line instead. This ensures the build-time default takes effect for developers who have tsuku installed.
 
-After validation, the implementation must verify that `filepath.Join(tsukuHome, "envs", envName)` resolves to a path under `$TSUKU_HOME/envs/` using `filepath.Rel()`. This catches edge cases the regex might miss on different platforms.
-
-### Directory Layout
+### Precedence Chain
 
 ```
-~/.tsuku/                          # Real TSUKU_HOME (unchanged)
-├── state.json                     # User's real state
-├── tools/                         # User's installed tools
-├── cache/
-│   └── downloads/                 # Shared download cache (content-addressed)
-├── envs/                          # NEW: environment root
-│   ├── dev/                       # Named environment "dev"
-│   │   ├── state.json             # Environment-specific state
-│   │   ├── state.json.lock        # Environment-specific lock
-│   │   ├── tools/                 # Environment-specific tools
-│   │   ├── libs/                  # Environment-specific libraries
-│   │   ├── bin/                   # Environment-specific symlinks
-│   │   ├── registry/              # Environment-specific registry cache
-│   │   └── cache/
-│   │       └── versions/          # Environment-specific version cache
-│   └── ci-cmake/                  # Another environment
-│       └── ...
+TSUKU_HOME env var  →  ldflags defaultHomeOverride  →  ~/.tsuku
+(explicit override)    (dev builds: .tsuku-dev)        (release builds)
 ```
 
-Environments don't get their own `config.toml` or `cache/downloads/`. The config file is the parent's, and the download cache is shared via the `Config` struct (see below).
+### Code Changes
 
-### Cache Sharing Mechanism
-
-The download cache is shared via a config-level override, not filesystem links. When `DefaultConfig()` detects an environment, it sets `DownloadCacheDir` to the parent's `$TSUKU_HOME/cache/downloads/` directly in the `Config` struct. The `DownloadCache` code receives this path and operates normally. No symlinks, no security check changes.
-
-The symlink approach (considered as a fallback) is explicitly rejected because:
-- It conflicts with the existing `containsSymlink()` security check
-- It behaves differently on Windows
-- The config-level approach is simpler and doesn't touch security code
-
-### Key Interfaces
-
-**Config changes** (`internal/config/config.go`):
+**`cmd/tsuku/main.go`** (or appropriate entry point):
 
 ```go
-const EnvTsukuEnv = "TSUKU_ENV"
+// defaultHomeOverride is set via ldflags for dev builds.
+// When set, it overrides the ~/.tsuku default (but not TSUKU_HOME env var).
+var defaultHomeOverride string
+```
+
+**`internal/config/config.go`**:
+
+```go
+// DefaultHomeOverride can be set by the binary's main package
+// to change the default home directory (e.g., for dev builds).
+var DefaultHomeOverride string
 
 func DefaultConfig() (*Config, error) {
     tsukuHome := os.Getenv(EnvTsukuHome)
     if tsukuHome == "" {
-        home, _ := os.UserHomeDir()
-        tsukuHome = filepath.Join(home, ".tsuku")
+        if DefaultHomeOverride != "" {
+            tsukuHome = DefaultHomeOverride
+        } else {
+            home, err := os.UserHomeDir()
+            if err != nil {
+                return nil, fmt.Errorf("failed to get user home directory: %w", err)
+            }
+            tsukuHome = filepath.Join(home, ".tsuku")
+        }
     }
 
-    parentDownloadCache := filepath.Join(tsukuHome, "cache", "downloads")
-
-    envName := os.Getenv(EnvTsukuEnv)
-    if envName != "" {
-        if err := ValidateEnvName(envName); err != nil {
-            return nil, err
-        }
-        envHome := filepath.Join(tsukuHome, "envs", envName)
-        // Verify resolved path is under envs/
-        if !isUnder(envHome, filepath.Join(tsukuHome, "envs")) {
-            return nil, fmt.Errorf("invalid environment name: path escapes envs directory")
-        }
-        tsukuHome = envHome
-    }
-
-    cfg := &Config{
+    return &Config{
         HomeDir:          tsukuHome,
         ToolsDir:         filepath.Join(tsukuHome, "tools"),
         // ... all other paths derive from tsukuHome as before
-        DownloadCacheDir: parentDownloadCache, // Always use parent's download cache
-    }
-    return cfg, nil
+    }, nil
 }
 ```
 
-**CLI changes** (`cmd/tsuku/root.go`):
+**`Makefile`** (new file):
 
-```go
-// Global persistent flag
-rootCmd.PersistentFlags().StringVar(&envFlag, "env", "", "use named environment for isolation")
+```makefile
+.PHONY: build test clean
 
-// In PersistentPreRun: if envFlag is set, override TSUKU_ENV
+build:
+	go build -ldflags "-X main.defaultHomeOverride=.tsuku-dev" -o tsuku ./cmd/tsuku
+
+test:
+	go test ./...
+
+clean:
+	rm -f tsuku
+	rm -rf .tsuku-dev
 ```
 
-**New subcommand** (`cmd/tsuku/env.go`):
+**`website/install.sh`** (env file generation, lines 115-124):
 
-```go
-// tsuku env list    - list environments under $TSUKU_HOME/envs/
-// tsuku env clean   - remove a named environment (acquires lock first)
-// tsuku env info    - show environment details (path, size, tool count)
+```bash
+# Before:
+cat > "$ENV_FILE" << 'ENVEOF'
+export TSUKU_HOME="${TSUKU_HOME:-$HOME/.tsuku}"
+export PATH="$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH"
+ENVEOF
+
+# After:
+cat > "$ENV_FILE" << 'ENVEOF'
+# tsuku shell configuration
+# Add tsuku directories to PATH
+export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
+ENVEOF
+```
+
+### Directory Layout
+
+Each checkout gets its own `.tsuku-dev`:
+
+```
+~/dev/tsuku-feature-a/
+├── .tsuku-dev/              # Created on first run
+│   ├── state.json
+│   ├── tools/
+│   ├── cache/
+│   │   └── downloads/       # Independent cache (format may differ)
+│   └── ...
+├── tsuku                    # Built binary (make build)
+└── ...
+
+~/dev/tsuku-feature-b/
+├── .tsuku-dev/              # Completely independent
+│   └── ...
+├── tsuku
+└── ...
 ```
 
 ### Data Flow
 
-1. User invokes `tsuku --env dev install cmake`
-2. Cobra's persistent pre-run sets `TSUKU_ENV=dev` (flag overrides env var)
-3. `DefaultConfig()` validates the name, computes `$TSUKU_HOME/envs/dev/` as effective home
-4. `DownloadCacheDir` stays at `$TSUKU_HOME/cache/downloads/` (parent's cache)
-5. `EnsureDirectories()` creates the environment's directory tree (but not download cache)
-6. Installation proceeds normally against the environment's state and tools
-7. `state.json` under `envs/dev/` records the installation
-8. Binaries are symlinked in `envs/dev/tools/current/`, following the existing `CurrentSymlink()` pattern
-
-### Flag Interactions
-
-- **`--env` + `--sandbox`**: These are compatible. `--env` determines the state and tool directories; `--sandbox` runs the installation in a container. The environment's state records the result.
-- **`--env` + `TSUKU_HOME`**: `TSUKU_HOME` sets the root, then `--env` creates the environment under that root. `TSUKU_HOME=/tmp/alt --env dev` uses `/tmp/alt/envs/dev/`.
-- **`--env` + `TSUKU_ENV`**: Flag takes precedence over env var.
-
-### Environment Indicator
-
-When operating in an environment, tsuku prints a one-line notice on commands that modify state:
-
-```
-[env: dev] Installing cmake...
-```
-
-The `tsuku config` command shows the active environment and its effective paths.
+1. Developer runs `make build` in checkout directory
+2. Go compiler injects `defaultHomeOverride = ".tsuku-dev"` via ldflags
+3. Developer runs `./tsuku install cmake`
+4. `DefaultConfig()` checks `TSUKU_HOME` env var -- not set (install script no longer exports it)
+5. Checks `DefaultHomeOverride` -- set to `.tsuku-dev`
+6. Uses `.tsuku-dev` as home directory (relative to working directory)
+7. `EnsureDirectories()` creates `.tsuku-dev/` tree on first use
+8. Installation proceeds normally against the isolated home
 
 ## Implementation Approach
 
-### Phase 1: Core environment support
+### Phase 1: Install script fix
 
-- Add `ValidateEnvName()` with regex and path-escape check
-- Modify `DefaultConfig()` to honor `TSUKU_ENV` and compute paths
-- Add `--env` persistent flag to root command, set env var in pre-run
-- Pass parent download cache path through Config struct
-- Ensure `EnsureDirectories()` creates environment tree (skipping download cache dir)
+- Change the env file template to stop exporting `TSUKU_HOME`
+- Use inline `${TSUKU_HOME:-$HOME/.tsuku}` fallback in the `PATH` line
+- Existing installations get the updated env file on next `tsuku` reinstall
 
-### Phase 2: Management subcommands and UX
+### Phase 2: Build-time default
 
-- `tsuku env list` -- enumerate `$TSUKU_HOME/envs/` directories with sizes
-- `tsuku env clean <name>` -- acquire state lock, then remove environment directory
-- `tsuku env info <name>` -- show path, disk usage, installed tools
-- Add environment indicator to state-modifying commands
+- Add `defaultHomeOverride` variable to `cmd/tsuku/main.go`
+- Add `DefaultHomeOverride` to `internal/config/config.go`
+- Modify `DefaultConfig()` to check the override
+- Create `Makefile` with `build`, `test`, and `clean` targets
+- Add `.tsuku-dev` to `.gitignore`
 
-### Phase 3: CI integration
+### Phase 3: Documentation and CI
 
-- Update Build Essentials macOS tests to use `--env` instead of manual `TSUKU_HOME` export
-- Remove the symlink-based cache sharing workaround
-- Document environment usage in contributor guide
+- Document `make build` workflow in CONTRIBUTING.md
+- Update Build Essentials CI to use `make build` where appropriate
+- Add CLAUDE.md note for agents: "Use `make build` to build tsuku"
 
 ## Security Considerations
 
 ### Download Verification
 
-No change to the verification pipeline. Download verification (checksums, PGP signatures) operates independently of which environment is active.
-
-The shared download cache does increase the blast radius of a cache poisoning event: a poisoned entry would be served to all environments, not just the one that wrote it. However, this is the same trust model as today's single-`TSUKU_HOME` setup. The cache keys on `sha256(url)`, and the existing verification pipeline checks content integrity after download. No new attack surface is introduced, but the blast radius note is worth keeping in mind for future cache hardening work.
+No change. Download verification operates independently of which home directory is active.
 
 ### Execution Isolation
 
-Environments don't provide execution isolation. Binaries installed in environment A run with the same user permissions and have full filesystem access to environment B. This is intentional and matches the existing `TSUKU_HOME` behavior. The feature isolates state (what's installed, which versions), not execution privileges. Container-based execution isolation is the `--sandbox` feature's domain.
+Dev builds don't provide execution isolation. Binaries installed in one checkout's `.tsuku-dev` run with the same user permissions as any other process. This matches the existing `$TSUKU_HOME` behavior. Container-based execution isolation is the `--sandbox` feature's domain.
 
 ### Supply Chain Risks
 
-No change. Environments use the same recipe sources and verification pipeline as the parent. An environment doesn't alter where recipes or bottles come from.
+No change. Dev builds use the same recipe sources and verification pipeline as release builds. The home directory override doesn't affect where recipes or downloads come from.
 
 ### User Data Exposure
 
-Environment names are stored on the local filesystem under `$TSUKU_HOME/envs/`. They aren't transmitted externally. The telemetry system (if enabled) doesn't report environment names. No new data exposure.
-
-### Input Validation
-
-Environment names are validated against `^[a-zA-Z0-9][a-zA-Z0-9._-]{0,63}$` and the resolved path is verified to stay under `$TSUKU_HOME/envs/`. This prevents path traversal attacks like `--env ../../tools` that would otherwise escape the `envs/` directory and potentially overwrite the user's real installation.
+The `.tsuku-dev` directory is local to each checkout. It isn't transmitted externally. Adding it to `.gitignore` prevents accidental commits. No new data exposure.
 
 ## Consequences
 
 ### Positive
-- Contributors can test recipe and CLI changes without risking their working installation
-- CI workflows can replace ad-hoc `TSUKU_HOME` + symlink scripts with `--env`
-- Parallel CI jobs use different environment names, eliminating lock contention
-- Downloaded files are shared across all environments, saving bandwidth and disk
+- Contributors and QA agents get isolation by default, just by using `make build`
+- No new CLI flags, env vars, or subcommands in the production binary
+- Parallel agents in separate checkouts are fully isolated, including download cache
+- Agents changing storage format can't corrupt other agents' state
+- The install script fix is independently correct (the binary shouldn't depend on the shell setting its home directory)
 
 ### Negative
-- `~/.tsuku/envs/` adds directory clutter that may accumulate if environments aren't cleaned up
-- The `--env` flag adds cognitive load for new contributors ("what's an env?")
-- Shared cache means a poisoned download entry affects all environments (same as today, but more explicitly shared)
+- Developers must use `make build` instead of bare `go build` to get dev defaults
+- `.tsuku-dev` is relative to working directory, which could surprise developers who run tsuku from a different directory
+- Existing users need to reinstall (or re-run install script) to get the updated env file
 
 ### Mitigations
-- `tsuku env list` shows environments with disk usage, making stale ones visible
-- `tsuku env clean` makes removal easy
-- Documentation explains environments as a development tool, not a required concept
-- Future cache hardening (content-hash verification on read) would mitigate the shared cache risk
+- `make build` is documented as the standard build command in CONTRIBUTING.md and CLAUDE.md
+- `make clean` removes `.tsuku-dev` for a fresh start
+- The env file change is backward-compatible: users who explicitly set `TSUKU_HOME` in their own shell config are unaffected
