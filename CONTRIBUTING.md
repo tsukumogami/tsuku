@@ -17,21 +17,39 @@ Thank you for your interest in contributing to tsuku! This document provides gui
 git clone https://github.com/tsukumogami/tsuku.git
 cd tsuku
 
-# Build
-go build -o tsuku ./cmd/tsuku
-
-# Install locally (optional)
-go install ./cmd/tsuku
-```
-
-### Verify Setup
-
-```bash
-# Check the build works
-./tsuku --help
+# Build for development (uses .tsuku-dev as home directory)
+make build
 
 # Run tests
-go test ./...
+make test
+
+# Clean build artifacts and dev data
+make clean
+```
+
+The `make build` target produces a `tsuku` binary that defaults to `.tsuku-dev/`
+in the current directory instead of `~/.tsuku`. This keeps development state
+isolated from any production installation. The `TSUKU_HOME` environment variable
+still takes precedence if set.
+
+To configure your shell for the dev binary (so installed tools are on PATH):
+
+```bash
+eval $(./tsuku shellenv)
+```
+
+To verify your environment is set up correctly:
+
+```bash
+./tsuku doctor
+```
+
+### Production Build
+
+To build without the dev directory override (same as release binaries):
+
+```bash
+go build -o tsuku ./cmd/tsuku
 ```
 
 ## Testing
