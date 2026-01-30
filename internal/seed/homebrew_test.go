@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 )
 
@@ -82,5 +83,62 @@ func TestHomebrewSource_FetchError(t *testing.T) {
 	_, err := src.Fetch(10)
 	if err == nil {
 		t.Fatal("expected error for 500 response")
+	}
+}
+
+func TestHomebrewSource_RetryOnServerError(t *testing.T) {
+	fixture := analyticsResponse{
+		Items: []analyticsItem{{Formula: "jq", Count: "500,000"}},
+	}
+	data, _ := json.Marshal(fixture)
+
+	var attempts atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		n := attempts.Add(1)
+		if n <= 2 {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write(data)
+	}))
+	defer srv.Close()
+
+	src := &HomebrewSource{
+		Client:       srv.Client(),
+		AnalyticsURL: srv.URL,
+	}
+
+	packages, err := src.Fetch(10)
+	if err != nil {
+		t.Fatalf("expected success after retries, got: %v", err)
+	}
+	if len(packages) != 1 {
+		t.Errorf("expected 1 package, got %d", len(packages))
+	}
+	if got := attempts.Load(); got != 3 {
+		t.Errorf("expected 3 attempts, got %d", got)
+	}
+}
+
+func TestHomebrewSource_NoRetryOn4xx(t *testing.T) {
+	var attempts atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		attempts.Add(1)
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer srv.Close()
+
+	src := &HomebrewSource{
+		Client:       srv.Client(),
+		AnalyticsURL: srv.URL,
+	}
+
+	_, err := src.Fetch(10)
+	if err == nil {
+		t.Fatal("expected error for 404")
+	}
+	if got := attempts.Load(); got != 1 {
+		t.Errorf("expected 1 attempt (no retry on 4xx), got %d", got)
 	}
 }
