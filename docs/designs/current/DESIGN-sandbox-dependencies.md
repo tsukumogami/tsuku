@@ -1,8 +1,8 @@
 ---
 status: Current
 problem: Sandbox testing fails for tools with declared dependencies because the plan generation duplicates code from normal install mode and doesn't pass RecipeLoader, causing dependencies to be omitted from container execution.
-decision: Eliminate code duplication by extracting plan generation to a shared function that both normal and sandbox install modes can use, ensuring dependencies are included in all sandbox plans.
-rationale: The sandbox executor already runs the same installation code path inside containers that normal mode uses, so plan generation should use unified infrastructure. Sharing the proven pattern from PR #808 automatically fixes both explicit and implicit dependency handling while reducing code duplication.
+decision: Eliminate code duplication by extracting plan generation to a shared function that both normal and sandbox install modes can use, ensuring dependencies are included in all sandbox plans with full platform awareness and resource limits.
+rationale: The sandbox executor already runs the same installation code path inside containers that normal mode uses, so plan generation should use unified infrastructure. Sharing the proven pattern from PR #808 automatically fixes both explicit and implicit dependency handling while reducing code duplication. Self-contained plans with embedded dependency trees enable portable, deterministic execution across platforms.
 ---
 
 # Sandbox Testing Doesn't Include Dependency Installation
@@ -35,11 +35,17 @@ The generated plan shows:
 Total steps: 6 (including 0 from dependencies)
 ```
 
-**Root cause**: `cmd/tsuku/install_sandbox.go` has its own `generatePlanFromRecipe()` function (lines 159-192) that **duplicates** the plan generation logic from `install_deps.go`. This duplicate implementation doesn't pass `RecipeLoader`, so dependencies aren't embedded in plans.
+**Root cause**: Three different code paths exist for installation, each generating plans differently:
 
-**Architectural issue**: This violates the principle established in PR #808 that plan generation should use a unified code path. The sandbox executor already runs `tsuku install --plan plan.json` inside the container (executor.go:354), which uses the same execution code as normal install. There's no reason to duplicate plan generation on the host side.
+1. **`tsuku install foo`**: Installs implicit dependencies before plan generation, then generates a plan with `RecipeLoader=nil` (no dependencies embedded)
+2. **`tsuku eval foo`**: Generates a plan with `RecipeLoader=loader` (includes all dependencies)
+3. **`tsuku install --plan plan.json`**: Loads and executes a plan (may or may not have dependencies)
 
-PR #808 fixed plan generation in `install_deps.go` (normal install mode), but the duplicated code in `install_sandbox.go` was left unfixed, creating two divergent implementations.
+Specifically, `cmd/tsuku/install_sandbox.go` has its own `generatePlanFromRecipe()` function (lines 159-192) that **duplicates** the plan generation logic from `install_deps.go`. This duplicate implementation doesn't pass `RecipeLoader`, so dependencies aren't embedded in plans.
+
+This violates the principle established in PR #808 that plan generation should use a unified code path. The sandbox executor already runs `tsuku install --plan plan.json` inside the container (executor.go:354), which uses the same execution code as normal install. There's no reason to duplicate plan generation on the host side.
+
+PR #808 fixed plan generation in `install_deps.go` (normal install mode), but the duplicated code in `install_sandbox.go` was left unfixed, creating two divergent implementations. The consequence: plans from `install` cannot be executed on different machines because dependencies are missing, sandbox testing doesn't validate real behavior because it uses a different code path, and three installation flows exist instead of one.
 
 ### Current State
 
@@ -236,6 +242,18 @@ Extract the core plan generation logic to a shared helper, but keep thin wrapper
 - Unclear where logic belongs (helper vs wrapper)
 - More complex than Option 1 with marginal benefit
 
+### Rejected Architectural Alternatives
+
+Before evaluating code organization options, several architectural approaches were considered and rejected:
+
+**Install dependencies before sandbox execution**: Mount `$TSUKU_HOME/tools/` into the container with pre-installed dependencies. Rejected because it violates the self-contained plan principle - plans would require recipe context at execution time, breaking portability.
+
+**Re-derive dependencies from plan steps**: Parse the plan's resolved steps to extract implicit dependencies at execution time. Rejected because it duplicates resolution logic, depends on fragile step naming conventions, and still requires recipe context.
+
+**Pass recipe to sandbox executor**: Modify the sandbox executor to accept the recipe alongside the plan. Rejected because it fixes only the sandbox symptom without solving the general portability problem, and breaks the separation between plan generation and plan execution.
+
+The chosen approach - embedding dependencies in plans via RecipeLoader - was the only option that achieves truly self-contained, portable plans.
+
 ## Evaluation Against Decision Drivers
 
 | Option | Consistency | Reuse Infrastructure | Minimal Changes | Code Simplification | Maintainability |
@@ -394,6 +412,125 @@ sandbox.Executor.Sandbox(plan)
 3. **Easier testing**: Test suite only needs to validate one implementation
 4. **Simpler mental model**: Developers don't need to understand two different code paths
 5. **Reduced cognitive load**: Changes to plan generation don't require thinking about two implementations
+
+### Plan Structure (Format v3)
+
+Self-contained plans use the existing format v3 structure with embedded dependency trees:
+
+```go
+type InstallationPlan struct {
+    Platform     Platform          // Platform this plan was generated for
+    Dependencies []DependencyPlan  // Nested dependency tree (explicit + implicit)
+    Steps        []ResolvedStep    // Resolved installation steps
+}
+
+type Platform struct {
+    OS          string `json:"os"`                     // "linux", "darwin", "windows"
+    Arch        string `json:"arch"`                   // "amd64", "arm64"
+    LinuxFamily string `json:"linux_family,omitempty"` // "debian", "fedora", "alpine"
+}
+
+type DependencyPlan struct {
+    Tool         string
+    Version      string
+    Dependencies []DependencyPlan  // Recursive
+    Steps        []ResolvedStep
+}
+```
+
+The `LinuxFamily` field extends the existing `Platform` struct in `internal/executor/plan.go`. The `omitempty` tag maintains backward compatibility with plans that don't include family information.
+
+### Platform Detection
+
+Platform detection occurs during plan generation as the first step, before step filtering and before dependency resolution. This ensures the entire dependency tree uses consistent platform constraints.
+
+**OS and Architecture** are always populated from `runtime.GOOS` and `runtime.GOARCH`.
+
+**Linux Family** is conditionally populated:
+- Only populated if the recipe uses family-specific steps (steps with `when.linux_family` conditions)
+- If the recipe is family-agnostic, the field stays empty for maximum portability
+- User override via `--linux-family` flag takes precedence over automatic detection
+- Automatic detection reads `/etc/os-release` as a fallback
+- Detection failure emits a warning and leaves the field empty (graceful degradation)
+
+Platform constraints are inherited by all dependencies. Nested dependency plans receive the same `Platform` value as the root plan.
+
+### Circular Dependency Detection
+
+Circular dependencies are detected during plan generation and result in hard errors. The `ResolveDependencies()` function tracks the resolution path and detects cycles during transitive resolution:
+
+```go
+for _, ancestor := range path {
+    if ancestor == depName {
+        cyclePath := append(path, depName)
+        return fmt.Errorf("%w: %s", ErrCyclicDependency, strings.Join(cyclePath, " -> "))
+    }
+}
+```
+
+Circular dependencies can be platform-specific due to conditional dependencies. Detection occurs after platform filtering, so platform-specific cycles only fail on the affected platform.
+
+### Version Conflict Resolution
+
+When multiple dependencies require different versions of the same tool, tsuku uses a first-encountered-wins strategy. The first version encountered for a tool is selected and used for all subsequent references. Resolution order is alphabetical by name, making the result deterministic.
+
+If the selected version is incompatible with a dependent tool's requirements, the build fails at runtime with tool-specific errors. Workaround: install tools separately rather than as a bundle.
+
+### Dependency Deduplication
+
+When multiple tools share the same dependency, each dependency is installed only once per version.
+
+**During plan generation**: Each dependency appears in the plan's dependency tree based on recipe requirements, potentially duplicated across subtrees.
+
+**During plan execution**: The state manager checks if each dependency is already installed before executing its steps. If installed, it skips (~10ms overhead for state lookup). If not installed, it executes and records in state.json.
+
+### Resource Limits
+
+Hard limits prevent resource exhaustion from deeply nested or wide dependency trees:
+- Maximum dependency depth: 5 levels
+- Maximum total dependencies: 100
+
+Plans exceeding these limits are rejected before any installation begins.
+
+### User-Facing Error Messages
+
+Error scenarios with actionable messages:
+
+**Circular Dependency:**
+```
+Error: circular dependency detected during plan generation
+  Dependency chain: ninja -> cmake -> ninja
+```
+
+**Missing Dependency Recipe:**
+```
+Warning: recipe not found for dependency 'cmake'
+  Required by: complex-app (cmake_build action)
+```
+Dependencies without recipes are excluded from the plan. The executor assumes they are available in the execution environment.
+
+**Platform Constraint Violation:**
+```
+Error: dependency 'foo' has no installation steps for platform linux/amd64/alpine
+```
+
+**Resource Limit Exceeded:**
+```
+Error: dependency tree exceeds limits
+  Total dependencies: 143 (limit: 100)
+  Max depth: 7 (limit: 5)
+```
+
+### Debugging
+
+Users can debug plan generation and execution issues with verbose logging:
+
+```bash
+tsuku eval <tool> --verbose       # Detailed plan generation logs
+tsuku install --plan plan.json -v # Verbose execution output
+```
+
+Verbose mode shows recipe loading, dependency resolution tree, version resolution for each dependency, step filtering by platform, and warnings for missing dependency recipes.
 
 ## Implementation Approach
 
@@ -677,6 +814,9 @@ golangci-lint run --timeout=5m ./...
 | **Recipe signing absent** | **Social trust: human review before registry merge** | **Compromised registry could serve malicious recipes (out of scope)** |
 | Container runtime security | User configures container runtime (Podman/Docker) | Container breakout depends on runtime security configuration |
 
+**Plan tampering risk:**
+Plans are JSON files that can be modified between `eval` and `install`. Attackers with filesystem access could modify dependency URLs, remove checksums, or inject malicious steps. Current mitigations: checksums are embedded in dependency recipes (modifying a plan URL still requires a valid checksum), schema validation at plan load time rejects malformed plans, and plan generation and execution typically happen in the same session. Plan integrity (signatures, embedded hashes) is a broader concern for future work.
+
 **Residual risk acceptance**:
 
 1. **Eval-time dependency host execution**: This is an **architectural limitation** of tsuku's plan generation design, not specific to this feature. Sandbox mode is for testing recipe platform compatibility, not isolating malicious code. Users must trust recipes they test.
@@ -688,6 +828,12 @@ golangci-lint run --timeout=5m ./...
 4. **Container security**: Users are responsible for configuring their container runtime securely. Tsuku provides the isolation mechanism but doesn't enforce container security policies.
 
 All other residual risks are inherited from the existing tsuku trust model (trust recipe registry maintainers, verify checksums, no sudo). This feature extends the existing model to dependencies in sandbox mode without introducing fundamentally new attack vectors.
+
+## Migration Path
+
+Old plan files (format v3 without dependencies) execute with a warning: plans with no dependencies may fail if implicit dependencies are missing from the system. Users should regenerate saved plan files with `tsuku eval <tool> > plan-new.json`. No action is needed for `tsuku install <tool>` (auto-generates new plans).
+
+Since tsuku is pre-GA, this one-time breakage is acceptable. The new format is strictly better (self-contained).
 
 ## Consequences
 
