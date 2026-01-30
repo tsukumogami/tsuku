@@ -120,6 +120,7 @@ type HomebrewSession struct {
 
 	// Deterministic generation state
 	usedDeterministic bool // True if the last recipe was generated deterministically
+	deterministicOnly bool // When true, skip LLM fallback
 
 	// Progress reporting
 	progress ProgressReporter
@@ -207,9 +208,11 @@ func NewHomebrewBuilder(opts ...HomebrewBuilderOption) *HomebrewBuilder {
 	return b
 }
 
-// RequiresLLM returns true as this builder uses LLM for recipe generation.
+// RequiresLLM returns false because the builder can generate recipes
+// deterministically from bottle inspection without LLM. LLM is used
+// as an optional fallback when deterministic generation fails.
 func (b *HomebrewBuilder) RequiresLLM() bool {
-	return true
+	return false
 }
 
 // Name returns the builder identifier.
@@ -392,17 +395,21 @@ func (b *HomebrewBuilder) NewSession(ctx context.Context, req BuildRequest, opts
 		{Role: llm.RoleUser, Content: userMessage},
 	}
 
+	// Check if deterministic-only mode is requested
+	deterministicOnly := opts != nil && opts.DeterministicOnly
+
 	return &HomebrewSession{
-		builder:      b,
-		req:          req,
-		provider:     nil, // Initialized lazily if deterministic generation fails
-		factory:      factory,
-		messages:     messages,
-		systemPrompt: systemPrompt,
-		tools:        tools,
-		genCtx:       genCtx,
-		formula:      formula,
-		progress:     progress,
+		builder:           b,
+		req:               req,
+		provider:          nil, // Initialized lazily if deterministic generation fails
+		factory:           factory,
+		messages:          messages,
+		systemPrompt:      systemPrompt,
+		tools:             tools,
+		genCtx:            genCtx,
+		formula:           formula,
+		deterministicOnly: deterministicOnly,
+		progress:          progress,
 	}, nil
 }
 
@@ -424,10 +431,18 @@ func (s *HomebrewSession) Generate(ctx context.Context) (*BuildResult, error) {
 		return result, nil
 	}
 
-	// Deterministic failed, fall back to LLM
+	// Deterministic failed
+	if s.deterministicOnly {
+		if s.progress != nil {
+			s.progress.OnStageFailed()
+		}
+		return nil, s.classifyDeterministicFailure(err)
+	}
+
+	// Fall back to LLM
 	if s.progress != nil {
 		s.progress.OnStageDone("falling back to LLM")
-		s.progress.OnStageStart(fmt.Sprintf("Analyzing formula with %s", s.provider.Name()))
+		s.progress.OnStageStart("Analyzing formula with LLM")
 	}
 
 	return s.generateBottle(ctx)
@@ -452,6 +467,48 @@ func (s *HomebrewSession) generateDeterministic(ctx context.Context) (*BuildResu
 			"Generated deterministically from bottle inspection",
 		},
 	}, nil
+}
+
+// classifyDeterministicFailure maps an internal error to a DeterministicFailedError
+// with a category matching failure-record.schema.json.
+func (s *HomebrewSession) classifyDeterministicFailure(err error) *DeterministicFailedError {
+	msg := err.Error()
+
+	var category DeterministicFailureCategory
+	var message string
+
+	switch {
+	case strings.Contains(msg, "no bottles available") ||
+		strings.Contains(msg, "no bottle found for platform"):
+		category = FailureCategoryNoBottles
+		message = fmt.Sprintf("formula %s has no bottles available", s.formula)
+
+	case strings.Contains(msg, "no binaries found"):
+		category = FailureCategoryComplexArchive
+		message = fmt.Sprintf("formula %s bottle contains no binaries in bin/", s.formula)
+
+	case strings.Contains(msg, "failed to fetch") ||
+		strings.Contains(msg, "token request") ||
+		strings.Contains(msg, "manifest request") ||
+		strings.Contains(msg, "download request"):
+		category = FailureCategoryAPIError
+		message = fmt.Sprintf("failed to fetch bottle data for formula %s", s.formula)
+
+	case strings.Contains(msg, "sandbox") || strings.Contains(msg, "validation"):
+		category = FailureCategoryValidation
+		message = fmt.Sprintf("generated recipe for %s failed validation", s.formula)
+
+	default:
+		category = FailureCategoryAPIError
+		message = fmt.Sprintf("deterministic generation failed for formula %s", s.formula)
+	}
+
+	return &DeterministicFailedError{
+		Formula:  s.formula,
+		Category: category,
+		Message:  message,
+		Err:      err,
+	}
 }
 
 // ensureLLMProvider initializes the LLM provider if not already done.
@@ -535,10 +592,14 @@ func (s *HomebrewSession) generateBottle(ctx context.Context) (*BuildResult, err
 
 // Repair attempts to fix the recipe given sandbox failure feedback.
 func (s *HomebrewSession) Repair(ctx context.Context, failure *sandbox.SandboxResult) (*BuildResult, error) {
+	if s.deterministicOnly {
+		return nil, &RepairNotSupportedError{BuilderType: "homebrew-deterministic"}
+	}
+
 	// If the failed recipe was generated deterministically, use LLM to generate a new one
 	if s.usedDeterministic {
 		if s.progress != nil {
-			s.progress.OnStageStart(fmt.Sprintf("Generating recipe with %s (deterministic failed)", s.provider.Name()))
+			s.progress.OnStageStart("Generating recipe with LLM (deterministic failed)")
 		}
 
 		// Include the failure context in the initial message to help LLM avoid same mistake
