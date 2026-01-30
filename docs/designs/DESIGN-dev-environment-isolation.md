@@ -1,8 +1,8 @@
 ---
 status: Proposed
-problem: Developers and QA agents working on tsuku lack a zero-ceremony way to run against isolated environments without interfering with each other or the host's real installation.
-decision: Use build-time ldflags to give Makefile-built binaries a different default home directory, and stop exporting TSUKU_HOME from the install script so the override takes effect.
-rationale: Build-time defaults require no new CLI flags, no wrapper scripts, and no manual env var setup. A developer runs make build then uses tsuku normally. Parallel agents in separate checkouts get isolation automatically because each checkout's .tsuku-dev is a different absolute path.
+problem: Developers working on tsuku lack a zero-ceremony way to run against isolated environments without interfering with each other or the host's real installation.
+decision: Use build-time ldflags to give Makefile-built binaries a different default home directory, stop exporting TSUKU_HOME from the install script, and add tsuku shellenv and tsuku doctor commands for PATH setup and environment validation.
+rationale: Build-time defaults handle isolation with zero ceremony. shellenv and doctor are general-purpose commands that serve both contributors (configuring PATH for dev builds) and end users (alternative to the install script's env file, environment health checks).
 ---
 
 # DESIGN: Dev Environment Isolation
@@ -17,7 +17,7 @@ When developing tsuku, you need to run your local build to test recipe changes, 
 
 Neither approach works well. Running against your real home pollutes it with test artifacts. Manually exporting a new `TSUKU_HOME` is tedious, easy to forget, and doesn't solve the parallel execution problem.
 
-The problem gets worse with QA agents. Multiple agents may run in parallel across different checkouts, each testing a different feature branch. Some branches change tsuku's internal storage format, so agents can't share any state -- not even the download cache. Each agent needs a fully independent `$TSUKU_HOME` without any manual setup.
+The problem gets worse with parallel testing. Multiple checkouts may run concurrently, each testing a different feature branch. Some branches change tsuku's internal storage format, so parallel sessions can't share any state -- not even the download cache. Each checkout needs a fully independent `$TSUKU_HOME` without any manual setup.
 
 The Build Essentials workflow already demonstrates this need: each macOS test creates a fresh `TSUKU_HOME` per tool to avoid interference. That pattern works but it's ad-hoc.
 
@@ -30,20 +30,21 @@ There's also a complication: the install script (`website/install.sh`) writes an
 - Parallel-safe execution across separate checkouts
 - A fix to the install script so it doesn't block the mechanism
 - State persistence across invocations within the same checkout
+- Commands for shell PATH configuration and environment health checking
 
 **Out of scope:**
 - Per-directory tool version activation (future feature, separate design)
 - Container-based isolation (the sandbox feature already covers that)
-- Shared download cache across environments (agents may change cache format)
-- New CLI flags or environment variables
+- Shared download cache across environments (parallel branches may change cache format)
 
 ## Decision Drivers
 
 - **Zero-conflict isolation**: A dev build must never read or write the host's real `$TSUKU_HOME/state.json`
-- **Parallel safety**: Multiple agents in separate checkouts must not interfere with each other
+- **Parallel safety**: Multiple checkouts must not interfere with each other
 - **Zero ceremony**: Building and running should require no extra flags, env vars, or wrapper scripts
-- **No new CLI surface**: The production binary shouldn't grow features that only serve contributors
-- **Format independence**: Agents changing tsuku's storage format must not corrupt other agents' state
+- **Useful CLI surface only**: Any new commands must serve end users, not just contributors
+- **Format independence**: Branches changing tsuku's storage format must not corrupt other checkouts' state
+- **Tool reachability**: After installing a tool, it should be possible to run it directly from the shell
 
 ## Implementation Context
 
@@ -90,7 +91,7 @@ make build
 - Zero ceremony: `make build` then use tsuku normally
 - No new CLI flags or env vars
 - Each checkout gets its own `.tsuku-dev` automatically
-- Parallel agents in separate checkouts are fully isolated
+- Parallel checkouts are fully isolated
 - `TSUKU_HOME` override still works for explicit control
 - Release binary behavior is unchanged
 
@@ -116,7 +117,7 @@ Example usage:
 **Cons:**
 - Adds permanent CLI surface area for a contributor problem
 - Shared cache assumes stable cache format across branches (breaks with format changes)
-- Environments inside `$TSUKU_HOME` means agents share state by default
+- Environments inside `$TSUKU_HOME` means parallel sessions share state by default
 - Doesn't move toward per-directory version activation (orthogonal feature)
 - Requires environment name validation, path traversal prevention, new subcommands
 
@@ -135,7 +136,7 @@ Example usage:
 
 **Cons:**
 - Changes the invocation syntax (`./scripts/dev-env` instead of `./tsuku`)
-- Agents must know to use the script instead of the binary
+- Users must know to use the script instead of the binary
 - Easy to forget and run `./tsuku` directly
 
 ### Evaluation Against Drivers
@@ -145,8 +146,9 @@ Example usage:
 | Zero-conflict | Good: separate home per checkout | Good: separate state per name | Good: separate home |
 | Parallel safety | Good: different directories | Fair: same TSUKU_HOME, shared cache | Good: different directories |
 | Zero ceremony | Good: make build, then use normally | Poor: extra flag every invocation | Fair: different command |
-| No new CLI surface | Good: no changes | Poor: flag + env var + subcommands | Good: no changes |
+| Useful CLI surface | Good: shellenv + doctor serve all users | Poor: env subcommands serve contributors only | Good: no changes |
 | Format independence | Good: nothing shared | Poor: shared download cache | Good: nothing shared |
+| Tool reachability | Good: shellenv configures PATH | Good: env flag sets PATH implicitly | Poor: must manage PATH separately |
 
 ## Decision Outcome
 
@@ -158,10 +160,10 @@ Option 1 is the only option that scores "Good" on every driver. It requires no n
 
 Option 2 (`--env`) was the original proposal but was rejected after analysis revealed three problems:
 - It adds permanent CLI surface area to solve a contributor/QA problem. The production binary shouldn't carry features that don't serve end users.
-- Its shared download cache assumes format stability across branches. QA agents testing storage format changes would corrupt each other's cache.
+- Its shared download cache assumes format stability across branches. Parallel sessions testing storage format changes would corrupt each other's cache.
 - It's orthogonal to per-directory version activation (a confirmed future goal). Building `--env` now doesn't move toward that feature and could create API commitments that constrain its design.
 
-Option 3 (wrapper script) was rejected because it changes the invocation syntax. Agents and developers must remember to use `./scripts/dev-env` instead of `./tsuku`. That's easy to forget and adds friction.
+Option 3 (wrapper script) was rejected because it changes the invocation syntax. Developers must remember to use `./scripts/dev-env` instead of `./tsuku`. That's easy to forget and adds friction.
 
 ### Trade-offs Accepted
 
@@ -173,11 +175,13 @@ Option 3 (wrapper script) was rejected because it changes the invocation syntax.
 
 ### Overview
 
-Two changes work together:
+Three changes work together:
 
 1. **Build-time default**: A Go variable `defaultHomeOverride` is set via ldflags during `make build`. `DefaultConfig()` checks this variable when `TSUKU_HOME` isn't set in the environment.
 
 2. **Install script fix**: The env file stops exporting `TSUKU_HOME`, using an inline fallback in the `PATH` line instead. This ensures the build-time default takes effect for developers who have tsuku installed.
+
+3. **Shell integration commands**: `tsuku shellenv` prints PATH configuration for the current home directory. `tsuku doctor` validates the environment is set up correctly. Both commands serve end users (alternative PATH setup, diagnostics) and contributors (dev build PATH configuration).
 
 ### Precedence Chain
 
@@ -258,6 +262,25 @@ export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/c
 ENVEOF
 ```
 
+**`cmd/tsuku/shellenv.go`** (new file):
+
+```go
+// tsuku shellenv -- prints shell commands to configure PATH
+// Output: export PATH="$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH"
+// Uses the effective home directory (respects ldflags override and TSUKU_HOME env var)
+```
+
+**`cmd/tsuku/doctor.go`** (new file):
+
+```go
+// tsuku doctor -- checks environment health
+// Checks:
+//   1. Home directory exists and is writable
+//   2. tools/current is in PATH
+//   3. State file is readable
+// Exits non-zero if any check fails
+```
+
 ### Directory Layout
 
 Each checkout gets its own `.tsuku-dev`:
@@ -284,7 +307,48 @@ Each checkout gets its own `.tsuku-dev`:
 
 The executor manages PATH internally for sub-processes. When installing a tool with dependencies (e.g., build-essentials installs ninja, then cmake needs ninja), the executor builds `ExecPaths` from each dependency's install directory and prepends them to PATH in spawned processes. This happens at the code level (`internal/actions/cmake_build.go`, `configure_make.go`, etc.), not via the shell's PATH. Multi-step recipes work correctly regardless of which directory is on the shell's PATH.
 
-The one place that references the shell's PATH is `tsuku verify`, which checks whether `tools/current` is in the user's PATH and prints a warning if not. For dev builds using `.tsuku-dev`, this check would report that `.tsuku-dev/tools/current` isn't in PATH. That's an informational message, not a functional failure. Developers who want to run installed tools directly (outside of tsuku) would need to add `.tsuku-dev/tools/current` to their PATH manually, but this is an uncommon workflow during development.
+However, after installation, running the tool directly from the shell (e.g., `cmake --version`) requires `tools/current` to be on PATH. For dev builds using `.tsuku-dev`, the shell's PATH still points to the host's `~/.tsuku/tools/current`, not `.tsuku-dev/tools/current`. Anyone who installs a tool and then wants to run it directly needs a way to fix their PATH.
+
+Two new commands solve this:
+
+**`tsuku shellenv`** -- prints shell commands to configure PATH for the current `$TSUKU_HOME`:
+
+```bash
+$ ./tsuku shellenv
+export PATH="/home/user/dev/tsuku-feature-a/.tsuku-dev/bin:/home/user/dev/tsuku-feature-a/.tsuku-dev/tools/current:$PATH"
+```
+
+Usage:
+```bash
+eval $(./tsuku shellenv)
+cmake --version    # works
+```
+
+This follows the pattern established by Homebrew (`eval $(brew shellenv)`), rbenv (`eval $(rbenv init -)`), and mise (`eval $(mise activate bash)`). It's useful for all users, not just contributors -- anyone who installs tsuku without the install script (e.g., via `go install` or manual download) can use `tsuku shellenv` to configure their shell.
+
+**`tsuku doctor`** -- checks that the environment is configured correctly and exits non-zero if something is wrong:
+
+```bash
+$ ./tsuku doctor
+Checking tsuku environment...
+  Home directory: /home/user/dev/tsuku-feature-a/.tsuku-dev ... ok
+  tools/current in PATH ... FAIL
+    .tsuku-dev/tools/current is not in your PATH
+    Run: eval $(./tsuku shellenv)
+  State file ... ok
+```
+
+This gives scripts and CI a programmatic gate (`./tsuku doctor || exit 1`) and gives end users a diagnostic tool when things aren't working. The existing `tsuku verify` command checks a specific tool's installation; `tsuku doctor` checks the overall environment.
+
+### Typical Development Workflow
+
+```bash
+make build                    # build with dev defaults
+eval $(./tsuku shellenv)      # configure PATH for .tsuku-dev
+./tsuku install cmake         # install into .tsuku-dev
+cmake --version               # tool is reachable
+./tsuku doctor                # verify environment is healthy
+```
 
 ### Data Flow
 
@@ -313,11 +377,17 @@ The one place that references the shell's PATH is `tsuku verify`, which checks w
 - Create `Makefile` with `build`, `test`, and `clean` targets
 - Add `.tsuku-dev` to `.gitignore`
 
-### Phase 3: Documentation and CI
+### Phase 3: Shell integration commands
+
+- Add `tsuku shellenv` command that prints `export PATH=...` for the current home directory
+- Add `tsuku doctor` command that validates environment health (home dir, PATH, state file)
+- `doctor` exits non-zero on failure for use as a CI/script gate
+
+### Phase 4: Documentation and CI
 
 - Document `make build` workflow in CONTRIBUTING.md
 - Update Build Essentials CI to use `make build` where appropriate
-- Add CLAUDE.md note for agents: "Use `make build` to build tsuku"
+- Add note to CLAUDE.md: "Use `make build` to build tsuku"
 
 ## Security Considerations
 
@@ -340,16 +410,18 @@ The `.tsuku-dev` directory is local to each checkout. It isn't transmitted exter
 ## Consequences
 
 ### Positive
-- Contributors and QA agents get isolation by default, just by using `make build`
-- No new CLI flags, env vars, or subcommands in the production binary
-- Parallel agents in separate checkouts are fully isolated, including download cache
-- Agents changing storage format can't corrupt other agents' state
+- Contributors get isolation by default, just by using `make build`
+- Parallel checkouts are fully isolated, including download cache
+- Branches changing storage format can't corrupt other checkouts' state
 - The install script fix is independently correct (the binary shouldn't depend on the shell setting its home directory)
+- `tsuku shellenv` gives all users a way to configure PATH without the install script
+- `tsuku doctor` gives all users a diagnostic tool for environment issues
 
 ### Negative
 - Developers must use `make build` instead of bare `go build` to get dev defaults
 - `.tsuku-dev` is relative to working directory, which could surprise developers who run tsuku from a different directory
 - Existing users need to reinstall (or re-run install script) to get the updated env file
+- Two new commands (`shellenv`, `doctor`) add CLI surface area, though both serve end users
 
 ### Mitigations
 - `make build` is documented as the standard build command in CONTRIBUTING.md and CLAUDE.md
