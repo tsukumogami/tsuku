@@ -18,6 +18,11 @@ import (
 	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
+// defaultHomeOverride is set via ldflags for dev builds.
+// When set, it overrides the ~/.tsuku default (but not TSUKU_HOME env var).
+// Example: go build -ldflags "-X main.defaultHomeOverride=.tsuku-dev"
+var defaultHomeOverride string
+
 var (
 	quietFlag   bool
 	verboseFlag bool
@@ -50,6 +55,9 @@ func init() {
 
 	// Set version from build info (handles tagged releases and dev builds)
 	rootCmd.Version = buildinfo.Version()
+
+	// Apply build-time home directory override (set via ldflags for dev builds)
+	config.DefaultHomeOverride = defaultHomeOverride
 
 	// Initialize registry client
 	cfg, err := config.DefaultConfig()
@@ -86,6 +94,8 @@ func init() {
 	rootCmd.AddCommand(completionCmd)
 	rootCmd.AddCommand(validateCmd)
 	rootCmd.AddCommand(evalCmd)
+	rootCmd.AddCommand(shellenvCmd)
+	rootCmd.AddCommand(doctorCmd)
 }
 
 func main() {

@@ -310,6 +310,11 @@ func GetRecipeCacheStaleFallback() bool {
 	}
 }
 
+// DefaultHomeOverride can be set by the binary's main package to change the
+// default home directory. Used by dev builds (via ldflags) to default to
+// .tsuku-dev instead of ~/.tsuku. TSUKU_HOME env var still takes precedence.
+var DefaultHomeOverride string
+
 // Config holds tsuku configuration
 type Config struct {
 	HomeDir          string // $TSUKU_HOME
@@ -332,11 +337,15 @@ func DefaultConfig() (*Config, error) {
 	// Check for TSUKU_HOME environment variable first
 	tsukuHome := os.Getenv(EnvTsukuHome)
 	if tsukuHome == "" {
-		home, err := os.UserHomeDir()
-		if err != nil {
-			return nil, fmt.Errorf("failed to get user home directory: %w", err)
+		if DefaultHomeOverride != "" {
+			tsukuHome = DefaultHomeOverride
+		} else {
+			home, err := os.UserHomeDir()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get user home directory: %w", err)
+			}
+			tsukuHome = filepath.Join(home, ".tsuku")
 		}
-		tsukuHome = filepath.Join(home, ".tsuku")
 	}
 
 	return &Config{

@@ -1,5 +1,8 @@
 # Binaries
 /tsuku
+
+# Dev environment data directory (created by make build)
+.tsuku-dev/
 *.exe
 *.dll
 *.so
