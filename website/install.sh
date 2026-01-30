@@ -115,12 +115,7 @@ echo ""
 cat > "$ENV_FILE" << 'ENVEOF'
 # tsuku shell configuration
 # Add tsuku directories to PATH
-
-# Set TSUKU_HOME if not already set
-export TSUKU_HOME="${TSUKU_HOME:-$HOME/.tsuku}"
-
-# Add tsuku bin and tools/current to PATH
-export PATH="$TSUKU_HOME/bin:$TSUKU_HOME/tools/current:$PATH"
+export PATH="${TSUKU_HOME:-$HOME/.tsuku}/bin:${TSUKU_HOME:-$HOME/.tsuku}/tools/current:$PATH"
 ENVEOF
 
 # Add telemetry opt-out to env file if requested
