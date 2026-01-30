@@ -23,37 +23,6 @@ Current
 | ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~feat(scripts): add queue seed script for Homebrew~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
 | ~~[#1203](https://github.com/tsukumogami/tsuku/issues/1203)~~ | ~~feat(scripts): add gap analysis script~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~ | ~~testable~~ |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph Phase1["Phase 1: Schemas"]
-        I1199["#1199: Priority queue and failure schemas"]
-        I1200["#1200: Dependency name mapping"]
-    end
-
-    subgraph Phase2["Phase 2: Scripts"]
-        I1201["#1201: Schema validation scripts"]
-        I1202["#1202: Queue seed script"]
-        I1203["#1203: Gap analysis script"]
-    end
-
-    I1199 --> I1201
-    I1199 --> I1202
-    I1199 --> I1203
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1199,I1200 done
-    class I1201 done
-    class I1202 done
-    class I1203 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
