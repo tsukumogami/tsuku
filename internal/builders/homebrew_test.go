@@ -6,6 +6,8 @@ import (
 	"compress/gzip"
 	"context"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -2099,5 +2101,176 @@ func TestHomebrewBuilder_getCurrentPlatformTag(t *testing.T) {
 
 	if !validTags[tag] {
 		t.Errorf("getCurrentPlatformTag() = %q, not a valid tag", tag)
+	}
+}
+
+func TestHomebrewBuilder_RequiresLLM(t *testing.T) {
+	b := &HomebrewBuilder{}
+	if b.RequiresLLM() {
+		t.Error("RequiresLLM() = true, want false")
+	}
+}
+
+func TestHomebrewSession_Generate_DeterministicOnly_ReturnsDeterministicFailedError(t *testing.T) {
+	// Create a session with DeterministicOnly=true that will fail deterministic generation
+	// (formula info has no stable version, causing generateDeterministic to fail)
+	b := NewHomebrewBuilder(
+		WithHomebrewAPIURL("http://unused"),
+		WithHomebrewHTTPClient(&http.Client{Timeout: 5 * time.Second}),
+	)
+
+	session := &HomebrewSession{
+		builder:           b,
+		req:               BuildRequest{Package: "testpkg"},
+		formula:           "testformula",
+		deterministicOnly: true,
+		genCtx: &homebrewGenContext{
+			formula: "testformula",
+			formulaInfo: &homebrewFormulaInfo{
+				Name: "testformula",
+				// No stable version set -> generateDeterministic will fail
+			},
+			httpClient: b.httpClient,
+		},
+	}
+
+	ctx := context.Background()
+	_, err := session.Generate(ctx)
+	if err == nil {
+		t.Fatal("Generate() expected error in deterministic-only mode")
+	}
+
+	var detErr *DeterministicFailedError
+	if !errors.As(err, &detErr) {
+		t.Fatalf("Generate() error type = %T, want *DeterministicFailedError", err)
+	}
+
+	if detErr.Formula != "testformula" {
+		t.Errorf("Formula = %q, want %q", detErr.Formula, "testformula")
+	}
+	if detErr.Category == "" {
+		t.Error("Category should not be empty")
+	}
+	if detErr.Message == "" {
+		t.Error("Message should not be empty")
+	}
+	if detErr.Err == nil {
+		t.Error("Err (underlying) should not be nil")
+	}
+}
+
+func TestHomebrewSession_Repair_DeterministicOnly_ReturnsRepairNotSupported(t *testing.T) {
+	session := &HomebrewSession{
+		deterministicOnly: true,
+	}
+
+	ctx := context.Background()
+	_, err := session.Repair(ctx, nil)
+	if err == nil {
+		t.Fatal("Repair() expected error in deterministic-only mode")
+	}
+
+	var repairErr *RepairNotSupportedError
+	if !errors.As(err, &repairErr) {
+		t.Fatalf("Repair() error type = %T, want *RepairNotSupportedError", err)
+	}
+
+	if repairErr.BuilderType != "homebrew-deterministic" {
+		t.Errorf("BuilderType = %q, want %q", repairErr.BuilderType, "homebrew-deterministic")
+	}
+}
+
+func TestDeterministicFailedError_Fields(t *testing.T) {
+	underlying := fmt.Errorf("no binaries found in bottle")
+	err := &DeterministicFailedError{
+		Formula:  "jq",
+		Category: FailureCategoryComplexArchive,
+		Message:  "formula jq bottle contains no binaries in bin/",
+		Err:      underlying,
+	}
+
+	// Check Error() string
+	errStr := err.Error()
+	if !strings.Contains(errStr, "jq") {
+		t.Error("Error() should contain formula name")
+	}
+	if !strings.Contains(errStr, "deterministic generation failed") {
+		t.Error("Error() should indicate deterministic failure")
+	}
+
+	// Check Unwrap()
+	if err.Unwrap() != underlying {
+		t.Error("Unwrap() should return the underlying error")
+	}
+
+	// Check fields
+	if err.Category != FailureCategoryComplexArchive {
+		t.Errorf("Category = %q, want %q", err.Category, FailureCategoryComplexArchive)
+	}
+}
+
+func TestHomebrewSession_classifyDeterministicFailure(t *testing.T) {
+	session := &HomebrewSession{
+		formula: "testpkg",
+	}
+
+	tests := []struct {
+		name    string
+		err     error
+		wantCat DeterministicFailureCategory
+	}{
+		{
+			name:    "no bottles",
+			err:     fmt.Errorf("formula has no bottles available"),
+			wantCat: FailureCategoryNoBottles,
+		},
+		{
+			name:    "no bottle for platform",
+			err:     fmt.Errorf("no bottle found for platform tag: x86_64_linux"),
+			wantCat: FailureCategoryNoBottles,
+		},
+		{
+			name:    "no binaries",
+			err:     fmt.Errorf("no binaries found in bottle"),
+			wantCat: FailureCategoryComplexArchive,
+		},
+		{
+			name:    "fetch failure",
+			err:     fmt.Errorf("failed to fetch GHCR manifest: timeout"),
+			wantCat: FailureCategoryAPIError,
+		},
+		{
+			name:    "token failure",
+			err:     fmt.Errorf("token request failed: connection refused"),
+			wantCat: FailureCategoryAPIError,
+		},
+		{
+			name:    "validation failure",
+			err:     fmt.Errorf("sandbox validation failed"),
+			wantCat: FailureCategoryValidation,
+		},
+		{
+			name:    "unknown error",
+			err:     fmt.Errorf("something unexpected"),
+			wantCat: FailureCategoryAPIError,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := session.classifyDeterministicFailure(tt.err)
+			if result.Category != tt.wantCat {
+				t.Errorf("Category = %q, want %q", result.Category, tt.wantCat)
+			}
+			if result.Formula != "testpkg" {
+				t.Errorf("Formula = %q, want %q", result.Formula, "testpkg")
+			}
+			if result.Err != tt.err {
+				t.Error("Err should be the original error")
+			}
+			if result.Message == "" {
+				t.Error("Message should not be empty")
+			}
+		})
 	}
 }

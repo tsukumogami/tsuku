@@ -131,6 +131,38 @@ func (e *LLMAuthError) Suggestion() string {
 	return fmt.Sprintf("Verify %s is set correctly\nDocs: %s", e.EnvVar, e.DocsURL)
 }
 
+// DeterministicFailureCategory classifies why deterministic generation failed.
+// Values match the category enum in failure-record.schema.json.
+type DeterministicFailureCategory string
+
+const (
+	FailureCategoryNoBottles      DeterministicFailureCategory = "no_bottles"
+	FailureCategoryMissingDep     DeterministicFailureCategory = "missing_dep"
+	FailureCategoryBuildFromSrc   DeterministicFailureCategory = "build_from_source"
+	FailureCategoryComplexArchive DeterministicFailureCategory = "complex_archive"
+	FailureCategoryAPIError       DeterministicFailureCategory = "api_error"
+	FailureCategoryValidation     DeterministicFailureCategory = "validation_failed"
+)
+
+// DeterministicFailedError indicates deterministic generation failed
+// and LLM fallback was either unavailable or suppressed.
+type DeterministicFailedError struct {
+	Formula  string                       // Homebrew formula name
+	Category DeterministicFailureCategory // Failure classification
+	Message  string                       // Human-readable description (no internal paths)
+	Err      error                        // Underlying error (for logging only)
+}
+
+// Error implements the error interface.
+func (e *DeterministicFailedError) Error() string {
+	return fmt.Sprintf("deterministic generation failed for %s: %s", e.Formula, e.Message)
+}
+
+// Unwrap returns the underlying error.
+func (e *DeterministicFailedError) Unwrap() error {
+	return e.Err
+}
+
 // SandboxError indicates recipe sandbox testing failed after repair attempts.
 type SandboxError struct {
 	Tool           string // Tool name being created
