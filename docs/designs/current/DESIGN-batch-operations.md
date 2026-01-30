@@ -11,62 +11,6 @@ rationale: Combines automatic response (circuit breaker) with manual override (c
 
 Current
 
-## Implementation Issues
-
-### Milestone: [Batch Operations Control Plane](https://github.com/tsukumogami/tsuku/milestone/55)
-
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| ~~[#1197](https://github.com/tsukumogami/tsuku/issues/1197)~~ | ~~feat(ops): add batch-control.json schema and initial file~~ | ~~None~~ | ~~simple~~ |
-| ~~[#1204](https://github.com/tsukumogami/tsuku/issues/1204)~~ | ~~feat(ci): add pre-flight control file check to batch workflow~~ | ~~[#1197](https://github.com/tsukumogami/tsuku/issues/1197)~~ | ~~testable~~ |
-| ~~[#1205](https://github.com/tsukumogami/tsuku/issues/1205)~~ | ~~feat(ops): implement circuit breaker state transitions~~ | ~~[#1197](https://github.com/tsukumogami/tsuku/issues/1197), [#1204](https://github.com/tsukumogami/tsuku/issues/1204)~~ | ~~testable~~ |
-| ~~[#1206](https://github.com/tsukumogami/tsuku/issues/1206)~~ | ~~feat(ops): add rollback-batch.sh script~~ | ~~[#1197](https://github.com/tsukumogami/tsuku/issues/1197)~~ | ~~testable~~ |
-| ~~[#1207](https://github.com/tsukumogami/tsuku/issues/1207)~~ | ~~docs(ops): create batch operations runbook~~ | ~~[#1205](https://github.com/tsukumogami/tsuku/issues/1205), [#1206](https://github.com/tsukumogami/tsuku/issues/1206)~~ | ~~simple~~ |
-
-### Milestone: [Batch Operations Observability](https://github.com/tsukumogami/tsuku/milestone/56)
-
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| ~~[#1208](https://github.com/tsukumogami/tsuku/issues/1208)~~ | ~~feat(telemetry): deploy D1 schema for batch metrics~~ | ~~None~~ | ~~testable~~ |
-| ~~[#1209](https://github.com/tsukumogami/tsuku/issues/1209)~~ | ~~feat(ci): add checksum drift monitoring workflow~~ | ~~None~~ | ~~critical~~ |
-| ~~[#1210](https://github.com/tsukumogami/tsuku/issues/1210)~~ | ~~feat(ci): add post-batch metrics upload to workflow~~ | ~~[#1208](https://github.com/tsukumogami/tsuku/issues/1208)~~ | ~~testable~~ |
-
-### Dependency Graph
-
-```mermaid
-graph TD
-    subgraph ControlPlane["Batch Operations Control Plane"]
-        I1197["#1197: batch-control.json schema"]
-        I1204["#1204: pre-flight control check"]
-        I1205["#1205: circuit breaker transitions"]
-        I1206["#1206: rollback-batch.sh script"]
-        I1207["#1207: batch operations runbook"]
-    end
-
-    subgraph Observability["Batch Operations Observability"]
-        I1208["#1208: D1 schema for metrics"]
-        I1209["#1209: checksum drift monitoring"]
-        I1210["#1210: post-batch metrics upload"]
-    end
-
-    I1197 --> I1204
-    I1197 --> I1205
-    I1197 --> I1206
-    I1204 --> I1205
-    I1205 --> I1207
-    I1206 --> I1207
-    I1208 --> I1210
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1197,I1204,I1205,I1206,I1207,I1208,I1209,I1210 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
-
 ## Upstream Design Reference
 
 This design implements part of [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md).
