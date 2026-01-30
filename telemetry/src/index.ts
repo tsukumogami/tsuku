@@ -1,10 +1,36 @@
 export interface Env {
   ANALYTICS: AnalyticsEngineDataset;
+  BATCH_METRICS: D1Database;
   CF_ACCOUNT_ID: string;
   CF_API_TOKEN: string;
   VERSION_TOKEN: string;
+  BATCH_METRICS_TOKEN: string;
   COMMIT_SHA: string;
   DEPLOY_TIME: string;
+}
+
+interface RecipeResult {
+  recipe_name: string;
+  ecosystem: string;
+  result: string;
+  error_category?: string;
+  error_message?: string;
+  duration_seconds?: number;
+}
+
+interface BatchMetricsPayload {
+  batch_id: string;
+  ecosystem: string;
+  started_at: string;
+  completed_at?: string;
+  total_recipes: number;
+  passed: number;
+  failed: number;
+  skipped: number;
+  success_rate: number;
+  macos_minutes?: number;
+  linux_minutes?: number;
+  results: RecipeResult[];
 }
 
 const SCHEMA_VERSION = "1";
@@ -212,6 +238,31 @@ function validateLLMEvent(event: LLMTelemetryEvent): string | null {
       break;
   }
 
+  return null;
+}
+
+function validateBatchMetrics(payload: BatchMetricsPayload): string | null {
+  if (!payload.batch_id || typeof payload.batch_id !== "string") {
+    return "batch_id is required";
+  }
+  if (!payload.ecosystem || typeof payload.ecosystem !== "string") {
+    return "ecosystem is required";
+  }
+  if (!payload.started_at || typeof payload.started_at !== "string") {
+    return "started_at is required";
+  }
+  if (typeof payload.total_recipes !== "number") {
+    return "total_recipes is required";
+  }
+  if (!Array.isArray(payload.results)) {
+    return "results array is required";
+  }
+  for (let i = 0; i < payload.results.length; i++) {
+    const r = payload.results[i];
+    if (!r.recipe_name) return `results[${i}].recipe_name is required`;
+    if (!r.ecosystem) return `results[${i}].ecosystem is required`;
+    if (!r.result) return `results[${i}].result is required`;
+  }
   return null;
 }
 
@@ -558,6 +609,81 @@ export default {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         }
       );
+    }
+
+    // POST /batch-metrics - upload batch validation results to D1
+    if (request.method === "POST" && url.pathname === "/batch-metrics") {
+      const authHeader = request.headers.get("Authorization");
+      if (!env.BATCH_METRICS_TOKEN || !authHeader || authHeader !== `Bearer ${env.BATCH_METRICS_TOKEN}`) {
+        return new Response("Unauthorized", { status: 401, headers: corsHeaders });
+      }
+
+      let payload: BatchMetricsPayload;
+      try {
+        payload = (await request.json()) as BatchMetricsPayload;
+      } catch {
+        return new Response("Bad request: invalid JSON", { status: 400, headers: corsHeaders });
+      }
+
+      const validationError = validateBatchMetrics(payload);
+      if (validationError) {
+        return new Response(`Bad request: ${validationError}`, { status: 400, headers: corsHeaders });
+      }
+
+      try {
+        const batchResult = await env.BATCH_METRICS.prepare(
+          `INSERT INTO batch_runs (batch_id, ecosystem, started_at, completed_at, total_recipes, passed, failed, skipped, success_rate, macos_minutes, linux_minutes)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+          .bind(
+            payload.batch_id,
+            payload.ecosystem,
+            payload.started_at,
+            payload.completed_at || null,
+            payload.total_recipes,
+            payload.passed,
+            payload.failed,
+            payload.skipped,
+            payload.success_rate,
+            payload.macos_minutes || 0,
+            payload.linux_minutes || 0
+          )
+          .run();
+
+        const batchRunId = batchResult.meta.last_row_id;
+
+        if (payload.results.length > 0) {
+          const stmt = env.BATCH_METRICS.prepare(
+            `INSERT INTO recipe_results (batch_run_id, recipe_name, ecosystem, result, error_category, error_message, duration_seconds)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`
+          );
+
+          const inserts = payload.results.map((r) =>
+            stmt.bind(
+              batchRunId,
+              r.recipe_name,
+              r.ecosystem,
+              r.result,
+              r.error_category || null,
+              r.error_message || null,
+              r.duration_seconds || 0
+            )
+          );
+
+          await env.BATCH_METRICS.batch(inserts);
+        }
+
+        return new Response(
+          JSON.stringify({ batch_run_id: batchRunId }),
+          { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Unknown error";
+        return new Response(
+          JSON.stringify({ error: "Failed to insert batch metrics", detail: message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
     }
 
     return new Response("Not found", { status: 404, headers: corsHeaders });

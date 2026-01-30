@@ -56,6 +56,12 @@ jobs:
           echo "Batch processing placeholder"
           echo "Disabled ecosystems: ${{ needs.pre-flight.outputs.disabled_ecosystems }}"
 
+          # Output placeholder metrics for upload step
+          # When real batch validation is implemented, replace this with actual results
+          BATCH_ID="${{ github.run_id }}-$(date -u +%Y%m%d)"
+          echo "batch_id=$BATCH_ID" >> $GITHUB_OUTPUT
+          echo "started_at=$(date -u -Iseconds)" >> $GITHUB_OUTPUT
+
       - name: Update circuit breaker state
         if: always() && steps.breaker.outputs.skip != 'true'
         run: |
@@ -80,3 +86,51 @@ jobs:
             git pull --rebase origin main && git push && break
             sleep $((i * 2))
           done || echo "::warning::Control file update failed, will self-heal on next run"
+
+      - name: Upload batch metrics
+        if: always() && steps.validate.outputs.batch_id != ''
+        continue-on-error: true
+        env:
+          BATCH_METRICS_TOKEN: ${{ secrets.BATCH_METRICS_TOKEN }}
+          TELEMETRY_URL: https://telemetry.tsuku.dev
+        run: |
+          BATCH_ID="${{ steps.validate.outputs.batch_id }}"
+          STARTED_AT="${{ steps.validate.outputs.started_at }}"
+          COMPLETED_AT="$(date -u -Iseconds)"
+
+          # Build payload from batch results
+          # When real validation is implemented, populate from actual results
+          PAYLOAD=$(jq -n \
+            --arg batch_id "$BATCH_ID" \
+            --arg ecosystem "all" \
+            --arg started_at "$STARTED_AT" \
+            --arg completed_at "$COMPLETED_AT" \
+            '{
+              batch_id: $batch_id,
+              ecosystem: $ecosystem,
+              started_at: $started_at,
+              completed_at: $completed_at,
+              total_recipes: 0,
+              passed: 0,
+              failed: 0,
+              skipped: 0,
+              success_rate: 0,
+              macos_minutes: 0,
+              linux_minutes: 0,
+              results: []
+            }')
+
+          RESPONSE=$(curl -sf -w "\n%{http_code}" -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $BATCH_METRICS_TOKEN" \
+            -d "$PAYLOAD" \
+            "$TELEMETRY_URL/batch-metrics" 2>&1) || true
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          if [ "$HTTP_CODE" = "201" ]; then
+            echo "Batch metrics uploaded: $BODY"
+          else
+            echo "::warning::Failed to upload batch metrics (HTTP $HTTP_CODE): $BODY"
+          fi
