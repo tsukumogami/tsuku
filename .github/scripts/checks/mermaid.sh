@@ -18,14 +18,18 @@
 #   MM13: If subgraph styling present, colors must be standardized
 #   MM14: Legend line required after diagram
 #   MM15: Class must match actual issue status (requires gh CLI)
+#   MM16: needs-design label cannot have class 'ready'
+#   MM17: Node with no open blockers cannot have class 'blocked'
+#   MM18: Node with open blocker cannot have class 'ready'
 #
 # Usage:
-#   mermaid.sh [-q|--quiet] [--skip-status-check] [--pr <number>] <doc-path>
+#   mermaid.sh [-q|--quiet] [--skip-status-check] [--github-state <file>] [--pr <number>] <doc-path>
 #
 # Options:
-#   -q, --quiet          Suppress [PASS] messages, only show failures
-#   --skip-status-check  Skip MM15 (GitHub API status validation)
-#   --pr <number>        PR number; issues closed by this PR expect 'done' class
+#   -q, --quiet              Suppress [PASS] messages, only show failures
+#   --skip-status-check      Skip MM15-MM18 (GitHub status validation)
+#   --github-state <file>    Read node state from JSON file instead of GitHub API
+#   --pr <number>            PR number; issues closed by this PR expect 'done' class
 #
 # Exit codes:
 #   0 - All checks passed
@@ -50,6 +54,7 @@ declare -A VALID_CLASS_COLORS=(
 # Parse arguments
 SKIP_STATUS_CHECK=0
 PR_NUMBER=""
+GITHUB_STATE_FILE=""
 DOC_PATH=""
 
 while [[ $# -gt 0 ]]; do
@@ -61,6 +66,14 @@ while [[ $# -gt 0 ]]; do
         --skip-status-check)
             SKIP_STATUS_CHECK=1
             shift
+            ;;
+        --github-state)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --github-state requires a file path" >&2
+                exit $EXIT_ERROR
+            fi
+            GITHUB_STATE_FILE="$2"
+            shift 2
             ;;
         --pr)
             if [[ $# -lt 2 ]]; then
@@ -378,7 +391,7 @@ fi
 
 # MM15: Validate class matches actual issue status
 # Only run if gh CLI is available, we have diagram nodes, and --skip-status-check not set
-if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && command -v gh &>/dev/null && [[ -n "$DIAGRAM_NODES" ]]; then
+if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && { [[ -n "$GITHUB_STATE_FILE" ]] || command -v gh &>/dev/null; } && [[ -n "$DIAGRAM_NODES" ]]; then
     # Extract issues being closed by this PR (if --pr was provided)
     CLOSING_ISSUES=""
     if [[ -n "$PR_NUMBER" ]]; then
@@ -415,99 +428,143 @@ if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && command -v gh &>/dev/null && [[ -n "$DIAG
         fi
     done <<< "$MERMAID_CONTENT"
 
-    # Get repo name for milestone API queries
-    REPO_NWO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || true)
+    # First pass: get state for all nodes
+    declare -A NODE_GITHUB_STATE   # OPEN or CLOSED
+    declare -A NODE_NEEDS_DESIGN   # true or false
+    declare -A NODE_LABELS         # human-readable label
+    declare -A NODE_IS_CLOSING     # true if PR closes it
 
-    # Query GitHub for each node (issues and milestones) and compute expected class
+    if [[ -n "$GITHUB_STATE_FILE" ]]; then
+        # Load state from JSON file (for testing)
+        while IFS= read -r node; do
+            [[ -z "$node" ]] && continue
+            NODE_DATA=$(jq -r --arg n "$node" '.[$n] // empty' "$GITHUB_STATE_FILE")
+            if [[ -z "$NODE_DATA" ]]; then
+                continue
+            fi
+            NODE_GITHUB_STATE[$node]=$(echo "$NODE_DATA" | jq -r '.state')
+            HAS_ND=$(echo "$NODE_DATA" | jq -r '.labels // [] | map(select(. == "needs-design")) | length > 0')
+            NODE_NEEDS_DESIGN[$node]="$HAS_ND"
+            if [[ "$node" =~ ^M ]]; then
+                NODE_LABELS[$node]="milestone #${node#M}"
+            else
+                NODE_LABELS[$node]="issue #${node#I}"
+            fi
+            NODE_IS_CLOSING[$node]="false"
+            if [[ "$node" =~ ^I[0-9]+$ && -n "$CLOSING_ISSUES" ]]; then
+                ISSUE_NUM="${node#I}"
+                if echo "$CLOSING_ISSUES" | grep -qE "^${ISSUE_NUM}$"; then
+                    NODE_IS_CLOSING[$node]="true"
+                fi
+            fi
+        done <<< "$DIAGRAM_NODES"
+    else
+        # Query GitHub API
+        REPO_NWO=$(gh repo view --json nameWithOwner -q .nameWithOwner 2>/dev/null || true)
+
+        while IFS= read -r node; do
+            [[ -z "$node" ]] && continue
+
+            if [[ "$node" =~ ^M[0-9]+$ ]]; then
+                MILESTONE_NUM="${node#M}"
+                if [[ -z "$REPO_NWO" ]]; then
+                    continue
+                fi
+                MILESTONE_DATA=$(gh api "repos/${REPO_NWO}/milestones/${MILESTONE_NUM}" 2>/dev/null || true)
+                if [[ -z "$MILESTONE_DATA" ]]; then
+                    continue
+                fi
+                MS_STATE=$(echo "$MILESTONE_DATA" | jq -r '.state')
+                if [[ "$MS_STATE" == "closed" ]]; then
+                    NODE_GITHUB_STATE[$node]="CLOSED"
+                else
+                    NODE_GITHUB_STATE[$node]="OPEN"
+                fi
+                NODE_NEEDS_DESIGN[$node]="false"
+                NODE_LABELS[$node]="milestone #$MILESTONE_NUM"
+            else
+                ISSUE_NUM="${node#I}"
+                ISSUE_DATA=$(gh issue view "$ISSUE_NUM" --json state,labels 2>/dev/null || true)
+                if [[ -z "$ISSUE_DATA" ]]; then
+                    continue
+                fi
+                NODE_GITHUB_STATE[$node]=$(echo "$ISSUE_DATA" | jq -r '.state')
+                NODE_NEEDS_DESIGN[$node]=$(echo "$ISSUE_DATA" | jq -r '.labels[]?.name' 2>/dev/null | grep -qE '^needs-design$' && echo "true" || echo "false")
+                NODE_LABELS[$node]="issue #$ISSUE_NUM"
+            fi
+
+            NODE_IS_CLOSING[$node]="false"
+            if [[ "$node" =~ ^I[0-9]+$ && -n "$CLOSING_ISSUES" ]]; then
+                ISSUE_NUM="${node#I}"
+                if echo "$CLOSING_ISSUES" | grep -qE "^${ISSUE_NUM}$"; then
+                    NODE_IS_CLOSING[$node]="true"
+                fi
+            fi
+        done <<< "$DIAGRAM_NODES"
+    fi
+
+    # Helper: check if a node has any open blockers (using GitHub state)
+    node_has_open_blocker() {
+        local node="$1"
+        local blocker_list="${BLOCKERS[$node]:-}"
+        for blocker in $blocker_list; do
+            local b_state="${NODE_GITHUB_STATE[$blocker]:-}"
+            local b_closing="${NODE_IS_CLOSING[$blocker]:-false}"
+            if [[ "$b_state" != "CLOSED" && "$b_closing" != "true" ]]; then
+                return 0
+            fi
+        done
+        return 1
+    }
+
+    # Second pass: validate class assignments against GitHub state
     while IFS= read -r node; do
         [[ -z "$node" ]] && continue
 
-        NODE_STATE=""
-        HAS_NEEDS_DESIGN="false"
-        NODE_LABEL=""
+        NODE_STATE="${NODE_GITHUB_STATE[$node]:-}"
+        [[ -z "$NODE_STATE" ]] && continue
 
-        if [[ "$node" =~ ^M[0-9]+$ ]]; then
-            # Milestone node: query milestone API for open/closed state
-            MILESTONE_NUM=$(echo "$node" | sed 's/^M//')
-            if [[ -z "$REPO_NWO" ]]; then
-                continue
-            fi
-            MILESTONE_DATA=$(gh api "repos/${REPO_NWO}/milestones/${MILESTONE_NUM}" 2>/dev/null || true)
-            if [[ -z "$MILESTONE_DATA" ]]; then
-                continue
-            fi
-            MS_STATE=$(echo "$MILESTONE_DATA" | jq -r '.state')
-            if [[ "$MS_STATE" == "closed" ]]; then
-                NODE_STATE="CLOSED"
-            else
-                NODE_STATE="OPEN"
-            fi
-            NODE_LABEL="milestone #$MILESTONE_NUM"
-        else
-            # Issue node: query issue API
-            ISSUE_NUM=$(echo "$node" | sed 's/^I//')
-            ISSUE_DATA=$(gh issue view "$ISSUE_NUM" --json state,labels 2>/dev/null || true)
-            if [[ -z "$ISSUE_DATA" ]]; then
-                continue
-            fi
-            NODE_STATE=$(echo "$ISSUE_DATA" | jq -r '.state')
-            HAS_NEEDS_DESIGN=$(echo "$ISSUE_DATA" | jq -r '.labels[]?.name' 2>/dev/null | grep -qE '^needs-design$' && echo "true" || echo "false")
-            NODE_LABEL="issue #$ISSUE_NUM"
-        fi
-
-        # Check if this issue is being closed by the PR (only for issue nodes)
-        IS_CLOSING="false"
-        if [[ "$node" =~ ^I[0-9]+$ && -n "$CLOSING_ISSUES" ]]; then
-            ISSUE_NUM=$(echo "$node" | sed 's/^I//')
-            if echo "$CLOSING_ISSUES" | grep -qE "^${ISSUE_NUM}$"; then
-                IS_CLOSING="true"
-            fi
-        fi
-
-        # Determine expected class
-        EXPECTED_CLASS=""
-        if [[ "$IS_CLOSING" == "true" || "$NODE_STATE" == "CLOSED" ]]; then
-            EXPECTED_CLASS="done"
-        else
-            # Check if any blocker is not done
-            HAS_OPEN_BLOCKER="false"
-            BLOCKER_LIST="${BLOCKERS[$node]:-}"
-            for blocker in $BLOCKER_LIST; do
-                BLOCKER_CLASS="${ACTUAL_CLASS[$blocker]:-}"
-                if [[ "$BLOCKER_CLASS" != "done" ]]; then
-                    HAS_OPEN_BLOCKER="true"
-                    break
-                fi
-            done
-
-            if [[ "$HAS_OPEN_BLOCKER" == "true" ]]; then
-                EXPECTED_CLASS="blocked"
-            elif [[ "$HAS_NEEDS_DESIGN" == "true" ]]; then
-                EXPECTED_CLASS="needsDesign"
-            else
-                EXPECTED_CLASS="ready"
-            fi
-        fi
-
-        # Build reason string for error context
-        REASON=""
-        if [[ "$IS_CLOSING" == "true" ]]; then
-            REASON="(PR closes this issue)"
-        elif [[ "$NODE_STATE" == "CLOSED" ]]; then
-            REASON="($NODE_LABEL is closed)"
-        elif [[ "$HAS_OPEN_BLOCKER" == "true" ]]; then
-            # Format blocker list as "I123, M456" etc.
-            REASON="(blocked by $(echo "$BLOCKER_LIST" | sed 's/^ //; s/ /, /g'))"
-        elif [[ "$HAS_NEEDS_DESIGN" == "true" ]]; then
-            REASON="(is not blocked and has 'needs-design' label)"
-        else
-            REASON="($NODE_LABEL is open, no blocking dependencies)"
-        fi
-
-        # Compare with actual class
+        HAS_NEEDS_DESIGN="${NODE_NEEDS_DESIGN[$node]:-false}"
+        NODE_LABEL="${NODE_LABELS[$node]:-$node}"
+        IS_CLOSING="${NODE_IS_CLOSING[$node]:-false}"
         ACTUAL="${ACTUAL_CLASS[$node]:-}"
-        if [[ -n "$EXPECTED_CLASS" && -n "$ACTUAL" && "$ACTUAL" != "$EXPECTED_CLASS" ]]; then
-            emit_fail "MM15: Node $node has class '$ACTUAL' but $NODE_LABEL requires '$EXPECTED_CLASS' $REASON. See: .github/scripts/docs/MM15.md"
+        [[ -z "$ACTUAL" ]] && continue
+
+        # MM15: Closed/closing issues must be 'done', open issues must not be 'done'
+        if [[ "$IS_CLOSING" == "true" || "$NODE_STATE" == "CLOSED" ]]; then
+            if [[ "$ACTUAL" != "done" ]]; then
+                if [[ "$IS_CLOSING" == "true" ]]; then
+                    REASON="(PR closes this issue)"
+                else
+                    REASON="($NODE_LABEL is closed)"
+                fi
+                emit_fail "MM15: Node $node has class '$ACTUAL' but $NODE_LABEL requires 'done' $REASON. See: .github/scripts/docs/MM15.md"
+                FAILED=1
+            fi
+            continue
+        fi
+        if [[ "$ACTUAL" == "done" && "$NODE_STATE" == "OPEN" ]]; then
+            emit_fail "MM15: Node $node has class 'done' but $NODE_LABEL is open. See: .github/scripts/docs/MM15.md"
+            FAILED=1
+            continue
+        fi
+
+        # MM16: needs-design label cannot have class 'ready'
+        if [[ "$HAS_NEEDS_DESIGN" == "true" && "$ACTUAL" == "ready" ]]; then
+            emit_fail "MM16: Node $node has class 'ready' but $NODE_LABEL has 'needs-design' label, expected 'needsDesign'. See: .github/scripts/docs/MM16.md"
+            FAILED=1
+        fi
+
+        # MM17: No open blockers cannot show as 'blocked'
+        if [[ "$ACTUAL" == "blocked" ]] && ! node_has_open_blocker "$node"; then
+            emit_fail "MM17: Node $node has class 'blocked' but has no open blocking dependencies. See: .github/scripts/docs/MM17.md"
+            FAILED=1
+        fi
+
+        # MM18: Has open blocker cannot show as 'ready'
+        if [[ "$ACTUAL" == "ready" ]] && node_has_open_blocker "$node"; then
+            BLOCKER_LIST="${BLOCKERS[$node]:-}"
+            emit_fail "MM18: Node $node has class 'ready' but is blocked by open dependencies ($(echo "$BLOCKER_LIST" | sed 's/^ //; s/ /, /g')). See: .github/scripts/docs/MM18.md"
             FAILED=1
         fi
     done <<< "$DIAGRAM_NODES"
