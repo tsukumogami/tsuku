@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: Developers working on tsuku lack a zero-ceremony way to run against isolated environments without interfering with each other or the host's real installation.
 decision: Use build-time ldflags to give Makefile-built binaries a different default home directory, stop exporting TSUKU_HOME from the install script, and add tsuku shellenv and tsuku doctor commands for PATH setup and environment validation.
 rationale: Build-time defaults handle isolation with zero ceremony. shellenv and doctor are general-purpose commands that serve both contributors (configuring PATH for dev builds) and end users (alternative to the install script's env file, environment health checks).
@@ -9,7 +9,7 @@ rationale: Build-time defaults handle isolation with zero ceremony. shellenv and
 
 ## Status
 
-Accepted
+Current
 
 ## Context and Problem Statement
 
