@@ -37,7 +37,8 @@ M57 (Visibility Infrastructure Schemas) is complete. The schema, validation scri
 ### Scope
 
 **In scope:**
-- `--merge` flag for seed-queue.sh (additive updates)
+- Queue lifecycle model: status transitions, ownership, deduplication rules
+- `--merge` flag for seed-queue.sh (additive updates that respect existing statuses)
 - GitHub Actions workflow with `workflow_dispatch` trigger
 - Schema validation as a workflow step
 - Graduation criteria for enabling a cron schedule
@@ -47,6 +48,7 @@ M57 (Visibility Infrastructure Schemas) is complete. The schema, validation scri
 - Additional ecosystem sources (Cargo, npm, PyPI, etc.) -- these follow the same pattern and will be added later
 - Backend storage migration (queue stays as a JSON file)
 - Changes to the seed script's tier assignment logic
+- Version-aware re-queuing (the queue tracks package names, not versions)
 
 ## Decision Drivers
 
@@ -165,7 +167,77 @@ The merge logic belongs in the script, not the workflow. This keeps the script s
 
 ### Overview
 
-Two changes: (1) add `--merge` to `seed-queue.sh`, and (2) create `.github/workflows/seed-queue.yml`.
+Two changes: (1) add `--merge` to `seed-queue.sh`, and (2) create `.github/workflows/seed-queue.yml`. But these changes only make sense with a clear model of how the queue works as a queue -- who produces items, who consumes them, and what happens to items after they're processed.
+
+### Queue Lifecycle
+
+The queue file serves two roles: it's the input for the batch pipeline (what to process next) and the record of what's been processed (what already succeeded or failed). These roles are in tension -- a pure queue would remove consumed items, but we need history to avoid re-processing.
+
+**Status transitions:**
+
+```
+                seed-queue.sh
+                     │
+                     ▼
+              ┌─── pending ◄──── (re-seed on failed after fix)
+              │      │
+              │      │  batch pipeline picks up
+              │      ▼
+              │  in_progress
+              │      │
+              ├──────┤
+              │      │
+              ▼      ▼
+           failed  success
+              │
+              │  (manual fix or dep added)
+              ▼
+           pending  (re-queued)
+```
+
+- **pending**: Ready for the batch pipeline to pick up. The seed script creates all new entries in this state.
+- **in_progress**: The batch pipeline has claimed this item. Only the pipeline writes this status.
+- **success**: Recipe was generated and merged. The item stays in the queue as a record, preventing the seed script from re-adding it.
+- **failed**: Generation or validation failed. Stays in the queue with failure details in the failure record files (`data/failures/`). Can be moved back to `pending` when the blocking issue is resolved.
+- **skipped**: Deliberately excluded (e.g., not a CLI tool, duplicate of another source). Stays in the queue to prevent re-adding.
+
+**Who writes what:**
+
+| Actor | Creates entries? | Changes status? | To which statuses? |
+|-------|-----------------|-----------------|-------------------|
+| seed-queue.sh | Yes (pending) | No | -- |
+| batch pipeline | No | Yes | pending → in_progress → success/failed |
+| operator (manual) | No | Yes | failed → pending (re-queue), any → skipped |
+
+The seed script never changes the status of an existing entry. It only adds new entries as `pending`. This separation is critical: the seed script doesn't need to know about the batch pipeline's state machine.
+
+**What "consumed" means:**
+
+Items are never removed from the file. An item with `status: success` is "consumed" -- it stays as a record that prevents re-seeding and provides historical context. This is a deliberate choice: the file is small (hundreds to low thousands of entries), and keeping history avoids the need for a separate "processed items" store.
+
+**How the seed script avoids duplicates:**
+
+When `--merge` is set, the script checks the `id` field of every existing entry regardless of status. If `homebrew:ripgrep` exists with any status (`pending`, `success`, `failed`, etc.), the script doesn't add it again. This means:
+
+- A `success` item won't be re-queued just because it's still popular on Homebrew
+- A `failed` item won't be re-queued automatically by the seed script (it needs manual intervention or a separate re-queue mechanism)
+- A `skipped` item stays skipped
+
+**When items should be re-queued:**
+
+The seed script doesn't handle re-queuing. Re-queuing happens through separate mechanisms:
+
+1. **Failed items after a fix**: When a blocking dependency is added or a builder bug is fixed, an operator (or the gap analysis script) changes the status from `failed` back to `pending`. The batch pipeline picks it up on its next run.
+
+2. **Upstream version changes**: This design does NOT address version-aware re-queuing. The queue tracks package names, not versions. Version-aware refresh is a separate concern for when the batch pipeline matures. For now, if a recipe needs updating because the upstream tool released a new version, that's handled by the existing `tsuku update` workflow, not the seed queue.
+
+3. **New packages from the source**: The seed script handles this naturally. When the Homebrew API returns a package that isn't in the queue, it gets added as `pending`. This is the primary growth mechanism.
+
+**Queue growth and pruning:**
+
+The queue grows monotonically (items are added, never removed). At Homebrew scale with a limit of 100, the file stays under 200 entries. Even at 500 entries across multiple ecosystems, the file is ~50 KB of JSON. Pruning isn't needed for the foreseeable future.
+
+If the file does grow large enough to be a concern, pruning `success` entries older than N months is safe -- the batch pipeline already has the merged recipes. But this is future work, not part of this design.
 
 ### Script Changes: --merge Flag
 
