@@ -1,0 +1,86 @@
+name: Checksum Drift Monitoring
+
+on:
+  schedule:
+    # Run daily at 5 AM UTC
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check-drift:
+    name: Check Checksum Drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run checksum drift check
+        id: drift
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          chmod +x scripts/check-checksum-drift.sh
+          if scripts/check-checksum-drift.sh internal/recipe/recipes; then
+            echo "drift=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "drift=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create issue on drift
+        if: steps.drift.outputs.drift == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RESULTS_FILE="/tmp/checksum-drift-results.json"
+          if [[ ! -f "$RESULTS_FILE" ]]; then
+            echo "::warning::Drift detected but no results file found"
+            exit 0
+          fi
+
+          # Build issue body from results
+          BODY="## Checksum Drift Detected"
+          BODY+=$'\n\n'
+          BODY+="The scheduled checksum drift monitor found changes in upstream checksums."
+          BODY+=$'\n'
+          BODY+="This may indicate a supply chain compromise, upstream rebuild, or mirror inconsistency."
+          BODY+=$'\n\n'
+          BODY+="### Affected Recipes"
+          BODY+=$'\n\n'
+
+          COUNT=$(jq length "$RESULTS_FILE")
+          for i in $(seq 0 $((COUNT - 1))); do
+            NAME=$(jq -r ".[$i].name" "$RESULTS_FILE")
+            VERSION=$(jq -r ".[$i].version" "$RESULTS_FILE")
+            RECIPE=$(jq -r ".[$i].recipe" "$RESULTS_FILE")
+            URL=$(jq -r ".[$i].url" "$RESULTS_FILE")
+            EXPECTED=$(jq -r ".[$i].expected" "$RESULTS_FILE")
+            ACTUAL=$(jq -r ".[$i].actual" "$RESULTS_FILE")
+
+            BODY+="#### $NAME v$VERSION"
+            BODY+=$'\n\n'
+            BODY+="- **Recipe**: \`$RECIPE\`"
+            BODY+=$'\n'
+            BODY+="- **Checksum URL**: $URL"
+            BODY+=$'\n'
+            BODY+="- **Expected**: \`$EXPECTED\`"
+            BODY+=$'\n'
+            BODY+="- **Actual**: \`$ACTUAL\`"
+            BODY+=$'\n\n'
+          done
+
+          BODY+="### Next Steps"
+          BODY+=$'\n\n'
+          BODY+="1. Verify the upstream source has not been compromised"
+          BODY+=$'\n'
+          BODY+="2. If legitimate rebuild, update the stored baseline in \`data/checksums/\`"
+          BODY+=$'\n'
+          BODY+="3. If suspicious, investigate further and consider removing the recipe"
+
+          gh issue create \
+            --title "Checksum drift detected: $(jq -r '[.[].name] | join(", ")' "$RESULTS_FILE")" \
+            --body "$BODY" \
+            --label "security" \
+            --label "needs-triage"
