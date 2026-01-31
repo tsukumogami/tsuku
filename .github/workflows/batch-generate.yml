@@ -76,13 +76,18 @@ jobs:
           BRANCH="batch/${{ inputs.ecosystem }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
           git add recipes/ data/
+          git reset HEAD -- data/batch-summary.md 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "feat(recipes): add batch $(date +%Y-%m-%d) ${{ inputs.ecosystem }} recipes"
           git push -u origin "$BRANCH"
+          BODY="Automated batch generation for ${{ inputs.ecosystem }} ecosystem."
+          if [ -f data/batch-summary.md ]; then
+            BODY=$(cat data/batch-summary.md)
+          fi
           gh pr create \
             --title "feat(recipes): add batch ${{ inputs.ecosystem }} recipes" \
-            --body "Automated batch generation for ${{ inputs.ecosystem }} ecosystem." \
+            --body "$BODY" \
             --base main
         env:
           GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}

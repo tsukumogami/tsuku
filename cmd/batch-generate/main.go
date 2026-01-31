@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/tsukumogami/tsuku/internal/batch"
 	"github.com/tsukumogami/tsuku/internal/seed"
@@ -51,6 +52,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(os.Stderr, "Batch complete: %d generated, %d failed, %d blocked (%d total)\n",
-		result.Generated, result.Failed, result.Blocked, result.Total)
+	fmt.Fprintf(os.Stderr, "Batch complete: %d succeeded, %d failed, %d blocked (%d total)\n",
+		result.Succeeded, result.Failed, result.Blocked, result.Total)
+
+	// Write summary for use in PR body.
+	summaryPath := filepath.Join(*outputDir, "..", "data", "batch-summary.md")
+	if err := os.WriteFile(summaryPath, []byte(result.Summary()), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "warning: could not write summary: %v\n", err)
+	}
 }
