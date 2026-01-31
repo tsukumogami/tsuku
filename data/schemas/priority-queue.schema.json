@@ -49,8 +49,8 @@
           },
           "status": {
             "type": "string",
-            "enum": ["pending", "in_progress", "success", "failed", "skipped"],
-            "description": "Current processing status"
+            "enum": ["pending", "in_progress", "success", "failed", "blocked", "skipped"],
+            "description": "Current processing status. Blocked means validation failed due to missing dependencies that don't have recipes yet."
           },
           "added_at": {
             "type": "string",
