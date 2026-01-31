@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"strings"
 	"testing"
@@ -310,5 +311,115 @@ func TestClassifyInstallError(t *testing.T) {
 				t.Errorf("classifyInstallError() = %d, want %d", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestCategoryFromExitCode(t *testing.T) {
+	tests := []struct {
+		code int
+		want string
+	}{
+		{ExitRecipeNotFound, "recipe_not_found"},
+		{ExitNetwork, "network_error"},
+		{ExitDependencyFailed, "missing_dep"},
+		{ExitInstallFailed, "install_failed"},
+		{99, "install_failed"},
+	}
+	for _, tt := range tests {
+		got := categoryFromExitCode(tt.code)
+		if got != tt.want {
+			t.Errorf("categoryFromExitCode(%d) = %q, want %q", tt.code, got, tt.want)
+		}
+	}
+}
+
+func TestExtractMissingRecipes(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want []string
+	}{
+		{
+			name: "single missing recipe",
+			err:  fmt.Errorf("registry: recipe dav1d not found in registry"),
+			want: []string{"dav1d"},
+		},
+		{
+			name: "multiple missing recipes",
+			err:  fmt.Errorf("failed to install dependency 'foo': registry: recipe foo not found in registry\nfailed to install dependency 'bar': registry: recipe bar not found in registry"),
+			want: []string{"foo", "bar"},
+		},
+		{
+			name: "deduplicates",
+			err:  fmt.Errorf("recipe dav1d not found in registry\nretry: recipe dav1d not found in registry"),
+			want: []string{"dav1d"},
+		},
+		{
+			name: "no matches returns empty slice",
+			err:  fmt.Errorf("extraction failed: bad tarball"),
+			want: []string{},
+		},
+		{
+			name: "wrapped error",
+			err:  fmt.Errorf("install error: %w", fmt.Errorf("registry: recipe libx265 not found in registry")),
+			want: []string{"libx265"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := extractMissingRecipes(tt.err)
+			if len(got) != len(tt.want) {
+				t.Fatalf("extractMissingRecipes() returned %d items, want %d: %v", len(got), len(tt.want), got)
+			}
+			for i, name := range tt.want {
+				if got[i] != name {
+					t.Errorf("extractMissingRecipes()[%d] = %q, want %q", i, got[i], name)
+				}
+			}
+		})
+	}
+}
+
+func TestInstallErrorJSON(t *testing.T) {
+	resp := installError{
+		Status:         "error",
+		Category:       "missing_dep",
+		Message:        "failed to install dependency 'foo'",
+		MissingRecipes: []string{"foo", "bar"},
+		ExitCode:       8,
+	}
+	data, err := json.Marshal(resp)
+	if err != nil {
+		t.Fatalf("json.Marshal failed: %v", err)
+	}
+
+	var parsed map[string]interface{}
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		t.Fatalf("json.Unmarshal failed: %v", err)
+	}
+
+	if parsed["status"] != "error" {
+		t.Errorf("status = %v, want %q", parsed["status"], "error")
+	}
+	if parsed["category"] != "missing_dep" {
+		t.Errorf("category = %v, want %q", parsed["category"], "missing_dep")
+	}
+	if parsed["exit_code"].(float64) != 8 {
+		t.Errorf("exit_code = %v, want 8", parsed["exit_code"])
+	}
+	recipes := parsed["missing_recipes"].([]interface{})
+	if len(recipes) != 2 {
+		t.Errorf("missing_recipes length = %d, want 2", len(recipes))
+	}
+}
+
+func TestInstallJSONFlag(t *testing.T) {
+	flag := installCmd.Flags().Lookup("json")
+	if flag == nil {
+		t.Fatal("--json flag not registered")
+	}
+	if flag.DefValue != "false" {
+		t.Errorf("--json default = %q, want %q", flag.DefValue, "false")
 	}
 }
