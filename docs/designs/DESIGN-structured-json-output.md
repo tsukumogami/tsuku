@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: The CLI lumps all install failures into exit code 6 and provides no machine-readable output, forcing programmatic consumers to parse error text with regex.
 decision: Fix exit code conflation in tsuku install (use code 8 for dependency failures, code 3 for missing recipes) and add a --json flag that emits structured error details on failure.
 rationale: Correct exit codes are the highest-value change since the orchestrator already uses categoryFromExitCode(). Adding --json provides richer detail for consumers that need it, following the existing pattern from validate and plan commands.
@@ -9,7 +9,39 @@ rationale: Correct exit codes are the highest-value change since the orchestrato
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Structured Install Output](https://github.com/tsukumogami/tsuku/milestone/58)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1288](https://github.com/tsukumogami/tsuku/issues/1288) | classify install errors with typed exit codes | None | testable |
+| [#1289](https://github.com/tsukumogami/tsuku/issues/1289) | add --json flag to tsuku install | [#1288](https://github.com/tsukumogami/tsuku/issues/1288) | testable |
+| [#1290](https://github.com/tsukumogami/tsuku/issues/1290) | replace regex error parsing with JSON | [#1289](https://github.com/tsukumogami/tsuku/issues/1289) | testable |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    I1288["#1288: Classify install errors"]
+    I1289["#1289: Add --json flag"]
+    I1290["#1290: Replace regex parsing"]
+
+    I1288 --> I1289
+    I1289 --> I1290
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1288 ready
+    class I1289,I1290 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 

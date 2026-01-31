@@ -13,7 +13,7 @@ Planned
 
 ## Implementation Issues
 
-### Milestone: [M-BatchPipeline](https://github.com/tsukumogami/tsuku/milestone/52)
+### Milestone: [Batch Pipeline](https://github.com/tsukumogami/tsuku/milestone/52)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|

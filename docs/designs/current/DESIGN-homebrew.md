@@ -174,7 +174,7 @@ This enables:
 
 The HomebrewBuilder generates tsuku recipes from Homebrew formulas, eliminating manual recipe authoring for Homebrew-only tools. It uses a deterministic-first approach for speed and cost efficiency, falling back to LLM analysis only when needed.
 
-**Implementation milestone:** [M17: Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/17)
+**Implementation milestone:** [Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/17)
 
 **Architecture:**
 
