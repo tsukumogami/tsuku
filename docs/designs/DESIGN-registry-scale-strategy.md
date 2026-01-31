@@ -53,6 +53,7 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 | ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~design batch recipe generation CI pipeline~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~testable~~ |
 | [#1267](https://github.com/tsukumogami/tsuku/issues/1267) | skip existing recipes in seed tool | [#1241](https://github.com/tsukumogami/tsuku/issues/1241) | simple |
 | [#1268](https://github.com/tsukumogami/tsuku/issues/1268) | CI validation of queue against registry | [#1267](https://github.com/tsukumogami/tsuku/issues/1267) | testable |
+| [#1273](https://github.com/tsukumogami/tsuku/issues/1273) | Structured JSON output for CLI + batch integration | None | testable |
 
 Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md) for issue details.
 
@@ -95,6 +96,7 @@ graph TD
         I1189["#1189: Batch recipe generation CI"]
         I1267["#1267: Skip existing in seed tool"]
         I1268["#1268: CI queue vs registry check"]
+        I1273["#1273: Structured JSON CLI output"]
     end
 
     subgraph M_FailureBackend["M-FailureBackend"]
@@ -139,6 +141,7 @@ graph TD
     class I1189 done
     class I1267 needsDesign
     class I1268 needsDesign
+    class I1273 needsDesign
     class I1266 needsDesign
     class I1190 needsDesign
     class I1191 blocked
