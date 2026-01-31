@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: The CLI lumps all install failures into exit code 6 and provides no machine-readable output, forcing programmatic consumers to parse error text with regex.
 decision: Fix exit code conflation in tsuku install (use code 8 for dependency failures, code 3 for missing recipes) and add a --json flag that emits structured error details on failure.
 rationale: Correct exit codes are the highest-value change since the orchestrator already uses categoryFromExitCode(). Adding --json provides richer detail for consumers that need it, following the existing pattern from validate and plan commands.
@@ -9,7 +9,7 @@ rationale: Correct exit codes are the highest-value change since the orchestrato
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
