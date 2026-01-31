@@ -13,7 +13,7 @@ type BatchResult struct {
 	BatchID   string    `json:"batch_id"`
 	Ecosystem string    `json:"ecosystem"`
 	Total     int       `json:"total"`
-	Generated int       `json:"generated"`
+	Succeeded int       `json:"succeeded"`
 	Failed    int       `json:"failed"`
 	Blocked   int       `json:"blocked"`
 	Timestamp time.Time `json:"timestamp"`
@@ -23,6 +23,36 @@ type BatchResult struct {
 
 	// Failures is the list of failure records for this run.
 	Failures []FailureRecord `json:"-"`
+}
+
+// Summary returns a markdown summary of the batch run for use in PR descriptions.
+func (r *BatchResult) Summary() string {
+	s := fmt.Sprintf("Batch run for **%s** on %s.\n\n", r.Ecosystem, r.Timestamp.Format("2006-01-02"))
+	s += "| Metric | Count |\n|--------|-------|\n"
+	s += fmt.Sprintf("| Succeeded | %d |\n", r.Succeeded)
+	s += fmt.Sprintf("| Failed | %d |\n", r.Failed)
+	s += fmt.Sprintf("| Blocked | %d |\n", r.Blocked)
+	s += fmt.Sprintf("| **Total** | **%d** |\n", r.Total)
+
+	if len(r.Recipes) > 0 {
+		s += "\n### Recipes added\n\n"
+		for _, p := range r.Recipes {
+			s += fmt.Sprintf("- `%s`\n", filepath.Base(p))
+		}
+	}
+
+	if len(r.Failures) > 0 {
+		s += "\n### Failures\n\n"
+		for _, f := range r.Failures {
+			if f.Category == "missing_dep" && len(f.BlockedBy) > 0 {
+				s += fmt.Sprintf("- **%s**: blocked by %v\n", f.PackageID, f.BlockedBy)
+			} else {
+				s += fmt.Sprintf("- **%s**: %s\n", f.PackageID, f.Category)
+			}
+		}
+	}
+
+	return s
 }
 
 // FailureRecord represents a single package generation failure.
