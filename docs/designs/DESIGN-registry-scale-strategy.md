@@ -49,7 +49,9 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~seed priority queue pipeline~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~, ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~testable~~ |
-| [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | design batch recipe generation CI pipeline | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | testable |
+| ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~design batch recipe generation CI pipeline~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~testable~~ |
+
+Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md) for issue details.
 
 ### Milestone: [M-FailureBackend](https://github.com/tsukumogami/tsuku/milestone/53)
 
@@ -125,8 +127,9 @@ graph TD
     class I1202 done
     class I1203 done
     class I1241 done
-    class I1189 needsDesign
-    class I1190,I1191 blocked
+    class I1189 done
+    class I1190 needsDesign
+    class I1191 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
@@ -500,7 +503,7 @@ Validation runs across a matrix of target environments. Recipes can have **parti
 - **Ecosystem builders**: Cargo/Go binaries built on the runner match the runner's libc. Musl requires explicit cross-compilation.
 - **macOS costs**: 10x Linux CI minutes. May sample or defer to nightly for cost control.
 
-**Graceful degradation principle:** A recipe is useful even with partial coverage. If ripgrep works on 4 environments but fails on linux-musl, the recipe merges with `platforms: [linux-glibc-x86_64, linux-glibc-arm64, darwin-x86_64, darwin-arm64]`. Users on musl see "not available for your platform" instead of a broken install.
+**Graceful degradation principle:** A recipe is useful even with partial coverage. If ripgrep works on 4 environments but fails on linux-musl, the recipe merges with platform constraints (e.g., `supported_libc = ["glibc"]`). Users on musl see "not available for your platform" instead of a broken install.
 
 **Contributor backfill path:** When a recipe doesn't support an environment, contributors can:
 1. Add an alternative source that works (e.g., `--from cargo:ripgrep` might build a musl-compatible binary)
@@ -618,11 +621,27 @@ Validation produces a result matrix, not a single pass/fail. Each (package, envi
 }}
 ```
 
-**Recipe output:** When a recipe passes on at least one environment, it merges with a `platforms` field derived from the validation results:
+**Recipe output:** When a recipe passes on at least one environment, it merges with platform constraints derived from the validation results using existing metadata fields:
 ```toml
 [metadata]
-platforms = ["linux-glibc-x86_64", "linux-glibc-arm64", "darwin-x86_64", "darwin-arm64"]
+# Example: musl failed, everything else passed
+supported_libc = ["glibc"]
+
+# Example: arm64 failed on all OS
+supported_arch = ["amd64"]
+
+# Example: one specific combo failed
+unsupported_platforms = ["linux/arm64"]
 ```
+If all platforms pass, no constraint fields are written (universal is the default).
+
+**Mutation mechanism:** The merge job is the single aggregation point for platform results. Platform validation jobs produce result artifacts (pass/fail per recipe per platform) but never modify recipe files. After all platform jobs complete, the merge job collects the full result matrix, then derives constraints from the set of passing platforms — not from individual failures. This avoids conflicting writes (e.g., arm64 failure writing `supported_arch = ["amd64"]` while x86_64 failure writes `supported_arch = ["arm64"]`).
+
+**Merge threshold:** A recipe is mergeable if it passes on at least one platform. Partial coverage is acceptable — a constrained recipe is more useful than no recipe. Users on unsupported platforms see "not available for your platform" instead of a broken install.
+
+The merge job writes platform constraints into the recipe TOML using the existing metadata fields (`supported_os`, `supported_arch`, `supported_libc`, `unsupported_platforms`). The logic lives in `internal/batch/` and uses the existing `WriteRecipe` infrastructure. If all 5 target platforms pass, no constraint fields are written (universal compatibility is the default). When some platforms fail, the merge job computes the minimal set of constraint fields that express the passing platforms — for example, if only musl failed: `supported_libc = ["glibc"]`; if one specific combo failed: `unsupported_platforms = ["linux/arm64"]`. No new schema field is needed. PR CI uses `tsuku info --json` to read the computed `supported_platforms` and skip runners where the recipe isn't supported.
+
+**Retry policy:** Platform validation jobs retry only on transient failures, identified by the CLI's exit code. Exit code 5 (`ExitNetwork`) indicates network errors (timeouts, rate limits, DNS, connection failures) and triggers up to 3 retries with exponential backoff. All other non-zero exit codes (install failed, verify failed, dependency failed, recipe not found) are structural and fail immediately without retry. The CLI's error classification system (`internal/version/errors.go`, `internal/registry/errors.go`) handles the distinction — the batch pipeline only checks the exit code.
 
 **Failure tracking:** Failures are recorded per environment, enabling:
 - "Which environments fail most often for Homebrew recipes?" (answer: musl)
@@ -1088,9 +1107,9 @@ Analysis by specialized agents identified the following unknowns that must be re
 | How to coordinate rate limits across parallel CI jobs? | RubyGems has 300/5min limit. GitHub Actions runners share IPs. | DESIGN-batch-recipe-generation.md |
 | What batch size per CI job? | Trade-off: more recipes = higher timeout risk. Estimate: 50-100 for Linux, 20-30 for macOS. | DESIGN-batch-recipe-generation.md |
 | How to map Homebrew deps to tsuku recipe names? | Formula depends on `libyaml`, tsuku might call it `yaml`. Enables `blocked_by` tracking. | DESIGN-batch-failure-analysis.md |
-| How to distinguish structural vs transient failures? | Structural: missing capability. Transient: network error. Affects retry logic. | DESIGN-batch-failure-analysis.md |
+| ~~How to distinguish structural vs transient failures?~~ | ~~Resolved: CLI exit code 5 (`ExitNetwork`) = transient (retry up to 3x). All other non-zero = structural (fail immediately). See Per-Environment Validation Results section.~~ | ~~DESIGN-batch-recipe-generation.md~~ |
 | How to run validation matrix efficiently? | 5 environments × N packages = 5N CI jobs. Parallelize? Sequential? Sample low-priority environments? | DESIGN-batch-recipe-generation.md |
-| What's the minimum platform coverage to merge? | Must pass on at least 1 environment? At least linux+darwin? Configurable per ecosystem? | DESIGN-batch-recipe-generation.md |
+| ~~What's the minimum platform coverage to merge?~~ | ~~Resolved: At least 1 platform. Partial coverage acceptable — constrained recipe is more useful than no recipe. See Per-Environment Validation Results section.~~ | ~~DESIGN-batch-recipe-generation.md~~ |
 
 ### Medium Priority (Needed for Scale)
 
