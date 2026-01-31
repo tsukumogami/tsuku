@@ -1,0 +1,35 @@
+[metadata]
+  name = "ffmpeg"
+  description = "Play, record, convert, and stream select audio and video codecs"
+  homepage = "https://ffmpeg.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["dav1d", "lame", "libvpx", "opus", "sdl2", "svt-av1", "x264", "x265"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "ffmpeg"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "ffmpeg"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["aviocat", "bisect-create", "clean-diff", "compare-cvelists.sh", "crypto_bench", "cws2fws", "dvd2concat", "enc_recon_frame_test", "enum_options", "ffescape", "ffeval", "ffhash", "ffmpeg", "ffplay", "ffprobe", "fourcc2pixfmt", "gen-rc", "general_assembly.pl", "graph2dot", "ismindex", "loudnorm.rb", "make_chlayout_test", "merge-all-source-plugins", "missing_codec_desc", "murge", "normalize.py", "patcheck", "pktdumper", "plotframes", "probetest", "qt-faststart", "scale_slice_test", "seek_print", "sidxindex", "source2c", "target_dec_fate.sh", "trasher", "uncoded_frame", "unwrap-diff", "venc_data_dump", "zmqsend", "zmqshell.py"]
+
+[verify]
+  command = "aviocat --version"
+  pattern = ""

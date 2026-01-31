@@ -1,0 +1,35 @@
+[metadata]
+  name = "imagemagick"
+  description = "Tools and libraries to manipulate images in select formats"
+  homepage = "https://imagemagick.org/index.php"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["glib", "jpeg-turbo", "libheif", "libpng", "libtiff", "libtool", "little-cms2", "webp", "xz", "gettext", "imath"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "imagemagick"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "imagemagick"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["Magick++-config", "MagickCore-config", "MagickWand-config", "magick"]
+
+[verify]
+  command = "Magick++-config --version"
+  pattern = ""

@@ -1,13 +1,13 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-01-31T00:11:22Z",
+  "updated_at": "2026-01-31T14:49:50Z",
   "packages": [
     {
       "id": "homebrew:awscli",
       "source": "homebrew",
       "name": "awscli",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -15,7 +15,7 @@
       "source": "homebrew",
       "name": "gh",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -23,7 +23,7 @@
       "source": "homebrew",
       "name": "node",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -31,7 +31,7 @@
       "source": "homebrew",
       "name": "uv",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -39,7 +39,7 @@
       "source": "homebrew",
       "name": "ffmpeg",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -47,7 +47,7 @@
       "source": "homebrew",
       "name": "cmake",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -55,7 +55,7 @@
       "source": "homebrew",
       "name": "go",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -63,7 +63,7 @@
       "source": "homebrew",
       "name": "gemini-cli",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -71,7 +71,7 @@
       "source": "homebrew",
       "name": "imagemagick",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
@@ -79,7 +79,7 @@
       "source": "homebrew",
       "name": "pyenv",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {

@@ -1,0 +1,35 @@
+[metadata]
+  name = "node"
+  description = "Open-source, cross-platform JavaScript runtime environment"
+  homepage = "https://nodejs.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["ada-url", "brotli", "c-ares", "hdrhistogram_c", "icu4c@78", "libnghttp2", "libnghttp3", "libngtcp2", "libuv", "llhttp", "openssl@3", "simdjson", "sqlite", "uvwasi", "zstd"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "node"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "node"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["node"]
+
+[verify]
+  command = "node --version"
+  pattern = ""
