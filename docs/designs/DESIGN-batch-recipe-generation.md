@@ -358,11 +358,14 @@ permissions:
 │   - On failure: classify exit code, record failure       │
 │ - Output: passing recipes, failure records               │
 ├─────────────────────────────────────────────────────────┤
-│ Job 3: validate-macos (conditional, if !skip_macos)      │
-│ - For each Linux-passing recipe:                         │
-│   - Validate on macOS (darwin-arm64, darwin-x86_64)      │
-│   - Update platform coverage metadata                    │
-│ - Output: per-recipe platform results                    │
+│ Job 3: validate-platforms (conditional)                   │
+│ - For each Linux x86_64-passing recipe:                  │
+│   - linux-arm64 (ubuntu-24.04-arm, if !skip_arm64)       │
+│   - linux-musl (alpine container on ubuntu, if !skip_musl│
+│   - darwin-arm64 (macos-14, if !skip_macos)              │
+│   - darwin-x86_64 (macos-13, if !skip_macos)             │
+│ - Update platform coverage metadata per recipe           │
+│ - Output: per-recipe, per-platform results               │
 ├─────────────────────────────────────────────────────────┤
 │ Job 4: merge                                             │
 │ - Collect passing recipes from all ecosystems            │
@@ -394,15 +397,25 @@ If the CLI crashes or produces unexpected errors, the circuit breaker catches th
 
 ### Validation Flow
 
+**Important:** Recipe generation is platform-independent. Recipes contain `os_mapping` and `arch_mapping` that resolve to platform-specific download URLs at install time. The TOML itself is the same regardless of where it was generated. Generation can run on any platform (we use `ubuntu-latest` for cost).
+
+Validation, however, must run on each target platform because it executes the actual binary in a sandbox to verify it works.
+
 ```
-Recipe generated
+Recipe generated (on ubuntu-latest, platform-independent TOML)
     │
-    ├─ Linux validation (ubuntu-latest)
+    ├─ Linux x86_64 glibc validation (ubuntu-latest)
     │   ├─ Schema validation (tsuku validate --strict)
     │   ├─ Plan generation (tsuku eval <recipe>)
     │   └─ Sandbox install (tsuku install --plan --sandbox)
-    │       ├─ PASS → promote to macOS validation
+    │       ├─ PASS → promote to additional platform validation
     │       └─ FAIL → record failure (validation_failed)
+    │
+    ├─ Linux arm64 validation (if x86_64 passed, ubuntu-24.04-arm)
+    │   └─ Sandbox install
+    │
+    ├─ Linux musl validation (if x86_64 passed, alpine container on ubuntu-latest)
+    │   └─ Sandbox install in alpine-based container
     │
     └─ macOS validation (if Linux passed && !skip_macos)
         ├─ darwin-arm64 (macos-14)
@@ -410,6 +423,8 @@ Recipe generated
         └─ darwin-x86_64 (macos-13)
             └─ Sandbox install
 ```
+
+The progressive strategy applies across all platforms: Linux x86_64 glibc is the cheapest and catches most failures. arm64 and musl use Linux runners (low cost). macOS runners are last due to 10x cost. A recipe that fails on x86_64 glibc won't be tested on any other platform.
 
 ### Failure Record Format
 
@@ -550,11 +565,18 @@ Also add version pinning to `install.sh` (`TSUKU_VERSION` env var) so operators 
 
 **Files:** `cmd/batch-generate/main.go`, `internal/batch/`, `.github/workflows/batch-generate.yml`, `website/install.sh` (version pinning), `data/failures/`
 
-### Phase 2: macOS Progressive Validation
+### Phase 2: Multi-Platform Progressive Validation
 
-Add conditional macOS validation job for Linux-passing recipes. The macOS job also installs tsuku via `install.sh` and runs sandbox validation. Update platform metadata in recipes.
+Add platform validation jobs for Linux x86_64-passing recipes. Each platform job installs tsuku via `install.sh` and runs sandbox validation. Platforms are tested in cost order: Linux arm64 and musl (cheap), then macOS (expensive). Update platform coverage metadata in recipes.
 
-**Files:** `.github/workflows/batch-generate.yml` (macOS job)
+| Platform | Runner | Cost | Skip Flag |
+|----------|--------|------|-----------|
+| linux-arm64 | ubuntu-24.04-arm | Low | `skip_arm64` |
+| linux-musl | Alpine container on ubuntu-latest | Low | `skip_musl` |
+| darwin-arm64 | macos-14 | High (10x) | `skip_macos` |
+| darwin-x86_64 | macos-13 | High (10x) | `skip_macos` |
+
+**Files:** `.github/workflows/batch-generate.yml` (platform validation jobs)
 
 ### Phase 3: Metrics and Circuit Breaker
 
