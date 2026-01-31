@@ -28,6 +28,7 @@ This design implements part of [DESIGN-registry-scale-strategy.md](DESIGN-regist
 **Dependent designs:**
 - [DESIGN-batch-operations.md](current/DESIGN-batch-operations.md): Control plane, rollback, emergency stop
 - [DESIGN-homebrew-deterministic-mode.md](current/DESIGN-homebrew-deterministic-mode.md): Homebrew DeterministicOnly session option
+- [DESIGN-seed-queue-pipeline.md](current/DESIGN-seed-queue-pipeline.md): Queue population and lifecycle model
 
 ## Context and Problem Statement
 
@@ -61,14 +62,14 @@ Three challenges make this non-trivial:
 **Prerequisites:**
 - `tsuku create` CLI command with `--deterministic` flag (invokes builder with `DeterministicOnly: true`). If this CLI surface doesn't exist, it must be added as a prerequisite issue.
 - Sandbox validation via `tsuku install --sandbox` (existing infrastructure).
-- Priority queue populated at `data/priority-queue.json` (existing from M50 scripts).
+- Priority queue populated at `data/priority-queue.json` via the seed-queue workflow (#1241, completed). The `cmd/seed-queue` Go tool fetches from ecosystem APIs and merges additively into the queue file. See [DESIGN-seed-queue-pipeline.md](current/DESIGN-seed-queue-pipeline.md).
 
 **Out of scope:**
 - Failure analysis backend (downstream #1190)
-- Priority queue population (existing scripts from M50)
 - Builder improvements (separate issues per ecosystem)
 - D1/R2 backend integration (Phase 2 of scale strategy)
 - Re-queue mechanism (requires failure analysis backend)
+- Queue seeding (handled by #1241, completed)
 
 ## Decision Drivers
 
@@ -519,7 +520,13 @@ Each artifact is named with the batch ID and ecosystem for traceability. Artifac
 
 ### Queue Consumption
 
-The preflight job reads `data/priority-queue.json` and selects packages that don't already have recipes in `recipes/`. After a successful merge, the newly added recipes prevent those packages from being selected in future runs. Failed packages remain in the queue and are retried in subsequent batches (the failure JSONL records are informational, not blocking).
+The preflight job reads `data/priority-queue.json` and selects packages with `status: "pending"` matching the requested ecosystem and tier. The queue uses a status-based lifecycle (see [DESIGN-seed-queue-pipeline.md](current/DESIGN-seed-queue-pipeline.md)):
+
+- **Before generation**: The batch pipeline sets selected packages to `in_progress`.
+- **On success**: The merge job sets packages to `success` after the recipe PR merges.
+- **On failure**: The merge job sets packages to `failed` and records the failure in JSONL.
+
+The seed tool only creates `pending` entries and never modifies existing statuses. Items are never removed from the queue -- `success` and `skipped` entries serve as deduplication records. An operator can manually change `failed` back to `pending` to re-queue after fixes.
 
 ### Data Flow
 
