@@ -232,14 +232,21 @@ Add `--json` to validate's install args. Parse JSON response for `missing_recipe
 
 **Files:** `internal/batch/orchestrator.go`, `internal/batch/orchestrator_test.go`
 
-### Step 4: Tests
+### Step 4: Tests and Automation Integration
 
-- Unit test: `classifyInstallError` returns correct exit codes for different error messages
-- Unit test: JSON output includes `missing_recipes` when deps are missing
-- Unit test: orchestrator parses JSON install output correctly
-- Existing orchestrator tests updated to remove regex-based classification tests
+**Unit tests:**
+- `classifyInstallError` returns correct exit codes for different error types (typed `RegistryError` unwrapping and string fallback)
+- JSON output includes `missing_recipes` when deps are missing
+- Orchestrator parses JSON install output correctly
+- Existing `TestClassifyValidationFailure` tests in `orchestrator_test.go` are replaced with JSON-based equivalents
 
 **Files:** `cmd/tsuku/install_test.go`, `internal/batch/orchestrator_test.go`
+
+**Existing test infrastructure impact:**
+- `TestRun_validationFailureMissingDep` in `orchestrator_test.go` uses a fake shell script that emits stderr text matching the regex pattern. After this change, the fake script needs to emit JSON to stdout instead (or in addition), since the orchestrator will pass `--json` to install.
+- `TestRun_withFakeBinary` and `TestRun_validationFailureGeneric` need their fake scripts updated to handle the `--json` flag (they can ignore it and return non-JSON output; the orchestrator should fall back gracefully when JSON parsing fails).
+- The `test-changed-recipes.yml` CI workflow doesn't need changes — it uses exit codes only, and those get more accurate with this change.
+- The batch orchestrator's `classifyValidationFailure` function and `reNotFoundInRegistry` regex are removed, along with their test (`TestClassifyValidationFailure`).
 
 ## Security Considerations
 
