@@ -1,7 +1,7 @@
 {
   "format_version": 3,
   "tool": "openssl",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "platform": {
     "os": "linux",
     "arch": "amd64",

@@ -4,12 +4,14 @@ Feature: Create
   Background:
     Given a clean tsuku environment
 
+  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   Scenario: Create recipe to default location
     When I run "tsuku create prettier --from npm --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the file "recipes/prettier.toml" exists
 
+  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   Scenario: Create recipe with --output flag
     When I run "tsuku create prettier --from npm --yes --skip-sandbox --output .tsuku-test/custom/prettier.toml"
     Then the exit code is 0
@@ -17,29 +19,34 @@ Feature: Create
     And the file "custom/prettier.toml" exists
     And the file "recipes/prettier.toml" does not exist
 
+  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   Scenario: Create recipe from crates.io
     When I run "tsuku create ripgrep --from crates.io --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the file "recipes/ripgrep.toml" exists
 
+  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   Scenario: Create recipe from rubygems
     When I run "tsuku create jekyll --from rubygems --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the file "recipes/jekyll.toml" exists
 
+  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   Scenario: Create recipe from pypi
     When I run "tsuku create ruff --from pypi --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the file "recipes/ruff.toml" exists
 
+  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   Scenario: Create recipe from go
     When I run "tsuku create github.com/google/uuid --from go --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
 
+  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   Scenario: Create recipe from cpan
     When I run "tsuku create ack --from cpan --yes --skip-sandbox"
     Then the exit code is 0
@@ -53,6 +60,7 @@ Feature: Create
     And the error output does not contain "was NOT tested in a sandbox"
     And the file "recipes/jq.toml" exists
 
+  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   @macos
   Scenario: Create recipe from cask
     When I run "tsuku create iterm2 --from cask:iterm2 --yes --skip-sandbox"

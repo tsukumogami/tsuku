@@ -44,6 +44,7 @@ jobs:
       # Note: No setup-node step - tsuku installs nodejs as a dependency
       # when needed by npm_install recipes
 
+      # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
       - name: Create recipe for prettier
         run: ./tsuku create prettier --from npm --yes --skip-sandbox
 
@@ -87,6 +88,7 @@ jobs:
       # Note: No setup-node step - tsuku installs nodejs as a dependency
       # when needed by npm_install recipes
 
+      # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
       - name: Create recipe for prettier
         run: ./tsuku create prettier --from npm --yes --skip-sandbox
 
