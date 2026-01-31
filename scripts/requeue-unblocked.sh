@@ -17,6 +17,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 QUEUE="$REPO_ROOT/data/priority-queue.json"
 FAILURES_DIR="$REPO_ROOT/data/failures"
 RECIPES_DIR="$REPO_ROOT/recipes"
+EMBEDDED_DIR="$REPO_ROOT/internal/recipe/recipes"
 DRY_RUN=false
 
 for arg in "$@"; do
@@ -41,12 +42,13 @@ if [[ ! -f "$QUEUE" ]]; then
   exit 1
 fi
 
-# recipe_exists checks if a recipe TOML file exists in the registry.
+# recipe_exists checks if a recipe TOML file exists in the registry or
+# embedded recipes directory.
 recipe_exists() {
   local name="$1"
   local first="${name:0:1}"
   first="$(echo "$first" | tr '[:upper:]' '[:lower:]')"
-  [[ -f "$RECIPES_DIR/$first/$name.toml" ]]
+  [[ -f "$RECIPES_DIR/$first/$name.toml" ]] || [[ -f "$EMBEDDED_DIR/$name.toml" ]]
 }
 
 # Collect all blocked_by entries from missing_dep failures across all JSONL files.
