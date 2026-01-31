@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: The batch pipeline crashes when Homebrew deterministic generation fails because the CLI can't suppress LLM fallback, producing "no LLM providers available" instead of a structured failure record.
 decision: Add a --deterministic-only CLI flag to tsuku create that sets SessionOptions.DeterministicOnly, and add a dedicated exit code (9) for deterministic failures so the batch orchestrator can categorize them without output parsing.
 rationale: The Go API already supports deterministic-only mode with structured errors. Exposing it through the CLI closes the gap between the builder API and the subprocess-based orchestrator. A dedicated exit code lets the orchestrator classify failures reliably.
@@ -9,7 +9,7 @@ rationale: The Go API already supports deterministic-only mode with structured e
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
