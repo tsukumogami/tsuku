@@ -176,7 +176,7 @@ jobs:
       - name: "Install ${{ matrix.recipe.tool }}"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./tsuku install --force ${{ matrix.recipe.tool }}
+        run: ./tsuku install --force --recipe ${{ matrix.recipe.path }}
 
   # Test all macOS-compatible recipes in a single job (reduces runner queue pressure)
   test-macos:
@@ -210,13 +210,17 @@ jobs:
           for recipe in $(echo "$RECIPES" | jq -r '.[]'); do
             echo "::group::Testing $recipe"
 
+            # Derive recipe file path from tool name
+            first_letter=$(echo "$recipe" | cut -c1)
+            recipe_path="recipes/$first_letter/$recipe.toml"
+
             # Fresh TSUKU_HOME per recipe with shared download cache
             export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe"
             mkdir -p "$TSUKU_HOME/cache"
             ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
             echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
 
-            if ! ./tsuku install --force "$recipe"; then
+            if ! ./tsuku install --force --recipe "$recipe_path"; then
               FAILED+=("$recipe")
             fi
             echo "::endgroup::"
