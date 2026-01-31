@@ -1,0 +1,86 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-01-30T23:59:06Z",
+  "packages": [
+    {
+      "id": "homebrew:awscli",
+      "source": "homebrew",
+      "name": "awscli",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:gh",
+      "source": "homebrew",
+      "name": "gh",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:node",
+      "source": "homebrew",
+      "name": "node",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:uv",
+      "source": "homebrew",
+      "name": "uv",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:ffmpeg",
+      "source": "homebrew",
+      "name": "ffmpeg",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:cmake",
+      "source": "homebrew",
+      "name": "cmake",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:go",
+      "source": "homebrew",
+      "name": "go",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:git",
+      "source": "homebrew",
+      "name": "git",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:gemini-cli",
+      "source": "homebrew",
+      "name": "gemini-cli",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:imagemagick",
+      "source": "homebrew",
+      "name": "imagemagick",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-30T23:59:06Z"
+    }
+  ]
+}
