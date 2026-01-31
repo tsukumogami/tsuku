@@ -306,6 +306,9 @@ func categoryFromExitCode(code int) string {
 
 // handleInstallError prints the error (as JSON if --json is set, otherwise
 // human-readable to stderr) and exits with the classified exit code.
+// Note: JSON output may include local file paths from error messages. Consumers
+// that log or forward this output should treat it with the same care as any log
+// data that may contain system paths.
 func handleInstallError(err error) {
 	code := classifyInstallError(err)
 	if installJSON {
