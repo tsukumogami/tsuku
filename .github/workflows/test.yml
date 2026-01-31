@@ -109,6 +109,35 @@ jobs:
       - name: Run lint tests
         run: go test -v -run 'Test(GolangCILint|GoFmt|GoModTidy|GoVet|Govulncheck)' .
 
+  functional-tests:
+    name: Functional Tests
+    needs: matrix
+    if: ${{ needs.matrix.outputs.code == 'true' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Run functional tests
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            make test-functional
+          else
+            make test-functional-critical
+          fi
+
   # Build and test tsuku-dltest Rust binary
   rust-test:
     name: "Rust: ${{ matrix.os }}"
