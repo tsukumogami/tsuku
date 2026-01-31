@@ -14,7 +14,7 @@ Feature: Install
   @critical
   Scenario: Install a tool that does not exist
     When I run "tsuku install nonexistent-tool-xyz-12345"
-    Then the exit code is not 0
+    Then the exit code is 6
 
   Scenario: List shows installed tool
     When I run "tsuku install actionlint --force"
