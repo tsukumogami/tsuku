@@ -14,5 +14,5 @@ Feature: Developer Environment
   @critical
   Scenario: doctor reports PATH issues in unconfigured environment
     When I run "tsuku doctor"
-    Then the exit code is not 0
+    Then the exit code is 1
     And the output contains "PATH"
