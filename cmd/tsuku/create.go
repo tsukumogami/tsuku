@@ -314,12 +314,7 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitGeneral)
 	}
 
-	// Determine if sandbox testing should be skipped
-	// - Explicitly requested via --skip-sandbox
-	// - Ecosystem builders (non-LLM) don't benefit from sandbox testing since:
-	//   1. Their recipes are deterministic (can't be repaired)
-	//   2. They require toolchains (cargo, pip, etc.) not available in base container
-	effectiveSkipSandbox := skipSandbox || !builder.RequiresLLM()
+	effectiveSkipSandbox := skipSandbox
 
 	// Create sandbox executor (if not skipping sandbox)
 	var sandboxExec *sandbox.Executor

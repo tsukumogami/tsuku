@@ -1838,6 +1838,14 @@ func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packa
 		},
 	}
 
+	// Prefix binaries with bin/ to match the extracted bottle structure.
+	// Homebrew bottles contain formula/version/bin/<name>, and after extract
+	// with strip_dirs:2, binaries end up at bin/<name> in the work directory.
+	binPaths := make([]string, len(binaries))
+	for i, b := range binaries {
+		binPaths[i] = "bin/" + b
+	}
+
 	// Add homebrew action and install_binaries
 	r.Steps = []recipe.Step{
 		{
@@ -1849,7 +1857,7 @@ func (b *HomebrewBuilder) generateDeterministicRecipe(ctx context.Context, packa
 		{
 			Action: "install_binaries",
 			Params: map[string]interface{}{
-				"binaries": binaries,
+				"binaries": binPaths,
 			},
 		},
 	}

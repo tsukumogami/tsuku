@@ -26,6 +26,10 @@ type HomebrewAction struct{ BaseAction }
 // IsDeterministic returns true because homebrew downloads with checksums.
 func (HomebrewAction) IsDeterministic() bool { return true }
 
+// RequiresNetwork returns true because homebrew decomposes into download_file
+// which fetches bottles from GHCR.
+func (HomebrewAction) RequiresNetwork() bool { return true }
+
 // Dependencies returns patchelf as a Linux-only install-time dependency.
 // The homebrew action decomposes to homebrew_relocate which requires patchelf for RPATH fixup on Linux.
 // macOS uses install_name_tool (system-provided) instead.
