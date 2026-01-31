@@ -19,5 +19,5 @@ Feature: Create
 
   Scenario: Create recipe fails without --from
     When I run "tsuku create prettier"
-    Then the exit code is not 0
+    Then the exit code is 1
     And the error output contains "required"
