@@ -1,0 +1,63 @@
+name: Seed Queue
+
+on:
+  workflow_dispatch:
+    inputs:
+      source:
+        description: 'Package source'
+        required: true
+        default: 'homebrew'
+        type: choice
+        options:
+          - homebrew
+      limit:
+        description: 'Max packages to fetch'
+        required: false
+        default: '100'
+        type: string
+
+jobs:
+  seed:
+    name: Seed Priority Queue
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build seed-queue
+        run: go build -o seed-queue ./cmd/seed-queue
+
+      - name: Run seed-queue
+        run: |
+          ./seed-queue \
+            -source "${{ inputs.source }}" \
+            -limit "${{ inputs.limit }}"
+
+      - name: Validate output
+        run: |
+          if [ ! -f data/priority-queue.json ]; then
+            echo "ERROR: priority-queue.json not created" >&2
+            exit 1
+          fi
+          # Schema validation (requires ajv or similar; basic jq check for now)
+          jq -e '.schema_version == 1 and (.packages | length) > 0' data/priority-queue.json > /dev/null
+
+      - name: Commit and push
+        run: |
+          git add data/priority-queue.json
+          git diff --cached --quiet && {
+            echo "No changes to priority queue"
+            exit 0
+          }
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): seed priority queue from ${{ inputs.source }} [skip ci]"
+          for i in 1 2 3; do
+            git pull --rebase origin main && git push && break
+            sleep $((i * 2))
+          done || echo "::warning::Push failed after retries"
