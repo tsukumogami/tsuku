@@ -73,7 +73,7 @@ jobs:
       - name: Create pull request
         if: steps.check.outputs.changes == 'true'
         run: |
-          BRANCH="batch/${{ inputs.ecosystem }}-$(date +%Y%m%d)"
+          BRANCH="batch/${{ inputs.ecosystem }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
           git add recipes/ data/
           git config user.name "github-actions[bot]"
