@@ -351,11 +351,11 @@ permissions:
 │ - Output: package list per ecosystem, batch_id           │
 ├─────────────────────────────────────────────────────────┤
 │ Job 2: generate-<ecosystem> (matrix, per ecosystem)      │
-│ - Build tsuku binary                                     │
+│ - Install released tsuku via install.sh                  │
 │ - For each package in ecosystem slice:                   │
-│   - Invoke builder with DeterministicOnly=true           │
+│   - Run: tsuku create --from <eco>:<pkg> --deterministic │
 │   - On success: validate on Linux (sandbox)              │
-│   - On failure: record DeterministicFailedError          │
+│   - On failure: classify exit code, record failure       │
 │ - Output: passing recipes, failure records               │
 ├─────────────────────────────────────────────────────────┤
 │ Job 3: validate-macos (conditional, if !skip_macos)      │
@@ -376,40 +376,21 @@ permissions:
 
 ### Generation Flow (Per Package)
 
-```go
-// Pseudocode for batch generation of one package
-func generatePackage(ctx context.Context, ecosystem, pkg string) (*Result, error) {
-    builder := registry.Get(ecosystem)
-    if builder == nil {
-        return nil, fmt.Errorf("unknown ecosystem: %s", ecosystem)
-    }
+The batch tool invokes the released `tsuku` CLI binary for each package. This exercises the same code path users run, making the batch pipeline a continuous integration test for the CLI itself.
 
-    req := BuildRequest{Package: pkg}
-    canBuild, err := builder.CanBuild(ctx, req)
-    if !canBuild || err != nil {
-        return recordFailure(pkg, "api_error", err)
-    }
+```bash
+# Per-package generation via released CLI
+tsuku create --from cargo:ripgrep --deterministic --output recipes/r/ripgrep.toml
 
-    session, err := builder.NewSession(ctx, req, &SessionOptions{
-        DeterministicOnly: true,
-    })
-    if err != nil {
-        return recordFailure(pkg, classifyError(err))
-    }
-    defer session.Close()
-
-    result, err := session.Generate(ctx)
-    if err != nil {
-        var detErr *DeterministicFailedError
-        if errors.As(err, &detErr) {
-            return recordFailure(pkg, string(detErr.Category), detErr)
-        }
-        return recordFailure(pkg, "api_error", err)
-    }
-
-    return &Result{Recipe: result.Recipe, Status: "generated"}, nil
-}
+# Exit codes determine failure handling:
+#   0 = success (recipe written)
+#   1 = deterministic failure (classified in stderr JSON)
+#   2 = infrastructure error (API timeout, network, etc.)
 ```
+
+The Go orchestrator (`cmd/batch-generate`) manages the loop: reading the queue, invoking `tsuku create` as a subprocess for each package, parsing exit codes and stderr for failure classification, and writing results. This keeps the orchestration logic in Go (testable, type-safe) while exercising the real CLI for the work that matters.
+
+If the CLI crashes or produces unexpected errors, the circuit breaker catches the pattern -- consecutive failures trip the breaker and pause the ecosystem. This is a feature: a broken CLI release gets detected and paused automatically rather than silently generating bad recipes via internal APIs.
 
 ### Validation Flow
 
@@ -497,15 +478,20 @@ Each generation job outputs metrics to a JSONL summary:
 
 Metrics are appended to `data/metrics/batch-runs.jsonl` and optionally uploaded to the telemetry endpoint.
 
-### Key Interfaces (Unchanged)
+### CLI as the Execution Boundary
 
-The pipeline uses existing interfaces:
-- `SessionBuilder.NewSession()` with `DeterministicOnly: true`
-- `BuildSession.Generate()` returning `BuildResult` or `DeterministicFailedError`
-- `sandbox.Executor.Run()` for container validation
-- `tsuku validate --strict` for schema validation
+The batch pipeline invokes the released `tsuku` binary rather than importing `internal/builders` directly. This means the pipeline exercises the same code path users run, catching CLI-level regressions (flag parsing, environment handling, output formatting) that internal API calls would bypass.
 
-No new Go interfaces are needed. The pipeline is a workflow + shell scripts invoking the existing CLI.
+**CLI commands used:**
+- `tsuku create --from <eco>:<pkg> --deterministic` -- generate a recipe
+- `tsuku validate --strict <recipe>` -- schema validation
+- `tsuku install --plan <recipe> --sandbox` -- sandbox validation
+
+**CLI installation:** Each generate job installs `tsuku` via `install.sh`. The script currently fetches the latest release. Version pinning support (`TSUKU_VERSION` env var) should be added to allow operators to pin to a known-good release if the latest has issues.
+
+**Why not Go API:** If the CLI doesn't work, there's little value in generating recipes that users can't install. A broken CLI release gets caught immediately by batch failures tripping the circuit breaker, rather than being masked by internal API calls that bypass the CLI entirely.
+
+**Orchestrator tool:** A Go tool at `cmd/batch-generate` handles queue reading, package selection, subprocess management, failure classification, and result aggregation. It shells out to `tsuku` for the actual work. This keeps orchestration logic testable in Go while the CLI does the heavy lifting.
 
 ### Artifact Passing Between Jobs
 
@@ -535,7 +521,8 @@ Priority Queue (data/priority-queue.json)
     │
     ├─ Preflight reads queue, filters by ecosystem/tier
     │
-    ├─ Generate jobs invoke:  tsuku create --from <eco>:<pkg> --deterministic
+    ├─ Generate jobs install released tsuku via install.sh
+    │   ├─ For each package: tsuku create --from <eco>:<pkg> --deterministic
     │   ├─ Success → recipe TOML file
     │   └─ Failure → failure record (JSONL)
     │
@@ -557,21 +544,23 @@ Priority Queue (data/priority-queue.json)
 
 ### Phase 1: End-to-End Pipeline (Generation + Linux Validation + Merge)
 
-Create the complete workflow: manual dispatch, preflight, per-ecosystem generation with Linux sandbox validation, and merge job with `run_command` gate. This delivers a working pipeline from the first phase. Generation invokes `tsuku create --from <eco>:<pkg> --deterministic` (shell script wrapping the CLI). Failures are recorded to JSONL.
+Create the Go orchestrator (`cmd/batch-generate`) and GitHub Actions workflow. The orchestrator reads the queue, invokes the released `tsuku` CLI for generation and validation, records failures, and outputs results. The workflow installs tsuku via `install.sh`, runs the orchestrator, and creates a PR with passing recipes.
 
-**Files:** `.github/workflows/batch-generate.yml`, `scripts/batch-generate.sh`, `scripts/batch-validate.sh`, `scripts/batch-merge.sh`, `data/failures/`
+Also add version pinning to `install.sh` (`TSUKU_VERSION` env var) so operators can pin to a known-good release if needed.
+
+**Files:** `cmd/batch-generate/main.go`, `internal/batch/`, `.github/workflows/batch-generate.yml`, `website/install.sh` (version pinning), `data/failures/`
 
 ### Phase 2: macOS Progressive Validation
 
-Add conditional macOS validation job for Linux-passing recipes. Recipes pass through artifact upload from the generate job to the macOS runner. Update platform metadata in recipes.
+Add conditional macOS validation job for Linux-passing recipes. The macOS job also installs tsuku via `install.sh` and runs sandbox validation. Update platform metadata in recipes.
 
-**Files:** `.github/workflows/batch-generate.yml` (macOS job), `scripts/batch-validate-macos.sh`
+**Files:** `.github/workflows/batch-generate.yml` (macOS job)
 
 ### Phase 3: Metrics and Circuit Breaker
 
-Add SLI metrics collection to `data/metrics/batch-runs.jsonl`. Integrate circuit breaker state updates in `batch-control.json` after each run.
+Add SLI metrics collection to `data/metrics/batch-runs.jsonl`. Integrate circuit breaker state updates in `batch-control.json` after each run. The circuit breaker serves double duty: pausing ecosystems with high failure rates and detecting broken CLI releases (which manifest as sudden across-the-board failures).
 
-**Files:** `data/metrics/`, `scripts/batch-merge.sh` (metrics update)
+**Files:** `internal/batch/` (metrics, circuit breaker), `data/metrics/`
 
 ## Security Considerations
 
