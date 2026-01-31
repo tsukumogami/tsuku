@@ -94,6 +94,7 @@ var (
 	createForce       bool
 	createAutoApprove bool
 	createSkipSandbox bool
+	createOutput      string
 )
 
 func init() {
@@ -101,6 +102,7 @@ func init() {
 	createCmd.Flags().BoolVar(&createForce, "force", false, "Overwrite existing local recipe")
 	createCmd.Flags().BoolVar(&createAutoApprove, "yes", false, "Skip recipe preview confirmation")
 	createCmd.Flags().BoolVar(&createSkipSandbox, "skip-sandbox", false, "Skip container sandbox testing (use when Docker is unavailable)")
+	createCmd.Flags().StringVar(&createOutput, "output", "", "Write recipe to this path instead of the default registry location")
 	_ = createCmd.MarkFlagRequired("from")
 }
 
@@ -196,10 +198,12 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Handle --skip-sandbox flag
 	skipSandbox := false
 	if createSkipSandbox {
-		// Require explicit consent for skipping sandbox testing
-		if !confirmSkipSandbox() {
-			fmt.Fprintln(os.Stderr, "Aborted.")
-			exitWithCode(ExitGeneral)
+		// --yes implies consent for skipping sandbox (needed for batch/CI)
+		if !createAutoApprove {
+			if !confirmSkipSandbox() {
+				fmt.Fprintln(os.Stderr, "Aborted.")
+				exitWithCode(ExitGeneral)
+			}
 		}
 		skipSandbox = true
 	}
@@ -390,6 +394,9 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	recipePath := filepath.Join(cfg.RecipesDir, toolName+".toml")
+	if createOutput != "" {
+		recipePath = createOutput
+	}
 
 	// Check if recipe already exists
 	if _, err := os.Stat(recipePath); err == nil && !createForce {

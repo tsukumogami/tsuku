@@ -132,9 +132,11 @@ type generateResult struct {
 // generate invokes tsuku create for a single package with retry on network errors.
 func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string) generateResult {
 	args := []string{
-		"create",
+		"create", pkg.Name,
 		"--from", pkg.ID,
 		"--output", recipePath,
+		"--yes",
+		"--skip-sandbox",
 	}
 
 	var lastErr error
