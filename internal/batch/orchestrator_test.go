@@ -109,6 +109,7 @@ func TestCategoryFromExitCode(t *testing.T) {
 		{6, "validation_failed"},
 		{7, "validation_failed"},
 		{8, "missing_dep"},
+		{9, "deterministic_insufficient"},
 		{1, "validation_failed"},
 	}
 

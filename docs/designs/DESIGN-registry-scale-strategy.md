@@ -43,7 +43,7 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~design homebrew deterministic mode~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
-| [#1266](https://github.com/tsukumogami/tsuku/issues/1266) | structured deterministic-failed error path | [#1188](https://github.com/tsukumogami/tsuku/issues/1188) | testable |
+| ~~[#1266](https://github.com/tsukumogami/tsuku/issues/1266)~~ | ~~structured deterministic-failed error path~~ | ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~testable~~ |
 
 ### Milestone: [M-BatchPipeline](https://github.com/tsukumogami/tsuku/milestone/52)
 
@@ -147,7 +147,7 @@ graph TD
     class I1267 needsDesign
     class I1268 needsDesign
     class I1273 needsDesign
-    class I1266 needsDesign
+    class I1266 done
     class I1190 needsDesign
     class I1277 needsDesign
     class I1278 needsDesign

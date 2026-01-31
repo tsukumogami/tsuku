@@ -90,11 +90,12 @@ Examples:
 }
 
 var (
-	createFrom        string
-	createForce       bool
-	createAutoApprove bool
-	createSkipSandbox bool
-	createOutput      string
+	createFrom              string
+	createForce             bool
+	createAutoApprove       bool
+	createSkipSandbox       bool
+	createDeterministicOnly bool
+	createOutput            string
 )
 
 func init() {
@@ -102,6 +103,7 @@ func init() {
 	createCmd.Flags().BoolVar(&createForce, "force", false, "Overwrite existing local recipe")
 	createCmd.Flags().BoolVar(&createAutoApprove, "yes", false, "Skip recipe preview confirmation")
 	createCmd.Flags().BoolVar(&createSkipSandbox, "skip-sandbox", false, "Skip container sandbox testing (use when Docker is unavailable)")
+	createCmd.Flags().BoolVar(&createDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; exit with structured error if deterministic generation fails")
 	createCmd.Flags().StringVar(&createOutput, "output", "", "Write recipe to this path instead of the default registry location")
 	_ = createCmd.MarkFlagRequired("from")
 }
@@ -264,9 +266,10 @@ func runCreate(cmd *cobra.Command, args []string) {
 	}
 
 	sessionOpts := &builders.SessionOptions{
-		ProgressReporter: progressReporter,
-		LLMConfig:        userCfg,
-		LLMStateTracker:  stateManager,
+		ProgressReporter:  progressReporter,
+		LLMConfig:         userCfg,
+		LLMStateTracker:   stateManager,
+		DeterministicOnly: createDeterministicOnly,
 	}
 
 	// Build request for use throughout
@@ -346,6 +349,14 @@ func runCreate(cmd *cobra.Command, args []string) {
 	// Generate recipe using orchestrator (handles sandbox validation and repair)
 	orchResult, err := orchestrator.Create(ctx, builder, buildReq, sessionOpts)
 	if err != nil {
+		// Handle DeterministicFailedError (--deterministic-only mode)
+		var detErr *builders.DeterministicFailedError
+		if errors.As(err, &detErr) {
+			fmt.Fprintf(os.Stderr, "deterministic generation failed: [%s] %s\n",
+				detErr.Category, detErr.Message)
+			exitWithCode(ExitDeterministicFailed)
+		}
+
 		// Handle ValidationFailedError with detailed output
 		var valErr *builders.ValidationFailedError
 		if errors.As(err, &valErr) {

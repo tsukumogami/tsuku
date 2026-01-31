@@ -32,6 +32,10 @@ const (
 	// ExitDependencyFailed indicates dependency resolution failed
 	ExitDependencyFailed = 8
 
+	// ExitDeterministicFailed indicates deterministic generation failed
+	// and LLM fallback was suppressed (--deterministic-only flag).
+	ExitDeterministicFailed = 9
+
 	// ExitCancelled indicates the operation was canceled by the user (Ctrl+C)
 	ExitCancelled = 130
 )

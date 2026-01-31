@@ -157,6 +157,7 @@ func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string)
 		"--output", recipePath,
 		"--yes",
 		"--skip-sandbox",
+		"--deterministic-only",
 	}
 
 	var lastErr error
@@ -321,6 +322,8 @@ func categoryFromExitCode(code int) string {
 		return "validation_failed"
 	case 8:
 		return "missing_dep"
+	case 9:
+		return "deterministic_insufficient"
 	default:
 		return "validation_failed"
 	}
