@@ -84,10 +84,10 @@ func NewExecutor(detector *validate.RuntimeDetector, opts ...ExecutorOption) *Ex
 
 // findTsukuBinary locates a valid tsuku binary for container execution.
 func findTsukuBinary() string {
-	// Try the current executable first
+	// Try the current executable first (accepts tsuku, tsuku-test, etc.)
 	if exePath, err := os.Executable(); err == nil {
 		baseName := filepath.Base(exePath)
-		if baseName == "tsuku" || baseName == "tsuku.exe" {
+		if strings.HasPrefix(baseName, "tsuku") {
 			return exePath
 		}
 	}

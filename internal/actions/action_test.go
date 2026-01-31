@@ -121,6 +121,9 @@ func TestNetworkValidator_AllActions(t *testing.T) {
 		"nix_realize": true,
 		// Arbitrary commands (conservative)
 		"run_command": true,
+		// Composite actions that decompose into network-requiring steps
+		"homebrew":      true,
+		"download_file": true,
 	}
 
 	// Actions that should NOT require network (work offline with cached content)
@@ -141,7 +144,6 @@ func TestNetworkValidator_AllActions(t *testing.T) {
 		"download_archive",
 		"github_archive",
 		"github_file",
-		"homebrew",
 	}
 
 	// Test actions that require network

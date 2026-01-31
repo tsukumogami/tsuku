@@ -93,6 +93,7 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 	ctx.Step(`^the output contains "([^"]*)"$`, theOutputContains)
 	ctx.Step(`^the output does not contain "([^"]*)"$`, theOutputDoesNotContain)
 	ctx.Step(`^the error output contains "([^"]*)"$`, theErrorOutputContains)
+	ctx.Step(`^the error output does not contain "([^"]*)"$`, theErrorOutputDoesNotContain)
 	ctx.Step(`^the file "([^"]*)" exists$`, theFileExists)
 	ctx.Step(`^the file "([^"]*)" does not exist$`, theFileDoesNotExist)
 	ctx.Step(`^I can run "([^"]*)"$`, iCanRun)

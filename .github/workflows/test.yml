@@ -132,7 +132,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if [ "${{ github.event_name }}" = "push" ]; then
+          if [ "${{ github.event_name }}" = "push" ] || [ "${{ needs.matrix.outputs.functional }}" = "true" ]; then
             make test-functional
           else
             make test-functional-critical
@@ -250,6 +250,8 @@ jobs:
       recipes: ${{ steps.filter.outputs.recipes }}
       # true when validator code is modified
       validator: ${{ steps.filter.outputs.validator }}
+      # true when functional test files or infra change
+      functional: ${{ steps.filter.outputs.functional }}
 
     steps:
       - uses: actions/checkout@v4
@@ -272,6 +274,8 @@ jobs:
             validator:
               - 'internal/recipe/validator.go'
               - 'internal/recipe/validator_test.go'
+            functional:
+              - 'test/functional/**'
 
       - name: Generate test matrices
         id: matrix

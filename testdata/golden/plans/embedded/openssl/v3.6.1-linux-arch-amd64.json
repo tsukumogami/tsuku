@@ -1,7 +1,7 @@
 {
   "format_version": 3,
   "tool": "openssl",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "platform": {
     "os": "linux",
     "arch": "amd64",
@@ -123,15 +123,15 @@
     {
       "action": "download_file",
       "params": {
-        "checksum": "dae10cea048eae154365f18fc51154093f8ba378ace3fe138f89dda08bf09e4e",
+        "checksum": "89ac158da355fc26605808829909a11e23d604f2d70ac7e272f318a71c1eab5c",
         "dest": "openssl@3.tar.gz",
-        "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:dae10cea048eae154365f18fc51154093f8ba378ace3fe138f89dda08bf09e4e"
+        "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:89ac158da355fc26605808829909a11e23d604f2d70ac7e272f318a71c1eab5c"
       },
       "evaluable": true,
       "deterministic": true,
-      "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:dae10cea048eae154365f18fc51154093f8ba378ace3fe138f89dda08bf09e4e",
-      "checksum": "dae10cea048eae154365f18fc51154093f8ba378ace3fe138f89dda08bf09e4e",
-      "size": 11218983
+      "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:89ac158da355fc26605808829909a11e23d604f2d70ac7e272f318a71c1eab5c",
+      "checksum": "89ac158da355fc26605808829909a11e23d604f2d70ac7e272f318a71c1eab5c",
+      "size": 11224092
     },
     {
       "action": "extract",

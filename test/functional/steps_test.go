@@ -32,7 +32,10 @@ func iRun(ctx context.Context, command string) (context.Context, error) {
 	// Run from the same directory as the binary, where .tsuku-test lives
 	cmd.Dir = filepath.Dir(state.binPath)
 	// Suppress telemetry notice in test output
-	cmd.Env = append(os.Environ(), "TSUKU_NO_TELEMETRY=1")
+	cmd.Env = append(os.Environ(),
+		"TSUKU_HOME="+state.homeDir,
+		"TSUKU_NO_TELEMETRY=1",
+	)
 
 	var stdout, stderr strings.Builder
 	cmd.Stdout = &stdout
@@ -93,6 +96,14 @@ func theErrorOutputContains(ctx context.Context, text string) error {
 	state := getState(ctx)
 	if !strings.Contains(state.stderr, text) {
 		return fmt.Errorf("expected stderr to contain %q, got:\n%s", text, state.stderr)
+	}
+	return nil
+}
+
+func theErrorOutputDoesNotContain(ctx context.Context, text string) error {
+	state := getState(ctx)
+	if strings.Contains(state.stderr, text) {
+		return fmt.Errorf("expected stderr not to contain %q, got:\n%s", text, state.stderr)
 	}
 	return nil
 }

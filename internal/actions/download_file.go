@@ -25,6 +25,9 @@ type DownloadFileAction struct{ BaseAction }
 // IsDeterministic returns true because download_file requires checksums.
 func (DownloadFileAction) IsDeterministic() bool { return true }
 
+// RequiresNetwork returns true because download_file fetches files from URLs.
+func (DownloadFileAction) RequiresNetwork() bool { return true }
+
 // Name returns the action name
 func (a *DownloadFileAction) Name() string {
 	return "download_file"
