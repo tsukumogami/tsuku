@@ -62,6 +62,8 @@ Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIG
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | [#1190](https://github.com/tsukumogami/tsuku/issues/1190) | design failure analysis backend | [#1189](https://github.com/tsukumogami/tsuku/issues/1189) | testable |
+| [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | top-blockers report for gap analysis | None | simple |
+| [#1278](https://github.com/tsukumogami/tsuku/issues/1278) | hybrid prioritization (popularity + blocking impact) | [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | testable |
 
 ### Milestone: [M-MultiEcosystem](https://github.com/tsukumogami/tsuku/milestone/54)
 
@@ -101,6 +103,8 @@ graph TD
 
     subgraph M_FailureBackend["M-FailureBackend"]
         I1190["#1190: Failure analysis backend"]
+        I1277["#1277: Top-blockers report"]
+        I1278["#1278: Hybrid prioritization"]
     end
 
     subgraph M_MultiEcosystem["M-MultiEcosystem"]
@@ -124,6 +128,7 @@ graph TD
     I1267 --> I1268
     I1189 --> I1190
     I1190 --> I1191
+    I1277 --> I1278
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
@@ -144,6 +149,8 @@ graph TD
     class I1273 needsDesign
     class I1266 needsDesign
     class I1190 needsDesign
+    class I1277 needsDesign
+    class I1278 needsDesign
     class I1191 blocked
 ```
 
