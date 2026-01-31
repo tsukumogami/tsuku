@@ -364,15 +364,21 @@ permissions:
 │   - linux-musl (alpine container on ubuntu, if !skip_musl│
 │   - darwin-arm64 (macos-14, if !skip_macos)              │
 │   - darwin-x86_64 (macos-13, if !skip_macos)             │
-│ - Update platform coverage metadata per recipe           │
-│ - Output: per-recipe, per-platform results               │
+│ - Retry on exit code 5 (network) up to 3x with backoff  │
+│ - Output: per-recipe, per-platform pass/fail artifacts   │
+│   (platform jobs NEVER modify recipe files)              │
 ├─────────────────────────────────────────────────────────┤
-│ Job 4: merge                                             │
-│ - Collect passing recipes from all ecosystems            │
+│ Job 4: merge (single aggregation point)                  │
+│ - Collect full result matrix from all platform jobs      │
+│ - For partial-coverage recipes: derive platform          │
+│   constraints from passing set, write to recipe TOML     │
+│   using existing fields (supported_os, supported_arch,   │
+│   supported_libc, unsupported_platforms)                  │
 │ - Exclude recipes with run_command actions               │
 │ - Create PR with batch_id in commit message              │
 │ - Record failures to data/failures/<ecosystem>.jsonl     │
-│ - Update batch-control.json metrics                      │
+│ - Append per-platform metrics to batch-runs.jsonl        │
+│ - Update batch-control.json circuit breaker state        │
 │ - Auto-merge if gates pass                               │
 └─────────────────────────────────────────────────────────┘
 ```
@@ -385,10 +391,12 @@ The batch tool invokes the released `tsuku` CLI binary for each package. This ex
 # Per-package generation via released CLI
 tsuku create --from cargo:ripgrep --deterministic --output recipes/r/ripgrep.toml
 
-# Exit codes determine failure handling:
+# Exit codes determine failure handling (from cmd/tsuku/exitcodes.go):
 #   0 = success (recipe written)
-#   1 = deterministic failure (classified in stderr JSON)
-#   2 = infrastructure error (API timeout, network, etc.)
+#   5 = network error (timeout, rate limit, DNS) — transient, retry up to 3x
+#   6 = install/generation failed — structural, no retry
+#   7 = verify failed — structural, no retry
+#   8 = dependency failed — structural, no retry
 ```
 
 The Go orchestrator (`cmd/batch-generate`) manages the loop: reading the queue, invoking `tsuku create` as a subprocess for each package, parsing exit codes and stderr for failure classification, and writing results. This keeps the orchestration logic in Go (testable, type-safe) while exercising the real CLI for the work that matters.
@@ -425,6 +433,8 @@ Recipe generated (on ubuntu-latest, platform-independent TOML)
 ```
 
 The progressive strategy applies across all platforms: Linux x86_64 glibc is the cheapest and catches most failures. arm64 and musl use Linux runners (low cost). macOS runners are last due to 10x cost. A recipe that fails on x86_64 glibc won't be tested on any other platform.
+
+**Retry policy:** Each platform validation job retries only on exit code 5 (`ExitNetwork` — timeouts, rate limits, DNS, connection errors) up to 3 times with exponential backoff. All other non-zero exit codes are structural failures and fail immediately without retry. This avoids wasting CI time on structural failures while catching transient network issues.
 
 ### Failure Record Format
 
@@ -485,13 +495,15 @@ Per-ecosystem rate limiting in the generation script:
 
 ### SLI Collection
 
-Each generation job outputs metrics to a JSONL summary:
+Each batch run appends one JSON line to `data/metrics/batch-runs.jsonl` with per-platform breakdown:
 
 ```jsonl
-{"batch_id":"2026-01-29-001","ecosystem":"cargo","total":25,"generated":23,"failed":2,"validated_linux":23,"validated_macos":21,"merged":21,"success_rate":0.84,"duration_seconds":450,"timestamp":"2026-01-29T10:30:00Z"}
+{"batch_id":"2026-01-29-001","ecosystem":"cargo","total":25,"generated":23,"platforms":{"linux-glibc-x86_64":{"tested":23,"passed":23,"failed":0},"linux-glibc-arm64":{"tested":23,"passed":20,"failed":3},"linux-musl-x86_64":{"tested":23,"passed":18,"failed":5},"darwin-arm64":{"tested":20,"passed":19,"failed":1},"darwin-x86_64":{"tested":20,"passed":19,"failed":1}},"merged":18,"timestamp":"2026-01-29T10:30:00Z","duration_seconds":450}
 ```
 
-Metrics are appended to `data/metrics/batch-runs.jsonl` and optionally uploaded to the telemetry endpoint.
+The merge job also writes a markdown summary table to `$GITHUB_STEP_SUMMARY` for immediate visibility in the GitHub Actions UI. This shows the same per-platform tested/passed/failed counts in a readable table.
+
+The file is append-only and committed to the repo. At weekly runs this grows by ~52 lines/year. A reporting script can be added later to aggregate trends from the accumulated data.
 
 ### CLI as the Execution Boundary
 
@@ -513,9 +525,9 @@ The batch pipeline invokes the released `tsuku` binary rather than importing `in
 Jobs communicate via GitHub Actions artifacts (`actions/upload-artifact` and `actions/download-artifact`):
 
 - **preflight → generate**: Package lists as JSON files (one per ecosystem)
-- **generate → validate-macos**: Recipe TOML files that passed Linux validation
+- **generate → validate-platforms**: Recipe TOML files that passed Linux x86_64 validation
 - **generate → merge**: Recipe TOML files, failure JSONL records
-- **validate-macos → merge**: Per-recipe platform validation results
+- **validate-platforms → merge**: Per-recipe, per-platform pass/fail results (JSON artifacts, not modified recipe files)
 
 Each artifact is named with the batch ID and ecosystem for traceability. Artifacts expire after 1 day (they're committed to the repo by the merge job).
 
@@ -567,7 +579,7 @@ Also add version pinning to `install.sh` (`TSUKU_VERSION` env var) so operators 
 
 ### Phase 2: Multi-Platform Progressive Validation
 
-Add platform validation jobs for Linux x86_64-passing recipes. Each platform job installs tsuku via `install.sh` and runs sandbox validation. Platforms are tested in cost order: Linux arm64 and musl (cheap), then macOS (expensive). Update platform coverage metadata in recipes.
+Add platform validation jobs for Linux x86_64-passing recipes. Each platform job installs tsuku via `install.sh` and runs sandbox validation. Platforms are tested in cost order: Linux arm64 and musl (cheap), then macOS (expensive). Platform jobs produce pass/fail result artifacts only — the merge job writes platform constraint fields into recipe TOML. Update `test-changed-recipes.yml` to use `tsuku info --json --metadata-only` for filtering recipes per platform runner, so PR CI skips recipes on platforms they don't support.
 
 | Platform | Runner | Cost | Skip Flag |
 |----------|--------|------|-----------|
