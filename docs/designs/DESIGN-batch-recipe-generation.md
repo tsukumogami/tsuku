@@ -60,7 +60,7 @@ Three challenges make this non-trivial:
 - Single concurrent run enforced via GitHub Actions `concurrency` group. Overlapping dispatches are queued, not parallel. This prevents `batch-control.json` write races and JSONL merge conflicts.
 
 **Prerequisites:**
-- `tsuku create` CLI command with `--deterministic` flag (invokes builder with `DeterministicOnly: true`). If this CLI surface doesn't exist, it must be added as a prerequisite issue.
+- `tsuku create` in deterministic-only mode: when no LLM API keys are present in the environment, builders run deterministic-only (no LLM fallback). The CI workflow runs without API keys, so this happens naturally.
 - Sandbox validation via `tsuku install --sandbox` (existing infrastructure).
 - Priority queue populated at `data/priority-queue.json` via the seed-queue workflow (#1241, completed). The `cmd/seed-queue` Go tool fetches from ecosystem APIs and merges additively into the queue file. See [DESIGN-seed-queue-pipeline.md](current/DESIGN-seed-queue-pipeline.md).
 
@@ -353,7 +353,7 @@ permissions:
 │ Job 2: generate-<ecosystem> (matrix, per ecosystem)      │
 │ - Install released tsuku via install.sh                  │
 │ - For each package in ecosystem slice:                   │
-│   - Run: tsuku create --from <eco>:<pkg> --deterministic │
+│   - Run: tsuku create --from <eco>:<pkg> │
 │   - On success: validate on Linux (sandbox)              │
 │   - On failure: classify exit code, record failure       │
 │ - Output: passing recipes, failure records               │
@@ -389,7 +389,7 @@ The batch tool invokes the released `tsuku` CLI binary for each package. This ex
 
 ```bash
 # Per-package generation via released CLI
-tsuku create --from cargo:ripgrep --deterministic --output recipes/r/ripgrep.toml
+tsuku create --from cargo:ripgrep --output recipes/r/ripgrep.toml
 
 # Exit codes determine failure handling (from cmd/tsuku/exitcodes.go):
 #   0 = success (recipe written)
@@ -510,7 +510,7 @@ The file is append-only and committed to the repo. At weekly runs this grows by 
 The batch pipeline invokes the released `tsuku` binary rather than importing `internal/builders` directly. This means the pipeline exercises the same code path users run, catching CLI-level regressions (flag parsing, environment handling, output formatting) that internal API calls would bypass.
 
 **CLI commands used:**
-- `tsuku create --from <eco>:<pkg> --deterministic` -- generate a recipe
+- `tsuku create --from <eco>:<pkg>` -- generate a recipe
 - `tsuku validate --strict <recipe>` -- schema validation
 - `tsuku install --plan <recipe> --sandbox` -- sandbox validation
 
@@ -549,7 +549,7 @@ Priority Queue (data/priority-queue.json)
     ├─ Preflight reads queue, filters by ecosystem/tier
     │
     ├─ Generate jobs install released tsuku via install.sh
-    │   ├─ For each package: tsuku create --from <eco>:<pkg> --deterministic
+    │   ├─ For each package: tsuku create --from <eco>:<pkg>
     │   ├─ Success → recipe TOML file
     │   └─ Failure → failure record (JSONL)
     │

@@ -134,7 +134,6 @@ func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string)
 	args := []string{
 		"create",
 		"--from", pkg.ID,
-		"--deterministic",
 		"--output", recipePath,
 	}
 
