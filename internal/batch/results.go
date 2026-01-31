@@ -28,7 +28,7 @@ type BatchResult struct {
 // Summary returns a markdown summary of the batch run for use in PR descriptions.
 func (r *BatchResult) Summary() string {
 	s := fmt.Sprintf("Batch run for **%s** on %s.\n\n", r.Ecosystem, r.Timestamp.Format("2006-01-02"))
-	s += fmt.Sprintf("| Metric | Count |\n|--------|-------|\n")
+	s += "| Metric | Count |\n|--------|-------|\n"
 	s += fmt.Sprintf("| Succeeded | %d |\n", r.Succeeded)
 	s += fmt.Sprintf("| Failed | %d |\n", r.Failed)
 	s += fmt.Sprintf("| Blocked | %d |\n", r.Blocked)
