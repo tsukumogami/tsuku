@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-01-31T18:00:45Z",
+  "updated_at": "2026-01-31T22:31:12Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -87,7 +87,7 @@
       "source": "homebrew",
       "name": "pkgconf",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {
@@ -95,7 +95,7 @@
       "source": "homebrew",
       "name": "python@3.14",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {
@@ -103,7 +103,7 @@
       "source": "homebrew",
       "name": "xz",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {
@@ -111,7 +111,7 @@
       "source": "homebrew",
       "name": "gnupg",
       "tier": 2,
-      "status": "pending",
+      "status": "blocked",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {
@@ -119,7 +119,7 @@
       "source": "homebrew",
       "name": "jq",
       "tier": 1,
-      "status": "pending",
+      "status": "blocked",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {
@@ -127,7 +127,7 @@
       "source": "homebrew",
       "name": "openssl@3",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -135,7 +135,7 @@
       "source": "homebrew",
       "name": "mkcert",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -143,7 +143,7 @@
       "source": "homebrew",
       "name": "helm",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -151,7 +151,7 @@
       "source": "homebrew",
       "name": "yt-dlp",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -159,7 +159,7 @@
       "source": "homebrew",
       "name": "python@3.11",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -167,7 +167,7 @@
       "source": "homebrew",
       "name": "protobuf",
       "tier": 2,
-      "status": "pending",
+      "status": "blocked",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -175,7 +175,7 @@
       "source": "homebrew",
       "name": "neovim",
       "tier": 1,
-      "status": "pending",
+      "status": "blocked",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -183,7 +183,7 @@
       "source": "homebrew",
       "name": "pnpm",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -191,7 +191,7 @@
       "source": "homebrew",
       "name": "harfbuzz",
       "tier": 2,
-      "status": "pending",
+      "status": "blocked",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -199,7 +199,7 @@
       "source": "homebrew",
       "name": "nvm",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:11:22Z"
     }
   ]
