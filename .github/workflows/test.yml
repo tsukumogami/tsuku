@@ -263,6 +263,7 @@ jobs:
               - '**/*.go'
               - 'go.mod'
               - 'go.sum'
+              - 'test/functional/**'
               - '.github/workflows/**'
             rust:
               - 'cmd/tsuku-dltest/**'
