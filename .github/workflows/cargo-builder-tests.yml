@@ -45,7 +45,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Create recipe for hyperfine
-        run: ./tsuku create hyperfine --from crates.io
+        run: ./tsuku create hyperfine --from crates.io --yes --skip-sandbox
 
       - name: Verify recipe was created
         run: |
@@ -88,7 +88,7 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
 
       - name: Create recipe for hyperfine
-        run: ./tsuku create hyperfine --from crates.io
+        run: ./tsuku create hyperfine --from crates.io --yes --skip-sandbox
 
       - name: Verify recipe was created
         run: |

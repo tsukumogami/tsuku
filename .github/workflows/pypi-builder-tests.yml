@@ -50,7 +50,7 @@ jobs:
         run: pip install pipx
 
       - name: Create recipe for ruff
-        run: ./tsuku create ruff --from pypi
+        run: ./tsuku create ruff --from pypi --yes --skip-sandbox
 
       - name: Verify recipe was created
         run: |
@@ -98,7 +98,7 @@ jobs:
         run: pip install pipx
 
       - name: Create recipe for ruff
-        run: ./tsuku create ruff --from pypi
+        run: ./tsuku create ruff --from pypi --yes --skip-sandbox
 
       - name: Verify recipe was created
         run: |

@@ -47,7 +47,7 @@ jobs:
           ruby-version: '3.2'
 
       - name: Create recipe for bundler
-        run: ./tsuku create bundler --from rubygems
+        run: ./tsuku create bundler --from rubygems --yes --skip-sandbox
 
       - name: Verify recipe was created
         run: |
@@ -92,7 +92,7 @@ jobs:
           ruby-version: '3.2'
 
       - name: Create recipe for bundler
-        run: ./tsuku create bundler --from rubygems
+        run: ./tsuku create bundler --from rubygems --yes --skip-sandbox
 
       - name: Verify recipe was created
         run: |
