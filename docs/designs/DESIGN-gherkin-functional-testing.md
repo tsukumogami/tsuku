@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: >
   Tsuku's test suite covers internal correctness and specific integration dimensions
   but doesn't systematically test user-facing CLI workflows like install-verify-remove
@@ -20,7 +20,7 @@ rationale: >
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
