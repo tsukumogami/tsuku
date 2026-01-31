@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: No CI pipeline exists to orchestrate batch recipe generation across deterministic ecosystem builders, validate recipes across target environments, record failures with structured metadata, and merge passing recipes at scale.
 decision: A manually-triggered GitHub Actions workflow that reads from the priority queue, runs per-ecosystem generation jobs with progressive validation (Linux first, macOS on pass), records failures to JSONL artifacts, and creates one PR per batch with auto-merge gated on validation and run_command absence.
 rationale: Manual trigger gives operators control over batch timing and size without requiring external orchestration. Per-ecosystem jobs isolate failures and enable ecosystem-specific rate limiting. Progressive validation reduces macOS CI cost by 80%+ since most failures surface on Linux. JSONL artifacts in the repo keep failure data versioned and auditable without requiring backend infrastructure in this phase.
@@ -9,7 +9,7 @@ rationale: Manual trigger gives operators control over batch timing and size wit
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
