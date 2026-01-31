@@ -82,8 +82,6 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 			continue
 		}
 
-		result.Generated++
-
 		// Validate the generated recipe by attempting installation.
 		valResult := o.validate(bin, pkg, recipePath)
 		if valResult.Err != nil {
@@ -99,6 +97,7 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 			continue
 		}
 
+		result.Succeeded++
 		result.Recipes = append(result.Recipes, recipePath)
 		o.setStatus(pkg.ID, "success")
 	}

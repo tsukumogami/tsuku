@@ -177,8 +177,8 @@ func TestRun_withFakeBinary(t *testing.T) {
 	if result.Failed != 1 {
 		t.Errorf("expected failed 1, got %d", result.Failed)
 	}
-	if result.Generated != 0 {
-		t.Errorf("expected generated 0, got %d", result.Generated)
+	if result.Succeeded != 0 {
+		t.Errorf("expected succeeded 0, got %d", result.Succeeded)
 	}
 	if len(result.Failures) != 1 {
 		t.Fatalf("expected 1 failure, got %d", len(result.Failures))
@@ -234,8 +234,8 @@ exit 0
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if result.Generated != 1 {
-		t.Errorf("expected generated 1, got %d", result.Generated)
+	if result.Succeeded != 1 {
+		t.Errorf("expected succeeded 1, got %d", result.Succeeded)
 	}
 	if result.Failed != 0 {
 		t.Errorf("expected failed 0, got %d", result.Failed)
@@ -297,8 +297,8 @@ esac
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	if result.Generated != 1 {
-		t.Errorf("expected generated 1, got %d", result.Generated)
+	if result.Succeeded != 0 {
+		t.Errorf("expected succeeded 0, got %d", result.Succeeded)
 	}
 	if result.Blocked != 1 {
 		t.Errorf("expected blocked 1, got %d", result.Blocked)
