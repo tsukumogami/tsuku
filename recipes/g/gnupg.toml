@@ -1,0 +1,35 @@
+[metadata]
+  name = "gnupg"
+  description = "GNU Privacy Guard (OpenPGP)"
+  homepage = "https://gnupg.org/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gnutls", "libassuan", "libgcrypt", "libgpg-error", "libksba", "libusb", "npth", "pinentry", "readline", "gettext"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "gnupg"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "gnupg"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["dirmngr", "dirmngr-client", "gpg", "gpg-agent", "gpg-card", "gpg-connect-agent", "gpg-mail-tube", "gpg-wks-client", "gpg-wks-server", "gpgconf", "gpgparsemail", "gpgscm", "gpgsm", "gpgsplit", "gpgtar", "gpgv", "kbxutil", "watchgnupg"]
+
+[verify]
+  command = "dirmngr --version"
+  pattern = ""

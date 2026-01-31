@@ -1,0 +1,35 @@
+[metadata]
+  name = "coreutils"
+  description = "GNU File, Shell, and Text utilities"
+  homepage = "https://www.gnu.org/software/coreutils/"
+  version_format = ""
+  requires_sudo = false
+  runtime_dependencies = ["gmp"]
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "coreutils"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "coreutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["g[", "gb2sum", "gbase32", "gbase64", "gbasename", "gbasenc", "gcat", "gchgrp", "gchmod", "gchown", "gchroot", "gcksum", "gcomm", "gcp", "gcsplit", "gcut", "gdate", "gdd", "gdf", "gdir", "gdircolors", "gdirname", "gdu", "gecho", "genv", "gexpand", "gexpr", "gfactor", "gfalse", "gfmt", "gfold", "ggroups", "ghead", "ghostid", "gid", "ginstall", "gjoin", "gkill", "glink", "gln", "glogname", "gls", "gmd5sum", "gmkdir", "gmkfifo", "gmknod", "gmktemp", "gmv", "gnice", "gnl", "gnohup", "gnproc", "gnumfmt", "god", "gpaste", "gpathchk", "gpinky", "gpr", "gprintenv", "gprintf", "gptx", "gpwd", "greadlink", "grealpath", "grm", "grmdir", "gseq", "gsha1sum", "gsha224sum", "gsha256sum", "gsha384sum", "gsha512sum", "gshred", "gshuf", "gsleep", "gsort", "gsplit", "gstat", "gstdbuf", "gstty", "gsum", "gsync", "gtac", "gtail", "gtee", "gtest", "gtimeout", "gtouch", "gtr", "gtrue", "gtruncate", "gtsort", "gtty", "guname", "gunexpand", "guniq", "gunlink", "guptime", "gusers", "gvdir", "gwc", "gwho", "gwhoami", "gyes"]
+
+[verify]
+  command = "g[ --version"
+  pattern = ""
