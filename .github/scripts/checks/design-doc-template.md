@@ -5,9 +5,16 @@ Required sections in order:
 ```markdown
 ---
 status: Proposed
-problem: One sentence describing the problem.
-decision: One sentence stating the decision.
-rationale: 1-2 sentences explaining why.
+problem: |
+  2-3 paragraphs describing the problem being solved.
+  Cover what's broken or missing, who it affects,
+  and why it matters now.
+decision: |
+  2-3 paragraphs stating the decision.
+  Cover the chosen approach and key design choices.
+rationale: |
+  2-3 paragraphs explaining why this approach was chosen.
+  Cover trade-offs and why alternatives were rejected.
 ---
 
 # DESIGN: Title
