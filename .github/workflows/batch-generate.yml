@@ -58,6 +58,9 @@ jobs:
             -batch-size "${{ inputs.batch_size }}" \
             -tier "${{ inputs.tier }}"
 
+      - name: Requeue unblocked packages
+        run: ./scripts/requeue-unblocked.sh
+
       - name: Check for generated recipes
         id: check
         run: |

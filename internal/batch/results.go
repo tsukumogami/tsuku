@@ -15,6 +15,7 @@ type BatchResult struct {
 	Total     int       `json:"total"`
 	Generated int       `json:"generated"`
 	Failed    int       `json:"failed"`
+	Blocked   int       `json:"blocked"`
 	Timestamp time.Time `json:"timestamp"`
 
 	// Recipes is the list of generated recipe file paths.

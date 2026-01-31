@@ -300,8 +300,11 @@ esac
 	if result.Generated != 1 {
 		t.Errorf("expected generated 1, got %d", result.Generated)
 	}
-	if result.Failed != 1 {
-		t.Errorf("expected failed 1, got %d", result.Failed)
+	if result.Blocked != 1 {
+		t.Errorf("expected blocked 1, got %d", result.Blocked)
+	}
+	if result.Failed != 0 {
+		t.Errorf("expected failed 0, got %d", result.Failed)
 	}
 	if len(result.Recipes) != 0 {
 		t.Errorf("expected 0 validated recipes, got %d", len(result.Recipes))
@@ -324,8 +327,8 @@ esac
 		t.Errorf("expected recipe file to be removed after validation failure")
 	}
 
-	if queue.Packages[0].Status != "failed" {
-		t.Errorf("expected queue status failed, got %s", queue.Packages[0].Status)
+	if queue.Packages[0].Status != "blocked" {
+		t.Errorf("expected queue status blocked, got %s", queue.Packages[0].Status)
 	}
 }
 

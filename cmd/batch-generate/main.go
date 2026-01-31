@@ -51,6 +51,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(os.Stderr, "Batch complete: %d generated, %d failed (%d total)\n",
-		result.Generated, result.Failed, result.Total)
+	fmt.Fprintf(os.Stderr, "Batch complete: %d generated, %d failed, %d blocked (%d total)\n",
+		result.Generated, result.Failed, result.Blocked, result.Total)
 }

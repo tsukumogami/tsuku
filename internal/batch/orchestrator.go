@@ -87,10 +87,15 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 		// Validate the generated recipe by attempting installation.
 		valResult := o.validate(bin, pkg, recipePath)
 		if valResult.Err != nil {
-			result.Failed++
 			result.Failures = append(result.Failures, valResult.Failure)
-			o.setStatus(pkg.ID, "failed")
 			os.Remove(recipePath)
+			if valResult.Failure.Category == "missing_dep" {
+				result.Blocked++
+				o.setStatus(pkg.ID, "blocked")
+			} else {
+				result.Failed++
+				o.setStatus(pkg.ID, "failed")
+			}
 			continue
 		}
 
