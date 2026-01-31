@@ -5,12 +5,17 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 	"unicode"
 
 	"github.com/tsukumogami/tsuku/internal/seed"
 )
+
+// reNotFoundInRegistry matches "recipe <name> not found in registry" in CLI output.
+// TODO(#1273): Replace with structured JSON output from tsuku install.
+var reNotFoundInRegistry = regexp.MustCompile(`recipe (\S+) not found in registry`)
 
 // ExitNetwork is the tsuku CLI exit code for transient network errors.
 const ExitNetwork = 5
@@ -78,6 +83,17 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 		}
 
 		result.Generated++
+
+		// Validate the generated recipe by attempting installation.
+		valResult := o.validate(bin, pkg, recipePath)
+		if valResult.Err != nil {
+			result.Failed++
+			result.Failures = append(result.Failures, valResult.Failure)
+			o.setStatus(pkg.ID, "failed")
+			os.Remove(recipePath)
+			continue
+		}
+
 		result.Recipes = append(result.Recipes, recipePath)
 		o.setStatus(pkg.ID, "success")
 	}
@@ -177,6 +193,89 @@ func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string)
 			Timestamp: time.Now().UTC(),
 		},
 	}
+}
+
+// validate runs tsuku install --recipe to verify the generated recipe works.
+// It uses the same retry logic as generate for transient network errors.
+// On failure, it parses CLI output to identify missing dependencies and
+// produces a structured FailureRecord with BlockedBy populated.
+func (o *Orchestrator) validate(bin string, pkg seed.Package, recipePath string) generateResult {
+	args := []string{
+		"install", "--force", "--recipe", recipePath,
+	}
+
+	var lastErr error
+	var lastOutput []byte
+	for attempt := 0; attempt <= MaxRetries; attempt++ {
+		if attempt > 0 {
+			delay := time.Duration(1<<uint(attempt-1)) * time.Second
+			time.Sleep(delay)
+		}
+
+		cmd := exec.Command(bin, args...)
+		output, err := cmd.CombinedOutput()
+		if err == nil {
+			return generateResult{}
+		}
+
+		lastOutput = output
+		exitCode := exitCodeFrom(err)
+		lastErr = fmt.Errorf("tsuku install %s: exit %d: %s", pkg.ID, exitCode, truncateOutput(output))
+
+		if exitCode != ExitNetwork {
+			category, blockedBy := classifyValidationFailure(output)
+			return generateResult{
+				Err: lastErr,
+				Failure: FailureRecord{
+					PackageID: pkg.ID,
+					Category:  category,
+					BlockedBy: blockedBy,
+					Message:   truncateOutput(output),
+					Timestamp: time.Now().UTC(),
+				},
+			}
+		}
+	}
+
+	category, blockedBy := classifyValidationFailure(lastOutput)
+	return generateResult{
+		Err: lastErr,
+		Failure: FailureRecord{
+			PackageID: pkg.ID,
+			Category:  category,
+			BlockedBy: blockedBy,
+			Message:   fmt.Sprintf("failed after %d retries: %s", MaxRetries, truncateOutput(lastOutput)),
+			Timestamp: time.Now().UTC(),
+		},
+	}
+}
+
+// classifyValidationFailure parses CLI output to determine the failure
+// category and extract any missing dependency names.
+// TODO(#1273): Replace regex parsing with structured JSON from tsuku install --output json.
+// The current approach is brittle because it depends on human-readable error message text.
+// Once tsuku install supports JSON output, this function should parse the structured
+// response instead, and the exit code should distinguish missing deps (8) from other
+// install failures (6).
+func classifyValidationFailure(output []byte) (category string, blockedBy []string) {
+	text := string(output)
+
+	// Extract unique missing recipe names from "recipe <name> not found in registry"
+	matches := reNotFoundInRegistry.FindAllStringSubmatch(text, -1)
+	seen := map[string]bool{}
+	for _, m := range matches {
+		name := m[1]
+		if !seen[name] {
+			seen[name] = true
+			blockedBy = append(blockedBy, name)
+		}
+	}
+
+	if len(blockedBy) > 0 {
+		return "missing_dep", blockedBy
+	}
+
+	return "validation_failed", nil
 }
 
 func (o *Orchestrator) setStatus(id, status string) {

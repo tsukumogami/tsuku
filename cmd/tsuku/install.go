@@ -164,6 +164,10 @@ Test installation in a sandbox container:
 				if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
 					// Continue installing other tools even if one fails?
 					// For now, exit on first failure to be safe
+					// TODO(#1273): Distinguish dependency failures (ExitDependencyFailed)
+					// from other install failures. Currently all errors exit with
+					// ExitInstallFailed, which prevents programmatic consumers from
+					// identifying missing dependencies via exit code alone.
 					printError(err)
 					exitWithCode(ExitInstallFailed)
 				}
