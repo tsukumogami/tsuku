@@ -1,0 +1,64 @@
+{
+  "format_version": 3,
+  "tool": "openssl",
+  "version": "3.6.1",
+  "platform": {
+    "os": "darwin",
+    "arch": "arm64"
+  },
+  "recipe_hash": "3c1319b74192a4b885e8d6e822039d72377d99b99d2a2d01521523d3ebbf0bd8",
+  "deterministic": true,
+  "steps": [
+    {
+      "action": "download_file",
+      "params": {
+        "checksum": "d0f784ea2dce63f778a41cc0db641a95f8c46c39e5487bd151cad20760723b13",
+        "dest": "openssl@3.tar.gz",
+        "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:d0f784ea2dce63f778a41cc0db641a95f8c46c39e5487bd151cad20760723b13"
+      },
+      "evaluable": true,
+      "deterministic": true,
+      "url": "https://ghcr.io/v2/homebrew/core/openssl/3/blobs/sha256:d0f784ea2dce63f778a41cc0db641a95f8c46c39e5487bd151cad20760723b13",
+      "checksum": "d0f784ea2dce63f778a41cc0db641a95f8c46c39e5487bd151cad20760723b13",
+      "size": 10871872
+    },
+    {
+      "action": "extract",
+      "params": {
+        "archive": "openssl@3.tar.gz",
+        "format": "tar.gz",
+        "strip_dirs": 2
+      },
+      "evaluable": true,
+      "deterministic": true
+    },
+    {
+      "action": "homebrew_relocate",
+      "params": {
+        "formula": "openssl@3"
+      },
+      "evaluable": false,
+      "deterministic": true
+    },
+    {
+      "action": "install_binaries",
+      "params": {
+        "install_mode": "directory",
+        "outputs": [
+          "bin/openssl",
+          "lib/libssl.dylib",
+          "lib/libssl.3.dylib",
+          "lib/libcrypto.dylib",
+          "lib/libcrypto.3.dylib"
+        ]
+      },
+      "evaluable": true,
+      "deterministic": true
+    }
+  ],
+  "verify": {
+    "command": "openssl version",
+    "pattern": "OpenSSL {version}"
+  },
+  "recipe_type": "library"
+}

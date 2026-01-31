@@ -49,8 +49,9 @@ jobs:
       - name: Install pipx
         run: pip install pipx
 
+      # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
       - name: Create recipe for ruff
-        run: ./tsuku create ruff --from pypi
+        run: ./tsuku create ruff --from pypi --yes --skip-sandbox
 
       - name: Verify recipe was created
         run: |
@@ -97,8 +98,9 @@ jobs:
       - name: Install pipx
         run: pip install pipx
 
+      # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
       - name: Create recipe for ruff
-        run: ./tsuku create ruff --from pypi
+        run: ./tsuku create ruff --from pypi --yes --skip-sandbox
 
       - name: Verify recipe was created
         run: |

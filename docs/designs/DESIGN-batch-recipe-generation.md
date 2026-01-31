@@ -25,6 +25,7 @@ Planned
 | [#1257](https://github.com/tsukumogami/tsuku/issues/1257) | SLI metrics collection | [#1254](https://github.com/tsukumogami/tsuku/issues/1254) | testable |
 | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | PR CI platform filtering | [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | testable |
 | [#1273](https://github.com/tsukumogami/tsuku/issues/1273) | Structured JSON CLI output + batch integration | None | testable |
+| [#1287](https://github.com/tsukumogami/tsuku/issues/1287) | Auto-install required toolchains for ecosystem builders | None | testable |
 
 ### Dependency Graph
 
@@ -51,6 +52,7 @@ graph LR
     subgraph Future["Future Work"]
         I1253["#1253: Pinned release + source fallback"]
         I1273["#1273: Structured JSON CLI output"]
+        I1287["#1287: Auto-install toolchains"]
     end
 
     I1252 --> I1254
@@ -67,7 +69,7 @@ graph LR
 
     class I1252 ready
     class I1253 blocked
-    class I1273 needsDesign
+    class I1273,I1287 ready
     class I1254,I1255,I1256,I1257,I1258 blocked
 ```
 
