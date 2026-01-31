@@ -1,0 +1,87 @@
+name: Batch Recipe Generation
+on:
+  workflow_dispatch:
+    inputs:
+      ecosystem:
+        description: 'Ecosystem to process'
+        required: true
+        default: 'homebrew'
+        type: choice
+        options:
+          - homebrew
+          - cargo
+          - npm
+          - pypi
+          - rubygems
+          - go
+          - cpan
+          - cask
+      batch_size:
+        description: 'Max recipes per run'
+        required: true
+        default: '25'
+      tier:
+        description: 'Queue tier (1=critical, 2=popular, 3=all)'
+        required: true
+        default: '2'
+        type: choice
+        options: ['1', '2', '3']
+
+concurrency:
+  group: batch-generate
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build batch-generate
+        run: go build -o batch-generate ./cmd/batch-generate
+
+      - name: Install tsuku
+        run: |
+          curl -fsSL https://tsuku.dev/install.sh | bash
+          echo "$HOME/.tsuku/bin" >> "$GITHUB_PATH"
+
+      - name: Run batch generation
+        run: |
+          ./batch-generate \
+            -ecosystem "${{ inputs.ecosystem }}" \
+            -batch-size "${{ inputs.batch_size }}" \
+            -tier "${{ inputs.tier }}"
+
+      - name: Check for generated recipes
+        id: check
+        run: |
+          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard recipes/)" ]; then
+            echo "changes=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changes=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create pull request
+        if: steps.check.outputs.changes == 'true'
+        run: |
+          BRANCH="batch/${{ inputs.ecosystem }}-$(date +%Y%m%d)"
+          git checkout -b "$BRANCH"
+          git add recipes/ data/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "feat(recipes): add batch $(date +%Y-%m-%d) ${{ inputs.ecosystem }} recipes"
+          git push -u origin "$BRANCH"
+          gh pr create \
+            --title "feat(recipes): add batch ${{ inputs.ecosystem }} recipes" \
+            --body "Automated batch generation for ${{ inputs.ecosystem }} ecosystem." \
+            --base main
+        env:
+          GH_TOKEN: ${{ github.token }}
