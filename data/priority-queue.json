@@ -59,14 +59,6 @@
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
-      "id": "homebrew:git",
-      "source": "homebrew",
-      "name": "git",
-      "tier": 2,
-      "status": "pending",
-      "added_at": "2026-01-30T23:59:06Z"
-    },
-    {
       "id": "homebrew:gemini-cli",
       "source": "homebrew",
       "name": "gemini-cli",
@@ -81,14 +73,6 @@
       "tier": 2,
       "status": "pending",
       "added_at": "2026-01-30T23:59:06Z"
-    },
-    {
-      "id": "homebrew:docker",
-      "source": "homebrew",
-      "name": "docker",
-      "tier": 2,
-      "status": "pending",
-      "added_at": "2026-01-31T00:06:53Z"
     },
     {
       "id": "homebrew:pyenv",
@@ -142,14 +126,6 @@
       "id": "homebrew:gnupg",
       "source": "homebrew",
       "name": "gnupg",
-      "tier": 2,
-      "status": "pending",
-      "added_at": "2026-01-31T00:06:53Z"
-    },
-    {
-      "id": "homebrew:mise",
-      "source": "homebrew",
-      "name": "mise",
       "tier": 2,
       "status": "pending",
       "added_at": "2026-01-31T00:06:53Z"

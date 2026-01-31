@@ -43,6 +43,7 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~design homebrew deterministic mode~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
+| [#1266](https://github.com/tsukumogami/tsuku/issues/1266) | structured deterministic-failed error path | [#1188](https://github.com/tsukumogami/tsuku/issues/1188) | testable |
 
 ### Milestone: [M-BatchPipeline](https://github.com/tsukumogami/tsuku/milestone/52)
 
@@ -50,6 +51,8 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 |-------|-------|--------------|------|
 | ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~seed priority queue pipeline~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~, ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~testable~~ |
 | ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~design batch recipe generation CI pipeline~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~testable~~ |
+| [#1267](https://github.com/tsukumogami/tsuku/issues/1267) | skip existing recipes in seed tool | [#1241](https://github.com/tsukumogami/tsuku/issues/1241) | simple |
+| [#1268](https://github.com/tsukumogami/tsuku/issues/1268) | CI validation of queue against registry | [#1267](https://github.com/tsukumogami/tsuku/issues/1267) | testable |
 
 Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md) for issue details.
 
@@ -84,11 +87,14 @@ graph TD
 
     subgraph M_HomebrewBuilder["M-HomebrewBuilder"]
         I1188["#1188: Homebrew deterministic mode"]
+        I1266["#1266: Deterministic-failed error path"]
     end
 
     subgraph M_BatchPipeline["M-BatchPipeline"]
         I1241["#1241: Seed priority queue pipeline"]
         I1189["#1189: Batch recipe generation CI"]
+        I1267["#1267: Skip existing in seed tool"]
+        I1268["#1268: CI queue vs registry check"]
     end
 
     subgraph M_FailureBackend["M-FailureBackend"]
@@ -111,6 +117,9 @@ graph TD
     I1186 --> I1189
     I1187 --> I1189
     I1188 --> I1189
+    I1188 --> I1266
+    I1241 --> I1267
+    I1267 --> I1268
     I1189 --> I1190
     I1190 --> I1191
 
@@ -128,6 +137,9 @@ graph TD
     class I1203 done
     class I1241 done
     class I1189 done
+    class I1267 needsDesign
+    class I1268 needsDesign
+    class I1266 needsDesign
     class I1190 needsDesign
     class I1191 blocked
 ```

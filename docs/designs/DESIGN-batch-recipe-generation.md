@@ -18,7 +18,7 @@ Planned
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | Preflight job and rate limiting | None | testable |
-| [#1253](https://github.com/tsukumogami/tsuku/issues/1253) | install.sh TSUKU_VERSION support | None | testable |
+| [#1253](https://github.com/tsukumogami/tsuku/issues/1253) | Pinned release with source fallback | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | simple |
 | [#1254](https://github.com/tsukumogami/tsuku/issues/1254) | Multi-platform validation jobs | [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | testable |
 | [#1255](https://github.com/tsukumogami/tsuku/issues/1255) | Circuit breaker integration | [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | testable |
 | [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | Platform constraints in merge job | [#1254](https://github.com/tsukumogami/tsuku/issues/1254) | testable |
@@ -31,7 +31,6 @@ Planned
 graph LR
     subgraph Phase1["Phase 1: Foundation"]
         I1252["#1252: Preflight + rate limiting"]
-        I1253["#1253: install.sh version pinning"]
     end
 
     subgraph Phase2["Phase 2: Validation"]
@@ -48,18 +47,24 @@ graph LR
         I1258["#1258: PR CI filtering"]
     end
 
+    subgraph Future["Future Work"]
+        I1253["#1253: Pinned release + source fallback"]
+    end
+
     I1252 --> I1254
     I1252 --> I1255
     I1254 --> I1256
     I1254 --> I1257
     I1256 --> I1258
+    I1258 --> I1253
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1252,I1253 ready
+    class I1252 ready
+    class I1253 blocked
     class I1254,I1255,I1256,I1257,I1258 blocked
 ```
 
@@ -405,7 +410,7 @@ permissions:
 │ - Output: package list per ecosystem, batch_id           │
 ├─────────────────────────────────────────────────────────┤
 │ Job 2: generate-<ecosystem> (matrix, per ecosystem)      │
-│ - Install released tsuku via install.sh                  │
+│ - Build tsuku from source (go build)                     │
 │ - For each package in ecosystem slice:                   │
 │   - Run: tsuku create --from <eco>:<pkg> │
 │   - On success: validate on Linux (sandbox)              │
@@ -568,7 +573,7 @@ The batch pipeline invokes the released `tsuku` binary rather than importing `in
 - `tsuku validate --strict <recipe>` -- schema validation
 - `tsuku install --plan <recipe> --sandbox` -- sandbox validation
 
-**CLI installation:** Each generate job installs `tsuku` via `install.sh`. The script currently fetches the latest release. Version pinning support (`TSUKU_VERSION` env var) should be added to allow operators to pin to a known-good release if the latest has issues.
+**CLI installation:** Each generate job builds `tsuku` from source (`go build ./cmd/tsuku`). This catches CLI regressions immediately rather than waiting for a release. Version pinning via `install.sh` is deferred to #1253 once the pipeline stabilizes.
 
 **Why not Go API:** If the CLI doesn't work, there's little value in generating recipes that users can't install. A broken CLI release gets caught immediately by batch failures tripping the circuit breaker, rather than being masked by internal API calls that bypass the CLI entirely.
 
@@ -602,7 +607,7 @@ Priority Queue (data/priority-queue.json)
     │
     ├─ Preflight reads queue, filters by ecosystem/tier
     │
-    ├─ Generate jobs install released tsuku via install.sh
+    ├─ Generate jobs build tsuku from source (go build)
     │   ├─ For each package: tsuku create --from <eco>:<pkg>
     │   ├─ Success → recipe TOML file
     │   └─ Failure → failure record (JSONL)
@@ -625,15 +630,13 @@ Priority Queue (data/priority-queue.json)
 
 ### Phase 1: End-to-End Pipeline (Generation + Linux Validation + Merge)
 
-Create the Go orchestrator (`cmd/batch-generate`) and GitHub Actions workflow. The orchestrator reads the queue, invokes the released `tsuku` CLI for generation and validation, records failures, and outputs results. The workflow installs tsuku via `install.sh`, runs the orchestrator, and creates a PR with passing recipes.
+Create the Go orchestrator (`cmd/batch-generate`) and GitHub Actions workflow. The orchestrator reads the queue, invokes the `tsuku` CLI (built from source) for generation and validation, records failures, and outputs results. The workflow builds both binaries, runs the orchestrator, and creates a PR with passing recipes.
 
-Also add version pinning to `install.sh` (`TSUKU_VERSION` env var) so operators can pin to a known-good release if needed.
-
-**Files:** `cmd/batch-generate/main.go`, `internal/batch/`, `.github/workflows/batch-generate.yml`, `website/install.sh` (version pinning), `data/failures/`
+**Files:** `cmd/batch-generate/main.go`, `internal/batch/`, `.github/workflows/batch-generate.yml`, `data/failures/`
 
 ### Phase 2: Multi-Platform Progressive Validation
 
-Add platform validation jobs for Linux x86_64-passing recipes. Each platform job installs tsuku via `install.sh` and runs sandbox validation. Platforms are tested in cost order: Linux arm64 and musl (cheap), then macOS (expensive). Platform jobs produce pass/fail result artifacts only — the merge job writes platform constraint fields into recipe TOML. Update `test-changed-recipes.yml` to use `tsuku info --json --metadata-only` for filtering recipes per platform runner, so PR CI skips recipes on platforms they don't support.
+Add platform validation jobs for Linux x86_64-passing recipes. Each platform job builds tsuku from source and runs sandbox validation. Platforms are tested in cost order: Linux arm64 and musl (cheap), then macOS (expensive). Platform jobs produce pass/fail result artifacts only — the merge job writes platform constraint fields into recipe TOML. Update `test-changed-recipes.yml` to use `tsuku info --json --metadata-only` for filtering recipes per platform runner, so PR CI skips recipes on platforms they don't support.
 
 | Platform | Runner | Cost | Skip Flag |
 |----------|--------|------|-----------|
