@@ -45,15 +45,20 @@ func TestFeatures(t *testing.T) {
 	}
 	binPath = absBin
 
+	opts := &godog.Options{
+		Format:   "pretty",
+		Paths:    []string{"features"},
+		TestingT: t,
+	}
+	if tags := os.Getenv("TSUKU_TEST_TAGS"); tags != "" {
+		opts.Tags = tags
+	}
+
 	suite := godog.TestSuite{
 		ScenarioInitializer: func(ctx *godog.ScenarioContext) {
 			initializeScenario(ctx, binPath)
 		},
-		Options: &godog.Options{
-			Format:   "pretty",
-			Paths:    []string{"features"},
-			TestingT: t,
-		},
+		Options: opts,
 	}
 	if suite.Run() != 0 {
 		t.Fatal("functional tests failed")

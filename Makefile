@@ -22,5 +22,5 @@ test-functional: build-test
 
 # Run only critical functional tests
 test-functional-critical: build-test
-	TSUKU_TEST_BINARY=$(CURDIR)/tsuku-test go test -v ./test/functional/... -godog.tags=@critical
+	TSUKU_TEST_BINARY=$(CURDIR)/tsuku-test TSUKU_TEST_TAGS=@critical go test -v ./test/functional/...
 	rm -rf .tsuku-test
