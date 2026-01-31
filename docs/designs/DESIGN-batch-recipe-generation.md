@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: No CI pipeline exists to orchestrate batch recipe generation across deterministic ecosystem builders, validate recipes across target environments, record failures with structured metadata, and merge passing recipes at scale.
 decision: A manually-triggered GitHub Actions workflow that reads from the priority queue, runs per-ecosystem generation jobs with progressive validation (Linux first, macOS on pass), records failures to JSONL artifacts, and creates one PR per batch with auto-merge gated on validation and run_command absence.
 rationale: Manual trigger gives operators control over batch timing and size without requiring external orchestration. Per-ecosystem jobs isolate failures and enable ecosystem-specific rate limiting. Progressive validation reduces macOS CI cost by 80%+ since most failures surface on Linux. JSONL artifacts in the repo keep failure data versioned and auditable without requiring backend infrastructure in this phase.
@@ -9,7 +9,61 @@ rationale: Manual trigger gives operators control over batch timing and size wit
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [M-BatchPipeline](https://github.com/tsukumogami/tsuku/milestone/52)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | Preflight job and rate limiting | None | testable |
+| [#1253](https://github.com/tsukumogami/tsuku/issues/1253) | install.sh TSUKU_VERSION support | None | testable |
+| [#1254](https://github.com/tsukumogami/tsuku/issues/1254) | Multi-platform validation jobs | [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | testable |
+| [#1255](https://github.com/tsukumogami/tsuku/issues/1255) | Circuit breaker integration | [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | testable |
+| [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | Platform constraints in merge job | [#1254](https://github.com/tsukumogami/tsuku/issues/1254) | testable |
+| [#1257](https://github.com/tsukumogami/tsuku/issues/1257) | SLI metrics collection | [#1254](https://github.com/tsukumogami/tsuku/issues/1254) | testable |
+| [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | PR CI platform filtering | [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | testable |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Foundation"]
+        I1252["#1252: Preflight + rate limiting"]
+        I1253["#1253: install.sh version pinning"]
+    end
+
+    subgraph Phase2["Phase 2: Validation"]
+        I1254["#1254: Multi-platform validation"]
+        I1255["#1255: Circuit breaker"]
+    end
+
+    subgraph Phase3["Phase 3: Constraints + Metrics"]
+        I1256["#1256: Platform constraints"]
+        I1257["#1257: SLI metrics"]
+    end
+
+    subgraph Phase4["Phase 4: CI Integration"]
+        I1258["#1258: PR CI filtering"]
+    end
+
+    I1252 --> I1254
+    I1252 --> I1255
+    I1254 --> I1256
+    I1254 --> I1257
+    I1256 --> I1258
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1252,I1253 ready
+    class I1254,I1255,I1256,I1257,I1258 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
