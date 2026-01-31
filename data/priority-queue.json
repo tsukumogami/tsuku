@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-01-31T00:00:36Z",
+  "updated_at": "2026-01-31T00:06:53Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -81,6 +81,86 @@
       "tier": 2,
       "status": "pending",
       "added_at": "2026-01-30T23:59:06Z"
+    },
+    {
+      "id": "homebrew:docker",
+      "source": "homebrew",
+      "name": "docker",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:pyenv",
+      "source": "homebrew",
+      "name": "pyenv",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:xcbeautify",
+      "source": "homebrew",
+      "name": "xcbeautify",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:coreutils",
+      "source": "homebrew",
+      "name": "coreutils",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:pkgconf",
+      "source": "homebrew",
+      "name": "pkgconf",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:python@3.14",
+      "source": "homebrew",
+      "name": "python@3.14",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:xz",
+      "source": "homebrew",
+      "name": "xz",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:gnupg",
+      "source": "homebrew",
+      "name": "gnupg",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:mise",
+      "source": "homebrew",
+      "name": "mise",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:jq",
+      "source": "homebrew",
+      "name": "jq",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-01-31T00:06:53Z"
     }
   ]
 }
