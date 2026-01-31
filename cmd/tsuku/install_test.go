@@ -1,8 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/registry"
 )
 
 func TestIsInteractive(t *testing.T) {
@@ -208,5 +211,104 @@ func TestInstallCmdUsage(t *testing.T) {
 	}
 	if !strings.Contains(installCmd.Long, "tsuku eval rg | tsuku install --plan -") {
 		t.Error("installCmd.Long should contain --plan stdin example")
+	}
+}
+
+func TestClassifyInstallError(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		want int
+	}{
+		{
+			name: "not found registry error",
+			err: &registry.RegistryError{
+				Type:    registry.ErrTypeNotFound,
+				Recipe:  "nonexistent",
+				Message: "recipe not found",
+			},
+			want: ExitRecipeNotFound,
+		},
+		{
+			name: "network registry error",
+			err: &registry.RegistryError{
+				Type:    registry.ErrTypeNetwork,
+				Message: "connection failed",
+			},
+			want: ExitNetwork,
+		},
+		{
+			name: "DNS registry error",
+			err: &registry.RegistryError{
+				Type:    registry.ErrTypeDNS,
+				Message: "DNS resolution failed",
+			},
+			want: ExitNetwork,
+		},
+		{
+			name: "timeout registry error",
+			err: &registry.RegistryError{
+				Type:    registry.ErrTypeTimeout,
+				Message: "request timed out",
+			},
+			want: ExitNetwork,
+		},
+		{
+			name: "connection registry error",
+			err: &registry.RegistryError{
+				Type:    registry.ErrTypeConnection,
+				Message: "connection refused",
+			},
+			want: ExitNetwork,
+		},
+		{
+			name: "TLS registry error",
+			err: &registry.RegistryError{
+				Type:    registry.ErrTypeTLS,
+				Message: "certificate error",
+			},
+			want: ExitNetwork,
+		},
+		{
+			name: "wrapped not found error",
+			err: fmt.Errorf("install failed: %w", &registry.RegistryError{
+				Type:    registry.ErrTypeNotFound,
+				Recipe:  "missing-tool",
+				Message: "recipe not found",
+			}),
+			want: ExitRecipeNotFound,
+		},
+		{
+			name: "dependency failure",
+			err:  fmt.Errorf("failed to install dependency 'dav1d': registry: recipe dav1d not found in registry"),
+			want: ExitDependencyFailed,
+		},
+		{
+			name: "wrapped dependency failure",
+			err:  fmt.Errorf("install error: %w", fmt.Errorf("failed to install dependency 'libx265': some error")),
+			want: ExitDependencyFailed,
+		},
+		{
+			name: "generic install error",
+			err:  fmt.Errorf("extraction failed: bad tarball"),
+			want: ExitInstallFailed,
+		},
+		{
+			name: "parsing registry error falls through to default",
+			err: &registry.RegistryError{
+				Type:    registry.ErrTypeParsing,
+				Message: "invalid TOML",
+			},
+			want: ExitInstallFailed,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := classifyInstallError(tt.err)
+			if got != tt.want {
+				t.Errorf("classifyInstallError() = %d, want %d", got, tt.want)
+			}
+		})
 	}
 }

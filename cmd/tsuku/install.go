@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -9,6 +10,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/registry"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
@@ -97,7 +99,7 @@ Test installation in a sandbox container:
 
 			if err := runRecipeBasedInstall(installRecipePath, toolName); err != nil {
 				printError(err)
-				exitWithCode(ExitInstallFailed)
+				exitWithCode(classifyInstallError(err))
 			}
 			return
 		}
@@ -124,7 +126,7 @@ Test installation in a sandbox container:
 
 			if err := runPlanBasedInstall(installPlanPath, toolName); err != nil {
 				printError(err)
-				exitWithCode(ExitInstallFailed)
+				exitWithCode(classifyInstallError(err))
 			}
 			return
 		}
@@ -162,14 +164,8 @@ Test installation in a sandbox container:
 				}
 			} else {
 				if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
-					// Continue installing other tools even if one fails?
-					// For now, exit on first failure to be safe
-					// TODO(#1273): Distinguish dependency failures (ExitDependencyFailed)
-					// from other install failures. Currently all errors exit with
-					// ExitInstallFailed, which prevents programmatic consumers from
-					// identifying missing dependencies via exit code alone.
 					printError(err)
-					exitWithCode(ExitInstallFailed)
+					exitWithCode(classifyInstallError(err))
 				}
 			}
 		}
@@ -263,4 +259,24 @@ func runRecipeBasedInstall(recipePath, toolName string) error {
 	}
 
 	return nil
+}
+
+// classifyInstallError maps an install error to the appropriate exit code.
+// It uses typed error unwrapping for registry errors and string matching
+// for dependency wrapper errors.
+func classifyInstallError(err error) int {
+	var regErr *registry.RegistryError
+	if errors.As(err, &regErr) {
+		switch regErr.Type {
+		case registry.ErrTypeNotFound:
+			return ExitRecipeNotFound // 3
+		case registry.ErrTypeNetwork, registry.ErrTypeDNS,
+			registry.ErrTypeTimeout, registry.ErrTypeConnection, registry.ErrTypeTLS:
+			return ExitNetwork // 5
+		}
+	}
+	if strings.Contains(err.Error(), "failed to install dependency") {
+		return ExitDependencyFailed // 8
+	}
+	return ExitInstallFailed // 6
 }
