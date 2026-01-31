@@ -17,8 +17,8 @@ Planned
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1288](https://github.com/tsukumogami/tsuku/issues/1288) | classify install errors with typed exit codes | None | testable |
-| [#1289](https://github.com/tsukumogami/tsuku/issues/1289) | add --json flag to tsuku install | [#1288](https://github.com/tsukumogami/tsuku/issues/1288) | testable |
+| ~~[#1288](https://github.com/tsukumogami/tsuku/issues/1288)~~ | ~~classify install errors with typed exit codes~~ | ~~None~~ | ~~testable~~ |
+| ~~[#1289](https://github.com/tsukumogami/tsuku/issues/1289)~~ | ~~add --json flag to tsuku install~~ | ~~[#1288](https://github.com/tsukumogami/tsuku/issues/1288)~~ | ~~testable~~ |
 | [#1290](https://github.com/tsukumogami/tsuku/issues/1290) | replace regex error parsing with JSON | [#1289](https://github.com/tsukumogami/tsuku/issues/1289) | testable |
 
 ### Dependency Graph
@@ -37,8 +37,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1288 ready
-    class I1289,I1290 blocked
+    class I1288,I1289 done
+    class I1290 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
