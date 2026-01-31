@@ -43,22 +43,6 @@
       "added_at": "2026-01-30T23:59:06Z"
     },
     {
-      "id": "homebrew:cmake",
-      "source": "homebrew",
-      "name": "cmake",
-      "tier": 1,
-      "status": "pending",
-      "added_at": "2026-01-30T23:59:06Z"
-    },
-    {
-      "id": "homebrew:go",
-      "source": "homebrew",
-      "name": "go",
-      "tier": 1,
-      "status": "pending",
-      "added_at": "2026-01-30T23:59:06Z"
-    },
-    {
       "id": "homebrew:gemini-cli",
       "source": "homebrew",
       "name": "gemini-cli",
