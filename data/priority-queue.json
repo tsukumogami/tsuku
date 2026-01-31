@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-01-30T23:59:06Z",
+  "updated_at": "2026-01-31T00:00:28Z",
   "packages": [
     {
       "id": "homebrew:awscli",
