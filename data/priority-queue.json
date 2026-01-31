@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-01-31T00:08:42Z",
+  "updated_at": "2026-01-31T00:11:22Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -161,6 +161,86 @@
       "tier": 1,
       "status": "pending",
       "added_at": "2026-01-31T00:06:53Z"
+    },
+    {
+      "id": "homebrew:openssl@3",
+      "source": "homebrew",
+      "name": "openssl@3",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:mkcert",
+      "source": "homebrew",
+      "name": "mkcert",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:helm",
+      "source": "homebrew",
+      "name": "helm",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:yt-dlp",
+      "source": "homebrew",
+      "name": "yt-dlp",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:python@3.11",
+      "source": "homebrew",
+      "name": "python@3.11",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:protobuf",
+      "source": "homebrew",
+      "name": "protobuf",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:neovim",
+      "source": "homebrew",
+      "name": "neovim",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:pnpm",
+      "source": "homebrew",
+      "name": "pnpm",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:harfbuzz",
+      "source": "homebrew",
+      "name": "harfbuzz",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
+    },
+    {
+      "id": "homebrew:nvm",
+      "source": "homebrew",
+      "name": "nvm",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-01-31T00:11:22Z"
     }
   ]
 }
