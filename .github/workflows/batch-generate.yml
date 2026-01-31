@@ -45,15 +45,11 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Build batch-generate
-        run: go build -o batch-generate ./cmd/batch-generate
-
-      - name: Install tsuku
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build binaries
         run: |
-          curl -fsSL https://tsuku.dev/install.sh | bash
-          echo "$HOME/.tsuku/bin" >> "$GITHUB_PATH"
+          go build -o batch-generate ./cmd/batch-generate
+          go build -o tsuku ./cmd/tsuku
+          echo "$PWD" >> "$GITHUB_PATH"
 
       - name: Run batch generation
         run: |
