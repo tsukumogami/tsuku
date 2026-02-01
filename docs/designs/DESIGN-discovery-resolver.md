@@ -40,17 +40,19 @@ Planned
 | _Add the early check in the create pipeline that rejects builders where `RequiresLLM()` returns true when `--deterministic-only` is set, producing the actionable error message from the UX table instead of a confusing "no LLM providers available" failure._ | | |
 | [#1315: Bootstrap registry ~500 entries](https://github.com/tsukumogami/tsuku/issues/1315) | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | testable |
 | _Populate `discovery.json` with ~500 entries covering GitHub-release tools not in any ecosystem registry and disambiguation overrides for known name collisions. Requires the fetch mechanism from #1312 to be testable end-to-end._ | | |
-| [#1316: Install/create convergence](https://github.com/tsukumogami/tsuku/issues/1316) | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | testable |
-| _Make `tsuku install` fall back to the discovery resolver when no recipe exists, add `--from` flag forwarding to the create pipeline, and handle `--yes`/non-interactive mode. This is the main integration point that wires the resolver into the user-facing command._ | | |
-| [#1317: Ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1317) | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | testable |
+| [#1337: Add --from flag to install](https://github.com/tsukumogami/tsuku/issues/1337) | None | testable |
+| _Add `--from` flag to `tsuku install` that forwards to the create pipeline, skipping recipe lookup. Passes through `--yes` and `--deterministic-only`. First step toward converging install and create under a single command._ | | |
+| [#1338: Discovery fallback in install](https://github.com/tsukumogami/tsuku/issues/1338) | [#1337](https://github.com/tsukumogami/tsuku/issues/1337) | testable |
+| _Wire the discovery resolver chain into `tsuku install` so unknown tools trigger automatic source discovery and recipe generation. Shows which resolver stage matched and provides actionable errors on failure._ | | |
+| [#1317: Ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1317) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | testable |
 | _Implement the `EcosystemProber` interface and `EcosystemProbe` resolver that queries all seven ecosystem builders in parallel with a 3-second timeout. Includes threshold filtering (age >90 days, downloads >1000/month) and the `ProbeResult` type._ | | |
-| [#1318: LLM discovery](https://github.com/tsukumogami/tsuku/issues/1318) | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | critical |
+| [#1318: LLM discovery](https://github.com/tsukumogami/tsuku/issues/1318) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | critical |
 | _Implement the `LLMDiscovery` resolver: web search via LLM, structured JSON extraction, GitHub API verification (existence, archived status, ownership), rich confirmation prompt with metadata, and prompt injection defenses (HTML stripping, URL validation)._ | | |
-| [#1319: Telemetry events](https://github.com/tsukumogami/tsuku/issues/1319) | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | simple |
-| _Emit telemetry events for discovery usage: which stage resolved the tool, whether disambiguation was needed, LLM discovery usage rates. Builds on the convergence from #1316 to hook into the install fallback path._ | | |
+| [#1319: Telemetry events](https://github.com/tsukumogami/tsuku/issues/1319) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | simple |
+| _Emit telemetry events for discovery usage: which stage resolved the tool, whether disambiguation was needed, LLM discovery usage rates. Hooks into the install fallback path from #1338._ | | |
 | [#1321: Disambiguation](https://github.com/tsukumogami/tsuku/issues/1321) | [#1317](https://github.com/tsukumogami/tsuku/issues/1317) | critical |
 | _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317._ | | |
-| [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1316](https://github.com/tsukumogami/tsuku/issues/1316), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
+| [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
 
 ### Dependency Graph
@@ -65,7 +67,8 @@ graph TD
 
     subgraph Phase2["Phase 2: Bootstrap + Convergence"]
         I1315["#1315: Bootstrap registry"]
-        I1316["#1316: Install/create convergence"]
+        I1337["#1337: Add --from to install"]
+        I1338["#1338: Discovery fallback"]
     end
 
     subgraph Phase3["Phase 3: Discovery Stages"]
@@ -80,10 +83,10 @@ graph TD
     end
 
     I1312 --> I1315
-    I1312 --> I1316
-    I1316 --> I1317
-    I1316 --> I1318
-    I1316 --> I1319
+    I1337 --> I1338
+    I1338 --> I1317
+    I1338 --> I1318
+    I1338 --> I1319
     I1317 --> I1321
     I1317 --> I1322
     I1318 --> I1322
@@ -94,8 +97,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1312,I1313,I1314 done
-    class I1319 blocked
-    class I1316 ready
+    class I1337 ready
+    class I1338,I1319 blocked
     class I1315 needsDesign
     class I1317,I1318,I1321,I1322 blocked
 ```
