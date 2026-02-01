@@ -42,6 +42,9 @@ func ParseRegistry(data []byte) (*DiscoveryRegistry, error) {
 	if reg.SchemaVersion != 1 {
 		return nil, fmt.Errorf("unsupported discovery registry schema version %d (expected 1)", reg.SchemaVersion)
 	}
+	if err := reg.validateEntries(); err != nil {
+		return nil, err
+	}
 	reg.buildIndex()
 	return &reg, nil
 }
@@ -54,6 +57,19 @@ func (r *DiscoveryRegistry) Lookup(name string) (*RegistryEntry, bool) {
 	}
 	entry := r.Tools[canonical]
 	return &entry, true
+}
+
+// validateEntries checks that all registry entries have non-empty builder and source fields.
+func (r *DiscoveryRegistry) validateEntries() error {
+	for name, entry := range r.Tools {
+		if entry.Builder == "" {
+			return fmt.Errorf("invalid discovery registry entry %q: builder field is empty", name)
+		}
+		if entry.Source == "" {
+			return fmt.Errorf("invalid discovery registry entry %q: source field is empty", name)
+		}
+	}
+	return nil
 }
 
 // buildIndex creates a lowercase-to-canonical mapping for case-insensitive lookup.
