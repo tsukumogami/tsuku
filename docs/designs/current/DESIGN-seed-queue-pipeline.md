@@ -59,7 +59,7 @@ This design implements part of [DESIGN-registry-scale-strategy.md](../DESIGN-reg
 **Relevant sections:**
 - Phase 0 deliverables: "Scripts to populate queue from Homebrew API (popularity data)"
 - Decision 2: Popularity-based prioritization (Option 2A)
-- M-BatchPipeline milestone, issue #1241
+- Batch Pipeline milestone, issue #1241
 
 ## Context and Problem Statement
 

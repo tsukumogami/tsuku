@@ -13,7 +13,7 @@ Planned
 
 ## Implementation Issues
 
-### Milestone: [M-BatchPipeline](https://github.com/tsukumogami/tsuku/milestone/52)
+### Milestone: [Batch Pipeline](https://github.com/tsukumogami/tsuku/milestone/52)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
@@ -24,7 +24,7 @@ Planned
 | [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | Platform constraints in merge job | [#1254](https://github.com/tsukumogami/tsuku/issues/1254) | testable |
 | [#1257](https://github.com/tsukumogami/tsuku/issues/1257) | SLI metrics collection | [#1254](https://github.com/tsukumogami/tsuku/issues/1254) | testable |
 | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | PR CI platform filtering | [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | testable |
-| [#1273](https://github.com/tsukumogami/tsuku/issues/1273) | Structured JSON CLI output + batch integration | None | testable |
+| ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON CLI output + batch integration~~ | ~~None~~ | ~~testable~~ |
 | [#1287](https://github.com/tsukumogami/tsuku/issues/1287) | Auto-install required toolchains for ecosystem builders | None | testable |
 
 ### Dependency Graph
@@ -69,7 +69,8 @@ graph LR
 
     class I1252 ready
     class I1253 blocked
-    class I1273,I1287 ready
+    class I1273 done
+    class I1287 ready
     class I1254,I1255,I1256,I1257,I1258 blocked
 ```
 
