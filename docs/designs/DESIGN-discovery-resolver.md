@@ -341,7 +341,6 @@ Errors fall into two categories:
 - **Hard errors** (context cancelled, LLM budget exhausted, invalid tool name): stop the chain and return the error
 
 Tool name input is normalized before resolution: Unicode homoglyph detection and lowercasing prevent confusable-character attacks (e.g., `kubеctl` with a Cyrillic "е").
-```
 
 ### Discovery Registry Format
 
