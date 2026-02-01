@@ -133,9 +133,9 @@ func TestParseRegistry_OptionalBinaryAllowed(t *testing.T) {
 	}
 }
 
-func TestParseRegistry_SchemaV2(t *testing.T) {
+func TestParseRegistry_OptionalMetadata(t *testing.T) {
 	data := []byte(`{
-		"schema_version": 2,
+		"schema_version": 1,
 		"tools": {
 			"ripgrep": {
 				"builder": "github",
@@ -168,10 +168,10 @@ func TestParseRegistry_SchemaV2(t *testing.T) {
 	}
 }
 
-func TestParseRegistry_V2MetadataOptional(t *testing.T) {
-	// v2 with no metadata fields should work fine
+func TestParseRegistry_MetadataOptional(t *testing.T) {
+	// Entries without metadata fields should work fine
 	data := []byte(`{
-		"schema_version": 2,
+		"schema_version": 1,
 		"tools": {
 			"jq": {"builder": "homebrew", "source": "jq"}
 		}
@@ -181,13 +181,13 @@ func TestParseRegistry_V2MetadataOptional(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 	if reg.Tools["jq"].Description != "" {
-		t.Error("expected empty description for minimal v2 entry")
+		t.Error("expected empty description for minimal entry")
 	}
 }
 
-func TestParseRegistry_V2LookupStillWorks(t *testing.T) {
+func TestParseRegistry_LookupWithMetadata(t *testing.T) {
 	data := []byte(`{
-		"schema_version": 2,
+		"schema_version": 1,
 		"tools": {
 			"ripgrep": {"builder": "github", "source": "BurntSushi/ripgrep", "description": "fast grep"}
 		}
@@ -202,6 +202,14 @@ func TestParseRegistry_V2LookupStillWorks(t *testing.T) {
 	}
 	if entry.Builder != "github" || entry.Source != "BurntSushi/ripgrep" {
 		t.Errorf("lookup returned wrong entry: %+v", entry)
+	}
+}
+
+func TestParseRegistry_Version2Rejected(t *testing.T) {
+	data := []byte(`{"schema_version": 2, "tools": {}}`)
+	_, err := ParseRegistry(data)
+	if err == nil {
+		t.Fatal("expected error for schema version 2")
 	}
 }
 
