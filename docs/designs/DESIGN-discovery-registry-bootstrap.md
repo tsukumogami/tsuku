@@ -1,27 +1,25 @@
 ---
 status: Proposed
 problem: |
-  The discovery resolver's registry lookup stage has 1 entry but needs ~500 to make
-  `tsuku install <tool>` useful for popular developer tools. Without populated data,
-  every tool resolution falls through to slower ecosystem probes or LLM discovery.
-  The entries cover two categories: GitHub-release tools not in ecosystem registries
-  (kubectl, terraform, stripe-cli) and disambiguation overrides for name collisions
-  across ecosystems (bat, fd, serve).
+  The discovery registry has 1 entry but needs ~500 for the resolver to deliver value.
+  The current schema conflates tool identity (where it's maintained, what it does) with
+  install instructions (which builder to use). This blocks future evolution: an LLM builder
+  could infer install paths from metadata, and richer data improves disambiguation UX.
+  The bootstrap must populate entries that serve today's resolver while collecting metadata
+  for future builders and features.
 decision: |
-  A Go CLI tool (`cmd/seed-discovery`) reads from curated seed lists organized by
-  category, validates each entry via the GitHub API (repo exists, not archived, has
-  binary release assets within 24 months), detects ecosystem name collisions via
-  direct HTTP checks against npm/crates.io/PyPI/RubyGems, and outputs a validated
-  `discovery.json`. CI runs weekly freshness checks. Disambiguation entries are
-  preserved even when recipes exist. Seed lists require verification URLs and
-  CODEOWNERS review for supply chain safety.
+  Evolve the registry schema to v2: keep builder+source as required fields (today's resolver
+  works unchanged), add optional metadata fields (repo, homepage, description, disambiguation
+  flag). A Go CLI tool reads curated seed lists, validates via builder-specific API checks,
+  enriches with metadata from the same API responses, detects ecosystem name collisions, and
+  outputs discovery.json. CI runs weekly freshness checks. Schema v3 (optional install fields)
+  is deferred until an LLM builder exists to consume metadata-only entries.
 rationale: |
-  Curated seed lists (rather than LLM generation or web scraping) ensure accuracy
-  for the initial ~500 entries. A Go tool gives type safety, testability, and
-  reusable patterns from the existing seed-queue infrastructure. Keeping discovery
-  tooling separate from the batch pipeline respects their different purposes while
-  sharing conventions. CI freshness checks address the staleness risk without
-  blocking PR workflows.
+  Separating tool identity from install path is a low-cost, backward-compatible schema change
+  that collects useful data now without requiring consumers. Keeping builder+source required
+  avoids premature abstraction. Curated seed lists focus manual effort on the high-value
+  decision (correct source for each tool) while automating mechanical work (description,
+  homepage, validation). The Go tool reuses patterns from existing seed-queue infrastructure.
 ---
 
 # DESIGN: Discovery Registry Bootstrap
@@ -32,277 +30,351 @@ Proposed
 
 ## Upstream Design Reference
 
-This design implements Phase 2 of [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md).
+This design implements Phase 2 of [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md), and proposes evolving the discovery registry schema from install-only mappings to a richer tool metadata index.
 
-**Relevant sections:**
-- Discovery Registry Format: `{builder, source, binary?}` schema
+**Relevant upstream sections:**
+- Discovery Registry Format (current): `{builder, source, binary?}`
 - Two entry categories: GitHub-release tools and disambiguation overrides
 - Target size: ~500 entries at launch
 - Registry is fetched from recipes repository, cached locally
 
 **Related designs:**
-- [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md): Batch recipe generation from priority queue. Shares data sourcing and validation concerns — both need to verify GitHub repos exist and aren't archived. The priority queue (`data/priority-queue.json`) contains 204 Homebrew entries that overlap with potential discovery entries.
-- [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md): CI pipeline that generates recipes. As recipes get generated and merged, discovery registry entries for those tools become redundant (the recipe exists, so the resolver never reaches the registry stage). The bootstrap should account for this shrinkage.
+- [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md): Batch recipe generation from priority queue. Shares data sourcing and validation concerns.
+- [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md): CI pipeline that generates recipes. As recipes get generated, tools graduate out of the discovery registry.
 
 ## Context and Problem Statement
 
-The discovery resolver's registry lookup stage maps tool names to `{builder, source}` pairs so `tsuku install <tool>` can find tools without ecosystem probing or LLM calls. The registry currently has a single `jq` entry added during skeleton work. It needs ~500 real entries before the resolver delivers value to users.
+The discovery resolver's registry lookup stage maps tool names to install instructions so `tsuku install <tool>` can resolve tools without ecosystem probing or LLM calls. The registry has a single `jq` entry added during skeleton work. It needs ~500 entries before the resolver delivers value.
 
-The entries fall into two categories:
+The current schema conflates two different things: what a tool *is* (its identity, where it's maintained, what it does) and how to *install* it (which builder to use, what arguments to pass). A tool like `jq` is maintained on GitHub at `jqlang/jq`, documented at `https://jqlang.github.io/jq/`, and installable via Homebrew bottles. These are separate facts. The current schema — `{"builder": "homebrew", "source": "jq"}` — captures only the install path and loses everything else.
 
-1. **GitHub-release tools** not discoverable through ecosystem registries. Tools like kubectl, terraform, and stripe-cli distribute binaries via GitHub releases but don't appear in crates.io, npm, or PyPI. Without registry entries, these tools fall through to LLM discovery — slow, requires API keys, and unreliable.
+This matters for three reasons:
 
-2. **Disambiguation overrides** for tools whose names collide across ecosystems. "bat" exists on npm (a testing framework) and as a GitHub release (sharkdp/bat, a cat replacement). Without an override, the ecosystem probe might resolve to the wrong tool.
+1. **Today's resolver needs install instructions.** The `RegistryLookup` stage must return a `DiscoveryResult` with builder and source. That's the minimum viable entry.
 
-Three challenges make this non-trivial:
+2. **Future builders could infer install paths from metadata.** An LLM-based builder (not yet implemented) could take a tool's homepage, repository URL, and description and figure out how to install it. If the registry captured this metadata, entries wouldn't need explicit builder+source — they could work with builders that don't exist yet.
 
-1. **Data sourcing at scale.** Manually curating 500 entries is tedious and error-prone. Automated approaches risk importing stale or incorrect mappings. The right answer is likely a hybrid: seed from existing data sources, validate automatically, review manually.
+3. **Richer data improves disambiguation and UX.** When multiple ecosystems claim a name, having the tool's description, homepage, and repo URL helps both automated disambiguation and user-facing display (`"Found bat: a cat clone with syntax highlighting (github.com/sharkdp/bat). Also available: npm bat (testing framework)."`).
 
-2. **Validation reliability.** Every entry must point to a real, active GitHub repository (or a valid ecosystem source). Repos get archived, transferred, or deleted. A one-time validation isn't enough — entries need periodic freshness checks.
-
-3. **Overlap with batch pipeline.** The priority queue and discovery registry both map tool names to builders. As the batch pipeline generates recipes, those tools no longer need discovery entries. The bootstrap process should be aware of this lifecycle.
+The bootstrap challenge is populating ~500 entries with enough data to serve today's resolver while collecting metadata that enables future evolution.
 
 ### Scope
 
 **In scope:**
+- Discovery registry schema evolution (metadata fields, optional install info)
 - Data sources for populating ~500 entries
 - Go tool for generating and validating entries
 - Disambiguation entries for known name collisions
 - CI validation of the registry file
-- Process for adding new entries (contributor workflow)
-- Relationship between discovery registry and priority queue / batch pipeline
+- Updates to parent design (DESIGN-discovery-resolver.md) for schema changes
+- Contributor workflow for adding entries
 
 **Out of scope:**
-- Resolver architecture (covered by DESIGN-discovery-resolver.md)
-- Ecosystem probe implementation
-- LLM discovery implementation
-- Registry format changes (schema is defined in parent design)
+- Resolver chain architecture (covered by parent design)
+- Ecosystem probe and LLM discovery implementation
+- LLM-based builder that infers install paths from metadata (future work)
+- Recipe format changes
 
 ## Decision Drivers
 
-- **Entry accuracy**: Every entry must resolve to a working builder+source pair
-- **Repeatable process**: The population method must be re-runnable as tools change
-- **Reuse existing infrastructure**: The seed-queue tool and priority queue data already exist
-- **Minimal manual effort**: 500 entries can't be hand-curated efficiently
+- **Serve today's resolver**: Entries with builder+source must work with the current `RegistryLookup` code
+- **Enable future evolution**: Schema should accommodate richer metadata without breaking changes
+- **Separate identity from install path**: Where a tool is maintained is distinct from how to install it
+- **Entry accuracy**: Every install instruction must resolve to a working builder+source pair
+- **Minimal required fields**: Only `name` and install info should be required; everything else optional
+- **Repeatable process**: Population method must be re-runnable as tools change
 - **Contributor-friendly**: External contributors should be able to add entries via PR
-- **Shrinkage awareness**: As recipes get generated, discovery entries become redundant
-- **Builder coverage**: Most entries will use `github` builder since ecosystem tools are discoverable via probe
+- **Reuse infrastructure**: Leverage existing seed-queue patterns and priority queue data
 
 ## Considered Options
 
-### Decision 1: Data Sourcing Strategy
+### Decision 1: Registry Schema
 
-The registry needs ~500 entries covering the most popular developer tools not already discoverable through ecosystem registries. The challenge is finding a reliable source of tool-name-to-GitHub-repo mappings at scale. Manual curation is accurate but slow. Automated scraping is fast but may import incorrect data. The priority queue already has 204 Homebrew entries, but those map to the `homebrew` builder — discovery entries for these tools would use the `github` builder only if the tool distributes pre-built binaries via GitHub releases.
+The current schema is a flat map of tool name to install instructions: `{"builder": "github", "source": "BurntSushi/ripgrep"}`. The question is how to evolve it to support richer metadata while keeping backward compatibility with the existing `RegistryLookup` code.
 
-The key insight is that the discovery registry's primary purpose is covering GitHub-release tools that ecosystem probes can't find. Ecosystem tools (cargo, npm, pypi, etc.) are handled by the probe stage. So the data source should focus on popular tools that distribute via GitHub releases.
+The resolver code (`internal/discover/registry.go`) unmarshals `RegistryEntry` with `builder`, `source`, and `binary` fields. Adding optional fields to this struct is backward-compatible — old entries still work, new entries carry more data. Making `builder`+`source` optional is a bigger change but enables future builders that infer install paths from metadata.
 
-#### Chosen: Go CLI Tool with Multiple Data Sources
+#### Chosen: Required Install Info + Optional Metadata Fields
 
-Build a `cmd/seed-discovery` Go tool (parallel to the existing `cmd/seed-queue`) that:
+Keep `builder` and `source` as required fields for now. Add optional metadata fields to the same entry struct. This delivers value today (resolver works) while collecting data for the future (metadata is available when needed).
 
-1. **Reads from curated seed lists** — static JSON/TOML files containing known tool-name-to-repo mappings, organized by category (cloud CLI tools, development tools, security tools, etc.)
-2. **Validates via GitHub API** — for each entry, verifies the repo exists, isn't archived, and has recent releases with binary assets
-3. **Cross-references existing recipes** — skips tools that already have recipes in `recipes/`
-4. **Cross-references priority queue** — notes overlap with `data/priority-queue.json` entries
-5. **Outputs validated discovery.json** — merges validated entries into the existing registry
+The schema becomes:
 
-The seed lists are the manual curation step, but they're one-time work that produces a reusable artifact. Sources for the seed lists:
-- Homebrew analytics top-500 formulas (filtered to those with GitHub release binaries)
-- Curated lists of popular CLI tools (terraform, kubectl, gh, etc.)
-- Tools already mentioned in tsuku issues and documentation
+```json
+{
+  "schema_version": 2,
+  "tools": {
+    "ripgrep": {
+      "builder": "github",
+      "source": "BurntSushi/ripgrep",
+      "homepage": "https://github.com/BurntSushi/ripgrep",
+      "description": "Fast line-oriented search tool"
+    },
+    "jq": {
+      "builder": "homebrew",
+      "source": "jq",
+      "repo": "https://github.com/jqlang/jq",
+      "homepage": "https://jqlang.github.io/jq/",
+      "description": "Lightweight command-line JSON processor"
+    }
+  }
+}
+```
 
-#### Alternatives Considered
-
-**LLM-assisted bulk generation**: Use an LLM to generate tool-to-repo mappings from prompts like "list the 50 most popular Kubernetes CLI tools." Fast for initial generation but unreliable — LLMs hallucinate repo names, and validation becomes the bottleneck. Rejected because the accuracy requirement is high (every entry must resolve to a real repo) and the cost of fixing LLM errors exceeds the cost of manual curation.
-
-**Extend cmd/seed-queue to output discovery entries**: Modify the existing seed-queue tool to emit discovery.json entries alongside priority queue entries. Architecturally clean for reuse, but the tools serve different purposes: seed-queue populates a generation queue (homebrew builder), while discovery maps names to GitHub release sources. Forcing them together conflates the concerns. Rejected as primary approach, but the `seed-discovery` tool should reuse `internal/seed` package utilities where applicable (HTTP client, retry logic, JSON I/O patterns).
-
-**Scrape awesome-cli-apps and similar lists**: Parse GitHub awesome-lists to extract tool names and repos. Good coverage but noisy — many entries are libraries, not CLI tools, and repo URLs may be stale. Rejected as primary source but useful as input for seed lists.
-
-### Decision 2: Validation Approach
-
-Every registry entry must point to a real, active source. The question is whether validation happens once during bootstrap, continuously in CI, or both.
-
-Stale entries are a real risk: GitHub repos get archived, transferred to new owners, or deleted. A tool that worked when bootstrapped may break months later. The parent design notes that "Registry staleness" is a security concern — a transferred repo could become malicious.
-
-#### Chosen: Build-Time Validation in Go Tool + CI Freshness Check
-
-Two validation layers:
-
-1. **Build-time validation** (in `cmd/seed-discovery`): When generating entries, validate each one via GitHub API — repo exists, not archived, has releases with binary assets, and owner matches expected. Failures are logged and the entry is excluded.
-
-2. **CI freshness check** (GitHub Actions workflow): A weekly scheduled workflow runs `cmd/seed-discovery --validate-only` against the existing `discovery.json`, checking that all entries still resolve. Failures open an issue or PR removing stale entries.
-
-This separates the initial population (fast, runs locally) from ongoing maintenance (automated, runs in CI).
+Schema version bumps from 1 to 2. The loading code accepts both versions: v1 entries have only `builder`/`source`/`binary`, v2 entries may include metadata fields. The `RegistryLookup` resolver ignores metadata — it just reads `builder` and `source`. Other consumers (future LLM builder, `tsuku info`, `tsuku search`, disambiguation UX) can use the metadata when available.
 
 #### Alternatives Considered
 
-**One-time script with no CI**: Validate during bootstrap only. Simple but entries go stale silently. Rejected because the parent design explicitly calls for freshness checks.
+**Separate install info into a nested object**: Structure entries as `{"install": {"builder": "github", "source": "..."}, "repo": "...", "homepage": "..."}`. Cleaner separation but breaks the existing `RegistryEntry` struct and all code that reads `entry.Builder`. The refactor cost isn't justified when the flat approach works and is forward-compatible. Rejected because the migration cost is high for a cosmetic difference.
 
-**CI-only validation on every PR**: Validate all 500 entries on every PR that touches discovery.json. Thorough but slow (GitHub API rate limits at 5000 requests/hour for authenticated users; 500 entries with multiple API calls each could hit limits). Rejected for PR-time validation; weekly is sufficient.
+**Make builder+source optional now**: Allow entries with only metadata and no install info, for future LLM builder consumption. Premature — the LLM builder doesn't exist, and entries without install info provide zero value to today's resolver. The resolver would need to handle `nil` install fields, adding complexity for no immediate gain. Rejected as future work: when the LLM builder lands, a schema v3 can make install fields optional.
 
-### Decision 3: Disambiguation Data
+### Decision 2: Data Sourcing Strategy
 
-Some tool names exist in multiple ecosystems. The discovery registry needs override entries so the resolver returns the "correct" tool without ecosystem probing. The question is how to identify which names collide and which resolution is correct.
+The registry needs ~500 entries covering the most popular developer tools. The challenge is finding tool-to-source mappings at scale with enough metadata (homepage, description, repo URL) to populate the new schema fields.
 
-#### Chosen: Automated Collision Detection + Manual Resolution
+#### Chosen: Go CLI Tool with Curated Seed Lists
 
-1. **Detection**: The `seed-discovery` tool makes lightweight HTTP GET requests to ecosystem registries (crates.io, npm, PyPI, RubyGems — the four most common collision sources) for each entry in the seed list. This avoids coupling to the `internal/builders` package. When a tool name exists in both the discovery registry and an ecosystem registry, flag it as a potential collision.
+Build a `cmd/seed-discovery` Go tool that reads from curated seed list files, validates each entry, enriches it with metadata from GitHub/ecosystem APIs, and outputs `discovery.json`. Seed lists provide the human-curated mapping (tool name → source), and the tool handles validation and metadata enrichment automatically.
 
-2. **Resolution**: A human reviews flagged collisions and adds an explicit disambiguation entry. The entry goes in the seed list with a `disambiguation: true` field so it's preserved even if the tool gets a recipe later.
+Seed lists require only the minimum: tool name, builder, and source. The tool queries APIs to fill in optional metadata (description, homepage, star count, etc.) during generation. This keeps the curation effort focused on accuracy (is this the right source?) rather than data collection (what's the homepage?).
 
-3. **Known collisions**: Start with a manually curated list of known collisions (bat, fd, serve, delta, etc.) based on tsuku issue history and common developer tools.
-
-This catches collisions that a manual review would miss, while keeping humans in the loop for the resolution decision.
+Sources for populating seed lists:
+- Homebrew analytics top-500 (filtered to tools with GitHub release binaries)
+- Well-known tool categories (HashiCorp, Kubernetes, cloud CLIs)
+- Tools referenced in tsuku issues and existing recipes
+- Priority queue entries that map to GitHub-release tools
 
 #### Alternatives Considered
 
-**Fully manual curation**: Maintain a hand-written list of disambiguations. Catches obvious cases but misses obscure collisions. Rejected because at 500 entries, manual cross-referencing against 7 ecosystem registries is impractical.
+**LLM-assisted bulk generation**: Use an LLM to generate tool-to-repo mappings. Fast but unreliable — hallucinated repo names pass no validation, and the cost of fixing errors exceeds manual curation. Rejected because accuracy is non-negotiable.
 
-**Fully automated resolution by popularity**: Auto-resolve collisions by picking the most-downloaded option. Fast but wrong in edge cases — npm's `bat` has more downloads than sharkdp/bat has GitHub stars, but sharkdp/bat is what CLI users want. Rejected because disambiguation correctness is a key decision driver.
+**Scrape awesome-lists and aggregate**: Parse curated GitHub lists (awesome-cli-apps, etc.) for tool names and repos. Good coverage but noisy — many entries are libraries, and URLs go stale. Rejected as primary source but useful as input when building seed lists.
+
+### Decision 3: Validation and Enrichment
+
+Every entry must point to a real, active source. Beyond validation, the tool should enrich entries with metadata from APIs — description, homepage, stars, etc. The question is how aggressive to be with enrichment and how to handle stale data.
+
+#### Chosen: Builder-Aware Validation + API Enrichment + CI Freshness
+
+The `seed-discovery` tool does three things per entry:
+
+1. **Validates** via builder-specific checks (GitHub: repo exists, not archived, has binary releases in last 24 months; Homebrew: formula exists; ecosystem builders: package exists).
+2. **Enriches** with metadata from the same API response (description from GitHub API, star count, homepage from repo metadata). Enrichment is best-effort — missing metadata doesn't fail the entry.
+3. **Detects collisions** via lightweight HTTP checks against ecosystem registries (npm, crates.io, PyPI, RubyGems).
+
+CI runs a weekly freshness check (`seed-discovery --validate-only`) that verifies entries still resolve and flags ownership changes.
+
+#### Alternatives Considered
+
+**Validation only, no enrichment**: Validate entries but don't collect metadata — let contributors add it manually. Rejected because GitHub API responses already include description and homepage for free; throwing away data we've already fetched is wasteful.
+
+**CI validation on every PR**: Validate all 500 entries when `discovery.json` changes. Too slow (rate limits, 500+ API calls per PR). Weekly is sufficient. Rejected for PR-time; weekly catches staleness without blocking contributors.
+
+### Decision 4: Disambiguation Approach
+
+Some tool names exist in multiple ecosystems. The registry needs override entries so the resolver returns the correct tool. The question is how to identify collisions and choose the right resolution.
+
+#### Chosen: Automated Detection + Manual Resolution
+
+The `seed-discovery` tool queries ecosystem registries for each entry name. When a collision is found, it logs the conflict with metadata from both sides. A human reviews and marks the entry as a disambiguation override if needed.
+
+Disambiguation entries are preserved in `discovery.json` even when a recipe exists for the tool, because they prevent the ecosystem probe from resolving to the wrong package.
+
+#### Alternatives Considered
+
+**Fully automated by popularity**: Auto-resolve by download count. Wrong in practice — npm's `bat` has more downloads than sharkdp/bat has GitHub stars, but CLI users want sharkdp/bat. Rejected because disambiguation correctness is a core decision driver.
 
 ### Uncertainties
 
-- **GitHub API rate limits during bootstrap**: 500 entries with 2-3 API calls each = 1000-1500 requests. Within the 5000/hour authenticated limit, but may need pagination for repos with many releases.
-- **Actual collision rate**: We don't know how many of the ~500 tools have name collisions across ecosystems. Could be 10 or 50.
-- **Homebrew overlap**: Many popular tools exist in both Homebrew and as GitHub releases. The right discovery entry depends on whether the homebrew or github builder produces better results for that tool.
+- **GitHub API rate limits during bootstrap**: 500 entries with 2-3 calls each = 1000-1500 requests. Within the 5000/hour authenticated limit, but enrichment adds calls.
+- **Actual collision rate**: Could be 10 or 50 tools with name collisions across ecosystems.
+- **Metadata staleness**: Descriptions and homepages change. Weekly freshness checks catch broken repos but not updated descriptions. Acceptable for now — stale descriptions don't break installs.
 
 ## Decision Outcome
 
-**Chosen: Go CLI tool + CI freshness + automated collision detection**
+**Chosen: Schema v2 with optional metadata + Go CLI tool + CI freshness**
 
 ### Summary
 
-A new `cmd/seed-discovery` Go tool reads from curated seed lists (static files containing tool-name-to-repo mappings), validates each entry via the GitHub API (repo exists, not archived, has binary release assets), cross-references against existing recipes and the priority queue, detects ecosystem name collisions by probing builder registries, and outputs a validated `discovery.json`. The seed lists are organized by category (cloud tools, dev tools, security tools) and maintained as committed files in the repository.
+The discovery registry schema evolves from a flat install mapping to a tool metadata index. Each entry still requires `builder` and `source` (so today's resolver works unchanged), but gains optional fields: `repo`, `homepage`, `description`, `binary`, and a `disambiguation` flag. Schema version bumps to 2 with backward compatibility for v1 entries.
 
-CI runs a weekly freshness check against the published `discovery.json`, verifying all entries still resolve. Stale entries get flagged via automated issue or PR. Disambiguation entries are identified via automated collision detection and resolved by a human reviewer. Known collisions (bat, fd, serve, delta) are pre-seeded in the seed lists with explicit `disambiguation: true` markers.
+A new `cmd/seed-discovery` Go tool reads curated seed lists (tool name, builder, source), validates each entry via builder-specific API checks, enriches it with metadata from the same API responses (description, homepage, stars), detects name collisions against ecosystem registries, and outputs `discovery.json`. The tool also checks for typosquatting (Levenshtein distance between entry names) and cross-references existing recipes (excluding entries where a recipe already exists, unless marked as disambiguation overrides).
 
-The tool reuses patterns from the existing `cmd/seed-queue` and `internal/seed` packages: HTTP client with retry, JSON I/O, merge-with-deduplication. It doesn't share code directly with the batch pipeline but follows the same conventions.
+Seed lists require only the install mapping plus a verification URL. The tool handles metadata enrichment automatically. CI runs weekly freshness checks. Disambiguation entries are resolved by human review and preserved regardless of recipe existence.
 
 ### Rationale
 
-A Go tool (rather than a shell script) gives type safety, testability, and access to the existing `internal/builders` package for collision detection. Curated seed lists (rather than LLM generation or web scraping) ensure accuracy for the initial ~500 entries — the manual effort is front-loaded but produces a reusable, auditable artifact. CI freshness checks address the staleness risk identified in the parent design without blocking PR workflows.
+Keeping `builder`+`source` required avoids premature abstraction — the LLM builder that could infer install paths from metadata doesn't exist yet. Adding optional metadata fields is a low-cost, backward-compatible change that collects useful data for disambiguation UX, `tsuku info`/`search`, and future builder evolution. The schema can move to v3 (optional install fields) when a builder exists that can use metadata-only entries.
 
-Keeping the discovery tool separate from the seed-queue tool (rather than extending it) respects the different purposes: seed-queue populates a generation queue for batch recipe creation, while seed-discovery populates a name-resolution index for the install command. They share patterns but not concerns.
+The Go tool with seed lists balances accuracy (human-curated install mappings) with automation (API validation, metadata enrichment, collision detection). The manual effort is focused on the high-value decision (which source is correct for this tool name?) while mechanical work (description, homepage, validation) is automated.
 
 ### Trade-offs Accepted
 
-- **Manual seed list curation**: Building the initial seed lists requires human effort to compile ~500 tool-to-repo mappings. This is acceptable because the accuracy requirement is high and the work is one-time (future additions are incremental).
-- **GitHub API dependency**: Validation requires GitHub API access, which has rate limits. Acceptable because authenticated requests get 5000/hour and the bootstrap runs once.
-- **No automated population growth**: The registry doesn't automatically discover new tools — entries are added manually or via PR. Acceptable because the registry is intentionally curated, and the ecosystem probe handles the long tail.
+- **builder+source still required**: Entries without install info provide no value to today's resolver. This means we can't add metadata-only entries yet — acceptable since no consumer exists for them.
+- **Manual seed list curation**: ~500 tool-to-source mappings must be compiled by hand. The accuracy requirement justifies this; the work is one-time with incremental additions afterward.
+- **Schema version bump**: Existing v1 entries still load, but the loading code needs to handle both versions. Minor code change.
 
 ## Solution Architecture
 
 ### Overview
 
-The bootstrap system has three components: seed lists (data), a Go CLI tool (processor), and a CI workflow (maintenance).
+Three components: an evolved registry schema, a Go CLI tool for population, and a CI workflow for freshness.
+
+### Registry Schema (v2)
+
+```json
+{
+  "schema_version": 2,
+  "tools": {
+    "ripgrep": {
+      "builder": "github",
+      "source": "BurntSushi/ripgrep",
+      "description": "Fast line-oriented search tool",
+      "homepage": "https://github.com/BurntSushi/ripgrep",
+      "repo": "https://github.com/BurntSushi/ripgrep"
+    },
+    "jq": {
+      "builder": "homebrew",
+      "source": "jq",
+      "description": "Lightweight command-line JSON processor",
+      "homepage": "https://jqlang.github.io/jq/",
+      "repo": "https://github.com/jqlang/jq"
+    },
+    "bat": {
+      "builder": "github",
+      "source": "sharkdp/bat",
+      "description": "A cat clone with syntax highlighting",
+      "homepage": "https://github.com/sharkdp/bat",
+      "repo": "https://github.com/sharkdp/bat",
+      "disambiguation": true
+    },
+    "kubectl": {
+      "builder": "github",
+      "source": "kubernetes/kubernetes",
+      "binary": "kubectl",
+      "description": "Kubernetes command-line tool",
+      "homepage": "https://kubernetes.io/docs/reference/kubectl/",
+      "repo": "https://github.com/kubernetes/kubernetes"
+    }
+  }
+}
+```
+
+**Required fields:**
+- `builder`: Builder name (`github`, `homebrew`, `cargo`, `npm`, `pypi`, `gem`, `go`, `cpan`, `cask`)
+- `source`: Builder-specific source argument (`owner/repo` for github, formula name for homebrew, crate name for cargo, etc.)
+
+**Optional fields:**
+- `binary`: Binary name when it differs from the tool name
+- `description`: Short description of the tool (enriched from API)
+- `homepage`: URL to the tool's documentation or marketing page
+- `repo`: URL to the source code repository (may differ from install source — e.g., jq's repo is GitHub but builder is homebrew)
+- `disambiguation`: When `true`, entry is a collision override preserved even when a recipe exists
+
+**Builder selection guidance:**
+
+The `builder` field describes how to install the tool, not where its source code lives. A tool maintained on GitHub might install best via Homebrew, cargo, or a direct GitHub release download. The choice depends on the installation path:
+
+1. **`github`**: Tool publishes pre-built platform binaries in GitHub releases. Fastest, most reliable — no build step needed.
+2. **`homebrew`**: Tool has Homebrew bottles or requires complex build dependencies that Homebrew handles.
+3. **Ecosystem builders** (`cargo`, `npm`, `pypi`, `gem`, `go`, `cpan`): Tool is primarily distributed through an ecosystem registry. Mainly used for disambiguation overrides.
+4. **`cask`**: macOS application distributed as a .dmg or .pkg.
+
+### Go Code Changes
+
+Update `internal/discover/registry.go`:
+
+```go
+type RegistryEntry struct {
+    Builder        string `json:"builder"`
+    Source         string `json:"source"`
+    Binary         string `json:"binary,omitempty"`
+    Description    string `json:"description,omitempty"`
+    Homepage       string `json:"homepage,omitempty"`
+    Repo           string `json:"repo,omitempty"`
+    Disambiguation bool   `json:"disambiguation,omitempty"`
+}
+```
+
+Update `ParseRegistry` to accept schema versions 1 and 2. The `RegistryLookup` resolver is unchanged — it reads `Builder` and `Source` as before. New fields are available for other consumers.
+
+Update the parent design (DESIGN-discovery-resolver.md) to reflect the v2 schema.
 
 ### Components
 
 ```
-data/discovery-seeds/          # Curated seed lists
+data/discovery-seeds/          # Curated seed lists (input)
 ├── cloud-cli.json             # AWS, GCP, Azure CLI tools
 ├── dev-tools.json             # General development tools
 ├── kubernetes.json            # k8s ecosystem tools
 ├── security.json              # Security and audit tools
 ├── hashicorp.json             # HashiCorp tools
-└── disambiguations.json       # Known name collisions with explicit resolution
+└── disambiguations.json       # Known name collisions
 
-cmd/seed-discovery/            # Go CLI tool
-├── main.go                    # Entry point, flag parsing
-└── (uses internal/seed/ patterns)
+cmd/seed-discovery/            # Go CLI tool (processor)
+└── main.go
 
-recipes/discovery.json         # Output: validated registry
+recipes/discovery.json         # Output: validated registry (v2 schema)
 
 .github/workflows/
 └── discovery-freshness.yml    # Weekly CI validation
 ```
 
-### Builder Selection Rules
-
-Discovery entries exist for two reasons: (1) the tool isn't discoverable through ecosystem probes, or (2) the tool needs a disambiguation override because its name collides across ecosystems. The builder for each entry should be chosen based on the best installation path for that tool, not just "whatever hosts the source code."
-
-Many tools are maintained on GitHub but distributed through Homebrew, cargo, npm, or other ecosystems. The GitHub repo is the source of truth for development, but the best installation path may be an ecosystem package. For example, `jq` is maintained on GitHub (jqlang/jq) but its Homebrew bottle is the most reliable install method — so its discovery entry uses the `homebrew` builder.
-
-**Selection order (prefer earlier options):**
-
-1. **Use `github`** when the tool publishes pre-built platform binaries in GitHub releases. This is the fastest and most reliable path — no build step, no ecosystem-specific toolchain. Examples: kubectl, terraform, gh, stripe-cli.
-2. **Use `homebrew`** when the tool has Homebrew bottles but no GitHub release binaries, or when Homebrew handles complex build dependencies that other builders struggle with. Examples: jq, ffmpeg, imagemagick.
-3. **Use an ecosystem builder** (`cargo`, `npm`, `pypi`, etc.) as a disambiguation override when the tool name collides and the correct resolution is the ecosystem package. Examples: if `serve` should resolve to the npm package rather than a GitHub release.
-
-**What about tools not on GitHub?**
-
-The discovery registry format supports any builder — entries like `{"builder": "homebrew", "source": "formula-name"}` or `{"builder": "cargo", "source": "crate-name"}` are valid. The seed list format and validation tool should handle non-GitHub entries:
-
-- For `homebrew` builder: validate the formula exists via Homebrew API
-- For ecosystem builders (`cargo`, `npm`, etc.): validate the package exists via the ecosystem's API
-- For `github` builder: validate the repo exists, isn't archived, and has binary release assets
-
-At bootstrap time, the majority of entries will use `github` since that's the largest gap (ecosystem tools are already discoverable via the probe stage). But the design doesn't limit future entries to GitHub-only — the seed list format and validation are builder-aware.
-
 ### Seed List Format
+
+Seed lists are the human-curated input. They contain the minimum needed for validation — the tool handles enrichment:
 
 ```json
 {
   "category": "dev-tools",
   "description": "General development CLI tools",
   "entries": [
-    {"name": "ripgrep", "builder": "github", "source": "BurntSushi/ripgrep", "verification": "https://github.com/BurntSushi/ripgrep"},
-    {"name": "fd", "builder": "github", "source": "sharkdp/fd", "disambiguation": true, "verification": "https://github.com/sharkdp/fd"},
-    {"name": "bat", "builder": "github", "source": "sharkdp/bat", "disambiguation": true, "verification": "https://github.com/sharkdp/bat"},
-    {"name": "jq", "builder": "homebrew", "source": "jq", "verification": "https://github.com/jqlang/jq"},
-    {"name": "yq", "builder": "github", "source": "mikefarah/yq", "verification": "https://github.com/mikefarah/yq"},
-    {"name": "delta", "builder": "github", "source": "dandavison/delta", "disambiguation": true, "verification": "https://github.com/dandavison/delta"},
-    {"name": "kubectl", "builder": "github", "source": "kubernetes/kubernetes", "binary": "kubectl", "verification": "https://kubernetes.io/docs/tasks/tools/"}
+    {"name": "ripgrep", "builder": "github", "source": "BurntSushi/ripgrep"},
+    {"name": "fd", "builder": "github", "source": "sharkdp/fd", "disambiguation": true},
+    {"name": "bat", "builder": "github", "source": "sharkdp/bat", "disambiguation": true},
+    {"name": "jq", "builder": "homebrew", "source": "jq", "repo": "https://github.com/jqlang/jq"},
+    {"name": "kubectl", "builder": "github", "source": "kubernetes/kubernetes", "binary": "kubectl"}
   ]
 }
 ```
 
-Fields:
-- `name` (required): Tool name as users would type it
-- `builder` (required): Builder name (`github`, `homebrew`, `cargo`, `npm`, etc.)
-- `source` (required): Builder-specific source argument (`owner/repo` for github, formula name for homebrew, crate name for cargo, etc.)
-- `binary` (optional): Binary name when it differs from tool name
-- `disambiguation` (optional): When `true`, this entry is a collision override and should be preserved even after a recipe exists
-- `verification` (required): URL to the tool's official page or repository proving this is the canonical source. Reviewers must verify this link matches the entry
+Required per entry: `name`, `builder`, `source`. Optional: `binary`, `disambiguation`, `repo` (when repo differs from install source — the tool can't infer it). The tool enriches `description`, `homepage`, and `repo` (for github builder entries) from API responses.
 
-### Go Tool: cmd/seed-discovery
+### Processing Pipeline
 
 ```
-Usage: seed-discovery [flags]
-
-Flags:
-  -seeds-dir     Directory containing seed list JSON files (default: data/discovery-seeds)
-  -output        Output discovery.json path (default: recipes/discovery.json)
-  -recipes-dir   Recipe directory to cross-reference (default: recipes)
-  -queue          Priority queue to cross-reference (default: data/priority-queue.json)
-  -validate-only  Validate existing discovery.json without regenerating
-  -github-token   GitHub API token (default: $GITHUB_TOKEN)
-  -verbose        Show detailed validation output
-```
-
-Processing pipeline:
-
-```
-Read seed lists
+Read seed lists (data/discovery-seeds/*.json)
     |
     v
-Merge all entries (deduplicate by name)
+Merge all entries (deduplicate by name; last-seen wins on conflicts,
+    logged as warning for review)
     |
     v
 For each entry:
   1. Builder-specific validation:
-     - github: repo exists? not archived? owner matches? release in last 24 months? binary assets?
+     - github: repo exists? not archived? API full_name matches source
+       (detect renamed/redirected repos)? has a non-draft release in
+       last 24 months with at least one asset matching platform patterns
+       (linux|darwin|windows combined with amd64|arm64|x86_64)?
      - homebrew: formula exists via Homebrew API?
-     - cargo/npm/pypi/gem: package exists via ecosystem API?
-  2. Cross-reference: recipe already exists in recipes/?
-  3. Cross-reference: entry in priority queue?
-  4. Collision check: name exists on npm, crates.io, PyPI, or RubyGems?
+     - cargo/npm/pypi/gem/go/cpan: package exists via ecosystem API?
+     All API calls use exponential backoff with 3 retries. Responses
+     cached in memory for the duration of the run to avoid duplicate
+     requests (e.g., collision detection reusing validation responses).
+  2. Metadata enrichment (from the same API response):
+     - github: description, homepage, stars, repo URL
+     - homebrew: description, homepage
+     - ecosystem: description (where available)
+  3. Cross-reference: recipe already exists in recipes/? (case-insensitive,
+     normalized name match against recipe filenames)
+  4. Collision detection: name exists on npm, crates.io, PyPI, or RubyGems?
   5. Typosquatting check: Levenshtein distance <=2 from another entry?
+  6. Unicode normalization: reject names with mixed-script characters
     |
     v
 Output:
-  - Valid entries -> discovery.json
+  - Valid entries -> recipes/discovery.json (v2 schema)
   - Skipped (has recipe, not disambiguation) -> logged, excluded
   - Skipped (has recipe, is disambiguation) -> logged, INCLUDED
   - Failed validation -> logged with reason, excluded
@@ -310,31 +382,22 @@ Output:
   - Typosquatting warnings -> logged for human review
 ```
 
-**Validation criteria for "has binary releases":** A release qualifies if it has at least one asset that is not an auto-generated source archive (GitHub's automatic `Source code (zip)` and `Source code (tar.gz)` don't count). The asset name should contain a platform identifier (linux, darwin, windows, amd64, arm64, etc.) suggesting it's a pre-built binary.
+### CLI Interface
 
-**Entry lifecycle:** Regular entries are excluded from `discovery.json` when a recipe exists in `recipes/`. Disambiguation entries (marked `disambiguation: true`) are always included regardless of recipe existence, because they prevent the ecosystem probe from resolving to the wrong tool.
-
-### Output Format
-
-The tool outputs `recipes/discovery.json` matching the existing schema:
-
-```json
-{
-  "schema_version": 1,
-  "tools": {
-    "ripgrep": {"builder": "github", "source": "BurntSushi/ripgrep"},
-    "bat": {"builder": "github", "source": "sharkdp/bat"},
-    "kubectl": {"builder": "github", "source": "kubernetes/kubernetes", "binary": "kubectl"}
-  }
-}
 ```
+Usage: seed-discovery [flags]
 
-The `builder` field is always `"github"` for most entries (the primary use case). Disambiguation overrides may use other builders (e.g., `"cargo"` for a Rust tool that should be installed from crates.io rather than GitHub releases).
+Flags:
+  -seeds-dir      Seed list directory (default: data/discovery-seeds)
+  -output         Output path (default: recipes/discovery.json)
+  -recipes-dir    Recipe directory for cross-reference (default: recipes)
+  -validate-only  Validate existing discovery.json without regenerating
+  -verbose        Show detailed validation and enrichment output
+```
 
 ### CI Freshness Workflow
 
 ```yaml
-# .github/workflows/discovery-freshness.yml
 name: Discovery Registry Freshness
 on:
   schedule:
@@ -355,71 +418,75 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-On validation failure, the workflow creates an issue listing stale entries with the reason (archived, deleted, no releases).
+On failure, creates an issue listing stale entries with reasons.
 
 ### Data Flow
 
 ```
 Seed lists (data/discovery-seeds/*.json)
-    |
+    |  human-curated: name, builder, source
     v
-cmd/seed-discovery (Go tool)
-    |--- validates via GitHub API
-    |--- cross-references recipes/ and priority queue
-    |--- detects ecosystem collisions
-    |
+cmd/seed-discovery
+    |  validates + enriches via APIs
     v
-recipes/discovery.json (~500 entries)
-    |
+recipes/discovery.json (~500 entries, v2 schema with metadata)
+    |  committed to repo
     v
 tsuku update-registry (fetches to $TSUKU_HOME/registry/discovery.json)
-    |
+    |  cached locally
     v
-RegistryLookup resolver (instant O(1) lookup)
+RegistryLookup (reads builder+source, O(1) lookup)
+    |  future: other consumers read metadata fields
+    v
+DiscoveryResult -> create pipeline -> install
 ```
 
 ### Relationship to Batch Pipeline
 
-The discovery registry and batch pipeline serve different lifecycle stages:
-
 | Aspect | Discovery Registry | Priority Queue |
 |--------|-------------------|----------------|
 | Purpose | Name resolution for `tsuku install` | Batch recipe generation |
-| Builder | Primarily `github` | Primarily `homebrew` |
-| Lifecycle | Entry becomes redundant when recipe exists | Entry moves to `success` when recipe generated |
-| Update | `cmd/seed-discovery` | `cmd/seed-queue` |
+| Builder | Any (github, homebrew, cargo, etc.) | Primarily `homebrew` |
+| Lifecycle | Entry removed when recipe exists (unless disambiguation) | Entry status → `success` when recipe generated |
+| Tooling | `cmd/seed-discovery` | `cmd/seed-queue` |
 | Output | `recipes/discovery.json` | `data/priority-queue.json` |
 
-Shared patterns (not shared code):
-- GitHub API client with retry and rate limiting
-- JSON file load/save with schema validation
-- Cross-referencing against existing recipes
+Shared patterns: GitHub API client, JSON I/O, recipe cross-referencing. Not shared code — different tools with different concerns.
 
-As the batch pipeline generates recipes for popular tools, those tools' discovery entries become redundant (the recipe exists, so the resolver short-circuits before reaching the registry stage). The `seed-discovery` tool's cross-reference step handles this: it skips tools that already have recipes, so re-running the tool naturally shrinks the registry.
+### Future Evolution
+
+**Schema v3 (when LLM builder exists):** Make `builder`+`source` optional. Entries with only metadata (`repo`, `homepage`, `description`) can be resolved by an LLM builder that infers the install path. The registry becomes a general tool knowledge base rather than just an install index.
+
+**Automated population:** Once ecosystem probe metadata is collected at scale, new entries could be generated automatically from probe results + disambiguation review.
+
+**Convergence with priority queue:** Both registries map tool names to sources. They could merge into a unified tool index that serves both discovery (name resolution) and batch generation (recipe queue).
 
 ## Implementation Approach
 
-### Phase 1: Seed Lists and Go Tool
+### Phase 1: Schema Evolution and Go Tool
 
-Create the seed list files and `cmd/seed-discovery` tool. Start with 50-100 entries from the most obvious sources (Kubernetes tools, HashiCorp tools, popular GitHub CLI tools) to validate the pipeline end-to-end.
+Update the registry schema to v2, modify Go code to accept new fields, and build `cmd/seed-discovery`. Start with 50-100 entries to validate end-to-end.
 
 **Files:**
-- `data/discovery-seeds/*.json` (seed lists)
+- `internal/discover/registry.go` (add optional fields, accept schema v1 and v2)
+- `internal/discover/registry_test.go` (update tests)
 - `cmd/seed-discovery/main.go`
+- `data/discovery-seeds/dev-tools.json` (initial seed list)
 - `recipes/discovery.json` (updated output)
+- `docs/designs/DESIGN-discovery-resolver.md` (update schema section)
 
-### Phase 2: Scale to 500 Entries
+### Phase 2: Scale to ~500 Entries
 
-Expand the seed lists to cover ~500 tools. Run the tool, review collision reports, add disambiguation entries.
+Expand seed lists across categories. Run the tool, review collision reports, add disambiguation entries.
 
 **Files:**
-- `data/discovery-seeds/*.json` (expanded)
-- `data/discovery-seeds/disambiguations.json` (collision overrides)
-- `recipes/discovery.json` (500 entries)
+- `data/discovery-seeds/*.json` (all categories)
+- `data/discovery-seeds/disambiguations.json`
+- `recipes/discovery.json` (~500 entries)
 
 ### Phase 3: CI Freshness
 
-Add the weekly freshness workflow.
+Add weekly validation workflow.
 
 **Files:**
 - `.github/workflows/discovery-freshness.yml`
@@ -428,72 +495,74 @@ Add the weekly freshness workflow.
 
 ### Download Verification
 
-The `seed-discovery` tool doesn't download binaries. It queries the GitHub API over HTTPS to verify repo metadata (existence, archived status, release assets). No artifacts are downloaded or executed during the bootstrap process.
+The `seed-discovery` tool doesn't download binaries. It queries APIs over HTTPS (GitHub, Homebrew, ecosystem registries) to verify metadata and enrich entries. No artifacts are downloaded or executed.
 
-The entries it produces are consumed by the discovery resolver, which delegates to builders that have their own download verification (checksums, HTTPS). The accuracy of the registry entry (pointing to the correct repo) is the security concern here, not download integrity.
+The entries it produces are consumed by the discovery resolver, which delegates to builders with their own verification (checksums, HTTPS). The accuracy of the registry entry — pointing to the correct source for the correct builder — is the security concern.
 
 ### Execution Isolation
 
-The tool runs locally or in CI. It makes read-only GitHub API calls and writes a JSON file. No code execution, no sandbox needed, no elevated permissions required.
+The tool runs locally or in CI. Read-only API calls, writes a JSON file. No code execution, no sandbox, no elevated permissions.
 
 ### Supply Chain Risks
 
-**Registry poisoning via seed lists.** A malicious PR could add an entry pointing to a compromised repo (e.g., `kubernetes-tools/kubernetes` instead of `kubernetes/kubernetes`). Mitigations:
-- Every seed list entry requires a `verification` URL linking to the tool's official page
-- PR reviewers must verify the `verification` URL matches the `repo` field
-- The tool validates that repos exist and have legitimate release history (24+ months of releases)
-- Weekly freshness checks detect repos that change ownership or get transferred
-- Automated typosquatting detection flags entries with names close to existing entries (Levenshtein distance <=2)
+**Registry poisoning via seed lists.** A malicious PR could map a tool name to a compromised source (e.g., `kubernetes-tools/kubernetes` instead of `kubernetes/kubernetes`). Mitigations:
+- PR review: changes to `data/discovery-seeds/` require CODEOWNERS review
+- Reviewer checklist: verify source matches official tool, check for typosquatting
+- Automated validation: tool verifies source exists and has legitimate release history
+- Redirect detection: compare GitHub API's `full_name` response against the seed list's `source` field to catch renamed repos claimed by attackers
+- Typosquatting detection: Levenshtein distance check flags near-miss entry names
+- Unicode normalization: reject entry names with mixed-script characters
+- PR size limit: PRs adding more than 100 entries require additional review
+- Weekly freshness: detects ownership transfers
 
-**PR review requirements for seed list changes:**
-- Changes to `data/discovery-seeds/` require review from a CODEOWNERS-designated reviewer
-- Reviewer checklist: (1) verify `verification` URL is the tool's official page, (2) verify `repo` matches the official repository, (3) check for typosquatting against existing entries, (4) for disambiguation entries, verify the chosen resolution is correct
+**Stale entries pointing to transferred repos.** Mitigations:
+- Weekly CI freshness check compares current repo owner against entry
+- The parent design's ownership verification applies
 
-**Stale entries pointing to transferred repos.** A legitimate repo transferred to a new owner could become malicious. Mitigations:
-- Weekly CI freshness check detects ownership changes (compare owner in entry vs. current GitHub owner)
-- The parent design's ownership verification applies here
+**Disambiguation errors.** Wrong override sends users to wrong tool. Mitigations:
+- Disambiguation entries are flagged for extra review
+- Collision detection surfaces both sides with metadata
+- Each disambiguation must be justified in the seed list
 
-**Typosquatting via seed lists.** An entry like `kubeclt` (one character off from `kubectl`) could redirect users to a malicious repo. Mitigations:
-- The `seed-discovery` tool computes Levenshtein distance between all entry names and flags pairs with distance <=2
-- Flagged entries require explicit justification in the seed list or are rejected
-
-**Disambiguation errors.** A wrong disambiguation override sends users to the wrong tool. Mitigations:
-- Disambiguation entries are flagged in seed lists (`disambiguation: true`) for extra review attention
-- Collision detection automates discovery; human review ensures correctness
-- Each disambiguation entry must document the rationale (which tool is the "correct" one for the name)
+**Metadata poisoning.** Enriched fields (description, homepage) come from API responses controlled by repo owners. A malicious repo could set misleading metadata. Mitigations:
+- Metadata is informational only — it doesn't affect install behavior
+- The `builder`+`source` fields (which control what gets installed) come from the human-curated seed list, not from API enrichment
 
 ### User Data Exposure
 
-The bootstrap tool sends tool names and repo identifiers to the GitHub API and ecosystem registries (crates.io, npm, PyPI, RubyGems) during collision detection. This is equivalent to browsing those sites. No user data is collected or transmitted. The published `discovery.json` contains only tool names and public repo identifiers.
+The bootstrap tool sends tool names and source identifiers to GitHub and ecosystem APIs. Equivalent to browsing those sites. No user data collected or transmitted. Published `discovery.json` contains tool names, public repo identifiers, and publicly available metadata.
 
 ### Mitigations
 
 | Risk | Mitigation | Residual Risk |
 |------|------------|---------------|
-| Registry poisoning via PR | Verification URLs, CODEOWNERS review, automated validation | Sophisticated attack with matching verification page |
-| Typosquatting via seed lists | Levenshtein distance check, review checklist | Novel Unicode or homoglyph attacks (handled by resolver's normalize.go) |
-| Stale entry to transferred repo | Weekly freshness check with ownership comparison | 7-day window between transfer and detection |
-| Wrong disambiguation | Automated collision detection + human review + documented rationale | Obscure collisions not in seed lists |
-| GitHub API compromise | HTTPS transport, standard API authentication | GitHub infrastructure compromise |
+| Registry poisoning via PR | CODEOWNERS review, automated validation, typosquatting detection | Sophisticated attack with legitimate-looking source |
+| Stale entry to transferred repo | Weekly freshness with ownership check | 7-day window between transfer and detection |
+| Wrong disambiguation | Collision detection + human review + documented rationale | Obscure collisions not in seed lists |
+| Metadata poisoning | Metadata is informational only; install fields from curated seed list | Misleading description/homepage (no install impact) |
+| Typosquatting | Levenshtein distance check, review checklist | Novel Unicode attacks (handled by resolver's normalize.go) |
 
 ## Consequences
 
 ### Positive
 
-- Discovery resolver has data to work with (~500 tools resolve instantly)
-- Repeatable process for ongoing maintenance
-- Automated collision detection catches disambiguations humans would miss
+- Discovery resolver has ~500 entries for instant tool resolution
+- Schema v2 captures tool identity (repo, homepage, description) separately from install path
+- Metadata enables richer disambiguation UX and `tsuku info`/`search` output
+- Schema is forward-compatible with future LLM builder (v3 can make install fields optional)
+- Automated enrichment reduces manual effort — curators only specify name+builder+source
 - CI freshness keeps entries current
-- Contributor-friendly: add an entry to a seed list, run the tool, submit PR
 
 ### Negative
 
+- Schema version bump requires code changes to the registry loader
 - Initial seed list curation requires manual effort (~500 entries)
-- GitHub API rate limits constrain validation speed
+- Metadata enrichment adds API calls during generation (acceptable for one-time bootstrap)
 - Weekly freshness has up to 7-day staleness window
 
 ### Mitigations
 
-- Seed lists are organized by category for parallel curation by multiple contributors
-- Authenticated GitHub API provides 5000 requests/hour (sufficient for 500 entries)
-- Critical tools (top 50) could have more frequent freshness checks if needed
+- Schema v1 entries still load without changes (backward compatible)
+- Seed lists organized by category for parallel curation
+- Enrichment API calls are cached and rate-limited
+- Critical tools could have more frequent freshness checks if needed

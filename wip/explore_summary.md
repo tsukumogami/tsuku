@@ -1,31 +1,37 @@
 # Exploration Summary: Discovery Registry Bootstrap
 
 ## Problem (Phase 1)
-The discovery registry (`recipes/discovery.json`) has 1 entry but needs ~500 to make `tsuku install <tool>` useful for the top developer tools. Without populated data, the registry lookup stage of the discovery resolver returns nothing, forcing every tool resolution through slower ecosystem probes or LLM discovery.
+The discovery registry has 1 entry but needs ~500 for the resolver to deliver value. The current schema conflates tool identity with install instructions, blocking future evolution.
 
 ## Decision Drivers (Phase 1)
-- Registry entries must map to working builders (github, homebrew, cargo, etc.)
-- Each entry's source must exist and not be archived
-- Disambiguation overrides needed for known name collisions (bat, fd, serve)
-- Reuse existing infrastructure where possible (seed-queue tool, priority queue data)
-- The process must be repeatable for ongoing maintenance
-- Public visibility: bootstrap tooling should be contributor-friendly
+- Serve today's resolver (builder+source required)
+- Enable future evolution (optional metadata fields)
+- Separate identity from install path
+- Entry accuracy and contributor-friendliness
 
 ## Research Findings (Phase 2)
-- Upstream design (DESIGN-discovery-resolver.md) defines registry format: `{builder, source, binary?}`
-- Two entry categories: GitHub-release tools not in ecosystems, and disambiguation overrides
-- Existing `cmd/seed-queue/` tool fetches from Homebrew analytics API with tier assignment
-- Priority queue has 204 Homebrew entries — but these map to `homebrew` builder, not `github`
-- The batch pipeline and discovery registry serve different purposes: batch generates recipes, discovery maps names to builders for first-time resolution
-- Shared concern: both need to verify repos exist and aren't archived
-- Registry loading code (`internal/discover/registry.go`) validates builder+source fields on load
+- Upstream design defines registry format, resolver code at internal/discover/registry.go
+- Recipe metadata already includes description, homepage, tier, dependencies
+- Seed-queue tool provides reusable patterns for API clients and JSON I/O
+- Batch pipeline shares validation concerns but serves different purpose
 
 ## Options (Phase 3)
-1. Data sourcing: curated list from awesome-cli-apps + GitHub API scraping vs. LLM-assisted bulk generation vs. extend seed-queue tool
-2. Validation: Go CLI tool with GitHub API checks vs. shell script vs. CI-only validation
-3. Disambiguation: manual curation vs. automated cross-ecosystem collision detection
-4. Tooling reuse: new standalone tool vs. extend cmd/seed-queue vs. one-time script
+1. Schema: required install + optional metadata (chosen) vs nested objects vs optional install now
+2. Sourcing: Go CLI with seed lists (chosen) vs LLM generation vs awesome-list scraping
+3. Validation: builder-aware + enrichment + CI freshness (chosen) vs validation-only vs PR-time CI
+4. Disambiguation: automated detection + manual resolution (chosen) vs fully automated
+
+## Decision (Phase 5)
+
+**Problem:**
+The discovery registry has 1 entry but needs ~500 for the resolver to deliver value. The current schema conflates tool identity (where it's maintained, what it does) with install instructions (which builder to use). This blocks future evolution: an LLM builder could infer install paths from metadata, and richer data improves disambiguation UX. The bootstrap must populate entries that serve today's resolver while collecting metadata for future builders and features.
+
+**Decision:**
+Evolve the registry schema to v2: keep builder+source as required fields (today's resolver works unchanged), add optional metadata fields (repo, homepage, description, disambiguation flag). A Go CLI tool reads curated seed lists, validates via builder-specific API checks, enriches with metadata from the same API responses, detects ecosystem name collisions, and outputs discovery.json. CI runs weekly freshness checks. Schema v3 (optional install fields) is deferred until an LLM builder exists to consume metadata-only entries.
+
+**Rationale:**
+Separating tool identity from install path is a low-cost, backward-compatible schema change that collects useful data now without requiring consumers. Keeping builder+source required avoids premature abstraction. Curated seed lists focus manual effort on the high-value decision (correct source for each tool) while automating mechanical work (description, homepage, validation). The Go tool reuses patterns from existing seed-queue infrastructure.
 
 ## Current Status
-**Phase:** 3 - Options
+**Phase:** 8 - Final Review
 **Last Updated:** 2026-02-01
