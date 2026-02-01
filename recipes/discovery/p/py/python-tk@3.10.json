@@ -1,0 +1,4 @@
+{
+  "builder": "homebrew",
+  "source": "python-tk@3.10"
+}

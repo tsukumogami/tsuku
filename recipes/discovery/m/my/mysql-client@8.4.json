@@ -1,0 +1,4 @@
+{
+  "builder": "homebrew",
+  "source": "mysql-client@8.4"
+}

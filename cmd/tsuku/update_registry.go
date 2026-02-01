@@ -46,9 +46,6 @@ Use --dry-run to see what would be refreshed without making network requests.`,
 			return
 		}
 
-		// Fetch discovery registry (warn on failure, don't block recipe refresh)
-		refreshDiscoveryRegistry(ctx, reg)
-
 		if registryRecipeName != "" {
 			runSingleRecipeRefresh(ctx, cachedReg, registryRecipeName)
 			return
@@ -219,17 +216,6 @@ func forceRegistryRefreshAll(ctx context.Context, cachedReg *registry.CachedRegi
 	}
 
 	return stats
-}
-
-// refreshDiscoveryRegistry fetches the discovery registry and caches it locally.
-// Errors are printed as warnings; they don't block recipe refresh.
-func refreshDiscoveryRegistry(ctx context.Context, reg *registry.Registry) {
-	printInfo("Updating discovery registry...")
-	if err := reg.FetchDiscoveryRegistry(ctx); err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: could not update discovery registry: %v\n", err)
-		return
-	}
-	printInfo("Discovery registry updated.")
 }
 
 // formatAgeDuration formats a duration for human-readable display.

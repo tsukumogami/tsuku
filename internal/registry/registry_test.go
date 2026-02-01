@@ -325,13 +325,13 @@ func TestListCached_NonExistentDir(t *testing.T) {
 	}
 }
 
-func TestFetchDiscoveryRegistry(t *testing.T) {
-	discoveryJSON := `{"schema_version":1,"tools":{"jq":{"builder":"homebrew","source":"jq"}}}`
+func TestFetchDiscoveryEntry(t *testing.T) {
+	entryJSON := `{"builder":"homebrew","source":"jq"}`
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/recipes/discovery.json" {
+		if r.URL.Path == "/recipes/discovery/j/jq/jq.json" {
 			w.WriteHeader(http.StatusOK)
-			_, _ = w.Write([]byte(discoveryJSON))
+			_, _ = w.Write([]byte(entryJSON))
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -346,31 +346,26 @@ func TestFetchDiscoveryRegistry(t *testing.T) {
 	}
 
 	ctx := context.Background()
-
-	// Test successful fetch
-	err := reg.FetchDiscoveryRegistry(ctx)
+	data, err := reg.FetchDiscoveryEntry(ctx, "j/jq/jq.json")
 	if err != nil {
-		t.Fatalf("FetchDiscoveryRegistry failed: %v", err)
+		t.Fatalf("FetchDiscoveryEntry failed: %v", err)
+	}
+	if string(data) != entryJSON {
+		t.Errorf("content = %q, want %q", data, entryJSON)
 	}
 
-	// Verify file was written
-	path := filepath.Join(cacheDir, "discovery.json")
-	data, err := os.ReadFile(path)
+	// Verify cached locally
+	cachePath := filepath.Join(cacheDir, "discovery", "j", "jq", "jq.json")
+	cached, err := os.ReadFile(cachePath)
 	if err != nil {
-		t.Fatalf("Failed to read cached discovery.json: %v", err)
+		t.Fatalf("cache not written: %v", err)
 	}
-	if string(data) != discoveryJSON {
-		t.Errorf("Cached content = %q, want %q", data, discoveryJSON)
-	}
-
-	// Test idempotency: run again, should overwrite cleanly
-	err = reg.FetchDiscoveryRegistry(ctx)
-	if err != nil {
-		t.Fatalf("FetchDiscoveryRegistry (second call) failed: %v", err)
+	if string(cached) != entryJSON {
+		t.Errorf("cached = %q, want %q", cached, entryJSON)
 	}
 }
 
-func TestFetchDiscoveryRegistry_NotFound(t *testing.T) {
+func TestFetchDiscoveryEntry_NotFound(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
 	}))
@@ -382,7 +377,7 @@ func TestFetchDiscoveryRegistry_NotFound(t *testing.T) {
 		client:   &http.Client{},
 	}
 
-	err := reg.FetchDiscoveryRegistry(context.Background())
+	_, err := reg.FetchDiscoveryEntry(context.Background(), "z/zz/zzz.json")
 	if err == nil {
 		t.Fatal("Expected error for 404 response")
 	}
@@ -395,42 +390,14 @@ func TestFetchDiscoveryRegistry_NotFound(t *testing.T) {
 	}
 }
 
-func TestFetchDiscoveryRegistry_CreatesDirectory(t *testing.T) {
-	discoveryJSON := `{"schema_version":1,"tools":{}}`
-
-	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		_, _ = w.Write([]byte(discoveryJSON))
-	}))
-	defer server.Close()
-
-	// Use a non-existent subdirectory
-	cacheDir := filepath.Join(t.TempDir(), "nested", "registry")
-	reg := &Registry{
-		BaseURL:  server.URL,
-		CacheDir: cacheDir,
-		client:   &http.Client{},
-	}
-
-	err := reg.FetchDiscoveryRegistry(context.Background())
-	if err != nil {
-		t.Fatalf("FetchDiscoveryRegistry failed: %v", err)
-	}
-
-	// Verify directory was created and file exists
-	if _, err := os.Stat(filepath.Join(cacheDir, "discovery.json")); err != nil {
-		t.Fatalf("discovery.json not found after fetch: %v", err)
-	}
-}
-
-func TestFetchDiscoveryRegistry_NetworkError(t *testing.T) {
+func TestFetchDiscoveryEntry_NetworkError(t *testing.T) {
 	reg := &Registry{
 		BaseURL:  "http://localhost:1", // connection refused
 		CacheDir: t.TempDir(),
 		client:   &http.Client{},
 	}
 
-	err := reg.FetchDiscoveryRegistry(context.Background())
+	_, err := reg.FetchDiscoveryEntry(context.Background(), "j/jq/jq.json")
 	if err == nil {
 		t.Fatal("Expected error for unreachable server")
 	}
