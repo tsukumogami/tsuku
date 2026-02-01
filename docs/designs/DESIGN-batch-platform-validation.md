@@ -1,8 +1,11 @@
 ---
 status: Planned
-problem: Batch-generated recipes are validated only on Linux x86_64 but claim all-platform support, so users on arm64 or macOS can get broken installs.
-decision: Add platform validation jobs to the batch workflow that test on 12 target environments (5 linux families x 2 architectures + 2 macOS), then write platform constraints for partial-coverage recipes before creating the PR.
-rationale: In-workflow validation catches platform failures before the PR exists, enables the merge job to write accurate platform constraints, and keeps progressive promotion from cheap Linux runners to expensive macOS runners.
+problem: |
+  The batch recipe generation pipeline validates recipes only on Linux x86_64 glibc before creating a PR. These recipes claim all-platform support by default, but nobody verifies that download URLs resolve to working binaries on ARM64, macOS, musl-based distros, or non-debian Linux families. Users on those platforms can get broken installs -- missing binaries, wrong architecture, or shared library failures -- with no warning until they run `tsuku install`.
+decision: |
+  Add four platform validation jobs to the batch workflow that test generated recipes across 12 target environments (5 Linux families x 2 architectures + 2 macOS) before the PR is created. A merge job aggregates per-platform pass/fail results and writes `supported_os`, `supported_libc`, or `unsupported_platforms` constraints for recipes with partial coverage, so the PR contains only recipes proven to work on the platforms they claim.
+rationale: |
+  The merge job needs structured per-platform results to write accurate platform constraints, and those results must be available before the PR is created. In-workflow validation is the only approach that produces this data at the right time. Reusing PR CI (Option 2) can't provide structured results and blocks the entire PR on any single platform failure. Progressive promotion from cheap Linux runners to expensive macOS runners keeps the macOS CI budget manageable.
 ---
 
 # Batch Multi-Platform Validation
@@ -15,14 +18,20 @@ Planned
 
 ### Milestone: [Batch Multi-Platform Validation](https://github.com/tsukumogami/tsuku/milestone/60)
 
-| Issue | Title | Dependencies | Tier |
-|-------|-------|--------------|------|
-| [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | ci(batch): restructure generate job and add platform validation jobs | None | testable |
-| [#1323](https://github.com/tsukumogami/tsuku/issues/1323) | ci(batch): add merge job with platform constraint derivation | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
-| [#1324](https://github.com/tsukumogami/tsuku/issues/1324) | ci(batch): produce generate job validation result artifact | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
-| [#1325](https://github.com/tsukumogami/tsuku/issues/1325) | ci(batch): honor execution-exclusions.json in validation jobs | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
-| [#1326](https://github.com/tsukumogami/tsuku/issues/1326) | ci(batch): use NDJSON accumulation in validation loops | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | simple |
-| [#1327](https://github.com/tsukumogami/tsuku/issues/1327) | ci(batch): add nullglob guard for recipe collection | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | simple |
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1320: ci(batch): restructure generate job and add platform validation jobs](https://github.com/tsukumogami/tsuku/issues/1320) | None | testable |
+| _Split the generate job so it uploads passing recipes as artifacts, add four validation jobs (two Linux with 5-family Docker containers each, two macOS native), and cross-compile tsuku binaries for all target platforms._ | | |
+| [#1323: ci(batch): add merge job with platform constraint derivation](https://github.com/tsukumogami/tsuku/issues/1323) | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
+| _With validation results from all 12 environments available, aggregate pass/fail into a result matrix, derive `supported_os`/`supported_libc`/`unsupported_platforms` constraints for partial-coverage recipes, and create the PR with accurate metadata._ | | |
+| [#1324: ci(batch): produce generate job validation result artifact](https://github.com/tsukumogami/tsuku/issues/1324) | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
+| _The generate job already validates on linux-debian-glibc-x86_64 but doesn't emit a structured result artifact. Add JSON output so the merge job can include generation-time results in its platform matrix._ | | |
+| [#1325: ci(batch): honor execution-exclusions.json in validation jobs](https://github.com/tsukumogami/tsuku/issues/1325) | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
+| _Some recipes can't be tested in CI (e.g., they require interactive input). Load `data/execution-exclusions.json` in each validation job and skip listed recipes, matching the behavior of `test-changed-recipes.yml`._ | | |
+| [#1326: ci(batch): use NDJSON accumulation in validation loops](https://github.com/tsukumogami/tsuku/issues/1326) | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | simple |
+| _Replace the current pattern of building a JSON array in a shell variable with append-per-line NDJSON, avoiding shell quoting issues and memory growth for large batches._ | | |
+| [#1327: ci(batch): add nullglob guard for recipe collection](https://github.com/tsukumogami/tsuku/issues/1327) | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | simple |
+| _When no recipes match a glob pattern, bash expands the literal glob string into the loop. Add `shopt -s nullglob` so empty matches produce an empty list instead of a spurious iteration._ | | |
 
 ### Dependency Graph
 
@@ -119,93 +128,25 @@ The core question is where multi-platform validation should happen: inside the b
 
 ## Considered Options
 
-### Option 1: Platform Matrix Jobs in Batch Workflow
+### Decision 1: Where to run multi-platform validation
 
-Add platform validation jobs to `batch-generate.yml` that run after generation, plus a merge job that aggregates results and writes platform constraints. This is the Job 3-4 architecture from the batch design doc.
+The batch workflow currently validates recipes only on Linux x86_64 glibc before creating a PR. Multi-platform validation needs to happen somewhere, and the key question is whether it belongs inside the batch workflow (before the PR exists) or in PR CI (after the PR is created).
 
-Each Linux platform job runs all 5 family containers (debian, rhel, arch, suse, alpine) sequentially on a single runner, using Docker for family isolation — the same pattern `platform-integration.yml` already uses for alpine on arm64. Each macOS job validates directly on the runner. All jobs produce JSON artifacts with per-recipe, per-family pass/fail results. The merge job collects all results, writes `supported_os`/`unsupported_platforms`/`supported_libc` for partial-coverage recipes, and creates the PR.
+The answer depends on when platform results are needed. The merge job must write `supported_os`, `supported_libc`, and `unsupported_platforms` fields to recipe TOML before creating the PR, which means it needs structured per-platform pass/fail data. It also needs to support partial coverage -- a recipe that works on Linux but not macOS should still ship with a `supported_os = ["linux"]` constraint rather than blocking the entire batch.
 
-This gives 12 target environments (5 families x 2 linux architectures + 2 macOS) using only 4 workflow jobs.
+#### Chosen: Platform matrix jobs in batch workflow
 
-**Pros:**
-- Validates before PR creation; broken recipes never enter the PR queue
-- Full family coverage catches family-specific bottle resolution failures
-- Platform results available in batch artifacts for analysis and metrics
-- Merge job can write accurate constraints based on actual results
-- Aligns with batch design doc architecture (Jobs 3-4)
-- Only 4 jobs despite 12 environments (container reuse on Linux runners)
+Add four validation jobs to `batch-generate.yml` that run after generation. Each Linux job runs all 5 family containers (debian, rhel, arch, suse, alpine) sequentially on a single runner using Docker -- the same pattern `platform-integration.yml` already uses for alpine on arm64. Each macOS job validates directly on the runner. All jobs produce JSON artifacts with per-recipe, per-family pass/fail results. The merge job collects all results, writes constraints for partial-coverage recipes, and creates the PR.
 
-**Cons:**
-- macOS jobs cost 10x (mitigated by progressive strategy)
-- Linux jobs take longer due to sequential family testing (~5 families x recipe count)
-- Duplicates some validation that `test-changed-recipes.yml` would also do on the PR
-- Two parallel multi-platform validation systems to maintain
+This gives 12 target environments using only 4 workflow jobs. macOS cost is mitigated by progressive validation: only recipes that pass Linux get promoted. The main trade-off is maintaining two parallel multi-platform validation systems (batch workflow and `test-changed-recipes.yml`), but they serve different purposes -- batch produces structured results for constraint writing, PR CI validates the final constrained recipes.
 
-### Option 2: Batch PR Triggers test-changed-recipes.yml
+#### Alternatives Considered
 
-The batch merge job creates a PR with all Linux-passing recipes. `test-changed-recipes.yml` triggers on that PR (it already watches `recipes/**/*.toml`). Auto-merge waits for required checks to pass.
+**PR CI reuse**: The batch merge job creates a PR with all Linux-passing recipes, and `test-changed-recipes.yml` (which already watches `recipes/**/*.toml`) validates them. Rejected because `test-changed-recipes.yml` doesn't produce structured per-platform results the merge job can consume, a single macOS failure blocks the entire batch PR with no partial-coverage support, and it only tests on `ubuntu-latest` and `macos-latest` (no ARM64, musl, or non-debian family coverage).
 
-Recipes that fail macOS validation in PR CI block the batch PR for review. The merge job doesn't write platform constraints itself; instead, failing recipes are investigated manually or the batch is re-run with those recipes excluded.
+**Tiered validation (plans + URL pre-filter)**: Generate installation plans on a single Linux runner using `tsuku eval`, check that download URLs return HTTP 200, then promote to install validation on a subset of platforms. Rejected because plan generation misses runtime failures (wrong binary format, missing shared libs), and the install subset still requires the same runner infrastructure as the chosen approach. Could be added later as an optimization layer.
 
-**Pros:**
-- Zero new validation infrastructure (reuses existing workflow)
-- Single validation system for manual and batch PRs
-- Already handles Linux matrix + macOS aggregation, execution exclusions, Linux-only detection
-- Same macOS cost (validation runs either way)
-- Less code to maintain
-
-**Cons:**
-- Can't write platform constraints before PR creation (test-changed-recipes.yml doesn't produce structured per-platform results)
-- A single macOS failure blocks the entire batch PR (no partial-coverage merge)
-- Slower batch cycle (generation finishes, PR created, then waits for PR CI)
-- No ARM64, musl, or non-debian family validation (`test-changed-recipes.yml` only tests on `ubuntu-latest` and `macos-latest`)
-- Batch-specific logic (constraint writing, failure recording) would need to live in a separate post-CI step
-
-### Option 3: Tiered Validation (Plans + URL Pre-filter, Then Install)
-
-Generate installation plans for all 5 platforms on a single Linux runner using `tsuku eval`. Validate that:
-1. Plans generate without errors
-2. Download URLs return HTTP 200 (HEAD request)
-3. Platform mappings produce valid URLs for each target
-
-Recipes that pass the plan check get promoted to install validation on a subset of platforms (linux-amd64 + darwin-arm64 only, to save cost).
-
-**Pros:**
-- Plan validation is very cheap (no downloads, no extraction, one Linux runner)
-- Catches URL pattern errors, architecture mapping mistakes, missing platform variants
-- Install validation only on the subset saves ~60% vs full matrix
-- Could be combined with Option 1 as a pre-filter stage
-
-**Cons:**
-- Plan generation alone misses runtime failures (binary wrong format, missing shared libs)
-- URL HEAD checks can be slow at scale (hundreds of requests, rate limiting)
-- Two-stage validation adds workflow complexity
-- The subset of platforms for install validation still needs the same runner infrastructure as Option 1
-
-### Option 4: Container Matrix on Linux Only
-
-Run all validations inside Docker containers on Linux runners, using QEMU for ARM64 emulation. Skip macOS entirely.
-
-**Pros:**
-- No macOS runners needed
-- All validation on cheap Linux runners
-
-**Cons:**
-- QEMU emulation is slow and sometimes unreliable
-- Can't validate macOS binaries (different binary format, dylibs, codesigning)
-- Most Homebrew bottles have macOS variants that would go untested
-- Marking everything Linux-only defeats multi-platform support
-
-### Evaluation Against Decision Drivers
-
-| Driver | Option 1: Batch Matrix | Option 2: PR CI Reuse | Option 3: Tiered | Option 4: Containers |
-|--------|----------------------|----------------------|-----------------|---------------------|
-| macOS budget | Fair (progressive) | Fair (same cost) | Good (subset only) | Good (none) |
-| Progressive savings | Good | N/A (no progression) | Good (plan pre-filter) | N/A |
-| Partial coverage | Good (per-platform) | Poor (blocks PR) | Fair (subset only) | Poor (no macOS) |
-| Constraint timing | Good (before PR) | Poor (after PR) | Good (before PR) | Poor (no macOS data) |
-| Consistency | Fair (parallel system) | Good (single system) | Fair (parallel) | Poor (no macOS) |
-| CLI boundary | Good | Good | Fair (plan, not install) | Good |
+**Container matrix on Linux only**: Run all validations inside Docker containers using QEMU for ARM64 emulation, skipping macOS entirely. Rejected because QEMU emulation is unreliable, macOS binaries can't be validated in Linux containers (different binary format, dylibs, codesigning), and marking everything Linux-only defeats multi-platform support.
 
 ### Uncertainties
 
@@ -215,29 +156,23 @@ Run all validations inside Docker containers on Linux runners, using QEMU for AR
 
 ## Decision Outcome
 
-**Chosen option: Option 1 (Platform Matrix Jobs in Batch Workflow)**
+**Chosen: Platform matrix jobs in batch workflow**
 
-This is the right approach because the merge job needs per-platform pass/fail results to write accurate platform constraints before creating the PR. None of the other options produce structured per-platform results that the merge job can consume.
+### Summary
+
+The batch workflow gains four platform validation jobs that run after recipe generation. Two Linux jobs (x86_64 on `ubuntu-latest`, arm64 on `ubuntu-24.04-arm`) each spin up five Docker containers sequentially -- debian, fedora, archlinux, opensuse, and alpine -- running `tsuku install --force --recipe <path>` inside each one. Two macOS jobs (arm64 on `macos-14`, x86_64 on `macos-13`) run the same install command natively. This produces 12 target environments from 4 workflow jobs, with each job uploading a `validation-results-<platform>.json` artifact containing per-recipe, per-family pass/fail records.
+
+The generate job cross-compiles tsuku binaries for all four runner platforms (`linux-amd64`, `linux-arm64`, `darwin-arm64`, `darwin-amd64`) and uploads them alongside the passing recipes. Each validation job downloads these artifacts, so there's no redundant compilation. Per-recipe timeouts of 5 minutes and per-job timeouts of 120 minutes bound resource consumption. Network errors (exit code 5) get up to 3 retries with exponential backoff; all other failures are recorded immediately.
+
+The merge job runs after all four validation jobs complete (using `if: always()` to handle infrastructure failures). It downloads all result artifacts, builds a per-recipe, per-platform matrix, and categorizes each recipe: all 12 pass (no constraint changes), partial coverage (derive and write constraints), zero passes (exclude), or contains `run_command` (exclude as security gate). For partial-coverage recipes, a shell script `scripts/write-platform-constraints.sh` writes the minimum constraint set to the recipe TOML -- `supported_os = ["linux"]` when all macOS fails, `supported_libc = ["glibc"]` when all musl fails, or `unsupported_platforms` entries for finer-grained failures. The merge job then creates the PR with constrained recipes and appends platform failures to `data/failures/<eco>.jsonl`.
+
+After the batch PR is created, `test-changed-recipes.yml` still triggers as a secondary validation layer. This provides defense-in-depth: the batch workflow catches platform issues and writes constraints, PR CI validates that the constrained recipes install correctly on the platforms they claim. No changes are needed to `test-changed-recipes.yml` for this to work.
 
 ### Rationale
 
-Option 1 was chosen because:
-- **Platform constraint timing** is the deciding factor. The merge job must know which platforms each recipe supports to write `supported_os`/`unsupported_platforms` before the PR is created. Option 2 (PR CI reuse) can't provide this because `test-changed-recipes.yml` doesn't produce structured per-platform artifacts.
-- **Partial coverage** is a key requirement. When a recipe works on Linux but fails on macOS, the merge job should add `supported_os = ["linux"]` and still include the recipe. Option 2 blocks the entire PR on any failure, losing the partial-coverage benefit.
-- **Progressive validation** directly addresses the macOS budget constraint by only running expensive macOS jobs on recipes that pass Linux first.
+The deciding factor is constraint timing. The merge job must write `supported_os`, `supported_libc`, and `unsupported_platforms` fields to recipe TOML before the PR exists, which requires structured per-platform results that only in-workflow validation can provide. PR CI reuse was the most attractive alternative (zero new infrastructure), but it produces pass/fail per-PR rather than per-recipe per-platform, and blocks the entire batch on any single failure.
 
-Alternatives were rejected because:
-- **Option 2 (PR CI reuse)**: Can't write platform constraints before PR creation, and a single platform failure blocks the whole batch. Good idea in principle but doesn't support the partial-coverage workflow.
-- **Option 3 (Tiered)**: Plan pre-filtering is a good optimization but doesn't eliminate the need for install validation infrastructure. Could be added later as a pre-filter stage within Option 1.
-- **Option 4 (Containers)**: Can't validate macOS binaries. Not viable for a multi-platform tool manager.
-
-### Trade-offs Accepted
-
-- **Two validation systems**: Batch workflow has its own platform matrix alongside `test-changed-recipes.yml`. This means two places to update when validation logic changes.
-- **macOS budget pressure**: Progressive validation mitigates this (~80% savings) but large batches still consume significant budget.
-- **Workflow complexity**: `batch-generate.yml` grows from 1 job to 6 jobs (preflight, generate, 2 Linux validators, 2 macOS validators, merge).
-
-These are acceptable because the batch pipeline has fundamentally different needs from PR CI: it must produce per-platform results for constraint writing and support partial-coverage merging, which PR CI wasn't designed for.
+The main cost is maintaining two parallel validation systems. This is acceptable because they serve different purposes: batch validation produces structured results for constraint derivation and supports partial-coverage merging, while PR CI validates the final constrained recipes as a safety net. The workflow grows from 1 job to 6, but the jobs are largely mechanical (download artifacts, run install in containers, upload results) and follow patterns already established in `platform-integration.yml`.
 
 ## Solution Architecture
 
