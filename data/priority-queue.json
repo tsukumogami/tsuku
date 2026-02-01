@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-01-31T18:00:45Z",
+  "updated_at": "2026-02-01T21:31:59Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -87,7 +87,7 @@
       "source": "homebrew",
       "name": "pkgconf",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {

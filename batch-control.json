@@ -8,8 +8,8 @@
   "expected_resume": "",
   "circuit_breaker": {
     "homebrew": {
-      "state": "open",
-      "failures": 5,
+      "state": "closed",
+      "failures": 0,
       "last_failure": "2026-02-01T10:00:00Z",
       "opens_at": "2026-02-01T11:00:00Z"
     }
