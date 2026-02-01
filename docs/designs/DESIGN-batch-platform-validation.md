@@ -42,12 +42,12 @@ Planned
 
 ```mermaid
 graph LR
-    subgraph Foundation["M60: Foundation"]
+    subgraph Foundation["Foundation"]
         I1320["#1320: Restructure generate job..."]
         I1323["#1323: Add merge job with constraints"]
     end
 
-    subgraph Refinements["M61: Refinements"]
+    subgraph Refinements["Refinements"]
         I1324["#1324: Produce validation artifact"]
         I1325["#1325: Honor execution-exclusions"]
         I1326["#1326: NDJSON accumulation"]
