@@ -44,7 +44,7 @@ Planned
 | _Add `--from` flag to `tsuku install` that forwards to the create pipeline, skipping recipe lookup. Passes through `--yes` and `--deterministic-only`. First step toward converging install and create under a single command._ | | |
 | ~~[#1338: Discovery fallback in install](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~[#1337](https://github.com/tsukumogami/tsuku/issues/1337)~~ | ~~testable~~ |
 | _Wire the discovery resolver chain into `tsuku install` so unknown tools trigger automatic source discovery and recipe generation. Shows which resolver stage matched and provides actionable errors on failure._ | | |
-| [#1317: Ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1317) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | testable |
+| ~~[#1317: Ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1317)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~testable~~ |
 | _Implement the `EcosystemProber` interface and `EcosystemProbe` resolver that queries all seven ecosystem builders in parallel with a 3-second timeout. Includes threshold filtering (age >90 days, downloads >1000/month) and the `ProbeResult` type._ | | |
 | [#1318: LLM discovery](https://github.com/tsukumogami/tsuku/issues/1318) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | critical |
 | _Implement the `LLMDiscovery` resolver: web search via LLM, structured JSON extraction, GitHub API verification (existence, archived status, ownership), rich confirmation prompt with metadata, and prompt injection defenses (HTML stripping, URL validation)._ | | |

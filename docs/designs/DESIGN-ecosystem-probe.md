@@ -61,7 +61,7 @@ graph TD
 
 ## Upstream Design Reference
 
-This design implements the Ecosystem Probe stage described in [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md) (Solution Architecture: Ecosystem Probe section). It addresses the design questions raised in [#1317](https://github.com/tsukumogami/tsuku/issues/1317).
+This design implements the Ecosystem Probe stage described in [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md) (Solution Architecture: Ecosystem Probe section). It addresses the design questions raised in issue 1317.
 
 ## Context and Problem Statement
 
