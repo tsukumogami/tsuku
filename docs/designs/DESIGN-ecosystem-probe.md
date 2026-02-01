@@ -10,7 +10,9 @@ rationale: |
 
 # DESIGN: Ecosystem Probe for Discovery Resolver
 
-**Status**: Planned
+## Status
+
+Planned
 
 ## Implementation Issues
 
