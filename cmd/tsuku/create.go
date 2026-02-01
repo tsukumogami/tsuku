@@ -247,6 +247,18 @@ func runCreate(cmd *cobra.Command, args []string) {
 		exitWithCode(ExitUsage)
 	}
 
+	// Guard: fail early if --deterministic-only is set and the builder needs LLM
+	if createDeterministicOnly && builder.RequiresLLM() {
+		source := sourceArg
+		if source == "" {
+			source = builderName
+		}
+		fmt.Fprintf(os.Stderr, "Error: '%s' resolved to %s (%s), which requires LLM for recipe generation.\n",
+			toolName, builderName, source)
+		fmt.Fprintln(os.Stderr, "Remove --deterministic-only or wait for a recipe to be contributed.")
+		exitWithCode(ExitDeterministicFailed)
+	}
+
 	ctx := context.Background()
 
 	// For LLM builders, load config and state tracker for session options

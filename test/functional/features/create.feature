@@ -68,6 +68,18 @@ Feature: Create
     And the output contains "Recipe created:"
     And the file "recipes/iterm2.toml" exists
 
+  Scenario: Deterministic-only with explicit GitHub builder fails with actionable message
+    When I run "tsuku create test-tool --from github:cli/cli --deterministic-only"
+    Then the exit code is 9
+    And the error output contains "requires LLM for recipe generation"
+    And the error output contains "Remove --deterministic-only"
+
+  Scenario: Deterministic-only with discovery GitHub builder fails with actionable message
+    When I run "tsuku create fd --deterministic-only"
+    Then the exit code is 9
+    And the error output contains "requires LLM for recipe generation"
+    And the error output contains "Remove --deterministic-only"
+
   Scenario: Create without --from runs discovery
     When I run "tsuku create nonexistent-tool-xyz"
     Then the exit code is 3
