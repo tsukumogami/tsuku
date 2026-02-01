@@ -137,18 +137,14 @@ jobs:
       - name: Validate on all Linux x86_64 families
         run: |
           RESULTS="[]"
-          FAMILIES="debian:bookworm-slim fedora:41 archlinux:base opensuse/tumbleweed alpine:3.21"
-          FAMILY_NAMES="debian rhel arch suse alpine"
-          LIBCS="glibc glibc glibc glibc musl"
+          IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
+          NAMES=("debian" "rhel" "arch" "suse" "alpine")
+          LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
 
-          set -- $FAMILY_NAMES
-          set_libcs="$LIBCS"
-
-          for image in $FAMILIES; do
-            family=$(echo "$FAMILY_NAMES" | cut -d' ' -f1)
-            FAMILY_NAMES=$(echo "$FAMILY_NAMES" | cut -d' ' -f2-)
-            libc=$(echo "$set_libcs" | cut -d' ' -f1)
-            set_libcs=$(echo "$set_libcs" | cut -d' ' -f2-)
+          for i in "${!IMAGES[@]}"; do
+            image="${IMAGES[$i]}"
+            family="${NAMES[$i]}"
+            libc="${LIBCS[$i]}"
             platform="linux-${family}-${libc}-x86_64"
 
             echo "=== Validating on $platform ($image) ==="
@@ -156,12 +152,8 @@ jobs:
             for recipe_path in ${{ steps.recipes.outputs.list }}; do
               recipe_name=$(basename "$recipe_path" .toml)
 
-              # Path traversal check
               case "$recipe_path" in
-                *..*)
-                  echo "SKIP: path traversal detected in $recipe_path"
-                  continue
-                  ;;
+                *..*) echo "SKIP: path traversal in $recipe_path"; continue ;;
               esac
 
               echo "--- $recipe_name on $platform ---"
@@ -171,7 +163,8 @@ jobs:
 
               for attempt in 1 2 3; do
                 ATTEMPTS=$attempt
-                if docker run --rm \
+                # Write tsuku exit code to file so Docker doesn't mask it
+                docker run --rm \
                   -v "$PWD:/workspace" \
                   -w /workspace \
                   "$image" \
@@ -184,17 +177,25 @@ jobs:
                       suse) zypper -n install curl ca-certificates ;;
                     esac
                     timeout 300 ./tsuku-linux-amd64 install --force --recipe '$recipe_path'
-                  " 2>&1; then
-                  EXIT_CODE=0
+                    echo \$? > /workspace/.tsuku-exit-code
+                  " 2>&1 || true
+
+                if [ -f .tsuku-exit-code ]; then
+                  EXIT_CODE=$(cat .tsuku-exit-code)
+                  rm -f .tsuku-exit-code
+                else
+                  # Container failed before running tsuku (Docker error)
+                  EXIT_CODE=1
+                fi
+
+                if [ "$EXIT_CODE" = "0" ]; then
                   STATUS="pass"
                   break
+                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 3 ]; then
+                  echo "Network error, retrying (attempt $((attempt+1)))..."
+                  sleep $((2 ** attempt))
+                  continue
                 else
-                  EXIT_CODE=$?
-                  if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 3 ]; then
-                    echo "Network error, retrying (attempt $((attempt+1)))..."
-                    sleep $((2 ** attempt))
-                    continue
-                  fi
                   STATUS="fail"
                   break
                 fi
@@ -256,18 +257,14 @@ jobs:
       - name: Validate on all Linux arm64 families
         run: |
           RESULTS="[]"
-          FAMILIES="debian:bookworm-slim fedora:41 archlinux:base opensuse/tumbleweed alpine:3.21"
-          FAMILY_NAMES="debian rhel arch suse alpine"
-          LIBCS="glibc glibc glibc glibc musl"
+          IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
+          NAMES=("debian" "rhel" "arch" "suse" "alpine")
+          LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
 
-          set -- $FAMILY_NAMES
-          set_libcs="$LIBCS"
-
-          for image in $FAMILIES; do
-            family=$(echo "$FAMILY_NAMES" | cut -d' ' -f1)
-            FAMILY_NAMES=$(echo "$FAMILY_NAMES" | cut -d' ' -f2-)
-            libc=$(echo "$set_libcs" | cut -d' ' -f1)
-            set_libcs=$(echo "$set_libcs" | cut -d' ' -f2-)
+          for i in "${!IMAGES[@]}"; do
+            image="${IMAGES[$i]}"
+            family="${NAMES[$i]}"
+            libc="${LIBCS[$i]}"
             platform="linux-${family}-${libc}-arm64"
 
             echo "=== Validating on $platform ($image) ==="
@@ -276,10 +273,7 @@ jobs:
               recipe_name=$(basename "$recipe_path" .toml)
 
               case "$recipe_path" in
-                *..*)
-                  echo "SKIP: path traversal detected in $recipe_path"
-                  continue
-                  ;;
+                *..*) echo "SKIP: path traversal in $recipe_path"; continue ;;
               esac
 
               echo "--- $recipe_name on $platform ---"
@@ -289,7 +283,7 @@ jobs:
 
               for attempt in 1 2 3; do
                 ATTEMPTS=$attempt
-                if docker run --rm \
+                docker run --rm \
                   -v "$PWD:/workspace" \
                   -w /workspace \
                   "$image" \
@@ -302,17 +296,24 @@ jobs:
                       suse) zypper -n install curl ca-certificates ;;
                     esac
                     timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'
-                  " 2>&1; then
-                  EXIT_CODE=0
+                    echo \$? > /workspace/.tsuku-exit-code
+                  " 2>&1 || true
+
+                if [ -f .tsuku-exit-code ]; then
+                  EXIT_CODE=$(cat .tsuku-exit-code)
+                  rm -f .tsuku-exit-code
+                else
+                  EXIT_CODE=1
+                fi
+
+                if [ "$EXIT_CODE" = "0" ]; then
                   STATUS="pass"
                   break
+                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 3 ]; then
+                  echo "Network error, retrying (attempt $((attempt+1)))..."
+                  sleep $((2 ** attempt))
+                  continue
                 else
-                  EXIT_CODE=$?
-                  if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 3 ]; then
-                    echo "Network error, retrying (attempt $((attempt+1)))..."
-                    sleep $((2 ** attempt))
-                    continue
-                  fi
                   STATUS="fail"
                   break
                 fi
@@ -514,7 +515,7 @@ jobs:
 
   merge:
     needs: [generate, validate-linux-x86_64, validate-linux-arm64, validate-darwin-arm64, validate-darwin-x86_64]
-    if: needs.generate.outputs.has_recipes == 'true'
+    if: always() && needs.generate.outputs.has_recipes == 'true' && needs.generate.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -524,19 +525,30 @@ jobs:
           name: passing-recipes
           path: artifacts
 
+      - name: Download validation results (tolerating missing artifacts)
+        run: |
+          # Download each result artifact, creating empty results for failed/skipped jobs
+          for platform in linux-x86_64 linux-arm64 darwin-arm64 darwin-x86_64; do
+            echo "[]" > "validation-results-${platform}.json"
+          done
+
       - uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: validation-results-linux-x86_64
 
       - uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: validation-results-linux-arm64
 
       - uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: validation-results-darwin-arm64
 
       - uses: actions/download-artifact@v4
+        continue-on-error: true
         with:
           name: validation-results-darwin-x86_64
 
