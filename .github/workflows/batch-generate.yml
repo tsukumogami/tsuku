@@ -596,6 +596,8 @@ jobs:
           INCLUDED_COUNT=0
           CONSTRAINED_COUNT=0
           EXCLUDED_COUNT=0
+          INCLUDED_RECIPES=""
+          EXCLUDED_RECIPES=""
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           FAILURE_JSONL="data/failures/${{ inputs.ecosystem }}.jsonl"
           mkdir -p "$(dirname "$FAILURE_JSONL")"
@@ -610,6 +612,7 @@ jobs:
               rm -f "$RECIPE_FILE"
               EXCLUDED_LOG="${EXCLUDED_LOG}\n- **${recipe}**: contains run_command action (security gate)"
               EXCLUDED_COUNT=$((EXCLUDED_COUNT + 1))
+              EXCLUDED_RECIPES="$EXCLUDED_RECIPES $recipe"
               continue
             fi
 
@@ -640,6 +643,7 @@ jobs:
             if [ "$EFFECTIVE_PASSED" = "$TOTAL" ]; then
               echo "All platforms pass or skipped, no constraints needed"
               INCLUDED_COUNT=$((INCLUDED_COUNT + 1))
+              INCLUDED_RECIPES="$INCLUDED_RECIPES $recipe"
               continue
             fi
 
@@ -648,6 +652,7 @@ jobs:
               rm -f "$RECIPE_FILE"
               EXCLUDED_LOG="${EXCLUDED_LOG}\n- **${recipe}**: failed on all platforms"
               EXCLUDED_COUNT=$((EXCLUDED_COUNT + 1))
+              EXCLUDED_RECIPES="$EXCLUDED_RECIPES $recipe"
               continue
             fi
 
@@ -657,6 +662,7 @@ jobs:
             CONSTRAINT_LOG="${CONSTRAINT_LOG}\n- **${recipe}**: ${CONSTRAINT}"
             CONSTRAINED_COUNT=$((CONSTRAINED_COUNT + 1))
             INCLUDED_COUNT=$((INCLUDED_COUNT + 1))
+            INCLUDED_RECIPES="$INCLUDED_RECIPES $recipe"
           done
 
           # Summary table for step summary
@@ -680,6 +686,8 @@ jobs:
           echo "INCLUDED_COUNT=$INCLUDED_COUNT" >> "$GITHUB_ENV"
           echo "CONSTRAINED_COUNT=$CONSTRAINED_COUNT" >> "$GITHUB_ENV"
           echo "EXCLUDED_COUNT=$EXCLUDED_COUNT" >> "$GITHUB_ENV"
+          echo "INCLUDED_RECIPES=${INCLUDED_RECIPES# }" >> "$GITHUB_ENV"
+          echo "EXCLUDED_RECIPES=${EXCLUDED_RECIPES# }" >> "$GITHUB_ENV"
 
           # Save logs for PR body (use files to avoid shell quoting issues)
           printf '%b' "$CONSTRAINT_LOG" > /tmp/constraint-log.md
