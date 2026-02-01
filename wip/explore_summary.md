@@ -1,36 +1,46 @@
 # Exploration Summary: Discovery Registry Bootstrap
 
 ## Problem (Phase 1)
-The discovery registry has 1 entry but needs ~500 for the resolver to deliver value. The current schema conflates tool identity with install instructions, blocking future evolution.
+The discovery registry has 1 entry but needs ~500 for the resolver to deliver value. The registry is the only resolver stage implemented today. The current schema conflates tool identity with install instructions, blocking future evolution.
 
 ## Decision Drivers (Phase 1)
 - Serve today's resolver (builder+source required)
+- Align with batch pipeline (don't duplicate curation work)
+- Disambiguation correctness (durable registry value)
+- Graduation path (entries become redundant as recipes appear)
 - Enable future evolution (optional metadata fields)
-- Separate identity from install path
-- Entry accuracy and contributor-friendliness
 
 ## Research Findings (Phase 2)
 - Upstream design defines registry format, resolver code at internal/discover/registry.go
 - Recipe metadata already includes description, homepage, tier, dependencies
 - Seed-queue tool provides reusable patterns for API clients and JSON I/O
-- Batch pipeline shares validation concerns but serves different purpose
+- Batch pipeline shares the priority queue as data source
+- Registry scale strategy defines deterministic-only batch pipeline; GitHub Release tools are manual/user-facing
+
+## First Principles (from DESIGN-registry-scale-strategy.md)
+- The registry is a pre-computed cache of name-to-builder mappings
+- Once a recipe exists, the registry entry is redundant (except disambiguation)
+- The batch pipeline generates recipes for ecosystem tools (homebrew, cargo, npm, etc.)
+- GitHub Release builder is LLM-only, excluded from automation
+- The registry's durable value: disambiguation overrides + GitHub Release tools
+- Transitional value: bridge until batch pipeline generates recipes
 
 ## Options (Phase 3)
 1. Schema: required install + optional metadata (chosen) vs nested objects vs optional install now
-2. Sourcing: Go CLI with seed lists (chosen) vs LLM generation vs awesome-list scraping
-3. Validation: builder-aware + enrichment + CI freshness (chosen) vs validation-only vs PR-time CI
-4. Disambiguation: automated detection + manual resolution (chosen) vs fully automated
+2. Sourcing: priority queue + curated seeds (chosen) vs LLM generation vs awesome-list scraping
+3. Graduation: exclude entries with recipes except disambiguation (chosen) vs keep all vs remove from seeds
+4. Validation: builder-aware + enrichment (chosen) vs validation-only
 
 ## Decision (Phase 5)
 
 **Problem:**
-The discovery registry has 1 entry but needs ~500 for the resolver to deliver value. The current schema conflates tool identity (where it's maintained, what it does) with install instructions (which builder to use). This blocks future evolution: an LLM builder could infer install paths from metadata, and richer data improves disambiguation UX. The bootstrap must populate entries that serve today's resolver while collecting metadata for future builders and features.
+The discovery registry has 1 entry but needs ~500. It's the only resolver stage that exists today. The batch pipeline generates recipes for ecosystem tools, but until those recipes exist, the registry bridges the gap. Its durable value is disambiguation overrides and GitHub Release tools the batch pipeline can't automate.
 
 **Decision:**
-Evolve the registry schema to v2: keep builder+source as required fields (today's resolver works unchanged), add optional metadata fields (repo, homepage, description, disambiguation flag). A Go CLI tool reads curated seed lists, validates via builder-specific API checks, enriches with metadata from the same API responses, detects ecosystem name collisions, and outputs discovery.json. CI runs weekly freshness checks. Schema v3 (optional install fields) is deferred until an LLM builder exists to consume metadata-only entries.
+Evolve schema to v2 with optional metadata. Populate by deriving entries from the priority queue (transitional ecosystem entries) and curated seed lists (durable GitHub Release + disambiguation entries). A Go CLI tool validates, enriches, and cross-references recipes. Entries graduate out as the batch pipeline generates recipes. Disambiguation entries persist regardless.
 
 **Rationale:**
-Separating tool identity from install path is a low-cost, backward-compatible schema change that collects useful data now without requiring consumers. Keeping builder+source required avoids premature abstraction. Curated seed lists focus manual effort on the high-value decision (correct source for each tool) while automating mechanical work (description, homepage, validation). The Go tool reuses patterns from existing seed-queue infrastructure.
+The priority queue already has 204 entries curated for the batch pipeline. Converting those to registry entries is mechanical and avoids duplicate curation. GitHub Release tools need separate curation (~200-300 entries) because they're outside the batch pipeline's scope. The graduation model keeps the registry lean — it converges toward disambiguation + GitHub Release mappings over time.
 
 ## Current Status
 **Phase:** 8 - Final Review
