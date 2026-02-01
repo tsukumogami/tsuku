@@ -22,6 +22,19 @@ Feature: Install
     And the file "recipes/shfmt.toml" exists
     And I can run "shfmt --version"
 
+  Scenario: Discovery fallback finds tool via registry and installs
+    When I run "tsuku install shfmt --force --deterministic-only"
+    Then the exit code is 0
+    And the error output contains "Discovered:"
+    And the file "recipes/shfmt.toml" exists
+    And I can run "shfmt --version"
+
+  Scenario: Discovery fallback shows actionable error for unknown tool
+    When I run "tsuku install nonexistent-discovery-test-xyz"
+    Then the exit code is 3
+    And the error output contains "could not find"
+    And the error output contains "--from"
+
   Scenario: Install with --from without tool name shows error
     When I run "tsuku install --from homebrew:jq"
     Then the exit code is 2
