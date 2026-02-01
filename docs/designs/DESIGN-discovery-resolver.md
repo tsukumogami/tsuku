@@ -38,8 +38,8 @@ Planned
 | _Add schema validation when loading `discovery.json`: check required fields (`builder`, `source`), reject unknown builders, and surface clear errors for malformed entries. Prevents silent failures from bad registry data._ | | |
 | [#1314: --deterministic-only guard](https://github.com/tsukumogami/tsuku/issues/1314) | None | testable |
 | _Add the early check in the create pipeline that rejects builders where `RequiresLLM()` returns true when `--deterministic-only` is set, producing the actionable error message from the UX table instead of a confusing "no LLM providers available" failure._ | | |
-| [#1315: Bootstrap registry ~500 entries](https://github.com/tsukumogami/tsuku/issues/1315) | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | testable |
-| _Populate `discovery.json` with ~500 entries covering GitHub-release tools not in any ecosystem registry and disambiguation overrides for known name collisions. Requires the fetch mechanism from #1312 to be testable end-to-end._ | | |
+| ~~[#1315: Bootstrap registry ~500 entries](https://github.com/tsukumogami/tsuku/issues/1315)~~ | ~~[#1312](https://github.com/tsukumogami/tsuku/issues/1312), [M62](https://github.com/tsukumogami/tsuku/milestone/62)~~ | ~~testable~~ |
+| _Populate `discovery.json` with ~500 entries covering GitHub-release tools not in any ecosystem registry and disambiguation overrides for known name collisions. Decomposed into [milestone 62](https://github.com/tsukumogami/tsuku/milestone/62) with 6 implementation issues._ | | |
 | ~~[#1337: Add --from flag to install](https://github.com/tsukumogami/tsuku/issues/1337)~~ | None | testable |
 | _Add `--from` flag to `tsuku install` that forwards to the create pipeline, skipping recipe lookup. Passes through `--yes` and `--deterministic-only`. First step toward converging install and create under a single command._ | | |
 | [#1338: Discovery fallback in install](https://github.com/tsukumogami/tsuku/issues/1338) | [#1337](https://github.com/tsukumogami/tsuku/issues/1337) | testable |
@@ -54,6 +54,7 @@ Planned
 | _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317._ | | |
 | [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
+| [M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62) | None | |
 
 ### Dependency Graph
 
@@ -66,6 +67,7 @@ graph TD
     end
 
     subgraph Phase2["Phase 2: Bootstrap + Convergence"]
+        M62["M62: Discovery Registry Bootstrap"]
         I1315["#1315: Bootstrap registry"]
         I1337["#1337: Add --from to install"]
         I1338["#1338: Discovery fallback"]
@@ -83,6 +85,7 @@ graph TD
     end
 
     I1312 --> I1315
+    M62 --> I1315
     I1337 --> I1338
     I1338 --> I1317
     I1338 --> I1318
@@ -100,7 +103,8 @@ graph TD
     class I1337 done
     class I1338 ready
     class I1319 blocked
-    class I1315 needsDesign
+    class M62 ready
+    class I1315 done
     class I1317,I1318,I1321,I1322 blocked
 ```
 
