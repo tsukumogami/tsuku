@@ -161,8 +161,8 @@ jobs:
               EXIT_CODE=0
               ATTEMPTS=1
 
-              for attempt in 1 2 3; do
-                ATTEMPTS=$attempt
+              for attempt in 0 1 2; do
+                ATTEMPTS=$((attempt + 1))
                 # Write tsuku exit code to file so Docker doesn't mask it
                 docker run --rm \
                   -v "$PWD:/workspace" \
@@ -191,9 +191,9 @@ jobs:
                 if [ "$EXIT_CODE" = "0" ]; then
                   STATUS="pass"
                   break
-                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 3 ]; then
-                  echo "Network error, retrying (attempt $((attempt+1)))..."
-                  sleep $((2 ** attempt))
+                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
+                  echo "Network error, retrying (attempt $((attempt+2)))..."
+                  sleep $((2 ** (attempt + 1)))
                   continue
                 else
                   STATUS="fail"
@@ -257,9 +257,10 @@ jobs:
       - name: Validate on all Linux arm64 families
         run: |
           RESULTS="[]"
-          IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
-          NAMES=("debian" "rhel" "arch" "suse" "alpine")
-          LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
+          # archlinux:base excluded -- no ARM64 container image
+          IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
+          NAMES=("debian" "rhel" "suse" "alpine")
+          LIBCS=("glibc" "glibc" "glibc" "musl")
 
           for i in "${!IMAGES[@]}"; do
             image="${IMAGES[$i]}"
@@ -281,8 +282,8 @@ jobs:
               EXIT_CODE=0
               ATTEMPTS=1
 
-              for attempt in 1 2 3; do
-                ATTEMPTS=$attempt
+              for attempt in 0 1 2; do
+                ATTEMPTS=$((attempt + 1))
                 docker run --rm \
                   -v "$PWD:/workspace" \
                   -w /workspace \
@@ -292,7 +293,6 @@ jobs:
                       alpine) apk add --no-cache curl bash ca-certificates ;;
                       debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates ;;
                       rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates ;;
-                      arch) pacman -Sy --noconfirm curl ca-certificates ;;
                       suse) zypper -n install curl ca-certificates ;;
                     esac
                     timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'
@@ -309,9 +309,9 @@ jobs:
                 if [ "$EXIT_CODE" = "0" ]; then
                   STATUS="pass"
                   break
-                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 3 ]; then
-                  echo "Network error, retrying (attempt $((attempt+1)))..."
-                  sleep $((2 ** attempt))
+                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
+                  echo "Network error, retrying (attempt $((attempt+2)))..."
+                  sleep $((2 ** (attempt + 1)))
                   continue
                 else
                   STATUS="fail"
@@ -357,6 +357,9 @@ jobs:
       - name: Make binary executable
         run: chmod +x tsuku-darwin-arm64
 
+      - name: Install GNU coreutils for gtimeout
+        run: brew install coreutils
+
       - name: Collect new recipe list
         id: recipes
         run: |
@@ -390,17 +393,17 @@ jobs:
             EXIT_CODE=0
             ATTEMPTS=1
 
-            for attempt in 1 2 3; do
-              ATTEMPTS=$attempt
-              if timeout 300 ./tsuku-darwin-arm64 install --force --recipe "$recipe_path" 2>&1; then
+            for attempt in 0 1 2; do
+              ATTEMPTS=$((attempt + 1))
+              if gtimeout 300 ./tsuku-darwin-arm64 install --force --recipe "$recipe_path" 2>&1; then
                 EXIT_CODE=0
                 STATUS="pass"
                 break
               else
                 EXIT_CODE=$?
-                if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 3 ]; then
-                  echo "Network error, retrying (attempt $((attempt+1)))..."
-                  sleep $((2 ** attempt))
+                if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
+                  echo "Network error, retrying (attempt $((attempt+2)))..."
+                  sleep $((2 ** (attempt + 1)))
                   continue
                 fi
                 STATUS="fail"
@@ -445,6 +448,9 @@ jobs:
       - name: Make binary executable
         run: chmod +x tsuku-darwin-amd64
 
+      - name: Install GNU coreutils for gtimeout
+        run: brew install coreutils
+
       - name: Collect new recipe list
         id: recipes
         run: |
@@ -478,17 +484,17 @@ jobs:
             EXIT_CODE=0
             ATTEMPTS=1
 
-            for attempt in 1 2 3; do
-              ATTEMPTS=$attempt
-              if timeout 300 ./tsuku-darwin-amd64 install --force --recipe "$recipe_path" 2>&1; then
+            for attempt in 0 1 2; do
+              ATTEMPTS=$((attempt + 1))
+              if gtimeout 300 ./tsuku-darwin-amd64 install --force --recipe "$recipe_path" 2>&1; then
                 EXIT_CODE=0
                 STATUS="pass"
                 break
               else
                 EXIT_CODE=$?
-                if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 3 ]; then
-                  echo "Network error, retrying (attempt $((attempt+1)))..."
-                  sleep $((2 ** attempt))
+                if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
+                  echo "Network error, retrying (attempt $((attempt+2)))..."
+                  sleep $((2 ** (attempt + 1)))
                   continue
                 fi
                 STATUS="fail"
@@ -557,6 +563,7 @@ jobs:
 
       - name: Copy data files
         run: |
+          mkdir -p data
           if [ -d artifacts/data ]; then
             cp -r artifacts/data/* data/
           fi
