@@ -54,6 +54,8 @@ Planned
 | _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317._ | | |
 | [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
+| [M65: Ecosystem Probe](https://github.com/tsukumogami/tsuku/milestone/65) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | |
+| _Add Probe() methods to all seven ecosystem builders, wire them into a parallel resolver with 3-second timeout, integrate into the discovery chain, and add integration tests. See [DESIGN-ecosystem-probe.md](DESIGN-ecosystem-probe.md)._ | | |
 | [M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62) | None | |
 | _Evolve registry schema to v2, build the `seed-discovery` CLI tool, populate ~500 entries from the priority queue and curated seed lists, and add CI freshness checks. See [DESIGN-discovery-registry-bootstrap.md](DESIGN-discovery-registry-bootstrap.md)._ | | |
 
@@ -76,6 +78,7 @@ graph TD
 
     subgraph Phase3["Phase 3: Discovery Stages"]
         I1317["#1317: Ecosystem probe"]
+        M65["M65: Ecosystem Probe"]
         I1318["#1318: LLM discovery"]
         I1319["#1319: Telemetry events"]
     end
@@ -89,10 +92,11 @@ graph TD
     I1315 --> M62
     I1337 --> I1338
     I1338 --> I1317
+    I1317 --> M65
     I1338 --> I1318
     I1338 --> I1319
-    I1317 --> I1321
-    I1317 --> I1322
+    M65 --> I1321
+    M65 --> I1322
     I1318 --> I1322
 
     classDef done fill:#c8e6c9
@@ -105,7 +109,7 @@ graph TD
     class I1319 ready
     class I1317 done
     class I1318 needsDesign
-    class M62 ready
+    class M65,M62 ready
     class I1315 done
     class I1321 needsDesign
     class I1322 blocked
