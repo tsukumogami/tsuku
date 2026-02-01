@@ -17,7 +17,7 @@ build-test:
 
 # Run functional tests (builds test binary first)
 test-functional: build-test
-	TSUKU_TEST_BINARY=$(CURDIR)/tsuku-test go test -v ./test/functional/...
+	TSUKU_TEST_BINARY=$(CURDIR)/tsuku-test TSUKU_TEST_TAGS="~@requires-no-cargo && ~@requires-no-gem" go test -v ./test/functional/...
 	rm -rf .tsuku-test
 
 # Run only critical functional tests
