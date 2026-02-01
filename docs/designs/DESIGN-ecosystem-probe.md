@@ -20,7 +20,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1383: Add Probe() to ecosystem builders](https://github.com/tsukumogami/tsuku/issues/1383) | None | testable |
+| ~~[#1383: Add Probe() to ecosystem builders](https://github.com/tsukumogami/tsuku/issues/1383)~~ | ~~None~~ | ~~testable~~ |
 | _Adds `Probe()` to all 7 ecosystem builders (npm, pypi, cargo, gem, go, cpan, cask), wrapping existing fetch methods to return `ProbeResult` with existence, source, and age (Go only)._ | | |
 | [#1384: Implement parallel ecosystem probe resolver](https://github.com/tsukumogami/tsuku/issues/1384) | [#1383](https://github.com/tsukumogami/tsuku/issues/1383) | testable |
 | _Replaces the stub resolver with goroutine-per-builder fan-out, shared 3-second timeout, buffered channel collection, and static priority-based disambiguation._ | | |
@@ -55,8 +55,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1383 ready
-    class I1384,I1385,I1386 blocked
+    class I1383 done
+    class I1384 ready
+    class I1385,I1386 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

@@ -350,3 +350,15 @@ func isValidExecutableName(name string) bool {
 	matched, _ := regexp.MatchString(`^[a-zA-Z0-9_][a-zA-Z0-9._-]*$`, name)
 	return matched
 }
+
+// Probe checks if a crate exists on crates.io.
+func (b *CargoBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
+	_, err := b.fetchCrateInfo(ctx, name)
+	if err != nil {
+		return &ProbeResult{Exists: false}, nil
+	}
+	return &ProbeResult{
+		Exists: true,
+		Source: name,
+	}, nil
+}

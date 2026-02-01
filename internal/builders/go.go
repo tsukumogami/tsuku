@@ -266,3 +266,19 @@ func inferGoExecutableName(modulePath string) (string, string) {
 
 	return executable, ""
 }
+
+// Probe checks if a module exists on proxy.golang.org.
+func (b *GoBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
+	info, err := b.fetchModuleInfo(ctx, name)
+	if err != nil {
+		return &ProbeResult{Exists: false}, nil
+	}
+	result := &ProbeResult{
+		Exists: true,
+		Source: name,
+	}
+	if t, parseErr := time.Parse(time.RFC3339, info.Time); parseErr == nil {
+		result.Age = int(time.Since(t).Hours() / 24)
+	}
+	return result, nil
+}

@@ -245,3 +245,16 @@ func inferExecutableName(distribution string) (string, string) {
 
 	return name, warning
 }
+
+// Probe checks if a distribution exists on CPAN.
+func (b *CPANBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
+	dist := normalizeToDistribution(name)
+	_, err := b.fetchDistributionInfo(ctx, dist)
+	if err != nil {
+		return &ProbeResult{Exists: false}, nil
+	}
+	return &ProbeResult{
+		Exists: true,
+		Source: dist,
+	}, nil
+}
