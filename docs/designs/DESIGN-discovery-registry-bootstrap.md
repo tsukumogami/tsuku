@@ -42,8 +42,7 @@ Planned
 | _Enriches discovery entries with description, homepage, and repo URL from GitHub and Homebrew API responses during validation. Uses the same API calls already made for validation, so the cost is extracting additional fields from existing responses._ | | |
 | [#1367: feat(discover): add recipe cross-reference and graduation logic](https://github.com/tsukumogami/tsuku/issues/1367) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
 | _Excludes entries from `discovery.json` when a recipe already exists in `recipes/`, except for disambiguation entries which persist regardless. Implements the graduation model that keeps the registry lean as the batch pipeline generates recipes._ | | |
-| [#1368: feat(discover): curate seed lists for ~500 discovery entries](https://github.com/tsukumogami/tsuku/issues/1368) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | simple |
-| _Creates seed list files in `data/discovery-seeds/` for GitHub Release tools and disambiguation overrides, reaching ~500 total entries when combined with priority queue derivation._ | | |
+| ~~[#1368: feat(discover): curate seed lists for ~500 discovery entries](https://github.com/tsukumogami/tsuku/issues/1368)~~ | ~~[#1364](https://github.com/tsukumogami/tsuku/issues/1364)~~ | ~~simple~~ |
 | [#1369: ci(discover): add weekly discovery registry freshness check](https://github.com/tsukumogami/tsuku/issues/1369) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | simple |
 | _Adds a GitHub Actions workflow that validates existing `discovery.json` entries weekly, checking that referenced repositories and packages still exist, and creates an issue listing any stale entries._ | | |
 
@@ -68,8 +67,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1364,I1365 done
-    class I1366,I1367,I1368,I1369 ready
+    class I1364,I1365,I1368 done
+    class I1366,I1367,I1369 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
@@ -178,7 +177,53 @@ The existing `RegistryLookup` code reads `builder` and `source` and ignores ever
 
 **Nested install object**: `{"install": {"builder": "...", "source": "..."}, "repo": "..."}`. Cleaner separation but breaks the existing `RegistryEntry` struct for no functional benefit. Rejected.
 
-### Decision 2: Population Strategy
+### Decision 2: Registry Storage Format
+
+#### Chosen: Per-Tool Files in Nested Directory
+
+Instead of a single `discovery.json` file, each tool gets its own JSON file in a nested directory structure:
+
+```
+recipes/discovery/
+├── b/
+│   ├── ba/
+│   │   └── bash.json
+│   └── bu/
+│       └── buf.json
+├── r/
+│   └── ri/
+│       └── ripgrep.json
+└── ...
+```
+
+Path construction: `{first-letter}/{first-two-letters}/{name}.json`. Single-character names use `{letter}/_/{name}.json`.
+
+Each file contains a single `RegistryEntry` with no wrapper object:
+
+```json
+{
+  "builder": "github",
+  "source": "sharkdp/bat",
+  "disambiguation": true
+}
+```
+
+The CLI fetches entries on demand from GitHub raw URLs when a cache miss occurs during `tsuku install`. Entries are cached locally at `$TSUKU_HOME/registry/discovery/{path}`. There is no bulk download — `update-registry` refreshes recipes only; discovery entries are fetched lazily.
+
+This format has several advantages over a single monolith file:
+
+- **Conflict-free contributions**: Parallel PRs touch different files, so merge conflicts don't happen.
+- **Name uniqueness by construction**: One file per name means duplicates are impossible.
+- **Incremental fetching**: The CLI only downloads entries it needs, not the entire registry.
+- **Natural scaling**: Adding entry #1001 doesn't require downloading entries #1-#1000.
+
+#### Alternatives Considered
+
+**Single assembled `discovery.json`**: The original approach. Simple but creates merge conflicts with every parallel contribution and requires downloading the full file even when looking up a single tool. Rejected once the registry reached ~800 entries.
+
+**Directory with assembled file for serving**: Keep split files as source of truth but also check in an assembled file for runtime. Rejected — the CLI can construct the path from the tool name and fetch the individual file directly. No assembly step needed.
+
+### Decision 3: Population Strategy
 
 The core question is where ~500 entries come from. The batch pipeline already has a priority queue (`data/priority-queue.json`) with 204 homebrew entries. That's the starting point.
 
@@ -202,7 +247,7 @@ Two sources, matching the registry's two durable purposes:
 
 #### Chosen: Exclude Entries with Existing Recipes (Except Disambiguation)
 
-When the seed-discovery tool generates `discovery.json`, it cross-references the recipes directory. If a recipe already exists for a tool, the entry is excluded — the recipe takes precedence. Exception: entries marked `disambiguation: true` are always included, because they prevent the ecosystem probe from overriding the correct resolution.
+When the seed-discovery tool generates the discovery directory, it cross-references the recipes directory. If a recipe already exists for a tool, the entry is excluded — the recipe takes precedence. Exception: entries marked `disambiguation: true` are always included, because they prevent the ecosystem probe from overriding the correct resolution.
 
 This means the registry naturally shrinks as the batch pipeline generates recipes. The seed lists remain the source of truth (they're not modified), but the output only includes entries that still provide value.
 
@@ -233,7 +278,7 @@ The discovery registry is a pre-computed cache of name-to-builder mappings that 
 2. **GitHub Release tools** (durable): Curated manually because the batch pipeline can't automate them. Persist until a recipe is created via `tsuku create` or similar.
 3. **Disambiguation overrides** (permanent): Pin the correct resolution for ambiguous names. Persist regardless of recipe existence.
 
-The schema adds optional metadata fields. A Go CLI tool (`cmd/seed-discovery`) reads the priority queue and curated seed lists, validates entries, enriches metadata, cross-references recipes, and outputs `discovery.json`. CI runs weekly freshness checks.
+The schema adds optional metadata fields. A Go CLI tool (`cmd/seed-discovery`) reads the priority queue and curated seed lists, validates entries, enriches metadata, cross-references recipes, and outputs per-tool files to `recipes/discovery/`. CI runs weekly freshness checks.
 
 ### Rationale
 
@@ -294,16 +339,18 @@ The `RegistryLookup` resolver is unchanged — it reads `Builder` and `Source` a
 ### Components
 
 ```
-data/priority-queue.json           # Existing: 204 homebrew entries (input)
+data/priority-queue.json           # Existing: ~1000 homebrew entries (input)
 data/discovery-seeds/              # Curated seed lists (input)
 ├── github-release-tools.json      # Tools distributed via GitHub releases
-├── github-release-tools-2.json    # Additional GitHub release tools (split for review)
 └── disambiguations.json           # Known name collisions
 
 cmd/seed-discovery/                # Go CLI tool (processor)
 └── main.go
 
-recipes/discovery.json             # Output: validated registry
+recipes/discovery/                 # Output: per-tool JSON files
+├── a/ac/ack.json
+├── b/ba/bash.json
+└── ...
 
 .github/workflows/
 └── discovery-freshness.yml        # Weekly CI validation
@@ -357,7 +404,7 @@ For each entry:
     |
     v
 Output:
-  - Valid entries -> recipes/discovery.json
+  - Valid entries -> recipes/discovery/{first-letter}/{first-two-letters}/{name}.json
   - Graduated (has recipe, not disambiguation) -> logged, excluded
   - Failed validation -> logged with reason, excluded
 ```
@@ -370,9 +417,9 @@ Usage: seed-discovery [flags]
 Flags:
   -seeds-dir      Seed list directory (default: data/discovery-seeds)
   -queue          Priority queue path (default: data/priority-queue.json)
-  -output         Output path (default: recipes/discovery.json)
+  -output         Output directory (default: recipes/discovery)
   -recipes-dir    Recipe directory for cross-reference (default: recipes)
-  -validate-only  Validate existing discovery.json without regenerating
+  -validate-only  Validate existing discovery directory without regenerating
   -verbose        Detailed output
 ```
 
@@ -403,16 +450,16 @@ jobs:
 
 ```
 Priority queue (data/priority-queue.json)
-    |  204 homebrew entries
+    |  ~1000 homebrew entries
     v
 cmd/seed-discovery  <-- also reads data/discovery-seeds/*.json
     |  validates, enriches, cross-references recipes
     v
-recipes/discovery.json (~500 entries)
+recipes/discovery/ (~800 per-tool JSON files)
     |
     v
-tsuku update-registry (fetches to $TSUKU_HOME/registry/)
-    |
+tsuku install <tool> (fetches individual entry on demand)
+    |  cached at $TSUKU_HOME/registry/discovery/{path}
     v
 RegistryLookup -> DiscoveryResult -> create pipeline -> install
 ```
@@ -423,7 +470,7 @@ RegistryLookup -> DiscoveryResult -> create pipeline -> install
                   seed list / priority queue
                          |
                          v
-                  discovery.json entry
+                  discovery entry
                     (serves resolver)
                          |
             batch pipeline generates recipe
@@ -445,7 +492,7 @@ RegistryLookup -> DiscoveryResult -> create pipeline -> install
 | Purpose | Name resolution at install time | Recipe generation |
 | Input | Priority queue + seed lists | Priority queue |
 | Builder scope | All builders | Deterministic only (no github) |
-| Output | `recipes/discovery.json` | `recipes/*.toml` |
+| Output | `recipes/discovery/` (per-tool files) | `recipes/*.toml` |
 | Entry lifespan | Until recipe exists | Until recipe generated |
 | Shared data | Priority queue entries | Priority queue entries |
 
@@ -491,7 +538,7 @@ Add optional metadata fields to registry schema, modify Go code, build `cmd/seed
 - `internal/discover/registry_test.go`
 - `cmd/seed-discovery/main.go`
 - `data/discovery-seeds/github-release-tools.json` (initial seed list)
-- `recipes/discovery.json` (regenerated output)
+- `recipes/discovery/` (per-tool output files)
 
 ### Phase 2: Scale to ~500 Entries
 
@@ -499,7 +546,7 @@ Expand GitHub release seed lists. Run the tool, review output, add disambiguatio
 
 **Files:**
 - `data/discovery-seeds/*.json`
-- `recipes/discovery.json` (~500 entries)
+- `recipes/discovery/` (~800 per-tool files)
 
 ### Phase 3: CI Freshness
 

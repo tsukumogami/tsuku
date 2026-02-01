@@ -662,18 +662,15 @@ func runDiscovery(toolName string) (*discover.DiscoveryResult, error) {
 		return nil, fmt.Errorf("load config: %w", err)
 	}
 
-	registryPath := filepath.Join(cfg.RegistryDir, "discovery.json")
+	discoveryDir := filepath.Join(cfg.RegistryDir, "discovery")
 
 	var stages []discover.Resolver
 
-	// Stage 1: Registry lookup (if the file exists).
-	if data, err := os.ReadFile(registryPath); err == nil {
-		reg, err := discover.ParseRegistry(data)
+	// Stage 1: Registry lookup (if the directory exists).
+	if info, err := os.Stat(discoveryDir); err == nil && info.IsDir() {
+		lookup, err := discover.NewRegistryLookup(discoveryDir)
 		if err == nil {
-			lookup, err := discover.NewRegistryLookup(reg)
-			if err == nil {
-				stages = append(stages, lookup)
-			}
+			stages = append(stages, lookup)
 		}
 	}
 

@@ -1,0 +1,4 @@
+{
+  "builder": "homebrew",
+  "source": "helm@3"
+}

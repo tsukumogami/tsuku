@@ -1,0 +1,25 @@
+{
+  "category": "disambiguation-overrides",
+  "entries": [
+    {"name": "bat", "builder": "github", "source": "sharkdp/bat", "disambiguation": true},
+    {"name": "fd", "builder": "github", "source": "sharkdp/fd", "disambiguation": true},
+    {"name": "rg", "builder": "github", "source": "BurntSushi/ripgrep", "disambiguation": true},
+    {"name": "delta", "builder": "github", "source": "dandavison/delta", "disambiguation": true},
+    {"name": "dust", "builder": "github", "source": "bootandy/dust", "disambiguation": true},
+    {"name": "sd", "builder": "github", "source": "chmln/sd", "disambiguation": true},
+    {"name": "age", "builder": "github", "source": "FiloSottile/age", "disambiguation": true},
+    {"name": "sk", "builder": "github", "source": "lotabout/skim", "disambiguation": true},
+    {"name": "fzf", "builder": "github", "source": "junegunn/fzf", "disambiguation": true},
+    {"name": "jq", "builder": "github", "source": "jqlang/jq", "disambiguation": true},
+    {"name": "yq", "builder": "github", "source": "mikefarah/yq", "disambiguation": true},
+    {"name": "just", "builder": "github", "source": "casey/just", "disambiguation": true},
+    {"name": "task", "builder": "github", "source": "go-task/task", "disambiguation": true},
+    {"name": "gh", "builder": "github", "source": "cli/cli", "disambiguation": true},
+    {"name": "hub", "builder": "github", "source": "github/hub", "disambiguation": true},
+    {"name": "gum", "builder": "github", "source": "charmbracelet/gum", "disambiguation": true},
+    {"name": "dive", "builder": "github", "source": "wagoodman/dive", "disambiguation": true},
+    {"name": "step", "builder": "github", "source": "smallstep/cli", "disambiguation": true},
+    {"name": "buf", "builder": "github", "source": "bufbuild/buf", "disambiguation": true},
+    {"name": "ko", "builder": "github", "source": "ko-build/ko", "disambiguation": true}
+  ]
+}

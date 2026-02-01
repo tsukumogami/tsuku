@@ -1,8 +1,0 @@
-{
-  "schema_version": 1,
-  "tools": {
-    "jq": {"builder": "homebrew", "source": "jq"},
-    "fd": {"builder": "github", "source": "sharkdp/fd"},
-    "shfmt": {"builder": "homebrew", "source": "shfmt"}
-  }
-}

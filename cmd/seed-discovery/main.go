@@ -11,9 +11,9 @@ import (
 func main() {
 	seedsDir := flag.String("seeds-dir", "data/discovery-seeds", "directory containing seed list JSON files")
 	queueFile := flag.String("queue", "", "path to priority-queue.json (optional)")
-	output := flag.String("output", "recipes/discovery.json", "output file path")
+	outputDir := flag.String("output", "recipes/discovery", "output directory for per-tool discovery files")
 	recipesDir := flag.String("recipes-dir", "", "path to recipes directory for cross-referencing (stub)")
-	validateOnly := flag.String("validate-only", "", "validate an existing discovery.json instead of generating")
+	validateOnly := flag.String("validate-only", "", "validate an existing discovery directory instead of generating")
 	verbose := flag.Bool("verbose", false, "print progress information")
 	flag.Parse()
 
@@ -29,7 +29,7 @@ func main() {
 	cfg := discover.GenerateConfig{
 		SeedsDir:   *seedsDir,
 		QueueFile:  *queueFile,
-		Output:     *output,
+		OutputDir:  *outputDir,
 		Validators: validators,
 		Verbose:    *verbose,
 	}
@@ -39,7 +39,7 @@ func main() {
 		if *queueFile != "" {
 			fmt.Fprintf(os.Stderr, "Queue file: %s\n", *queueFile)
 		}
-		fmt.Fprintf(os.Stderr, "Output: %s\n", *output)
+		fmt.Fprintf(os.Stderr, "Output dir: %s\n", *outputDir)
 	}
 
 	result, err := discover.Generate(cfg)
@@ -63,9 +63,9 @@ func main() {
 	}
 }
 
-func runValidateOnly(path string, verbose bool) {
+func runValidateOnly(dir string, verbose bool) {
 	validators := buildValidators()
-	result, err := discover.ValidateExisting(path, validators)
+	result, err := discover.ValidateExisting(dir, validators)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)

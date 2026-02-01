@@ -1,0 +1,4 @@
+{
+  "builder": "homebrew",
+  "source": "dos2unix"
+}

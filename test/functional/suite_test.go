@@ -76,14 +76,24 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 			return ctx, err
 		}
 
-		// Seed the discovery registry cache from the repo's checked-in file
-		registryDir := filepath.Join(homeDir, "registry")
-		if err := os.MkdirAll(registryDir, 0o755); err != nil {
-			return ctx, err
-		}
-		src := filepath.Join(repoRoot, "recipes", "discovery.json")
-		if data, err := os.ReadFile(src); err == nil {
-			_ = os.WriteFile(filepath.Join(registryDir, "discovery.json"), data, 0o644)
+		// Seed the discovery registry cache from the repo's per-tool files
+		srcDir := filepath.Join(repoRoot, "recipes", "discovery")
+		dstDir := filepath.Join(homeDir, "registry", "discovery")
+		if info, err := os.Stat(srcDir); err == nil && info.IsDir() {
+			_ = filepath.Walk(srcDir, func(path string, info os.FileInfo, err error) error {
+				if err != nil || info.IsDir() {
+					return err
+				}
+				rel, _ := filepath.Rel(srcDir, path)
+				dst := filepath.Join(dstDir, rel)
+				_ = os.MkdirAll(filepath.Dir(dst), 0o755)
+				data, err := os.ReadFile(path)
+				if err != nil {
+					return nil
+				}
+				_ = os.WriteFile(dst, data, 0o644)
+				return nil
+			})
 		}
 
 		state := &testState{
