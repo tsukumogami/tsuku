@@ -111,7 +111,7 @@ graph TD
     class I1318 needsDesign
     class M65,M62 ready
     class I1315 done
-    class I1321 needsDesign
+    class I1321 blocked
     class I1322 blocked
 ```
 
