@@ -3,7 +3,9 @@ package functional
 import (
 	"context"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/cucumber/godog"
@@ -14,11 +16,12 @@ type stateKeyType struct{}
 var stateKey = stateKeyType{}
 
 type testState struct {
-	homeDir  string
-	binPath  string
-	stdout   string
-	stderr   string
-	exitCode int
+	homeDir        string
+	binPath        string
+	stdout         string
+	stderr         string
+	exitCode       int
+	hiddenBinaries []string // binaries to hide from PATH (e.g., "cargo", "gem")
 }
 
 func getState(ctx context.Context) *testState {
@@ -96,9 +99,19 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 			})
 		}
 
+		// Parse @requires-no-<binary> tags to hide binaries from PATH
+		var hidden []string
+		for _, tag := range sc.Tags {
+			if strings.HasPrefix(tag.Name, "@requires-no-") {
+				binary := strings.TrimPrefix(tag.Name, "@requires-no-")
+				hidden = append(hidden, binary)
+			}
+		}
+
 		state := &testState{
-			homeDir: homeDir,
-			binPath: binPath,
+			homeDir:        homeDir,
+			binPath:        binPath,
+			hiddenBinaries: hidden,
 		}
 		return setState(ctx, state), nil
 	})
@@ -119,4 +132,34 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 	ctx.Step(`^the file "([^"]*)" exists$`, theFileExists)
 	ctx.Step(`^the file "([^"]*)" does not exist$`, theFileDoesNotExist)
 	ctx.Step(`^I can run "([^"]*)"$`, iCanRun)
+}
+
+// filteredPATH returns a PATH string with directories containing any of the
+// hidden binaries removed. This lets @requires-no-<binary> scenarios simulate
+// environments where a toolchain isn't installed.
+func filteredPATH(hidden []string) string {
+	if len(hidden) == 0 {
+		return os.Getenv("PATH")
+	}
+
+	var kept []string
+	for _, dir := range filepath.SplitList(os.Getenv("PATH")) {
+		exclude := false
+		for _, bin := range hidden {
+			candidate := filepath.Join(dir, bin)
+			if _, err := exec.LookPath(candidate); err == nil {
+				exclude = true
+				break
+			}
+			// Also check directly since LookPath searches PATH
+			if _, err := os.Stat(candidate); err == nil {
+				exclude = true
+				break
+			}
+		}
+		if !exclude {
+			kept = append(kept, dir)
+		}
+	}
+	return strings.Join(kept, string(os.PathListSeparator))
 }

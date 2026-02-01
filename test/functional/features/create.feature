@@ -4,50 +4,64 @@ Feature: Create
   Background:
     Given a clean tsuku environment
 
-  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
-  Scenario: Create recipe to default location
+Scenario: Create recipe to default location
     When I run "tsuku create prettier --from npm --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the file "recipes/prettier.toml" exists
 
-  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
-  Scenario: Create recipe with --output flag
+Scenario: Create recipe with --output flag
     When I run "tsuku create prettier --from npm --yes --skip-sandbox --output .tsuku-test/custom/prettier.toml"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the file "custom/prettier.toml" exists
     And the file "recipes/prettier.toml" does not exist
 
-  # Requires Cargo toolchain. Expects success once #1287 is resolved.
-  @requires-no-cargo
-  Scenario: Create recipe from crates.io requires toolchain
+  Scenario: Create recipe from crates.io
     When I run "tsuku create ripgrep --from crates.io --yes --skip-sandbox"
-    Then the exit code is 8
-    And the error output contains "Cargo is required"
+    Then the exit code is 0
+    And the output contains "Recipe created:"
+    And the file "recipes/ripgrep.toml" exists
 
-  # Requires gem toolchain. Expects success once #1287 is resolved.
-  @requires-no-gem
-  Scenario: Create recipe from rubygems requires toolchain
+  Scenario: Create recipe from rubygems
     When I run "tsuku create jekyll --from rubygems --yes --skip-sandbox"
-    Then the exit code is 8
-    And the error output contains "gem is required"
+    Then the exit code is 0
+    And the output contains "Recipe created:"
+    And the file "recipes/jekyll.toml" exists
 
-  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
-  Scenario: Create recipe from pypi
+  # Auto-install scenarios: only run when toolchain is NOT already present.
+  # Excluded from standard CI via ~@requires-no-cargo / ~@requires-no-gem.
+
+  @requires-no-cargo
+  Scenario: Create with --yes attempts to auto-install missing toolchain
+    When I run "tsuku create ripgrep --from crates.io --yes --skip-sandbox"
+    Then the error output contains "requires Cargo"
+    And the error output contains "Installing rust"
+
+  @requires-no-gem
+  Scenario: Create with --yes attempts to auto-install missing gem toolchain
+    When I run "tsuku create jekyll --from rubygems --yes --skip-sandbox"
+    Then the error output contains "requires gem"
+    And the error output contains "Installing ruby"
+
+  @requires-no-cargo
+  Scenario: Create without --yes fails when toolchain missing in non-interactive mode
+    When I run "tsuku create ripgrep --from crates.io"
+    Then the exit code is 8
+    And the error output contains "requires Cargo"
+
+Scenario: Create recipe from pypi
     When I run "tsuku create ruff --from pypi --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
     And the file "recipes/ruff.toml" exists
 
-  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
-  Scenario: Create recipe from go
+Scenario: Create recipe from go
     When I run "tsuku create github.com/google/uuid --from go --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
 
-  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
-  Scenario: Create recipe from cpan
+Scenario: Create recipe from cpan
     When I run "tsuku create ack --from cpan --yes --skip-sandbox"
     Then the exit code is 0
     And the output contains "Recipe created:"
@@ -60,8 +74,7 @@ Feature: Create
     And the error output does not contain "was NOT tested in a sandbox"
     And the file "recipes/jq.toml" exists
 
-  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
-  @macos
+@macos
   Scenario: Create recipe from cask
     When I run "tsuku create iterm2 --from cask:iterm2 --yes --skip-sandbox"
     Then the exit code is 0
