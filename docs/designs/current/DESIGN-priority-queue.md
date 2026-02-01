@@ -13,7 +13,7 @@ Current
 
 ## Implementation Issues
 
-### Milestone: [M50: Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)
+### Milestone: [Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|

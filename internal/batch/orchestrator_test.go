@@ -263,12 +263,9 @@ case "$1" in
     ;;
   install)
     echo "Checking dependencies for coreutils..." >&2
-    echo "  Resolving dependency 'dav1d'..." >&2
-    echo "Error: registry: recipe dav1d not found in registry" >&2
-    echo "" >&2
-    echo "Suggestion: Verify the recipe name is correct." >&2
-    echo "Error: failed to install dependency 'dav1d': registry: recipe dav1d not found in registry" >&2
-    exit 6
+    echo "Error: failed to install dependency 'dav1d'" >&2
+    echo '{"status":"error","category":"missing_dep","message":"failed to install dependency dav1d","missing_recipes":["dav1d"],"exit_code":8}'
+    exit 8
     ;;
 esac
 `
@@ -389,42 +386,54 @@ esac
 	}
 }
 
-func TestClassifyValidationFailure(t *testing.T) {
+func TestParseInstallJSON(t *testing.T) {
 	tests := []struct {
 		name         string
-		output       string
+		stdout       string
+		exitCode     int
 		wantCategory string
 		wantBlocked  []string
 	}{
 		{
-			name:         "single missing dep",
-			output:       "Error: registry: recipe dav1d not found in registry\nError: failed to install dependency 'dav1d'",
+			name:         "valid JSON with missing recipes",
+			stdout:       `{"status":"error","category":"missing_dep","message":"failed","missing_recipes":["dav1d","libfoo"],"exit_code":8}`,
+			exitCode:     8,
 			wantCategory: "missing_dep",
-			wantBlocked:  []string{"dav1d"},
+			wantBlocked:  []string{"dav1d", "libfoo"},
 		},
 		{
-			name:         "multiple missing deps",
-			output:       "recipe libfoo not found in registry\nrecipe libbar not found in registry",
-			wantCategory: "missing_dep",
-			wantBlocked:  []string{"libfoo", "libbar"},
+			name:         "valid JSON no missing recipes",
+			stdout:       `{"status":"error","category":"validation_failed","message":"bad tarball","missing_recipes":[],"exit_code":6}`,
+			exitCode:     6,
+			wantCategory: "validation_failed",
+			wantBlocked:  []string{},
 		},
 		{
-			name:         "duplicate dep mentioned twice",
-			output:       "recipe dav1d not found in registry\nfailed to install dependency 'dav1d': registry: recipe dav1d not found in registry",
+			name:         "invalid JSON falls back to exit code",
+			stdout:       "not json at all",
+			exitCode:     8,
 			wantCategory: "missing_dep",
-			wantBlocked:  []string{"dav1d"},
+			wantBlocked:  nil,
 		},
 		{
-			name:         "no dep pattern",
-			output:       "Error: download failed: 404 Not Found",
+			name:         "empty stdout falls back to exit code",
+			stdout:       "",
+			exitCode:     6,
 			wantCategory: "validation_failed",
 			wantBlocked:  nil,
+		},
+		{
+			name:         "JSON with empty category uses exit code",
+			stdout:       `{"status":"error","category":"","missing_recipes":["x"],"exit_code":8}`,
+			exitCode:     8,
+			wantCategory: "missing_dep",
+			wantBlocked:  []string{"x"},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			category, blockedBy := classifyValidationFailure([]byte(tt.output))
+			category, blockedBy := parseInstallJSON([]byte(tt.stdout), tt.exitCode)
 			if category != tt.wantCategory {
 				t.Errorf("category = %q, want %q", category, tt.wantCategory)
 			}

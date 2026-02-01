@@ -18,7 +18,7 @@ This design implements part of [DESIGN-registry-scale-strategy.md](DESIGN-regist
 **Relevant sections:**
 - Decision 1: Fully deterministic batch generation
 - Builder Gaps: "Homebrew Deterministic Success Rate"
-- M-HomebrewBuilder milestone: Issue #1188
+- Deterministic Homebrew Builder milestone: Issue #1188
 
 **This design must deliver:**
 - Homebrew builder API for deterministic-only mode (required by #1189)

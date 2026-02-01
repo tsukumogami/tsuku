@@ -2,19 +2,23 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
+	"github.com/tsukumogami/tsuku/internal/registry"
 	"github.com/tsukumogami/tsuku/internal/telemetry"
 )
 
 var installDryRun bool
 var installForce bool
 var installFresh bool
+var installJSON bool
 var installPlanPath string
 var installSandbox bool
 var installRecipePath string
@@ -96,8 +100,7 @@ Test installation in a sandbox container:
 			}
 
 			if err := runRecipeBasedInstall(installRecipePath, toolName); err != nil {
-				printError(err)
-				exitWithCode(ExitInstallFailed)
+				handleInstallError(err)
 			}
 			return
 		}
@@ -123,8 +126,7 @@ Test installation in a sandbox container:
 			}
 
 			if err := runPlanBasedInstall(installPlanPath, toolName); err != nil {
-				printError(err)
-				exitWithCode(ExitInstallFailed)
+				handleInstallError(err)
 			}
 			return
 		}
@@ -162,14 +164,7 @@ Test installation in a sandbox container:
 				}
 			} else {
 				if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
-					// Continue installing other tools even if one fails?
-					// For now, exit on first failure to be safe
-					// TODO(#1273): Distinguish dependency failures (ExitDependencyFailed)
-					// from other install failures. Currently all errors exit with
-					// ExitInstallFailed, which prevents programmatic consumers from
-					// identifying missing dependencies via exit code alone.
-					printError(err)
-					exitWithCode(ExitInstallFailed)
+					handleInstallError(err)
 				}
 			}
 		}
@@ -180,6 +175,7 @@ func init() {
 	installCmd.Flags().BoolVar(&installDryRun, "dry-run", false, "Show what would be installed without making changes")
 	installCmd.Flags().BoolVar(&installForce, "force", false, "Skip security warnings and proceed without prompts")
 	installCmd.Flags().BoolVar(&installFresh, "fresh", false, "Force fresh plan generation, bypassing cached plans")
+	installCmd.Flags().BoolVar(&installJSON, "json", false, "Emit structured JSON error output on failure")
 	installCmd.Flags().StringVar(&installPlanPath, "plan", "", "Install from a pre-computed plan file (use '-' for stdin)")
 	installCmd.Flags().BoolVar(&installSandbox, "sandbox", false, "Run installation in an isolated container for testing")
 	installCmd.Flags().StringVar(&installRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
@@ -263,4 +259,93 @@ func runRecipeBasedInstall(recipePath, toolName string) error {
 	}
 
 	return nil
+}
+
+// classifyInstallError maps an install error to the appropriate exit code.
+// It uses typed error unwrapping for registry errors and string matching
+// for dependency wrapper errors.
+func classifyInstallError(err error) int {
+	var regErr *registry.RegistryError
+	if errors.As(err, &regErr) {
+		switch regErr.Type {
+		case registry.ErrTypeNotFound:
+			return ExitRecipeNotFound // 3
+		case registry.ErrTypeNetwork, registry.ErrTypeDNS,
+			registry.ErrTypeTimeout, registry.ErrTypeConnection, registry.ErrTypeTLS:
+			return ExitNetwork // 5
+		}
+	}
+	if strings.Contains(err.Error(), "failed to install dependency") {
+		return ExitDependencyFailed // 8
+	}
+	return ExitInstallFailed // 6
+}
+
+// installError is the structured JSON error response emitted by tsuku install --json.
+type installError struct {
+	Status         string   `json:"status"`
+	Category       string   `json:"category"`
+	Message        string   `json:"message"`
+	MissingRecipes []string `json:"missing_recipes"`
+	ExitCode       int      `json:"exit_code"`
+}
+
+// categoryFromExitCode maps an exit code to its category string.
+func categoryFromExitCode(code int) string {
+	switch code {
+	case ExitRecipeNotFound:
+		return "recipe_not_found"
+	case ExitNetwork:
+		return "network_error"
+	case ExitDependencyFailed:
+		return "missing_dep"
+	default:
+		return "install_failed"
+	}
+}
+
+// handleInstallError prints the error (as JSON if --json is set, otherwise
+// human-readable to stderr) and exits with the classified exit code.
+// Note: JSON output may include local file paths from error messages. Consumers
+// that log or forward this output should treat it with the same care as any log
+// data that may contain system paths.
+func handleInstallError(err error) {
+	code := classifyInstallError(err)
+	if installJSON {
+		resp := installError{
+			Status:         "error",
+			Category:       categoryFromExitCode(code),
+			Message:        err.Error(),
+			MissingRecipes: extractMissingRecipes(err),
+			ExitCode:       code,
+		}
+		printJSON(resp)
+	} else {
+		printError(err)
+	}
+	exitWithCode(code)
+}
+
+var reNotFoundInRegistry = regexp.MustCompile(`recipe (\S+) not found in registry`)
+
+// extractMissingRecipes extracts recipe names from "recipe X not found in registry"
+// patterns in the error chain. Results are deduplicated and capped at 100 items.
+func extractMissingRecipes(err error) []string {
+	matches := reNotFoundInRegistry.FindAllStringSubmatch(err.Error(), -1)
+	if len(matches) == 0 {
+		return []string{}
+	}
+	seen := make(map[string]bool)
+	var names []string
+	for _, m := range matches {
+		name := m[1]
+		if !seen[name] {
+			seen[name] = true
+			names = append(names, name)
+		}
+		if len(names) >= 100 {
+			break
+		}
+	}
+	return names
 }

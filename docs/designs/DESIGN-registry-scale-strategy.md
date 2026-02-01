@@ -20,7 +20,7 @@ Planned
 | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | design priority queue and failure record schemas | None | testable |
 | ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~ | design batch operations and rollback procedures | None | testable |
 
-### Milestone: [M50: Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)
+### Milestone: [Visibility Infrastructure Schemas](https://github.com/tsukumogami/tsuku/milestone/57)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
@@ -38,14 +38,14 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 
 Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIGN-batch-operations.md](DESIGN-batch-operations.md) for issue details.
 
-### Milestone: [M-HomebrewBuilder](https://github.com/tsukumogami/tsuku/milestone/51)
+### Milestone: [Deterministic Homebrew Builder](https://github.com/tsukumogami/tsuku/milestone/51)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~design homebrew deterministic mode~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~ | ~~testable~~ |
 | ~~[#1266](https://github.com/tsukumogami/tsuku/issues/1266)~~ | ~~structured deterministic-failed error path~~ | ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~ | ~~testable~~ |
 
-### Milestone: [M-BatchPipeline](https://github.com/tsukumogami/tsuku/milestone/52)
+### Milestone: [Batch Pipeline](https://github.com/tsukumogami/tsuku/milestone/52)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
@@ -53,11 +53,11 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 | ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~design batch recipe generation CI pipeline~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~testable~~ |
 | [#1267](https://github.com/tsukumogami/tsuku/issues/1267) | skip existing recipes in seed tool | [#1241](https://github.com/tsukumogami/tsuku/issues/1241) | simple |
 | [#1268](https://github.com/tsukumogami/tsuku/issues/1268) | CI validation of queue against registry | [#1267](https://github.com/tsukumogami/tsuku/issues/1267) | testable |
-| [#1273](https://github.com/tsukumogami/tsuku/issues/1273) | Structured JSON output for CLI + batch integration | None | testable |
+| ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON output for CLI + batch integration~~ | ~~None~~ | ~~testable~~ |
 
 Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIGN-batch-recipe-generation.md](DESIGN-batch-recipe-generation.md) for issue details.
 
-### Milestone: [M-FailureBackend](https://github.com/tsukumogami/tsuku/milestone/53)
+### Milestone: [Failure Backend](https://github.com/tsukumogami/tsuku/milestone/53)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
@@ -65,7 +65,7 @@ Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIG
 | [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | top-blockers report for gap analysis | None | simple |
 | [#1278](https://github.com/tsukumogami/tsuku/issues/1278) | hybrid prioritization (popularity + blocking impact) | [#1277](https://github.com/tsukumogami/tsuku/issues/1277) | testable |
 
-### Milestone: [M-MultiEcosystem](https://github.com/tsukumogami/tsuku/milestone/54)
+### Milestone: [Multi-Ecosystem](https://github.com/tsukumogami/tsuku/milestone/54)
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
@@ -75,12 +75,12 @@ Implements [#1189](https://github.com/tsukumogami/tsuku/issues/1189). See [DESIG
 
 ```mermaid
 graph TD
-    subgraph M_Visibility["M-Visibility"]
+    subgraph M_Visibility["Tool Backlog Visibility"]
         I1186["#1186: Priority queue and failure schemas"]
         I1187["#1187: Batch operations and rollback"]
     end
 
-    subgraph M50["M50: Visibility Infrastructure Schemas"]
+    subgraph M50["Visibility Infrastructure Schemas"]
         I1199["#1199: Priority queue and failure schemas"]
         I1200["#1200: Dependency name mapping"]
         I1201["#1201: Schema validation scripts"]
@@ -88,12 +88,12 @@ graph TD
         I1203["#1203: Gap analysis script"]
     end
 
-    subgraph M_HomebrewBuilder["M-HomebrewBuilder"]
+    subgraph M_HomebrewBuilder["Deterministic Homebrew Builder"]
         I1188["#1188: Homebrew deterministic mode"]
         I1266["#1266: Deterministic-failed error path"]
     end
 
-    subgraph M_BatchPipeline["M-BatchPipeline"]
+    subgraph M_BatchPipeline["Batch Pipeline"]
         I1241["#1241: Seed priority queue pipeline"]
         I1189["#1189: Batch recipe generation CI"]
         I1267["#1267: Skip existing in seed tool"]
@@ -101,13 +101,13 @@ graph TD
         I1273["#1273: Structured JSON CLI output"]
     end
 
-    subgraph M_FailureBackend["M-FailureBackend"]
+    subgraph M_FailureBackend["Failure Backend"]
         I1190["#1190: Failure analysis backend"]
         I1277["#1277: Top-blockers report"]
         I1278["#1278: Hybrid prioritization"]
     end
 
-    subgraph M_MultiEcosystem["M-MultiEcosystem"]
+    subgraph M_MultiEcosystem["Multi-Ecosystem"]
         I1191["#1191: System library backfill"]
     end
 
@@ -146,7 +146,7 @@ graph TD
     class I1189 done
     class I1267 needsDesign
     class I1268 needsDesign
-    class I1273 needsDesign
+    class I1273 done
     class I1266 done
     class I1190 needsDesign
     class I1277 needsDesign
@@ -982,15 +982,15 @@ This is a strategic design. Implementation follows a **walking skeleton** approa
 
 Milestones align with phases:
 
-- **M-ValidationSpike**: Pre-Phase 0 - Validate Homebrew deterministic rate (gate: >70% to proceed)
-- **M-Day1Batch**: Parallel track - 20 high-impact tools manually generated and merged
-- **M-Visibility**: Phase 0 - Queue schema, failure schema, rollback scripts, seeded data
-- **M-HomebrewBuilder**: Phase 1a - Homebrew deterministic mode validated on single formulas
-- **M-BatchPipeline**: Phase 1b - Batch workflow, SLIs, circuit breaker, 50+ recipes merged
-- **M-FailureBackend**: Phase 2 - Cloudflare Worker + D1, query API, macOS validation, observability
-- **M-MultiEcosystem**: Phase 3 - All ecosystem builders, cross-ecosystem scoring, ecosystem controls
-- **M-Automation**: Phase 4 - Auto-merge, re-queue triggers, post-merge monitoring
-- **M-PlatformComplete**: Phase 5 - Full platform matrix, dashboards, state reconciliation
+- **Validation Spike**: Pre-Phase 0 - Validate Homebrew deterministic rate (gate: >70% to proceed)
+- **Day 1 Batch**: Parallel track - 20 high-impact tools manually generated and merged
+- **Tool Backlog Visibility**: Phase 0 - Queue schema, failure schema, rollback scripts, seeded data
+- **Deterministic Homebrew Builder**: Phase 1a - Homebrew deterministic mode validated on single formulas
+- **Batch Pipeline**: Phase 1b - Batch workflow, SLIs, circuit breaker, 50+ recipes merged
+- **Failure Backend**: Phase 2 - Cloudflare Worker + D1, query API, macOS validation, observability
+- **Multi-Ecosystem**: Phase 3 - All ecosystem builders, cross-ecosystem scoring, ecosystem controls
+- **Automation**: Phase 4 - Auto-merge, re-queue triggers, post-merge monitoring
+- **Platform Complete**: Phase 5 - Full platform matrix, dashboards, state reconciliation
 
 ## Required Tactical Designs
 

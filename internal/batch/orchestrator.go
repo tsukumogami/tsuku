@@ -1,11 +1,12 @@
 package batch
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"time"
 	"unicode"
@@ -13,9 +14,12 @@ import (
 	"github.com/tsukumogami/tsuku/internal/seed"
 )
 
-// reNotFoundInRegistry matches "recipe <name> not found in registry" in CLI output.
-// TODO(#1273): Replace with structured JSON output from tsuku install.
-var reNotFoundInRegistry = regexp.MustCompile(`recipe (\S+) not found in registry`)
+// installResult is the subset of tsuku install --json output that the
+// orchestrator needs for failure classification.
+type installResult struct {
+	Category       string   `json:"category"`
+	MissingRecipes []string `json:"missing_recipes"`
+}
 
 // ExitNetwork is the tsuku CLI exit code for transient network errors.
 const ExitNetwork = 5
@@ -200,17 +204,17 @@ func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string)
 	}
 }
 
-// validate runs tsuku install --recipe to verify the generated recipe works.
+// validate runs tsuku install --recipe --json to verify the generated recipe works.
 // It uses the same retry logic as generate for transient network errors.
-// On failure, it parses CLI output to identify missing dependencies and
-// produces a structured FailureRecord with BlockedBy populated.
+// On failure, it parses the structured JSON response from --json to extract
+// the failure category and missing dependency names.
 func (o *Orchestrator) validate(bin string, pkg seed.Package, recipePath string) generateResult {
 	args := []string{
-		"install", "--force", "--recipe", recipePath,
+		"install", "--force", "--json", "--recipe", recipePath,
 	}
 
 	var lastErr error
-	var lastOutput []byte
+	var lastStdout, lastStderr []byte
 	for attempt := 0; attempt <= MaxRetries; attempt++ {
 		if attempt > 0 {
 			delay := time.Duration(1<<uint(attempt-1)) * time.Second
@@ -218,69 +222,60 @@ func (o *Orchestrator) validate(bin string, pkg seed.Package, recipePath string)
 		}
 
 		cmd := exec.Command(bin, args...)
-		output, err := cmd.CombinedOutput()
+		var stdout, stderr bytes.Buffer
+		cmd.Stdout = &stdout
+		cmd.Stderr = &stderr
+		err := cmd.Run()
 		if err == nil {
 			return generateResult{}
 		}
 
-		lastOutput = output
+		lastStdout = stdout.Bytes()
+		lastStderr = stderr.Bytes()
 		exitCode := exitCodeFrom(err)
-		lastErr = fmt.Errorf("tsuku install %s: exit %d: %s", pkg.ID, exitCode, truncateOutput(output))
+		lastErr = fmt.Errorf("tsuku install %s: exit %d: %s", pkg.ID, exitCode, truncateOutput(lastStderr))
 
 		if exitCode != ExitNetwork {
-			category, blockedBy := classifyValidationFailure(output)
+			category, blockedBy := parseInstallJSON(lastStdout, exitCode)
 			return generateResult{
 				Err: lastErr,
 				Failure: FailureRecord{
 					PackageID: pkg.ID,
 					Category:  category,
 					BlockedBy: blockedBy,
-					Message:   truncateOutput(output),
+					Message:   truncateOutput(lastStderr),
 					Timestamp: time.Now().UTC(),
 				},
 			}
 		}
 	}
 
-	category, blockedBy := classifyValidationFailure(lastOutput)
+	category, blockedBy := parseInstallJSON(lastStdout, ExitNetwork)
 	return generateResult{
 		Err: lastErr,
 		Failure: FailureRecord{
 			PackageID: pkg.ID,
 			Category:  category,
 			BlockedBy: blockedBy,
-			Message:   fmt.Sprintf("failed after %d retries: %s", MaxRetries, truncateOutput(lastOutput)),
+			Message:   fmt.Sprintf("failed after %d retries: %s", MaxRetries, truncateOutput(lastStderr)),
 			Timestamp: time.Now().UTC(),
 		},
 	}
 }
 
-// classifyValidationFailure parses CLI output to determine the failure
-// category and extract any missing dependency names.
-// TODO(#1273): Replace regex parsing with structured JSON from tsuku install --output json.
-// The current approach is brittle because it depends on human-readable error message text.
-// Once tsuku install supports JSON output, this function should parse the structured
-// response instead, and the exit code should distinguish missing deps (8) from other
-// install failures (6).
-func classifyValidationFailure(output []byte) (category string, blockedBy []string) {
-	text := string(output)
-
-	// Extract unique missing recipe names from "recipe <name> not found in registry"
-	matches := reNotFoundInRegistry.FindAllStringSubmatch(text, -1)
-	seen := map[string]bool{}
-	for _, m := range matches {
-		name := m[1]
-		if !seen[name] {
-			seen[name] = true
-			blockedBy = append(blockedBy, name)
-		}
+// parseInstallJSON extracts the failure category and missing recipes from the
+// structured JSON output of tsuku install --json. If JSON parsing fails, it
+// falls back to exit-code-based classification.
+func parseInstallJSON(stdout []byte, exitCode int) (category string, blockedBy []string) {
+	var result installResult
+	if err := json.Unmarshal(stdout, &result); err != nil {
+		return categoryFromExitCode(exitCode), nil
 	}
-
-	if len(blockedBy) > 0 {
-		return "missing_dep", blockedBy
+	cat := result.Category
+	if cat == "" {
+		cat = categoryFromExitCode(exitCode)
 	}
-
-	return "validation_failed", nil
+	return cat, result.MissingRecipes
 }
 
 func (o *Orchestrator) setStatus(id, status string) {

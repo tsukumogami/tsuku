@@ -13,7 +13,7 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 
 ## Implementation Issues
 
-### Milestone: [M30 - Recipe Separation Foundation](https://github.com/tsukumogami/tsuku/milestone/40)
+### Milestone: [Recipe Separation Foundation](https://github.com/tsukumogami/tsuku/milestone/40)
 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
@@ -21,14 +21,14 @@ rationale: Location-based categorization is simplest. R2 storage scales to 10K+ 
 | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | Migrate registry recipes to recipes/ directory | [Embedded Recipe List Validation](https://github.com/tsukumogami/tsuku/milestone/44) | testable | Done |
 | [#1034](https://github.com/tsukumogami/tsuku/issues/1034) | Reorganize golden files into embedded/registry directories | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable | Done |
 
-### Milestone: [M31 - CI and Testing Adaptation](https://github.com/tsukumogami/tsuku/milestone/41)
+### Milestone: [CI and Testing Adaptation](https://github.com/tsukumogami/tsuku/milestone/41)
 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
 | [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | Create testdata/recipes for integration test coverage | [#1033](https://github.com/tsukumogami/tsuku/issues/1033) | testable | Done |
 | [#1036](https://github.com/tsukumogami/tsuku/issues/1036) | Update workflows for split recipe structure | [#1034](https://github.com/tsukumogami/tsuku/issues/1034), [#1035](https://github.com/tsukumogami/tsuku/issues/1035) | testable | Done |
 
-### Milestone: [M32 - Cache Management and Documentation](https://github.com/tsukumogami/tsuku/milestone/42)
+### Milestone: [Cache Management and Documentation](https://github.com/tsukumogami/tsuku/milestone/42)
 
 | Issue | Title | Dependencies | Tier | Status |
 |-------|-------|--------------|------|--------|
