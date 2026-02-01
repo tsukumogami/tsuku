@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The discovery registry has 1 entry but needs ~500 for the resolver to deliver value.
   The registry is the only resolver stage that exists today — the ecosystem probe and
@@ -28,7 +28,53 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1364: feat(discover): add seed-discovery tool with schema v2 registry output](https://github.com/tsukumogami/tsuku/issues/1364) | None | testable |
+| _Creates the `cmd/seed-discovery` CLI tool that reads seed lists and the priority queue, validates entries via builder-specific API checks, and outputs `recipes/discovery.json` in schema v2 format. Establishes the end-to-end pipeline that all refinement issues build on._ | | |
+| [#1365: feat(discover): evolve registry schema to v2 with optional metadata](https://github.com/tsukumogami/tsuku/issues/1365) | None | testable |
+| _Updates `RegistryEntry` struct and `ParseRegistry` to accept schema versions 1 and 2, adding optional fields (description, homepage, repo, disambiguation). Existing v1 consumers continue working unchanged._ | | |
+| [#1366: feat(discover): add metadata enrichment to seed-discovery tool](https://github.com/tsukumogami/tsuku/issues/1366) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
+| _Enriches discovery entries with description, homepage, and repo URL from GitHub and Homebrew API responses during validation. Uses the same API calls already made for validation, so the cost is extracting additional fields from existing responses._ | | |
+| [#1367: feat(discover): add recipe cross-reference and graduation logic](https://github.com/tsukumogami/tsuku/issues/1367) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
+| _Excludes entries from `discovery.json` when a recipe already exists in `recipes/`, except for disambiguation entries which persist regardless. Implements the graduation model that keeps the registry lean as the batch pipeline generates recipes._ | | |
+| [#1368: feat(discover): curate seed lists for ~500 discovery entries](https://github.com/tsukumogami/tsuku/issues/1368) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | simple |
+| _Creates seed list files in `data/discovery-seeds/` for GitHub Release tools and disambiguation overrides, reaching ~500 total entries when combined with priority queue derivation._ | | |
+| [#1369: ci(discover): add weekly discovery registry freshness check](https://github.com/tsukumogami/tsuku/issues/1369) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | simple |
+| _Adds a GitHub Actions workflow that validates existing `discovery.json` entries weekly, checking that referenced repositories and packages still exist, and creates an issue listing any stale entries._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    I1364["#1364: seed-discovery tool (skeleton)"]
+    I1365["#1365: registry schema v2"]
+    I1366["#1366: metadata enrichment"]
+    I1367["#1367: recipe cross-ref + graduation"]
+    I1368["#1368: curate seed lists (~500)"]
+    I1369["#1369: CI freshness check"]
+
+    I1364 --> I1366
+    I1364 --> I1367
+    I1364 --> I1368
+    I1364 --> I1369
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1364,I1365 ready
+    class I1366,I1367,I1368,I1369 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
