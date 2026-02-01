@@ -685,6 +685,21 @@ jobs:
           printf '%b' "$CONSTRAINT_LOG" > /tmp/constraint-log.md
           printf '%b' "$EXCLUDED_LOG" > /tmp/excluded-log.md
 
+      - name: Generate batch ID
+        run: |
+          BATCH_DATE=$(date -u +%Y-%m-%d)
+          BATCH_ID="${BATCH_DATE}-${{ inputs.ecosystem }}"
+
+          # Check for existing same-day batches to add sequence number
+          EXISTING=$(git log --oneline --all --grep="batch_id: ${BATCH_ID}" | wc -l)
+          if [ "$EXISTING" -gt 0 ]; then
+            SEQ=$((EXISTING + 1))
+            BATCH_ID="${BATCH_ID}-$(printf '%03d' $SEQ)"
+          fi
+
+          echo "BATCH_ID=$BATCH_ID" >> "$GITHUB_ENV"
+          echo "Generated batch ID: $BATCH_ID"
+
       - name: Requeue unblocked packages
         run: ./scripts/requeue-unblocked.sh
 
@@ -706,7 +721,28 @@ jobs:
           git reset HEAD -- data/batch-summary.md 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "feat(recipes): add batch $(date +%Y-%m-%d) ${{ inputs.ecosystem }} recipes"
+          TOTAL=$((INCLUDED_COUNT + EXCLUDED_COUNT))
+          if [ "$TOTAL" -gt 0 ]; then
+            SUCCESS_RATE=$(awk "BEGIN {printf \"%.2f\", $INCLUDED_COUNT / $TOTAL}")
+          else
+            SUCCESS_RATE="0.00"
+          fi
+
+          # Build structured commit message with git trailers
+          {
+            echo "feat(recipes): add batch ${BATCH_ID} recipes"
+            echo ""
+            echo "Batch generation of ${TOTAL} packages from ${{ inputs.ecosystem }} ecosystem."
+            echo "- ${INCLUDED_COUNT} passed validation across platform environments"
+            echo "- ${EXCLUDED_COUNT} excluded (recorded to data/failures/${{ inputs.ecosystem }}.jsonl)"
+            echo ""
+            echo "batch_id: ${BATCH_ID}"
+            echo "ecosystem: ${{ inputs.ecosystem }}"
+            echo "batch_size: ${TOTAL}"
+            echo "success_rate: ${SUCCESS_RATE}"
+          } > /tmp/commit-msg.txt
+
+          git commit -F /tmp/commit-msg.txt
           git push -u origin "$BRANCH"
 
           # Build PR body with platform validation summary
