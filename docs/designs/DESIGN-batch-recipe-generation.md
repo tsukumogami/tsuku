@@ -17,7 +17,7 @@ Planned
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | Preflight job and rate limiting | None | testable |
+| ~~[#1252](https://github.com/tsukumogami/tsuku/issues/1252)~~ | ~~Preflight job and rate limiting~~ | ~~None~~ | ~~testable~~ |
 | [#1253](https://github.com/tsukumogami/tsuku/issues/1253) | Pinned release with source fallback | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | simple |
 | ~~[#1254](https://github.com/tsukumogami/tsuku/issues/1254)~~ | ~~Multi-platform validation jobs~~ | ~~[#1252](https://github.com/tsukumogami/tsuku/issues/1252)~~ | ~~testable~~ |
 | [#1255](https://github.com/tsukumogami/tsuku/issues/1255) | Circuit breaker integration (preflight side) | [#1252](https://github.com/tsukumogami/tsuku/issues/1252), [M63](https://github.com/tsukumogami/tsuku/milestone/63) | testable |
@@ -79,8 +79,9 @@ graph LR
     class I1254,I1273,I1257 done
     class M60,I1256 done
     class M63 done
-    class I1252,I1287,M61 ready
-    class I1253,I1255 blocked
+    class I1252 done
+    class I1287,M61,I1255 ready
+    class I1253 blocked
     class M64 ready
     class I1258 ready
 ```
