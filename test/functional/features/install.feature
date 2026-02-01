@@ -27,6 +27,18 @@ Feature: Install
     Then the exit code is 2
     And the error output contains "--from requires exactly one tool name"
 
+  # See #1346 - install should not require --force for recipes with dynamic checksums
+  Scenario: Install an embedded recipe without force flag
+    When I run "tsuku install go"
+    Then the exit code is 0
+
+  # See #1347 - invalid version should report version error, not checksum error
+  Scenario: Install with invalid version reports version not found
+    When I run "tsuku install go@99.99.99"
+    Then the exit code is not 0
+    And the error output contains "not found"
+    And the error output does not contain "checksum"
+
   Scenario: List shows installed tool
     When I run "tsuku install actionlint --force"
     Then the exit code is 0
