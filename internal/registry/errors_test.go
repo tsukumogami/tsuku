@@ -121,9 +121,9 @@ func TestRegistryError_Suggestion(t *testing.T) {
 			wantEmpty: true,
 		},
 		{
-			name:      "validation has no suggestion",
-			errorType: ErrTypeValidation,
-			wantEmpty: true,
+			name:       "validation has suggestion",
+			errorType:  ErrTypeValidation,
+			wantSubstr: "rejected by the registry",
 		},
 	}
 
