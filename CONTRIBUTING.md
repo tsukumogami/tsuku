@@ -920,6 +920,32 @@ The release includes:
 
 Tags containing a hyphen after the version (e.g., `v1.0.0-rc.1`, `v0.2.0-beta`) are automatically marked as pre-releases on GitHub.
 
+## Dependency Installation Consent Model
+
+When a tsuku command needs to install a dependency (toolchain, runtime, etc.) as a side effect of the user's request, the consent model depends on which command is running:
+
+### `tsuku install`: auto-install without prompting
+
+The `install` command auto-installs dependencies silently. Users running `tsuku install` expect software to be installed, so installing prerequisites (declared in `Metadata.Dependencies` and `Metadata.RuntimeDependencies`) doesn't require confirmation. This is handled by `installWithDependencies()` in `install_deps.go`.
+
+### All other commands: prompt or require `--yes`
+
+Commands like `create`, `eval`, and any future command that might need to install dependencies should **always prompt the user** in interactive mode and **auto-install only with `--yes`**. Users running these commands don't necessarily expect new software to be installed, so explicit consent is required.
+
+Example from `eval.go`: `installEvalDeps()` prompts with `[y/N]` during standalone `tsuku eval`, but auto-installs when called from `tsuku install` (which passes `autoAccept=true`).
+
+### When to prompt
+
+| Context | Behavior |
+|---------|----------|
+| `tsuku install` installing a dependency | Auto-install, no prompt |
+| Any other command installing a dependency | Prompt in interactive mode |
+| Any command with `--yes` | Auto-install, no prompt |
+
+### Security-sensitive prompts
+
+Prompts for security-sensitive actions (checksum bypass, sandbox skip) always require explicit confirmation regardless of `--yes`. These use `--force` instead.
+
 ## Code Organization
 
 ### File Size Guidelines
