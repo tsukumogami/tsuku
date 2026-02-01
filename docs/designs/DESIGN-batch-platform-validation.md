@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: Batch-generated recipes are validated only on Linux x86_64 but claim all-platform support, so users on arm64 or macOS can get broken installs.
 decision: Add platform validation jobs to the batch workflow that test on 12 target environments (5 linux families x 2 architectures + 2 macOS), then write platform constraints for partial-coverage recipes before creating the PR.
 rationale: In-workflow validation catches platform failures before the PR exists, enables the merge job to write accurate platform constraints, and keeps progressive promotion from cheap Linux runners to expensive macOS runners.
@@ -9,7 +9,53 @@ rationale: In-workflow validation catches platform failures before the PR exists
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Batch Multi-Platform Validation](https://github.com/tsukumogami/tsuku/milestone/60)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | ci(batch): restructure generate job and add platform validation jobs | None | testable |
+| [#1323](https://github.com/tsukumogami/tsuku/issues/1323) | ci(batch): add merge job with platform constraint derivation | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
+| [#1324](https://github.com/tsukumogami/tsuku/issues/1324) | ci(batch): produce generate job validation result artifact | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
+| [#1325](https://github.com/tsukumogami/tsuku/issues/1325) | ci(batch): honor execution-exclusions.json in validation jobs | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
+| [#1326](https://github.com/tsukumogami/tsuku/issues/1326) | ci(batch): use NDJSON accumulation in validation loops | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | simple |
+| [#1327](https://github.com/tsukumogami/tsuku/issues/1327) | ci(batch): add nullglob guard for recipe collection | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | simple |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Foundation"]
+        I1320["#1320: Restructure generate job..."]
+    end
+
+    subgraph Phase2["Phase 2: Refinements"]
+        I1323["#1323: Add merge job with constraints"]
+        I1324["#1324: Produce validation artifact"]
+        I1325["#1325: Honor execution-exclusions"]
+        I1326["#1326: NDJSON accumulation"]
+        I1327["#1327: Nullglob guard"]
+    end
+
+    I1320 --> I1323
+    I1320 --> I1324
+    I1320 --> I1325
+    I1320 --> I1326
+    I1320 --> I1327
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1320 ready
+    class I1323,I1324,I1325,I1326,I1327 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
