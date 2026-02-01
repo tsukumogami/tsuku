@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: tsuku requires --from flags on every create invocation, but users expect tsuku install <tool> to just work without knowing the source.
 decision: Three-stage resolver (embedded registry, parallel ecosystem probe, LLM fallback) behind a unified tsuku install entry point, with disambiguation via registry overrides and popularity ranking.
 rationale: A registry handles the top ~500 tools instantly without API keys, ecosystem probes cover the middle ground under 3 seconds, and LLM discovery handles the long tail. This layered approach degrades gracefully when keys are missing or APIs are down.
