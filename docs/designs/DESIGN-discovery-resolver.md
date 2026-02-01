@@ -276,6 +276,8 @@ Existing create pipeline (builder → sandbox → install)
 
 `tsuku install` also accepts `--from` to override discovery without switching to `create`. Internally, `install --from` forwards to the create pipeline, keeping `install` as the single entry point even for power users.
 
+`tsuku install` inherits the `--deterministic-only` flag from `create`. When set, the resolver skips the LLM discovery stage entirely, and if the selected builder requires LLM (`RequiresLLM() == true`), the create pipeline fails with an actionable error rather than silently falling back. This is distinct from the "no API key" case: `--deterministic-only` is an explicit choice to avoid LLM, while a missing key is a configuration gap.
+
 ### Components
 
 ```
@@ -441,10 +443,12 @@ The LLM can recommend any builder type (including the documentation builder once
 
 | Scenario | Message |
 |----------|---------|
-| No match anywhere | `Could not find 'foo'. Try tsuku create foo --from github:owner/repo if you know the source.` |
-| LLM not configured | `No match in registry or ecosystems. Set ANTHROPIC_API_KEY to enable web search discovery.` |
+| No match anywhere | `Could not find 'foo'. Try tsuku install foo --from github:owner/repo if you know the source.` |
+| LLM not configured | `No match in registry or ecosystems. Set ANTHROPIC_API_KEY to enable web search discovery, or use --from to specify the source directly.` |
+| `--deterministic-only`, no ecosystem match | `No deterministic source found for 'foo'. Remove --deterministic-only to enable LLM discovery, or use --from to specify the source.` |
+| `--deterministic-only`, builder requires LLM | `'foo' resolved to GitHub releases (owner/repo), which requires LLM for recipe generation. Remove --deterministic-only or wait for a recipe to be contributed.` |
 | Ecosystem probe timeout | Silently fall through to LLM. Show timeout warning in `--verbose` mode. |
-| LLM rate limit/budget | `LLM discovery unavailable (rate limit). Try tsuku create foo --from <source> directly.` |
+| LLM rate limit/budget | `LLM discovery unavailable (rate limit). Try --from <source> to specify the source directly.` |
 | Ecosystem ambiguity (close) | Interactive prompt listing matches with metadata |
 
 ### Data Flow: Integration with Existing Code
