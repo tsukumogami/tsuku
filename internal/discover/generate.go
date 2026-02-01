@@ -117,6 +117,12 @@ func WriteRegistryDir(dir string, entries []SeedEntry) error {
 		if e.Binary != "" {
 			entry.Binary = e.Binary
 		}
+		if e.Description != "" {
+			entry.Description = e.Description
+		}
+		if e.Homepage != "" {
+			entry.Homepage = e.Homepage
+		}
 		if e.Repo != "" {
 			entry.Repo = e.Repo
 		}

@@ -11,9 +11,17 @@ import (
 	"time"
 )
 
+// EntryMetadata holds optional metadata extracted from API responses during validation.
+type EntryMetadata struct {
+	Description string
+	Homepage    string
+	Repo        string
+}
+
 // Validator checks whether a seed entry is valid (the source exists and is usable).
+// On success, it may return metadata extracted from the API response.
 type Validator interface {
-	Validate(entry SeedEntry) error
+	Validate(entry SeedEntry) (*EntryMetadata, error)
 }
 
 // ValidationResult holds the outcome of validating a single entry.
@@ -31,9 +39,21 @@ func ValidateEntries(entries []SeedEntry, validators map[string]Validator) (vali
 			failures = append(failures, ValidationResult{Entry: e, Err: fmt.Errorf("no validator for builder %q", e.Builder)})
 			continue
 		}
-		if err := v.Validate(e); err != nil {
+		meta, err := v.Validate(e)
+		if err != nil {
 			failures = append(failures, ValidationResult{Entry: e, Err: err})
 			continue
+		}
+		if meta != nil {
+			if meta.Description != "" {
+				e.Description = meta.Description
+			}
+			if meta.Homepage != "" {
+				e.Homepage = meta.Homepage
+			}
+			if meta.Repo != "" && e.Repo == "" {
+				e.Repo = meta.Repo
+			}
 		}
 		valid = append(valid, e)
 	}
@@ -59,47 +79,53 @@ func NewGitHubValidator(client *http.Client) *GitHubValidator {
 	}
 }
 
-func (g *GitHubValidator) Validate(entry SeedEntry) error {
-	// Check cache
-	if cached, ok := g.cache.Load(entry.Source); ok {
-		if cached == nil {
-			return nil
-		}
-		return cached.(error)
-	}
-
-	err := g.validate(entry.Source)
-	if err != nil {
-		g.cache.Store(entry.Source, err)
-	} else {
-		g.cache.Store(entry.Source, nil)
-	}
-	return err
+// cachedResult stores both metadata and error for the GitHub validator cache.
+type cachedResult struct {
+	meta *EntryMetadata
+	err  error
 }
 
-func (g *GitHubValidator) validate(source string) error {
+func (g *GitHubValidator) Validate(entry SeedEntry) (*EntryMetadata, error) {
+	if cached, ok := g.cache.Load(entry.Source); ok {
+		cr := cached.(cachedResult)
+		return cr.meta, cr.err
+	}
+
+	meta, err := g.validate(entry.Source)
+	g.cache.Store(entry.Source, cachedResult{meta: meta, err: err})
+	return meta, err
+}
+
+func (g *GitHubValidator) validate(source string) (*EntryMetadata, error) {
 	parts := strings.SplitN(source, "/", 2)
 	if len(parts) != 2 {
-		return fmt.Errorf("invalid github source %q: expected owner/repo", source)
+		return nil, fmt.Errorf("invalid github source %q: expected owner/repo", source)
 	}
 
 	url := fmt.Sprintf("https://api.github.com/repos/%s", source)
 	body, err := g.apiGet(url)
 	if err != nil {
-		return fmt.Errorf("github repo check %s: %w", source, err)
+		return nil, fmt.Errorf("github repo check %s: %w", source, err)
 	}
 
 	var repo struct {
-		Archived bool `json:"archived"`
+		Archived    bool   `json:"archived"`
+		Description string `json:"description"`
+		Homepage    string `json:"homepage"`
+		HTMLURL     string `json:"html_url"`
 	}
 	if err := json.Unmarshal(body, &repo); err != nil {
-		return fmt.Errorf("parse github response for %s: %w", source, err)
+		return nil, fmt.Errorf("parse github response for %s: %w", source, err)
 	}
 	if repo.Archived {
-		return fmt.Errorf("github repo %s is archived", source)
+		return nil, fmt.Errorf("github repo %s is archived", source)
 	}
 
-	return nil
+	return &EntryMetadata{
+		Description: repo.Description,
+		Homepage:    repo.Homepage,
+		Repo:        repo.HTMLURL,
+	}, nil
 }
 
 func (g *GitHubValidator) apiGet(url string) ([]byte, error) {
@@ -161,24 +187,18 @@ func NewHomebrewValidator(client *http.Client) *HomebrewValidator {
 	return &HomebrewValidator{client: client}
 }
 
-func (h *HomebrewValidator) Validate(entry SeedEntry) error {
+func (h *HomebrewValidator) Validate(entry SeedEntry) (*EntryMetadata, error) {
 	if cached, ok := h.cache.Load(entry.Source); ok {
-		if cached == nil {
-			return nil
-		}
-		return cached.(error)
+		cr := cached.(cachedResult)
+		return cr.meta, cr.err
 	}
 
-	err := h.validate(entry.Source)
-	if err != nil {
-		h.cache.Store(entry.Source, err)
-	} else {
-		h.cache.Store(entry.Source, nil)
-	}
-	return err
+	meta, err := h.validate(entry.Source)
+	h.cache.Store(entry.Source, cachedResult{meta: meta, err: err})
+	return meta, err
 }
 
-func (h *HomebrewValidator) validate(formula string) error {
+func (h *HomebrewValidator) validate(formula string) (*EntryMetadata, error) {
 	url := fmt.Sprintf("https://formulae.brew.sh/api/formula/%s.json", formula)
 	var lastErr error
 	for attempt := 0; attempt < 3; attempt++ {
@@ -191,19 +211,36 @@ func (h *HomebrewValidator) validate(formula string) error {
 			lastErr = err
 			continue
 		}
+
+		body, err := io.ReadAll(resp.Body)
 		resp.Body.Close()
+		if err != nil {
+			lastErr = err
+			continue
+		}
 
 		if resp.StatusCode == http.StatusNotFound {
-			return fmt.Errorf("homebrew formula %q not found", formula)
+			return nil, fmt.Errorf("homebrew formula %q not found", formula)
 		}
 		if resp.StatusCode >= 500 {
 			lastErr = fmt.Errorf("server error (HTTP %d)", resp.StatusCode)
 			continue
 		}
 		if resp.StatusCode == http.StatusOK {
-			return nil
+			var f struct {
+				Desc     string `json:"desc"`
+				Homepage string `json:"homepage"`
+			}
+			// Best-effort metadata extraction; validation still succeeds if parsing fails
+			if err := json.Unmarshal(body, &f); err != nil {
+				return &EntryMetadata{}, nil
+			}
+			return &EntryMetadata{
+				Description: f.Desc,
+				Homepage:    f.Homepage,
+			}, nil
 		}
-		return fmt.Errorf("unexpected status (HTTP %d)", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status (HTTP %d)", resp.StatusCode)
 	}
-	return fmt.Errorf("after 3 retries: %w", lastErr)
+	return nil, fmt.Errorf("after 3 retries: %w", lastErr)
 }
