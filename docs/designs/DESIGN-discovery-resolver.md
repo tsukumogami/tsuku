@@ -38,7 +38,7 @@ Planned
 | _Add schema validation when loading `discovery.json`: check required fields (`builder`, `source`), reject unknown builders, and surface clear errors for malformed entries. Prevents silent failures from bad registry data._ | | |
 | [#1314: --deterministic-only guard](https://github.com/tsukumogami/tsuku/issues/1314) | None | testable |
 | _Add the early check in the create pipeline that rejects builders where `RequiresLLM()` returns true when `--deterministic-only` is set, producing the actionable error message from the UX table instead of a confusing "no LLM providers available" failure._ | | |
-| ~~[#1315: Bootstrap registry ~500 entries](https://github.com/tsukumogami/tsuku/issues/1315)~~ | ~~[#1312](https://github.com/tsukumogami/tsuku/issues/1312), [M62](https://github.com/tsukumogami/tsuku/milestone/62)~~ | ~~testable~~ |
+| ~~[#1315: Bootstrap registry ~500 entries](https://github.com/tsukumogami/tsuku/issues/1315)~~ | ~~[#1312](https://github.com/tsukumogami/tsuku/issues/1312)~~ | ~~testable~~ |
 | _Populate `discovery.json` with ~500 entries covering GitHub-release tools not in any ecosystem registry and disambiguation overrides for known name collisions. Decomposed into [milestone 62](https://github.com/tsukumogami/tsuku/milestone/62) with 6 implementation issues._ | | |
 | ~~[#1337: Add --from flag to install](https://github.com/tsukumogami/tsuku/issues/1337)~~ | None | testable |
 | _Add `--from` flag to `tsuku install` that forwards to the create pipeline, skipping recipe lookup. Passes through `--yes` and `--deterministic-only`. First step toward converging install and create under a single command._ | | |
@@ -55,6 +55,7 @@ Planned
 | [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
 | [M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62) | None | |
+| _Evolve registry schema to v2, build the `seed-discovery` CLI tool, populate ~500 entries from the priority queue and curated seed lists, and add CI freshness checks. See [DESIGN-discovery-registry-bootstrap.md](DESIGN-discovery-registry-bootstrap.md)._ | | |
 
 ### Dependency Graph
 
@@ -85,7 +86,7 @@ graph TD
     end
 
     I1312 --> I1315
-    M62 --> I1315
+    I1315 --> M62
     I1337 --> I1338
     I1338 --> I1317
     I1338 --> I1318
