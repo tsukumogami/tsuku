@@ -97,8 +97,9 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1312,I1313,I1314 done
-    class I1337 ready
-    class I1338,I1319 blocked
+    class I1337 done
+    class I1338 ready
+    class I1319 blocked
     class I1315 needsDesign
     class I1317,I1318,I1321,I1322 blocked
 ```
