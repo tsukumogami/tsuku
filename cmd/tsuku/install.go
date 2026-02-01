@@ -24,6 +24,8 @@ var installSandbox bool
 var installRecipePath string
 var installTargetFamily string
 var installRequireEmbedded bool
+var installFrom string
+var installDeterministicOnly bool
 
 var installCmd = &cobra.Command{
 	Use:   "install [tool]...",
@@ -35,6 +37,10 @@ Examples:
   tsuku install kubectl
   tsuku install kubectl@v1.29.0
   tsuku install terraform@latest
+
+Generate a recipe from a specific source and install:
+  tsuku install jq --from homebrew:jq
+  tsuku install gh --from github:cli/cli --force
 
 Install from a pre-computed plan:
   tsuku install --plan plan.json
@@ -131,6 +137,30 @@ Test installation in a sandbox container:
 			return
 		}
 
+		// --from flag: generate recipe via create pipeline, then install
+		if installFrom != "" {
+			if len(args) != 1 {
+				printError(fmt.Errorf("--from requires exactly one tool name"))
+				exitWithCode(ExitUsage)
+			}
+			toolName := args[0]
+
+			// Forward to create pipeline by setting its package-level flags
+			createFrom = installFrom
+			createAutoApprove = installForce
+			createDeterministicOnly = installDeterministicOnly
+			createForce = true // overwrite existing recipe
+			runCreate(nil, []string{toolName})
+			// runCreate calls exitWithCode on failure, so if we get here it succeeded.
+			// Now install the generated recipe.
+			telemetryClient := telemetry.NewClient()
+			telemetry.ShowNoticeIfNeeded()
+			if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
+				handleInstallError(err)
+			}
+			return
+		}
+
 		// Normal installation: require at least one tool
 		if len(args) == 0 {
 			printError(fmt.Errorf("requires at least 1 arg(s), only received 0"))
@@ -181,6 +211,8 @@ func init() {
 	installCmd.Flags().StringVar(&installRecipePath, "recipe", "", "Path to a local recipe file (for testing)")
 	installCmd.Flags().StringVar(&installTargetFamily, "target-family", "", "Override detected linux_family (debian, rhel, arch, alpine, suse)")
 	installCmd.Flags().BoolVar(&installRequireEmbedded, "require-embedded", false, "Require action dependencies to resolve from embedded registry")
+	installCmd.Flags().StringVar(&installFrom, "from", "", "Source override: builder:source (e.g., github:cli/cli, homebrew:jq)")
+	installCmd.Flags().BoolVar(&installDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; fail if deterministic generation fails")
 }
 
 // isInteractive returns true if stdin is connected to a terminal
