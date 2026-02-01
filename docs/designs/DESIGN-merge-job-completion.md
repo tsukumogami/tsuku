@@ -22,7 +22,7 @@ Core merge job capabilities that make the pipeline functionally complete: batch_
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1349: ci(batch): add batch_id generation and structured commit message](https://github.com/tsukumogami/tsuku/issues/1349) | None | testable |
+| ~~[#1349: ci(batch): add batch_id generation and structured commit message](https://github.com/tsukumogami/tsuku/issues/1349)~~ | ~~None~~ | ~~testable~~ |
 | _Generates a `BATCH_ID` in `{date}-{ecosystem}` format with sequence numbers for same-day batches, and restructures the commit message to include git trailers (`batch_id`, `ecosystem`, `batch_size`, `success_rate`) for rollback support._ | | |
 | [#1350: ci(batch): add recipe list tracking to merge job](https://github.com/tsukumogami/tsuku/issues/1350) | None | simple |
 | _Accumulates `INCLUDED_RECIPES` and `EXCLUDED_RECIPES` name lists during the constraint derivation loop, making recipe-level data available to queue updates and auto-merge gating._ | | |
@@ -64,8 +64,10 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1349,I1350 ready
-    class I1351,I1352,I1353 blocked
+    class I1349 done
+    class I1350 ready
+    class I1351 ready
+    class I1352,I1353 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
