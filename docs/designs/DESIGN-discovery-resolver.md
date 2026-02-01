@@ -42,7 +42,7 @@ Planned
 | _Populate `discovery.json` with ~500 entries covering GitHub-release tools not in any ecosystem registry and disambiguation overrides for known name collisions. Decomposed into [milestone 62](https://github.com/tsukumogami/tsuku/milestone/62) with 6 implementation issues._ | | |
 | ~~[#1337: Add --from flag to install](https://github.com/tsukumogami/tsuku/issues/1337)~~ | None | testable |
 | _Add `--from` flag to `tsuku install` that forwards to the create pipeline, skipping recipe lookup. Passes through `--yes` and `--deterministic-only`. First step toward converging install and create under a single command._ | | |
-| [#1338: Discovery fallback in install](https://github.com/tsukumogami/tsuku/issues/1338) | [#1337](https://github.com/tsukumogami/tsuku/issues/1337) | testable |
+| ~~[#1338: Discovery fallback in install](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~[#1337](https://github.com/tsukumogami/tsuku/issues/1337)~~ | ~~testable~~ |
 | _Wire the discovery resolver chain into `tsuku install` so unknown tools trigger automatic source discovery and recipe generation. Shows which resolver stage matched and provides actionable errors on failure._ | | |
 | [#1317: Ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1317) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | testable |
 | _Implement the `EcosystemProber` interface and `EcosystemProbe` resolver that queries all seven ecosystem builders in parallel with a 3-second timeout. Includes threshold filtering (age >90 days, downloads >1000/month) and the `ProbeResult` type._ | | |
@@ -101,12 +101,11 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1312,I1313,I1314 done
-    class I1337 done
-    class I1338 ready
-    class I1319 blocked
+    class I1337,I1338 done
+    class I1319,I1317,I1318 ready
     class M62 ready
     class I1315 done
-    class I1317,I1318,I1321,I1322 blocked
+    class I1321,I1322 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
