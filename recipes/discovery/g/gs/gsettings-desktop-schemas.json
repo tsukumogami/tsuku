@@ -1,0 +1,4 @@
+{
+  "builder": "homebrew",
+  "source": "gsettings-desktop-schemas"
+}

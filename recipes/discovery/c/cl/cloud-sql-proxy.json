@@ -1,0 +1,4 @@
+{
+  "builder": "homebrew",
+  "source": "cloud-sql-proxy"
+}

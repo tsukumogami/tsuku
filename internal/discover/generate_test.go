@@ -1,7 +1,6 @@
 package discover
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -24,10 +23,10 @@ func TestGenerate_SeedsOnly(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	output := filepath.Join(dir, "discovery.json")
+	outputDir := filepath.Join(dir, "discovery")
 	result, err := Generate(GenerateConfig{
-		SeedsDir: seedsDir,
-		Output:   output,
+		SeedsDir:  seedsDir,
+		OutputDir: outputDir,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -39,16 +38,18 @@ func TestGenerate_SeedsOnly(t *testing.T) {
 		t.Errorf("valid = %d, want 2", result.Valid)
 	}
 
-	data, err := os.ReadFile(output)
+	// Verify individual files exist
+	for _, name := range []string{"bat", "fd"} {
+		path := filepath.Join(outputDir, RegistryEntryPath(name))
+		if _, err := os.Stat(path); err != nil {
+			t.Errorf("expected file for %s at %s: %v", name, path, err)
+		}
+	}
+
+	// Verify we can load the directory back
+	reg, err := LoadRegistryDir(outputDir)
 	if err != nil {
-		t.Fatalf("read output: %v", err)
-	}
-	var reg registryFile
-	if err := json.Unmarshal(data, &reg); err != nil {
-		t.Fatalf("parse output: %v", err)
-	}
-	if reg.SchemaVersion != 1 {
-		t.Errorf("schema_version = %d, want 1", reg.SchemaVersion)
+		t.Fatalf("LoadRegistryDir: %v", err)
 	}
 	if len(reg.Tools) != 2 {
 		t.Errorf("tools count = %d, want 2", len(reg.Tools))
@@ -82,11 +83,11 @@ func TestGenerate_MergeQueueAndSeeds(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	output := filepath.Join(dir, "discovery.json")
+	outputDir := filepath.Join(dir, "discovery")
 	result, err := Generate(GenerateConfig{
 		SeedsDir:  seedsDir,
 		QueueFile: queuePath,
-		Output:    output,
+		OutputDir: outputDir,
 	})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -95,20 +96,21 @@ func TestGenerate_MergeQueueAndSeeds(t *testing.T) {
 		t.Errorf("total = %d, want 2", result.Total)
 	}
 
-	data, err := os.ReadFile(output)
+	// Load and verify jq uses github builder (seed overrides queue)
+	entry, err := LoadRegistryEntry(outputDir, "jq")
 	if err != nil {
-		t.Fatalf("read output: %v", err)
+		t.Fatalf("load jq: %v", err)
 	}
-	var reg registryFile
-	if err := json.Unmarshal(data, &reg); err != nil {
-		t.Fatalf("parse output: %v", err)
+	if entry.Builder != "github" {
+		t.Errorf("jq builder = %q, want github", entry.Builder)
 	}
 
-	if reg.Tools["jq"].Builder != "github" {
-		t.Errorf("jq builder = %q, want github", reg.Tools["jq"].Builder)
+	entry, err = LoadRegistryEntry(outputDir, "gh")
+	if err != nil {
+		t.Fatalf("load gh: %v", err)
 	}
-	if reg.Tools["gh"].Builder != "homebrew" {
-		t.Errorf("gh builder = %q, want homebrew", reg.Tools["gh"].Builder)
+	if entry.Builder != "homebrew" {
+		t.Errorf("gh builder = %q, want homebrew", entry.Builder)
 	}
 }
 
@@ -134,10 +136,10 @@ func TestGenerate_WithValidation(t *testing.T) {
 		},
 	}
 
-	output := filepath.Join(dir, "discovery.json")
+	outputDir := filepath.Join(dir, "discovery")
 	result, err := Generate(GenerateConfig{
 		SeedsDir:   seedsDir,
-		Output:     output,
+		OutputDir:  outputDir,
 		Validators: validators,
 	})
 	if err != nil {
@@ -151,40 +153,6 @@ func TestGenerate_WithValidation(t *testing.T) {
 	}
 }
 
-func TestGenerate_SortedOutput(t *testing.T) {
-	dir := t.TempDir()
-	seedsDir := filepath.Join(dir, "seeds")
-	if err := os.Mkdir(seedsDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-	if err := os.WriteFile(filepath.Join(seedsDir, "tools.json"), []byte(`{
-		"category": "test",
-		"entries": [
-			{"name": "zsh", "builder": "homebrew", "source": "zsh"},
-			{"name": "awk", "builder": "homebrew", "source": "awk"}
-		]
-	}`), 0644); err != nil {
-		t.Fatal(err)
-	}
-
-	output := filepath.Join(dir, "discovery.json")
-	if _, err := Generate(GenerateConfig{SeedsDir: seedsDir, Output: output}); err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	data, err := os.ReadFile(output)
-	if err != nil {
-		t.Fatalf("read output: %v", err)
-	}
-	var reg registryFile
-	if err := json.Unmarshal(data, &reg); err != nil {
-		t.Fatalf("parse output: %v", err)
-	}
-	if len(reg.Tools) != 2 {
-		t.Errorf("tools = %d, want 2", len(reg.Tools))
-	}
-}
-
 func TestGenerate_EmptyInputError(t *testing.T) {
 	_, err := Generate(GenerateConfig{})
 	if err == nil {
@@ -194,15 +162,12 @@ func TestGenerate_EmptyInputError(t *testing.T) {
 
 func TestValidateExisting(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "discovery.json")
-	if err := os.WriteFile(path, []byte(`{
-		"schema_version": 1,
-		"tools": {
-			"good": {"builder": "github", "source": "owner/good"},
-			"bad": {"builder": "github", "source": "owner/bad"}
-		}
-	}`), 0644); err != nil {
-		t.Fatal(err)
+	// Write entries as individual files
+	for name, entry := range map[string]RegistryEntry{
+		"good": {Builder: "github", Source: "owner/good"},
+		"bad":  {Builder: "github", Source: "owner/bad"},
+	} {
+		writeTestEntry(t, dir, name, entry)
 	}
 
 	validators := map[string]Validator{
@@ -211,7 +176,7 @@ func TestValidateExisting(t *testing.T) {
 		},
 	}
 
-	result, err := ValidateExisting(path, validators)
+	result, err := ValidateExisting(dir, validators)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -220,6 +185,73 @@ func TestValidateExisting(t *testing.T) {
 	}
 	if result.Valid != 1 {
 		t.Errorf("valid = %d, want 1", result.Valid)
+	}
+}
+
+func TestRegistryEntryPath(t *testing.T) {
+	tests := []struct {
+		name string
+		want string
+	}{
+		{"bat", filepath.Join("b", "ba", "bat.json")},
+		{"ripgrep", filepath.Join("r", "ri", "ripgrep.json")},
+		{"fd", filepath.Join("f", "fd", "fd.json")},
+		{"a", filepath.Join("a", "_", "a.json")},
+	}
+	for _, tt := range tests {
+		got := RegistryEntryPath(tt.name)
+		if got != tt.want {
+			t.Errorf("RegistryEntryPath(%q) = %q, want %q", tt.name, got, tt.want)
+		}
+	}
+}
+
+func TestLoadRegistryEntry(t *testing.T) {
+	dir := t.TempDir()
+	writeTestEntry(t, dir, "bat", RegistryEntry{
+		Builder:        "github",
+		Source:         "sharkdp/bat",
+		Disambiguation: true,
+	})
+
+	entry, err := LoadRegistryEntry(dir, "bat")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if entry.Builder != "github" {
+		t.Errorf("builder = %q, want github", entry.Builder)
+	}
+	if !entry.Disambiguation {
+		t.Error("expected disambiguation = true")
+	}
+}
+
+func TestLoadRegistryEntry_NotFound(t *testing.T) {
+	dir := t.TempDir()
+	_, err := LoadRegistryEntry(dir, "nonexistent")
+	if err == nil {
+		t.Fatal("expected error for missing entry")
+	}
+}
+
+func TestLoadRegistryDir(t *testing.T) {
+	dir := t.TempDir()
+	writeTestEntry(t, dir, "bat", RegistryEntry{Builder: "github", Source: "sharkdp/bat"})
+	writeTestEntry(t, dir, "fd", RegistryEntry{Builder: "github", Source: "sharkdp/fd"})
+
+	reg, err := LoadRegistryDir(dir)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(reg.Tools) != 2 {
+		t.Errorf("tools = %d, want 2", len(reg.Tools))
+	}
+	entry, ok := reg.Lookup("bat")
+	if !ok {
+		t.Fatal("expected bat in registry")
+	}
+	if entry.Source != "sharkdp/bat" {
+		t.Errorf("bat source = %q, want sharkdp/bat", entry.Source)
 	}
 }
 

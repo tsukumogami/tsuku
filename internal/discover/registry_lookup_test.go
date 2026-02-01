@@ -2,15 +2,33 @@ package discover
 
 import (
 	"context"
+	"encoding/json"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
+func writeTestEntry(t *testing.T, dir, name string, entry RegistryEntry) {
+	t.Helper()
+	relPath := RegistryEntryPath(name)
+	fullPath := filepath.Join(dir, relPath)
+	if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+		t.Fatal(err)
+	}
+	data, err := json.MarshalIndent(entry, "", "  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(fullPath, data, 0644); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestRegistryLookup_Hit(t *testing.T) {
-	reg, _ := ParseRegistry([]byte(`{
-		"schema_version": 1,
-		"tools": {"bat": {"builder": "github", "source": "sharkdp/bat"}}
-	}`))
-	lookup, err := NewRegistryLookup(reg)
+	dir := t.TempDir()
+	writeTestEntry(t, dir, "bat", RegistryEntry{Builder: "github", Source: "sharkdp/bat"})
+
+	lookup, err := NewRegistryLookup(dir)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -34,8 +52,8 @@ func TestRegistryLookup_Hit(t *testing.T) {
 }
 
 func TestRegistryLookup_Miss(t *testing.T) {
-	reg, _ := ParseRegistry([]byte(`{"schema_version": 1, "tools": {}}`))
-	lookup, _ := NewRegistryLookup(reg)
+	dir := t.TempDir()
+	lookup, _ := NewRegistryLookup(dir)
 
 	result, err := lookup.Resolve(context.Background(), "nonexistent")
 	if err != nil {
@@ -46,9 +64,9 @@ func TestRegistryLookup_Miss(t *testing.T) {
 	}
 }
 
-func TestNewRegistryLookup_NilRegistry(t *testing.T) {
-	_, err := NewRegistryLookup(nil)
+func TestNewRegistryLookup_EmptyDir(t *testing.T) {
+	_, err := NewRegistryLookup("")
 	if err == nil {
-		t.Fatal("expected error for nil registry")
+		t.Fatal("expected error for empty directory")
 	}
 }

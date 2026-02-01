@@ -151,26 +151,31 @@ func (r *Registry) FetchRecipe(ctx context.Context, name string) ([]byte, error)
 	return data, nil
 }
 
-// discoveryRegistryURL returns the URL for the discovery registry file.
-func (r *Registry) discoveryRegistryURL() string {
-	return r.BaseURL + "/recipes/discovery.json"
+// discoveryEntryURL returns the URL for a single discovery registry entry.
+func (r *Registry) discoveryEntryURL(relPath string) string {
+	return r.BaseURL + "/recipes/discovery/" + relPath
 }
 
-// discoveryRegistryCachePath returns the local cache path for discovery.json.
-func (r *Registry) discoveryRegistryCachePath() string {
-	return filepath.Join(r.CacheDir, "discovery.json")
+// discoveryEntryCachePath returns the local cache path for a discovery entry.
+func (r *Registry) discoveryEntryCachePath(relPath string) string {
+	return filepath.Join(r.CacheDir, "discovery", relPath)
 }
 
-// FetchDiscoveryRegistry fetches discovery.json from the remote registry
-// and writes it to the local cache directory.
-func (r *Registry) FetchDiscoveryRegistry(ctx context.Context) error {
-	url := r.discoveryRegistryURL()
+// DiscoveryCacheDir returns the local cache directory for discovery entries.
+func (r *Registry) DiscoveryCacheDir() string {
+	return filepath.Join(r.CacheDir, "discovery")
+}
+
+// FetchDiscoveryEntry fetches a single discovery entry from the remote registry
+// and caches it locally. The relPath is the entry's relative path (e.g., "b/ba/bat.json").
+func (r *Registry) FetchDiscoveryEntry(ctx context.Context, relPath string) ([]byte, error) {
+	url := r.discoveryEntryURL(relPath)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		return &RegistryError{
+		return nil, &RegistryError{
 			Type:    ErrTypeNetwork,
-			Recipe:  "discovery.json",
+			Recipe:  relPath,
 			Message: "failed to create request",
 			Err:     err,
 		}
@@ -178,57 +183,44 @@ func (r *Registry) FetchDiscoveryRegistry(ctx context.Context) error {
 
 	resp, err := r.client.Do(req)
 	if err != nil {
-		return WrapNetworkError(err, "discovery.json", "failed to fetch discovery registry")
+		return nil, WrapNetworkError(err, relPath, "failed to fetch discovery entry")
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusNotFound {
-		return &RegistryError{
+		return nil, &RegistryError{
 			Type:    ErrTypeNotFound,
-			Recipe:  "discovery.json",
-			Message: "discovery registry not found in remote registry",
+			Recipe:  relPath,
+			Message: "discovery entry not found in remote registry",
 		}
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return &RegistryError{
+		return nil, &RegistryError{
 			Type:    ErrTypeNetwork,
-			Recipe:  "discovery.json",
+			Recipe:  relPath,
 			Message: fmt.Sprintf("registry returned status %d", resp.StatusCode),
 		}
 	}
 
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return &RegistryError{
+		return nil, &RegistryError{
 			Type:    ErrTypeParsing,
-			Recipe:  "discovery.json",
-			Message: "failed to read discovery registry content",
+			Recipe:  relPath,
+			Message: "failed to read discovery entry content",
 			Err:     err,
 		}
 	}
 
-	// Ensure cache directory exists
-	if err := os.MkdirAll(r.CacheDir, 0755); err != nil {
-		return &RegistryError{
-			Type:    ErrTypeCacheWrite,
-			Recipe:  "discovery.json",
-			Message: "failed to create registry directory",
-			Err:     err,
-		}
+	// Cache locally
+	cachePath := r.discoveryEntryCachePath(relPath)
+	if err := os.MkdirAll(filepath.Dir(cachePath), 0755); err != nil {
+		return data, nil // Return data even if caching fails
 	}
+	_ = os.WriteFile(cachePath, data, 0644) // Best effort cache
 
-	path := r.discoveryRegistryCachePath()
-	if err := os.WriteFile(path, data, 0644); err != nil {
-		return &RegistryError{
-			Type:    ErrTypeCacheWrite,
-			Recipe:  "discovery.json",
-			Message: "failed to write discovery registry",
-			Err:     err,
-		}
-	}
-
-	return nil
+	return data, nil
 }
 
 // GetCached returns a cached recipe if it exists.

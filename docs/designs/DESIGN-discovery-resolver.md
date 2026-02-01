@@ -209,7 +209,7 @@ Embedding guarantees offline availability but locks updates to binary releases. 
 
 #### Chosen: Remote-Only Registry
 
-No embedded registry. The registry JSON is fetched from the recipes repository on first use and cached locally at `$TSUKU_HOME/registry/discovery.json`. Updated via `tsuku update-registry`, the same mechanism that already handles recipe registry updates.
+No embedded registry. Individual discovery entries are fetched on demand from the recipes repository and cached locally at `$TSUKU_HOME/registry/discovery/`. Each entry is a separate JSON file fetched when `tsuku install` needs it.
 
 This keeps a single source of truth and allows registry updates without releasing a new binary. The trade-off is that first run requires network access, but tsuku already requires network for recipe fetching and tool installation — offline use was never a supported scenario.
 
@@ -251,7 +251,7 @@ Simple, deterministic rules that are easy to explain. The thresholds aren't perf
 
 ### Summary
 
-When `tsuku install <tool>` finds no existing recipe, it falls back to a `ChainResolver` that tries three stages in order: `RegistryLookup` (O(1) map lookup against `$TSUKU_HOME/registry/discovery.json`, ~500 entries), `EcosystemProbe` (parallel queries to cargo/gem/pypi/npm/go/cpan/cask with a 3-second timeout, filtered by age >90 days and >1000 downloads/month), and `LLMDiscovery` (web search via LLM, structured JSON extraction, GitHub API verification, 15-second timeout). Each stage implements a `Resolver` interface returning a `DiscoveryResult` with builder name, source argument, confidence level, and optional metadata.
+When `tsuku install <tool>` finds no existing recipe, it falls back to a `ChainResolver` that tries three stages in order: `RegistryLookup` (single file read from `$TSUKU_HOME/registry/discovery/`, ~800 entries), `EcosystemProbe` (parallel queries to cargo/gem/pypi/npm/go/cpan/cask with a 3-second timeout, filtered by age >90 days and >1000 downloads/month), and `LLMDiscovery` (web search via LLM, structured JSON extraction, GitHub API verification, 15-second timeout). Each stage implements a `Resolver` interface returning a `DiscoveryResult` with builder name, source argument, confidence level, and optional metadata.
 
 Errors are soft or hard. Soft errors (API timeouts, rate limits, empty results) log a warning and try the next stage. Hard errors (context cancelled, LLM budget exhausted, homoglyph detection) stop the chain. Input is normalized before resolution: lowercased and checked for Unicode homoglyphs. The `--deterministic-only` flag skips LLM discovery and rejects builders where `RequiresLLM()` returns true. When multiple ecosystems match, disambiguation ranks by download count, auto-selects at >10x the runner-up, and prompts otherwise. LLM-discovered sources require user confirmation with repo metadata unless `--yes` is set.
 
@@ -374,7 +374,7 @@ Tool name input is normalized before resolution: Unicode homoglyph detection and
 }
 ```
 
-The registry is a JSON file fetched from the recipes repository and cached locally at `$TSUKU_HOME/registry/discovery.json`. It's updated via `tsuku update-registry` (same mechanism as recipe registry updates). Fields:
+The registry is stored as per-tool JSON files in `recipes/discovery/` in the repository. Entries are fetched on demand and cached locally at `$TSUKU_HOME/registry/discovery/`. Fields:
 
 - `builder` (required): Builder name from the builder registry
 - `source` (required): Builder-specific source argument

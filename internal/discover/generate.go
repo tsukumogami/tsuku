@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 )
 
@@ -12,7 +13,7 @@ type GenerateConfig struct {
 	SeedsDir   string
 	QueueFile  string
 	RecipesDir string
-	Output     string
+	OutputDir  string
 	Validators map[string]Validator
 	Verbose    bool
 }
@@ -67,12 +68,9 @@ func Generate(cfg GenerateConfig) (*GenerateResult, error) {
 		return valid[i].Name < valid[j].Name
 	})
 
-	// Build registry
-	reg := buildRegistry(valid)
-
-	// Write output
-	if cfg.Output != "" {
-		if err := writeRegistry(cfg.Output, reg); err != nil {
+	// Write output directory
+	if cfg.OutputDir != "" {
+		if err := WriteRegistryDir(cfg.OutputDir, valid); err != nil {
 			return nil, fmt.Errorf("write output: %w", err)
 		}
 	}
@@ -84,9 +82,9 @@ func Generate(cfg GenerateConfig) (*GenerateResult, error) {
 	}, nil
 }
 
-// ValidateExisting validates an existing discovery.json file.
-func ValidateExisting(path string, validators map[string]Validator) (*GenerateResult, error) {
-	reg, err := LoadRegistry(path)
+// ValidateExisting validates an existing discovery registry directory.
+func ValidateExisting(dir string, validators map[string]Validator) (*GenerateResult, error) {
+	reg, err := LoadRegistryDir(dir)
 	if err != nil {
 		return nil, fmt.Errorf("load registry: %w", err)
 	}
@@ -108,8 +106,9 @@ func ValidateExisting(path string, validators map[string]Validator) (*GenerateRe
 	}, nil
 }
 
-func buildRegistry(entries []SeedEntry) *registryFile {
-	tools := make(map[string]RegistryEntry, len(entries))
+// WriteRegistryDir writes one JSON file per entry into a nested directory tree.
+// Path: {dir}/{first-letter}/{first-two-letters}/{name}.json
+func WriteRegistryDir(dir string, entries []SeedEntry) error {
 	for _, e := range entries {
 		entry := RegistryEntry{
 			Builder: e.Builder,
@@ -124,25 +123,21 @@ func buildRegistry(entries []SeedEntry) *registryFile {
 		if e.Disambiguation {
 			entry.Disambiguation = true
 		}
-		tools[e.Name] = entry
-	}
-	return &registryFile{
-		SchemaVersion: 1,
-		Tools:         tools,
-	}
-}
 
-// registryFile is the on-disk format for discovery.json.
-type registryFile struct {
-	SchemaVersion int                      `json:"schema_version"`
-	Tools         map[string]RegistryEntry `json:"tools"`
-}
+		relPath := RegistryEntryPath(e.Name)
+		fullPath := filepath.Join(dir, relPath)
+		if err := os.MkdirAll(filepath.Dir(fullPath), 0755); err != nil {
+			return fmt.Errorf("create directory for %s: %w", e.Name, err)
+		}
 
-func writeRegistry(path string, reg *registryFile) error {
-	data, err := json.MarshalIndent(reg, "", "  ")
-	if err != nil {
-		return err
+		data, err := json.MarshalIndent(entry, "", "  ")
+		if err != nil {
+			return fmt.Errorf("marshal %s: %w", e.Name, err)
+		}
+		data = append(data, '\n')
+		if err := os.WriteFile(fullPath, data, 0644); err != nil {
+			return fmt.Errorf("write %s: %w", e.Name, err)
+		}
 	}
-	data = append(data, '\n')
-	return os.WriteFile(path, data, 0644)
+	return nil
 }

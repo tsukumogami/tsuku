@@ -1,0 +1,4 @@
+{
+  "builder": "homebrew",
+  "source": "qt@5"
+}

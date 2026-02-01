@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -20,7 +21,8 @@ type RegistryEntry struct {
 }
 
 // DiscoveryRegistry holds the tool-to-source mapping used by the registry
-// lookup stage. Loaded from a JSON file cached at $TSUKU_HOME/registry/discovery.json.
+// lookup stage. Each entry is stored as a separate JSON file under
+// $TSUKU_HOME/registry/discovery/{first-letter}/{first-two-letters}/{name}.json.
 type DiscoveryRegistry struct {
 	SchemaVersion int                      `json:"schema_version"`
 	Tools         map[string]RegistryEntry `json:"tools"`
@@ -83,4 +85,73 @@ func (r *DiscoveryRegistry) buildIndex() {
 	for name := range r.Tools {
 		r.normalized[strings.ToLower(name)] = name
 	}
+}
+
+// RegistryEntryPath returns the relative path for a tool's discovery entry.
+// The path uses two levels of prefix: {first-letter}/{first-two-letters}/{name}.json.
+// Single-character names use {letter}/_/{name}.json.
+func RegistryEntryPath(name string) string {
+	lower := strings.ToLower(name)
+	first := string(lower[0])
+	var prefix string
+	if len(lower) >= 2 {
+		prefix = lower[:2]
+	} else {
+		prefix = "_"
+	}
+	return filepath.Join(first, prefix, lower+".json")
+}
+
+// LoadRegistryEntry reads a single discovery entry from a directory tree.
+// The name is case-insensitive.
+func LoadRegistryEntry(dir, name string) (*RegistryEntry, error) {
+	path := filepath.Join(dir, RegistryEntryPath(name))
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("load discovery entry %q: %w", name, err)
+	}
+	var entry RegistryEntry
+	if err := json.Unmarshal(data, &entry); err != nil {
+		return nil, fmt.Errorf("parse discovery entry %q: %w", name, err)
+	}
+	if entry.Builder == "" {
+		return nil, fmt.Errorf("invalid discovery entry %q: builder field is empty", name)
+	}
+	if entry.Source == "" {
+		return nil, fmt.Errorf("invalid discovery entry %q: source field is empty", name)
+	}
+	return &entry, nil
+}
+
+// LoadRegistryDir reads all discovery entries from a directory tree and
+// assembles them into a DiscoveryRegistry. Used for validation and bulk operations.
+func LoadRegistryDir(dir string) (*DiscoveryRegistry, error) {
+	reg := &DiscoveryRegistry{
+		SchemaVersion: 1,
+		Tools:         make(map[string]RegistryEntry),
+	}
+	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() || filepath.Ext(path) != ".json" {
+			return nil
+		}
+		name := strings.TrimSuffix(filepath.Base(path), ".json")
+		data, err := os.ReadFile(path)
+		if err != nil {
+			return fmt.Errorf("read %s: %w", path, err)
+		}
+		var entry RegistryEntry
+		if err := json.Unmarshal(data, &entry); err != nil {
+			return fmt.Errorf("parse %s: %w", path, err)
+		}
+		reg.Tools[name] = entry
+		return nil
+	})
+	if err != nil {
+		return nil, fmt.Errorf("load discovery directory: %w", err)
+	}
+	reg.buildIndex()
+	return reg, nil
 }

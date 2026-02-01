@@ -3,28 +3,36 @@ package discover
 import (
 	"context"
 	"fmt"
+	"os"
 )
 
-// RegistryLookup resolves tool names against the discovery registry.
+// RegistryLookup resolves tool names against the discovery registry directory.
 // This is the first stage of the resolver chain: instant, no network, no API keys.
 type RegistryLookup struct {
-	registry *DiscoveryRegistry
+	dir string
 }
 
-// NewRegistryLookup creates a registry lookup resolver.
-// Returns an error if registry is nil.
-func NewRegistryLookup(registry *DiscoveryRegistry) (*RegistryLookup, error) {
-	if registry == nil {
-		return nil, fmt.Errorf("discovery registry is nil")
+// NewRegistryLookup creates a registry lookup resolver that reads from a directory.
+// The directory contains per-tool JSON files in a nested structure.
+func NewRegistryLookup(dir string) (*RegistryLookup, error) {
+	if dir == "" {
+		return nil, fmt.Errorf("discovery registry directory is empty")
 	}
-	return &RegistryLookup{registry: registry}, nil
+	return &RegistryLookup{dir: dir}, nil
 }
 
-// Resolve looks up the tool name in the discovery registry.
+// Resolve looks up the tool name in the discovery registry directory.
 // Returns (nil, nil) on miss — the chain continues to the next stage.
 func (r *RegistryLookup) Resolve(_ context.Context, toolName string) (*DiscoveryResult, error) {
-	entry, ok := r.registry.Lookup(toolName)
-	if !ok {
+	entry, err := LoadRegistryEntry(r.dir, toolName)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, nil
+		}
+		// Unwrap to check for os.ErrNotExist in wrapped errors
+		if pathErr, ok := err.(*os.PathError); ok && os.IsNotExist(pathErr) {
+			return nil, nil
+		}
 		return nil, nil
 	}
 	return &DiscoveryResult{
