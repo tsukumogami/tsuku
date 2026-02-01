@@ -1,15 +1,400 @@
 {
   "category": "github-release",
   "entries": [
-    {"name": "ripgrep", "builder": "github", "source": "BurntSushi/ripgrep"},
-    {"name": "fd", "builder": "github", "source": "sharkdp/fd"},
-    {"name": "bat", "builder": "github", "source": "sharkdp/bat"},
-    {"name": "delta", "builder": "github", "source": "dandavison/delta"},
-    {"name": "lazygit", "builder": "github", "source": "jesseduffield/lazygit"},
-    {"name": "eza", "builder": "github", "source": "eza-community/eza"},
-    {"name": "hyperfine", "builder": "github", "source": "sharkdp/hyperfine"},
-    {"name": "jless", "builder": "github", "source": "PaulJuliusMartinez/jless"},
-    {"name": "xh", "builder": "github", "source": "ducaale/xh"},
-    {"name": "yq", "builder": "github", "source": "mikefarah/yq"}
+    {
+      "name": "ripgrep",
+      "builder": "github",
+      "source": "BurntSushi/ripgrep"
+    },
+    {
+      "name": "fd",
+      "builder": "github",
+      "source": "sharkdp/fd"
+    },
+    {
+      "name": "bat",
+      "builder": "github",
+      "source": "sharkdp/bat"
+    },
+    {
+      "name": "delta",
+      "builder": "github",
+      "source": "dandavison/delta"
+    },
+    {
+      "name": "eza",
+      "builder": "github",
+      "source": "eza-community/eza"
+    },
+    {
+      "name": "dust",
+      "builder": "github",
+      "source": "bootandy/dust"
+    },
+    {
+      "name": "procs",
+      "builder": "github",
+      "source": "dalance/procs"
+    },
+    {
+      "name": "sd",
+      "builder": "github",
+      "source": "chmln/sd"
+    },
+    {
+      "name": "tokei",
+      "builder": "github",
+      "source": "XAMPPRocky/tokei"
+    },
+    {
+      "name": "hyperfine",
+      "builder": "github",
+      "source": "sharkdp/hyperfine"
+    },
+    {
+      "name": "lazygit",
+      "builder": "github",
+      "source": "jesseduffield/lazygit"
+    },
+    {
+      "name": "lazydocker",
+      "builder": "github",
+      "source": "jesseduffield/lazydocker"
+    },
+    {
+      "name": "jless",
+      "builder": "github",
+      "source": "PaulJuliusMartinez/jless"
+    },
+    {
+      "name": "xh",
+      "builder": "github",
+      "source": "ducaale/xh"
+    },
+    {
+      "name": "yq",
+      "builder": "github",
+      "source": "mikefarah/yq"
+    },
+    {
+      "name": "jq",
+      "builder": "github",
+      "source": "jqlang/jq"
+    },
+    {
+      "name": "fzf",
+      "builder": "github",
+      "source": "junegunn/fzf"
+    },
+    {
+      "name": "zoxide",
+      "builder": "github",
+      "source": "ajeetdsouza/zoxide"
+    },
+    {
+      "name": "starship",
+      "builder": "github",
+      "source": "starship/starship"
+    },
+    {
+      "name": "gh",
+      "builder": "github",
+      "source": "cli/cli"
+    },
+    {
+      "name": "glab",
+      "builder": "github",
+      "source": "gitlab-org/cli"
+    },
+    {
+      "name": "hub",
+      "builder": "github",
+      "source": "github/hub"
+    },
+    {
+      "name": "kubectl",
+      "builder": "github",
+      "source": "kubernetes/kubernetes"
+    },
+    {
+      "name": "helm",
+      "builder": "github",
+      "source": "helm/helm"
+    },
+    {
+      "name": "k9s",
+      "builder": "github",
+      "source": "derailed/k9s"
+    },
+    {
+      "name": "kind",
+      "builder": "github",
+      "source": "kubernetes-sigs/kind"
+    },
+    {
+      "name": "minikube",
+      "builder": "github",
+      "source": "kubernetes/minikube"
+    },
+    {
+      "name": "kustomize",
+      "builder": "github",
+      "source": "kubernetes-sigs/kustomize"
+    },
+    {
+      "name": "flux",
+      "builder": "github",
+      "source": "fluxcd/flux2"
+    },
+    {
+      "name": "argocd",
+      "builder": "github",
+      "source": "argoproj/argo-cd"
+    },
+    {
+      "name": "istioctl",
+      "builder": "github",
+      "source": "istio/istio"
+    },
+    {
+      "name": "linkerd",
+      "builder": "github",
+      "source": "linkerd/linkerd2"
+    },
+    {
+      "name": "cilium",
+      "builder": "github",
+      "source": "cilium/cilium-cli"
+    },
+    {
+      "name": "trivy",
+      "builder": "github",
+      "source": "aquasecurity/trivy"
+    },
+    {
+      "name": "grype",
+      "builder": "github",
+      "source": "anchore/grype"
+    },
+    {
+      "name": "syft",
+      "builder": "github",
+      "source": "anchore/syft"
+    },
+    {
+      "name": "cosign",
+      "builder": "github",
+      "source": "sigstore/cosign"
+    },
+    {
+      "name": "age",
+      "builder": "github",
+      "source": "FiloSottile/age"
+    },
+    {
+      "name": "sops",
+      "builder": "github",
+      "source": "getsops/sops"
+    },
+    {
+      "name": "vault",
+      "builder": "github",
+      "source": "hashicorp/vault"
+    },
+    {
+      "name": "terraform",
+      "builder": "github",
+      "source": "hashicorp/terraform"
+    },
+    {
+      "name": "packer",
+      "builder": "github",
+      "source": "hashicorp/packer"
+    },
+    {
+      "name": "consul",
+      "builder": "github",
+      "source": "hashicorp/consul"
+    },
+    {
+      "name": "nomad",
+      "builder": "github",
+      "source": "hashicorp/nomad"
+    },
+    {
+      "name": "waypoint",
+      "builder": "github",
+      "source": "hashicorp/waypoint"
+    },
+    {
+      "name": "goreleaser",
+      "builder": "github",
+      "source": "goreleaser/goreleaser"
+    },
+    {
+      "name": "task",
+      "builder": "github",
+      "source": "go-task/task"
+    },
+    {
+      "name": "just",
+      "builder": "github",
+      "source": "casey/just"
+    },
+    {
+      "name": "deno",
+      "builder": "github",
+      "source": "denoland/deno"
+    },
+    {
+      "name": "bun",
+      "builder": "github",
+      "source": "oven-sh/bun"
+    },
+    {
+      "name": "hugo",
+      "builder": "github",
+      "source": "gohugoio/hugo"
+    },
+    {
+      "name": "caddy",
+      "builder": "github",
+      "source": "caddyserver/caddy"
+    },
+    {
+      "name": "traefik",
+      "builder": "github",
+      "source": "traefik/traefik"
+    },
+    {
+      "name": "minio",
+      "builder": "github",
+      "source": "minio/minio"
+    },
+    {
+      "name": "rclone",
+      "builder": "github",
+      "source": "rclone/rclone"
+    },
+    {
+      "name": "restic",
+      "builder": "github",
+      "source": "restic/restic"
+    },
+    {
+      "name": "croc",
+      "builder": "github",
+      "source": "schollz/croc"
+    },
+    {
+      "name": "dive",
+      "builder": "github",
+      "source": "wagoodman/dive"
+    },
+    {
+      "name": "ctop",
+      "builder": "github",
+      "source": "bcicen/ctop"
+    },
+    {
+      "name": "bottom",
+      "builder": "github",
+      "source": "ClementTsang/bottom"
+    },
+    {
+      "name": "btm",
+      "builder": "github",
+      "source": "ClementTsang/bottom"
+    },
+    {
+      "name": "glow",
+      "builder": "github",
+      "source": "charmbracelet/glow"
+    },
+    {
+      "name": "vhs",
+      "builder": "github",
+      "source": "charmbracelet/vhs"
+    },
+    {
+      "name": "gum",
+      "builder": "github",
+      "source": "charmbracelet/gum"
+    },
+    {
+      "name": "slides",
+      "builder": "github",
+      "source": "maaslalani/slides"
+    },
+    {
+      "name": "nats",
+      "builder": "github",
+      "source": "nats-io/natscli"
+    },
+    {
+      "name": "grpcurl",
+      "builder": "github",
+      "source": "fullstorydev/grpcurl"
+    },
+    {
+      "name": "evans",
+      "builder": "github",
+      "source": "ktr0731/evans"
+    },
+    {
+      "name": "k6",
+      "builder": "github",
+      "source": "grafana/k6"
+    },
+    {
+      "name": "bombardier",
+      "builder": "github",
+      "source": "codesenberg/bombardier"
+    },
+    {
+      "name": "hey",
+      "builder": "github",
+      "source": "rakyll/hey"
+    },
+    {
+      "name": "vegeta",
+      "builder": "github",
+      "source": "tsenart/vegeta"
+    },
+    {
+      "name": "infracost",
+      "builder": "github",
+      "source": "infracost/infracost"
+    },
+    {
+      "name": "tflint",
+      "builder": "github",
+      "source": "terraform-linters/tflint"
+    },
+    {
+      "name": "tfsec",
+      "builder": "github",
+      "source": "aquasecurity/tfsec"
+    },
+    {
+      "name": "terragrunt",
+      "builder": "github",
+      "source": "gruntwork-io/terragrunt"
+    },
+    {
+      "name": "pulumi",
+      "builder": "github",
+      "source": "pulumi/pulumi"
+    },
+    {
+      "name": "pnpm",
+      "builder": "github",
+      "source": "pnpm/pnpm"
+    },
+    {
+      "name": "volta",
+      "builder": "github",
+      "source": "volta-cli/volta"
+    }
   ]
 }
