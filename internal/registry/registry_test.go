@@ -325,6 +325,117 @@ func TestListCached_NonExistentDir(t *testing.T) {
 	}
 }
 
+func TestFetchDiscoveryRegistry(t *testing.T) {
+	discoveryJSON := `{"schema_version":1,"tools":{"jq":{"builder":"homebrew","source":"jq"}}}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/recipes/discovery.json" {
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(discoveryJSON))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	cacheDir := t.TempDir()
+	reg := &Registry{
+		BaseURL:  server.URL,
+		CacheDir: cacheDir,
+		client:   &http.Client{},
+	}
+
+	ctx := context.Background()
+
+	// Test successful fetch
+	err := reg.FetchDiscoveryRegistry(ctx)
+	if err != nil {
+		t.Fatalf("FetchDiscoveryRegistry failed: %v", err)
+	}
+
+	// Verify file was written
+	path := filepath.Join(cacheDir, "discovery.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatalf("Failed to read cached discovery.json: %v", err)
+	}
+	if string(data) != discoveryJSON {
+		t.Errorf("Cached content = %q, want %q", data, discoveryJSON)
+	}
+
+	// Test idempotency: run again, should overwrite cleanly
+	err = reg.FetchDiscoveryRegistry(ctx)
+	if err != nil {
+		t.Fatalf("FetchDiscoveryRegistry (second call) failed: %v", err)
+	}
+}
+
+func TestFetchDiscoveryRegistry_NotFound(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	reg := &Registry{
+		BaseURL:  server.URL,
+		CacheDir: t.TempDir(),
+		client:   &http.Client{},
+	}
+
+	err := reg.FetchDiscoveryRegistry(context.Background())
+	if err == nil {
+		t.Fatal("Expected error for 404 response")
+	}
+	regErr, ok := err.(*RegistryError)
+	if !ok {
+		t.Fatalf("Expected *RegistryError, got %T", err)
+	}
+	if regErr.Type != ErrTypeNotFound {
+		t.Errorf("Error type = %v, want %v", regErr.Type, ErrTypeNotFound)
+	}
+}
+
+func TestFetchDiscoveryRegistry_CreatesDirectory(t *testing.T) {
+	discoveryJSON := `{"schema_version":1,"tools":{}}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte(discoveryJSON))
+	}))
+	defer server.Close()
+
+	// Use a non-existent subdirectory
+	cacheDir := filepath.Join(t.TempDir(), "nested", "registry")
+	reg := &Registry{
+		BaseURL:  server.URL,
+		CacheDir: cacheDir,
+		client:   &http.Client{},
+	}
+
+	err := reg.FetchDiscoveryRegistry(context.Background())
+	if err != nil {
+		t.Fatalf("FetchDiscoveryRegistry failed: %v", err)
+	}
+
+	// Verify directory was created and file exists
+	if _, err := os.Stat(filepath.Join(cacheDir, "discovery.json")); err != nil {
+		t.Fatalf("discovery.json not found after fetch: %v", err)
+	}
+}
+
+func TestFetchDiscoveryRegistry_NetworkError(t *testing.T) {
+	reg := &Registry{
+		BaseURL:  "http://localhost:1", // connection refused
+		CacheDir: t.TempDir(),
+		client:   &http.Client{},
+	}
+
+	err := reg.FetchDiscoveryRegistry(context.Background())
+	if err == nil {
+		t.Fatal("Expected error for unreachable server")
+	}
+}
+
 // TestRegistryHTTPClient_DisableCompression tests that registry HTTP client has compression disabled
 func TestRegistryHTTPClient_DisableCompression(t *testing.T) {
 	client := newRegistryHTTPClient()
