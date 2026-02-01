@@ -320,3 +320,15 @@ func isValidNpmPackageNameForBuilder(name string) bool {
 
 	return npmPackageNameRegex.MatchString(name)
 }
+
+// Probe checks if a package exists on npm.
+func (b *NpmBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
+	_, err := b.fetchPackageInfo(ctx, name)
+	if err != nil {
+		return &ProbeResult{Exists: false}, nil
+	}
+	return &ProbeResult{
+		Exists: true,
+		Source: name,
+	}, nil
+}

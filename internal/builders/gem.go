@@ -349,3 +349,15 @@ func isValidGemName(name string) bool {
 	}
 	return gemNameRegex.MatchString(name)
 }
+
+// Probe checks if a gem exists on RubyGems.
+func (b *GemBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
+	_, err := b.fetchGemInfo(ctx, name)
+	if err != nil {
+		return &ProbeResult{Exists: false}, nil
+	}
+	return &ProbeResult{
+		Exists: true,
+		Source: name,
+	}, nil
+}
