@@ -6,14 +6,14 @@ Required sections in order:
 ---
 status: Proposed
 problem: |
-  2-3 paragraphs describing the problem being solved.
+  1 paragraph describing the problem being solved.
   Cover what's broken or missing, who it affects,
   and why it matters now.
 decision: |
-  2-3 paragraphs stating the decision.
+  1 paragraph stating the decision.
   Cover the chosen approach and key design choices.
 rationale: |
-  2-3 paragraphs explaining why this approach was chosen.
+  1 paragraph explaining why this approach was chosen.
   Cover trade-offs and why alternatives were rejected.
 ---
 
