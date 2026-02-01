@@ -102,7 +102,8 @@ graph TD
 
     class I1312,I1313,I1314 done
     class I1337,I1338 done
-    class I1319,I1317,I1318 ready
+    class I1319 ready
+    class I1317,I1318 needsDesign
     class M62 ready
     class I1315 done
     class I1321,I1322 blocked
