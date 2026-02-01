@@ -15,6 +15,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/builders"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/install"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/sandbox"
@@ -105,7 +106,6 @@ func init() {
 	createCmd.Flags().BoolVar(&createSkipSandbox, "skip-sandbox", false, "Skip container sandbox testing (use when Docker is unavailable)")
 	createCmd.Flags().BoolVar(&createDeterministicOnly, "deterministic-only", false, "Skip LLM fallback; exit with structured error if deterministic generation fails")
 	createCmd.Flags().StringVar(&createOutput, "output", "", "Write recipe to this path instead of the default registry location")
-	_ = createCmd.MarkFlagRequired("from")
 }
 
 // confirmSkipSandbox prompts the user to confirm skipping sandbox testing.
@@ -191,11 +191,34 @@ func runCreate(cmd *cobra.Command, args []string) {
 		fmt.Fprintln(os.Stderr, "Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.")
 	}
 
-	// Parse the --from flag
-	builderName, sourceArg := parseFromFlag(createFrom)
+	// Initialize builder registry with all builders
+	builderRegistry := builders.NewRegistry()
+	builderRegistry.Register(builders.NewCargoBuilder(nil))
+	builderRegistry.Register(builders.NewGemBuilder(nil))
+	builderRegistry.Register(builders.NewPyPIBuilder(nil))
+	builderRegistry.Register(builders.NewNpmBuilder(nil))
+	builderRegistry.Register(builders.NewGoBuilder(nil))
+	builderRegistry.Register(builders.NewCPANBuilder(nil))
+	builderRegistry.Register(builders.NewGitHubReleaseBuilder())
+	builderRegistry.Register(builders.NewHomebrewBuilder())
+	builderRegistry.Register(builders.NewCaskBuilder(nil))
 
-	// Normalize ecosystem names (e.g., "cargo" -> "crates.io", "pip" -> "pypi")
-	builderName = normalizeEcosystem(builderName)
+	var builderName, sourceArg string
+	if createFrom != "" {
+		// Explicit --from flag: parse and normalize as before.
+		builderName, sourceArg = parseFromFlag(createFrom)
+		builderName = normalizeEcosystem(builderName)
+	} else {
+		// No --from flag: run discovery to find the builder and source.
+		result, err := runDiscovery(toolName)
+		if err != nil {
+			printError(err)
+			exitWithCode(ExitRecipeNotFound)
+		}
+		builderName = result.Builder
+		sourceArg = result.Source
+		fmt.Fprintf(os.Stderr, "Discovered: %s\n", result.Reason)
+	}
 
 	// Handle --skip-sandbox flag
 	skipSandbox := false
@@ -210,22 +233,10 @@ func runCreate(cmd *cobra.Command, args []string) {
 		skipSandbox = true
 	}
 
-	// Initialize builder registry with all builders
-	builderRegistry := builders.NewRegistry()
-	builderRegistry.Register(builders.NewCargoBuilder(nil))
-	builderRegistry.Register(builders.NewGemBuilder(nil))
-	builderRegistry.Register(builders.NewPyPIBuilder(nil))
-	builderRegistry.Register(builders.NewNpmBuilder(nil))
-	builderRegistry.Register(builders.NewGoBuilder(nil))
-	builderRegistry.Register(builders.NewCPANBuilder(nil))
-	builderRegistry.Register(builders.NewGitHubReleaseBuilder())
-	builderRegistry.Register(builders.NewHomebrewBuilder())
-	builderRegistry.Register(builders.NewCaskBuilder(nil))
-
 	// Get the builder
 	builder, ok := builderRegistry.Get(builderName)
 	if !ok {
-		fmt.Fprintf(os.Stderr, "Error: unknown source '%s'\n", createFrom)
+		fmt.Fprintf(os.Stderr, "Error: unknown source '%s'\n", builderName)
 		fmt.Fprintf(os.Stderr, "\nAvailable sources:\n")
 		for _, name := range builderRegistry.List() {
 			fmt.Fprintf(os.Stderr, "  %s\n", name)
@@ -628,6 +639,40 @@ func describeStep(step recipe.Step) string {
 		}
 		return step.Action
 	}
+}
+
+// runDiscovery resolves a tool name to a builder and source using the
+// discovery resolver chain. Currently only the registry lookup stage is
+// active; ecosystem probe and LLM stages are stubs.
+func runDiscovery(toolName string) (*discover.DiscoveryResult, error) {
+	cfg, err := config.DefaultConfig()
+	if err != nil {
+		return nil, fmt.Errorf("load config: %w", err)
+	}
+
+	registryPath := filepath.Join(cfg.RegistryDir, "discovery.json")
+
+	var stages []discover.Resolver
+
+	// Stage 1: Registry lookup (if the file exists).
+	if data, err := os.ReadFile(registryPath); err == nil {
+		reg, err := discover.ParseRegistry(data)
+		if err == nil {
+			lookup, err := discover.NewRegistryLookup(reg)
+			if err == nil {
+				stages = append(stages, lookup)
+			}
+		}
+	}
+
+	// Stage 2: Ecosystem probe (stub — always misses).
+	stages = append(stages, &discover.EcosystemProbe{})
+
+	// Stage 3: LLM discovery (stub — always misses).
+	stages = append(stages, &discover.LLMDiscovery{})
+
+	chain := discover.NewChainResolver(stages...)
+	return chain.Resolve(globalCtx, toolName)
 }
 
 // formatRecipeTOML returns the recipe as a TOML string.

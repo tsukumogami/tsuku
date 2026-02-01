@@ -1,0 +1,6 @@
+{
+  "schema_version": 1,
+  "tools": {
+    "jq": {"builder": "homebrew", "source": "jq"}
+  }
+}
