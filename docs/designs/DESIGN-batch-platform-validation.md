@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: Batch-generated recipes are validated only on Linux x86_64 but claim all-platform support, so users on arm64 or macOS can get broken installs.
 decision: Add platform validation jobs to the batch workflow that test on 12 target environments (5 linux families x 2 architectures + 2 macOS), then write platform constraints for partial-coverage recipes before creating the PR.
 rationale: In-workflow validation catches platform failures before the PR exists, enables the merge job to write accurate platform constraints, and keeps progressive promotion from cheap Linux runners to expensive macOS runners.
