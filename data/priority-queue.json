@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-01-31T18:00:45Z",
+  "updated_at": "2026-02-01T19:01:15Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -87,7 +87,7 @@
       "source": "homebrew",
       "name": "pkgconf",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {
@@ -95,7 +95,7 @@
       "source": "homebrew",
       "name": "python@3.14",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {
@@ -103,7 +103,7 @@
       "source": "homebrew",
       "name": "xz",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-01-31T00:06:53Z"
     },
     {
