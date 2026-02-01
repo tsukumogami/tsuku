@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/tsukumogami/tsuku/internal/seed"
 )
@@ -446,5 +447,101 @@ func TestParseInstallJSON(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestEcosystemRateLimits(t *testing.T) {
+	// Verify all expected ecosystems have rate limits
+	expected := map[string]time.Duration{
+		"homebrew": 1 * time.Second,
+		"cargo":    1 * time.Second,
+		"npm":      1 * time.Second,
+		"pypi":     1 * time.Second,
+		"go":       1 * time.Second,
+		"rubygems": 6 * time.Second,
+		"cpan":     1 * time.Second,
+		"cask":     1 * time.Second,
+	}
+	for eco, want := range expected {
+		got, ok := ecosystemRateLimits[eco]
+		if !ok {
+			t.Errorf("missing rate limit for ecosystem %q", eco)
+			continue
+		}
+		if got != want {
+			t.Errorf("ecosystemRateLimits[%q] = %v, want %v", eco, got, want)
+		}
+	}
+}
+
+func TestRun_rateLimiting(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping rate limit timing test in short mode")
+	}
+
+	tmpDir := t.TempDir()
+	fakeBin := filepath.Join(tmpDir, "tsuku")
+	// Fake binary that succeeds for both create and install
+	script := `#!/bin/sh
+case "$1" in
+  create)
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --output) shift; mkdir -p "$(dirname "$1")"; echo "[metadata]" > "$1"; shift ;;
+        *) shift ;;
+      esac
+    done
+    exit 0
+    ;;
+  install) exit 0 ;;
+esac
+`
+	if err := os.WriteFile(fakeBin, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	queue := &seed.PriorityQueue{
+		SchemaVersion: 1,
+		Packages: []seed.Package{
+			{ID: "cargo:pkg1", Name: "pkg1", Status: "pending", Tier: 1},
+			{ID: "cargo:pkg2", Name: "pkg2", Status: "pending", Tier: 1},
+			{ID: "cargo:pkg3", Name: "pkg3", Status: "pending", Tier: 1},
+		},
+	}
+
+	// Temporarily set cargo rate limit to 100ms for fast test
+	orig := ecosystemRateLimits["cargo"]
+	ecosystemRateLimits["cargo"] = 100 * time.Millisecond
+	defer func() { ecosystemRateLimits["cargo"] = orig }()
+
+	orch := NewOrchestrator(Config{
+		Ecosystem:   "cargo",
+		BatchSize:   10,
+		MaxTier:     3,
+		QueuePath:   filepath.Join(tmpDir, "queue.json"),
+		OutputDir:   filepath.Join(tmpDir, "recipes"),
+		FailuresDir: filepath.Join(tmpDir, "failures"),
+		TsukuBin:    fakeBin,
+	}, queue)
+
+	if err := EnsureOutputDir(filepath.Join(tmpDir, "recipes")); err != nil {
+		t.Fatal(err)
+	}
+
+	start := time.Now()
+	result, err := orch.Run()
+	elapsed := time.Since(start)
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Succeeded != 3 {
+		t.Fatalf("expected 3 succeeded, got %d", result.Succeeded)
+	}
+
+	// 3 packages with 100ms rate limit = at least 200ms (sleep between, not before first)
+	minExpected := 180 * time.Millisecond // slight margin for timing
+	if elapsed < minExpected {
+		t.Errorf("expected at least %v for rate limiting, got %v", minExpected, elapsed)
 	}
 }
