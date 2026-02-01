@@ -20,12 +20,14 @@ Feature: Create
     And the file "recipes/prettier.toml" does not exist
 
   # Requires Cargo toolchain. Expects success once #1287 is resolved.
+  @requires-no-cargo
   Scenario: Create recipe from crates.io requires toolchain
     When I run "tsuku create ripgrep --from crates.io --yes --skip-sandbox"
     Then the exit code is 8
     And the error output contains "Cargo is required"
 
   # Requires gem toolchain. Expects success once #1287 is resolved.
+  @requires-no-gem
   Scenario: Create recipe from rubygems requires toolchain
     When I run "tsuku create jekyll --from rubygems --yes --skip-sandbox"
     Then the exit code is 8
