@@ -285,11 +285,12 @@ Existing create pipeline (builder → sandbox → install)
 internal/discover/
 ├── resolver.go           # Resolver interface and DiscoveryResult type
 ├── chain.go              # ChainResolver orchestrating the three stages
-├── registry_lookup.go    # Stage 1: embedded/local registry lookup
+├── registry.go           # Registry data types and JSON loading
+├── registry_lookup.go    # Stage 1: registry lookup
 ├── ecosystem_probe.go    # Stage 2: parallel ecosystem API queries
 ├── llm_discovery.go      # Stage 3: LLM web search fallback
 ├── disambiguation.go     # Popularity ranking and user prompting
-└── registry.go           # Registry loading (embedded + sync)
+└── normalize.go          # Input normalization and homoglyph detection
 ```
 
 ### Key Interfaces
