@@ -13,7 +13,7 @@ rationale: A registry handles the top ~500 tools instantly without API keys, eco
 
 tsuku v0.4.x has eight recipe builders (cargo, gem, pypi, npm, go, cpan, github, homebrew) and a growing recipe registry. But every `tsuku create` invocation requires the user to specify `--from github:owner/repo` or `--from crates.io`. Users also need to know whether a recipe already exists before choosing between `tsuku install` and `tsuku create`.
 
-For a public preview, this is a poor first experience. Users expect `tsuku install stripe-cli` to work without knowing that stripe-cli is distributed as a GitHub release. They don't care about the source, and they shouldn't need to distinguish between "install an existing recipe" and "generate a new recipe."
+For new users, this is a poor first experience. Users expect `tsuku install stripe-cli` to work without knowing that stripe-cli is distributed as a GitHub release. They don't care about the source, and they shouldn't need to distinguish between "install an existing recipe" and "generate a new recipe."
 
 The problem breaks into four parts:
 
@@ -53,15 +53,6 @@ The problem breaks into four parts:
 - **Minimal maintenance burden**: The discovery registry should stay small and shrink as recipe coverage grows
 
 ## Implementation Context
-
-### Upstream Design Reference
-
-This design implements part of the v0.5.0 public preview plan. The upstream design establishes the three-stage resolver architecture, command convergence approach, and the relationship between discovery and recipe registries.
-
-**Relevant upstream decisions:**
-- Registry-first discovery with parallel ecosystem probe and LLM fallback (Decision 1A)
-- Discovery registry scope: ~500 entries for GitHub-release tools and disambiguation overrides
-- `tsuku install` becomes the universal entry point
 
 ### Existing Patterns
 
@@ -474,7 +465,7 @@ The discovery registry and the batch pipeline's priority queue serve related pur
 2. **Offline disambiguation** resolves name collisions (batch LLM, not real-time)
 3. **The index replaces both** the curated discovery registry and the batch pipeline's seed list
 
-This convergence isn't a v0.5.0 concern. The current design anticipates it by keeping the registry format simple and the `Resolver` interface stable.
+This convergence is a future concern. The current design anticipates it by keeping the registry format simple and the `Resolver` interface stable.
 
 ## Implementation Approach
 
