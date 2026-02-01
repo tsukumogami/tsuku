@@ -409,6 +409,27 @@ The priority queue is the shared data source. The batch pipeline turns queue ent
 
 ### Future Evolution
 
+**Multi-builder entries (per-platform source mapping):** Today each registry entry maps a tool name to a single builder+source pair. In practice, a tool often has multiple viable install paths — `jq` could come from homebrew bottles on macOS, GitHub releases on Linux, and a distro package elsewhere. The schema should evolve to support multiple builder sources per tool, ordered by preference:
+
+```json
+{
+  "jq": {
+    "sources": [
+      {"builder": "homebrew", "source": "jq", "platforms": ["darwin"]},
+      {"builder": "github", "source": "jqlang/jq", "platforms": ["linux", "windows"]}
+    ],
+    "repo": "https://github.com/jqlang/jq",
+    "description": "Lightweight command-line JSON processor"
+  }
+}
+```
+
+This creates a tension with the current design's simplicity goals. Populating multi-builder entries requires knowing which builders work on which platforms for each tool — testing and validation work that belongs to the recipe consumer (the batch pipeline or `tsuku create`), not the registry author. The registry's job during bootstrap is to map names to sources, not to solve platform coverage.
+
+The resolution: v2 keeps a single builder+source per entry (the "best default" for the tool). A future schema version adds a `sources` array for tools where platform-specific routing matters. The single-builder entries remain valid — they're just the degenerate case of a one-element sources array. This lets the registry accumulate platform knowledge incrementally as recipes get tested, without requiring it upfront.
+
+This also surfaces a gap in how the priority queue and discovery registry interact. The priority queue doesn't choose between builders — it builds whatever it sees. The discovery registry *does* choose, by picking one builder. As multi-builder entries evolve, the registry becomes the place where builder preference is expressed, and the priority queue becomes one of several consumers that can read those preferences. But that's a design for when the batch pipeline and resolver are both mature enough to consume richer data.
+
 **Schema v3 (when LLM builder ships):** Make `builder`+`source` optional. Metadata-only entries can be resolved by an LLM builder that infers install paths. The registry becomes a general tool knowledge base.
 
 **Automated population from probe results:** Once the ecosystem probe ships and collects resolution data, new entries could be generated automatically from probe hits.
