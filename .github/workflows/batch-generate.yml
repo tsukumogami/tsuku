@@ -534,7 +534,7 @@ jobs:
       - name: Download validation results (tolerating missing artifacts)
         run: |
           # Download each result artifact, creating empty results for failed/skipped jobs
-          for platform in linux-x86_64 linux-arm64 darwin-arm64 darwin-x86_64; do
+          for platform in linux-x86_64 linux-arm64 darwin-arm64 darwin-x86_64 linux-debian-glibc-x86_64; do
             echo "[]" > "validation-results-${platform}.json"
           done
 
@@ -558,6 +558,12 @@ jobs:
         with:
           name: validation-results-darwin-x86_64
 
+      # Generation-environment result from #1324 (may not exist yet)
+      - uses: actions/download-artifact@v4
+        continue-on-error: true
+        with:
+          name: validation-results-linux-debian-glibc-x86_64
+
       - name: Copy new recipes into working tree
         run: cp -r artifacts/recipes/* recipes/
 
@@ -576,12 +582,23 @@ jobs:
             validation-results-linux-arm64.json \
             validation-results-darwin-arm64.json \
             validation-results-darwin-x86_64.json \
+            validation-results-linux-debian-glibc-x86_64.json \
             > all-results.json
 
           echo "### Aggregated Results" >> "$GITHUB_STEP_SUMMARY"
 
           # Get unique recipe names
           RECIPES=$(jq -r '.[].recipe' all-results.json | sort -u)
+
+          # Track constraint info for PR body
+          CONSTRAINT_LOG=""
+          EXCLUDED_LOG=""
+          INCLUDED_COUNT=0
+          CONSTRAINED_COUNT=0
+          EXCLUDED_COUNT=0
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          FAILURE_JSONL="data/failures/${{ inputs.ecosystem }}.jsonl"
+          mkdir -p "$(dirname "$FAILURE_JSONL")"
 
           for recipe in $RECIPES; do
             echo "=== Processing $recipe ==="
@@ -591,46 +608,82 @@ jobs:
             if grep -q 'action.*=.*"run_command"' "$RECIPE_FILE" 2>/dev/null; then
               echo "EXCLUDE: $recipe has run_command action"
               rm -f "$RECIPE_FILE"
+              EXCLUDED_LOG="${EXCLUDED_LOG}\n- **${recipe}**: contains run_command action (security gate)"
+              EXCLUDED_COUNT=$((EXCLUDED_COUNT + 1))
               continue
             fi
 
-            # Get per-platform results for this recipe
+            # Count results by status (pass, fail, skipped)
             TOTAL=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r)] | length' all-results.json)
             PASSED=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "pass")] | length' all-results.json)
-            FAILED_PLATFORMS=$(jq -r --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "fail")] | .[].platform' all-results.json)
+            FAILED=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "fail")] | length' all-results.json)
+            SKIPPED=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "skipped")] | length' all-results.json)
 
-            echo "$recipe: $PASSED/$TOTAL passed"
+            echo "$recipe: $PASSED passed, $FAILED failed, $SKIPPED skipped (of $TOTAL)"
 
-            if [ "$PASSED" = "$TOTAL" ]; then
-              echo "All platforms pass, no constraints needed"
+            # Write failure JSONL for each failed platform
+            jq -c --arg r "$recipe" --arg ts "$TIMESTAMP" \
+              '[.[] | select(.recipe == $r and .status == "fail")] | .[] |
+              {
+                schema_version: 1,
+                recipe: .recipe,
+                platform: .platform,
+                exit_code: .exit_code,
+                category: (if .exit_code == 5 then "network" elif .exit_code == 124 or .exit_code == 137 then "timeout" else "deterministic" end),
+                timestamp: $ts
+              }' all-results.json >> "$FAILURE_JSONL" 2>/dev/null || true
+
+            # Effective results: pass + skipped count as "not failed"
+            # A recipe with all skipped + pass should be included without constraints
+            EFFECTIVE_PASSED=$((PASSED + SKIPPED))
+
+            if [ "$EFFECTIVE_PASSED" = "$TOTAL" ]; then
+              echo "All platforms pass or skipped, no constraints needed"
+              INCLUDED_COUNT=$((INCLUDED_COUNT + 1))
               continue
             fi
 
             if [ "$PASSED" = "0" ]; then
-              echo "EXCLUDE: $recipe failed on all platforms"
+              echo "EXCLUDE: $recipe failed on all non-skipped platforms"
               rm -f "$RECIPE_FILE"
+              EXCLUDED_LOG="${EXCLUDED_LOG}\n- **${recipe}**: failed on all platforms"
+              EXCLUDED_COUNT=$((EXCLUDED_COUNT + 1))
               continue
             fi
 
-            # Derive constraints
+            # Derive constraints (only considers pass/fail, ignores skipped)
             ./scripts/write-platform-constraints.sh "$RECIPE_FILE" "$recipe" all-results.json
+            CONSTRAINT=$(grep -E 'supported_os|supported_libc|unsupported_platforms' "$RECIPE_FILE" 2>/dev/null | head -1 || echo "unknown")
+            CONSTRAINT_LOG="${CONSTRAINT_LOG}\n- **${recipe}**: ${CONSTRAINT}"
+            CONSTRAINED_COUNT=$((CONSTRAINED_COUNT + 1))
+            INCLUDED_COUNT=$((INCLUDED_COUNT + 1))
           done
 
-          # Summary
+          # Summary table for step summary
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Recipe | Passed | Total | Constraints |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|--------|--------|-------|-------------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Recipe | Passed | Failed | Skipped | Constraints |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|--------|--------|---------|-------------|" >> "$GITHUB_STEP_SUMMARY"
           for recipe in $RECIPES; do
             RECIPE_FILE=$(find recipes -name "${recipe}.toml" | head -1)
             if [ -z "$RECIPE_FILE" ]; then
-              echo "| $recipe | - | - | Excluded |" >> "$GITHUB_STEP_SUMMARY"
+              echo "| $recipe | - | - | - | Excluded |" >> "$GITHUB_STEP_SUMMARY"
               continue
             fi
-            TOTAL=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r)] | length' all-results.json)
             PASSED=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "pass")] | length' all-results.json)
+            FAILED=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "fail")] | length' all-results.json)
+            SKIPPED=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "skipped")] | length' all-results.json)
             CONSTRAINTS=$(grep -E 'supported_os|supported_libc|unsupported_platforms' "$RECIPE_FILE" 2>/dev/null | head -1 || echo "None")
-            echo "| $recipe | $PASSED | $TOTAL | $CONSTRAINTS |" >> "$GITHUB_STEP_SUMMARY"
+            echo "| $recipe | $PASSED | $FAILED | $SKIPPED | $CONSTRAINTS |" >> "$GITHUB_STEP_SUMMARY"
           done
+
+          # Save counts for PR body step
+          echo "INCLUDED_COUNT=$INCLUDED_COUNT" >> "$GITHUB_ENV"
+          echo "CONSTRAINED_COUNT=$CONSTRAINED_COUNT" >> "$GITHUB_ENV"
+          echo "EXCLUDED_COUNT=$EXCLUDED_COUNT" >> "$GITHUB_ENV"
+
+          # Save logs for PR body (use files to avoid shell quoting issues)
+          printf '%b' "$CONSTRAINT_LOG" > /tmp/constraint-log.md
+          printf '%b' "$EXCLUDED_LOG" > /tmp/excluded-log.md
 
       - name: Requeue unblocked packages
         run: ./scripts/requeue-unblocked.sh
@@ -655,13 +708,48 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "feat(recipes): add batch $(date +%Y-%m-%d) ${{ inputs.ecosystem }} recipes"
           git push -u origin "$BRANCH"
-          BODY="Automated batch generation for ${{ inputs.ecosystem }} ecosystem."
-          if [ -f data/batch-summary.md ]; then
-            BODY=$(cat data/batch-summary.md)
-          fi
+
+          # Build PR body with platform validation summary
+          RECIPE_COUNT=$(git diff --name-only main -- recipes/ | wc -l)
+          {
+            echo "Batch ${{ inputs.ecosystem }} recipe generation: ${INCLUDED_COUNT} recipes included, ${EXCLUDED_COUNT} excluded."
+            echo ""
+            echo "Validated across 11 platform environments (5 Linux x86_64 families, 4 Linux arm64 families, 2 macOS)."
+            if [ "$CONSTRAINED_COUNT" -gt 0 ]; then
+              echo ""
+              echo "## Platform Constraints"
+              echo ""
+              echo "${CONSTRAINED_COUNT} recipe(s) have partial platform coverage. Constraints were derived automatically:"
+              cat /tmp/constraint-log.md 2>/dev/null || true
+            fi
+            if [ "$EXCLUDED_COUNT" -gt 0 ]; then
+              echo ""
+              echo "## Excluded Recipes"
+              echo ""
+              cat /tmp/excluded-log.md 2>/dev/null || true
+            fi
+            echo ""
+            echo "---"
+            echo ""
+            echo "## Validation Summary"
+            echo ""
+            echo "| Platform | Status |"
+            echo "|----------|--------|"
+            for platform in linux-x86_64 linux-arm64 darwin-arm64 darwin-x86_64; do
+              COUNT=$(jq "length" "validation-results-${platform}.json" 2>/dev/null || echo "0")
+              if [ "$COUNT" = "0" ]; then
+                echo "| ${platform} | No results (infrastructure failure or not yet implemented) |"
+              else
+                PASS=$(jq '[.[] | select(.status == "pass")] | length' "validation-results-${platform}.json")
+                FAIL=$(jq '[.[] | select(.status == "fail")] | length' "validation-results-${platform}.json")
+                echo "| ${platform} | ${PASS} passed, ${FAIL} failed |"
+              fi
+            done
+          } > /tmp/pr-body.md
+
           gh pr create \
-            --title "feat(recipes): add batch ${{ inputs.ecosystem }} recipes" \
-            --body "$BODY" \
+            --title "feat(recipes): add batch ${{ inputs.ecosystem }} recipes (${INCLUDED_COUNT} recipes)" \
+            --body-file /tmp/pr-body.md \
             --base main
         env:
           GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}

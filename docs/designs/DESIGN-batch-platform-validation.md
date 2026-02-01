@@ -20,9 +20,9 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1320: ci(batch): restructure generate job and add platform validation jobs](https://github.com/tsukumogami/tsuku/issues/1320) | None | testable |
+| ~~[#1320: ci(batch): restructure generate job and add platform validation jobs](https://github.com/tsukumogami/tsuku/issues/1320)~~ | None | testable |
 | _Split the generate job so it uploads passing recipes as artifacts, add four validation jobs (two Linux with 5-family Docker containers each, two macOS native), and cross-compile tsuku binaries for all target platforms._ | | |
-| [#1323: ci(batch): add merge job with platform constraint derivation](https://github.com/tsukumogami/tsuku/issues/1323) | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
+| ~~[#1323: ci(batch): add merge job with platform constraint derivation](https://github.com/tsukumogami/tsuku/issues/1323)~~ | ~~[#1320](https://github.com/tsukumogami/tsuku/issues/1320)~~ | testable |
 | _With validation results from all 11 environments available, aggregate pass/fail into a result matrix, derive `supported_os`/`supported_libc`/`unsupported_platforms` constraints for partial-coverage recipes, and create the PR with accurate metadata._ | | |
 | [#1324: ci(batch): produce generate job validation result artifact](https://github.com/tsukumogami/tsuku/issues/1324) | [#1320](https://github.com/tsukumogami/tsuku/issues/1320) | testable |
 | _The generate job already validates on linux-debian-glibc-x86_64 but doesn't emit a structured result artifact. Add JSON output so the merge job can include generation-time results in its platform matrix._ | | |
@@ -60,8 +60,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1320 ready
-    class I1323,I1324,I1325,I1326,I1327 blocked
+    class I1320,I1323 done
+    class I1324,I1325,I1326,I1327 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
