@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The batch-generate merge job has working constraint derivation and PR creation but lacks structured commit messages with batch metadata, SLI metrics collection, circuit breaker state updates, and auto-merge gating required by DESIGN-batch-recipe-generation.md for pipeline observability and scale.
 decision: |
@@ -12,7 +12,54 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Merge Job Completion](https://github.com/tsukumogami/tsuku/milestone/63)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1349: ci(batch): add batch_id generation and structured commit message](https://github.com/tsukumogami/tsuku/issues/1349) | None | testable |
+| _Generates a `BATCH_ID` in `{date}-{ecosystem}` format with sequence numbers for same-day batches, and restructures the commit message to include git trailers (`batch_id`, `ecosystem`, `batch_size`, `success_rate`) for rollback support._ | | |
+| [#1350: ci(batch): add recipe list tracking to merge job](https://github.com/tsukumogami/tsuku/issues/1350) | None | simple |
+| _Accumulates `INCLUDED_RECIPES` and `EXCLUDED_RECIPES` name lists during the constraint derivation loop, making recipe-level data available to queue updates and auto-merge gating._ | | |
+| [#1351: ci(batch): add SLI metrics collection to merge job](https://github.com/tsukumogami/tsuku/issues/1351) | [#1349](https://github.com/tsukumogami/tsuku/issues/1349) | testable |
+| _Appends a structured JSON line to `data/metrics/batch-runs.jsonl` with per-platform tested/passed/failed counts, recipe totals, and duration. Uses the batch_id from #1349 as the primary key._ | | |
+| [#1352: ci(batch): add circuit breaker and queue status updates](https://github.com/tsukumogami/tsuku/issues/1352) | [#1350](https://github.com/tsukumogami/tsuku/issues/1350) | testable |
+| _Calls `scripts/update_breaker.sh` with batch outcome and updates `data/priority-queue.json` with per-recipe success/failed statuses using the recipe lists from #1350._ | | |
+| [#1353: ci(batch): add auto-merge gating for clean batches](https://github.com/tsukumogami/tsuku/issues/1353) | [#1350](https://github.com/tsukumogami/tsuku/issues/1350) | testable |
+| _Enables `gh pr merge --auto --squash` when `EXCLUDED_COUNT=0` and leaves a PR comment explaining why auto-merge was skipped otherwise. Fail-open policy: the PR is always created regardless._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Foundation"]
+        I1349["#1349: batch_id + structured commit"]
+        I1350["#1350: recipe list tracking"]
+    end
+
+    subgraph Phase2["Phase 2: Consumers"]
+        I1351["#1351: SLI metrics collection"]
+        I1352["#1352: circuit breaker + queue"]
+        I1353["#1353: auto-merge gating"]
+    end
+
+    I1349 --> I1351
+    I1350 --> I1352
+    I1350 --> I1353
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1349,I1350 ready
+    class I1351,I1352,I1353 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
