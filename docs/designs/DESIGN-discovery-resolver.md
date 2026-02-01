@@ -54,7 +54,7 @@ Planned
 | _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317._ | | |
 | [#1322: Error UX and verbose mode](https://github.com/tsukumogami/tsuku/issues/1322) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
-| [M62](https://github.com/tsukumogami/tsuku/milestone/62) | Discovery Registry Bootstrap | None | |
+| [M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62) | None | |
 
 ### Dependency Graph
 
