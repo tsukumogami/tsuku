@@ -25,19 +25,19 @@ None.
 
 ## Implementation Steps
 
-- [ ] Add `FetchDiscoveryRegistry(ctx context.Context) error` to `Registry` in `internal/registry/registry.go`
+- [x] Add `FetchDiscoveryRegistry(ctx context.Context) error` to `Registry` in `internal/registry/registry.go`
   - Build URL as `{BaseURL}/recipes/discovery.json`
   - Use existing `r.client` for the HTTP request
   - Create `r.CacheDir` with `os.MkdirAll` if it doesn't exist
   - Write response body to `filepath.Join(r.CacheDir, "discovery.json")`
   - Return `RegistryError` with appropriate types on failure (reuse `WrapNetworkError` for network errors)
-- [ ] Add unit tests for `FetchDiscoveryRegistry` in `internal/registry/registry_test.go`
+- [x] Add unit tests for `FetchDiscoveryRegistry` in `internal/registry/registry_test.go`
   - Test successful fetch and cache write
   - Test network error produces clear error message
   - Test HTTP 404 returns appropriate error
   - Test idempotency (calling twice overwrites cleanly)
   - Test directory creation when CacheDir doesn't exist
-- [ ] Update `update-registry` command in `cmd/tsuku/update_registry.go`
+- [x] Update `update-registry` command in `cmd/tsuku/update_registry.go`
   - In the main `Run` func, call `reg.FetchDiscoveryRegistry(ctx)` after creating the registry
   - Print status message ("Updating discovery registry...")
   - On error, print warning but don't abort (recipe refresh should still proceed)
