@@ -23,7 +23,7 @@ Planned
 | ~~[#1383: Add Probe() to ecosystem builders](https://github.com/tsukumogami/tsuku/issues/1383)~~ | ~~None~~ | ~~testable~~ |
 | _Adds `Probe()` to all 7 ecosystem builders (npm, pypi, cargo, gem, go, cpan, cask), wrapping existing fetch methods to return `ProbeResult` with existence, source, and age (Go only)._ | | |
 | ~~[#1384: Implement parallel ecosystem probe resolver](https://github.com/tsukumogami/tsuku/issues/1384)~~ | ~~[#1383](https://github.com/tsukumogami/tsuku/issues/1383)~~ | ~~testable~~ |
-| ~~_Replaces the stub resolver with goroutine-per-builder fan-out, shared 3-second timeout, buffered channel collection, and static priority-based disambiguation._~~ | | |
+| _Replaces the stub resolver with goroutine-per-builder fan-out, shared 3-second timeout, buffered channel collection, and static priority-based disambiguation._ | | |
 | [#1385: Wire ecosystem probe into chain resolver](https://github.com/tsukumogami/tsuku/issues/1385) | [#1384](https://github.com/tsukumogami/tsuku/issues/1384) | testable |
 | _Updates `runDiscovery()` to construct `NewEcosystemProbe()` with the list of builder probers, connecting the probe to the live discovery chain._ | | |
 | [#1386: Add integration tests for ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1386) | [#1385](https://github.com/tsukumogami/tsuku/issues/1385) | testable |
