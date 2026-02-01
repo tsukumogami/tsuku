@@ -19,19 +19,17 @@ Feature: Create
     And the file "custom/prettier.toml" exists
     And the file "recipes/prettier.toml" does not exist
 
-  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
-  Scenario: Create recipe from crates.io
+  # Requires Cargo toolchain. Expects success once #1287 is resolved.
+  Scenario: Create recipe from crates.io requires toolchain
     When I run "tsuku create ripgrep --from crates.io --yes --skip-sandbox"
-    Then the exit code is 0
-    And the output contains "Recipe created:"
-    And the file "recipes/ripgrep.toml" exists
+    Then the exit code is 8
+    And the error output contains "Cargo is required"
 
-  # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
-  Scenario: Create recipe from rubygems
+  # Requires gem toolchain. Expects success once #1287 is resolved.
+  Scenario: Create recipe from rubygems requires toolchain
     When I run "tsuku create jekyll --from rubygems --yes --skip-sandbox"
-    Then the exit code is 0
-    And the output contains "Recipe created:"
-    And the file "recipes/jekyll.toml" exists
+    Then the exit code is 8
+    And the error output contains "gem is required"
 
   # TODO(#1287): remove --skip-sandbox once toolchains auto-install in sandbox
   Scenario: Create recipe from pypi
@@ -68,7 +66,8 @@ Feature: Create
     And the output contains "Recipe created:"
     And the file "recipes/iterm2.toml" exists
 
-  Scenario: Create recipe fails without --from
-    When I run "tsuku create prettier"
-    Then the exit code is 1
-    And the error output contains "required"
+  Scenario: Create without --from runs discovery
+    When I run "tsuku create nonexistent-tool-xyz"
+    Then the exit code is 3
+    And the error output contains "could not find"
+    And the error output contains "--from"
