@@ -2,189 +2,14 @@
   "category": "github-release",
   "entries": [
     {
-      "name": "ripgrep",
+      "name": "act",
       "builder": "github",
-      "source": "BurntSushi/ripgrep"
+      "source": "nektos/act"
     },
     {
-      "name": "fd",
+      "name": "actionlint",
       "builder": "github",
-      "source": "sharkdp/fd"
-    },
-    {
-      "name": "bat",
-      "builder": "github",
-      "source": "sharkdp/bat"
-    },
-    {
-      "name": "delta",
-      "builder": "github",
-      "source": "dandavison/delta"
-    },
-    {
-      "name": "eza",
-      "builder": "github",
-      "source": "eza-community/eza"
-    },
-    {
-      "name": "dust",
-      "builder": "github",
-      "source": "bootandy/dust"
-    },
-    {
-      "name": "procs",
-      "builder": "github",
-      "source": "dalance/procs"
-    },
-    {
-      "name": "sd",
-      "builder": "github",
-      "source": "chmln/sd"
-    },
-    {
-      "name": "tokei",
-      "builder": "github",
-      "source": "XAMPPRocky/tokei"
-    },
-    {
-      "name": "hyperfine",
-      "builder": "github",
-      "source": "sharkdp/hyperfine"
-    },
-    {
-      "name": "lazygit",
-      "builder": "github",
-      "source": "jesseduffield/lazygit"
-    },
-    {
-      "name": "lazydocker",
-      "builder": "github",
-      "source": "jesseduffield/lazydocker"
-    },
-    {
-      "name": "jless",
-      "builder": "github",
-      "source": "PaulJuliusMartinez/jless"
-    },
-    {
-      "name": "xh",
-      "builder": "github",
-      "source": "ducaale/xh"
-    },
-    {
-      "name": "yq",
-      "builder": "github",
-      "source": "mikefarah/yq"
-    },
-    {
-      "name": "jq",
-      "builder": "github",
-      "source": "jqlang/jq"
-    },
-    {
-      "name": "fzf",
-      "builder": "github",
-      "source": "junegunn/fzf"
-    },
-    {
-      "name": "zoxide",
-      "builder": "github",
-      "source": "ajeetdsouza/zoxide"
-    },
-    {
-      "name": "starship",
-      "builder": "github",
-      "source": "starship/starship"
-    },
-    {
-      "name": "gh",
-      "builder": "github",
-      "source": "cli/cli"
-    },
-    {
-      "name": "glab",
-      "builder": "github",
-      "source": "gitlab-org/cli"
-    },
-    {
-      "name": "hub",
-      "builder": "github",
-      "source": "github/hub"
-    },
-    {
-      "name": "kubectl",
-      "builder": "github",
-      "source": "kubernetes/kubernetes"
-    },
-    {
-      "name": "helm",
-      "builder": "github",
-      "source": "helm/helm"
-    },
-    {
-      "name": "k9s",
-      "builder": "github",
-      "source": "derailed/k9s"
-    },
-    {
-      "name": "kind",
-      "builder": "github",
-      "source": "kubernetes-sigs/kind"
-    },
-    {
-      "name": "minikube",
-      "builder": "github",
-      "source": "kubernetes/minikube"
-    },
-    {
-      "name": "kustomize",
-      "builder": "github",
-      "source": "kubernetes-sigs/kustomize"
-    },
-    {
-      "name": "flux",
-      "builder": "github",
-      "source": "fluxcd/flux2"
-    },
-    {
-      "name": "argocd",
-      "builder": "github",
-      "source": "argoproj/argo-cd"
-    },
-    {
-      "name": "istioctl",
-      "builder": "github",
-      "source": "istio/istio"
-    },
-    {
-      "name": "linkerd",
-      "builder": "github",
-      "source": "linkerd/linkerd2"
-    },
-    {
-      "name": "cilium",
-      "builder": "github",
-      "source": "cilium/cilium-cli"
-    },
-    {
-      "name": "trivy",
-      "builder": "github",
-      "source": "aquasecurity/trivy"
-    },
-    {
-      "name": "grype",
-      "builder": "github",
-      "source": "anchore/grype"
-    },
-    {
-      "name": "syft",
-      "builder": "github",
-      "source": "anchore/syft"
-    },
-    {
-      "name": "cosign",
-      "builder": "github",
-      "source": "sigstore/cosign"
+      "source": "rhysd/actionlint"
     },
     {
       "name": "age",
@@ -192,109 +17,39 @@
       "source": "FiloSottile/age"
     },
     {
-      "name": "sops",
+      "name": "air",
       "builder": "github",
-      "source": "getsops/sops"
+      "source": "cosmtrek/air"
     },
     {
-      "name": "vault",
+      "name": "alertmanager",
       "builder": "github",
-      "source": "hashicorp/vault"
+      "source": "prometheus/alertmanager"
     },
     {
-      "name": "terraform",
+      "name": "argocd",
       "builder": "github",
-      "source": "hashicorp/terraform"
+      "source": "argoproj/argo-cd"
     },
     {
-      "name": "packer",
+      "name": "atlas",
       "builder": "github",
-      "source": "hashicorp/packer"
+      "source": "ariga/atlas"
     },
     {
-      "name": "consul",
+      "name": "bat",
       "builder": "github",
-      "source": "hashicorp/consul"
+      "source": "sharkdp/bat"
     },
     {
-      "name": "nomad",
+      "name": "bearer",
       "builder": "github",
-      "source": "hashicorp/nomad"
+      "source": "bearer/bearer"
     },
     {
-      "name": "waypoint",
+      "name": "bombardier",
       "builder": "github",
-      "source": "hashicorp/waypoint"
-    },
-    {
-      "name": "goreleaser",
-      "builder": "github",
-      "source": "goreleaser/goreleaser"
-    },
-    {
-      "name": "task",
-      "builder": "github",
-      "source": "go-task/task"
-    },
-    {
-      "name": "just",
-      "builder": "github",
-      "source": "casey/just"
-    },
-    {
-      "name": "deno",
-      "builder": "github",
-      "source": "denoland/deno"
-    },
-    {
-      "name": "bun",
-      "builder": "github",
-      "source": "oven-sh/bun"
-    },
-    {
-      "name": "hugo",
-      "builder": "github",
-      "source": "gohugoio/hugo"
-    },
-    {
-      "name": "caddy",
-      "builder": "github",
-      "source": "caddyserver/caddy"
-    },
-    {
-      "name": "traefik",
-      "builder": "github",
-      "source": "traefik/traefik"
-    },
-    {
-      "name": "minio",
-      "builder": "github",
-      "source": "minio/minio"
-    },
-    {
-      "name": "rclone",
-      "builder": "github",
-      "source": "rclone/rclone"
-    },
-    {
-      "name": "restic",
-      "builder": "github",
-      "source": "restic/restic"
-    },
-    {
-      "name": "croc",
-      "builder": "github",
-      "source": "schollz/croc"
-    },
-    {
-      "name": "dive",
-      "builder": "github",
-      "source": "wagoodman/dive"
-    },
-    {
-      "name": "ctop",
-      "builder": "github",
-      "source": "bcicen/ctop"
+      "source": "codesenberg/bombardier"
     },
     {
       "name": "bottom",
@@ -307,34 +62,129 @@
       "source": "ClementTsang/bottom"
     },
     {
-      "name": "glow",
+      "name": "buf",
       "builder": "github",
-      "source": "charmbracelet/glow"
+      "source": "bufbuild/buf"
     },
     {
-      "name": "vhs",
+      "name": "buildkit",
       "builder": "github",
-      "source": "charmbracelet/vhs"
+      "source": "moby/buildkit"
     },
     {
-      "name": "gum",
+      "name": "bun",
       "builder": "github",
-      "source": "charmbracelet/gum"
+      "source": "oven-sh/bun"
     },
     {
-      "name": "slides",
+      "name": "caddy",
       "builder": "github",
-      "source": "maaslalani/slides"
+      "source": "caddyserver/caddy"
     },
     {
-      "name": "nats",
+      "name": "certstrap",
       "builder": "github",
-      "source": "nats-io/natscli"
+      "source": "square/certstrap"
     },
     {
-      "name": "grpcurl",
+      "name": "cfssl",
       "builder": "github",
-      "source": "fullstorydev/grpcurl"
+      "source": "cloudflare/cfssl"
+    },
+    {
+      "name": "cilium",
+      "builder": "github",
+      "source": "cilium/cilium-cli"
+    },
+    {
+      "name": "constellation",
+      "builder": "github",
+      "source": "edgelesssys/constellation"
+    },
+    {
+      "name": "consul",
+      "builder": "github",
+      "source": "hashicorp/consul"
+    },
+    {
+      "name": "cosign",
+      "builder": "github",
+      "source": "sigstore/cosign"
+    },
+    {
+      "name": "crane",
+      "builder": "github",
+      "source": "google/go-containerregistry"
+    },
+    {
+      "name": "croc",
+      "builder": "github",
+      "source": "schollz/croc"
+    },
+    {
+      "name": "ctop",
+      "builder": "github",
+      "source": "bcicen/ctop"
+    },
+    {
+      "name": "dagger",
+      "builder": "github",
+      "source": "dagger/dagger"
+    },
+    {
+      "name": "dbmate",
+      "builder": "github",
+      "source": "amacneil/dbmate"
+    },
+    {
+      "name": "delta",
+      "builder": "github",
+      "source": "dandavison/delta"
+    },
+    {
+      "name": "deno",
+      "builder": "github",
+      "source": "denoland/deno"
+    },
+    {
+      "name": "devspace",
+      "builder": "github",
+      "source": "loft-sh/devspace"
+    },
+    {
+      "name": "direnv",
+      "builder": "github",
+      "source": "direnv/direnv"
+    },
+    {
+      "name": "dive",
+      "builder": "github",
+      "source": "wagoodman/dive"
+    },
+    {
+      "name": "dust",
+      "builder": "github",
+      "source": "bootandy/dust"
+    },
+    {
+      "name": "earthly",
+      "builder": "github",
+      "source": "earthly/earthly"
+    },
+    {
+      "name": "eksctl",
+      "builder": "github",
+      "source": "weaveworks/eksctl"
+    },
+    {
+      "name": "entr",
+      "builder": "github",
+      "source": "eradman/entr"
+    },
+    {
+      "name": "etcdctl",
+      "builder": "github",
+      "source": "etcd-io/etcd"
     },
     {
       "name": "evans",
@@ -342,14 +192,124 @@
       "source": "ktr0731/evans"
     },
     {
-      "name": "k6",
+      "name": "eza",
       "builder": "github",
-      "source": "grafana/k6"
+      "source": "eza-community/eza"
     },
     {
-      "name": "bombardier",
+      "name": "fd",
       "builder": "github",
-      "source": "codesenberg/bombardier"
+      "source": "sharkdp/fd"
+    },
+    {
+      "name": "feroxbuster",
+      "builder": "github",
+      "source": "epi052/feroxbuster"
+    },
+    {
+      "name": "ffuf",
+      "builder": "github",
+      "source": "ffuf/ffuf"
+    },
+    {
+      "name": "flux",
+      "builder": "github",
+      "source": "fluxcd/flux2"
+    },
+    {
+      "name": "fzf",
+      "builder": "github",
+      "source": "junegunn/fzf"
+    },
+    {
+      "name": "gh",
+      "builder": "github",
+      "source": "cli/cli"
+    },
+    {
+      "name": "gh-dash",
+      "builder": "github",
+      "source": "dlvhdr/gh-dash"
+    },
+    {
+      "name": "ghz",
+      "builder": "github",
+      "source": "bojand/ghz"
+    },
+    {
+      "name": "gitleaks",
+      "builder": "github",
+      "source": "gitleaks/gitleaks"
+    },
+    {
+      "name": "gke-gcloud-auth-plugin",
+      "builder": "github",
+      "source": "kubernetes/cloud-provider-gcp"
+    },
+    {
+      "name": "glab",
+      "builder": "github",
+      "source": "gitlab-org/cli"
+    },
+    {
+      "name": "glow",
+      "builder": "github",
+      "source": "charmbracelet/glow"
+    },
+    {
+      "name": "gofumpt",
+      "builder": "github",
+      "source": "mvdan/gofumpt"
+    },
+    {
+      "name": "goimports",
+      "builder": "github",
+      "source": "golang/tools"
+    },
+    {
+      "name": "golangci-lint",
+      "builder": "github",
+      "source": "golangci/golangci-lint"
+    },
+    {
+      "name": "goose",
+      "builder": "github",
+      "source": "pressly/goose"
+    },
+    {
+      "name": "gopls",
+      "builder": "github",
+      "source": "golang/tools"
+    },
+    {
+      "name": "goreleaser",
+      "builder": "github",
+      "source": "goreleaser/goreleaser"
+    },
+    {
+      "name": "grafana-agent",
+      "builder": "github",
+      "source": "grafana/agent"
+    },
+    {
+      "name": "grpcurl",
+      "builder": "github",
+      "source": "fullstorydev/grpcurl"
+    },
+    {
+      "name": "grype",
+      "builder": "github",
+      "source": "anchore/grype"
+    },
+    {
+      "name": "gum",
+      "builder": "github",
+      "source": "charmbracelet/gum"
+    },
+    {
+      "name": "helm",
+      "builder": "github",
+      "source": "helm/helm"
     },
     {
       "name": "hey",
@@ -357,14 +317,374 @@
       "source": "rakyll/hey"
     },
     {
-      "name": "vegeta",
+      "name": "httpx",
       "builder": "github",
-      "source": "tsenart/vegeta"
+      "source": "projectdiscovery/httpx"
+    },
+    {
+      "name": "hub",
+      "builder": "github",
+      "source": "github/hub"
+    },
+    {
+      "name": "hugo",
+      "builder": "github",
+      "source": "gohugoio/hugo"
+    },
+    {
+      "name": "hyperfine",
+      "builder": "github",
+      "source": "sharkdp/hyperfine"
     },
     {
       "name": "infracost",
       "builder": "github",
       "source": "infracost/infracost"
+    },
+    {
+      "name": "istioctl",
+      "builder": "github",
+      "source": "istio/istio"
+    },
+    {
+      "name": "jless",
+      "builder": "github",
+      "source": "PaulJuliusMartinez/jless"
+    },
+    {
+      "name": "jq",
+      "builder": "github",
+      "source": "jqlang/jq"
+    },
+    {
+      "name": "just",
+      "builder": "github",
+      "source": "casey/just"
+    },
+    {
+      "name": "k3d",
+      "builder": "github",
+      "source": "k3d-io/k3d"
+    },
+    {
+      "name": "k3s",
+      "builder": "github",
+      "source": "k3s-io/k3s"
+    },
+    {
+      "name": "k6",
+      "builder": "github",
+      "source": "grafana/k6"
+    },
+    {
+      "name": "k9s",
+      "builder": "github",
+      "source": "derailed/k9s"
+    },
+    {
+      "name": "kind",
+      "builder": "github",
+      "source": "kubernetes-sigs/kind"
+    },
+    {
+      "name": "kn",
+      "builder": "github",
+      "source": "knative/client"
+    },
+    {
+      "name": "ko",
+      "builder": "github",
+      "source": "ko-build/ko"
+    },
+    {
+      "name": "kops",
+      "builder": "github",
+      "source": "kubernetes/kops"
+    },
+    {
+      "name": "krew",
+      "builder": "github",
+      "source": "kubernetes-sigs/krew"
+    },
+    {
+      "name": "kubebuilder",
+      "builder": "github",
+      "source": "kubernetes-sigs/kubebuilder"
+    },
+    {
+      "name": "kubectl",
+      "builder": "github",
+      "source": "kubernetes/kubernetes"
+    },
+    {
+      "name": "kubectx",
+      "builder": "github",
+      "source": "ahmetb/kubectx"
+    },
+    {
+      "name": "kubens",
+      "builder": "github",
+      "source": "ahmetb/kubectx"
+    },
+    {
+      "name": "kubeseal",
+      "builder": "github",
+      "source": "bitnami-labs/sealed-secrets"
+    },
+    {
+      "name": "kubeval",
+      "builder": "github",
+      "source": "instrumenta/kubeval"
+    },
+    {
+      "name": "kustomize",
+      "builder": "github",
+      "source": "kubernetes-sigs/kustomize"
+    },
+    {
+      "name": "lazydocker",
+      "builder": "github",
+      "source": "jesseduffield/lazydocker"
+    },
+    {
+      "name": "lazygit",
+      "builder": "github",
+      "source": "jesseduffield/lazygit"
+    },
+    {
+      "name": "linkerd",
+      "builder": "github",
+      "source": "linkerd/linkerd2"
+    },
+    {
+      "name": "loki",
+      "builder": "github",
+      "source": "grafana/loki"
+    },
+    {
+      "name": "mage",
+      "builder": "github",
+      "source": "magefile/mage"
+    },
+    {
+      "name": "migrate",
+      "builder": "github",
+      "source": "golang-migrate/migrate"
+    },
+    {
+      "name": "minikube",
+      "builder": "github",
+      "source": "kubernetes/minikube"
+    },
+    {
+      "name": "minio",
+      "builder": "github",
+      "source": "minio/minio"
+    },
+    {
+      "name": "mkcert",
+      "builder": "github",
+      "source": "FiloSottile/mkcert"
+    },
+    {
+      "name": "nats",
+      "builder": "github",
+      "source": "nats-io/natscli"
+    },
+    {
+      "name": "nerdctl",
+      "builder": "github",
+      "source": "containerd/nerdctl"
+    },
+    {
+      "name": "node-exporter",
+      "builder": "github",
+      "source": "prometheus/node_exporter"
+    },
+    {
+      "name": "nomad",
+      "builder": "github",
+      "source": "hashicorp/nomad"
+    },
+    {
+      "name": "nuclei",
+      "builder": "github",
+      "source": "projectdiscovery/nuclei"
+    },
+    {
+      "name": "operator-sdk",
+      "builder": "github",
+      "source": "operator-framework/operator-sdk"
+    },
+    {
+      "name": "osv-scanner",
+      "builder": "github",
+      "source": "google/osv-scanner"
+    },
+    {
+      "name": "packer",
+      "builder": "github",
+      "source": "hashicorp/packer"
+    },
+    {
+      "name": "pnpm",
+      "builder": "github",
+      "source": "pnpm/pnpm"
+    },
+    {
+      "name": "podman",
+      "builder": "github",
+      "source": "containers/podman"
+    },
+    {
+      "name": "popeye",
+      "builder": "github",
+      "source": "derailed/popeye"
+    },
+    {
+      "name": "procs",
+      "builder": "github",
+      "source": "dalance/procs"
+    },
+    {
+      "name": "prometheus",
+      "builder": "github",
+      "source": "prometheus/prometheus"
+    },
+    {
+      "name": "promtool",
+      "builder": "github",
+      "source": "prometheus/prometheus"
+    },
+    {
+      "name": "protoc-gen-go",
+      "builder": "github",
+      "source": "protocolbuffers/protobuf-go"
+    },
+    {
+      "name": "pulumi",
+      "builder": "github",
+      "source": "pulumi/pulumi"
+    },
+    {
+      "name": "pv-migrate",
+      "builder": "github",
+      "source": "utkuozdemir/pv-migrate"
+    },
+    {
+      "name": "rclone",
+      "builder": "github",
+      "source": "rclone/rclone"
+    },
+    {
+      "name": "reflex",
+      "builder": "github",
+      "source": "cespare/reflex"
+    },
+    {
+      "name": "regctl",
+      "builder": "github",
+      "source": "regclient/regclient"
+    },
+    {
+      "name": "restic",
+      "builder": "github",
+      "source": "restic/restic"
+    },
+    {
+      "name": "revive",
+      "builder": "github",
+      "source": "mgechev/revive"
+    },
+    {
+      "name": "ripgrep",
+      "builder": "github",
+      "source": "BurntSushi/ripgrep"
+    },
+    {
+      "name": "sd",
+      "builder": "github",
+      "source": "chmln/sd"
+    },
+    {
+      "name": "semgrep",
+      "builder": "github",
+      "source": "semgrep/semgrep"
+    },
+    {
+      "name": "skaffold",
+      "builder": "github",
+      "source": "GoogleContainerTools/skaffold"
+    },
+    {
+      "name": "skopeo",
+      "builder": "github",
+      "source": "containers/skopeo"
+    },
+    {
+      "name": "slides",
+      "builder": "github",
+      "source": "maaslalani/slides"
+    },
+    {
+      "name": "sops",
+      "builder": "github",
+      "source": "getsops/sops"
+    },
+    {
+      "name": "starship",
+      "builder": "github",
+      "source": "starship/starship"
+    },
+    {
+      "name": "staticcheck",
+      "builder": "github",
+      "source": "dominikh/go-tools"
+    },
+    {
+      "name": "step",
+      "builder": "github",
+      "source": "smallstep/cli"
+    },
+    {
+      "name": "stern",
+      "builder": "github",
+      "source": "stern/stern"
+    },
+    {
+      "name": "subfinder",
+      "builder": "github",
+      "source": "projectdiscovery/subfinder"
+    },
+    {
+      "name": "syft",
+      "builder": "github",
+      "source": "anchore/syft"
+    },
+    {
+      "name": "task",
+      "builder": "github",
+      "source": "go-task/task"
+    },
+    {
+      "name": "telepresence",
+      "builder": "github",
+      "source": "telepresenceio/telepresence"
+    },
+    {
+      "name": "tempo",
+      "builder": "github",
+      "source": "grafana/tempo"
+    },
+    {
+      "name": "terraform",
+      "builder": "github",
+      "source": "hashicorp/terraform"
+    },
+    {
+      "name": "terragrunt",
+      "builder": "github",
+      "source": "gruntwork-io/terragrunt"
     },
     {
       "name": "tflint",
@@ -377,24 +697,89 @@
       "source": "aquasecurity/tfsec"
     },
     {
-      "name": "terragrunt",
+      "name": "tilt",
       "builder": "github",
-      "source": "gruntwork-io/terragrunt"
+      "source": "tilt-dev/tilt"
     },
     {
-      "name": "pulumi",
+      "name": "tokei",
       "builder": "github",
-      "source": "pulumi/pulumi"
+      "source": "XAMPPRocky/tokei"
     },
     {
-      "name": "pnpm",
+      "name": "traefik",
       "builder": "github",
-      "source": "pnpm/pnpm"
+      "source": "traefik/traefik"
+    },
+    {
+      "name": "trivy",
+      "builder": "github",
+      "source": "aquasecurity/trivy"
+    },
+    {
+      "name": "trufflehog",
+      "builder": "github",
+      "source": "trufflesecurity/trufflehog"
+    },
+    {
+      "name": "usql",
+      "builder": "github",
+      "source": "xo/usql"
+    },
+    {
+      "name": "vault",
+      "builder": "github",
+      "source": "hashicorp/vault"
+    },
+    {
+      "name": "vcluster",
+      "builder": "github",
+      "source": "loft-sh/vcluster"
+    },
+    {
+      "name": "vegeta",
+      "builder": "github",
+      "source": "tsenart/vegeta"
+    },
+    {
+      "name": "velero",
+      "builder": "github",
+      "source": "vmware-tanzu/velero"
+    },
+    {
+      "name": "vhs",
+      "builder": "github",
+      "source": "charmbracelet/vhs"
     },
     {
       "name": "volta",
       "builder": "github",
       "source": "volta-cli/volta"
+    },
+    {
+      "name": "watchexec",
+      "builder": "github",
+      "source": "watchexec/watchexec"
+    },
+    {
+      "name": "waypoint",
+      "builder": "github",
+      "source": "hashicorp/waypoint"
+    },
+    {
+      "name": "xh",
+      "builder": "github",
+      "source": "ducaale/xh"
+    },
+    {
+      "name": "yq",
+      "builder": "github",
+      "source": "mikefarah/yq"
+    },
+    {
+      "name": "zoxide",
+      "builder": "github",
+      "source": "ajeetdsouza/zoxide"
     }
   ]
 }

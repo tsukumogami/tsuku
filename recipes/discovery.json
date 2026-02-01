@@ -9,9 +9,21 @@
       "builder": "homebrew",
       "source": "ack"
     },
+    "act": {
+      "builder": "github",
+      "source": "nektos/act"
+    },
+    "actionlint": {
+      "builder": "github",
+      "source": "rhysd/actionlint"
+    },
     "adb-enhanced": {
       "builder": "homebrew",
       "source": "adb-enhanced"
+    },
+    "age": {
+      "builder": "github",
+      "source": "FiloSottile/age"
     },
     "aliyun-cli": {
       "builder": "homebrew",
@@ -68,6 +80,10 @@
     "argo": {
       "builder": "homebrew",
       "source": "argo"
+    },
+    "argocd": {
+      "builder": "github",
+      "source": "argoproj/argo-cd"
     },
     "aria2": {
       "builder": "homebrew",
@@ -185,6 +201,10 @@
       "builder": "homebrew",
       "source": "bash-preexec"
     },
+    "bat": {
+      "builder": "github",
+      "source": "sharkdp/bat"
+    },
     "bats-core": {
       "builder": "homebrew",
       "source": "bats-core"
@@ -249,13 +269,25 @@
       "builder": "homebrew",
       "source": "boost"
     },
+    "bottom": {
+      "builder": "github",
+      "source": "ClementTsang/bottom"
+    },
     "brotli": {
       "builder": "homebrew",
       "source": "brotli"
     },
+    "btm": {
+      "builder": "github",
+      "source": "ClementTsang/bottom"
+    },
     "btop": {
       "builder": "homebrew",
       "source": "btop"
+    },
+    "buf": {
+      "builder": "github",
+      "source": "bufbuild/buf"
     },
     "buildifier": {
       "builder": "homebrew",
@@ -280,6 +312,10 @@
     "cabal-install": {
       "builder": "homebrew",
       "source": "cabal-install"
+    },
+    "caddy": {
+      "builder": "github",
+      "source": "caddyserver/caddy"
     },
     "cairo": {
       "builder": "homebrew",
@@ -465,6 +501,10 @@
       "builder": "homebrew",
       "source": "coreutils"
     },
+    "cosign": {
+      "builder": "github",
+      "source": "sigstore/cosign"
+    },
     "cowsay": {
       "builder": "homebrew",
       "source": "cowsay"
@@ -517,9 +557,17 @@
       "builder": "homebrew",
       "source": "dav1d"
     },
+    "dbmate": {
+      "builder": "github",
+      "source": "amacneil/dbmate"
+    },
     "ddrescue": {
       "builder": "homebrew",
       "source": "ddrescue"
+    },
+    "deno": {
+      "builder": "github",
+      "source": "denoland/deno"
     },
     "dependency-check": {
       "builder": "homebrew",
@@ -544,6 +592,10 @@
     "diffutils": {
       "builder": "homebrew",
       "source": "diffutils"
+    },
+    "direnv": {
+      "builder": "github",
+      "source": "direnv/direnv"
     },
     "displayplacer": {
       "builder": "homebrew",
@@ -625,6 +677,10 @@
       "builder": "homebrew",
       "source": "duf"
     },
+    "dust": {
+      "builder": "github",
+      "source": "bootandy/dust"
+    },
     "duti": {
       "builder": "homebrew",
       "source": "duti"
@@ -685,6 +741,10 @@
       "builder": "homebrew",
       "source": "expect"
     },
+    "eza": {
+      "builder": "github",
+      "source": "eza-community/eza"
+    },
     "fabric-ai": {
       "builder": "homebrew",
       "source": "fabric-ai"
@@ -704,6 +764,10 @@
     "fbthrift": {
       "builder": "homebrew",
       "source": "fbthrift"
+    },
+    "fd": {
+      "builder": "github",
+      "source": "sharkdp/fd"
     },
     "ffmpeg": {
       "builder": "homebrew",
@@ -801,6 +865,10 @@
       "builder": "homebrew",
       "source": "fx"
     },
+    "fzf": {
+      "builder": "github",
+      "source": "junegunn/fzf"
+    },
     "gallery-dl": {
       "builder": "homebrew",
       "source": "gallery-dl"
@@ -848,6 +916,10 @@
     "gettext": {
       "builder": "homebrew",
       "source": "gettext"
+    },
+    "gh": {
+      "builder": "github",
+      "source": "cli/cli"
     },
     "ghc": {
       "builder": "homebrew",
@@ -905,6 +977,10 @@
       "builder": "homebrew",
       "source": "gitlab-runner"
     },
+    "gitleaks": {
+      "builder": "github",
+      "source": "gitleaks/gitleaks"
+    },
     "gitui": {
       "builder": "homebrew",
       "source": "gitui"
@@ -928,6 +1004,10 @@
     "glm": {
       "builder": "homebrew",
       "source": "glm"
+    },
+    "glow": {
+      "builder": "github",
+      "source": "charmbracelet/glow"
     },
     "glslang": {
       "builder": "homebrew",
@@ -993,6 +1073,10 @@
       "builder": "homebrew",
       "source": "golang-migrate"
     },
+    "golangci-lint": {
+      "builder": "github",
+      "source": "golangci/golangci-lint"
+    },
     "gomplate": {
       "builder": "homebrew",
       "source": "gomplate"
@@ -1048,6 +1132,14 @@
     "grpcui": {
       "builder": "homebrew",
       "source": "grpcui"
+    },
+    "grpcurl": {
+      "builder": "github",
+      "source": "fullstorydev/grpcurl"
+    },
+    "grype": {
+      "builder": "github",
+      "source": "anchore/grype"
     },
     "gsasl": {
       "builder": "homebrew",
@@ -1117,6 +1209,10 @@
       "builder": "homebrew",
       "source": "hello"
     },
+    "helm": {
+      "builder": "github",
+      "source": "helm/helm"
+    },
     "helm@3": {
       "builder": "homebrew",
       "source": "helm@3"
@@ -1156,6 +1252,10 @@
     "huggingface-cli": {
       "builder": "homebrew",
       "source": "huggingface-cli"
+    },
+    "hugo": {
+      "builder": "github",
+      "source": "gohugoio/hugo"
     },
     "iblinter": {
       "builder": "homebrew",
@@ -1273,6 +1373,10 @@
       "builder": "homebrew",
       "source": "jpeg-xl"
     },
+    "jq": {
+      "builder": "github",
+      "source": "jqlang/jq"
+    },
     "jsonnet": {
       "builder": "homebrew",
       "source": "jsonnet"
@@ -1284,6 +1388,22 @@
     "jupyterlab": {
       "builder": "homebrew",
       "source": "jupyterlab"
+    },
+    "just": {
+      "builder": "github",
+      "source": "casey/just"
+    },
+    "k3d": {
+      "builder": "github",
+      "source": "k3d-io/k3d"
+    },
+    "k6": {
+      "builder": "github",
+      "source": "grafana/k6"
+    },
+    "k9s": {
+      "builder": "github",
+      "source": "derailed/k9s"
     },
     "kafka": {
       "builder": "homebrew",
@@ -1300,6 +1420,10 @@
     "kimi-cli": {
       "builder": "homebrew",
       "source": "kimi-cli"
+    },
+    "kind": {
+      "builder": "github",
+      "source": "kubernetes-sigs/kind"
     },
     "kompose": {
       "builder": "homebrew",
@@ -1321,13 +1445,33 @@
       "builder": "homebrew",
       "source": "kubeconform"
     },
+    "kubectx": {
+      "builder": "github",
+      "source": "ahmetb/kubectx"
+    },
     "kubelogin": {
       "builder": "homebrew",
       "source": "kubelogin"
     },
+    "kubens": {
+      "builder": "github",
+      "source": "ahmetb/kubectx"
+    },
     "kubernetes-cli": {
       "builder": "homebrew",
       "source": "kubernetes-cli"
+    },
+    "kustomize": {
+      "builder": "github",
+      "source": "kubernetes-sigs/kustomize"
+    },
+    "lazydocker": {
+      "builder": "github",
+      "source": "jesseduffield/lazydocker"
+    },
+    "lazygit": {
+      "builder": "github",
+      "source": "jesseduffield/lazygit"
     },
     "lcov": {
       "builder": "homebrew",
@@ -1717,6 +1861,10 @@
       "builder": "homebrew",
       "source": "minicom"
     },
+    "minikube": {
+      "builder": "github",
+      "source": "kubernetes/minikube"
+    },
     "mint": {
       "builder": "homebrew",
       "source": "mint"
@@ -1732,6 +1880,10 @@
     "mit-scheme": {
       "builder": "homebrew",
       "source": "mit-scheme"
+    },
+    "mkcert": {
+      "builder": "github",
+      "source": "FiloSottile/mkcert"
     },
     "mkvtoolnix": {
       "builder": "homebrew",
@@ -2241,6 +2393,14 @@
       "builder": "homebrew",
       "source": "pngquant"
     },
+    "pnpm": {
+      "builder": "github",
+      "source": "pnpm/pnpm"
+    },
+    "podman": {
+      "builder": "github",
+      "source": "containers/podman"
+    },
     "podman-compose": {
       "builder": "homebrew",
       "source": "podman-compose"
@@ -2309,6 +2469,10 @@
       "builder": "homebrew",
       "source": "protobuf-c"
     },
+    "protoc-gen-go": {
+      "builder": "github",
+      "source": "protocolbuffers/protobuf-go"
+    },
     "protoc-gen-go-grpc": {
       "builder": "homebrew",
       "source": "protoc-gen-go-grpc"
@@ -2316,6 +2480,10 @@
     "psutils": {
       "builder": "homebrew",
       "source": "psutils"
+    },
+    "pulumi": {
+      "builder": "github",
+      "source": "pulumi/pulumi"
     },
     "putty": {
       "builder": "homebrew",
@@ -2477,6 +2645,10 @@
       "builder": "homebrew",
       "source": "rbenv"
     },
+    "rclone": {
+      "builder": "github",
+      "source": "rclone/rclone"
+    },
     "re2": {
       "builder": "homebrew",
       "source": "re2"
@@ -2512,6 +2684,15 @@
     "resvg": {
       "builder": "homebrew",
       "source": "resvg"
+    },
+    "rg": {
+      "builder": "github",
+      "source": "BurntSushi/ripgrep",
+      "disambiguation": true
+    },
+    "ripgrep": {
+      "builder": "github",
+      "source": "BurntSushi/ripgrep"
     },
     "rom-tools": {
       "builder": "homebrew",
@@ -2621,6 +2802,10 @@
       "builder": "homebrew",
       "source": "sdl3"
     },
+    "semgrep": {
+      "builder": "github",
+      "source": "semgrep/semgrep"
+    },
     "sentry-cli": {
       "builder": "homebrew",
       "source": "sentry-cli"
@@ -2649,6 +2834,15 @@
       "builder": "homebrew",
       "source": "sing-box"
     },
+    "sk": {
+      "builder": "github",
+      "source": "lotabout/skim",
+      "disambiguation": true
+    },
+    "skopeo": {
+      "builder": "github",
+      "source": "containers/skopeo"
+    },
     "smartmontools": {
       "builder": "homebrew",
       "source": "smartmontools"
@@ -2668,6 +2862,10 @@
     "sonar-scanner": {
       "builder": "homebrew",
       "source": "sonar-scanner"
+    },
+    "sops": {
+      "builder": "github",
+      "source": "getsops/sops"
     },
     "sourcekitten": {
       "builder": "homebrew",
@@ -2724,6 +2922,14 @@
     "sshuttle": {
       "builder": "homebrew",
       "source": "sshuttle"
+    },
+    "starship": {
+      "builder": "github",
+      "source": "starship/starship"
+    },
+    "stern": {
+      "builder": "github",
+      "source": "stern/stern"
     },
     "stow": {
       "builder": "homebrew",
@@ -2797,6 +3003,10 @@
       "builder": "homebrew",
       "source": "swig"
     },
+    "syft": {
+      "builder": "github",
+      "source": "anchore/syft"
+    },
     "syncthing": {
       "builder": "homebrew",
       "source": "syncthing"
@@ -2861,9 +3071,17 @@
       "builder": "homebrew",
       "source": "terminal-notifier"
     },
+    "terraform": {
+      "builder": "github",
+      "source": "hashicorp/terraform"
+    },
     "terraform-docs": {
       "builder": "homebrew",
       "source": "terraform-docs"
+    },
+    "terragrunt": {
+      "builder": "github",
+      "source": "gruntwork-io/terragrunt"
     },
     "tesseract": {
       "builder": "homebrew",
@@ -2885,6 +3103,10 @@
       "builder": "homebrew",
       "source": "tfenv"
     },
+    "tflint": {
+      "builder": "github",
+      "source": "terraform-linters/tflint"
+    },
     "the_silver_searcher": {
       "builder": "homebrew",
       "source": "the_silver_searcher"
@@ -2901,6 +3123,10 @@
       "builder": "homebrew",
       "source": "tig"
     },
+    "tilt": {
+      "builder": "github",
+      "source": "tilt-dev/tilt"
+    },
     "tldr": {
       "builder": "homebrew",
       "source": "tldr"
@@ -2912,6 +3138,10 @@
     "tmux": {
       "builder": "homebrew",
       "source": "tmux"
+    },
+    "tokei": {
+      "builder": "github",
+      "source": "XAMPPRocky/tokei"
     },
     "topgrade": {
       "builder": "homebrew",
@@ -2940,6 +3170,14 @@
     "tree-sitter-cli": {
       "builder": "homebrew",
       "source": "tree-sitter-cli"
+    },
+    "trivy": {
+      "builder": "github",
+      "source": "aquasecurity/trivy"
+    },
+    "trufflehog": {
+      "builder": "github",
+      "source": "trufflesecurity/trufflehog"
     },
     "ty": {
       "builder": "homebrew",
@@ -3177,6 +3415,10 @@
       "builder": "homebrew",
       "source": "ykman"
     },
+    "yq": {
+      "builder": "github",
+      "source": "mikefarah/yq"
+    },
     "yt-dlp": {
       "builder": "homebrew",
       "source": "yt-dlp"
@@ -3216,6 +3458,10 @@
     "zola": {
       "builder": "homebrew",
       "source": "zola"
+    },
+    "zoxide": {
+      "builder": "github",
+      "source": "ajeetdsouza/zoxide"
     },
     "zsh": {
       "builder": "homebrew",
