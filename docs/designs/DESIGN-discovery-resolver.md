@@ -1,51 +1,23 @@
 ---
 status: Planned
 problem: |
-  tsuku requires `--from` flags on every `tsuku create` invocation, forcing users
-  to know whether a tool comes from GitHub releases, crates.io, npm, or elsewhere.
-  Users also need to distinguish between `tsuku install` (existing recipe) and
-  `tsuku create` (generate new recipe), which is a leaky abstraction.
-
-  For new users, this is a poor first experience. Running `tsuku install stripe-cli`
-  should work without knowing that stripe-cli is distributed as a GitHub release.
-  The user shouldn't need to care about the source or the install-vs-create distinction.
-
-  The problem breaks into four parts: command convergence (single entry point),
-  source resolution (figure out where a tool comes from), disambiguation (handle
-  name collisions across ecosystems), and graceful degradation (work without API
-  keys for common tools).
+  tsuku requires `--from` flags on every `tsuku create` invocation, forcing users to
+  know whether a tool comes from GitHub releases, crates.io, npm, or elsewhere. Users
+  also need to distinguish between `tsuku install` (existing recipe) and `tsuku create`
+  (generate new recipe). The problem breaks into four parts: command convergence, source
+  resolution, disambiguation across ecosystems, and graceful degradation without API keys.
 decision: |
-  A three-stage sequential resolver chain handles source resolution: an embedded
-  registry covers the top ~500 tools instantly, a parallel ecosystem probe queries
-  cargo/gem/pypi/npm/go/cpan/cask under 3 seconds, and an LLM web search fallback
-  handles the long tail. The stages run sequentially at the top level (no wasted
-  API calls), but the ecosystem probe queries all registries in parallel internally.
-
-  `tsuku install` becomes the single entry point, falling back to recipe generation
-  via the discovery resolver when no recipe exists. The discovery registry is fetched
-  from the recipes repository and cached locally, following the same pattern as recipe
-  registry updates. Ecosystem results are filtered by age and download thresholds to
-  exclude typosquats.
-
-  Disambiguation uses registry overrides for known collisions, edit-distance checking
-  against registry entries, popularity ranking by download count, and interactive
-  prompting when matches are close. LLM discovery requires user confirmation with
-  repository metadata (age, stars, owner) as a defense against prompt injection.
+  A three-stage sequential resolver chain (registry lookup, parallel ecosystem probe, LLM
+  web search fallback) behind a unified `tsuku install` entry point. The registry covers
+  ~500 tools instantly, ecosystem probes query seven registries under 3 seconds, and LLM
+  handles the long tail. Disambiguation uses registry overrides, popularity ranking, and
+  interactive prompting. Ecosystem results are filtered by age/download thresholds.
 rationale: |
-  The sequential chain avoids wasting API calls and LLM budget on tools already in
-  the registry or ecosystem registries. Full parallelism (querying everything at once)
-  would be marginally faster but wastes resources on the common case. The registry
-  handles the top 500 tools with zero latency and no API keys.
-
-  Remote-only registry storage (rather than embedded-in-binary) keeps a single source
-  of truth and allows updates between binary releases. The trade-off is that first run
-  requires network access, but tsuku already requires network for recipe fetching and
-  tool installation, so this isn't a new constraint.
-
-  Threshold-based ecosystem filtering is simple and catches obvious typosquats without
-  per-ecosystem tuning. The thresholds are noise reduction, not a security boundary.
-  Real security comes from registry overrides, disambiguation UX showing metadata, and
-  user confirmation for LLM-discovered sources.
+  Sequential stages avoid wasting API calls and LLM budget on tools found by earlier stages.
+  Remote-only registry storage keeps a single source of truth without embedded-vs-local
+  precedence complexity. Global threshold filtering is simple noise reduction; real security
+  comes from registry overrides for known tools, disambiguation UX with metadata, and
+  mandatory user confirmation for LLM-discovered sources.
 ---
 
 # DESIGN: Discovery Resolver
@@ -260,15 +232,9 @@ Simple, deterministic rules that are easy to explain. The thresholds aren't perf
 
 ### Summary
 
-When a user runs `tsuku install <tool>` and no recipe exists, the install command falls back to the discovery resolver. The resolver is a `ChainResolver` that tries three stages in order: `RegistryLookup`, `EcosystemProbe`, and `LLMDiscovery`. Each stage implements a `Resolver` interface with a single `Resolve(ctx, toolName)` method returning a `DiscoveryResult` containing the builder name, source argument, confidence level, and optional metadata.
+When `tsuku install <tool>` finds no existing recipe, it falls back to a `ChainResolver` that tries three stages in order: `RegistryLookup` (O(1) map lookup against `$TSUKU_HOME/registry/discovery.json`, ~500 entries), `EcosystemProbe` (parallel queries to cargo/gem/pypi/npm/go/cpan/cask with a 3-second timeout, filtered by age >90 days and >1000 downloads/month), and `LLMDiscovery` (web search via LLM, structured JSON extraction, GitHub API verification, 15-second timeout). Each stage implements a `Resolver` interface returning a `DiscoveryResult` with builder name, source argument, confidence level, and optional metadata.
 
-The registry stage reads from `$TSUKU_HOME/registry/discovery.json`, a JSON file fetched from the recipes repository and cached locally. It maps ~500 tool names directly to `{builder, source}` pairs. Lookups are O(1) map access. The registry is refreshed via `tsuku update-registry`, the same mechanism that updates the recipe cache. No embedded copy exists in the binary — the remote-fetch-and-cache pattern is the single source of truth.
-
-When the registry misses, the ecosystem probe fires. It queries all seven ecosystem builders (cargo, gem, pypi, npm, go, cpan, cask) in parallel using a new `EcosystemProber` interface that extends `SessionBuilder` with a `Probe()` method returning download counts and package age. A shared 3-second `context.WithTimeout` governs all queries. Results below threshold (>90 days old, >1000 downloads/month) are discarded. If multiple ecosystems match, disambiguation logic ranks by download count, auto-selects when the leader has >10x the runner-up, and prompts the user otherwise. Non-interactive mode (`--yes` or piped stdin) auto-selects by popularity or errors if ambiguous.
-
-If ecosystem probe also misses, LLM discovery runs as the final fallback. It invokes an LLM with a web search tool, extracts structured JSON output (`builder`, `source`, `reasoning`), verifies GitHub sources against the GitHub API (existence, not archived, ownership unchanged), and presents a rich confirmation prompt with repo metadata. Users must confirm unless `--yes` is set. The entire LLM stage has a 15-second timeout. Missing API keys produce an actionable error suggesting `--from` instead.
-
-Errors are classified as soft or hard. Soft errors (API timeouts, rate limits on individual ecosystems, empty results) log a warning and try the next stage. Hard errors (context cancelled, LLM budget exhausted, homoglyph detection in input) stop the chain immediately. Input is normalized before resolution: lowercased and checked for Unicode homoglyphs (e.g., Cyrillic "e" in `kubectl`). The `--deterministic-only` flag skips LLM discovery entirely and rejects builders where `RequiresLLM()` returns true.
+Errors are soft or hard. Soft errors (API timeouts, rate limits, empty results) log a warning and try the next stage. Hard errors (context cancelled, LLM budget exhausted, homoglyph detection) stop the chain. Input is normalized before resolution: lowercased and checked for Unicode homoglyphs. The `--deterministic-only` flag skips LLM discovery and rejects builders where `RequiresLLM()` returns true. When multiple ecosystems match, disambiguation ranks by download count, auto-selects at >10x the runner-up, and prompts otherwise. LLM-discovered sources require user confirmation with repo metadata unless `--yes` is set.
 
 ### Rationale
 
