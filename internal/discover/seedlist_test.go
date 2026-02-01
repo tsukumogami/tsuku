@@ -38,8 +38,12 @@ func TestLoadSeedDir(t *testing.T) {
 	// Write two seed files
 	f1 := []byte(`{"category": "a", "entries": [{"name": "tool1", "builder": "github", "source": "o/r1"}]}`)
 	f2 := []byte(`{"category": "b", "entries": [{"name": "tool2", "builder": "homebrew", "source": "tool2"}]}`)
-	os.WriteFile(filepath.Join(dir, "a.json"), f1, 0644)
-	os.WriteFile(filepath.Join(dir, "b.json"), f2, 0644)
+	if err := os.WriteFile(filepath.Join(dir, "a.json"), f1, 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "b.json"), f2, 0644); err != nil {
+		t.Fatal(err)
+	}
 
 	entries, err := LoadSeedDir(dir)
 	if err != nil {
