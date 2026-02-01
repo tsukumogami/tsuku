@@ -371,17 +371,17 @@ func printSummary(statuses []DepStatus) {
 		}
 	}
 
-	fmt.Printf("Summary: %d total, ", total)
+	parts := []string{fmt.Sprintf("%d total", total)}
 	if installed > 0 {
-		fmt.Printf("%s%d installed%s, ", colorGreen, installed, colorReset)
+		parts = append(parts, fmt.Sprintf("%s%d installed%s", colorGreen, installed, colorReset))
 	}
 	if missing > 0 {
-		fmt.Printf("%s%d missing%s, ", colorRed, missing, colorReset)
+		parts = append(parts, fmt.Sprintf("%s%d missing%s", colorRed, missing, colorReset))
 	}
 	if versionMismatch > 0 {
-		fmt.Printf("%s%d version mismatch%s, ", colorYellow, versionMismatch, colorReset)
+		parts = append(parts, fmt.Sprintf("%s%d version mismatch%s", colorYellow, versionMismatch, colorReset))
 	}
-	fmt.Println()
+	fmt.Printf("Summary: %s\n", strings.Join(parts, ", "))
 
 	if systemIssues > 0 {
 		fmt.Printf("\n%sNote:%s %d system dependency issue(s) must be resolved before installation.\n",
