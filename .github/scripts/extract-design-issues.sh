@@ -204,7 +204,15 @@ parse_table() {
         entry_type=$(get_entry_type "$issue_val" "$tier_val")
         entry_number=$(extract_number "$issue_val" "$entry_type")
         entry_url=$(extract_link_url "$issue_val")
-        entry_title=$(strip_strikethrough "$title_val")
+        # Title: from Title column (legacy) or from issue link text [#N: title](url)
+        if [[ -n "$title_col" && -n "$title_val" ]]; then
+            entry_title=$(strip_strikethrough "$title_val")
+        else
+            # Extract title from issue link: [#N: title](url) -> title
+            local link_text
+            link_text=$(extract_link_text "$issue_val")
+            entry_title=$(echo "$link_text" | sed 's/^#[0-9]*: *//')
+        fi
         entry_tier=$(strip_strikethrough "$tier_val")
         entry_deps=$(parse_dependencies "$dep_val")
 
