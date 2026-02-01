@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The ecosystem probe is the second stage of tsuku's discovery resolver chain, but it's currently a stub. Without it, tools not in the curated registry (~500 entries) fall through to LLM-based discovery, which requires an API key and costs money. Most popular developer tools exist in at least one package registry, so a deterministic probe could resolve them for free in under 3 seconds.
 decision: |
