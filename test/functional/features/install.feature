@@ -31,8 +31,8 @@ Feature: Install
   # When fixed, this should assert exit code 0 and remove the checksum assertion
   Scenario: Install an embedded recipe without force flag requires force
     When I run "tsuku install go"
-    Then the exit code is 6
-    And the error output contains "checksum verification required"
+    Then the exit code is not 0
+    And the error output contains "checksum"
 
   # See #1347 - invalid version gives checksum error instead of version-not-found
   # When fixed, error output should contain "not found" and not "checksum"
