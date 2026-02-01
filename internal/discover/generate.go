@@ -127,7 +127,7 @@ func buildRegistry(entries []SeedEntry) *registryFile {
 		tools[e.Name] = entry
 	}
 	return &registryFile{
-		SchemaVersion: 2,
+		SchemaVersion: 1,
 		Tools:         tools,
 	}
 }

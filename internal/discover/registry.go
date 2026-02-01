@@ -8,7 +8,7 @@ import (
 )
 
 // RegistryEntry maps a tool name to its builder and source.
-// Schema v2 adds optional metadata fields for enrichment and disambiguation.
+// Optional metadata fields support enrichment and disambiguation.
 type RegistryEntry struct {
 	Builder        string `json:"builder"`
 	Source         string `json:"source"`
@@ -44,8 +44,8 @@ func ParseRegistry(data []byte) (*DiscoveryRegistry, error) {
 	if err := json.Unmarshal(data, &reg); err != nil {
 		return nil, fmt.Errorf("parse discovery registry: %w", err)
 	}
-	if reg.SchemaVersion != 1 && reg.SchemaVersion != 2 {
-		return nil, fmt.Errorf("unsupported discovery registry schema version %d (expected 1 or 2)", reg.SchemaVersion)
+	if reg.SchemaVersion != 1 {
+		return nil, fmt.Errorf("unsupported discovery registry schema version %d (expected 1)", reg.SchemaVersion)
 	}
 	if err := reg.validateEntries(); err != nil {
 		return nil, err
