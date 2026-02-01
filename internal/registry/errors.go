@@ -79,6 +79,8 @@ func (e *RegistryError) Suggestion() string {
 		return "There may be a certificate issue. Check your system time is correct"
 	case ErrTypeNotFound:
 		return "Verify the recipe name is correct. Run 'tsuku recipes' to list available recipes"
+	case ErrTypeValidation:
+		return "The request was rejected by the registry. Check that the tool name is valid"
 	case ErrTypeNetwork:
 		return "Check your internet connection and try again"
 	case ErrTypeCacheTooStale:

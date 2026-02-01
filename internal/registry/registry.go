@@ -127,8 +127,12 @@ func (r *Registry) FetchRecipe(ctx context.Context, name string) ([]byte, error)
 	}
 
 	if resp.StatusCode != http.StatusOK {
+		errType := ErrTypeNetwork
+		if resp.StatusCode >= 400 && resp.StatusCode < 500 {
+			errType = ErrTypeValidation
+		}
 		return nil, &RegistryError{
-			Type:    ErrTypeNetwork,
+			Type:    errType,
 			Recipe:  name,
 			Message: fmt.Sprintf("registry returned status %d", resp.StatusCode),
 		}
