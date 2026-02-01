@@ -381,3 +381,15 @@ func isValidPyPIPackageName(name string) bool {
 
 	return pypiPackageNameRegex.MatchString(name)
 }
+
+// Probe checks if a package exists on PyPI.
+func (b *PyPIBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
+	_, err := b.fetchPackageInfo(ctx, name)
+	if err != nil {
+		return &ProbeResult{Exists: false}, nil
+	}
+	return &ProbeResult{
+		Exists: true,
+		Source: name,
+	}, nil
+}
