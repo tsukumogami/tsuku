@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The discovery registry has 1 entry but needs ~500 for the resolver to deliver value.
   The registry is the only resolver stage that exists today — the ecosystem probe and
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
