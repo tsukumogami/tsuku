@@ -23,13 +23,13 @@ None.
 
 ## Implementation Steps
 
-- [ ] Add Go setup and tsuku build steps to the `matrix` job, before the "Get changed recipes" step
-- [ ] Replace the grep-based `linux_only` detection block (lines 98-110) with a `tsuku info --json --metadata-only --recipe "$path"` call that reads `supported_platforms`
-- [ ] Add platform-to-runner mapping logic: check if any platform has `os == "linux"` (-> include in Linux matrix), check if any has `os == "darwin"` (-> include in macOS list)
-- [ ] Handle empty `supported_platforms` array (no constraints) as "all runners" for backward compatibility
-- [ ] Unify the macOS recipe list format to use objects with `tool` and `path` fields (matching the Linux matrix format) instead of bare tool name strings
-- [ ] Update the `test-macos` job to consume the new object format, using `matrix.recipe.path` instead of deriving the path from the tool name
-- [ ] Verify the existing exclusion logic (library, require_system, execution-exclusions.json) remains unchanged and runs before the `tsuku info` call
+- [x] Add Go setup and tsuku build steps to the `matrix` job, before the "Get changed recipes" step
+- [x] Replace the grep-based `linux_only` detection block (lines 98-110) with a `tsuku info --json --metadata-only --recipe "$path"` call that reads `supported_platforms`
+- [x] Add platform-to-runner mapping logic: check if any platform has `os == "linux"` (-> include in Linux matrix), check if any has `os == "darwin"` (-> include in macOS list)
+- [x] Handle empty `supported_platforms` array (no constraints) as "all runners" for backward compatibility
+- [x] Unify the macOS recipe list format to use objects with `tool` and `path` fields (matching the Linux matrix format) instead of bare tool name strings
+- [x] Update the `test-macos` job to consume the new object format, using `matrix.recipe.path` instead of deriving the path from the tool name
+- [x] Verify the existing exclusion logic (library, require_system, execution-exclusions.json) remains unchanged and runs before the `tsuku info` call
 
 ## Testing Strategy
 
