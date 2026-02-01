@@ -47,8 +47,8 @@ func TestGenerate_SeedsOnly(t *testing.T) {
 	if err := json.Unmarshal(data, &reg); err != nil {
 		t.Fatalf("parse output: %v", err)
 	}
-	if reg.SchemaVersion != 2 {
-		t.Errorf("schema_version = %d, want 2", reg.SchemaVersion)
+	if reg.SchemaVersion != 1 {
+		t.Errorf("schema_version = %d, want 1", reg.SchemaVersion)
 	}
 	if len(reg.Tools) != 2 {
 		t.Errorf("tools count = %d, want 2", len(reg.Tools))
