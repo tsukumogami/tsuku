@@ -6,7 +6,14 @@
   "disabled_by": "",
   "disabled_at": "",
   "expected_resume": "",
-  "circuit_breaker": {},
+  "circuit_breaker": {
+    "homebrew": {
+      "state": "open",
+      "failures": 5,
+      "last_failure": "2026-02-01T10:00:00Z",
+      "opens_at": "2026-02-01T11:00:00Z"
+    }
+  },
   "budget": {
     "macos_minutes_used": 0,
     "linux_minutes_used": 0,
