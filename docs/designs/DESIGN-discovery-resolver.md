@@ -1,8 +1,51 @@
 ---
 status: Planned
-problem: tsuku requires --from flags on every create invocation, but users expect tsuku install <tool> to just work without knowing the source.
-decision: Three-stage resolver (embedded registry, parallel ecosystem probe, LLM fallback) behind a unified tsuku install entry point, with disambiguation via registry overrides and popularity ranking.
-rationale: A registry handles the top ~500 tools instantly without API keys, ecosystem probes cover the middle ground under 3 seconds, and LLM discovery handles the long tail. This layered approach degrades gracefully when keys are missing or APIs are down.
+problem: |
+  tsuku requires `--from` flags on every `tsuku create` invocation, forcing users
+  to know whether a tool comes from GitHub releases, crates.io, npm, or elsewhere.
+  Users also need to distinguish between `tsuku install` (existing recipe) and
+  `tsuku create` (generate new recipe), which is a leaky abstraction.
+
+  For new users, this is a poor first experience. Running `tsuku install stripe-cli`
+  should work without knowing that stripe-cli is distributed as a GitHub release.
+  The user shouldn't need to care about the source or the install-vs-create distinction.
+
+  The problem breaks into four parts: command convergence (single entry point),
+  source resolution (figure out where a tool comes from), disambiguation (handle
+  name collisions across ecosystems), and graceful degradation (work without API
+  keys for common tools).
+decision: |
+  A three-stage sequential resolver chain handles source resolution: an embedded
+  registry covers the top ~500 tools instantly, a parallel ecosystem probe queries
+  cargo/gem/pypi/npm/go/cpan/cask under 3 seconds, and an LLM web search fallback
+  handles the long tail. The stages run sequentially at the top level (no wasted
+  API calls), but the ecosystem probe queries all registries in parallel internally.
+
+  `tsuku install` becomes the single entry point, falling back to recipe generation
+  via the discovery resolver when no recipe exists. The discovery registry is fetched
+  from the recipes repository and cached locally, following the same pattern as recipe
+  registry updates. Ecosystem results are filtered by age and download thresholds to
+  exclude typosquats.
+
+  Disambiguation uses registry overrides for known collisions, edit-distance checking
+  against registry entries, popularity ranking by download count, and interactive
+  prompting when matches are close. LLM discovery requires user confirmation with
+  repository metadata (age, stars, owner) as a defense against prompt injection.
+rationale: |
+  The sequential chain avoids wasting API calls and LLM budget on tools already in
+  the registry or ecosystem registries. Full parallelism (querying everything at once)
+  would be marginally faster but wastes resources on the common case. The registry
+  handles the top 500 tools with zero latency and no API keys.
+
+  Remote-only registry storage (rather than embedded-in-binary) keeps a single source
+  of truth and allows updates between binary releases. The trade-off is that first run
+  requires network access, but tsuku already requires network for recipe fetching and
+  tool installation, so this isn't a new constraint.
+
+  Threshold-based ecosystem filtering is simple and catches obvious typosquats without
+  per-ecosystem tuning. The thresholds are noise reduction, not a security boundary.
+  Real security comes from registry overrides, disambiguation UX showing metadata, and
+  user confirmation for LLM-discovered sources.
 ---
 
 # DESIGN: Discovery Resolver
@@ -16,15 +59,25 @@ rationale: A registry handles the top ~500 tools instantly without API keys, eco
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | Registry fetch and cache | None | testable |
+| _Extend `tsuku update-registry` to fetch `discovery.json` alongside recipe data, cache it at `$TSUKU_HOME/registry/discovery.json`, and load it into the `RegistryLookup` resolver. Establishes the remote-fetch-and-cache pattern that all registry reads depend on._ | | | |
 | [#1313](https://github.com/tsukumogami/tsuku/issues/1313) | Validate registry entries on load | None | testable |
+| _Add schema validation when loading `discovery.json`: check required fields (`builder`, `source`), reject unknown builders, and surface clear errors for malformed entries. Prevents silent failures from bad registry data._ | | | |
 | [#1314](https://github.com/tsukumogami/tsuku/issues/1314) | --deterministic-only guard | None | testable |
+| _Add the early check in the create pipeline that rejects builders where `RequiresLLM()` returns true when `--deterministic-only` is set, producing the actionable error message from the UX table instead of a confusing "no LLM providers available" failure._ | | | |
 | [#1315](https://github.com/tsukumogami/tsuku/issues/1315) | Bootstrap registry ~500 entries | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | testable |
+| _Populate `discovery.json` with ~500 entries covering GitHub-release tools not in any ecosystem registry and disambiguation overrides for known name collisions. Requires the fetch mechanism from #1312 to be testable end-to-end._ | | | |
 | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | Install/create convergence | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | testable |
+| _Make `tsuku install` fall back to the discovery resolver when no recipe exists, add `--from` flag forwarding to the create pipeline, and handle `--yes`/non-interactive mode. This is the main integration point that wires the resolver into the user-facing command._ | | | |
 | [#1317](https://github.com/tsukumogami/tsuku/issues/1317) | Ecosystem probe | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | testable |
+| _Implement the `EcosystemProber` interface and `EcosystemProbe` resolver that queries all seven ecosystem builders in parallel with a 3-second timeout. Includes threshold filtering (age >90 days, downloads >1000/month) and the `ProbeResult` type._ | | | |
 | [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | LLM discovery | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | critical |
+| _Implement the `LLMDiscovery` resolver: web search via LLM, structured JSON extraction, GitHub API verification (existence, archived status, ownership), rich confirmation prompt with metadata, and prompt injection defenses (HTML stripping, URL validation)._ | | | |
 | [#1319](https://github.com/tsukumogami/tsuku/issues/1319) | Telemetry events | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | simple |
+| _Emit telemetry events for discovery usage: which stage resolved the tool, whether disambiguation was needed, LLM discovery usage rates. Builds on the convergence from #1316 to hook into the install fallback path._ | | | |
 | [#1321](https://github.com/tsukumogami/tsuku/issues/1321) | Disambiguation | [#1317](https://github.com/tsukumogami/tsuku/issues/1317) | critical |
+| _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317._ | | | |
 | [#1322](https://github.com/tsukumogami/tsuku/issues/1322) | Error UX and verbose mode | [#1316](https://github.com/tsukumogami/tsuku/issues/1316), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
+| _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | | |
 
 ### Dependency Graph
 
@@ -141,142 +194,57 @@ The problem breaks into four parts:
 
 ### Decision 1: Resolver Architecture
 
-How should the resolver chain be organized?
+The resolver needs to orchestrate three distinct stages — registry lookup, ecosystem probe, and LLM discovery — each with different latency profiles and failure modes. The key question is whether these stages should run sequentially (each stage only fires if the previous one missed) or in parallel (all fire simultaneously, highest-priority result wins).
 
-#### Option A: Sequential Chain with Short-Circuit
+Sequential execution avoids wasting API calls and LLM budget on tools that would have been found by an earlier stage. Parallel execution minimizes worst-case latency but at the cost of unnecessary API traffic and complexity. Since the registry lookup is effectively instant (<1ms for an in-memory map), the practical latency difference between sequential and parallel is negligible for registry hits — the real question is whether to start ecosystem probing before the registry check completes.
 
-Each resolver stage runs in sequence. If a stage returns a confident match, stop. If it returns nothing, try the next stage. The registry is checked first (instant), then ecosystem probe (up to 3s), then LLM (up to 15s).
+#### Chosen: Registry-then-Parallel with LLM Gating
 
-**Pros:**
-- Simple to reason about: deterministic ordering, predictable latency
-- Easy to test each stage in isolation
-- Short-circuit means common tools are fast
-- Matches the recipe loader's existing priority chain pattern
+Registry lookup runs first (instant). On miss, ecosystem probe runs. On miss, LLM runs. The ecosystem probe itself queries all ecosystems in parallel internally, but the three top-level stages are sequential.
 
-**Cons:**
-- Ecosystem probe always waits for registry miss (though registry is instant, so minimal impact)
-- Adding new stages requires deciding where they go in the chain
+This gives the best resource efficiency: no ecosystem API calls for registry-hit tools, no LLM cost for ecosystem-hit tools. The ecosystem probe stays fast because it's internally parallel (all seven registries queried simultaneously within a 3-second timeout). Two levels of concurrency — stage sequencing at the top, parallelism within the ecosystem probe — keep the implementation tractable.
 
-#### Option B: Parallel Resolution with Priority Merge
+#### Alternatives Considered
 
-All stages run simultaneously. Results are collected and the highest-priority match wins. Registry results beat ecosystem results, which beat LLM results.
+**Sequential chain with short-circuit**: Each stage runs in strict sequence. This is functionally identical to the chosen approach once you clarify that "ecosystem probe" means parallel queries. Rejected as a distinct option because it's the same design stated less precisely.
 
-**Pros:**
-- Lowest possible latency for every query
-- Ecosystem probe runs while registry lookup happens (though registry is <1ms)
-
-**Cons:**
-- Wastes API calls: ecosystem APIs get queried even for tools in the registry
-- LLM gets invoked even when ecosystem finds the tool, wasting money
-- More complex cancellation logic
-- Harder to test because stages interact
-
-#### Option C: Registry-then-Parallel with LLM Gating
-
-Registry lookup runs first (instant). On miss, ecosystem probe runs. On miss, LLM runs. But ecosystem probe queries all ecosystems in parallel (not sequentially).
-
-This is effectively Option A, but clarifies that "ecosystem probe" itself is internally parallel while the three stages are sequential.
-
-**Pros:**
-- No wasted API calls (ecosystem only runs on registry miss)
-- No wasted LLM cost (LLM only runs on ecosystem miss)
-- Ecosystem probing is still fast because it's internally parallel
-- Simple top-level flow, parallel only where it matters
-
-**Cons:**
-- Slightly higher latency than full parallel for ecosystem-resolved tools (registry miss adds ~0ms, so negligible)
-- Requires two levels of concurrency (stage sequencing + ecosystem parallelism)
+**Parallel resolution with priority merge**: All stages fire simultaneously, with registry results taking priority over ecosystem, which takes priority over LLM. Rejected because it wastes API calls (ecosystem APIs queried for tools already in the registry) and LLM budget (invoked even when ecosystem finds the tool). The latency savings are negligible since the registry check is <1ms.
 
 ### Decision 2: Discovery Registry Storage
 
-Where does the discovery registry live and how is it updated?
+The discovery registry maps ~500 tool names to their builder and source. It needs to be fast to read, updatable between binary releases, and simple to maintain. The question is where the canonical copy lives: embedded in the binary, fetched from a remote repository, or both.
 
-#### Option A: Embedded in Binary
+Embedding guarantees offline availability but locks updates to binary releases. Remote-only keeps a single source of truth but requires network on first use. A hybrid approach (embedded baseline + remote override) offers both but adds complexity around precedence and integrity verification.
 
-Ship the registry JSON as an embedded Go file (using `//go:embed`). Updated with each tsuku release. No separate update mechanism.
+#### Chosen: Remote-Only Registry
 
-**Pros:**
-- Zero network requests for registry lookup
-- Works offline and in air-gapped environments
-- Integrity guaranteed by binary signing
-- Simplest implementation
+No embedded registry. The registry JSON is fetched from the recipes repository on first use and cached locally at `$TSUKU_HOME/registry/discovery.json`. Updated via `tsuku update-registry`, the same mechanism that already handles recipe registry updates.
 
-**Cons:**
-- Registry only updates with new tsuku releases
-- Can't fix a bad registry entry without releasing a new binary
+This keeps a single source of truth and allows registry updates without releasing a new binary. The trade-off is that first run requires network access, but tsuku already requires network for recipe fetching and tool installation — offline use was never a supported scenario.
 
-#### Option B: Embedded with Registry-Sync Override
+#### Alternatives Considered
 
-Embed a baseline registry in the binary, but allow `tsuku update-registry` to fetch a newer version from the recipes repository. The local override takes precedence over the embedded version.
+**Embedded in binary**: Ship the registry as a `//go:embed` resource. Zero network requests, works offline, integrity guaranteed by binary signing. Rejected because registry updates would require a new binary release, and bad entries couldn't be fixed without a release cycle.
 
-**Pros:**
-- Fast default (embedded)
-- Can update registry between binary releases
-- Follows the same pattern as recipe registry updates
-- Graceful fallback to embedded when network is unavailable
-
-**Cons:**
-- Two sources of truth (embedded vs. local override)
-- Need integrity verification for downloaded registry
-- More complex loader logic
-
-#### Option C: Remote-Only Registry
-
-No embedded registry. Always fetch from the recipes repository (cached locally).
-
-**Pros:**
-- Always up to date
-- Single source of truth
-
-**Cons:**
-- First run requires network access
-- Breaks offline use
-- Adds latency to first invocation
+**Embedded with registry-sync override**: Embed a baseline, allow `tsuku update-registry` to fetch a newer version that takes precedence. Rejected because maintaining two sources of truth (embedded vs. local override) adds complexity for little value when the remote-fetch-and-cache pattern is already proven by the recipe registry.
 
 ### Decision 3: Ecosystem Probe Filtering
 
-How aggressively should ecosystem probe results be filtered to exclude typosquats and abandoned packages?
+When the ecosystem probe returns matches, some may be typosquats or abandoned packages with the same name as a legitimate tool. The question is how aggressively to filter results before presenting them to the user or auto-selecting.
 
-#### Option A: Threshold Filtering (Age + Downloads)
+Filtering is noise reduction, not a security boundary. A patient attacker can register a package, wait 90 days, and game download counts. The real security comes from registry overrides for the top 500 tools, disambiguation UX showing metadata, and user confirmation for ambiguous results. But filtering still provides value by keeping the common case clean.
 
-Reject ecosystem matches below minimum thresholds: >90 days old AND >1000 downloads/month. These thresholds are conservative enough to exclude typosquats while keeping legitimate tools.
+#### Chosen: Threshold Filtering (Age + Downloads)
 
-**Pros:**
-- Simple, deterministic rules
-- Catches most typosquats (newly registered, low download)
-- Easy to explain to users
+Reject ecosystem matches below minimum thresholds: >90 days old AND >1000 downloads/month. These are conservative enough to exclude most typosquats while keeping legitimate tools.
 
-**Cons:**
-- New legitimate tools fail the age check for 90 days
-- Download thresholds vary wildly across ecosystems (1000/month is huge on CPAN, tiny on npm)
-- Thresholds need per-ecosystem tuning
+Simple, deterministic rules that are easy to explain. The thresholds aren't perfect — 1000 downloads/month is large on CPAN but tiny on npm — but they catch the obvious cases. Per-ecosystem tuning can be added later if collision data shows it's needed. Users can always bypass filtering with `--from`.
 
-#### Option B: Ecosystem-Specific Thresholds
+#### Alternatives Considered
 
-Each ecosystem gets its own thresholds based on its scale. npm might require 10K downloads/month, CPAN might require 100.
+**Ecosystem-specific thresholds**: Each ecosystem gets its own thresholds (npm: 10K/month, CPAN: 100/month). More accurate per ecosystem but adds configuration to maintain and thresholds become stale as ecosystems grow. Rejected as premature optimization — start with global thresholds and tune if needed.
 
-**Pros:**
-- More accurate filtering per ecosystem
-- Fewer false negatives for smaller ecosystems
-
-**Cons:**
-- More configuration to maintain
-- Thresholds become stale as ecosystems grow
-- Hard to justify specific numbers
-
-#### Option C: No Filtering, Rely on Disambiguation UX
-
-Don't filter results. Instead, show all matches to the user with metadata (downloads, age, description) and let them pick. For single matches, auto-select but show metadata.
-
-**Pros:**
-- No false negatives from over-filtering
-- User makes the final call
-- Simpler implementation
-
-**Cons:**
-- Typosquats appear as options (with metadata that should reveal them)
-- More prompting friction for the user
-- Automated/scripted usage becomes harder
+**No filtering, rely on disambiguation UX**: Show all matches with metadata, let the user pick. No false negatives from over-filtering, but typosquats appear as options and automated/scripted usage (`--yes` flag) becomes harder. Rejected because it shifts the security burden to users who may not notice metadata differences.
 
 ### Uncertainties
 
@@ -288,26 +256,25 @@ Don't filter results. Instead, show all matches to the user with metadata (downl
 
 ## Decision Outcome
 
-**Chosen: 1C + 2C + 3A**
+**Chosen: Sequential chain + Remote-only registry + Threshold filtering**
 
 ### Summary
 
-Sequential resolver chain (registry → parallel ecosystem probe → LLM) with a remote-fetched discovery registry (cached locally) and threshold-based ecosystem filtering. The three stages run sequentially at the top level, but the ecosystem probe queries all registries in parallel internally.
+When a user runs `tsuku install <tool>` and no recipe exists, the install command falls back to the discovery resolver. The resolver is a `ChainResolver` that tries three stages in order: `RegistryLookup`, `EcosystemProbe`, and `LLMDiscovery`. Each stage implements a `Resolver` interface with a single `Resolve(ctx, toolName)` method returning a `DiscoveryResult` containing the builder name, source argument, confidence level, and optional metadata.
+
+The registry stage reads from `$TSUKU_HOME/registry/discovery.json`, a JSON file fetched from the recipes repository and cached locally. It maps ~500 tool names directly to `{builder, source}` pairs. Lookups are O(1) map access. The registry is refreshed via `tsuku update-registry`, the same mechanism that updates the recipe cache. No embedded copy exists in the binary — the remote-fetch-and-cache pattern is the single source of truth.
+
+When the registry misses, the ecosystem probe fires. It queries all seven ecosystem builders (cargo, gem, pypi, npm, go, cpan, cask) in parallel using a new `EcosystemProber` interface that extends `SessionBuilder` with a `Probe()` method returning download counts and package age. A shared 3-second `context.WithTimeout` governs all queries. Results below threshold (>90 days old, >1000 downloads/month) are discarded. If multiple ecosystems match, disambiguation logic ranks by download count, auto-selects when the leader has >10x the runner-up, and prompts the user otherwise. Non-interactive mode (`--yes` or piped stdin) auto-selects by popularity or errors if ambiguous.
+
+If ecosystem probe also misses, LLM discovery runs as the final fallback. It invokes an LLM with a web search tool, extracts structured JSON output (`builder`, `source`, `reasoning`), verifies GitHub sources against the GitHub API (existence, not archived, ownership unchanged), and presents a rich confirmation prompt with repo metadata. Users must confirm unless `--yes` is set. The entire LLM stage has a 15-second timeout. Missing API keys produce an actionable error suggesting `--from` instead.
+
+Errors are classified as soft or hard. Soft errors (API timeouts, rate limits on individual ecosystems, empty results) log a warning and try the next stage. Hard errors (context cancelled, LLM budget exhausted, homoglyph detection in input) stop the chain immediately. Input is normalized before resolution: lowercased and checked for Unicode homoglyphs (e.g., Cyrillic "e" in `kubectl`). The `--deterministic-only` flag skips LLM discovery entirely and rejects builders where `RequiresLLM()` returns true.
 
 ### Rationale
 
-**1C over 1A/1B**: Option C is the clearest decomposition. The top-level flow is sequential (no wasted API calls or LLM cost), while ecosystem probing is internally parallel (keeping latency under 3 seconds). Option B's full parallelism wastes resources on tools already in the registry. Option A is essentially the same as 1C once you clarify that "ecosystem probe" means parallel queries.
+The sequential chain and remote-only registry work together: the registry handles the top 500 tools with zero API calls and sub-millisecond latency, so ecosystem probing only fires for the middle ground, and LLM only fires for the true long tail. This minimizes cost and external dependencies for the common case. Remote-only storage avoids the complexity of embedded-vs-local precedence while matching a pattern tsuku already uses for recipe registry updates.
 
-**2C over 2A/2B**: Remote-only keeps things simple: one source of truth, always up to date, no embedded-vs-local precedence logic. The registry is fetched on first use and cached locally, following the same pattern as the recipe registry. Option 2B (embedded + sync) adds surface area for little value when the recipe registry already proves the remote-fetch-and-cache pattern works. Option 2A is too rigid. The trade-off is that first run requires network access, but tsuku already requires network for recipe fetching and tool installation.
-
-**3A over 3B/3C**: Threshold filtering is simple and catches the obvious cases. Per-ecosystem thresholds (3B) add maintenance burden for marginal improvement. No filtering (3C) exposes users to typosquats. We can start with conservative global thresholds and add per-ecosystem tuning later if collision data shows it's needed.
-
-### Trade-offs Accepted
-
-- The discovery registry requires curation. Its scope is narrow (~500 entries) and shrinks as recipe coverage grows via batch generation.
-- First run requires network access for registry fetch. This matches tsuku's existing behavior for recipe registry fetching.
-- Global thresholds will occasionally filter out legitimate new tools. Users can bypass discovery with `--from` for these cases.
-- The sequential chain means ecosystem-resolved tools pay ~0ms extra for the registry miss. This is negligible.
+Threshold filtering at the ecosystem stage is simple noise reduction that catches obvious typosquats without requiring per-ecosystem configuration. It's deliberately not a security boundary — the real defense layers are registry overrides for known tools, disambiguation UX that surfaces metadata, and mandatory user confirmation for LLM-discovered sources. Starting with global thresholds keeps the implementation simple; per-ecosystem tuning can be added later if collision data warrants it.
 
 ## Solution Architecture
 
