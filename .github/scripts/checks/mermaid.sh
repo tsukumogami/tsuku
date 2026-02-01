@@ -21,6 +21,7 @@
 #   MM16: needs-design label cannot have class 'ready'
 #   MM17: Node with no open blockers cannot have class 'blocked'
 #   MM18: Node with open blocker cannot have class 'ready'
+#   MM19: Node with open blocker cannot have class 'needsDesign'
 #
 # Usage:
 #   mermaid.sh [-q|--quiet] [--skip-status-check] [--github-state <file>] [--pr <number>] <doc-path>
@@ -565,6 +566,13 @@ if [[ "$SKIP_STATUS_CHECK" -eq 0 ]] && { [[ -n "$GITHUB_STATE_FILE" ]] || comman
         if [[ "$ACTUAL" == "ready" ]] && node_has_open_blocker "$node"; then
             BLOCKER_LIST="${BLOCKERS[$node]:-}"
             emit_fail "MM18: Node $node has class 'ready' but is blocked by open dependencies ($(echo "$BLOCKER_LIST" | sed 's/^ //; s/ /, /g')). See: .github/scripts/docs/MM18.md"
+            FAILED=1
+        fi
+
+        # MM19: needsDesign cannot have open blockers (should be 'blocked')
+        if [[ "$ACTUAL" == "needsDesign" ]] && node_has_open_blocker "$node"; then
+            BLOCKER_LIST="${BLOCKERS[$node]:-}"
+            emit_fail "MM19: Node $node has class 'needsDesign' but is blocked by open dependencies ($(echo "$BLOCKER_LIST" | sed 's/^ //; s/ /, /g')), expected 'blocked'. See: .github/scripts/docs/MM19.md"
             FAILED=1
         fi
     done <<< "$DIAGRAM_NODES"
