@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: tsuku requires --from flags on every create invocation, but users expect tsuku install <tool> to just work without knowing the source.
 decision: Three-stage resolver (embedded registry, parallel ecosystem probe, LLM fallback) behind a unified tsuku install entry point, with disambiguation via registry overrides and popularity ranking.
 rationale: A registry handles the top ~500 tools instantly without API keys, ecosystem probes cover the middle ground under 3 seconds, and LLM discovery handles the long tail. This layered approach degrades gracefully when keys are missing or APIs are down.
@@ -7,7 +7,70 @@ rationale: A registry handles the top ~500 tools instantly without API keys, eco
 
 # DESIGN: Discovery Resolver
 
-**Status**: Proposed
+**Status**: Planned
+
+## Implementation Issues
+
+### Milestone: [M59: Discovery Resolver](https://github.com/tsukumogami/tsuku/milestone/59)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | Registry fetch and cache | None | testable |
+| [#1313](https://github.com/tsukumogami/tsuku/issues/1313) | Validate registry entries on load | None | testable |
+| [#1314](https://github.com/tsukumogami/tsuku/issues/1314) | --deterministic-only guard | None | testable |
+| [#1315](https://github.com/tsukumogami/tsuku/issues/1315) | Bootstrap registry ~500 entries | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | testable |
+| [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | Install/create convergence | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | testable |
+| [#1317](https://github.com/tsukumogami/tsuku/issues/1317) | Ecosystem probe | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | testable |
+| [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | LLM discovery | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | critical |
+| [#1319](https://github.com/tsukumogami/tsuku/issues/1319) | Telemetry events | [#1316](https://github.com/tsukumogami/tsuku/issues/1316) | simple |
+| [#1321](https://github.com/tsukumogami/tsuku/issues/1321) | Disambiguation | [#1317](https://github.com/tsukumogami/tsuku/issues/1317) | critical |
+| [#1322](https://github.com/tsukumogami/tsuku/issues/1322) | Error UX and verbose mode | [#1316](https://github.com/tsukumogami/tsuku/issues/1316), [#1317](https://github.com/tsukumogami/tsuku/issues/1317), [#1318](https://github.com/tsukumogami/tsuku/issues/1318) | testable |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Foundation"]
+        I1312["#1312: Registry fetch and cache"]
+        I1313["#1313: Validate registry entries"]
+        I1314["#1314: Deterministic-only guard"]
+    end
+
+    subgraph Phase2["Phase 2: Bootstrap + Convergence"]
+        I1315["#1315: Bootstrap registry"]
+        I1316["#1316: Install/create convergence"]
+    end
+
+    subgraph Phase3["Phase 3: Discovery Stages"]
+        I1317["#1317: Ecosystem probe"]
+        I1318["#1318: LLM discovery"]
+        I1319["#1319: Telemetry events"]
+    end
+
+    subgraph Phase4["Phase 4: Polish"]
+        I1321["#1321: Disambiguation"]
+        I1322["#1322: Error UX and verbose mode"]
+    end
+
+    I1312 --> I1315
+    I1312 --> I1316
+    I1316 --> I1317
+    I1316 --> I1318
+    I1316 --> I1319
+    I1317 --> I1321
+    I1317 --> I1322
+    I1318 --> I1322
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1312,I1313,I1314 ready
+    class I1315,I1316,I1317,I1318,I1319,I1321,I1322 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
