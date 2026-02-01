@@ -7,7 +7,9 @@ rationale: In-workflow validation catches platform failures before the PR exists
 
 # Batch Multi-Platform Validation
 
-**Status**: Proposed
+## Status
+
+Accepted
 
 ## Upstream Design Reference
 
