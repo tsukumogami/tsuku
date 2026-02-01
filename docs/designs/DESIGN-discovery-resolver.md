@@ -504,7 +504,7 @@ Make `tsuku install` the universal entry point by adding the discovery fallback 
 - Keep `tsuku create --from` as explicit override
 - Display discovery confidence to user
 - Handle `--yes` and non-interactive (piped) mode
-- Fix `--deterministic-only` guard: when the resolved builder has `RequiresLLM() == true`, reject immediately with the actionable error from the UX table — before attempting session creation. Currently the flag only affects fallback behavior after generation fails, which means an LLM builder will fail with a confusing "no LLM providers available" error instead of the intended deterministic-mode message. The check belongs in the create pipeline after builder selection, before `NewSession()`.
+- Fix `--deterministic-only` semantics: the flag should prevent LLM usage proactively, but the behavior depends on how the builder uses LLM. Some builders (like github) require LLM for all generation — these should be rejected immediately with the actionable error from the UX table before session creation. Other builders (like homebrew) use LLM only as a fallback when deterministic generation fails — these should skip the LLM fallback and return a deterministic failure instead. The current `RequiresLLM()` boolean can't distinguish between these cases. The fix needs to ensure that builders which can operate deterministically do so, while builders that fundamentally need LLM fail early with a clear message rather than a confusing "no LLM providers available" error.
 
 ### Phase 4: Ecosystem Probe
 
