@@ -49,6 +49,7 @@ graph LR
 
     subgraph Phase4["Phase 4: Observability + CI"]
         I1255["#1255: Circuit breaker (preflight)"]
+        I1257["#1257: SLI metrics (superseded)"]
         M64["M64: Merge Job Observability"]
         I1258["#1258: PR CI filtering"]
     end
@@ -75,7 +76,7 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1254,I1273 done
+    class I1254,I1273,I1257 done
     class M60,I1256 done
     class I1252,I1287,M61,M63 ready
     class I1253,I1255,I1258,M64 blocked
