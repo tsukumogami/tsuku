@@ -26,8 +26,8 @@ Planned
 | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | PR CI platform filtering | [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | testable |
 | ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON CLI output + batch integration~~ | ~~None~~ | ~~testable~~ |
 | [#1287](https://github.com/tsukumogami/tsuku/issues/1287) | Auto-install required toolchains for ecosystem builders | None | testable |
-| [M63](https://github.com/tsukumogami/tsuku/milestone/63) | Merge Job Completion (batch_id, recipe tracking, circuit breaker update, queue sync) | None | — |
-| [M64](https://github.com/tsukumogami/tsuku/milestone/64) | Merge Job Observability (SLI metrics, auto-merge gating) | [M63](https://github.com/tsukumogami/tsuku/milestone/63) | — |
+| [M63](https://github.com/tsukumogami/tsuku/milestone/63) | Merge Job Completion (batch_id, recipe tracking, circuit breaker update, queue sync) | None | |
+| [M64](https://github.com/tsukumogami/tsuku/milestone/64) | Merge Job Observability (SLI metrics, auto-merge gating) | [M63](https://github.com/tsukumogami/tsuku/milestone/63) | |
 
 ### Dependency Graph
 
