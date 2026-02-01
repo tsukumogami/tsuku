@@ -37,8 +37,7 @@ Planned
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1364: feat(discover): add seed-discovery tool with schema v2 registry output](https://github.com/tsukumogami/tsuku/issues/1364)~~ | ~~None~~ | ~~testable~~ |
-| [#1365: feat(discover): add optional metadata fields to registry schema](https://github.com/tsukumogami/tsuku/issues/1365) | None | testable |
-| _Adds optional metadata fields (description, homepage, repo, disambiguation) to the `RegistryEntry` struct. Fields use `omitempty` tags so existing entries and consumers are unaffected._ | | |
+| ~~[#1365: feat(discover): add optional metadata fields to registry schema](https://github.com/tsukumogami/tsuku/issues/1365)~~ | ~~None~~ | ~~testable~~ |
 | [#1366: feat(discover): add metadata enrichment to seed-discovery tool](https://github.com/tsukumogami/tsuku/issues/1366) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
 | _Enriches discovery entries with description, homepage, and repo URL from GitHub and Homebrew API responses during validation. Uses the same API calls already made for validation, so the cost is extracting additional fields from existing responses._ | | |
 | [#1367: feat(discover): add recipe cross-reference and graduation logic](https://github.com/tsukumogami/tsuku/issues/1367) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
@@ -69,8 +68,7 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1364 done
-    class I1365 ready
+    class I1364,I1365 done
     class I1366,I1367,I1368,I1369 ready
 ```
 
