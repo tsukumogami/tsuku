@@ -22,7 +22,9 @@ rationale: |
 
 # DESIGN: Discovery Resolver
 
-**Status**: Planned
+## Status
+
+Planned
 
 ## Implementation Issues
 
