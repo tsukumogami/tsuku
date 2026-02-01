@@ -40,6 +40,7 @@ source "$CHECKS_DIR/common.sh"
 # Cutoff dates for each check category (ISO 8601 format)
 readonly II_CHECK_CUTOFF="2026-01-01"  # Implementation Issues validation introduced
 
+
 # Check if file was created before a cutoff date
 # Usage: file_predates_check "$DOC_PATH" "$CUTOFF_DATE"
 # Returns: 0 if file predates cutoff (should skip), 1 if file is newer (should check)

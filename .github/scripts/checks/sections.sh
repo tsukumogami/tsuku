@@ -21,7 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "$SCRIPT_DIR/common.sh"
 
 # Constants - required sections in order
-readonly REQUIRED_SECTIONS=(
+REQUIRED_SECTIONS=(
     "Status"
     "Context and Problem Statement"
     "Decision Drivers"
@@ -32,6 +32,7 @@ readonly REQUIRED_SECTIONS=(
     "Security Considerations"
     "Consequences"
 )
+readonly REQUIRED_SECTIONS
 
 # Validate arguments
 if [[ $# -lt 1 ]]; then
@@ -107,7 +108,7 @@ for section in "${REQUIRED_SECTIONS[@]}"; do
 done
 
 if [[ "$MISSING_COUNT" -gt 0 ]]; then
-    emit_fail "SC01: Missing $MISSING_COUNT of 9 required sections. See: .github/scripts/docs/SC01.md"
+    emit_fail "SC01: Missing $MISSING_COUNT of ${#REQUIRED_SECTIONS[@]} required sections. See: .github/scripts/docs/SC01.md"
     for section in "${MISSING_SECTIONS[@]}"; do
         echo "       - ## $section" >&2
     done
