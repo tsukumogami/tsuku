@@ -19,7 +19,7 @@ var searchCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		query := ""
 		if len(args) > 0 {
-			query = strings.ToLower(args[0])
+			query = strings.ToLower(strings.TrimSpace(args[0]))
 		}
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
@@ -90,10 +90,14 @@ var searchCmd = &cobra.Command{
 		}
 
 		if len(results) == 0 {
-			printInfof("No cached recipes found for '%s'.\n\n", query)
-			printInfo("Tip: You can still try installing it!")
-			printInfof("   Run: tsuku install %s\n", query)
-			printInfo("   (Tsuku will attempt to find and install it using AI)")
+			if query == "" {
+				printInfo("No cached recipes found.")
+			} else {
+				printInfof("No cached recipes found for '%s'.\n\n", query)
+				printInfo("Tip: You can still try installing it!")
+				printInfof("   Run: tsuku install %s\n", query)
+				printInfo("   (Tsuku will attempt to find and install it using AI)")
+			}
 			return
 		}
 
