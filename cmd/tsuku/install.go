@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/tsukumogami/tsuku/internal/discover"
 	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 	"github.com/tsukumogami/tsuku/internal/registry"
@@ -192,10 +193,20 @@ Test installation in a sandbox container:
 					printError(err)
 					exitWithCode(ExitInstallFailed)
 				}
-			} else {
-				if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
-					handleInstallError(err)
+				continue
+			}
+
+			// Check if a recipe exists. If not, try discovery before the full install flow.
+			// This avoids the confusing "recipe not found" message when discovery can resolve.
+			_, recipeErr := loader.Get(toolName, recipe.LoaderOptions{})
+			if recipeErr != nil {
+				if result := tryDiscoveryFallback(toolName); result != nil {
+					continue
 				}
+			}
+
+			if err := runInstallWithTelemetry(toolName, resolveVersion, versionConstraint, true, "", telemetryClient); err != nil {
+				handleInstallError(err)
 			}
 		}
 	},
@@ -380,4 +391,39 @@ func extractMissingRecipes(err error) []string {
 		}
 	}
 	return names
+}
+
+// tryDiscoveryFallback runs the discovery resolver chain for a tool with no recipe.
+// On success, it forwards to the create pipeline to generate a recipe and install.
+// Returns the discovery result on success (install completed), nil on failure.
+func tryDiscoveryFallback(toolName string) *discover.DiscoveryResult {
+	result, err := runDiscovery(toolName)
+	if err != nil {
+		var notFound *discover.NotFoundError
+		if errors.As(err, &notFound) {
+			printError(notFound)
+		} else {
+			printError(fmt.Errorf("discovery failed for '%s': %w", toolName, err))
+		}
+		exitWithCode(ExitRecipeNotFound)
+	}
+
+	// Discovery found the tool — show which stage resolved it
+	fmt.Fprintf(os.Stderr, "Discovered: %s\n", result.Reason)
+
+	// Forward to create pipeline, then install the generated recipe
+	fromArg := result.Builder + ":" + result.Source
+	createFrom = fromArg
+	createAutoApprove = installForce
+	createDeterministicOnly = installDeterministicOnly
+	createForce = true
+	runCreate(nil, []string{toolName})
+	// runCreate calls exitWithCode on failure
+
+	telemetryClient := telemetry.NewClient()
+	telemetry.ShowNoticeIfNeeded()
+	if err := runInstallWithTelemetry(toolName, "", "", true, "", telemetryClient); err != nil {
+		handleInstallError(err)
+	}
+	return result
 }
