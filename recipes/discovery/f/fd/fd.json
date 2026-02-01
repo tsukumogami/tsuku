@@ -1,0 +1,5 @@
+{
+  "builder": "github",
+  "source": "sharkdp/fd",
+  "disambiguation": true
+}
