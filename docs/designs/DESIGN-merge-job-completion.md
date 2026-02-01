@@ -1,3 +1,13 @@
+---
+status: Proposed
+problem: |
+  The batch-generate merge job has working constraint derivation and PR creation but lacks structured commit messages with batch metadata, SLI metrics collection, circuit breaker state updates, and auto-merge gating required by DESIGN-batch-recipe-generation.md for pipeline observability and scale.
+decision: |
+  Add four shell-based steps to the merge job: batch_id generation, structured commit with git trailers, SLI metrics appended to data/metrics/batch-runs.jsonl, and circuit breaker update via scripts/update_breaker.sh. Auto-merge is enabled only for clean batches with zero exclusions.
+rationale: |
+  Shell-first approach matches the existing merge job pattern and avoids adding Go build dependencies. Conservative auto-merge (fail-open) is appropriate for an unproven pipeline. Generating batch_id in the merge job keeps it loosely coupled from the Go orchestrator while using the same format for rollback compatibility.
+---
+
 # DESIGN: Merge Job Completion
 
 ## Status
