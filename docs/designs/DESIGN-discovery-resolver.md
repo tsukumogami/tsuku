@@ -100,7 +100,7 @@ graph TD
     class I1337 done
     class I1338 ready
     class I1319 blocked
-    class I1315 blocked
+    class I1315 ready
     class I1317,I1318,I1321,I1322 blocked
 ```
 
