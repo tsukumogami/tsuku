@@ -42,8 +42,7 @@ Planned
 | _Enriches discovery entries with description, homepage, and repo URL from GitHub and Homebrew API responses during validation. Uses the same API calls already made for validation, so the cost is extracting additional fields from existing responses._ | | |
 | [#1367: feat(discover): add recipe cross-reference and graduation logic](https://github.com/tsukumogami/tsuku/issues/1367) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
 | _Excludes entries from `discovery.json` when a recipe already exists in `recipes/`, except for disambiguation entries which persist regardless. Implements the graduation model that keeps the registry lean as the batch pipeline generates recipes._ | | |
-| [#1368: feat(discover): curate seed lists for ~500 discovery entries](https://github.com/tsukumogami/tsuku/issues/1368) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | simple |
-| _Creates seed list files in `data/discovery-seeds/` for GitHub Release tools and disambiguation overrides, reaching ~500 total entries when combined with priority queue derivation._ | | |
+| ~~[#1368: feat(discover): curate seed lists for ~500 discovery entries](https://github.com/tsukumogami/tsuku/issues/1368)~~ | ~~[#1364](https://github.com/tsukumogami/tsuku/issues/1364)~~ | ~~simple~~ |
 | [#1369: ci(discover): add weekly discovery registry freshness check](https://github.com/tsukumogami/tsuku/issues/1369) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | simple |
 | _Adds a GitHub Actions workflow that validates existing `discovery.json` entries weekly, checking that referenced repositories and packages still exist, and creates an issue listing any stale entries._ | | |
 
@@ -68,8 +67,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1364,I1365 done
-    class I1366,I1367,I1368,I1369 ready
+    class I1364,I1365,I1368 done
+    class I1366,I1367,I1369 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
