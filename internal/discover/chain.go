@@ -2,7 +2,9 @@ package discover
 
 import (
 	"context"
-	"log"
+	"fmt"
+
+	"github.com/tsukumogami/tsuku/internal/log"
 )
 
 // ChainResolver tries resolver stages in order, stopping at the first match.
@@ -32,7 +34,7 @@ func (c *ChainResolver) Resolve(ctx context.Context, toolName string) (*Discover
 				return nil, err
 			}
 			// Soft error: log and try the next stage.
-			log.Printf("discover: stage error for %q: %v", normalized, err)
+			log.Default().Warn(fmt.Sprintf("discover: stage error for %q: %v", normalized, err))
 			continue
 		}
 		if result != nil {
