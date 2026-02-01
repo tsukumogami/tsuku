@@ -137,6 +137,8 @@ Enable `gh pr merge --auto --squash` only when:
 
 If any gate fails, the PR is left open with a comment explaining why auto-merge was skipped. This is fail-open: the pipeline creates the PR regardless, but only enables auto-merge for clean batches.
 
+**Note: open-PR guard.** If a previous batch PR is still open (not yet merged or closed), triggering a new batch run creates a second PR that may conflict. The preflight job (#1252) should check for open batch PRs and skip the run if one exists. This isn't implemented here since it belongs in the preflight job, but it's a prerequisite for safe auto-merge at scale.
+
 #### Alternatives Considered
 
 **Always auto-merge**: Enable auto-merge on every batch PR since excluded recipes are already removed. Rejected because a batch with many exclusions may indicate a systemic issue worth human review, and `run_command` exclusions specifically should draw attention.

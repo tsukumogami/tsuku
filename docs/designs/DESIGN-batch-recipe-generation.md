@@ -543,6 +543,8 @@ The preflight job reads `batch-control.json` and skips ecosystems with open circ
 }
 ```
 
+The preflight job should also check for open batch PRs (`gh pr list --label batch --state open`) and skip the run if one exists. This prevents conflicting PRs and is a prerequisite for safe auto-merge (see [DESIGN-merge-job-completion.md](DESIGN-merge-job-completion.md)).
+
 After generation, the merge job updates circuit breaker state:
 - Track consecutive failures per ecosystem
 - Open breaker at 10 consecutive failures (>50% over window)
