@@ -431,7 +431,7 @@ jobs:
   validate-darwin-x86_64:
     needs: generate
     if: needs.generate.outputs.has_recipes == 'true'
-    runs-on: macos-13
+    runs-on: macos-15-intel
     timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
