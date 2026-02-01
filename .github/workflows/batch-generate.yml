@@ -44,18 +44,38 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Preflight circuit breaker check
+        id: preflight
         run: |
           STATE=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
             '.circuit_breaker[$eco].state // "closed"' batch-control.json)
+
           if [ "$STATE" = "open" ]; then
-            OPENED_AT=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
-              '.circuit_breaker[$eco].last_failure // "unknown"' batch-control.json)
-            FAILURES=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
-              '.circuit_breaker[$eco].failures // 0' batch-control.json)
-            echo "::error::Circuit breaker is OPEN for ${{ inputs.ecosystem }} (${FAILURES} consecutive failures, last failure: ${OPENED_AT}). Skipping batch generation."
-            exit 1
+            OPENS_AT=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
+              '.circuit_breaker[$eco].opens_at // ""' batch-control.json)
+            NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+            if [ -n "$OPENS_AT" ] && [[ "$NOW" > "$OPENS_AT" ]]; then
+              # Timeout expired: transition to half-open for probe
+              jq --arg eco "${{ inputs.ecosystem }}" --arg now "$NOW" \
+                '.circuit_breaker[$eco].state = "half-open"' \
+                batch-control.json > batch-control.tmp && mv batch-control.tmp batch-control.json
+              STATE="half-open"
+              echo "::notice::Circuit breaker transitioned to half-open for ${{ inputs.ecosystem }} (recovery timeout expired). Running probe batch (size=1)."
+              echo "batch_size_override=1" >> "$GITHUB_OUTPUT"
+            else
+              FAILURES=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
+                '.circuit_breaker[$eco].failures // 0' batch-control.json)
+              echo "::error::Circuit breaker is OPEN for ${{ inputs.ecosystem }} (${FAILURES} consecutive failures, recovery at: ${OPENS_AT}). Skipping batch generation."
+              exit 1
+            fi
           fi
-          echo "Circuit breaker check passed for ${{ inputs.ecosystem }} (state: ${STATE})"
+
+          if [ "$STATE" = "half-open" ]; then
+            echo "Circuit breaker is half-open for ${{ inputs.ecosystem }}. Running probe batch (size=1)."
+            echo "batch_size_override=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "Circuit breaker check passed for ${{ inputs.ecosystem }} (state: ${STATE})"
+          fi
 
       - uses: actions/setup-go@v5
         with:
@@ -73,9 +93,11 @@ jobs:
 
       - name: Run batch generation
         run: |
+          OVERRIDE="${{ steps.preflight.outputs.batch_size_override }}"
+          BATCH_SIZE="${OVERRIDE:-${{ inputs.batch_size }}}"
           ./batch-generate \
             -ecosystem "${{ inputs.ecosystem }}" \
-            -batch-size "${{ inputs.batch_size }}" \
+            -batch-size "$BATCH_SIZE" \
             -tier "${{ inputs.tier }}"
 
       - name: Requeue unblocked packages
