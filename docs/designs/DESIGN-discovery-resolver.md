@@ -224,23 +224,24 @@ Don't filter results. Instead, show all matches to the user with metadata (downl
 
 ## Decision Outcome
 
-**Chosen: 1C + 2B + 3A**
+**Chosen: 1C + 2C + 3A**
 
 ### Summary
 
-Sequential resolver chain (registry → parallel ecosystem probe → LLM) with an embedded-plus-sync discovery registry and threshold-based ecosystem filtering. The three stages run sequentially at the top level, but the ecosystem probe queries all registries in parallel internally.
+Sequential resolver chain (registry → parallel ecosystem probe → LLM) with a remote-fetched discovery registry (cached locally) and threshold-based ecosystem filtering. The three stages run sequentially at the top level, but the ecosystem probe queries all registries in parallel internally.
 
 ### Rationale
 
 **1C over 1A/1B**: Option C is the clearest decomposition. The top-level flow is sequential (no wasted API calls or LLM cost), while ecosystem probing is internally parallel (keeping latency under 3 seconds). Option B's full parallelism wastes resources on tools already in the registry. Option A is essentially the same as 1C once you clarify that "ecosystem probe" means parallel queries.
 
-**2B over 2A/2C**: Embedded-with-sync gives the best of both worlds. The embedded registry works offline and on first run. The sync mechanism (`tsuku update-registry` already exists for recipes) lets us fix bad entries between releases. Option 2A is too rigid; Option 2C breaks offline use.
+**2C over 2A/2B**: Remote-only keeps things simple: one source of truth, always up to date, no embedded-vs-local precedence logic. The registry is fetched on first use and cached locally, following the same pattern as the recipe registry. Option 2B (embedded + sync) adds surface area for little value when the recipe registry already proves the remote-fetch-and-cache pattern works. Option 2A is too rigid. The trade-off is that first run requires network access, but tsuku already requires network for recipe fetching and tool installation.
 
 **3A over 3B/3C**: Threshold filtering is simple and catches the obvious cases. Per-ecosystem thresholds (3B) add maintenance burden for marginal improvement. No filtering (3C) exposes users to typosquats. We can start with conservative global thresholds and add per-ecosystem tuning later if collision data shows it's needed.
 
 ### Trade-offs Accepted
 
 - The discovery registry requires curation. Its scope is narrow (~500 entries) and shrinks as recipe coverage grows via batch generation.
+- First run requires network access for registry fetch. This matches tsuku's existing behavior for recipe registry fetching.
 - Global thresholds will occasionally filter out legitimate new tools. Users can bypass discovery with `--from` for these cases.
 - The sequential chain means ecosystem-resolved tools pay ~0ms extra for the registry miss. This is negligible.
 
@@ -357,7 +358,7 @@ Tool name input is normalized before resolution: Unicode homoglyph detection and
 }
 ```
 
-The registry is a JSON file embedded in the binary via `//go:embed` and optionally overridden by a local file fetched via `tsuku update-registry`. Fields:
+The registry is a JSON file fetched from the recipes repository and cached locally at `$TSUKU_HOME/registry/discovery.json`. It's updated via `tsuku update-registry` (same mechanism as recipe registry updates). Fields:
 
 - `builder` (required): Builder name from the builder registry
 - `source` (required): Builder-specific source argument
@@ -478,11 +479,11 @@ This convergence is a future concern. The current design anticipates it by keepi
 Define the `Resolver` interface, `DiscoveryResult` type, and `ChainResolver`. Implement the registry lookup stage with embedded JSON. This is the foundation everything else builds on.
 
 - Define `internal/discover/` package with core types
-- Implement registry loading from embedded JSON (with `//go:embed`)
+- Implement registry loading from remote JSON (cached locally, same pattern as recipe registry)
 - Implement `RegistryLookup` resolver
 - Implement `ChainResolver` with soft/hard error distinction
 - Add input normalization (Unicode homoglyph detection, lowercasing)
-- Add `tsuku update-registry` support for discovery registry (extend existing mechanism, SHA-256 verification)
+- Extend `tsuku update-registry` to fetch discovery registry alongside recipe registry
 
 ### Phase 2: Discovery Registry Bootstrap
 
@@ -539,7 +540,7 @@ Polish the error messages and add `--verbose` debugging.
 
 The discovery resolver doesn't download artifacts itself. It determines `{builder, source}` which the existing builder pipeline then uses. However, **discovery misdirection is equivalent to download misdirection**: pointing a user at the wrong source is as dangerous as corrupting a download. The resolver's integrity is part of the supply chain.
 
-Mitigation: The registry is embedded in the signed binary. Registry sync uses the same fetch mechanism as recipe registry updates. Ecosystem results are filtered by age/download thresholds. LLM results require user confirmation with repo metadata.
+Mitigation: The registry is fetched from the recipes repository over HTTPS and cached locally, following the same trust model as recipe registry updates. Ecosystem results are filtered by age/download thresholds. LLM results require user confirmation with repo metadata.
 
 ### Execution Isolation
 
@@ -565,7 +566,7 @@ No code execution happens during discovery. Generated recipes go through existin
 - User confirmation required for all LLM-discovered sources
 - Sandbox validation as defense in depth
 
-**Registry integrity.** The embedded registry controls what gets installed for the top ~500 tools. If the build pipeline is compromised, an attacker could modify registry entries. Mitigation: the registry is embedded in the Go binary, which is part of the signed release. The sync mechanism verifies a SHA-256 checksum of the downloaded registry against a checksum embedded in the binary. This means only registry versions matching a released binary are accepted; arbitrary tampering during transit is detected.
+**Registry integrity.** The discovery registry controls what gets installed for the top ~500 tools. It's fetched over HTTPS from the recipes repository and cached locally, following the same trust model as the recipe registry. An attacker who compromises the repository or performs a MITM attack on the HTTPS connection could modify registry entries. Mitigation: the registry lives in the same repository as recipes, so its integrity is covered by the same review and access controls. The HTTPS transport prevents tampering in transit.
 
 **Registry staleness.** A registry entry pointing to a compromised repo continues directing users there until updated. Mitigations:
 - `tsuku update-registry` fetches the latest registry
@@ -587,7 +588,7 @@ No code execution happens during discovery. Generated recipes go through existin
 | LLM prompt injection | HTML stripping, structured JSON output, GitHub API verification, user confirmation | Novel injection via visible text in search results |
 | Registry staleness | update-registry, freshness checks, ownership change detection | Zero-day repo compromise |
 | LLM recommends malicious source | Rich confirmation display, GitHub API verification, sandbox validation | User ignores warning signs |
-| Registry integrity | Embedded in signed binary; sync verified via SHA-256 checksum | Build pipeline compromise |
+| Registry integrity | HTTPS transport, same repo access controls as recipes | Repository compromise |
 | Unicode/homoglyph confusion | Input normalization before resolution | Novel Unicode attacks |
 | Ecosystem API abuse | 3-second timeout, no authentication required | API-side rate limiting |
 
