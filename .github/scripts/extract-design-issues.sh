@@ -106,10 +106,11 @@ extract_number() {
     url=$(extract_link_url "$val")
 
     if [[ "$entry_type" == "issue" ]]; then
-        # Extract from [#N](url) format
+        # Extract from [#N](url) or [#N: title](url) format
         local text
         text=$(extract_link_text "$val")
-        echo "$text" | grep -oE '[0-9]+' || true
+        # Only extract the number after #, not digits in the title
+        echo "$text" | grep -oE '^#[0-9]+' | grep -oE '[0-9]+' || true
     else
         # Extract from milestone URL: .../milestone/N
         echo "$url" | grep -oE 'milestone/[0-9]+' | grep -oE '[0-9]+' || true
