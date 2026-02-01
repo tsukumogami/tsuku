@@ -3,6 +3,7 @@ package discover
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 )
 
@@ -71,6 +72,64 @@ func TestRegistry_LookupMiss(t *testing.T) {
 	_, ok := reg.Lookup("nonexistent")
 	if ok {
 		t.Error("expected miss for nonexistent tool")
+	}
+}
+
+func TestParseRegistry_EmptyBuilder(t *testing.T) {
+	data := []byte(`{"schema_version": 1, "tools": {"kubectl": {"builder": "", "source": "kubernetes/kubernetes"}}}`)
+	_, err := ParseRegistry(data)
+	if err == nil {
+		t.Fatal("expected error for empty builder")
+	}
+	if !strings.Contains(err.Error(), "kubectl") || !strings.Contains(err.Error(), "builder") {
+		t.Errorf("error should mention tool name and field: %v", err)
+	}
+}
+
+func TestParseRegistry_MissingBuilder(t *testing.T) {
+	data := []byte(`{"schema_version": 1, "tools": {"kubectl": {"source": "kubernetes/kubernetes"}}}`)
+	_, err := ParseRegistry(data)
+	if err == nil {
+		t.Fatal("expected error for missing builder")
+	}
+	if !strings.Contains(err.Error(), "builder") {
+		t.Errorf("error should mention builder field: %v", err)
+	}
+}
+
+func TestParseRegistry_EmptySource(t *testing.T) {
+	data := []byte(`{"schema_version": 1, "tools": {"kubectl": {"builder": "github", "source": ""}}}`)
+	_, err := ParseRegistry(data)
+	if err == nil {
+		t.Fatal("expected error for empty source")
+	}
+	if !strings.Contains(err.Error(), "kubectl") || !strings.Contains(err.Error(), "source") {
+		t.Errorf("error should mention tool name and field: %v", err)
+	}
+}
+
+func TestParseRegistry_MissingSource(t *testing.T) {
+	data := []byte(`{"schema_version": 1, "tools": {"kubectl": {"builder": "github"}}}`)
+	_, err := ParseRegistry(data)
+	if err == nil {
+		t.Fatal("expected error for missing source")
+	}
+	if !strings.Contains(err.Error(), "source") {
+		t.Errorf("error should mention source field: %v", err)
+	}
+}
+
+func TestParseRegistry_OptionalBinaryAllowed(t *testing.T) {
+	data := []byte(`{"schema_version": 1, "tools": {
+		"kubectl": {"builder": "github", "source": "kubernetes/kubernetes", "binary": "kubectl"},
+		"ripgrep": {"builder": "github", "source": "BurntSushi/ripgrep"}
+	}}`)
+	reg, err := ParseRegistry(data)
+	if err != nil {
+		t.Fatalf("optional binary field should not cause error: %v", err)
+	}
+	if len(reg.Tools) != 2 {
+		t.Errorf("got %d tools, want 2", len(reg.Tools))
 	}
 }
 
