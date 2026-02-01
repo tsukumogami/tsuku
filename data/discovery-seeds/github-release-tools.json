@@ -1,0 +1,15 @@
+{
+  "category": "github-release",
+  "entries": [
+    {"name": "ripgrep", "builder": "github", "source": "BurntSushi/ripgrep"},
+    {"name": "fd", "builder": "github", "source": "sharkdp/fd"},
+    {"name": "bat", "builder": "github", "source": "sharkdp/bat"},
+    {"name": "delta", "builder": "github", "source": "dandavison/delta"},
+    {"name": "lazygit", "builder": "github", "source": "jesseduffield/lazygit"},
+    {"name": "eza", "builder": "github", "source": "eza-community/eza"},
+    {"name": "hyperfine", "builder": "github", "source": "sharkdp/hyperfine"},
+    {"name": "jless", "builder": "github", "source": "PaulJuliusMartinez/jless"},
+    {"name": "xh", "builder": "github", "source": "ducaale/xh"},
+    {"name": "yq", "builder": "github", "source": "mikefarah/yq"}
+  ]
+}

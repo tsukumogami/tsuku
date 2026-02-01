@@ -36,8 +36,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1364: feat(discover): add seed-discovery tool with schema v2 registry output](https://github.com/tsukumogami/tsuku/issues/1364) | None | testable |
-| _Creates the `cmd/seed-discovery` CLI tool that reads seed lists and the priority queue, validates entries via builder-specific API checks, and outputs `recipes/discovery.json` in schema v2 format. Establishes the end-to-end pipeline that all refinement issues build on._ | | |
+| ~~[#1364: feat(discover): add seed-discovery tool with schema v2 registry output](https://github.com/tsukumogami/tsuku/issues/1364)~~ | ~~None~~ | ~~testable~~ |
 | [#1365: feat(discover): evolve registry schema to v2 with optional metadata](https://github.com/tsukumogami/tsuku/issues/1365) | None | testable |
 | _Updates `RegistryEntry` struct and `ParseRegistry` to accept schema versions 1 and 2, adding optional fields (description, homepage, repo, disambiguation). Existing v1 consumers continue working unchanged._ | | |
 | [#1366: feat(discover): add metadata enrichment to seed-discovery tool](https://github.com/tsukumogami/tsuku/issues/1366) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
@@ -70,8 +69,9 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1364,I1365 ready
-    class I1366,I1367,I1368,I1369 blocked
+    class I1364 done
+    class I1365 ready
+    class I1366,I1367,I1368,I1369 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design

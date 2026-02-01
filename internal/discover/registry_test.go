@@ -133,6 +133,78 @@ func TestParseRegistry_OptionalBinaryAllowed(t *testing.T) {
 	}
 }
 
+func TestParseRegistry_SchemaV2(t *testing.T) {
+	data := []byte(`{
+		"schema_version": 2,
+		"tools": {
+			"ripgrep": {
+				"builder": "github",
+				"source": "BurntSushi/ripgrep",
+				"description": "A fast search tool",
+				"homepage": "https://github.com/BurntSushi/ripgrep",
+				"repo": "BurntSushi/ripgrep"
+			},
+			"bat": {
+				"builder": "github",
+				"source": "sharkdp/bat",
+				"disambiguation": true
+			}
+		}
+	}`)
+	reg, err := ParseRegistry(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if len(reg.Tools) != 2 {
+		t.Errorf("got %d tools, want 2", len(reg.Tools))
+	}
+	rg := reg.Tools["ripgrep"]
+	if rg.Description != "A fast search tool" {
+		t.Errorf("description = %q, want %q", rg.Description, "A fast search tool")
+	}
+	bat := reg.Tools["bat"]
+	if !bat.Disambiguation {
+		t.Error("bat.Disambiguation should be true")
+	}
+}
+
+func TestParseRegistry_V2MetadataOptional(t *testing.T) {
+	// v2 with no metadata fields should work fine
+	data := []byte(`{
+		"schema_version": 2,
+		"tools": {
+			"jq": {"builder": "homebrew", "source": "jq"}
+		}
+	}`)
+	reg, err := ParseRegistry(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if reg.Tools["jq"].Description != "" {
+		t.Error("expected empty description for minimal v2 entry")
+	}
+}
+
+func TestParseRegistry_V2LookupStillWorks(t *testing.T) {
+	data := []byte(`{
+		"schema_version": 2,
+		"tools": {
+			"ripgrep": {"builder": "github", "source": "BurntSushi/ripgrep", "description": "fast grep"}
+		}
+	}`)
+	reg, err := ParseRegistry(data)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	entry, ok := reg.Lookup("ripgrep")
+	if !ok {
+		t.Fatal("expected hit")
+	}
+	if entry.Builder != "github" || entry.Source != "BurntSushi/ripgrep" {
+		t.Errorf("lookup returned wrong entry: %+v", entry)
+	}
+}
+
 func TestLoadRegistry_FromFile(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "discovery.json")
