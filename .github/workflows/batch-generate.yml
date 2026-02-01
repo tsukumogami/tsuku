@@ -708,6 +708,16 @@ jobs:
           echo "BATCH_ID=$BATCH_ID" >> "$GITHUB_ENV"
           echo "Generated batch ID: $BATCH_ID"
 
+      - name: Update circuit breaker
+        run: |
+          if [ "$INCLUDED_COUNT" -gt 0 ]; then
+            OUTCOME="success"
+          else
+            OUTCOME="failure"
+          fi
+          echo "Circuit breaker outcome: $OUTCOME"
+          ./scripts/update_breaker.sh "${{ inputs.ecosystem }}" "$OUTCOME"
+
       - name: Requeue unblocked packages
         run: ./scripts/requeue-unblocked.sh
 
@@ -720,12 +730,39 @@ jobs:
             echo "changes=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Persist circuit breaker state
+        if: steps.check.outputs.changes == 'false'
+        run: |
+          if git diff --quiet batch-control.json; then
+            echo "No circuit breaker changes to persist"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add batch-control.json
+          git commit -m "chore(batch): update circuit breaker state for ${{ inputs.ecosystem }}"
+          git push
+        env:
+          GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}
+
       - name: Create pull request
         if: steps.check.outputs.changes == 'true'
         run: |
+          # Update queue statuses for processed recipes
+          for recipe in $INCLUDED_RECIPES; do
+            jq --arg pkg "${{ inputs.ecosystem }}:${recipe}" \
+              '(.packages[] | select(.id == $pkg)).status = "success"' \
+              data/priority-queue.json > tmp.json && mv tmp.json data/priority-queue.json
+          done
+          for recipe in $EXCLUDED_RECIPES; do
+            jq --arg pkg "${{ inputs.ecosystem }}:${recipe}" \
+              '(.packages[] | select(.id == $pkg)).status = "failed"' \
+              data/priority-queue.json > tmp.json && mv tmp.json data/priority-queue.json
+          done
+
           BRANCH="batch/${{ inputs.ecosystem }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
-          git add recipes/ data/
+          git add recipes/ data/ batch-control.json
           git reset HEAD -- data/batch-summary.md 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
