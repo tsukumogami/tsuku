@@ -4,11 +4,10 @@ Feature: Search
   Background:
     Given a clean tsuku environment
 
-  Scenario: Search with empty string
-    When I run "tsuku search ''"
+  Scenario: Search with no query does not suggest install
+    When I run "tsuku search"
     Then the exit code is 0
-    # TODO: should assert output does not suggest "tsuku install" with empty name
-    # https://github.com/tsukumogami/tsuku/issues/1293
+    And the output does not contain "tsuku install"
 
   Scenario: Search for a known tool
     When I run "tsuku search go"
