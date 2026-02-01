@@ -101,10 +101,10 @@ for col in "${REQUIRED_COLUMNS[@]}"; do
     fi
 done
 
-# Extract table data rows (skip header and separator)
-# Pattern: | content | content | content | content |
+# Extract table data rows (skip header, separator, and description rows)
+# Description rows have italic text in first cell with empty remaining cells: | _text_ | | | |
 TABLE_ROWS=$(echo "$ISSUES_SECTION" | awk '
-    /^\|/ && !/^\| *-/ && !/^\| *Issue/ { print }
+    /^\|/ && !/^\| *-/ && !/^\| *Issue/ && !/^\| *_/ { print }
 ')
 
 # Parse column positions from header

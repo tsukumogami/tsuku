@@ -178,10 +178,11 @@ parse_table() {
     dep_col=$(get_column_position "$header" "Dependencies")
     tier_col=$(get_column_position "$header" "Tier")
 
-    # Extract table data rows (skip header and separator)
+    # Extract table data rows (skip header, separator, and description rows)
+    # Description rows have italic text in first cell: | _text_ | | | |
     local rows
     rows=$(echo "$table_content" | awk '
-        /^\|/ && !/^\| *-/ && !/^\| *Issue/ { print }
+        /^\|/ && !/^\| *-/ && !/^\| *Issue/ && !/^\| *_/ { print }
     ')
 
     local entries="[]"
