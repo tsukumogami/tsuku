@@ -38,7 +38,7 @@ Planned
 | _Add schema validation when loading `discovery.json`: check required fields (`builder`, `source`), reject unknown builders, and surface clear errors for malformed entries. Prevents silent failures from bad registry data._ | | |
 | [#1314: --deterministic-only guard](https://github.com/tsukumogami/tsuku/issues/1314) | None | testable |
 | _Add the early check in the create pipeline that rejects builders where `RequiresLLM()` returns true when `--deterministic-only` is set, producing the actionable error message from the UX table instead of a confusing "no LLM providers available" failure._ | | |
-| [#1315: Bootstrap registry ~500 entries](https://github.com/tsukumogami/tsuku/issues/1315) | [#1312](https://github.com/tsukumogami/tsuku/issues/1312), [M62](https://github.com/tsukumogami/tsuku/milestone/62) | testable |
+| ~~[#1315: Bootstrap registry ~500 entries](https://github.com/tsukumogami/tsuku/issues/1315)~~ | ~~[#1312](https://github.com/tsukumogami/tsuku/issues/1312), [M62](https://github.com/tsukumogami/tsuku/milestone/62)~~ | ~~testable~~ |
 | _Populate `discovery.json` with ~500 entries covering GitHub-release tools not in any ecosystem registry and disambiguation overrides for known name collisions. Decomposed into [milestone 62](https://github.com/tsukumogami/tsuku/milestone/62) with 6 implementation issues._ | | |
 | ~~[#1337: Add --from flag to install](https://github.com/tsukumogami/tsuku/issues/1337)~~ | None | testable |
 | _Add `--from` flag to `tsuku install` that forwards to the create pipeline, skipping recipe lookup. Passes through `--yes` and `--deterministic-only`. First step toward converging install and create under a single command._ | | |
@@ -104,7 +104,7 @@ graph TD
     class I1338 ready
     class I1319 blocked
     class M62 ready
-    class I1315 blocked
+    class I1315 done
     class I1317,I1318,I1321,I1322 blocked
 ```
 
