@@ -43,6 +43,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Preflight circuit breaker check
+        run: |
+          STATE=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
+            '.circuit_breaker[$eco].state // "closed"' batch-control.json)
+          if [ "$STATE" = "open" ]; then
+            OPENED_AT=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
+              '.circuit_breaker[$eco].last_failure // "unknown"' batch-control.json)
+            FAILURES=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
+              '.circuit_breaker[$eco].failures // 0' batch-control.json)
+            echo "::error::Circuit breaker is OPEN for ${{ inputs.ecosystem }} (${FAILURES} consecutive failures, last failure: ${OPENED_AT}). Skipping batch generation."
+            exit 1
+          fi
+          echo "Circuit breaker check passed for ${{ inputs.ecosystem }} (state: ${STATE})"
+
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
