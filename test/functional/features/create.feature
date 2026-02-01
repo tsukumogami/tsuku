@@ -71,3 +71,10 @@ Feature: Create
     Then the exit code is 3
     And the error output contains "could not find"
     And the error output contains "--from"
+
+  Scenario: Create without --from resolves from discovery registry
+    When I run "tsuku create jq --deterministic-only --yes"
+    Then the exit code is 0
+    And the error output contains "Discovered:"
+    And the output contains "Recipe created:"
+    And the file "recipes/jq.toml" exists

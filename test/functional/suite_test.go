@@ -68,12 +68,24 @@ func TestFeatures(t *testing.T) {
 func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 	// Reset home directory before each scenario
 	ctx.Before(func(ctx context.Context, sc *godog.Scenario) (context.Context, error) {
+		repoRoot := filepath.Dir(binPath)
 		// homeDir is relative to the binary's directory (repo root)
-		homeDir := filepath.Join(filepath.Dir(binPath), ".tsuku-test")
+		homeDir := filepath.Join(repoRoot, ".tsuku-test")
 		os.RemoveAll(homeDir)
 		if err := os.MkdirAll(homeDir, 0o755); err != nil {
 			return ctx, err
 		}
+
+		// Seed the discovery registry cache from the repo's checked-in file
+		registryDir := filepath.Join(homeDir, "registry")
+		if err := os.MkdirAll(registryDir, 0o755); err != nil {
+			return ctx, err
+		}
+		src := filepath.Join(repoRoot, "recipes", "discovery.json")
+		if data, err := os.ReadFile(src); err == nil {
+			_ = os.WriteFile(filepath.Join(registryDir, "discovery.json"), data, 0o644)
+		}
+
 		state := &testState{
 			homeDir: homeDir,
 			binPath: binPath,
