@@ -40,7 +40,7 @@ Planned
 | _Add the early check in the create pipeline that rejects builders where `RequiresLLM()` returns true when `--deterministic-only` is set, producing the actionable error message from the UX table instead of a confusing "no LLM providers available" failure._ | | |
 | [#1315: Bootstrap registry ~500 entries](https://github.com/tsukumogami/tsuku/issues/1315) | [#1312](https://github.com/tsukumogami/tsuku/issues/1312) | testable |
 | _Populate `discovery.json` with ~500 entries covering GitHub-release tools not in any ecosystem registry and disambiguation overrides for known name collisions. Requires the fetch mechanism from #1312 to be testable end-to-end._ | | |
-| [#1337: Add --from flag to install](https://github.com/tsukumogami/tsuku/issues/1337) | None | testable |
+| ~~[#1337: Add --from flag to install](https://github.com/tsukumogami/tsuku/issues/1337)~~ | None | testable |
 | _Add `--from` flag to `tsuku install` that forwards to the create pipeline, skipping recipe lookup. Passes through `--yes` and `--deterministic-only`. First step toward converging install and create under a single command._ | | |
 | [#1338: Discovery fallback in install](https://github.com/tsukumogami/tsuku/issues/1338) | [#1337](https://github.com/tsukumogami/tsuku/issues/1337) | testable |
 | _Wire the discovery resolver chain into `tsuku install` so unknown tools trigger automatic source discovery and recipe generation. Shows which resolver stage matched and provides actionable errors on failure._ | | |
