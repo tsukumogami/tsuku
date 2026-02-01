@@ -708,6 +708,16 @@ jobs:
           echo "BATCH_ID=$BATCH_ID" >> "$GITHUB_ENV"
           echo "Generated batch ID: $BATCH_ID"
 
+      - name: Update circuit breaker
+        run: |
+          if [ "$INCLUDED_COUNT" -gt 0 ]; then
+            OUTCOME="success"
+          else
+            OUTCOME="failure"
+          fi
+          echo "Circuit breaker outcome: $OUTCOME"
+          ./scripts/update_breaker.sh "${{ inputs.ecosystem }}" "$OUTCOME"
+
       - name: Requeue unblocked packages
         run: ./scripts/requeue-unblocked.sh
 
@@ -723,6 +733,18 @@ jobs:
       - name: Create pull request
         if: steps.check.outputs.changes == 'true'
         run: |
+          # Update queue statuses for processed recipes
+          for recipe in $INCLUDED_RECIPES; do
+            jq --arg pkg "${{ inputs.ecosystem }}:${recipe}" \
+              '(.packages[] | select(.id == $pkg)).status = "success"' \
+              data/priority-queue.json > tmp.json && mv tmp.json data/priority-queue.json
+          done
+          for recipe in $EXCLUDED_RECIPES; do
+            jq --arg pkg "${{ inputs.ecosystem }}:${recipe}" \
+              '(.packages[] | select(.id == $pkg)).status = "failed"' \
+              data/priority-queue.json > tmp.json && mv tmp.json data/priority-queue.json
+          done
+
           BRANCH="batch/${{ inputs.ecosystem }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
           git add recipes/ data/
