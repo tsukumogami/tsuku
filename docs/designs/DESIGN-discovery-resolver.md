@@ -93,8 +93,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1312 done
-    class I1313,I1314 ready
+    class I1312,I1313 done
+    class I1314 ready
     class I1319 blocked
     class I1316 ready
     class I1315,I1317,I1318,I1321,I1322 needsDesign
