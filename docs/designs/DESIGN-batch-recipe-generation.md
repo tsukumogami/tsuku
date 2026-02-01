@@ -21,7 +21,7 @@ Planned
 | [#1253](https://github.com/tsukumogami/tsuku/issues/1253) | Pinned release with source fallback | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | simple |
 | ~~[#1254](https://github.com/tsukumogami/tsuku/issues/1254)~~ | ~~Multi-platform validation jobs~~ | ~~[#1252](https://github.com/tsukumogami/tsuku/issues/1252)~~ | ~~testable~~ |
 | [#1255](https://github.com/tsukumogami/tsuku/issues/1255) | Circuit breaker integration | [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | testable |
-| [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | Platform constraints in merge job | ~~[M60](https://github.com/tsukumogami/tsuku/milestone/60)~~ | testable |
+| ~~[#1256](https://github.com/tsukumogami/tsuku/issues/1256)~~ | ~~Platform constraints in merge job~~ | ~~[M60](https://github.com/tsukumogami/tsuku/milestone/60)~~ | ~~testable~~ |
 | [#1257](https://github.com/tsukumogami/tsuku/issues/1257) | SLI metrics collection | ~~[M60](https://github.com/tsukumogami/tsuku/milestone/60)~~ | testable |
 | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | PR CI platform filtering | [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | testable |
 | ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON CLI output + batch integration~~ | ~~None~~ | ~~testable~~ |
@@ -75,7 +75,8 @@ graph LR
     class I1254,I1273 done
     class I1252,I1287,M61 ready
     class M60 ready
-    class I1255,I1256,I1257,I1258 blocked
+    class I1256 done
+    class I1255,I1257,I1258 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
