@@ -72,10 +72,10 @@ graph LR
 
     class I1252 ready
     class I1253 blocked
-    class I1254,I1273,M60 done
-    class I1287,I1257,M61 ready
-    class I1256 needsDesign
-    class I1255,I1258 blocked
+    class I1254,I1273 done
+    class I1252,I1287,M61 ready
+    class M60 ready
+    class I1255,I1256,I1257,I1258 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
