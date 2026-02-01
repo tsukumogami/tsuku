@@ -220,13 +220,25 @@ recipes/discovery.json         # Output: validated registry
 
 ### Builder Selection Rules
 
-Most discovery entries use the `github` builder, since ecosystem tools (cargo, npm, pypi, etc.) are handled by the ecosystem probe stage and don't need registry entries. The builder selection rules are:
+Discovery entries exist for two reasons: (1) the tool isn't discoverable through ecosystem probes, or (2) the tool needs a disambiguation override because its name collides across ecosystems. The builder for each entry should be chosen based on the best installation path for that tool, not just "whatever hosts the source code."
 
-1. **Use `github`** when the tool distributes pre-built binaries via GitHub releases and isn't in any ecosystem registry (kubectl, terraform, stripe-cli)
-2. **Use an ecosystem builder** (`cargo`, `npm`, `pypi`, etc.) only for disambiguation overrides where the correct resolution is an ecosystem package rather than a GitHub release
-3. **Use `homebrew`** for tools that are best installed via Homebrew bottles (e.g., tools with complex build dependencies that Homebrew handles well)
+Many tools are maintained on GitHub but distributed through Homebrew, cargo, npm, or other ecosystems. The GitHub repo is the source of truth for development, but the best installation path may be an ecosystem package. For example, `jq` is maintained on GitHub (jqlang/jq) but its Homebrew bottle is the most reliable install method — so its discovery entry uses the `homebrew` builder.
 
-The existing `jq` entry uses `homebrew` because jq's Homebrew bottle is a reliable installation path. Most new entries will use `github` since the primary gap is GitHub-release tools that ecosystem probes can't discover.
+**Selection order (prefer earlier options):**
+
+1. **Use `github`** when the tool publishes pre-built platform binaries in GitHub releases. This is the fastest and most reliable path — no build step, no ecosystem-specific toolchain. Examples: kubectl, terraform, gh, stripe-cli.
+2. **Use `homebrew`** when the tool has Homebrew bottles but no GitHub release binaries, or when Homebrew handles complex build dependencies that other builders struggle with. Examples: jq, ffmpeg, imagemagick.
+3. **Use an ecosystem builder** (`cargo`, `npm`, `pypi`, etc.) as a disambiguation override when the tool name collides and the correct resolution is the ecosystem package. Examples: if `serve` should resolve to the npm package rather than a GitHub release.
+
+**What about tools not on GitHub?**
+
+The discovery registry format supports any builder — entries like `{"builder": "homebrew", "source": "formula-name"}` or `{"builder": "cargo", "source": "crate-name"}` are valid. The seed list format and validation tool should handle non-GitHub entries:
+
+- For `homebrew` builder: validate the formula exists via Homebrew API
+- For ecosystem builders (`cargo`, `npm`, etc.): validate the package exists via the ecosystem's API
+- For `github` builder: validate the repo exists, isn't archived, and has binary release assets
+
+At bootstrap time, the majority of entries will use `github` since that's the largest gap (ecosystem tools are already discoverable via the probe stage). But the design doesn't limit future entries to GitHub-only — the seed list format and validation are builder-aware.
 
 ### Seed List Format
 
@@ -235,24 +247,23 @@ The existing `jq` entry uses `homebrew` because jq's Homebrew bottle is a reliab
   "category": "dev-tools",
   "description": "General development CLI tools",
   "entries": [
-    {"name": "ripgrep", "repo": "BurntSushi/ripgrep", "verification": "https://github.com/BurntSushi/ripgrep"},
-    {"name": "fd", "repo": "sharkdp/fd", "disambiguation": true, "verification": "https://github.com/sharkdp/fd"},
-    {"name": "bat", "repo": "sharkdp/bat", "disambiguation": true, "verification": "https://github.com/sharkdp/bat"},
-    {"name": "jq", "repo": "jqlang/jq", "builder": "homebrew", "source": "jq", "verification": "https://github.com/jqlang/jq"},
-    {"name": "yq", "repo": "mikefarah/yq", "verification": "https://github.com/mikefarah/yq"},
-    {"name": "delta", "repo": "dandavison/delta", "disambiguation": true, "verification": "https://github.com/dandavison/delta"},
-    {"name": "kubectl", "repo": "kubernetes/kubernetes", "binary": "kubectl", "verification": "https://kubernetes.io/docs/tasks/tools/"}
+    {"name": "ripgrep", "builder": "github", "source": "BurntSushi/ripgrep", "verification": "https://github.com/BurntSushi/ripgrep"},
+    {"name": "fd", "builder": "github", "source": "sharkdp/fd", "disambiguation": true, "verification": "https://github.com/sharkdp/fd"},
+    {"name": "bat", "builder": "github", "source": "sharkdp/bat", "disambiguation": true, "verification": "https://github.com/sharkdp/bat"},
+    {"name": "jq", "builder": "homebrew", "source": "jq", "verification": "https://github.com/jqlang/jq"},
+    {"name": "yq", "builder": "github", "source": "mikefarah/yq", "verification": "https://github.com/mikefarah/yq"},
+    {"name": "delta", "builder": "github", "source": "dandavison/delta", "disambiguation": true, "verification": "https://github.com/dandavison/delta"},
+    {"name": "kubectl", "builder": "github", "source": "kubernetes/kubernetes", "binary": "kubectl", "verification": "https://kubernetes.io/docs/tasks/tools/"}
   ]
 }
 ```
 
 Fields:
 - `name` (required): Tool name as users would type it
-- `repo` (required): GitHub `owner/repo`
+- `builder` (required): Builder name (`github`, `homebrew`, `cargo`, `npm`, etc.)
+- `source` (required): Builder-specific source argument (`owner/repo` for github, formula name for homebrew, crate name for cargo, etc.)
 - `binary` (optional): Binary name when it differs from tool name
 - `disambiguation` (optional): When `true`, this entry is a collision override and should be preserved even after a recipe exists
-- `builder` (optional): Override builder (default: `github`). Use for disambiguation entries that should resolve to an ecosystem builder
-- `source` (optional): Override source argument. When `builder` is set, this is the builder-specific source (e.g., Homebrew formula name)
 - `verification` (required): URL to the tool's official page or repository proving this is the canonical source. Reviewers must verify this link matches the entry
 
 ### Go Tool: cmd/seed-discovery
@@ -280,13 +291,14 @@ Merge all entries (deduplicate by name)
     |
     v
 For each entry:
-  1. GitHub API: repo exists? not archived? owner matches seed list?
-  2. GitHub API: has a release within the last 24 months?
-  3. GitHub API: latest release has binary assets? (exclude source archives)
-  4. Cross-reference: recipe already exists in recipes/?
-  5. Cross-reference: entry in priority queue?
-  6. Collision check: name exists on npm, crates.io, PyPI, or RubyGems?
-  7. Typosquatting check: Levenshtein distance <=2 from another entry?
+  1. Builder-specific validation:
+     - github: repo exists? not archived? owner matches? release in last 24 months? binary assets?
+     - homebrew: formula exists via Homebrew API?
+     - cargo/npm/pypi/gem: package exists via ecosystem API?
+  2. Cross-reference: recipe already exists in recipes/?
+  3. Cross-reference: entry in priority queue?
+  4. Collision check: name exists on npm, crates.io, PyPI, or RubyGems?
+  5. Typosquatting check: Levenshtein distance <=2 from another entry?
     |
     v
 Output:
