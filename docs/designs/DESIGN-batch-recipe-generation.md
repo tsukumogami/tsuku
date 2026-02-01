@@ -20,12 +20,14 @@ Planned
 | [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | Preflight job and rate limiting | None | testable |
 | [#1253](https://github.com/tsukumogami/tsuku/issues/1253) | Pinned release with source fallback | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | simple |
 | ~~[#1254](https://github.com/tsukumogami/tsuku/issues/1254)~~ | ~~Multi-platform validation jobs~~ | ~~[#1252](https://github.com/tsukumogami/tsuku/issues/1252)~~ | ~~testable~~ |
-| [#1255](https://github.com/tsukumogami/tsuku/issues/1255) | Circuit breaker integration | [#1252](https://github.com/tsukumogami/tsuku/issues/1252) | testable |
+| [#1255](https://github.com/tsukumogami/tsuku/issues/1255) | Circuit breaker integration (preflight side) | [#1252](https://github.com/tsukumogami/tsuku/issues/1252), [M63](https://github.com/tsukumogami/tsuku/milestone/63) | testable |
 | ~~[#1256](https://github.com/tsukumogami/tsuku/issues/1256)~~ | ~~Platform constraints in merge job~~ | ~~[M60](https://github.com/tsukumogami/tsuku/milestone/60)~~ | ~~testable~~ |
-| [#1257](https://github.com/tsukumogami/tsuku/issues/1257) | SLI metrics collection | ~~[M60](https://github.com/tsukumogami/tsuku/milestone/60)~~ | testable |
+| ~~[#1257](https://github.com/tsukumogami/tsuku/issues/1257)~~ | ~~SLI metrics collection~~ | ~~[M60](https://github.com/tsukumogami/tsuku/milestone/60)~~ | ~~testable~~ |
 | [#1258](https://github.com/tsukumogami/tsuku/issues/1258) | PR CI platform filtering | [#1256](https://github.com/tsukumogami/tsuku/issues/1256) | testable |
 | ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON CLI output + batch integration~~ | ~~None~~ | ~~testable~~ |
 | [#1287](https://github.com/tsukumogami/tsuku/issues/1287) | Auto-install required toolchains for ecosystem builders | None | testable |
+| [M63](https://github.com/tsukumogami/tsuku/milestone/63) | Merge Job Completion (batch_id, recipe tracking, circuit breaker update, queue sync) | None | — |
+| [M64](https://github.com/tsukumogami/tsuku/milestone/64) | Merge Job Observability (SLI metrics, auto-merge gating) | [M63](https://github.com/tsukumogami/tsuku/milestone/63) | — |
 
 ### Dependency Graph
 
@@ -37,16 +39,17 @@ graph LR
 
     subgraph Phase2["Phase 2: Validation"]
         I1254["#1254: Multi-platform validation"]
-        I1255["#1255: Circuit breaker"]
         M60["M60: Platform Validation (Foundation)"]
     end
 
-    subgraph Phase3["Phase 3: Constraints + Metrics"]
+    subgraph Phase3["Phase 3: Merge Job"]
         I1256["#1256: Platform constraints"]
-        I1257["#1257: SLI metrics"]
+        M63["M63: Merge Job Completion"]
     end
 
-    subgraph Phase4["Phase 4: CI Integration"]
+    subgraph Phase4["Phase 4: Observability + CI"]
+        I1255["#1255: Circuit breaker (preflight)"]
+        M64["M64: Merge Job Observability"]
         I1258["#1258: PR CI filtering"]
     end
 
@@ -58,25 +61,24 @@ graph LR
     end
 
     I1252 --> I1254
-    I1252 --> I1255
     I1254 --> M60
     M60 --> I1256
-    M60 --> I1257
+    M60 --> M63
     I1256 --> I1258
     I1258 --> I1253
+    M63 --> I1255
+    I1252 --> I1255
+    M63 --> M64
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1252 ready
-    class I1253 blocked
     class I1254,I1273 done
-    class I1252,I1287,M61 ready
     class M60,I1256 done
-    class I1255 blocked
-    class I1257,I1258 ready
+    class I1252,I1287,M61,M63 ready
+    class I1253,I1255,I1258,M64 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
