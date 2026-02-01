@@ -67,7 +67,7 @@ The core question is where multi-platform validation should happen: inside the b
 - Workflow jobs pass data via uploaded artifacts
 - Failure JSONL uses `schema_version` field and structured categories
 - Environment names: `{os}-{libc}-{arch}` (e.g., `linux-glibc-x86_64`)
-- Skip flags: `workflow_dispatch` inputs with boolean type
+- All validation jobs always run (no skip flags)
 
 ## Considered Options
 
@@ -206,10 +206,10 @@ batch-generate.yml:
       │
   generate (existing, Linux x86_64 glibc/debian)
       │
-      ├── validate-linux-x86_64   (ubuntu-latest, 5 family containers, if !skip_linux_families)
-      ├── validate-linux-arm64    (ubuntu-24.04-arm, 5 family containers, if !skip_arm64)
-      ├── validate-darwin-arm64   (macos-14, if !skip_macos)
-      └── validate-darwin-x86_64  (macos-13, if !skip_macos)
+      ├── validate-linux-x86_64   (ubuntu-latest, 5 family containers)
+      ├── validate-linux-arm64    (ubuntu-24.04-arm, 5 family containers)
+      ├── validate-darwin-arm64   (macos-14)
+      └── validate-darwin-x86_64  (macos-13)
       │
   merge (aggregates results, writes constraints, creates PR)
 ```
@@ -247,13 +247,13 @@ Platform IDs use the format `{os}-{family}-{libc}-{arch}` for Linux and `{os}-{a
 
 ### Platform Environments
 
-| Job | Runner | Environments | Skip Flag |
-|-----|--------|-------------|-----------|
-| generate (existing) | `ubuntu-latest` | `linux-debian-glibc-x86_64` | N/A (always runs) |
-| validate-linux-x86_64 | `ubuntu-latest` | 5 family containers: `linux-{debian,rhel,arch,suse}-glibc-x86_64`, `linux-alpine-musl-x86_64` | `skip_linux_families` |
-| validate-linux-arm64 | `ubuntu-24.04-arm` | 5 family containers: `linux-{debian,rhel,arch,suse}-glibc-arm64`, `linux-alpine-musl-arm64` | `skip_arm64` |
-| validate-darwin-arm64 | `macos-14` | `darwin-arm64` | `skip_macos` |
-| validate-darwin-x86_64 | `macos-13` | `darwin-x86_64` | `skip_macos` |
+| Job | Runner | Environments |
+|-----|--------|-------------|
+| generate (existing) | `ubuntu-latest` | `linux-debian-glibc-x86_64` |
+| validate-linux-x86_64 | `ubuntu-latest` | 5 family containers: `linux-{debian,rhel,arch,suse}-glibc-x86_64`, `linux-alpine-musl-x86_64` |
+| validate-linux-arm64 | `ubuntu-24.04-arm` | 5 family containers: `linux-{debian,rhel,arch,suse}-glibc-arm64`, `linux-alpine-musl-arm64` |
+| validate-darwin-arm64 | `macos-14` | `darwin-arm64` |
+| validate-darwin-x86_64 | `macos-13` | `darwin-x86_64` |
 
 **Container images for Linux family validation:**
 
@@ -269,14 +269,14 @@ These are the same images used by `platform-integration.yml`. ARM64 variants exi
 
 ### Merge Job Logic
 
-The merge job runs after all platform jobs complete (including skipped ones). It distinguishes between **skipped** platforms (skip flag was true, no result artifact exists) and **failed** platforms (job ran, recipe failed). Skipped platforms are excluded from constraint derivation; the recipe is treated as "untested" on those platforms rather than "unsupported."
+The merge job runs after all four platform validation jobs complete. All jobs always run — there are no skip flags.
 
-1. **Downloads all result artifacts** from platform jobs (absent artifacts = skipped platform)
-2. **Builds the result matrix**: per-recipe, per-platform pass/fail/skipped
+1. **Downloads all result artifacts** from platform jobs
+2. **Builds the result matrix**: per-recipe, per-platform pass/fail
 3. **For each recipe**:
-   - If passed all platforms: include in PR with no constraint changes
-   - If passed some platforms (partial coverage): write platform constraints to recipe TOML, include in PR
-   - If passed only linux-glibc-x86_64 (generation platform) and failed all validation platforms: still include with restrictive constraints
+   - If passed all 12 environments: include in PR with no constraint changes
+   - If passed some environments (partial coverage): write platform constraints to recipe TOML, include in PR
+   - If passed only linux-debian-glibc-x86_64 (generation environment) and failed all validation environments: still include with restrictive constraints
    - If has `run_command` action: exclude from PR (security gate)
 4. **Creates PR** with passing/constrained recipes, failure JSONL, and queue updates
 
@@ -344,7 +344,6 @@ merge job:
 ### Phase 1: Platform Validation Jobs (#1254)
 
 Add the four platform validation jobs to `batch-generate.yml`:
-- Conditional execution based on skip flags
 - Retry logic for network errors
 - Structured JSON result artifacts
 - Job summaries in `$GITHUB_STEP_SUMMARY`
@@ -413,6 +412,5 @@ Platform validation doesn't access or transmit user data. It runs in CI on synth
 ### Mitigations
 
 - Progressive validation minimizes macOS cost (only recipes that pass Linux get promoted)
-- Skip flags allow disabling expensive platforms for budget-constrained runs
 - `test-changed-recipes.yml` on the PR provides defense-in-depth without additional cost (it runs anyway)
 - The two validation systems serve different purposes: batch produces structured per-platform results for constraint writing; PR CI validates the final constrained recipes
