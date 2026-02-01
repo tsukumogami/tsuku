@@ -27,6 +27,19 @@ const ExitNetwork = 5
 // MaxRetries is the number of retry attempts for transient failures.
 const MaxRetries = 3
 
+// ecosystemRateLimits defines the sleep duration between package generations
+// per ecosystem, to respect API rate limits.
+var ecosystemRateLimits = map[string]time.Duration{
+	"homebrew": 1 * time.Second,
+	"cargo":    1 * time.Second,
+	"npm":      1 * time.Second,
+	"pypi":     1 * time.Second,
+	"go":       1 * time.Second,
+	"rubygems": 6 * time.Second,
+	"cpan":     1 * time.Second,
+	"cask":     1 * time.Second,
+}
+
 // Config holds batch generation settings.
 type Config struct {
 	Ecosystem   string
@@ -72,7 +85,13 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 		bin = "tsuku"
 	}
 
-	for _, pkg := range candidates {
+	rateLimit := ecosystemRateLimits[o.cfg.Ecosystem]
+
+	for i, pkg := range candidates {
+		// Rate limit: sleep between packages (not before the first one)
+		if i > 0 && rateLimit > 0 {
+			time.Sleep(rateLimit)
+		}
 		o.setStatus(pkg.ID, "in_progress")
 
 		recipePath := recipeOutputPath(o.cfg.OutputDir, pkg.Name)

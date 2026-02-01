@@ -38,21 +38,21 @@ Why not chosen: While technically cleaner (keeps all logic in Go), it wastes CI 
 
 ## Implementation Steps
 
-- [ ] Add preflight step to batch-generate.yml
+- [x] Add preflight step to batch-generate.yml
   - Insert new step after checkout (line 44) and before "Build binaries" (line 50)
   - Read batch-control.json with jq
   - Check if `.circuit_breaker[$ecosystem].state == "open"`
   - If open, fail with `::error::` annotation containing ecosystem, opened_at, and reason
   - Exit with non-zero status to prevent downstream jobs from running
-- [ ] Add rate limit configuration to orchestrator
+- [x] Add rate limit configuration to orchestrator
   - Define rate limit map at package level: `var ecosystemRateLimits = map[string]time.Duration{...}`
   - Map entries: homebrew=1s, cargo=1s, npm=1s, pypi=1s, go=1s, rubygems=6s, cpan=1s, cask=1s
-- [ ] Add rate limiting sleep to Run() method
+- [x] Add rate limiting sleep to Run() method
   - After line 76 (`o.setStatus(pkg.ID, "in_progress")`), check if this is not the first package
   - If not first, get sleep duration from ecosystemRateLimits map using o.cfg.Ecosystem
   - Sleep for that duration
   - Add comment explaining rate limit purpose (ecosystem API limits)
-- [ ] Add unit test for rate limiting
+- [x] Add unit test for rate limiting
   - Create test in orchestrator_test.go that verifies sleep duration
   - Use time.Since() to measure elapsed time for multi-package batch
   - Assert that duration >= (packageCount - 1) * expectedSleep
