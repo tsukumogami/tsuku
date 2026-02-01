@@ -5,7 +5,7 @@
 # Implements implementation issues validation rules:
 #   II00: Section must NOT exist for Proposed/Accepted status
 #   II01: Section exists for Planned status (optional for Current)
-#   II02: Table has correct columns (Issue, Title, Dependencies, Tier)
+#   II02: Table has correct columns (Issue, Dependencies, Tier) or legacy (Issue, Title, Dependencies, Tier)
 #   II03: Issue/milestone links use valid format [#N](url) or [Name](milestone-url)
 #   II04: Dependencies use link format, not plain text
 #   II05: Tier values are valid (simple, testable, critical, milestone)
@@ -90,7 +90,10 @@ if [[ -z "$TABLE_HEADER" ]]; then
 fi
 
 # II02: Validate required columns exist
-REQUIRED_COLUMNS=("Issue" "Title" "Dependencies" "Tier")
+# Accept both formats:
+#   New (3-col): | Issue | Dependencies | Tier |
+#   Legacy (4-col): | Issue | Title | Dependencies | Tier |
+REQUIRED_COLUMNS=("Issue" "Dependencies" "Tier")
 for col in "${REQUIRED_COLUMNS[@]}"; do
     if ! echo "$TABLE_HEADER" | grep -qiE "\| *$col *\|"; then
         # Check if it's the last column (no trailing |)
@@ -149,11 +152,11 @@ is_milestone_link() {
     [[ "$val" =~ ^\[.+\]\(.*milestone.*\)$ ]]
 }
 
-# Helper: Check if a value is an issue link [#N](url)
+# Helper: Check if a value is an issue link [#N](url) or [#N: title](url)
 is_issue_link() {
     local val
     val=$(strip_strikethrough "$1")
-    [[ "$val" =~ ^\[#[0-9]+\]\(.+\)$ ]]
+    [[ "$val" =~ ^\[#[0-9]+(\]|:\ .*\])\(.+\)$ ]]
 }
 
 # Process each row
