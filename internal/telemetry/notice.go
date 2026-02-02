@@ -28,7 +28,7 @@ To opt out: tsuku config set telemetry false
 // Returns silently on any error (file permissions, etc.).
 func ShowNoticeIfNeeded() {
 	// Don't show notice if telemetry is disabled via env var
-	if os.Getenv(EnvNoTelemetry) != "" {
+	if DisabledByEnv() {
 		return
 	}
 

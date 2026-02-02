@@ -16,6 +16,7 @@ func TestNewClient_Default(t *testing.T) {
 	// Clear env vars using t.Setenv with empty string won't work,
 	// so we unset them and ignore errors (they may not be set)
 	_ = os.Unsetenv(EnvNoTelemetry)
+	_ = os.Unsetenv(EnvTelemetry)
 	_ = os.Unsetenv(EnvDebug)
 
 	c := NewClient()
@@ -55,6 +56,40 @@ func TestNewClient_DisabledAnyValue(t *testing.T) {
 
 	if !c.disabled {
 		t.Error("disabled = false, want true")
+	}
+}
+
+func TestDisabledByEnv_TsukuTelemetryZero(t *testing.T) {
+	_ = os.Unsetenv(EnvNoTelemetry)
+	t.Setenv(EnvTelemetry, "0")
+	if !DisabledByEnv() {
+		t.Error("DisabledByEnv() = false, want true for TSUKU_TELEMETRY=0")
+	}
+}
+
+func TestDisabledByEnv_TsukuTelemetryFalse(t *testing.T) {
+	_ = os.Unsetenv(EnvNoTelemetry)
+	t.Setenv(EnvTelemetry, "false")
+	if !DisabledByEnv() {
+		t.Error("DisabledByEnv() = false, want true for TSUKU_TELEMETRY=false")
+	}
+}
+
+func TestDisabledByEnv_TsukuTelemetryOne(t *testing.T) {
+	// TSUKU_TELEMETRY=1 means telemetry is enabled, not disabled
+	_ = os.Unsetenv(EnvNoTelemetry)
+	t.Setenv(EnvTelemetry, "1")
+	if DisabledByEnv() {
+		t.Error("DisabledByEnv() = true, want false for TSUKU_TELEMETRY=1")
+	}
+}
+
+func TestNewClient_DisabledByTsukuTelemetryZero(t *testing.T) {
+	_ = os.Unsetenv(EnvNoTelemetry)
+	t.Setenv(EnvTelemetry, "0")
+	c := NewClient()
+	if !c.disabled {
+		t.Error("disabled = false, want true for TSUKU_TELEMETRY=0")
 	}
 }
 

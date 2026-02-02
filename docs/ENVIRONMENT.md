@@ -61,6 +61,15 @@ Disable telemetry collection.
 
 When set to any non-empty value, tsuku will not send any telemetry data. This takes precedence over the `telemetry` setting in `config.toml`.
 
+### TSUKU_TELEMETRY
+
+Alternative way to control telemetry.
+
+- **Default:** (unset - telemetry enabled)
+- **Example:** `export TSUKU_TELEMETRY=0`
+
+Setting this to `0` or `false` disables telemetry. This is an alias for `TSUKU_NO_TELEMETRY` for users who prefer the `VARIABLE=0` convention.
+
 ### TSUKU_TELEMETRY_DEBUG
 
 Enable telemetry debug mode.
@@ -162,6 +171,7 @@ To create a token:
 | `TSUKU_RECIPE_CACHE_MAX_STALE` | `168h` | Maximum stale cache age for fallback |
 | `TSUKU_RECIPE_CACHE_STALE_FALLBACK` | `true` | Enable stale-if-error fallback |
 | `TSUKU_NO_TELEMETRY` | (unset) | Disable telemetry when set |
+| `TSUKU_TELEMETRY` | (unset) | Disable telemetry when `0` or `false` |
 | `TSUKU_TELEMETRY_DEBUG` | (unset) | Print telemetry to stderr |
 | `TSUKU_DEBUG` | (unset) | Enable verbose debug output |
 | `GITHUB_TOKEN` | (unset) | GitHub API token |
