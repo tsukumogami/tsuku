@@ -16,6 +16,11 @@ const (
 	// EnvNoTelemetry disables telemetry when set to any non-empty value.
 	EnvNoTelemetry = "TSUKU_NO_TELEMETRY"
 
+	// EnvTelemetry disables telemetry when set to "0" or "false".
+	// This is an alias for TSUKU_NO_TELEMETRY for users who expect
+	// TSUKU_TELEMETRY=0 to work.
+	EnvTelemetry = "TSUKU_TELEMETRY"
+
 	// EnvDebug enables debug mode: prints events to stderr without sending.
 	EnvDebug = "TSUKU_TELEMETRY_DEBUG"
 
@@ -34,14 +39,26 @@ type Client struct {
 	debug    bool
 }
 
+// DisabledByEnv reports whether telemetry is disabled via environment variables.
+// It checks TSUKU_NO_TELEMETRY (any non-empty value) and TSUKU_TELEMETRY ("0" or "false").
+func DisabledByEnv() bool {
+	if os.Getenv(EnvNoTelemetry) != "" {
+		return true
+	}
+	if v := os.Getenv(EnvTelemetry); v == "0" || v == "false" {
+		return true
+	}
+	return false
+}
+
 // NewClient creates a telemetry client.
-// It checks TSUKU_NO_TELEMETRY env var first (takes precedence), then config file.
+// It checks environment variables first (takes precedence), then config file.
 // TSUKU_TELEMETRY_DEBUG enables debug mode.
 func NewClient() *Client {
 	disabled := false
 
 	// Environment variable takes precedence
-	if os.Getenv(EnvNoTelemetry) != "" {
+	if DisabledByEnv() {
 		disabled = true
 	} else {
 		// Check config file
