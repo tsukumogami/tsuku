@@ -17,6 +17,7 @@ type EcosystemProbe struct {
 	probers  []builders.EcosystemProber
 	timeout  time.Duration
 	priority map[string]int // builder name → priority rank (lower = better)
+	filter   *QualityFilter
 }
 
 // NewEcosystemProbe creates a resolver that queries ecosystem builders in parallel.
@@ -34,6 +35,7 @@ func NewEcosystemProbe(probers []builders.EcosystemProber, timeout time.Duration
 			"go":        6,
 			"cpan":      7,
 		},
+		filter: NewQualityFilter(),
 	}
 }
 
@@ -85,11 +87,15 @@ func (p *EcosystemProbe) Resolve(ctx context.Context, toolName string) (*Discove
 			hardErrors++
 			continue
 		}
-		if outcome.result == nil || !outcome.result.Exists {
+		if outcome.result == nil {
 			continue
 		}
 		// Exact name match filter (case-insensitive).
 		if !strings.EqualFold(outcome.result.Source, toolName) {
+			continue
+		}
+		// Quality filter: reject low-quality matches.
+		if ok, _ := p.filter.Accept(outcome.builderName, outcome.result); !ok {
 			continue
 		}
 		matches = append(matches, outcome)
@@ -124,7 +130,6 @@ func (p *EcosystemProbe) Resolve(ctx context.Context, toolName string) (*Discove
 		Reason:     fmt.Sprintf("found in %s ecosystem", best.builderName),
 		Metadata: Metadata{
 			Downloads: best.result.Downloads,
-			AgeDays:   best.result.Age,
 		},
 	}, nil
 }

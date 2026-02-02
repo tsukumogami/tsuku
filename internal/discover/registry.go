@@ -18,6 +18,9 @@ type RegistryEntry struct {
 	Homepage       string `json:"homepage,omitempty"`
 	Repo           string `json:"repo,omitempty"`
 	Disambiguation bool   `json:"disambiguation,omitempty"`
+	Downloads      int    `json:"downloads,omitempty"`
+	VersionCount   int    `json:"version_count,omitempty"`
+	HasRepository  bool   `json:"has_repository,omitempty"`
 }
 
 // DiscoveryRegistry holds the tool-to-source mapping used by the registry
