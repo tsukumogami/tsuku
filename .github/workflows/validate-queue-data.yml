@@ -4,9 +4,6 @@ on:
   pull_request:
     paths:
       - 'data/priority-queue.json'
-      - 'data/schemas/priority-queue.schema.json'
-      - 'scripts/validate-queue.sh'
-      - 'scripts/validate-queue-recipes.sh'
 
 jobs:
   validate:
