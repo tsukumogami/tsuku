@@ -40,8 +40,8 @@ func (m *mockProber) Probe(ctx context.Context, _ string) (*builders.ProbeResult
 
 func TestEcosystemProbe_ZeroResults(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: false}},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Exists: false}},
+		&mockProber{name: "npm", result: nil},
+		&mockProber{name: "pypi", result: nil},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "nonexistent")
@@ -55,8 +55,8 @@ func TestEcosystemProbe_ZeroResults(t *testing.T) {
 
 func TestEcosystemProbe_SingleResult(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: false}},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Exists: true, Source: "flask", Downloads: 1000}},
+		&mockProber{name: "npm", result: nil},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "flask", Downloads: 1000}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "flask")
@@ -76,9 +76,9 @@ func TestEcosystemProbe_SingleResult(t *testing.T) {
 
 func TestEcosystemProbe_MultipleResults_PriorityRanking(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: true, Source: "serve"}},
-		&mockProber{name: "cask", result: &builders.ProbeResult{Exists: true, Source: "serve"}},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Exists: true, Source: "serve"}},
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve"}},
+		&mockProber{name: "cask", result: &builders.ProbeResult{Source: "serve"}},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "serve"}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "serve")
@@ -96,7 +96,7 @@ func TestEcosystemProbe_MultipleResults_PriorityRanking(t *testing.T) {
 
 func TestEcosystemProbe_NameMismatch(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: true, Source: "other-tool"}},
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "other-tool"}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "my-tool")
@@ -110,7 +110,7 @@ func TestEcosystemProbe_NameMismatch(t *testing.T) {
 
 func TestEcosystemProbe_NameMatchCaseInsensitive(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: true, Source: "Flask"}},
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "Flask"}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "flask")
@@ -140,7 +140,7 @@ func TestEcosystemProbe_AllFailures(t *testing.T) {
 func TestEcosystemProbe_SoftErrors(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
 		&mockProber{name: "npm", err: fmt.Errorf("network error")},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Exists: true, Source: "flask"}},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "flask"}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "flask")
@@ -157,8 +157,8 @@ func TestEcosystemProbe_SoftErrors(t *testing.T) {
 
 func TestEcosystemProbe_Timeout(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", delay: 5 * time.Second, result: &builders.ProbeResult{Exists: true, Source: "tool"}},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Exists: true, Source: "tool"}},
+		&mockProber{name: "npm", delay: 5 * time.Second, result: &builders.ProbeResult{Source: "tool"}},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "tool"}},
 	}, 100*time.Millisecond)
 
 	start := time.Now()
@@ -191,7 +191,7 @@ func TestEcosystemProbe_EmptyProbers(t *testing.T) {
 func TestEcosystemProbe_MetadataPassthrough(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
 		&mockProber{name: "pypi", result: &builders.ProbeResult{
-			Exists: true, Source: "flask", Downloads: 50000, Age: 365,
+			Source: "flask", Downloads: 50000,
 		}},
 	}, 5*time.Second)
 
@@ -202,9 +202,56 @@ func TestEcosystemProbe_MetadataPassthrough(t *testing.T) {
 	if result.Metadata.Downloads != 50000 {
 		t.Errorf("expected downloads 50000, got %d", result.Metadata.Downloads)
 	}
-	if result.Metadata.AgeDays != 365 {
-		t.Errorf("expected age 365, got %d", result.Metadata.AgeDays)
-	}
+}
+
+func TestEcosystemProbe_QualityFilter(t *testing.T) {
+	t.Run("rejects low quality crates.io match", func(t *testing.T) {
+		probe := NewEcosystemProbe([]builders.EcosystemProber{
+			&mockProber{name: "crates.io", result: &builders.ProbeResult{
+				Source: "prettier", Downloads: 87, VersionCount: 3,
+			}},
+		}, 5*time.Second)
+
+		result, err := probe.Resolve(context.Background(), "prettier")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result != nil {
+			t.Fatalf("expected nil (filtered), got %+v", result)
+		}
+	})
+
+	t.Run("accepts high download crates.io match", func(t *testing.T) {
+		probe := NewEcosystemProbe([]builders.EcosystemProber{
+			&mockProber{name: "crates.io", result: &builders.ProbeResult{
+				Source: "ripgrep", Downloads: 5000000, VersionCount: 50,
+			}},
+		}, 5*time.Second)
+
+		result, err := probe.Resolve(context.Background(), "ripgrep")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected result, got nil")
+		}
+	})
+
+	t.Run("no filter for unconfigured builders", func(t *testing.T) {
+		probe := NewEcosystemProbe([]builders.EcosystemProber{
+			&mockProber{name: "npm", result: &builders.ProbeResult{
+				Source: "prettier",
+			}},
+		}, 5*time.Second)
+
+		result, err := probe.Resolve(context.Background(), "prettier")
+		if err != nil {
+			t.Fatalf("unexpected error: %v", err)
+		}
+		if result == nil {
+			t.Fatal("expected result (no filter for npm), got nil")
+		}
+	})
 }
 
 // Chain integration tests: EcosystemProbe wired into ChainResolver.
@@ -212,7 +259,9 @@ func TestEcosystemProbe_MetadataPassthrough(t *testing.T) {
 func TestChain_RegistryMissFallsToEcosystemProbe(t *testing.T) {
 	registryMiss := &mockResolver{result: nil, err: nil}
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "crates.io", result: &builders.ProbeResult{Exists: true, Source: "ripgrep"}},
+		&mockProber{name: "crates.io", result: &builders.ProbeResult{
+			Source: "ripgrep", Downloads: 5000000, VersionCount: 50,
+		}},
 	}, 5*time.Second)
 
 	chain := NewChainResolver(registryMiss, probe)
@@ -234,7 +283,7 @@ func TestChain_RegistryMissFallsToEcosystemProbe(t *testing.T) {
 func TestChain_EcosystemProbeMissFallsThrough(t *testing.T) {
 	registryMiss := &mockResolver{result: nil, err: nil}
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: false}},
+		&mockProber{name: "npm", result: nil},
 	}, 5*time.Second)
 	llmStub := &mockResolver{result: nil, err: nil}
 
@@ -271,7 +320,7 @@ func TestChain_RegistryHitSkipsEcosystemProbe(t *testing.T) {
 	registryResult := &DiscoveryResult{Builder: "github", Source: "cli/cli", Confidence: ConfidenceRegistry}
 	registryHit := &mockResolver{result: registryResult}
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: true, Source: "gh"}},
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "gh"}},
 	}, 5*time.Second)
 
 	chain := NewChainResolver(registryHit, probe)
