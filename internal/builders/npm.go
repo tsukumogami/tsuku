@@ -325,10 +325,7 @@ func isValidNpmPackageNameForBuilder(name string) bool {
 func (b *NpmBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
 	_, err := b.fetchPackageInfo(ctx, name)
 	if err != nil {
-		return &ProbeResult{Exists: false}, nil
+		return nil, nil
 	}
-	return &ProbeResult{
-		Exists: true,
-		Source: name,
-	}, nil
+	return &ProbeResult{Source: name}, nil
 }

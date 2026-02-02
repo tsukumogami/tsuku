@@ -27,11 +27,14 @@ const (
 // cratesIOCrateResponse represents the crates.io API response for a crate
 type cratesIOCrateResponse struct {
 	Crate struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Homepage    string `json:"homepage"`
-		Repository  string `json:"repository"`
+		Name            string `json:"name"`
+		Description     string `json:"description"`
+		Homepage        string `json:"homepage"`
+		Repository      string `json:"repository"`
+		RecentDownloads int    `json:"recent_downloads"`
+		// exact_match is not used but documented for reference
 	} `json:"crate"`
+	Versions []struct{} `json:"versions"`
 }
 
 // cargoTomlBinSection represents a [[bin]] section in Cargo.toml
@@ -351,14 +354,16 @@ func isValidExecutableName(name string) bool {
 	return matched
 }
 
-// Probe checks if a crate exists on crates.io.
+// Probe checks if a crate exists on crates.io and returns quality metadata.
 func (b *CargoBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
-	_, err := b.fetchCrateInfo(ctx, name)
+	info, err := b.fetchCrateInfo(ctx, name)
 	if err != nil {
-		return &ProbeResult{Exists: false}, nil
+		return nil, nil
 	}
 	return &ProbeResult{
-		Exists: true,
-		Source: name,
+		Source:        name,
+		Downloads:     info.Crate.RecentDownloads,
+		VersionCount:  len(info.Versions),
+		HasRepository: info.Crate.Repository != "",
 	}, nil
 }

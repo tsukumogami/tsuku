@@ -22,7 +22,7 @@ func TestCargoBuilder_Probe(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/v1/crates/ripgrep" {
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"crate":{"name":"ripgrep"}}`))
+			_, _ = w.Write([]byte(`{"crate":{"name":"ripgrep","recent_downloads":5000000,"repository":"https://github.com/BurntSushi/ripgrep"},"versions":[{},{},{},{},{},{},{},{},{},{}]}`))
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -32,19 +32,25 @@ func TestCargoBuilder_Probe(t *testing.T) {
 	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	t.Run("exists", func(t *testing.T) {
+	t.Run("exists with metadata", func(t *testing.T) {
 		result, err := builder.Probe(ctx, "ripgrep")
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true")
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil")
 		}
 		if result.Source != "ripgrep" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "ripgrep")
 		}
-		if result.Downloads != 0 {
-			t.Errorf("Probe() Downloads = %d, want 0", result.Downloads)
+		if result.Downloads != 5000000 {
+			t.Errorf("Probe() Downloads = %d, want 5000000", result.Downloads)
+		}
+		if result.VersionCount != 10 {
+			t.Errorf("Probe() VersionCount = %d, want 10", result.VersionCount)
+		}
+		if !result.HasRepository {
+			t.Error("Probe() HasRepository = false, want true")
 		}
 	})
 
@@ -53,10 +59,36 @@ func TestCargoBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if result.Exists {
-			t.Error("Probe() Exists = true, want false")
+		if result != nil {
+			t.Errorf("Probe() = %+v, want nil", result)
 		}
 	})
+}
+
+func TestCargoBuilder_Probe_NoRepository(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"crate":{"name":"squatter","recent_downloads":50},"versions":[{},{}]}`))
+	}))
+	defer server.Close()
+
+	builder := NewCargoBuilderWithBaseURL(nil, server.URL)
+	result, err := builder.Probe(context.Background(), "squatter")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil")
+	}
+	if result.HasRepository {
+		t.Error("Probe() HasRepository = true, want false")
+	}
+	if result.Downloads != 50 {
+		t.Errorf("Probe() Downloads = %d, want 50", result.Downloads)
+	}
+	if result.VersionCount != 2 {
+		t.Errorf("Probe() VersionCount = %d, want 2", result.VersionCount)
+	}
 }
 
 func TestPyPIBuilder_Probe(t *testing.T) {
@@ -78,8 +110,8 @@ func TestPyPIBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true")
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil")
 		}
 		if result.Source != "black" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "black")
@@ -91,8 +123,8 @@ func TestPyPIBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if result.Exists {
-			t.Error("Probe() Exists = true, want false")
+		if result != nil {
+			t.Errorf("Probe() = %+v, want nil", result)
 		}
 	})
 }
@@ -116,8 +148,8 @@ func TestNpmBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true")
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil")
 		}
 		if result.Source != "prettier" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "prettier")
@@ -129,8 +161,8 @@ func TestNpmBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if result.Exists {
-			t.Error("Probe() Exists = true, want false")
+		if result != nil {
+			t.Errorf("Probe() = %+v, want nil", result)
 		}
 	})
 }
@@ -154,8 +186,8 @@ func TestGemBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true")
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil")
 		}
 		if result.Source != "rubocop" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "rubocop")
@@ -167,8 +199,8 @@ func TestGemBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if result.Exists {
-			t.Error("Probe() Exists = true, want false")
+		if result != nil {
+			t.Errorf("Probe() = %+v, want nil", result)
 		}
 	})
 }
@@ -187,19 +219,16 @@ func TestGoBuilder_Probe(t *testing.T) {
 	builder := NewGoBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	t.Run("exists with age", func(t *testing.T) {
+	t.Run("exists", func(t *testing.T) {
 		result, err := builder.Probe(ctx, "github.com/spf13/cobra")
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true")
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil")
 		}
 		if result.Source != "github.com/spf13/cobra" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "github.com/spf13/cobra")
-		}
-		if result.Age <= 0 {
-			t.Errorf("Probe() Age = %d, want > 0", result.Age)
 		}
 	})
 
@@ -208,28 +237,8 @@ func TestGoBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if result.Exists {
-			t.Error("Probe() Exists = true, want false")
-		}
-	})
-
-	t.Run("invalid time", func(t *testing.T) {
-		badTimeServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"Version":"v1.0.0","Time":"not-a-date"}`))
-		}))
-		defer badTimeServer.Close()
-
-		b := NewGoBuilderWithBaseURL(nil, badTimeServer.URL)
-		result, err := b.Probe(ctx, "github.com/example/mod")
-		if err != nil {
-			t.Fatalf("Probe() error = %v", err)
-		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true")
-		}
-		if result.Age != 0 {
-			t.Errorf("Probe() Age = %d, want 0 for invalid time", result.Age)
+		if result != nil {
+			t.Errorf("Probe() = %+v, want nil", result)
 		}
 	})
 }
@@ -253,8 +262,8 @@ func TestCPANBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true")
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil")
 		}
 		if result.Source != "App-Ack" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "App-Ack")
@@ -266,8 +275,8 @@ func TestCPANBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true (:: should normalize to -)")
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil (:: should normalize to -)")
 		}
 		if result.Source != "App-Ack" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "App-Ack")
@@ -279,8 +288,8 @@ func TestCPANBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if result.Exists {
-			t.Error("Probe() Exists = true, want false")
+		if result != nil {
+			t.Errorf("Probe() = %+v, want nil", result)
 		}
 	})
 }
@@ -304,8 +313,8 @@ func TestCaskBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if !result.Exists {
-			t.Error("Probe() Exists = false, want true")
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil")
 		}
 		if result.Source != "visual-studio-code" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "visual-studio-code")
@@ -317,8 +326,8 @@ func TestCaskBuilder_Probe(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
-		if result.Exists {
-			t.Error("Probe() Exists = true, want false")
+		if result != nil {
+			t.Errorf("Probe() = %+v, want nil", result)
 		}
 	})
 }
@@ -350,8 +359,8 @@ func TestProbe_APIError(t *testing.T) {
 			if err != nil {
 				t.Fatalf("Probe() returned error for %s: %v", b.name, err)
 			}
-			if result.Exists {
-				t.Errorf("Probe() Exists = true for %s on 500, want false", b.name)
+			if result != nil {
+				t.Errorf("Probe() = %+v for %s on 500, want nil", result, b.name)
 			}
 		})
 	}
