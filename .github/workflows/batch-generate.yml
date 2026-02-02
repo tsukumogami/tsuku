@@ -864,9 +864,27 @@ jobs:
             done
           } > /tmp/pr-body.md
 
-          gh pr create \
+          PR_URL=$(gh pr create \
             --title "feat(recipes): add batch ${{ inputs.ecosystem }} recipes (${INCLUDED_COUNT} recipes)" \
             --body-file /tmp/pr-body.md \
-            --base main
+            --base main)
+          echo "PR_URL=$PR_URL" >> "$GITHUB_ENV"
+          echo "Created PR: $PR_URL"
+        env:
+          GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}
+
+      - name: Enable auto-merge or post review notice
+        if: steps.check.outputs.changes == 'true'
+        run: |
+          PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
+          if [ "$EXCLUDED_COUNT" -eq 0 ]; then
+            echo "All recipes passed validation — enabling auto-merge"
+            gh pr merge "$PR_NUMBER" --auto --squash \
+              --subject "feat(recipes): add batch ${{ inputs.ecosystem }} recipes (${INCLUDED_COUNT} recipes)" \
+              --body "Batch generation of ${INCLUDED_COUNT} packages from ${{ inputs.ecosystem }} ecosystem. All recipes passed validation across platform environments."
+          else
+            echo "Some recipes were excluded — skipping auto-merge"
+            gh pr comment "$PR_NUMBER" --body "Auto-merge was not enabled because ${EXCLUDED_COUNT} recipe(s) were excluded during validation. Please review the excluded recipes and merge manually."
+          fi
         env:
           GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}
