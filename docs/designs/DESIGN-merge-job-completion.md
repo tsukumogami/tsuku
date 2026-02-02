@@ -37,7 +37,7 @@ Observability and scale improvements: SLI metrics for trend analysis and auto-me
 |-------|--------------|------|
 | [#1351: ci(batch): add SLI metrics collection to merge job](https://github.com/tsukumogami/tsuku/issues/1351) | [#1349](https://github.com/tsukumogami/tsuku/issues/1349) | testable |
 | _Appends a structured JSON line to `data/metrics/batch-runs.jsonl` with per-platform tested/passed/failed counts, recipe totals, and duration. Uses the batch_id from #1349 as the primary key._ | | |
-| [#1353: ci(batch): add auto-merge gating for clean batches](https://github.com/tsukumogami/tsuku/issues/1353) | [#1350](https://github.com/tsukumogami/tsuku/issues/1350) | testable |
+| ~~[#1353: ci(batch): add auto-merge gating for clean batches](https://github.com/tsukumogami/tsuku/issues/1353)~~ | [#1350](https://github.com/tsukumogami/tsuku/issues/1350) | testable |
 | _Enables `gh pr merge --auto --squash` when `EXCLUDED_COUNT=0` and leaves a PR comment explaining why auto-merge was skipped otherwise. Fail-open policy: the PR is always created regardless._ | | |
 
 ### Dependency Graph
@@ -66,7 +66,8 @@ graph LR
 
     class I1349,I1350 done
     class I1352 done
-    class I1351,I1353 ready
+    class I1351 ready
+    class I1353 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
