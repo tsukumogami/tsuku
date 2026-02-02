@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "mise",
-  "description": "Polyglot runtime manager (asdf rust clone)",
-  "homepage": "https://mise.jdx.dev/"
-}

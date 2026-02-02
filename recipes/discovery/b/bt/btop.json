@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "btop",
-  "description": "Resource monitor. C++ version and continuation of bashtop and bpytop",
-  "homepage": "https://github.com/aristocratos/btop"
-}

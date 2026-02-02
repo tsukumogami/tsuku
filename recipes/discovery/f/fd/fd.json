@@ -1,6 +1,7 @@
 {
   "builder": "github",
   "source": "sharkdp/fd",
-  "description": "A simple, fast and user-friendly alternative to 'find'",
-  "repo": "https://github.com/sharkdp/fd"
+  "description": "A simple, fast and user-friendly alternative to find.",
+  "repo": "https://github.com/sharkdp/fd",
+  "disambiguation": true
 }

@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "FiloSottile/mkcert",
-  "description": "A simple zero-config tool to make locally trusted development certificates with any names you'd like.",
-  "homepage": "https://mkcert.dev",
-  "repo": "https://github.com/FiloSottile/mkcert"
-}

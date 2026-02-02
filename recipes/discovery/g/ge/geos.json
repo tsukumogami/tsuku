@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "geos",
-  "description": "Geometry Engine",
-  "homepage": "https://libgeos.org/"
-}

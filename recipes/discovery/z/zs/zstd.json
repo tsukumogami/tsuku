@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "zstd",
-  "description": "Zstandard is a real-time compression algorithm",
-  "homepage": "https://facebook.github.io/zstd/"
-}

@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "grafana/k6",
-  "description": "A modern load testing tool, using Go and JavaScript",
-  "homepage": "https://grafana.com/oss/k6/",
-  "repo": "https://github.com/grafana/k6"
-}

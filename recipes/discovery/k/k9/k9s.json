@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "derailed/k9s",
-  "description": "🐶 Kubernetes CLI To Manage Your Clusters In Style!",
-  "homepage": "https://k9scli.io",
-  "repo": "https://github.com/derailed/k9s"
-}

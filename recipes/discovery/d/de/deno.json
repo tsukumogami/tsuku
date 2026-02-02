@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "denoland/deno",
-  "description": "A modern runtime for JavaScript and TypeScript.",
-  "homepage": "https://deno.com",
-  "repo": "https://github.com/denoland/deno"
-}
