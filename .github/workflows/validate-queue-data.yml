@@ -1,0 +1,22 @@
+name: Validate Queue Data
+
+on:
+  pull_request:
+    paths:
+      - 'data/priority-queue.json'
+      - 'data/schemas/priority-queue.schema.json'
+      - 'scripts/validate-queue.sh'
+      - 'scripts/validate-queue-recipes.sh'
+
+jobs:
+  validate:
+    name: Validate queue schema and recipe conflicts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate schema
+        run: ./scripts/validate-queue.sh
+
+      - name: Validate recipe conflicts
+        run: ./scripts/validate-queue-recipes.sh
