@@ -25,7 +25,7 @@ Planned
 | ~~[#1257](https://github.com/tsukumogami/tsuku/issues/1257)~~ | ~~SLI metrics collection~~ | ~~[M60](https://github.com/tsukumogami/tsuku/milestone/60)~~ | ~~testable~~ |
 | ~~[#1258](https://github.com/tsukumogami/tsuku/issues/1258)~~ | ~~PR CI platform filtering~~ | ~~[#1256](https://github.com/tsukumogami/tsuku/issues/1256)~~ | ~~testable~~ |
 | ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON CLI output + batch integration~~ | ~~None~~ | ~~testable~~ |
-| [#1287](https://github.com/tsukumogami/tsuku/issues/1287) | Auto-install required toolchains for ecosystem builders | None | testable |
+| ~~[#1287](https://github.com/tsukumogami/tsuku/issues/1287)~~ | ~~Auto-install required toolchains for ecosystem builders~~ | ~~None~~ | ~~testable~~ |
 | ~~[M63](https://github.com/tsukumogami/tsuku/milestone/63)~~ | ~~Merge Job Completion (batch_id, recipe tracking, circuit breaker update, queue sync)~~ | ~~None~~ | |
 | [M64](https://github.com/tsukumogami/tsuku/milestone/64) | Merge Job Observability (SLI metrics, auto-merge gating) | [M63](https://github.com/tsukumogami/tsuku/milestone/63) | |
 
@@ -76,15 +76,15 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1254,I1273,I1257 done
+    class I1254,I1273,I1257,I1287 done
     class M60,I1256 done
     class M63 done
     class I1252 done
     class I1255 done
-    class I1287,M61 ready
+    class I1258 done
+    class M61 ready
     class I1253 ready
     class M64 ready
-    class I1258 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
