@@ -51,7 +51,7 @@ Implements [#1187](https://github.com/tsukumogami/tsuku/issues/1187). See [DESIG
 |-------|-------|--------------|------|
 | ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~seed priority queue pipeline~~ | ~~[#1199](https://github.com/tsukumogami/tsuku/issues/1199)~~, ~~[#1202](https://github.com/tsukumogami/tsuku/issues/1202)~~ | ~~testable~~ |
 | ~~[#1189](https://github.com/tsukumogami/tsuku/issues/1189)~~ | ~~design batch recipe generation CI pipeline~~ | ~~[#1186](https://github.com/tsukumogami/tsuku/issues/1186)~~, ~~[#1187](https://github.com/tsukumogami/tsuku/issues/1187)~~, ~~[#1188](https://github.com/tsukumogami/tsuku/issues/1188)~~, ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~testable~~ |
-| [#1267](https://github.com/tsukumogami/tsuku/issues/1267) | skip existing recipes in seed tool | [#1241](https://github.com/tsukumogami/tsuku/issues/1241) | simple |
+| ~~[#1267](https://github.com/tsukumogami/tsuku/issues/1267)~~ | ~~skip existing recipes in seed tool~~ | ~~[#1241](https://github.com/tsukumogami/tsuku/issues/1241)~~ | ~~simple~~ |
 | [#1268](https://github.com/tsukumogami/tsuku/issues/1268) | CI validation of queue against registry | [#1267](https://github.com/tsukumogami/tsuku/issues/1267) | testable |
 | ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON output for CLI + batch integration~~ | ~~None~~ | ~~testable~~ |
 | [#1412](https://github.com/tsukumogami/tsuku/issues/1412) | Scheduled triggers for queue seeding and batch generation | [#1268](https://github.com/tsukumogami/tsuku/issues/1268) | testable |
@@ -147,13 +147,13 @@ graph TD
     class I1203 done
     class I1241 done
     class I1189 done
-    class I1267 needsDesign
+    class I1267 done
     class I1268 needsDesign
     class I1273 done
     class I1266 done
     class I1190 needsDesign
     class I1277 needsDesign
-    class I1278 needsDesign
+    class I1278 blocked
     class I1412 blocked
     class I1191 blocked
 ```
