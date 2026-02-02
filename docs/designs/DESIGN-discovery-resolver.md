@@ -56,8 +56,8 @@ Planned
 | _Implement all error and fallback messages from the UX specification table, add `--verbose` output showing resolver chain progress (registry lookup, ecosystem probe, LLM discovery), and wire debug/info/error log levels through a consistent logger._ | | |
 | [M65: Ecosystem Probe](https://github.com/tsukumogami/tsuku/milestone/65) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | |
 | _Add Probe() methods to all seven ecosystem builders, wire them into a parallel resolver with 3-second timeout, integrate into the discovery chain, and add integration tests. See [DESIGN-ecosystem-probe.md](DESIGN-ecosystem-probe.md)._ | | |
-| [M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62) | None | |
-| _Extend registry schema with optional metadata, build the `seed-discovery` CLI tool, populate ~500 entries from the priority queue and curated seed lists, and add CI freshness checks. See [DESIGN-discovery-registry-bootstrap.md](DESIGN-discovery-registry-bootstrap.md)._ | | |
+| ~~[M62: Discovery Registry Bootstrap](https://github.com/tsukumogami/tsuku/milestone/62)~~ | ~~None~~ | |
+| _Extend registry schema with optional metadata, build the `seed-discovery` CLI tool, populate ~500 entries from the priority queue and curated seed lists, and add CI freshness checks. See [DESIGN-discovery-registry-bootstrap.md](current/DESIGN-discovery-registry-bootstrap.md)._ | | |
 
 ### Dependency Graph
 
@@ -109,7 +109,8 @@ graph TD
     class I1319 ready
     class I1317 done
     class I1318 needsDesign
-    class M65,M62 ready
+    class M65 ready
+    class M62 done
     class I1315 done
     class I1321 blocked
     class I1322 blocked
