@@ -2,6 +2,7 @@ package discover
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -203,5 +204,82 @@ func TestEcosystemProbe_MetadataPassthrough(t *testing.T) {
 	}
 	if result.Metadata.AgeDays != 365 {
 		t.Errorf("expected age 365, got %d", result.Metadata.AgeDays)
+	}
+}
+
+// Chain integration tests: EcosystemProbe wired into ChainResolver.
+
+func TestChain_RegistryMissFallsToEcosystemProbe(t *testing.T) {
+	registryMiss := &mockResolver{result: nil, err: nil}
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "crates.io", result: &builders.ProbeResult{Exists: true, Source: "ripgrep"}},
+	}, 5*time.Second)
+
+	chain := NewChainResolver(registryMiss, probe)
+	result, err := chain.Resolve(context.Background(), "ripgrep")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result from ecosystem probe")
+	}
+	if result.Builder != "crates.io" {
+		t.Errorf("expected builder crates.io, got %s", result.Builder)
+	}
+	if result.Confidence != ConfidenceEcosystem {
+		t.Errorf("expected confidence %s, got %s", ConfidenceEcosystem, result.Confidence)
+	}
+}
+
+func TestChain_EcosystemProbeMissFallsThrough(t *testing.T) {
+	registryMiss := &mockResolver{result: nil, err: nil}
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: false}},
+	}, 5*time.Second)
+	llmStub := &mockResolver{result: nil, err: nil}
+
+	chain := NewChainResolver(registryMiss, probe, llmStub)
+	_, err := chain.Resolve(context.Background(), "nonexistent")
+	if err == nil {
+		t.Fatal("expected NotFoundError")
+	}
+	var notFound *NotFoundError
+	if !errors.As(err, &notFound) {
+		t.Fatalf("expected NotFoundError, got %T: %v", err, err)
+	}
+}
+
+func TestChain_EcosystemProbeErrorIsSoft(t *testing.T) {
+	registryMiss := &mockResolver{result: nil, err: nil}
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", err: fmt.Errorf("all registries down")},
+	}, 5*time.Second)
+	llmResult := &DiscoveryResult{Builder: "llm", Source: "fallback", Confidence: ConfidenceLLM}
+	llmStage := &mockResolver{result: llmResult}
+
+	chain := NewChainResolver(registryMiss, probe, llmStage)
+	result, err := chain.Resolve(context.Background(), "sometool")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Builder != "llm" {
+		t.Errorf("expected fallback to llm, got %s", result.Builder)
+	}
+}
+
+func TestChain_RegistryHitSkipsEcosystemProbe(t *testing.T) {
+	registryResult := &DiscoveryResult{Builder: "github", Source: "cli/cli", Confidence: ConfidenceRegistry}
+	registryHit := &mockResolver{result: registryResult}
+	probe := NewEcosystemProbe([]builders.EcosystemProber{
+		&mockProber{name: "npm", result: &builders.ProbeResult{Exists: true, Source: "gh"}},
+	}, 5*time.Second)
+
+	chain := NewChainResolver(registryHit, probe)
+	result, err := chain.Resolve(context.Background(), "gh")
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if result.Confidence != ConfidenceRegistry {
+		t.Errorf("expected registry confidence, got %s", result.Confidence)
 	}
 }

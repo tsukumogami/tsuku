@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/spf13/cobra"
@@ -712,8 +713,22 @@ func runDiscovery(toolName string) (*discover.DiscoveryResult, error) {
 		}
 	}
 
-	// Stage 2: Ecosystem probe (stub — always misses).
-	stages = append(stages, &discover.EcosystemProbe{})
+	// Stage 2: Ecosystem probe — queries package registries in parallel.
+	var probers []builders.EcosystemProber
+	for _, b := range []builders.SessionBuilder{
+		builders.NewCargoBuilder(nil),
+		builders.NewPyPIBuilder(nil),
+		builders.NewNpmBuilder(nil),
+		builders.NewGemBuilder(nil),
+		builders.NewGoBuilder(nil),
+		builders.NewCPANBuilder(nil),
+		builders.NewCaskBuilder(nil),
+	} {
+		if p, ok := b.(builders.EcosystemProber); ok {
+			probers = append(probers, p)
+		}
+	}
+	stages = append(stages, discover.NewEcosystemProbe(probers, 3*time.Second))
 
 	// Stage 3: LLM discovery (stub — always misses).
 	stages = append(stages, &discover.LLMDiscovery{})
