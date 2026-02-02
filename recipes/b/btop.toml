@@ -1,3 +1,4 @@
+# Platform filtering validation test
 [metadata]
 name = "btop"
 description = "Resource monitor that shows usage and stats"
