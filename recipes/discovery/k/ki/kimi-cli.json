@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "kimi-cli"
+  "source": "kimi-cli",
+  "description": "CLI agent for MoonshotAI Kimi platform",
+  "homepage": "https://github.com/MoonshotAI/kimi-cli"
 }

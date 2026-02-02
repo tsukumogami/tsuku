@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libgpg-error"
+  "source": "libgpg-error",
+  "description": "Common error values for all GnuPG components",
+  "homepage": "https://www.gnupg.org/related_software/libgpg-error/"
 }

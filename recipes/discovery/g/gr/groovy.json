@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "groovy"
+  "source": "groovy",
+  "description": "Java-based scripting language",
+  "homepage": "https://www.groovy-lang.org/"
 }

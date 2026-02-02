@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "clamav"
+  "source": "clamav",
+  "description": "Anti-virus software",
+  "homepage": "https://www.clamav.net/"
 }

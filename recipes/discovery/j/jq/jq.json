@@ -1,4 +1,7 @@
 {
-  "builder": "homebrew",
-  "source": "jq"
+  "builder": "github",
+  "source": "jqlang/jq",
+  "description": "Command-line JSON processor",
+  "homepage": "https://jqlang.org",
+  "repo": "https://github.com/jqlang/jq"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "unbound"
+  "source": "unbound",
+  "description": "Validating, recursive, caching DNS resolver",
+  "homepage": "https://www.unbound.net"
 }

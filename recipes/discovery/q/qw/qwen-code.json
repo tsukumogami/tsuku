@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "qwen-code"
+  "source": "qwen-code",
+  "description": "AI-powered command-line workflow tool for developers",
+  "homepage": "https://github.com/QwenLM/qwen-code"
 }

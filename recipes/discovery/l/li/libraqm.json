@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libraqm"
+  "source": "libraqm",
+  "description": "Library for complex text layout",
+  "homepage": "https://github.com/HOST-Oman/libraqm"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sqlcipher"
+  "source": "sqlcipher",
+  "description": "SQLite extension providing 256-bit AES encryption",
+  "homepage": "https://www.zetetic.net/sqlcipher/"
 }

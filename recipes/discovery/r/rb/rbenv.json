@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rbenv"
+  "source": "rbenv",
+  "description": "Ruby version manager",
+  "homepage": "https://rbenv.org"
 }

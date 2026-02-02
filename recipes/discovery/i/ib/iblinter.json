@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "iblinter"
+  "source": "iblinter",
+  "description": "Linter tool for Interface Builder",
+  "homepage": "https://github.com/IBDecodable/IBLinter"
 }

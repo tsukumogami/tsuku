@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "python-matplotlib"
+  "source": "python-matplotlib",
+  "description": "Python library for creating static, animated, and interactive visualizations",
+  "homepage": "https://matplotlib.org/"
 }

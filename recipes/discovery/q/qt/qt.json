@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "qt"
+  "source": "qt",
+  "description": "Cross-platform application and UI framework",
+  "homepage": "https://www.qt.io/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "exiftool"
+  "source": "exiftool",
+  "description": "Perl lib for reading and writing EXIF metadata",
+  "homepage": "https://exiftool.org"
 }

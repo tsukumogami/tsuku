@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mariadb"
+  "source": "mariadb",
+  "description": "Drop-in replacement for MySQL",
+  "homepage": "https://mariadb.org/"
 }

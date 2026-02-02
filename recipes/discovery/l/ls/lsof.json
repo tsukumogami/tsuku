@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lsof"
+  "source": "lsof",
+  "description": "Utility to list open files",
+  "homepage": "https://github.com/lsof-org/lsof"
 }

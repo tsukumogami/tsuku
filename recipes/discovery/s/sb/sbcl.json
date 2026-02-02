@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sbcl"
+  "source": "sbcl",
+  "description": "Steel Bank Common Lisp system",
+  "homepage": "https://www.sbcl.org/"
 }

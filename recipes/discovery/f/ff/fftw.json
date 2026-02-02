@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fftw"
+  "source": "fftw",
+  "description": "C routines to compute the Discrete Fourier Transform",
+  "homepage": "https://fftw.org"
 }

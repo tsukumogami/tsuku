@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "wireshark"
+  "source": "wireshark",
+  "description": "Network analyzer and capture tool - without graphical user interface",
+  "homepage": "https://www.wireshark.org"
 }

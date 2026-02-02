@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mvfst"
+  "source": "mvfst",
+  "description": "QUIC transport protocol implementation",
+  "homepage": "https://github.com/facebook/mvfst"
 }

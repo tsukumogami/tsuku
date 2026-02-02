@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pgvector"
+  "source": "pgvector",
+  "description": "Open-source vector similarity search for Postgres",
+  "homepage": "https://github.com/pgvector/pgvector"
 }

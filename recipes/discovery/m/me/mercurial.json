@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mercurial"
+  "source": "mercurial",
+  "description": "Scalable distributed version control system",
+  "homepage": "https://mercurial-scm.org/"
 }

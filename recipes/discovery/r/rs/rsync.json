@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rsync"
+  "source": "rsync",
+  "description": "Utility that provides fast incremental file transfer",
+  "homepage": "https://rsync.samba.org/"
 }

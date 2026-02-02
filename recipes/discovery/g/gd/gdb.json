@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gdb"
+  "source": "gdb",
+  "description": "GNU debugger",
+  "homepage": "https://www.gnu.org/software/gdb/"
 }

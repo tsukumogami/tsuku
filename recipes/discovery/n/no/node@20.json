@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "node@20"
+  "source": "node@20",
+  "description": "Open-source, cross-platform JavaScript runtime environment",
+  "homepage": "https://nodejs.org/"
 }

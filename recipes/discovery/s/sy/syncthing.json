@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "syncthing"
+  "source": "syncthing",
+  "description": "Open source continuous file synchronization application",
+  "homepage": "https://syncthing.net/"
 }

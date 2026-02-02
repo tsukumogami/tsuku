@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fmt"
+  "source": "fmt",
+  "description": "Open-source formatting library for C++",
+  "homepage": "https://fmt.dev/"
 }

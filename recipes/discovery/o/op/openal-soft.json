@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openal-soft"
+  "source": "openal-soft",
+  "description": "Implementation of the OpenAL 3D audio API",
+  "homepage": "https://openal-soft.org/"
 }

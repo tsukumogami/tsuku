@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openjdk@17"
+  "source": "openjdk@17",
+  "description": "Development kit for the Java programming language",
+  "homepage": "https://openjdk.org/"
 }

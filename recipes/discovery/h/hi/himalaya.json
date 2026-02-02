@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "himalaya"
+  "source": "himalaya",
+  "description": "CLI email client written in Rust",
+  "homepage": "https://github.com/pimalaya/himalaya"
 }

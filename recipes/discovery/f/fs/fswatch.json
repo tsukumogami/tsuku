@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fswatch"
+  "source": "fswatch",
+  "description": "Monitor a directory for changes and run a shell command",
+  "homepage": "https://github.com/emcrisostomo/fswatch"
 }

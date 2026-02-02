@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "utf8proc"
+  "source": "utf8proc",
+  "description": "Clean C library for processing UTF-8 Unicode data",
+  "homepage": "https://juliastrings.github.io/utf8proc/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "upx"
+  "source": "upx",
+  "description": "Compress/expand executable files",
+  "homepage": "https://upx.github.io/"
 }

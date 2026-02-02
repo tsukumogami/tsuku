@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "llvm@18"
+  "source": "llvm@18",
+  "description": "Next-gen compiler infrastructure",
+  "homepage": "https://llvm.org/"
 }

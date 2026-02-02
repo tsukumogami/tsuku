@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openjdk@8"
+  "source": "openjdk@8",
+  "description": "Development kit for the Java programming language",
+  "homepage": "https://openjdk.org/"
 }

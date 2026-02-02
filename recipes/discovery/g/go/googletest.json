@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "googletest"
+  "source": "googletest",
+  "description": "Google Testing and Mocking Framework",
+  "homepage": "https://google.github.io/googletest/"
 }

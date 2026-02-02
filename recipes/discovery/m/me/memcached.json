@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "memcached"
+  "source": "memcached",
+  "description": "High performance, distributed memory object caching system",
+  "homepage": "https://memcached.org/"
 }

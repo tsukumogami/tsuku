@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openssh"
+  "source": "openssh",
+  "description": "OpenBSD freely-licensed SSH connectivity tools",
+  "homepage": "https://www.openssh.com/"
 }

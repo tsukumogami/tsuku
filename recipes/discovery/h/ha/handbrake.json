@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "handbrake"
+  "source": "handbrake",
+  "description": "Open-source video transcoder available for Linux, Mac, and Windows",
+  "homepage": "https://handbrake.fr/"
 }

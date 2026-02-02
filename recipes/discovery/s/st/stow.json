@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "stow"
+  "source": "stow",
+  "description": "Organize software neatly under a single directory tree (e.g. /usr/local)",
+  "homepage": "https://www.gnu.org/software/stow/"
 }

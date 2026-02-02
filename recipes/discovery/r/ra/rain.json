@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rain"
+  "source": "rain",
+  "description": "Command-line tool for working with AWS CloudFormation",
+  "homepage": "https://github.com/aws-cloudformation/rain"
 }

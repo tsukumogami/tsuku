@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "xclogparser"
+  "source": "xclogparser",
+  "description": "Tool to parse the SLF serialization format used by Xcode",
+  "homepage": "https://github.com/MobileNativeFoundation/XCLogParser"
 }

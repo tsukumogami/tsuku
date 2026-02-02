@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tree-sitter-cli"
+  "source": "tree-sitter-cli",
+  "description": "Parser generator tool",
+  "homepage": "https://tree-sitter.github.io"
 }

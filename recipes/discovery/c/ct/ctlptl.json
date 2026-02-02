@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ctlptl"
+  "source": "ctlptl",
+  "description": "Making local Kubernetes clusters fun and easy to set up",
+  "homepage": "https://github.com/tilt-dev/ctlptl"
 }

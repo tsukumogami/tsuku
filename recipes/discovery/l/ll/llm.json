@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "llm"
+  "source": "llm",
+  "description": "Access large language models from the command-line",
+  "homepage": "https://llm.datasette.io/"
 }

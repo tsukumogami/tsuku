@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "typst"
+  "source": "typst",
+  "description": "Markup-based typesetting system",
+  "homepage": "https://typst.app/"
 }

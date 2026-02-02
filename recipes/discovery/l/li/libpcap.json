@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libpcap"
+  "source": "libpcap",
+  "description": "Portable library for network traffic capture",
+  "homepage": "https://www.tcpdump.org/"
 }

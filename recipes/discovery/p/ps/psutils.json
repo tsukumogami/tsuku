@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "psutils"
+  "source": "psutils",
+  "description": "Utilities for manipulating PostScript documents",
+  "homepage": "https://github.com/rrthomas/psutils"
 }

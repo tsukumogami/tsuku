@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jenv"
+  "source": "jenv",
+  "description": "Manage your Java environment",
+  "homepage": "https://github.com/jenv/jenv"
 }

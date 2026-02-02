@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libxmlsec1"
+  "source": "libxmlsec1",
+  "description": "XML security library",
+  "homepage": "https://www.aleksey.com/xmlsec/"
 }

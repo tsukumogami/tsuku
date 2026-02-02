@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "llama.cpp"
+  "source": "llama.cpp",
+  "description": "LLM inference in C/C++",
+  "homepage": "https://github.com/ggml-org/llama.cpp"
 }

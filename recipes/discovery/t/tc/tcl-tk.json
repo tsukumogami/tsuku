@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tcl-tk"
+  "source": "tcl-tk",
+  "description": "Tool Command Language",
+  "homepage": "https://www.tcl-lang.org"
 }

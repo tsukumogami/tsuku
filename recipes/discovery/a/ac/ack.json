@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ack"
+  "source": "ack",
+  "description": "Search tool like grep, but optimized for programmers",
+  "homepage": "https://beyondgrep.com/"
 }

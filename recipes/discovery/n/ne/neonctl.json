@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "neonctl"
+  "source": "neonctl",
+  "description": "Neon CLI tool",
+  "homepage": "https://neon.tech/docs/reference/neon-cli"
 }

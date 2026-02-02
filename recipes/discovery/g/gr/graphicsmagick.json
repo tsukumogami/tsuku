@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "graphicsmagick"
+  "source": "graphicsmagick",
+  "description": "Image processing tools collection",
+  "homepage": "https://graphicsmagick.sourceforge.io/"
 }

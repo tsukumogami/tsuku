@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gradle"
+  "source": "gradle",
+  "description": "Open-source build automation tool based on the Groovy and Kotlin DSL",
+  "homepage": "https://www.gradle.org/"
 }

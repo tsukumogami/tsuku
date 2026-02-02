@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "angular-cli"
+  "source": "angular-cli",
+  "description": "CLI tool for Angular",
+  "homepage": "https://angular.dev/cli/"
 }

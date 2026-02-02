@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rumdl"
+  "source": "rumdl",
+  "description": "Markdown Linter and Formatter written in Rust",
+  "homepage": "https://github.com/rvben/rumdl"
 }

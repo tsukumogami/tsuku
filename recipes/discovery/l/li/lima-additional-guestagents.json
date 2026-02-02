@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lima-additional-guestagents"
+  "source": "lima-additional-guestagents",
+  "description": "Additional guest agents for Lima",
+  "homepage": "https://lima-vm.io/"
 }

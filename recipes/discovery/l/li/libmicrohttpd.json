@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libmicrohttpd"
+  "source": "libmicrohttpd",
+  "description": "Light HTTP/1.1 server library",
+  "homepage": "https://www.gnu.org/software/libmicrohttpd/"
 }

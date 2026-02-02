@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "doctl"
+  "source": "doctl",
+  "description": "Command-line tool for DigitalOcean",
+  "homepage": "https://github.com/digitalocean/doctl"
 }

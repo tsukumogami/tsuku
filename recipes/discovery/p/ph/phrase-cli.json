@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "phrase-cli"
+  "source": "phrase-cli",
+  "description": "Tool to interact with the Phrase API",
+  "homepage": "https://phrase.com/"
 }

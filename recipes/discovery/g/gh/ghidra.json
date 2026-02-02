@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ghidra"
+  "source": "ghidra",
+  "description": "Multi-platform software reverse engineering framework",
+  "homepage": "https://github.com/NationalSecurityAgency/ghidra"
 }

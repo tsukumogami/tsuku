@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "displayplacer"
+  "source": "displayplacer",
+  "description": "Utility to configure multi-display resolutions and arrangements",
+  "homepage": "https://github.com/jakehilborn/displayplacer"
 }

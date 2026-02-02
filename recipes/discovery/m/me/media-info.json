@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "media-info"
+  "source": "media-info",
+  "description": "Unified display of technical and tag data for audio/video",
+  "homepage": "https://mediaarea.net/"
 }

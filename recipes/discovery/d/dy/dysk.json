@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "dysk"
+  "source": "dysk",
+  "description": "Linux utility to get information on filesystems, like df but better",
+  "homepage": "https://dystroy.org/dysk/"
 }

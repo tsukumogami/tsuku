@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "swift-format"
+  "source": "swift-format",
+  "description": "Formatting technology for Swift source code",
+  "homepage": "https://github.com/swiftlang/swift-format"
 }

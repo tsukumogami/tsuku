@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nvm"
+  "source": "nvm",
+  "description": "Manage multiple Node.js versions",
+  "homepage": "https://github.com/nvm-sh/nvm"
 }

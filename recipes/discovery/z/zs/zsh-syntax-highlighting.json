@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "zsh-syntax-highlighting"
+  "source": "zsh-syntax-highlighting",
+  "description": "Fish shell like syntax highlighting for zsh",
+  "homepage": "https://github.com/zsh-users/zsh-syntax-highlighting"
 }

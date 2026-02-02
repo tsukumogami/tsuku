@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "temporal"
+  "source": "temporal",
+  "description": "Command-line interface for running and interacting with Temporal Server and UI",
+  "homepage": "https://temporal.io/"
 }

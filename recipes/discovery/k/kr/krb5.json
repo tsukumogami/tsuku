@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "krb5"
+  "source": "krb5",
+  "description": "Network authentication protocol",
+  "homepage": "https://web.mit.edu/kerberos/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rom-tools"
+  "source": "rom-tools",
+  "description": "Tools for Multiple Arcade Machine Emulator",
+  "homepage": "https://www.mamedev.org/"
 }

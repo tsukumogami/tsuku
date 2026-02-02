@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gdbm"
+  "source": "gdbm",
+  "description": "GNU database manager",
+  "homepage": "https://www.gnu.org.ua/software/gdbm/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cppcheck"
+  "source": "cppcheck",
+  "description": "Static analysis of C and C++ code",
+  "homepage": "https://sourceforge.net/projects/cppcheck/"
 }

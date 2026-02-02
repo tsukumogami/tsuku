@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tig"
+  "source": "tig",
+  "description": "Text interface for Git repositories",
+  "homepage": "https://jonas.github.io/tig/"
 }

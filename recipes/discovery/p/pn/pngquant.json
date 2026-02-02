@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pngquant"
+  "source": "pngquant",
+  "description": "PNG image optimizing utility",
+  "homepage": "https://pngquant.org/"
 }

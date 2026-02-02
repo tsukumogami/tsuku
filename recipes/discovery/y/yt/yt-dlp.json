@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "yt-dlp"
+  "source": "yt-dlp",
+  "description": "Feature-rich command-line audio/video downloader",
+  "homepage": "https://github.com/yt-dlp/yt-dlp"
 }

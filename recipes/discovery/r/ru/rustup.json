@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rustup"
+  "source": "rustup",
+  "description": "Rust toolchain installer",
+  "homepage": "https://rust-lang.github.io/rustup/"
 }

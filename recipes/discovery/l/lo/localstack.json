@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "localstack"
+  "source": "localstack",
+  "description": "Fully functional local AWS cloud stack",
+  "homepage": "https://localstack.cloud/"
 }

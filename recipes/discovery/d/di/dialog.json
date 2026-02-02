@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "dialog"
+  "source": "dialog",
+  "description": "Display user-friendly message boxes from shell scripts",
+  "homepage": "https://invisible-island.net/dialog/"
 }

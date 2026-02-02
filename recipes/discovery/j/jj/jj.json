@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jj"
+  "source": "jj",
+  "description": "Git-compatible distributed version control system",
+  "homepage": "https://github.com/jj-vcs/jj"
 }

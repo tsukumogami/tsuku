@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "suite-sparse"
+  "source": "suite-sparse",
+  "description": "Suite of Sparse Matrix Software",
+  "homepage": "https://people.engr.tamu.edu/davis/suitesparse.html"
 }

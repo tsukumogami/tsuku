@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tectonic"
+  "source": "tectonic",
+  "description": "Modernized, complete, self-contained TeX/LaTeX engine",
+  "homepage": "https://tectonic-typesetting.github.io/"
 }

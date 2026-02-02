@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "scala"
+  "source": "scala",
+  "description": "JVM-based programming language",
+  "homepage": "https://dotty.epfl.ch/"
 }

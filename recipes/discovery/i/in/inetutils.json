@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "inetutils"
+  "source": "inetutils",
+  "description": "GNU utilities for networking",
+  "homepage": "https://www.gnu.org/software/inetutils/"
 }

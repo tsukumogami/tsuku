@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "samba"
+  "source": "samba",
+  "description": "SMB/CIFS file, print, and login server for UNIX",
+  "homepage": "https://www.samba.org/"
 }

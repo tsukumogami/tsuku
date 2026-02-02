@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openapi-generator"
+  "source": "openapi-generator",
+  "description": "Generate clients, server \u0026 docs from an OpenAPI spec (v2, v3)",
+  "homepage": "https://openapi-generator.tech/"
 }

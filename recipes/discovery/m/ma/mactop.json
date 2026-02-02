@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mactop"
+  "source": "mactop",
+  "description": "Apple Silicon Monitor Top written in Go Lang",
+  "homepage": "https://github.com/metaspartan/mactop"
 }

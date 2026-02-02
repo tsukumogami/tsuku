@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sourcekitten"
+  "source": "sourcekitten",
+  "description": "Framework and command-line tool for interacting with SourceKit",
+  "homepage": "https://github.com/jpsim/SourceKitten"
 }

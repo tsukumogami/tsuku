@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mongosh"
+  "source": "mongosh",
+  "description": "MongoDB Shell to connect, configure, query, and work with your MongoDB database",
+  "homepage": "https://github.com/mongodb-js/mongosh"
 }

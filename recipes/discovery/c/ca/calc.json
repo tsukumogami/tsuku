@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "calc"
+  "source": "calc",
+  "description": "Arbitrary precision calculator",
+  "homepage": "http://www.isthe.com/chongo/tech/comp/calc/"
 }

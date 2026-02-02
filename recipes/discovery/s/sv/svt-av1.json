@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "svt-av1"
+  "source": "svt-av1",
+  "description": "AV1 encoder",
+  "homepage": "https://gitlab.com/AOMediaCodec/SVT-AV1"
 }

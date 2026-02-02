@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "emscripten"
+  "source": "emscripten",
+  "description": "LLVM bytecode to JavaScript compiler",
+  "homepage": "https://emscripten.org/"
 }

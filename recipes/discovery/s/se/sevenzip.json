@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sevenzip"
+  "source": "sevenzip",
+  "description": "7-Zip is a file archiver with a high compression ratio",
+  "homepage": "https://7-zip.org"
 }

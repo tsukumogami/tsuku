@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mupdf"
+  "source": "mupdf",
+  "description": "Lightweight PDF and XPS viewer",
+  "homepage": "https://mupdf.com/"
 }

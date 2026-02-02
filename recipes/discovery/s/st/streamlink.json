@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "streamlink"
+  "source": "streamlink",
+  "description": "CLI for extracting streams from various websites to a video player",
+  "homepage": "https://streamlink.github.io/"
 }

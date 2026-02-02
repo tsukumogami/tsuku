@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bc"
+  "source": "bc",
+  "description": "Arbitrary precision numeric processing language",
+  "homepage": "https://www.gnu.org/software/bc/"
 }

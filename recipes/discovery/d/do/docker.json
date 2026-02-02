@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "docker"
+  "source": "docker",
+  "description": "Pack, ship and run any application as a lightweight container",
+  "homepage": "https://www.docker.com/"
 }

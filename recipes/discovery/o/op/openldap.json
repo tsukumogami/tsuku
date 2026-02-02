@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openldap"
+  "source": "openldap",
+  "description": "Open source suite of directory software",
+  "homepage": "https://www.openldap.org/software/"
 }

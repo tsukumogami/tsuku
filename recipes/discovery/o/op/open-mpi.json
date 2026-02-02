@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "open-mpi"
+  "source": "open-mpi",
+  "description": "High performance message passing library",
+  "homepage": "https://www.open-mpi.org/"
 }

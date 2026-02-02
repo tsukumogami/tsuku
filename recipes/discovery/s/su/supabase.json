@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "supabase"
+  "source": "supabase",
+  "description": "Open source Firebase alternative",
+  "homepage": "https://supabase.com/docs/reference/cli/about"
 }

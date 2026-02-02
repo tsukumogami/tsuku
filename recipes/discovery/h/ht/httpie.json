@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "httpie"
+  "source": "httpie",
+  "description": "User-friendly cURL replacement (command-line HTTP client)",
+  "homepage": "https://httpie.io/"
 }

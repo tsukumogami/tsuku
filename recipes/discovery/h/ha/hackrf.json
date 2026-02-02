@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "hackrf"
+  "source": "hackrf",
+  "description": "Low cost software radio platform",
+  "homepage": "https://github.com/greatscottgadgets/hackrf"
 }

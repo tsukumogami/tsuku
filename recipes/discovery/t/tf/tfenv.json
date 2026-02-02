@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tfenv"
+  "source": "tfenv",
+  "description": "Terraform version manager inspired by rbenv",
+  "homepage": "https://github.com/tfutils/tfenv"
 }

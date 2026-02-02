@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "neofetch"
+  "source": "neofetch",
+  "description": "Fast, highly customisable system info script",
+  "homepage": "https://github.com/dylanaraps/neofetch"
 }

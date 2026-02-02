@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "postgis"
+  "source": "postgis",
+  "description": "Adds support for geographic objects to PostgreSQL",
+  "homepage": "https://postgis.net/"
 }

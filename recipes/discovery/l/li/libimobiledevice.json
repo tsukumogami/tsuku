@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libimobiledevice"
+  "source": "libimobiledevice",
+  "description": "Library to communicate with iOS devices natively",
+  "homepage": "https://www.libimobiledevice.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "maven"
+  "source": "maven",
+  "description": "Java-based project management",
+  "homepage": "https://maven.apache.org/"
 }

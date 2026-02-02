@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "resvg"
+  "source": "resvg",
+  "description": "SVG rendering tool and library",
+  "homepage": "https://github.com/linebender/resvg"
 }

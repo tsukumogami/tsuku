@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "re2"
+  "source": "re2",
+  "description": "Alternative to backtracking PCRE-style regular expression engines",
+  "homepage": "https://github.com/google/re2"
 }

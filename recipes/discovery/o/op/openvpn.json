@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openvpn"
+  "source": "openvpn",
+  "description": "SSL/TLS VPN implementing OSI layer 2 or 3 secure network extension",
+  "homepage": "https://openvpn.net/community/"
 }

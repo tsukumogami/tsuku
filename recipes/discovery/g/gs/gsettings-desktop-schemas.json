@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gsettings-desktop-schemas"
+  "source": "gsettings-desktop-schemas",
+  "description": "GSettings schemas for desktop components",
+  "homepage": "https://download.gnome.org/sources/gsettings-desktop-schemas/"
 }

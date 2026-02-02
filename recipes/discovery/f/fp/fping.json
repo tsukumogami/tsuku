@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fping"
+  "source": "fping",
+  "description": "Scriptable ping program for checking if multiple hosts are up",
+  "homepage": "https://fping.org/"
 }

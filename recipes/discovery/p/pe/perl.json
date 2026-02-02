@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "perl"
+  "source": "perl",
+  "description": "Highly capable, feature-rich programming language",
+  "homepage": "https://www.perl.org/"
 }

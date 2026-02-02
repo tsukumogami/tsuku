@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "clang-format@11"
+  "source": "clang-format@11",
+  "description": "Formatting tools for C, C++, Obj-C, Java, JavaScript, TypeScript",
+  "homepage": "https://clang.llvm.org/docs/ClangFormat.html"
 }

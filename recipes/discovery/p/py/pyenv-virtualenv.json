@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pyenv-virtualenv"
+  "source": "pyenv-virtualenv",
+  "description": "Pyenv plugin to manage virtualenv",
+  "homepage": "https://github.com/pyenv/pyenv-virtualenv"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "unar"
+  "source": "unar",
+  "description": "Command-line unarchiving tools supporting multiple formats",
+  "homepage": "https://theunarchiver.com/command-line"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gemini-cli"
+  "source": "gemini-cli",
+  "description": "Interact with Google Gemini AI models from the command-line",
+  "homepage": "https://github.com/google-gemini/gemini-cli"
 }

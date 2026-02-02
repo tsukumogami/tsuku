@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "signal-cli"
+  "source": "signal-cli",
+  "description": "CLI and dbus interface for WhisperSystems/libsignal-service-java",
+  "homepage": "https://github.com/AsamK/signal-cli"
 }

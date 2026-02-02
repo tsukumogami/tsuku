@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "figlet"
+  "source": "figlet",
+  "description": "Banner-like program prints strings as ASCII art",
+  "homepage": "http://www.figlet.org/"
 }

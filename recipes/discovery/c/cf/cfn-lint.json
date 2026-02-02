@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cfn-lint"
+  "source": "cfn-lint",
+  "description": "Validate CloudFormation templates against the CloudFormation spec",
+  "homepage": "https://github.com/aws-cloudformation/cfn-lint/"
 }

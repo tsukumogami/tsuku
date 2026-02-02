@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cloudflare-wrangler"
+  "source": "cloudflare-wrangler",
+  "description": "CLI tool for Cloudflare Workers",
+  "homepage": "https://github.com/cloudflare/workers-sdk"
 }

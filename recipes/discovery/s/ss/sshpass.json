@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sshpass"
+  "source": "sshpass",
+  "description": "Non-interactive SSH password auth",
+  "homepage": "https://sourceforge.net/projects/sshpass/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "docutils"
+  "source": "docutils",
+  "description": "Text processing system for reStructuredText",
+  "homepage": "https://docutils.sourceforge.io"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "kubernetes-cli"
+  "source": "kubernetes-cli",
+  "description": "Kubernetes command-line interface",
+  "homepage": "https://kubernetes.io/docs/reference/kubectl/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sing-box"
+  "source": "sing-box",
+  "description": "Universal proxy platform",
+  "homepage": "https://sing-box.sagernet.org"
 }

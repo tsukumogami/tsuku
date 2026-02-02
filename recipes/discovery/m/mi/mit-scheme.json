@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mit-scheme"
+  "source": "mit-scheme",
+  "description": "MIT/GNU Scheme development tools and runtime library",
+  "homepage": "https://www.gnu.org/software/mit-scheme/"
 }

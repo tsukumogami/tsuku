@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "iperf3"
+  "source": "iperf3",
+  "description": "Update of iperf: measures TCP, UDP, and SCTP bandwidth",
+  "homepage": "https://github.com/esnet/iperf"
 }

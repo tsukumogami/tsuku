@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "biome"
+  "source": "biome",
+  "description": "Toolchain of the web",
+  "homepage": "https://biomejs.dev/"
 }

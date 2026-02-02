@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cmake"
+  "source": "cmake",
+  "description": "Cross-platform make",
+  "homepage": "https://www.cmake.org/"
 }

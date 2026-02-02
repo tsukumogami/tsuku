@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "jesseduffield/lazydocker",
+  "description": "The lazier way to manage everything docker",
+  "repo": "https://github.com/jesseduffield/lazydocker"
+}

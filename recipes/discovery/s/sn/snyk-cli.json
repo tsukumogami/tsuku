@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "snyk-cli"
+  "source": "snyk-cli",
+  "description": "Scans and monitors projects for security vulnerabilities",
+  "homepage": "https://snyk.io"
 }

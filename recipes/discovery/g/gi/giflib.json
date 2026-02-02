@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "giflib"
+  "source": "giflib",
+  "description": "Library and utilities for processing GIFs",
+  "homepage": "https://giflib.sourceforge.net/"
 }

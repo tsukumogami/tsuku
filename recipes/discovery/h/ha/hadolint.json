@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "hadolint"
+  "source": "hadolint",
+  "description": "Smarter Dockerfile linter to validate best practices",
+  "homepage": "https://github.com/hadolint/hadolint"
 }

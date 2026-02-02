@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "poetry"
+  "source": "poetry",
+  "description": "Python package management tool",
+  "homepage": "https://python-poetry.org/"
 }

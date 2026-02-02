@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sdl2_image"
+  "source": "sdl2_image",
+  "description": "Library for loading images as SDL surfaces and textures",
+  "homepage": "https://github.com/libsdl-org/SDL_image"
 }

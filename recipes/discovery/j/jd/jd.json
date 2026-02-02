@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jd"
+  "source": "jd",
+  "description": "JSON diff and patch",
+  "homepage": "https://github.com/josephburnett/jd"
 }

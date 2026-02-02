@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "the_silver_searcher"
+  "source": "the_silver_searcher",
+  "description": "Code-search similar to ack",
+  "homepage": "https://geoff.greer.fm/ag/"
 }

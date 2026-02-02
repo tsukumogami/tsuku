@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "vulkan-loader"
+  "source": "vulkan-loader",
+  "description": "Vulkan ICD Loader",
+  "homepage": "https://github.com/KhronosGroup/Vulkan-Loader"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pyenv"
+  "source": "pyenv",
+  "description": "Python version management",
+  "homepage": "https://github.com/pyenv/pyenv"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mockolo"
+  "source": "mockolo",
+  "description": "Efficient Mock Generator for Swift",
+  "homepage": "https://github.com/uber/mockolo"
 }

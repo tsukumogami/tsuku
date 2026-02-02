@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "swiftgen"
+  "source": "swiftgen",
+  "description": "Swift code generator for assets, storyboards, Localizable.strings, etc.",
+  "homepage": "https://github.com/SwiftGen/SwiftGen"
 }

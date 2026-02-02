@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "license-eye"
+  "source": "license-eye",
+  "description": "Tool to check and fix license headers and resolve dependency licenses",
+  "homepage": "https://github.com/apache/skywalking-eyes"
 }

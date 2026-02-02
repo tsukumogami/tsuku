@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "awscli-local"
+  "source": "awscli-local",
+  "description": "Thin wrapper around the `aws` command-line interface for use with LocalStack",
+  "homepage": "https://www.localstack.cloud/"
 }

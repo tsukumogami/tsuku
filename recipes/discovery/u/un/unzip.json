@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "unzip"
+  "source": "unzip",
+  "description": "Extraction utility for .zip compressed archives",
+  "homepage": "https://infozip.sourceforge.net/UnZip.html"
 }

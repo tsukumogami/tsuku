@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fizz"
+  "source": "fizz",
+  "description": "C++14 implementation of the TLS-1.3 standard",
+  "homepage": "https://github.com/facebookincubator/fizz"
 }

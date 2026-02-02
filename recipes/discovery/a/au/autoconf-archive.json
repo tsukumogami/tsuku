@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "autoconf-archive"
+  "source": "autoconf-archive",
+  "description": "Collection of over 500 reusable autoconf macros",
+  "homepage": "https://savannah.gnu.org/projects/autoconf-archive/"
 }

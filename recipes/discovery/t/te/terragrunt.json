@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "gruntwork-io/terragrunt",
+  "description": "Terragrunt is a flexible orchestration tool that allows Infrastructure as Code written in OpenTofu/Terraform to scale.",
+  "homepage": "https://terragrunt.gruntwork.io/",
+  "repo": "https://github.com/gruntwork-io/terragrunt"
+}

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jpeg"
+  "source": "jpeg",
+  "description": "Image manipulation library",
+  "homepage": "https://www.ijg.org/"
 }

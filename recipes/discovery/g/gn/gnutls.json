@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gnutls"
+  "source": "gnutls",
+  "description": "GNU Transport Layer Security (TLS) Library",
+  "homepage": "https://gnutls.org/"
 }

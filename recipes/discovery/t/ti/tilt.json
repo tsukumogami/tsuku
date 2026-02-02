@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "tilt-dev/tilt",
+  "description": "Define your dev environment as code. For microservice apps on Kubernetes.",
+  "homepage": "https://tilt.dev/",
+  "repo": "https://github.com/tilt-dev/tilt"
+}

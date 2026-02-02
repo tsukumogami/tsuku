@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "midnight-commander"
+  "source": "midnight-commander",
+  "description": "Terminal-based visual file manager",
+  "homepage": "https://www.midnight-commander.org/"
 }

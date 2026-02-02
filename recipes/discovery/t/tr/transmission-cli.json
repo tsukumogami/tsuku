@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "transmission-cli"
+  "source": "transmission-cli",
+  "description": "Lightweight BitTorrent client",
+  "homepage": "https://transmissionbt.com/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mosquitto"
+  "source": "mosquitto",
+  "description": "Message broker implementing the MQTT protocol",
+  "homepage": "https://mosquitto.org/"
 }

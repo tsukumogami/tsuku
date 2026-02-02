@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lychee"
+  "source": "lychee",
+  "description": "Fast, async, resource-friendly link checker",
+  "homepage": "https://lychee.cli.rs/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "saml2aws"
+  "source": "saml2aws",
+  "description": "Login and retrieve AWS temporary credentials using a SAML IDP",
+  "homepage": "https://github.com/Versent/saml2aws"
 }

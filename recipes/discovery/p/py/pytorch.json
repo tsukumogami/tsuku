@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pytorch"
+  "source": "pytorch",
+  "description": "Tensors and dynamic neural networks",
+  "homepage": "https://pytorch.org/"
 }

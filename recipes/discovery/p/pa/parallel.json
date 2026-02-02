@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "parallel"
+  "source": "parallel",
+  "description": "Shell command parallelization utility",
+  "homepage": "https://savannah.gnu.org/projects/parallel/"
 }

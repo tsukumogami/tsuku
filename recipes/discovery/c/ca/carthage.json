@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "carthage"
+  "source": "carthage",
+  "description": "Decentralized dependency manager for Cocoa",
+  "homepage": "https://github.com/Carthage/Carthage"
 }

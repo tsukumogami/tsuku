@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cmocka"
+  "source": "cmocka",
+  "description": "Unit testing framework for C",
+  "homepage": "https://cmocka.org/"
 }

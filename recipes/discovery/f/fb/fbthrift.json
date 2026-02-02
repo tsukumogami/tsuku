@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fbthrift"
+  "source": "fbthrift",
+  "description": "Facebook's branch of Apache Thrift, including a new C++ server",
+  "homepage": "https://github.com/facebook/fbthrift"
 }

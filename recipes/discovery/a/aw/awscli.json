@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "awscli"
+  "source": "awscli",
+  "description": "Official Amazon AWS command-line interface",
+  "homepage": "https://aws.amazon.com/cli/"
 }

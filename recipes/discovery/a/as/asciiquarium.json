@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "asciiquarium"
+  "source": "asciiquarium",
+  "description": "Aquarium animation in ASCII art",
+  "homepage": "https://robobunny.com/projects/asciiquarium/html/"
 }

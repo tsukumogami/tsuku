@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "go"
+  "source": "go",
+  "description": "Open source programming language to build simple/reliable/efficient software",
+  "homepage": "https://go.dev/"
 }

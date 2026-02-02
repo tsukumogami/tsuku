@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "gohugoio/hugo",
+  "description": "The world’s fastest framework for building websites.",
+  "homepage": "https://gohugo.io",
+  "repo": "https://github.com/gohugoio/hugo"
+}

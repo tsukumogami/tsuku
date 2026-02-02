@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nodenv"
+  "source": "nodenv",
+  "description": "Node.js version manager",
+  "homepage": "https://github.com/nodenv/nodenv"
 }

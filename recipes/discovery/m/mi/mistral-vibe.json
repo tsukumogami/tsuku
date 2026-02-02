@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mistral-vibe"
+  "source": "mistral-vibe",
+  "description": "Minimal CLI coding agent",
+  "homepage": "https://github.com/mistralai/mistral-vibe"
 }

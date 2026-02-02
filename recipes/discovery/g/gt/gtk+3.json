@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gtk+3"
+  "source": "gtk+3",
+  "description": "Toolkit for creating graphical user interfaces",
+  "homepage": "https://gtk.org/"
 }

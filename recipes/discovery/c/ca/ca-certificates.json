@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ca-certificates"
+  "source": "ca-certificates",
+  "description": "Mozilla CA certificate store",
+  "homepage": "https://curl.se/docs/caextract.html"
 }

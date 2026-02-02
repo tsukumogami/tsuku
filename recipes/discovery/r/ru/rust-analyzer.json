@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rust-analyzer"
+  "source": "rust-analyzer",
+  "description": "Experimental Rust compiler front-end for IDEs",
+  "homepage": "https://rust-analyzer.github.io/"
 }

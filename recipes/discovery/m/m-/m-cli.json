@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "m-cli"
+  "source": "m-cli",
+  "description": "Swiss Army Knife for macOS",
+  "homepage": "https://github.com/rgcr/m-cli"
 }

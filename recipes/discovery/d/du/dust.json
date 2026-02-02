@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "bootandy/dust",
+  "description": "A more intuitive version of du in rust",
+  "repo": "https://github.com/bootandy/dust"
+}

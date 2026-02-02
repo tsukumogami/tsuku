@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mysql-client@8.0"
+  "source": "mysql-client@8.0",
+  "description": "Open source relational database management system",
+  "homepage": "https://github.com/mysql/mysql-server"
 }

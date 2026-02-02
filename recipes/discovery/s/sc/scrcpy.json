@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "scrcpy"
+  "source": "scrcpy",
+  "description": "Display and control your Android device",
+  "homepage": "https://github.com/Genymobile/scrcpy"
 }

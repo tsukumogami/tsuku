@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gitlab-runner"
+  "source": "gitlab-runner",
+  "description": "Official GitLab CI runner",
+  "homepage": "https://gitlab.com/gitlab-org/gitlab-runner"
 }

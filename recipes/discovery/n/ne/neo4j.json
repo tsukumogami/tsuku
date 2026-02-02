@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "neo4j"
+  "source": "neo4j",
+  "description": "Robust (fully ACID) transactional property graph database",
+  "homepage": "https://neo4j.com/"
 }

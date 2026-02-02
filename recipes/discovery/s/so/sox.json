@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sox"
+  "source": "sox",
+  "description": "SOund eXchange: universal sound sample translator",
+  "homepage": "https://sox.sourceforge.net/"
 }

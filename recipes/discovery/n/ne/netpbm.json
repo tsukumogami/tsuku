@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "netpbm"
+  "source": "netpbm",
+  "description": "Image manipulation",
+  "homepage": "https://netpbm.sourceforge.net/"
 }

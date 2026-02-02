@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "aws-cdk"
+  "source": "aws-cdk",
+  "description": "AWS Cloud Development Kit - framework for defining AWS infra as code",
+  "homepage": "https://github.com/aws/aws-cdk"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mosh"
+  "source": "mosh",
+  "description": "Remote terminal application",
+  "homepage": "https://mosh.org"
 }

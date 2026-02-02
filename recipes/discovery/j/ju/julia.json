@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "julia"
+  "source": "julia",
+  "description": "Fast, Dynamic Programming Language",
+  "homepage": "https://julialang.org/"
 }

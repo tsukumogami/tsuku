@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "composer"
+  "source": "composer",
+  "description": "Dependency Manager for PHP",
+  "homepage": "https://getcomposer.org/"
 }

@@ -255,14 +255,90 @@ func TestLoadRegistryDir(t *testing.T) {
 	}
 }
 
-// Test helper
+func TestGenerate_MetadataWrittenToFiles(t *testing.T) {
+	dir := t.TempDir()
+	seedsDir := filepath.Join(dir, "seeds")
+	if err := os.Mkdir(seedsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(seedsDir, "tools.json"), []byte(`{
+		"category": "test",
+		"entries": [
+			{"name": "bat", "builder": "github", "source": "sharkdp/bat"},
+			{"name": "jq", "builder": "homebrew", "source": "jq"}
+		]
+	}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	outputDir := filepath.Join(dir, "discovery")
+	result, err := Generate(GenerateConfig{
+		SeedsDir:  seedsDir,
+		OutputDir: outputDir,
+		Validators: map[string]Validator{
+			"github": &enrichingValidator{meta: &EntryMetadata{
+				Description: "A cat clone with wings",
+				Homepage:    "https://github.com/sharkdp/bat",
+				Repo:        "https://github.com/sharkdp/bat",
+			}},
+			"homebrew": &enrichingValidator{meta: &EntryMetadata{
+				Description: "Lightweight JSON processor",
+				Homepage:    "https://jqlang.github.io/jq/",
+			}},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if result.Valid != 2 {
+		t.Fatalf("expected 2 valid, got %d", result.Valid)
+	}
+
+	// Verify bat entry has metadata
+	batEntry, err := LoadRegistryEntry(outputDir, "bat")
+	if err != nil {
+		t.Fatalf("load bat: %v", err)
+	}
+	if batEntry.Description != "A cat clone with wings" {
+		t.Errorf("bat description = %q, want 'A cat clone with wings'", batEntry.Description)
+	}
+	if batEntry.Homepage != "https://github.com/sharkdp/bat" {
+		t.Errorf("bat homepage = %q", batEntry.Homepage)
+	}
+	if batEntry.Repo != "https://github.com/sharkdp/bat" {
+		t.Errorf("bat repo = %q", batEntry.Repo)
+	}
+
+	// Verify jq entry has metadata (no repo for homebrew)
+	jqEntry, err := LoadRegistryEntry(outputDir, "jq")
+	if err != nil {
+		t.Fatalf("load jq: %v", err)
+	}
+	if jqEntry.Description != "Lightweight JSON processor" {
+		t.Errorf("jq description = %q", jqEntry.Description)
+	}
+	if jqEntry.Homepage != "https://jqlang.github.io/jq/" {
+		t.Errorf("jq homepage = %q", jqEntry.Homepage)
+	}
+}
+
+// Test helpers
+
+type enrichingValidator struct {
+	meta *EntryMetadata
+}
+
+func (v *enrichingValidator) Validate(entry SeedEntry) (*EntryMetadata, error) {
+	return v.meta, nil
+}
+
 type conditionalValidator struct {
 	allow map[string]bool
 }
 
-func (v *conditionalValidator) Validate(entry SeedEntry) error {
+func (v *conditionalValidator) Validate(entry SeedEntry) (*EntryMetadata, error) {
 	if v.allow[entry.Source] {
-		return nil
+		return nil, nil
 	}
-	return fmt.Errorf("source %q not allowed", entry.Source)
+	return nil, fmt.Errorf("source %q not allowed", entry.Source)
 }

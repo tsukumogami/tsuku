@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pgcli"
+  "source": "pgcli",
+  "description": "CLI for Postgres with auto-completion and syntax highlighting",
+  "homepage": "https://pgcli.com/"
 }

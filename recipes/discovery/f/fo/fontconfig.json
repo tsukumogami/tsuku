@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fontconfig"
+  "source": "fontconfig",
+  "description": "XML-based font configuration API for X Windows",
+  "homepage": "https://wiki.freedesktop.org/www/Software/fontconfig/"
 }

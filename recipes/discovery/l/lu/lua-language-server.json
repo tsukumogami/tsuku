@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lua-language-server"
+  "source": "lua-language-server",
+  "description": "Language Server for the Lua language",
+  "homepage": "https://github.com/LuaLS/lua-language-server"
 }

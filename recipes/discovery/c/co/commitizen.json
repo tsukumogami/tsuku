@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "commitizen"
+  "source": "commitizen",
+  "description": "Defines a standard way of committing rules and communicating it",
+  "homepage": "https://commitizen-tools.github.io/commitizen/"
 }

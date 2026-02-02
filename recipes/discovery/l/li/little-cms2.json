@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "little-cms2"
+  "source": "little-cms2",
+  "description": "Color management engine supporting ICC profiles",
+  "homepage": "https://www.littlecms.com/"
 }

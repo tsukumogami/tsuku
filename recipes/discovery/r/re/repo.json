@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "repo"
+  "source": "repo",
+  "description": "Repository tool for Android development",
+  "homepage": "https://source.android.com/source/developing.html"
 }

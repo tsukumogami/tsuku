@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "chicken"
+  "source": "chicken",
+  "description": "Compiler for the Scheme programming language",
+  "homepage": "https://www.call-cc.org/"
 }

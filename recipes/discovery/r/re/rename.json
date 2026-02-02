@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rename"
+  "source": "rename",
+  "description": "Perl-powered file rename script with many helpful built-ins",
+  "homepage": "http://plasmasturm.org/code/rename"
 }

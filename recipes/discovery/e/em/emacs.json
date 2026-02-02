@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "emacs"
+  "source": "emacs",
+  "description": "GNU Emacs text editor",
+  "homepage": "https://www.gnu.org/software/emacs/"
 }

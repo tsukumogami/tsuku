@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "goenv"
+  "source": "goenv",
+  "description": "Go version management",
+  "homepage": "https://github.com/go-nv/goenv"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "watchman"
+  "source": "watchman",
+  "description": "Watch files and take action when they change",
+  "homepage": "https://github.com/facebook/watchman"
 }

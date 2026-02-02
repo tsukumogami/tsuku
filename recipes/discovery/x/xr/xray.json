@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "xray"
+  "source": "xray",
+  "description": "Platform for building proxies to bypass network restrictions",
+  "homepage": "https://xtls.github.io/"
 }

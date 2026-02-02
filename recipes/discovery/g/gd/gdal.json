@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gdal"
+  "source": "gdal",
+  "description": "Geospatial Data Abstraction Library",
+  "homepage": "https://gdal.org/en/stable/"
 }

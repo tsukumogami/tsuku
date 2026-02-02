@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mpv"
+  "source": "mpv",
+  "description": "Media player based on MPlayer and mplayer2",
+  "homepage": "https://mpv.io"
 }

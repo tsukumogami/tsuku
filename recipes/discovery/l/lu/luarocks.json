@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "luarocks"
+  "source": "luarocks",
+  "description": "Package manager for the Lua programming language",
+  "homepage": "https://luarocks.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ocrmypdf"
+  "source": "ocrmypdf",
+  "description": "Adds an OCR text layer to scanned PDF files",
+  "homepage": "https://ocrmypdf.readthedocs.io/en/latest/"
 }

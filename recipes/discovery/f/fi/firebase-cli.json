@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "firebase-cli"
+  "source": "firebase-cli",
+  "description": "Firebase command-line tools",
+  "homepage": "https://firebase.google.com/docs/cli/"
 }

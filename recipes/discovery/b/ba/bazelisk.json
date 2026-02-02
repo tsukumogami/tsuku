@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bazelisk"
+  "source": "bazelisk",
+  "description": "User-friendly launcher for Bazel",
+  "homepage": "https://github.com/bazelbuild/bazelisk/"
 }

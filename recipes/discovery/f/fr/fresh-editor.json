@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fresh-editor"
+  "source": "fresh-editor",
+  "description": "Text editor for your terminal: easy, powerful and fast",
+  "homepage": "https://sinelaw.github.io/fresh/"
 }

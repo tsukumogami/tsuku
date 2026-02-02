@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gnu-sed"
+  "source": "gnu-sed",
+  "description": "GNU implementation of the famous stream editor",
+  "homepage": "https://www.gnu.org/software/sed/"
 }

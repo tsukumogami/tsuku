@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "opus"
+  "source": "opus",
+  "description": "Audio codec",
+  "homepage": "https://www.opus-codec.org/"
 }

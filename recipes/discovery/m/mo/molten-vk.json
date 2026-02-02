@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "molten-vk"
+  "source": "molten-vk",
+  "description": "Implementation of the Vulkan graphics and compute API on top of Metal",
+  "homepage": "https://github.com/KhronosGroup/MoltenVK"
 }

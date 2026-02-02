@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libtiff"
+  "source": "libtiff",
+  "description": "TIFF library and utilities",
+  "homepage": "https://libtiff.gitlab.io/libtiff/"
 }

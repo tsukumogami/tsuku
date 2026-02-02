@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "icu4c@77"
+  "source": "icu4c@77",
+  "description": "C/C++ and Java libraries for Unicode and globalization",
+  "homepage": "https://icu.unicode.org/home"
 }

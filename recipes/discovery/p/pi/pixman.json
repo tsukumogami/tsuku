@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pixman"
+  "source": "pixman",
+  "description": "Low-level library for pixel manipulation",
+  "homepage": "https://cairographics.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "qrencode"
+  "source": "qrencode",
+  "description": "QR Code generation",
+  "homepage": "https://fukuchi.org/works/qrencode/index.html.en"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mockery"
+  "source": "mockery",
+  "description": "Mock code autogenerator for Golang",
+  "homepage": "https://github.com/vektra/mockery"
 }

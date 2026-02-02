@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libgcrypt"
+  "source": "libgcrypt",
+  "description": "Cryptographic library based on the code from GnuPG",
+  "homepage": "https://gnupg.org/related_software/libgcrypt/"
 }

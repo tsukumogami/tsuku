@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "z3"
+  "source": "z3",
+  "description": "High-performance theorem prover",
+  "homepage": "https://github.com/Z3Prover/z3"
 }

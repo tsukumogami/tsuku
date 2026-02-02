@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cloud-sql-proxy"
+  "source": "cloud-sql-proxy",
+  "description": "Utility for connecting securely to your Cloud SQL instances",
+  "homepage": "https://github.com/GoogleCloudPlatform/cloud-sql-proxy"
 }

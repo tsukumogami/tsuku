@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "aws-iam-authenticator"
+  "source": "aws-iam-authenticator",
+  "description": "Use AWS IAM credentials to authenticate to Kubernetes",
+  "homepage": "https://github.com/kubernetes-sigs/aws-iam-authenticator"
 }

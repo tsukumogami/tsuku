@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ceres-solver"
+  "source": "ceres-solver",
+  "description": "C++ library for large-scale optimization",
+  "homepage": "http://ceres-solver.org/"
 }

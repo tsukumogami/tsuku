@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "protobuf-c"
+  "source": "protobuf-c",
+  "description": "Protocol buffers library",
+  "homepage": "https://github.com/protobuf-c/protobuf-c"
 }

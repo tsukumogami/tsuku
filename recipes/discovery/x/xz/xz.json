@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "xz"
+  "source": "xz",
+  "description": "General-purpose data compression with high compression ratio",
+  "homepage": "https://tukaani.org/xz/"
 }

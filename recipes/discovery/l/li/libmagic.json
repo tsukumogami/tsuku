@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libmagic"
+  "source": "libmagic",
+  "description": "Implementation of the file(1) command",
+  "homepage": "https://www.darwinsys.com/file/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "antidote"
+  "source": "antidote",
+  "description": "Plugin manager for zsh, inspired by antigen and antibody",
+  "homepage": "https://antidote.sh/"
 }

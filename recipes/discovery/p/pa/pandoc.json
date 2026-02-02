@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pandoc"
+  "source": "pandoc",
+  "description": "Swiss-army knife of markup format conversion",
+  "homepage": "https://pandoc.org/"
 }

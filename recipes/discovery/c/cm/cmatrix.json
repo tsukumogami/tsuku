@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cmatrix"
+  "source": "cmatrix",
+  "description": "Console Matrix",
+  "homepage": "https://github.com/abishekvashok/cmatrix/"
 }

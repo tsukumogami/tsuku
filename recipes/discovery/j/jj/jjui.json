@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jjui"
+  "source": "jjui",
+  "description": "TUI for interacting with the Jujutsu version control system",
+  "homepage": "https://github.com/idursun/jjui"
 }

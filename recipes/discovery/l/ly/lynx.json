@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lynx"
+  "source": "lynx",
+  "description": "Text-based web browser",
+  "homepage": "https://invisible-island.net/lynx/"
 }

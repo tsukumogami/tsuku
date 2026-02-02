@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libtool"
+  "source": "libtool",
+  "description": "Generic library support script",
+  "homepage": "https://www.gnu.org/software/libtool/"
 }

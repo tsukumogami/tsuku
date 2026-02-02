@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "terraform-docs"
+  "source": "terraform-docs",
+  "description": "Tool to generate documentation from Terraform modules",
+  "homepage": "https://terraform-docs.io/"
 }

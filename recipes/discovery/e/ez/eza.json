@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "eza-community/eza",
+  "description": "A modern alternative to ls",
+  "homepage": "https://eza.rocks",
+  "repo": "https://github.com/eza-community/eza"
+}

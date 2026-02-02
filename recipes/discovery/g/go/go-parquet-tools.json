@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "go-parquet-tools"
+  "source": "go-parquet-tools",
+  "description": "Utility to deal with Parquet data",
+  "homepage": "https://github.com/hangxie/parquet-tools"
 }

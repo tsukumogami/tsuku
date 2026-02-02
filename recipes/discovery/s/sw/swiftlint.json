@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "swiftlint"
+  "source": "swiftlint",
+  "description": "Tool to enforce Swift style and conventions",
+  "homepage": "https://github.com/realm/SwiftLint"
 }

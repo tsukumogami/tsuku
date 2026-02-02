@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "numpy"
+  "source": "numpy",
+  "description": "Package for scientific computing with Python",
+  "homepage": "https://www.numpy.org/"
 }

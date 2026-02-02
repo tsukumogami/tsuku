@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openai-whisper"
+  "source": "openai-whisper",
+  "description": "General-purpose speech recognition model",
+  "homepage": "https://github.com/openai/whisper"
 }

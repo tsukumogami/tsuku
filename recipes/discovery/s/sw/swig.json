@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "swig"
+  "source": "swig",
+  "description": "Generate scripting interfaces to C/C++ code",
+  "homepage": "https://www.swig.org/"
 }

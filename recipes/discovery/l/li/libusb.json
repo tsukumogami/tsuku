@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libusb"
+  "source": "libusb",
+  "description": "Library for USB device access",
+  "homepage": "https://libusb.info/"
 }

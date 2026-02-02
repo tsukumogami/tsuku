@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ant"
+  "source": "ant",
+  "description": "Java build tool",
+  "homepage": "https://ant.apache.org/"
 }

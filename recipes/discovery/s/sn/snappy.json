@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "snappy"
+  "source": "snappy",
+  "description": "Compression/decompression library aiming for high speed",
+  "homepage": "https://google.github.io/snappy/"
 }

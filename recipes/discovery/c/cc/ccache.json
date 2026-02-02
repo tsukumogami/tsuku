@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ccache"
+  "source": "ccache",
+  "description": "Object-file caching compiler wrapper",
+  "homepage": "https://ccache.dev/"
 }

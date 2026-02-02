@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ninja"
+  "source": "ninja",
+  "description": "Small build system for use with gyp or CMake",
+  "homepage": "https://ninja-build.org/"
 }

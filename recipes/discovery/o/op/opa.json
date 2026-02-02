@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "opa"
+  "source": "opa",
+  "description": "Open source, general-purpose policy engine",
+  "homepage": "https://www.openpolicyagent.org"
 }

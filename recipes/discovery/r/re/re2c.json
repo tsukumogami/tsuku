@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "re2c"
+  "source": "re2c",
+  "description": "Generate C-based recognizers from regular expressions",
+  "homepage": "https://re2c.org/"
 }

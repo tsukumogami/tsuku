@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "docker-buildx"
+  "source": "docker-buildx",
+  "description": "Docker CLI plugin for extended build capabilities with BuildKit",
+  "homepage": "https://docs.docker.com/buildx/working-with-buildx/"
 }

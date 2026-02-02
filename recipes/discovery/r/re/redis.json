@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "redis"
+  "source": "redis",
+  "description": "Persistent key-value database, with built-in net interface",
+  "homepage": "https://redis.io/"
 }

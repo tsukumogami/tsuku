@@ -13,6 +13,8 @@ type SeedEntry struct {
 	Builder        string `json:"builder"`
 	Source         string `json:"source"`
 	Binary         string `json:"binary,omitempty"`
+	Description    string `json:"description,omitempty"`
+	Homepage       string `json:"homepage,omitempty"`
 	Repo           string `json:"repo,omitempty"`
 	Disambiguation bool   `json:"disambiguation,omitempty"`
 }

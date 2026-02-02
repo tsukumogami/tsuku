@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pdfgrep"
+  "source": "pdfgrep",
+  "description": "Search PDFs for strings matching a regular expression",
+  "homepage": "https://pdfgrep.org/"
 }

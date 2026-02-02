@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "edencommon"
+  "source": "edencommon",
+  "description": "Shared library for Watchman and Eden projects",
+  "homepage": "https://github.com/facebookexperimental/edencommon"
 }

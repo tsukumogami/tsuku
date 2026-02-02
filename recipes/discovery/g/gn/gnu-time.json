@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gnu-time"
+  "source": "gnu-time",
+  "description": "GNU implementation of time utility",
+  "homepage": "https://www.gnu.org/software/time/"
 }

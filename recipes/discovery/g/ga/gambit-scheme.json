@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gambit-scheme"
+  "source": "gambit-scheme",
+  "description": "Implementation of the Scheme Language",
+  "homepage": "https://gambitscheme.org/"
 }

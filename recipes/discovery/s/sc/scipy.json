@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "scipy"
+  "source": "scipy",
+  "description": "Software for mathematics, science, and engineering",
+  "homepage": "https://www.scipy.org"
 }

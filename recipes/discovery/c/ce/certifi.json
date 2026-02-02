@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "certifi"
+  "source": "certifi",
+  "description": "Mozilla CA bundle for Python",
+  "homepage": "https://github.com/certifi/python-certifi"
 }

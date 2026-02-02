@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "netcat"
+  "source": "netcat",
+  "description": "Utility for managing network connections",
+  "homepage": "https://netcat.sourceforge.net/"
 }

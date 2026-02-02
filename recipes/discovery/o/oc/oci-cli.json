@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "oci-cli"
+  "source": "oci-cli",
+  "description": "Oracle Cloud Infrastructure CLI",
+  "homepage": "https://docs.cloud.oracle.com/iaas/Content/API/Concepts/cliconcepts.htm"
 }

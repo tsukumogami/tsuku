@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "imagemagick"
+  "source": "imagemagick",
+  "description": "Tools and libraries to manipulate images in select formats",
+  "homepage": "https://imagemagick.org/index.php"
 }

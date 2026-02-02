@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fabric-ai"
+  "source": "fabric-ai",
+  "description": "Open-source framework for augmenting humans using AI",
+  "homepage": "https://github.com/danielmiessler/fabric"
 }

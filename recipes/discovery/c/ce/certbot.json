@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "certbot"
+  "source": "certbot",
+  "description": "Tool to obtain certs from Let's Encrypt and autoenable HTTPS",
+  "homepage": "https://certbot.eff.org/"
 }

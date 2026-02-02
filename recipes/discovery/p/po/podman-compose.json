@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "podman-compose"
+  "source": "podman-compose",
+  "description": "Alternative to docker-compose using podman",
+  "homepage": "https://github.com/containers/podman-compose"
 }

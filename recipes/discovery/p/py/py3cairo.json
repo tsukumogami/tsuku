@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "py3cairo"
+  "source": "py3cairo",
+  "description": "Python 3 bindings for the Cairo graphics library",
+  "homepage": "https://cairographics.org/pycairo/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libogg"
+  "source": "libogg",
+  "description": "Ogg Bitstream Library",
+  "homepage": "https://www.xiph.org/ogg/"
 }

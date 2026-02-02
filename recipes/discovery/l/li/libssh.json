@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libssh"
+  "source": "libssh",
+  "description": "C library SSHv1/SSHv2 client and server protocols",
+  "homepage": "https://www.libssh.org/"
 }

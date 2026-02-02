@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "unixodbc"
+  "source": "unixodbc",
+  "description": "ODBC 3 connectivity for UNIX",
+  "homepage": "https://www.unixodbc.org/"
 }

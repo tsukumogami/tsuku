@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pcre2"
+  "source": "pcre2",
+  "description": "Perl compatible regular expressions library with a new API",
+  "homepage": "https://www.pcre.org/"
 }

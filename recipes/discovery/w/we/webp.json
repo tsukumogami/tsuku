@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "webp"
+  "source": "webp",
+  "description": "Image format providing lossless and lossy compression for web images",
+  "homepage": "https://developers.google.com/speed/webp/"
 }

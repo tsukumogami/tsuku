@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mesa"
+  "source": "mesa",
+  "description": "Graphics Library",
+  "homepage": "https://www.mesa3d.org/"
 }

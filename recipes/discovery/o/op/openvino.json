@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openvino"
+  "source": "openvino",
+  "description": "Open Visual Inference And Optimization toolkit for AI inference",
+  "homepage": "https://docs.openvino.ai"
 }

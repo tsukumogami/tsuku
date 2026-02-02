@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nx"
+  "source": "nx",
+  "description": "Smart, Fast and Extensible Build System",
+  "homepage": "https://nx.dev"
 }

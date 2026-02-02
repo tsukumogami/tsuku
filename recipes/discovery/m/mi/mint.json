@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mint"
+  "source": "mint",
+  "description": "Dependency manager that installs and runs Swift command-line tool packages",
+  "homepage": "https://github.com/yonaskolb/Mint"
 }

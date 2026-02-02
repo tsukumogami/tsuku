@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gawk"
+  "source": "gawk",
+  "description": "GNU awk utility",
+  "homepage": "https://www.gnu.org/software/gawk/"
 }

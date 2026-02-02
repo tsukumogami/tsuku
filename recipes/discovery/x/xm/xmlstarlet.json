@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "xmlstarlet"
+  "source": "xmlstarlet",
+  "description": "XML command-line utilities",
+  "homepage": "https://xmlstar.sourceforge.net/"
 }

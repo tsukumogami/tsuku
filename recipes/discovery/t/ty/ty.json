@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ty"
+  "source": "ty",
+  "description": "Extremely fast Python type checker, written in Rust",
+  "homepage": "https://docs.astral.sh/ty/"
 }

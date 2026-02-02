@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "speedtest-cli"
+  "source": "speedtest-cli",
+  "description": "Command-line interface for https://speedtest.net bandwidth tests",
+  "homepage": "https://github.com/sivel/speedtest-cli"
 }

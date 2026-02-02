@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pigz"
+  "source": "pigz",
+  "description": "Parallel gzip",
+  "homepage": "https://zlib.net/pigz/"
 }

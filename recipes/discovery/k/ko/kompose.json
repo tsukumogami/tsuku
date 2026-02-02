@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "kompose"
+  "source": "kompose",
+  "description": "Tool to move from `docker-compose` to Kubernetes",
+  "homepage": "https://kompose.io/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "node-build"
+  "source": "node-build",
+  "description": "Install NodeJS versions",
+  "homepage": "https://github.com/nodenv/node-build"
 }

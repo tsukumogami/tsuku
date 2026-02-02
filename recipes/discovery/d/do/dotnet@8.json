@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "dotnet@8"
+  "source": "dotnet@8",
+  "description": ".NET Core",
+  "homepage": "https://dotnet.microsoft.com/"
 }

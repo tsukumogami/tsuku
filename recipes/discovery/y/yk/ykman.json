@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ykman"
+  "source": "ykman",
+  "description": "Tool for managing your YubiKey configuration",
+  "homepage": "https://developers.yubico.com/yubikey-manager/"
 }

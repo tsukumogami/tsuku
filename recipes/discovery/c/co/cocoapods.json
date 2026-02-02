@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cocoapods"
+  "source": "cocoapods",
+  "description": "Dependency manager for Cocoa projects",
+  "homepage": "https://cocoapods.org/"
 }

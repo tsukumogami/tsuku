@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gmp"
+  "source": "gmp",
+  "description": "GNU multiple precision arithmetic library",
+  "homepage": "https://gmplib.org/"
 }

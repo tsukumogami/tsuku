@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jansson"
+  "source": "jansson",
+  "description": "C library for encoding, decoding, and manipulating JSON",
+  "homepage": "https://digip.org/jansson/"
 }

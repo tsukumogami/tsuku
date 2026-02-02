@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "telnet"
+  "source": "telnet",
+  "description": "User interface to the TELNET protocol",
+  "homepage": "https://opensource.apple.com/"
 }

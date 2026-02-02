@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lftp"
+  "source": "lftp",
+  "description": "Sophisticated file transfer program",
+  "homepage": "https://lftp.yar.ru/"
 }

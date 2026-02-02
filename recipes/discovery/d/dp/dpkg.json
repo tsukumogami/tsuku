@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "dpkg"
+  "source": "dpkg",
+  "description": "Debian package management system",
+  "homepage": "https://wiki.debian.org/Teams/Dpkg"
 }

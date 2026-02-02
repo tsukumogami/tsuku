@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pygobject3"
+  "source": "pygobject3",
+  "description": "GNOME Python bindings (based on GObject Introspection)",
+  "homepage": "https://pygobject.gnome.org"
 }

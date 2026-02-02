@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jmeter"
+  "source": "jmeter",
+  "description": "Load testing and performance measurement application",
+  "homepage": "https://jmeter.apache.org/"
 }

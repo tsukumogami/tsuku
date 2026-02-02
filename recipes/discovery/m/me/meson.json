@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "meson"
+  "source": "meson",
+  "description": "Fast and user friendly build system",
+  "homepage": "https://mesonbuild.com/"
 }

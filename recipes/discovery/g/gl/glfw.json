@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "glfw"
+  "source": "glfw",
+  "description": "Multi-platform library for OpenGL applications",
+  "homepage": "https://www.glfw.org/"
 }

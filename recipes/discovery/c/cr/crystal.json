@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "crystal"
+  "source": "crystal",
+  "description": "Fast and statically typed, compiled language with Ruby-like syntax",
+  "homepage": "https://crystal-lang.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "expat"
+  "source": "expat",
+  "description": "XML 1.0 parser",
+  "homepage": "https://libexpat.github.io/"
 }

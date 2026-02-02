@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jadx"
+  "source": "jadx",
+  "description": "Dex to Java decompiler",
+  "homepage": "https://github.com/skylot/jadx"
 }

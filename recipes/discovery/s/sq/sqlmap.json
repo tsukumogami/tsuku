@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sqlmap"
+  "source": "sqlmap",
+  "description": "Penetration testing for SQL injection and database servers",
+  "homepage": "https://sqlmap.org"
 }

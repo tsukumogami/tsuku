@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tesseract"
+  "source": "tesseract",
+  "description": "OCR (Optical Character Recognition) engine",
+  "homepage": "https://tesseract-ocr.github.io/"
 }

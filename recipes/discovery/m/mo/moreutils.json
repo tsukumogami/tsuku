@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "moreutils"
+  "source": "moreutils",
+  "description": "Collection of tools that nobody wrote when UNIX was young",
+  "homepage": "https://joeyh.name/code/moreutils/"
 }

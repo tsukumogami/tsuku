@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cask"
+  "source": "cask",
+  "description": "Emacs dependency management",
+  "homepage": "https://cask.readthedocs.io/"
 }

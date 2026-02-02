@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mailpit"
+  "source": "mailpit",
+  "description": "Web and API based SMTP testing",
+  "homepage": "https://mailpit.axllent.org/"
 }

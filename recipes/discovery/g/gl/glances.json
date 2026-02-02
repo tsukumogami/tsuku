@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "glances"
+  "source": "glances",
+  "description": "Alternative to top/htop",
+  "homepage": "https://nicolargo.github.io/glances/"
 }

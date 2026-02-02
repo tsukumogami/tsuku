@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "portaudio"
+  "source": "portaudio",
+  "description": "Cross-platform library for audio I/O",
+  "homepage": "https://www.portaudio.com"
 }

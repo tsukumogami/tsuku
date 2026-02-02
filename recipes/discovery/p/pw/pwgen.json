@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pwgen"
+  "source": "pwgen",
+  "description": "Password generator",
+  "homepage": "https://pwgen.sourceforge.net/"
 }
