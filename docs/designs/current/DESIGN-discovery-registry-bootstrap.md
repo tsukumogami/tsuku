@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The discovery registry has 1 entry but needs ~500 for the resolver to deliver value.
   The registry is the only resolver stage that exists today — the ecosystem probe and
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -41,35 +41,8 @@ Planned
 | ~~[#1366: feat(discover): add metadata enrichment to seed-discovery tool](https://github.com/tsukumogami/tsuku/issues/1366)~~ | ~~[#1364](https://github.com/tsukumogami/tsuku/issues/1364)~~ | ~~testable~~ |
 | ~~[#1367: feat(discover): add recipe cross-reference and graduation logic](https://github.com/tsukumogami/tsuku/issues/1367)~~ | ~~[#1364](https://github.com/tsukumogami/tsuku/issues/1364)~~ | ~~testable~~ |
 | ~~[#1368: feat(discover): curate seed lists for ~500 discovery entries](https://github.com/tsukumogami/tsuku/issues/1368)~~ | ~~[#1364](https://github.com/tsukumogami/tsuku/issues/1364)~~ | ~~simple~~ |
-| [#1369: ci(discover): add weekly discovery registry freshness check](https://github.com/tsukumogami/tsuku/issues/1369) | [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | simple |
-| _Adds a GitHub Actions workflow that validates existing `discovery.json` entries weekly, checking that referenced repositories and packages still exist, and creates an issue listing any stale entries._ | | |
+| ~~[#1369: ci(discover): add weekly discovery registry freshness check](https://github.com/tsukumogami/tsuku/issues/1369)~~ | ~~[#1364](https://github.com/tsukumogami/tsuku/issues/1364)~~ | ~~simple~~ |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    I1364["#1364: seed-discovery tool (skeleton)"]
-    I1365["#1365: registry optional metadata"]
-    I1366["#1366: metadata enrichment"]
-    I1367["#1367: recipe cross-ref + graduation"]
-    I1368["#1368: curate seed lists (~500)"]
-    I1369["#1369: CI freshness check"]
-
-    I1364 --> I1366
-    I1364 --> I1367
-    I1364 --> I1368
-    I1364 --> I1369
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1364,I1365,I1366,I1367,I1368 done
-    class I1369 ready
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
