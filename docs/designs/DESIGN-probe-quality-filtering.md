@@ -5,7 +5,7 @@ problem: |
 decision: |
   Extend each builder's Probe() method to return quality metadata from the registry's standard API response, and add a minimum-quality filter in the ecosystem probe resolver that rejects packages below configurable thresholds. Extract the filtering logic into a shared QualityFilter so it can be reused by discovery registry seeding.
 rationale: |
-  Most registries already expose download counts, version counts, or other quality signals in their standard package lookup endpoint. Parsing these fields adds no extra HTTP requests or latency. A shared filter component keeps the logic consistent between the runtime probe and the registry seeding pipeline, and thresholds can be tuned per registry without changing the core algorithm.
+  Most registries expose download counts, version counts, or dependency metrics in their standard API responses or via lightweight secondary endpoints. Crates.io and RubyGems include downloads in the standard response. npm, RubyGems (version count), Go (version list), and MetaCPAN (river metrics) each need one parallel secondary call. A shared filter component keeps the logic consistent between the runtime probe and the registry seeding pipeline, and thresholds can be tuned per registry without changing the core algorithm.
 ---
 
 # DESIGN: Probe Quality Filtering
@@ -37,11 +37,11 @@ The same problem affects discovery registry seeding. When populating the offline
 - Updating each builder's `Probe()` method to populate quality metadata from existing API responses
 - Adding a quality filter in the ecosystem probe resolver
 - Making the filter reusable for discovery registry seeding
-- Adding a secondary API call for npm downloads (the only registry where downloads require a separate endpoint and the data is valuable enough to justify the latency)
+- Adding secondary API calls where needed: npm (downloads), RubyGems (version count), Go (version list), MetaCPAN (river metrics). Each runs in parallel with the primary fetch.
 
 **Out of scope:**
 - Changing the static priority ranking system (that's a separate concern)
-- Adding PyPI download stats (requires BigQuery, not a standard API call)
+- Adding PyPI download stats from pypistats.org (rate-limited third-party API; version count is sufficient for initial filtering)
 - User-facing configuration of quality thresholds
 - Changes to the LLM discovery stage
 
@@ -99,13 +99,13 @@ Quality thresholds need to distinguish "definitely a squatter" from "possibly le
 
 Define minimum acceptable values per registry. A package must pass at least one threshold to be accepted. Defaults are intentionally low to avoid false negatives:
 
-- crates.io: `recent_downloads >= 100` OR `version_count >= 5`
-- npm: `weekly_downloads >= 100` OR `version_count >= 5`
-- RubyGems: `downloads >= 1000` OR `version_count >= 5`
-- PyPI: `version_count >= 3` (no downloads available)
-- MetaCPAN: `river_total >= 1` OR `version_count >= 3`
-- Go: no threshold (domain-based naming deters squatting)
-- Cask: no threshold (curated by Homebrew maintainers)
+- crates.io: `recent_downloads >= 100` OR `version_count >= 5` (both from standard `/api/v1/crates/{name}` response: `crate.recent_downloads`, `crate.num_versions`)
+- npm: `weekly_downloads >= 100` OR `version_count >= 5` (downloads from `api.npmjs.org/downloads/point/last-week/{name}`; version count from `Object.keys(versions).length` in registry response)
+- RubyGems: `downloads >= 1000` OR `version_count >= 5` (downloads from `downloads` field in `/api/v1/gems/{name}.json`; version count from separate `/api/v1/versions/{name}.json` array length)
+- PyPI: `version_count >= 3` (from `len(releases)` in `/pypi/{name}/json`; download fields return -1 in standard API; pypistats.org has downloads but adds rate-limited third-party dependency)
+- MetaCPAN: `river_total >= 1` OR `version_count >= 3` (`river.total` from `/v1/distribution/{name}` endpoint, requires separate call from existing `/v1/release/{name}`)
+- Go: `version_count >= 3` (from `/@v/list` endpoint line count; domain-based naming prevents exact-name squatting but not typosquatting; no download metrics available)
+- Cask: no threshold (curated by Homebrew maintainers); check `deprecated` and `disabled` flags to reject removed or unsafe casks
 
 Packages that fail all thresholds for their registry are rejected. The thresholds live in the `QualityFilter` as a config map, making them easy to tune.
 
@@ -135,7 +135,7 @@ The ecosystem probe resolver passes each match through a `QualityFilter` before 
 
 The `QualityFilter` is a standalone type that takes a builder name and probe metadata as input and returns accept/reject. The discovery registry seeding pipeline can use the same filter with the same or different thresholds.
 
-Cask and Go are exempt from filtering. Cask packages are curated by Homebrew maintainers, so squatting isn't a concern. Go module paths are domain-based, which structurally prevents name squatting.
+Cask is exempt from quality thresholds because Homebrew maintainers review all casks before inclusion. However, Probe() should check the `deprecated` and `disabled` flags and reject disabled casks. Go module paths are domain-based, which prevents exact-name squatting on legitimate domains (you can't publish `github.com/cli/cli` without GitHub org access). However, typosquatting remains possible (e.g., `github.com/boltdb-go/bolt` targeting `github.com/boltdb/bolt`). Since Go has no download metrics, we apply a lightweight `version_count >= 3` check via the `/@v/list` endpoint to filter placeholder modules.
 
 ### Rationale
 
@@ -147,7 +147,7 @@ Keeping the filter separate from both Probe() and the resolver means policy chan
 
 - **npm gets an extra HTTP call**: The npm registry endpoint doesn't include downloads, so Probe() makes a parallel request to the downloads API. This adds ~100-200ms but the signal is too valuable to skip.
 - **New packages may be filtered**: A brand-new legitimate project with <100 downloads and <5 versions will be rejected. This is acceptable because users typing a common name (prettier, httpie) expect the well-known tool, not a new project with the same name.
-- **No PyPI download filtering**: PyPI doesn't expose downloads in its API. We rely on version count alone, which is weaker. A PyPI squatter with 5+ empty releases would slip through. This is rare enough to accept.
+- **No PyPI download filtering**: PyPI's standard JSON API returns -1 for all download fields. pypistats.org provides download stats via a separate API, but it's rate-limited (5 req/sec, 30 req/min) and adds a third-party dependency. We rely on version count alone for now, which is weaker. A PyPI squatter with 3+ empty releases would slip through. This is rare enough to accept; pypistats.org integration can be added later if needed.
 
 ## Solution Architecture
 
@@ -179,7 +179,7 @@ type QualityFilter struct {
 type QualityThreshold struct {
     MinDownloads    int  // Minimum downloads to accept (0 = don't check)
     MinVersionCount int  // Minimum version count to accept (0 = don't check)
-    Exempt          bool // Skip filtering entirely (e.g., cask, go)
+    Exempt          bool // Skip filtering entirely (e.g., cask)
 }
 
 // Accept returns true if the probe result meets minimum quality for the given builder.
@@ -207,17 +207,44 @@ Probe()  →  ProbeResult (with quality metadata)
 
 | Builder | New fields populated | Source | Extra API call |
 |---------|---------------------|--------|---------------|
-| Cargo | Downloads, VersionCount, HasRepository | `crate.recent_downloads`, version array length, `crate.repository` | No |
-| PyPI | VersionCount, HasRepository | `releases` dict length, `info.project_urls` | No |
-| npm | Downloads, VersionCount, HasRepository | Downloads API + `versions` object length + `repository` | Yes (downloads) |
-| Gem | Downloads, VersionCount, HasRepository | `downloads`, separate versions endpoint, `source_code_uri` | Yes (version count) |
-| Go | (unchanged, already has Age) | — | No |
-| CPAN | VersionCount, HasRepository | distribution endpoint `river.total`, release `date` | No |
-| Cask | (exempt from filtering) | — | No |
+| Cargo | Downloads, VersionCount, HasRepository | `crate.recent_downloads`, `crate.num_versions`, `crate.repository` | No |
+| PyPI | VersionCount, HasRepository | `len(releases)`, `info.project_urls` | No |
+| npm | Downloads, VersionCount, HasRepository | `api.npmjs.org/downloads/point/last-week/{name}` + `len(versions)` + `repository` | Yes (downloads) |
+| Gem | Downloads, VersionCount, HasRepository | `downloads` + `/api/v1/versions/{name}.json` array length + `source_code_uri` | Yes (version count) |
+| Go | VersionCount, HasRepository | `/@v/list` line count, `Origin.URL` from `/@latest` | Yes (version list) |
+| CPAN | Downloads (river), HasRepository | `/v1/distribution/{name}` for `river.total` + `repository` | Yes (distribution) |
+| Cask | (exempt from quality thresholds; check deprecated/disabled flags) | `deprecated`, `disabled` from `formulae.brew.sh/api/cask/{name}.json` | No |
 
-### npm parallel download fetch
+### Parallel secondary fetches
 
-The npm `Probe()` method launches the downloads API call in a goroutine alongside the existing registry fetch. Both share the same context timeout. If the downloads call fails, `Downloads` stays at 0 and the filter falls back to version count.
+Four registries need a secondary API call to collect quality metadata. Each runs in a goroutine alongside the primary fetch, sharing the same context timeout. If the secondary call fails, the missing field stays at its zero value and the filter falls back to whatever signals are available.
+
+| Builder | Secondary call | Purpose | Fallback on failure |
+|---------|---------------|---------|---------------------|
+| npm | `api.npmjs.org/downloads/point/last-week/{name}` | Weekly download count | Version count only |
+| Gem | `/api/v1/versions/{name}.json` | Version count (array length) | Downloads only |
+| Go | `proxy.golang.org/{module}/@v/list` | Version count (line count) | No filtering (exempt) |
+| CPAN | `fastapi.metacpan.org/v1/distribution/{name}` | River metrics (`river.total`) | Version count only |
+
+The remaining registries (Cargo, PyPI, Cask) get all needed signals from their primary endpoint.
+
+## API Investigation Results
+
+Each registry's API was investigated to verify that the proposed quality signals are actually available. Full investigation reports are in `wip/research/explore_registry_*.md`. Key findings per registry:
+
+**crates.io**: The standard `/api/v1/crates/{name}` response includes `crate.recent_downloads` (90-day window), `crate.num_versions`, `crate.repository`, and `crate.created_at`. The response also includes an undocumented `linecounts.total_code_lines` field per version that could serve as an additional signal (the `prettier` squatter has 3 lines of Rust code vs ripgrep's 11,041). No extra API call needed. Requires User-Agent header (already implemented).
+
+**npm**: The registry endpoint (`registry.npmjs.org/{name}`) returns version count (keys of `versions` object), repository URL, maintainer count, and timestamps (`time.created`, `time.modified`), but no download stats. Downloads come from `api.npmjs.org/downloads/point/last-week/{name}` (separate call). Rate limit: 1,000 req/hour unauthenticated. No bulk download endpoint exists.
+
+**RubyGems**: The main endpoint (`/api/v1/gems/{name}.json`) returns `downloads` (all-time total) and `source_code_uri`, but no version count or version list. Version count requires a separate call to `/api/v1/versions/{name}.json` (returns array, count via length). Quirk: non-existent gems return HTTP 200 with plain text "This rubygem could not be found." (not JSON 404).
+
+**PyPI**: The standard JSON API (`/pypi/{name}/json`) returns version count via `len(releases)` and repository URLs via `info.project_urls`, but download fields (`info.downloads.last_day` etc.) always return -1. Download stats exist via the third-party pypistats.org API (rate-limited: 5/sec, 30/min), but we defer that integration. Additional signals available: `info.classifiers` (development status), `info.author`, `last_serial` (activity indicator).
+
+**Go**: The proxy at `proxy.golang.org` returns version and timestamp from `/{module}/@latest`, plus an `Origin.URL` field (currently unparsed) for repository presence. Version count comes from `/{module}/@v/list` (plain text, one version per line). No download metrics exist anywhere in the Go ecosystem. The proxy has an undocumented malware detection feature that returns "SECURITY ERROR" for known malicious packages. Typosquatting is a real attack vector (multiple incidents in 2025).
+
+**MetaCPAN**: The existing `/v1/release/{name}` endpoint provides version and author info but no quality metrics. River metrics (`river.total`, `river.immediate`, `river.bucket`) are only available from the separate `/v1/distribution/{name}` endpoint. MetaCPAN has no download counts; river metrics (downstream dependency counts) serve as the primary quality signal. Minimal rate limits ("be polite" policy).
+
+**Cask**: The `formulae.brew.sh/api/cask/{name}.json` endpoint includes `analytics.install` data (30d, 90d, 365d counts), plus `deprecated` and `disabled` boolean flags. All official casks go through PR review by Homebrew maintainers, confirming the curation assumption. The deprecated/disabled flags should be checked even though quality thresholds are exempt.
 
 ## Implementation Approach
 
@@ -232,9 +259,13 @@ The npm `Probe()` method launches the downloads API call in a goroutine alongsid
 
 ### Phase 2: Remaining builder Probe() updates
 
-- Update the remaining 5 builders' API response structs and `Probe()` methods (PyPI, npm, Gem, CPAN; Go and Cask are exempt)
-- Add npm parallel downloads fetch
-- Add RubyGems version count fetch (separate endpoint)
+- Update the remaining 6 builders' API response structs and `Probe()` methods:
+  - PyPI: parse `releases` dict length and `info.project_urls` (no extra call)
+  - npm: add parallel downloads fetch to `api.npmjs.org`, parse `versions` object length (1 extra call)
+  - Gem: add parallel `/api/v1/versions/{name}.json` fetch for version count, parse `downloads` from main endpoint (1 extra call)
+  - Go: add parallel `/@v/list` fetch for version count, parse `Origin.URL` for repository (1 extra call)
+  - CPAN: add parallel `/v1/distribution/{name}` fetch for `river.total` and `repository` (1 extra call)
+  - Cask: parse `deprecated` and `disabled` flags, reject disabled casks in Probe()
 - Add unit tests per builder verifying metadata extraction
 
 ### Phase 3: Integration testing
