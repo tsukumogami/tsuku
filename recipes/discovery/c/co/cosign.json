@@ -1,6 +1,0 @@
-{
-  "builder": "github",
-  "source": "sigstore/cosign",
-  "description": "Code signing and transparency for containers and binaries",
-  "repo": "https://github.com/sigstore/cosign"
-}

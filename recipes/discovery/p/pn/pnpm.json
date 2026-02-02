@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "pnpm/pnpm",
-  "description": "Fast, disk space efficient package manager",
-  "homepage": "https://pnpm.io",
-  "repo": "https://github.com/pnpm/pnpm"
-}

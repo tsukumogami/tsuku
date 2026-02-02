@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "proj",
-  "description": "Cartographic Projections Library",
-  "homepage": "https://proj.org/"
-}

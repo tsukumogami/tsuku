@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "cli/cli",
-  "description": "GitHub’s official command line tool",
-  "homepage": "https://cli.github.com",
-  "repo": "https://github.com/cli/cli"
-}
