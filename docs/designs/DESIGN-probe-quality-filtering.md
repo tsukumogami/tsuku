@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The ecosystem probe accepts any package name that exists on a registry as a valid match, regardless of whether the package is a placeholder, name-squatter, or unmaintained stub. This causes tools like prettier and httpie to resolve to crates.io squatters instead of their actual registries (npm and pypi).
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Upstream Design Reference
 
