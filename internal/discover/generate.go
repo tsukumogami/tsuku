@@ -20,9 +20,11 @@ type GenerateConfig struct {
 
 // GenerateResult summarizes a generation run.
 type GenerateResult struct {
-	Total    int
-	Valid    int
-	Failures []ValidationResult
+	Total     int
+	Graduated int
+	Valid     int
+	Failures  []ValidationResult
+	Backfills []BackfillResult
 }
 
 // Generate runs the full pipeline: load seeds + queue, merge, validate, sort, write.
@@ -54,6 +56,19 @@ func Generate(cfg GenerateConfig) (*GenerateResult, error) {
 		return nil, fmt.Errorf("no entries to process (seeds dir and queue both empty)")
 	}
 
+	// Graduate entries that already have recipes
+	var graduated int
+	var backfills []BackfillResult
+	if cfg.RecipesDir != "" {
+		gr, err := GraduateEntries(merged, cfg.RecipesDir)
+		if err != nil {
+			return nil, fmt.Errorf("graduate entries: %w", err)
+		}
+		graduated = len(gr.Graduated)
+		backfills = gr.Backfills
+		merged = gr.Kept
+	}
+
 	// Validate if validators provided
 	var valid []SeedEntry
 	var failures []ValidationResult
@@ -76,9 +91,11 @@ func Generate(cfg GenerateConfig) (*GenerateResult, error) {
 	}
 
 	return &GenerateResult{
-		Total:    len(merged),
-		Valid:    len(valid),
-		Failures: failures,
+		Total:     len(merged) + graduated,
+		Graduated: graduated,
+		Valid:     len(valid),
+		Failures:  failures,
+		Backfills: backfills,
 	}, nil
 }
 
