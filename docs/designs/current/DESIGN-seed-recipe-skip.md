@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Current
 problem: |
   The seed-queue tool populates the priority queue without checking whether packages
   already have recipes in the registry or embedded recipe directories. This causes
@@ -27,7 +27,7 @@ rationale: |
 
 ## Status
 
-Accepted
+Current
 
 ## Context and Problem Statement
 
