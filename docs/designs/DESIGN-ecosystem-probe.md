@@ -26,7 +26,7 @@ Planned
 | _Replaces the stub resolver with goroutine-per-builder fan-out, shared 3-second timeout, buffered channel collection, and static priority-based disambiguation._ | | |
 | ~~[#1385: Wire ecosystem probe into chain resolver](https://github.com/tsukumogami/tsuku/issues/1385)~~ | ~~[#1384](https://github.com/tsukumogami/tsuku/issues/1384)~~ | ~~testable~~ |
 | _Updates `runDiscovery()` to construct `NewEcosystemProbe()` with the list of builder probers, connecting the probe to the live discovery chain._ | | |
-| [#1386: Add integration tests for ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1386) | [#1385](https://github.com/tsukumogami/tsuku/issues/1385) | testable |
+| ~~[#1386: Add integration tests for ecosystem probe](https://github.com/tsukumogami/tsuku/issues/1386)~~ | ~~[#1385](https://github.com/tsukumogami/tsuku/issues/1385)~~ | ~~testable~~ |
 | _Covers parallel execution, timeout behavior, priority disambiguation, and full chain integration with mock HTTP responses._ | | |
 
 ### Dependency Graph
@@ -58,7 +58,7 @@ graph TD
     class I1383 done
     class I1384 done
     class I1385 done
-    class I1386 ready
+    class I1386 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
