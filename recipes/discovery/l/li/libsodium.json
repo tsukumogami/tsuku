@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libsodium"
+  "source": "libsodium",
+  "description": "NaCl networking and cryptography library",
+  "homepage": "https://libsodium.org/"
 }

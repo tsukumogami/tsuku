@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nmap"
+  "source": "nmap",
+  "description": "Port scanning utility for large networks",
+  "homepage": "https://nmap.org/"
 }

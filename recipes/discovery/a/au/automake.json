@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "automake"
+  "source": "automake",
+  "description": "Tool for generating GNU Standards-compliant Makefiles",
+  "homepage": "https://www.gnu.org/software/automake/"
 }

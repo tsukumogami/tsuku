@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "kotlin"
+  "source": "kotlin",
+  "description": "Statically typed programming language for the JVM",
+  "homepage": "https://kotlinlang.org/"
 }

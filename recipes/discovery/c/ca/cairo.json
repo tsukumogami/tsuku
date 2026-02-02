@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cairo"
+  "source": "cairo",
+  "description": "Vector graphics library with cross-device output support",
+  "homepage": "https://cairographics.org/"
 }

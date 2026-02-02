@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bear"
+  "source": "bear",
+  "description": "Generate compilation database for clang tooling",
+  "homepage": "https://github.com/rizsotto/Bear"
 }

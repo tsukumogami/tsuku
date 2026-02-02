@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gsasl"
+  "source": "gsasl",
+  "description": "SASL library command-line interface",
+  "homepage": "https://www.gnu.org/software/gsasl/"
 }

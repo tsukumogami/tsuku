@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "witr"
+  "source": "witr",
+  "description": "Why is this running?",
+  "homepage": "https://github.com/pranshuparmar/witr"
 }

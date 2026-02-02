@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tree"
+  "source": "tree",
+  "description": "Display directories as trees (with optional color/HTML output)",
+  "homepage": "https://oldmanprogrammer.net/source.php?dir=projects/tree"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "grep"
+  "source": "grep",
+  "description": "GNU grep, egrep and fgrep",
+  "homepage": "https://www.gnu.org/software/grep/"
 }

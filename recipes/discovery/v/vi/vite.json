@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "vite"
+  "source": "vite",
+  "description": "Next generation frontend tooling. It's fast!",
+  "homepage": "https://vitejs.dev/"
 }

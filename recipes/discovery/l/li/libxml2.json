@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libxml2"
+  "source": "libxml2",
+  "description": "GNOME XML library",
+  "homepage": "http://xmlsoft.org/"
 }

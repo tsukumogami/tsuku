@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cloudflared"
+  "source": "cloudflared",
+  "description": "Cloudflare Tunnel client (formerly Argo Tunnel)",
+  "homepage": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "postgresql@17"
+  "source": "postgresql@17",
+  "description": "Object-relational database system",
+  "homepage": "https://www.postgresql.org/"
 }

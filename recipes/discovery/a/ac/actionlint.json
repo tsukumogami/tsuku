@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "rhysd/actionlint",
+  "description": ":octocat: Static checker for GitHub Actions workflow files",
+  "homepage": "https://rhysd.github.io/actionlint/",
+  "repo": "https://github.com/rhysd/actionlint"
+}

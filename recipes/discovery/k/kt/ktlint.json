@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ktlint"
+  "source": "ktlint",
+  "description": "Anti-bikeshedding Kotlin linter with built-in formatter",
+  "homepage": "https://ktlint.github.io/"
 }

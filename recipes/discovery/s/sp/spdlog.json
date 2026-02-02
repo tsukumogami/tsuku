@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "spdlog"
+  "source": "spdlog",
+  "description": "Super fast C++ logging library",
+  "homepage": "https://github.com/gabime/spdlog"
 }

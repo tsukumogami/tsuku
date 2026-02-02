@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ruby@3.3"
+  "source": "ruby@3.3",
+  "description": "Powerful, clean, object-oriented scripting language",
+  "homepage": "https://www.ruby-lang.org/"
 }

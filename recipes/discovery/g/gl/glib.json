@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "glib"
+  "source": "glib",
+  "description": "Core application library for C",
+  "homepage": "https://docs.gtk.org/glib/"
 }

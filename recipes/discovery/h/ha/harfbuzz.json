@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "harfbuzz"
+  "source": "harfbuzz",
+  "description": "OpenType text shaping engine",
+  "homepage": "https://github.com/harfbuzz/harfbuzz"
 }

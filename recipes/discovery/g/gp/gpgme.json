@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gpgme"
+  "source": "gpgme",
+  "description": "Library access to GnuPG",
+  "homepage": "https://www.gnupg.org/related_software/gpgme/"
 }

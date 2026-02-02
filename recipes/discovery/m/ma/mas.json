@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mas"
+  "source": "mas",
+  "description": "Mac App Store command-line interface",
+  "homepage": "https://github.com/mas-cli/mas"
 }

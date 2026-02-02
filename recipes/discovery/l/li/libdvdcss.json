@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libdvdcss"
+  "source": "libdvdcss",
+  "description": "Access DVDs as block devices without the decryption",
+  "homepage": "https://www.videolan.org/developers/libdvdcss.html"
 }

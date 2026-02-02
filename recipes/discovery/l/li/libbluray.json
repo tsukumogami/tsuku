@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libbluray"
+  "source": "libbluray",
+  "description": "Blu-Ray disc playback library for media players like VLC",
+  "homepage": "https://www.videolan.org/developers/libbluray.html"
 }

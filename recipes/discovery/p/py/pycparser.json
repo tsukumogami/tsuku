@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pycparser"
+  "source": "pycparser",
+  "description": "C parser in Python",
+  "homepage": "https://github.com/eliben/pycparser"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "helm@3"
+  "source": "helm@3",
+  "description": "Kubernetes package manager",
+  "homepage": "https://helm.sh/"
 }

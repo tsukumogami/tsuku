@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "imagemagick@6"
+  "source": "imagemagick@6",
+  "description": "Tools and libraries to manipulate images in many formats",
+  "homepage": "https://legacy.imagemagick.org/"
 }

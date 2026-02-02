@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jpeg-xl"
+  "source": "jpeg-xl",
+  "description": "New file format for still image compression",
+  "homepage": "https://jpeg.org/jpegxl/index.html"
 }

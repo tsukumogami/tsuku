@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bash-completion@2"
+  "source": "bash-completion@2",
+  "description": "Programmable completion for Bash 4.2+",
+  "homepage": "https://github.com/scop/bash-completion"
 }

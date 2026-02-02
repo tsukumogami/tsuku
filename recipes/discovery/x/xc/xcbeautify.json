@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "xcbeautify"
+  "source": "xcbeautify",
+  "description": "Little beautifier tool for xcodebuild",
+  "homepage": "https://github.com/cpisciotta/xcbeautify"
 }

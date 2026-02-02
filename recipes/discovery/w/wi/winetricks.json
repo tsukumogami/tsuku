@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "winetricks"
+  "source": "winetricks",
+  "description": "Automatic workarounds for problems in Wine",
+  "homepage": "https://github.com/Winetricks/winetricks"
 }

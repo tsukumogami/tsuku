@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "r"
+  "source": "r",
+  "description": "Software environment for statistical computing",
+  "homepage": "https://www.r-project.org/"
 }

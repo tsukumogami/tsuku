@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "zsh-completions"
+  "source": "zsh-completions",
+  "description": "Additional completion definitions for zsh",
+  "homepage": "https://github.com/zsh-users/zsh-completions"
 }

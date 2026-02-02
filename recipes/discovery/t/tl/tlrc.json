@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tlrc"
+  "source": "tlrc",
+  "description": "Official tldr client written in Rust",
+  "homepage": "https://tldr.sh/tlrc/"
 }

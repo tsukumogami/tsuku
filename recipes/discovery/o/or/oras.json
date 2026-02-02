@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "oras"
+  "source": "oras",
+  "description": "OCI Registry As Storage",
+  "homepage": "https://github.com/oras-project/oras"
 }

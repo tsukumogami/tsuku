@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ugrep"
+  "source": "ugrep",
+  "description": "Ultra fast grep with query UI, fuzzy search, archive search, and more",
+  "homepage": "https://ugrep.com/"
 }

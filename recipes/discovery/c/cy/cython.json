@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cython"
+  "source": "cython",
+  "description": "Compiler for writing C extensions for the Python language",
+  "homepage": "https://cython.org/"
 }

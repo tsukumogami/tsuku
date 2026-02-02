@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "erlang"
+  "source": "erlang",
+  "description": "Programming language for highly scalable real-time systems",
+  "homepage": "https://www.erlang.org/"
 }

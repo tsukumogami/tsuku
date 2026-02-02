@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fastlane"
+  "source": "fastlane",
+  "description": "Easiest way to build and release mobile apps",
+  "homepage": "https://fastlane.tools"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "php@8.1"
+  "source": "php@8.1",
+  "description": "General-purpose scripting language",
+  "homepage": "https://www.php.net/"
 }

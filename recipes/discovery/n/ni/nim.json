@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nim"
+  "source": "nim",
+  "description": "Statically typed compiled systems programming language",
+  "homepage": "https://nim-lang.org/"
 }

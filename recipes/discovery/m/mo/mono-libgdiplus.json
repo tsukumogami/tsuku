@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mono-libgdiplus"
+  "source": "mono-libgdiplus",
+  "description": "GDI+-compatible API on non-Windows operating systems",
+  "homepage": "https://www.mono-project.com/docs/gui/libgdiplus/"
 }

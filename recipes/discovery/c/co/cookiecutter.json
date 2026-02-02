@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cookiecutter"
+  "source": "cookiecutter",
+  "description": "Utility that creates projects from templates",
+  "homepage": "https://github.com/cookiecutter/cookiecutter"
 }

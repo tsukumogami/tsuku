@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "periphery"
+  "source": "periphery",
+  "description": "Identify unused code in Swift projects",
+  "homepage": "https://github.com/peripheryapp/periphery"
 }

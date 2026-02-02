@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jdtls"
+  "source": "jdtls",
+  "description": "Java language specific implementation of the Language Server Protocol",
+  "homepage": "https://github.com/eclipse-jdtls/eclipse.jdt.ls"
 }

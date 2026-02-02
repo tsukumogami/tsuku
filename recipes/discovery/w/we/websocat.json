@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "websocat"
+  "source": "websocat",
+  "description": "Command-line client for WebSockets",
+  "homepage": "https://github.com/vi/websocat"
 }

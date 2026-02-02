@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "conftest"
+  "source": "conftest",
+  "description": "Test your configuration files using Open Policy Agent",
+  "homepage": "https://www.conftest.dev/"
 }

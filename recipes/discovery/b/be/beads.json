@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "beads"
+  "source": "beads",
+  "description": "Memory upgrade for your coding agent",
+  "homepage": "https://github.com/steveyegge/beads"
 }

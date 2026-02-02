@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "conan"
+  "source": "conan",
+  "description": "Distributed, open source, package manager for C/C++",
+  "homepage": "https://conan.io"
 }

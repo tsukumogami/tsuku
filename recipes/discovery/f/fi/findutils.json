@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "findutils"
+  "source": "findutils",
+  "description": "Collection of GNU find, xargs, and locate",
+  "homepage": "https://www.gnu.org/software/findutils/"
 }

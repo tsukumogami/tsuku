@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "dfu-util"
+  "source": "dfu-util",
+  "description": "USB programmer",
+  "homepage": "https://dfu-util.sourceforge.net/"
 }

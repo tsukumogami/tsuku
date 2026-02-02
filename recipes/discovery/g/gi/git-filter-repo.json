@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "git-filter-repo"
+  "source": "git-filter-repo",
+  "description": "Quickly rewrite git repository history",
+  "homepage": "https://github.com/newren/git-filter-repo"
 }

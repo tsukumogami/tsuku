@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nginx"
+  "source": "nginx",
+  "description": "HTTP(S) server and reverse proxy, and IMAP/POP3 proxy server",
+  "homepage": "https://nginx.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "librist"
+  "source": "librist",
+  "description": "Reliable Internet Stream Transport (RIST)",
+  "homepage": "https://code.videolan.org/rist/"
 }

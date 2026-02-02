@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "flyctl"
+  "source": "flyctl",
+  "description": "Command-line tools for fly.io services",
+  "homepage": "https://fly.io"
 }

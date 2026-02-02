@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "casey/just",
+  "description": "🤖 Just a command runner",
+  "homepage": "https://just.systems",
+  "repo": "https://github.com/casey/just"
+}

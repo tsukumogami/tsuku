@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bzip2"
+  "source": "bzip2",
+  "description": "Freely available high-quality data compressor",
+  "homepage": "https://sourceware.org/bzip2/"
 }

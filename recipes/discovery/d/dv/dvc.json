@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "dvc"
+  "source": "dvc",
+  "description": "Git for data science projects",
+  "homepage": "https://dvc.org"
 }

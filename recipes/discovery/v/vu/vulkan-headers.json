@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "vulkan-headers"
+  "source": "vulkan-headers",
+  "description": "Vulkan Header files and API registry",
+  "homepage": "https://github.com/KhronosGroup/Vulkan-Headers"
 }

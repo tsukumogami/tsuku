@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "chezmoi"
+  "source": "chezmoi",
+  "description": "Manage your dotfiles across multiple diverse machines, securely",
+  "homepage": "https://chezmoi.io/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "swift-protobuf"
+  "source": "swift-protobuf",
+  "description": "Plugin and runtime library for using protobuf with Swift",
+  "homepage": "https://github.com/apple/swift-protobuf"
 }

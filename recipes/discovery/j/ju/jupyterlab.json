@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jupyterlab"
+  "source": "jupyterlab",
+  "description": "Interactive environments for writing and running code",
+  "homepage": "https://jupyter.org/"
 }

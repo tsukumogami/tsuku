@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ncdu"
+  "source": "ncdu",
+  "description": "NCurses Disk Usage",
+  "homepage": "https://dev.yorhel.nl/ncdu"
 }

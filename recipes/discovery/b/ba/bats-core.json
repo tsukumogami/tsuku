@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bats-core"
+  "source": "bats-core",
+  "description": "Bash Automated Testing System",
+  "homepage": "https://github.com/bats-core/bats-core"
 }

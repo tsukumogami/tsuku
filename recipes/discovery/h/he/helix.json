@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "helix"
+  "source": "helix",
+  "description": "Post-modern modal text editor",
+  "homepage": "https://helix-editor.com"
 }

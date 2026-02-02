@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "virtualenv"
+  "source": "virtualenv",
+  "description": "Tool for creating isolated virtual python environments",
+  "homepage": "https://virtualenv.pypa.io/"
 }

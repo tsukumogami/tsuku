@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "dav1d"
+  "source": "dav1d",
+  "description": "AV1 decoder targeted to be small and fast",
+  "homepage": "https://code.videolan.org/videolan/dav1d"
 }

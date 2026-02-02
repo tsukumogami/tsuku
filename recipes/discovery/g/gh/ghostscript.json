@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ghostscript"
+  "source": "ghostscript",
+  "description": "Interpreter for PostScript and PDF",
+  "homepage": "https://www.ghostscript.com/"
 }

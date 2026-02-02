@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "vercel-cli"
+  "source": "vercel-cli",
+  "description": "Command-line interface for Vercel",
+  "homepage": "https://vercel.com/home"
 }

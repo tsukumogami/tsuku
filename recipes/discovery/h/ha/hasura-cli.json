@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "hasura-cli"
+  "source": "hasura-cli",
+  "description": "Command-Line Interface for Hasura GraphQL Engine",
+  "homepage": "https://hasura.io"
 }

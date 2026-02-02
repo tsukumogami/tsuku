@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "platformio"
+  "source": "platformio",
+  "description": "Your Gateway to Embedded Software Development Excellence",
+  "homepage": "https://platformio.org/"
 }

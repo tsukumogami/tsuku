@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gnupg"
+  "source": "gnupg",
+  "description": "GNU Privacy Guard (OpenPGP)",
+  "homepage": "https://gnupg.org/"
 }

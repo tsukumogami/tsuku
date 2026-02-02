@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "grpcui"
+  "source": "grpcui",
+  "description": "Interactive web UI for gRPC, along the lines of postman",
+  "homepage": "https://github.com/fullstorydev/grpcui"
 }

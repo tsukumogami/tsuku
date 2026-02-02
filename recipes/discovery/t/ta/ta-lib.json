@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ta-lib"
+  "source": "ta-lib",
+  "description": "Tools for market analysis",
+  "homepage": "https://ta-lib.org/"
 }

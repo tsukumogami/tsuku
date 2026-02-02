@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pipenv"
+  "source": "pipenv",
+  "description": "Python dependency management tool",
+  "homepage": "https://github.com/pypa/pipenv"
 }

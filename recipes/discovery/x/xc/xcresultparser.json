@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "xcresultparser"
+  "source": "xcresultparser",
+  "description": "Parse binary .xcresult bundles from Xcode builds and test runs",
+  "homepage": "https://github.com/a7ex/xcresultparser"
 }

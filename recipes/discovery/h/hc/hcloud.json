@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "hcloud"
+  "source": "hcloud",
+  "description": "Command-line interface for Hetzner Cloud",
+  "homepage": "https://github.com/hetznercloud/cli"
 }

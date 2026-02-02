@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gobject-introspection"
+  "source": "gobject-introspection",
+  "description": "Generate introspection data for GObject libraries",
+  "homepage": "https://gi.readthedocs.io/en/latest/"
 }

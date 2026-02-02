@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libavif"
+  "source": "libavif",
+  "description": "Library for encoding and decoding .avif files",
+  "homepage": "https://github.com/AOMediaCodec/libavif"
 }

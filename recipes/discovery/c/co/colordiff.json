@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "colordiff"
+  "source": "colordiff",
+  "description": "Color-highlighted diff(1) output",
+  "homepage": "https://www.colordiff.org/"
 }

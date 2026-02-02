@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ansible"
+  "source": "ansible",
+  "description": "Automate deployment, configuration, and upgrading",
+  "homepage": "https://www.ansible.com/"
 }

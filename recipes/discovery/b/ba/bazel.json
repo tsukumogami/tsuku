@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bazel"
+  "source": "bazel",
+  "description": "Google's own build tool",
+  "homepage": "https://bazel.build/"
 }

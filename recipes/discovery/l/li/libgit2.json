@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libgit2"
+  "source": "libgit2",
+  "description": "C library of Git core methods that is re-entrant and linkable",
+  "homepage": "https://libgit2.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "at-spi2-core"
+  "source": "at-spi2-core",
+  "description": "Protocol definitions and daemon for D-Bus at-spi",
+  "homepage": "https://www.freedesktop.org/wiki/Accessibility/AT-SPI2/"
 }

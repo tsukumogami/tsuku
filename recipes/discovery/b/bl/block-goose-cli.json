@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "block-goose-cli"
+  "source": "block-goose-cli",
+  "description": "Open source, extensible AI agent that goes beyond code suggestions",
+  "homepage": "https://block.github.io/goose/"
 }

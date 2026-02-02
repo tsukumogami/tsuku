@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "micro"
+  "source": "micro",
+  "description": "Modern and intuitive terminal-based text editor",
+  "homepage": "https://github.com/zyedidia/micro"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mysql@8.4"
+  "source": "mysql@8.4",
+  "description": "Open source relational database management system",
+  "homepage": "https://github.com/mysql/mysql-server"
 }

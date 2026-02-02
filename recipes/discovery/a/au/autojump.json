@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "autojump"
+  "source": "autojump",
+  "description": "Shell extension to jump to frequently used directories",
+  "homepage": "https://github.com/wting/autojump"
 }

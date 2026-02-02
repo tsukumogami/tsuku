@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nvtop"
+  "source": "nvtop",
+  "description": "Interactive GPU process monitor",
+  "homepage": "https://github.com/Syllo/nvtop"
 }

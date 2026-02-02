@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ios-deploy"
+  "source": "ios-deploy",
+  "description": "Install and debug iPhone apps from the command-line",
+  "homepage": "https://github.com/ios-control/ios-deploy"
 }

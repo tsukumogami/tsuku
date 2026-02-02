@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "zsh-autosuggestions"
+  "source": "zsh-autosuggestions",
+  "description": "Fish-like fast/unobtrusive autosuggestions for zsh",
+  "homepage": "https://github.com/zsh-users/zsh-autosuggestions"
 }

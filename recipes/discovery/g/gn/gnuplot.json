@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gnuplot"
+  "source": "gnuplot",
+  "description": "Command-driven, interactive function plotting",
+  "homepage": "http://www.gnuplot.info/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "doxygen"
+  "source": "doxygen",
+  "description": "Generate documentation for several programming languages",
+  "homepage": "https://www.doxygen.nl/"
 }

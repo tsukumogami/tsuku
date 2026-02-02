@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "magic-wormhole"
+  "source": "magic-wormhole",
+  "description": "Securely transfers data between computers",
+  "homepage": "https://github.com/magic-wormhole/magic-wormhole"
 }

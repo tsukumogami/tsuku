@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jemalloc"
+  "source": "jemalloc",
+  "description": "Implementation of malloc emphasizing fragmentation avoidance",
+  "homepage": "https://jemalloc.net/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "swift-sh"
+  "source": "swift-sh",
+  "description": "Scripting with easy zero-conf dependency imports",
+  "homepage": "https://github.com/mxcl/swift-sh"
 }

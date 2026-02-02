@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "readline"
+  "source": "readline",
+  "description": "Library for command-line editing",
+  "homepage": "https://tiswww.case.edu/php/chet/readline/rltop.html"
 }

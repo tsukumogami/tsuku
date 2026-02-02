@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "hubble"
+  "source": "hubble",
+  "description": "Network, Service \u0026 Security Observability for Kubernetes using eBPF",
+  "homepage": "https://github.com/cilium/hubble"
 }

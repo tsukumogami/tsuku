@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mongodb-atlas-cli"
+  "source": "mongodb-atlas-cli",
+  "description": "Atlas CLI enables you to manage your MongoDB Atlas",
+  "homepage": "https://www.mongodb.com/docs/atlas/cli/stable/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "netcdf"
+  "source": "netcdf",
+  "description": "Libraries and data formats for array-oriented scientific data",
+  "homepage": "https://www.unidata.ucar.edu/software/netcdf/"
 }

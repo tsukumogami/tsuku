@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libvirt"
+  "source": "libvirt",
+  "description": "C virtualization API",
+  "homepage": "https://libvirt.org/"
 }

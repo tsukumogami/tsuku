@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "trash-cli"
+  "source": "trash-cli",
+  "description": "Command-line interface to the freedesktop.org trashcan",
+  "homepage": "https://github.com/andreafrancia/trash-cli"
 }

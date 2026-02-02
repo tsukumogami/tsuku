@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "dnsmasq"
+  "source": "dnsmasq",
+  "description": "Lightweight DNS forwarder and DHCP server",
+  "homepage": "https://thekelleys.org.uk/dnsmasq/doc.html"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sonar-scanner"
+  "source": "sonar-scanner",
+  "description": "Launcher to analyze a project with SonarQube",
+  "homepage": "https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/"
 }

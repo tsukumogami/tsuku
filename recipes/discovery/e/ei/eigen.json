@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "eigen"
+  "source": "eigen",
+  "description": "C++ template library for linear algebra",
+  "homepage": "https://gitlab.com/libeigen/eigen"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "oh-my-posh"
+  "source": "oh-my-posh",
+  "description": "Prompt theme engine for any shell",
+  "homepage": "https://ohmyposh.dev"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "basedpyright"
+  "source": "basedpyright",
+  "description": "Pyright fork with various improvements and built-in pylance features",
+  "homepage": "https://github.com/DetachHead/basedpyright"
 }

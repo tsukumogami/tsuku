@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "universal-ctags"
+  "source": "universal-ctags",
+  "description": "Maintained ctags implementation",
+  "homepage": "https://ctags.io/"
 }

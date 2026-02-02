@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jsonnet"
+  "source": "jsonnet",
+  "description": "Domain specific configuration language for defining JSON data",
+  "homepage": "https://jsonnet.org/"
 }

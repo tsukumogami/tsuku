@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "prettier"
+  "source": "prettier",
+  "description": "Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML",
+  "homepage": "https://prettier.io/"
 }

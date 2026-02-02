@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "duckdb"
+  "source": "duckdb",
+  "description": "Embeddable SQL OLAP Database Management System",
+  "homepage": "https://www.duckdb.org"
 }

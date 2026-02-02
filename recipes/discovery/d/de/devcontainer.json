@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "devcontainer"
+  "source": "devcontainer",
+  "description": "Reference implementation for the Development Containers specification",
+  "homepage": "https://containers.dev"
 }

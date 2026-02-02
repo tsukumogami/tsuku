@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "virt-manager"
+  "source": "virt-manager",
+  "description": "App for managing virtual machines",
+  "homepage": "https://virt-manager.org/"
 }

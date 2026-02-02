@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "yazi"
+  "source": "yazi",
+  "description": "Blazing fast terminal file manager written in Rust, based on async I/O",
+  "homepage": "https://github.com/sxyazi/yazi"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "opam"
+  "source": "opam",
+  "description": "OCaml package manager",
+  "homepage": "https://opam.ocaml.org"
 }

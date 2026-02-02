@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "kafka"
+  "source": "kafka",
+  "description": "Open-source distributed event streaming platform",
+  "homepage": "https://kafka.apache.org/"
 }

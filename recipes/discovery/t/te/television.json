@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "television"
+  "source": "television",
+  "description": "General purpose fuzzy finder TUI",
+  "homepage": "https://github.com/alexpasmantier/television"
 }

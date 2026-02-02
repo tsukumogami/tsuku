@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "atuin"
+  "source": "atuin",
+  "description": "Improved shell history for zsh, bash, fish and nushell",
+  "homepage": "https://atuin.sh/"
 }

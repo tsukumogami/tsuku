@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "python@3.9"
+  "source": "python@3.9",
+  "description": "Interpreted, interactive, object-oriented programming language",
+  "homepage": "https://www.python.org/"
 }

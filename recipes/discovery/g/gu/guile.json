@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "guile"
+  "source": "guile",
+  "description": "GNU Ubiquitous Intelligent Language for Extensions",
+  "homepage": "https://www.gnu.org/software/guile/"
 }

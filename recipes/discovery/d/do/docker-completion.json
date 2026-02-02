@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "docker-completion"
+  "source": "docker-completion",
+  "description": "Bash, Zsh and Fish completion for Docker",
+  "homepage": "https://www.docker.com/"
 }

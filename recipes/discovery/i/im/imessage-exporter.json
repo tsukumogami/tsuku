@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "imessage-exporter"
+  "source": "imessage-exporter",
+  "description": "Command-line tool to export and inspect local iMessage database",
+  "homepage": "https://github.com/ReagentX/imessage-exporter"
 }

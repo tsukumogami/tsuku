@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fnm"
+  "source": "fnm",
+  "description": "Fast and simple Node.js version manager",
+  "homepage": "https://github.com/Schniz/fnm"
 }

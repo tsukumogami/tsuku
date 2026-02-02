@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "shared-mime-info"
+  "source": "shared-mime-info",
+  "description": "Database of common MIME types",
+  "homepage": "https://wiki.freedesktop.org/www/Software/shared-mime-info"
 }

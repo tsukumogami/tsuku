@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openjpeg"
+  "source": "openjpeg",
+  "description": "Library for JPEG-2000 image manipulation",
+  "homepage": "https://www.openjpeg.org/"
 }

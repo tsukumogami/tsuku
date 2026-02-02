@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "folly"
+  "source": "folly",
+  "description": "Collection of reusable C++ library artifacts developed at Facebook",
+  "homepage": "https://github.com/facebook/folly"
 }

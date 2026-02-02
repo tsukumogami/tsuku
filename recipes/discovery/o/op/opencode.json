@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "opencode"
+  "source": "opencode",
+  "description": "AI coding agent, built for the terminal",
+  "homepage": "https://opencode.ai"
 }

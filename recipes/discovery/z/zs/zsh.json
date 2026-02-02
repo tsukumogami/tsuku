@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "zsh"
+  "source": "zsh",
+  "description": "UNIX shell (command interpreter)",
+  "homepage": "https://www.zsh.org/"
 }

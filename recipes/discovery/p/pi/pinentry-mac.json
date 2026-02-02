@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pinentry-mac"
+  "source": "pinentry-mac",
+  "description": "Pinentry for GPG on Mac",
+  "homepage": "https://github.com/GPGTools/pinentry"
 }

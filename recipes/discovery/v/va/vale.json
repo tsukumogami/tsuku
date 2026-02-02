@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "vale"
+  "source": "vale",
+  "description": "Syntax-aware linter for prose",
+  "homepage": "https://vale.sh/"
 }

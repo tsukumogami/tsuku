@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "helm/helm",
+  "description": "The Kubernetes Package Manager",
+  "homepage": "https://helm.sh",
+  "repo": "https://github.com/helm/helm"
+}

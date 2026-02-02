@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "miller"
+  "source": "miller",
+  "description": "Like sed, awk, cut, join \u0026 sort for name-indexed data such as CSV",
+  "homepage": "https://github.com/johnkerl/miller"
 }

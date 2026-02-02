@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "protobuf"
+  "source": "protobuf",
+  "description": "Protocol buffers (Google's data interchange format)",
+  "homepage": "https://protobuf.dev/"
 }

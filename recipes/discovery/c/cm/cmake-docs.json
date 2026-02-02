@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cmake-docs"
+  "source": "cmake-docs",
+  "description": "Documentation for CMake",
+  "homepage": "https://www.cmake.org/"
 }

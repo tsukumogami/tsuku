@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "colima"
+  "source": "colima",
+  "description": "Container runtimes on MacOS (and Linux) with minimal setup",
+  "homepage": "https://github.com/abiosoft/colima/blob/main/README.md"
 }
