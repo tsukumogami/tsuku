@@ -31,11 +31,15 @@ func iRun(ctx context.Context, command string) (context.Context, error) {
 	cmd := exec.Command(args[0], args[1:]...)
 	// Run from the same directory as the binary, where .tsuku-test lives
 	cmd.Dir = filepath.Dir(state.binPath)
-	// Suppress telemetry notice in test output
-	cmd.Env = append(os.Environ(),
+	// Build environment: suppress telemetry, set home, optionally filter PATH
+	env := append(os.Environ(),
 		"TSUKU_HOME="+state.homeDir,
 		"TSUKU_NO_TELEMETRY=1",
 	)
+	if len(state.hiddenBinaries) > 0 {
+		env = append(env, "PATH="+filteredPATH(state.hiddenBinaries))
+	}
+	cmd.Env = env
 
 	var stdout, stderr strings.Builder
 	cmd.Stdout = &stdout

@@ -147,6 +147,27 @@ func confirmWithUser(prompt string) bool {
 	return response == "y" || response == "yes"
 }
 
+// offerToolchainInstall prompts the user to install a missing toolchain (or
+// auto-installs with --yes). Returns true if the install succeeded.
+func offerToolchainInstall(info *toolchain.Info, ecosystem string, autoApprove bool) bool {
+	fmt.Fprintf(os.Stderr, "%s requires %s, which is not installed.\n", ecosystem, info.Name)
+
+	if autoApprove {
+		fmt.Fprintf(os.Stderr, "Installing %s (required toolchain)...\n", info.TsukuRecipe)
+	} else {
+		if !confirmWithUser(fmt.Sprintf("Install %s using tsuku?", info.TsukuRecipe)) {
+			return false
+		}
+	}
+
+	if err := runInstallWithTelemetry(info.TsukuRecipe, "", "", false, "create", nil); err != nil {
+		fmt.Fprintf(os.Stderr, "Error: failed to install required toolchain '%s': %v\n", info.TsukuRecipe, err)
+		return false
+	}
+	fmt.Fprintf(os.Stderr, "%s installed successfully.\n", info.TsukuRecipe)
+	return true
+}
+
 // parseFromFlag parses the --from flag value.
 // Returns (builder, remainder).
 // Splits on the first ":" - builder name before, remainder after.
@@ -305,8 +326,25 @@ func runCreate(cmd *cobra.Command, args []string) {
 	if !builder.RequiresLLM() {
 		// Check toolchain availability before making API calls
 		if err := toolchain.CheckAvailable(builderName); err != nil {
-			fmt.Fprintf(os.Stderr, "Error: %v\n", err)
-			exitWithCode(ExitDependencyFailed)
+			info := toolchain.GetInfo(builderName)
+			if info == nil || info.TsukuRecipe == "" {
+				fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+				exitWithCode(ExitDependencyFailed)
+			}
+			if !offerToolchainInstall(info, builderName, createAutoApprove) {
+				exitWithCode(ExitDependencyFailed)
+			}
+			// After install, add $TSUKU_HOME/tools/current to PATH so the
+			// re-check and subsequent builder commands can find the new binary.
+			cfg, cfgErr := config.DefaultConfig()
+			if cfgErr == nil {
+				os.Setenv("PATH", cfg.CurrentDir+string(filepath.ListSeparator)+os.Getenv("PATH"))
+			}
+			if err := toolchain.CheckAvailable(builderName); err != nil {
+				fmt.Fprintf(os.Stderr, "Error: %s was installed but '%s' is still not on PATH.\n", info.TsukuRecipe, info.Binary)
+				fmt.Fprintf(os.Stderr, "Try running: eval $(tsuku shellenv)\n")
+				exitWithCode(ExitDependencyFailed)
+			}
 		}
 
 		// Check if builder can handle this package
