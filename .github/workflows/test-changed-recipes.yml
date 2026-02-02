@@ -26,6 +26,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
       - name: Get changed recipes
         id: changed
         run: |
@@ -62,7 +71,7 @@ jobs:
             echo "Changed recipes:"
             echo "$CHANGED"
 
-            # Build JSON array of {tool, path, linux_only} objects
+            # Build JSON arrays of {tool, path} objects per platform
             # Skip library recipes (type = "library") as they cannot be installed directly
             JSON="["
             MACOS_JSON="["
@@ -95,35 +104,46 @@ jobs:
                 continue
               fi
 
-              # Check if recipe is Linux-only
-              # Method 1: Check supported_os field (new platform-aware format)
-              # Method 2: Check os_mapping (legacy format)
-              linux_only="false"
-              if grep -q 'supported_os.*=.*\["linux"\]' "$path" 2>/dev/null; then
-                linux_only="true"
-                echo "Linux-only recipe (supported_os): $path"
-              elif grep -q 'os_mapping.*linux' "$path" 2>/dev/null; then
-                if ! grep -q 'os_mapping.*darwin' "$path" 2>/dev/null; then
-                  linux_only="true"
-                  echo "Linux-only recipe (os_mapping): $path"
-                fi
+              # Determine platform support using tsuku info
+              has_linux="false"
+              has_macos="false"
+              if ! platforms=$(./tsuku info --json --metadata-only --recipe "$path" 2>/dev/null | jq -c '.supported_platforms // []'); then
+                platforms="[]"
               fi
 
-              if [ "$FIRST" = true ]; then
-                FIRST=false
+              if [ "$platforms" = "[]" ] || [ -z "$platforms" ]; then
+                # No platform data or tsuku info failed: assume all platforms
+                has_linux="true"
+                has_macos="true"
+                echo "All platforms (no constraints): $path"
               else
-                JSON="$JSON,"
+                if echo "$platforms" | jq -e '[.[] | select(.os == "linux")] | length > 0' > /dev/null 2>&1; then
+                  has_linux="true"
+                fi
+                if echo "$platforms" | jq -e '[.[] | select(.os == "darwin")] | length > 0' > /dev/null 2>&1; then
+                  has_macos="true"
+                fi
+                echo "Platform support for $tool: linux=$has_linux macos=$has_macos"
               fi
-              JSON="$JSON{\"tool\":\"$tool\",\"path\":\"$path\",\"linux_only\":$linux_only}"
 
-              # Add to macOS list if not Linux-only
-              if [ "$linux_only" = "false" ]; then
+              # Add to Linux list if supported
+              if [ "$has_linux" = "true" ]; then
+                if [ "$FIRST" = true ]; then
+                  FIRST=false
+                else
+                  JSON="$JSON,"
+                fi
+                JSON="$JSON{\"tool\":\"$tool\",\"path\":\"$path\"}"
+              fi
+
+              # Add to macOS list if supported
+              if [ "$has_macos" = "true" ]; then
                 if [ "$MACOS_FIRST" = true ]; then
                   MACOS_FIRST=false
                 else
                   MACOS_JSON="$MACOS_JSON,"
                 fi
-                MACOS_JSON="$MACOS_JSON\"$tool\""
+                MACOS_JSON="$MACOS_JSON{\"tool\":\"$tool\",\"path\":\"$path\"}"
               fi
             done
             JSON="$JSON]"
@@ -202,33 +222,34 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          FAILED=()
           RECIPES='${{ needs.matrix.outputs.macos_recipes }}'
           CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          FAIL_FILE="${{ runner.temp }}/failed-recipes.txt"
           mkdir -p "$CACHE_DIR"
+          : > "$FAIL_FILE"
 
-          for recipe in $(echo "$RECIPES" | jq -r '.[]'); do
-            echo "::group::Testing $recipe"
-
-            # Derive recipe file path from tool name
-            first_letter=$(echo "$recipe" | cut -c1)
-            recipe_path="recipes/$first_letter/$recipe.toml"
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            tool=$(echo "$RECIPES" | jq -r ".[$i].tool")
+            recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+            echo "::group::Testing $tool"
 
             # Fresh TSUKU_HOME per recipe with shared download cache
-            export TSUKU_HOME="${{ runner.temp }}/tsuku-$recipe"
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
             mkdir -p "$TSUKU_HOME/cache"
             ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
             echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
 
             if ! ./tsuku install --force --recipe "$recipe_path"; then
-              FAILED+=("$recipe")
+              echo "$tool" >> "$FAIL_FILE"
             fi
             echo "::endgroup::"
           done
 
           # Report failures at end (don't fail fast)
-          if [ ${#FAILED[@]} -gt 0 ]; then
-            echo "::error::Failed recipes: ${FAILED[*]}"
+          if [ -s "$FAIL_FILE" ]; then
+            FAILED=$(cat "$FAIL_FILE" | tr '\n' ' ')
+            echo "::error::Failed recipes: $FAILED"
             exit 1
           fi
 
