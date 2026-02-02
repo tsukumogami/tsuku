@@ -20,7 +20,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1405: add quality filter with RegistryEntry schema extension and Cargo builder](https://github.com/tsukumogami/tsuku/issues/1405) | [#1355](https://github.com/tsukumogami/tsuku/issues/1355) | testable |
+| [#1405: add quality filter with RegistryEntry schema extension and Cargo builder](https://github.com/tsukumogami/tsuku/issues/1405) | [#1365](https://github.com/tsukumogami/tsuku/issues/1365) | testable |
 | _Walking skeleton: extends RegistryEntry with quality metadata fields, changes Probe() to return RegistryEntry, creates QualityFilter with per-registry thresholds, wires it into the resolver, and proves the full path with the Cargo builder. Also updates the remaining 6 builders with stub Probe() implementations so the codebase compiles._ | | |
 | [#1406: add quality metadata to npm and PyPI builders](https://github.com/tsukumogami/tsuku/issues/1406) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
 | _Updates the npm and PyPI builders to populate quality metadata in RegistryEntry. npm adds a parallel downloads API fetch; PyPI parses releases dict length and project URLs._ | | |
