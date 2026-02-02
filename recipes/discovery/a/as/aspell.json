@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "aspell"
+  "source": "aspell",
+  "description": "Spell checker with better logic than ispell",
+  "homepage": "http://aspell.net/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "aws-elasticbeanstalk"
+  "source": "aws-elasticbeanstalk",
+  "description": "Client for Amazon Elastic Beanstalk web service",
+  "homepage": "https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/eb-cli3.html"
 }

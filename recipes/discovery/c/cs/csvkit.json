@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "csvkit"
+  "source": "csvkit",
+  "description": "Suite of command-line tools for converting to and working with CSV",
+  "homepage": "https://csvkit.readthedocs.io/"
 }

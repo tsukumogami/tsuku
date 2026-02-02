@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tesseract-lang"
+  "source": "tesseract-lang",
+  "description": "Enables extra languages support for Tesseract",
+  "homepage": "https://github.com/tesseract-ocr/tessdata_fast/"
 }

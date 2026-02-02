@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "util-linux"
+  "source": "util-linux",
+  "description": "Collection of Linux utilities",
+  "homepage": "https://github.com/util-linux/util-linux"
 }

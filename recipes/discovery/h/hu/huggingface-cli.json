@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "huggingface-cli"
+  "source": "huggingface-cli",
+  "description": "Client library for huggingface.co hub",
+  "homepage": "https://huggingface.co/docs/huggingface_hub/guides/cli"
 }

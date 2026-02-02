@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ffmpeg@6"
+  "source": "ffmpeg@6",
+  "description": "Play, record, convert, and stream audio and video",
+  "homepage": "https://ffmpeg.org/"
 }

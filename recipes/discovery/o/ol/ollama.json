@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ollama"
+  "source": "ollama",
+  "description": "Create, run, and share large language models (LLMs)",
+  "homepage": "https://ollama.com/"
 }

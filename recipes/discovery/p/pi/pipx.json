@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pipx"
+  "source": "pipx",
+  "description": "Execute binaries from Python packages in isolated environments",
+  "homepage": "https://pipx.pypa.io"
 }

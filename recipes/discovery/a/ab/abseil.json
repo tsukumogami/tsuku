@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "abseil"
+  "source": "abseil",
+  "description": "C++ Common Libraries",
+  "homepage": "https://abseil.io"
 }

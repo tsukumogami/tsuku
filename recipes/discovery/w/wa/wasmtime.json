@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "wasmtime"
+  "source": "wasmtime",
+  "description": "Standalone JIT-style runtime for WebAssembly, using Cranelift",
+  "homepage": "https://wasmtime.dev/"
 }

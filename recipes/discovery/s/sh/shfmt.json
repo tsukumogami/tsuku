@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "shfmt"
+  "source": "shfmt",
+  "description": "Autoformat shell script source code",
+  "homepage": "https://github.com/mvdan/sh"
 }

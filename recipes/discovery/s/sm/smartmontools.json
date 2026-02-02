@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "smartmontools"
+  "source": "smartmontools",
+  "description": "SMART hard drive monitoring",
+  "homepage": "https://www.smartmontools.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "vips"
+  "source": "vips",
+  "description": "Image processing library",
+  "homepage": "https://github.com/libvips/libvips"
 }

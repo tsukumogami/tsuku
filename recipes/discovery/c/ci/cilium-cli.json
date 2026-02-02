@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cilium-cli"
+  "source": "cilium-cli",
+  "description": "CLI to install, manage \u0026 troubleshoot Kubernetes clusters running Cilium",
+  "homepage": "https://cilium.io"
 }

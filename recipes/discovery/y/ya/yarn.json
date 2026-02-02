@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "yarn"
+  "source": "yarn",
+  "description": "JavaScript package manager",
+  "homepage": "https://yarnpkg.com/"
 }

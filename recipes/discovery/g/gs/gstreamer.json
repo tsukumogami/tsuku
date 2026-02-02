@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gstreamer"
+  "source": "gstreamer",
+  "description": "Development framework for multimedia applications",
+  "homepage": "https://gstreamer.freedesktop.org/"
 }

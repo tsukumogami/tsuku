@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "grpc"
+  "source": "grpc",
+  "description": "Next generation open source RPC library and framework",
+  "homepage": "https://grpc.io/"
 }

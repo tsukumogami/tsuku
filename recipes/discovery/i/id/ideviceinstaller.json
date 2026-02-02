@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ideviceinstaller"
+  "source": "ideviceinstaller",
+  "description": "Tool for managing apps on iOS devices",
+  "homepage": "https://libimobiledevice.org/"
 }

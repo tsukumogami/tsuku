@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mame"
+  "source": "mame",
+  "description": "Multiple Arcade Machine Emulator",
+  "homepage": "https://mamedev.org/"
 }

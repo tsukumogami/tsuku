@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "swiftformat"
+  "source": "swiftformat",
+  "description": "Formatting tool for reformatting Swift code",
+  "homepage": "https://github.com/nicklockwood/SwiftFormat"
 }

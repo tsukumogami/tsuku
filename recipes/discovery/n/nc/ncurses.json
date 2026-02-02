@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ncurses"
+  "source": "ncurses",
+  "description": "Text-based UI library",
+  "homepage": "https://invisible-island.net/ncurses/announce.html"
 }

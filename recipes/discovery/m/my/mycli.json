@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mycli"
+  "source": "mycli",
+  "description": "CLI for MySQL with auto-completion and syntax highlighting",
+  "homepage": "https://www.mycli.net/"
 }

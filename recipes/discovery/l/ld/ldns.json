@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ldns"
+  "source": "ldns",
+  "description": "DNS library written in C",
+  "homepage": "https://nlnetlabs.nl/projects/ldns/"
 }

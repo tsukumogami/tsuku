@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "zig"
+  "source": "zig",
+  "description": "Programming language designed for robustness, optimality, and clarity",
+  "homepage": "https://ziglang.org/"
 }

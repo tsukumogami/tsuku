@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "php-cs-fixer"
+  "source": "php-cs-fixer",
+  "description": "Tool to automatically fix PHP coding standards issues",
+  "homepage": "https://cs.symfony.com/"
 }

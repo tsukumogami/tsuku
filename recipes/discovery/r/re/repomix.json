@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "repomix"
+  "source": "repomix",
+  "description": "Pack repository contents into a single AI-friendly file",
+  "homepage": "https://github.com/yamadashy/repomix"
 }

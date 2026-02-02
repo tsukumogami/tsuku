@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libev"
+  "source": "libev",
+  "description": "Asynchronous event library",
+  "homepage": "https://software.schmorp.de/pkg/libev.html"
 }

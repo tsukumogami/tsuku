@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cgal"
+  "source": "cgal",
+  "description": "Computational Geometry Algorithms Library",
+  "homepage": "https://www.cgal.org/"
 }

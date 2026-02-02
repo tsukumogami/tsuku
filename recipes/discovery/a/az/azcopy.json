@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "azcopy"
+  "source": "azcopy",
+  "description": "Azure Storage data transfer utility",
+  "homepage": "https://github.com/Azure/azure-storage-azcopy"
 }

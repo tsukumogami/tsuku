@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "git"
+  "source": "git",
+  "description": "Distributed revision control system",
+  "homepage": "https://git-scm.com"
 }

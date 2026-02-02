@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "qsv"
+  "source": "qsv",
+  "description": "Ultra-fast CSV data-wrangling toolkit",
+  "homepage": "https://qsv.dathere.com/"
 }

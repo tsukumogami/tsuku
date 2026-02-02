@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libraw"
+  "source": "libraw",
+  "description": "Library for reading RAW files from digital photo cameras",
+  "homepage": "https://www.libraw.org/"
 }

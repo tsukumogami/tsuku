@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gitui"
+  "source": "gitui",
+  "description": "Blazing fast terminal-ui for git written in rust",
+  "homepage": "https://github.com/gitui-org/gitui"
 }

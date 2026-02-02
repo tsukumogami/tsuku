@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "haskell-stack"
+  "source": "haskell-stack",
+  "description": "Cross-platform program for developing Haskell projects",
+  "homepage": "https://haskellstack.org/"
 }

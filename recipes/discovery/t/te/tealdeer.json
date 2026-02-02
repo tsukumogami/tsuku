@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tealdeer"
+  "source": "tealdeer",
+  "description": "Very fast implementation of tldr in Rust",
+  "homepage": "https://tealdeer-rs.github.io/tealdeer/"
 }

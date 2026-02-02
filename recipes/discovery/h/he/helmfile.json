@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "helmfile"
+  "source": "helmfile",
+  "description": "Deploy Kubernetes Helm Charts",
+  "homepage": "https://github.com/helmfile/helmfile"
 }

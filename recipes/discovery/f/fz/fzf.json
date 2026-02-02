@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "junegunn/fzf",
+  "description": ":cherry_blossom: A command-line fuzzy finder",
+  "homepage": "https://junegunn.github.io/fzf/",
+  "repo": "https://github.com/junegunn/fzf"
+}

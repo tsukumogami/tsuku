@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libnghttp3"
+  "source": "libnghttp3",
+  "description": "HTTP/3 library written in C",
+  "homepage": "https://nghttp2.org/nghttp3/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "yamllint"
+  "source": "yamllint",
+  "description": "Linter for YAML files",
+  "homepage": "https://github.com/adrienverge/yamllint"
 }

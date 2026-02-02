@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "uutils-findutils"
+  "source": "uutils-findutils",
+  "description": "Cross-platform Rust rewrite of the GNU findutils",
+  "homepage": "https://uutils.github.io/findutils/"
 }

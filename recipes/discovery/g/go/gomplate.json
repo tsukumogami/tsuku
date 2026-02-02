@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gomplate"
+  "source": "gomplate",
+  "description": "Command-line Golang template processor",
+  "homepage": "https://gomplate.ca/"
 }

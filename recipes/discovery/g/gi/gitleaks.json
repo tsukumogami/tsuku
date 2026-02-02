@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "gitleaks/gitleaks",
+  "description": "Find secrets with Gitleaks 🔑",
+  "homepage": "https://gitleaks.io",
+  "repo": "https://github.com/gitleaks/gitleaks"
+}

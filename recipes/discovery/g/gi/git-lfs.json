@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "git-lfs"
+  "source": "git-lfs",
+  "description": "Git extension for versioning large files",
+  "homepage": "https://git-lfs.com/"
 }

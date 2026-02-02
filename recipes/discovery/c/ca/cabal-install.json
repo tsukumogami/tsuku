@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cabal-install"
+  "source": "cabal-install",
+  "description": "Command-line interface for Cabal and Hackage",
+  "homepage": "https://www.haskell.org/cabal/"
 }

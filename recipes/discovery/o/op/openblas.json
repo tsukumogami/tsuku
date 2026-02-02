@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openblas"
+  "source": "openblas",
+  "description": "Optimized BLAS library",
+  "homepage": "https://www.openblas.net/"
 }

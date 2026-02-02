@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cargo-binstall"
+  "source": "cargo-binstall",
+  "description": "Binary installation for rust projects",
+  "homepage": "https://github.com/cargo-bins/cargo-binstall"
 }

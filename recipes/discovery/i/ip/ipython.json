@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ipython"
+  "source": "ipython",
+  "description": "Interactive computing in Python",
+  "homepage": "https://ipython.org/"
 }

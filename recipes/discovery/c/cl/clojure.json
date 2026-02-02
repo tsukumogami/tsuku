@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "clojure"
+  "source": "clojure",
+  "description": "Dynamic, general-purpose programming language",
+  "homepage": "https://clojure.org"
 }

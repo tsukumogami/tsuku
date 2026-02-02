@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "vtk"
+  "source": "vtk",
+  "description": "Toolkit for 3D computer graphics, image processing, and visualization",
+  "homepage": "https://www.vtk.org/"
 }

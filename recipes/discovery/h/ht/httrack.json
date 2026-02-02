@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "httrack"
+  "source": "httrack",
+  "description": "Website copier/offline browser",
+  "homepage": "https://www.httrack.com/"
 }

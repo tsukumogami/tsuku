@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "azure-cli"
+  "source": "azure-cli",
+  "description": "Microsoft Azure CLI 2.0",
+  "homepage": "https://docs.microsoft.com/cli/azure/overview"
 }

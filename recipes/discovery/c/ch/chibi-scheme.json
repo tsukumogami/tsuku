@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "chibi-scheme"
+  "source": "chibi-scheme",
+  "description": "Small footprint Scheme for use as a C Extension Language",
+  "homepage": "https://github.com/ashinn/chibi-scheme"
 }

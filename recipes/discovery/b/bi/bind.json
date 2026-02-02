@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bind"
+  "source": "bind",
+  "description": "Implementation of the DNS protocols",
+  "homepage": "https://www.isc.org/bind/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "watch"
+  "source": "watch",
+  "description": "Executes a program periodically, showing output fullscreen",
+  "homepage": "https://gitlab.com/procps-ng/procps"
 }

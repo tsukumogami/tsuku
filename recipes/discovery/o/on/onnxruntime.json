@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "onnxruntime"
+  "source": "onnxruntime",
+  "description": "Cross-platform, high performance scoring engine for ML models",
+  "homepage": "https://github.com/microsoft/onnxruntime"
 }

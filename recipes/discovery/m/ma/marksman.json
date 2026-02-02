@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "marksman"
+  "source": "marksman",
+  "description": "Language Server Protocol for Markdown",
+  "homepage": "https://github.com/artempyanykh/marksman"
 }

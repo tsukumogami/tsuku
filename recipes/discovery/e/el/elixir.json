@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "elixir"
+  "source": "elixir",
+  "description": "Functional metaprogramming aware language built on Erlang VM",
+  "homepage": "https://elixir-lang.org/"
 }

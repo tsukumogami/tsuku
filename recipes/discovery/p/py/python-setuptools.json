@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "python-setuptools"
+  "source": "python-setuptools",
+  "description": "Easily download, build, install, upgrade, and uninstall Python packages",
+  "homepage": "https://setuptools.pypa.io/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "texlive"
+  "source": "texlive",
+  "description": "Free software distribution for the TeX typesetting system",
+  "homepage": "https://www.tug.org/texlive/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "powerlevel10k"
+  "source": "powerlevel10k",
+  "description": "Theme for zsh",
+  "homepage": "https://github.com/romkatv/powerlevel10k"
 }

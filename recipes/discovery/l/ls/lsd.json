@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lsd"
+  "source": "lsd",
+  "description": "Clone of ls with colorful output, file type icons, and more",
+  "homepage": "https://github.com/lsd-rs/lsd"
 }

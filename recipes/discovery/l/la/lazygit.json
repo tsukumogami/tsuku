@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "jesseduffield/lazygit",
+  "description": "simple terminal UI for git commands",
+  "repo": "https://github.com/jesseduffield/lazygit"
+}

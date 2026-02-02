@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sbt"
+  "source": "sbt",
+  "description": "Build tool for Scala projects",
+  "homepage": "https://www.scala-sbt.org/"
 }

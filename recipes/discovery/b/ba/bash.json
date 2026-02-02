@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bash"
+  "source": "bash",
+  "description": "Bourne-Again SHell, a UNIX command interpreter",
+  "homepage": "https://www.gnu.org/software/bash/"
 }

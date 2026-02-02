@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "zlib"
+  "source": "zlib",
+  "description": "General-purpose lossless data-compression library",
+  "homepage": "https://zlib.net/"
 }

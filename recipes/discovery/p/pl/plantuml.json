@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "plantuml"
+  "source": "plantuml",
+  "description": "Draw UML diagrams",
+  "homepage": "https://plantuml.com/"
 }

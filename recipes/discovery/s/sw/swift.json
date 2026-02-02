@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "swift"
+  "source": "swift",
+  "description": "High-performance system programming language",
+  "homepage": "https://www.swift.org"
 }

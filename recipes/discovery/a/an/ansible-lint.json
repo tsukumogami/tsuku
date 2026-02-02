@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ansible-lint"
+  "source": "ansible-lint",
+  "description": "Checks ansible playbooks for practices and behaviour",
+  "homepage": "https://ansible-lint.readthedocs.io/"
 }

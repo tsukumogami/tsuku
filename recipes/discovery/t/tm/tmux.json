@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tmux"
+  "source": "tmux",
+  "description": "Terminal multiplexer",
+  "homepage": "https://tmux.github.io/"
 }

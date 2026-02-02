@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "kubelogin"
+  "source": "kubelogin",
+  "description": "OpenID Connect authentication plugin for kubectl",
+  "homepage": "https://github.com/int128/kubelogin"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "python-packaging"
+  "source": "python-packaging",
+  "description": "Core utilities for Python packages",
+  "homepage": "https://packaging.pypa.io/"
 }

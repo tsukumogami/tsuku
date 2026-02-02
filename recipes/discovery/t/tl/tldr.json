@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tldr"
+  "source": "tldr",
+  "description": "Simplified and community-driven man pages",
+  "homepage": "https://tldr.sh/"
 }

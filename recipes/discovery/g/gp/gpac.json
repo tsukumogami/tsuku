@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gpac"
+  "source": "gpac",
+  "description": "Multimedia framework for research and academic purposes",
+  "homepage": "https://gpac.io/"
 }

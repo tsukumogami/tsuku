@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "git-delta"
+  "source": "git-delta",
+  "description": "Syntax-highlighting pager for git and diff output",
+  "homepage": "https://github.com/dandavison/delta"
 }

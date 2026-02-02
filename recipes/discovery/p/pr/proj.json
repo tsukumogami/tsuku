@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "proj"
+  "source": "proj",
+  "description": "Cartographic Projections Library",
+  "homepage": "https://proj.org/"
 }

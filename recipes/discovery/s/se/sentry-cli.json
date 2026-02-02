@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sentry-cli"
+  "source": "sentry-cli",
+  "description": "Command-line utility to interact with Sentry",
+  "homepage": "https://docs.sentry.io/cli/"
 }

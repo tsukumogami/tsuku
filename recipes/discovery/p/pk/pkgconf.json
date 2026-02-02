@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pkgconf"
+  "source": "pkgconf",
+  "description": "Package compiler and linker metadata toolkit",
+  "homepage": "https://github.com/pkgconf/pkgconf"
 }

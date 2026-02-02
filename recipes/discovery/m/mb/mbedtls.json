@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mbedtls"
+  "source": "mbedtls",
+  "description": "Cryptographic \u0026 SSL/TLS library",
+  "homepage": "https://tls.mbed.org/"
 }

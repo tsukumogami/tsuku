@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sccache"
+  "source": "sccache",
+  "description": "Used as a compiler wrapper and avoids compilation when possible",
+  "homepage": "https://github.com/mozilla/sccache"
 }

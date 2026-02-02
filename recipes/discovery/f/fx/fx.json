@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fx"
+  "source": "fx",
+  "description": "Terminal JSON viewer",
+  "homepage": "https://fx.wtf"
 }

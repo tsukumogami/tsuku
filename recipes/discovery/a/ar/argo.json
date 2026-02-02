@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "argo"
+  "source": "argo",
+  "description": "Get stuff done with container-native workflows for Kubernetes",
+  "homepage": "https://argoproj.io"
 }

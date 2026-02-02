@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "zbar"
+  "source": "zbar",
+  "description": "Suite of barcodes-reading tools",
+  "homepage": "https://github.com/mchehab/zbar"
 }

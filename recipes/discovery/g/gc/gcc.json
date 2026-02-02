@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gcc"
+  "source": "gcc",
+  "description": "GNU compiler collection",
+  "homepage": "https://gcc.gnu.org/"
 }

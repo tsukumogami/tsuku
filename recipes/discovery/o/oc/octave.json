@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "octave"
+  "source": "octave",
+  "description": "High-level interpreted language for numerical computing",
+  "homepage": "https://octave.org/index.html"
 }

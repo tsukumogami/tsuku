@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "httpd"
+  "source": "httpd",
+  "description": "Apache HTTP server",
+  "homepage": "https://httpd.apache.org/"
 }

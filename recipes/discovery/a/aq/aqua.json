@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "aqua"
+  "source": "aqua",
+  "description": "Declarative CLI Version manager",
+  "homepage": "https://aquaproj.github.io/"
 }

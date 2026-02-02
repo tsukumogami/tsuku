@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openexr"
+  "source": "openexr",
+  "description": "High dynamic-range image file format",
+  "homepage": "https://www.openexr.com/"
 }

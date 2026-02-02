@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "python-yq"
+  "source": "python-yq",
+  "description": "Command-line YAML and XML processor that wraps jq",
+  "homepage": "https://kislyuk.github.io/yq/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cycode"
+  "source": "cycode",
+  "description": "Boost security in your dev lifecycle via SAST, SCA, Secrets \u0026 IaC scanning",
+  "homepage": "https://github.com/cycodehq/cycode-cli"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "radare2"
+  "source": "radare2",
+  "description": "Reverse engineering framework",
+  "homepage": "https://radare.org"
 }

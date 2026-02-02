@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nushell"
+  "source": "nushell",
+  "description": "Modern shell for the GitHub era",
+  "homepage": "https://www.nushell.sh"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "jenkins-lts"
+  "source": "jenkins-lts",
+  "description": "Extendable open source continuous integration server",
+  "homepage": "https://www.jenkins.io/"
 }

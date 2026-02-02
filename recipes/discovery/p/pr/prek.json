@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "prek"
+  "source": "prek",
+  "description": "Pre-commit re-implemented in Rust",
+  "homepage": "https://github.com/j178/prek"
 }

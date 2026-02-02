@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "openshift-cli"
+  "source": "openshift-cli",
+  "description": "OpenShift command-line interface tools",
+  "homepage": "https://www.openshift.com/"
 }

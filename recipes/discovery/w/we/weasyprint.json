@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "weasyprint"
+  "source": "weasyprint",
+  "description": "Convert HTML to PDF",
+  "homepage": "https://www.courtbouillon.org/weasyprint"
 }

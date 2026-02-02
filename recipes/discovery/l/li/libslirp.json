@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libslirp"
+  "source": "libslirp",
+  "description": "General purpose TCP-IP emulator",
+  "homepage": "https://gitlab.freedesktop.org/slirp/libslirp"
 }

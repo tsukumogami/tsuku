@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "arduino-cli"
+  "source": "arduino-cli",
+  "description": "Arduino command-line interface",
+  "homepage": "https://arduino.github.io/arduino-cli/latest/"
 }

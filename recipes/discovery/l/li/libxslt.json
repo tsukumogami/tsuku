@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libxslt"
+  "source": "libxslt",
+  "description": "C XSLT library for GNOME",
+  "homepage": "http://xmlsoft.org/XSLT/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "mpg123"
+  "source": "mpg123",
+  "description": "MP3 player for Linux and UNIX",
+  "homepage": "https://www.mpg123.de/"
 }

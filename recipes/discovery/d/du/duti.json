@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "duti"
+  "source": "duti",
+  "description": "Select default apps for documents and URL schemes on macOS",
+  "homepage": "https://github.com/moretension/duti/"
 }

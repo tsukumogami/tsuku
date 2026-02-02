@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "freerdp"
+  "source": "freerdp",
+  "description": "X11 implementation of the Remote Desktop Protocol (RDP)",
+  "homepage": "https://www.freerdp.com/"
 }

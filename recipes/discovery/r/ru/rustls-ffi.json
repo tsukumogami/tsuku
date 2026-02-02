@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rustls-ffi"
+  "source": "rustls-ffi",
+  "description": "FFI bindings for the rustls TLS library",
+  "homepage": "https://github.com/rustls/rustls-ffi"
 }

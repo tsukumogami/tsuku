@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "freetype"
+  "source": "freetype",
+  "description": "Software library to render fonts",
+  "homepage": "https://www.freetype.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "groonga"
+  "source": "groonga",
+  "description": "Fulltext search engine and column store",
+  "homepage": "https://groonga.org/"
 }

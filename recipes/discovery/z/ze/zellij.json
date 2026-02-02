@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "zellij"
+  "source": "zellij",
+  "description": "Pluggable terminal workspace, with terminal multiplexer as the base feature",
+  "homepage": "https://zellij.dev"
 }

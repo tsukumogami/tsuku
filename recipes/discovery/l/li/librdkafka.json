@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "librdkafka"
+  "source": "librdkafka",
+  "description": "Apache Kafka C/C++ library",
+  "homepage": "https://github.com/confluentinc/librdkafka"
 }

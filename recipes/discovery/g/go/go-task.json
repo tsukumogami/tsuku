@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "go-task"
+  "source": "go-task",
+  "description": "Task is a task runner/build tool that aims to be simpler and easier to use",
+  "homepage": "https://taskfile.dev/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ruby-build"
+  "source": "ruby-build",
+  "description": "Install various Ruby versions and implementations",
+  "homepage": "https://rbenv.org/man/ruby-build.1"
 }

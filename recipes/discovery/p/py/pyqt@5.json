@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "pyqt@5"
+  "source": "pyqt@5",
+  "description": "Python bindings for v5 of Qt",
+  "homepage": "https://www.riverbankcomputing.com/software/pyqt/intro"
 }

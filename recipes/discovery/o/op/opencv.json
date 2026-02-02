@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "opencv"
+  "source": "opencv",
+  "description": "Open source computer vision library",
+  "homepage": "https://opencv.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "hl"
+  "source": "hl",
+  "description": "Fast and powerful log viewer and processor",
+  "homepage": "https://github.com/pamburus/hl"
 }

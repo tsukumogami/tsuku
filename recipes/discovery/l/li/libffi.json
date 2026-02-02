@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libffi"
+  "source": "libffi",
+  "description": "Portable Foreign Function Interface library",
+  "homepage": "https://sourceware.org/libffi/"
 }

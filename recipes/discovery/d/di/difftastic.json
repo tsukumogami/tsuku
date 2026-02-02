@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "difftastic"
+  "source": "difftastic",
+  "description": "Diff that understands syntax",
+  "homepage": "https://github.com/Wilfred/difftastic"
 }

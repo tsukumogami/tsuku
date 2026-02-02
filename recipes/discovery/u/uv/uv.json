@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "uv"
+  "source": "uv",
+  "description": "Extremely fast Python package installer and resolver, written in Rust",
+  "homepage": "https://docs.astral.sh/uv/"
 }

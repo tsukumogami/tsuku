@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tbb"
+  "source": "tbb",
+  "description": "Rich and complete approach to parallelism in C++",
+  "homepage": "https://uxlfoundation.github.io/oneTBB/"
 }

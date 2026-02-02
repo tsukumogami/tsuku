@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "talosctl"
+  "source": "talosctl",
+  "description": "CLI for out-of-band management of Kubernetes nodes created by Talos",
+  "homepage": "https://www.talos.dev/"
 }

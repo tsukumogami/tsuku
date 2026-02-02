@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "glm"
+  "source": "glm",
+  "description": "C++ mathematics library for graphics software",
+  "homepage": "https://glm.g-truc.net/"
 }

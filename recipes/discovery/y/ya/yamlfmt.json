@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "yamlfmt"
+  "source": "yamlfmt",
+  "description": "Extensible command-line tool to format YAML files",
+  "homepage": "https://github.com/google/yamlfmt"
 }

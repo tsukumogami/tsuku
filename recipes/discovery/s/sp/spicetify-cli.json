@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "spicetify-cli"
+  "source": "spicetify-cli",
+  "description": "Command-line tool to customize Spotify client",
+  "homepage": "https://spicetify.app/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "black"
+  "source": "black",
+  "description": "Python code formatter",
+  "homepage": "https://black.readthedocs.io/en/stable/"
 }

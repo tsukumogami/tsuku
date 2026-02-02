@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "tor"
+  "source": "tor",
+  "description": "Anonymizing overlay network for TCP",
+  "homepage": "https://www.torproject.org/"
 }

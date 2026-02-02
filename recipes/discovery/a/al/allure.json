@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "allure"
+  "source": "allure",
+  "description": "Flexible lightweight test report tool",
+  "homepage": "https://github.com/allure-framework/allure2"
 }

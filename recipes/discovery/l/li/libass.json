@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libass"
+  "source": "libass",
+  "description": "Subtitle renderer for the ASS/SSA subtitle format",
+  "homepage": "https://github.com/libass/libass"
 }

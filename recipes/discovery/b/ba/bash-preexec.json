@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "bash-preexec"
+  "source": "bash-preexec",
+  "description": "Preexec and precmd functions for Bash (like Zsh)",
+  "homepage": "https://github.com/rcaloras/bash-preexec"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "kcov"
+  "source": "kcov",
+  "description": "Code coverage tester for compiled programs, Python, and shell scripts",
+  "homepage": "https://simonkagstrom.github.io/kcov/"
 }

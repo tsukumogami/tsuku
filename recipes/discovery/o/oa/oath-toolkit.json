@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "oath-toolkit"
+  "source": "oath-toolkit",
+  "description": "Tools for one-time password authentication systems",
+  "homepage": "https://www.nongnu.org/oath-toolkit/"
 }

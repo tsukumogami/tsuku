@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "nss"
+  "source": "nss",
+  "description": "Libraries for security-enabled client and server applications",
+  "homepage": "https://firefox-source-docs.mozilla.org/security/nss/index.html"
 }

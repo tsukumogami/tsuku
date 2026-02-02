@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "gallery-dl"
+  "source": "gallery-dl",
+  "description": "Command-line downloader for image-hosting site galleries and collections",
+  "homepage": "https://github.com/mikf/gallery-dl"
 }

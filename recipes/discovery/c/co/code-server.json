@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "code-server"
+  "source": "code-server",
+  "description": "Access VS Code through the browser",
+  "homepage": "https://github.com/coder/code-server"
 }

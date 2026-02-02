@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "graphviz"
+  "source": "graphviz",
+  "description": "Graph visualization software from AT\u0026T and Bell Labs",
+  "homepage": "https://graphviz.org/"
 }

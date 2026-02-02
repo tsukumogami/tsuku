@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "fisher"
+  "source": "fisher",
+  "description": "Plugin manager for the Fish shell",
+  "homepage": "https://github.com/jorgebucaran/fisher"
 }

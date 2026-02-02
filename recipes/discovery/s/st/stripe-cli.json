@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "stripe-cli"
+  "source": "stripe-cli",
+  "description": "Command-line tool for Stripe",
+  "homepage": "https://docs.stripe.com/stripe-cli"
 }

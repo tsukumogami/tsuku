@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "autoconf"
+  "source": "autoconf",
+  "description": "Automatic configure script builder",
+  "homepage": "https://www.gnu.org/software/autoconf/"
 }

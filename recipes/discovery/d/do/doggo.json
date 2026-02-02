@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "doggo"
+  "source": "doggo",
+  "description": "Command-line DNS Client for Humans",
+  "homepage": "https://doggo.mrkaran.dev/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libvorbis"
+  "source": "libvorbis",
+  "description": "Vorbis general audio compression codec",
+  "homepage": "https://xiph.org/vorbis/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "sdl3"
+  "source": "sdl3",
+  "description": "Low-level access to audio, keyboard, mouse, joystick, and graphics",
+  "homepage": "https://libsdl.org/"
 }

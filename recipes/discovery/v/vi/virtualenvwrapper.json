@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "virtualenvwrapper"
+  "source": "virtualenvwrapper",
+  "description": "Python virtualenv extensions",
+  "homepage": "https://virtualenvwrapper.readthedocs.io/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "qemu"
+  "source": "qemu",
+  "description": "Generic machine emulator and virtualizer",
+  "homepage": "https://www.qemu.org/"
 }

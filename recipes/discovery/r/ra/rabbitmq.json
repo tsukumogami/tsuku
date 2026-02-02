@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rabbitmq"
+  "source": "rabbitmq",
+  "description": "Messaging and streaming broker",
+  "homepage": "https://www.rabbitmq.com"
 }

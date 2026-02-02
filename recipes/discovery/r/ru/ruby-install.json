@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ruby-install"
+  "source": "ruby-install",
+  "description": "Install Ruby, JRuby, Rubinius, TruffleRuby, or mruby",
+  "homepage": "https://github.com/postmodern/ruby-install"
 }

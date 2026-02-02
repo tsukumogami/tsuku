@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lima"
+  "source": "lima",
+  "description": "Linux virtual machines",
+  "homepage": "https://lima-vm.io/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "lld"
+  "source": "lld",
+  "description": "LLVM Project Linker",
+  "homepage": "https://lld.llvm.org/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "ghr"
+  "source": "ghr",
+  "description": "Upload multiple artifacts to GitHub Release in parallel",
+  "homepage": "https://github.com/tcnksm/ghr"
 }

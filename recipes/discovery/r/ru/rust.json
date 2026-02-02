@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "rust"
+  "source": "rust",
+  "description": "Safe, concurrent, practical language",
+  "homepage": "https://www.rust-lang.org/"
 }

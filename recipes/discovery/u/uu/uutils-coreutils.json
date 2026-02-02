@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "uutils-coreutils"
+  "source": "uutils-coreutils",
+  "description": "Cross-platform Rust rewrite of the GNU coreutils",
+  "homepage": "https://uutils.github.io/coreutils/"
 }

@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "putty"
+  "source": "putty",
+  "description": "Implementation of Telnet and SSH",
+  "homepage": "https://putty.software/"
 }

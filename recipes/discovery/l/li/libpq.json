@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "libpq"
+  "source": "libpq",
+  "description": "Postgres C API library",
+  "homepage": "https://www.postgresql.org/docs/current/libpq.html"
 }

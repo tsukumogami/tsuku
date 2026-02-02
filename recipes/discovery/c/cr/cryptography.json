@@ -1,4 +1,6 @@
 {
   "builder": "homebrew",
-  "source": "cryptography"
+  "source": "cryptography",
+  "description": "Cryptographic recipes and primitives for Python",
+  "homepage": "https://cryptography.io/en/latest/"
 }
