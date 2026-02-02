@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The ecosystem probe accepts any package name that exists on a registry as a valid match, regardless of whether the package is a placeholder, name-squatter, or unmaintained stub. This causes tools like prettier and httpie to resolve to crates.io squatters instead of their actual registries (npm and pypi).
 decision: |
@@ -12,7 +12,64 @@ rationale: |
 
 ## Status
 
-Accepted
+Planned
+
+## Implementation Issues
+
+### Milestone: [Probe Quality Filtering](https://github.com/tsukumogami/tsuku/milestone/66)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1405: add quality filter with RegistryEntry schema extension and Cargo builder](https://github.com/tsukumogami/tsuku/issues/1405) | [#1355](https://github.com/tsukumogami/tsuku/issues/1355) | testable |
+| _Walking skeleton: extends RegistryEntry with quality metadata fields, changes Probe() to return RegistryEntry, creates QualityFilter with per-registry thresholds, wires it into the resolver, and proves the full path with the Cargo builder. Also updates the remaining 6 builders with stub Probe() implementations so the codebase compiles._ | | |
+| [#1406: add quality metadata to npm and PyPI builders](https://github.com/tsukumogami/tsuku/issues/1406) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
+| _Updates the npm and PyPI builders to populate quality metadata in RegistryEntry. npm adds a parallel downloads API fetch; PyPI parses releases dict length and project URLs._ | | |
+| [#1407: add quality metadata to Gem and Go builders](https://github.com/tsukumogami/tsuku/issues/1407) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
+| _Updates the RubyGems and Go builders. Gem adds a parallel version count fetch and parses downloads from the main endpoint. Go adds a parallel /@v/list fetch for version count and parses Origin.URL._ | | |
+| [#1408: add quality metadata to CPAN and Cask builders](https://github.com/tsukumogami/tsuku/issues/1408) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
+| _Updates the MetaCPAN builder to fetch river metrics from the distribution endpoint, and the Cask builder to check deprecated/disabled flags. Completes the builder rollout._ | | |
+| [#1409: add integration tests for quality filtering](https://github.com/tsukumogami/tsuku/issues/1409) | [#1406](https://github.com/tsukumogami/tsuku/issues/1406), [#1407](https://github.com/tsukumogami/tsuku/issues/1407), [#1408](https://github.com/tsukumogami/tsuku/issues/1408) | testable |
+| _End-to-end integration tests with realistic squatter scenarios (prettier, httpie). Validates that the filter plus priority ranking resolves tools to the correct registry._ | | |
+| [#1410: wire QualityFilter into seed-discovery pipeline](https://github.com/tsukumogami/tsuku/issues/1410) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405), [#1354](https://github.com/tsukumogami/tsuku/issues/1354) | testable |
+| _Wires the same QualityFilter into the seed-discovery tool so batch-seeded entries pass through the same thresholds as runtime probes. Ensures consistent quality across all discovery paths._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph Phase1["Phase 1: Skeleton"]
+        I1405["#1405: Quality filter + Cargo builder"]
+    end
+
+    subgraph Phase2["Phase 2: Builder Rollout"]
+        I1406["#1406: npm + PyPI builders"]
+        I1407["#1407: Gem + Go builders"]
+        I1408["#1408: CPAN + Cask builders"]
+    end
+
+    subgraph Phase3["Phase 3: Integration"]
+        I1409["#1409: Integration tests"]
+        I1410["#1410: Seed-discovery wiring"]
+    end
+
+    I1405 --> I1406
+    I1405 --> I1407
+    I1405 --> I1408
+    I1406 --> I1409
+    I1407 --> I1409
+    I1408 --> I1409
+    I1405 --> I1410
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1405 ready
+    class I1406,I1407,I1408,I1409,I1410 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
