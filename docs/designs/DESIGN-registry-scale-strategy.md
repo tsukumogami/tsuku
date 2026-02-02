@@ -153,7 +153,7 @@ graph TD
     class I1266 done
     class I1190 needsDesign
     class I1277 needsDesign
-    class I1278 needsDesign
+    class I1278 blocked
     class I1412 blocked
     class I1191 blocked
 ```
