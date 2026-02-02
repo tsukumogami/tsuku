@@ -1,6 +1,0 @@
-{
-  "builder": "github",
-  "source": "kubernetes-sigs/kustomize",
-  "description": "Customization of kubernetes YAML configurations",
-  "repo": "https://github.com/kubernetes-sigs/kustomize"
-}

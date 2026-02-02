@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "sqlite",
-  "description": "Command-line interface for SQLite",
-  "homepage": "https://sqlite.org/index.html"
-}

@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "duf",
-  "description": "Disk Usage/Free Utility - a better 'df' alternative",
-  "homepage": "https://github.com/muesli/duf"
-}

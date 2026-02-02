@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "direnv/direnv",
-  "description": "unclutter your .profile",
-  "homepage": "http://direnv.net",
-  "repo": "https://github.com/direnv/direnv"
-}

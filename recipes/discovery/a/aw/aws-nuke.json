@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "aws-nuke",
-  "description": "Nuke a whole AWS account and delete all its resources",
-  "homepage": "https://github.com/ekristen/aws-nuke"
-}

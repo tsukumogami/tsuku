@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "nektos/act",
-  "description": "Run your GitHub Actions locally 🚀",
-  "homepage": "https://nektosact.com",
-  "repo": "https://github.com/nektos/act"
-}

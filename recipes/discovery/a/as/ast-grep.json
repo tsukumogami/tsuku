@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "ast-grep",
-  "description": "Code searching, linting, rewriting",
-  "homepage": "https://github.com/ast-grep/ast-grep"
-}

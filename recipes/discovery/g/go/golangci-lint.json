@@ -1,7 +1,0 @@
-{
-  "builder": "github",
-  "source": "golangci/golangci-lint",
-  "description": "Fast linters runner for Go",
-  "homepage": "https://golangci-lint.run",
-  "repo": "https://github.com/golangci/golangci-lint"
-}

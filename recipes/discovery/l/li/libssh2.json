@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "libssh2",
-  "description": "C library implementing the SSH2 protocol",
-  "homepage": "https://libssh2.org/"
-}

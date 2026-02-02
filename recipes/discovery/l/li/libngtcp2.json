@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "libngtcp2",
-  "description": "IETF QUIC protocol implementation",
-  "homepage": "https://nghttp2.org/ngtcp2/"
-}

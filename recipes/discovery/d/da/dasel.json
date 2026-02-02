@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "dasel",
-  "description": "JSON, YAML, TOML, XML, and CSV query and modification tool",
-  "homepage": "https://github.com/TomWright/dasel"
-}

@@ -1,6 +1,0 @@
-{
-  "builder": "homebrew",
-  "source": "brotli",
-  "description": "Generic-purpose lossless compression algorithm by Google",
-  "homepage": "https://github.com/google/brotli"
-}
