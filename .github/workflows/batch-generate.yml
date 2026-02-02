@@ -879,9 +879,13 @@ jobs:
           PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
           if [ "$EXCLUDED_COUNT" -eq 0 ]; then
             echo "All recipes passed validation — enabling auto-merge"
-            gh pr merge "$PR_NUMBER" --auto --squash \
-              --subject "feat(recipes): add batch ${{ inputs.ecosystem }} recipes (${INCLUDED_COUNT} recipes)" \
-              --body "Batch generation of ${INCLUDED_COUNT} packages from ${{ inputs.ecosystem }} ecosystem. All recipes passed validation across platform environments."
+            MERGE_ARGS=(--squash
+              --subject "feat(recipes): add batch ${{ inputs.ecosystem }} recipes (${INCLUDED_COUNT} recipes)"
+              --body "Batch generation of ${INCLUDED_COUNT} packages from ${{ inputs.ecosystem }} ecosystem. All recipes passed validation across platform environments.")
+            if ! gh pr merge "$PR_NUMBER" --auto "${MERGE_ARGS[@]}" 2>&1; then
+              echo "Auto-merge unavailable (no required checks?) — merging directly"
+              gh pr merge "$PR_NUMBER" "${MERGE_ARGS[@]}"
+            fi
           else
             echo "Some recipes were excluded — skipping auto-merge"
             gh pr comment "$PR_NUMBER" --body "Auto-merge was not enabled because ${EXCLUDED_COUNT} recipe(s) were excluded during validation. Please review the excluded recipes and merge manually."
