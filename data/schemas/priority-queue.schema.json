@@ -60,6 +60,10 @@
           "metadata": {
             "type": "object",
             "description": "Source-specific data (optional)"
+          },
+          "force_override": {
+            "type": "boolean",
+            "description": "When true, allows overwriting an existing recipe during batch generation"
           }
         },
         "additionalProperties": false

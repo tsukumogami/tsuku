@@ -228,8 +228,9 @@ func (o *Orchestrator) generate(bin string, pkg seed.Package, recipePath string)
 // On failure, it parses the structured JSON response from --json to extract
 // the failure category and missing dependency names.
 func (o *Orchestrator) validate(bin string, pkg seed.Package, recipePath string) generateResult {
-	args := []string{
-		"install", "--force", "--json", "--recipe", recipePath,
+	args := []string{"install", "--json", "--recipe", recipePath}
+	if pkg.ForceOverride {
+		args = append(args, "--force")
 	}
 
 	var lastErr error

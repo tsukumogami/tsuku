@@ -9,13 +9,14 @@ import (
 
 // Package represents a single entry in the priority queue.
 type Package struct {
-	ID       string         `json:"id"`
-	Source   string         `json:"source"`
-	Name     string         `json:"name"`
-	Tier     int            `json:"tier"`
-	Status   string         `json:"status"`
-	AddedAt  string         `json:"added_at"`
-	Metadata map[string]any `json:"metadata,omitempty"`
+	ID            string         `json:"id"`
+	Source        string         `json:"source"`
+	Name          string         `json:"name"`
+	Tier          int            `json:"tier"`
+	Status        string         `json:"status"`
+	AddedAt       string         `json:"added_at"`
+	Metadata      map[string]any `json:"metadata,omitempty"`
+	ForceOverride bool           `json:"force_override,omitempty"`
 }
 
 // PriorityQueue is the top-level structure matching priority-queue.schema.json.
