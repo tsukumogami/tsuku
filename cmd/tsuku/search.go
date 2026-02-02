@@ -8,13 +8,12 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/config"
 	"github.com/tsukumogami/tsuku/internal/install"
-	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 var searchCmd = &cobra.Command{
 	Use:   "search <query>",
 	Short: "Search for tools",
-	Long:  `Search for tools in the cached recipes by name or description.`,
+	Long:  `Search for tools by name or description across all available recipes.`,
 	Args:  cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		query := ""
@@ -23,8 +22,11 @@ var searchCmd = &cobra.Command{
 		}
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 
-		// Get all recipes
-		names := loader.List()
+		// Get all recipes from local, embedded, and registry sources
+		allRecipes, err := loader.ListAllWithSource()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to list recipes: %v\n", err)
+		}
 
 		// Filter and collect results
 		type result struct {
@@ -37,40 +39,31 @@ var searchCmd = &cobra.Command{
 		// Initialize install manager to check status
 		cfg, err := config.DefaultConfig()
 		if err != nil {
-			// If config fails, just assume nothing is installed
-			// This shouldn't really happen in practice
 			fmt.Fprintf(os.Stderr, "Warning: failed to load config: %v\n", err)
 		}
 		var installedTools []install.InstalledTool
 		if cfg != nil {
 			mgr := install.New(cfg)
-			installedTools, _ = mgr.List() // Ignore error, just treat as empty
+			installedTools, _ = mgr.List()
 		}
 
-		for _, name := range names {
-			r, err := loader.Get(name, recipe.LoaderOptions{})
-			if err != nil {
-				continue
-			}
-
-			// Check match
+		for _, ri := range allRecipes {
 			match := query == "" ||
-				strings.Contains(strings.ToLower(r.Metadata.Name), query) ||
-				strings.Contains(strings.ToLower(r.Metadata.Description), query)
+				strings.Contains(strings.ToLower(ri.Name), query) ||
+				strings.Contains(strings.ToLower(ri.Description), query)
 
 			if match {
-				// Check installed status
 				installedVer := ""
 				for _, t := range installedTools {
-					if t.Name == name {
+					if t.Name == ri.Name {
 						installedVer = t.Version
 						break
 					}
 				}
 
 				results = append(results, result{
-					Name:        r.Metadata.Name,
-					Description: r.Metadata.Description,
+					Name:        ri.Name,
+					Description: ri.Description,
 					Installed:   installedVer,
 				})
 			}
@@ -91,9 +84,9 @@ var searchCmd = &cobra.Command{
 
 		if len(results) == 0 {
 			if query == "" {
-				printInfo("No cached recipes found.")
+				printInfo("No recipes found.")
 			} else {
-				printInfof("No cached recipes found for '%s'.\n\n", query)
+				printInfof("No recipes found for '%s'.\n\n", query)
 				printInfo("Tip: You can still try installing it!")
 				printInfof("   Run: tsuku install %s\n", query)
 				printInfo("   (Tsuku will attempt to find and install it using AI)")
