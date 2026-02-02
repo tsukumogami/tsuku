@@ -450,6 +450,91 @@ func TestParseInstallJSON(t *testing.T) {
 	}
 }
 
+func TestValidate_forceOverrideFlag(t *testing.T) {
+	tmpDir := t.TempDir()
+	fakeBin := filepath.Join(tmpDir, "tsuku")
+	// Fake binary that checks for --force flag and writes result to a marker file
+	script := `#!/bin/sh
+case "$1" in
+  create)
+    while [ $# -gt 0 ]; do
+      case "$1" in
+        --output) shift; mkdir -p "$(dirname "$1")"; echo "[metadata]" > "$1"; shift ;;
+        *) shift ;;
+      esac
+    done
+    exit 0
+    ;;
+  install)
+    MARKER_DIR="` + tmpDir + `"
+    for arg in "$@"; do
+      if [ "$arg" = "--force" ]; then
+        echo "force" > "$MARKER_DIR/force_used"
+        exit 0
+      fi
+    done
+    echo "no-force" > "$MARKER_DIR/force_used"
+    exit 0
+    ;;
+esac
+`
+	if err := os.WriteFile(fakeBin, []byte(script), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	t.Run("without force_override", func(t *testing.T) {
+		os.Remove(filepath.Join(tmpDir, "force_used"))
+		queue := &seed.PriorityQueue{
+			SchemaVersion: 1,
+			Packages: []seed.Package{
+				{ID: "homebrew:testpkg", Name: "testpkg", Status: "pending", Tier: 1},
+			},
+		}
+		orch := NewOrchestrator(Config{
+			Ecosystem: "homebrew", BatchSize: 10, MaxTier: 3,
+			QueuePath: filepath.Join(tmpDir, "queue.json"),
+			OutputDir: filepath.Join(tmpDir, "recipes"),
+			TsukuBin:  fakeBin,
+		}, queue)
+		if _, err := orch.Run(); err != nil {
+			t.Fatal(err)
+		}
+		data, err := os.ReadFile(filepath.Join(tmpDir, "force_used"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := string(data); got != "no-force\n" {
+			t.Errorf("expected no-force, got %q", got)
+		}
+	})
+
+	t.Run("with force_override", func(t *testing.T) {
+		os.Remove(filepath.Join(tmpDir, "force_used"))
+		queue := &seed.PriorityQueue{
+			SchemaVersion: 1,
+			Packages: []seed.Package{
+				{ID: "homebrew:testpkg", Name: "testpkg", Status: "pending", Tier: 1, ForceOverride: true},
+			},
+		}
+		orch := NewOrchestrator(Config{
+			Ecosystem: "homebrew", BatchSize: 10, MaxTier: 3,
+			QueuePath: filepath.Join(tmpDir, "queue.json"),
+			OutputDir: filepath.Join(tmpDir, "recipes"),
+			TsukuBin:  fakeBin,
+		}, queue)
+		if _, err := orch.Run(); err != nil {
+			t.Fatal(err)
+		}
+		data, err := os.ReadFile(filepath.Join(tmpDir, "force_used"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := string(data); got != "force\n" {
+			t.Errorf("expected force, got %q", got)
+		}
+	})
+}
+
 func TestEcosystemRateLimits(t *testing.T) {
 	// Verify all expected ecosystems have rate limits
 	expected := map[string]time.Duration{
