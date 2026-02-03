@@ -1,10 +1,13 @@
 package discover
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
+
+	"github.com/tsukumogami/tsuku/internal/builders"
 )
 
 func TestGenerate_SeedsOnly(t *testing.T) {
@@ -322,7 +325,167 @@ func TestGenerate_MetadataWrittenToFiles(t *testing.T) {
 	}
 }
 
+func TestProbeAndFilter_EnrichesAndRejects(t *testing.T) {
+	// Use "crates.io" as builder name to match QualityFilter thresholds
+	// (100 downloads OR 5 versions).
+	entries := []SeedEntry{
+		{Name: "ripgrep", Builder: "crates.io", Source: "ripgrep"},
+		{Name: "squatter", Builder: "crates.io", Source: "squatter"},
+		{Name: "no-prober", Builder: "other", Source: "whatever"},
+	}
+
+	probers := map[string]builders.EcosystemProber{
+		"crates.io": &multiResultProber{
+			name: "crates.io",
+			results: map[string]*builders.ProbeResult{
+				"ripgrep":  {Source: "ripgrep", Downloads: 500, VersionCount: 20, HasRepository: true},
+				"squatter": {Source: "squatter", Downloads: 5, VersionCount: 1, HasRepository: false},
+			},
+		},
+	}
+
+	accepted, probed, rejections := ProbeAndFilter(context.Background(), entries, probers, false)
+
+	if probed != 2 {
+		t.Errorf("probed = %d, want 2", probed)
+	}
+	if len(rejections) != 1 {
+		t.Fatalf("rejections = %d, want 1", len(rejections))
+	}
+	if rejections[0].Entry.Name != "squatter" {
+		t.Errorf("rejected entry = %q, want squatter", rejections[0].Entry.Name)
+	}
+	if len(accepted) != 2 {
+		t.Fatalf("accepted = %d, want 2", len(accepted))
+	}
+
+	// Check that ripgrep was enriched
+	var rg SeedEntry
+	for _, e := range accepted {
+		if e.Name == "ripgrep" {
+			rg = e
+		}
+	}
+	if rg.Downloads != 500 {
+		t.Errorf("ripgrep Downloads = %d, want 500", rg.Downloads)
+	}
+	if rg.VersionCount != 20 {
+		t.Errorf("ripgrep VersionCount = %d, want 20", rg.VersionCount)
+	}
+	if !rg.HasRepository {
+		t.Error("ripgrep HasRepository = false, want true")
+	}
+
+	// Check that no-prober entry passed through unchanged
+	var np SeedEntry
+	for _, e := range accepted {
+		if e.Name == "no-prober" {
+			np = e
+		}
+	}
+	if np.Downloads != 0 || np.HasRepository {
+		t.Error("no-prober entry should be unchanged")
+	}
+}
+
+func TestProbeAndFilter_ProbeFailurePassesThrough(t *testing.T) {
+	entries := []SeedEntry{
+		{Name: "missing", Builder: "crates.io", Source: "missing"},
+	}
+	probers := map[string]builders.EcosystemProber{
+		"crates.io": &multiResultProber{
+			name:    "crates.io",
+			results: map[string]*builders.ProbeResult{}, // returns nil for "missing"
+		},
+	}
+
+	accepted, probed, rejections := ProbeAndFilter(context.Background(), entries, probers, false)
+	if probed != 0 {
+		t.Errorf("probed = %d, want 0 (nil result)", probed)
+	}
+	if len(rejections) != 0 {
+		t.Errorf("rejections = %d, want 0", len(rejections))
+	}
+	if len(accepted) != 1 {
+		t.Errorf("accepted = %d, want 1 (pass through)", len(accepted))
+	}
+}
+
+func TestGenerate_QualityFieldsWrittenToFiles(t *testing.T) {
+	dir := t.TempDir()
+	seedsDir := filepath.Join(dir, "seeds")
+	if err := os.Mkdir(seedsDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(seedsDir, "tools.json"), []byte(`{
+		"category": "test",
+		"entries": [
+			{"name": "good-tool", "builder": "homebrew", "source": "good-tool"}
+		]
+	}`), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	outputDir := filepath.Join(dir, "discovery")
+	result, err := Generate(GenerateConfig{
+		SeedsDir:  seedsDir,
+		OutputDir: outputDir,
+		Probers: map[string]builders.EcosystemProber{
+			"homebrew": &multiResultProber{
+				name: "homebrew",
+				results: map[string]*builders.ProbeResult{
+					"good-tool": {Source: "good-tool", Downloads: 1000, VersionCount: 10, HasRepository: true},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("Generate: %v", err)
+	}
+	if result.Probed != 1 {
+		t.Errorf("probed = %d, want 1", result.Probed)
+	}
+
+	entry, err := LoadRegistryEntry(outputDir, "good-tool")
+	if err != nil {
+		t.Fatalf("load good-tool: %v", err)
+	}
+	if entry.Downloads != 1000 {
+		t.Errorf("Downloads = %d, want 1000", entry.Downloads)
+	}
+	if entry.VersionCount != 10 {
+		t.Errorf("VersionCount = %d, want 10", entry.VersionCount)
+	}
+	if !entry.HasRepository {
+		t.Error("HasRepository = false, want true")
+	}
+}
+
 // Test helpers
+
+// multiResultProber implements builders.EcosystemProber with per-name results.
+type multiResultProber struct {
+	name    string
+	results map[string]*builders.ProbeResult
+}
+
+func (m *multiResultProber) Name() string { return m.name }
+
+func (m *multiResultProber) Probe(_ context.Context, name string) (*builders.ProbeResult, error) {
+	r, ok := m.results[name]
+	if !ok {
+		return nil, nil
+	}
+	return r, nil
+}
+
+func (m *multiResultProber) RequiresLLM() bool { return false }
+func (m *multiResultProber) CanBuild(_ context.Context, _ builders.BuildRequest) (bool, error) {
+	return false, nil
+}
+func (m *multiResultProber) NewSession(_ context.Context, _ builders.BuildRequest, _ *builders.SessionOptions) (builders.BuildSession, error) {
+	return nil, nil
+}
 
 type enrichingValidator struct {
 	meta *EntryMetadata
