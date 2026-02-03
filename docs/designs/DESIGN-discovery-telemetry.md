@@ -1,5 +1,5 @@
 ---
-status: Complete
+status: Current
 problem: |
   The discovery resolver runs through up to three stages (registry lookup, ecosystem probe, LLM discovery) but produces no telemetry. There's no visibility into how often each stage fires, what tools users search for, or where resolution fails. Without this data, we can't prioritize registry curation, measure ecosystem probe reliability, or evaluate LLM discovery effectiveness once it ships.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Complete
+Current
 
 ## Implementation Issues
 
@@ -22,25 +22,6 @@ Complete
 | ~~[#1423: add backend support for discovery events](https://github.com/tsukumogami/tsuku/issues/1423)~~ | ~~None~~ | ~~testable~~ |
 | ~~[#1424: add /stats/discovery endpoint](https://github.com/tsukumogami/tsuku/issues/1424)~~ | ~~[#1423](https://github.com/tsukumogami/tsuku/issues/1423)~~ | ~~testable~~ |
 | ~~[#1425: add discovery stats section to dashboard](https://github.com/tsukumogami/tsuku/issues/1425)~~ | ~~[#1424](https://github.com/tsukumogami/tsuku/issues/1424)~~ | ~~simple~~ |
-
-### Dependency Graph
-
-```mermaid
-graph LR
-    I1319["#1319: CLI telemetry events"]
-    I1423["#1423: Backend support"]
-    I1424["#1424: Stats endpoint"]
-    I1425["#1425: Dashboard section"]
-
-    I1423 --> I1424
-    I1424 --> I1425
-
-    classDef done fill:#c8e6c9
-
-    class I1319,I1423,I1424,I1425 done
-```
-
-**Legend**: Green = done
 
 ## Context and Problem Statement
 
