@@ -30,7 +30,7 @@ Planned
 | _Updates the MetaCPAN builder to fetch river metrics from the distribution endpoint. Cask and Homebrew formula metadata were completed in #1406._ | | |
 | [#1409: add integration tests for quality filtering](https://github.com/tsukumogami/tsuku/issues/1409) | [#1406](https://github.com/tsukumogami/tsuku/issues/1406), [#1407](https://github.com/tsukumogami/tsuku/issues/1407), [#1408](https://github.com/tsukumogami/tsuku/issues/1408) | testable |
 | _End-to-end integration tests with realistic squatter scenarios (prettier, httpie). Validates that the filter plus priority ranking resolves tools to the correct registry._ | | |
-| [#1410: wire QualityFilter into seed-discovery pipeline](https://github.com/tsukumogami/tsuku/issues/1410) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405), [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
+| ~~[#1410: wire QualityFilter into seed-discovery pipeline](https://github.com/tsukumogami/tsuku/issues/1410)~~ | [#1405](https://github.com/tsukumogami/tsuku/issues/1405), [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
 | _Wires the same QualityFilter into the seed-discovery tool so batch-seeded entries pass through the same thresholds as runtime probes. Ensures consistent quality across all discovery paths._ | | |
 
 ### Dependency Graph
@@ -67,7 +67,8 @@ graph TD
 
     class I1405 done
     class I1406 done
-    class I1407,I1408,I1410 ready
+    class I1407,I1408 ready
+    class I1410 done
     class I1409 blocked
 ```
 
