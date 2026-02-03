@@ -355,6 +355,164 @@ describe("tsuku-telemetry worker", () => {
     });
   });
 
+  describe("GET /stats/discovery", () => {
+    it("returns aggregated discovery statistics", async () => {
+      // Mock the Analytics Engine API responses for stage query
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(
+          200,
+          JSON.stringify({
+            data: [
+              { action: "discovery_registry_hit", count: 500 },
+              { action: "discovery_ecosystem_hit", count: 200 },
+              { action: "discovery_llm_hit", count: 10 },
+              { action: "discovery_not_found", count: 50 },
+              { action: "discovery_error", count: 15 },
+              { action: "discovery_disambiguation", count: 25 },
+            ],
+            meta: [],
+            rows: 6,
+          })
+        )
+        .times(1);
+
+      // Mock for top not-found query
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(
+          200,
+          JSON.stringify({
+            data: [
+              { tool_name: "sometool", count: 30 },
+              { tool_name: "othertool", count: 15 },
+              { tool_name: "raretool", count: 5 },
+            ],
+            meta: [],
+            rows: 3,
+          })
+        )
+        .times(1);
+
+      const response = await SELF.fetch("http://localhost/stats/discovery");
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe("application/json");
+
+      const stats = (await response.json()) as {
+        generated_at: string;
+        period: string;
+        total_lookups: number;
+        by_stage: {
+          registry: number;
+          ecosystem: number;
+          llm: number;
+          not_found: number;
+        };
+        top_not_found: { name: string; count: number }[];
+        error_rate: number;
+      };
+
+      expect(stats.generated_at).toBeDefined();
+      expect(stats.period).toBe("all_time");
+      // Total: 500 + 200 + 10 + 50 + 15 + 25 = 800
+      expect(stats.total_lookups).toBe(800);
+      expect(stats.by_stage).toEqual({
+        registry: 500,
+        ecosystem: 200,
+        llm: 10,
+        not_found: 50,
+      });
+      expect(stats.top_not_found).toHaveLength(3);
+      expect(stats.top_not_found[0]).toEqual({ name: "sometool", count: 30 });
+      // Error rate: 15 / 800 = 0.01875
+      expect(stats.error_rate).toBeCloseTo(0.01875);
+    });
+
+    it("handles empty data", async () => {
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(
+          200,
+          JSON.stringify({
+            meta: [],
+            rows: 0,
+          })
+        )
+        .times(2);
+
+      const response = await SELF.fetch("http://localhost/stats/discovery");
+      expect(response.status).toBe(200);
+
+      const stats = (await response.json()) as {
+        total_lookups: number;
+        by_stage: {
+          registry: number;
+          ecosystem: number;
+          llm: number;
+          not_found: number;
+        };
+        top_not_found: { name: string; count: number }[];
+        error_rate: number;
+      };
+
+      expect(stats.total_lookups).toBe(0);
+      expect(stats.by_stage).toEqual({
+        registry: 0,
+        ecosystem: 0,
+        llm: 0,
+        not_found: 0,
+      });
+      expect(stats.top_not_found).toEqual([]);
+      expect(stats.error_rate).toBe(0);
+    });
+
+    it("returns 500 on API error", async () => {
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(401, "Unauthorized")
+        .times(2);
+
+      const response = await SELF.fetch("http://localhost/stats/discovery");
+      expect(response.status).toBe(500);
+
+      const error = (await response.json()) as { error: string };
+      expect(error.error).toContain("Analytics Engine query failed");
+    });
+
+    it("includes CORS headers", async () => {
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(
+          200,
+          JSON.stringify({ data: [], meta: [], rows: 0 })
+        )
+        .times(2);
+
+      const response = await SELF.fetch("http://localhost/stats/discovery");
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    });
+  });
+
   describe("POST /event", () => {
     it("returns ok for valid install event", async () => {
       const response = await SELF.fetch("http://localhost/event", {
@@ -1139,6 +1297,339 @@ describe("tsuku-telemetry worker", () => {
       });
       expect(response.status).toBe(400);
       expect(await response.text()).toContain("failures is required");
+    });
+  });
+
+  describe("POST /event (discovery events)", () => {
+    // Common fields for discovery events
+    const baseFields = {
+      os: "linux",
+      arch: "amd64",
+      tsuku_version: "0.3.0",
+    };
+
+    // Valid discovery events
+    it("returns ok for valid discovery_registry_hit event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_registry_hit",
+          tool_name: "ripgrep",
+          confidence: "registry",
+          builder: "github",
+          source: "BurntSushi/ripgrep",
+          duration_ms: 50,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid discovery_ecosystem_hit event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_ecosystem_hit",
+          tool_name: "bat",
+          confidence: "ecosystem",
+          builder: "cargo",
+          source: "bat",
+          duration_ms: 120,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid discovery_llm_hit event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_llm_hit",
+          tool_name: "some-obscure-tool",
+          confidence: "llm",
+          builder: "github",
+          source: "owner/some-obscure-tool",
+          duration_ms: 2500,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid discovery_not_found event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_not_found",
+          tool_name: "nonexistent-tool",
+          duration_ms: 3000,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid discovery_disambiguation event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_disambiguation",
+          tool_name: "serve",
+          builder: "cargo",
+          source: "vercel/serve",
+          match_count: 3,
+          duration_ms: 200,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    it("returns ok for valid discovery_error event", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_error",
+          tool_name: "broken-tool",
+          error_category: "network_error",
+          duration_ms: 5000,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.text()).toBe("ok");
+    });
+
+    // Validation: missing common fields
+    it("returns 400 for discovery event missing os", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_registry_hit",
+          tool_name: "ripgrep",
+          confidence: "registry",
+          builder: "github",
+          arch: "amd64",
+          tsuku_version: "0.3.0",
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("os is required");
+    });
+
+    it("returns 400 for discovery event missing arch", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_registry_hit",
+          tool_name: "ripgrep",
+          confidence: "registry",
+          builder: "github",
+          os: "linux",
+          tsuku_version: "0.3.0",
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("arch is required");
+    });
+
+    it("returns 400 for discovery event missing tsuku_version", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_registry_hit",
+          tool_name: "ripgrep",
+          confidence: "registry",
+          builder: "github",
+          os: "linux",
+          arch: "amd64",
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("tsuku_version is required");
+    });
+
+    // Validation: tool_name
+    it("returns 400 for discovery event missing tool_name", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_registry_hit",
+          confidence: "registry",
+          builder: "github",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("tool_name is required");
+    });
+
+    it("returns 400 for tool_name exceeding max length", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_not_found",
+          tool_name: "a".repeat(129), // exceeds 128 char limit
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("tool_name exceeds max length");
+    });
+
+    it("returns 400 for tool_name with invalid pattern", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_not_found",
+          tool_name: "Invalid_Tool", // uppercase and underscore not allowed
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("tool_name must match");
+    });
+
+    it("returns 400 for tool_name starting with hyphen", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_not_found",
+          tool_name: "-invalid",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("tool_name must match");
+    });
+
+    // Validation: source length
+    it("returns 400 for source exceeding max length", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_registry_hit",
+          tool_name: "ripgrep",
+          confidence: "registry",
+          builder: "github",
+          source: "a".repeat(257), // exceeds 256 char limit
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("source exceeds max length");
+    });
+
+    // Validation: hit actions require confidence and builder
+    it("returns 400 for discovery_registry_hit missing confidence", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_registry_hit",
+          tool_name: "ripgrep",
+          builder: "github",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("confidence is required");
+    });
+
+    it("returns 400 for discovery_registry_hit missing builder", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_registry_hit",
+          tool_name: "ripgrep",
+          confidence: "registry",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("builder is required");
+    });
+
+    it("returns 400 for discovery_ecosystem_hit missing confidence", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_ecosystem_hit",
+          tool_name: "bat",
+          builder: "cargo",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("confidence is required");
+    });
+
+    it("returns 400 for discovery_llm_hit missing builder", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_llm_hit",
+          tool_name: "some-tool",
+          confidence: "llm",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("builder is required");
+    });
+
+    // Validation: disambiguation requires builder
+    it("returns 400 for discovery_disambiguation missing builder", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_disambiguation",
+          tool_name: "serve",
+          match_count: 3,
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("builder is required");
+    });
+
+    // Validation: error requires error_category
+    it("returns 400 for discovery_error missing error_category", async () => {
+      const response = await SELF.fetch("http://localhost/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "discovery_error",
+          tool_name: "broken-tool",
+          ...baseFields,
+        }),
+      });
+      expect(response.status).toBe(400);
+      expect(await response.text()).toContain("error_category is required");
     });
   });
 

@@ -48,7 +48,7 @@ Planned
 | _Implement the `EcosystemProber` interface and `EcosystemProbe` resolver that queries all seven ecosystem builders in parallel with a 3-second timeout. Includes threshold filtering (age >90 days, downloads >1000/month) and the `ProbeResult` type._ | | |
 | [#1318: LLM discovery](https://github.com/tsukumogami/tsuku/issues/1318) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | critical |
 | _Implement the `LLMDiscovery` resolver: web search via LLM, structured JSON extraction, GitHub API verification (existence, archived status, ownership), rich confirmation prompt with metadata, and prompt injection defenses (HTML stripping, URL validation)._ | | |
-| [#1319: Telemetry events](https://github.com/tsukumogami/tsuku/issues/1319) | [#1338](https://github.com/tsukumogami/tsuku/issues/1338) | simple |
+| ~~[#1319: Telemetry events](https://github.com/tsukumogami/tsuku/issues/1319)~~ | ~~[#1338](https://github.com/tsukumogami/tsuku/issues/1338)~~ | ~~simple~~ |
 | _Emit telemetry events for discovery usage: which stage resolved the tool, whether disambiguation was needed, LLM discovery usage rates. Hooks into the install fallback path from #1338._ | | |
 | [#1321: Disambiguation](https://github.com/tsukumogami/tsuku/issues/1321) | [#1317](https://github.com/tsukumogami/tsuku/issues/1317) | critical |
 | _Implement edit-distance checking against registry entries, popularity ranking by download count, the 10x auto-select rule, interactive prompting for close matches, and non-interactive error handling. Consumes `ProbeResult` metadata from #1317._ | | |
@@ -106,7 +106,7 @@ graph TD
 
     class I1312,I1313,I1314 done
     class I1337,I1338 done
-    class I1319 ready
+    class I1319 done
     class I1317 done
     class I1318 needsDesign
     class M65 ready

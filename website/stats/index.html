@@ -330,6 +330,7 @@
 
     <script>
         const API_URL = 'https://telemetry.tsuku.dev/stats';
+        const DISCOVERY_API_URL = 'https://telemetry.tsuku.dev/stats/discovery';
 
         function formatNumber(num) {
             return num.toLocaleString();
@@ -346,7 +347,7 @@
             });
         }
 
-        function renderStats(data) {
+        function renderStats(data, discoveryData) {
             const container = document.getElementById('stats-content');
             const maxInstalls = data.recipes.length > 0 ? data.recipes[0].installs : 1;
 
@@ -354,6 +355,79 @@
             const totalByArch = Object.values(data.by_arch).reduce((a, b) => a + b, 0);
 
             const topRecipe = data.recipes.length > 0 ? data.recipes[0] : null;
+
+            // Discovery stats calculations
+            let discoverySection = '';
+            if (discoveryData) {
+                const stageTotal = discoveryData.by_stage.registry + discoveryData.by_stage.ecosystem +
+                                   discoveryData.by_stage.llm + discoveryData.by_stage.not_found;
+                const maxNotFound = discoveryData.top_not_found.length > 0 ?
+                    discoveryData.top_not_found[0].count : 1;
+
+                const stageItems = [
+                    { label: 'Registry', count: discoveryData.by_stage.registry },
+                    { label: 'Ecosystem', count: discoveryData.by_stage.ecosystem },
+                    { label: 'LLM', count: discoveryData.by_stage.llm },
+                    { label: 'Not Found', count: discoveryData.by_stage.not_found }
+                ].map(stage => {
+                    const percent = stageTotal > 0 ? (stage.count / stageTotal * 100).toFixed(0) : 0;
+                    return `
+                        <div class="distribution-item">
+                            <span class="distribution-label">${stage.label}</span>
+                            <div class="distribution-bar-container">
+                                <div class="distribution-bar" style="width: ${percent}%"></div>
+                            </div>
+                            <span class="distribution-percent">${percent}%</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const notFoundItems = discoveryData.top_not_found.slice(0, 5).map(tool => {
+                    const barWidth = (tool.count / maxNotFound * 100).toFixed(0);
+                    return `
+                        <div class="distribution-item">
+                            <span class="distribution-label" style="width: 80px; font-family: 'SF Mono', Consolas, monospace;">${tool.name}</span>
+                            <div class="distribution-bar-container">
+                                <div class="distribution-bar" style="width: ${barWidth}%"></div>
+                            </div>
+                            <span class="distribution-percent">${formatNumber(tool.count)}</span>
+                        </div>
+                    `;
+                }).join('');
+
+                const notFoundCard = discoveryData.top_not_found.length > 0 ? `
+                    <div class="distribution-card">
+                        <h3>Top Missing Tools</h3>
+                        ${notFoundItems}
+                    </div>
+                ` : '';
+
+                discoverySection = `
+                    <div class="recipes-section">
+                        <h2 class="section-title">Discovery Resolver</h2>
+                        <div class="overview" style="margin-bottom: 1.5rem;">
+                            <div class="stat-card">
+                                <div class="value">${formatNumber(discoveryData.total_lookups)}</div>
+                                <div class="label">Lookups</div>
+                                <div class="sublabel">total</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="value">${(discoveryData.error_rate * 100).toFixed(1)}%</div>
+                                <div class="label">Error Rate</div>
+                                <div class="sublabel">failures</div>
+                            </div>
+                        </div>
+
+                        <div class="distribution-grid" style="margin-bottom: 1.5rem;">
+                            <div class="distribution-card">
+                                <h3>Resolution Stage</h3>
+                                ${stageItems}
+                            </div>
+                            ${notFoundCard}
+                        </div>
+                    </div>
+                `;
+            }
 
             container.innerHTML = `
                 <div class="stats-header">
@@ -436,6 +510,8 @@
                             }).join('')}
                     </div>
                 </div>
+
+                ${discoverySection}
             `;
         }
 
@@ -460,12 +536,29 @@
             `;
 
             try {
-                const response = await fetch(API_URL);
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                // Fetch both endpoints in parallel
+                const [statsResponse, discoveryResponse] = await Promise.all([
+                    fetch(API_URL),
+                    fetch(DISCOVERY_API_URL).catch(() => null) // Discovery is optional
+                ]);
+
+                if (!statsResponse.ok) {
+                    throw new Error(`HTTP ${statsResponse.status}`);
                 }
-                const data = await response.json();
-                renderStats(data);
+
+                const data = await statsResponse.json();
+
+                // Parse discovery data if available
+                let discoveryData = null;
+                if (discoveryResponse && discoveryResponse.ok) {
+                    try {
+                        discoveryData = await discoveryResponse.json();
+                    } catch (e) {
+                        console.warn('Failed to parse discovery stats:', e);
+                    }
+                }
+
+                renderStats(data, discoveryData);
             } catch (error) {
                 console.error('Failed to load stats:', error);
                 renderError('Unable to connect to the telemetry service. The service may be temporarily unavailable.');
