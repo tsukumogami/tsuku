@@ -148,3 +148,99 @@ func NewLLMCircuitBreakerTripEvent(provider string, failures int) LLMEvent {
 	e.Failures = failures
 	return e
 }
+
+// DiscoveryEvent represents a telemetry event for discovery resolver operations.
+type DiscoveryEvent struct {
+	Action        string `json:"action"`                   // discovery_* action type
+	ToolName      string `json:"tool_name"`                // Normalized tool name searched
+	Confidence    string `json:"confidence,omitempty"`     // Winning stage: "registry", "ecosystem", "llm"
+	Builder       string `json:"builder,omitempty"`        // Builder name (github, cargo, pip, etc.)
+	Source        string `json:"source,omitempty"`         // Source identifier (e.g., "sharkdp/bat")
+	MatchCount    int    `json:"match_count,omitempty"`    // Number of matches (disambiguation)
+	ErrorCategory string `json:"error_category,omitempty"` // Error type on failure
+	DurationMs    int64  `json:"duration_ms"`              // Total resolution time in milliseconds
+	OS            string `json:"os"`                       // Operating system
+	Arch          string `json:"arch"`                     // CPU architecture
+	TsukuVersion  string `json:"tsuku_version"`            // Version of tsuku CLI
+	SchemaVersion string `json:"schema_version"`           // Event schema version
+}
+
+// discoverySchemaVersion is the schema version for discovery events.
+const discoverySchemaVersion = "1"
+
+// newBaseDiscoveryEvent creates a DiscoveryEvent with common fields pre-filled.
+func newBaseDiscoveryEvent() DiscoveryEvent {
+	return DiscoveryEvent{
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		TsukuVersion:  buildinfo.Version(),
+		SchemaVersion: discoverySchemaVersion,
+	}
+}
+
+// NewDiscoveryRegistryHitEvent creates an event for a successful registry lookup.
+func NewDiscoveryRegistryHitEvent(toolName, builder, source string, durationMs int64) DiscoveryEvent {
+	e := newBaseDiscoveryEvent()
+	e.Action = "discovery_registry_hit"
+	e.ToolName = toolName
+	e.Confidence = "registry"
+	e.Builder = builder
+	e.Source = source
+	e.DurationMs = durationMs
+	return e
+}
+
+// NewDiscoveryEcosystemHitEvent creates an event for a successful ecosystem probe.
+func NewDiscoveryEcosystemHitEvent(toolName, builder, source string, durationMs int64) DiscoveryEvent {
+	e := newBaseDiscoveryEvent()
+	e.Action = "discovery_ecosystem_hit"
+	e.ToolName = toolName
+	e.Confidence = "ecosystem"
+	e.Builder = builder
+	e.Source = source
+	e.DurationMs = durationMs
+	return e
+}
+
+// NewDiscoveryLLMHitEvent creates an event for a successful LLM discovery.
+func NewDiscoveryLLMHitEvent(toolName, builder, source string, durationMs int64) DiscoveryEvent {
+	e := newBaseDiscoveryEvent()
+	e.Action = "discovery_llm_hit"
+	e.ToolName = toolName
+	e.Confidence = "llm"
+	e.Builder = builder
+	e.Source = source
+	e.DurationMs = durationMs
+	return e
+}
+
+// NewDiscoveryNotFoundEvent creates an event when no stage found a match.
+func NewDiscoveryNotFoundEvent(toolName string, durationMs int64) DiscoveryEvent {
+	e := newBaseDiscoveryEvent()
+	e.Action = "discovery_not_found"
+	e.ToolName = toolName
+	e.DurationMs = durationMs
+	return e
+}
+
+// NewDiscoveryDisambiguationEvent creates an event when multiple matches were found.
+func NewDiscoveryDisambiguationEvent(toolName, builder, source string, matchCount int, durationMs int64) DiscoveryEvent {
+	e := newBaseDiscoveryEvent()
+	e.Action = "discovery_disambiguation"
+	e.ToolName = toolName
+	e.Builder = builder
+	e.Source = source
+	e.MatchCount = matchCount
+	e.DurationMs = durationMs
+	return e
+}
+
+// NewDiscoveryErrorEvent creates an event when a resolver stage failed.
+func NewDiscoveryErrorEvent(toolName, errorCategory string, durationMs int64) DiscoveryEvent {
+	e := newBaseDiscoveryEvent()
+	e.Action = "discovery_error"
+	e.ToolName = toolName
+	e.ErrorCategory = errorCategory
+	e.DurationMs = durationMs
+	return e
+}
