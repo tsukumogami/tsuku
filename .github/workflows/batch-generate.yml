@@ -1,5 +1,7 @@
 name: Batch Recipe Generation
 on:
+  schedule:
+    - cron: '0 */3 * * *'
   workflow_dispatch:
     inputs:
       ecosystem:
@@ -27,6 +29,11 @@ on:
         type: choice
         options: ['1', '2', '3']
 
+env:
+  ECOSYSTEM: ${{ inputs.ecosystem || 'homebrew' }}
+  BATCH_SIZE: ${{ inputs.batch_size || '10' }}
+  TIER: ${{ inputs.tier || '2' }}
+
 concurrency:
   group: batch-generate
   cancel-in-progress: false
@@ -46,35 +53,35 @@ jobs:
       - name: Preflight circuit breaker check
         id: preflight
         run: |
-          STATE=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
+          STATE=$(jq -r --arg eco "${{ env.ECOSYSTEM }}" \
             '.circuit_breaker[$eco].state // "closed"' batch-control.json)
 
           if [ "$STATE" = "open" ]; then
-            OPENS_AT=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
+            OPENS_AT=$(jq -r --arg eco "${{ env.ECOSYSTEM }}" \
               '.circuit_breaker[$eco].opens_at // ""' batch-control.json)
             NOW=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
             if [ -n "$OPENS_AT" ] && [[ "$NOW" > "$OPENS_AT" ]]; then
               # Timeout expired: transition to half-open for probe
-              jq --arg eco "${{ inputs.ecosystem }}" --arg now "$NOW" \
+              jq --arg eco "${{ env.ECOSYSTEM }}" --arg now "$NOW" \
                 '.circuit_breaker[$eco].state = "half-open"' \
                 batch-control.json > batch-control.tmp && mv batch-control.tmp batch-control.json
               STATE="half-open"
-              echo "::notice::Circuit breaker transitioned to half-open for ${{ inputs.ecosystem }} (recovery timeout expired). Running probe batch (size=1)."
+              echo "::notice::Circuit breaker transitioned to half-open for ${{ env.ECOSYSTEM }} (recovery timeout expired). Running probe batch (size=1)."
               echo "batch_size_override=1" >> "$GITHUB_OUTPUT"
             else
-              FAILURES=$(jq -r --arg eco "${{ inputs.ecosystem }}" \
+              FAILURES=$(jq -r --arg eco "${{ env.ECOSYSTEM }}" \
                 '.circuit_breaker[$eco].failures // 0' batch-control.json)
-              echo "::error::Circuit breaker is OPEN for ${{ inputs.ecosystem }} (${FAILURES} consecutive failures, recovery at: ${OPENS_AT}). Skipping batch generation."
+              echo "::error::Circuit breaker is OPEN for ${{ env.ECOSYSTEM }} (${FAILURES} consecutive failures, recovery at: ${OPENS_AT}). Skipping batch generation."
               exit 1
             fi
           fi
 
           if [ "$STATE" = "half-open" ]; then
-            echo "Circuit breaker is half-open for ${{ inputs.ecosystem }}. Running probe batch (size=1)."
+            echo "Circuit breaker is half-open for ${{ env.ECOSYSTEM }}. Running probe batch (size=1)."
             echo "batch_size_override=1" >> "$GITHUB_OUTPUT"
           else
-            echo "Circuit breaker check passed for ${{ inputs.ecosystem }} (state: ${STATE})"
+            echo "Circuit breaker check passed for ${{ env.ECOSYSTEM }} (state: ${STATE})"
           fi
 
       - uses: actions/setup-go@v5
@@ -94,11 +101,11 @@ jobs:
       - name: Run batch generation
         run: |
           OVERRIDE="${{ steps.preflight.outputs.batch_size_override }}"
-          BATCH_SIZE="${OVERRIDE:-${{ inputs.batch_size }}}"
+          BATCH_SIZE="${OVERRIDE:-${{ env.BATCH_SIZE }}}"
           ./batch-generate \
-            -ecosystem "${{ inputs.ecosystem }}" \
+            -ecosystem "${{ env.ECOSYSTEM }}" \
             -batch-size "$BATCH_SIZE" \
-            -tier "${{ inputs.tier }}"
+            -tier "${{ env.TIER }}"
 
       - name: Requeue unblocked packages
         run: ./scripts/requeue-unblocked.sh
@@ -635,7 +642,7 @@ jobs:
           INCLUDED_RECIPES=""
           EXCLUDED_RECIPES=""
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          FAILURE_JSONL="data/failures/${{ inputs.ecosystem }}.jsonl"
+          FAILURE_JSONL="data/failures/${{ env.ECOSYSTEM }}.jsonl"
           mkdir -p "$(dirname "$FAILURE_JSONL")"
 
           for recipe in $RECIPES; do
@@ -732,7 +739,7 @@ jobs:
       - name: Generate batch ID
         run: |
           BATCH_DATE=$(date -u +%Y-%m-%d)
-          BATCH_ID="${BATCH_DATE}-${{ inputs.ecosystem }}"
+          BATCH_ID="${BATCH_DATE}-${{ env.ECOSYSTEM }}"
 
           # Check for existing same-day batches to add sequence number
           EXISTING=$(git log --oneline --all --grep="batch_id: ${BATCH_ID}" | wc -l)
@@ -752,7 +759,7 @@ jobs:
             OUTCOME="failure"
           fi
           echo "Circuit breaker outcome: $OUTCOME"
-          ./scripts/update_breaker.sh "${{ inputs.ecosystem }}" "$OUTCOME"
+          ./scripts/update_breaker.sh "${{ env.ECOSYSTEM }}" "$OUTCOME"
 
       - name: Requeue unblocked packages
         run: ./scripts/requeue-unblocked.sh
@@ -776,7 +783,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add batch-control.json
-          git commit -m "chore(batch): update circuit breaker state for ${{ inputs.ecosystem }}"
+          git commit -m "chore(batch): update circuit breaker state for ${{ env.ECOSYSTEM }}"
           git push
         env:
           GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}
@@ -786,17 +793,17 @@ jobs:
         run: |
           # Update queue statuses for processed recipes
           for recipe in $INCLUDED_RECIPES; do
-            jq --arg pkg "${{ inputs.ecosystem }}:${recipe}" \
+            jq --arg pkg "${{ env.ECOSYSTEM }}:${recipe}" \
               '(.packages[] | select(.id == $pkg)).status = "success"' \
               data/priority-queue.json > tmp.json && mv tmp.json data/priority-queue.json
           done
           for recipe in $EXCLUDED_RECIPES; do
-            jq --arg pkg "${{ inputs.ecosystem }}:${recipe}" \
+            jq --arg pkg "${{ env.ECOSYSTEM }}:${recipe}" \
               '(.packages[] | select(.id == $pkg)).status = "failed"' \
               data/priority-queue.json > tmp.json && mv tmp.json data/priority-queue.json
           done
 
-          BRANCH="batch/${{ inputs.ecosystem }}-$(date +%Y%m%d-%H%M%S)"
+          BRANCH="batch/${{ env.ECOSYSTEM }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
           git add recipes/ data/ batch-control.json
           git reset HEAD -- data/batch-summary.md 2>/dev/null || true
@@ -813,12 +820,12 @@ jobs:
           {
             echo "feat(recipes): add batch ${BATCH_ID} recipes"
             echo ""
-            echo "Batch generation of ${TOTAL} packages from ${{ inputs.ecosystem }} ecosystem."
+            echo "Batch generation of ${TOTAL} packages from ${{ env.ECOSYSTEM }} ecosystem."
             echo "- ${INCLUDED_COUNT} passed validation across platform environments"
-            echo "- ${EXCLUDED_COUNT} excluded (recorded to data/failures/${{ inputs.ecosystem }}.jsonl)"
+            echo "- ${EXCLUDED_COUNT} excluded (recorded to data/failures/${{ env.ECOSYSTEM }}.jsonl)"
             echo ""
             echo "batch_id: ${BATCH_ID}"
-            echo "ecosystem: ${{ inputs.ecosystem }}"
+            echo "ecosystem: ${{ env.ECOSYSTEM }}"
             echo "batch_size: ${TOTAL}"
             echo "success_rate: ${SUCCESS_RATE}"
           } > /tmp/commit-msg.txt
@@ -829,7 +836,7 @@ jobs:
           # Build PR body with platform validation summary
           RECIPE_COUNT=$(git diff --name-only main -- recipes/ | wc -l)
           {
-            echo "Batch ${{ inputs.ecosystem }} recipe generation: ${INCLUDED_COUNT} recipes included, ${EXCLUDED_COUNT} excluded."
+            echo "Batch ${{ env.ECOSYSTEM }} recipe generation: ${INCLUDED_COUNT} recipes included, ${EXCLUDED_COUNT} excluded."
             echo ""
             echo "Validated across 11 platform environments (5 Linux x86_64 families, 4 Linux arm64 families, 2 macOS)."
             if [ "$CONSTRAINED_COUNT" -gt 0 ]; then
@@ -865,7 +872,7 @@ jobs:
           } > /tmp/pr-body.md
 
           PR_URL=$(gh pr create \
-            --title "feat(recipes): add batch ${{ inputs.ecosystem }} recipes (${INCLUDED_COUNT} recipes)" \
+            --title "feat(recipes): add batch ${{ env.ECOSYSTEM }} recipes (${INCLUDED_COUNT} recipes)" \
             --body-file /tmp/pr-body.md \
             --base main)
           echo "PR_URL=$PR_URL" >> "$GITHUB_ENV"
@@ -880,8 +887,8 @@ jobs:
           if [ "$EXCLUDED_COUNT" -eq 0 ]; then
             echo "All recipes passed validation — enabling auto-merge"
             MERGE_ARGS=(--squash
-              --subject "feat(recipes): add batch ${{ inputs.ecosystem }} recipes (${INCLUDED_COUNT} recipes)"
-              --body "Batch generation of ${INCLUDED_COUNT} packages from ${{ inputs.ecosystem }} ecosystem. All recipes passed validation across platform environments.")
+              --subject "feat(recipes): add batch ${{ env.ECOSYSTEM }} recipes (${INCLUDED_COUNT} recipes)"
+              --body "Batch generation of ${INCLUDED_COUNT} packages from ${{ env.ECOSYSTEM }} ecosystem. All recipes passed validation across platform environments.")
             if ! gh pr merge "$PR_NUMBER" --auto "${MERGE_ARGS[@]}" 2>&1; then
               echo "Auto-merge unavailable (no required checks?) — merging directly"
               gh pr merge "$PR_NUMBER" "${MERGE_ARGS[@]}"

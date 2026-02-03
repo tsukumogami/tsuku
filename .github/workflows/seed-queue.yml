@@ -1,6 +1,8 @@
 name: Seed Queue
 
 on:
+  schedule:
+    - cron: '0 3 * * 0'
   workflow_dispatch:
     inputs:
       source:
@@ -15,6 +17,10 @@ on:
         required: false
         default: '100'
         type: string
+
+env:
+  SOURCE: ${{ inputs.source || 'homebrew' }}
+  LIMIT: ${{ inputs.limit || '1000' }}
 
 jobs:
   seed:
@@ -35,8 +41,8 @@ jobs:
       - name: Run seed-queue
         run: |
           ./seed-queue \
-            -source "${{ inputs.source }}" \
-            -limit "${{ inputs.limit }}"
+            -source "${{ env.SOURCE }}" \
+            -limit "${{ env.LIMIT }}"
 
       - name: Validate output
         run: |
@@ -56,7 +62,7 @@ jobs:
           }
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git commit -m "chore(data): seed priority queue from ${{ inputs.source }} [skip ci]"
+          git commit -m "chore(data): seed priority queue from ${{ env.SOURCE }} [skip ci]"
           for i in 1 2 3; do
             git pull --rebase origin main && git push && break
             sleep $((i * 2))
