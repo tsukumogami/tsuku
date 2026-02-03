@@ -35,6 +35,7 @@ interface BatchMetricsPayload {
 
 const SCHEMA_VERSION = "1";
 const LLM_SCHEMA_VERSION = "1";
+const DISCOVERY_SCHEMA_VERSION = "1";
 
 type ActionType = "install" | "update" | "remove" | "create" | "command";
 
@@ -44,6 +45,14 @@ type LLMActionType =
   | "llm_repair_attempt"
   | "llm_validation_result"
   | "llm_circuit_breaker_trip";
+
+type DiscoveryActionType =
+  | "discovery_registry_hit"
+  | "discovery_ecosystem_hit"
+  | "discovery_llm_hit"
+  | "discovery_not_found"
+  | "discovery_disambiguation"
+  | "discovery_error";
 
 interface TelemetryEvent {
   action: ActionType;
@@ -73,6 +82,21 @@ interface LLMTelemetryEvent {
   passed?: boolean;
   reason?: string;
   failures?: number;
+  os?: string;
+  arch?: string;
+  tsuku_version?: string;
+  schema_version?: string;
+}
+
+interface DiscoveryTelemetryEvent {
+  action: DiscoveryActionType;
+  tool_name?: string;
+  confidence?: string;
+  builder?: string;
+  source?: string;
+  match_count?: number;
+  error_category?: string;
+  duration_ms?: number;
   os?: string;
   arch?: string;
   tsuku_version?: string;
@@ -241,6 +265,64 @@ function validateLLMEvent(event: LLMTelemetryEvent): string | null {
   return null;
 }
 
+// Tool name validation: max 128 chars, must match ^[a-z0-9][a-z0-9-]*$
+const TOOL_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+const MAX_TOOL_NAME_LENGTH = 128;
+const MAX_SOURCE_LENGTH = 256;
+
+function validateDiscoveryEvent(event: DiscoveryTelemetryEvent): string | null {
+  // Common required fields
+  if (!event.os || typeof event.os !== "string") {
+    return "os is required";
+  }
+  if (!event.arch || typeof event.arch !== "string") {
+    return "arch is required";
+  }
+  if (!event.tsuku_version || typeof event.tsuku_version !== "string") {
+    return "tsuku_version is required";
+  }
+
+  // tool_name is required for all discovery events
+  if (!event.tool_name || typeof event.tool_name !== "string") {
+    return "tool_name is required";
+  }
+  if (event.tool_name.length > MAX_TOOL_NAME_LENGTH) {
+    return `tool_name exceeds max length of ${MAX_TOOL_NAME_LENGTH}`;
+  }
+  if (!TOOL_NAME_PATTERN.test(event.tool_name)) {
+    return "tool_name must match ^[a-z0-9][a-z0-9-]*$";
+  }
+
+  // source length validation (if provided)
+  if (event.source && event.source.length > MAX_SOURCE_LENGTH) {
+    return `source exceeds max length of ${MAX_SOURCE_LENGTH}`;
+  }
+
+  // Action-specific validation
+  switch (event.action) {
+    case "discovery_registry_hit":
+    case "discovery_ecosystem_hit":
+    case "discovery_llm_hit":
+      // Hit actions require confidence and builder
+      if (!event.confidence) return `confidence is required for ${event.action}`;
+      if (!event.builder) return `builder is required for ${event.action}`;
+      break;
+    case "discovery_disambiguation":
+      // Disambiguation requires builder
+      if (!event.builder) return "builder is required for discovery_disambiguation";
+      break;
+    case "discovery_error":
+      // Error requires error_category
+      if (!event.error_category) return "error_category is required for discovery_error";
+      break;
+    case "discovery_not_found":
+      // No additional requirements
+      break;
+  }
+
+  return null;
+}
+
 function validateBatchMetrics(payload: BatchMetricsPayload): string | null {
   if (!payload.batch_id || typeof payload.batch_id !== "string") {
     return "batch_id is required";
@@ -314,6 +396,20 @@ interface StatsResponse {
   recipes: { name: string; installs: number; updates: number }[];
   by_os: Record<string, number>;
   by_arch: Record<string, number>;
+}
+
+interface DiscoveryStatsResponse {
+  generated_at: string;
+  period: string;
+  total_lookups: number;
+  by_stage: {
+    registry: number;
+    ecosystem: number;
+    llm: number;
+    not_found: number;
+  };
+  top_not_found: { name: string; count: number }[];
+  error_rate: number;
 }
 
 async function getStats(env: Env): Promise<StatsResponse> {
@@ -393,6 +489,92 @@ async function getStats(env: Env): Promise<StatsResponse> {
   };
 }
 
+async function getDiscoveryStats(env: Env): Promise<DiscoveryStatsResponse> {
+  // Discovery events use blob0=action, blob1=tool_name, blob2=confidence
+  // Actions: discovery_registry_hit, discovery_ecosystem_hit, discovery_llm_hit,
+  //          discovery_not_found, discovery_disambiguation, discovery_error
+
+  // Query for stage distribution (based on action type)
+  const stageQuery = `
+    SELECT blob1 as action, count() as count
+    FROM tsuku_telemetry
+    WHERE blob1 LIKE 'discovery_%'
+    GROUP BY blob1
+  `;
+
+  // Query for top not-found tools
+  const notFoundQuery = `
+    SELECT blob2 as tool_name, count() as count
+    FROM tsuku_telemetry
+    WHERE blob1 = 'discovery_not_found'
+      AND blob2 != ''
+    GROUP BY blob2
+    ORDER BY count DESC
+    LIMIT 10
+  `;
+
+  const [stageData, notFoundData] = await Promise.all([
+    queryAnalyticsEngine(env, stageQuery),
+    queryAnalyticsEngine(env, notFoundQuery),
+  ]);
+
+  // Calculate stage counts
+  let registry = 0;
+  let ecosystem = 0;
+  let llm = 0;
+  let notFound = 0;
+  let errorCount = 0;
+  let totalLookups = 0;
+
+  for (const row of stageData) {
+    const action = String(row.action);
+    const count = Number(row.count) || 0;
+    totalLookups += count;
+
+    switch (action) {
+      case "discovery_registry_hit":
+        registry = count;
+        break;
+      case "discovery_ecosystem_hit":
+        ecosystem = count;
+        break;
+      case "discovery_llm_hit":
+        llm = count;
+        break;
+      case "discovery_not_found":
+        notFound = count;
+        break;
+      case "discovery_error":
+        errorCount = count;
+        break;
+      // discovery_disambiguation counted in total but not in by_stage
+    }
+  }
+
+  // Transform not-found data
+  const topNotFound = notFoundData.map((row) => ({
+    name: String(row.tool_name),
+    count: Number(row.count) || 0,
+  }));
+
+  // Calculate error rate
+  const errorRate = totalLookups > 0 ? errorCount / totalLookups : 0;
+
+  return {
+    generated_at: new Date().toISOString(),
+    period: "all_time",
+    total_lookups: totalLookups,
+    by_stage: {
+      registry,
+      ecosystem,
+      llm,
+      not_found: notFound,
+    },
+    top_not_found: topNotFound,
+    error_rate: errorRate,
+  };
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
@@ -467,6 +649,63 @@ export default {
               LLM_SCHEMA_VERSION, // blob15: schema_version
             ],
             indexes: [llmEvent.action],
+          });
+
+          return new Response("ok", { status: 200, headers: corsHeaders });
+        }
+
+        // Check if it's a discovery event
+        const discoveryActions: DiscoveryActionType[] = [
+          "discovery_registry_hit",
+          "discovery_ecosystem_hit",
+          "discovery_llm_hit",
+          "discovery_not_found",
+          "discovery_disambiguation",
+          "discovery_error",
+        ];
+
+        if (typeof event.action === "string" && discoveryActions.includes(event.action as DiscoveryActionType)) {
+          // Handle discovery event
+          const discoveryEvent: DiscoveryTelemetryEvent = {
+            action: event.action as DiscoveryActionType,
+            tool_name: event.tool_name as string | undefined,
+            confidence: event.confidence as string | undefined,
+            builder: event.builder as string | undefined,
+            source: event.source as string | undefined,
+            match_count: event.match_count as number | undefined,
+            error_category: event.error_category as string | undefined,
+            duration_ms: event.duration_ms as number | undefined,
+            os: event.os as string | undefined,
+            arch: event.arch as string | undefined,
+            tsuku_version: event.tsuku_version as string | undefined,
+            schema_version: event.schema_version as string | undefined,
+          };
+
+          const validationError = validateDiscoveryEvent(discoveryEvent);
+          if (validationError) {
+            return new Response(`Bad request: ${validationError}`, {
+              status: 400,
+              headers: corsHeaders,
+            });
+          }
+
+          // Write discovery event to analytics engine with 12-blob layout
+          env.ANALYTICS.writeDataPoint({
+            blobs: [
+              discoveryEvent.action, // blob0: action
+              discoveryEvent.tool_name || "", // blob1: tool_name
+              discoveryEvent.confidence || "", // blob2: confidence
+              discoveryEvent.builder || "", // blob3: builder
+              discoveryEvent.source || "", // blob4: source
+              discoveryEvent.match_count !== undefined ? String(discoveryEvent.match_count) : "", // blob5: match_count
+              discoveryEvent.error_category || "", // blob6: error_category
+              discoveryEvent.duration_ms !== undefined ? String(discoveryEvent.duration_ms) : "", // blob7: duration_ms
+              discoveryEvent.os || "", // blob8: os
+              discoveryEvent.arch || "", // blob9: arch
+              discoveryEvent.tsuku_version || "", // blob10: tsuku_version
+              DISCOVERY_SCHEMA_VERSION, // blob11: schema_version
+            ],
+            indexes: [discoveryEvent.tool_name || ""],
           });
 
           return new Response("ok", { status: 200, headers: corsHeaders });
@@ -562,6 +801,22 @@ export default {
     if (request.method === "GET" && url.pathname === "/stats") {
       try {
         const stats = await getStats(env);
+        return new Response(JSON.stringify(stats), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // GET /stats/discovery - return discovery resolver statistics
+    if (request.method === "GET" && url.pathname === "/stats/discovery") {
+      try {
+        const stats = await getDiscoveryStats(env);
         return new Response(JSON.stringify(stats), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

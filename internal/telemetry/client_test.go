@@ -327,6 +327,123 @@ func TestSendLLM_Debug(t *testing.T) {
 	}
 }
 
+func TestSendDiscovery_Disabled(t *testing.T) {
+	called := false
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	c := NewClientWithOptions(server.URL, time.Second, true, false)
+	c.SendDiscovery(NewDiscoveryRegistryHitEvent("bat", "github", "sharkdp/bat", 45))
+
+	time.Sleep(50 * time.Millisecond)
+
+	if called {
+		t.Error("server was called when telemetry was disabled")
+	}
+}
+
+func TestSendDiscovery_Debug(t *testing.T) {
+	oldStderr := os.Stderr
+	r, w, _ := os.Pipe()
+	os.Stderr = w
+
+	c := NewClientWithOptions("http://unused", time.Second, false, true)
+	c.SendDiscovery(NewDiscoveryRegistryHitEvent("bat", "github", "sharkdp/bat", 45))
+
+	w.Close()
+	os.Stderr = oldStderr
+
+	var buf bytes.Buffer
+	_, _ = io.Copy(&buf, r)
+	output := buf.String()
+
+	if !strings.Contains(output, "[telemetry]") {
+		t.Errorf("output does not contain [telemetry] prefix: %q", output)
+	}
+	if !strings.Contains(output, "discovery_registry_hit") {
+		t.Errorf("output does not contain action: %q", output)
+	}
+	if !strings.Contains(output, "bat") {
+		t.Errorf("output does not contain tool name: %q", output)
+	}
+}
+
+func TestSendDiscovery_Success(t *testing.T) {
+	received := make(chan DiscoveryEvent, 1)
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var event DiscoveryEvent
+		if err := json.NewDecoder(r.Body).Decode(&event); err != nil {
+			t.Errorf("failed to decode event: %v", err)
+		}
+		received <- event
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+
+	c := NewClientWithOptions(server.URL, time.Second, false, false)
+	c.SendDiscovery(NewDiscoveryEcosystemHitEvent("ripgrep", "cargo", "BurntSushi/ripgrep", 120))
+
+	select {
+	case event := <-received:
+		if event.Action != "discovery_ecosystem_hit" {
+			t.Errorf("Action = %q, want %q", event.Action, "discovery_ecosystem_hit")
+		}
+		if event.ToolName != "ripgrep" {
+			t.Errorf("ToolName = %q, want %q", event.ToolName, "ripgrep")
+		}
+		if event.Confidence != "ecosystem" {
+			t.Errorf("Confidence = %q, want %q", event.Confidence, "ecosystem")
+		}
+		if event.Builder != "cargo" {
+			t.Errorf("Builder = %q, want %q", event.Builder, "cargo")
+		}
+		if event.DurationMs != 120 {
+			t.Errorf("DurationMs = %d, want %d", event.DurationMs, 120)
+		}
+	case <-time.After(time.Second):
+		t.Error("event not received within timeout")
+	}
+}
+
+func TestNewDiscoveryNotFoundEvent(t *testing.T) {
+	event := NewDiscoveryNotFoundEvent("nonexistent", 500)
+	if event.Action != "discovery_not_found" {
+		t.Errorf("Action = %q, want %q", event.Action, "discovery_not_found")
+	}
+	if event.ToolName != "nonexistent" {
+		t.Errorf("ToolName = %q, want %q", event.ToolName, "nonexistent")
+	}
+	if event.DurationMs != 500 {
+		t.Errorf("DurationMs = %d, want %d", event.DurationMs, 500)
+	}
+	if event.SchemaVersion != "1" {
+		t.Errorf("SchemaVersion = %q, want %q", event.SchemaVersion, "1")
+	}
+}
+
+func TestNewDiscoveryErrorEvent(t *testing.T) {
+	event := NewDiscoveryErrorEvent("broken-tool", "timeout", 2000)
+	if event.Action != "discovery_error" {
+		t.Errorf("Action = %q, want %q", event.Action, "discovery_error")
+	}
+	if event.ErrorCategory != "timeout" {
+		t.Errorf("ErrorCategory = %q, want %q", event.ErrorCategory, "timeout")
+	}
+}
+
+func TestNewDiscoveryDisambiguationEvent(t *testing.T) {
+	event := NewDiscoveryDisambiguationEvent("serve", "github", "joseluisq/serve", 3, 200)
+	if event.Action != "discovery_disambiguation" {
+		t.Errorf("Action = %q, want %q", event.Action, "discovery_disambiguation")
+	}
+	if event.MatchCount != 3 {
+		t.Errorf("MatchCount = %d, want %d", event.MatchCount, 3)
+	}
+}
+
 func TestSendLLM_Success(t *testing.T) {
 	received := make(chan LLMEvent, 1)
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
