@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lftp",
   "description": "Sophisticated file transfer program",
-  "homepage": "https://lftp.yar.ru/"
+  "homepage": "https://lftp.yar.ru/",
+  "downloads": 14059,
+  "has_repository": true
 }

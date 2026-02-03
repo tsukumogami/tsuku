@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ant",
   "description": "Java build tool",
-  "homepage": "https://ant.apache.org/"
+  "homepage": "https://ant.apache.org/",
+  "downloads": 22091,
+  "has_repository": true
 }

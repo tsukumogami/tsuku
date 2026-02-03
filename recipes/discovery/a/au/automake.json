@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "automake",
   "description": "Tool for generating GNU Standards-compliant Makefiles",
-  "homepage": "https://www.gnu.org/software/automake/"
+  "homepage": "https://www.gnu.org/software/automake/",
+  "downloads": 340720,
+  "has_repository": true
 }

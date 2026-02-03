@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "onnxruntime",
   "description": "Cross-platform, high performance scoring engine for ML models",
-  "homepage": "https://github.com/microsoft/onnxruntime"
+  "homepage": "https://github.com/microsoft/onnxruntime",
+  "downloads": 7865,
+  "has_repository": true
 }

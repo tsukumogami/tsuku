@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gnuplot",
   "description": "Command-driven, interactive function plotting",
-  "homepage": "http://www.gnuplot.info/"
+  "homepage": "http://www.gnuplot.info/",
+  "downloads": 46259,
+  "has_repository": true
 }

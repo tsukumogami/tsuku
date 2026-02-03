@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pyenv-virtualenv",
   "description": "Pyenv plugin to manage virtualenv",
-  "homepage": "https://github.com/pyenv/pyenv-virtualenv"
+  "homepage": "https://github.com/pyenv/pyenv-virtualenv",
+  "downloads": 68144,
+  "has_repository": true
 }

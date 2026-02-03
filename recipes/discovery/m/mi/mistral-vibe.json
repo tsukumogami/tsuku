@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mistral-vibe",
   "description": "Minimal CLI coding agent",
-  "homepage": "https://github.com/mistralai/mistral-vibe"
+  "homepage": "https://github.com/mistralai/mistral-vibe",
+  "downloads": 1610,
+  "has_repository": true
 }

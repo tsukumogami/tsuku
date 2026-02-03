@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gnu-getopt",
   "description": "Command-line option parsing utility",
-  "homepage": "https://github.com/util-linux/util-linux"
+  "homepage": "https://github.com/util-linux/util-linux",
+  "downloads": 75204,
+  "has_repository": true
 }

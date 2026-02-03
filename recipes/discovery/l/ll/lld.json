@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lld",
   "description": "LLVM Project Linker",
-  "homepage": "https://lld.llvm.org/"
+  "homepage": "https://lld.llvm.org/",
+  "downloads": 50934,
+  "has_repository": true
 }

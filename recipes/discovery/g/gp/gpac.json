@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gpac",
   "description": "Multimedia framework for research and academic purposes",
-  "homepage": "https://gpac.io/"
+  "homepage": "https://gpac.io/",
+  "downloads": 7883,
+  "has_repository": true
 }

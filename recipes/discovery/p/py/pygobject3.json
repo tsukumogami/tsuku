@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pygobject3",
   "description": "GNOME Python bindings (based on GObject Introspection)",
-  "homepage": "https://pygobject.gnome.org"
+  "homepage": "https://pygobject.gnome.org",
+  "downloads": 87261,
+  "has_repository": true
 }

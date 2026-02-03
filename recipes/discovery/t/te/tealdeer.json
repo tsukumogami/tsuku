@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tealdeer",
   "description": "Very fast implementation of tldr in Rust",
-  "homepage": "https://tealdeer-rs.github.io/tealdeer/"
+  "homepage": "https://tealdeer-rs.github.io/tealdeer/",
+  "downloads": 30495,
+  "has_repository": true
 }

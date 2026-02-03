@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "parallel",
   "description": "Shell command parallelization utility",
-  "homepage": "https://savannah.gnu.org/projects/parallel/"
+  "homepage": "https://savannah.gnu.org/projects/parallel/",
+  "downloads": 75302,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "git-filter-repo",
   "description": "Quickly rewrite git repository history",
-  "homepage": "https://github.com/newren/git-filter-repo"
+  "homepage": "https://github.com/newren/git-filter-repo",
+  "downloads": 67527,
+  "has_repository": true
 }

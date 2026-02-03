@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "witr",
   "description": "Why is this running?",
-  "homepage": "https://github.com/pranshuparmar/witr"
+  "homepage": "https://github.com/pranshuparmar/witr",
+  "downloads": 5670,
+  "has_repository": true
 }

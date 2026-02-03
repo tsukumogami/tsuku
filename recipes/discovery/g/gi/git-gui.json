@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "git-gui",
   "description": "Tcl/Tk UI for the git revision control system",
-  "homepage": "https://git-scm.com"
+  "homepage": "https://git-scm.com",
+  "downloads": 65034,
+  "has_repository": true
 }

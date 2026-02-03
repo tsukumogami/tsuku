@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bash-preexec",
   "description": "Preexec and precmd functions for Bash (like Zsh)",
-  "homepage": "https://github.com/rcaloras/bash-preexec"
+  "homepage": "https://github.com/rcaloras/bash-preexec",
+  "downloads": 13938,
+  "has_repository": true
 }

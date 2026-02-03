@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "percona-toolkit",
   "description": "Command-line tools for MySQL, MariaDB and system tasks",
-  "homepage": "https://www.percona.com/software/percona-toolkit/"
+  "homepage": "https://www.percona.com/software/percona-toolkit/",
+  "downloads": 27689,
+  "has_repository": true
 }

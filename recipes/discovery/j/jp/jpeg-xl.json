@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jpeg-xl",
   "description": "New file format for still image compression",
-  "homepage": "https://jpeg.org/jpegxl/index.html"
+  "homepage": "https://jpeg.org/jpegxl/index.html",
+  "downloads": 1235757,
+  "has_repository": true
 }

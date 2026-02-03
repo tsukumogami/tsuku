@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "boost",
   "description": "Collection of portable C++ source libraries",
-  "homepage": "https://www.boost.org/"
+  "homepage": "https://www.boost.org/",
+  "downloads": 518638,
+  "has_repository": true
 }

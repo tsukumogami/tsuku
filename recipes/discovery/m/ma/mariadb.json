@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mariadb",
   "description": "Drop-in replacement for MySQL",
-  "homepage": "https://mariadb.org/"
+  "homepage": "https://mariadb.org/",
+  "downloads": 57246,
+  "has_repository": true
 }

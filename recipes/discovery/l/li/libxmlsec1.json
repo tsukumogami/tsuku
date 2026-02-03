@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libxmlsec1",
   "description": "XML security library",
-  "homepage": "https://www.aleksey.com/xmlsec/"
+  "homepage": "https://www.aleksey.com/xmlsec/",
+  "downloads": 24919,
+  "has_repository": true
 }

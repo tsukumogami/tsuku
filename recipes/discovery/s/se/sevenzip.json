@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sevenzip",
   "description": "7-Zip is a file archiver with a high compression ratio",
-  "homepage": "https://7-zip.org"
+  "homepage": "https://7-zip.org",
+  "downloads": 53122,
+  "has_repository": true
 }

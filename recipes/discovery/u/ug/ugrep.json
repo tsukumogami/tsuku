@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ugrep",
   "description": "Ultra fast grep with query UI, fuzzy search, archive search, and more",
-  "homepage": "https://ugrep.com/"
+  "homepage": "https://ugrep.com/",
+  "downloads": 29034,
+  "has_repository": true
 }

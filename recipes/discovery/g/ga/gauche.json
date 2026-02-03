@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gauche",
   "description": "R7RS Scheme implementation, developed to be a handy script interpreter",
-  "homepage": "https://practical-scheme.net/gauche/"
+  "homepage": "https://practical-scheme.net/gauche/",
+  "downloads": 44217,
+  "has_repository": true
 }

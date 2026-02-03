@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gnu-sed",
   "description": "GNU implementation of the famous stream editor",
-  "homepage": "https://www.gnu.org/software/sed/"
+  "homepage": "https://www.gnu.org/software/sed/",
+  "downloads": 106804,
+  "has_repository": true
 }

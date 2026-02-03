@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "vite",
   "description": "Next generation frontend tooling. It's fast!",
-  "homepage": "https://vitejs.dev/"
+  "homepage": "https://vitejs.dev/",
+  "downloads": 20216,
+  "has_repository": true
 }

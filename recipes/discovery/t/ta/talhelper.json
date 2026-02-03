@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "talhelper",
   "description": "Configuration helper for talos clusters",
-  "homepage": "https://budimanjojo.github.io/talhelper/latest/"
+  "homepage": "https://budimanjojo.github.io/talhelper/latest/",
+  "downloads": 18480,
+  "has_repository": true
 }

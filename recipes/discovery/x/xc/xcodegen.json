@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "xcodegen",
   "description": "Generate your Xcode project from a spec file and your folder structure",
-  "homepage": "https://github.com/yonaskolb/XcodeGen"
+  "homepage": "https://github.com/yonaskolb/XcodeGen",
+  "downloads": 156520,
+  "has_repository": true
 }

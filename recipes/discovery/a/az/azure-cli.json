@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "azure-cli",
   "description": "Microsoft Azure CLI 2.0",
-  "homepage": "https://docs.microsoft.com/cli/azure/overview"
+  "homepage": "https://docs.microsoft.com/cli/azure/overview",
+  "downloads": 435191,
+  "has_repository": true
 }

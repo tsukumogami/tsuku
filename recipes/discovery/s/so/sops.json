@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "getsops/sops",
+  "description": "Simple and flexible tool for managing secrets",
+  "homepage": "https://getsops.io/",
+  "repo": "https://github.com/getsops/sops"
+}

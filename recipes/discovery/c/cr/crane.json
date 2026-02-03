@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "google/go-containerregistry",
+  "description": "Go library and CLIs for working with container registries",
+  "repo": "https://github.com/google/go-containerregistry"
+}

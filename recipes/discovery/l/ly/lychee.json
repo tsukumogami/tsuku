@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lychee",
   "description": "Fast, async, resource-friendly link checker",
-  "homepage": "https://lychee.cli.rs/"
+  "homepage": "https://lychee.cli.rs/",
+  "downloads": 27316,
+  "has_repository": true
 }

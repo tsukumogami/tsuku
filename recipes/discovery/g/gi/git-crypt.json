@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "git-crypt",
   "description": "Enable transparent encryption/decryption of files in a git repo",
-  "homepage": "https://www.agwa.name/projects/git-crypt/"
+  "homepage": "https://www.agwa.name/projects/git-crypt/",
+  "downloads": 45585,
+  "has_repository": true
 }

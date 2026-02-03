@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fresh-editor",
   "description": "Text editor for your terminal: easy, powerful and fast",
-  "homepage": "https://sinelaw.github.io/fresh/"
+  "homepage": "https://sinelaw.github.io/fresh/",
+  "downloads": 7364,
+  "has_repository": true
 }

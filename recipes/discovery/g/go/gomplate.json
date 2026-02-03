@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gomplate",
   "description": "Command-line Golang template processor",
-  "homepage": "https://gomplate.ca/"
+  "homepage": "https://gomplate.ca/",
+  "downloads": 47624,
+  "has_repository": true
 }

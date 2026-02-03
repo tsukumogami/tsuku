@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "emacs",
   "description": "GNU Emacs text editor",
-  "homepage": "https://www.gnu.org/software/emacs/"
+  "homepage": "https://www.gnu.org/software/emacs/",
+  "downloads": 103080,
+  "has_repository": true
 }

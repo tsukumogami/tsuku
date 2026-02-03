@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nasm",
   "description": "Netwide Assembler (NASM) is an 80x86 assembler",
-  "homepage": "https://www.nasm.us/"
+  "homepage": "https://www.nasm.us/",
+  "downloads": 77919,
+  "has_repository": true
 }

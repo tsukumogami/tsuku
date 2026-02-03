@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "duckdb",
   "description": "Embeddable SQL OLAP Database Management System",
-  "homepage": "https://www.duckdb.org"
+  "homepage": "https://www.duckdb.org",
+  "downloads": 47429,
+  "has_repository": true
 }

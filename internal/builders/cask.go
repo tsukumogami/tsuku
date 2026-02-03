@@ -426,11 +426,14 @@ func isValidCaskName(name string) bool {
 	return true
 }
 
-// Probe checks if a cask exists on Homebrew Cask.
+// Probe checks if a cask exists on Homebrew Cask and returns quality metadata.
 func (b *CaskBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
-	_, err := b.fetchCaskInfo(ctx, name)
+	info, err := b.fetchCaskInfo(ctx, name)
 	if err != nil {
 		return nil, nil
 	}
-	return &ProbeResult{Source: name}, nil
+	return &ProbeResult{
+		Source:        name,
+		HasRepository: info.Homepage != "",
+	}, nil
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "talosctl",
   "description": "CLI for out-of-band management of Kubernetes nodes created by Talos",
-  "homepage": "https://www.talos.dev/"
+  "homepage": "https://www.talos.dev/",
+  "downloads": 23558,
+  "has_repository": true
 }

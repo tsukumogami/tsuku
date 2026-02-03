@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "oci-cli",
   "description": "Oracle Cloud Infrastructure CLI",
-  "homepage": "https://docs.cloud.oracle.com/iaas/Content/API/Concepts/cliconcepts.htm"
+  "homepage": "https://docs.cloud.oracle.com/iaas/Content/API/Concepts/cliconcepts.htm",
+  "downloads": 39363,
+  "has_repository": true
 }

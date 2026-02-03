@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cabal-install",
   "description": "Command-line interface for Cabal and Hackage",
-  "homepage": "https://www.haskell.org/cabal/"
+  "homepage": "https://www.haskell.org/cabal/",
+  "downloads": 11064,
+  "has_repository": true
 }

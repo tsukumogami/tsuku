@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "rabbitmq",
   "description": "Messaging and streaming broker",
-  "homepage": "https://www.rabbitmq.com"
+  "homepage": "https://www.rabbitmq.com",
+  "downloads": 46110,
+  "has_repository": true
 }

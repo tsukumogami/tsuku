@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "net-snmp",
   "description": "Implements SNMP v1, v2c, and v3, using IPv4 and IPv6",
-  "homepage": "http://www.net-snmp.org/"
+  "homepage": "http://www.net-snmp.org/",
+  "downloads": 140788,
+  "has_repository": true
 }

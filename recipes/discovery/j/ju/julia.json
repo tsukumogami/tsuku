@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "julia",
   "description": "Fast, Dynamic Programming Language",
-  "homepage": "https://julialang.org/"
+  "homepage": "https://julialang.org/",
+  "downloads": 11995,
+  "has_repository": true
 }

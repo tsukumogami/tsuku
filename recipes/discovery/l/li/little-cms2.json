@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "little-cms2",
   "description": "Color management engine supporting ICC profiles",
-  "homepage": "https://www.littlecms.com/"
+  "homepage": "https://www.littlecms.com/",
+  "downloads": 1333373,
+  "has_repository": true
 }

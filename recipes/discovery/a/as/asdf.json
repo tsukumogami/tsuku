@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "asdf",
   "description": "Extendable version manager with support for Ruby, Node.js, Erlang \u0026 more",
-  "homepage": "https://asdf-vm.com/"
+  "homepage": "https://asdf-vm.com/",
+  "downloads": 143303,
+  "has_repository": true
 }

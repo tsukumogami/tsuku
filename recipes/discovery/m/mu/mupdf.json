@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mupdf",
   "description": "Lightweight PDF and XPS viewer",
-  "homepage": "https://mupdf.com/"
+  "homepage": "https://mupdf.com/",
+  "downloads": 22137,
+  "has_repository": true
 }

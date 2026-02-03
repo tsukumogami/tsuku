@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "dandavison/delta",
+  "description": "A syntax-highlighting pager for git, diff, grep, and blame output",
+  "homepage": "https://dandavison.github.io/delta/",
+  "repo": "https://github.com/dandavison/delta"
+}

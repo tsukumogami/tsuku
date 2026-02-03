@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zip",
   "description": "Compression and file packaging/archive utility",
-  "homepage": "https://infozip.sourceforge.net/Zip.html"
+  "homepage": "https://infozip.sourceforge.net/Zip.html",
+  "downloads": 121626,
+  "has_repository": true
 }

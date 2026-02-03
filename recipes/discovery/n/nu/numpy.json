@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "numpy",
   "description": "Package for scientific computing with Python",
-  "homepage": "https://www.numpy.org/"
+  "homepage": "https://www.numpy.org/",
+  "downloads": 382830,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "groonga",
   "description": "Fulltext search engine and column store",
-  "homepage": "https://groonga.org/"
+  "homepage": "https://groonga.org/",
+  "downloads": 56667,
+  "has_repository": true
 }

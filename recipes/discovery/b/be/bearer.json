@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "bearer/bearer",
+  "description": "Code security scanning tool (SAST) to discover, filter and prioritize security and privacy risks.",
+  "homepage": "https://docs.bearer.com",
+  "repo": "https://github.com/Bearer/bearer"
+}

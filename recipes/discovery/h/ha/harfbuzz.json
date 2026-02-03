@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "harfbuzz",
   "description": "OpenType text shaping engine",
-  "homepage": "https://github.com/harfbuzz/harfbuzz"
+  "homepage": "https://github.com/harfbuzz/harfbuzz",
+  "downloads": 2599574,
+  "has_repository": true
 }

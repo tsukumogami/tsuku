@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cmatrix",
   "description": "Console Matrix",
-  "homepage": "https://github.com/abishekvashok/cmatrix/"
+  "homepage": "https://github.com/abishekvashok/cmatrix/",
+  "downloads": 17012,
+  "has_repository": true
 }

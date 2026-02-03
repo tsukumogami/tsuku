@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libpcap",
   "description": "Portable library for network traffic capture",
-  "homepage": "https://www.tcpdump.org/"
+  "homepage": "https://www.tcpdump.org/",
+  "downloads": 24868,
+  "has_repository": true
 }

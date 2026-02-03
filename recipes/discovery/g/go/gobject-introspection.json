@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gobject-introspection",
   "description": "Generate introspection data for GObject libraries",
-  "homepage": "https://gi.readthedocs.io/en/latest/"
+  "homepage": "https://gi.readthedocs.io/en/latest/",
+  "downloads": 244438,
+  "has_repository": true
 }

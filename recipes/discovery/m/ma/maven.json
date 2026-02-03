@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "maven",
   "description": "Java-based project management",
-  "homepage": "https://maven.apache.org/"
+  "homepage": "https://maven.apache.org/",
+  "downloads": 315328,
+  "has_repository": true
 }

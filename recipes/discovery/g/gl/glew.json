@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "glew",
   "description": "OpenGL Extension Wrangler Library",
-  "homepage": "https://glew.sourceforge.net/"
+  "homepage": "https://glew.sourceforge.net/",
+  "downloads": 45341,
+  "has_repository": true
 }

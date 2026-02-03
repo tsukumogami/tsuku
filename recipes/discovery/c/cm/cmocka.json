@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cmocka",
   "description": "Unit testing framework for C",
-  "homepage": "https://cmocka.org/"
+  "homepage": "https://cmocka.org/",
+  "downloads": 9108,
+  "has_repository": true
 }

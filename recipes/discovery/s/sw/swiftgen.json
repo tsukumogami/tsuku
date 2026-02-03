@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "swiftgen",
   "description": "Swift code generator for assets, storyboards, Localizable.strings, etc.",
-  "homepage": "https://github.com/SwiftGen/SwiftGen"
+  "homepage": "https://github.com/SwiftGen/SwiftGen",
+  "downloads": 112664,
+  "has_repository": true
 }

@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "istio/istio",
+  "description": "Connect, secure, control, and observe services.",
+  "homepage": "https://istio.io",
+  "repo": "https://github.com/istio/istio"
+}

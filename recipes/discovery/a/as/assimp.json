@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "assimp",
   "description": "Portable library for importing many well-known 3D model formats",
-  "homepage": "https://www.assimp.org/"
+  "homepage": "https://www.assimp.org/",
+  "downloads": 111660,
+  "has_repository": true
 }

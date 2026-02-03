@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "amacneil/dbmate",
+  "description": "🚀 A lightweight, framework-agnostic database migration tool.",
+  "repo": "https://github.com/amacneil/dbmate"
+}

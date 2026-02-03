@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "qpdf",
   "description": "Tools for and transforming and inspecting PDF files",
-  "homepage": "https://github.com/qpdf/qpdf"
+  "homepage": "https://github.com/qpdf/qpdf",
+  "downloads": 61862,
+  "has_repository": true
 }

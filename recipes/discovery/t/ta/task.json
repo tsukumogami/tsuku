@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "go-task/task",
+  "description": "A fast, cross-platform build tool inspired by Make, designed for modern workflows.",
+  "homepage": "https://taskfile.dev",
+  "repo": "https://github.com/go-task/task"
+}

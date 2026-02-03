@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tor",
   "description": "Anonymizing overlay network for TCP",
-  "homepage": "https://www.torproject.org/"
+  "homepage": "https://www.torproject.org/",
+  "downloads": 26660,
+  "has_repository": true
 }

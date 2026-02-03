@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dependency-check",
   "description": "OWASP dependency-check",
-  "homepage": "https://owasp.org/www-project-dependency-check/"
+  "homepage": "https://owasp.org/www-project-dependency-check/",
+  "downloads": 20290,
+  "has_repository": true
 }

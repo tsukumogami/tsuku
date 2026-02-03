@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "vale",
   "description": "Syntax-aware linter for prose",
-  "homepage": "https://vale.sh/"
+  "homepage": "https://vale.sh/",
+  "downloads": 53138,
+  "has_repository": true
 }

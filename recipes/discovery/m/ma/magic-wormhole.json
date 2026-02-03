@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "magic-wormhole",
   "description": "Securely transfers data between computers",
-  "homepage": "https://github.com/magic-wormhole/magic-wormhole"
+  "homepage": "https://github.com/magic-wormhole/magic-wormhole",
+  "downloads": 15555,
+  "has_repository": true
 }

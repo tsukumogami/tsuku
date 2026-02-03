@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "qemu",
   "description": "Generic machine emulator and virtualizer",
-  "homepage": "https://www.qemu.org/"
+  "homepage": "https://www.qemu.org/",
+  "downloads": 343026,
+  "has_repository": true
 }

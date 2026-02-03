@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cppcheck",
   "description": "Static analysis of C and C++ code",
-  "homepage": "https://sourceforge.net/projects/cppcheck/"
+  "homepage": "https://sourceforge.net/projects/cppcheck/",
+  "downloads": 22593,
+  "has_repository": true
 }

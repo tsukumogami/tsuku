@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lefthook",
   "description": "Fast and powerful Git hooks manager for any type of projects",
-  "homepage": "https://github.com/evilmartians/lefthook"
+  "homepage": "https://github.com/evilmartians/lefthook",
+  "downloads": 13829,
+  "has_repository": true
 }

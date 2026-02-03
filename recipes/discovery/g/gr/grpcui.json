@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "grpcui",
   "description": "Interactive web UI for gRPC, along the lines of postman",
-  "homepage": "https://github.com/fullstorydev/grpcui"
+  "homepage": "https://github.com/fullstorydev/grpcui",
+  "downloads": 10350,
+  "has_repository": true
 }

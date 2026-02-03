@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "swift-protobuf",
   "description": "Plugin and runtime library for using protobuf with Swift",
-  "homepage": "https://github.com/apple/swift-protobuf"
+  "homepage": "https://github.com/apple/swift-protobuf",
+  "downloads": 28631,
+  "has_repository": true
 }

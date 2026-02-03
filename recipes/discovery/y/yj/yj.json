@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "yj",
   "description": "CLI to convert between YAML, TOML, JSON and HCL",
-  "homepage": "https://github.com/sclevine/yj"
+  "homepage": "https://github.com/sclevine/yj",
+  "downloads": 12744,
+  "has_repository": true
 }

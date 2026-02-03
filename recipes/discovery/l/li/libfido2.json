@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libfido2",
   "description": "Provides library functionality for FIDO U2F \u0026 FIDO 2.0, including USB",
-  "homepage": "https://developers.yubico.com/libfido2/"
+  "homepage": "https://developers.yubico.com/libfido2/",
+  "downloads": 175139,
+  "has_repository": true
 }

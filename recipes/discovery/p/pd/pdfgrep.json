@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pdfgrep",
   "description": "Search PDFs for strings matching a regular expression",
-  "homepage": "https://pdfgrep.org/"
+  "homepage": "https://pdfgrep.org/",
+  "downloads": 5459,
+  "has_repository": true
 }

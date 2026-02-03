@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "hadolint",
   "description": "Smarter Dockerfile linter to validate best practices",
-  "homepage": "https://github.com/hadolint/hadolint"
+  "homepage": "https://github.com/hadolint/hadolint",
+  "downloads": 19927,
+  "has_repository": true
 }

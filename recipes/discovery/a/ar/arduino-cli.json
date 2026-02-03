@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "arduino-cli",
   "description": "Arduino command-line interface",
-  "homepage": "https://arduino.github.io/arduino-cli/latest/"
+  "homepage": "https://arduino.github.io/arduino-cli/latest/",
+  "downloads": 12663,
+  "has_repository": true
 }

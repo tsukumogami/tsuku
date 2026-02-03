@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "librsvg",
   "description": "Library to render SVG files using Cairo",
-  "homepage": "https://wiki.gnome.org/Projects/LibRsvg"
+  "homepage": "https://wiki.gnome.org/Projects/LibRsvg",
+  "downloads": 560870,
+  "has_repository": true
 }

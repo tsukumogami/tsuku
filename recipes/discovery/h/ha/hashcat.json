@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "hashcat",
   "description": "World's fastest and most advanced password recovery utility",
-  "homepage": "https://hashcat.net/hashcat/"
+  "homepage": "https://hashcat.net/hashcat/",
+  "downloads": 20555,
+  "has_repository": true
 }

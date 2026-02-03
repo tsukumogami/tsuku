@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tcl-tk@8",
   "description": "Tool Command Language",
-  "homepage": "https://www.tcl-lang.org"
+  "homepage": "https://www.tcl-lang.org",
+  "downloads": 86825,
+  "has_repository": true
 }

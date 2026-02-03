@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sdl2_mixer",
   "description": "Sample multi-channel audio mixer library",
-  "homepage": "https://github.com/libsdl-org/SDL_mixer"
+  "homepage": "https://github.com/libsdl-org/SDL_mixer",
+  "downloads": 20379,
+  "has_repository": true
 }

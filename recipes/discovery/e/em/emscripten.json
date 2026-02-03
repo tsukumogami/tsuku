@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "emscripten",
   "description": "LLVM bytecode to JavaScript compiler",
-  "homepage": "https://emscripten.org/"
+  "homepage": "https://emscripten.org/",
+  "downloads": 20078,
+  "has_repository": true
 }

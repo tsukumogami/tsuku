@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "xmlstarlet",
   "description": "XML command-line utilities",
-  "homepage": "https://xmlstar.sourceforge.net/"
+  "homepage": "https://xmlstar.sourceforge.net/",
+  "downloads": 61460,
+  "has_repository": true
 }

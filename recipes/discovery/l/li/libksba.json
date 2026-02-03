@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libksba",
   "description": "X.509 and CMS library",
-  "homepage": "https://www.gnupg.org/related_software/libksba/"
+  "homepage": "https://www.gnupg.org/related_software/libksba/",
+  "downloads": 230124,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fftw",
   "description": "C routines to compute the Discrete Fourier Transform",
-  "homepage": "https://fftw.org"
+  "homepage": "https://fftw.org",
+  "downloads": 97955,
+  "has_repository": true
 }

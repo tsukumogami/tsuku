@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "qt@5",
   "description": "Cross-platform application and UI framework",
-  "homepage": "https://www.qt.io/"
+  "homepage": "https://www.qt.io/",
+  "downloads": 118135,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "doxygen",
   "description": "Generate documentation for several programming languages",
-  "homepage": "https://www.doxygen.nl/"
+  "homepage": "https://www.doxygen.nl/",
+  "downloads": 92281,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "postgis",
   "description": "Adds support for geographic objects to PostgreSQL",
-  "homepage": "https://postgis.net/"
+  "homepage": "https://postgis.net/",
+  "downloads": 30426,
+  "has_repository": true
 }

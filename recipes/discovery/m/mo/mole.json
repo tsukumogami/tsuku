@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mole",
   "description": "Deep clean and optimize your Mac",
-  "homepage": "https://github.com/tw93/Mole"
+  "homepage": "https://github.com/tw93/Mole",
+  "downloads": 24881,
+  "has_repository": true
 }

@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "containers/skopeo",
+  "description": "Work with remote images registries - retrieving information, images, signing content",
+  "repo": "https://github.com/containers/skopeo"
+}

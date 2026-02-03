@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openvino",
   "description": "Open Visual Inference And Optimization toolkit for AI inference",
-  "homepage": "https://docs.openvino.ai"
+  "homepage": "https://docs.openvino.ai",
+  "downloads": 117000,
+  "has_repository": true
 }

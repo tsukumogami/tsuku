@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "grep",
   "description": "GNU grep, egrep and fgrep",
-  "homepage": "https://www.gnu.org/software/grep/"
+  "homepage": "https://www.gnu.org/software/grep/",
+  "downloads": 66317,
+  "has_repository": true
 }

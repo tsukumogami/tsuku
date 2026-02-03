@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libraw",
   "description": "Library for reading RAW files from digital photo cameras",
-  "homepage": "https://www.libraw.org/"
+  "homepage": "https://www.libraw.org/",
+  "downloads": 255110,
+  "has_repository": true
 }

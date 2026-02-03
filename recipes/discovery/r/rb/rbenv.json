@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "rbenv",
   "description": "Ruby version manager",
-  "homepage": "https://rbenv.org"
+  "homepage": "https://rbenv.org",
+  "downloads": 427352,
+  "has_repository": true
 }

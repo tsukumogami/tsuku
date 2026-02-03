@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "glib",
   "description": "Core application library for C",
-  "homepage": "https://docs.gtk.org/glib/"
+  "homepage": "https://docs.gtk.org/glib/",
+  "downloads": 2813453,
+  "has_repository": true
 }

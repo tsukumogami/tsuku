@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "wakeonlan",
   "description": "Sends magic packets to wake up network-devices",
-  "homepage": "https://github.com/jpoliv/wakeonlan"
+  "homepage": "https://github.com/jpoliv/wakeonlan",
+  "downloads": 11555,
+  "has_repository": true
 }

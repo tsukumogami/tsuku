@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jenkins-lts",
   "description": "Extendable open source continuous integration server",
-  "homepage": "https://www.jenkins.io/"
+  "homepage": "https://www.jenkins.io/",
+  "downloads": 25496,
+  "has_repository": true
 }

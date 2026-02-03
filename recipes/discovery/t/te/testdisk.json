@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "testdisk",
   "description": "Powerful free data recovery utility",
-  "homepage": "https://www.cgsecurity.org/wiki/TestDisk"
+  "homepage": "https://www.cgsecurity.org/wiki/TestDisk",
+  "downloads": 20259,
+  "has_repository": true
 }

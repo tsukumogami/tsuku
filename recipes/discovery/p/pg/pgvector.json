@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pgvector",
   "description": "Open-source vector similarity search for Postgres",
-  "homepage": "https://github.com/pgvector/pgvector"
+  "homepage": "https://github.com/pgvector/pgvector",
+  "downloads": 20124,
+  "has_repository": true
 }

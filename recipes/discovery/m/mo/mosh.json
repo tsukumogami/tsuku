@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mosh",
   "description": "Remote terminal application",
-  "homepage": "https://mosh.org"
+  "homepage": "https://mosh.org",
+  "downloads": 42111,
+  "has_repository": true
 }

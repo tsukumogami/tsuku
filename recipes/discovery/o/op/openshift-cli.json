@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openshift-cli",
   "description": "OpenShift command-line interface tools",
-  "homepage": "https://www.openshift.com/"
+  "homepage": "https://www.openshift.com/",
+  "downloads": 53910,
+  "has_repository": true
 }

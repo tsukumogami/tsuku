@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "rain",
   "description": "Command-line tool for working with AWS CloudFormation",
-  "homepage": "https://github.com/aws-cloudformation/rain"
+  "homepage": "https://github.com/aws-cloudformation/rain",
+  "downloads": 8877,
+  "has_repository": true
 }

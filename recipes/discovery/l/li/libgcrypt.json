@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libgcrypt",
   "description": "Cryptographic library based on the code from GnuPG",
-  "homepage": "https://gnupg.org/related_software/libgcrypt/"
+  "homepage": "https://gnupg.org/related_software/libgcrypt/",
+  "downloads": 480625,
+  "has_repository": true
 }

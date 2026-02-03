@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "allure",
   "description": "Flexible lightweight test report tool",
-  "homepage": "https://github.com/allure-framework/allure2"
+  "homepage": "https://github.com/allure-framework/allure2",
+  "downloads": 84122,
+  "has_repository": true
 }

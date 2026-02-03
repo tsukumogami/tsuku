@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "blueutil",
   "description": "Get/set bluetooth power and discoverable state",
-  "homepage": "https://github.com/toy/blueutil"
+  "homepage": "https://github.com/toy/blueutil",
+  "downloads": 19458,
+  "has_repository": true
 }

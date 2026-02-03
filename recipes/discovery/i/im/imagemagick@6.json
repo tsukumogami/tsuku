@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "imagemagick@6",
   "description": "Tools and libraries to manipulate images in many formats",
-  "homepage": "https://legacy.imagemagick.org/"
+  "homepage": "https://legacy.imagemagick.org/",
+  "downloads": 18197,
+  "has_repository": true
 }

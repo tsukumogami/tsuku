@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "helmfile",
   "description": "Deploy Kubernetes Helm Charts",
-  "homepage": "https://github.com/helmfile/helmfile"
+  "homepage": "https://github.com/helmfile/helmfile",
+  "downloads": 38406,
+  "has_repository": true
 }

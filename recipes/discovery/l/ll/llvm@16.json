@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "llvm@16",
   "description": "Next-gen compiler infrastructure",
-  "homepage": "https://llvm.org/"
+  "homepage": "https://llvm.org/",
+  "downloads": 10765,
+  "has_repository": true
 }

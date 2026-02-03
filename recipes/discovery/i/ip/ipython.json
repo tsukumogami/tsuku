@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ipython",
   "description": "Interactive computing in Python",
-  "homepage": "https://ipython.org/"
+  "homepage": "https://ipython.org/",
+  "downloads": 49512,
+  "has_repository": true
 }

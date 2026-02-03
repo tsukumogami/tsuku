@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "edencommon",
   "description": "Shared library for Watchman and Eden projects",
-  "homepage": "https://github.com/facebookexperimental/edencommon"
+  "homepage": "https://github.com/facebookexperimental/edencommon",
+  "downloads": 242145,
+  "has_repository": true
 }

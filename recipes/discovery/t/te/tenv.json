@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tenv",
   "description": "OpenTofu / Terraform / Terragrunt / Terramate / Atmos version manager",
-  "homepage": "https://tofuutils.github.io/tenv/"
+  "homepage": "https://tofuutils.github.io/tenv/",
+  "downloads": 12912,
+  "has_repository": true
 }

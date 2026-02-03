@@ -274,6 +274,10 @@ type homebrewFormulaInfo struct {
 			Checksum string `json:"checksum"`
 		} `json:"stable"`
 	} `json:"urls"`
+	// Analytics: install counts by time period
+	Analytics struct {
+		Install map[string]map[string]int `json:"install"`
+	} `json:"analytics"`
 }
 
 // HomebrewFormulaNotFoundError indicates a formula doesn't exist.
@@ -991,6 +995,28 @@ func (b *HomebrewBuilder) fetchFormulaInfo(ctx context.Context, formula string) 
 	}
 
 	return &formulaInfo, nil
+}
+
+// Probe checks if a formula exists on Homebrew and returns quality metadata.
+// This is independent of RequiresLLM — probing is a deterministic registry
+// lookup, while LLM is only needed for recipe generation.
+func (b *HomebrewBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
+	info, err := b.fetchFormulaInfo(ctx, name)
+	if err != nil {
+		return nil, nil
+	}
+	result := &ProbeResult{
+		Source:        name,
+		HasRepository: info.Homepage != "",
+	}
+	// Extract 365-day install count from analytics. The analytics map is
+	// keyed by time period ("30d", "90d", "365d"), then by formula name.
+	if period, ok := info.Analytics.Install["365d"]; ok {
+		if count, ok := period[name]; ok {
+			result.Downloads = count
+		}
+	}
+	return result, nil
 }
 
 // homebrewGenContext holds context needed during recipe generation.

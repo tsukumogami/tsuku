@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "terminal-notifier",
   "description": "Send macOS User Notifications from the command-line",
-  "homepage": "https://github.com/julienXX/terminal-notifier"
+  "homepage": "https://github.com/julienXX/terminal-notifier",
+  "downloads": 69194,
+  "has_repository": true
 }

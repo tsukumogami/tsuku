@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mono",
   "description": "Cross platform, open source .NET development framework",
-  "homepage": "https://www.mono-project.com/"
+  "homepage": "https://www.mono-project.com/",
+  "downloads": 57774,
+  "has_repository": true
 }

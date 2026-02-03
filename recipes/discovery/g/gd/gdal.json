@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gdal",
   "description": "Geospatial Data Abstraction Library",
-  "homepage": "https://gdal.org/en/stable/"
+  "homepage": "https://gdal.org/en/stable/",
+  "downloads": 131794,
+  "has_repository": true
 }

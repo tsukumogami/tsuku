@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libvorbis",
   "description": "Vorbis general audio compression codec",
-  "homepage": "https://xiph.org/vorbis/"
+  "homepage": "https://xiph.org/vorbis/",
+  "downloads": 245707,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "graphicsmagick",
   "description": "Image processing tools collection",
-  "homepage": "https://graphicsmagick.sourceforge.io/"
+  "homepage": "https://graphicsmagick.sourceforge.io/",
+  "downloads": 69044,
+  "has_repository": true
 }

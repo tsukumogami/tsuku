@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ncdu",
   "description": "NCurses Disk Usage",
-  "homepage": "https://dev.yorhel.nl/ncdu"
+  "homepage": "https://dev.yorhel.nl/ncdu",
+  "downloads": 66382,
+  "has_repository": true
 }

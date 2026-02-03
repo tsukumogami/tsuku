@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "wireguard-tools",
   "description": "Tools for the WireGuard secure network tunnel",
-  "homepage": "https://www.wireguard.com/"
+  "homepage": "https://www.wireguard.com/",
+  "downloads": 29635,
+  "has_repository": true
 }

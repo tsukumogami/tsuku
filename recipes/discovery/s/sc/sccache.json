@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sccache",
   "description": "Used as a compiler wrapper and avoids compilation when possible",
-  "homepage": "https://github.com/mozilla/sccache"
+  "homepage": "https://github.com/mozilla/sccache",
+  "downloads": 14790,
+  "has_repository": true
 }

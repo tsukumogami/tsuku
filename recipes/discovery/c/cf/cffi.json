@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cffi",
   "description": "C Foreign Function Interface for Python",
-  "homepage": "https://cffi.readthedocs.io/en/latest/"
+  "homepage": "https://cffi.readthedocs.io/en/latest/",
+  "downloads": 245153,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ykman",
   "description": "Tool for managing your YubiKey configuration",
-  "homepage": "https://developers.yubico.com/yubikey-manager/"
+  "homepage": "https://developers.yubico.com/yubikey-manager/",
+  "downloads": 22555,
+  "has_repository": true
 }

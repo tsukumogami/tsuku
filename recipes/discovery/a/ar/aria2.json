@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "aria2",
   "description": "Download with resuming and segmented downloading",
-  "homepage": "https://aria2.github.io/"
+  "homepage": "https://aria2.github.io/",
+  "downloads": 60895,
+  "has_repository": true
 }

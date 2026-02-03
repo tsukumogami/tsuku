@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jenv",
   "description": "Manage your Java environment",
-  "homepage": "https://github.com/jenv/jenv"
+  "homepage": "https://github.com/jenv/jenv",
+  "downloads": 52812,
+  "has_repository": true
 }

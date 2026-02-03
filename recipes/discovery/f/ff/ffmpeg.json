@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ffmpeg",
   "description": "Play, record, convert, and stream select audio and video codecs",
-  "homepage": "https://ffmpeg.org/"
+  "homepage": "https://ffmpeg.org/",
+  "downloads": 1540570,
+  "has_repository": true
 }

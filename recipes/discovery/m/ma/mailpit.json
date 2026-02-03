@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mailpit",
   "description": "Web and API based SMTP testing",
-  "homepage": "https://mailpit.axllent.org/"
+  "homepage": "https://mailpit.axllent.org/",
+  "downloads": 11463,
+  "has_repository": true
 }

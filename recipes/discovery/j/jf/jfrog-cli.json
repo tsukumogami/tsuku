@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jfrog-cli",
   "description": "Command-line interface for JFrog products",
-  "homepage": "https://www.jfrog.com/confluence/display/CLI/JFrog+CLI"
+  "homepage": "https://www.jfrog.com/confluence/display/CLI/JFrog+CLI",
+  "downloads": 59635,
+  "has_repository": true
 }

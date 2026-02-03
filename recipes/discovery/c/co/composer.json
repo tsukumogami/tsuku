@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "composer",
   "description": "Dependency Manager for PHP",
-  "homepage": "https://getcomposer.org/"
+  "homepage": "https://getcomposer.org/",
+  "downloads": 209235,
+  "has_repository": true
 }

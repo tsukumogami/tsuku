@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pngquant",
   "description": "PNG image optimizing utility",
-  "homepage": "https://pngquant.org/"
+  "homepage": "https://pngquant.org/",
+  "downloads": 17380,
+  "has_repository": true
 }

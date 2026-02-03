@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "python@3.14",
   "description": "Interpreted, interactive, object-oriented programming language",
-  "homepage": "https://www.python.org/"
+  "homepage": "https://www.python.org/",
+  "downloads": 965939,
+  "has_repository": true
 }

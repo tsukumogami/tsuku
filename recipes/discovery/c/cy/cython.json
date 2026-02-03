@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cython",
   "description": "Compiler for writing C extensions for the Python language",
-  "homepage": "https://cython.org/"
+  "homepage": "https://cython.org/",
+  "downloads": 15645,
+  "has_repository": true
 }

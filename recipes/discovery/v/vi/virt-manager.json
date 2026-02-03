@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "virt-manager",
   "description": "App for managing virtual machines",
-  "homepage": "https://virt-manager.org/"
+  "homepage": "https://virt-manager.org/",
+  "downloads": 11867,
+  "has_repository": true
 }

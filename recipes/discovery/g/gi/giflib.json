@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "giflib",
   "description": "Library and utilities for processing GIFs",
-  "homepage": "https://giflib.sourceforge.net/"
+  "homepage": "https://giflib.sourceforge.net/",
+  "downloads": 743532,
+  "has_repository": true
 }

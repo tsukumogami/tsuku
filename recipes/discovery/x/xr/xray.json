@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "xray",
   "description": "Platform for building proxies to bypass network restrictions",
-  "homepage": "https://xtls.github.io/"
+  "homepage": "https://xtls.github.io/",
+  "downloads": 6161,
+  "has_repository": true
 }

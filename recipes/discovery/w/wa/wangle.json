@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "wangle",
   "description": "Modular, composable client/server abstractions framework",
-  "homepage": "https://github.com/facebook/wangle"
+  "homepage": "https://github.com/facebook/wangle",
+  "downloads": 242859,
+  "has_repository": true
 }

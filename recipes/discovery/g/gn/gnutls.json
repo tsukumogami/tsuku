@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gnutls",
   "description": "GNU Transport Layer Security (TLS) Library",
-  "homepage": "https://gnutls.org/"
+  "homepage": "https://gnutls.org/",
+  "downloads": 1290796,
+  "has_repository": true
 }

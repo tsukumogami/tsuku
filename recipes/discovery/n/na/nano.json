@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nano",
   "description": "Free (GNU) replacement for the Pico text editor",
-  "homepage": "https://www.nano-editor.org/"
+  "homepage": "https://www.nano-editor.org/",
+  "downloads": 34792,
+  "has_repository": true
 }

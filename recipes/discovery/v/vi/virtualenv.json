@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "virtualenv",
   "description": "Tool for creating isolated virtual python environments",
-  "homepage": "https://virtualenv.pypa.io/"
+  "homepage": "https://virtualenv.pypa.io/",
+  "downloads": 93126,
+  "has_repository": true
 }

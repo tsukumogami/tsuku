@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tbb",
   "description": "Rich and complete approach to parallelism in C++",
-  "homepage": "https://uxlfoundation.github.io/oneTBB/"
+  "homepage": "https://uxlfoundation.github.io/oneTBB/",
+  "downloads": 111127,
+  "has_repository": true
 }

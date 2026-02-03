@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "vtk",
   "description": "Toolkit for 3D computer graphics, image processing, and visualization",
-  "homepage": "https://www.vtk.org/"
+  "homepage": "https://www.vtk.org/",
+  "downloads": 69469,
+  "has_repository": true
 }

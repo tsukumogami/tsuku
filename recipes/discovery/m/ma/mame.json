@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mame",
   "description": "Multiple Arcade Machine Emulator",
-  "homepage": "https://mamedev.org/"
+  "homepage": "https://mamedev.org/",
+  "downloads": 8626,
+  "has_repository": true
 }
