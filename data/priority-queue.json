@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-03T09:51:38Z",
+  "updated_at": "2026-02-03T13:15:46Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -703,7 +703,7 @@
       "source": "homebrew",
       "name": "git-lfs",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -767,7 +767,7 @@
       "source": "homebrew",
       "name": "bat",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -831,7 +831,7 @@
       "source": "homebrew",
       "name": "btop",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -935,7 +935,7 @@
       "source": "homebrew",
       "name": "htop",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -943,7 +943,7 @@
       "source": "homebrew",
       "name": "sqlite",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -959,7 +959,7 @@
       "source": "homebrew",
       "name": "fd",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1343,7 +1343,7 @@
       "source": "homebrew",
       "name": "eza",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1463,7 +1463,7 @@
       "source": "homebrew",
       "name": "terraform",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1471,7 +1471,7 @@
       "source": "homebrew",
       "name": "shellcheck",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2151,7 +2151,7 @@
       "source": "homebrew",
       "name": "meson",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
