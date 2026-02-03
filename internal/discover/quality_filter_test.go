@@ -76,6 +76,24 @@ func TestQualityFilter_Accept(t *testing.T) {
 			wantOK:      false,
 		},
 		{
+			name:        "cpan passes river threshold",
+			builderName: "cpan",
+			result:      &builders.ProbeResult{Downloads: 1, VersionCount: 0},
+			wantOK:      true,
+		},
+		{
+			name:        "cpan passes version threshold",
+			builderName: "cpan",
+			result:      &builders.ProbeResult{Downloads: 0, VersionCount: 3},
+			wantOK:      true,
+		},
+		{
+			name:        "cpan fails both thresholds",
+			builderName: "cpan",
+			result:      &builders.ProbeResult{Downloads: 0, VersionCount: 2},
+			wantOK:      false,
+		},
+		{
 			name:        "cask fails open (no threshold)",
 			builderName: "cask",
 			result:      &builders.ProbeResult{},

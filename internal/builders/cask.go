@@ -184,13 +184,15 @@ func (b *CaskBuilder) Build(ctx context.Context, req BuildRequest) (*BuildResult
 // caskAPIResponse represents the Homebrew Cask API response structure.
 // This includes the artifacts array which is needed for builder functionality.
 type caskAPIResponse struct {
-	Token    string   `json:"token"`    // Cask name (e.g., "visual-studio-code")
-	Version  string   `json:"version"`  // Version string (e.g., "1.96.4")
-	SHA256   string   `json:"sha256"`   // SHA256 checksum
-	URL      string   `json:"url"`      // Download URL
-	Name     []string `json:"name"`     // Human-readable name(s)
-	Desc     string   `json:"desc"`     // Description
-	Homepage string   `json:"homepage"` // Homepage URL
+	Token      string   `json:"token"`      // Cask name (e.g., "visual-studio-code")
+	Version    string   `json:"version"`    // Version string (e.g., "1.96.4")
+	SHA256     string   `json:"sha256"`     // SHA256 checksum
+	URL        string   `json:"url"`        // Download URL
+	Name       []string `json:"name"`       // Human-readable name(s)
+	Desc       string   `json:"desc"`       // Description
+	Homepage   string   `json:"homepage"`   // Homepage URL
+	Deprecated bool     `json:"deprecated"` // Whether the cask is deprecated
+	Disabled   bool     `json:"disabled"`   // Whether the cask is disabled
 
 	// Artifacts is a heterogeneous array where each element is an object
 	// with one key (app, binary, pkg, zap, etc.)
@@ -427,11 +429,18 @@ func isValidCaskName(name string) bool {
 }
 
 // Probe checks if a cask exists on Homebrew Cask and returns quality metadata.
+// Returns nil for disabled casks (rejected immediately).
 func (b *CaskBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
 	info, err := b.fetchCaskInfo(ctx, name)
 	if err != nil {
 		return nil, nil
 	}
+
+	// Reject disabled casks immediately
+	if info.Disabled {
+		return nil, nil
+	}
+
 	return &ProbeResult{
 		Source:        name,
 		HasRepository: info.Homepage != "",
