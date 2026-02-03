@@ -207,7 +207,7 @@
       "source": "homebrew",
       "name": "cmake",
       "tier": 1,
-      "status": "success",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -215,7 +215,7 @@
       "source": "homebrew",
       "name": "go",
       "tier": 1,
-      "status": "failed",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -264,14 +264,6 @@
       "name": "python@3.13",
       "tier": 2,
       "status": "failed",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:anomalyco/tap/opencode",
-      "source": "homebrew",
-      "name": "anomalyco/tap/opencode",
-      "tier": 3,
-      "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -383,7 +375,7 @@
       "source": "homebrew",
       "name": "lazygit",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -415,7 +407,7 @@
       "source": "homebrew",
       "name": "ruby",
       "tier": 3,
-      "status": "pending",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -431,7 +423,7 @@
       "source": "homebrew",
       "name": "ninja",
       "tier": 1,
-      "status": "success",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -455,7 +447,7 @@
       "source": "homebrew",
       "name": "docker-compose",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -519,7 +511,7 @@
       "source": "homebrew",
       "name": "pipx",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -527,7 +519,7 @@
       "source": "homebrew",
       "name": "just",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -542,22 +534,6 @@
       "id": "homebrew:tesseract",
       "source": "homebrew",
       "name": "tesseract",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:norwoodj/tap/helm-docs",
-      "source": "homebrew",
-      "name": "norwoodj/tap/helm-docs",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/gogcli",
-      "source": "homebrew",
-      "name": "steipete/tap/gogcli",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -583,7 +559,7 @@
       "source": "homebrew",
       "name": "starship",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -623,7 +599,7 @@
       "source": "homebrew",
       "name": "rust",
       "tier": 1,
-      "status": "failed",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -631,15 +607,7 @@
       "source": "homebrew",
       "name": "k9s",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:metalbear-co/mirrord/mirrord",
-      "source": "homebrew",
-      "name": "metalbear-co/mirrord/mirrord",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -671,7 +639,7 @@
       "source": "homebrew",
       "name": "kubeconform",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -691,27 +659,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:hashicorp/tap/terraform",
-      "source": "homebrew",
-      "name": "hashicorp/tap/terraform",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:git-lfs",
       "source": "homebrew",
       "name": "git-lfs",
       "tier": 1,
       "status": "success",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:antoniorodr/memo/memo",
-      "source": "homebrew",
-      "name": "antoniorodr/memo/memo",
-      "tier": 3,
-      "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -759,7 +711,7 @@
       "source": "homebrew",
       "name": "kustomize",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -771,35 +723,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:steipete/tap/remindctl",
-      "source": "homebrew",
-      "name": "steipete/tap/remindctl",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:chezmoi",
       "source": "homebrew",
       "name": "chezmoi",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:oven-sh/bun/bun",
-      "source": "homebrew",
-      "name": "oven-sh/bun/bun",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:yakitrak/yakitrak/obsidian-cli",
-      "source": "homebrew",
-      "name": "yakitrak/yakitrak/obsidian-cli",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -815,7 +743,7 @@
       "source": "homebrew",
       "name": "bash",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -887,7 +815,7 @@
       "source": "homebrew",
       "name": "argocd",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -907,25 +835,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:fluxcd/tap/flux",
-      "source": "homebrew",
-      "name": "fluxcd/tap/flux",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:himalaya",
       "source": "homebrew",
       "name": "himalaya",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/imsg",
-      "source": "homebrew",
-      "name": "steipete/tap/imsg",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -963,25 +875,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:steipete/tap/goplaces",
-      "source": "homebrew",
-      "name": "steipete/tap/goplaces",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:python@3.9",
       "source": "homebrew",
       "name": "python@3.9",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:wix/brew/applesimutils",
-      "source": "homebrew",
-      "name": "wix/brew/applesimutils",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -991,7 +887,7 @@
       "source": "homebrew",
       "name": "poetry",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1022,14 +918,6 @@
       "id": "homebrew:rbenv",
       "source": "homebrew",
       "name": "rbenv",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/wacli",
-      "source": "homebrew",
-      "name": "steipete/tap/wacli",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -1075,14 +963,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:supabase/tap/supabase",
-      "source": "homebrew",
-      "name": "supabase/tap/supabase",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:podman",
       "source": "homebrew",
       "name": "podman",
@@ -1103,7 +983,7 @@
       "source": "homebrew",
       "name": "direnv",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1123,14 +1003,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:steipete/tap/gifgrep",
-      "source": "homebrew",
-      "name": "steipete/tap/gifgrep",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:postgresql@17",
       "source": "homebrew",
       "name": "postgresql@17",
@@ -1143,7 +1015,7 @@
       "source": "homebrew",
       "name": "actionlint",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1151,15 +1023,7 @@
       "source": "homebrew",
       "name": "libpng",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:sst/tap/opencode",
-      "source": "homebrew",
-      "name": "sst/tap/opencode",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1183,7 +1047,7 @@
       "source": "homebrew",
       "name": "golangci-lint",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1191,15 +1055,7 @@
       "source": "homebrew",
       "name": "colima",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:tw93/tap/mole",
-      "source": "homebrew",
-      "name": "tw93/tap/mole",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1214,14 +1070,6 @@
       "id": "homebrew:terragrunt",
       "source": "homebrew",
       "name": "terragrunt",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/sag",
-      "source": "homebrew",
-      "name": "steipete/tap/sag",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -1259,14 +1107,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:steipete/tap/bird",
-      "source": "homebrew",
-      "name": "steipete/tap/bird",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:nss",
       "source": "homebrew",
       "name": "nss",
@@ -1279,15 +1119,7 @@
       "source": "homebrew",
       "name": "atuin",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/summarize",
-      "source": "homebrew",
-      "name": "steipete/tap/summarize",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1295,21 +1127,13 @@
       "source": "homebrew",
       "name": "tilt",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
       "id": "homebrew:mysql-client",
       "source": "homebrew",
       "name": "mysql-client",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/peekaboo",
-      "source": "homebrew",
-      "name": "steipete/tap/peekaboo",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -1344,14 +1168,6 @@
       "name": "eza",
       "tier": 1,
       "status": "failed",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:valkyrie00/bbrew/bbrew",
-      "source": "homebrew",
-      "name": "valkyrie00/bbrew/bbrew",
-      "tier": 3,
-      "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1423,7 +1239,7 @@
       "source": "homebrew",
       "name": "httpie",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1455,7 +1271,7 @@
       "source": "homebrew",
       "name": "ruff",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1479,7 +1295,7 @@
       "source": "homebrew",
       "name": "trivy",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1503,7 +1319,7 @@
       "source": "homebrew",
       "name": "zlib",
       "tier": 3,
-      "status": "pending",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1547,25 +1363,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:charmbracelet/tap/crush",
-      "source": "homebrew",
-      "name": "charmbracelet/tap/crush",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:uutils-findutils",
       "source": "homebrew",
       "name": "uutils-findutils",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:facebook/fb/idb-companion",
-      "source": "homebrew",
-      "name": "facebook/fb/idb-companion",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -1723,14 +1523,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:derailed/k9s/k9s",
-      "source": "homebrew",
-      "name": "derailed/k9s/k9s",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:pipenv",
       "source": "homebrew",
       "name": "pipenv",
@@ -1742,14 +1534,6 @@
       "id": "homebrew:tcl-tk",
       "source": "homebrew",
       "name": "tcl-tk",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/songsee",
-      "source": "homebrew",
-      "name": "steipete/tap/songsee",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -1811,14 +1595,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:azure/kubelogin/kubelogin",
-      "source": "homebrew",
-      "name": "azure/kubelogin/kubelogin",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:docker-buildx",
       "source": "homebrew",
       "name": "docker-buildx",
@@ -1859,14 +1635,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:chargepoint/xcparse/xcparse",
-      "source": "homebrew",
-      "name": "chargepoint/xcparse/xcparse",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:mpv",
       "source": "homebrew",
       "name": "mpv",
@@ -1883,25 +1651,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:ddev/ddev/ddev",
-      "source": "homebrew",
-      "name": "ddev/ddev/ddev",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:bats-core",
       "source": "homebrew",
       "name": "bats-core",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:mongodb/brew/mongodb-community",
-      "source": "homebrew",
-      "name": "mongodb/brew/mongodb-community",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -1931,19 +1683,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:openhue/cli/openhue-cli",
-      "source": "homebrew",
-      "name": "openhue/cli/openhue-cli",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:k3d",
       "source": "homebrew",
       "name": "k3d",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1955,19 +1699,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:stripe/stripe-cli/stripe",
-      "source": "homebrew",
-      "name": "stripe/stripe-cli/stripe",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:libxml2",
       "source": "homebrew",
       "name": "libxml2",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1975,7 +1711,7 @@
       "source": "homebrew",
       "name": "lazydocker",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1983,7 +1719,7 @@
       "source": "homebrew",
       "name": "zig",
       "tier": 3,
-      "status": "pending",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1991,7 +1727,7 @@
       "source": "homebrew",
       "name": "sops",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2015,7 +1751,7 @@
       "source": "homebrew",
       "name": "gitleaks",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2031,7 +1767,7 @@
       "source": "homebrew",
       "name": "readline",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2055,7 +1791,7 @@
       "source": "homebrew",
       "name": "k6",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2107,14 +1843,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:bats-core/bats-core/bats-support",
-      "source": "homebrew",
-      "name": "bats-core/bats-core/bats-support",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:rsync",
       "source": "homebrew",
       "name": "rsync",
@@ -2151,7 +1879,7 @@
       "source": "homebrew",
       "name": "meson",
       "tier": 1,
-      "status": "failed",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2171,27 +1899,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:bats-core/bats-core/bats-assert",
-      "source": "homebrew",
-      "name": "bats-core/bats-core/bats-assert",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:cosign",
       "source": "homebrew",
       "name": "cosign",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:bats-core/bats-core/bats-file",
-      "source": "homebrew",
-      "name": "bats-core/bats-core/bats-file",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2207,7 +1919,7 @@
       "source": "homebrew",
       "name": "minikube",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2222,14 +1934,6 @@
       "id": "homebrew:cloc",
       "source": "homebrew",
       "name": "cloc",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/ordercli",
-      "source": "homebrew",
-      "name": "steipete/tap/ordercli",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -2271,7 +1975,7 @@
       "source": "homebrew",
       "name": "libngtcp2",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2295,7 +1999,7 @@
       "source": "homebrew",
       "name": "libnghttp3",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2303,7 +2007,7 @@
       "source": "homebrew",
       "name": "ast-grep",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2327,7 +2031,7 @@
       "source": "homebrew",
       "name": "oras",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2367,15 +2071,7 @@
       "source": "homebrew",
       "name": "perl",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:jandedobbeleer/oh-my-posh/oh-my-posh",
-      "source": "homebrew",
-      "name": "jandedobbeleer/oh-my-posh/oh-my-posh",
-      "tier": 3,
-      "status": "pending",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2415,7 +2111,7 @@
       "source": "homebrew",
       "name": "kind",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2423,7 +2119,7 @@
       "source": "homebrew",
       "name": "tflint",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2451,19 +2147,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:vmware-tanzu/carvel/vendir",
-      "source": "homebrew",
-      "name": "vmware-tanzu/carvel/vendir",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:terraform-docs",
       "source": "homebrew",
       "name": "terraform-docs",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2515,14 +2203,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:databricks/tap/databricks",
-      "source": "homebrew",
-      "name": "databricks/tap/databricks",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:fizz",
       "source": "homebrew",
       "name": "fizz",
@@ -2543,15 +2223,7 @@
       "source": "homebrew",
       "name": "caddy",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:mobile-dev-inc/tap/maestro",
-      "source": "homebrew",
-      "name": "mobile-dev-inc/tap/maestro",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2695,7 +2367,7 @@
       "source": "homebrew",
       "name": "black",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2751,23 +2423,7 @@
       "source": "homebrew",
       "name": "railway",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:hashicorp/tap/vault",
-      "source": "homebrew",
-      "name": "hashicorp/tap/vault",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:bufbuild/buf/buf",
-      "source": "homebrew",
-      "name": "bufbuild/buf/buf",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2783,7 +2439,7 @@
       "source": "homebrew",
       "name": "ncurses",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2839,7 +2495,7 @@
       "source": "homebrew",
       "name": "jj",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2847,15 +2503,7 @@
       "source": "homebrew",
       "name": "fnm",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:getsentry/tools/sentry-cli",
-      "source": "homebrew",
-      "name": "getsentry/tools/sentry-cli",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2899,14 +2547,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:leoafarias/fvm/fvm",
-      "source": "homebrew",
-      "name": "leoafarias/fvm/fvm",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:emacs",
       "source": "homebrew",
       "name": "emacs",
@@ -2919,7 +2559,7 @@
       "source": "homebrew",
       "name": "age",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2927,7 +2567,7 @@
       "source": "homebrew",
       "name": "make",
       "tier": 3,
-      "status": "pending",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3007,7 +2647,7 @@
       "source": "homebrew",
       "name": "pulumi",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3030,14 +2670,6 @@
       "id": "homebrew:sbt",
       "source": "homebrew",
       "name": "sbt",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:puma/puma/puma-dev",
-      "source": "homebrew",
-      "name": "puma/puma/puma-dev",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -3079,7 +2711,7 @@
       "source": "homebrew",
       "name": "zstd",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3103,7 +2735,7 @@
       "source": "homebrew",
       "name": "grype",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3123,14 +2755,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:signadot/tap/signadot-cli",
-      "source": "homebrew",
-      "name": "signadot/tap/signadot-cli",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:luajit",
       "source": "homebrew",
       "name": "luajit",
@@ -3143,7 +2767,7 @@
       "source": "homebrew",
       "name": "libsodium",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3151,15 +2775,7 @@
       "source": "homebrew",
       "name": "syft",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:steipete/tap/camsnap",
-      "source": "homebrew",
-      "name": "steipete/tap/camsnap",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3174,14 +2790,6 @@
       "id": "homebrew:freetype",
       "source": "homebrew",
       "name": "freetype",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:dopplerhq/cli/doppler",
-      "source": "homebrew",
-      "name": "dopplerhq/cli/doppler",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -3287,7 +2895,7 @@
       "source": "homebrew",
       "name": "biome",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3475,19 +3083,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:steveyegge/beads/bd",
-      "source": "homebrew",
-      "name": "steveyegge/beads/bd",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:trufflehog",
       "source": "homebrew",
       "name": "trufflehog",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3543,15 +3143,7 @@
       "source": "homebrew",
       "name": "bottom",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:xcodesorg/made/xcodes",
-      "source": "homebrew",
-      "name": "xcodesorg/made/xcodes",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3591,7 +3183,7 @@
       "source": "homebrew",
       "name": "kubectx",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3631,7 +3223,7 @@
       "source": "homebrew",
       "name": "topgrade",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3686,14 +3278,6 @@
       "id": "homebrew:mariadb",
       "source": "homebrew",
       "name": "mariadb",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:pulumi/tap/pulumi",
-      "source": "homebrew",
-      "name": "pulumi/tap/pulumi",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -3803,14 +3387,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:microsoft/mssql-release/msodbcsql18",
-      "source": "homebrew",
-      "name": "microsoft/mssql-release/msodbcsql18",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:docutils",
       "source": "homebrew",
       "name": "docutils",
@@ -3847,7 +3423,7 @@
       "source": "homebrew",
       "name": "glow",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3919,7 +3495,7 @@
       "source": "homebrew",
       "name": "libyaml",
       "tier": 3,
-      "status": "pending",
+      "status": "skipped",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3943,7 +3519,7 @@
       "source": "homebrew",
       "name": "stern",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -4003,14 +3579,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:atlassian/acli/acli",
-      "source": "homebrew",
-      "name": "atlassian/acli/acli",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:grpcurl",
       "source": "homebrew",
       "name": "grpcurl",
@@ -4047,7 +3615,7 @@
       "source": "homebrew",
       "name": "libssh2",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -4083,14 +3651,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:mongodb/brew/mongodb-community@7.0",
-      "source": "homebrew",
-      "name": "mongodb/brew/mongodb-community@7.0",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:shared-mime-info",
       "source": "homebrew",
       "name": "shared-mime-info",
@@ -4119,15 +3679,7 @@
       "source": "homebrew",
       "name": "doctl",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:withgraphite/tap/graphite",
-      "source": "homebrew",
-      "name": "withgraphite/tap/graphite",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -4174,14 +3726,6 @@
       "id": "homebrew:midnight-commander",
       "source": "homebrew",
       "name": "midnight-commander",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:go-task/tap/go-task",
-      "source": "homebrew",
-      "name": "go-task/tap/go-task",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -4267,25 +3811,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:snyk/tap/snyk",
-      "source": "homebrew",
-      "name": "snyk/tap/snyk",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:rabbitmq",
       "source": "homebrew",
       "name": "rabbitmq",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:gnostr-org/gnostr-org/gnostr",
-      "source": "homebrew",
-      "name": "gnostr-org/gnostr-org/gnostr",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -4310,30 +3838,6 @@
       "id": "homebrew:talosctl",
       "source": "homebrew",
       "name": "talosctl",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:hudochenkov/sshpass/sshpass",
-      "source": "homebrew",
-      "name": "hudochenkov/sshpass/sshpass",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:dart-lang/dart/dart",
-      "source": "homebrew",
-      "name": "dart-lang/dart/dart",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:langgenius/dify/dify",
-      "source": "homebrew",
-      "name": "langgenius/dify/dify",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -4387,25 +3891,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:sass/sass/sass",
-      "source": "homebrew",
-      "name": "sass/sass/sass",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:tldr",
       "source": "homebrew",
       "name": "tldr",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:danger/tap/danger-swift",
-      "source": "homebrew",
-      "name": "danger/tap/danger-swift",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -4423,7 +3911,7 @@
       "source": "homebrew",
       "name": "helix",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -4439,7 +3927,7 @@
       "source": "homebrew",
       "name": "tfsec",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -4454,14 +3942,6 @@
       "id": "homebrew:protoc-gen-go-grpc",
       "source": "homebrew",
       "name": "protoc-gen-go-grpc",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:checkmarx/ast-cli/ast-cli",
-      "source": "homebrew",
-      "name": "checkmarx/ast-cli/ast-cli",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -4687,7 +4167,7 @@
       "source": "homebrew",
       "name": "gum",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -4703,7 +4183,7 @@
       "source": "homebrew",
       "name": "helmfile",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -4807,7 +4287,7 @@
       "source": "homebrew",
       "name": "velero",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -4875,14 +4355,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:twittemb/formulae/xcodecoverageconverter",
-      "source": "homebrew",
-      "name": "twittemb/formulae/xcodecoverageconverter",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:dialog",
       "source": "homebrew",
       "name": "dialog",
@@ -4910,14 +4382,6 @@
       "id": "homebrew:stress-ng",
       "source": "homebrew",
       "name": "stress-ng",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:cyclonedx/cyclonedx/cyclonedx-cli",
-      "source": "homebrew",
-      "name": "cyclonedx/cyclonedx/cyclonedx-cli",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -4959,29 +4423,13 @@
       "source": "homebrew",
       "name": "lsd",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
       "id": "homebrew:cask",
       "source": "homebrew",
       "name": "cask",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:mongodb/brew/mongodb-database-tools",
-      "source": "homebrew",
-      "name": "mongodb/brew/mongodb-database-tools",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:siderolabs/tap/talosctl",
-      "source": "homebrew",
-      "name": "siderolabs/tap/talosctl",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -4999,7 +4447,7 @@
       "source": "homebrew",
       "name": "pcre2",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -5014,14 +4462,6 @@
       "id": "homebrew:goreleaser",
       "source": "homebrew",
       "name": "goreleaser",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:mongodb/brew/mongodb-community@8.0",
-      "source": "homebrew",
-      "name": "mongodb/brew/mongodb-community@8.0",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -5083,14 +4523,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:jesseduffield/lazydocker/lazydocker",
-      "source": "homebrew",
-      "name": "jesseduffield/lazydocker/lazydocker",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:angular-cli",
       "source": "homebrew",
       "name": "angular-cli",
@@ -5110,14 +4542,6 @@
       "id": "homebrew:libmagic",
       "source": "homebrew",
       "name": "libmagic",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:azure/functions/azure-functions-core-tools@4",
-      "source": "homebrew",
-      "name": "azure/functions/azure-functions-core-tools@4",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -5191,7 +4615,7 @@
       "source": "homebrew",
       "name": "skaffold",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -5215,7 +4639,7 @@
       "source": "homebrew",
       "name": "eksctl",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -5283,14 +4707,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:shivammathur/php/php@7.4",
-      "source": "homebrew",
-      "name": "shivammathur/php/php@7.4",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:nano",
       "source": "homebrew",
       "name": "nano",
@@ -5302,22 +4718,6 @@
       "id": "homebrew:trash-cli",
       "source": "homebrew",
       "name": "trash-cli",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:hashicorp/tap/packer",
-      "source": "homebrew",
-      "name": "hashicorp/tap/packer",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:heroku/brew/heroku",
-      "source": "homebrew",
-      "name": "heroku/brew/heroku",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -5403,14 +4803,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:gromgit/fuse/ntfs-3g-mac",
-      "source": "homebrew",
-      "name": "gromgit/fuse/ntfs-3g-mac",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:nvtop",
       "source": "homebrew",
       "name": "nvtop",
@@ -5478,14 +4870,6 @@
       "id": "homebrew:dpkg",
       "source": "homebrew",
       "name": "dpkg",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:defenseunicorns/tap/uds@0.27.18",
-      "source": "homebrew",
-      "name": "defenseunicorns/tap/uds@0.27.18",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -5559,7 +4943,7 @@
       "source": "homebrew",
       "name": "aws-iam-authenticator",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -5591,7 +4975,7 @@
       "source": "homebrew",
       "name": "kubeseal",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -5867,25 +5251,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:localstack/tap/localstack-cli",
-      "source": "homebrew",
-      "name": "localstack/tap/localstack-cli",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:awscli-local",
       "source": "homebrew",
       "name": "awscli-local",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:microsoft/mssql-release/mssql-tools18",
-      "source": "homebrew",
-      "name": "microsoft/mssql-release/mssql-tools18",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -6103,7 +5471,7 @@
       "source": "homebrew",
       "name": "gopls",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -6143,7 +5511,7 @@
       "source": "homebrew",
       "name": "ack",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -6227,14 +5595,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:f1bonacc1/tap/process-compose",
-      "source": "homebrew",
-      "name": "f1bonacc1/tap/process-compose",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:hey",
       "source": "homebrew",
       "name": "hey",
@@ -6283,14 +5643,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:clojure/tools/clojure",
-      "source": "homebrew",
-      "name": "clojure/tools/clojure",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:pygobject3",
       "source": "homebrew",
       "name": "pygobject3",
@@ -6327,7 +5679,7 @@
       "source": "homebrew",
       "name": "jsonnet",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -6439,7 +5791,7 @@
       "source": "homebrew",
       "name": "duf",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -6551,7 +5903,7 @@
       "source": "homebrew",
       "name": "dive",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -6587,25 +5939,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:shopify/shopify/shopify-cli",
-      "source": "homebrew",
-      "name": "shopify/shopify/shopify-cli",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:wasmtime",
       "source": "homebrew",
       "name": "wasmtime",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:postmanlabs/postman-insights-agent/postman-insights-agent",
-      "source": "homebrew",
-      "name": "postmanlabs/postman-insights-agent/postman-insights-agent",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -6627,19 +5963,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:lizardbyte/homebrew/sunshine",
-      "source": "homebrew",
-      "name": "lizardbyte/homebrew/sunshine",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:dasel",
       "source": "homebrew",
       "name": "dasel",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -6715,14 +6043,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:netbirdio/tap/netbird",
-      "source": "homebrew",
-      "name": "netbirdio/tap/netbird",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:psutils",
       "source": "homebrew",
       "name": "psutils",
@@ -6742,14 +6062,6 @@
       "id": "homebrew:openfortivpn",
       "source": "homebrew",
       "name": "openfortivpn",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:felixherrmann/tap/swift-package-list",
-      "source": "homebrew",
-      "name": "felixherrmann/tap/swift-package-list",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -6827,14 +6139,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:obsproject/tools/clang-format@19",
-      "source": "homebrew",
-      "name": "obsproject/tools/clang-format@19",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:jackett",
       "source": "homebrew",
       "name": "jackett",
@@ -6847,7 +6151,7 @@
       "source": "homebrew",
       "name": "miller",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -6870,22 +6174,6 @@
       "id": "homebrew:haskell-stack",
       "source": "homebrew",
       "name": "haskell-stack",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:frontasticgmbh/tap/frontastic-cli",
-      "source": "homebrew",
-      "name": "frontasticgmbh/tap/frontastic-cli",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:cirruslabs/cli/tart",
-      "source": "homebrew",
-      "name": "cirruslabs/cli/tart",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -6943,7 +6231,7 @@
       "source": "homebrew",
       "name": "gdbm",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -7003,14 +6291,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:quarkusio/tap/quarkus",
-      "source": "homebrew",
-      "name": "quarkusio/tap/quarkus",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:ruby@3.3",
       "source": "homebrew",
       "name": "ruby@3.3",
@@ -7039,7 +6319,7 @@
       "source": "homebrew",
       "name": "expat",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -7083,25 +6363,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:minio/stable/mc",
-      "source": "homebrew",
-      "name": "minio/stable/mc",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:llm",
       "source": "homebrew",
       "name": "llm",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:azure/azd/azd",
-      "source": "homebrew",
-      "name": "azure/azd/azd",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -7131,14 +6395,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:filosottile/musl-cross/musl-cross",
-      "source": "homebrew",
-      "name": "filosottile/musl-cross/musl-cross",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:micromamba",
       "source": "homebrew",
       "name": "micromamba",
@@ -7163,19 +6419,11 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:defenseunicorns/tap/uds",
-      "source": "homebrew",
-      "name": "defenseunicorns/tap/uds",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:brotli",
       "source": "homebrew",
       "name": "brotli",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -7198,22 +6446,6 @@
       "id": "homebrew:basedpyright",
       "source": "homebrew",
       "name": "basedpyright",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:d12frosted/emacs-plus/emacs-plus@30",
-      "source": "homebrew",
-      "name": "d12frosted/emacs-plus/emacs-plus@30",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:max-sixty/worktrunk/wt",
-      "source": "homebrew",
-      "name": "max-sixty/worktrunk/wt",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -7255,7 +6487,7 @@
       "source": "homebrew",
       "name": "crane",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -7267,33 +6499,9 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:tursodatabase/tap/turso",
-      "source": "homebrew",
-      "name": "tursodatabase/tap/turso",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:coursier/formulas/coursier",
-      "source": "homebrew",
-      "name": "coursier/formulas/coursier",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:libev",
       "source": "homebrew",
       "name": "libev",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:felixkratz/formulae/sketchybar",
-      "source": "homebrew",
-      "name": "felixkratz/formulae/sketchybar",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -7391,7 +6599,7 @@
       "source": "homebrew",
       "name": "proj",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -7479,7 +6687,7 @@
       "source": "homebrew",
       "name": "fx",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -7547,14 +6755,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:env0/terratag/terratag",
-      "source": "homebrew",
-      "name": "env0/terratag/terratag",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:iblinter",
       "source": "homebrew",
       "name": "iblinter",
@@ -7566,14 +6766,6 @@
       "id": "homebrew:tcl-tk@8",
       "source": "homebrew",
       "name": "tcl-tk@8",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:homeport/tap/dyff",
-      "source": "homebrew",
-      "name": "homeport/tap/dyff",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -7591,15 +6783,7 @@
       "source": "homebrew",
       "name": "aws-nuke",
       "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:yoheimuta/protolint/protolint",
-      "source": "homebrew",
-      "name": "yoheimuta/protolint/protolint",
-      "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -7702,14 +6886,6 @@
       "id": "homebrew:zsh-autocomplete",
       "source": "homebrew",
       "name": "zsh-autocomplete",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:encoredev/tap/encore",
-      "source": "homebrew",
-      "name": "encoredev/tap/encore",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -7843,14 +7019,6 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:thezoraiz/ascii-image-converter/ascii-image-converter",
-      "source": "homebrew",
-      "name": "thezoraiz/ascii-image-converter/ascii-image-converter",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:gnu-time",
       "source": "homebrew",
       "name": "gnu-time",
@@ -7915,33 +7083,17 @@
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
-      "id": "homebrew:warrensbox/tap/tfswitch",
-      "source": "homebrew",
-      "name": "warrensbox/tap/tfswitch",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
       "id": "homebrew:geos",
       "source": "homebrew",
       "name": "geos",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
       "id": "homebrew:pwgen",
       "source": "homebrew",
       "name": "pwgen",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:temporalio/brew/tcld",
-      "source": "homebrew",
-      "name": "temporalio/brew/tcld",
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
@@ -7993,22 +7145,6 @@
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:koekeishiya/formulae/yabai",
-      "source": "homebrew",
-      "name": "koekeishiya/formulae/yabai",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T21:31:19Z"
-    },
-    {
-      "id": "homebrew:huseyinbabal/tap/taws",
-      "source": "homebrew",
-      "name": "huseyinbabal/tap/taws",
-      "tier": 3,
-      "status": "pending",
-      "added_at": "2026-02-01T22:26:52Z"
     }
   ]
 }

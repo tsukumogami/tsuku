@@ -42,7 +42,9 @@ jobs:
         run: |
           ./seed-queue \
             -source "${{ env.SOURCE }}" \
-            -limit "${{ env.LIMIT }}"
+            -limit "${{ env.LIMIT }}" \
+            -recipes-dir recipes \
+            -embedded-dir internal/recipe/recipes
 
       - name: Validate output
         run: |
