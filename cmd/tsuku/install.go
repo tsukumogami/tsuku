@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"os"
@@ -233,18 +232,6 @@ func isInteractive() bool {
 		return false
 	}
 	return (fileInfo.Mode() & os.ModeCharDevice) != 0
-}
-
-// confirmInstall prompts the user for confirmation and returns true if they agree
-func confirmInstall() bool {
-	reader := bufio.NewReader(os.Stdin)
-	fmt.Fprint(os.Stderr, "Continue installation? [y/N] ")
-	response, err := reader.ReadString('\n')
-	if err != nil {
-		return false
-	}
-	response = strings.TrimSpace(strings.ToLower(response))
-	return response == "y" || response == "yes"
 }
 
 // runDryRun shows what would be installed without making changes

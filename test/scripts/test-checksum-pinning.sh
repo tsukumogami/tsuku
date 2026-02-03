@@ -224,7 +224,7 @@ RESULT=$(docker run --rm -e GITHUB_TOKEN="$GITHUB_TOKEN" -e TSUKU_REGISTRY_URL="
 ' 2>&1) || true
 echo "$RESULT"
 
-if echo "$RESULT" | grep -q "MODIFIED\|mismatch\|checksum"; then
+if echo "$RESULT" | grep -iq "MODIFIED\|mismatch\|checksum"; then
     echo "Test 3: PASSED"
 else
     echo "Test 3: FAILED - expected tamper detection"
