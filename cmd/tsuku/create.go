@@ -723,6 +723,7 @@ func runDiscovery(toolName string) (*discover.DiscoveryResult, error) {
 		builders.NewGoBuilder(nil),
 		builders.NewCPANBuilder(nil),
 		builders.NewCaskBuilder(nil),
+		builders.NewHomebrewBuilder(),
 	} {
 		if p, ok := b.(builders.EcosystemProber); ok {
 			probers = append(probers, p)

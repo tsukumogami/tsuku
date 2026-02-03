@@ -993,6 +993,20 @@ func (b *HomebrewBuilder) fetchFormulaInfo(ctx context.Context, formula string) 
 	return &formulaInfo, nil
 }
 
+// Probe checks if a formula exists on Homebrew and returns quality metadata.
+// This is independent of RequiresLLM — probing is a deterministic registry
+// lookup, while LLM is only needed for recipe generation.
+func (b *HomebrewBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
+	info, err := b.fetchFormulaInfo(ctx, name)
+	if err != nil {
+		return nil, nil
+	}
+	return &ProbeResult{
+		Source:        name,
+		HasRepository: info.Homepage != "",
+	}, nil
+}
+
 // homebrewGenContext holds context needed during recipe generation.
 type homebrewGenContext struct {
 	formula     string

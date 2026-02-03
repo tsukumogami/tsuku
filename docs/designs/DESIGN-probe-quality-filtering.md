@@ -23,11 +23,11 @@ Planned
 | ~~[#1405: add quality filter with RegistryEntry schema extension and Cargo builder](https://github.com/tsukumogami/tsuku/issues/1405)~~ | [#1365](https://github.com/tsukumogami/tsuku/issues/1365) | testable |
 | _Walking skeleton: extends RegistryEntry with quality metadata fields, changes Probe() to return RegistryEntry, creates QualityFilter with per-registry thresholds, wires it into the resolver, and proves the full path with the Cargo builder. Also updates the remaining 6 builders with stub Probe() implementations so the codebase compiles._ | | |
 | ~~[#1406: add quality metadata to npm and PyPI builders](https://github.com/tsukumogami/tsuku/issues/1406)~~ | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
-| _Updates the npm and PyPI builders to populate quality metadata in RegistryEntry. npm adds a parallel downloads API fetch; PyPI parses releases dict length and project URLs. Also includes Cask builder metadata (originally #1408 scope)._ | | |
+| _Updates the npm, PyPI, Cask, and Homebrew formula builders to populate quality metadata. npm adds a parallel downloads API fetch; PyPI parses releases dict length and project URLs. Also adds Homebrew formulae to the ecosystem probe (Probe() is independent of LLM-based recipe building)._ | | |
 | [#1407: add quality metadata to Gem and Go builders](https://github.com/tsukumogami/tsuku/issues/1407) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
 | _Updates the RubyGems and Go builders. Gem adds a parallel version count fetch and parses downloads from the main endpoint. Go adds a parallel /@v/list fetch for version count and parses Origin.URL._ | | |
 | [#1408: add quality metadata to CPAN and Cask builders](https://github.com/tsukumogami/tsuku/issues/1408) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
-| _Updates the MetaCPAN builder to fetch river metrics from the distribution endpoint, and the Cask builder to check deprecated/disabled flags. Completes the builder rollout._ | | |
+| _Updates the MetaCPAN builder to fetch river metrics from the distribution endpoint. Cask and Homebrew formula metadata were completed in #1406._ | | |
 | [#1409: add integration tests for quality filtering](https://github.com/tsukumogami/tsuku/issues/1409) | [#1406](https://github.com/tsukumogami/tsuku/issues/1406), [#1407](https://github.com/tsukumogami/tsuku/issues/1407), [#1408](https://github.com/tsukumogami/tsuku/issues/1408) | testable |
 | _End-to-end integration tests with realistic squatter scenarios (prettier, httpie). Validates that the filter plus priority ranking resolves tools to the correct registry._ | | |
 | [#1410: wire QualityFilter into seed-discovery pipeline](https://github.com/tsukumogami/tsuku/issues/1410) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405), [#1364](https://github.com/tsukumogami/tsuku/issues/1364) | testable |
@@ -81,7 +81,7 @@ This design addresses a gap discovered during implementation of [DESIGN-ecosyste
 
 ## Context and Problem Statement
 
-The ecosystem probe is the second stage of tsuku's discovery resolver chain. It queries seven package registries in parallel and returns the highest-priority match. The probe was implemented in issues #1383-#1386 and is now live.
+The ecosystem probe is the second stage of tsuku's discovery resolver chain. It queries eight package registries in parallel (Cargo, PyPI, npm, Gem, Go, CPAN, Cask, and Homebrew formulae) and returns the highest-priority match. The probe was implemented in issues #1383-#1386 and is now live.
 
 The problem: every `Probe()` implementation only checks whether a name exists on the registry. It doesn't evaluate whether the package is real, maintained, or capable of delivering a working tool. Name squatting is widespread across package registries. Almost every common tool name is claimed on crates.io, npm, and pypi by placeholder packages that contain no meaningful code.
 
@@ -168,7 +168,8 @@ Define minimum acceptable values per registry. A package must pass at least one 
 - PyPI: `version_count >= 3` (from `len(releases)` in `/pypi/{name}/json`; download fields return -1 in standard API; pypistats.org has downloads but adds rate-limited third-party dependency)
 - MetaCPAN: `river_total >= 1` OR `version_count >= 3` (`river.total` from `/v1/distribution/{name}` endpoint, requires separate call from existing `/v1/release/{name}`)
 - Go: `version_count >= 3` (from `/@v/list` endpoint line count; domain-based naming prevents exact-name squatting but not typosquatting; no download metrics available)
-- Cask: no threshold (curated by Homebrew maintainers); check `deprecated` and `disabled` flags to reject removed or unsafe casks
+- Cask: no threshold (curated by Homebrew maintainers)
+- Homebrew (formulae): no threshold (curated by Homebrew maintainers)
 
 Packages that fail all thresholds for their registry are rejected. The thresholds live in the `QualityFilter` as a config map, making them easy to tune.
 
@@ -198,7 +199,7 @@ The ecosystem probe resolver passes each `RegistryEntry` through a `QualityFilte
 
 The `QualityFilter` is a standalone type that takes a builder name and a `RegistryEntry` as input and returns accept/reject. Because the ecosystem probe now produces `RegistryEntry` records (the same format the seeding pipeline and registry lookup use), the filter works identically in both contexts without conversion or adapter code.
 
-Cask is exempt from quality thresholds because Homebrew maintainers review all casks before inclusion. However, Probe() should check the `deprecated` and `disabled` flags and reject disabled casks. Go module paths are domain-based, which prevents exact-name squatting on legitimate domains (you can't publish `github.com/cli/cli` without GitHub org access). However, typosquatting remains possible (e.g., `github.com/boltdb-go/bolt` targeting `github.com/boltdb/bolt`). Since Go has no download metrics, we apply a lightweight `version_count >= 3` check via the `/@v/list` endpoint to filter placeholder modules.
+Cask and Homebrew formulae are exempt from quality thresholds because Homebrew maintainers review all entries before inclusion. Go module paths are domain-based, which prevents exact-name squatting on legitimate domains (you can't publish `github.com/cli/cli` without GitHub org access). However, typosquatting remains possible (e.g., `github.com/boltdb-go/bolt` targeting `github.com/boltdb/bolt`). Since Go has no download metrics, we apply a lightweight `version_count >= 3` check via the `/@v/list` endpoint to filter placeholder modules.
 
 ### Rationale
 
@@ -240,6 +241,12 @@ type RegistryEntry struct {
 ```
 
 These fields are `omitempty` so they don't appear in existing discovery JSON files that don't have quality data. The seeding pipeline can optionally populate them during enrichment, and the runtime probe always populates them.
+
+### Probe() is independent of build method
+
+A builder's `Probe()` method is a deterministic registry lookup: "does this name exist, and what quality signals does the API return?" This is independent of how the builder generates recipes. A builder can require LLM for recipe generation (`RequiresLLM() == true`) while still implementing `Probe()` as a simple API call. The Homebrew formulae builder is the clearest example: building a recipe from a bottle requires LLM-assisted extraction, but checking whether a formula exists is a single GET to `formulae.brew.sh/api/formula/{name}.json`.
+
+Any builder with a queryable registry API should implement `EcosystemProber`, regardless of its build complexity. The `RequiresLLM()` flag controls whether the builder needs an LLM provider during `NewSession()`; it has no bearing on whether the builder can participate in the ecosystem probe.
 
 ### Probe() signature change
 
@@ -309,7 +316,8 @@ Registry API  →  RegistryEntry (with quality metadata)
 | Gem | Downloads, VersionCount, HasRepository | `downloads` + `/api/v1/versions/{name}.json` array length + `source_code_uri` | Yes (version count) |
 | Go | VersionCount, HasRepository | `/@v/list` line count, `Origin.URL` from `/@latest` | Yes (version list) |
 | CPAN | Downloads (river), HasRepository | `/v1/distribution/{name}` for `river.total` + `repository` | Yes (distribution) |
-| Cask | (exempt from quality thresholds; check deprecated/disabled flags) | `deprecated`, `disabled` from `formulae.brew.sh/api/cask/{name}.json` | No |
+| Cask | HasRepository | `homepage` from `formulae.brew.sh/api/cask/{name}.json` | No |
+| Homebrew | HasRepository | `homepage` from `formulae.brew.sh/api/formula/{name}.json` | No |
 
 ### Parallel secondary fetches
 
@@ -357,13 +365,14 @@ Each registry's API was investigated to verify that the proposed quality signals
 
 ### Phase 2: Remaining builder Probe() updates
 
-- Update the remaining 6 builders to return `RegistryEntry` from `Probe()`:
+- Update the remaining 7 builders to return `RegistryEntry` from `Probe()`:
   - PyPI: parse `releases` dict length and `info.project_urls` (no extra call)
   - npm: add parallel downloads fetch to `api.npmjs.org`, parse `versions` object length (1 extra call)
   - Gem: add parallel `/api/v1/versions/{name}.json` fetch for version count, parse `downloads` from main endpoint (1 extra call)
   - Go: add parallel `/@v/list` fetch for version count, parse `Origin.URL` for repository (1 extra call)
   - CPAN: add parallel `/v1/distribution/{name}` fetch for `river.total` and `repository` (1 extra call)
-  - Cask: parse `deprecated` and `disabled` flags, reject disabled casks in Probe()
+  - Cask: parse `homepage` for repository presence (no extra call)
+  - Homebrew (formulae): parse `homepage` for repository presence (no extra call; Probe() is independent of the LLM-based recipe builder)
 - Add unit tests per builder verifying metadata extraction
 
 ### Phase 3: Integration testing and seeding pipeline
@@ -394,7 +403,7 @@ The mitigation isn't perfect. A well-crafted squatter with artificially inflated
 
 The npm downloads API call is new external traffic. It sends the package name to `api.npmjs.org`, which is the same domain npm already uses. No user-identifying information is transmitted beyond what the existing Probe() calls already send (package name + IP address).
 
-More broadly, the ecosystem probe sends the tool name to all seven registries in parallel. This means each registry learns that someone is looking for a given tool name. This is inherent to the existing probe design, not new to this change. The privacy model remains: tool names are sent, but no user-identifying data beyond IP address.
+More broadly, the ecosystem probe sends the tool name to all eight registries in parallel. This means each registry learns that someone is looking for a given tool name. This is inherent to the existing probe design, not new to this change. The privacy model remains: tool names are sent, but no user-identifying data beyond IP address.
 
 ## Consequences
 
