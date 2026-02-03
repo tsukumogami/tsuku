@@ -22,8 +22,8 @@ Planned
 |-------|--------------|------|
 | ~~[#1405: add quality filter with RegistryEntry schema extension and Cargo builder](https://github.com/tsukumogami/tsuku/issues/1405)~~ | [#1365](https://github.com/tsukumogami/tsuku/issues/1365) | testable |
 | _Walking skeleton: extends RegistryEntry with quality metadata fields, changes Probe() to return RegistryEntry, creates QualityFilter with per-registry thresholds, wires it into the resolver, and proves the full path with the Cargo builder. Also updates the remaining 6 builders with stub Probe() implementations so the codebase compiles._ | | |
-| [#1406: add quality metadata to npm and PyPI builders](https://github.com/tsukumogami/tsuku/issues/1406) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
-| _Updates the npm and PyPI builders to populate quality metadata in RegistryEntry. npm adds a parallel downloads API fetch; PyPI parses releases dict length and project URLs._ | | |
+| ~~[#1406: add quality metadata to npm and PyPI builders](https://github.com/tsukumogami/tsuku/issues/1406)~~ | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
+| _Updates the npm and PyPI builders to populate quality metadata in RegistryEntry. npm adds a parallel downloads API fetch; PyPI parses releases dict length and project URLs. Also includes Cask builder metadata (originally #1408 scope)._ | | |
 | [#1407: add quality metadata to Gem and Go builders](https://github.com/tsukumogami/tsuku/issues/1407) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
 | _Updates the RubyGems and Go builders. Gem adds a parallel version count fetch and parses downloads from the main endpoint. Go adds a parallel /@v/list fetch for version count and parses Origin.URL._ | | |
 | [#1408: add quality metadata to CPAN and Cask builders](https://github.com/tsukumogami/tsuku/issues/1408) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
@@ -66,7 +66,8 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1405 done
-    class I1406,I1407,I1408,I1410 ready
+    class I1406 done
+    class I1407,I1408,I1410 ready
     class I1409 blocked
 ```
 
