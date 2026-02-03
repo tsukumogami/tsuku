@@ -822,6 +822,34 @@ jobs:
           ./queue-analytics
           echo "Dashboard generated at website/pipeline/dashboard.json"
 
+          # Write step summary if dashboard was generated
+          DASHBOARD="website/pipeline/dashboard.json"
+          if [ -f "$DASHBOARD" ]; then
+            {
+              echo "## Pipeline Queue Status"
+              echo ""
+              echo "| Status | Count |"
+              echo "|--------|-------|"
+              jq -r '.queue.by_status | to_entries[] | "| \(.key) | \(.value) |"' "$DASHBOARD"
+              echo ""
+              echo "**Total packages**: $(jq -r '.queue.total' "$DASHBOARD")"
+              echo ""
+
+              # Top 3 blockers (if any)
+              BLOCKER_COUNT=$(jq '.blockers | length' "$DASHBOARD")
+              if [ "$BLOCKER_COUNT" -gt 0 ]; then
+                echo "### Top Blockers"
+                echo ""
+                echo "| Dependency | Blocked Packages |"
+                echo "|------------|------------------|"
+                jq -r '.blockers[:3][] | "| \(.dependency) | \(.count) |"' "$DASHBOARD"
+                echo ""
+              fi
+
+              echo "[View full dashboard](https://tsuku.dev/pipeline/)"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Check for recipes to merge
         id: check
         run: |
