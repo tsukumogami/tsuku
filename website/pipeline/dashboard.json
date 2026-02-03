@@ -1,0 +1,65 @@
+{
+  "generated_at": "2026-02-03T17:53:46Z",
+  "queue": {
+    "total": 1001,
+    "by_status": {
+      "blocked": 4,
+      "failed": 16,
+      "pending": 978,
+      "success": 3
+    },
+    "by_tier": {
+      "1": {
+        "blocked": 1,
+        "failed": 3,
+        "pending": 25,
+        "success": 1
+      },
+      "2": {
+        "blocked": 3,
+        "failed": 13,
+        "pending": 8,
+        "success": 2
+      },
+      "3": {
+        "pending": 945
+      }
+    }
+  },
+  "blockers": [
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
+      ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
+      ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
+    }
+  ],
+  "failures": {
+    "deterministic": 5,
+    "deterministic_insufficient": 5,
+    "missing_dep": 4,
+    "validation_failed": 11
+  }
+}
