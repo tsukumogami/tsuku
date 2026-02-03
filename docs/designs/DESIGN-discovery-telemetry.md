@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Complete
 problem: |
   The discovery resolver runs through up to three stages (registry lookup, ecosystem probe, LLM discovery) but produces no telemetry. There's no visibility into how often each stage fires, what tools users search for, or where resolution fails. Without this data, we can't prioritize registry curation, measure ecosystem probe reliability, or evaluate LLM discovery effectiveness once it ships.
 decision: |
@@ -12,16 +12,16 @@ rationale: |
 
 ## Status
 
-Planned
+Complete
 
 ## Implementation Issues
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1319: add discovery telemetry events](https://github.com/tsukumogami/tsuku/issues/1319) | None | testable |
-| [#1423: add backend support for discovery events](https://github.com/tsukumogami/tsuku/issues/1423) | None | testable |
-| [#1424: add /stats/discovery endpoint](https://github.com/tsukumogami/tsuku/issues/1424) | [#1423](https://github.com/tsukumogami/tsuku/issues/1423) | testable |
-| [#1425: add discovery stats section to dashboard](https://github.com/tsukumogami/tsuku/issues/1425) | [#1424](https://github.com/tsukumogami/tsuku/issues/1424) | simple |
+| ~~[#1319: add discovery telemetry events](https://github.com/tsukumogami/tsuku/issues/1319)~~ | ~~None~~ | ~~testable~~ |
+| ~~[#1423: add backend support for discovery events](https://github.com/tsukumogami/tsuku/issues/1423)~~ | ~~None~~ | ~~testable~~ |
+| ~~[#1424: add /stats/discovery endpoint](https://github.com/tsukumogami/tsuku/issues/1424)~~ | ~~[#1423](https://github.com/tsukumogami/tsuku/issues/1423)~~ | ~~testable~~ |
+| ~~[#1425: add discovery stats section to dashboard](https://github.com/tsukumogami/tsuku/issues/1425)~~ | ~~[#1424](https://github.com/tsukumogami/tsuku/issues/1424)~~ | ~~simple~~ |
 
 ### Dependency Graph
 
@@ -36,14 +36,11 @@ graph LR
     I1424 --> I1425
 
     classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
 
-    class I1319,I1423 ready
-    class I1424,I1425 blocked
+    class I1319,I1423,I1424,I1425 done
 ```
 
-**Legend**: Green = done, Blue = ready, Yellow = blocked
+**Legend**: Green = done
 
 ## Context and Problem Statement
 
