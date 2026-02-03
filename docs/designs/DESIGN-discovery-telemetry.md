@@ -10,7 +10,9 @@ rationale: |
 
 # DESIGN: Discovery Telemetry Events
 
-**Status**: Proposed
+## Status
+
+Proposed
 
 ## Context and Problem Statement
 
