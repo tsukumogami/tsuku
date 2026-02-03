@@ -50,7 +50,7 @@ rationale: |
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | ~~[#1434](https://github.com/tsukumogami/tsuku/issues/1434)~~ | ~~test(dashboard): add unit tests for internal/dashboard package~~ | ~~None~~ | ~~testable~~ |
-| ~~_Adds unit tests covering JSONL parsing (both legacy batch and per-recipe formats), queue aggregation, blocker extraction, and graceful handling of missing files._~~ | | |
+| _Adds unit tests covering JSONL parsing (both legacy batch and per-recipe formats), queue aggregation, blocker extraction, and graceful handling of missing files._ | | |
 | [#1435](https://github.com/tsukumogami/tsuku/issues/1435) | ci(pipeline): integrate dashboard generation into batch-generate workflow | None | testable |
 | _Integrates the queue-analytics binary into the batch-generate.yml merge job to auto-regenerate dashboard.json on every batch run._ | | |
 | [#1436](https://github.com/tsukumogami/tsuku/issues/1436) | ci(pipeline): add step summary with queue status | [#1435](https://github.com/tsukumogami/tsuku/issues/1435) | simple |
