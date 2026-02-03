@@ -534,6 +534,130 @@ func TestCaskBuilder_Session(t *testing.T) {
 	}
 }
 
+func TestCaskBuilder_Probe_ReturnsQualityMetadata(t *testing.T) {
+	mockResp := map[string]interface{}{
+		"token":      "iterm2",
+		"version":    "3.5.0",
+		"sha256":     "abc123",
+		"url":        "https://iterm2.com/downloads/stable/iTerm2-3_5_0.zip",
+		"name":       []string{"iTerm2"},
+		"desc":       "Terminal emulator",
+		"homepage":   "https://iterm2.com/",
+		"deprecated": false,
+		"disabled":   false,
+		"artifacts": []map[string]interface{}{
+			{"app": []interface{}{"iTerm.app"}},
+		},
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(mockResp)
+	}))
+	defer server.Close()
+
+	b := NewCaskBuilderWithBaseURL(nil, server.URL)
+	result, err := b.Probe(context.Background(), "iterm2")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil result")
+	}
+
+	if result.Source != "iterm2" {
+		t.Errorf("Source = %q, want %q", result.Source, "iterm2")
+	}
+	if !result.HasRepository {
+		t.Error("HasRepository = false, want true (homepage present)")
+	}
+}
+
+func TestCaskBuilder_Probe_DisabledCask(t *testing.T) {
+	mockResp := map[string]interface{}{
+		"token":      "disabled-app",
+		"version":    "1.0.0",
+		"sha256":     "abc123",
+		"url":        "https://example.com/app.dmg",
+		"name":       []string{"Disabled App"},
+		"desc":       "An app that is disabled",
+		"homepage":   "https://example.com/",
+		"deprecated": false,
+		"disabled":   true, // Disabled cask
+		"artifacts": []map[string]interface{}{
+			{"app": []interface{}{"DisabledApp.app"}},
+		},
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(mockResp)
+	}))
+	defer server.Close()
+
+	b := NewCaskBuilderWithBaseURL(nil, server.URL)
+	result, err := b.Probe(context.Background(), "disabled-app")
+	if err != nil {
+		t.Fatalf("Probe() error = %v, want nil", err)
+	}
+	if result != nil {
+		t.Errorf("Probe() result = %v, want nil for disabled cask", result)
+	}
+}
+
+func TestCaskBuilder_Probe_DeprecatedCask(t *testing.T) {
+	// Deprecated casks should still be returned (only disabled are rejected)
+	mockResp := map[string]interface{}{
+		"token":      "deprecated-app",
+		"version":    "1.0.0",
+		"sha256":     "abc123",
+		"url":        "https://example.com/app.dmg",
+		"name":       []string{"Deprecated App"},
+		"desc":       "An app that is deprecated",
+		"homepage":   "https://example.com/",
+		"deprecated": true, // Deprecated but not disabled
+		"disabled":   false,
+		"artifacts": []map[string]interface{}{
+			{"app": []interface{}{"DeprecatedApp.app"}},
+		},
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(mockResp)
+	}))
+	defer server.Close()
+
+	b := NewCaskBuilderWithBaseURL(nil, server.URL)
+	result, err := b.Probe(context.Background(), "deprecated-app")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil - deprecated casks should still be returned")
+	}
+
+	if result.Source != "deprecated-app" {
+		t.Errorf("Source = %q, want %q", result.Source, "deprecated-app")
+	}
+}
+
+func TestCaskBuilder_Probe_NotFound(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.NotFound(w, r)
+	}))
+	defer server.Close()
+
+	b := NewCaskBuilderWithBaseURL(nil, server.URL)
+	result, err := b.Probe(context.Background(), "nonexistent-cask")
+	if err != nil {
+		t.Fatalf("Probe() error = %v, want nil", err)
+	}
+	if result != nil {
+		t.Errorf("Probe() result = %v, want nil for not found", result)
+	}
+}
+
 // Helper function
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(s) > 0 && containsAt(s, substr, 0))

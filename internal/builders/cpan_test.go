@@ -404,3 +404,123 @@ func TestCPANBuilder_Build_InvalidContentType(t *testing.T) {
 		t.Error("Build() should fail on invalid content type")
 	}
 }
+
+func TestCPANBuilder_Probe_ReturnsQualityMetadata(t *testing.T) {
+	// Mock MetaCPAN API responses for both endpoints
+	releaseResponse := `{
+		"distribution": "App-Ack",
+		"version": "3.7.0",
+		"abstract": "grep-like text finder"
+	}`
+	distributionResponse := `{
+		"name": "App-Ack",
+		"river": {
+			"total": 42,
+			"bucket": "5",
+			"immediate": 10
+		},
+		"resources": {
+			"repository": {
+				"url": "https://github.com/beyondgrep/ack3",
+				"type": "git"
+			}
+		}
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		switch r.URL.Path {
+		case "/release/App-Ack":
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(releaseResponse))
+		case "/distribution/App-Ack":
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(distributionResponse))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Probe(ctx, "App-Ack")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil result")
+	}
+
+	if result.Source != "App-Ack" {
+		t.Errorf("Source = %q, want %q", result.Source, "App-Ack")
+	}
+	if result.Downloads != 42 {
+		t.Errorf("Downloads = %d, want 42", result.Downloads)
+	}
+	if !result.HasRepository {
+		t.Error("HasRepository = false, want true")
+	}
+}
+
+func TestCPANBuilder_Probe_GracefulDegradation(t *testing.T) {
+	// Distribution endpoint fails but release endpoint succeeds
+	releaseResponse := `{
+		"distribution": "App-Ack",
+		"version": "3.7.0",
+		"abstract": "grep-like text finder"
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/release/App-Ack":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(releaseResponse))
+		case "/distribution/App-Ack":
+			// Simulate distribution endpoint failure
+			w.WriteHeader(http.StatusInternalServerError)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Probe(ctx, "App-Ack")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil result - should succeed with graceful degradation")
+	}
+
+	// Graceful degradation: Downloads should be 0, HasRepository false
+	if result.Downloads != 0 {
+		t.Errorf("Downloads = %d, want 0 (graceful degradation)", result.Downloads)
+	}
+	if result.HasRepository {
+		t.Error("HasRepository = true, want false (graceful degradation)")
+	}
+}
+
+func TestCPANBuilder_Probe_NotFound(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	builder := NewCPANBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Probe(ctx, "Nonexistent-Distribution")
+	if err != nil {
+		t.Fatalf("Probe() error = %v, want nil", err)
+	}
+	if result != nil {
+		t.Errorf("Probe() result = %v, want nil for not found", result)
+	}
+}
