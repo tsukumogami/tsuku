@@ -19,23 +19,24 @@ problem: |
 decision: |
   Implement a static HTML dashboard at website/pipeline/ that displays queue
   status with tier breakdown, top blocking dependencies, failure categories,
-  and recent batch runs. A shell script processes the existing JSON/JSONL
-  data files and outputs a dashboard.json file that the HTML page fetches.
+  and recent batch runs. A Go tool (internal/dashboard) processes the existing
+  JSON/JSONL data files and outputs a dashboard.json file that the HTML page
+  fetches.
 
   The dashboard is regenerated automatically during each batch pipeline run,
   ensuring data freshness without manual intervention. The implementation
-  follows existing patterns: jq for data processing, vanilla JavaScript for
-  the frontend, no framework or build step.
+  follows existing patterns: Go for data processing (like internal/seed),
+  vanilla JavaScript for the frontend, no framework or build step.
 rationale: |
-  Shell scripting with jq aligns with established codebase patterns
-  (batch-metrics.sh, gap-analysis.sh). Static HTML matches the website's
-  existing architecture. CI-triggered generation ensures data is always
-  current after batch runs without operator intervention.
+  Go tooling aligns with established internal patterns (seed, queue packages).
+  The two JSONL record formats benefit from type-safe parsing with proper error
+  handling. Static HTML matches the website's existing architecture. CI-triggered
+  generation ensures data is always current after batch runs without operator
+  intervention.
 
   This is an intermediate solution that provides immediate value while #1190
-  (full failure analysis backend) is developed. The simple architecture means
-  low maintenance burden and fast iteration on what visualizations are most
-  useful.
+  (full failure analysis backend) is developed. The robust Go implementation
+  and comprehensive tests enable confident iteration on visualizations.
 ---
 
 # Pipeline Dashboard
@@ -165,9 +166,9 @@ Processing involves: reading JSON/JSONL files, aggregating counts, computing per
 
 The choice affects dependencies, maintainability, and consistency with existing codebase patterns.
 
-#### Chosen: Shell Script (jq + awk)
+#### Chosen: Go Tool (internal/dashboard)
 
-A single shell script processes all data files and outputs both CLI tables and JSON for the dashboard. This matches existing patterns (`batch-metrics.sh`, `gap-analysis.sh`) and requires no additional dependencies.
+A Go package processes all data files and outputs JSON for the dashboard. This matches existing internal tooling patterns (`internal/seed/`, `internal/queue/`) and provides type safety, testability, and robust error handling for parsing the two JSONL formats.
 
 Pipeline:
 1. Read `priority-queue.json` for queue status counts
@@ -175,13 +176,15 @@ Pipeline:
 3. Read `metrics/batch-runs.jsonl` for run history
 4. Output combined JSON to `website/pipeline/dashboard.json`
 
+Invoked as: `tsuku dashboard generate` or via direct binary for CI.
+
 #### Alternatives Considered
 
-**Python script**: More readable for complex logic, better error handling.
-Rejected because existing data processing scripts use shell+jq consistently. Python would add a dependency and break the pattern.
+**Shell script (jq + awk)**: Follows `batch-metrics.sh` pattern, lower barrier to quick changes.
+Rejected because the seed and queue tooling use Go. Dashboard generation is similar data transformation work and benefits from type safety, especially for parsing the two JSONL record formats.
 
-**Go tool**: Type-safe, fast, could be part of tsuku CLI.
-Rejected because this is a reporting tool, not a core CLI feature. Shell scripts are easier to iterate on and sufficient for the data volume.
+**Python script**: More readable for complex logic, better error handling than shell.
+Rejected because Go is the established language for tsuku internal tooling. Python would add a dependency.
 
 ---
 
@@ -242,8 +245,6 @@ Rejected for initial scope. Start simple, add detail if operators find the basic
 - **Metric data availability**: PR #1422 adds `batch-runs.jsonl` but it's not yet merged. Dashboard will handle missing file gracefully (show "No metrics data available" panel).
 
 ### Assumptions
-
-- **jq availability**: jq is available in GitHub Actions (ubuntu-latest) and on operator machines. This is documented as a development dependency.
 - **Public data**: Queue status and failure messages are appropriate for public visibility on tsuku.dev. Package names and Homebrew formula details are already public.
 - **Single ecosystem**: Initial implementation filters to homebrew only. The dashboard JSON schema supports future ecosystem expansion.
 - **Browser access**: Operators have browser access for the HTML dashboard; CLI scripts remain available for terminal-only contexts.
@@ -256,11 +257,11 @@ Rejected for initial scope. Start simple, add detail if operators find the basic
 
 The pipeline dashboard consists of three components: a shell script that processes data files, a JSON data file committed to the repository, and a static HTML page deployed to tsuku.dev.
 
-The data processing script (`scripts/generate-dashboard.sh`) reads from three sources: `data/priority-queue.json` for queue status and tier breakdown, `data/failures/homebrew.jsonl` for failure categories and blocking dependencies, and `data/metrics/batch-runs.jsonl` for historical run metrics. It aggregates counts, computes top blockers by frequency, and outputs a single `website/pipeline/dashboard.json` file. The script handles missing metrics data gracefully by omitting the "Recent Runs" panel data when `batch-runs.jsonl` doesn't exist.
+The data processing tool (`internal/dashboard/`) reads from three sources: `data/priority-queue.json` for queue status and tier breakdown, `data/failures/homebrew.jsonl` for failure categories and blocking dependencies, and `data/metrics/batch-runs.jsonl` for historical run metrics. It aggregates counts, computes top blockers by frequency, and outputs a single `website/pipeline/dashboard.json` file. The tool handles missing metrics data gracefully by omitting the "Recent Runs" panel data when `batch-runs.jsonl` doesn't exist.
 
 The HTML dashboard (`website/pipeline/index.html`) fetches `dashboard.json` at page load and renders four panels: queue status with tier breakdown, top blocking dependencies, failure category distribution, and recent batch runs. It follows the existing `website/stats/` pattern: vanilla JavaScript, CSS variables for theming, no framework, no build step. The page shows the data timestamp and links to the relevant data files for operators who want raw access.
 
-CI integration adds a step to `batch-generate.yml` after "Persist circuit breaker state" that runs the generation script and includes the output in the commit. The dashboard updates automatically after each batch pipeline run, ensuring data freshness without manual intervention. Additionally, the merge job's `$GITHUB_STEP_SUMMARY` output is enhanced to include a quick status table, providing immediate visibility in the Actions tab.
+CI integration adds a step to `batch-generate.yml` that runs the dashboard generation tool and includes the output in the commit. The dashboard updates automatically after each batch pipeline run, ensuring data freshness without manual intervention. Additionally, the merge job's `$GITHUB_STEP_SUMMARY` output is enhanced to include a quick status table, providing immediate visibility in the Actions tab.
 
 ### Rationale
 
@@ -320,24 +321,31 @@ These are acceptable because:
 
 ### Components
 
-**1. Data Generation Script** (`scripts/generate-dashboard.sh`)
+**1. Data Generation Tool** (`internal/dashboard/`)
 
-Reads source data files and outputs `website/pipeline/dashboard.json`:
+Go package that reads source data files and outputs `website/pipeline/dashboard.json`:
 
-```bash
-#!/usr/bin/env bash
-# Input files (relative to repo root)
-QUEUE_FILE="data/priority-queue.json"
-FAILURES_FILE="data/failures/homebrew.jsonl"
-METRICS_FILE="data/metrics/batch-runs.jsonl"
-OUTPUT_FILE="website/pipeline/dashboard.json"
+```go
+package dashboard
+
+// Generate reads pipeline data files and produces dashboard.json
+func Generate(opts Options) error {
+    // Input files (relative to repo root)
+    queueFile := "data/priority-queue.json"
+    failuresFile := "data/failures/homebrew.jsonl"
+    metricsFile := "data/metrics/batch-runs.jsonl"
+    outputFile := "website/pipeline/dashboard.json"
+    // ...
+}
 ```
 
-Note: The failures JSONL contains two record types:
+CLI integration: `tsuku dashboard generate [--output PATH]`
+
+Note: The failures JSONL contains two record types that the Go parser handles:
 1. **Legacy batch records**: Objects with `failures[]` array containing `package_id`, `category`, `blocked_by`
 2. **Per-recipe validation records**: Objects with `recipe`, `platform`, `exit_code`, `category`
 
-The script processes both formats: legacy records for blocker analysis (extracting `blocked_by` arrays) and per-recipe records for category counts.
+The tool processes both formats: legacy records for blocker analysis (extracting `blocked_by` arrays) and per-recipe records for category counts.
 
 **2. Dashboard Data File** (`website/pipeline/dashboard.json`)
 
@@ -418,15 +426,17 @@ Static HTML page using vanilla JavaScript:
 
 ## Implementation Approach
 
-### Phase 1: Data Generation Script
+### Phase 1: Data Generation Tool
 
-Create `scripts/generate-dashboard.sh` that:
-- Reads source JSON/JSONL files
-- Computes all aggregations with jq
-- Outputs formatted `dashboard.json`
-- Handles missing files gracefully (outputs partial data)
+Create `internal/dashboard/` package with:
+- Types for priority queue, failure records (both formats), and metrics
+- `Generate()` function that reads files and outputs `dashboard.json`
+- Unit tests for parsing both JSONL record formats
+- Graceful handling of missing files (outputs partial data)
 
-Test locally: `./scripts/generate-dashboard.sh && cat website/pipeline/dashboard.json`
+Add CLI command: `tsuku dashboard generate [--output PATH]`
+
+Test locally: `go run ./cmd/tsuku dashboard generate && cat website/pipeline/dashboard.json`
 
 ### Phase 2: HTML Dashboard Page
 
@@ -443,6 +453,7 @@ Test locally: `python3 -m http.server -d website 8080` → visit localhost:8080/
 
 Modify `.github/workflows/batch-generate.yml`:
 - Add "Generate dashboard" step in the `merge` job before "Check for recipes to merge"
+- Run `./tsuku dashboard generate` (using pre-built binary from generate job)
 - Include `website/pipeline/dashboard.json` in the commit
 
 This placement ensures the dashboard updates on every batch run, regardless of whether recipes are merged. The step should run early in the merge job so dashboard data reflects the current batch state.
@@ -462,7 +473,7 @@ Add status table to merge job `$GITHUB_STEP_SUMMARY`:
 
 - **Immediate visibility**: Operators can check pipeline health without jq knowledge
 - **Zero infrastructure**: No servers, databases, or external services
-- **Low maintenance**: Simple shell script + static HTML is easy to update
+- **Low maintenance**: Go tool with tests + static HTML is robust and easy to update
 - **Consistent with patterns**: Follows existing website and scripting conventions
 - **Complementary to #1190**: Provides value now while full backend is developed
 

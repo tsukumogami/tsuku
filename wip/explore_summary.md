@@ -44,12 +44,12 @@ The batch recipe generation pipeline collects structured data about failures, qu
 Issue #1190 designs a full backend with Cloudflare D1 for failure analysis, but that requires significant infrastructure. Meanwhile, all the necessary data already exists in the repository. An intermediate solution using only repo-resident data would provide immediate value without infrastructure dependencies.
 
 **Decision:**
-Implement a static HTML dashboard at `website/pipeline/` that displays queue status, top blocking dependencies, failure categories, and recent batch runs. A shell script processes the existing JSON/JSONL data files and outputs a `dashboard.json` file that the HTML page fetches.
+Implement a static HTML dashboard at `website/pipeline/` that displays queue status with tier breakdown, top blocking dependencies, failure categories, and recent batch runs. A Go tool (`internal/dashboard/`) processes the existing JSON/JSONL data files and outputs a `dashboard.json` file that the HTML page fetches.
 
-The dashboard is regenerated automatically during each batch pipeline run, ensuring data freshness without manual intervention. The implementation follows existing patterns: jq for data processing, vanilla JavaScript for the frontend, no framework or build step.
+The dashboard is regenerated automatically during each batch pipeline run, ensuring data freshness without manual intervention. The implementation follows existing patterns: Go for data processing (like `internal/seed/`), vanilla JavaScript for the frontend, no framework or build step.
 
 **Rationale:**
-Shell scripting with jq aligns with established codebase patterns (`batch-metrics.sh`, `gap-analysis.sh`). Static HTML matches the website's existing architecture. CI-triggered generation ensures data is always current after batch runs without operator intervention.
+Go tooling aligns with established internal patterns (seed, queue packages). The two JSONL record formats benefit from type-safe parsing with proper error handling. Static HTML matches the website's existing architecture. CI-triggered generation ensures data is always current after batch runs without operator intervention.
 
 This is an intermediate solution that provides immediate value while #1190 (full failure analysis backend) is developed. The simple architecture means low maintenance burden and fast iteration on what visualizations are most useful.
 
