@@ -32,6 +32,7 @@ type pypiPackageResponse struct {
 		HomePage    string            `json:"home_page"`
 		ProjectURLs map[string]string `json:"project_urls"`
 	} `json:"info"`
+	Releases map[string]json.RawMessage `json:"releases"`
 }
 
 // pyprojectToml represents the relevant parts of pyproject.toml
@@ -382,11 +383,24 @@ func isValidPyPIPackageName(name string) bool {
 	return pypiPackageNameRegex.MatchString(name)
 }
 
-// Probe checks if a package exists on PyPI.
+// Probe checks if a package exists on PyPI and returns quality metadata.
 func (b *PyPIBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
-	_, err := b.fetchPackageInfo(ctx, name)
+	info, err := b.fetchPackageInfo(ctx, name)
 	if err != nil {
 		return nil, nil
 	}
-	return &ProbeResult{Source: name}, nil
+	hasRepo := false
+	if info.Info.ProjectURLs != nil {
+		for _, u := range info.Info.ProjectURLs {
+			if u != "" {
+				hasRepo = true
+				break
+			}
+		}
+	}
+	return &ProbeResult{
+		Source:        name,
+		VersionCount:  len(info.Releases),
+		HasRepository: hasRepo,
+	}, nil
 }

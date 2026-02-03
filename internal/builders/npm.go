@@ -44,10 +44,16 @@ type npmVersionInfo struct {
 // - Max length: 214 characters
 var npmPackageNameRegex = regexp.MustCompile(`^(@[a-z0-9][\w.-]*/)?[a-z0-9][\w.-]*$`)
 
+// npmDownloadsResponse represents the npm downloads API response.
+type npmDownloadsResponse struct {
+	Downloads int `json:"downloads"`
+}
+
 // NpmBuilder generates recipes for Node.js packages from npm registry
 type NpmBuilder struct {
-	httpClient     *http.Client
-	npmRegistryURL string
+	httpClient      *http.Client
+	npmRegistryURL  string
+	npmDownloadsURL string
 }
 
 // NewNpmBuilder creates a new NpmBuilder with the given HTTP client.
@@ -59,8 +65,9 @@ func NewNpmBuilder(httpClient *http.Client) *NpmBuilder {
 		}
 	}
 	return &NpmBuilder{
-		httpClient:     httpClient,
-		npmRegistryURL: "https://registry.npmjs.org",
+		httpClient:      httpClient,
+		npmRegistryURL:  "https://registry.npmjs.org",
+		npmDownloadsURL: "https://api.npmjs.org",
 	}
 }
 
@@ -68,6 +75,7 @@ func NewNpmBuilder(httpClient *http.Client) *NpmBuilder {
 func NewNpmBuilderWithBaseURL(httpClient *http.Client, baseURL string) *NpmBuilder {
 	b := NewNpmBuilder(httpClient)
 	b.npmRegistryURL = baseURL
+	b.npmDownloadsURL = baseURL
 	return b
 }
 
@@ -321,11 +329,51 @@ func isValidNpmPackageNameForBuilder(name string) bool {
 	return npmPackageNameRegex.MatchString(name)
 }
 
-// Probe checks if a package exists on npm.
+// Probe checks if a package exists on npm and returns quality metadata.
 func (b *NpmBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
-	_, err := b.fetchPackageInfo(ctx, name)
+	info, err := b.fetchPackageInfo(ctx, name)
 	if err != nil {
 		return nil, nil
 	}
-	return &ProbeResult{Source: name}, nil
+	result := &ProbeResult{
+		Source:        name,
+		VersionCount:  len(info.Versions),
+		HasRepository: extractRepositoryURL(info.Repository) != "",
+	}
+	// Fetch weekly downloads from the separate downloads API.
+	// Failure is non-fatal: we fall back to version count for filtering.
+	result.Downloads = b.fetchWeeklyDownloads(ctx, name)
+	return result, nil
+}
+
+// fetchWeeklyDownloads fetches the last-week download count from the npm downloads API.
+// Returns 0 on any error.
+func (b *NpmBuilder) fetchWeeklyDownloads(ctx context.Context, name string) int {
+	baseURL, err := url.Parse(b.npmDownloadsURL)
+	if err != nil {
+		return 0
+	}
+	apiURL := baseURL.JoinPath("downloads", "point", "last-week", name)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return 0
+	}
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return 0
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return 0
+	}
+
+	var dlResp npmDownloadsResponse
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 4096)).Decode(&dlResp); err != nil {
+		return 0
+	}
+	return dlResp.Downloads
 }

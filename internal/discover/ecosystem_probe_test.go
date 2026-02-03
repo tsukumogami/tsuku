@@ -56,7 +56,7 @@ func TestEcosystemProbe_ZeroResults(t *testing.T) {
 func TestEcosystemProbe_SingleResult(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
 		&mockProber{name: "npm", result: nil},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "flask", Downloads: 1000}},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "flask", Downloads: 1000, VersionCount: 10}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "flask")
@@ -76,9 +76,9 @@ func TestEcosystemProbe_SingleResult(t *testing.T) {
 
 func TestEcosystemProbe_MultipleResults_PriorityRanking(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve"}},
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "serve", Downloads: 1000, VersionCount: 10}},
 		&mockProber{name: "cask", result: &builders.ProbeResult{Source: "serve"}},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "serve"}},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "serve", VersionCount: 10}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "serve")
@@ -110,7 +110,7 @@ func TestEcosystemProbe_NameMismatch(t *testing.T) {
 
 func TestEcosystemProbe_NameMatchCaseInsensitive(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "Flask"}},
+		&mockProber{name: "npm", result: &builders.ProbeResult{Source: "Flask", Downloads: 1000, VersionCount: 10}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "flask")
@@ -140,7 +140,7 @@ func TestEcosystemProbe_AllFailures(t *testing.T) {
 func TestEcosystemProbe_SoftErrors(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
 		&mockProber{name: "npm", err: fmt.Errorf("network error")},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "flask"}},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "flask", VersionCount: 10}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "flask")
@@ -157,8 +157,8 @@ func TestEcosystemProbe_SoftErrors(t *testing.T) {
 
 func TestEcosystemProbe_Timeout(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
-		&mockProber{name: "npm", delay: 5 * time.Second, result: &builders.ProbeResult{Source: "tool"}},
-		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "tool"}},
+		&mockProber{name: "npm", delay: 5 * time.Second, result: &builders.ProbeResult{Source: "tool", Downloads: 1000, VersionCount: 10}},
+		&mockProber{name: "pypi", result: &builders.ProbeResult{Source: "tool", VersionCount: 10}},
 	}, 100*time.Millisecond)
 
 	start := time.Now()
@@ -191,13 +191,16 @@ func TestEcosystemProbe_EmptyProbers(t *testing.T) {
 func TestEcosystemProbe_MetadataPassthrough(t *testing.T) {
 	probe := NewEcosystemProbe([]builders.EcosystemProber{
 		&mockProber{name: "pypi", result: &builders.ProbeResult{
-			Source: "flask", Downloads: 50000,
+			Source: "flask", Downloads: 50000, VersionCount: 30,
 		}},
 	}, 5*time.Second)
 
 	result, err := probe.Resolve(context.Background(), "flask")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
+	}
+	if result == nil {
+		t.Fatal("expected result, got nil")
 	}
 	if result.Metadata.Downloads != 50000 {
 		t.Errorf("expected downloads 50000, got %d", result.Metadata.Downloads)
@@ -239,7 +242,7 @@ func TestEcosystemProbe_QualityFilter(t *testing.T) {
 
 	t.Run("no filter for unconfigured builders", func(t *testing.T) {
 		probe := NewEcosystemProbe([]builders.EcosystemProber{
-			&mockProber{name: "npm", result: &builders.ProbeResult{
+			&mockProber{name: "cask", result: &builders.ProbeResult{
 				Source: "prettier",
 			}},
 		}, 5*time.Second)
@@ -249,7 +252,7 @@ func TestEcosystemProbe_QualityFilter(t *testing.T) {
 			t.Fatalf("unexpected error: %v", err)
 		}
 		if result == nil {
-			t.Fatal("expected result (no filter for npm), got nil")
+			t.Fatal("expected result (no filter for cask), got nil")
 		}
 	})
 }
