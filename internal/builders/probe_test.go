@@ -415,7 +415,7 @@ func TestHomebrewBuilder_Probe(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/formula/jq.json" {
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"name":"jq","full_name":"jq","desc":"Lightweight JSON processor","homepage":"https://jqlang.github.io/jq/","versions":{"stable":"1.7.1","bottle":true},"deprecated":false,"disabled":false}`))
+			_, _ = w.Write([]byte(`{"name":"jq","full_name":"jq","desc":"Lightweight JSON processor","homepage":"https://jqlang.github.io/jq/","versions":{"stable":"1.7.1","bottle":true},"deprecated":false,"disabled":false,"analytics":{"install":{"365d":{"jq":638284}}}}`))
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -438,6 +438,9 @@ func TestHomebrewBuilder_Probe(t *testing.T) {
 		}
 		if !result.HasRepository {
 			t.Error("Probe() HasRepository = false, want true (has homepage)")
+		}
+		if result.Downloads != 638284 {
+			t.Errorf("Probe() Downloads = %d, want 638284", result.Downloads)
 		}
 	})
 
