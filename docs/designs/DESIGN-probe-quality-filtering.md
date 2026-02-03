@@ -3,9 +3,9 @@ status: Planned
 problem: |
   The ecosystem probe accepts any package name that exists on a registry as a valid match, regardless of whether the package is a placeholder, name-squatter, or unmaintained stub. This causes tools like prettier and httpie to resolve to crates.io squatters instead of their actual registries (npm and pypi).
 decision: |
-  Extend the discovery RegistryEntry schema with quality metadata fields (downloads, version_count, has_repository). Each builder's Probe() populates a RegistryEntry instead of a ProbeResult, making the ecosystem probe produce the same record format as the batch seeding pipeline. A QualityFilter operates on RegistryEntry to reject squatters. Both the runtime probe and the seeding pipeline share the same filter and the same data shape.
+  Extend ProbeResult with quality metadata fields (downloads, version_count, has_repository). Each builder's Probe() populates a ProbeResult with quality signals from registry APIs. A QualityFilter operates on ProbeResult to reject squatters. The seeding pipeline calls Probe() and converts to RegistryEntry at the boundary.
 rationale: |
-  Discovery JSON files are already the interface between "knowing about a tool" and "being able to install it." The batch seeding pipeline, the registry lookup stage, and (eventually) LLM discovery all produce or consume RegistryEntry records. Making the ecosystem probe output the same shape means quality filtering works identically everywhere, with no parallel structs or adapter code. Most registries expose the needed signals in their standard API responses or via lightweight secondary endpoints.
+  Most registries expose quality signals (downloads, version count, repository presence) in their standard API responses. ProbeResult carries these signals, and a shared QualityFilter applies per-registry thresholds. The original plan to unify on RegistryEntry hit an import cycle between builders and discover; ProbeResult with a thin conversion at the boundary achieves the same filtering with less package complexity. The seeding pipeline can call Probe() directly and convert to RegistryEntry for disk storage.
 ---
 
 # DESIGN: Probe Quality Filtering
@@ -77,7 +77,7 @@ graph TD
 
 This design addresses a gap discovered during implementation of [DESIGN-ecosystem-probe.md](DESIGN-ecosystem-probe.md). That design assumed registry APIs don't expose download counts, but research shows at least crates.io and RubyGems do. This design also intersects with the discovery registry seeding process described in [DESIGN-discovery-resolver.md](DESIGN-discovery-resolver.md) and the batch pipeline described in [DESIGN-registry-scale-strategy.md](DESIGN-registry-scale-strategy.md).
 
-**Key architectural insight**: The discovery JSON files (`recipes/discovery/`) are already the universal interface for tool resolution. The batch seeding pipeline produces them, the `RegistryLookup` resolver consumes them, and LLM discovery will eventually produce them dynamically. Rather than building a parallel `ProbeResult` struct with quality fields, this design extends the `RegistryEntry` schema so the ecosystem probe produces the same record format. Quality filtering then operates on `RegistryEntry` regardless of where the record came from.
+**Key architectural insight**: The discovery JSON files (`recipes/discovery/`) are already the universal interface for tool resolution. The batch seeding pipeline produces them, the `RegistryLookup` resolver consumes them, and LLM discovery will eventually produce them dynamically. Quality filtering needs to work for both the runtime probe and the seeding pipeline. An import cycle between `builders` and `discover` prevents `Probe()` from returning `RegistryEntry` directly, so `ProbeResult` carries the quality fields and a thin conversion at the boundary maps to `RegistryEntry` for storage. The `QualityFilter` operates on `ProbeResult`, and the seeding pipeline can call `Probe()` to get the same data.
 
 ## Context and Problem Statement
 
@@ -91,15 +91,15 @@ The parent design (DESIGN-ecosystem-probe) explicitly stated that "none of the s
 
 The same problem affects discovery registry seeding. When populating the offline registry from ecosystem data, we need to distinguish real packages from squatters.
 
-The discovery JSON files in `recipes/discovery/` already represent resolved tool-to-registry mappings. The `seed-discovery` pipeline produces them by querying registry APIs and enriching entries with metadata. The `RegistryLookup` resolver consumes them at runtime. When LLM discovery is implemented, it will produce the same format dynamically. This makes `RegistryEntry` the natural place to add quality signals: each ecosystem probe can produce a `RegistryEntry` enriched with quality metadata, and the filter operates on that common shape. No parallel structs, no adapter code, and the seeding pipeline gets the same filter for free.
+The discovery JSON files in `recipes/discovery/` already represent resolved tool-to-registry mappings. The `seed-discovery` pipeline produces them by querying registry APIs and enriching entries with metadata. The `RegistryLookup` resolver consumes them at runtime. When LLM discovery is implemented, it will produce the same format dynamically. The seeding pipeline can call builder `Probe()` methods to get quality metadata in `ProbeResult`, apply `QualityFilter`, and convert passing entries to `RegistryEntry` for storage. This gives both the runtime probe and the seeding pipeline the same filtering logic.
 
 ### Scope
 
 **In scope:**
-- Extending the `RegistryEntry` schema with quality metadata fields (downloads, version_count, has_repository)
-- Updating each builder's `Probe()` to return a `RegistryEntry` instead of a `ProbeResult`, populated with quality metadata from existing API responses
-- Adding a `QualityFilter` that operates on `RegistryEntry` to reject squatters
-- Sharing the filter between the runtime ecosystem probe and the discovery registry seeding pipeline
+- Extending `ProbeResult` with quality metadata fields (downloads, version_count, has_repository)
+- Updating each builder's `Probe()` to populate quality metadata from existing API responses
+- Adding a `QualityFilter` that operates on `ProbeResult` to reject squatters
+- Sharing the filter between the runtime ecosystem probe and the discovery registry seeding pipeline (seeding calls `Probe()` and converts to `RegistryEntry` at the boundary)
 - Adding secondary API calls where needed: npm (downloads), RubyGems (version count), Go (version list), MetaCPAN (river metrics). Each runs in parallel with the primary fetch.
 
 **Out of scope:**
@@ -122,15 +122,17 @@ The discovery JSON files in `recipes/discovery/` already represent resolved tool
 
 The quality check could happen inside each builder's `Probe()` method, in the ecosystem probe resolver, or in a standalone component. Separately, the quality metadata could live in the existing `ProbeResult` struct or in the `RegistryEntry` schema that the discovery system already uses.
 
-#### Chosen: Shared QualityFilter operating on RegistryEntry
+#### Chosen: Shared QualityFilter operating on ProbeResult
 
-Extract filtering into a `QualityFilter` type in the `discover` package. Each builder's `Probe()` returns a `RegistryEntry` with quality metadata populated. The ecosystem probe resolver and the registry seeding pipeline both call `QualityFilter.Accept(builderName, entry)` to decide whether a result is trustworthy.
+Extract filtering into a `QualityFilter` type in the `discover` package. Each builder's `Probe()` returns a `*builders.ProbeResult` with quality metadata populated. The ecosystem probe resolver and the registry seeding pipeline both call `QualityFilter.Accept(builderName, result)` to decide whether a result is trustworthy.
 
-This keeps Probe() simple (fetch and return data) and puts policy in one place. Using `RegistryEntry` as the data shape means the ecosystem probe produces the same format as the batch seeding pipeline and the registry lookup stage. There's no separate `ProbeResult` struct to maintain or map between.
+The original plan was to have `Probe()` return `*discover.RegistryEntry` directly, eliminating `ProbeResult` and making the ecosystem probe produce the same record format as the seeding pipeline. However, this creates an import cycle: `builders` would need to import `discover` for the `RegistryEntry` type, but `discover` already imports `builders` for the `EcosystemProber` interface. Instead, `ProbeResult` was extended with the same quality fields (`Downloads`, `VersionCount`, `HasRepository`), and the ecosystem probe converts `ProbeResult` → `DiscoveryResult` at the boundary.
+
+This keeps the same data flow and filtering logic. The trade-off is a thin conversion between `ProbeResult` and `RegistryEntry` where the two systems meet. The seeding pipeline (#1410) can call builder `Probe()` methods directly (getting `ProbeResult` with quality metadata) and convert to `RegistryEntry` for writing to disk.
 
 #### Alternatives Considered
 
-**Extend ProbeResult with quality fields**: Add `VersionCount`, `HasRepository`, `Downloads` to the existing `ProbeResult` struct in the builders package. The `QualityFilter` would operate on `ProbeResult`. Rejected because this creates a parallel struct that duplicates fields already present (or planned) in `RegistryEntry`. The ecosystem probe would need to convert `ProbeResult` → `RegistryEntry` at some point anyway to produce a `DiscoveryResult`. Better to produce `RegistryEntry` directly.
+**Have Probe() return `*discover.RegistryEntry` directly**: Eliminate `ProbeResult` so the ecosystem probe produces the same record format as the seeding pipeline. This was the original design, but it creates an import cycle between `builders` and `discover`. Could be resolved by extracting `RegistryEntry` into a shared types package, but that adds package complexity for a small benefit. The current approach (parallel fields on `ProbeResult` with conversion at the boundary) is simpler.
 
 **Filter inside each Probe()**: Each builder would apply its own quality check and return `Exists: false` for low-quality packages. Rejected because it scatters policy across 7 files, makes thresholds hard to find, and prevents the seeding pipeline from applying different thresholds than the runtime probe.
 
@@ -189,15 +191,15 @@ Packages that fail all thresholds for their registry are rejected. The threshold
 
 ## Decision Outcome
 
-**Chosen: QualityFilter on RegistryEntry with per-registry thresholds using downloads, version count, and repository presence**
+**Chosen: QualityFilter on ProbeResult with per-registry thresholds using downloads, version count, and repository presence**
 
 ### Summary
 
-Each builder's `Probe()` method gets updated to return a `RegistryEntry` (instead of a `ProbeResult`) with quality metadata populated from the API response it already fetches. The `RegistryEntry` schema gains `Downloads`, `VersionCount`, and `HasRepository` fields. For npm, `Probe()` makes an additional parallel request to the npm downloads API.
+Each builder's `Probe()` method gets updated to populate quality metadata (`Downloads`, `VersionCount`, `HasRepository`) from the API response it already fetches. For npm, `Probe()` makes an additional parallel request to the npm downloads API.
 
-The ecosystem probe resolver passes each `RegistryEntry` through a `QualityFilter` before including it in the candidate list. The filter applies per-registry minimum thresholds: a package must meet at least one threshold (e.g., `recent_downloads >= 100` OR `version_count >= 5`) to be accepted. Packages that fail all thresholds are silently dropped, just like non-existent packages.
+The ecosystem probe resolver passes each `ProbeResult` through a `QualityFilter` before including it in the candidate list. The filter applies per-registry minimum thresholds: a package must meet at least one threshold (e.g., `recent_downloads >= 100` OR `version_count >= 5`) to be accepted. Packages that fail all thresholds are silently dropped, just like non-existent packages.
 
-The `QualityFilter` is a standalone type that takes a builder name and a `RegistryEntry` as input and returns accept/reject. Because the ecosystem probe now produces `RegistryEntry` records (the same format the seeding pipeline and registry lookup use), the filter works identically in both contexts without conversion or adapter code.
+The `QualityFilter` is a standalone type that takes a builder name and a `*builders.ProbeResult` as input and returns accept/reject. The seeding pipeline can call builder `Probe()` methods to get quality metadata, apply the same filter, and convert passing entries to `RegistryEntry` for disk storage. The conversion is a thin mapping at the boundary between the two packages.
 
 Cask and Homebrew formulae are exempt from quality thresholds because Homebrew maintainers review all entries before inclusion. Go module paths are domain-based, which prevents exact-name squatting on legitimate domains (you can't publish `github.com/cli/cli` without GitHub org access). However, typosquatting remains possible (e.g., `github.com/boltdb-go/bolt` targeting `github.com/boltdb/bolt`). Since Go has no download metrics, we apply a lightweight `version_count >= 3` check via the `/@v/list` endpoint to filter placeholder modules.
 
@@ -205,7 +207,7 @@ Cask and Homebrew formulae are exempt from quality thresholds because Homebrew m
 
 Downloads and version count together cover the signal gap across all registries. Crates.io and RubyGems have downloads in their standard response. npm needs one extra call but it's worth the latency. PyPI and MetaCPAN lack downloads but expose version count and dependency metrics respectively. The per-registry threshold approach handles this heterogeneity without pretending the registries are uniform.
 
-Using `RegistryEntry` as the data shape (rather than extending `ProbeResult`) aligns with tsuku's existing architecture. The discovery JSON files are already the interface between tool resolution and recipe creation. The seeding pipeline produces `RegistryEntry` records, the registry lookup consumes them, and LLM discovery will produce them. Making the ecosystem probe output the same format closes the loop: every path through the discovery system produces the same record, and the `QualityFilter` works on that common shape.
+Using `ProbeResult` as the quality data carrier (rather than `RegistryEntry`) avoids an import cycle between the `builders` and `discover` packages. The quality fields on `ProbeResult` mirror what `RegistryEntry` needs, and the conversion at the boundary is straightforward. The seeding pipeline can call `Probe()` directly, getting the same quality signals the runtime probe uses, and map to `RegistryEntry` for storage. This gives both paths the same filtering behavior without forcing a shared types package.
 
 ### Trade-offs Accepted
 
@@ -217,30 +219,22 @@ Using `RegistryEntry` as the data shape (rather than extending `ProbeResult`) al
 
 ### Overview
 
-The change touches three layers: the builder Probe() methods (data collection), a new QualityFilter type (policy), and the ecosystem probe resolver (enforcement). The central architectural choice is that Probe() now returns a `RegistryEntry` instead of a `ProbeResult`, making the ecosystem probe produce the same record format used throughout the discovery system.
+The change touches three layers: the builder Probe() methods (data collection), a new QualityFilter type (policy), and the ecosystem probe resolver (enforcement). Quality metadata lives on `ProbeResult` in the `builders` package to avoid an import cycle with `discover`.
 
-### RegistryEntry schema extension
+### ProbeResult quality fields
 
-The existing `RegistryEntry` struct gains quality metadata fields:
+`ProbeResult` gains quality metadata fields:
 
 ```go
-type RegistryEntry struct {
-    Builder        string `json:"builder"`
-    Source         string `json:"source"`
-    Binary         string `json:"binary,omitempty"`
-    Description    string `json:"description,omitempty"`
-    Homepage       string `json:"homepage,omitempty"`
-    Repo           string `json:"repo,omitempty"`
-    Disambiguation bool   `json:"disambiguation,omitempty"`
-
-    // Quality metadata (populated by Probe(), used by QualityFilter)
-    Downloads      int    `json:"downloads,omitempty"`       // Recent/monthly downloads (0 if unavailable)
-    VersionCount   int    `json:"version_count,omitempty"`   // Number of published versions
-    HasRepository  bool   `json:"has_repository,omitempty"`  // Whether a source repository URL is set
+type ProbeResult struct {
+    Source        string // Package name as returned by the registry
+    Downloads     int    // Recent/monthly downloads (0 if unavailable)
+    VersionCount  int    // Number of published versions
+    HasRepository bool   // Whether a source repository URL is set
 }
 ```
 
-These fields are `omitempty` so they don't appear in existing discovery JSON files that don't have quality data. The seeding pipeline can optionally populate them during enrichment, and the runtime probe always populates them.
+The original plan was to put these fields on `RegistryEntry` and have `Probe()` return `*discover.RegistryEntry` directly. This creates an import cycle: `builders` would need to import `discover` for `RegistryEntry`, but `discover` already imports `builders` for `EcosystemProber`. Keeping quality fields on `ProbeResult` avoids the cycle. The seeding pipeline converts `ProbeResult` → `RegistryEntry` at the boundary when writing to disk.
 
 ### Probe() is independent of build method
 
@@ -248,44 +242,43 @@ A builder's `Probe()` method is a deterministic registry lookup: "does this name
 
 Any builder with a queryable registry API should implement `EcosystemProber`, regardless of its build complexity. The `RequiresLLM()` flag controls whether the builder needs an LLM provider during `NewSession()`; it has no bearing on whether the builder can participate in the ecosystem probe.
 
-### Probe() signature change
+### Probe() signature
 
-`Probe()` returns a `*discover.RegistryEntry` instead of `*builders.ProbeResult`:
+`Probe()` returns a `*builders.ProbeResult`:
 
 ```go
 type EcosystemProber interface {
     SessionBuilder
-    Probe(ctx context.Context, name string) (*discover.RegistryEntry, error)
+    Probe(ctx context.Context, name string) (*ProbeResult, error)
 }
 ```
 
-This eliminates the `ProbeResult` struct. The `Exists` field is no longer needed (a nil return indicates the package doesn't exist). The `Age` field (only used by Go, currently unused by any consumer) is dropped; version count is a better signal.
+A nil return indicates the package doesn't exist. Each builder populates quality fields from its registry API.
 
 ### QualityFilter
 
 ```go
-// QualityFilter decides whether a discovery entry is trustworthy enough to use.
+// QualityFilter decides whether a probe result is trustworthy enough to use.
 type QualityFilter struct {
     thresholds map[string]QualityThreshold
 }
 
 type QualityThreshold struct {
-    MinDownloads    int  // Minimum downloads to accept (0 = don't check)
-    MinVersionCount int  // Minimum version count to accept (0 = don't check)
-    Exempt          bool // Skip filtering entirely (e.g., cask)
+    MinDownloads    int // Minimum downloads to accept (0 = don't check)
+    MinVersionCount int // Minimum version count to accept (0 = don't check)
 }
 
-// Accept returns true if the entry meets minimum quality for the given builder.
-// The reason string explains why a package was rejected (empty if accepted).
-func (f *QualityFilter) Accept(builderName string, entry *RegistryEntry) (ok bool, reason string)
+// Accept returns true if the result meets minimum quality for the given builder.
+// The reason string explains why a package was accepted or rejected.
+func (f *QualityFilter) Accept(builderName string, result *builders.ProbeResult) (ok bool, reason string)
 ```
 
-A package is accepted if the builder is exempt, or if it meets at least one non-zero threshold. If all applicable thresholds are set and the package fails all of them, it's rejected.
+Builders without a configured threshold pass through (fail-open). A package with a configured threshold is accepted if it meets at least one non-zero threshold. If all applicable thresholds are set and the package fails all of them, it's rejected.
 
 ### Data flow
 
 ```
-Probe()  →  RegistryEntry (with quality metadata)
+Probe()  →  ProbeResult (with quality metadata)
                 ↓
          EcosystemProbe.Resolve()
                 ↓
@@ -293,17 +286,19 @@ Probe()  →  RegistryEntry (with quality metadata)
                 ↓
          Priority ranking (unchanged)
                 ↓
-         DiscoveryResult (wraps the RegistryEntry)
+         DiscoveryResult
 ```
 
 The same flow works for the seeding pipeline:
 
 ```
-Registry API  →  RegistryEntry (with quality metadata)
-                      ↓
-               QualityFilter.Accept()  →  reject / accept
-                      ↓
-               Write to recipes/discovery/{path}.json
+Probe()  →  ProbeResult (with quality metadata)
+                ↓
+         QualityFilter.Accept()  →  reject / accept
+                ↓
+         Convert ProbeResult → RegistryEntry
+                ↓
+         Write to recipes/discovery/{path}.json
 ```
 
 ### Builder changes per registry
@@ -330,7 +325,7 @@ Four registries need a secondary API call to collect quality metadata. Each runs
 | Go | `proxy.golang.org/{module}/@v/list` | Version count (line count) | No filtering (exempt) |
 | CPAN | `fastapi.metacpan.org/v1/distribution/{name}` | River metrics (`river.total`) | Version count only |
 
-The remaining registries (Cargo, PyPI, Cask) get all needed signals from their primary endpoint.
+The remaining registries (Cargo, PyPI, Cask, Homebrew) get all needed signals from their primary endpoint.
 
 ## API Investigation Results
 
@@ -352,12 +347,10 @@ Each registry's API was investigated to verify that the proposed quality signals
 
 ## Implementation Approach
 
-### Phase 1: RegistryEntry extension, QualityFilter, and one builder
+### Phase 1: ProbeResult extension, QualityFilter, and one builder
 
-- Extend `RegistryEntry` with `Downloads`, `VersionCount`, and `HasRepository` fields
-- Change the `EcosystemProber` interface so `Probe()` returns `*discover.RegistryEntry` instead of `*builders.ProbeResult`
-- Remove the `ProbeResult` struct from `internal/builders/probe.go`
-- Update the Cargo builder's `Probe()` to return a `RegistryEntry` with quality metadata populated (crates.io has the richest signals, so it's the best proof-of-concept)
+- Extend `ProbeResult` with `Downloads`, `VersionCount`, and `HasRepository` fields
+- Update the Cargo builder's `Probe()` to populate quality metadata (crates.io has the richest signals, so it's the best proof-of-concept)
 - Create `QualityFilter` type in `discover` package with per-registry thresholds
 - Wire the filter into `EcosystemProbe.Resolve()` between match collection and priority sorting
 - Add unit tests for the filter and the Cargo builder's metadata extraction
@@ -365,7 +358,7 @@ Each registry's API was investigated to verify that the proposed quality signals
 
 ### Phase 2: Remaining builder Probe() updates
 
-- Update the remaining 7 builders to return `RegistryEntry` from `Probe()`:
+- Update the remaining 7 builders to populate quality metadata in `Probe()`:
   - PyPI: parse `releases` dict length and `info.project_urls` (no extra call)
   - npm: add parallel downloads fetch to `api.npmjs.org`, parse `versions` object length (1 extra call)
   - Gem: add parallel `/api/v1/versions/{name}.json` fetch for version count, parse `downloads` from main endpoint (1 extra call)
@@ -379,7 +372,7 @@ Each registry's API was investigated to verify that the proposed quality signals
 
 - Add integration tests with realistic squatter scenarios (prettier, httpie)
 - Verify the filter + priority ranking produces correct results end-to-end
-- Wire `QualityFilter` into the `seed-discovery` pipeline so seeded entries are filtered with the same thresholds
+- Wire `QualityFilter` into the `seed-discovery` pipeline: have it call builder `Probe()` methods to get quality metadata, filter with the same thresholds, and convert passing `ProbeResult` entries to `RegistryEntry` for storage
 - Log rejected packages with reason for debugging
 - Manual testing with `tsuku create` for known false-positive cases
 
@@ -410,9 +403,9 @@ More broadly, the ecosystem probe sends the tool name to all eight registries in
 ### Positive
 
 - Tools resolve to the correct registry. `prettier` → npm, `httpie` → pypi.
-- The quality filter operates on `RegistryEntry`, so it works identically for the runtime probe and the seeding pipeline with no adapter code.
-- `RegistryEntry` now carries quality metadata that future features (e.g., confidence scoring, disambiguation ranking) can build on.
-- The ecosystem probe produces the same data shape as every other path through the discovery system, simplifying the architecture.
+- The quality filter operates on `ProbeResult`, so the runtime probe and the seeding pipeline share the same filtering logic. The seeding pipeline calls `Probe()` to get quality metadata and converts to `RegistryEntry` at the boundary.
+- `ProbeResult` now carries quality metadata that future features (e.g., confidence scoring, disambiguation ranking) can build on.
+- Any builder with a queryable registry API can participate in the ecosystem probe, regardless of whether it needs LLM for recipe generation.
 
 ### Negative
 
