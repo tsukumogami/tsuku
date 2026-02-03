@@ -21,8 +21,17 @@ const (
 
 // goProxyLatestResponse represents the proxy.golang.org /@latest response
 type goProxyLatestResponse struct {
-	Version string `json:"Version"` // e.g., "v1.2.3"
-	Time    string `json:"Time"`    // e.g., "2024-01-15T10:30:00Z"
+	Version string         `json:"Version"` // e.g., "v1.2.3"
+	Time    string         `json:"Time"`    // e.g., "2024-01-15T10:30:00Z"
+	Origin  *goProxyOrigin `json:"Origin"`  // VCS origin information (optional)
+}
+
+// goProxyOrigin represents the Origin field in the /@latest response
+type goProxyOrigin struct {
+	VCS  string `json:"VCS"`  // e.g., "git"
+	URL  string `json:"URL"`  // e.g., "https://github.com/owner/repo"
+	Hash string `json:"Hash"` // e.g., "abc123..."
+	Ref  string `json:"Ref"`  // e.g., "refs/tags/v1.2.3"
 }
 
 // Pre-compile regex for Go module path validation
@@ -267,11 +276,74 @@ func inferGoExecutableName(modulePath string) (string, string) {
 	return executable, ""
 }
 
-// Probe checks if a module exists on proxy.golang.org.
+// Probe checks if a module exists on proxy.golang.org and returns quality metadata.
 func (b *GoBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
-	_, err := b.fetchModuleInfo(ctx, name)
+	info, err := b.fetchModuleInfo(ctx, name)
 	if err != nil {
 		return nil, nil
 	}
-	return &ProbeResult{Source: name}, nil
+
+	result := &ProbeResult{
+		Source:    name,
+		Downloads: 0, // Go proxy has no download metrics
+	}
+
+	// Check for repository URL in Origin field
+	if info.Origin != nil && info.Origin.URL != "" {
+		result.HasRepository = true
+	}
+
+	// Fetch version count (best-effort, doesn't block on failure)
+	versionCount, _ := b.fetchVersionCount(ctx, name)
+	result.VersionCount = versionCount
+
+	return result, nil
+}
+
+// fetchVersionCount fetches the number of versions for a module from the Go proxy.
+// Returns 0 if the fetch fails (graceful degradation).
+func (b *GoBuilder) fetchVersionCount(ctx context.Context, modulePath string) (int, error) {
+	// Encode module path (uppercase letters need special encoding)
+	encodedPath := encodeGoModulePath(modulePath)
+
+	baseURL, err := url.Parse(b.goProxyBaseURL)
+	if err != nil {
+		return 0, fmt.Errorf("invalid base URL: %w", err)
+	}
+	apiURL := baseURL.JoinPath(encodedPath, "@v", "list")
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("failed to fetch version list: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return 0, fmt.Errorf("proxy.golang.org returned status %d", resp.StatusCode)
+	}
+
+	// Limit response size
+	limitedReader := io.LimitReader(resp.Body, maxGoProxyResponseSize)
+	data, err := io.ReadAll(limitedReader)
+	if err != nil {
+		return 0, fmt.Errorf("failed to read version list: %w", err)
+	}
+
+	// Count non-empty lines (versions are one per line)
+	lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+	count := 0
+	for _, line := range lines {
+		if strings.TrimSpace(line) != "" {
+			count++
+		}
+	}
+
+	return count, nil
 }

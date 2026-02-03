@@ -430,3 +430,219 @@ func containsSubstr(s, substr string) bool {
 	}
 	return false
 }
+
+func TestGoBuilder_Probe_QualityMetadata(t *testing.T) {
+	// Mock Go proxy responses with origin data and version list
+	latestResponse := `{
+		"Version": "v0.40.0",
+		"Time": "2024-01-15T10:30:00Z",
+		"Origin": {
+			"VCS": "git",
+			"URL": "https://github.com/jesseduffield/lazygit",
+			"Hash": "abc123",
+			"Ref": "refs/tags/v0.40.0"
+		}
+	}`
+
+	versionList := `v0.36.0
+v0.37.0
+v0.38.0
+v0.39.0
+v0.40.0
+`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/github.com/jesseduffield/lazygit/@latest":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(latestResponse))
+		case "/github.com/jesseduffield/lazygit/@v/list":
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(versionList))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Probe(ctx, "github.com/jesseduffield/lazygit")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil for existing module")
+	}
+
+	if result.Source != "github.com/jesseduffield/lazygit" {
+		t.Errorf("Probe().Source = %q, want %q", result.Source, "github.com/jesseduffield/lazygit")
+	}
+	if result.Downloads != 0 {
+		t.Errorf("Probe().Downloads = %d, want 0 (Go has no download metrics)", result.Downloads)
+	}
+	if result.VersionCount != 5 {
+		t.Errorf("Probe().VersionCount = %d, want %d", result.VersionCount, 5)
+	}
+	if !result.HasRepository {
+		t.Error("Probe().HasRepository = false, want true (Origin.URL present)")
+	}
+}
+
+func TestGoBuilder_Probe_NotFound(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Probe(ctx, "github.com/nonexistent/module")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result != nil {
+		t.Error("Probe() should return nil for nonexistent module")
+	}
+}
+
+func TestGoBuilder_Probe_VersionListFetchFails(t *testing.T) {
+	// Test graceful degradation when version list fetch fails
+	latestResponse := `{
+		"Version": "v1.0.0",
+		"Time": "2024-01-15T10:30:00Z",
+		"Origin": {
+			"VCS": "git",
+			"URL": "https://github.com/owner/repo"
+		}
+	}`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/github.com/owner/repo/@latest":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(latestResponse))
+		case "/github.com/owner/repo/@v/list":
+			// Version list endpoint fails
+			w.WriteHeader(http.StatusInternalServerError)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Probe(ctx, "github.com/owner/repo")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() should return result even when version list fetch fails")
+	}
+
+	// Should have HasRepository but VersionCount should be 0
+	if result.VersionCount != 0 {
+		t.Errorf("Probe().VersionCount = %d, want 0 (version list fetch failed)", result.VersionCount)
+	}
+	if !result.HasRepository {
+		t.Error("Probe().HasRepository = false, want true")
+	}
+}
+
+func TestGoBuilder_Probe_NoOrigin(t *testing.T) {
+	// Test module without Origin field (older modules may not have it)
+	latestResponse := `{
+		"Version": "v1.0.0",
+		"Time": "2024-01-15T10:30:00Z"
+	}`
+
+	versionList := `v1.0.0
+`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/github.com/old/module/@latest":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(latestResponse))
+		case "/github.com/old/module/@v/list":
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(versionList))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Probe(ctx, "github.com/old/module")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil for existing module")
+	}
+
+	if result.HasRepository {
+		t.Error("Probe().HasRepository = true, want false (no Origin field)")
+	}
+	if result.VersionCount != 1 {
+		t.Errorf("Probe().VersionCount = %d, want 1", result.VersionCount)
+	}
+}
+
+func TestGoBuilder_Probe_UppercaseModule(t *testing.T) {
+	// Test that uppercase modules are encoded correctly for probe
+	latestResponse := `{
+		"Version": "v1.0.0",
+		"Time": "2024-01-15T10:30:00Z",
+		"Origin": {
+			"VCS": "git",
+			"URL": "https://github.com/User/Repo"
+		}
+	}`
+
+	versionList := `v1.0.0
+`
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/github.com/!user/!repo/@latest":
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(latestResponse))
+		case "/github.com/!user/!repo/@v/list":
+			w.Header().Set("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusOK)
+			_, _ = w.Write([]byte(versionList))
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewGoBuilderWithBaseURL(nil, server.URL)
+	ctx := context.Background()
+
+	result, err := builder.Probe(ctx, "github.com/User/Repo")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil for uppercase module")
+	}
+
+	if result.Source != "github.com/User/Repo" {
+		t.Errorf("Probe().Source = %q, want %q", result.Source, "github.com/User/Repo")
+	}
+}

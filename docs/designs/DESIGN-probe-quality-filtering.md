@@ -24,7 +24,7 @@ Planned
 | _Walking skeleton: extends RegistryEntry with quality metadata fields, changes Probe() to return RegistryEntry, creates QualityFilter with per-registry thresholds, wires it into the resolver, and proves the full path with the Cargo builder. Also updates the remaining 6 builders with stub Probe() implementations so the codebase compiles._ | | |
 | ~~[#1406: add quality metadata to npm and PyPI builders](https://github.com/tsukumogami/tsuku/issues/1406)~~ | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
 | _Updates the npm, PyPI, Cask, and Homebrew formula builders to populate quality metadata. npm adds a parallel downloads API fetch; PyPI parses releases dict length and project URLs. Also adds Homebrew formulae to the ecosystem probe (Probe() is independent of LLM-based recipe building)._ | | |
-| [#1407: add quality metadata to Gem and Go builders](https://github.com/tsukumogami/tsuku/issues/1407) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
+| ~~[#1407: add quality metadata to Gem and Go builders](https://github.com/tsukumogami/tsuku/issues/1407)~~ | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
 | _Updates the RubyGems and Go builders. Gem adds a parallel version count fetch and parses downloads from the main endpoint. Go adds a parallel /@v/list fetch for version count and parses Origin.URL._ | | |
 | [#1408: add quality metadata to CPAN and Cask builders](https://github.com/tsukumogami/tsuku/issues/1408) | [#1405](https://github.com/tsukumogami/tsuku/issues/1405) | testable |
 | _Updates the MetaCPAN builder to fetch river metrics from the distribution endpoint. Cask and Homebrew formula metadata were completed in #1406._ | | |
@@ -67,7 +67,8 @@ graph TD
 
     class I1405 done
     class I1406 done
-    class I1407,I1408 ready
+    class I1407 done
+    class I1408 ready
     class I1410 done
     class I1409 blocked
 ```

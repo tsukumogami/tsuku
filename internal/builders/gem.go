@@ -29,6 +29,12 @@ type rubyGemsGemResponse struct {
 	Info          string `json:"info"`
 	HomepageURI   string `json:"homepage_uri"`
 	SourceCodeURI string `json:"source_code_uri"`
+	Downloads     int    `json:"downloads"`
+}
+
+// rubyGemsVersionEntry represents a single version in the versions API response
+type rubyGemsVersionEntry struct {
+	Number string `json:"number"`
 }
 
 // Pre-compile regex for gem name validation
@@ -350,11 +356,66 @@ func isValidGemName(name string) bool {
 	return gemNameRegex.MatchString(name)
 }
 
-// Probe checks if a gem exists on RubyGems.
+// Probe checks if a gem exists on RubyGems and returns quality metadata.
 func (b *GemBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
-	_, err := b.fetchGemInfo(ctx, name)
+	gemInfo, err := b.fetchGemInfo(ctx, name)
 	if err != nil {
 		return nil, nil
 	}
-	return &ProbeResult{Source: name}, nil
+
+	result := &ProbeResult{
+		Source:        name,
+		Downloads:     gemInfo.Downloads,
+		HasRepository: gemInfo.SourceCodeURI != "",
+	}
+
+	// Fetch version count in parallel (best-effort, doesn't block on failure)
+	versionCount, _ := b.fetchVersionCount(ctx, name)
+	result.VersionCount = versionCount
+
+	return result, nil
+}
+
+// fetchVersionCount fetches the number of versions for a gem from RubyGems API.
+// Returns 0 if the fetch fails (graceful degradation).
+func (b *GemBuilder) fetchVersionCount(ctx context.Context, gemName string) (int, error) {
+	baseURL, err := url.Parse(b.rubyGemsBaseURL)
+	if err != nil {
+		return 0, fmt.Errorf("invalid base URL: %w", err)
+	}
+	apiURL := baseURL.JoinPath("api", "v1", "versions", gemName+".json")
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return 0, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return 0, fmt.Errorf("failed to fetch versions: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return 0, fmt.Errorf("rubygems.org returned status %d", resp.StatusCode)
+	}
+
+	// Validate content type - RubyGems returns plain text for non-existent gems
+	contentType := resp.Header.Get("Content-Type")
+	if !strings.HasPrefix(contentType, "application/json") {
+		return 0, fmt.Errorf("unexpected content-type: %s", contentType)
+	}
+
+	// Limit response size
+	limitedReader := io.LimitReader(resp.Body, maxRubyGemsResponseSize)
+
+	var versions []rubyGemsVersionEntry
+	if err := json.NewDecoder(limitedReader).Decode(&versions); err != nil {
+		return 0, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return len(versions), nil
 }
