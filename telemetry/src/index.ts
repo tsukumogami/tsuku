@@ -35,6 +35,7 @@ interface BatchMetricsPayload {
 
 const SCHEMA_VERSION = "1";
 const LLM_SCHEMA_VERSION = "1";
+const DISCOVERY_SCHEMA_VERSION = "1";
 
 type ActionType = "install" | "update" | "remove" | "create" | "command";
 
@@ -44,6 +45,14 @@ type LLMActionType =
   | "llm_repair_attempt"
   | "llm_validation_result"
   | "llm_circuit_breaker_trip";
+
+type DiscoveryActionType =
+  | "discovery_registry_hit"
+  | "discovery_ecosystem_hit"
+  | "discovery_llm_hit"
+  | "discovery_not_found"
+  | "discovery_disambiguation"
+  | "discovery_error";
 
 interface TelemetryEvent {
   action: ActionType;
@@ -73,6 +82,21 @@ interface LLMTelemetryEvent {
   passed?: boolean;
   reason?: string;
   failures?: number;
+  os?: string;
+  arch?: string;
+  tsuku_version?: string;
+  schema_version?: string;
+}
+
+interface DiscoveryTelemetryEvent {
+  action: DiscoveryActionType;
+  tool_name?: string;
+  confidence?: string;
+  builder?: string;
+  source?: string;
+  match_count?: number;
+  error_category?: string;
+  duration_ms?: number;
   os?: string;
   arch?: string;
   tsuku_version?: string;
@@ -235,6 +259,64 @@ function validateLLMEvent(event: LLMTelemetryEvent): string | null {
     case "llm_circuit_breaker_trip":
       if (!event.provider) return "provider is required for llm_circuit_breaker_trip";
       if (event.failures === undefined) return "failures is required for llm_circuit_breaker_trip";
+      break;
+  }
+
+  return null;
+}
+
+// Tool name validation: max 128 chars, must match ^[a-z0-9][a-z0-9-]*$
+const TOOL_NAME_PATTERN = /^[a-z0-9][a-z0-9-]*$/;
+const MAX_TOOL_NAME_LENGTH = 128;
+const MAX_SOURCE_LENGTH = 256;
+
+function validateDiscoveryEvent(event: DiscoveryTelemetryEvent): string | null {
+  // Common required fields
+  if (!event.os || typeof event.os !== "string") {
+    return "os is required";
+  }
+  if (!event.arch || typeof event.arch !== "string") {
+    return "arch is required";
+  }
+  if (!event.tsuku_version || typeof event.tsuku_version !== "string") {
+    return "tsuku_version is required";
+  }
+
+  // tool_name is required for all discovery events
+  if (!event.tool_name || typeof event.tool_name !== "string") {
+    return "tool_name is required";
+  }
+  if (event.tool_name.length > MAX_TOOL_NAME_LENGTH) {
+    return `tool_name exceeds max length of ${MAX_TOOL_NAME_LENGTH}`;
+  }
+  if (!TOOL_NAME_PATTERN.test(event.tool_name)) {
+    return "tool_name must match ^[a-z0-9][a-z0-9-]*$";
+  }
+
+  // source length validation (if provided)
+  if (event.source && event.source.length > MAX_SOURCE_LENGTH) {
+    return `source exceeds max length of ${MAX_SOURCE_LENGTH}`;
+  }
+
+  // Action-specific validation
+  switch (event.action) {
+    case "discovery_registry_hit":
+    case "discovery_ecosystem_hit":
+    case "discovery_llm_hit":
+      // Hit actions require confidence and builder
+      if (!event.confidence) return `confidence is required for ${event.action}`;
+      if (!event.builder) return `builder is required for ${event.action}`;
+      break;
+    case "discovery_disambiguation":
+      // Disambiguation requires builder
+      if (!event.builder) return "builder is required for discovery_disambiguation";
+      break;
+    case "discovery_error":
+      // Error requires error_category
+      if (!event.error_category) return "error_category is required for discovery_error";
+      break;
+    case "discovery_not_found":
+      // No additional requirements
       break;
   }
 
@@ -467,6 +549,63 @@ export default {
               LLM_SCHEMA_VERSION, // blob15: schema_version
             ],
             indexes: [llmEvent.action],
+          });
+
+          return new Response("ok", { status: 200, headers: corsHeaders });
+        }
+
+        // Check if it's a discovery event
+        const discoveryActions: DiscoveryActionType[] = [
+          "discovery_registry_hit",
+          "discovery_ecosystem_hit",
+          "discovery_llm_hit",
+          "discovery_not_found",
+          "discovery_disambiguation",
+          "discovery_error",
+        ];
+
+        if (typeof event.action === "string" && discoveryActions.includes(event.action as DiscoveryActionType)) {
+          // Handle discovery event
+          const discoveryEvent: DiscoveryTelemetryEvent = {
+            action: event.action as DiscoveryActionType,
+            tool_name: event.tool_name as string | undefined,
+            confidence: event.confidence as string | undefined,
+            builder: event.builder as string | undefined,
+            source: event.source as string | undefined,
+            match_count: event.match_count as number | undefined,
+            error_category: event.error_category as string | undefined,
+            duration_ms: event.duration_ms as number | undefined,
+            os: event.os as string | undefined,
+            arch: event.arch as string | undefined,
+            tsuku_version: event.tsuku_version as string | undefined,
+            schema_version: event.schema_version as string | undefined,
+          };
+
+          const validationError = validateDiscoveryEvent(discoveryEvent);
+          if (validationError) {
+            return new Response(`Bad request: ${validationError}`, {
+              status: 400,
+              headers: corsHeaders,
+            });
+          }
+
+          // Write discovery event to analytics engine with 12-blob layout
+          env.ANALYTICS.writeDataPoint({
+            blobs: [
+              discoveryEvent.action, // blob0: action
+              discoveryEvent.tool_name || "", // blob1: tool_name
+              discoveryEvent.confidence || "", // blob2: confidence
+              discoveryEvent.builder || "", // blob3: builder
+              discoveryEvent.source || "", // blob4: source
+              discoveryEvent.match_count !== undefined ? String(discoveryEvent.match_count) : "", // blob5: match_count
+              discoveryEvent.error_category || "", // blob6: error_category
+              discoveryEvent.duration_ms !== undefined ? String(discoveryEvent.duration_ms) : "", // blob7: duration_ms
+              discoveryEvent.os || "", // blob8: os
+              discoveryEvent.arch || "", // blob9: arch
+              discoveryEvent.tsuku_version || "", // blob10: tsuku_version
+              DISCOVERY_SCHEMA_VERSION, // blob11: schema_version
+            ],
+            indexes: [discoveryEvent.tool_name || ""],
           });
 
           return new Response("ok", { status: 200, headers: corsHeaders });
