@@ -41,7 +41,9 @@ rationale: |
 
 # Pipeline Dashboard
 
-**Status**: Planned
+## Status
+
+**Planned**
 
 ## Implementation Issues
 
