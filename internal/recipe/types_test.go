@@ -889,186 +889,147 @@ pattern = "cargo {version}"
 	}
 }
 
-func TestRecipe_HasChecksumVerification_NoDownloadSteps(t *testing.T) {
-	// Recipes without download steps should return true (nothing to verify)
-	recipe := Recipe{
+func TestGetChecksumVerification_NoDownloadSteps(t *testing.T) {
+	r := Recipe{
 		Steps: []Step{
 			{Action: "chmod", Params: map[string]interface{}{"files": []string{"bin/tool"}}},
 		},
 	}
-
-	if !recipe.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = false for recipe with no download steps, want true")
+	if got := r.GetChecksumVerification(); got != ChecksumStatic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumStatic", got)
+	}
+	if !r.HasChecksumVerification() {
+		t.Error("HasChecksumVerification() = false, want true")
 	}
 }
 
-func TestRecipe_HasChecksumVerification_DownloadWithoutChecksum(t *testing.T) {
-	// Download step without checksum should return false
-	recipe := Recipe{
+func TestGetChecksumVerification_GenericDownloadWithoutChecksum(t *testing.T) {
+	// Generic downloads without static checksums use dynamic verification
+	// (plan generator computes checksums at install time)
+	r := Recipe{
 		Steps: []Step{
-			{Action: "download", Params: map[string]interface{}{
-				"url":  "https://example.com/file",
-				"dest": "file",
-			}},
+			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file"}},
 		},
 	}
-
-	if recipe.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = true for recipe without checksum, want false")
+	if got := r.GetChecksumVerification(); got != ChecksumDynamic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumDynamic", got)
+	}
+	if !r.HasChecksumVerification() {
+		t.Error("HasChecksumVerification() = false, want true")
 	}
 }
 
-func TestRecipe_HasChecksumVerification_DownloadWithInlineChecksum(t *testing.T) {
-	// Download step with inline checksum should return true
-	recipe := Recipe{
+func TestGetChecksumVerification_GenericDownloadWithChecksum(t *testing.T) {
+	r := Recipe{
 		Steps: []Step{
-			{Action: "download", Params: map[string]interface{}{
-				"url":      "https://example.com/file",
-				"dest":     "file",
-				"checksum": "abc123",
-			}},
+			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file", "checksum": "abc123"}},
 		},
 	}
-
-	if !recipe.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = false for recipe with inline checksum, want true")
+	if got := r.GetChecksumVerification(); got != ChecksumStatic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumStatic", got)
 	}
 }
 
-func TestRecipe_HasChecksumVerification_DownloadWithChecksumURL(t *testing.T) {
-	// Download step with checksum URL should return true
-	recipe := Recipe{
+func TestGetChecksumVerification_GenericDownloadWithChecksumURL(t *testing.T) {
+	r := Recipe{
 		Steps: []Step{
-			{Action: "download", Params: map[string]interface{}{
-				"url":          "https://example.com/file",
-				"dest":         "file",
-				"checksum_url": "https://example.com/file.sha256",
-			}},
+			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file", "checksum_url": "https://example.com/file.sha256"}},
 		},
 	}
-
-	if !recipe.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = false for recipe with checksum_url, want true")
+	if got := r.GetChecksumVerification(); got != ChecksumStatic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumStatic", got)
 	}
 }
 
-func TestRecipe_HasChecksumVerification_GitHubArchiveWithChecksum(t *testing.T) {
-	// github_archive with checksum should return true
-	recipe := Recipe{
+func TestGetChecksumVerification_GitHubArchiveWithChecksum(t *testing.T) {
+	r := Recipe{
 		Steps: []Step{
 			{Action: "github_archive", Params: map[string]interface{}{
-				"repo":           "owner/repo",
-				"asset_pattern":  "tool-{version}.tar.gz",
-				"archive_format": "tar.gz",
-				"binaries":       []string{"tool"},
-				"checksum":       "abc123",
+				"repo": "owner/repo", "asset_pattern": "tool.tar.gz", "checksum": "abc123",
 			}},
 		},
 	}
-
-	if !recipe.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = false for github_archive with checksum, want true")
+	if got := r.GetChecksumVerification(); got != ChecksumStatic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumStatic", got)
 	}
 }
 
-func TestRecipe_HasChecksumVerification_GitHubArchiveWithoutChecksum(t *testing.T) {
-	// github_archive without checksum should return false
-	recipe := Recipe{
+func TestGetChecksumVerification_GitHubArchiveWithoutChecksum(t *testing.T) {
+	// GitHub-bound without static checksum uses dynamic verification
+	r := Recipe{
 		Steps: []Step{
 			{Action: "github_archive", Params: map[string]interface{}{
-				"repo":           "owner/repo",
-				"asset_pattern":  "tool-{version}.tar.gz",
-				"archive_format": "tar.gz",
-				"binaries":       []string{"tool"},
+				"repo": "owner/repo", "asset_pattern": "tool.tar.gz",
 			}},
 		},
 	}
-
-	if recipe.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = true for github_archive without checksum, want false")
+	if got := r.GetChecksumVerification(); got != ChecksumDynamic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumDynamic", got)
+	}
+	if !r.HasChecksumVerification() {
+		t.Error("HasChecksumVerification() = false, want true (dynamic counts)")
 	}
 }
 
-func TestRecipe_HasChecksumVerification_MultipleSteps_AnyHasChecksum(t *testing.T) {
-	// If any download step has checksum, should return true
-	recipe := Recipe{
-		Steps: []Step{
-			{Action: "github_file", Params: map[string]interface{}{
-				"repo":          "owner/repo",
-				"asset_pattern": "tool1",
-				"binary":        "tool1",
-				// No checksum
-			}},
-			{Action: "download", Params: map[string]interface{}{
-				"url":      "https://example.com/tool2",
-				"dest":     "tool2",
-				"checksum": "abc123", // Has checksum
-			}},
-		},
+func TestGetChecksumVerification_EcosystemActions(t *testing.T) {
+	actions := []string{
+		"homebrew", "pipx_install", "pip_exec", "cargo_install",
+		"gem_install", "npm_install", "go_install", "nix_install", "cpan_install",
 	}
-
-	if !recipe.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = false when any step has checksum, want true")
-	}
-}
-
-func TestRecipe_HasChecksumVerification_AllDownloadActions(t *testing.T) {
-	// Test all download action types
-	downloadActions := []string{
-		"download",
-		"download_archive",
-		"github_archive",
-		"github_file",
-	}
-
-	for _, action := range downloadActions {
-		t.Run(action+"_without_checksum", func(t *testing.T) {
-			recipe := Recipe{
+	for _, action := range actions {
+		t.Run(action, func(t *testing.T) {
+			r := Recipe{
 				Steps: []Step{
-					{Action: action, Params: map[string]interface{}{
-						"url": "https://example.com/file",
-					}},
+					{Action: action, Params: map[string]interface{}{"package": "test"}},
 				},
 			}
-
-			if recipe.HasChecksumVerification() {
-				t.Errorf("HasChecksumVerification() = true for %s without checksum, want false", action)
+			if got := r.GetChecksumVerification(); got != ChecksumEcosystem {
+				t.Errorf("GetChecksumVerification() = %d, want ChecksumEcosystem", got)
 			}
-		})
-
-		t.Run(action+"_with_checksum", func(t *testing.T) {
-			recipe := Recipe{
-				Steps: []Step{
-					{Action: action, Params: map[string]interface{}{
-						"url":      "https://example.com/file",
-						"checksum": "abc123",
-					}},
-				},
-			}
-
-			if !recipe.HasChecksumVerification() {
-				t.Errorf("HasChecksumVerification() = false for %s with checksum, want true", action)
+			if !r.HasChecksumVerification() {
+				t.Errorf("HasChecksumVerification() = false for %s, want true", action)
 			}
 		})
 	}
 }
 
-func TestRecipe_HasChecksumVerification_NonDownloadActions(t *testing.T) {
-	// Non-download actions should be ignored
-	recipe := Recipe{
+func TestGetChecksumVerification_LowestLevelWins(t *testing.T) {
+	// Mix of ecosystem (ecosystem) and download without checksum (dynamic) → dynamic wins
+	r := Recipe{
 		Steps: []Step{
-			{Action: "npm_install", Params: map[string]interface{}{
-				"package": "some-package",
-			}},
-			{Action: "pip_install", Params: map[string]interface{}{
-				"package": "some-package",
-			}},
+			{Action: "homebrew", Params: map[string]interface{}{"formula": "jq"}},
+			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file"}},
 		},
 	}
+	if got := r.GetChecksumVerification(); got != ChecksumDynamic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumDynamic (lowest wins)", got)
+	}
+}
 
-	// No download actions, so should return true (nothing to verify)
-	if !recipe.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = false for non-download actions, want true")
+func TestGetChecksumVerification_MixedWithChecksumOnGeneric(t *testing.T) {
+	// github_file (dynamic) + download with checksum (static) → dynamic is lowest
+	r := Recipe{
+		Steps: []Step{
+			{Action: "github_file", Params: map[string]interface{}{"repo": "owner/repo"}},
+			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file", "checksum": "abc123"}},
+		},
+	}
+	if got := r.GetChecksumVerification(); got != ChecksumDynamic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumDynamic", got)
+	}
+	if !r.HasChecksumVerification() {
+		t.Error("HasChecksumVerification() = false, want true")
+	}
+}
+
+func TestGetChecksumVerification_DownloadArchiveWithoutChecksum(t *testing.T) {
+	r := Recipe{
+		Steps: []Step{
+			{Action: "download_archive", Params: map[string]interface{}{"url": "https://example.com/file.tar.gz"}},
+		},
+	}
+	if got := r.GetChecksumVerification(); got != ChecksumDynamic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumDynamic", got)
 	}
 }
 

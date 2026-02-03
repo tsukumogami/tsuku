@@ -867,34 +867,109 @@ func (r *Recipe) IsLibrary() bool {
 }
 
 // HasChecksumVerification returns true if any download step includes checksum verification.
-// This checks for the presence of "checksum" or "checksum_url" parameters in download-related actions.
-func (r *Recipe) HasChecksumVerification() bool {
-	// Actions that download external files and can verify checksums
-	downloadActions := map[string]bool{
-		"download":         true,
-		"download_archive": true,
-		"github_archive":   true,
-		"github_file":      true,
-	}
+// ChecksumVerification describes how a recipe's downloads are verified.
+type ChecksumVerification int
 
-	hasDownloadStep := false
+const (
+	// ChecksumNone means the recipe has unverified generic downloads.
+	ChecksumNone ChecksumVerification = iota
+	// ChecksumDynamic means downloads are GitHub-bound and checksums are
+	// computed during plan generation.
+	ChecksumDynamic
+	// ChecksumEcosystem means an ecosystem package manager handles verification.
+	ChecksumEcosystem
+	// ChecksumStatic means explicit checksums are declared in the recipe.
+	ChecksumStatic
+)
+
+// ecosystemActions are actions whose underlying package manager verifies
+// integrity (pip hashes, cargo checksums, npm integrity, etc.).
+var ecosystemActions = map[string]bool{
+	"homebrew":      true,
+	"pipx_install":  true,
+	"pip_exec":      true,
+	"cargo_install": true,
+	"cargo_build":   true,
+	"gem_install":   true,
+	"npm_install":   true,
+	"go_install":    true,
+	"nix_install":   true,
+	"cpan_install":  true,
+}
+
+// githubBoundActions download from a specific GitHub repo's releases and
+// compute checksums dynamically during plan generation.
+var githubBoundActions = map[string]bool{
+	"github_archive": true,
+	"github_file":    true,
+}
+
+// genericDownloadActions fetch from arbitrary URLs. Without explicit
+// checksums they rely on dynamic computation during plan generation.
+var genericDownloadActions = map[string]bool{
+	"download":         true,
+	"download_archive": true,
+}
+
+// GetChecksumVerification returns the verification level for this recipe.
+// It returns the lowest level across all download steps: if any step has
+// no verification, the overall level is ChecksumNone.
+func (r *Recipe) GetChecksumVerification() ChecksumVerification {
+	level := ChecksumVerification(-1) // unset sentinel
+
 	for _, step := range r.Steps {
-		if !downloadActions[step.Action] {
+		var stepLevel ChecksumVerification
+
+		switch {
+		case ecosystemActions[step.Action]:
+			stepLevel = ChecksumEcosystem
+
+		case githubBoundActions[step.Action]:
+			if hasStaticChecksum(step) {
+				stepLevel = ChecksumStatic
+			} else {
+				stepLevel = ChecksumDynamic
+			}
+
+		case genericDownloadActions[step.Action]:
+			if hasStaticChecksum(step) {
+				stepLevel = ChecksumStatic
+			} else {
+				stepLevel = ChecksumDynamic
+			}
+
+		default:
+			// Non-download actions (extract, chmod, install_binaries, etc.)
 			continue
 		}
-		hasDownloadStep = true
 
-		// Check for checksum parameters
-		if _, hasChecksum := step.Params["checksum"]; hasChecksum {
-			return true
-		}
-		if _, hasChecksumURL := step.Params["checksum_url"]; hasChecksumURL {
-			return true
+		if level == -1 || stepLevel < level {
+			level = stepLevel
 		}
 	}
 
-	// If there are no download steps, consider it "verified" (nothing to verify)
-	return !hasDownloadStep
+	// No download steps at all — nothing to verify.
+	if level == -1 {
+		return ChecksumStatic
+	}
+	return level
+}
+
+func hasStaticChecksum(step Step) bool {
+	if _, ok := step.Params["checksum"]; ok {
+		return true
+	}
+	if _, ok := step.Params["checksum_url"]; ok {
+		return true
+	}
+	return false
+}
+
+// HasChecksumVerification reports whether the recipe has adequate integrity
+// verification for its downloads. Ecosystem actions and GitHub-bound actions
+// with dynamic checksums are considered verified.
+func (r *Recipe) HasChecksumVerification() bool {
+	return r.GetChecksumVerification() >= ChecksumDynamic
 }
 
 // SystemActionChecker is the interface that SystemAction implements.
