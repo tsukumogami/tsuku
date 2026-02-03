@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-03T07:00:21Z",
+  "updated_at": "2026-02-03T09:51:38Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -287,7 +287,7 @@
       "source": "homebrew",
       "name": "yq",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -295,7 +295,7 @@
       "source": "homebrew",
       "name": "tmux",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -327,7 +327,7 @@
       "source": "homebrew",
       "name": "curl",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -367,7 +367,7 @@
       "source": "homebrew",
       "name": "tree",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -391,7 +391,7 @@
       "source": "homebrew",
       "name": "ripgrep",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -423,7 +423,7 @@
       "source": "homebrew",
       "name": "wget",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -431,7 +431,7 @@
       "source": "homebrew",
       "name": "ninja",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -535,7 +535,7 @@
       "source": "homebrew",
       "name": "fzf",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -607,7 +607,7 @@
       "source": "homebrew",
       "name": "vim",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -623,7 +623,7 @@
       "source": "homebrew",
       "name": "rust",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
