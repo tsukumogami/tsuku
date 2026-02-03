@@ -514,30 +514,6 @@ Add status table to merge job `$GITHUB_STEP_SUMMARY`:
 - Top 3 blockers
 - Link to full dashboard
 
-## Consequences
-
-### Positive
-
-- **Immediate visibility**: Operators can check pipeline health without jq knowledge
-- **Zero infrastructure**: No servers, databases, or external services
-- **Low maintenance**: Go tool with tests + static HTML is robust and easy to update
-- **Consistent with patterns**: Follows existing website and scripting conventions
-- **Complementary to #1190**: Provides value now while full backend is developed
-
-### Negative
-
-- **Stale data**: Dashboard reflects last batch run, not current state
-- **Limited interactivity**: No filtering, drill-down, or ad-hoc queries
-- **Homebrew only**: Other ecosystems not supported initially
-- **Growing data files**: JSONL files grow without bound
-
-### Mitigations
-
-- Stale data: Batch runs every 3 hours, so max staleness is predictable
-- Limited interactivity: CLI scripts remain available for custom queries; #1190 will provide full investigation
-- Homebrew only: JSON schema supports future ecosystem expansion
-- Growing files: Monitor file sizes; add rotation when files exceed 1MB
-
 ## Security Considerations
 
 ### Download Verification
@@ -588,3 +564,27 @@ The dashboard is deployed to tsuku.dev (public). All displayed information is al
 | Malicious data injection | All data sources are written by CI with repo permissions; PRs require review | Compromised CI could inject bad data; mitigated by GitHub's security model |
 | XSS via failure messages | Dashboard renders text as textContent, not innerHTML | None for standard text rendering |
 | Denial of service via large JSON | Dashboard truncates display of long lists (max 10 blockers, 10 runs) | Extremely large files could slow page load; acceptable given data growth rate |
+
+## Consequences
+
+### Positive
+
+- **Immediate visibility**: Operators can check pipeline health without jq knowledge
+- **Zero infrastructure**: No servers, databases, or external services
+- **Low maintenance**: Go tool with tests + static HTML is robust and easy to update
+- **Consistent with patterns**: Follows existing website and scripting conventions
+- **Complementary to #1190**: Provides value now while full backend is developed
+
+### Negative
+
+- **Stale data**: Dashboard reflects last batch run, not current state
+- **Limited interactivity**: No filtering, drill-down, or ad-hoc queries
+- **Homebrew only**: Other ecosystems not supported initially
+- **Growing data files**: JSONL files grow without bound
+
+### Mitigations
+
+- Stale data: Batch runs every 3 hours, so max staleness is predictable
+- Limited interactivity: CLI scripts remain available for custom queries; #1190 will provide full investigation
+- Homebrew only: JSON schema supports future ecosystem expansion
+- Growing files: Monitor file sizes; add rotation when files exceed 1MB
