@@ -201,7 +201,7 @@ Benefits:
 - No manual intervention required
 - Dashboard reflects the same state as the repository
 
-Implementation: Add step to the `merge` job before "Check for recipes to merge" that runs `scripts/generate-dashboard.sh` and includes output in the commit. This ensures the dashboard updates on every batch run regardless of whether recipes are merged.
+Implementation: Add step to the `merge` job before "Check for recipes to merge" that runs `./queue-analytics` and includes output in the commit. This ensures the dashboard updates on every batch run regardless of whether recipes are merged.
 
 #### Alternatives Considered
 
@@ -321,25 +321,25 @@ These are acceptable because:
 
 ### Components
 
-**1. Data Generation Tool** (`internal/dashboard/`)
+**1. Data Generation Tool** (`cmd/queue-analytics/`)
 
-Go package that reads source data files and outputs `website/pipeline/dashboard.json`:
+Standalone binary (like `cmd/seed-queue/`) that reads source data files and outputs `website/pipeline/dashboard.json`:
 
 ```go
-package dashboard
-
-// Generate reads pipeline data files and produces dashboard.json
-func Generate(opts Options) error {
-    // Input files (relative to repo root)
-    queueFile := "data/priority-queue.json"
-    failuresFile := "data/failures/homebrew.jsonl"
-    metricsFile := "data/metrics/batch-runs.jsonl"
-    outputFile := "website/pipeline/dashboard.json"
+// cmd/queue-analytics/main.go
+func main() {
+    queueFile := flag.String("queue", "data/priority-queue.json", "...")
+    failuresFile := flag.String("failures", "data/failures/homebrew.jsonl", "...")
+    metricsFile := flag.String("metrics", "data/metrics/batch-runs.jsonl", "...")
+    output := flag.String("output", "website/pipeline/dashboard.json", "...")
     // ...
+    dashboard.Generate(opts)
 }
 ```
 
-CLI integration: `tsuku dashboard generate [--output PATH]`
+Usage: `./queue-analytics [-output PATH]`
+
+The core logic lives in `internal/dashboard/` package for testability.
 
 Note: The failures JSONL contains two record types that the Go parser handles:
 1. **Legacy batch records**: Objects with `failures[]` array containing `package_id`, `category`, `blocked_by`
@@ -434,9 +434,9 @@ Create `internal/dashboard/` package with:
 - Unit tests for parsing both JSONL record formats
 - Graceful handling of missing files (outputs partial data)
 
-Add CLI command: `tsuku dashboard generate [--output PATH]`
+Create standalone binary: `cmd/queue-analytics/main.go` (like `cmd/seed-queue/`)
 
-Test locally: `go run ./cmd/tsuku dashboard generate && cat website/pipeline/dashboard.json`
+Test locally: `go run ./cmd/queue-analytics && cat website/pipeline/dashboard.json`
 
 ### Phase 2: HTML Dashboard Page
 
@@ -453,7 +453,7 @@ Test locally: `python3 -m http.server -d website 8080` → visit localhost:8080/
 
 Modify `.github/workflows/batch-generate.yml`:
 - Add "Generate dashboard" step in the `merge` job before "Check for recipes to merge"
-- Run `./tsuku dashboard generate` (using pre-built binary from generate job)
+- Build and run `./queue-analytics` binary
 - Include `website/pipeline/dashboard.json` in the commit
 
 This placement ensures the dashboard updates on every batch run, regardless of whether recipes are merged. The step should run early in the merge job so dashboard data reflects the current batch state.
