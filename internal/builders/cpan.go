@@ -26,6 +26,28 @@ type metacpanRelease struct {
 	Abstract     string `json:"abstract"`     // Short description
 }
 
+// metacpanDistribution represents the MetaCPAN API response for /distribution/{name}
+type metacpanDistribution struct {
+	Name      string                        `json:"name"`
+	River     metacpanRiver                 `json:"river"`
+	Resources metacpanDistributionResources `json:"resources"`
+}
+
+// metacpanRiver contains downstream dependency metrics
+type metacpanRiver struct {
+	Total int `json:"total"` // Total downstream dependents
+}
+
+// metacpanDistributionResources contains resource links
+type metacpanDistributionResources struct {
+	Repository metacpanRepository `json:"repository"`
+}
+
+// metacpanRepository contains repository information
+type metacpanRepository struct {
+	URL string `json:"url"`
+}
+
 // Pre-compile regex for distribution name validation
 // Distribution names: start with letter, can contain letters, numbers, hyphens
 var cpanDistributionRegex = regexp.MustCompile(`^[A-Za-z][A-Za-z0-9]*(-[A-Za-z0-9]+)*$`)
@@ -246,12 +268,58 @@ func inferExecutableName(distribution string) (string, string) {
 	return name, warning
 }
 
-// Probe checks if a distribution exists on CPAN.
+// Probe checks if a distribution exists on CPAN and returns quality metadata.
 func (b *CPANBuilder) Probe(ctx context.Context, name string) (*ProbeResult, error) {
 	dist := normalizeToDistribution(name)
 	_, err := b.fetchDistributionInfo(ctx, dist)
 	if err != nil {
 		return nil, nil
 	}
-	return &ProbeResult{Source: dist}, nil
+
+	result := &ProbeResult{Source: dist}
+
+	// Fetch quality metrics (best-effort, doesn't block on failure)
+	riverTotal, repoURL := b.fetchDistributionMetrics(ctx, dist)
+	result.Downloads = riverTotal
+	result.HasRepository = repoURL != ""
+
+	return result, nil
+}
+
+// fetchDistributionMetrics fetches river metrics and repository URL from the distribution endpoint.
+// Returns (0, "") if the fetch fails (graceful degradation).
+func (b *CPANBuilder) fetchDistributionMetrics(ctx context.Context, distribution string) (int, string) {
+	baseURL, err := url.Parse(b.metacpanBaseURL)
+	if err != nil {
+		return 0, ""
+	}
+	apiURL := baseURL.JoinPath("distribution", distribution)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", apiURL.String(), nil)
+	if err != nil {
+		return 0, ""
+	}
+
+	req.Header.Set("User-Agent", "tsuku/1.0 (https://github.com/tsukumogami/tsuku)")
+	req.Header.Set("Accept", "application/json")
+
+	resp, err := b.httpClient.Do(req)
+	if err != nil {
+		return 0, ""
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return 0, ""
+	}
+
+	// Limit response size
+	limitedReader := io.LimitReader(resp.Body, maxMetaCPANResponseSize)
+
+	var distResp metacpanDistribution
+	if err := json.NewDecoder(limitedReader).Decode(&distResp); err != nil {
+		return 0, ""
+	}
+
+	return distResp.River.Total, distResp.Resources.Repository.URL
 }

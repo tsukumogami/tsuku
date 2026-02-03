@@ -25,6 +25,7 @@ func NewQualityFilter() *QualityFilter {
 			"crates.io": {MinDownloads: 100, MinVersionCount: 5},
 			"npm":       {MinDownloads: 100, MinVersionCount: 5},
 			"pypi":      {MinDownloads: 0, MinVersionCount: 3},
+			"cpan":      {MinDownloads: 1, MinVersionCount: 3}, // MinDownloads = river.total (downstream deps)
 		},
 	}
 }
