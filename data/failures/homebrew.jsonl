@@ -28,3 +28,6 @@
 {"schema_version":1,"recipe":"htop","platform":"linux-suse-glibc-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-03T13:24:28Z"}
 {"schema_version":1,"recipe":"htop","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-03T13:24:28Z"}
 {"schema_version":1,"recipe":"htop","platform":"darwin-x86_64","exit_code":124,"category":"timeout","timestamp":"2026-02-03T13:24:28Z"}
+{"schema_version":1,"ecosystem":"homebrew","environment":"linux-glibc-x86_64","updated_at":"2026-02-03T15:56:55Z","failures":[{"package_id":"homebrew:hyperfine","category":"validation_failed","message":"Warning: Skipping recipe review (--yes). The recipe will be installed without confirmation.\nCreating recipe for hyperfine from homebrew:hyperfine...\nFetching formula metadata... done (v1.20.0)\nInspecting bottle contents... done (deterministic)\nError: recipe already exists at recipes/h/hyperfine.toml\nUse --force to overwrite","timestamp":"2026-02-03T15:56:55.582777453Z"}]}
+{"schema_version":1,"recipe":"tokei","platform":"linux-alpine-musl-x86_64","exit_code":6,"category":"deterministic","timestamp":"2026-02-03T15:59:17Z"}
+{"schema_version":1,"recipe":"tokei","platform":"linux-alpine-musl-arm64","exit_code":6,"category":"deterministic","timestamp":"2026-02-03T15:59:17Z"}
