@@ -569,6 +569,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
       - name: Record merge start time
         run: echo "MERGE_START=$(date -u +%s)" >> "$GITHUB_ENV"
 
@@ -812,6 +816,40 @@ jobs:
 
           echo "SLI metrics appended for batch $BATCH_ID"
 
+      - name: Generate dashboard
+        run: |
+          go build -o queue-analytics ./cmd/queue-analytics
+          ./queue-analytics
+          echo "Dashboard generated at website/pipeline/dashboard.json"
+
+          # Write step summary if dashboard was generated
+          DASHBOARD="website/pipeline/dashboard.json"
+          if [ -f "$DASHBOARD" ]; then
+            {
+              echo "## Pipeline Queue Status"
+              echo ""
+              echo "| Status | Count |"
+              echo "|--------|-------|"
+              jq -r '.queue.by_status | to_entries[] | "| \(.key) | \(.value) |"' "$DASHBOARD"
+              echo ""
+              echo "**Total packages**: $(jq -r '.queue.total' "$DASHBOARD")"
+              echo ""
+
+              # Top 3 blockers (if any)
+              BLOCKER_COUNT=$(jq '.blockers | length' "$DASHBOARD")
+              if [ "$BLOCKER_COUNT" -gt 0 ]; then
+                echo "### Top Blockers"
+                echo ""
+                echo "| Dependency | Blocked Packages |"
+                echo "|------------|------------------|"
+                jq -r '.blockers[:3][] | "| \(.dependency) | \(.count) |"' "$DASHBOARD"
+                echo ""
+              fi
+
+              echo "[View full dashboard](https://tsuku.dev/pipeline/)"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
       - name: Check for recipes to merge
         id: check
         run: |
@@ -824,7 +862,7 @@ jobs:
       - name: Persist circuit breaker and metrics state
         if: steps.check.outputs.changes == 'false'
         run: |
-          git add batch-control.json data/metrics/ 2>/dev/null || true
+          git add batch-control.json data/metrics/ website/pipeline/dashboard.json 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No state changes to persist"
             exit 0
@@ -853,7 +891,7 @@ jobs:
 
           BRANCH="batch/${{ env.ECOSYSTEM }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
-          git add recipes/ data/ batch-control.json
+          git add recipes/ data/ batch-control.json website/pipeline/dashboard.json
           git reset HEAD -- data/batch-summary.md 2>/dev/null || true
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

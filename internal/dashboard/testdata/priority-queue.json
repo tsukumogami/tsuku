@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-02-03T10:00:00Z",
+  "tiers": {
+    "1": "Critical",
+    "2": "Popular"
+  },
+  "packages": [
+    {"id": "homebrew:jq", "source": "homebrew", "name": "jq", "tier": 1, "status": "success", "added_at": "2026-01-01T00:00:00Z"},
+    {"id": "homebrew:fd", "source": "homebrew", "name": "fd", "tier": 1, "status": "pending", "added_at": "2026-01-01T00:00:00Z"},
+    {"id": "homebrew:bat", "source": "homebrew", "name": "bat", "tier": 1, "status": "failed", "added_at": "2026-01-01T00:00:00Z"},
+    {"id": "homebrew:fzf", "source": "homebrew", "name": "fzf", "tier": 2, "status": "pending", "added_at": "2026-01-02T00:00:00Z"},
+    {"id": "homebrew:ripgrep", "source": "homebrew", "name": "ripgrep", "tier": 2, "status": "blocked", "added_at": "2026-01-02T00:00:00Z"},
+    {"id": "homebrew:exa", "source": "homebrew", "name": "exa", "tier": 2, "status": "success", "added_at": "2026-01-02T00:00:00Z"}
+  ]
+}
