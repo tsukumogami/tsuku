@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The batch recipe generation pipeline collects structured data about failures,
   queue status, and run metrics, but there's no way to visualize this data
@@ -41,7 +41,7 @@ rationale: |
 
 # Pipeline Dashboard
 
-**Status**: Proposed
+**Status**: Accepted
 
 ## Context and Problem Statement
 
