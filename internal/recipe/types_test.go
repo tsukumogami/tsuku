@@ -904,16 +904,18 @@ func TestGetChecksumVerification_NoDownloadSteps(t *testing.T) {
 }
 
 func TestGetChecksumVerification_GenericDownloadWithoutChecksum(t *testing.T) {
+	// Generic downloads without static checksums use dynamic verification
+	// (plan generator computes checksums at install time)
 	r := Recipe{
 		Steps: []Step{
 			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file"}},
 		},
 	}
-	if got := r.GetChecksumVerification(); got != ChecksumNone {
-		t.Errorf("GetChecksumVerification() = %d, want ChecksumNone", got)
+	if got := r.GetChecksumVerification(); got != ChecksumDynamic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumDynamic", got)
 	}
-	if r.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = true, want false")
+	if !r.HasChecksumVerification() {
+		t.Error("HasChecksumVerification() = false, want true")
 	}
 }
 
@@ -992,18 +994,15 @@ func TestGetChecksumVerification_EcosystemActions(t *testing.T) {
 }
 
 func TestGetChecksumVerification_LowestLevelWins(t *testing.T) {
-	// Mix of github_file (dynamic) and download without checksum (none) → none wins
+	// Mix of ecosystem (ecosystem) and download without checksum (dynamic) → dynamic wins
 	r := Recipe{
 		Steps: []Step{
-			{Action: "github_file", Params: map[string]interface{}{"repo": "owner/repo"}},
+			{Action: "homebrew", Params: map[string]interface{}{"formula": "jq"}},
 			{Action: "download", Params: map[string]interface{}{"url": "https://example.com/file"}},
 		},
 	}
-	if got := r.GetChecksumVerification(); got != ChecksumNone {
-		t.Errorf("GetChecksumVerification() = %d, want ChecksumNone (lowest wins)", got)
-	}
-	if r.HasChecksumVerification() {
-		t.Error("HasChecksumVerification() = true, want false (generic download without checksum)")
+	if got := r.GetChecksumVerification(); got != ChecksumDynamic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumDynamic (lowest wins)", got)
 	}
 }
 
@@ -1029,8 +1028,8 @@ func TestGetChecksumVerification_DownloadArchiveWithoutChecksum(t *testing.T) {
 			{Action: "download_archive", Params: map[string]interface{}{"url": "https://example.com/file.tar.gz"}},
 		},
 	}
-	if got := r.GetChecksumVerification(); got != ChecksumNone {
-		t.Errorf("GetChecksumVerification() = %d, want ChecksumNone", got)
+	if got := r.GetChecksumVerification(); got != ChecksumDynamic {
+		t.Errorf("GetChecksumVerification() = %d, want ChecksumDynamic", got)
 	}
 }
 

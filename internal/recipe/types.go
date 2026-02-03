@@ -904,7 +904,8 @@ var githubBoundActions = map[string]bool{
 	"github_file":    true,
 }
 
-// genericDownloadActions fetch from arbitrary URLs and need explicit checksums.
+// genericDownloadActions fetch from arbitrary URLs. Without explicit
+// checksums they rely on dynamic computation during plan generation.
 var genericDownloadActions = map[string]bool{
 	"download":         true,
 	"download_archive": true,
@@ -934,7 +935,7 @@ func (r *Recipe) GetChecksumVerification() ChecksumVerification {
 			if hasStaticChecksum(step) {
 				stepLevel = ChecksumStatic
 			} else {
-				stepLevel = ChecksumNone
+				stepLevel = ChecksumDynamic
 			}
 
 		default:

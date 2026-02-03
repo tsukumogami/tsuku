@@ -283,24 +283,9 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 	// Check for checksum verification (only warn for explicit installs)
 	if isExplicit {
 		switch r.GetChecksumVerification() {
-		case recipe.ChecksumNone:
-			// Generic downloads without checksums — block unless forced.
-			fmt.Fprintf(os.Stderr, "Warning: Recipe '%s' downloads from an arbitrary URL without checksum verification.\n", toolName)
-			fmt.Fprintf(os.Stderr, "The downloaded file cannot be verified for integrity.\n")
-
-			if !installForce {
-				if isInteractive() {
-					if !confirmInstall() {
-						return fmt.Errorf("installation canceled by user")
-					}
-				} else {
-					fmt.Fprintf(os.Stderr, "Use --force to proceed without verification.\n")
-					return fmt.Errorf("checksum verification required (use --force to override)")
-				}
-			}
-
 		case recipe.ChecksumDynamic:
-			// GitHub-bound downloads — inform but don't block.
+			// Downloads without static checksums — inform but don't block.
+			// The plan generator computes checksums at install time.
 			fmt.Fprintf(os.Stderr, "Note: Checksums for '%s' will be computed during installation.\n", toolName)
 
 		case recipe.ChecksumEcosystem, recipe.ChecksumStatic:
