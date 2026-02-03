@@ -81,7 +81,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1434,I1435 ready
+    class I1434 done
+    class I1435 ready
     class I1436,I1437 blocked
 ```
 
