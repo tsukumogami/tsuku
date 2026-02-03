@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "carthage",
   "description": "Decentralized dependency manager for Cocoa",
-  "homepage": "https://github.com/Carthage/Carthage"
+  "homepage": "https://github.com/Carthage/Carthage",
+  "downloads": 23634,
+  "has_repository": true
 }

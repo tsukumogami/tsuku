@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "hl",
   "description": "Fast and powerful log viewer and processor",
-  "homepage": "https://github.com/pamburus/hl"
+  "homepage": "https://github.com/pamburus/hl",
+  "downloads": 2786,
+  "has_repository": true
 }

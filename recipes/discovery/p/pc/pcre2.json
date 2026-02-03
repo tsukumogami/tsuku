@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pcre2",
   "description": "Perl compatible regular expressions library with a new API",
-  "homepage": "https://www.pcre.org/"
+  "homepage": "https://www.pcre.org/",
+  "downloads": 2331762,
+  "has_repository": true
 }

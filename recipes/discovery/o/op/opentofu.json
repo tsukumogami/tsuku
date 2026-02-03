@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "opentofu",
   "description": "Drop-in replacement for Terraform. Infrastructure as Code Tool",
-  "homepage": "https://opentofu.org/"
+  "homepage": "https://opentofu.org/",
+  "downloads": 61157,
+  "has_repository": true
 }

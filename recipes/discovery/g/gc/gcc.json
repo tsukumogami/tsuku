@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gcc",
   "description": "GNU compiler collection",
-  "homepage": "https://gcc.gnu.org/"
+  "homepage": "https://gcc.gnu.org/",
+  "downloads": 1040853,
+  "has_repository": true
 }

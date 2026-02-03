@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "protobuf",
   "description": "Protocol buffers (Google's data interchange format)",
-  "homepage": "https://protobuf.dev/"
+  "homepage": "https://protobuf.dev/",
+  "downloads": 891415,
+  "has_repository": true
 }

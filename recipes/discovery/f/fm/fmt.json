@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fmt",
   "description": "Open-source formatting library for C++",
-  "homepage": "https://fmt.dev/"
+  "homepage": "https://fmt.dev/",
+  "downloads": 299036,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "neonctl",
   "description": "Neon CLI tool",
-  "homepage": "https://neon.tech/docs/reference/neon-cli"
+  "homepage": "https://neon.tech/docs/reference/neon-cli",
+  "downloads": 6714,
+  "has_repository": true
 }

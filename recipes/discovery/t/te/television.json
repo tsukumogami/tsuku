@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "television",
   "description": "General purpose fuzzy finder TUI",
-  "homepage": "https://github.com/alexpasmantier/television"
+  "homepage": "https://github.com/alexpasmantier/television",
+  "downloads": 57250,
+  "has_repository": true
 }

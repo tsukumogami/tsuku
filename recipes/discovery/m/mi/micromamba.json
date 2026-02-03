@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "micromamba",
   "description": "Fast Cross-Platform Package Manager",
-  "homepage": "https://github.com/mamba-org/mamba"
+  "homepage": "https://github.com/mamba-org/mamba",
+  "downloads": 13576,
+  "has_repository": true
 }

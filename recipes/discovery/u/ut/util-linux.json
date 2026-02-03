@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "util-linux",
   "description": "Collection of Linux utilities",
-  "homepage": "https://github.com/util-linux/util-linux"
+  "homepage": "https://github.com/util-linux/util-linux",
+  "downloads": 408768,
+  "has_repository": true
 }

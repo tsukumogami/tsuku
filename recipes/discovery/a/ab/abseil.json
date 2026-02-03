@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "abseil",
   "description": "C++ Common Libraries",
-  "homepage": "https://abseil.io"
+  "homepage": "https://abseil.io",
+  "downloads": 812208,
+  "has_repository": true
 }

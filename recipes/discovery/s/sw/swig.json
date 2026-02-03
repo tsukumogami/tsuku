@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "swig",
   "description": "Generate scripting interfaces to C/C++ code",
-  "homepage": "https://www.swig.org/"
+  "homepage": "https://www.swig.org/",
+  "downloads": 115236,
+  "has_repository": true
 }

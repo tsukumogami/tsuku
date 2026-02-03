@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "less",
   "description": "Pager program similar to more",
-  "homepage": "https://www.greenwoodsoftware.com/less/index.html"
+  "homepage": "https://www.greenwoodsoftware.com/less/index.html",
+  "downloads": 11905,
+  "has_repository": true
 }

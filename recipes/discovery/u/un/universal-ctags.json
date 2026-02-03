@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "universal-ctags",
   "description": "Maintained ctags implementation",
-  "homepage": "https://ctags.io/"
+  "homepage": "https://ctags.io/",
+  "downloads": 33205,
+  "has_repository": true
 }

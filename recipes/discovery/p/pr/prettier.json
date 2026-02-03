@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "prettier",
   "description": "Code formatter for JavaScript, CSS, JSON, GraphQL, Markdown, YAML",
-  "homepage": "https://prettier.io/"
+  "homepage": "https://prettier.io/",
+  "downloads": 27688,
+  "has_repository": true
 }

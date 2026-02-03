@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "temporal",
   "description": "Command-line interface for running and interacting with Temporal Server and UI",
-  "homepage": "https://temporal.io/"
+  "homepage": "https://temporal.io/",
+  "downloads": 39074,
+  "has_repository": true
 }

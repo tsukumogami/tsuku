@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "midnight-commander",
   "description": "Terminal-based visual file manager",
-  "homepage": "https://www.midnight-commander.org/"
+  "homepage": "https://www.midnight-commander.org/",
+  "downloads": 39928,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "htop",
   "description": "Improved top (interactive process viewer)",
-  "homepage": "https://htop.dev/"
+  "homepage": "https://htop.dev/",
+  "downloads": 211694,
+  "has_repository": true
 }

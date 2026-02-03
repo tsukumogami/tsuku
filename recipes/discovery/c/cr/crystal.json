@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "crystal",
   "description": "Fast and statically typed, compiled language with Ruby-like syntax",
-  "homepage": "https://crystal-lang.org/"
+  "homepage": "https://crystal-lang.org/",
+  "downloads": 10594,
+  "has_repository": true
 }

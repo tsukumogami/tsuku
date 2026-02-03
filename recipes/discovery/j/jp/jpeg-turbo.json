@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jpeg-turbo",
   "description": "JPEG image codec that aids compression and decompression",
-  "homepage": "https://www.libjpeg-turbo.org/"
+  "homepage": "https://www.libjpeg-turbo.org/",
+  "downloads": 1487518,
+  "has_repository": true
 }

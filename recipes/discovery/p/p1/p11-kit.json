@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "p11-kit",
   "description": "Library to load and enumerate PKCS#11 modules",
-  "homepage": "https://p11-glue.freedesktop.org"
+  "homepage": "https://p11-glue.freedesktop.org",
+  "downloads": 797508,
+  "has_repository": true
 }

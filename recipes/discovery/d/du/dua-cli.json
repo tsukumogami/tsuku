@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dua-cli",
   "description": "View disk space usage and delete unwanted data, fast",
-  "homepage": "https://lib.rs/crates/dua-cli"
+  "homepage": "https://lib.rs/crates/dua-cli",
+  "downloads": 9212,
+  "has_repository": true
 }

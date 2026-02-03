@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "opam",
   "description": "OCaml package manager",
-  "homepage": "https://opam.ocaml.org"
+  "homepage": "https://opam.ocaml.org",
+  "downloads": 15561,
+  "has_repository": true
 }

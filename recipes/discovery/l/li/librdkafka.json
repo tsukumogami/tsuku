@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "librdkafka",
   "description": "Apache Kafka C/C++ library",
-  "homepage": "https://github.com/confluentinc/librdkafka"
+  "homepage": "https://github.com/confluentinc/librdkafka",
+  "downloads": 36102,
+  "has_repository": true
 }

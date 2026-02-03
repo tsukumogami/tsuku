@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "kubernetes-sigs/krew",
+  "description": "📦 Find and install kubectl plugins",
+  "homepage": "https://krew.sigs.k8s.io",
+  "repo": "https://github.com/kubernetes-sigs/krew"
+}

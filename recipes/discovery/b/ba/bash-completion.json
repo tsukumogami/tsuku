@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bash-completion",
   "description": "Programmable completion for Bash 3.2",
-  "homepage": "https://salsa.debian.org/debian/bash-completion"
+  "homepage": "https://salsa.debian.org/debian/bash-completion",
+  "downloads": 16325,
+  "has_repository": true
 }

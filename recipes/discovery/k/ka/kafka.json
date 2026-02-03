@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "kafka",
   "description": "Open-source distributed event streaming platform",
-  "homepage": "https://kafka.apache.org/"
+  "homepage": "https://kafka.apache.org/",
+  "downloads": 35810,
+  "has_repository": true
 }

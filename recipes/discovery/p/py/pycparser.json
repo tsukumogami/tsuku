@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pycparser",
   "description": "C parser in Python",
-  "homepage": "https://github.com/eliben/pycparser"
+  "homepage": "https://github.com/eliben/pycparser",
+  "downloads": 273409,
+  "has_repository": true
 }

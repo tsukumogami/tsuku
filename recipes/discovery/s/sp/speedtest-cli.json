@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "speedtest-cli",
   "description": "Command-line interface for https://speedtest.net bandwidth tests",
-  "homepage": "https://github.com/sivel/speedtest-cli"
+  "homepage": "https://github.com/sivel/speedtest-cli",
+  "downloads": 29065,
+  "has_repository": true
 }

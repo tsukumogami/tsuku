@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tesseract",
   "description": "OCR (Optical Character Recognition) engine",
-  "homepage": "https://tesseract-ocr.github.io/"
+  "homepage": "https://tesseract-ocr.github.io/",
+  "downloads": 960740,
+  "has_repository": true
 }

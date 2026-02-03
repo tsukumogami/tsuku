@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "swift",
   "description": "High-performance system programming language",
-  "homepage": "https://www.swift.org"
+  "homepage": "https://www.swift.org",
+  "downloads": 10525,
+  "has_repository": true
 }

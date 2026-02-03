@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jpeg",
   "description": "Image manipulation library",
-  "homepage": "https://www.ijg.org/"
+  "homepage": "https://www.ijg.org/",
+  "downloads": 97681,
+  "has_repository": true
 }

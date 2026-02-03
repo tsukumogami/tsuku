@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "dalance/procs",
+  "description": "A modern replacement for ps written in Rust",
+  "repo": "https://github.com/dalance/procs"
+}

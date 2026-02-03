@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "netcdf",
   "description": "Libraries and data formats for array-oriented scientific data",
-  "homepage": "https://www.unidata.ucar.edu/software/netcdf/"
+  "homepage": "https://www.unidata.ucar.edu/software/netcdf/",
+  "downloads": 101041,
+  "has_repository": true
 }

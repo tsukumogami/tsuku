@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bfg",
   "description": "Remove large files or passwords from Git history like git-filter-branch",
-  "homepage": "https://rtyley.github.io/bfg-repo-cleaner/"
+  "homepage": "https://rtyley.github.io/bfg-repo-cleaner/",
+  "downloads": 16555,
+  "has_repository": true
 }

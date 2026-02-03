@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "grafana",
   "description": "Gorgeous metric visualizations and dashboards for timeseries databases",
-  "homepage": "https://grafana.com"
+  "homepage": "https://grafana.com",
+  "downloads": 20049,
+  "has_repository": true
 }

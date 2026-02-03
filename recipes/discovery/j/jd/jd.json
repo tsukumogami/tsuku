@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jd",
   "description": "JSON diff and patch",
-  "homepage": "https://github.com/josephburnett/jd"
+  "homepage": "https://github.com/josephburnett/jd",
+  "downloads": 10309,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "open-mpi",
   "description": "High performance message passing library",
-  "homepage": "https://www.open-mpi.org/"
+  "homepage": "https://www.open-mpi.org/",
+  "downloads": 153382,
+  "has_repository": true
 }

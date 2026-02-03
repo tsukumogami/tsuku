@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "xcode-build-server",
   "description": "Build server protocol implementation for integrating Xcode with sourcekit-lsp",
-  "homepage": "https://github.com/SolaWing/xcode-build-server"
+  "homepage": "https://github.com/SolaWing/xcode-build-server",
+  "downloads": 10471,
+  "has_repository": true
 }

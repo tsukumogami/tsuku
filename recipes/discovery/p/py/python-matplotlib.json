@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "python-matplotlib",
   "description": "Python library for creating static, animated, and interactive visualizations",
-  "homepage": "https://matplotlib.org/"
+  "homepage": "https://matplotlib.org/",
+  "downloads": 26989,
+  "has_repository": true
 }

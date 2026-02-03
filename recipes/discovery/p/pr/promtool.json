@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "prometheus/prometheus",
+  "description": "The Prometheus monitoring system and time series database.",
+  "homepage": "https://prometheus.io/",
+  "repo": "https://github.com/prometheus/prometheus"
+}

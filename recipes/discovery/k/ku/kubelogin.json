@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "kubelogin",
   "description": "OpenID Connect authentication plugin for kubectl",
-  "homepage": "https://github.com/int128/kubelogin"
+  "homepage": "https://github.com/int128/kubelogin",
+  "downloads": 19564,
+  "has_repository": true
 }

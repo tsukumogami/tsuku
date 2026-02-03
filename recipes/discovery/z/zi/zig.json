@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zig",
   "description": "Programming language designed for robustness, optimality, and clarity",
-  "homepage": "https://ziglang.org/"
+  "homepage": "https://ziglang.org/",
+  "downloads": 57203,
+  "has_repository": true
 }

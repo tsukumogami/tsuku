@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jansson",
   "description": "C library for encoding, decoding, and manipulating JSON",
-  "homepage": "https://digip.org/jansson/"
+  "homepage": "https://digip.org/jansson/",
+  "downloads": 66573,
+  "has_repository": true
 }

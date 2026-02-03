@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pixi",
   "description": "Package management made easy",
-  "homepage": "https://pixi.sh"
+  "homepage": "https://pixi.sh",
+  "downloads": 20441,
+  "has_repository": true
 }

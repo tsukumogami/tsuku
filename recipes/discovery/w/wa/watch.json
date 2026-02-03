@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "watch",
   "description": "Executes a program periodically, showing output fullscreen",
-  "homepage": "https://gitlab.com/procps-ng/procps"
+  "homepage": "https://gitlab.com/procps-ng/procps",
+  "downloads": 71017,
+  "has_repository": true
 }

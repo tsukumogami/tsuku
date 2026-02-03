@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bazel",
   "description": "Google's own build tool",
-  "homepage": "https://bazel.build/"
+  "homepage": "https://bazel.build/",
+  "downloads": 30240,
+  "has_repository": true
 }

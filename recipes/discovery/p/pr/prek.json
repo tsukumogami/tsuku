@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "prek",
   "description": "Pre-commit re-implemented in Rust",
-  "homepage": "https://github.com/j178/prek"
+  "homepage": "https://github.com/j178/prek",
+  "downloads": 5862,
+  "has_repository": true
 }

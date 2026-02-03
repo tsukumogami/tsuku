@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "eigen",
   "description": "C++ template library for linear algebra",
-  "homepage": "https://gitlab.com/libeigen/eigen"
+  "homepage": "https://gitlab.com/libeigen/eigen",
+  "downloads": 134009,
+  "has_repository": true
 }

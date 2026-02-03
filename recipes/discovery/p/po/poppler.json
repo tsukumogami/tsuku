@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "poppler",
   "description": "PDF rendering library (based on the xpdf-3.0 code base)",
-  "homepage": "https://poppler.freedesktop.org/"
+  "homepage": "https://poppler.freedesktop.org/",
+  "downloads": 442272,
+  "has_repository": true
 }

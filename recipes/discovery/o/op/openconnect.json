@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openconnect",
   "description": "Open client for Cisco AnyConnect VPN",
-  "homepage": "https://www.infradead.org/openconnect/"
+  "homepage": "https://www.infradead.org/openconnect/",
+  "downloads": 11184,
+  "has_repository": true
 }

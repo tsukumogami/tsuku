@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "helm@3",
   "description": "Kubernetes package manager",
-  "homepage": "https://helm.sh/"
+  "homepage": "https://helm.sh/",
+  "downloads": 8469,
+  "has_repository": true
 }

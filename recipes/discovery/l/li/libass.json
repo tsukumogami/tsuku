@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libass",
   "description": "Subtitle renderer for the ASS/SSA subtitle format",
-  "homepage": "https://github.com/libass/libass"
+  "homepage": "https://github.com/libass/libass",
+  "downloads": 359153,
+  "has_repository": true
 }

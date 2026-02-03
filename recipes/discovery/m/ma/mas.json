@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mas",
   "description": "Mac App Store command-line interface",
-  "homepage": "https://github.com/mas-cli/mas"
+  "homepage": "https://github.com/mas-cli/mas",
+  "downloads": 122073,
+  "has_repository": true
 }

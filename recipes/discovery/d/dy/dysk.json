@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dysk",
   "description": "Linux utility to get information on filesystems, like df but better",
-  "homepage": "https://dystroy.org/dysk/"
+  "homepage": "https://dystroy.org/dysk/",
+  "downloads": 31776,
+  "has_repository": true
 }

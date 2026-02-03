@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libsodium",
   "description": "NaCl networking and cryptography library",
-  "homepage": "https://libsodium.org/"
+  "homepage": "https://libsodium.org/",
+  "downloads": 535858,
+  "has_repository": true
 }

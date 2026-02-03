@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "ajeetdsouza/zoxide",
+  "description": "A smarter cd command. Supports all major shells.",
+  "homepage": "https://crates.io/crates/zoxide",
+  "repo": "https://github.com/ajeetdsouza/zoxide"
+}

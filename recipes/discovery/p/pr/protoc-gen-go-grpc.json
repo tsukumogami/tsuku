@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "protoc-gen-go-grpc",
   "description": "Protoc plugin that generates code for gRPC-Go clients",
-  "homepage": "https://github.com/grpc/grpc-go"
+  "homepage": "https://github.com/grpc/grpc-go",
+  "downloads": 5955,
+  "has_repository": true
 }

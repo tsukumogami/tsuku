@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "projectdiscovery/subfinder",
+  "description": "Fast passive subdomain enumeration tool.",
+  "homepage": "https://projectdiscovery.io",
+  "repo": "https://github.com/projectdiscovery/subfinder"
+}

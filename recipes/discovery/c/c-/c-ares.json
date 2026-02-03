@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "c-ares",
   "description": "Asynchronous DNS library",
-  "homepage": "https://c-ares.org/"
+  "homepage": "https://c-ares.org/",
+  "downloads": 972245,
+  "has_repository": true
 }

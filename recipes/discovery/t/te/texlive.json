@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "texlive",
   "description": "Free software distribution for the TeX typesetting system",
-  "homepage": "https://www.tug.org/texlive/"
+  "homepage": "https://www.tug.org/texlive/",
+  "downloads": 16684,
+  "has_repository": true
 }

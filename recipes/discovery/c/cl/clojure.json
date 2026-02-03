@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "clojure",
   "description": "Dynamic, general-purpose programming language",
-  "homepage": "https://clojure.org"
+  "homepage": "https://clojure.org",
+  "downloads": 9609,
+  "has_repository": true
 }

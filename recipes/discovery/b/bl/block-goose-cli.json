@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "block-goose-cli",
   "description": "Open source, extensible AI agent that goes beyond code suggestions",
-  "homepage": "https://block.github.io/goose/"
+  "homepage": "https://block.github.io/goose/",
+  "downloads": 15702,
+  "has_repository": true
 }

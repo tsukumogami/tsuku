@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "resvg",
   "description": "SVG rendering tool and library",
-  "homepage": "https://github.com/linebender/resvg"
+  "homepage": "https://github.com/linebender/resvg",
+  "downloads": 7140,
+  "has_repository": true
 }

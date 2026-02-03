@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libssh",
   "description": "C library SSHv1/SSHv2 client and server protocols",
-  "homepage": "https://www.libssh.org/"
+  "homepage": "https://www.libssh.org/",
+  "downloads": 409093,
+  "has_repository": true
 }

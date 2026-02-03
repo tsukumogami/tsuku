@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "kcov",
   "description": "Code coverage tester for compiled programs, Python, and shell scripts",
-  "homepage": "https://simonkagstrom.github.io/kcov/"
+  "homepage": "https://simonkagstrom.github.io/kcov/",
+  "downloads": 40809,
+  "has_repository": true
 }

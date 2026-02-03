@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "conftest",
   "description": "Test your configuration files using Open Policy Agent",
-  "homepage": "https://www.conftest.dev/"
+  "homepage": "https://www.conftest.dev/",
+  "downloads": 16102,
+  "has_repository": true
 }

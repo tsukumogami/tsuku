@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "scipy",
   "description": "Software for mathematics, science, and engineering",
-  "homepage": "https://www.scipy.org"
+  "homepage": "https://www.scipy.org",
+  "downloads": 34594,
+  "has_repository": true
 }

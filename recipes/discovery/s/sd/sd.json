@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "chmln/sd",
+  "description": "Intuitive find \u0026 replace CLI (sed alternative)",
+  "repo": "https://github.com/chmln/sd"
+}

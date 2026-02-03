@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "yubico-piv-tool",
   "description": "Command-line tool for the YubiKey PIV application",
-  "homepage": "https://developers.yubico.com/yubico-piv-tool/"
+  "homepage": "https://developers.yubico.com/yubico-piv-tool/",
+  "downloads": 5364,
+  "has_repository": true
 }

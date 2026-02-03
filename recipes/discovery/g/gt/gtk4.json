@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gtk4",
   "description": "Toolkit for creating graphical user interfaces",
-  "homepage": "https://gtk.org/"
+  "homepage": "https://gtk.org/",
+  "downloads": 118637,
+  "has_repository": true
 }

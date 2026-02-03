@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gettext",
   "description": "GNU internationalization (i18n) and localization (l10n) library",
-  "homepage": "https://www.gnu.org/software/gettext/"
+  "homepage": "https://www.gnu.org/software/gettext/",
+  "downloads": 2567514,
+  "has_repository": true
 }

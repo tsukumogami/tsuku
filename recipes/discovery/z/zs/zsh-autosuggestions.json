@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zsh-autosuggestions",
   "description": "Fish-like fast/unobtrusive autosuggestions for zsh",
-  "homepage": "https://github.com/zsh-users/zsh-autosuggestions"
+  "homepage": "https://github.com/zsh-users/zsh-autosuggestions",
+  "downloads": 65767,
+  "has_repository": true
 }

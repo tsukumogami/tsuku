@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "clamav",
   "description": "Anti-virus software",
-  "homepage": "https://www.clamav.net/"
+  "homepage": "https://www.clamav.net/",
+  "downloads": 16770,
+  "has_repository": true
 }

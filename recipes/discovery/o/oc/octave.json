@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "octave",
   "description": "High-level interpreted language for numerical computing",
-  "homepage": "https://octave.org/index.html"
+  "homepage": "https://octave.org/index.html",
+  "downloads": 23681,
+  "has_repository": true
 }

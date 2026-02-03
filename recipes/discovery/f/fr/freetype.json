@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "freetype",
   "description": "Software library to render fonts",
-  "homepage": "https://www.freetype.org/"
+  "homepage": "https://www.freetype.org/",
+  "downloads": 1094464,
+  "has_repository": true
 }

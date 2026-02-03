@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "python-tk@3.12",
   "description": "Python interface to Tcl/Tk",
-  "homepage": "https://www.python.org/"
+  "homepage": "https://www.python.org/",
+  "downloads": 27138,
+  "has_repository": true
 }

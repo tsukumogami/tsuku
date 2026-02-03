@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "webp",
   "description": "Image format providing lossless and lossy compression for web images",
-  "homepage": "https://developers.google.com/speed/webp/"
+  "homepage": "https://developers.google.com/speed/webp/",
+  "downloads": 1049176,
+  "has_repository": true
 }

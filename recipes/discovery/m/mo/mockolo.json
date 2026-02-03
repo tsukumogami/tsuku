@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mockolo",
   "description": "Efficient Mock Generator for Swift",
-  "homepage": "https://github.com/uber/mockolo"
+  "homepage": "https://github.com/uber/mockolo",
+  "downloads": 29086,
+  "has_repository": true
 }

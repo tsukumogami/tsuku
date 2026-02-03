@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "conan",
   "description": "Distributed, open source, package manager for C/C++",
-  "homepage": "https://conan.io"
+  "homepage": "https://conan.io",
+  "downloads": 23784,
+  "has_repository": true
 }

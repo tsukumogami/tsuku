@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sentry-cli",
   "description": "Command-line utility to interact with Sentry",
-  "homepage": "https://docs.sentry.io/cli/"
+  "homepage": "https://docs.sentry.io/cli/",
+  "downloads": 9050,
+  "has_repository": true
 }

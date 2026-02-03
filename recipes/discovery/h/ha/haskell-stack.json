@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "haskell-stack",
   "description": "Cross-platform program for developing Haskell projects",
-  "homepage": "https://haskellstack.org/"
+  "homepage": "https://haskellstack.org/",
+  "downloads": 7062,
+  "has_repository": true
 }

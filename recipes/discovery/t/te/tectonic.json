@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tectonic",
   "description": "Modernized, complete, self-contained TeX/LaTeX engine",
-  "homepage": "https://tectonic-typesetting.github.io/"
+  "homepage": "https://tectonic-typesetting.github.io/",
+  "downloads": 6957,
+  "has_repository": true
 }

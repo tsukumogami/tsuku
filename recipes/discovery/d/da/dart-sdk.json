@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dart-sdk",
   "description": "Dart Language SDK, including the VM, dart2js, core libraries, and more",
-  "homepage": "https://dart.dev"
+  "homepage": "https://dart.dev",
+  "downloads": 31004,
+  "has_repository": true
 }

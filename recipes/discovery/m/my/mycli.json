@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mycli",
   "description": "CLI for MySQL with auto-completion and syntax highlighting",
-  "homepage": "https://www.mycli.net/"
+  "homepage": "https://www.mycli.net/",
+  "downloads": 19455,
+  "has_repository": true
 }

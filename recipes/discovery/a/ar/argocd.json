@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "argoproj/argo-cd",
+  "description": "Declarative Continuous Deployment for Kubernetes",
+  "homepage": "https://argo-cd.readthedocs.io",
+  "repo": "https://github.com/argoproj/argo-cd"
+}

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "powerlevel10k",
   "description": "Theme for zsh",
-  "homepage": "https://github.com/romkatv/powerlevel10k"
+  "homepage": "https://github.com/romkatv/powerlevel10k",
+  "downloads": 34188,
+  "has_repository": true
 }

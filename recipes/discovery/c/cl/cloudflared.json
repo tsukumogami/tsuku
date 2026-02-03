@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cloudflared",
   "description": "Cloudflare Tunnel client (formerly Argo Tunnel)",
-  "homepage": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/"
+  "homepage": "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/",
+  "downloads": 183187,
+  "has_repository": true
 }

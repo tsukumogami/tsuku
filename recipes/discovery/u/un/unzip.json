@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "unzip",
   "description": "Extraction utility for .zip compressed archives",
-  "homepage": "https://infozip.sourceforge.net/UnZip.html"
+  "homepage": "https://infozip.sourceforge.net/UnZip.html",
+  "downloads": 489518,
+  "has_repository": true
 }

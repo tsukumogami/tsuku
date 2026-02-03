@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "re2",
   "description": "Alternative to backtracking PCRE-style regular expression engines",
-  "homepage": "https://github.com/google/re2"
+  "homepage": "https://github.com/google/re2",
+  "downloads": 118738,
+  "has_repository": true
 }

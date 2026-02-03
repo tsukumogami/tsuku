@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "create-dmg",
   "description": "Shell script to build fancy DMGs",
-  "homepage": "https://github.com/create-dmg/create-dmg"
+  "homepage": "https://github.com/create-dmg/create-dmg",
+  "downloads": 13968,
+  "has_repository": true
 }

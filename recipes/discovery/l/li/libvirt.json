@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libvirt",
   "description": "C virtualization API",
-  "homepage": "https://libvirt.org/"
+  "homepage": "https://libvirt.org/",
+  "downloads": 34940,
+  "has_repository": true
 }

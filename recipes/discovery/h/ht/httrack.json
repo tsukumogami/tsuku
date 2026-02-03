@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "httrack",
   "description": "Website copier/offline browser",
-  "homepage": "https://www.httrack.com/"
+  "homepage": "https://www.httrack.com/",
+  "downloads": 12776,
+  "has_repository": true
 }

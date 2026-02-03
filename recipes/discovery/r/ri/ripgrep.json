@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "BurntSushi/ripgrep",
+  "description": "ripgrep recursively searches directories for a regex pattern while respecting your gitignore",
+  "repo": "https://github.com/BurntSushi/ripgrep"
+}

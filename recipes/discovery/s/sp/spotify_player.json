@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "spotify_player",
   "description": "Command driven spotify player",
-  "homepage": "https://github.com/aome510/spotify-player"
+  "homepage": "https://github.com/aome510/spotify-player",
+  "downloads": 5817,
+  "has_repository": true
 }

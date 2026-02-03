@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zsh",
   "description": "UNIX shell (command interpreter)",
-  "homepage": "https://www.zsh.org/"
+  "homepage": "https://www.zsh.org/",
+  "downloads": 150861,
+  "has_repository": true
 }

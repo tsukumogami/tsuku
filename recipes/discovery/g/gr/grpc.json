@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "grpc",
   "description": "Next generation open source RPC library and framework",
-  "homepage": "https://grpc.io/"
+  "homepage": "https://grpc.io/",
+  "downloads": 169090,
+  "has_repository": true
 }

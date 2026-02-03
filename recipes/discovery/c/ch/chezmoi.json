@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "chezmoi",
   "description": "Manage your dotfiles across multiple diverse machines, securely",
-  "homepage": "https://chezmoi.io/"
+  "homepage": "https://chezmoi.io/",
+  "downloads": 100430,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openfortivpn",
   "description": "Open Fortinet client for PPP+TLS VPN tunnel services",
-  "homepage": "https://github.com/adrienverge/openfortivpn"
+  "homepage": "https://github.com/adrienverge/openfortivpn",
+  "downloads": 6980,
+  "has_repository": true
 }

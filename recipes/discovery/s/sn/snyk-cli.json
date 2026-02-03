@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "snyk-cli",
   "description": "Scans and monitors projects for security vulnerabilities",
-  "homepage": "https://snyk.io"
+  "homepage": "https://snyk.io",
+  "downloads": 16197,
+  "has_repository": true
 }

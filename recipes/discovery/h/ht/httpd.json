@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "httpd",
   "description": "Apache HTTP server",
-  "homepage": "https://httpd.apache.org/"
+  "homepage": "https://httpd.apache.org/",
+  "downloads": 78862,
+  "has_repository": true
 }

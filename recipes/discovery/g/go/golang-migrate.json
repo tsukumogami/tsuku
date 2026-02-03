@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "golang-migrate",
   "description": "Database migrations CLI tool",
-  "homepage": "https://github.com/golang-migrate/migrate"
+  "homepage": "https://github.com/golang-migrate/migrate",
+  "downloads": 15502,
+  "has_repository": true
 }

@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "bufbuild/buf",
+  "description": "The best way of working with Protocol Buffers.",
+  "homepage": "https://buf.build",
+  "repo": "https://github.com/bufbuild/buf"
+}

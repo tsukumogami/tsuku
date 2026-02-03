@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "autoconf",
   "description": "Automatic configure script builder",
-  "homepage": "https://www.gnu.org/software/autoconf/"
+  "homepage": "https://www.gnu.org/software/autoconf/",
+  "downloads": 400049,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "transmission-cli",
   "description": "Lightweight BitTorrent client",
-  "homepage": "https://transmissionbt.com/"
+  "homepage": "https://transmissionbt.com/",
+  "downloads": 12732,
+  "has_repository": true
 }

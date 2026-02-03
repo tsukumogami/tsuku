@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pigz",
   "description": "Parallel gzip",
-  "homepage": "https://zlib.net/pigz/"
+  "homepage": "https://zlib.net/pigz/",
+  "downloads": 18287,
+  "has_repository": true
 }

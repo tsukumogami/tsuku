@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "python-setuptools",
   "description": "Easily download, build, install, upgrade, and uninstall Python packages",
-  "homepage": "https://setuptools.pypa.io/"
+  "homepage": "https://setuptools.pypa.io/",
+  "downloads": 352631,
+  "has_repository": true
 }

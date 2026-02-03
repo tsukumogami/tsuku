@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mkvtoolnix",
   "description": "Matroska media files manipulation tools",
-  "homepage": "https://mkvtoolnix.download/"
+  "homepage": "https://mkvtoolnix.download/",
+  "downloads": 31873,
+  "has_repository": true
 }

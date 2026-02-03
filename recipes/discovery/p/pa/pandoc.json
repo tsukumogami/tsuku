@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pandoc",
   "description": "Swiss-army knife of markup format conversion",
-  "homepage": "https://pandoc.org/"
+  "homepage": "https://pandoc.org/",
+  "downloads": 303285,
+  "has_repository": true
 }

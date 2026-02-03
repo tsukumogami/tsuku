@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mercurial",
   "description": "Scalable distributed version control system",
-  "homepage": "https://mercurial-scm.org/"
+  "homepage": "https://mercurial-scm.org/",
+  "downloads": 35203,
+  "has_repository": true
 }

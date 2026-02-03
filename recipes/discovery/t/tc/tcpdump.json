@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tcpdump",
   "description": "Command-line packet analyzer",
-  "homepage": "https://www.tcpdump.org/"
+  "homepage": "https://www.tcpdump.org/",
+  "downloads": 5524,
+  "has_repository": true
 }

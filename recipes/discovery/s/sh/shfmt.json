@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "shfmt",
   "description": "Autoformat shell script source code",
-  "homepage": "https://github.com/mvdan/sh"
+  "homepage": "https://github.com/mvdan/sh",
+  "downloads": 44253,
+  "has_repository": true
 }

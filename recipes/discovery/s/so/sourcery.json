@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sourcery",
   "description": "Meta-programming for Swift, stop writing boilerplate code",
-  "homepage": "https://github.com/krzysztofzablocki/Sourcery"
+  "homepage": "https://github.com/krzysztofzablocki/Sourcery",
+  "downloads": 58689,
+  "has_repository": true
 }

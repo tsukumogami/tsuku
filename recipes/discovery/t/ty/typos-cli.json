@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "typos-cli",
   "description": "Source code spell checker",
-  "homepage": "https://github.com/crate-ci/typos"
+  "homepage": "https://github.com/crate-ci/typos",
+  "downloads": 30690,
+  "has_repository": true
 }

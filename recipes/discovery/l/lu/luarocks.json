@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "luarocks",
   "description": "Package manager for the Lua programming language",
-  "homepage": "https://luarocks.org/"
+  "homepage": "https://luarocks.org/",
+  "downloads": 36655,
+  "has_repository": true
 }

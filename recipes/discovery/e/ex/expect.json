@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "expect",
   "description": "Program that can automate interactive applications",
-  "homepage": "https://core.tcl-lang.org/expect/index"
+  "homepage": "https://core.tcl-lang.org/expect/index",
+  "downloads": 28099,
+  "has_repository": true
 }

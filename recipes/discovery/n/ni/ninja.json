@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ninja",
   "description": "Small build system for use with gyp or CMake",
-  "homepage": "https://ninja-build.org/"
+  "homepage": "https://ninja-build.org/",
+  "downloads": 483029,
+  "has_repository": true
 }

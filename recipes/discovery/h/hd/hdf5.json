@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "hdf5",
   "description": "File format designed to store large amounts of data",
-  "homepage": "https://www.hdfgroup.org/solutions/hdf5/"
+  "homepage": "https://www.hdfgroup.org/solutions/hdf5/",
+  "downloads": 145538,
+  "has_repository": true
 }

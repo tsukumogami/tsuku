@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libavif",
   "description": "Library for encoding and decoding .avif files",
-  "homepage": "https://github.com/AOMediaCodec/libavif"
+  "homepage": "https://github.com/AOMediaCodec/libavif",
+  "downloads": 480650,
+  "has_repository": true
 }

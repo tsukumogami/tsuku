@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cryptography",
   "description": "Cryptographic recipes and primitives for Python",
-  "homepage": "https://cryptography.io/en/latest/"
+  "homepage": "https://cryptography.io/en/latest/",
+  "downloads": 546907,
+  "has_repository": true
 }

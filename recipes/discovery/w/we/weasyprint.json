@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "weasyprint",
   "description": "Convert HTML to PDF",
-  "homepage": "https://www.courtbouillon.org/weasyprint"
+  "homepage": "https://www.courtbouillon.org/weasyprint",
+  "downloads": 16868,
+  "has_repository": true
 }

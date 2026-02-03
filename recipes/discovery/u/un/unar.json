@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "unar",
   "description": "Command-line unarchiving tools supporting multiple formats",
-  "homepage": "https://theunarchiver.com/command-line"
+  "homepage": "https://theunarchiver.com/command-line",
+  "downloads": 39450,
+  "has_repository": true
 }

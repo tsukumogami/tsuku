@@ -23,6 +23,8 @@ func NewQualityFilter() *QualityFilter {
 	return &QualityFilter{
 		thresholds: map[string]qualityThreshold{
 			"crates.io": {MinDownloads: 100, MinVersionCount: 5},
+			"npm":       {MinDownloads: 100, MinVersionCount: 5},
+			"pypi":      {MinDownloads: 0, MinVersionCount: 3},
 		},
 	}
 }
@@ -35,10 +37,10 @@ func (f *QualityFilter) Accept(builderName string, result *builders.ProbeResult)
 		return true, "no threshold configured"
 	}
 
-	if result.Downloads >= thresh.MinDownloads {
+	if thresh.MinDownloads > 0 && result.Downloads >= thresh.MinDownloads {
 		return true, fmt.Sprintf("downloads %d >= %d", result.Downloads, thresh.MinDownloads)
 	}
-	if result.VersionCount >= thresh.MinVersionCount {
+	if thresh.MinVersionCount > 0 && result.VersionCount >= thresh.MinVersionCount {
 		return true, fmt.Sprintf("version count %d >= %d", result.VersionCount, thresh.MinVersionCount)
 	}
 

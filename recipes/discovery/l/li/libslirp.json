@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libslirp",
   "description": "General purpose TCP-IP emulator",
-  "homepage": "https://gitlab.freedesktop.org/slirp/libslirp"
+  "homepage": "https://gitlab.freedesktop.org/slirp/libslirp",
+  "downloads": 121274,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gnupg",
   "description": "GNU Privacy Guard (OpenPGP)",
-  "homepage": "https://gnupg.org/"
+  "homepage": "https://gnupg.org/",
+  "downloads": 846095,
+  "has_repository": true
 }

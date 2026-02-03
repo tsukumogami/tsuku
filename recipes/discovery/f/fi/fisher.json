@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fisher",
   "description": "Plugin manager for the Fish shell",
-  "homepage": "https://github.com/jorgebucaran/fisher"
+  "homepage": "https://github.com/jorgebucaran/fisher",
+  "downloads": 5072,
+  "has_repository": true
 }

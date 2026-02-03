@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libpq",
   "description": "Postgres C API library",
-  "homepage": "https://www.postgresql.org/docs/current/libpq.html"
+  "homepage": "https://www.postgresql.org/docs/current/libpq.html",
+  "downloads": 581493,
+  "has_repository": true
 }

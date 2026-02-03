@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "firebase-cli",
   "description": "Firebase command-line tools",
-  "homepage": "https://firebase.google.com/docs/cli/"
+  "homepage": "https://firebase.google.com/docs/cli/",
+  "downloads": 52085,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cairo",
   "description": "Vector graphics library with cross-device output support",
-  "homepage": "https://cairographics.org/"
+  "homepage": "https://cairographics.org/",
+  "downloads": 1172051,
+  "has_repository": true
 }

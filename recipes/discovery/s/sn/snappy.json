@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "snappy",
   "description": "Compression/decompression library aiming for high speed",
-  "homepage": "https://google.github.io/snappy/"
+  "homepage": "https://google.github.io/snappy/",
+  "downloads": 446409,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "icu4c@78",
   "description": "C/C++ and Java libraries for Unicode and globalization",
-  "homepage": "https://icu.unicode.org/home"
+  "homepage": "https://icu.unicode.org/home",
+  "downloads": 671187,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gpgme",
   "description": "Library access to GnuPG",
-  "homepage": "https://www.gnupg.org/related_software/gpgme/"
+  "homepage": "https://www.gnupg.org/related_software/gpgme/",
+  "downloads": 291202,
+  "has_repository": true
 }

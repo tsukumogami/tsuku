@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "doggo",
   "description": "Command-line DNS Client for Humans",
-  "homepage": "https://doggo.mrkaran.dev/"
+  "homepage": "https://doggo.mrkaran.dev/",
+  "downloads": 4496,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libheif",
   "description": "ISO/IEC 23008-12:2017 HEIF file format decoder and encoder",
-  "homepage": "https://www.libde265.org/"
+  "homepage": "https://www.libde265.org/",
+  "downloads": 544980,
+  "has_repository": true
 }

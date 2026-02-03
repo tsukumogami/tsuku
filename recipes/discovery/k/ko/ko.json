@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "ko-build/ko",
+  "description": "Build and deploy Go applications",
+  "homepage": "https://ko.build",
+  "repo": "https://github.com/ko-build/ko"
+}

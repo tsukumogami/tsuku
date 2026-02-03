@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libspatialite",
   "description": "Adds spatial SQL capabilities to SQLite",
-  "homepage": "https://www.gaia-gis.it/fossil/libspatialite/index"
+  "homepage": "https://www.gaia-gis.it/fossil/libspatialite/index",
+  "downloads": 57283,
+  "has_repository": true
 }

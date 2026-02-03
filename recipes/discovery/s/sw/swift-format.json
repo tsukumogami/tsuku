@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "swift-format",
   "description": "Formatting technology for Swift source code",
-  "homepage": "https://github.com/swiftlang/swift-format"
+  "homepage": "https://github.com/swiftlang/swift-format",
+  "downloads": 22274,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "vips",
   "description": "Image processing library",
-  "homepage": "https://github.com/libvips/libvips"
+  "homepage": "https://github.com/libvips/libvips",
+  "downloads": 63068,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openldap",
   "description": "Open source suite of directory software",
-  "homepage": "https://www.openldap.org/software/"
+  "homepage": "https://www.openldap.org/software/",
+  "downloads": 487825,
+  "has_repository": true
 }

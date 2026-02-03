@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "m-cli",
   "description": "Swiss Army Knife for macOS",
-  "homepage": "https://github.com/rgcr/m-cli"
+  "homepage": "https://github.com/rgcr/m-cli",
+  "downloads": 2761,
+  "has_repository": true
 }

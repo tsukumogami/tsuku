@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zsh-autocomplete",
   "description": "Real-time type-ahead completion for Zsh",
-  "homepage": "https://github.com/marlonrichert/zsh-autocomplete"
+  "homepage": "https://github.com/marlonrichert/zsh-autocomplete",
+  "downloads": 12438,
+  "has_repository": true
 }

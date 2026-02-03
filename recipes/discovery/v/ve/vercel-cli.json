@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "vercel-cli",
   "description": "Command-line interface for Vercel",
-  "homepage": "https://vercel.com/home"
+  "homepage": "https://vercel.com/home",
+  "downloads": 28776,
+  "has_repository": true
 }

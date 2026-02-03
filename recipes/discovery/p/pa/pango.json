@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pango",
   "description": "Framework for layout and rendering of i18n text",
-  "homepage": "https://www.gtk.org/docs/architecture/pango"
+  "homepage": "https://www.gtk.org/docs/architecture/pango",
+  "downloads": 1263784,
+  "has_repository": true
 }

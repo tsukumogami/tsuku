@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cilium-cli",
   "description": "CLI to install, manage \u0026 troubleshoot Kubernetes clusters running Cilium",
-  "homepage": "https://cilium.io"
+  "homepage": "https://cilium.io",
+  "downloads": 15311,
+  "has_repository": true
 }

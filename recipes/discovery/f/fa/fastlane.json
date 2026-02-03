@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fastlane",
   "description": "Easiest way to build and release mobile apps",
-  "homepage": "https://fastlane.tools"
+  "homepage": "https://fastlane.tools",
+  "downloads": 143057,
+  "has_repository": true
 }

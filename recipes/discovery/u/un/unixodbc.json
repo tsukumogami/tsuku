@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "unixodbc",
   "description": "ODBC 3 connectivity for UNIX",
-  "homepage": "https://www.unixodbc.org/"
+  "homepage": "https://www.unixodbc.org/",
+  "downloads": 203204,
+  "has_repository": true
 }

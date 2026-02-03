@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jmeter",
   "description": "Load testing and performance measurement application",
-  "homepage": "https://jmeter.apache.org/"
+  "homepage": "https://jmeter.apache.org/",
+  "downloads": 18609,
+  "has_repository": true
 }

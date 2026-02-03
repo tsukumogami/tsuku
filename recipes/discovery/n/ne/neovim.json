@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "neovim",
   "description": "Ambitious Vim-fork focused on extensibility and agility",
-  "homepage": "https://neovim.io/"
+  "homepage": "https://neovim.io/",
+  "downloads": 541414,
+  "has_repository": true
 }

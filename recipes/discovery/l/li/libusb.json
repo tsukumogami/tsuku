@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libusb",
   "description": "Library for USB device access",
-  "homepage": "https://libusb.info/"
+  "homepage": "https://libusb.info/",
+  "downloads": 487315,
+  "has_repository": true
 }

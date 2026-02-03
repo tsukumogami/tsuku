@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libtiff",
   "description": "TIFF library and utilities",
-  "homepage": "https://libtiff.gitlab.io/libtiff/"
+  "homepage": "https://libtiff.gitlab.io/libtiff/",
+  "downloads": 1265473,
+  "has_repository": true
 }

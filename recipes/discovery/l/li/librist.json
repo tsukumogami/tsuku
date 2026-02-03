@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "librist",
   "description": "Reliable Internet Stream Transport (RIST)",
-  "homepage": "https://code.videolan.org/rist/"
+  "homepage": "https://code.videolan.org/rist/",
+  "downloads": 371353,
+  "has_repository": true
 }

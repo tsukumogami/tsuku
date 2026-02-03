@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sdl2_ttf",
   "description": "Library for using TrueType fonts in SDL applications",
-  "homepage": "https://github.com/libsdl-org/SDL_ttf"
+  "homepage": "https://github.com/libsdl-org/SDL_ttf",
+  "downloads": 27586,
+  "has_repository": true
 }

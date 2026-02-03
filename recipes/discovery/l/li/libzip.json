@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libzip",
   "description": "C library for reading, creating, and modifying zip archives",
-  "homepage": "https://libzip.org/"
+  "homepage": "https://libzip.org/",
+  "downloads": 282814,
+  "has_repository": true
 }

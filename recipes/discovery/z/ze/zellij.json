@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zellij",
   "description": "Pluggable terminal workspace, with terminal multiplexer as the base feature",
-  "homepage": "https://zellij.dev"
+  "homepage": "https://zellij.dev",
+  "downloads": 40832,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pgcli",
   "description": "CLI for Postgres with auto-completion and syntax highlighting",
-  "homepage": "https://pgcli.com/"
+  "homepage": "https://pgcli.com/",
+  "downloads": 14637,
+  "has_repository": true
 }

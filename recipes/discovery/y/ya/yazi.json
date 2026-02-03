@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "yazi",
   "description": "Blazing fast terminal file manager written in Rust, based on async I/O",
-  "homepage": "https://github.com/sxyazi/yazi"
+  "homepage": "https://github.com/sxyazi/yazi",
+  "downloads": 65930,
+  "has_repository": true
 }

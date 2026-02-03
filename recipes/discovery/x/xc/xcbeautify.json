@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "xcbeautify",
   "description": "Little beautifier tool for xcodebuild",
-  "homepage": "https://github.com/cpisciotta/xcbeautify"
+  "homepage": "https://github.com/cpisciotta/xcbeautify",
+  "downloads": 679354,
+  "has_repository": true
 }

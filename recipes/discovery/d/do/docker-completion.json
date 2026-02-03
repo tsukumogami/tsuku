@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "docker-completion",
   "description": "Bash, Zsh and Fish completion for Docker",
-  "homepage": "https://www.docker.com/"
+  "homepage": "https://www.docker.com/",
+  "downloads": 417454,
+  "has_repository": true
 }

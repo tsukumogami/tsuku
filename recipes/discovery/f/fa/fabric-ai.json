@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fabric-ai",
   "description": "Open-source framework for augmenting humans using AI",
-  "homepage": "https://github.com/danielmiessler/fabric"
+  "homepage": "https://github.com/danielmiessler/fabric",
+  "downloads": 14747,
+  "has_repository": true
 }

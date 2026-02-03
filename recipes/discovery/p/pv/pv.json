@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pv",
   "description": "Monitor data's progress through a pipe",
-  "homepage": "https://www.ivarch.com/programs/pv.shtml"
+  "homepage": "https://www.ivarch.com/programs/pv.shtml",
+  "downloads": 47659,
+  "has_repository": true
 }

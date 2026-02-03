@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "periphery",
   "description": "Identify unused code in Swift projects",
-  "homepage": "https://github.com/peripheryapp/periphery"
+  "homepage": "https://github.com/peripheryapp/periphery",
+  "downloads": 26319,
+  "has_repository": true
 }

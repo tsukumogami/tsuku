@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cocoapods",
   "description": "Dependency manager for Cocoa projects",
-  "homepage": "https://cocoapods.org/"
+  "homepage": "https://cocoapods.org/",
+  "downloads": 373757,
+  "has_repository": true
 }

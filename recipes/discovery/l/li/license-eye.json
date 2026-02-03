@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "license-eye",
   "description": "Tool to check and fix license headers and resolve dependency licenses",
-  "homepage": "https://github.com/apache/skywalking-eyes"
+  "homepage": "https://github.com/apache/skywalking-eyes",
+  "downloads": 34905,
+  "has_repository": true
 }

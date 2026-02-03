@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nmap",
   "description": "Port scanning utility for large networks",
-  "homepage": "https://nmap.org/"
+  "homepage": "https://nmap.org/",
+  "downloads": 266115,
+  "has_repository": true
 }

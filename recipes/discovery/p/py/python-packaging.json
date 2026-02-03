@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "python-packaging",
   "description": "Core utilities for Python packages",
-  "homepage": "https://packaging.pypa.io/"
+  "homepage": "https://packaging.pypa.io/",
+  "downloads": 202925,
+  "has_repository": true
 }

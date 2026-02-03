@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "thefuck",
   "description": "Programmatically correct mistyped console commands",
-  "homepage": "https://github.com/nvbn/thefuck"
+  "homepage": "https://github.com/nvbn/thefuck",
+  "downloads": 16387,
+  "has_repository": true
 }

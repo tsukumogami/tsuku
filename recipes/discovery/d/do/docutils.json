@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "docutils",
   "description": "Text processing system for reStructuredText",
-  "homepage": "https://docutils.sourceforge.io"
+  "homepage": "https://docutils.sourceforge.io",
+  "downloads": 51575,
+  "has_repository": true
 }

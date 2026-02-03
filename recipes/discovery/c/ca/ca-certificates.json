@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ca-certificates",
   "description": "Mozilla CA certificate store",
-  "homepage": "https://curl.se/docs/caextract.html"
+  "homepage": "https://curl.se/docs/caextract.html",
+  "downloads": 4511961,
+  "has_repository": true
 }

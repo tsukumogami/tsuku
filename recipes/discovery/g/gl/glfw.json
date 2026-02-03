@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "glfw",
   "description": "Multi-platform library for OpenGL applications",
-  "homepage": "https://www.glfw.org/"
+  "homepage": "https://www.glfw.org/",
+  "downloads": 34901,
+  "has_repository": true
 }

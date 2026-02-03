@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cowsay",
   "description": "Apjanke's fork of the classic cowsay project",
-  "homepage": "https://cowsay.diamonds"
+  "homepage": "https://cowsay.diamonds",
+  "downloads": 23864,
+  "has_repository": true
 }

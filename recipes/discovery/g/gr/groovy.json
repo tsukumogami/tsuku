@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "groovy",
   "description": "Java-based scripting language",
-  "homepage": "https://www.groovy-lang.org/"
+  "homepage": "https://www.groovy-lang.org/",
+  "downloads": 19639,
+  "has_repository": true
 }

@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "kubernetes-sigs/kubebuilder",
+  "description": "Kubebuilder - SDK for building Kubernetes APIs using CRDs",
+  "homepage": "http://book.kubebuilder.io",
+  "repo": "https://github.com/kubernetes-sigs/kubebuilder"
+}

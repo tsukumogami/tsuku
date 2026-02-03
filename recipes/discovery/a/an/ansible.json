@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ansible",
   "description": "Automate deployment, configuration, and upgrading",
-  "homepage": "https://www.ansible.com/"
+  "homepage": "https://www.ansible.com/",
+  "downloads": 261942,
+  "has_repository": true
 }

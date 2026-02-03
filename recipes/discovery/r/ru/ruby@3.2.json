@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ruby@3.2",
   "description": "Powerful, clean, object-oriented scripting language",
-  "homepage": "https://www.ruby-lang.org/"
+  "homepage": "https://www.ruby-lang.org/",
+  "downloads": 12885,
+  "has_repository": true
 }

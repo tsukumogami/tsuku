@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "aom",
   "description": "Codec library for encoding and decoding AV1 video streams",
-  "homepage": "https://aomedia.googlesource.com/aom"
+  "homepage": "https://aomedia.googlesource.com/aom",
+  "downloads": 1063472,
+  "has_repository": true
 }

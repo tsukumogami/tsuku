@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ios-deploy",
   "description": "Install and debug iPhone apps from the command-line",
-  "homepage": "https://github.com/ios-control/ios-deploy"
+  "homepage": "https://github.com/ios-control/ios-deploy",
+  "downloads": 28243,
+  "has_repository": true
 }

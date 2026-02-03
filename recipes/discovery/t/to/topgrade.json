@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "topgrade",
   "description": "Upgrade all the things",
-  "homepage": "https://github.com/topgrade-rs/topgrade"
+  "homepage": "https://github.com/topgrade-rs/topgrade",
+  "downloads": 20721,
+  "has_repository": true
 }

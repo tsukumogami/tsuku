@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "azcopy",
   "description": "Azure Storage data transfer utility",
-  "homepage": "https://github.com/Azure/azure-storage-azcopy"
+  "homepage": "https://github.com/Azure/azure-storage-azcopy",
+  "downloads": 23063,
+  "has_repository": true
 }

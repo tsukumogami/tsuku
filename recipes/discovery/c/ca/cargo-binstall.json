@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cargo-binstall",
   "description": "Binary installation for rust projects",
-  "homepage": "https://github.com/cargo-bins/cargo-binstall"
+  "homepage": "https://github.com/cargo-bins/cargo-binstall",
+  "downloads": 15030,
+  "has_repository": true
 }

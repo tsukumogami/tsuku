@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sox",
   "description": "SOund eXchange: universal sound sample translator",
-  "homepage": "https://sox.sourceforge.net/"
+  "homepage": "https://sox.sourceforge.net/",
+  "downloads": 30877,
+  "has_repository": true
 }

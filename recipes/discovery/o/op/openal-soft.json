@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openal-soft",
   "description": "Implementation of the OpenAL 3D audio API",
-  "homepage": "https://openal-soft.org/"
+  "homepage": "https://openal-soft.org/",
+  "downloads": 7014,
+  "has_repository": true
 }

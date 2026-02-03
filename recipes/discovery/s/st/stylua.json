@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "stylua",
   "description": "Opinionated Lua code formatter",
-  "homepage": "https://github.com/JohnnyMorganz/StyLua"
+  "homepage": "https://github.com/JohnnyMorganz/StyLua",
+  "downloads": 10213,
+  "has_repository": true
 }

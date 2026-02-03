@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "github/hub",
+  "description": "A command-line tool that makes git easier to use with GitHub.",
+  "homepage": "https://hub.github.com/",
+  "repo": "https://github.com/mislav/hub"
+}

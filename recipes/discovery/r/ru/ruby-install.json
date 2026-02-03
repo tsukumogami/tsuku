@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ruby-install",
   "description": "Install Ruby, JRuby, Rubinius, TruffleRuby, or mruby",
-  "homepage": "https://github.com/postmodern/ruby-install"
+  "homepage": "https://github.com/postmodern/ruby-install",
+  "downloads": 22882,
+  "has_repository": true
 }

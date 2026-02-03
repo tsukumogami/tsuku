@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tailscale",
   "description": "Easiest, most secure way to use WireGuard and 2FA",
-  "homepage": "https://tailscale.com"
+  "homepage": "https://tailscale.com",
+  "downloads": 148725,
+  "has_repository": true
 }

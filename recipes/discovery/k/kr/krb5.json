@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "krb5",
   "description": "Network authentication protocol",
-  "homepage": "https://web.mit.edu/kerberos/"
+  "homepage": "https://web.mit.edu/kerberos/",
+  "downloads": 826865,
+  "has_repository": true
 }

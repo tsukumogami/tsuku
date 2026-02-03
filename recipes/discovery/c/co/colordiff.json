@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "colordiff",
   "description": "Color-highlighted diff(1) output",
-  "homepage": "https://www.colordiff.org/"
+  "homepage": "https://www.colordiff.org/",
+  "downloads": 7962,
+  "has_repository": true
 }

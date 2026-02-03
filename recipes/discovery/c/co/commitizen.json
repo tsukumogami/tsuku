@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "commitizen",
   "description": "Defines a standard way of committing rules and communicating it",
-  "homepage": "https://commitizen-tools.github.io/commitizen/"
+  "homepage": "https://commitizen-tools.github.io/commitizen/",
+  "downloads": 16323,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "php@8.4",
   "description": "General-purpose scripting language",
-  "homepage": "https://www.php.net/"
+  "homepage": "https://www.php.net/",
+  "downloads": 8550,
+  "has_repository": true
 }

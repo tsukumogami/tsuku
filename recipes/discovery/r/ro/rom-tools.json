@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "rom-tools",
   "description": "Tools for Multiple Arcade Machine Emulator",
-  "homepage": "https://www.mamedev.org/"
+  "homepage": "https://www.mamedev.org/",
+  "downloads": 7870,
+  "has_repository": true
 }

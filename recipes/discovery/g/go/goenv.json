@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "goenv",
   "description": "Go version management",
-  "homepage": "https://github.com/go-nv/goenv"
+  "homepage": "https://github.com/go-nv/goenv",
+  "downloads": 14029,
+  "has_repository": true
 }

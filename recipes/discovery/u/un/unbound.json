@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "unbound",
   "description": "Validating, recursive, caching DNS resolver",
-  "homepage": "https://www.unbound.net"
+  "homepage": "https://www.unbound.net",
+  "downloads": 1179530,
+  "has_repository": true
 }

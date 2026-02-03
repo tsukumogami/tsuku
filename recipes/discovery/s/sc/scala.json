@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "scala",
   "description": "JVM-based programming language",
-  "homepage": "https://dotty.epfl.ch/"
+  "homepage": "https://dotty.epfl.ch/",
+  "downloads": 26485,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "llama.cpp",
   "description": "LLM inference in C/C++",
-  "homepage": "https://github.com/ggml-org/llama.cpp"
+  "homepage": "https://github.com/ggml-org/llama.cpp",
+  "downloads": 155113,
+  "has_repository": true
 }

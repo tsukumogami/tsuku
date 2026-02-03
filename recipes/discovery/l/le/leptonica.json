@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "leptonica",
   "description": "Image processing and image analysis library",
-  "homepage": "http://www.leptonica.org/"
+  "homepage": "http://www.leptonica.org/",
+  "downloads": 548554,
+  "has_repository": true
 }

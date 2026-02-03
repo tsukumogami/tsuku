@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "r",
   "description": "Software environment for statistical computing",
-  "homepage": "https://www.r-project.org/"
+  "homepage": "https://www.r-project.org/",
+  "downloads": 48027,
+  "has_repository": true
 }

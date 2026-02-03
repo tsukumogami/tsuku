@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gsettings-desktop-schemas",
   "description": "GSettings schemas for desktop components",
-  "homepage": "https://download.gnome.org/sources/gsettings-desktop-schemas/"
+  "homepage": "https://download.gnome.org/sources/gsettings-desktop-schemas/",
+  "downloads": 158162,
+  "has_repository": true
 }

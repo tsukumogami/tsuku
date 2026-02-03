@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "w3m",
   "description": "Pager/text based browser",
-  "homepage": "https://w3m.sourceforge.net/"
+  "homepage": "https://w3m.sourceforge.net/",
+  "downloads": 13594,
+  "has_repository": true
 }

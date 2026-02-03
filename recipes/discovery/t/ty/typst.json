@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "typst",
   "description": "Markup-based typesetting system",
-  "homepage": "https://typst.app/"
+  "homepage": "https://typst.app/",
+  "downloads": 19520,
+  "has_repository": true
 }

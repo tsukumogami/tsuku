@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libimobiledevice",
   "description": "Library to communicate with iOS devices natively",
-  "homepage": "https://www.libimobiledevice.org/"
+  "homepage": "https://www.libimobiledevice.org/",
+  "downloads": 44342,
+  "has_repository": true
 }

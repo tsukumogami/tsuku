@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bazelisk",
   "description": "User-friendly launcher for Bazel",
-  "homepage": "https://github.com/bazelbuild/bazelisk/"
+  "homepage": "https://github.com/bazelbuild/bazelisk/",
+  "downloads": 39085,
+  "has_repository": true
 }

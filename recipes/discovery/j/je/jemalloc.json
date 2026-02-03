@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jemalloc",
   "description": "Implementation of malloc emphasizing fragmentation avoidance",
-  "homepage": "https://jemalloc.net/"
+  "homepage": "https://jemalloc.net/",
+  "downloads": 17335,
+  "has_repository": true
 }

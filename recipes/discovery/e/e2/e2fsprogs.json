@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "e2fsprogs",
   "description": "Utilities for the ext2, ext3, and ext4 file systems",
-  "homepage": "https://e2fsprogs.sourceforge.net/"
+  "homepage": "https://e2fsprogs.sourceforge.net/",
+  "downloads": 12201,
+  "has_repository": true
 }

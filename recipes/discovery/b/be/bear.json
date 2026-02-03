@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bear",
   "description": "Generate compilation database for clang tooling",
-  "homepage": "https://github.com/rizsotto/Bear"
+  "homepage": "https://github.com/rizsotto/Bear",
+  "downloads": 17776,
+  "has_repository": true
 }

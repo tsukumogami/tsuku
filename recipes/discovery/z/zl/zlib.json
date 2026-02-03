@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zlib",
   "description": "General-purpose lossless data-compression library",
-  "homepage": "https://zlib.net/"
+  "homepage": "https://zlib.net/",
+  "downloads": 978993,
+  "has_repository": true
 }

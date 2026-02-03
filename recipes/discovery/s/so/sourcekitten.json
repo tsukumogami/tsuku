@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sourcekitten",
   "description": "Framework and command-line tool for interacting with SourceKit",
-  "homepage": "https://github.com/jpsim/SourceKitten"
+  "homepage": "https://github.com/jpsim/SourceKitten",
+  "downloads": 113274,
+  "has_repository": true
 }

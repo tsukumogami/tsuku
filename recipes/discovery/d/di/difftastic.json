@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "difftastic",
   "description": "Diff that understands syntax",
-  "homepage": "https://github.com/Wilfred/difftastic"
+  "homepage": "https://github.com/Wilfred/difftastic",
+  "downloads": 17968,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pipenv",
   "description": "Python dependency management tool",
-  "homepage": "https://github.com/pypa/pipenv"
+  "homepage": "https://github.com/pypa/pipenv",
+  "downloads": 83578,
+  "has_repository": true
 }

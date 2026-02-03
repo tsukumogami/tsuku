@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "asciinema",
   "description": "Record and share terminal sessions",
-  "homepage": "https://asciinema.org"
+  "homepage": "https://asciinema.org",
+  "downloads": 14145,
+  "has_repository": true
 }

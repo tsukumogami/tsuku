@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "go-parquet-tools",
   "description": "Utility to deal with Parquet data",
-  "homepage": "https://github.com/hangxie/parquet-tools"
+  "homepage": "https://github.com/hangxie/parquet-tools",
+  "downloads": 6649,
+  "has_repository": true
 }

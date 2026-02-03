@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "localstack",
   "description": "Fully functional local AWS cloud stack",
-  "homepage": "https://localstack.cloud/"
+  "homepage": "https://localstack.cloud/",
+  "downloads": 21802,
+  "has_repository": true
 }

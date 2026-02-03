@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "csvkit",
   "description": "Suite of command-line tools for converting to and working with CSV",
-  "homepage": "https://csvkit.readthedocs.io/"
+  "homepage": "https://csvkit.readthedocs.io/",
+  "downloads": 10395,
+  "has_repository": true
 }

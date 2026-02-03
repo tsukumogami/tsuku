@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ollama",
   "description": "Create, run, and share large language models (LLMs)",
-  "homepage": "https://ollama.com/"
+  "homepage": "https://ollama.com/",
+  "downloads": 341994,
+  "has_repository": true
 }

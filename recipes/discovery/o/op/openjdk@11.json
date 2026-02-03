@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openjdk@11",
   "description": "Development kit for the Java programming language",
-  "homepage": "https://openjdk.org/"
+  "homepage": "https://openjdk.org/",
+  "downloads": 207950,
+  "has_repository": true
 }

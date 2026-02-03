@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "espeak-ng",
   "description": "Speech synthesizer that supports more than hundred languages and accents",
-  "homepage": "https://github.com/espeak-ng/espeak-ng"
+  "homepage": "https://github.com/espeak-ng/espeak-ng",
+  "downloads": 13104,
+  "has_repository": true
 }

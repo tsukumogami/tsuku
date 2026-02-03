@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "yamlfmt",
   "description": "Extensible command-line tool to format YAML files",
-  "homepage": "https://github.com/google/yamlfmt"
+  "homepage": "https://github.com/google/yamlfmt",
+  "downloads": 14357,
+  "has_repository": true
 }

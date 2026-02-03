@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "apktool",
   "description": "Tool for reverse engineering 3rd party, closed, binary Android apps",
-  "homepage": "https://github.com/iBotPeaches/Apktool"
+  "homepage": "https://github.com/iBotPeaches/Apktool",
+  "downloads": 59925,
+  "has_repository": true
 }

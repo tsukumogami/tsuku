@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "memcached",
   "description": "High performance, distributed memory object caching system",
-  "homepage": "https://memcached.org/"
+  "homepage": "https://memcached.org/",
+  "downloads": 18773,
+  "has_repository": true
 }

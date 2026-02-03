@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ta-lib",
   "description": "Tools for market analysis",
-  "homepage": "https://ta-lib.org/"
+  "homepage": "https://ta-lib.org/",
+  "downloads": 20994,
+  "has_repository": true
 }

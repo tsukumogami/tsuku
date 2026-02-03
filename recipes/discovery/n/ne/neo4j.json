@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "neo4j",
   "description": "Robust (fully ACID) transactional property graph database",
-  "homepage": "https://neo4j.com/"
+  "homepage": "https://neo4j.com/",
+  "downloads": 13067,
+  "has_repository": true
 }

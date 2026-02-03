@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ghr",
   "description": "Upload multiple artifacts to GitHub Release in parallel",
-  "homepage": "https://github.com/tcnksm/ghr"
+  "homepage": "https://github.com/tcnksm/ghr",
+  "downloads": 20194,
+  "has_repository": true
 }

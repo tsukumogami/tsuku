@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "whisper-cpp",
   "description": "Port of OpenAI's Whisper model in C/C++",
-  "homepage": "https://github.com/ggml-org/whisper.cpp"
+  "homepage": "https://github.com/ggml-org/whisper.cpp",
+  "downloads": 15787,
+  "has_repository": true
 }

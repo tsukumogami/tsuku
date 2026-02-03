@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jadx",
   "description": "Dex to Java decompiler",
-  "homepage": "https://github.com/skylot/jadx"
+  "homepage": "https://github.com/skylot/jadx",
+  "downloads": 25233,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "freerdp",
   "description": "X11 implementation of the Remote Desktop Protocol (RDP)",
-  "homepage": "https://www.freerdp.com/"
+  "homepage": "https://www.freerdp.com/",
+  "downloads": 30090,
+  "has_repository": true
 }

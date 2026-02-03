@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "devcontainer",
   "description": "Reference implementation for the Development Containers specification",
-  "homepage": "https://containers.dev"
+  "homepage": "https://containers.dev",
+  "downloads": 7565,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "flyctl",
   "description": "Command-line tools for fly.io services",
-  "homepage": "https://fly.io"
+  "homepage": "https://fly.io",
+  "downloads": 168003,
+  "has_repository": true
 }

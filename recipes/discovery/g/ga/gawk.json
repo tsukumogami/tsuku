@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gawk",
   "description": "GNU awk utility",
-  "homepage": "https://www.gnu.org/software/gawk/"
+  "homepage": "https://www.gnu.org/software/gawk/",
+  "downloads": 36241,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "suite-sparse",
   "description": "Suite of Sparse Matrix Software",
-  "homepage": "https://people.engr.tamu.edu/davis/suitesparse.html"
+  "homepage": "https://people.engr.tamu.edu/davis/suitesparse.html",
+  "downloads": 82422,
+  "has_repository": true
 }

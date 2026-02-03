@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ccache",
   "description": "Object-file caching compiler wrapper",
-  "homepage": "https://ccache.dev/"
+  "homepage": "https://ccache.dev/",
+  "downloads": 319309,
+  "has_repository": true
 }

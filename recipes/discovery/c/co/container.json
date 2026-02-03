@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "container",
   "description": "Create and run Linux containers using lightweight virtual machines",
-  "homepage": "https://apple.github.io/container/documentation/"
+  "homepage": "https://apple.github.io/container/documentation/",
+  "downloads": 6711,
+  "has_repository": true
 }

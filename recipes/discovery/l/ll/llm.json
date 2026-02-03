@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "llm",
   "description": "Access large language models from the command-line",
-  "homepage": "https://llm.datasette.io/"
+  "homepage": "https://llm.datasette.io/",
+  "downloads": 16543,
+  "has_repository": true
 }

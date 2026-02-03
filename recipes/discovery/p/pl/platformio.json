@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "platformio",
   "description": "Your Gateway to Embedded Software Development Excellence",
-  "homepage": "https://platformio.org/"
+  "homepage": "https://platformio.org/",
+  "downloads": 12770,
+  "has_repository": true
 }

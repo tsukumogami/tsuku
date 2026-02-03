@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "git-delta",
   "description": "Syntax-highlighting pager for git and diff output",
-  "homepage": "https://github.com/dandavison/delta"
+  "homepage": "https://github.com/dandavison/delta",
+  "downloads": 34577,
+  "has_repository": true
 }

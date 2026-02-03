@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "argo",
   "description": "Get stuff done with container-native workflows for Kubernetes",
-  "homepage": "https://argoproj.io"
+  "homepage": "https://argoproj.io",
+  "downloads": 10746,
+  "has_repository": true
 }

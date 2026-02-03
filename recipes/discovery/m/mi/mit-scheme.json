@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mit-scheme",
   "description": "MIT/GNU Scheme development tools and runtime library",
-  "homepage": "https://www.gnu.org/software/mit-scheme/"
+  "homepage": "https://www.gnu.org/software/mit-scheme/",
+  "downloads": 22247,
+  "has_repository": true
 }

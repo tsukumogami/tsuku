@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sphinx-doc",
   "description": "Tool to create intelligent and beautiful documentation",
-  "homepage": "https://www.sphinx-doc.org/"
+  "homepage": "https://www.sphinx-doc.org/",
+  "downloads": 103234,
+  "has_repository": true
 }

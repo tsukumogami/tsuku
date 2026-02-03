@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "ducaale/xh",
+  "description": "Friendly and fast tool for sending HTTP requests",
+  "repo": "https://github.com/ducaale/xh"
+}

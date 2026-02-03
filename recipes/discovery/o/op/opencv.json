@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "opencv",
   "description": "Open source computer vision library",
-  "homepage": "https://opencv.org/"
+  "homepage": "https://opencv.org/",
+  "downloads": 97032,
+  "has_repository": true
 }

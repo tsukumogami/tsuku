@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "asciiquarium",
   "description": "Aquarium animation in ASCII art",
-  "homepage": "https://robobunny.com/projects/asciiquarium/html/"
+  "homepage": "https://robobunny.com/projects/asciiquarium/html/",
+  "downloads": 4312,
+  "has_repository": true
 }

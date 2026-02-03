@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "wireshark",
   "description": "Network analyzer and capture tool - without graphical user interface",
-  "homepage": "https://www.wireshark.org"
+  "homepage": "https://www.wireshark.org",
+  "downloads": 73550,
+  "has_repository": true
 }

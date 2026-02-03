@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "git-flow",
   "description": "Extensions to follow Vincent Driessen's branching model",
-  "homepage": "https://github.com/nvie/gitflow"
+  "homepage": "https://github.com/nvie/gitflow",
+  "downloads": 18192,
+  "has_repository": true
 }

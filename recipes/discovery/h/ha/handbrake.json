@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "handbrake",
   "description": "Open-source video transcoder available for Linux, Mac, and Windows",
-  "homepage": "https://handbrake.fr/"
+  "homepage": "https://handbrake.fr/",
+  "downloads": 44293,
+  "has_repository": true
 }

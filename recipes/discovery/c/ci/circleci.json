@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "circleci",
   "description": "Enables you to reproduce the CircleCI environment locally",
-  "homepage": "https://circleci.com/docs/guides/toolkit/local-cli/"
+  "homepage": "https://circleci.com/docs/guides/toolkit/local-cli/",
+  "downloads": 24431,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dos2unix",
   "description": "Convert text between DOS, UNIX, and Mac formats",
-  "homepage": "https://waterlan.home.xs4all.nl/dos2unix.html"
+  "homepage": "https://waterlan.home.xs4all.nl/dos2unix.html",
+  "downloads": 33648,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nushell",
   "description": "Modern shell for the GitHub era",
-  "homepage": "https://www.nushell.sh"
+  "homepage": "https://www.nushell.sh",
+  "downloads": 49354,
+  "has_repository": true
 }

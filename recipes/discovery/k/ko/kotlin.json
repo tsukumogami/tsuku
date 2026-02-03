@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "kotlin",
   "description": "Statically typed programming language for the JVM",
-  "homepage": "https://kotlinlang.org/"
+  "homepage": "https://kotlinlang.org/",
+  "downloads": 39465,
+  "has_repository": true
 }

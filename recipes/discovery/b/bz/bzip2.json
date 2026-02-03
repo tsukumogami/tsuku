@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bzip2",
   "description": "Freely available high-quality data compressor",
-  "homepage": "https://sourceware.org/bzip2/"
+  "homepage": "https://sourceware.org/bzip2/",
+  "downloads": 714093,
+  "has_repository": true
 }

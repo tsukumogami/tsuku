@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "figlet",
   "description": "Banner-like program prints strings as ASCII art",
-  "homepage": "http://www.figlet.org/"
+  "homepage": "http://www.figlet.org/",
+  "downloads": 11988,
+  "has_repository": true
 }

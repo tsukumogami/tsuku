@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "perl",
   "description": "Highly capable, feature-rich programming language",
-  "homepage": "https://www.perl.org/"
+  "homepage": "https://www.perl.org/",
+  "downloads": 191432,
+  "has_repository": true
 }

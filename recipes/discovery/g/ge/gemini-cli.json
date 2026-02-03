@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gemini-cli",
   "description": "Interact with Google Gemini AI models from the command-line",
-  "homepage": "https://github.com/google-gemini/gemini-cli"
+  "homepage": "https://github.com/google-gemini/gemini-cli",
+  "downloads": 384472,
+  "has_repository": true
 }

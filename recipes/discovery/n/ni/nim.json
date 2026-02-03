@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nim",
   "description": "Statically typed compiled systems programming language",
-  "homepage": "https://nim-lang.org/"
+  "homepage": "https://nim-lang.org/",
+  "downloads": 10354,
+  "has_repository": true
 }

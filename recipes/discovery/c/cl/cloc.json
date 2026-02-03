@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cloc",
   "description": "Statistics utility to count lines of code",
-  "homepage": "https://github.com/AlDanial/cloc/"
+  "homepage": "https://github.com/AlDanial/cloc/",
+  "downloads": 42057,
+  "has_repository": true
 }

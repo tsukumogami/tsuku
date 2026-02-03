@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libogg",
   "description": "Ogg Bitstream Library",
-  "homepage": "https://www.xiph.org/ogg/"
+  "homepage": "https://www.xiph.org/ogg/",
+  "downloads": 316752,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "xctesthtmlreport",
   "description": "Xcode-like HTML report for Unit and UI Tests",
-  "homepage": "https://github.com/XCTestHTMLReport/XCTestHTMLReport"
+  "homepage": "https://github.com/XCTestHTMLReport/XCTestHTMLReport",
+  "downloads": 92788,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "oath-toolkit",
   "description": "Tools for one-time password authentication systems",
-  "homepage": "https://www.nongnu.org/oath-toolkit/"
+  "homepage": "https://www.nongnu.org/oath-toolkit/",
+  "downloads": 7612,
+  "has_repository": true
 }

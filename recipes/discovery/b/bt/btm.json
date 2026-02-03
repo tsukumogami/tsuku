@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "ClementTsang/bottom",
+  "description": "Yet another cross-platform graphical process/system monitor.",
+  "homepage": "https://bottom.pages.dev",
+  "repo": "https://github.com/ClementTsang/bottom"
+}

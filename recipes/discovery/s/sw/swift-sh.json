@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "swift-sh",
   "description": "Scripting with easy zero-conf dependency imports",
-  "homepage": "https://github.com/mxcl/swift-sh"
+  "homepage": "https://github.com/mxcl/swift-sh",
+  "downloads": 43395,
+  "has_repository": true
 }

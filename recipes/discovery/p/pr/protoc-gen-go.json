@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "protocolbuffers/protobuf-go",
+  "description": "Go support for Google's protocol buffers",
+  "homepage": "https://developers.google.com/protocol-buffers",
+  "repo": "https://github.com/protocolbuffers/protobuf-go"
+}

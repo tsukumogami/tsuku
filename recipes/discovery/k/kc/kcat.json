@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "kcat",
   "description": "Generic command-line non-JVM Apache Kafka producer and consumer",
-  "homepage": "https://github.com/edenhill/kcat"
+  "homepage": "https://github.com/edenhill/kcat",
+  "downloads": 13816,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "qwen-code",
   "description": "AI-powered command-line workflow tool for developers",
-  "homepage": "https://github.com/QwenLM/qwen-code"
+  "homepage": "https://github.com/QwenLM/qwen-code",
+  "downloads": 21752,
+  "has_repository": true
 }

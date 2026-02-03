@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gmp",
   "description": "GNU multiple precision arithmetic library",
-  "homepage": "https://gmplib.org/"
+  "homepage": "https://gmplib.org/",
+  "downloads": 1400375,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bash-completion@2",
   "description": "Programmable completion for Bash 4.2+",
-  "homepage": "https://github.com/scop/bash-completion"
+  "homepage": "https://github.com/scop/bash-completion",
+  "downloads": 15257,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dotnet",
   "description": ".NET Core",
-  "homepage": "https://dotnet.microsoft.com/"
+  "homepage": "https://dotnet.microsoft.com/",
+  "downloads": 61995,
+  "has_repository": true
 }

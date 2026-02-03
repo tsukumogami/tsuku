@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gstreamer",
   "description": "Development framework for multimedia applications",
-  "homepage": "https://gstreamer.freedesktop.org/"
+  "homepage": "https://gstreamer.freedesktop.org/",
+  "downloads": 111813,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "awscli",
   "description": "Official Amazon AWS command-line interface",
-  "homepage": "https://aws.amazon.com/cli/"
+  "homepage": "https://aws.amazon.com/cli/",
+  "downloads": 2186243,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dvc",
   "description": "Git for data science projects",
-  "homepage": "https://dvc.org"
+  "homepage": "https://dvc.org",
+  "downloads": 8095,
+  "has_repository": true
 }

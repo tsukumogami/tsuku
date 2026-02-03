@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "xcodes",
   "description": "Best command-line tool to install and switch between multiple versions of Xcode",
-  "homepage": "https://github.com/XcodesOrg/xcodes"
+  "homepage": "https://github.com/XcodesOrg/xcodes",
+  "downloads": 41143,
+  "has_repository": true
 }

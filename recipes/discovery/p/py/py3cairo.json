@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "py3cairo",
   "description": "Python 3 bindings for the Cairo graphics library",
-  "homepage": "https://cairographics.org/pycairo/"
+  "homepage": "https://cairographics.org/pycairo/",
+  "downloads": 76442,
+  "has_repository": true
 }

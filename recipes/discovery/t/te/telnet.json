@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "telnet",
   "description": "User interface to the TELNET protocol",
-  "homepage": "https://opensource.apple.com/"
+  "homepage": "https://opensource.apple.com/",
+  "downloads": 179807,
+  "has_repository": true
 }

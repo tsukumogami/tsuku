@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "supabase",
   "description": "Open source Firebase alternative",
-  "homepage": "https://supabase.com/docs/reference/cli/about"
+  "homepage": "https://supabase.com/docs/reference/cli/about",
+  "downloads": 10563,
+  "has_repository": true
 }

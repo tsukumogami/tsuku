@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jo",
   "description": "JSON output from a shell",
-  "homepage": "https://github.com/jpmens/jo"
+  "homepage": "https://github.com/jpmens/jo",
+  "downloads": 37963,
+  "has_repository": true
 }

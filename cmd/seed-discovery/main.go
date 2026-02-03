@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/tsukumogami/tsuku/internal/builders"
 	"github.com/tsukumogami/tsuku/internal/discover"
 )
 
@@ -24,6 +25,7 @@ func main() {
 	}
 
 	validators := buildValidators()
+	probers := buildProbers()
 
 	cfg := discover.GenerateConfig{
 		SeedsDir:   *seedsDir,
@@ -31,6 +33,7 @@ func main() {
 		RecipesDir: *recipesDir,
 		OutputDir:  *outputDir,
 		Validators: validators,
+		Probers:    probers,
 		Verbose:    *verbose,
 	}
 
@@ -48,8 +51,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	fmt.Fprintf(os.Stderr, "Processed %d entries: %d graduated, %d valid, %d failed\n",
-		result.Total, result.Graduated, result.Valid, len(result.Failures))
+	fmt.Fprintf(os.Stderr, "Processed %d entries: %d graduated, %d valid, %d failed, %d probed, %d rejected\n",
+		result.Total, result.Graduated, result.Valid, len(result.Failures), result.Probed, result.Rejected)
 
 	if *verbose && len(result.Backfills) > 0 {
 		fmt.Fprintln(os.Stderr, "\nMetadata backfills:")
@@ -62,6 +65,13 @@ func main() {
 				fields = append(fields, "homepage")
 			}
 			fmt.Fprintf(os.Stderr, "  %s: added %s\n", bf.Name, strings.Join(fields, ", "))
+		}
+	}
+
+	if *verbose && len(result.Rejections) > 0 {
+		fmt.Fprintln(os.Stderr, "\nQuality rejections:")
+		for _, r := range result.Rejections {
+			fmt.Fprintf(os.Stderr, "  %s (%s/%s): %s\n", r.Entry.Name, r.Entry.Builder, r.Entry.Source, r.Reason)
 		}
 	}
 
@@ -104,5 +114,12 @@ func buildValidators() map[string]discover.Validator {
 	return map[string]discover.Validator{
 		"github":   discover.NewGitHubValidator(nil),
 		"homebrew": discover.NewHomebrewValidator(nil),
+	}
+}
+
+func buildProbers() map[string]builders.EcosystemProber {
+	hb := builders.NewHomebrewBuilder()
+	return map[string]builders.EcosystemProber{
+		hb.Name(): hb,
 	}
 }

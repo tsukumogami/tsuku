@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mtr",
   "description": "'traceroute' and 'ping' in a single tool",
-  "homepage": "https://www.bitwizard.nl/mtr/"
+  "homepage": "https://www.bitwizard.nl/mtr/",
+  "downloads": 36880,
+  "has_repository": true
 }

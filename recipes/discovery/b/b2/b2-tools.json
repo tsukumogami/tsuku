@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "b2-tools",
   "description": "B2 Cloud Storage Command-Line Tools",
-  "homepage": "https://github.com/Backblaze/B2_Command_Line_Tool"
+  "homepage": "https://github.com/Backblaze/B2_Command_Line_Tool",
+  "downloads": 6514,
+  "has_repository": true
 }

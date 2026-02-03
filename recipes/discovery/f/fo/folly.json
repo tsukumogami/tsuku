@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "folly",
   "description": "Collection of reusable C++ library artifacts developed at Facebook",
-  "homepage": "https://github.com/facebook/folly"
+  "homepage": "https://github.com/facebook/folly",
+  "downloads": 269075,
+  "has_repository": true
 }

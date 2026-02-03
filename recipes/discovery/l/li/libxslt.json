@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libxslt",
   "description": "C XSLT library for GNOME",
-  "homepage": "http://xmlsoft.org/XSLT/"
+  "homepage": "http://xmlsoft.org/XSLT/",
+  "downloads": 80575,
+  "has_repository": true
 }

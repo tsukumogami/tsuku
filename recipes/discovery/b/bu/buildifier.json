@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "buildifier",
   "description": "Format bazel BUILD files with a standard convention",
-  "homepage": "https://github.com/bazelbuild/buildtools"
+  "homepage": "https://github.com/bazelbuild/buildtools",
+  "downloads": 10647,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "yarn",
   "description": "JavaScript package manager",
-  "homepage": "https://yarnpkg.com/"
+  "homepage": "https://yarnpkg.com/",
+  "downloads": 141072,
+  "has_repository": true
 }

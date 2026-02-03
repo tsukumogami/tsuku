@@ -16,6 +16,7 @@ var (
 	_ EcosystemProber = (*GoBuilder)(nil)
 	_ EcosystemProber = (*CPANBuilder)(nil)
 	_ EcosystemProber = (*CaskBuilder)(nil)
+	_ EcosystemProber = (*HomebrewBuilder)(nil)
 )
 
 func TestCargoBuilder_Probe(t *testing.T) {
@@ -95,7 +96,7 @@ func TestPyPIBuilder_Probe(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/pypi/black/json" {
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"info":{"name":"black"}}`))
+			_, _ = w.Write([]byte(`{"info":{"name":"black","project_urls":{"Homepage":"https://github.com/psf/black","Repository":"https://github.com/psf/black"}},"releases":{"20.8b1":[],"21.4b0":[],"22.1.0":[],"23.1.0":[],"24.1.0":[]}}`))
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -105,7 +106,7 @@ func TestPyPIBuilder_Probe(t *testing.T) {
 	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	t.Run("exists", func(t *testing.T) {
+	t.Run("exists with metadata", func(t *testing.T) {
 		result, err := builder.Probe(ctx, "black")
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
@@ -115,6 +116,15 @@ func TestPyPIBuilder_Probe(t *testing.T) {
 		}
 		if result.Source != "black" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "black")
+		}
+		if result.VersionCount != 5 {
+			t.Errorf("Probe() VersionCount = %d, want 5", result.VersionCount)
+		}
+		if !result.HasRepository {
+			t.Error("Probe() HasRepository = false, want true")
+		}
+		if result.Downloads != 0 {
+			t.Errorf("Probe() Downloads = %d, want 0 (PyPI doesn't expose downloads)", result.Downloads)
 		}
 	})
 
@@ -129,12 +139,39 @@ func TestPyPIBuilder_Probe(t *testing.T) {
 	})
 }
 
+func TestPyPIBuilder_Probe_NoProjectURLs(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"info":{"name":"squatter"},"releases":{"0.0.1":[]}}`))
+	}))
+	defer server.Close()
+
+	builder := NewPyPIBuilderWithBaseURL(nil, server.URL)
+	result, err := builder.Probe(context.Background(), "squatter")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil")
+	}
+	if result.HasRepository {
+		t.Error("Probe() HasRepository = true, want false")
+	}
+	if result.VersionCount != 1 {
+		t.Errorf("Probe() VersionCount = %d, want 1", result.VersionCount)
+	}
+}
+
 func TestNpmBuilder_Probe(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/prettier" {
+		switch r.URL.Path {
+		case "/prettier":
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"name":"prettier"}`))
-		} else {
+			_, _ = w.Write([]byte(`{"name":"prettier","repository":{"type":"git","url":"git+https://github.com/prettier/prettier.git"},"versions":{"1.0.0":{},"2.0.0":{},"3.0.0":{}}}`))
+		case "/downloads/point/last-week/prettier":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"downloads":25000000}`))
+		default:
 			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
@@ -143,7 +180,7 @@ func TestNpmBuilder_Probe(t *testing.T) {
 	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	t.Run("exists", func(t *testing.T) {
+	t.Run("exists with metadata", func(t *testing.T) {
 		result, err := builder.Probe(ctx, "prettier")
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
@@ -153,6 +190,15 @@ func TestNpmBuilder_Probe(t *testing.T) {
 		}
 		if result.Source != "prettier" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "prettier")
+		}
+		if result.Downloads != 25000000 {
+			t.Errorf("Probe() Downloads = %d, want 25000000", result.Downloads)
+		}
+		if result.VersionCount != 3 {
+			t.Errorf("Probe() VersionCount = %d, want 3", result.VersionCount)
+		}
+		if !result.HasRepository {
+			t.Error("Probe() HasRepository = false, want true")
 		}
 	})
 
@@ -165,6 +211,36 @@ func TestNpmBuilder_Probe(t *testing.T) {
 			t.Errorf("Probe() = %+v, want nil", result)
 		}
 	})
+}
+
+func TestNpmBuilder_Probe_DownloadsAPIFails(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/some-pkg":
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"name":"some-pkg","versions":{"1.0.0":{},"2.0.0":{}}}`))
+		case "/downloads/point/last-week/some-pkg":
+			w.WriteHeader(http.StatusInternalServerError)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewNpmBuilderWithBaseURL(nil, server.URL)
+	result, err := builder.Probe(context.Background(), "some-pkg")
+	if err != nil {
+		t.Fatalf("Probe() error = %v", err)
+	}
+	if result == nil {
+		t.Fatal("Probe() returned nil")
+	}
+	if result.Downloads != 0 {
+		t.Errorf("Probe() Downloads = %d, want 0 (API failed)", result.Downloads)
+	}
+	if result.VersionCount != 2 {
+		t.Errorf("Probe() VersionCount = %d, want 2", result.VersionCount)
+	}
 }
 
 func TestGemBuilder_Probe(t *testing.T) {
@@ -298,7 +374,7 @@ func TestCaskBuilder_Probe(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/api/cask/visual-studio-code.json" {
 			w.Header().Set("Content-Type", "application/json")
-			_, _ = w.Write([]byte(`{"token":"visual-studio-code","version":"1.96.4"}`))
+			_, _ = w.Write([]byte(`{"token":"visual-studio-code","version":"1.96.4","homepage":"https://code.visualstudio.com/"}`))
 		} else {
 			w.WriteHeader(http.StatusNotFound)
 		}
@@ -308,7 +384,7 @@ func TestCaskBuilder_Probe(t *testing.T) {
 	builder := NewCaskBuilderWithBaseURL(nil, server.URL)
 	ctx := context.Background()
 
-	t.Run("exists", func(t *testing.T) {
+	t.Run("exists with metadata", func(t *testing.T) {
 		result, err := builder.Probe(ctx, "visual-studio-code")
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
@@ -319,10 +395,57 @@ func TestCaskBuilder_Probe(t *testing.T) {
 		if result.Source != "visual-studio-code" {
 			t.Errorf("Probe() Source = %q, want %q", result.Source, "visual-studio-code")
 		}
+		if !result.HasRepository {
+			t.Error("Probe() HasRepository = false, want true (has homepage)")
+		}
 	})
 
 	t.Run("not found", func(t *testing.T) {
 		result, err := builder.Probe(ctx, "nonexistent-cask-xyz")
+		if err != nil {
+			t.Fatalf("Probe() error = %v", err)
+		}
+		if result != nil {
+			t.Errorf("Probe() = %+v, want nil", result)
+		}
+	})
+}
+
+func TestHomebrewBuilder_Probe(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/api/formula/jq.json" {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(`{"name":"jq","full_name":"jq","desc":"Lightweight JSON processor","homepage":"https://jqlang.github.io/jq/","versions":{"stable":"1.7.1","bottle":true},"deprecated":false,"disabled":false,"analytics":{"install":{"365d":{"jq":638284}}}}`))
+		} else {
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	builder := NewHomebrewBuilder(WithHomebrewAPIURL(server.URL))
+	ctx := context.Background()
+
+	t.Run("exists with metadata", func(t *testing.T) {
+		result, err := builder.Probe(ctx, "jq")
+		if err != nil {
+			t.Fatalf("Probe() error = %v", err)
+		}
+		if result == nil {
+			t.Fatal("Probe() returned nil, want non-nil")
+		}
+		if result.Source != "jq" {
+			t.Errorf("Probe() Source = %q, want %q", result.Source, "jq")
+		}
+		if !result.HasRepository {
+			t.Error("Probe() HasRepository = false, want true (has homepage)")
+		}
+		if result.Downloads != 638284 {
+			t.Errorf("Probe() Downloads = %d, want 638284", result.Downloads)
+		}
+	})
+
+	t.Run("not found", func(t *testing.T) {
+		result, err := builder.Probe(ctx, "nonexistent-formula-xyz")
 		if err != nil {
 			t.Fatalf("Probe() error = %v", err)
 		}
@@ -351,6 +474,7 @@ func TestProbe_APIError(t *testing.T) {
 		{"go", NewGoBuilderWithBaseURL(nil, server.URL)},
 		{"cpan", NewCPANBuilderWithBaseURL(nil, server.URL)},
 		{"cask", NewCaskBuilderWithBaseURL(nil, server.URL)},
+		{"homebrew", NewHomebrewBuilder(WithHomebrewAPIURL(server.URL))},
 	}
 
 	for _, b := range builders {

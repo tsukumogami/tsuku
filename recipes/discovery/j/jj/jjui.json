@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jjui",
   "description": "TUI for interacting with the Jujutsu version control system",
-  "homepage": "https://github.com/idursun/jjui"
+  "homepage": "https://github.com/idursun/jjui",
+  "downloads": 2941,
+  "has_repository": true
 }

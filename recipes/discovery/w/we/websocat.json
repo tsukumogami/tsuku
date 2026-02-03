@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "websocat",
   "description": "Command-line client for WebSockets",
-  "homepage": "https://github.com/vi/websocat"
+  "homepage": "https://github.com/vi/websocat",
+  "downloads": 14854,
+  "has_repository": true
 }

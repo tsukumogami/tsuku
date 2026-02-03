@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nuget",
   "description": "Package manager for Microsoft development platform including .NET",
-  "homepage": "https://www.nuget.org/"
+  "homepage": "https://www.nuget.org/",
+  "downloads": 24641,
+  "has_repository": true
 }

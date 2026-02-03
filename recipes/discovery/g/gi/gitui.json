@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gitui",
   "description": "Blazing fast terminal-ui for git written in rust",
-  "homepage": "https://github.com/gitui-org/gitui"
+  "homepage": "https://github.com/gitui-org/gitui",
+  "downloads": 9422,
+  "has_repository": true
 }

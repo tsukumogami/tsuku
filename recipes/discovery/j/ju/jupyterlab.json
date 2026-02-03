@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "jupyterlab",
   "description": "Interactive environments for writing and running code",
-  "homepage": "https://jupyter.org/"
+  "homepage": "https://jupyter.org/",
+  "downloads": 148861,
+  "has_repository": true
 }

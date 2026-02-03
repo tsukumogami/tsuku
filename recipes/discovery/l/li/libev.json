@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libev",
   "description": "Asynchronous event library",
-  "homepage": "https://software.schmorp.de/pkg/libev.html"
+  "homepage": "https://software.schmorp.de/pkg/libev.html",
+  "downloads": 27489,
+  "has_repository": true
 }

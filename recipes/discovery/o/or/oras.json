@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "oras",
   "description": "OCI Registry As Storage",
-  "homepage": "https://github.com/oras-project/oras"
+  "homepage": "https://github.com/oras-project/oras",
+  "downloads": 44937,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "autojump",
   "description": "Shell extension to jump to frequently used directories",
-  "homepage": "https://github.com/wting/autojump"
+  "homepage": "https://github.com/wting/autojump",
+  "downloads": 14466,
+  "has_repository": true
 }

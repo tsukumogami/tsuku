@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "marksman",
   "description": "Language Server Protocol for Markdown",
-  "homepage": "https://github.com/artempyanykh/marksman"
+  "homepage": "https://github.com/artempyanykh/marksman",
+  "downloads": 5620,
+  "has_repository": true
 }

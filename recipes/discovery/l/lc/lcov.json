@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lcov",
   "description": "Graphical front-end for GCC's coverage testing tool (gcov)",
-  "homepage": "https://github.com/linux-test-project/lcov"
+  "homepage": "https://github.com/linux-test-project/lcov",
+  "downloads": 111610,
+  "has_repository": true
 }

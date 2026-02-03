@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sonar-scanner",
   "description": "Launcher to analyze a project with SonarQube",
-  "homepage": "https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/"
+  "homepage": "https://docs.sonarqube.org/latest/analysis/scan/sonarscanner/",
+  "downloads": 66811,
+  "has_repository": true
 }

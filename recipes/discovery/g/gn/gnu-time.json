@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gnu-time",
   "description": "GNU implementation of time utility",
-  "homepage": "https://www.gnu.org/software/time/"
+  "homepage": "https://www.gnu.org/software/time/",
+  "downloads": 8904,
+  "has_repository": true
 }

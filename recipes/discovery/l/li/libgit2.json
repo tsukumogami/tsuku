@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libgit2",
   "description": "C library of Git core methods that is re-entrant and linkable",
-  "homepage": "https://libgit2.org/"
+  "homepage": "https://libgit2.org/",
+  "downloads": 314526,
+  "has_repository": true
 }

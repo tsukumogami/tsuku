@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "freetds",
   "description": "Libraries to talk to Microsoft SQL Server and Sybase databases",
-  "homepage": "https://www.freetds.org/"
+  "homepage": "https://www.freetds.org/",
+  "downloads": 356684,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "docker-machine",
   "description": "Create Docker hosts locally and on cloud providers",
-  "homepage": "https://docs.gitlab.com/runner/executors/docker_machine.html"
+  "homepage": "https://docs.gitlab.com/runner/executors/docker_machine.html",
+  "downloads": 27338,
+  "has_repository": true
 }

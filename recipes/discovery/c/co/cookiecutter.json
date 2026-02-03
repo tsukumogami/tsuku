@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cookiecutter",
   "description": "Utility that creates projects from templates",
-  "homepage": "https://github.com/cookiecutter/cookiecutter"
+  "homepage": "https://github.com/cookiecutter/cookiecutter",
+  "downloads": 14165,
+  "has_repository": true
 }

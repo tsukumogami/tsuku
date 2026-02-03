@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "docker-buildx",
   "description": "Docker CLI plugin for extended build capabilities with BuildKit",
-  "homepage": "https://docs.docker.com/buildx/working-with-buildx/"
+  "homepage": "https://docs.docker.com/buildx/working-with-buildx/",
+  "downloads": 68968,
+  "has_repository": true
 }

@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "projectdiscovery/httpx",
+  "description": "httpx is a fast and multi-purpose HTTP toolkit that allows running multiple probes using the retryablehttp library.",
+  "homepage": "https://docs.projectdiscovery.io/tools/httpx",
+  "repo": "https://github.com/projectdiscovery/httpx"
+}

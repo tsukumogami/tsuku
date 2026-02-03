@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pinentry-mac",
   "description": "Pinentry for GPG on Mac",
-  "homepage": "https://github.com/GPGTools/pinentry"
+  "homepage": "https://github.com/GPGTools/pinentry",
+  "downloads": 36930,
+  "has_repository": true
 }

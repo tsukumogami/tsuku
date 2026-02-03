@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "neomutt",
   "description": "E-mail reader with support for Notmuch, NNTP and much more",
-  "homepage": "https://neomutt.org/"
+  "homepage": "https://neomutt.org/",
+  "downloads": 5350,
+  "has_repository": true
 }

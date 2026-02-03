@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libmagic",
   "description": "Implementation of the file(1) command",
-  "homepage": "https://www.darwinsys.com/file/"
+  "homepage": "https://www.darwinsys.com/file/",
+  "downloads": 51651,
+  "has_repository": true
 }

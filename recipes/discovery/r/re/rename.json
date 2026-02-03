@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "rename",
   "description": "Perl-powered file rename script with many helpful built-ins",
-  "homepage": "http://plasmasturm.org/code/rename"
+  "homepage": "http://plasmasturm.org/code/rename",
+  "downloads": 9999,
+  "has_repository": true
 }

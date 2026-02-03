@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mongodb-atlas-cli",
   "description": "Atlas CLI enables you to manage your MongoDB Atlas",
-  "homepage": "https://www.mongodb.com/docs/atlas/cli/stable/"
+  "homepage": "https://www.mongodb.com/docs/atlas/cli/stable/",
+  "downloads": 64912,
+  "has_repository": true
 }

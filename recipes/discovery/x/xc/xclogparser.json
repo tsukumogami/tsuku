@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "xclogparser",
   "description": "Tool to parse the SLF serialization format used by Xcode",
-  "homepage": "https://github.com/MobileNativeFoundation/XCLogParser"
+  "homepage": "https://github.com/MobileNativeFoundation/XCLogParser",
+  "downloads": 165427,
+  "has_repository": true
 }

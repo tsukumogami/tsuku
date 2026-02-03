@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "rust",
   "description": "Safe, concurrent, practical language",
-  "homepage": "https://www.rust-lang.org/"
+  "homepage": "https://www.rust-lang.org/",
+  "downloads": 450860,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "aqua",
   "description": "Declarative CLI Version manager",
-  "homepage": "https://aquaproj.github.io/"
+  "homepage": "https://aquaproj.github.io/",
+  "downloads": 5314,
+  "has_repository": true
 }

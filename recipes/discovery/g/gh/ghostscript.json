@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ghostscript",
   "description": "Interpreter for PostScript and PDF",
-  "homepage": "https://www.ghostscript.com/"
+  "homepage": "https://www.ghostscript.com/",
+  "downloads": 369707,
+  "has_repository": true
 }

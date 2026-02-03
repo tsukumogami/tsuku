@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "binutils",
   "description": "GNU binary tools for native development",
-  "homepage": "https://www.gnu.org/software/binutils/binutils.html"
+  "homepage": "https://www.gnu.org/software/binutils/binutils.html",
+  "downloads": 445016,
+  "has_repository": true
 }

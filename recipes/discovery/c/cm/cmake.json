@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cmake",
   "description": "Cross-platform make",
-  "homepage": "https://www.cmake.org/"
+  "homepage": "https://www.cmake.org/",
+  "downloads": 1579497,
+  "has_repository": true
 }

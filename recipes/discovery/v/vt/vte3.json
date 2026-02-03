@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "vte3",
   "description": "Terminal emulator widget used by GNOME terminal",
-  "homepage": "https://wiki.gnome.org/Apps/Terminal/VTE"
+  "homepage": "https://wiki.gnome.org/Apps/Terminal/VTE",
+  "downloads": 26987,
+  "has_repository": true
 }

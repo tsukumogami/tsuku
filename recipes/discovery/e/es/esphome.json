@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "esphome",
   "description": "Make creating custom firmwares for ESP32/ESP8266 super easy",
-  "homepage": "https://github.com/esphome/esphome"
+  "homepage": "https://github.com/esphome/esphome",
+  "downloads": 19454,
+  "has_repository": true
 }

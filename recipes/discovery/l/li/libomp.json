@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libomp",
   "description": "LLVM's OpenMP runtime library",
-  "homepage": "https://openmp.llvm.org/"
+  "homepage": "https://openmp.llvm.org/",
+  "downloads": 646812,
+  "has_repository": true
 }

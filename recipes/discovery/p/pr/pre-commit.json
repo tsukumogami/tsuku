@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pre-commit",
   "description": "Framework for managing multi-language pre-commit hooks",
-  "homepage": "https://pre-commit.com/"
+  "homepage": "https://pre-commit.com/",
+  "downloads": 135032,
+  "has_repository": true
 }

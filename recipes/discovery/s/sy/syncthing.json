@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "syncthing",
   "description": "Open source continuous file synchronization application",
-  "homepage": "https://syncthing.net/"
+  "homepage": "https://syncthing.net/",
+  "downloads": 41311,
+  "has_repository": true
 }

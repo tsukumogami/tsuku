@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bitwarden-cli",
   "description": "Secure and free password manager for all of your devices",
-  "homepage": "https://bitwarden.com/"
+  "homepage": "https://bitwarden.com/",
+  "downloads": 33473,
+  "has_repository": true
 }

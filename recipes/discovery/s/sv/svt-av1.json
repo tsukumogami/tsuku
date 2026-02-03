@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "svt-av1",
   "description": "AV1 encoder",
-  "homepage": "https://gitlab.com/AOMediaCodec/SVT-AV1"
+  "homepage": "https://gitlab.com/AOMediaCodec/SVT-AV1",
+  "downloads": 569251,
+  "has_repository": true
 }

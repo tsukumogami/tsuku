@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "google/osv-scanner",
+  "description": "Vulnerability scanner written in Go which uses the data provided by https://osv.dev",
+  "homepage": "https://google.github.io/osv-scanner/",
+  "repo": "https://github.com/google/osv-scanner"
+}

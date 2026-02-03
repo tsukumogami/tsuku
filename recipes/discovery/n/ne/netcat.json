@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "netcat",
   "description": "Utility for managing network connections",
-  "homepage": "https://netcat.sourceforge.net/"
+  "homepage": "https://netcat.sourceforge.net/",
+  "downloads": 13243,
+  "has_repository": true
 }
