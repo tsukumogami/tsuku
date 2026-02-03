@@ -21,7 +21,7 @@ func TestComputeQueueStatus_aggregates(t *testing.T) {
 		},
 	}
 
-	status := computeQueueStatus(queue)
+	status := computeQueueStatus(queue, nil)
 
 	if status.Total != 6 {
 		t.Errorf("Total: got %d, want 6", status.Total)
@@ -51,7 +51,7 @@ func TestComputeQueueStatus_aggregates(t *testing.T) {
 
 func TestComputeQueueStatus_empty(t *testing.T) {
 	queue := &seed.PriorityQueue{Packages: []seed.Package{}}
-	status := computeQueueStatus(queue)
+	status := computeQueueStatus(queue, nil)
 
 	if status.Total != 0 {
 		t.Errorf("Total: got %d, want 0", status.Total)
@@ -63,7 +63,7 @@ func TestComputeQueueStatus_empty(t *testing.T) {
 
 func TestLoadFailures_legacyFormat(t *testing.T) {
 	path := filepath.Join("testdata", "failures.jsonl")
-	blockers, categories, err := loadFailures(path)
+	blockers, categories, details, err := loadFailures(path)
 	if err != nil {
 		t.Fatalf("loadFailures: %v", err)
 	}
@@ -90,6 +90,11 @@ func TestLoadFailures_legacyFormat(t *testing.T) {
 	if categories["api_error"] != 1 {
 		t.Errorf("api_error: got %d, want 1", categories["api_error"])
 	}
+
+	// Check details are captured
+	if len(details) == 0 {
+		t.Error("details should not be empty for legacy format")
+	}
 }
 
 func TestLoadFailures_perRecipeFormat(t *testing.T) {
@@ -104,7 +109,7 @@ func TestLoadFailures_perRecipeFormat(t *testing.T) {
 		t.Fatalf("write temp file: %v", err)
 	}
 
-	blockers, categories, err := loadFailures(path)
+	blockers, categories, _, err := loadFailures(path)
 	if err != nil {
 		t.Fatalf("loadFailures: %v", err)
 	}
@@ -124,7 +129,7 @@ func TestLoadFailures_perRecipeFormat(t *testing.T) {
 }
 
 func TestLoadFailures_missingFile(t *testing.T) {
-	_, _, err := loadFailures("/nonexistent/path.jsonl")
+	_, _, _, err := loadFailures("/nonexistent/path.jsonl")
 	if err == nil {
 		t.Error("expected error for missing file, got nil")
 	}
@@ -132,7 +137,7 @@ func TestLoadFailures_missingFile(t *testing.T) {
 
 func TestLoadFailures_malformedLines(t *testing.T) {
 	path := filepath.Join("testdata", "malformed.jsonl")
-	blockers, categories, err := loadFailures(path)
+	blockers, categories, _, err := loadFailures(path)
 	if err != nil {
 		t.Fatalf("loadFailures: %v", err)
 	}

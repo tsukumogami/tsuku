@@ -41,9 +41,20 @@ type Dashboard struct {
 
 // QueueStatus summarizes queue state.
 type QueueStatus struct {
-	Total    int                    `json:"total"`
-	ByStatus map[string]int         `json:"by_status"`
-	ByTier   map[int]map[string]int `json:"by_tier"`
+	Total    int                      `json:"total"`
+	ByStatus map[string]int           `json:"by_status"`
+	ByTier   map[int]map[string]int   `json:"by_tier"`
+	Packages map[string][]PackageInfo `json:"packages"` // Packages grouped by status
+}
+
+// PackageInfo contains details about a package for display.
+type PackageInfo struct {
+	ID        string   `json:"id"`
+	Name      string   `json:"name"`
+	Ecosystem string   `json:"ecosystem"`
+	Tier      int      `json:"tier"`
+	Category  string   `json:"category,omitempty"`   // For failed packages
+	BlockedBy []string `json:"blocked_by,omitempty"` // For blocked packages
 }
 
 // Blocker represents a dependency blocking packages.
@@ -105,22 +116,23 @@ func Generate(opts Options) error {
 		Failures:    make(map[string]int),
 	}
 
+	// Load failures first to get details for packages
+	blockerCounts, failureCounts, failureDetails, err := loadFailures(opts.FailuresFile)
+	if err != nil {
+		// Non-fatal: failures file might not exist yet
+		blockerCounts = make(map[string][]string)
+		failureCounts = make(map[string]int)
+		failureDetails = make(map[string]FailureDetails)
+	}
+	dash.Blockers = computeTopBlockers(blockerCounts, 10)
+	dash.Failures = failureCounts
+
 	// Load queue
 	queue, err := seed.Load(opts.QueueFile)
 	if err != nil {
 		return fmt.Errorf("load queue: %w", err)
 	}
-	dash.Queue = computeQueueStatus(queue)
-
-	// Load failures
-	blockerCounts, failureCounts, err := loadFailures(opts.FailuresFile)
-	if err != nil {
-		// Non-fatal: failures file might not exist yet
-		blockerCounts = make(map[string][]string)
-		failureCounts = make(map[string]int)
-	}
-	dash.Blockers = computeTopBlockers(blockerCounts, 10)
-	dash.Failures = failureCounts
+	dash.Queue = computeQueueStatus(queue, failureDetails)
 
 	// Load metrics
 	runs, err := loadMetrics(opts.MetricsFile)
@@ -150,11 +162,12 @@ func Generate(opts Options) error {
 	return nil
 }
 
-func computeQueueStatus(queue *seed.PriorityQueue) QueueStatus {
+func computeQueueStatus(queue *seed.PriorityQueue, failureDetails map[string]FailureDetails) QueueStatus {
 	status := QueueStatus{
 		Total:    len(queue.Packages),
 		ByStatus: make(map[string]int),
 		ByTier:   make(map[int]map[string]int),
+		Packages: make(map[string][]PackageInfo),
 	}
 
 	for _, pkg := range queue.Packages {
@@ -164,20 +177,52 @@ func computeQueueStatus(queue *seed.PriorityQueue) QueueStatus {
 			status.ByTier[pkg.Tier] = make(map[string]int)
 		}
 		status.ByTier[pkg.Tier][pkg.Status]++
+
+		// Build package info with failure details if available
+		info := PackageInfo{
+			ID:        pkg.ID,
+			Name:      pkg.Name,
+			Ecosystem: pkg.Source,
+			Tier:      pkg.Tier,
+		}
+
+		if details, ok := failureDetails[pkg.ID]; ok {
+			info.Category = details.Category
+			info.BlockedBy = details.BlockedBy
+		}
+
+		status.Packages[pkg.Status] = append(status.Packages[pkg.Status], info)
+	}
+
+	// Sort packages by tier (lower tier = higher priority)
+	for s := range status.Packages {
+		sort.Slice(status.Packages[s], func(i, j int) bool {
+			if status.Packages[s][i].Tier != status.Packages[s][j].Tier {
+				return status.Packages[s][i].Tier < status.Packages[s][j].Tier
+			}
+			return status.Packages[s][i].Name < status.Packages[s][j].Name
+		})
 	}
 
 	return status
 }
 
-func loadFailures(path string) (map[string][]string, map[string]int, error) {
+// FailureDetails holds failure information for a package.
+type FailureDetails struct {
+	Category  string
+	BlockedBy []string
+}
+
+func loadFailures(path string) (map[string][]string, map[string]int, map[string]FailureDetails, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, nil, err
 	}
 	defer file.Close()
 
-	blockers := make(map[string][]string) // dependency -> list of blocked packages
-	categories := make(map[string]int)
+	blockers := make(map[string][]string)      // dependency -> list of blocked packages
+	categories := make(map[string]int)         // category -> count
+	details := make(map[string]FailureDetails) // package ID -> failure details
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -195,6 +240,10 @@ func loadFailures(path string) (map[string][]string, map[string]int, error) {
 		if len(record.Failures) > 0 {
 			for _, f := range record.Failures {
 				categories[f.Category]++
+				details[f.PackageID] = FailureDetails{
+					Category:  f.Category,
+					BlockedBy: f.BlockedBy,
+				}
 				for _, dep := range f.BlockedBy {
 					blockers[dep] = append(blockers[dep], f.PackageID)
 				}
@@ -207,7 +256,7 @@ func loadFailures(path string) (map[string][]string, map[string]int, error) {
 		}
 	}
 
-	return blockers, categories, scanner.Err()
+	return blockers, categories, details, scanner.Err()
 }
 
 func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {

@@ -46,6 +46,17 @@
             display: flex;
             align-items: center;
             gap: 0.75rem;
+            text-decoration: none;
+            color: inherit;
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 0.25rem;
+            margin: -0.25rem;
+            transition: background 0.15s ease;
+        }
+
+        .status-row:hover {
+            background: var(--bg);
         }
 
         .status-label {
@@ -262,13 +273,13 @@
                 const count = data.queue.by_status[status] || 0;
                 const pct = (count / total * 100).toFixed(1);
                 return `
-                    <div class="status-row">
+                    <a href="/pipeline/${status}.html" class="status-row">
                         <span class="status-label">${status}</span>
                         <div class="status-bar-container">
                             <div class="status-bar ${status}" style="width: ${pct}%"></div>
                         </div>
                         <span class="status-count">${count}</span>
-                    </div>
+                    </a>
                 `;
             }).join('');
 
