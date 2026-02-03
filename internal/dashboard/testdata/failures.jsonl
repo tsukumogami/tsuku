@@ -1,0 +1,4 @@
+{"schema_version": 1, "ecosystem": "homebrew", "environment": "linux-x86_64", "updated_at": "2026-02-01T00:00:00Z", "failures": [{"package_id": "imagemagick", "category": "missing_dep", "blocked_by": ["glib", "gmp"], "message": "missing dependencies", "timestamp": "2026-02-01T00:00:00Z"}, {"package_id": "ffmpeg", "category": "missing_dep", "blocked_by": ["glib"], "message": "missing glib", "timestamp": "2026-02-01T00:00:00Z"}]}
+{"schema_version": 1, "ecosystem": "homebrew", "environment": "linux-x86_64", "updated_at": "2026-02-02T00:00:00Z", "failures": [{"package_id": "coreutils", "category": "validation_failed", "blocked_by": ["gmp"], "message": "validation error", "timestamp": "2026-02-02T00:00:00Z"}]}
+{"recipe": "node", "platform": "linux-x86_64", "exit_code": 1, "category": "api_error"}
+{"recipe": "python", "platform": "darwin-arm64", "exit_code": 1, "category": "validation_failed"}
