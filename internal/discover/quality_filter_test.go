@@ -94,6 +94,36 @@ func TestQualityFilter_Accept(t *testing.T) {
 			wantOK:      false,
 		},
 		{
+			name:        "rubygems passes download threshold",
+			builderName: "rubygems",
+			result:      &builders.ProbeResult{Downloads: 5000, VersionCount: 2},
+			wantOK:      true,
+		},
+		{
+			name:        "rubygems passes version threshold",
+			builderName: "rubygems",
+			result:      &builders.ProbeResult{Downloads: 100, VersionCount: 5},
+			wantOK:      true,
+		},
+		{
+			name:        "rubygems fails both thresholds",
+			builderName: "rubygems",
+			result:      &builders.ProbeResult{Downloads: 500, VersionCount: 3},
+			wantOK:      false,
+		},
+		{
+			name:        "go passes version threshold",
+			builderName: "go",
+			result:      &builders.ProbeResult{Downloads: 0, VersionCount: 3},
+			wantOK:      true,
+		},
+		{
+			name:        "go fails version threshold",
+			builderName: "go",
+			result:      &builders.ProbeResult{Downloads: 0, VersionCount: 2},
+			wantOK:      false,
+		},
+		{
 			name:        "cask fails open (no threshold)",
 			builderName: "cask",
 			result:      &builders.ProbeResult{},
