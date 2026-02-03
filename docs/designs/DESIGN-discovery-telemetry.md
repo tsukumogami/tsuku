@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The discovery resolver runs through up to three stages (registry lookup, ecosystem probe, LLM discovery) but produces no telemetry. There's no visibility into how often each stage fires, what tools users search for, or where resolution fails. Without this data, we can't prioritize registry curation, measure ecosystem probe reliability, or evaluate LLM discovery effectiveness once it ships.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
