@@ -52,7 +52,7 @@ type PackageInfo struct {
 	ID        string   `json:"id"`
 	Name      string   `json:"name"`
 	Ecosystem string   `json:"ecosystem"`
-	Tier      int      `json:"tier"`
+	Priority  int      `json:"priority"`
 	Category  string   `json:"category,omitempty"`   // For failed packages
 	BlockedBy []string `json:"blocked_by,omitempty"` // For blocked packages
 }
@@ -183,7 +183,7 @@ func computeQueueStatus(queue *seed.PriorityQueue, failureDetails map[string]Fai
 			ID:        pkg.ID,
 			Name:      pkg.Name,
 			Ecosystem: pkg.Source,
-			Tier:      pkg.Tier,
+			Priority:  pkg.Tier,
 		}
 
 		if details, ok := failureDetails[pkg.ID]; ok {
@@ -194,11 +194,11 @@ func computeQueueStatus(queue *seed.PriorityQueue, failureDetails map[string]Fai
 		status.Packages[pkg.Status] = append(status.Packages[pkg.Status], info)
 	}
 
-	// Sort packages by tier (lower tier = higher priority)
+	// Sort packages by priority (lower number = higher priority)
 	for s := range status.Packages {
 		sort.Slice(status.Packages[s], func(i, j int) bool {
-			if status.Packages[s][i].Tier != status.Packages[s][j].Tier {
-				return status.Packages[s][i].Tier < status.Packages[s][j].Tier
+			if status.Packages[s][i].Priority != status.Packages[s][j].Priority {
+				return status.Packages[s][i].Priority < status.Packages[s][j].Priority
 			}
 			return status.Packages[s][i].Name < status.Packages[s][j].Name
 		})

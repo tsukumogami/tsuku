@@ -47,7 +47,7 @@
             font-family: "SF Mono", Consolas, monospace;
         }
 
-        .tier-badge {
+        .priority-badge {
             display: inline-block;
             padding: 0.15rem 0.5rem;
             border-radius: 4px;
@@ -55,9 +55,9 @@
             font-weight: 600;
         }
 
-        .tier-1 { background: #3fb950; color: #000; }
-        .tier-2 { background: #d29922; color: #000; }
-        .tier-3 { background: var(--text-muted); color: var(--bg); }
+        .priority-1 { background: #3fb950; color: #000; }
+        .priority-2 { background: #d29922; color: #000; }
+        .priority-3 { background: var(--text-muted); color: var(--bg); }
 
         .dep-list {
             display: flex;
@@ -150,7 +150,7 @@
                     <tr>
                         <td class="package-name">${pkg.name}</td>
                         <td>${pkg.ecosystem}</td>
-                        <td><span class="tier-badge tier-${pkg.tier}">Tier ${pkg.tier}</span></td>
+                        <td><span class="priority-badge priority-${pkg.priority}">P${pkg.priority}</span></td>
                         <td><div class="dep-list">${deps || '-'}</div></td>
                     </tr>
                 `;
@@ -164,7 +164,7 @@
                             <tr>
                                 <th>Package</th>
                                 <th>Ecosystem</th>
-                                <th>Tier</th>
+                                <th>Priority</th>
                                 <th>Blocked By</th>
                             </tr>
                         </thead>
