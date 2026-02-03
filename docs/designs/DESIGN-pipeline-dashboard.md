@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The batch recipe generation pipeline collects structured data about failures,
   queue status, and run metrics, but there's no way to visualize this data
@@ -41,7 +41,51 @@ rationale: |
 
 # Pipeline Dashboard
 
-**Status**: Accepted
+**Status**: Planned
+
+## Implementation Issues
+
+### Milestone: [Pipeline Dashboard](https://github.com/tsukumogami/tsuku/milestone/67)
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1434](https://github.com/tsukumogami/tsuku/issues/1434) | test(dashboard): add unit tests for internal/dashboard package | None | testable |
+| _Adds unit tests covering JSONL parsing (both legacy batch and per-recipe formats), queue aggregation, blocker extraction, and graceful handling of missing files._ | | |
+| [#1435](https://github.com/tsukumogami/tsuku/issues/1435) | ci(pipeline): integrate dashboard generation into batch-generate workflow | None | testable |
+| _Integrates the queue-analytics binary into the batch-generate.yml merge job to auto-regenerate dashboard.json on every batch run._ | | |
+| [#1436](https://github.com/tsukumogami/tsuku/issues/1436) | ci(pipeline): add step summary with queue status | [#1435](https://github.com/tsukumogami/tsuku/issues/1435) | simple |
+| _Adds a step that writes queue status counts and top blockers to $GITHUB_STEP_SUMMARY for quick visibility in the Actions UI._ | | |
+| [#1437](https://github.com/tsukumogami/tsuku/issues/1437) | docs(pipeline): update design status to Current after deployment | [#1434](https://github.com/tsukumogami/tsuku/issues/1434), [#1435](https://github.com/tsukumogami/tsuku/issues/1435) | simple |
+| _Finalizes the design lifecycle by updating status to Current after verifying the dashboard is live and functional on tsuku.dev._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph LR
+    subgraph Phase1["Phase 1: Foundation"]
+        I1434["#1434: Add unit tests"]
+        I1435["#1435: CI integration"]
+    end
+
+    subgraph Phase2["Phase 2: Enhancements"]
+        I1436["#1436: Step summary"]
+        I1437["#1437: Status update"]
+    end
+
+    I1435 --> I1436
+    I1434 --> I1437
+    I1435 --> I1437
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1434,I1435 ready
+    class I1436,I1437 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
