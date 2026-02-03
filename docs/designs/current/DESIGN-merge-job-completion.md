@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The batch-generate merge job has working constraint derivation and PR creation but lacks structured commit messages with batch metadata, SLI metrics collection, circuit breaker state updates, and auto-merge gating required by DESIGN-batch-recipe-generation.md for pipeline observability and scale.
 decision: |
@@ -12,7 +12,7 @@ rationale: |
 
 ## Status
 
-Planned
+Current
 
 ## Implementation Issues
 
@@ -39,38 +39,6 @@ Observability and scale improvements: SLI metrics for trend analysis and auto-me
 | _Appends a structured JSON line to `data/metrics/batch-runs.jsonl` with per-platform tested/passed/failed counts, recipe totals, and duration. Uses the batch_id from #1349 as the primary key._ | | |
 | ~~[#1353: ci(batch): add auto-merge gating for clean batches](https://github.com/tsukumogami/tsuku/issues/1353)~~ | [#1350](https://github.com/tsukumogami/tsuku/issues/1350) | testable |
 | _Enables `gh pr merge --auto --squash` when `EXCLUDED_COUNT=0` and leaves a PR comment explaining why auto-merge was skipped otherwise. Fail-open policy: the PR is always created regardless._ | | |
-
-### Dependency Graph
-
-```mermaid
-graph LR
-    subgraph M63["M63: Merge Job Completion"]
-        I1349["#1349: batch_id + structured commit"]
-        I1350["#1350: recipe list tracking"]
-        I1352["#1352: circuit breaker + queue"]
-    end
-
-    subgraph M64["M64: Merge Job Observability"]
-        I1351["#1351: SLI metrics collection"]
-        I1353["#1353: auto-merge gating"]
-    end
-
-    I1350 --> I1352
-    I1349 --> I1351
-    I1350 --> I1353
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1349,I1350 done
-    class I1352 done
-    class I1351 done
-    class I1353 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Upstream Design Reference
 
