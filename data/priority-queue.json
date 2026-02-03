@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-03T04:51:55Z",
+  "updated_at": "2026-02-03T07:00:21Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -191,7 +191,7 @@
       "source": "homebrew",
       "name": "harfbuzz",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -199,7 +199,7 @@
       "source": "homebrew",
       "name": "nvm",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-01-31T00:11:22Z"
     },
     {
@@ -207,7 +207,7 @@
       "source": "homebrew",
       "name": "cmake",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -215,7 +215,7 @@
       "source": "homebrew",
       "name": "go",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -223,7 +223,7 @@
       "source": "homebrew",
       "name": "git",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -231,7 +231,7 @@
       "source": "homebrew",
       "name": "docker",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -239,7 +239,7 @@
       "source": "homebrew",
       "name": "mise",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -247,7 +247,7 @@
       "source": "homebrew",
       "name": "gcc",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -255,7 +255,7 @@
       "source": "homebrew",
       "name": "ollama",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -263,7 +263,7 @@
       "source": "homebrew",
       "name": "python@3.13",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
