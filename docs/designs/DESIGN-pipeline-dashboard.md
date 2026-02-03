@@ -1,5 +1,5 @@
 ---
-status: Planned
+status: Current
 problem: |
   The batch recipe generation pipeline collects structured data about failures,
   queue status, and run metrics, but there's no way to visualize this data
@@ -43,7 +43,7 @@ rationale: |
 
 ## Status
 
-**Planned**
+**Current**
 
 ## Implementation Issues
 
@@ -57,7 +57,7 @@ rationale: |
 | _Integrates the queue-analytics binary into the batch-generate.yml merge job to auto-regenerate dashboard.json on every batch run._ | | |
 | ~~[#1436](https://github.com/tsukumogami/tsuku/issues/1436)~~ | ~~ci(pipeline): add step summary with queue status~~ | ~~[#1435](https://github.com/tsukumogami/tsuku/issues/1435)~~ | ~~simple~~ |
 | _Adds a step that writes queue status counts and top blockers to $GITHUB_STEP_SUMMARY for quick visibility in the Actions UI._ | | |
-| [#1437](https://github.com/tsukumogami/tsuku/issues/1437) | docs(pipeline): update design status to Current after deployment | [#1434](https://github.com/tsukumogami/tsuku/issues/1434), [#1435](https://github.com/tsukumogami/tsuku/issues/1435) | simple |
+| ~~[#1437](https://github.com/tsukumogami/tsuku/issues/1437)~~ | ~~docs(pipeline): update design status to Current after deployment~~ | ~~[#1434](https://github.com/tsukumogami/tsuku/issues/1434), [#1435](https://github.com/tsukumogami/tsuku/issues/1435)~~ | ~~simple~~ |
 | _Finalizes the design lifecycle by updating status to Current after verifying the dashboard is live and functional on tsuku.dev._ | | |
 
 ### Dependency Graph
@@ -83,8 +83,7 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1434,I1435,I1436 done
-    class I1437 ready
+    class I1434,I1435,I1436,I1437 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
