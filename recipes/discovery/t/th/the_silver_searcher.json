@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "the_silver_searcher",
   "description": "Code-search similar to ack",
-  "homepage": "https://geoff.greer.fm/ag/"
+  "homepage": "https://geoff.greer.fm/ag/",
+  "downloads": 114969,
+  "has_repository": true
 }

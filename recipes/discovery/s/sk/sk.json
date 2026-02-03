@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "lotabout/skim",
+  "description": "Fuzzy Finder in rust!",
+  "repo": "https://github.com/skim-rs/skim",
+  "disambiguation": true
+}

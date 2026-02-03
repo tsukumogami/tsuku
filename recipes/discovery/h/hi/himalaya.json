@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "himalaya",
   "description": "CLI email client written in Rust",
-  "homepage": "https://github.com/pimalaya/himalaya"
+  "homepage": "https://github.com/pimalaya/himalaya",
+  "downloads": 17383,
+  "has_repository": true
 }

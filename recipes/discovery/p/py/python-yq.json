@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "python-yq",
   "description": "Command-line YAML and XML processor that wraps jq",
-  "homepage": "https://kislyuk.github.io/yq/"
+  "homepage": "https://kislyuk.github.io/yq/",
+  "downloads": 55291,
+  "has_repository": true
 }

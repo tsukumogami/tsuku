@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sdl2",
   "description": "Low-level access to audio, keyboard, mouse, joystick, and graphics",
-  "homepage": "https://www.libsdl.org/"
+  "homepage": "https://www.libsdl.org/",
+  "downloads": 652904,
+  "has_repository": true
 }

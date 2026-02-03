@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "protobuf-c",
   "description": "Protocol buffers library",
-  "homepage": "https://github.com/protobuf-c/protobuf-c"
+  "homepage": "https://github.com/protobuf-c/protobuf-c",
+  "downloads": 50088,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "glslang",
   "description": "OpenGL and OpenGL ES reference compiler for shading languages",
-  "homepage": "https://www.khronos.org/opengles/sdk/Reference-Compiler/"
+  "homepage": "https://www.khronos.org/opengles/sdk/Reference-Compiler/",
+  "downloads": 23503,
+  "has_repository": true
 }

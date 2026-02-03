@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tree-sitter-cli",
   "description": "Parser generator tool",
-  "homepage": "https://tree-sitter.github.io"
+  "homepage": "https://tree-sitter.github.io",
+  "downloads": 12042,
+  "has_repository": true
 }

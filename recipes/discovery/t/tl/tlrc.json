@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tlrc",
   "description": "Official tldr client written in Rust",
-  "homepage": "https://tldr.sh/tlrc/"
+  "homepage": "https://tldr.sh/tlrc/",
+  "downloads": 15846,
+  "has_repository": true
 }

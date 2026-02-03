@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fb303",
   "description": "Thrift functions for querying information from a service",
-  "homepage": "https://github.com/facebook/fb303"
+  "homepage": "https://github.com/facebook/fb303",
+  "downloads": 264371,
+  "has_repository": true
 }

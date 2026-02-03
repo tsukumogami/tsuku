@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "atuin",
   "description": "Improved shell history for zsh, bash, fish and nushell",
-  "homepage": "https://atuin.sh/"
+  "homepage": "https://atuin.sh/",
+  "downloads": 72036,
+  "has_repository": true
 }

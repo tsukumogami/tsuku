@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "uutils-findutils",
   "description": "Cross-platform Rust rewrite of the GNU findutils",
-  "homepage": "https://uutils.github.io/findutils/"
+  "homepage": "https://uutils.github.io/findutils/",
+  "downloads": 116263,
+  "has_repository": true
 }

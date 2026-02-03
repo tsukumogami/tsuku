@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "virtualenvwrapper",
   "description": "Python virtualenv extensions",
-  "homepage": "https://virtualenvwrapper.readthedocs.io/"
+  "homepage": "https://virtualenvwrapper.readthedocs.io/",
+  "downloads": 3687,
+  "has_repository": true
 }

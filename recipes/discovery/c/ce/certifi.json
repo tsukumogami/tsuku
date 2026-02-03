@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "certifi",
   "description": "Mozilla CA bundle for Python",
-  "homepage": "https://github.com/certifi/python-certifi"
+  "homepage": "https://github.com/certifi/python-certifi",
+  "downloads": 730784,
+  "has_repository": true
 }

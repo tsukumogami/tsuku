@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "putty",
   "description": "Implementation of Telnet and SSH",
-  "homepage": "https://putty.software/"
+  "homepage": "https://putty.software/",
+  "downloads": 32537,
+  "has_repository": true
 }

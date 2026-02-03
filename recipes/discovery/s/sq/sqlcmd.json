@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sqlcmd",
   "description": "Microsoft SQL Server command-line interface",
-  "homepage": "https://github.com/microsoft/go-sqlcmd"
+  "homepage": "https://github.com/microsoft/go-sqlcmd",
+  "downloads": 20338,
+  "has_repository": true
 }

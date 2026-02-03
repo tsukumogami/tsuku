@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mvfst",
   "description": "QUIC transport protocol implementation",
-  "homepage": "https://github.com/facebook/mvfst"
+  "homepage": "https://github.com/facebook/mvfst",
+  "downloads": 50651,
+  "has_repository": true
 }

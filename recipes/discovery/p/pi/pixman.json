@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pixman",
   "description": "Low-level library for pixel manipulation",
-  "homepage": "https://cairographics.org/"
+  "homepage": "https://cairographics.org/",
+  "downloads": 1183006,
+  "has_repository": true
 }

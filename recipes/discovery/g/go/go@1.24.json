@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "go@1.24",
   "description": "Open source programming language to build simple/reliable/efficient software",
-  "homepage": "https://go.dev/"
+  "homepage": "https://go.dev/",
+  "downloads": 14229,
+  "has_repository": true
 }

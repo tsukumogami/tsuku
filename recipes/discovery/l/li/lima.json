@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lima",
   "description": "Linux virtual machines",
-  "homepage": "https://lima-vm.io/"
+  "homepage": "https://lima-vm.io/",
+  "downloads": 158462,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zbar",
   "description": "Suite of barcodes-reading tools",
-  "homepage": "https://github.com/mchehab/zbar"
+  "homepage": "https://github.com/mchehab/zbar",
+  "downloads": 18064,
+  "has_repository": true
 }

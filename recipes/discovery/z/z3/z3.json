@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "z3",
   "description": "High-performance theorem prover",
-  "homepage": "https://github.com/Z3Prover/z3"
+  "homepage": "https://github.com/Z3Prover/z3",
+  "downloads": 578767,
+  "has_repository": true
 }

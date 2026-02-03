@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "psutils",
   "description": "Utilities for manipulating PostScript documents",
-  "homepage": "https://github.com/rrthomas/psutils"
+  "homepage": "https://github.com/rrthomas/psutils",
+  "downloads": 19777,
+  "has_repository": true
 }

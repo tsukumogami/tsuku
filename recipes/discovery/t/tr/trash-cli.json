@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "trash-cli",
   "description": "Command-line interface to the freedesktop.org trashcan",
-  "homepage": "https://github.com/andreafrancia/trash-cli"
+  "homepage": "https://github.com/andreafrancia/trash-cli",
+  "downloads": 16721,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "carapace",
   "description": "Multi-shell multi-command argument completer",
-  "homepage": "https://carapace.sh"
+  "homepage": "https://carapace.sh",
+  "downloads": 18814,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dialog",
   "description": "Display user-friendly message boxes from shell scripts",
-  "homepage": "https://invisible-island.net/dialog/"
+  "homepage": "https://invisible-island.net/dialog/",
+  "downloads": 19029,
+  "has_repository": true
 }

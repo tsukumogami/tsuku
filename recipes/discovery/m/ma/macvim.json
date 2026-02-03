@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "macvim",
   "description": "GUI for vim, made for macOS",
-  "homepage": "https://github.com/macvim-dev/macvim"
+  "homepage": "https://github.com/macvim-dev/macvim",
+  "downloads": 16813,
+  "has_repository": true
 }

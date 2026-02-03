@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libunistring",
   "description": "C string library for manipulating Unicode strings",
-  "homepage": "https://www.gnu.org/software/libunistring/"
+  "homepage": "https://www.gnu.org/software/libunistring/",
+  "downloads": 1651852,
+  "has_repository": true
 }

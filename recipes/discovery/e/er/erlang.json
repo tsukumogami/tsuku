@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "erlang",
   "description": "Programming language for highly scalable real-time systems",
-  "homepage": "https://www.erlang.org/"
+  "homepage": "https://www.erlang.org/",
+  "downloads": 98330,
+  "has_repository": true
 }

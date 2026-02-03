@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "aws-vault",
   "description": "Securely store and access AWS credentials in development environments",
-  "homepage": "https://github.com/ByteNess/aws-vault"
+  "homepage": "https://github.com/ByteNess/aws-vault",
+  "downloads": 31075,
+  "has_repository": true
 }

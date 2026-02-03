@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "meson",
   "description": "Fast and user friendly build system",
-  "homepage": "https://mesonbuild.com/"
+  "homepage": "https://mesonbuild.com/",
+  "downloads": 193627,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "rustup",
   "description": "Rust toolchain installer",
-  "homepage": "https://rust-lang.github.io/rustup/"
+  "homepage": "https://rust-lang.github.io/rustup/",
+  "downloads": 68768,
+  "has_repository": true
 }

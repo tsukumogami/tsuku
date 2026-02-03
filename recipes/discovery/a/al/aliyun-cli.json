@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "aliyun-cli",
   "description": "Universal Command-Line Interface for Alibaba Cloud",
-  "homepage": "https://github.com/aliyun/aliyun-cli"
+  "homepage": "https://github.com/aliyun/aliyun-cli",
+  "downloads": 9327,
+  "has_repository": true
 }

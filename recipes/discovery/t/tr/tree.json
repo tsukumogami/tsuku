@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tree",
   "description": "Display directories as trees (with optional color/HTML output)",
-  "homepage": "https://oldmanprogrammer.net/source.php?dir=projects/tree"
+  "homepage": "https://oldmanprogrammer.net/source.php?dir=projects/tree",
+  "downloads": 306424,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "media-info",
   "description": "Unified display of technical and tag data for audio/video",
-  "homepage": "https://mediaarea.net/"
+  "homepage": "https://mediaarea.net/",
+  "downloads": 23113,
+  "has_repository": true
 }

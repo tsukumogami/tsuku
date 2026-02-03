@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "goreman",
   "description": "Foreman clone written in Go",
-  "homepage": "https://github.com/mattn/goreman"
+  "homepage": "https://github.com/mattn/goreman",
+  "downloads": 25850,
+  "has_repository": true
 }

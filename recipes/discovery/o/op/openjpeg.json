@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openjpeg",
   "description": "Library for JPEG-2000 image manipulation",
-  "homepage": "https://www.openjpeg.org/"
+  "homepage": "https://www.openjpeg.org/",
+  "downloads": 654854,
+  "has_repository": true
 }

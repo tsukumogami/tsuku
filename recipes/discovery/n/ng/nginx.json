@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nginx",
   "description": "HTTP(S) server and reverse proxy, and IMAP/POP3 proxy server",
-  "homepage": "https://nginx.org/"
+  "homepage": "https://nginx.org/",
+  "downloads": 141299,
+  "has_repository": true
 }

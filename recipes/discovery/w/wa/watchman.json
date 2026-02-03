@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "watchman",
   "description": "Watch files and take action when they change",
-  "homepage": "https://github.com/facebook/watchman"
+  "homepage": "https://github.com/facebook/watchman",
+  "downloads": 422384,
+  "has_repository": true
 }

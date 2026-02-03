@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tmux",
   "description": "Terminal multiplexer",
-  "homepage": "https://tmux.github.io/"
+  "homepage": "https://tmux.github.io/",
+  "downloads": 342138,
+  "has_repository": true
 }

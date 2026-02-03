@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "aspell",
   "description": "Spell checker with better logic than ispell",
-  "homepage": "http://aspell.net/"
+  "homepage": "http://aspell.net/",
+  "downloads": 55370,
+  "has_repository": true
 }

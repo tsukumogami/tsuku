@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "micro",
   "description": "Modern and intuitive terminal-based text editor",
-  "homepage": "https://github.com/zyedidia/micro"
+  "homepage": "https://github.com/zyedidia/micro",
+  "downloads": 12267,
+  "has_repository": true
 }

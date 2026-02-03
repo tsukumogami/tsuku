@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sshuttle",
   "description": "Proxy server that works as a poor man's VPN",
-  "homepage": "https://github.com/sshuttle/sshuttle"
+  "homepage": "https://github.com/sshuttle/sshuttle",
+  "downloads": 37853,
+  "has_repository": true
 }

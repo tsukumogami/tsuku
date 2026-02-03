@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "moreutils",
   "description": "Collection of tools that nobody wrote when UNIX was young",
-  "homepage": "https://joeyh.name/code/moreutils/"
+  "homepage": "https://joeyh.name/code/moreutils/",
+  "downloads": 45177,
+  "has_repository": true
 }

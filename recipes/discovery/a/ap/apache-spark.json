@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "apache-spark",
   "description": "Engine for large-scale data processing",
-  "homepage": "https://spark.apache.org/"
+  "homepage": "https://spark.apache.org/",
+  "downloads": 21441,
+  "has_repository": true
 }

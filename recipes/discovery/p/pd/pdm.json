@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pdm",
   "description": "Modern Python package and dependency manager supporting the latest PEP standards",
-  "homepage": "https://pdm-project.org"
+  "homepage": "https://pdm-project.org",
+  "downloads": 13819,
+  "has_repository": true
 }

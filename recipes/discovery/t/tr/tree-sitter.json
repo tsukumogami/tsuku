@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tree-sitter",
   "description": "Incremental parsing library",
-  "homepage": "https://tree-sitter.github.io/"
+  "homepage": "https://tree-sitter.github.io/",
+  "downloads": 352084,
+  "has_repository": true
 }

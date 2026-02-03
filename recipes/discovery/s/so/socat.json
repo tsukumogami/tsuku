@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "socat",
   "description": "SOcket CAT: netcat on steroids",
-  "homepage": "http://www.dest-unreach.org/socat/"
+  "homepage": "http://www.dest-unreach.org/socat/",
+  "downloads": 52827,
+  "has_repository": true
 }

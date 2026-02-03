@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libtool",
   "description": "Generic library support script",
-  "homepage": "https://www.gnu.org/software/libtool/"
+  "homepage": "https://www.gnu.org/software/libtool/",
+  "downloads": 641493,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "overmind",
   "description": "Process manager for Procfile-based applications and tmux",
-  "homepage": "https://github.com/DarthSim/overmind"
+  "homepage": "https://github.com/DarthSim/overmind",
+  "downloads": 30531,
+  "has_repository": true
 }

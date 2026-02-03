@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fswatch",
   "description": "Monitor a directory for changes and run a shell command",
-  "homepage": "https://github.com/emcrisostomo/fswatch"
+  "homepage": "https://github.com/emcrisostomo/fswatch",
+  "downloads": 18493,
+  "has_repository": true
 }

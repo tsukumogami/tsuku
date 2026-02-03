@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "tig",
   "description": "Text interface for Git repositories",
-  "homepage": "https://jonas.github.io/tig/"
+  "homepage": "https://jonas.github.io/tig/",
+  "downloads": 27203,
+  "has_repository": true
 }

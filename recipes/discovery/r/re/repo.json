@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "repo",
   "description": "Repository tool for Android development",
-  "homepage": "https://source.android.com/source/developing.html"
+  "homepage": "https://source.android.com/source/developing.html",
+  "downloads": 9195,
+  "has_repository": true
 }

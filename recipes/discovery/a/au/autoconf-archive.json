@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "autoconf-archive",
   "description": "Collection of over 500 reusable autoconf macros",
-  "homepage": "https://savannah.gnu.org/projects/autoconf-archive/"
+  "homepage": "https://savannah.gnu.org/projects/autoconf-archive/",
+  "downloads": 37501,
+  "has_repository": true
 }

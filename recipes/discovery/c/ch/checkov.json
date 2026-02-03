@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "checkov",
   "description": "Prevent cloud misconfigurations during build-time for IaC tools",
-  "homepage": "https://www.checkov.io/"
+  "homepage": "https://www.checkov.io/",
+  "downloads": 35207,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ldns",
   "description": "DNS library written in C",
-  "homepage": "https://nlnetlabs.nl/projects/ldns/"
+  "homepage": "https://nlnetlabs.nl/projects/ldns/",
+  "downloads": 28462,
+  "has_repository": true
 }

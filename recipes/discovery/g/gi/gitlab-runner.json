@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gitlab-runner",
   "description": "Official GitLab CI runner",
-  "homepage": "https://gitlab.com/gitlab-org/gitlab-runner"
+  "homepage": "https://gitlab.com/gitlab-org/gitlab-runner",
+  "downloads": 24417,
+  "has_repository": true
 }

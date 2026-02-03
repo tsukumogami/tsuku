@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sshpass",
   "description": "Non-interactive SSH password auth",
-  "homepage": "https://sourceforge.net/projects/sshpass/"
+  "homepage": "https://sourceforge.net/projects/sshpass/",
+  "downloads": 31961,
+  "has_repository": true
 }

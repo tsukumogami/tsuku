@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "opa",
   "description": "Open source, general-purpose policy engine",
-  "homepage": "https://www.openpolicyagent.org"
+  "homepage": "https://www.openpolicyagent.org",
+  "downloads": 12358,
+  "has_repository": true
 }

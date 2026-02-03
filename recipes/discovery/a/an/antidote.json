@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "antidote",
   "description": "Plugin manager for zsh, inspired by antigen and antibody",
-  "homepage": "https://antidote.sh/"
+  "homepage": "https://antidote.sh/",
+  "downloads": 5790,
+  "has_repository": true
 }

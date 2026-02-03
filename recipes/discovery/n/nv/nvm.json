@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nvm",
   "description": "Manage multiple Node.js versions",
-  "homepage": "https://github.com/nvm-sh/nvm"
+  "homepage": "https://github.com/nvm-sh/nvm",
+  "downloads": 462582,
+  "has_repository": true
 }

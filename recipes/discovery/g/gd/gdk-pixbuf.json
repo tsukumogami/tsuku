@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gdk-pixbuf",
   "description": "Toolkit for image loading and pixel buffer manipulation",
-  "homepage": "https://gtk.org"
+  "homepage": "https://gtk.org",
+  "downloads": 576751,
+  "has_repository": true
 }

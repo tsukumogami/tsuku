@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "portaudio",
   "description": "Cross-platform library for audio I/O",
-  "homepage": "https://www.portaudio.com"
+  "homepage": "https://www.portaudio.com",
+  "downloads": 77010,
+  "has_repository": true
 }

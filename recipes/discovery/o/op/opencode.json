@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "opencode",
   "description": "AI coding agent, built for the terminal",
-  "homepage": "https://opencode.ai"
+  "homepage": "https://opencode.ai",
+  "downloads": 118811,
+  "has_repository": true
 }

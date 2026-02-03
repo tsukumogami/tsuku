@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "yamllint",
   "description": "Linter for YAML files",
-  "homepage": "https://github.com/adrienverge/yamllint"
+  "homepage": "https://github.com/adrienverge/yamllint",
+  "downloads": 43487,
+  "has_repository": true
 }

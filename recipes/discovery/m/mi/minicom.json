@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "minicom",
   "description": "Menu-driven communications program",
-  "homepage": "https://packages.debian.org/sid/minicom"
+  "homepage": "https://packages.debian.org/sid/minicom",
+  "downloads": 15776,
+  "has_repository": true
 }

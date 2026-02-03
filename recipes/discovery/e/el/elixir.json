@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "elixir",
   "description": "Functional metaprogramming aware language built on Erlang VM",
-  "homepage": "https://elixir-lang.org/"
+  "homepage": "https://elixir-lang.org/",
+  "downloads": 42779,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fizz",
   "description": "C++14 implementation of the TLS-1.3 standard",
-  "homepage": "https://github.com/facebookincubator/fizz"
+  "homepage": "https://github.com/facebookincubator/fizz",
+  "downloads": 270756,
+  "has_repository": true
 }

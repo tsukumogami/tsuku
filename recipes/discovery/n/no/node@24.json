@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "node@24",
   "description": "Open-source, cross-platform JavaScript runtime environment",
-  "homepage": "https://nodejs.org/"
+  "homepage": "https://nodejs.org/",
+  "downloads": 22814,
+  "has_repository": true
 }

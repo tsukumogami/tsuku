@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "chicken",
   "description": "Compiler for the Scheme programming language",
-  "homepage": "https://www.call-cc.org/"
+  "homepage": "https://www.call-cc.org/",
+  "downloads": 21577,
+  "has_repository": true
 }

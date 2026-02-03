@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "netpbm",
   "description": "Image manipulation",
-  "homepage": "https://netpbm.sourceforge.net/"
+  "homepage": "https://netpbm.sourceforge.net/",
+  "downloads": 346640,
+  "has_repository": true
 }

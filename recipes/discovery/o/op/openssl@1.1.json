@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openssl@1.1",
   "description": "Cryptography and SSL/TLS Toolkit",
-  "homepage": "https://openssl.org/"
+  "homepage": "https://openssl.org/",
+  "downloads": 51874,
+  "has_repository": true
 }

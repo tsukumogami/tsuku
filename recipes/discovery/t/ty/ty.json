@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ty",
   "description": "Extremely fast Python type checker, written in Rust",
-  "homepage": "https://docs.astral.sh/ty/"
+  "homepage": "https://docs.astral.sh/ty/",
+  "downloads": 1996,
+  "has_repository": true
 }

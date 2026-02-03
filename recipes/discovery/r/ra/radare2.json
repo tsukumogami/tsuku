@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "radare2",
   "description": "Reverse engineering framework",
-  "homepage": "https://radare.org"
+  "homepage": "https://radare.org",
+  "downloads": 8642,
+  "has_repository": true
 }

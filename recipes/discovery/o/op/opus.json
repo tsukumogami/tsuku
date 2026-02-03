@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "opus",
   "description": "Audio codec",
-  "homepage": "https://www.opus-codec.org/"
+  "homepage": "https://www.opus-codec.org/",
+  "downloads": 366398,
+  "has_repository": true
 }

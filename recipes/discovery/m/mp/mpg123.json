@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mpg123",
   "description": "MP3 player for Linux and UNIX",
-  "homepage": "https://www.mpg123.de/"
+  "homepage": "https://www.mpg123.de/",
+  "downloads": 555288,
+  "has_repository": true
 }

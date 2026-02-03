@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "prometheus/alertmanager",
+  "description": "Prometheus Alertmanager",
+  "homepage": "https://prometheus.io",
+  "repo": "https://github.com/prometheus/alertmanager"
+}

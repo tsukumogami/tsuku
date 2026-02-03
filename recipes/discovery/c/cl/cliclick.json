@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cliclick",
   "description": "Tool for emulating mouse and keyboard events",
-  "homepage": "https://www.bluem.net/jump/cliclick/"
+  "homepage": "https://www.bluem.net/jump/cliclick/",
+  "downloads": 47654,
+  "has_repository": true
 }

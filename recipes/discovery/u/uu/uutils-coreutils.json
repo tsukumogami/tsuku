@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "uutils-coreutils",
   "description": "Cross-platform Rust rewrite of the GNU coreutils",
-  "homepage": "https://uutils.github.io/coreutils/"
+  "homepage": "https://uutils.github.io/coreutils/",
+  "downloads": 94132,
+  "has_repository": true
 }

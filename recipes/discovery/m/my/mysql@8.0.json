@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mysql@8.0",
   "description": "Open source relational database management system",
-  "homepage": "https://github.com/mysql/mysql-server"
+  "homepage": "https://github.com/mysql/mysql-server",
+  "downloads": 115148,
+  "has_repository": true
 }

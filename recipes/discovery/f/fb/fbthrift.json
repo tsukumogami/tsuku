@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fbthrift",
   "description": "Facebook's branch of Apache Thrift, including a new C++ server",
-  "homepage": "https://github.com/facebook/fbthrift"
+  "homepage": "https://github.com/facebook/fbthrift",
+  "downloads": 262425,
+  "has_repository": true
 }

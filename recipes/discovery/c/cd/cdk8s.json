@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cdk8s",
   "description": "Define k8s native apps and abstractions using object-oriented programming",
-  "homepage": "https://cdk8s.io/"
+  "homepage": "https://cdk8s.io/",
+  "downloads": 23292,
+  "has_repository": true
 }

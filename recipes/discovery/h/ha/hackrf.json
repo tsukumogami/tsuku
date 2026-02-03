@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "hackrf",
   "description": "Low cost software radio platform",
-  "homepage": "https://github.com/greatscottgadgets/hackrf"
+  "homepage": "https://github.com/greatscottgadgets/hackrf",
+  "downloads": 3462,
+  "has_repository": true
 }

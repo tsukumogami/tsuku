@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "gdb",
   "description": "GNU debugger",
-  "homepage": "https://www.gnu.org/software/gdb/"
+  "homepage": "https://www.gnu.org/software/gdb/",
+  "downloads": 44679,
+  "has_repository": true
 }

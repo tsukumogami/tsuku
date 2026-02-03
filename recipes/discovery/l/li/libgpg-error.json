@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libgpg-error",
   "description": "Common error values for all GnuPG components",
-  "homepage": "https://www.gnupg.org/related_software/libgpg-error/"
+  "homepage": "https://www.gnupg.org/related_software/libgpg-error/",
+  "downloads": 625704,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "angular-cli",
   "description": "CLI tool for Angular",
-  "homepage": "https://angular.dev/cli/"
+  "homepage": "https://angular.dev/cli/",
+  "downloads": 24514,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "iproute2mac",
   "description": "CLI wrapper for basic network utilities on macOS - ip command",
-  "homepage": "https://github.com/brona/iproute2mac"
+  "homepage": "https://github.com/brona/iproute2mac",
+  "downloads": 15633,
+  "has_repository": true
 }

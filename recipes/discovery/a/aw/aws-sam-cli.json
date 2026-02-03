@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "aws-sam-cli",
   "description": "CLI tool to build, test, debug, and deploy Serverless applications using AWS SAM",
-  "homepage": "https://aws.amazon.com/serverless/sam/"
+  "homepage": "https://aws.amazon.com/serverless/sam/",
+  "downloads": 104383,
+  "has_repository": true
 }

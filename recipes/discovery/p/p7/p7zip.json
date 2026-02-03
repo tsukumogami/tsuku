@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "p7zip",
   "description": "7-Zip (high compression file archiver) implementation",
-  "homepage": "https://github.com/p7zip-project/p7zip"
+  "homepage": "https://github.com/p7zip-project/p7zip",
+  "downloads": 116342,
+  "has_repository": true
 }

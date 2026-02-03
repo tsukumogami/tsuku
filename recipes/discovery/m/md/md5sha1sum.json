@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "md5sha1sum",
   "description": "Hash utilities",
-  "homepage": "http://microbrew.org/tools/md5sha1sum/"
+  "homepage": "http://microbrew.org/tools/md5sha1sum/",
+  "downloads": 23188,
+  "has_repository": true
 }

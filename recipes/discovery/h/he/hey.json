@@ -1,0 +1,6 @@
+{
+  "builder": "github",
+  "source": "rakyll/hey",
+  "description": "HTTP load generator, ApacheBench (ab) replacement",
+  "repo": "https://github.com/rakyll/hey"
+}

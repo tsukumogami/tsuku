@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fontconfig",
   "description": "XML-based font configuration API for X Windows",
-  "homepage": "https://wiki.freedesktop.org/www/Software/fontconfig/"
+  "homepage": "https://wiki.freedesktop.org/www/Software/fontconfig/",
+  "downloads": 1502945,
+  "has_repository": true
 }

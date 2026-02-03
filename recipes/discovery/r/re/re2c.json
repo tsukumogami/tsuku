@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "re2c",
   "description": "Generate C-based recognizers from regular expressions",
-  "homepage": "https://re2c.org/"
+  "homepage": "https://re2c.org/",
+  "downloads": 15061,
+  "has_repository": true
 }

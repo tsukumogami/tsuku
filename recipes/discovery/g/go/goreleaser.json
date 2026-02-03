@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "goreleaser/goreleaser",
+  "description": "Release engineering, simplified",
+  "homepage": "https://goreleaser.com",
+  "repo": "https://github.com/goreleaser/goreleaser"
+}

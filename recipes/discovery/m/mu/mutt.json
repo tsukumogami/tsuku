@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mutt",
   "description": "Mongrel of mail user agents (part elm, pine, mush, mh, etc.)",
-  "homepage": "http://www.mutt.org/"
+  "homepage": "http://www.mutt.org/",
+  "downloads": 7782,
+  "has_repository": true
 }

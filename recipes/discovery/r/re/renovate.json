@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "renovate",
   "description": "Automated dependency updates. Flexible so you don't need to be",
-  "homepage": "https://github.com/renovatebot/renovate"
+  "homepage": "https://github.com/renovatebot/renovate",
+  "downloads": 20896,
+  "has_repository": true
 }

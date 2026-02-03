@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libtasn1",
   "description": "ASN.1 structure parser library",
-  "homepage": "https://www.gnu.org/software/libtasn1/"
+  "homepage": "https://www.gnu.org/software/libtasn1/",
+  "downloads": 753481,
+  "has_repository": true
 }

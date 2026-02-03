@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "shellcheck",
   "description": "Static analysis and lint tool, for (ba)sh scripts",
-  "homepage": "https://www.shellcheck.net/"
+  "homepage": "https://www.shellcheck.net/",
+  "downloads": 170463,
+  "has_repository": true
 }

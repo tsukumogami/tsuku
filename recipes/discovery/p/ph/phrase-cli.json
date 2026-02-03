@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "phrase-cli",
   "description": "Tool to interact with the Phrase API",
-  "homepage": "https://phrase.com/"
+  "homepage": "https://phrase.com/",
+  "downloads": 10516,
+  "has_repository": true
 }

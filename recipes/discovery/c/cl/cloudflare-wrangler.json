@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cloudflare-wrangler",
   "description": "CLI tool for Cloudflare Workers",
-  "homepage": "https://github.com/cloudflare/workers-sdk"
+  "homepage": "https://github.com/cloudflare/workers-sdk",
+  "downloads": 14698,
+  "has_repository": true
 }

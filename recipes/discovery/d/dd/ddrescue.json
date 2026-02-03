@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ddrescue",
   "description": "GNU data recovery tool",
-  "homepage": "https://www.gnu.org/software/ddrescue/ddrescue.html"
+  "homepage": "https://www.gnu.org/software/ddrescue/ddrescue.html",
+  "downloads": 8037,
+  "has_repository": true
 }

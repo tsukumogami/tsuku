@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "samba",
   "description": "SMB/CIFS file, print, and login server for UNIX",
-  "homepage": "https://www.samba.org/"
+  "homepage": "https://www.samba.org/",
+  "downloads": 20264,
+  "has_repository": true
 }

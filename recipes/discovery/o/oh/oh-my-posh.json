@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "oh-my-posh",
   "description": "Prompt theme engine for any shell",
-  "homepage": "https://ohmyposh.dev"
+  "homepage": "https://ohmyposh.dev",
+  "downloads": 62282,
+  "has_repository": true
 }

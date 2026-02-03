@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "kompose",
   "description": "Tool to move from `docker-compose` to Kubernetes",
-  "homepage": "https://kompose.io/"
+  "homepage": "https://kompose.io/",
+  "downloads": 9231,
+  "has_repository": true
 }

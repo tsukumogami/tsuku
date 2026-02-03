@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "pyqt@5",
   "description": "Python bindings for v5 of Qt",
-  "homepage": "https://www.riverbankcomputing.com/software/pyqt/intro"
+  "homepage": "https://www.riverbankcomputing.com/software/pyqt/intro",
+  "downloads": 31143,
+  "has_repository": true
 }

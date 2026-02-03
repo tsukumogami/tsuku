@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "scrcpy",
   "description": "Display and control your Android device",
-  "homepage": "https://github.com/Genymobile/scrcpy"
+  "homepage": "https://github.com/Genymobile/scrcpy",
+  "downloads": 102448,
+  "has_repository": true
 }

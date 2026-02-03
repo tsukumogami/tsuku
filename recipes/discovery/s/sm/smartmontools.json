@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "smartmontools",
   "description": "SMART hard drive monitoring",
-  "homepage": "https://www.smartmontools.org/"
+  "homepage": "https://www.smartmontools.org/",
+  "downloads": 34641,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sbt",
   "description": "Build tool for Scala projects",
-  "homepage": "https://www.scala-sbt.org/"
+  "homepage": "https://www.scala-sbt.org/",
+  "downloads": 42448,
+  "has_repository": true
 }

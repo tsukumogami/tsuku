@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "exiftool",
   "description": "Perl lib for reading and writing EXIF metadata",
-  "homepage": "https://exiftool.org"
+  "homepage": "https://exiftool.org",
+  "downloads": 124005,
+  "has_repository": true
 }

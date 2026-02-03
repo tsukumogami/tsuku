@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "subversion",
   "description": "Version control system designed to be a better CVS",
-  "homepage": "https://subversion.apache.org/"
+  "homepage": "https://subversion.apache.org/",
+  "downloads": 97867,
+  "has_repository": true
 }

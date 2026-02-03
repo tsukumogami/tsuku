@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "fish",
   "description": "User-friendly command-line shell for UNIX-like operating systems",
-  "homepage": "https://fishshell.com"
+  "homepage": "https://fishshell.com",
+  "downloads": 165094,
+  "has_repository": true
 }

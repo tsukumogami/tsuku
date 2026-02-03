@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "vim",
   "description": "Vi 'workalike' with many additional features",
-  "homepage": "https://www.vim.org/"
+  "homepage": "https://www.vim.org/",
+  "downloads": 261463,
+  "has_repository": true
 }

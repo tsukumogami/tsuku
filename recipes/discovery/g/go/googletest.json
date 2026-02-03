@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "googletest",
   "description": "Google Testing and Mocking Framework",
-  "homepage": "https://google.github.io/googletest/"
+  "homepage": "https://google.github.io/googletest/",
+  "downloads": 52065,
+  "has_repository": true
 }

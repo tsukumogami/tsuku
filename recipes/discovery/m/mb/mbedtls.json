@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mbedtls",
   "description": "Cryptographic \u0026 SSL/TLS library",
-  "homepage": "https://tls.mbed.org/"
+  "homepage": "https://tls.mbed.org/",
+  "downloads": 501271,
+  "has_repository": true
 }

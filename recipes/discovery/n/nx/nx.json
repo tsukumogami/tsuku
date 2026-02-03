@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "nx",
   "description": "Smart, Fast and Extensible Build System",
-  "homepage": "https://nx.dev"
+  "homepage": "https://nx.dev",
+  "downloads": 6812,
+  "has_repository": true
 }

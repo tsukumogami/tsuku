@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "git-xet",
   "description": "Git LFS plugin that uploads and downloads using the Xet protocol",
-  "homepage": "https://github.com/huggingface/xet-core"
+  "homepage": "https://github.com/huggingface/xet-core",
+  "downloads": 3200,
+  "has_repository": true
 }

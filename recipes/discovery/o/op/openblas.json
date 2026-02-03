@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openblas",
   "description": "Optimized BLAS library",
-  "homepage": "https://www.openblas.net/"
+  "homepage": "https://www.openblas.net/",
+  "downloads": 279268,
+  "has_repository": true
 }

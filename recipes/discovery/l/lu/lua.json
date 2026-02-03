@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lua",
   "description": "Powerful, lightweight programming language",
-  "homepage": "https://www.lua.org/"
+  "homepage": "https://www.lua.org/",
+  "downloads": 255360,
+  "has_repository": true
 }

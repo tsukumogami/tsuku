@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "iblinter",
   "description": "Linter tool for Interface Builder",
-  "homepage": "https://github.com/IBDecodable/IBLinter"
+  "homepage": "https://github.com/IBDecodable/IBLinter",
+  "downloads": 8580,
+  "has_repository": true
 }

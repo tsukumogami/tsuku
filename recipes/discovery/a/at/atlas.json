@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "ariga/atlas",
+  "description": "Declarative schema migrations with schema-as-code workflows",
+  "homepage": "https://atlasgo.io",
+  "repo": "https://github.com/ariga/atlas"
+}

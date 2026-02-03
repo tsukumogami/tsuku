@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "wget",
   "description": "Internet file retriever",
-  "homepage": "https://www.gnu.org/software/wget/"
+  "homepage": "https://www.gnu.org/software/wget/",
+  "downloads": 566149,
+  "has_repository": true
 }

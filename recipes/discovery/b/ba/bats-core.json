@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "bats-core",
   "description": "Bash Automated Testing System",
-  "homepage": "https://github.com/bats-core/bats-core"
+  "homepage": "https://github.com/bats-core/bats-core",
+  "downloads": 72808,
+  "has_repository": true
 }

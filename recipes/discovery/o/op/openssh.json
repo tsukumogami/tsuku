@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "openssh",
   "description": "OpenBSD freely-licensed SSH connectivity tools",
-  "homepage": "https://www.openssh.com/"
+  "homepage": "https://www.openssh.com/",
+  "downloads": 67171,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "sqlmap",
   "description": "Penetration testing for SQL injection and database servers",
-  "homepage": "https://sqlmap.org"
+  "homepage": "https://sqlmap.org",
+  "downloads": 25020,
+  "has_repository": true
 }

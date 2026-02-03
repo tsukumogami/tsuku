@@ -1,0 +1,7 @@
+{
+  "builder": "github",
+  "source": "fullstorydev/grpcurl",
+  "description": "Like cURL, but for gRPC: Command-line tool for interacting with gRPC servers",
+  "homepage": "https://www.fullstory.com/resources/content/fullstory-engineering-blog/",
+  "repo": "https://github.com/fullstorydev/grpcurl"
+}

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "glances",
   "description": "Alternative to top/htop",
-  "homepage": "https://nicolargo.github.io/glances/"
+  "homepage": "https://nicolargo.github.io/glances/",
+  "downloads": 44058,
+  "has_repository": true
 }

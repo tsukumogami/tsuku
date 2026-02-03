@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "rsync",
   "description": "Utility that provides fast incremental file transfer",
-  "homepage": "https://rsync.samba.org/"
+  "homepage": "https://rsync.samba.org/",
+  "downloads": 71759,
+  "has_repository": true
 }

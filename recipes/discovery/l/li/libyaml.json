@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "libyaml",
   "description": "YAML Parser",
-  "homepage": "https://github.com/yaml/libyaml"
+  "homepage": "https://github.com/yaml/libyaml",
+  "downloads": 470203,
+  "has_repository": true
 }

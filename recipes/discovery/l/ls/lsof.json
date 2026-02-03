@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lsof",
   "description": "Utility to list open files",
-  "homepage": "https://github.com/lsof-org/lsof"
+  "homepage": "https://github.com/lsof-org/lsof",
+  "downloads": 7808,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ruby-build",
   "description": "Install various Ruby versions and implementations",
-  "homepage": "https://rbenv.org/man/ruby-build.1"
+  "homepage": "https://rbenv.org/man/ruby-build.1",
+  "downloads": 503941,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mingw-w64",
   "description": "Minimalist GNU for Windows and GCC cross-compilers",
-  "homepage": "https://sourceforge.net/projects/mingw-w64/"
+  "homepage": "https://sourceforge.net/projects/mingw-w64/",
+  "downloads": 34219,
+  "has_repository": true
 }

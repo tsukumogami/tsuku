@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "zola",
   "description": "Fast static site generator in a single binary with everything built-in",
-  "homepage": "https://www.getzola.org/"
+  "homepage": "https://www.getzola.org/",
+  "downloads": 4663,
+  "has_repository": true
 }

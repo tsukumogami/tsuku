@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mockery",
   "description": "Mock code autogenerator for Golang",
-  "homepage": "https://github.com/vektra/mockery"
+  "homepage": "https://github.com/vektra/mockery",
+  "downloads": 19373,
+  "has_repository": true
 }

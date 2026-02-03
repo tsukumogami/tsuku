@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "lynx",
   "description": "Text-based web browser",
-  "homepage": "https://invisible-island.net/lynx/"
+  "homepage": "https://invisible-island.net/lynx/",
+  "downloads": 17018,
+  "has_repository": true
 }

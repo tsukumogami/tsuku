@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "postgresql@15",
   "description": "Object-relational database system",
-  "homepage": "https://www.postgresql.org/"
+  "homepage": "https://www.postgresql.org/",
+  "downloads": 130645,
+  "has_repository": true
 }

@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "ctlptl",
   "description": "Making local Kubernetes clusters fun and easy to set up",
-  "homepage": "https://github.com/tilt-dev/ctlptl"
+  "homepage": "https://github.com/tilt-dev/ctlptl",
+  "downloads": 18727,
+  "has_repository": true
 }

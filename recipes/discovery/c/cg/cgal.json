@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cgal",
   "description": "Computational Geometry Algorithms Library",
-  "homepage": "https://www.cgal.org/"
+  "homepage": "https://www.cgal.org/",
+  "downloads": 35203,
+  "has_repository": true
 }

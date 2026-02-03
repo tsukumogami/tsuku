@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "mosquitto",
   "description": "Message broker implementing the MQTT protocol",
-  "homepage": "https://mosquitto.org/"
+  "homepage": "https://mosquitto.org/",
+  "downloads": 26359,
+  "has_repository": true
 }

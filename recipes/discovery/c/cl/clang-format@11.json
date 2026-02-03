@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "clang-format@11",
   "description": "Formatting tools for C, C++, Obj-C, Java, JavaScript, TypeScript",
-  "homepage": "https://clang.llvm.org/docs/ClangFormat.html"
+  "homepage": "https://clang.llvm.org/docs/ClangFormat.html",
+  "downloads": 17392,
+  "has_repository": true
 }

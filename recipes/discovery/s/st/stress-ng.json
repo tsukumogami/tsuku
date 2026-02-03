@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "stress-ng",
   "description": "Stress test a computer system in various selectable ways",
-  "homepage": "https://wiki.ubuntu.com/Kernel/Reference/stress-ng"
+  "homepage": "https://wiki.ubuntu.com/Kernel/Reference/stress-ng",
+  "downloads": 22851,
+  "has_repository": true
 }

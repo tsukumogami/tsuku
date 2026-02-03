@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "beads",
   "description": "Memory upgrade for your coding agent",
-  "homepage": "https://github.com/steveyegge/beads"
+  "homepage": "https://github.com/steveyegge/beads",
+  "downloads": 1725,
+  "has_repository": true
 }

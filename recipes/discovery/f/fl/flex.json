@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "flex",
   "description": "Fast Lexical Analyzer, generates Scanners (tokenizers)",
-  "homepage": "https://github.com/westes/flex"
+  "homepage": "https://github.com/westes/flex",
+  "downloads": 22706,
+  "has_repository": true
 }

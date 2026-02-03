@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "plantuml",
   "description": "Draw UML diagrams",
-  "homepage": "https://plantuml.com/"
+  "homepage": "https://plantuml.com/",
+  "downloads": 35858,
+  "has_repository": true
 }

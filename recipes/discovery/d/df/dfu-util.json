@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "dfu-util",
   "description": "USB programmer",
-  "homepage": "https://dfu-util.sourceforge.net/"
+  "homepage": "https://dfu-util.sourceforge.net/",
+  "downloads": 12974,
+  "has_repository": true
 }

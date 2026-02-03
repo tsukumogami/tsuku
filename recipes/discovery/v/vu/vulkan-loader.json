@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "vulkan-loader",
   "description": "Vulkan ICD Loader",
-  "homepage": "https://github.com/KhronosGroup/Vulkan-Loader"
+  "homepage": "https://github.com/KhronosGroup/Vulkan-Loader",
+  "downloads": 57337,
+  "has_repository": true
 }

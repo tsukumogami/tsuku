@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "cask",
   "description": "Emacs dependency management",
-  "homepage": "https://cask.readthedocs.io/"
+  "homepage": "https://cask.readthedocs.io/",
+  "downloads": 36587,
+  "has_repository": true
 }

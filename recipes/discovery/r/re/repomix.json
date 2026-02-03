@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "repomix",
   "description": "Pack repository contents into a single AI-friendly file",
-  "homepage": "https://github.com/yamadashy/repomix"
+  "homepage": "https://github.com/yamadashy/repomix",
+  "downloads": 17146,
+  "has_repository": true
 }

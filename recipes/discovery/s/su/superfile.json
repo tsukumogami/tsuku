@@ -2,5 +2,7 @@
   "builder": "homebrew",
   "source": "superfile",
   "description": "Modern and pretty fancy file manager for the terminal",
-  "homepage": "https://superfile.netlify.app/"
+  "homepage": "https://superfile.netlify.app/",
+  "downloads": 9601,
+  "has_repository": true
 }
