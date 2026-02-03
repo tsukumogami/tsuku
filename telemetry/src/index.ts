@@ -398,6 +398,20 @@ interface StatsResponse {
   by_arch: Record<string, number>;
 }
 
+interface DiscoveryStatsResponse {
+  generated_at: string;
+  period: string;
+  total_lookups: number;
+  by_stage: {
+    registry: number;
+    ecosystem: number;
+    llm: number;
+    not_found: number;
+  };
+  top_not_found: { name: string; count: number }[];
+  error_rate: number;
+}
+
 async function getStats(env: Env): Promise<StatsResponse> {
   // Query for total installs and recipe breakdown
   // Analytics Engine uses 1-indexed blobs: blob1=action, blob2=recipe, blob6=os, blob7=arch
@@ -472,6 +486,92 @@ async function getStats(env: Env): Promise<StatsResponse> {
     recipes,
     by_os: byOs,
     by_arch: byArch,
+  };
+}
+
+async function getDiscoveryStats(env: Env): Promise<DiscoveryStatsResponse> {
+  // Discovery events use blob0=action, blob1=tool_name, blob2=confidence
+  // Actions: discovery_registry_hit, discovery_ecosystem_hit, discovery_llm_hit,
+  //          discovery_not_found, discovery_disambiguation, discovery_error
+
+  // Query for stage distribution (based on action type)
+  const stageQuery = `
+    SELECT blob1 as action, count() as count
+    FROM tsuku_telemetry
+    WHERE blob1 LIKE 'discovery_%'
+    GROUP BY blob1
+  `;
+
+  // Query for top not-found tools
+  const notFoundQuery = `
+    SELECT blob2 as tool_name, count() as count
+    FROM tsuku_telemetry
+    WHERE blob1 = 'discovery_not_found'
+      AND blob2 != ''
+    GROUP BY blob2
+    ORDER BY count DESC
+    LIMIT 10
+  `;
+
+  const [stageData, notFoundData] = await Promise.all([
+    queryAnalyticsEngine(env, stageQuery),
+    queryAnalyticsEngine(env, notFoundQuery),
+  ]);
+
+  // Calculate stage counts
+  let registry = 0;
+  let ecosystem = 0;
+  let llm = 0;
+  let notFound = 0;
+  let errorCount = 0;
+  let totalLookups = 0;
+
+  for (const row of stageData) {
+    const action = String(row.action);
+    const count = Number(row.count) || 0;
+    totalLookups += count;
+
+    switch (action) {
+      case "discovery_registry_hit":
+        registry = count;
+        break;
+      case "discovery_ecosystem_hit":
+        ecosystem = count;
+        break;
+      case "discovery_llm_hit":
+        llm = count;
+        break;
+      case "discovery_not_found":
+        notFound = count;
+        break;
+      case "discovery_error":
+        errorCount = count;
+        break;
+      // discovery_disambiguation counted in total but not in by_stage
+    }
+  }
+
+  // Transform not-found data
+  const topNotFound = notFoundData.map((row) => ({
+    name: String(row.tool_name),
+    count: Number(row.count) || 0,
+  }));
+
+  // Calculate error rate
+  const errorRate = totalLookups > 0 ? errorCount / totalLookups : 0;
+
+  return {
+    generated_at: new Date().toISOString(),
+    period: "all_time",
+    total_lookups: totalLookups,
+    by_stage: {
+      registry,
+      ecosystem,
+      llm,
+      not_found: notFound,
+    },
+    top_not_found: topNotFound,
+    error_rate: errorRate,
   };
 }
 
@@ -701,6 +801,22 @@ export default {
     if (request.method === "GET" && url.pathname === "/stats") {
       try {
         const stats = await getStats(env);
+        return new Response(JSON.stringify(stats), {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      } catch (error) {
+        return new Response(JSON.stringify({ error: String(error) }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
+    // GET /stats/discovery - return discovery resolver statistics
+    if (request.method === "GET" && url.pathname === "/stats/discovery") {
+      try {
+        const stats = await getDiscoveryStats(env);
         return new Response(JSON.stringify(stats), {
           status: 200,
           headers: { ...corsHeaders, "Content-Type": "application/json" },

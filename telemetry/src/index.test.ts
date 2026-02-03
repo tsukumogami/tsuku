@@ -355,6 +355,164 @@ describe("tsuku-telemetry worker", () => {
     });
   });
 
+  describe("GET /stats/discovery", () => {
+    it("returns aggregated discovery statistics", async () => {
+      // Mock the Analytics Engine API responses for stage query
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(
+          200,
+          JSON.stringify({
+            data: [
+              { action: "discovery_registry_hit", count: 500 },
+              { action: "discovery_ecosystem_hit", count: 200 },
+              { action: "discovery_llm_hit", count: 10 },
+              { action: "discovery_not_found", count: 50 },
+              { action: "discovery_error", count: 15 },
+              { action: "discovery_disambiguation", count: 25 },
+            ],
+            meta: [],
+            rows: 6,
+          })
+        )
+        .times(1);
+
+      // Mock for top not-found query
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(
+          200,
+          JSON.stringify({
+            data: [
+              { tool_name: "sometool", count: 30 },
+              { tool_name: "othertool", count: 15 },
+              { tool_name: "raretool", count: 5 },
+            ],
+            meta: [],
+            rows: 3,
+          })
+        )
+        .times(1);
+
+      const response = await SELF.fetch("http://localhost/stats/discovery");
+      expect(response.status).toBe(200);
+      expect(response.headers.get("Content-Type")).toBe("application/json");
+
+      const stats = (await response.json()) as {
+        generated_at: string;
+        period: string;
+        total_lookups: number;
+        by_stage: {
+          registry: number;
+          ecosystem: number;
+          llm: number;
+          not_found: number;
+        };
+        top_not_found: { name: string; count: number }[];
+        error_rate: number;
+      };
+
+      expect(stats.generated_at).toBeDefined();
+      expect(stats.period).toBe("all_time");
+      // Total: 500 + 200 + 10 + 50 + 15 + 25 = 800
+      expect(stats.total_lookups).toBe(800);
+      expect(stats.by_stage).toEqual({
+        registry: 500,
+        ecosystem: 200,
+        llm: 10,
+        not_found: 50,
+      });
+      expect(stats.top_not_found).toHaveLength(3);
+      expect(stats.top_not_found[0]).toEqual({ name: "sometool", count: 30 });
+      // Error rate: 15 / 800 = 0.01875
+      expect(stats.error_rate).toBeCloseTo(0.01875);
+    });
+
+    it("handles empty data", async () => {
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(
+          200,
+          JSON.stringify({
+            meta: [],
+            rows: 0,
+          })
+        )
+        .times(2);
+
+      const response = await SELF.fetch("http://localhost/stats/discovery");
+      expect(response.status).toBe(200);
+
+      const stats = (await response.json()) as {
+        total_lookups: number;
+        by_stage: {
+          registry: number;
+          ecosystem: number;
+          llm: number;
+          not_found: number;
+        };
+        top_not_found: { name: string; count: number }[];
+        error_rate: number;
+      };
+
+      expect(stats.total_lookups).toBe(0);
+      expect(stats.by_stage).toEqual({
+        registry: 0,
+        ecosystem: 0,
+        llm: 0,
+        not_found: 0,
+      });
+      expect(stats.top_not_found).toEqual([]);
+      expect(stats.error_rate).toBe(0);
+    });
+
+    it("returns 500 on API error", async () => {
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(401, "Unauthorized")
+        .times(2);
+
+      const response = await SELF.fetch("http://localhost/stats/discovery");
+      expect(response.status).toBe(500);
+
+      const error = (await response.json()) as { error: string };
+      expect(error.error).toContain("Analytics Engine query failed");
+    });
+
+    it("includes CORS headers", async () => {
+      fetchMock
+        .get("https://api.cloudflare.com")
+        .intercept({
+          path: /\/client\/v4\/accounts\/.*\/analytics_engine\/sql/,
+          method: "POST",
+        })
+        .reply(
+          200,
+          JSON.stringify({ data: [], meta: [], rows: 0 })
+        )
+        .times(2);
+
+      const response = await SELF.fetch("http://localhost/stats/discovery");
+      expect(response.headers.get("Access-Control-Allow-Origin")).toBe("*");
+    });
+  });
+
   describe("POST /event", () => {
     it("returns ok for valid install event", async () => {
       const response = await SELF.fetch("http://localhost/event", {
