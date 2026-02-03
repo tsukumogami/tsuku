@@ -27,7 +27,7 @@ Planned
 | ~~[#1273](https://github.com/tsukumogami/tsuku/issues/1273)~~ | ~~Structured JSON CLI output + batch integration~~ | ~~None~~ | ~~testable~~ |
 | ~~[#1287](https://github.com/tsukumogami/tsuku/issues/1287)~~ | ~~Auto-install required toolchains for ecosystem builders~~ | ~~None~~ | ~~testable~~ |
 | ~~[M63](https://github.com/tsukumogami/tsuku/milestone/63)~~ | ~~Merge Job Completion (batch_id, recipe tracking, circuit breaker update, queue sync)~~ | ~~None~~ | |
-| [M64](https://github.com/tsukumogami/tsuku/milestone/64) | Merge Job Observability (SLI metrics, auto-merge gating) | [M63](https://github.com/tsukumogami/tsuku/milestone/63) | |
+| ~~[M64](https://github.com/tsukumogami/tsuku/milestone/64)~~ | ~~Merge Job Observability (SLI metrics, auto-merge gating)~~ | ~~[M63](https://github.com/tsukumogami/tsuku/milestone/63)~~ | |
 
 ### Dependency Graph
 
@@ -84,7 +84,7 @@ graph LR
     class I1258 done
     class M61 ready
     class I1253 ready
-    class M64 ready
+    class M64 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
@@ -551,7 +551,7 @@ The preflight job reads `batch-control.json` and skips ecosystems with open circ
 }
 ```
 
-The preflight job should also check for open batch PRs (`gh pr list --label batch --state open`) and skip the run if one exists. This prevents conflicting PRs and is a prerequisite for safe auto-merge (see [DESIGN-merge-job-completion.md](DESIGN-merge-job-completion.md)).
+The preflight job should also check for open batch PRs (`gh pr list --label batch --state open`) and skip the run if one exists. This prevents conflicting PRs and is a prerequisite for safe auto-merge (see [DESIGN-merge-job-completion.md](current/DESIGN-merge-job-completion.md)).
 
 After generation, the merge job updates circuit breaker state:
 - Track consecutive failures per ecosystem
