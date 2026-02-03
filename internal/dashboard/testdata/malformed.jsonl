@@ -1,0 +1,5 @@
+{"recipe": "valid1", "platform": "linux", "exit_code": 0, "category": "success"}
+this is not valid json
+{"recipe": "valid2", "platform": "darwin", "exit_code": 1, "category": "api_error"}
+{"incomplete": json
+{"recipe": "valid3", "platform": "linux", "exit_code": 1, "category": "missing_dep"}

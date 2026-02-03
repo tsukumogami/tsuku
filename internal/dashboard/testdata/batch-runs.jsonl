@@ -1,0 +1,3 @@
+{"batch_id": "2026-01-30-homebrew", "ecosystem": "homebrew", "total": 10, "generated": 8, "merged": 6, "excluded": 1, "constrained": 1, "timestamp": "2026-01-30T12:00:00Z", "duration_seconds": 120}
+{"batch_id": "2026-01-31-homebrew", "ecosystem": "homebrew", "total": 12, "generated": 10, "merged": 8, "excluded": 1, "constrained": 1, "timestamp": "2026-01-31T12:00:00Z", "duration_seconds": 150}
+{"batch_id": "2026-02-01-homebrew", "ecosystem": "homebrew", "total": 15, "generated": 12, "merged": 10, "excluded": 2, "constrained": 1, "timestamp": "2026-02-01T12:00:00Z", "duration_seconds": 180}
