@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T11:39:51Z",
+  "updated_at": "2026-02-04T17:56:11Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1455,7 +1455,7 @@
       "source": "homebrew",
       "name": "azcopy",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1463,7 +1463,7 @@
       "source": "homebrew",
       "name": "mongosh",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1471,7 +1471,7 @@
       "source": "homebrew",
       "name": "xctesthtmlreport",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1479,7 +1479,7 @@
       "source": "homebrew",
       "name": "jpeg",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1487,7 +1487,7 @@
       "source": "homebrew",
       "name": "subversion",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1495,7 +1495,7 @@
       "source": "homebrew",
       "name": "webp",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1503,7 +1503,7 @@
       "source": "homebrew",
       "name": "lua",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1511,7 +1511,7 @@
       "source": "homebrew",
       "name": "aom",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1519,7 +1519,7 @@
       "source": "homebrew",
       "name": "dotnet",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1527,7 +1527,7 @@
       "source": "homebrew",
       "name": "pipenv",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
