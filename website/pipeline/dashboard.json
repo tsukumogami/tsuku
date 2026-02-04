@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-04T10:10:12Z",
+  "generated_at": "2026-02-04T10:56:18Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 101,
-      "pending": 661,
+      "failed": 105,
+      "pending": 651,
       "skipped": 11,
-      "success": 116
+      "success": 122
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 64,
-        "pending": 661,
+        "failed": 68,
+        "pending": 651,
         "skipped": 6,
-        "success": 106
+        "success": 112
       }
     },
     "packages": {
@@ -339,6 +339,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:autoconf",
+          "name": "autoconf",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:automake",
           "name": "automake",
           "ecosystem": "homebrew",
@@ -584,6 +591,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:opencv",
+          "name": "opencv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:openjdk",
           "name": "openjdk",
           "ecosystem": "homebrew",
@@ -710,6 +724,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:qt",
+          "name": "qt",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:rbenv",
           "name": "rbenv",
           "ecosystem": "homebrew",
@@ -747,6 +768,13 @@
         {
           "id": "homebrew:unbound",
           "name": "unbound",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:uutils-findutils",
+          "name": "uutils-findutils",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -916,12 +944,6 @@
         {
           "id": "homebrew:at-spi2-core",
           "name": "at-spi2-core",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:autoconf",
-          "name": "autoconf",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1934,12 +1956,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:gnu-sed",
-          "name": "gnu-sed",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:gnu-time",
           "name": "gnu-time",
           "ecosystem": "homebrew",
@@ -1954,12 +1970,6 @@
         {
           "id": "homebrew:go-parquet-tools",
           "name": "go-parquet-tools",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:go-task",
-          "name": "go-task",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3272,12 +3282,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:opencv",
-          "name": "opencv",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:openexr",
           "name": "openexr",
           "ecosystem": "homebrew",
@@ -3722,12 +3726,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:qt",
-          "name": "qt",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:qt@5",
           "name": "qt@5",
           "ecosystem": "homebrew",
@@ -3760,12 +3758,6 @@
         {
           "id": "homebrew:rain",
           "name": "rain",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:rclone",
-          "name": "rclone",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4028,12 +4020,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:sourcekitten",
-          "name": "sourcekitten",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:sourcery",
           "name": "sourcery",
           "ecosystem": "homebrew",
@@ -4274,18 +4260,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:television",
-          "name": "television",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:temporal",
-          "name": "temporal",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:tenv",
           "name": "tenv",
           "ecosystem": "homebrew",
@@ -4456,12 +4430,6 @@
         {
           "id": "homebrew:uutils-coreutils",
           "name": "uutils-coreutils",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:uutils-findutils",
-          "name": "uutils-findutils",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5103,8 +5071,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:gnu-sed",
+          "name": "gnu-sed",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:gnu-tar",
           "name": "gnu-tar",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:go-task",
+          "name": "go-task",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5379,6 +5359,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:rclone",
+          "name": "rclone",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:readline",
           "name": "readline",
           "ecosystem": "homebrew",
@@ -5399,6 +5385,12 @@
         {
           "id": "homebrew:sops",
           "name": "sops",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:sourcekitten",
+          "name": "sourcekitten",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5429,6 +5421,18 @@
         {
           "id": "homebrew:tailscale",
           "name": "tailscale",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:television",
+          "name": "television",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:temporal",
+          "name": "temporal",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5521,20 +5525,6 @@
   },
   "blockers": [
     {
-      "dependency": "glib",
-      "count": 1,
-      "packages": [
-        "homebrew:imagemagick"
-      ]
-    },
-    {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -5547,13 +5537,27 @@
       "packages": [
         "homebrew:ffmpeg"
       ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
+      ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 74,
-    "deterministic_insufficient": 40,
+    "deterministic": 88,
+    "deterministic_insufficient": 42,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 64
+    "validation_failed": 66
   }
 }

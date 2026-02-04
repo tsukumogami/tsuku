@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T09:58:49Z",
+  "updated_at": "2026-02-04T10:49:52Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1255,7 +1255,7 @@
       "source": "homebrew",
       "name": "go-task",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1263,7 +1263,7 @@
       "source": "homebrew",
       "name": "temporal",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1303,7 +1303,7 @@
       "source": "homebrew",
       "name": "gnu-sed",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1311,7 +1311,7 @@
       "source": "homebrew",
       "name": "qt",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1327,7 +1327,7 @@
       "source": "homebrew",
       "name": "sourcekitten",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1335,7 +1335,7 @@
       "source": "homebrew",
       "name": "opencv",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1343,7 +1343,7 @@
       "source": "homebrew",
       "name": "rclone",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1351,7 +1351,7 @@
       "source": "homebrew",
       "name": "television",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1359,7 +1359,7 @@
       "source": "homebrew",
       "name": "autoconf",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1367,7 +1367,7 @@
       "source": "homebrew",
       "name": "uutils-findutils",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
