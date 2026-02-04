@@ -191,6 +191,13 @@ jobs:
           elif [[ "$R2_AVAILABLE" == "true" ]]; then
             # Registry recipes use R2 when available
             export TSUKU_GOLDEN_SOURCE=r2
+
+            # Check if golden files exist in R2 for this recipe
+            # New recipes won't have golden files yet - skip validation with notice
+            if ! ./scripts/check-golden-exists.sh "$RECIPE" --category "$CATEGORY"; then
+              echo "::notice::Skipping validation for new recipe '$RECIPE' - golden files will be generated after merge"
+              exit 0
+            fi
           else
             # R2 unavailable - skip registry recipe validation with warning
             echo "::warning::Skipping $RECIPE validation - R2 unavailable (registry recipes require R2 golden files)"
