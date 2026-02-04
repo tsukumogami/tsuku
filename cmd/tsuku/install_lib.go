@@ -167,7 +167,7 @@ func installLibrary(libName, reqVersion, parent string, mgr *install.Manager, te
 
 	verifyOpts := LibraryVerifyOptions{
 		CheckIntegrity: false, // Skip Tier 4 for post-install (opt-in via --integrity flag)
-		SkipDlopen:     false, // Run Tier 3 dlopen testing
+		SkipDlopen:     true,  // Skip Tier 3 dlopen testing for post-install (may conflict with system libs)
 	}
 	if err := verifyLibrary(libName, state, cfg, verifyOpts); err != nil {
 		return fmt.Errorf("library verification failed: %w", err)
