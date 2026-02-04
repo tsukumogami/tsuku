@@ -414,6 +414,48 @@
             container.appendChild(depsSection);
         }
 
+        // Render collapsible recipe TOML viewer
+        function renderRecipeViewer(container, recipeName) {
+            const section = document.createElement('details');
+            section.className = 'recipe-viewer';
+
+            const summary = document.createElement('summary');
+            summary.textContent = 'View Recipe';
+            section.appendChild(summary);
+
+            const content = document.createElement('div');
+            content.className = 'recipe-content';
+            content.innerHTML = '<p class="recipe-loading">Loading recipe...</p>';
+            section.appendChild(content);
+
+            // Fetch TOML on first expand
+            let loaded = false;
+            section.addEventListener('toggle', async () => {
+                if (!section.open || loaded) return;
+                loaded = true;
+
+                const firstLetter = recipeName.charAt(0).toLowerCase();
+                const url = `https://raw.githubusercontent.com/tsukumogami/tsuku/main/recipes/${firstLetter}/${recipeName}.toml`;
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const toml = await response.text();
+
+                    const pre = document.createElement('pre');
+                    const code = document.createElement('code');
+                    code.textContent = toml;
+                    pre.appendChild(code);
+                    content.innerHTML = '';
+                    content.appendChild(pre);
+                } catch (error) {
+                    content.innerHTML = '<p class="recipe-error">Failed to load recipe. <a href="' + url + '" target="_blank" rel="noopener">View on GitHub</a></p>';
+                }
+            });
+
+            container.appendChild(section);
+        }
+
         // ============================================================
         // View Renderers
         // ============================================================
@@ -485,6 +527,9 @@
                 (recipe.runtime_dependencies && recipe.runtime_dependencies.length > 0)) {
                 renderDependencies(detail, recipe);
             }
+
+            // Recipe TOML viewer (collapsible)
+            renderRecipeViewer(detail, recipe.name);
 
             // Back link
             const back = document.createElement('a');
