@@ -55,6 +55,7 @@
         </section>
 
         <section class="links">
+            <a href="/recipes/" class="link-btn" id="back-to-recipes" hidden>Back to Recipes</a>
             <a href="/" class="link-btn">Back to Home</a>
             <a href="https://github.com/tsukumogami/tsuku/tree/main/internal/recipe/recipes" class="link-btn">View on GitHub</a>
         </section>
@@ -414,6 +415,48 @@
             container.appendChild(depsSection);
         }
 
+        // Render collapsible recipe TOML viewer
+        function renderRecipeViewer(container, recipeName) {
+            const section = document.createElement('details');
+            section.className = 'recipe-viewer';
+
+            const summary = document.createElement('summary');
+            summary.textContent = 'View Recipe';
+            section.appendChild(summary);
+
+            const content = document.createElement('div');
+            content.className = 'recipe-content';
+            content.innerHTML = '<p class="recipe-loading">Loading recipe...</p>';
+            section.appendChild(content);
+
+            // Fetch TOML on first expand
+            let loaded = false;
+            section.addEventListener('toggle', async () => {
+                if (!section.open || loaded) return;
+                loaded = true;
+
+                const firstLetter = recipeName.charAt(0).toLowerCase();
+                const url = `https://raw.githubusercontent.com/tsukumogami/tsuku/main/recipes/${firstLetter}/${recipeName}.toml`;
+
+                try {
+                    const response = await fetch(url);
+                    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                    const toml = await response.text();
+
+                    const pre = document.createElement('pre');
+                    const code = document.createElement('code');
+                    code.textContent = toml;
+                    pre.appendChild(code);
+                    content.innerHTML = '';
+                    content.appendChild(pre);
+                } catch (error) {
+                    content.innerHTML = '<p class="recipe-error">Failed to load recipe. <a href="' + url + '" target="_blank" rel="noopener">View on GitHub</a></p>';
+                }
+            });
+
+            container.appendChild(section);
+        }
+
         // ============================================================
         // View Renderers
         // ============================================================
@@ -425,6 +468,10 @@
             if (searchContainer) searchContainer.hidden = false;
             const tagline = document.querySelector('.hero .tagline');
             if (tagline) tagline.hidden = false;
+
+            // Hide "Back to Recipes" link
+            const backLink = document.getElementById('back-to-recipes');
+            if (backLink) backLink.hidden = true;
 
             // Apply current search filter
             const searchInput = document.getElementById('recipe-search');
@@ -486,18 +533,14 @@
                 renderDependencies(detail, recipe);
             }
 
-            // Back link
-            const back = document.createElement('a');
-            back.href = '/recipes/';
-            back.className = 'link-btn';
-            back.textContent = 'Back to Recipes';
-            back.addEventListener('click', (e) => {
-                e.preventDefault();
-                navigateTo('/recipes/');
-            });
-            detail.appendChild(back);
+            // Recipe TOML viewer (collapsible)
+            renderRecipeViewer(detail, recipe.name);
 
             grid.appendChild(detail);
+
+            // Show "Back to Recipes" link in footer
+            const backLink = document.getElementById('back-to-recipes');
+            if (backLink) backLink.hidden = false;
         }
 
         // Render 404 view for unknown recipes
@@ -573,6 +616,15 @@
             const searchInput = document.getElementById('recipe-search');
             const debouncedSearch = debounce(handleSearch, 150);
             searchInput.addEventListener('input', debouncedSearch);
+
+            // Set up "Back to Recipes" link for SPA navigation
+            const backLink = document.getElementById('back-to-recipes');
+            if (backLink) {
+                backLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navigateTo('/recipes/');
+                });
+            }
 
             // Handle browser back/forward
             window.addEventListener('popstate', renderCurrentView);

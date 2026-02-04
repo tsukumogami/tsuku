@@ -622,6 +622,62 @@ main.wide {
     text-decoration: underline;
 }
 
+/* Recipe Viewer (collapsible TOML) */
+.recipe-viewer {
+    text-align: left;
+    max-width: 600px;
+    margin: 0 auto 2rem;
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+}
+
+.recipe-viewer summary {
+    padding: 1rem 1.25rem;
+    cursor: pointer;
+    font-weight: 500;
+    color: var(--text);
+    user-select: none;
+}
+
+.recipe-viewer summary:hover {
+    color: var(--accent);
+}
+
+.recipe-viewer[open] summary {
+    border-bottom: 1px solid var(--border);
+}
+
+.recipe-content {
+    padding: 1rem 1.25rem;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.recipe-content pre {
+    margin: 0;
+    font-family: "SF Mono", Consolas, monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+}
+
+.recipe-content code {
+    color: var(--text);
+}
+
+.recipe-loading,
+.recipe-error {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.recipe-error a {
+    color: var(--accent);
+}
+
 /* Noscript Message */
 .noscript-message {
     text-align: center;
