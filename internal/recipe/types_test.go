@@ -809,6 +809,45 @@ pattern = "14.2.5"
 	}
 }
 
+func TestRecipe_ExtractBinaries_GemInstall(t *testing.T) {
+	// Test that gem_install 'executables' parameter gets "bin/" prefix
+	tomlData := `
+[metadata]
+name = "bundler"
+description = "Ruby dependency manager"
+version_format = "semver"
+
+[[steps]]
+action = "gem_install"
+gem = "bundler"
+executables = ["bundle", "bundler"]
+
+[verify]
+command = "bundle --version"
+pattern = "{version}"
+`
+
+	var recipe Recipe
+	err := toml.Unmarshal([]byte(tomlData), &recipe)
+	if err != nil {
+		t.Fatalf("Unmarshal() error = %v", err)
+	}
+
+	binaries := recipe.ExtractBinaries()
+
+	// gem_install executables should get bin/ prefix
+	expected := []string{"bin/bundle", "bin/bundler"}
+	if len(binaries) != len(expected) {
+		t.Fatalf("ExtractBinaries() returned %d binaries, want %d", len(binaries), len(expected))
+	}
+
+	for i, want := range expected {
+		if binaries[i] != want {
+			t.Errorf("ExtractBinaries()[%d] = %s, want %s", i, binaries[i], want)
+		}
+	}
+}
+
 func TestRecipe_ExtractBinaries_DirectoryMode_SimplePaths(t *testing.T) {
 	// Test that directory mode preserves simple paths as-is (zig)
 	tomlData := `

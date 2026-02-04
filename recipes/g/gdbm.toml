@@ -15,4 +15,4 @@ outputs = ["bin/gdbmtool"]
 
 [verify]
 command = "gdbmtool --version"
-pattern = "gdbmtool (GDBM) {version}"
+pattern = "gdbmtool (gdbm) {version}"

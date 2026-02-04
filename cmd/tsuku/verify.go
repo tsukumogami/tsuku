@@ -25,8 +25,9 @@ var (
 
 // LibraryVerifyOptions controls library verification behavior
 type LibraryVerifyOptions struct {
-	CheckIntegrity bool // Enable Level 4: checksum verification
-	SkipDlopen     bool // Disable Level 3: dlopen load testing
+	CheckIntegrity           bool // Enable Level 4: checksum verification
+	SkipDlopen               bool // Disable Level 3: dlopen load testing
+	SkipDependencyValidation bool // Disable Level 2: dependency validation
 }
 
 func init() {
@@ -608,8 +609,12 @@ func verifyTsukuManagedLibrary(name string, libVersions map[string]install.Libra
 	}
 
 	// Tier 2: Dependency validation
-	if err := runTier2Validation(libFiles, state, cfg); err != nil {
-		return err
+	if opts.SkipDependencyValidation {
+		printInfo("  Tier 2: Skipping dependency validation (post-install verification)\n")
+	} else {
+		if err := runTier2Validation(libFiles, state, cfg); err != nil {
+			return err
+		}
 	}
 
 	// Tier 3: dlopen load testing

@@ -772,6 +772,7 @@ func (r *Recipe) ExtractBinaries() []string {
 			"github_archive":   true,
 			"github_file":      true,
 			"npm_install":      true,
+			"gem_install":      true, // Uses 'executables' parameter, installs to bin/
 			"cargo_install":    true, // Uses 'executables' parameter, installs to bin/
 			"cargo_build":      true, // Uses 'executables' parameter, installs to bin/
 			"configure_make":   true, // Uses 'executables' parameter
