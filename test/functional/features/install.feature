@@ -50,12 +50,10 @@ Feature: Install
     Then the exit code is 0
     And the error output does not contain "checksum verification required"
 
-  # #1347 tracks improving the error message for invalid versions.
-  # Currently the version resolver falls back to 'dev' which then fails with 404.
-  Scenario: Install with invalid version fails at download
+  Scenario: Install with invalid version shows clear error
     When I run "tsuku install go@99.99.99"
     Then the exit code is 6
-    And the error output contains "404"
+    And the error output contains "version 99.99.99 not found"
 
   Scenario: List shows installed tool
     When I run "tsuku install actionlint --force"

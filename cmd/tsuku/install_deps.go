@@ -79,6 +79,10 @@ func getOrGeneratePlanWith(
 	// Phase 1: Version Resolution (ALWAYS runs)
 	resolvedVersion, err := resolver.ResolveVersion(ctx, cfg.VersionConstraint)
 	if err != nil {
+		// If user requested a specific version, fail with error instead of falling back
+		if cfg.VersionConstraint != "" {
+			return nil, fmt.Errorf("version resolution failed: %w", err)
+		}
 		// Fall back to "dev" version for recipes without proper version sources
 		// This matches the behavior in executor.Execute() for backward compatibility
 		printInfof("Warning: version resolution failed: %v, using 'dev'\n", err)
