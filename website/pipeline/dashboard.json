@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-04T07:09:57Z",
+  "generated_at": "2026-02-04T08:56:22Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 85,
-      "pending": 681,
+      "failed": 94,
+      "pending": 671,
       "skipped": 11,
-      "success": 112
+      "success": 113
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 48,
-        "pending": 681,
+        "failed": 57,
+        "pending": 671,
         "skipped": 6,
-        "success": 102
+        "success": 103
       }
     },
     "packages": {
@@ -353,6 +353,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:boost",
+          "name": "boost",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:ccache",
           "name": "ccache",
           "ecosystem": "homebrew",
@@ -395,6 +402,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:gettext",
+          "name": "gettext",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:glib",
           "name": "glib",
           "ecosystem": "homebrew",
@@ -423,6 +437,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:jupyterlab",
+          "name": "jupyterlab",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:libheif",
           "name": "libheif",
           "ecosystem": "homebrew",
@@ -430,8 +451,29 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:libomp",
+          "name": "libomp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:libpq",
           "name": "libpq",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:librsvg",
+          "name": "librsvg",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:libtool",
+          "name": "libtool",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -479,6 +521,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:mysql-client",
+          "name": "mysql-client",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:nmap",
           "name": "nmap",
           "ecosystem": "homebrew",
@@ -491,6 +540,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:nss",
+          "name": "nss",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:openai-whisper",
@@ -558,6 +614,13 @@
         {
           "id": "homebrew:postgresql@14",
           "name": "postgresql@14",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:postgresql@16",
+          "name": "postgresql@16",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -966,12 +1029,6 @@
         {
           "id": "homebrew:blueutil",
           "name": "blueutil",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:boost",
-          "name": "boost",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1714,12 +1771,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:gettext",
-          "name": "gettext",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:ghc",
           "name": "ghc",
           "ecosystem": "homebrew",
@@ -2290,12 +2341,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:jupyterlab",
-          "name": "jupyterlab",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:kafka",
           "name": "kafka",
           "ecosystem": "homebrew",
@@ -2494,12 +2539,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:libomp",
-          "name": "libomp",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:libpcap",
           "name": "libpcap",
           "ecosystem": "homebrew",
@@ -2530,12 +2569,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:librsvg",
-          "name": "librsvg",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:libslirp",
           "name": "libslirp",
           "ecosystem": "homebrew",
@@ -2562,12 +2595,6 @@
         {
           "id": "homebrew:libtiff",
           "name": "libtiff",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:libtool",
-          "name": "libtool",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2956,12 +2983,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:mysql-client",
-          "name": "mysql-client",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:mysql-client@8.0",
           "name": "mysql-client@8.0",
           "ecosystem": "homebrew",
@@ -3102,12 +3123,6 @@
         {
           "id": "homebrew:nodenv",
           "name": "nodenv",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:nss",
-          "name": "nss",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3498,12 +3513,6 @@
         {
           "id": "homebrew:postgresql@15",
           "name": "postgresql@15",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:postgresql@16",
-          "name": "postgresql@16",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4290,12 +4299,6 @@
         {
           "id": "homebrew:terminal-notifier",
           "name": "terminal-notifier",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:terragrunt",
-          "name": "terragrunt",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5435,6 +5438,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:terragrunt",
+          "name": "terragrunt",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:tflint",
           "name": "tflint",
           "ecosystem": "homebrew",
@@ -5505,13 +5514,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -5531,13 +5533,20 @@
       "packages": [
         "homebrew:coreutils"
       ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 61,
-    "deterministic_insufficient": 32,
+    "deterministic": 62,
+    "deterministic_insufficient": 36,
     "missing_dep": 4,
     "timeout": 1,
-    "validation_failed": 56
+    "validation_failed": 61
   }
 }
