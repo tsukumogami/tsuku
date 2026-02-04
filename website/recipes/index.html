@@ -55,6 +55,7 @@
         </section>
 
         <section class="links">
+            <a href="/recipes/" class="link-btn" id="back-to-recipes" hidden>Back to Recipes</a>
             <a href="/" class="link-btn">Back to Home</a>
             <a href="https://github.com/tsukumogami/tsuku/tree/main/internal/recipe/recipes" class="link-btn">View on GitHub</a>
         </section>
@@ -468,6 +469,10 @@
             const tagline = document.querySelector('.hero .tagline');
             if (tagline) tagline.hidden = false;
 
+            // Hide "Back to Recipes" link
+            const backLink = document.getElementById('back-to-recipes');
+            if (backLink) backLink.hidden = true;
+
             // Apply current search filter
             const searchInput = document.getElementById('recipe-search');
             const query = searchInput ? searchInput.value : '';
@@ -531,18 +536,11 @@
             // Recipe TOML viewer (collapsible)
             renderRecipeViewer(detail, recipe.name);
 
-            // Back link
-            const back = document.createElement('a');
-            back.href = '/recipes/';
-            back.className = 'link-btn';
-            back.textContent = 'Back to Recipes';
-            back.addEventListener('click', (e) => {
-                e.preventDefault();
-                navigateTo('/recipes/');
-            });
-            detail.appendChild(back);
-
             grid.appendChild(detail);
+
+            // Show "Back to Recipes" link in footer
+            const backLink = document.getElementById('back-to-recipes');
+            if (backLink) backLink.hidden = false;
         }
 
         // Render 404 view for unknown recipes
@@ -618,6 +616,15 @@
             const searchInput = document.getElementById('recipe-search');
             const debouncedSearch = debounce(handleSearch, 150);
             searchInput.addEventListener('input', debouncedSearch);
+
+            // Set up "Back to Recipes" link for SPA navigation
+            const backLink = document.getElementById('back-to-recipes');
+            if (backLink) {
+                backLink.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navigateTo('/recipes/');
+                });
+            }
 
             // Handle browser back/forward
             window.addEventListener('popstate', renderCurrentView);
