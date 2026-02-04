@@ -22,12 +22,17 @@ Feature: Install
     And the file "recipes/shfmt.toml" exists
     And I can run "shfmt --version"
 
-  Scenario: Discovery fallback finds tool via registry and installs
-    When I run "tsuku install shfmt --force --deterministic-only"
-    Then the exit code is 0
-    And the error output contains "Discovered:"
-    And the file "recipes/shfmt.toml" exists
-    And I can run "shfmt --version"
+  # TODO: Re-enable when #1446 (registry URL override) is implemented.
+  # This test is fragile because it depends on the tool NOT having a recipe
+  # in the repo. As batch generation adds recipes, test tools get recipes
+  # and the test breaks. Registry isolation will fix this.
+  #
+  # Scenario: Discovery fallback finds tool via registry and installs
+  #   When I run "tsuku install <tool> --force --deterministic-only"
+  #   Then the exit code is 0
+  #   And the error output contains "Discovered:"
+  #   And the file "recipes/<tool>.toml" exists
+  #   And I can run "<tool> --version"
 
   Scenario: Discovery fallback shows actionable error for unknown tool
     When I run "tsuku install nonexistent-discovery-test-xyz"
