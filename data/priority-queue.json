@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T10:49:52Z",
+  "updated_at": "2026-02-04T11:39:51Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1375,7 +1375,7 @@
       "source": "homebrew",
       "name": "semgrep",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1383,7 +1383,7 @@
       "source": "homebrew",
       "name": "ca-certificates",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1391,7 +1391,7 @@
       "source": "homebrew",
       "name": "tfenv",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1399,7 +1399,7 @@
       "source": "homebrew",
       "name": "node@24",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1407,7 +1407,7 @@
       "source": "homebrew",
       "name": "yarn",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1415,7 +1415,7 @@
       "source": "homebrew",
       "name": "opentofu",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1423,7 +1423,7 @@
       "source": "homebrew",
       "name": "jpeg-xl",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1431,7 +1431,7 @@
       "source": "homebrew",
       "name": "swiftformat",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1439,7 +1439,7 @@
       "source": "homebrew",
       "name": "python-setuptools",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1447,7 +1447,7 @@
       "source": "homebrew",
       "name": "aws-sam-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
