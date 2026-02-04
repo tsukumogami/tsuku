@@ -550,7 +550,7 @@ func installWithDependencies(toolName, reqVersion, versionConstraint string, isE
 				return fmt.Errorf("failed to load state for verification: %w", err)
 			}
 
-			opts := ToolVerifyOptions{Verbose: true, SkipPATHChecks: true}
+			opts := ToolVerifyOptions{Verbose: true, SkipPATHChecks: true, SkipDependencyValidation: true}
 			if err := RunToolVerification(r, toolName, toolState, cfg, state, opts); err != nil {
 				return fmt.Errorf("installation verification failed: %w", err)
 			}

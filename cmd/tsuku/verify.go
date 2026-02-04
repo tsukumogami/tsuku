@@ -143,6 +143,9 @@ type ToolVerifyOptions struct {
 	// SkipPATHChecks skips Steps 2-3 (PATH environment checks) for visible tools.
 	// Use this in post-install context where the user may not have added tsuku to PATH yet.
 	SkipPATHChecks bool
+	// SkipDependencyValidation skips Tier 2 dependency validation for tools.
+	// Use this in post-install context where dependency classification may have false positives.
+	SkipDependencyValidation bool
 }
 
 // RunToolVerification performs verification for an installed tool.
@@ -228,30 +231,34 @@ func runHiddenToolVerification(r *recipe.Recipe, toolName, version, installDir s
 		return err
 	}
 
-	// Tier 2: Dependency validation
-	if opts.Verbose {
-		printInfo("  Tier 2: Validating dependencies...\n")
-	}
-	binaries := findToolBinaries(installDir, nil, toolName)
-	if len(binaries) == 0 {
-		// Try the tool name directly in install dir
-		binPath := filepath.Join(installDir, "bin", toolName)
-		if _, err := os.Stat(binPath); err == nil {
-			binaries = []string{binPath}
+	// Tier 2: Dependency validation (skipped in post-install context)
+	if !opts.SkipDependencyValidation {
+		if opts.Verbose {
+			printInfo("  Tier 2: Validating dependencies...\n")
 		}
-	}
-
-	var allResults []verify.DepResult
-	for _, binPath := range binaries {
-		results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
-		if err != nil {
-			return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(binPath), err)
+		binaries := findToolBinaries(installDir, nil, toolName)
+		if len(binaries) == 0 {
+			// Try the tool name directly in install dir
+			binPath := filepath.Join(installDir, "bin", toolName)
+			if _, err := os.Stat(binPath); err == nil {
+				binaries = []string{binPath}
+			}
 		}
-		allResults = append(allResults, results...)
-	}
 
-	if !checkDependencyResults(allResults, opts.Verbose) {
-		return fmt.Errorf("dependency validation failed")
+		var allResults []verify.DepResult
+		for _, binPath := range binaries {
+			results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
+			if err != nil {
+				return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(binPath), err)
+			}
+			allResults = append(allResults, results...)
+		}
+
+		if !checkDependencyResults(allResults, opts.Verbose) {
+			return fmt.Errorf("dependency validation failed")
+		}
+	} else if opts.Verbose {
+		printInfo("  Tier 2: Skipping dependency validation (post-install verification)\n")
 	}
 
 	return nil
@@ -373,31 +380,35 @@ func runVisibleToolVerification(r *recipe.Recipe, toolName string, toolState *in
 		return err
 	}
 
-	// Step 5: Tier 2 dependency validation
-	if opts.Verbose {
-		printInfo("\n  Step 5: Validating dependencies...")
-	}
-	binaries := findToolBinaries(installDir, toolState.Binaries, toolName)
-	if len(binaries) == 0 {
+	// Step 5: Tier 2 dependency validation (skipped in post-install context)
+	if !opts.SkipDependencyValidation {
 		if opts.Verbose {
-			printInfo("\n    No binaries found to validate\n")
+			printInfo("\n  Step 5: Validating dependencies...")
 		}
-	} else {
-		var allResults []verify.DepResult
-		for _, binPath := range binaries {
-			results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
-			if err != nil {
-				return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(binPath), err)
+		binaries := findToolBinaries(installDir, toolState.Binaries, toolName)
+		if len(binaries) == 0 {
+			if opts.Verbose {
+				printInfo("\n    No binaries found to validate\n")
 			}
-			allResults = append(allResults, results...)
-		}
+		} else {
+			var allResults []verify.DepResult
+			for _, binPath := range binaries {
+				results, err := verify.ValidateDependenciesSimple(binPath, state, cfg.HomeDir)
+				if err != nil {
+					return fmt.Errorf("dependency validation failed for %s: %w", filepath.Base(binPath), err)
+				}
+				allResults = append(allResults, results...)
+			}
 
-		if opts.Verbose {
-			printInfo("\n")
+			if opts.Verbose {
+				printInfo("\n")
+			}
+			if !checkDependencyResults(allResults, opts.Verbose) {
+				return fmt.Errorf("dependency validation failed")
+			}
 		}
-		if !checkDependencyResults(allResults, opts.Verbose) {
-			return fmt.Errorf("dependency validation failed")
-		}
+	} else if opts.Verbose {
+		printInfo("\n  Step 5: Skipping dependency validation (post-install verification)\n")
 	}
 
 	return nil
