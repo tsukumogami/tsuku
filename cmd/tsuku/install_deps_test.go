@@ -318,6 +318,37 @@ func TestGetOrGeneratePlanWith_VersionResolutionFallback(t *testing.T) {
 	}
 }
 
+func TestGetOrGeneratePlanWith_VersionResolutionError_WithConstraint(t *testing.T) {
+	ctx := context.Background()
+
+	// When a version constraint is specified and resolution fails,
+	// the function should return an error (not fall back to "dev")
+	resolver := &mockVersionResolver{err: errors.New("version 99.99.99 not found")}
+	generator := &mockPlanGenerator{} // Should not be called
+	cacheReader := &mockPlanCacheReader{}
+
+	cfg := planRetrievalConfig{
+		Tool:              "go",
+		VersionConstraint: "99.99.99", // User requested a specific version
+		OS:                "linux",
+		Arch:              "amd64",
+	}
+
+	result, err := getOrGeneratePlanWith(ctx, resolver, generator, cacheReader, cfg)
+	if err == nil {
+		t.Fatal("getOrGeneratePlanWith() should return error when version constraint fails")
+	}
+
+	if result != nil {
+		t.Errorf("result should be nil when error is returned, got %+v", result)
+	}
+
+	// Error should mention version resolution
+	if !errors.Is(err, resolver.err) && err.Error() == "" {
+		t.Errorf("error should wrap the resolution error, got: %v", err)
+	}
+}
+
 func TestGetOrGeneratePlanWith_DefaultOSArch(t *testing.T) {
 	ctx := context.Background()
 
