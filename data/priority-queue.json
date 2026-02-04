@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T07:06:38Z",
+  "updated_at": "2026-02-04T08:54:17Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1063,7 +1063,7 @@
       "source": "homebrew",
       "name": "librsvg",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1071,7 +1071,7 @@
       "source": "homebrew",
       "name": "terragrunt",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1079,7 +1079,7 @@
       "source": "homebrew",
       "name": "gettext",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1087,7 +1087,7 @@
       "source": "homebrew",
       "name": "boost",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1095,7 +1095,7 @@
       "source": "homebrew",
       "name": "postgresql@16",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1103,7 +1103,7 @@
       "source": "homebrew",
       "name": "jupyterlab",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1111,7 +1111,7 @@
       "source": "homebrew",
       "name": "nss",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1135,7 +1135,7 @@
       "source": "homebrew",
       "name": "mysql-client",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1143,7 +1143,7 @@
       "source": "homebrew",
       "name": "libtool",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1151,7 +1151,7 @@
       "source": "homebrew",
       "name": "libomp",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
