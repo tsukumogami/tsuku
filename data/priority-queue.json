@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T05:56:41Z",
+  "updated_at": "2026-02-04T07:06:38Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -943,7 +943,7 @@
       "source": "homebrew",
       "name": "libheif",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -951,7 +951,7 @@
       "source": "homebrew",
       "name": "fastlane",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -959,7 +959,7 @@
       "source": "homebrew",
       "name": "libpq",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -967,7 +967,7 @@
       "source": "homebrew",
       "name": "podman",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -975,7 +975,7 @@
       "source": "homebrew",
       "name": "zsh",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -991,7 +991,7 @@
       "source": "homebrew",
       "name": "flyctl",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -999,7 +999,7 @@
       "source": "homebrew",
       "name": "nmap",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1007,7 +1007,7 @@
       "source": "homebrew",
       "name": "postgresql@17",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1031,7 +1031,7 @@
       "source": "homebrew",
       "name": "unbound",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1039,7 +1039,7 @@
       "source": "homebrew",
       "name": "lcov",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
