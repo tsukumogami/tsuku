@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-04T08:56:22Z",
+  "generated_at": "2026-02-04T10:10:12Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 94,
-      "pending": 671,
+      "failed": 101,
+      "pending": 661,
       "skipped": 11,
-      "success": 113
+      "success": 116
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 57,
-        "pending": 671,
+        "failed": 64,
+        "pending": 661,
         "skipped": 6,
-        "success": 103
+        "success": 106
       }
     },
     "packages": {
@@ -409,6 +409,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:ghostscript",
+          "name": "ghostscript",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:glib",
           "name": "glib",
           "ecosystem": "homebrew",
@@ -535,6 +542,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:node@20",
+          "name": "node@20",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:node@22",
           "name": "node@22",
           "ecosystem": "homebrew",
@@ -544,6 +558,13 @@
         {
           "id": "homebrew:nss",
           "name": "nss",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:numpy",
+          "name": "numpy",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -565,6 +586,13 @@
         {
           "id": "homebrew:openjdk",
           "name": "openjdk",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:openjdk@11",
+          "name": "openjdk@11",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -619,6 +647,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:postgresql@15",
+          "name": "postgresql@15",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:postgresql@16",
           "name": "postgresql@16",
           "ecosystem": "homebrew",
@@ -668,6 +703,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:qpdf",
+          "name": "qpdf",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:rbenv",
           "name": "rbenv",
           "ecosystem": "homebrew",
@@ -684,6 +726,13 @@
         {
           "id": "homebrew:ruby-build",
           "name": "ruby-build",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:telnet",
+          "name": "telnet",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1779,12 +1828,6 @@
         {
           "id": "homebrew:ghidra",
           "name": "ghidra",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:ghostscript",
-          "name": "ghostscript",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3109,12 +3152,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:node@20",
-          "name": "node@20",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:node@24",
           "name": "node@24",
           "ecosystem": "homebrew",
@@ -3135,12 +3172,6 @@
         {
           "id": "homebrew:nuget",
           "name": "nuget",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:numpy",
-          "name": "numpy",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3259,12 +3290,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:openjdk@11",
-          "name": "openjdk@11",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:openjdk@8",
           "name": "openjdk@8",
           "ecosystem": "homebrew",
@@ -3345,12 +3370,6 @@
         {
           "id": "homebrew:p11-kit",
           "name": "p11-kit",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:p7zip",
-          "name": "p7zip",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3507,12 +3526,6 @@
         {
           "id": "homebrew:postgis",
           "name": "postgis",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:postgresql@15",
-          "name": "postgresql@15",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3693,12 +3706,6 @@
         {
           "id": "homebrew:pytorch",
           "name": "pytorch",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:qpdf",
-          "name": "qpdf",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4219,12 +4226,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:tailscale",
-          "name": "tailscale",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:talhelper",
           "name": "talhelper",
           "ecosystem": "homebrew",
@@ -4275,12 +4276,6 @@
         {
           "id": "homebrew:television",
           "name": "television",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:telnet",
-          "name": "telnet",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4557,12 +4552,6 @@
         {
           "id": "homebrew:wasmtime",
           "name": "wasmtime",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:watch",
-          "name": "watch",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5342,6 +5331,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:p7zip",
+          "name": "p7zip",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:pcre2",
           "name": "pcre2",
           "ecosystem": "homebrew",
@@ -5432,6 +5427,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:tailscale",
+          "name": "tailscale",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:terraform-docs",
           "name": "terraform-docs",
           "ecosystem": "homebrew",
@@ -5486,6 +5487,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:watch",
+          "name": "watch",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:xclogparser",
           "name": "xclogparser",
           "ecosystem": "homebrew",
@@ -5514,13 +5521,6 @@
   },
   "blockers": [
     {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
-      ]
-    },
-    {
       "dependency": "glib",
       "count": 1,
       "packages": [
@@ -5540,13 +5540,20 @@
       "packages": [
         "homebrew:node"
       ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 62,
-    "deterministic_insufficient": 36,
+    "deterministic": 74,
+    "deterministic_insufficient": 40,
     "missing_dep": 4,
-    "timeout": 1,
-    "validation_failed": 61
+    "timeout": 2,
+    "validation_failed": 64
   }
 }
