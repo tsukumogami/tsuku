@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-04T11:43:49Z",
+  "generated_at": "2026-02-04T14:52:27Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 113,
-      "pending": 641,
+      "failed": 120,
+      "pending": 631,
       "skipped": 11,
-      "success": 124
+      "success": 127
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 76,
-        "pending": 641,
+        "failed": 83,
+        "pending": 631,
         "skipped": 6,
-        "success": 114
+        "success": 117
       }
     },
     "packages": {
@@ -339,6 +339,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:aom",
+          "name": "aom",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:autoconf",
           "name": "autoconf",
           "ecosystem": "homebrew",
@@ -397,6 +404,13 @@
         {
           "id": "homebrew:deno",
           "name": "deno",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:dotnet",
+          "name": "dotnet",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -549,6 +563,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:mongosh",
+          "name": "mongosh",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:mysql",
           "name": "mysql",
           "ecosystem": "homebrew",
@@ -675,6 +696,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:pipenv",
+          "name": "pipenv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:poppler",
           "name": "poppler",
           "ecosystem": "homebrew",
@@ -794,6 +822,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:subversion",
+          "name": "subversion",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:telnet",
           "name": "telnet",
           "ecosystem": "homebrew",
@@ -836,6 +871,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:webp",
+          "name": "webp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:xcodegen",
           "name": "xcodegen",
           "ecosystem": "homebrew",
@@ -845,6 +887,13 @@
         {
           "id": "homebrew:xcresultparser",
           "name": "xcresultparser",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:xctesthtmlreport",
+          "name": "xctesthtmlreport",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -916,12 +965,6 @@
         {
           "id": "homebrew:antidote",
           "name": "antidote",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:aom",
-          "name": "aom",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1036,12 +1079,6 @@
         {
           "id": "homebrew:awscli-local",
           "name": "awscli-local",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:azcopy",
-          "name": "azcopy",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1588,12 +1625,6 @@
         {
           "id": "homebrew:dos2unix",
           "name": "dos2unix",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:dotnet",
-          "name": "dotnet",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2414,12 +2445,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:jpeg",
-          "name": "jpeg",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:jpeg-turbo",
           "name": "jpeg-turbo",
           "ecosystem": "homebrew",
@@ -2798,12 +2823,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:lua",
-          "name": "lua",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:lua-language-server",
           "name": "lua-language-server",
           "ecosystem": "homebrew",
@@ -2992,12 +3011,6 @@
         {
           "id": "homebrew:mongodb-atlas-cli",
           "name": "mongodb-atlas-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:mongosh",
-          "name": "mongosh",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3502,12 +3515,6 @@
         {
           "id": "homebrew:pinentry-mac",
           "name": "pinentry-mac",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:pipenv",
-          "name": "pipenv",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4142,12 +4149,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:subversion",
-          "name": "subversion",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:suite-sparse",
           "name": "suite-sparse",
           "ecosystem": "homebrew",
@@ -4538,12 +4539,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:webp",
-          "name": "webp",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:websocat",
           "name": "websocat",
           "ecosystem": "homebrew",
@@ -4594,12 +4589,6 @@
         {
           "id": "homebrew:xcodes",
           "name": "xcodes",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:xctesthtmlreport",
-          "name": "xctesthtmlreport",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4893,6 +4882,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:azcopy",
+          "name": "azcopy",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:bash",
           "name": "bash",
           "ecosystem": "homebrew",
@@ -5151,6 +5146,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:jpeg",
+          "name": "jpeg",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:jsonnet",
           "name": "jsonnet",
           "ecosystem": "homebrew",
@@ -5273,6 +5274,12 @@
         {
           "id": "homebrew:lsd",
           "name": "lsd",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:lua",
+          "name": "lua",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5533,6 +5540,13 @@
   },
   "blockers": [
     {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
+    },
+    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -5552,20 +5566,13 @@
       "packages": [
         "homebrew:imagemagick"
       ]
-    },
-    {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
     }
   ],
   "failures": {
-    "deterministic": 90,
-    "deterministic_insufficient": 49,
+    "deterministic": 95,
+    "deterministic_insufficient": 52,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 67
+    "validation_failed": 71
   }
 }
