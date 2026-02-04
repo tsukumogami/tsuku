@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The batch-generate workflow merges PRs before all CI checks complete, or with failing checks.
   GitHub auto-merge only waits for required checks, but making recipe-specific checks required
