@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T03:41:00Z",
+  "updated_at": "2026-02-04T04:47:11Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -703,7 +703,7 @@
       "source": "homebrew",
       "name": "xclogparser",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -735,7 +735,7 @@
       "source": "homebrew",
       "name": "mint",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -751,7 +751,7 @@
       "source": "homebrew",
       "name": "deno",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -767,7 +767,7 @@
       "source": "homebrew",
       "name": "pango",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -775,7 +775,7 @@
       "source": "homebrew",
       "name": "ruby-build",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -783,7 +783,7 @@
       "source": "homebrew",
       "name": "llama.cpp",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -791,7 +791,7 @@
       "source": "homebrew",
       "name": "glab",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -799,7 +799,7 @@
       "source": "homebrew",
       "name": "openai-whisper",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -807,7 +807,7 @@
       "source": "homebrew",
       "name": "qemu",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -823,7 +823,7 @@
       "source": "homebrew",
       "name": "yazi",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
