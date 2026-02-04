@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-04T03:44:02Z",
+  "generated_at": "2026-02-04T04:51:17Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 65,
-      "pending": 711,
+      "failed": 71,
+      "pending": 701,
       "skipped": 11,
-      "success": 102
+      "success": 106
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 28,
-        "pending": 711,
+        "failed": 34,
+        "pending": 701,
         "skipped": 6,
-        "success": 92
+        "success": 96
       }
     },
     "packages": {
@@ -367,6 +367,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:deno",
+          "name": "deno",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:fastfetch",
           "name": "fastfetch",
           "ecosystem": "homebrew",
@@ -402,6 +409,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:llama.cpp",
+          "name": "llama.cpp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:llvm",
           "name": "llvm",
           "ecosystem": "homebrew",
@@ -432,6 +446,13 @@
         {
           "id": "homebrew:node@22",
           "name": "node@22",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:openai-whisper",
+          "name": "openai-whisper",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -472,6 +493,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:pango",
+          "name": "pango",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:php",
           "name": "php",
           "ecosystem": "homebrew",
@@ -507,11 +535,25 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:qemu",
+          "name": "qemu",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:redis",
           "name": "redis",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:ruby-build",
+          "name": "ruby-build",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:tesseract",
@@ -1184,12 +1226,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:deno",
-          "name": "deno",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:dependency-check",
           "name": "dependency-check",
           "ecosystem": "homebrew",
@@ -1678,12 +1714,6 @@
         {
           "id": "homebrew:gitui",
           "name": "gitui",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:glab",
-          "name": "glab",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2558,12 +2588,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:llama.cpp",
-          "name": "llama.cpp",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:lld",
           "name": "lld",
           "ecosystem": "homebrew",
@@ -2764,12 +2788,6 @@
         {
           "id": "homebrew:minicom",
           "name": "minicom",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:mint",
-          "name": "mint",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3146,12 +3164,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:openai-whisper",
-          "name": "openai-whisper",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:openal-soft",
           "name": "openal-soft",
           "ecosystem": "homebrew",
@@ -3286,12 +3298,6 @@
         {
           "id": "homebrew:p7zip",
           "name": "p7zip",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:pango",
-          "name": "pango",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3668,12 +3674,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:qemu",
-          "name": "qemu",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:qpdf",
           "name": "qpdf",
           "ecosystem": "homebrew",
@@ -3796,12 +3796,6 @@
         {
           "id": "homebrew:rsync",
           "name": "rsync",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:ruby-build",
-          "name": "ruby-build",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4628,12 +4622,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:xclogparser",
-          "name": "xclogparser",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:xcode-build-server",
           "name": "xcode-build-server",
           "ecosystem": "homebrew",
@@ -4696,12 +4684,6 @@
         {
           "id": "homebrew:yarn",
           "name": "yarn",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:yazi",
-          "name": "yazi",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5127,6 +5109,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:glab",
+          "name": "glab",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:glow",
           "name": "glow",
           "ecosystem": "homebrew",
@@ -5331,6 +5319,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:mint",
+          "name": "mint",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ncurses",
           "name": "ncurses",
           "ecosystem": "homebrew",
@@ -5475,6 +5469,18 @@
           "priority": 3
         },
         {
+          "id": "homebrew:xclogparser",
+          "name": "xclogparser",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:yazi",
+          "name": "yazi",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:zstd",
           "name": "zstd",
           "ecosystem": "homebrew",
@@ -5514,10 +5520,10 @@
     }
   ],
   "failures": {
-    "deterministic": 45,
-    "deterministic_insufficient": 21,
+    "deterministic": 51,
+    "deterministic_insufficient": 24,
     "missing_dep": 4,
     "timeout": 1,
-    "validation_failed": 47
+    "validation_failed": 50
   }
 }
