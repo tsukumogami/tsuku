@@ -1,7 +1,7 @@
 name: Batch Recipe Generation
 on:
   schedule:
-    - cron: '0 */3 * * *'
+    - cron: '0 * * * *'
   workflow_dispatch:
     inputs:
       ecosystem:
@@ -25,14 +25,14 @@ on:
       tier:
         description: 'Queue tier (1=critical, 2=popular, 3=all)'
         required: true
-        default: '2'
+        default: '3'
         type: choice
         options: ['1', '2', '3']
 
 env:
   ECOSYSTEM: ${{ inputs.ecosystem || 'homebrew' }}
   BATCH_SIZE: ${{ inputs.batch_size || '10' }}
-  TIER: ${{ inputs.tier || '2' }}
+  TIER: ${{ inputs.tier || '3' }}
 
 concurrency:
   group: batch-generate
