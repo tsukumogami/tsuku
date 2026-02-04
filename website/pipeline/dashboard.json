@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-04T10:56:18Z",
+  "generated_at": "2026-02-04T11:43:49Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 105,
-      "pending": 651,
+      "failed": 113,
+      "pending": 641,
       "skipped": 11,
-      "success": 122
+      "success": 124
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 68,
-        "pending": 651,
+        "failed": 76,
+        "pending": 641,
         "skipped": 6,
-        "success": 112
+        "success": 114
       }
     },
     "packages": {
@@ -353,6 +353,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:aws-sam-cli",
+          "name": "aws-sam-cli",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -362,6 +369,13 @@
         {
           "id": "homebrew:boost",
           "name": "boost",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:ca-certificates",
+          "name": "ca-certificates",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -446,6 +460,13 @@
         {
           "id": "homebrew:graphviz",
           "name": "graphviz",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:jpeg-xl",
+          "name": "jpeg-xl",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -558,6 +579,13 @@
         {
           "id": "homebrew:node@22",
           "name": "node@22",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:node@24",
+          "name": "node@24",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -689,6 +717,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:python-setuptools",
+          "name": "python-setuptools",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:python@3.10",
           "name": "python@3.10",
           "ecosystem": "homebrew",
@@ -752,6 +787,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:semgrep",
+          "name": "semgrep",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:telnet",
           "name": "telnet",
           "ecosystem": "homebrew",
@@ -764,6 +806,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:tfenv",
+          "name": "tfenv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:unbound",
@@ -796,6 +845,13 @@
         {
           "id": "homebrew:xcresultparser",
           "name": "xcresultparser",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:yarn",
+          "name": "yarn",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -972,12 +1028,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:aws-sam-cli",
-          "name": "aws-sam-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:aws-vault",
           "name": "aws-vault",
           "ecosystem": "homebrew",
@@ -1130,12 +1180,6 @@
         {
           "id": "homebrew:c-ares",
           "name": "c-ares",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:ca-certificates",
-          "name": "ca-certificates",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2382,12 +2426,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:jpeg-xl",
-          "name": "jpeg-xl",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:julia",
           "name": "julia",
           "ecosystem": "homebrew",
@@ -3162,12 +3200,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:node@24",
-          "name": "node@24",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:nodenv",
           "name": "nodenv",
           "ecosystem": "homebrew",
@@ -3332,12 +3364,6 @@
         {
           "id": "homebrew:openssl@3.5",
           "name": "openssl@3.5",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:opentofu",
-          "name": "opentofu",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3666,12 +3692,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:python-setuptools",
-          "name": "python-setuptools",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:python-tk@3.10",
           "name": "python-tk@3.10",
           "ecosystem": "homebrew",
@@ -3942,12 +3962,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:semgrep",
-          "name": "semgrep",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:sentry-cli",
           "name": "sentry-cli",
           "ecosystem": "homebrew",
@@ -4182,12 +4196,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:swiftformat",
-          "name": "swiftformat",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:swiftgen",
           "name": "swiftgen",
           "ecosystem": "homebrew",
@@ -4286,12 +4294,6 @@
         {
           "id": "homebrew:texlive",
           "name": "texlive",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:tfenv",
-          "name": "tfenv",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4628,12 +4630,6 @@
         {
           "id": "homebrew:yamllint",
           "name": "yamllint",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:yarn",
-          "name": "yarn",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5305,6 +5301,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:opentofu",
+          "name": "opentofu",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:oras",
           "name": "oras",
           "ecosystem": "homebrew",
@@ -5403,6 +5405,12 @@
         {
           "id": "homebrew:stern",
           "name": "stern",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:swiftformat",
+          "name": "swiftformat",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5554,10 +5562,10 @@
     }
   ],
   "failures": {
-    "deterministic": 88,
-    "deterministic_insufficient": 42,
+    "deterministic": 90,
+    "deterministic_insufficient": 49,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 66
+    "validation_failed": 67
   }
 }
