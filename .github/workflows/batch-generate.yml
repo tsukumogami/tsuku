@@ -976,8 +976,15 @@ jobs:
               --subject "feat(recipes): add batch ${{ env.ECOSYSTEM }} recipes (${INCLUDED_COUNT} recipes)"
               --body "Batch generation of ${INCLUDED_COUNT} packages from ${{ env.ECOSYSTEM }} ecosystem. All recipes passed validation across platform environments.")
             if ! gh pr merge "$PR_NUMBER" --auto "${MERGE_ARGS[@]}" 2>&1; then
-              echo "Auto-merge unavailable (no required checks?) — merging directly"
-              gh pr merge "$PR_NUMBER" "${MERGE_ARGS[@]}"
+              echo "Auto-merge unavailable — waiting for CI checks to complete"
+              if gh pr checks "$PR_NUMBER" --watch --fail-fast; then
+                echo "All CI checks passed — merging"
+                gh pr merge "$PR_NUMBER" "${MERGE_ARGS[@]}"
+              else
+                echo "::error::CI checks failed — not merging automatically"
+                gh pr comment "$PR_NUMBER" --body "Auto-merge was skipped because CI checks failed. Please review the failures and merge manually after fixing."
+                exit 1
+              fi
             fi
           else
             echo "Some recipes were excluded — skipping auto-merge"
