@@ -197,10 +197,11 @@ func runHiddenToolVerification(r *recipe.Recipe, toolName, version, installDir s
 	}
 
 	cmdExec := exec.Command("sh", "-c", command)
-	// Add install directory bin/ to PATH so binaries can be found
+	// Add install directory bin/ and current/ symlink directory to PATH so binaries can be found
+	// current/ is needed for tools that use wrapper scripts (gem-based, runtime deps, etc.)
 	env := os.Environ()
 	binDir := filepath.Join(installDir, "bin")
-	env = append(env, "PATH="+binDir+":"+os.Getenv("PATH"))
+	env = append(env, "PATH="+cfg.CurrentDir+":"+binDir+":"+os.Getenv("PATH"))
 	cmdExec.Env = env
 
 	output, err := cmdExec.CombinedOutput()
@@ -281,10 +282,11 @@ func runVisibleToolVerification(r *recipe.Recipe, toolName string, toolState *in
 	}
 	cmdExec := exec.Command("sh", "-c", command)
 
-	// Add install directory bin/ to PATH so binaries can be found
+	// Add install directory bin/ and current/ symlink directory to PATH so binaries can be found
+	// current/ is needed for tools that use wrapper scripts (gem-based, runtime deps, etc.)
 	env := os.Environ()
 	binDir := filepath.Join(installDir, "bin")
-	env = append(env, "PATH="+binDir+":"+os.Getenv("PATH"))
+	env = append(env, "PATH="+cfg.CurrentDir+":"+binDir+":"+os.Getenv("PATH"))
 	cmdExec.Env = env
 
 	output, err := cmdExec.CombinedOutput()
