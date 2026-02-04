@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-03T15:56:55Z",
+  "updated_at": "2026-02-04T01:24:47Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -271,7 +271,7 @@
       "source": "homebrew",
       "name": "python@3.12",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -295,7 +295,7 @@
       "source": "homebrew",
       "name": "cocoapods",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -303,7 +303,7 @@
       "source": "homebrew",
       "name": "swiftlint",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -311,7 +311,7 @@
       "source": "homebrew",
       "name": "opencode",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -327,7 +327,7 @@
       "source": "homebrew",
       "name": "graphviz",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -335,7 +335,7 @@
       "source": "homebrew",
       "name": "node@22",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -343,7 +343,7 @@
       "source": "homebrew",
       "name": "openjdk@17",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -351,7 +351,7 @@
       "source": "homebrew",
       "name": "azure-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -367,7 +367,7 @@
       "source": "homebrew",
       "name": "kubernetes-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -391,7 +391,7 @@
       "source": "homebrew",
       "name": "openjdk",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -399,7 +399,7 @@
       "source": "homebrew",
       "name": "ansible",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -431,7 +431,7 @@
       "source": "homebrew",
       "name": "poppler",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -439,7 +439,7 @@
       "source": "homebrew",
       "name": "mysql",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -455,7 +455,7 @@
       "source": "homebrew",
       "name": "hello",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -463,7 +463,7 @@
       "source": "homebrew",
       "name": "python@3.10",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -471,7 +471,7 @@
       "source": "homebrew",
       "name": "watchman",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -479,7 +479,7 @@
       "source": "homebrew",
       "name": "php",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -487,7 +487,7 @@
       "source": "homebrew",
       "name": "gnu-tar",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -495,7 +495,7 @@
       "source": "homebrew",
       "name": "glib",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -503,7 +503,7 @@
       "source": "homebrew",
       "name": "maven",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -535,7 +535,7 @@
       "source": "homebrew",
       "name": "tesseract",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -543,7 +543,7 @@
       "source": "homebrew",
       "name": "postgresql@14",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -551,7 +551,7 @@
       "source": "homebrew",
       "name": "fastfetch",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -567,7 +567,7 @@
       "source": "homebrew",
       "name": "redis",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -575,7 +575,7 @@
       "source": "homebrew",
       "name": "ccache",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
