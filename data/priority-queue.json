@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T04:47:11Z",
+  "updated_at": "2026-02-04T05:56:41Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -831,7 +831,7 @@
       "source": "homebrew",
       "name": "zoxide",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -839,7 +839,7 @@
       "source": "homebrew",
       "name": "himalaya",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -863,7 +863,7 @@
       "source": "homebrew",
       "name": "pre-commit",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -879,7 +879,7 @@
       "source": "homebrew",
       "name": "python@3.9",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -895,7 +895,7 @@
       "source": "homebrew",
       "name": "mas",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -903,7 +903,7 @@
       "source": "homebrew",
       "name": "xcodegen",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -911,7 +911,7 @@
       "source": "homebrew",
       "name": "xcresultparser",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -919,7 +919,7 @@
       "source": "homebrew",
       "name": "rbenv",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -927,7 +927,7 @@
       "source": "homebrew",
       "name": "exiftool",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -935,7 +935,7 @@
       "source": "homebrew",
       "name": "gnutls",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
