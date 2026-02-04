@@ -130,7 +130,7 @@
 
             const rows = packages.map(pkg => `
                 <tr>
-                    <td class="package-name">${pkg.name}</td>
+                    <td class="package-name"><a href="/recipes/${pkg.name}/">${pkg.name}</a></td>
                     <td>${pkg.ecosystem}</td>
                     <td><span class="priority-badge priority-${pkg.priority}">P${pkg.priority}</span></td>
                 </tr>
