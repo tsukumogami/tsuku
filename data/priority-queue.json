@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T01:24:47Z",
+  "updated_at": "2026-02-04T03:41:00Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -591,7 +591,7 @@
       "source": "homebrew",
       "name": "hugo",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -615,7 +615,7 @@
       "source": "homebrew",
       "name": "pandoc",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -623,7 +623,7 @@
       "source": "homebrew",
       "name": "automake",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -631,7 +631,7 @@
       "source": "homebrew",
       "name": "mole",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -647,7 +647,7 @@
       "source": "homebrew",
       "name": "composer",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -655,7 +655,7 @@
       "source": "homebrew",
       "name": "openjdk@21",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -671,7 +671,7 @@
       "source": "homebrew",
       "name": "fish",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -679,7 +679,7 @@
       "source": "homebrew",
       "name": "gradle",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -687,7 +687,7 @@
       "source": "homebrew",
       "name": "llvm",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -695,7 +695,7 @@
       "source": "homebrew",
       "name": "cloudflared",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {

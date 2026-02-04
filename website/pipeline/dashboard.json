@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-04T01:29:01Z",
+  "generated_at": "2026-02-04T03:44:02Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 57,
-      "pending": 721,
+      "failed": 65,
+      "pending": 711,
       "skipped": 11,
-      "success": 100
+      "success": 102
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 20,
-        "pending": 721,
+        "failed": 28,
+        "pending": 711,
         "skipped": 6,
-        "success": 90
+        "success": 92
       }
     },
     "packages": {
@@ -339,6 +339,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:automake",
+          "name": "automake",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:azure-cli",
           "name": "azure-cli",
           "ecosystem": "homebrew",
@@ -353,8 +360,22 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:composer",
+          "name": "composer",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:fastfetch",
           "name": "fastfetch",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:fish",
+          "name": "fish",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -367,6 +388,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:gradle",
+          "name": "gradle",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:graphviz",
           "name": "graphviz",
           "ecosystem": "homebrew",
@@ -374,8 +402,22 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:llvm",
+          "name": "llvm",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:maven",
           "name": "maven",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:mole",
+          "name": "mole",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -414,6 +456,20 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:openjdk@21",
+          "name": "openjdk@21",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:pandoc",
+          "name": "pandoc",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:php",
@@ -626,12 +682,6 @@
         {
           "id": "homebrew:autojump",
           "name": "autojump",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:automake",
-          "name": "automake",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -996,12 +1046,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:cloudflared",
-          "name": "cloudflared",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:cmake-docs",
           "name": "cmake-docs",
           "ecosystem": "homebrew",
@@ -1034,12 +1078,6 @@
         {
           "id": "homebrew:commitizen",
           "name": "commitizen",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:composer",
-          "name": "composer",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1434,12 +1472,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:fish",
-          "name": "fish",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:fisher",
           "name": "fisher",
           "ecosystem": "homebrew",
@@ -1794,12 +1826,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:gradle",
-          "name": "gradle",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:grafana",
           "name": "grafana",
           "ecosystem": "homebrew",
@@ -1988,12 +2014,6 @@
         {
           "id": "homebrew:huggingface-cli",
           "name": "huggingface-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:hugo",
-          "name": "hugo",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2556,12 +2576,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:llvm",
-          "name": "llvm",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:llvm@16",
           "name": "llvm@16",
           "ecosystem": "homebrew",
@@ -2786,12 +2800,6 @@
         {
           "id": "homebrew:mockolo",
           "name": "mockolo",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:mole",
-          "name": "mole",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3192,12 +3200,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:openjdk@21",
-          "name": "openjdk@21",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:openjdk@8",
           "name": "openjdk@8",
           "ecosystem": "homebrew",
@@ -3284,12 +3286,6 @@
         {
           "id": "homebrew:p7zip",
           "name": "p7zip",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:pandoc",
-          "name": "pandoc",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5023,6 +5019,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cloudflared",
+          "name": "cloudflared",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:cocoapods",
           "name": "cocoapods",
           "ecosystem": "homebrew",
@@ -5181,6 +5183,12 @@
         {
           "id": "homebrew:httpie",
           "name": "httpie",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:hugo",
+          "name": "hugo",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5477,6 +5485,13 @@
   },
   "blockers": [
     {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
+    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -5496,20 +5511,13 @@
       "packages": [
         "homebrew:coreutils"
       ]
-    },
-    {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
     }
   ],
   "failures": {
-    "deterministic": 42,
-    "deterministic_insufficient": 18,
+    "deterministic": 45,
+    "deterministic_insufficient": 21,
     "missing_dep": 4,
     "timeout": 1,
-    "validation_failed": 42
+    "validation_failed": 47
   }
 }
