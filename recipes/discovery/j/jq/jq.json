@@ -3,5 +3,6 @@
   "source": "jq",
   "description": "Command-line JSON processor",
   "homepage": "https://jqlang.org",
-  "repo": "https://github.com/jqlang/jq"
+  "downloads": 0,
+  "has_repository": true
 }
