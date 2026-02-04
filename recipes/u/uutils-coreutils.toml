@@ -1,0 +1,35 @@
+[metadata]
+  name = "uutils-coreutils"
+  description = "Cross-platform Rust rewrite of the GNU coreutils"
+  homepage = "https://uutils.github.io/coreutils/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_libc = ["glibc"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "uutils-coreutils"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "uutils-coreutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/u[", "bin/uarch", "bin/ub2sum", "bin/ubase32", "bin/ubase64", "bin/ubasename", "bin/ubasenc", "bin/ucat", "bin/uchgrp", "bin/uchmod", "bin/uchown", "bin/uchroot", "bin/ucksum", "bin/ucomm", "bin/ucp", "bin/ucsplit", "bin/ucut", "bin/udate", "bin/udd", "bin/udf", "bin/udir", "bin/udircolors", "bin/udirname", "bin/udu", "bin/uecho", "bin/uenv", "bin/uexpand", "bin/uexpr", "bin/ufactor", "bin/ufalse", "bin/ufmt", "bin/ufold", "bin/ugroups", "bin/uhead", "bin/uhostid", "bin/uhostname", "bin/uid", "bin/uinstall", "bin/ujoin", "bin/ukill", "bin/ulink", "bin/uln", "bin/ulogname", "bin/uls", "bin/umd5sum", "bin/umkdir", "bin/umkfifo", "bin/umknod", "bin/umktemp", "bin/umore", "bin/umv", "bin/unice", "bin/unl", "bin/unohup", "bin/unproc", "bin/unumfmt", "bin/uod", "bin/upaste", "bin/upathchk", "bin/upinky", "bin/upr", "bin/uprintenv", "bin/uprintf", "bin/uptx", "bin/upwd", "bin/ureadlink", "bin/urealpath", "bin/urm", "bin/urmdir", "bin/useq", "bin/usha1sum", "bin/usha224sum", "bin/usha256sum", "bin/usha384sum", "bin/usha512sum", "bin/ushred", "bin/ushuf", "bin/usleep", "bin/usort", "bin/usplit", "bin/ustat", "bin/ustdbuf", "bin/ustty", "bin/usum", "bin/usync", "bin/utac", "bin/utail", "bin/utee", "bin/utest", "bin/utimeout", "bin/utouch", "bin/utr", "bin/utrue", "bin/utruncate", "bin/utsort", "bin/utty", "bin/uu-[", "bin/uu-arch", "bin/uu-b2sum", "bin/uu-base32", "bin/uu-base64", "bin/uu-basename", "bin/uu-basenc", "bin/uu-cat", "bin/uu-chgrp", "bin/uu-chmod", "bin/uu-chown", "bin/uu-chroot", "bin/uu-cksum", "bin/uu-comm", "bin/uu-cp", "bin/uu-csplit", "bin/uu-cut", "bin/uu-date", "bin/uu-dd", "bin/uu-df", "bin/uu-dir", "bin/uu-dircolors", "bin/uu-dirname", "bin/uu-du", "bin/uu-echo", "bin/uu-env", "bin/uu-expand", "bin/uu-expr", "bin/uu-factor", "bin/uu-false", "bin/uu-fmt", "bin/uu-fold", "bin/uu-groups", "bin/uu-head", "bin/uu-hostid", "bin/uu-hostname", "bin/uu-id", "bin/uu-install", "bin/uu-join", "bin/uu-kill", "bin/uu-link", "bin/uu-ln", "bin/uu-logname", "bin/uu-ls", "bin/uu-md5sum", "bin/uu-mkdir", "bin/uu-mkfifo", "bin/uu-mknod", "bin/uu-mktemp", "bin/uu-more", "bin/uu-mv", "bin/uu-nice", "bin/uu-nl", "bin/uu-nohup", "bin/uu-nproc", "bin/uu-numfmt", "bin/uu-od", "bin/uu-paste", "bin/uu-pathchk", "bin/uu-pinky", "bin/uu-pr", "bin/uu-printenv", "bin/uu-printf", "bin/uu-ptx", "bin/uu-pwd", "bin/uu-readlink", "bin/uu-realpath", "bin/uu-rm", "bin/uu-rmdir", "bin/uu-seq", "bin/uu-sha1sum", "bin/uu-sha224sum", "bin/uu-sha256sum", "bin/uu-sha384sum", "bin/uu-sha512sum", "bin/uu-shred", "bin/uu-shuf", "bin/uu-sleep", "bin/uu-sort", "bin/uu-split", "bin/uu-stat", "bin/uu-stdbuf", "bin/uu-stty", "bin/uu-sum", "bin/uu-sync", "bin/uu-tac", "bin/uu-tail", "bin/uu-tee", "bin/uu-test", "bin/uu-timeout", "bin/uu-touch", "bin/uu-tr", "bin/uu-true", "bin/uu-truncate", "bin/uu-tsort", "bin/uu-tty", "bin/uu-uname", "bin/uu-unexpand", "bin/uu-uniq", "bin/uu-unlink", "bin/uu-uptime", "bin/uu-users", "bin/uu-vdir", "bin/uu-wc", "bin/uu-who", "bin/uu-whoami", "bin/uu-yes", "bin/uuname", "bin/uunexpand", "bin/uuniq", "bin/uunlink", "bin/uuptime", "bin/uusers", "bin/uvdir", "bin/uwc", "bin/uwho", "bin/uwhoami", "bin/uyes"]
+
+[verify]
+  command = "u[ --version"
+  pattern = ""

@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-04T20:47:05Z",
+  "generated_at": "2026-02-04T22:40:58Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 120,
-      "pending": 631,
+      "failed": 128,
+      "pending": 621,
       "skipped": 11,
-      "success": 127
+      "success": 129
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 83,
-        "pending": 631,
+        "failed": 91,
+        "pending": 621,
         "skipped": 6,
-        "success": 117
+        "success": 119
       }
     },
     "packages": {
@@ -388,6 +388,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:cairo",
+          "name": "cairo",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:ccache",
           "name": "ccache",
           "ecosystem": "homebrew",
@@ -400,6 +407,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:dart-sdk",
+          "name": "dart-sdk",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:deno",
@@ -479,6 +493,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:huggingface-cli",
+          "name": "huggingface-cli",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:jpeg-xl",
           "name": "jpeg-xl",
           "ecosystem": "homebrew",
@@ -516,6 +537,13 @@
         {
           "id": "homebrew:librsvg",
           "name": "librsvg",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:libtiff",
+          "name": "libtiff",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -579,6 +607,20 @@
         {
           "id": "homebrew:mysql-client",
           "name": "mysql-client",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:mysql@8.0",
+          "name": "mysql@8.0",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:nginx",
+          "name": "nginx",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -829,6 +871,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:tcl-tk",
+          "name": "tcl-tk",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:telnet",
           "name": "telnet",
           "ecosystem": "homebrew",
@@ -859,6 +908,13 @@
         {
           "id": "homebrew:uutils-findutils",
           "name": "uutils-findutils",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:virtualenv",
+          "name": "virtualenv",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1227,12 +1283,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:cairo",
-          "name": "cairo",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:calc",
           "name": "calc",
           "ecosystem": "homebrew",
@@ -1509,12 +1559,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:dart-sdk",
-          "name": "dart-sdk",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:dav1d",
           "name": "dav1d",
           "ecosystem": "homebrew",
@@ -1577,12 +1621,6 @@
         {
           "id": "homebrew:dnsmasq",
           "name": "dnsmasq",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:docker-buildx",
-          "name": "docker-buildx",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2289,12 +2327,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:huggingface-cli",
-          "name": "huggingface-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:iblinter",
           "name": "iblinter",
           "ecosystem": "homebrew",
@@ -2709,12 +2741,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:libtiff",
-          "name": "libtiff",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:libunistring",
           "name": "libunistring",
           "ecosystem": "homebrew",
@@ -3099,12 +3125,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:mysql@8.0",
-          "name": "mysql@8.0",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:mysql@8.4",
           "name": "mysql@8.4",
           "ecosystem": "homebrew",
@@ -3185,12 +3205,6 @@
         {
           "id": "homebrew:nghttp2",
           "name": "nghttp2",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:nginx",
-          "name": "nginx",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4239,12 +4253,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:tcl-tk",
-          "name": "tcl-tk",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:tcl-tk@8",
           "name": "tcl-tk@8",
           "ecosystem": "homebrew",
@@ -4431,12 +4439,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:uutils-coreutils",
-          "name": "uutils-coreutils",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:vale",
           "name": "vale",
           "ecosystem": "homebrew",
@@ -4457,12 +4459,6 @@
         {
           "id": "homebrew:virt-manager",
           "name": "virt-manager",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:virtualenv",
-          "name": "virtualenv",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4974,6 +4970,12 @@
         {
           "id": "homebrew:dive",
           "name": "dive",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:docker-buildx",
+          "name": "docker-buildx",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5500,6 +5502,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:uutils-coreutils",
+          "name": "uutils-coreutils",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:velero",
           "name": "velero",
           "ecosystem": "homebrew",
@@ -5540,20 +5548,6 @@
   },
   "blockers": [
     {
-      "dependency": "glib",
-      "count": 1,
-      "packages": [
-        "homebrew:imagemagick"
-      ]
-    },
-    {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -5566,13 +5560,27 @@
       "packages": [
         "homebrew:ffmpeg"
       ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
+      ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 95,
-    "deterministic_insufficient": 52,
+    "deterministic": 97,
+    "deterministic_insufficient": 56,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 71
+    "validation_failed": 75
   }
 }

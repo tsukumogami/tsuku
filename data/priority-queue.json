@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T20:43:36Z",
+  "updated_at": "2026-02-04T22:37:47Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1535,7 +1535,7 @@
       "source": "homebrew",
       "name": "tcl-tk",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1543,7 +1543,7 @@
       "source": "homebrew",
       "name": "uutils-coreutils",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1551,7 +1551,7 @@
       "source": "homebrew",
       "name": "nginx",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1559,7 +1559,7 @@
       "source": "homebrew",
       "name": "mysql@8.0",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1567,7 +1567,7 @@
       "source": "homebrew",
       "name": "cairo",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1575,7 +1575,7 @@
       "source": "homebrew",
       "name": "huggingface-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1583,7 +1583,7 @@
       "source": "homebrew",
       "name": "libtiff",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1591,7 +1591,7 @@
       "source": "homebrew",
       "name": "dart-sdk",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1599,7 +1599,7 @@
       "source": "homebrew",
       "name": "docker-buildx",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1607,7 +1607,7 @@
       "source": "homebrew",
       "name": "virtualenv",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
