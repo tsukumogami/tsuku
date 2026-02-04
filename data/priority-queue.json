@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T08:54:17Z",
+  "updated_at": "2026-02-04T09:58:49Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1159,7 +1159,7 @@
       "source": "homebrew",
       "name": "telnet",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1175,7 +1175,7 @@
       "source": "homebrew",
       "name": "p7zip",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1183,7 +1183,7 @@
       "source": "homebrew",
       "name": "postgresql@15",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1191,7 +1191,7 @@
       "source": "homebrew",
       "name": "qpdf",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1199,7 +1199,7 @@
       "source": "homebrew",
       "name": "watch",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1207,7 +1207,7 @@
       "source": "homebrew",
       "name": "openjdk@11",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1215,7 +1215,7 @@
       "source": "homebrew",
       "name": "ghostscript",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1223,7 +1223,7 @@
       "source": "homebrew",
       "name": "node@20",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1231,7 +1231,7 @@
       "source": "homebrew",
       "name": "numpy",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1247,7 +1247,7 @@
       "source": "homebrew",
       "name": "tailscale",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
