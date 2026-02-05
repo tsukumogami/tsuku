@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-05T10:56:34Z",
+  "generated_at": "2026-02-05T14:54:44Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 155,
-      "pending": 581,
+      "failed": 164,
+      "pending": 571,
       "skipped": 11,
-      "success": 142
+      "success": 143
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 118,
-        "pending": 581,
+        "failed": 127,
+        "pending": 571,
         "skipped": 6,
-        "success": 132
+        "success": 133
       }
     },
     "packages": {
@@ -465,8 +465,29 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:firebase-cli",
+          "name": "firebase-cli",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:fish",
           "name": "fish",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:folly",
+          "name": "folly",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:freetds",
+          "name": "freetds",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -675,6 +696,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:mongodb-atlas-cli",
+          "name": "mongodb-atlas-cli",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:mongosh",
           "name": "mongosh",
           "ecosystem": "homebrew",
@@ -773,6 +801,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:ocrmypdf",
+          "name": "ocrmypdf",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:openai-whisper",
           "name": "openai-whisper",
           "ecosystem": "homebrew",
@@ -817,6 +852,13 @@
         {
           "id": "homebrew:openjdk@21",
           "name": "openjdk@21",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:openssl@3.5",
+          "name": "openssl@3.5",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -934,6 +976,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:python-yq",
+          "name": "python-yq",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:python@3.10",
           "name": "python@3.10",
           "ecosystem": "homebrew",
@@ -1023,6 +1072,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:socat",
+          "name": "socat",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:subversion",
@@ -1153,6 +1209,13 @@
         {
           "id": "homebrew:zsh-autosuggestions",
           "name": "zsh-autosuggestions",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:zsh-syntax-highlighting",
+          "name": "zsh-syntax-highlighting",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1772,12 +1835,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:docker-credential-helper",
-          "name": "docker-credential-helper",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:docker-credential-helper-ecr",
           "name": "docker-credential-helper-ecr",
           "ecosystem": "homebrew",
@@ -1964,12 +2021,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:firebase-cli",
-          "name": "firebase-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:fisher",
           "name": "fisher",
           "ecosystem": "homebrew",
@@ -2000,12 +2051,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:folly",
-          "name": "folly",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:fontconfig",
           "name": "fontconfig",
           "ecosystem": "homebrew",
@@ -2020,12 +2065,6 @@
         {
           "id": "homebrew:freerdp",
           "name": "freerdp",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:freetds",
-          "name": "freetds",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3104,12 +3143,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:mongodb-atlas-cli",
-          "name": "mongodb-atlas-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:mono",
           "name": "mono",
           "ecosystem": "homebrew",
@@ -3326,12 +3359,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:ocrmypdf",
-          "name": "ocrmypdf",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:octave",
           "name": "octave",
           "ecosystem": "homebrew",
@@ -3436,12 +3463,6 @@
         {
           "id": "homebrew:openssl@1.1",
           "name": "openssl@1.1",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:openssl@3.5",
-          "name": "openssl@3.5",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3764,12 +3785,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:python-yq",
-          "name": "python-yq",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:pytorch",
           "name": "pytorch",
           "ecosystem": "homebrew",
@@ -4036,12 +4051,6 @@
         {
           "id": "homebrew:snyk-cli",
           "name": "snyk-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:socat",
-          "name": "socat",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4638,12 +4647,6 @@
           "name": "zsh-completions",
           "ecosystem": "homebrew",
           "priority": 3
-        },
-        {
-          "id": "homebrew:zsh-syntax-highlighting",
-          "name": "zsh-syntax-highlighting",
-          "ecosystem": "homebrew",
-          "priority": 3
         }
       ],
       "skipped": [
@@ -4961,6 +4964,12 @@
         {
           "id": "homebrew:docker-compose",
           "name": "docker-compose",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:docker-credential-helper",
+          "name": "docker-credential-helper",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5575,13 +5584,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -5601,13 +5603,20 @@
       "packages": [
         "homebrew:coreutils"
       ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 116,
-    "deterministic_insufficient": 67,
+    "deterministic": 120,
+    "deterministic_insufficient": 73,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 91
+    "validation_failed": 94
   }
 }
