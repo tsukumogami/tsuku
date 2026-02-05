@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-05T19:47:44Z",
+  "generated_at": "2026-02-05T21:43:00Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 183,
-      "pending": 541,
+      "failed": 189,
+      "pending": 531,
       "skipped": 11,
-      "success": 154
+      "success": 158
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 146,
-        "pending": 541,
+        "failed": 152,
+        "pending": 531,
         "skipped": 6,
-        "success": 144
+        "success": 148
       }
     },
     "packages": {
@@ -472,11 +472,25 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:dnsmasq",
+          "name": "dnsmasq",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:dotnet",
           "name": "dotnet",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:edencommon",
+          "name": "edencommon",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:fastfetch",
@@ -591,6 +605,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:gobject-introspection",
+          "name": "gobject-introspection",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:gradle",
           "name": "gradle",
           "ecosystem": "homebrew",
@@ -638,6 +659,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:jenv",
+          "name": "jenv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:jpeg-xl",
@@ -955,6 +983,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:openssl@1.1",
+          "name": "openssl@1.1",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:openssl@3.5",
           "name": "openssl@3.5",
           "ecosystem": "homebrew",
@@ -1062,6 +1097,13 @@
         {
           "id": "homebrew:pre-commit",
           "name": "pre-commit",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:prettier",
+          "name": "prettier",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1914,12 +1956,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:dnsmasq",
-          "name": "dnsmasq",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:docker-completion",
           "name": "docker-completion",
           "ecosystem": "homebrew",
@@ -1974,12 +2010,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:duckdb",
-          "name": "duckdb",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:duti",
           "name": "duti",
           "ecosystem": "homebrew",
@@ -2000,12 +2030,6 @@
         {
           "id": "homebrew:e2fsprogs",
           "name": "e2fsprogs",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:edencommon",
-          "name": "edencommon",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2138,12 +2162,6 @@
         {
           "id": "homebrew:freetype",
           "name": "freetype",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:fresh-editor",
-          "name": "fresh-editor",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2312,12 +2330,6 @@
         {
           "id": "homebrew:go@1.24",
           "name": "go@1.24",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:gobject-introspection",
-          "name": "gobject-introspection",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2636,12 +2648,6 @@
         {
           "id": "homebrew:jenkins-lts",
           "name": "jenkins-lts",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:jenv",
-          "name": "jenv",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2990,12 +2996,6 @@
         {
           "id": "homebrew:lsof",
           "name": "lsof",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:lua-language-server",
-          "name": "lua-language-server",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3468,12 +3468,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:openssl@1.1",
-          "name": "openssl@1.1",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:openvpn",
           "name": "openvpn",
           "ecosystem": "homebrew",
@@ -3644,12 +3638,6 @@
         {
           "id": "homebrew:prek",
           "name": "prek",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:prettier",
-          "name": "prettier",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3896,12 +3884,6 @@
         {
           "id": "homebrew:rumdl",
           "name": "rumdl",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:rust-analyzer",
-          "name": "rust-analyzer",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4957,6 +4939,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:duckdb",
+          "name": "duckdb",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:duf",
           "name": "duf",
           "ecosystem": "homebrew",
@@ -4995,6 +4983,12 @@
         {
           "id": "homebrew:fnm",
           "name": "fnm",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:fresh-editor",
+          "name": "fresh-editor",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5281,6 +5275,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:lua-language-server",
+          "name": "lua-language-server",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:miller",
           "name": "miller",
           "ecosystem": "homebrew",
@@ -5385,6 +5385,12 @@
         {
           "id": "homebrew:ruff",
           "name": "ruff",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:rust-analyzer",
+          "name": "rust-analyzer",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5603,6 +5609,13 @@
   },
   "blockers": [
     {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
+    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -5622,20 +5635,13 @@
       "packages": [
         "homebrew:coreutils"
       ]
-    },
-    {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
     }
   ],
   "failures": {
-    "deterministic": 140,
-    "deterministic_insufficient": 84,
+    "deterministic": 148,
+    "deterministic_insufficient": 89,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 102
+    "validation_failed": 103
   }
 }
