@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-05T21:38:18Z",
+  "updated_at": "2026-02-05T22:38:35Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -2535,7 +2535,7 @@
       "source": "homebrew",
       "name": "git-delta",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2543,7 +2543,7 @@
       "source": "homebrew",
       "name": "portaudio",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2551,7 +2551,7 @@
       "source": "homebrew",
       "name": "emacs",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2575,7 +2575,7 @@
       "source": "homebrew",
       "name": "ctlptl",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2583,7 +2583,7 @@
       "source": "homebrew",
       "name": "gmp",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2591,7 +2591,7 @@
       "source": "homebrew",
       "name": "llvm@20",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2599,7 +2599,7 @@
       "source": "homebrew",
       "name": "ncdu",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2607,7 +2607,7 @@
       "source": "homebrew",
       "name": "git-crypt",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2615,7 +2615,7 @@
       "source": "homebrew",
       "name": "gstreamer",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2623,7 +2623,7 @@
       "source": "homebrew",
       "name": "witr",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
