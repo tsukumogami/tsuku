@@ -1,0 +1,35 @@
+[metadata]
+  name = "jfrog-cli"
+  description = "Command-line interface for JFrog products"
+  homepage = "https://www.jfrog.com/confluence/display/CLI/JFrog+CLI"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_libc = ["glibc"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "jfrog-cli"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "jfrog-cli"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/jf"]
+
+[verify]
+  command = "jf --version"
+  pattern = ""
