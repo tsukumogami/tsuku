@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-05T18:02:30Z",
+  "generated_at": "2026-02-05T19:04:49Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 170,
-      "pending": 561,
+      "failed": 176,
+      "pending": 551,
       "skipped": 11,
-      "success": 147
+      "success": 151
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 133,
-        "pending": 561,
+        "failed": 139,
+        "pending": 551,
         "skipped": 6,
-        "success": 137
+        "success": 141
       }
     },
     "packages": {
@@ -360,6 +360,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:aria2",
+          "name": "aria2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:autoconf",
           "name": "autoconf",
           "ecosystem": "homebrew",
@@ -437,6 +444,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:cmake-docs",
+          "name": "cmake-docs",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:composer",
           "name": "composer",
           "ecosystem": "homebrew",
@@ -474,6 +488,20 @@
         {
           "id": "homebrew:fastlane",
           "name": "fastlane",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:fb303",
+          "name": "fb303",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:fbthrift",
+          "name": "fbthrift",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -1193,6 +1221,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:wangle",
+          "name": "wangle",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:watchman",
           "name": "watchman",
           "ecosystem": "homebrew",
@@ -1202,6 +1237,13 @@
         {
           "id": "homebrew:webp",
           "name": "webp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:wireshark",
+          "name": "wireshark",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -1337,12 +1379,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:aria2",
-          "name": "aria2",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:asciinema",
           "name": "asciinema",
           "ecosystem": "homebrew",
@@ -1465,12 +1501,6 @@
         {
           "id": "homebrew:bind",
           "name": "bind",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:bison",
-          "name": "bison",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1675,12 +1705,6 @@
         {
           "id": "homebrew:cloudflare-wrangler",
           "name": "cloudflare-wrangler",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:cmake-docs",
-          "name": "cmake-docs",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1999,18 +2023,6 @@
         {
           "id": "homebrew:fabric-ai",
           "name": "fabric-ai",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:fb303",
-          "name": "fb303",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:fbthrift",
-          "name": "fbthrift",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3365,12 +3377,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:oh-my-posh",
-          "name": "oh-my-posh",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:onnxruntime",
           "name": "onnxruntime",
           "ecosystem": "homebrew",
@@ -4109,12 +4115,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:sshpass",
-          "name": "sshpass",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:sshuttle",
           "name": "sshuttle",
           "ecosystem": "homebrew",
@@ -4361,12 +4361,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:typos-cli",
-          "name": "typos-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:typst",
           "name": "typst",
           "ecosystem": "homebrew",
@@ -4481,12 +4475,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:wangle",
-          "name": "wangle",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:wasmtime",
           "name": "wasmtime",
           "ecosystem": "homebrew",
@@ -4525,12 +4513,6 @@
         {
           "id": "homebrew:wireguard-tools",
           "name": "wireguard-tools",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:wireshark",
-          "name": "wireshark",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4844,6 +4826,12 @@
         {
           "id": "homebrew:biome",
           "name": "biome",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:bison",
+          "name": "bison",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5310,6 +5298,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:oh-my-posh",
+          "name": "oh-my-posh",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:opentofu",
           "name": "opentofu",
           "ecosystem": "homebrew",
@@ -5418,6 +5412,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:sshpass",
+          "name": "sshpass",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:starship",
           "name": "starship",
           "ecosystem": "homebrew",
@@ -5516,6 +5516,12 @@
         {
           "id": "homebrew:trufflehog",
           "name": "trufflehog",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:typos-cli",
+          "name": "typos-cli",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5619,10 +5625,10 @@
     }
   ],
   "failures": {
-    "deterministic": 127,
-    "deterministic_insufficient": 76,
+    "deterministic": 134,
+    "deterministic_insufficient": 79,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 97
+    "validation_failed": 100
   }
 }
