@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-05T04:55:03Z",
+  "updated_at": "2026-02-05T06:02:26Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1735,7 +1735,7 @@
       "source": "homebrew",
       "name": "guile",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1743,7 +1743,7 @@
       "source": "homebrew",
       "name": "gdk-pixbuf",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1759,7 +1759,7 @@
       "source": "homebrew",
       "name": "pyenv-virtualenv",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1775,7 +1775,7 @@
       "source": "homebrew",
       "name": "xmlstarlet",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1783,7 +1783,7 @@
       "source": "homebrew",
       "name": "asdf",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1799,7 +1799,7 @@
       "source": "homebrew",
       "name": "wimlib",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1807,7 +1807,7 @@
       "source": "homebrew",
       "name": "python-tk@3.14",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1815,7 +1815,7 @@
       "source": "homebrew",
       "name": "vips",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1823,7 +1823,7 @@
       "source": "homebrew",
       "name": "binutils",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1831,7 +1831,7 @@
       "source": "homebrew",
       "name": "zsh-autosuggestions",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
