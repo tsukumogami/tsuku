@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-05T06:02:26Z",
+  "updated_at": "2026-02-05T08:56:07Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1839,7 +1839,7 @@
       "source": "homebrew",
       "name": "little-cms2",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1847,7 +1847,7 @@
       "source": "homebrew",
       "name": "rsync",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1855,7 +1855,7 @@
       "source": "homebrew",
       "name": "vale",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1863,7 +1863,7 @@
       "source": "homebrew",
       "name": "libffi",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1871,7 +1871,7 @@
       "source": "homebrew",
       "name": "gdal",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1887,7 +1887,7 @@
       "source": "homebrew",
       "name": "git-filter-repo",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1895,7 +1895,7 @@
       "source": "homebrew",
       "name": "swift-sh",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1911,7 +1911,7 @@
       "source": "homebrew",
       "name": "dust",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1927,7 +1927,7 @@
       "source": "homebrew",
       "name": "qwen-code",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1935,7 +1935,7 @@
       "source": "homebrew",
       "name": "cloc",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
