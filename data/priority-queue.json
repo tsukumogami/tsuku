@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-05T19:01:06Z",
+  "updated_at": "2026-02-05T19:44:21Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -2335,7 +2335,7 @@
       "source": "homebrew",
       "name": "mactop",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2343,7 +2343,7 @@
       "source": "homebrew",
       "name": "libraw",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2351,7 +2351,7 @@
       "source": "homebrew",
       "name": "libusb",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2359,7 +2359,7 @@
       "source": "homebrew",
       "name": "plantuml",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2375,7 +2375,7 @@
       "source": "homebrew",
       "name": "lima",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2383,7 +2383,7 @@
       "source": "homebrew",
       "name": "openvino",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2391,7 +2391,7 @@
       "source": "homebrew",
       "name": "nushell",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2399,7 +2399,7 @@
       "source": "homebrew",
       "name": "clang-format",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2407,7 +2407,7 @@
       "source": "homebrew",
       "name": "vercel-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2415,7 +2415,7 @@
       "source": "homebrew",
       "name": "block-goose-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
