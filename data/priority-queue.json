@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-05T10:52:20Z",
+  "updated_at": "2026-02-05T15:50:33Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -2055,7 +2055,7 @@
       "source": "homebrew",
       "name": "openssl@3.5",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2063,7 +2063,7 @@
       "source": "homebrew",
       "name": "docker-credential-helper",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2079,7 +2079,7 @@
       "source": "homebrew",
       "name": "mongodb-atlas-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2087,7 +2087,7 @@
       "source": "homebrew",
       "name": "ocrmypdf",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2095,7 +2095,7 @@
       "source": "homebrew",
       "name": "freetds",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2103,7 +2103,7 @@
       "source": "homebrew",
       "name": "zsh-syntax-highlighting",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2127,7 +2127,7 @@
       "source": "homebrew",
       "name": "python-yq",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2135,7 +2135,7 @@
       "source": "homebrew",
       "name": "folly",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2143,7 +2143,7 @@
       "source": "homebrew",
       "name": "firebase-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2159,7 +2159,7 @@
       "source": "homebrew",
       "name": "socat",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
