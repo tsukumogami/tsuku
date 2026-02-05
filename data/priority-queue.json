@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-04T23:36:20Z",
+  "updated_at": "2026-02-05T04:55:03Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -1615,7 +1615,7 @@
       "source": "homebrew",
       "name": "scrcpy",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1623,7 +1623,7 @@
       "source": "homebrew",
       "name": "gsasl",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1631,7 +1631,7 @@
       "source": "homebrew",
       "name": "mosh",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1639,7 +1639,7 @@
       "source": "homebrew",
       "name": "mpv",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1647,7 +1647,7 @@
       "source": "homebrew",
       "name": "c-ares",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1655,7 +1655,7 @@
       "source": "homebrew",
       "name": "bats-core",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1663,7 +1663,7 @@
       "source": "homebrew",
       "name": "allure",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1671,7 +1671,7 @@
       "source": "homebrew",
       "name": "p11-kit",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1679,7 +1679,7 @@
       "source": "homebrew",
       "name": "swiftgen",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -1695,7 +1695,7 @@
       "source": "homebrew",
       "name": "act",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
