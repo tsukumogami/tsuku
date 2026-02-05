@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-05T06:05:27Z",
+  "generated_at": "2026-02-05T09:00:23Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 143,
-      "pending": 601,
+      "failed": 149,
+      "pending": 591,
       "skipped": 11,
-      "success": 134
+      "success": 138
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 106,
-        "pending": 601,
+        "failed": 112,
+        "pending": 591,
         "skipped": 6,
-        "success": 124
+        "success": 128
       }
     },
     "packages": {
@@ -472,6 +472,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:gdal",
+          "name": "gdal",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:gdk-pixbuf",
           "name": "gdk-pixbuf",
           "ecosystem": "homebrew",
@@ -491,6 +498,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:git-filter-repo",
+          "name": "git-filter-repo",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:glib",
@@ -556,6 +570,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:libffi",
+          "name": "libffi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:libheif",
           "name": "libheif",
           "ecosystem": "homebrew",
@@ -593,6 +614,13 @@
         {
           "id": "homebrew:libtool",
           "name": "libtool",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:little-cms2",
+          "name": "little-cms2",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -913,6 +941,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:qwen-code",
+          "name": "qwen-code",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:rbenv",
           "name": "rbenv",
           "ecosystem": "homebrew",
@@ -922,6 +957,13 @@
         {
           "id": "homebrew:redis",
           "name": "redis",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:rsync",
+          "name": "rsync",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -1490,12 +1532,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:cloc",
-          "name": "cloc",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:clojure",
           "name": "clojure",
           "ecosystem": "homebrew",
@@ -1766,12 +1802,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:dust",
-          "name": "dust",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:duti",
           "name": "duti",
           "ecosystem": "homebrew",
@@ -2006,12 +2036,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:gdal",
-          "name": "gdal",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:gdb",
           "name": "gdb",
           "ecosystem": "homebrew",
@@ -2050,12 +2074,6 @@
         {
           "id": "homebrew:git-delta",
           "name": "git-delta",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:git-filter-repo",
-          "name": "git-filter-repo",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2672,12 +2690,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:libffi",
-          "name": "libffi",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:libfido2",
           "name": "libfido2",
           "ecosystem": "homebrew",
@@ -2848,12 +2860,6 @@
         {
           "id": "homebrew:lima-additional-guestagents",
           "name": "lima-additional-guestagents",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:little-cms2",
-          "name": "little-cms2",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3794,12 +3800,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:qwen-code",
-          "name": "qwen-code",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:r",
           "name": "r",
           "ecosystem": "homebrew",
@@ -3868,12 +3868,6 @@
         {
           "id": "homebrew:rom-tools",
           "name": "rom-tools",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:rsync",
-          "name": "rsync",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4220,12 +4214,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:swift-sh",
-          "name": "swift-sh",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:swig",
           "name": "swig",
           "ecosystem": "homebrew",
@@ -4444,12 +4432,6 @@
         {
           "id": "homebrew:util-linux",
           "name": "util-linux",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:vale",
-          "name": "vale",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4929,6 +4911,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:cloc",
+          "name": "cloc",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:cloudflared",
           "name": "cloudflared",
           "ecosystem": "homebrew",
@@ -4997,6 +4985,12 @@
         {
           "id": "homebrew:duf",
           "name": "duf",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:dust",
+          "name": "dust",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5421,6 +5415,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:swift-sh",
+          "name": "swift-sh",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:swiftformat",
           "name": "swiftformat",
           "ecosystem": "homebrew",
@@ -5511,6 +5511,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:vale",
+          "name": "vale",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:velero",
           "name": "velero",
           "ecosystem": "homebrew",
@@ -5563,6 +5569,13 @@
   },
   "blockers": [
     {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
+    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -5582,20 +5595,13 @@
       "packages": [
         "homebrew:coreutils"
       ]
-    },
-    {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
     }
   ],
   "failures": {
-    "deterministic": 104,
-    "deterministic_insufficient": 61,
+    "deterministic": 113,
+    "deterministic_insufficient": 64,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 85
+    "validation_failed": 88
   }
 }
