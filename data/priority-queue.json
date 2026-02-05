@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-05T17:57:48Z",
+  "updated_at": "2026-02-05T19:01:06Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -2255,7 +2255,7 @@
       "source": "homebrew",
       "name": "aria2",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2263,7 +2263,7 @@
       "source": "homebrew",
       "name": "fb303",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2271,7 +2271,7 @@
       "source": "homebrew",
       "name": "cmake-docs",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2279,7 +2279,7 @@
       "source": "homebrew",
       "name": "typos-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2287,7 +2287,7 @@
       "source": "homebrew",
       "name": "bison",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2295,7 +2295,7 @@
       "source": "homebrew",
       "name": "sshpass",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2303,7 +2303,7 @@
       "source": "homebrew",
       "name": "oh-my-posh",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2311,7 +2311,7 @@
       "source": "homebrew",
       "name": "wireshark",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2319,7 +2319,7 @@
       "source": "homebrew",
       "name": "wangle",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2327,7 +2327,7 @@
       "source": "homebrew",
       "name": "fbthrift",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
