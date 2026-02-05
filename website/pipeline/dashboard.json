@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-05T19:04:49Z",
+  "generated_at": "2026-02-05T19:47:44Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 176,
-      "pending": 551,
+      "failed": 183,
+      "pending": 541,
       "skipped": 11,
-      "success": 151
+      "success": 154
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 139,
-        "pending": 551,
+        "failed": 146,
+        "pending": 541,
         "skipped": 6,
-        "success": 141
+        "success": 144
       }
     },
     "packages": {
@@ -689,6 +689,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:libraw",
+          "name": "libraw",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:librsvg",
           "name": "librsvg",
           "ecosystem": "homebrew",
@@ -710,6 +717,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:libusb",
+          "name": "libusb",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:little-cms2",
           "name": "little-cms2",
           "ecosystem": "homebrew",
@@ -729,6 +743,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:mactop",
+          "name": "mactop",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:mas",
@@ -864,6 +885,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:nushell",
+          "name": "nushell",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:ocrmypdf",
           "name": "ocrmypdf",
           "ecosystem": "homebrew",
@@ -934,6 +962,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:openvino",
+          "name": "openvino",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:p11-kit",
           "name": "p11-kit",
           "ecosystem": "homebrew",
@@ -971,6 +1006,13 @@
         {
           "id": "homebrew:pipenv",
           "name": "pipenv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:plantuml",
+          "name": "plantuml",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1202,6 +1244,13 @@
         {
           "id": "homebrew:uutils-findutils",
           "name": "uutils-findutils",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:vercel-cli",
+          "name": "vercel-cli",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1511,12 +1560,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:block-goose-cli",
-          "name": "block-goose-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:blueutil",
           "name": "blueutil",
           "ecosystem": "homebrew",
@@ -1663,12 +1706,6 @@
         {
           "id": "homebrew:clamav",
           "name": "clamav",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:clang-format",
-          "name": "clang-format",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2837,12 +2874,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:libraw",
-          "name": "libraw",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:librdkafka",
           "name": "librdkafka",
           "ecosystem": "homebrew",
@@ -2885,12 +2916,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:libusb",
-          "name": "libusb",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:libvirt",
           "name": "libvirt",
           "ecosystem": "homebrew",
@@ -2917,12 +2942,6 @@
         {
           "id": "homebrew:libzip",
           "name": "libzip",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:lima",
-          "name": "lima",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3007,12 +3026,6 @@
         {
           "id": "homebrew:m-cli",
           "name": "m-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:mactop",
-          "name": "mactop",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3341,12 +3354,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:nushell",
-          "name": "nushell",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:nvtop",
           "name": "nvtop",
           "ecosystem": "homebrew",
@@ -3463,12 +3470,6 @@
         {
           "id": "homebrew:openssl@1.1",
           "name": "openssl@1.1",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:openvino",
-          "name": "openvino",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3601,12 +3602,6 @@
         {
           "id": "homebrew:pixman",
           "name": "pixman",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:plantuml",
-          "name": "plantuml",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4415,12 +4410,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:vercel-cli",
-          "name": "vercel-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:virt-manager",
           "name": "virt-manager",
           "ecosystem": "homebrew",
@@ -4842,6 +4831,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:block-goose-cli",
+          "name": "block-goose-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:bottom",
           "name": "bottom",
           "ecosystem": "homebrew",
@@ -4868,6 +4863,12 @@
         {
           "id": "homebrew:chezmoi",
           "name": "chezmoi",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:clang-format",
+          "name": "clang-format",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5262,6 +5263,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:lima",
+          "name": "lima",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:lsd",
           "name": "lsd",
           "ecosystem": "homebrew",
@@ -5596,13 +5603,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -5622,13 +5622,20 @@
       "packages": [
         "homebrew:coreutils"
       ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 134,
-    "deterministic_insufficient": 79,
+    "deterministic": 140,
+    "deterministic_insufficient": 84,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 100
+    "validation_failed": 102
   }
 }
