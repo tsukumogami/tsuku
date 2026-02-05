@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-05T21:43:00Z",
+  "generated_at": "2026-02-05T23:46:00Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 189,
-      "pending": 531,
+      "failed": 196,
+      "pending": 521,
       "skipped": 11,
-      "success": 158
+      "success": 161
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 152,
-        "pending": 531,
+        "failed": 159,
+        "pending": 521,
         "skipped": 6,
-        "success": 148
+        "success": 151
       }
     },
     "packages": {
@@ -493,6 +493,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:emacs",
+          "name": "emacs",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:fastfetch",
           "name": "fastfetch",
           "ecosystem": "homebrew",
@@ -584,6 +591,20 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:git-crypt",
+          "name": "git-crypt",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:git-delta",
+          "name": "git-delta",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:git-filter-repo",
           "name": "git-filter-repo",
           "ecosystem": "homebrew",
@@ -596,6 +617,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:gmp",
+          "name": "gmp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:gnutls",
@@ -635,6 +663,13 @@
         {
           "id": "homebrew:gsasl",
           "name": "gsasl",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:gstreamer",
+          "name": "gstreamer",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -771,6 +806,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:llvm@20",
+          "name": "llvm@20",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:mactop",
@@ -1058,6 +1100,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:portaudio",
+          "name": "portaudio",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:postgresql@14",
@@ -1878,12 +1927,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:ctlptl",
-          "name": "ctlptl",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:cycode",
           "name": "cycode",
           "ecosystem": "homebrew",
@@ -2042,12 +2085,6 @@
         {
           "id": "homebrew:elixir",
           "name": "elixir",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:emacs",
-          "name": "emacs",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2226,18 +2263,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:git-crypt",
-          "name": "git-crypt",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:git-delta",
-          "name": "git-delta",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:git-flow",
           "name": "git-flow",
           "ecosystem": "homebrew",
@@ -2294,12 +2319,6 @@
         {
           "id": "homebrew:glslang",
           "name": "glslang",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:gmp",
-          "name": "gmp",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2420,12 +2439,6 @@
         {
           "id": "homebrew:gsettings-desktop-schemas",
           "name": "gsettings-desktop-schemas",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:gstreamer",
-          "name": "gstreamer",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2982,12 +2995,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:llvm@20",
-          "name": "llvm@20",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:localstack",
           "name": "localstack",
           "ecosystem": "homebrew",
@@ -3260,12 +3267,6 @@
         {
           "id": "homebrew:nasm",
           "name": "nasm",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:ncdu",
-          "name": "ncdu",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3614,12 +3615,6 @@
         {
           "id": "homebrew:podman-compose",
           "name": "podman-compose",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:portaudio",
-          "name": "portaudio",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4488,12 +4483,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:witr",
-          "name": "witr",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:xcode-build-server",
           "name": "xcode-build-server",
           "ecosystem": "homebrew",
@@ -4887,6 +4876,12 @@
         {
           "id": "homebrew:crane",
           "name": "crane",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:ctlptl",
+          "name": "ctlptl",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5299,6 +5294,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:ncdu",
+          "name": "ncdu",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ncurses",
           "name": "ncurses",
           "ecosystem": "homebrew",
@@ -5569,6 +5570,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:witr",
+          "name": "witr",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:xclogparser",
           "name": "xclogparser",
           "ecosystem": "homebrew",
@@ -5638,10 +5645,10 @@
     }
   ],
   "failures": {
-    "deterministic": 148,
-    "deterministic_insufficient": 89,
+    "deterministic": 159,
+    "deterministic_insufficient": 92,
     "missing_dep": 4,
-    "timeout": 2,
-    "validation_failed": 103
+    "timeout": 3,
+    "validation_failed": 107
   }
 }
