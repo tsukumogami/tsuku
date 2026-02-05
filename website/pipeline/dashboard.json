@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-05T04:57:15Z",
+  "generated_at": "2026-02-05T06:05:27Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 136,
-      "pending": 611,
+      "failed": 143,
+      "pending": 601,
       "skipped": 11,
-      "success": 131
+      "success": 134
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 99,
-        "pending": 611,
+        "failed": 106,
+        "pending": 601,
         "skipped": 6,
-        "success": 121
+        "success": 124
       }
     },
     "packages": {
@@ -388,6 +388,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:binutils",
+          "name": "binutils",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:boost",
           "name": "boost",
           "ecosystem": "homebrew",
@@ -465,6 +472,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:gdk-pixbuf",
+          "name": "gdk-pixbuf",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:gettext",
           "name": "gettext",
           "ecosystem": "homebrew",
@@ -509,6 +523,13 @@
         {
           "id": "homebrew:gsasl",
           "name": "gsasl",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:guile",
+          "name": "guile",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -829,8 +850,22 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:pyenv-virtualenv",
+          "name": "pyenv-virtualenv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:python-setuptools",
           "name": "python-setuptools",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:python-tk@3.14",
+          "name": "python-tk@3.14",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -969,6 +1004,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:vips",
+          "name": "vips",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:virtualenv",
           "name": "virtualenv",
           "ecosystem": "homebrew",
@@ -1023,6 +1065,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:zsh-autosuggestions",
+          "name": "zsh-autosuggestions",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         }
       ],
       "pending": [
@@ -1119,12 +1168,6 @@
         {
           "id": "homebrew:asciiquarium",
           "name": "asciiquarium",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:asdf",
-          "name": "asdf",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1251,12 +1294,6 @@
         {
           "id": "homebrew:bind",
           "name": "bind",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:binutils",
-          "name": "binutils",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1981,12 +2018,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:gdk-pixbuf",
-          "name": "gdk-pixbuf",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:ghc",
           "name": "ghc",
           "ecosystem": "homebrew",
@@ -2247,12 +2278,6 @@
         {
           "id": "homebrew:gtk4",
           "name": "gtk4",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:guile",
-          "name": "guile",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3679,12 +3704,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:pyenv-virtualenv",
-          "name": "pyenv-virtualenv",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:pygobject3",
           "name": "pygobject3",
           "ecosystem": "homebrew",
@@ -3741,12 +3760,6 @@
         {
           "id": "homebrew:python-tk@3.13",
           "name": "python-tk@3.13",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:python-tk@3.14",
-          "name": "python-tk@3.14",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4447,12 +4460,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:vips",
-          "name": "vips",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:virt-manager",
           "name": "virt-manager",
           "ecosystem": "homebrew",
@@ -4543,12 +4550,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:wimlib",
-          "name": "wimlib",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:winetricks",
           "name": "winetricks",
           "ecosystem": "homebrew",
@@ -4587,12 +4588,6 @@
         {
           "id": "homebrew:xh",
           "name": "xh",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:xmlstarlet",
-          "name": "xmlstarlet",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4671,12 +4666,6 @@
         {
           "id": "homebrew:zsh-autocomplete",
           "name": "zsh-autocomplete",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:zsh-autosuggestions",
-          "name": "zsh-autosuggestions",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4852,6 +4841,12 @@
         {
           "id": "homebrew:argocd",
           "name": "argocd",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:asdf",
+          "name": "asdf",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5528,8 +5523,20 @@
           "priority": 3
         },
         {
+          "id": "homebrew:wimlib",
+          "name": "wimlib",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:xclogparser",
           "name": "xclogparser",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:xmlstarlet",
+          "name": "xmlstarlet",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5556,13 +5563,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
       "dependency": "dav1d",
       "count": 1,
       "packages": [
@@ -5582,13 +5582,20 @@
       "packages": [
         "homebrew:coreutils"
       ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 100,
-    "deterministic_insufficient": 59,
+    "deterministic": 104,
+    "deterministic_insufficient": 61,
     "missing_dep": 4,
     "timeout": 2,
-    "validation_failed": 80
+    "validation_failed": 85
   }
 }
