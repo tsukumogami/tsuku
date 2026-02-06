@@ -24,9 +24,9 @@ This approach audits each of the 20 disambiguation tools by:
 - [x] Create audit script to compare disambiguations.json against existing recipes
 - [x] Run audit to identify all mismatched builders
 - [x] Document findings showing current vs. correct builder for each tool
-- [ ] Update disambiguations.json with correct builders for tools that have deterministic recipes
-- [ ] Verify no tools were inadvertently changed
-- [ ] Add comment explaining builder selection criteria for future maintainers
+- [x] Update disambiguations.json with correct builders for tools that have deterministic recipes
+- [x] Verify no tools were inadvertently changed
+- [x] Add comment explaining builder selection criteria for future maintainers
 
 ## Testing Strategy
 - Unit tests: No new tests needed; existing seed loading tests cover the format
