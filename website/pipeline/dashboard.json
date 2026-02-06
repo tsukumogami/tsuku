@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-06T13:17:02Z",
+  "generated_at": "2026-02-06T14:48:36Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 238,
-      "pending": 461,
+      "failed": 247,
+      "pending": 451,
       "skipped": 11,
-      "success": 179
+      "success": 180
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 201,
-        "pending": 461,
+        "failed": 210,
+        "pending": 451,
         "skipped": 6,
-        "success": 169
+        "success": 170
       }
     },
     "packages": {
@@ -612,6 +612,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:freerdp",
+          "name": "freerdp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:freetds",
           "name": "freetds",
           "ecosystem": "homebrew",
@@ -642,6 +649,13 @@
         {
           "id": "homebrew:gdal",
           "name": "gdal",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:gdb",
+          "name": "gdb",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -789,6 +803,13 @@
         {
           "id": "homebrew:hdf5",
           "name": "hdf5",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:httpd",
+          "name": "httpd",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -1200,6 +1221,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:openssh",
+          "name": "openssh",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:openssl@1.1",
           "name": "openssl@1.1",
           "ecosystem": "homebrew",
@@ -1226,6 +1254,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:overmind",
+          "name": "overmind",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:p11-kit",
@@ -1261,6 +1296,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:php@8.2",
+          "name": "php@8.2",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:php@8.3",
@@ -1373,6 +1415,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:pycparser",
+          "name": "pycparser",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:pyenv-virtualenv",
@@ -1536,6 +1585,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:swig",
+          "name": "swig",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:tcl-tk",
           "name": "tcl-tk",
           "ecosystem": "homebrew",
@@ -1657,6 +1713,13 @@
         {
           "id": "homebrew:whisper-cpp",
           "name": "whisper-cpp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:winetricks",
+          "name": "winetricks",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -2419,12 +2482,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:freerdp",
-          "name": "freerdp",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:fswatch",
           "name": "fswatch",
           "ecosystem": "homebrew",
@@ -2433,12 +2490,6 @@
         {
           "id": "homebrew:gawk",
           "name": "gawk",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:gdb",
-          "name": "gdb",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2679,12 +2730,6 @@
         {
           "id": "homebrew:hl",
           "name": "hl",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:httpd",
-          "name": "httpd",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3241,12 +3286,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:micro",
-          "name": "micro",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:micromamba",
           "name": "micromamba",
           "ecosystem": "homebrew",
@@ -3553,12 +3592,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:openssh",
-          "name": "openssh",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:openvpn",
           "name": "openvpn",
           "ecosystem": "homebrew",
@@ -3567,12 +3600,6 @@
         {
           "id": "homebrew:osv-scanner",
           "name": "osv-scanner",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:overmind",
-          "name": "overmind",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3621,12 +3648,6 @@
         {
           "id": "homebrew:php@8.1",
           "name": "php@8.1",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:php@8.2",
-          "name": "php@8.2",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3735,12 +3756,6 @@
         {
           "id": "homebrew:py3cairo",
           "name": "py3cairo",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:pycparser",
-          "name": "pycparser",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4171,12 +4186,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:swig",
-          "name": "swig",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:ta-lib",
           "name": "ta-lib",
           "ecosystem": "homebrew",
@@ -4419,12 +4428,6 @@
         {
           "id": "homebrew:websocat",
           "name": "websocat",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:winetricks",
-          "name": "winetricks",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5252,6 +5255,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:micro",
+          "name": "micro",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:miller",
           "name": "miller",
           "ecosystem": "homebrew",
@@ -5688,9 +5697,9 @@
   ],
   "failures": {
     "deterministic": 198,
-    "deterministic_insufficient": 119,
+    "deterministic_insufficient": 122,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 122
+    "validation_failed": 128
   }
 }

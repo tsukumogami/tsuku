@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T13:15:23Z",
+  "updated_at": "2026-02-06T14:46:56Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -3191,7 +3191,7 @@
       "source": "homebrew",
       "name": "pycparser",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3199,7 +3199,7 @@
       "source": "homebrew",
       "name": "freerdp",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3207,7 +3207,7 @@
       "source": "homebrew",
       "name": "winetricks",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3215,7 +3215,7 @@
       "source": "homebrew",
       "name": "php@8.2",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3231,7 +3231,7 @@
       "source": "homebrew",
       "name": "gdb",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3239,7 +3239,7 @@
       "source": "homebrew",
       "name": "micro",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3247,7 +3247,7 @@
       "source": "homebrew",
       "name": "httpd",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3255,7 +3255,7 @@
       "source": "homebrew",
       "name": "openssh",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3263,7 +3263,7 @@
       "source": "homebrew",
       "name": "overmind",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3271,7 +3271,7 @@
       "source": "homebrew",
       "name": "swig",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
