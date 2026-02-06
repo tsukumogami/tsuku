@@ -66,7 +66,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1505: refactor(cli): split priority queue by ecosystem](https://github.com/tsukumogami/tsuku/issues/1505) | [#1504](https://github.com/tsukumogami/tsuku/issues/1504) | testable |
+| ~~[#1505: refactor(cli): split priority queue by ecosystem](https://github.com/tsukumogami/tsuku/issues/1505)~~ | ~~[#1504](https://github.com/tsukumogami/tsuku/issues/1504)~~ | ~~testable~~ |
 | _Splits the monolithic 7000-line priority-queue.json into per-ecosystem files in data/queues/ directory. Enables per-ecosystem batch PRs to modify only their own queue files, eliminating cross-ecosystem conflicts. Requires preflight check first to prevent new conflicts during migration._ | | |
 | [#1506: refactor(workflows): timestamp metrics and failures files](https://github.com/tsukumogami/tsuku/issues/1506) | [#1505](https://github.com/tsukumogami/tsuku/issues/1505) | testable |
 | _Replaces append-only metrics and failure logs with timestamped files using ISO 8601 format. Each batch run writes its own file instead of appending to shared logs, eliminating 2 more conflict sources. Updates queue-analytics to aggregate across multiple files._ | | |
@@ -110,9 +110,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1498,I1499,I1500,I1501,I1502,I1503,I1504 done
-    class I1505 ready
-    class I1506,I1507,I1508 blocked
+    class I1498,I1499,I1500,I1501,I1502,I1503,I1504,I1505 done
+    class I1506 ready
+    class I1507,I1508 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
