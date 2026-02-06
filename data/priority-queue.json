@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T19:02:02Z",
+  "updated_at": "2026-02-06T20:42:37Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -3631,7 +3631,7 @@
       "source": "homebrew",
       "name": "sdl2_image",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3639,7 +3639,7 @@
       "source": "homebrew",
       "name": "nasm",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3647,7 +3647,7 @@
       "source": "homebrew",
       "name": "ykman",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3655,7 +3655,7 @@
       "source": "homebrew",
       "name": "shared-mime-info",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3663,7 +3663,7 @@
       "source": "homebrew",
       "name": "krb5",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3671,7 +3671,7 @@
       "source": "homebrew",
       "name": "libavif",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3687,7 +3687,7 @@
       "source": "homebrew",
       "name": "protoc-gen-go",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3695,7 +3695,7 @@
       "source": "homebrew",
       "name": "podman-compose",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3703,7 +3703,7 @@
       "source": "homebrew",
       "name": "magic-wormhole",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3711,7 +3711,7 @@
       "source": "homebrew",
       "name": "tree-sitter-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
