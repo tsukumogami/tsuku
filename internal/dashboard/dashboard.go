@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"time"
 
@@ -14,19 +15,19 @@ import (
 
 // Options configures dashboard generation.
 type Options struct {
-	QueueFile    string // Path to priority-queue.json
-	FailuresFile string // Path to failures JSONL file
-	MetricsFile  string // Path to batch-runs.jsonl
-	OutputFile   string // Path to output dashboard.json
+	QueueFile   string // Path to priority-queue.json or queues directory
+	FailuresDir string // Directory containing failures JSONL files
+	MetricsDir  string // Directory containing metrics JSONL files
+	OutputFile  string // Path to output dashboard.json
 }
 
 // DefaultOptions returns options with default file paths.
 func DefaultOptions() Options {
 	return Options{
-		QueueFile:    "data/priority-queue.json",
-		FailuresFile: "data/failures/homebrew.jsonl",
-		MetricsFile:  "data/metrics/batch-runs.jsonl",
-		OutputFile:   "website/pipeline/dashboard.json",
+		QueueFile:   "data/priority-queue.json",
+		FailuresDir: "data/failures",
+		MetricsDir:  "data/metrics",
+		OutputFile:  "website/pipeline/dashboard.json",
 	}
 }
 
@@ -117,9 +118,9 @@ func Generate(opts Options) error {
 	}
 
 	// Load failures first to get details for packages
-	blockerCounts, failureCounts, failureDetails, err := loadFailures(opts.FailuresFile)
+	blockerCounts, failureCounts, failureDetails, err := loadFailuresFromDir(opts.FailuresDir)
 	if err != nil {
-		// Non-fatal: failures file might not exist yet
+		// Non-fatal: failures directory might not exist yet
 		blockerCounts = make(map[string][]string)
 		failureCounts = make(map[string]int)
 		failureDetails = make(map[string]FailureDetails)
@@ -135,7 +136,7 @@ func Generate(opts Options) error {
 	dash.Queue = computeQueueStatus(queue, failureDetails)
 
 	// Load metrics
-	runs, err := loadMetrics(opts.MetricsFile)
+	runs, err := loadMetricsFromDir(opts.MetricsDir)
 	if err == nil && len(runs) > 0 {
 		// Take last 10, newest first
 		if len(runs) > 10 {
@@ -331,4 +332,78 @@ func loadMetrics(path string) ([]RunSummary, error) {
 	}
 
 	return runs, scanner.Err()
+}
+
+// loadFailuresFromDir aggregates failures across all JSONL files in a directory.
+// Supports both timestamped files (homebrew-2026-02-06T14:30:00Z.jsonl) and legacy
+// single files (homebrew.jsonl, failures.jsonl) for backward compatibility.
+func loadFailuresFromDir(dir string) (map[string][]string, map[string]int, map[string]FailureDetails, error) {
+	blockers := make(map[string][]string)
+	categories := make(map[string]int)
+	details := make(map[string]FailureDetails)
+
+	// Glob for all JSONL files in the directory
+	pattern := filepath.Join(dir, "*.jsonl")
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, nil, nil, fmt.Errorf("glob failures: %w", err)
+	}
+
+	if len(files) == 0 {
+		return blockers, categories, details, fmt.Errorf("no failure files found")
+	}
+
+	// Aggregate across all files
+	for _, path := range files {
+		b, c, d, err := loadFailures(path)
+		if err != nil {
+			continue // Skip files that can't be read
+		}
+
+		// Merge blockers
+		for dep, pkgs := range b {
+			blockers[dep] = append(blockers[dep], pkgs...)
+		}
+
+		// Merge categories
+		for cat, count := range c {
+			categories[cat] += count
+		}
+
+		// Merge details (later files override earlier ones)
+		for id, det := range d {
+			details[id] = det
+		}
+	}
+
+	return blockers, categories, details, nil
+}
+
+// loadMetricsFromDir aggregates metrics across all JSONL files in a directory.
+// Supports both timestamped files (batch-runs-2026-02-06T14:30:00Z.jsonl) and legacy
+// files (batch-runs.jsonl) for backward compatibility.
+func loadMetricsFromDir(dir string) ([]RunSummary, error) {
+	var allRuns []RunSummary
+
+	// Glob for all JSONL files that start with "batch-runs"
+	pattern := filepath.Join(dir, "batch-runs*.jsonl")
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("glob metrics: %w", err)
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no metrics files found")
+	}
+
+	// Aggregate across all files
+	for _, path := range files {
+		runs, err := loadMetrics(path)
+		if err != nil {
+			continue // Skip files that can't be read
+		}
+		allRuns = append(allRuns, runs...)
+	}
+
+	return allRuns, nil
 }

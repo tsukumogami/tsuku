@@ -15,9 +15,9 @@ jobs:
     name: Build Binaries
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff  # v5
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
@@ -28,7 +28,7 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o tsuku-linux-arm64 ./cmd/tsuku
 
       - name: Upload binaries
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: binaries
           path: tsuku-*
@@ -46,13 +46,13 @@ jobs:
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
       - name: Set up Rust
         uses: dtolnay/rust-toolchain@stable
 
       - name: Cache Rust build
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4
         with:
           path: |
             cmd/tsuku-dltest/target
@@ -70,7 +70,7 @@ jobs:
         run: cp cmd/tsuku-dltest/target/release/tsuku-dltest tsuku-dltest-linux-${{ matrix.arch }}
 
       - name: Upload dltest binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: dltest-${{ matrix.arch }}
           path: tsuku-dltest-linux-${{ matrix.arch }}
@@ -89,7 +89,7 @@ jobs:
             runner: ubuntu-24.04-arm
     runs-on: ${{ matrix.runner }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
       - name: Build in Alpine container
         run: |
@@ -103,7 +103,7 @@ jobs:
         run: cp cmd/tsuku-dltest/target/release/tsuku-dltest tsuku-dltest-linux-${{ matrix.arch }}-musl
 
       - name: Upload dltest binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: dltest-${{ matrix.arch }}-musl
           path: tsuku-dltest-linux-${{ matrix.arch }}-musl
@@ -156,12 +156,12 @@ jobs:
 
     steps:
       - name: Download pre-built binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: binaries
 
       - name: Download dltest helper
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: ${{ matrix.dltest_artifact }}
 
@@ -275,12 +275,12 @@ jobs:
 
     steps:
       - name: Download pre-built binary
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: binaries
 
       - name: Download dltest helper
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           name: dltest-arm64-musl
 

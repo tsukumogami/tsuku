@@ -1,0 +1,14 @@
+# CODEOWNERS - Require designated team approvals for security-sensitive changes
+#
+# This file enforces required reviews for workflow and script changes to prevent
+# workflow injection attacks. See docs/designs/DESIGN-batch-pr-coordination.md
+# (Phase 0: Security Hardening) for rationale.
+
+# Workflow files - require approval from both core and security teams
+# Protects against workflow injection attacks that could push arbitrary code,
+# steal secrets, or bypass CI validation.
+/.github/workflows/** @tsukumogami/core-team @tsukumogami/security-team
+
+# Scripts - require approval from core team
+# Scripts are called by workflows and could be used to inject malicious behavior.
+/scripts/** @tsukumogami/core-team

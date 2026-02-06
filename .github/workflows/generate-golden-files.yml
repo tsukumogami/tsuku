@@ -69,12 +69,12 @@ jobs:
           - { runner: macos-15-intel, name: "macOS Intel", os: darwin, arch: amd64 }
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
         with:
           ref: ${{ inputs.branch || github.ref }}
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff  # v5
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
@@ -98,7 +98,7 @@ jobs:
             --arch "${{ matrix.platform.arch }}"
 
       - name: Upload golden files
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
         with:
           name: golden-${{ matrix.platform.os }}-${{ matrix.platform.arch }}
           path: ${{ steps.golden-path.outputs.recipe_dir }}
@@ -111,14 +111,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
         with:
           ref: ${{ inputs.branch || github.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
         with:
           path: artifacts/
 
@@ -157,5 +157,19 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "chore(golden): regenerate ${{ inputs.recipe }} golden files"
-            git push
+
+            # Push with retry logic (3 attempts, exponential backoff)
+            for attempt in 1 2 3; do
+              if [ $attempt -gt 1 ]; then
+                echo "::warning::Push attempt $attempt after failure"
+                git pull --rebase || { echo "::error::Rebase failed"; exit 1; }
+                sleep $((2 ** attempt))
+              fi
+              if git push; then
+                echo "Push succeeded on attempt $attempt"
+                exit 0
+              fi
+            done
+            echo "::error::Push failed after 3 attempts"
+            exit 1
           fi

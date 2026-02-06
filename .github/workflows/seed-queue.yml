@@ -22,6 +22,10 @@ env:
   SOURCE: ${{ inputs.source || 'homebrew' }}
   LIMIT: ${{ inputs.limit || '1000' }}
 
+concurrency:
+  group: queue-operations-${{ inputs.source || 'homebrew' }}
+  cancel-in-progress: false
+
 jobs:
   seed:
     name: Seed Priority Queue
@@ -29,9 +33,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff  # v5
         with:
           go-version-file: go.mod
 
@@ -65,7 +69,18 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "chore(data): seed priority queue from ${{ env.SOURCE }} [skip ci]"
-          for i in 1 2 3; do
-            git pull --rebase origin main && git push && break
-            sleep $((i * 2))
-          done || echo "::warning::Push failed after retries"
+
+          # Push with retry logic (3 attempts, exponential backoff)
+          for attempt in 1 2 3; do
+            if [ $attempt -gt 1 ]; then
+              echo "::warning::Push attempt $attempt after failure"
+              git pull --rebase origin main || { echo "::error::Rebase failed"; exit 1; }
+              sleep $((2 ** attempt))
+            fi
+            if git push; then
+              echo "Push succeeded on attempt $attempt"
+              exit 0
+            fi
+          done
+          echo "::error::Push failed after 3 attempts"
+          exit 1

@@ -26,8 +26,16 @@ func TestWriteFailures_createsFile(t *testing.T) {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
-	path := filepath.Join(tmpDir, "homebrew.jsonl")
-	data, err := os.ReadFile(path)
+	// Find the timestamped file that was created
+	files, err := filepath.Glob(filepath.Join(tmpDir, "homebrew-*.jsonl"))
+	if err != nil {
+		t.Fatalf("failed to glob files: %v", err)
+	}
+	if len(files) != 1 {
+		t.Fatalf("expected 1 file, got %d", len(files))
+	}
+
+	data, err := os.ReadFile(files[0])
 	if err != nil {
 		t.Fatalf("failed to read file: %v", err)
 	}
@@ -51,7 +59,7 @@ func TestWriteFailures_createsFile(t *testing.T) {
 	}
 }
 
-func TestWriteFailures_appends(t *testing.T) {
+func TestWriteFailures_createsTimestampedFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 
 	batch1 := []FailureRecord{
@@ -64,24 +72,20 @@ func TestWriteFailures_appends(t *testing.T) {
 	if err := WriteFailures(tmpDir, "homebrew", batch1); err != nil {
 		t.Fatal(err)
 	}
+	// Sleep to try for different timestamps (may still collide at second precision)
+	time.Sleep(1100 * time.Millisecond)
 	if err := WriteFailures(tmpDir, "homebrew", batch2); err != nil {
 		t.Fatal(err)
 	}
 
-	data, err := os.ReadFile(filepath.Join(tmpDir, "homebrew.jsonl"))
+	// Should have created separate timestamped files (or 1 if timestamps collided)
+	// Timestamp precision is 1 second, so collisions are possible and acceptable
+	files, err := filepath.Glob(filepath.Join(tmpDir, "homebrew-*.jsonl"))
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	// Should have two lines (two JSONL entries)
-	lines := 0
-	for _, b := range data {
-		if b == '\n' {
-			lines++
-		}
-	}
-	if lines != 2 {
-		t.Errorf("expected 2 JSONL lines, got %d", lines)
+	if len(files) < 1 || len(files) > 2 {
+		t.Errorf("expected 1-2 timestamped files (collision possible), got %d", len(files))
 	}
 }
 

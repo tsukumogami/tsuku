@@ -10,16 +10,16 @@ import (
 
 func main() {
 	queueFile := flag.String("queue", "data/priority-queue.json", "path to priority queue JSON")
-	failuresFile := flag.String("failures", "data/failures/homebrew.jsonl", "path to failures JSONL")
-	metricsFile := flag.String("metrics", "data/metrics/batch-runs.jsonl", "path to metrics JSONL")
+	failuresDir := flag.String("failures-dir", "data/failures", "directory containing failures JSONL files")
+	metricsDir := flag.String("metrics-dir", "data/metrics", "directory containing metrics JSONL files")
 	output := flag.String("output", "website/pipeline/dashboard.json", "output file path")
 	flag.Parse()
 
 	opts := dashboard.Options{
-		QueueFile:    *queueFile,
-		FailuresFile: *failuresFile,
-		MetricsFile:  *metricsFile,
-		OutputFile:   *output,
+		QueueFile:   *queueFile,
+		FailuresDir: *failuresDir,
+		MetricsDir:  *metricsDir,
+		OutputFile:  *output,
 	}
 
 	if err := dashboard.Generate(opts); err != nil {
