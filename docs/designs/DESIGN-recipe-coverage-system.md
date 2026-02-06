@@ -3,7 +3,7 @@ status: Proposed
 problem: |
   M47 delivered platform compatibility infrastructure (libc detection, recipe conditionals, coverage analysis) but 0 of 13 library recipes were migrated to support musl/Alpine. The gap wasn't visible until milestone validation ran. We lack systematic monitoring to surface coverage gaps early, no multi-angle visibility into which recipes support which platforms, and no automated enforcement preventing regression. Users on Alpine encounter failures, recipe authors don't know if contributions break platform support, and milestones can be "complete" while features remain non-functional.
 decision: |
-  Build three interconnected subsystems: (1) Monitoring via CLI tools and metrics generation across dimensions (libc, architecture, OS, category), (2) Visualization through dashboard expansion with matrix views, recipe detail pages, and website integration, and (3) Enforcement via CI checks that block library recipes lacking musl support with automated PR feedback and opt-out mechanism. Includes systematic workflow to migrate 13 M47 library recipes in batches, using system packages (apk) for Alpine support.
+  Build three interconnected subsystems: (1) Monitoring via internal tooling (cmd/coverage-analytics) and metrics generation across dimensions (libc, architecture, OS, category), (2) Visualization through static website at tsuku.dev/coverage with matrix views and recipe detail pages, and (3) Enforcement via CI checks that block library recipes lacking musl support with automated PR feedback and opt-out mechanism. Includes systematic workflow to migrate 13 M47 library recipes in batches, using system packages (apk) for Alpine support. Follows the same architecture pattern as the existing pipeline dashboard (internal/dashboard, cmd/queue-analytics, website/pipeline).
 rationale: |
   This is the only approach that addresses all needs: closes M47 gap immediately (Phase 1 recipe migrations), prevents future gaps (CI enforcement), and provides visibility (dashboard). Alternatives considered: CI-only (no visibility), dashboard-only (no enforcement), external tools (don't understand tsuku's libc conditionals). The comprehensive system scales to additional dimensions and provides both immediate value and long-term infrastructure. Phased implementation delivers value incrementally while managing complexity.
 ---
@@ -80,19 +80,21 @@ The core question is how much to build: monitoring-only, visualization-only, or 
 Build three interconnected subsystems:
 
 1. **Monitoring Subsystem**
-   - CLI tool (`tsuku coverage analyze/validate/gaps`) for local analysis
+   - Internal package (`internal/coverage/`) with analysis logic
+   - CLI tool (`cmd/coverage-analytics/`) generating coverage metrics JSON
    - Metrics generator analyzing all 265 recipes across dimensions
    - Historical snapshots for tracking trends
    - Coverage analysis algorithm detecting gaps, classifying blockers, generating recommendations
 
 2. **Visualization Subsystem**
-   - Dashboard expansion with 5 views: overview matrix (recipes × platforms), category breakdown, platform breakdown, gap details, trends over time
+   - Static website at tsuku.dev/coverage with 5 views: overview matrix (recipes × platforms), category breakdown, platform breakdown, gap details, trends over time
    - Recipe detail pages showing per-recipe platform support
-   - CLI visualization for local gap analysis
-   - Website integration (tsuku.dev/coverage) for public transparency
+   - Static HTML/JS loading coverage.json (matches pipeline dashboard architecture)
+   - Public transparency through deployed website
 
 3. **Enforcement Subsystem**
-   - CI checks blocking PRs if library recipes lack musl support
+   - CI GitHub Actions workflow using internal/coverage validation
+   - Blocks PRs if library recipes lack musl support
    - Automated PR comments with gap analysis and fix recommendations
    - Opt-out mechanism with documented reasons for legitimate blockers
    - Validation rules: Libraries MUST support musl, CLI tools SHOULD
@@ -213,7 +215,7 @@ Rejected because some libraries are more critical. Openssl and zlib are used by 
 
 We're building a complete recipe coverage system with three subsystems working together. Monitoring analyzes all recipes across four dimensions (libc, architecture, OS, category) and generates metrics. Visualization renders multi-angle dashboards showing gaps by category, platform, and recipe. Enforcement blocks PRs that introduce library gaps while allowing opt-outs with documented reasons.
 
-The system addresses the M47 gap directly: Phase 1 migrates 13 library recipes in 4 priority batches using a standard template (homebrew for glibc, system packages for musl). CLI tools validate coverage locally before submission. CI checks block library recipes lacking musl support and post automated comments with fix guidance. Dashboard shows real-time coverage across all dimensions with drill-down to recipe details.
+The system addresses the M47 gap directly: Phase 1 migrates 13 library recipes in 4 priority batches using a standard template (homebrew for glibc, system packages for musl). Internal coverage-analytics tool generates metrics and validates recipes. CI checks block library recipes lacking musl support and post automated comments with fix guidance. Static website at tsuku.dev/coverage shows real-time coverage across all dimensions with drill-down to recipe details.
 
 Coverage dimensions (libc, arch, OS, category) are orthogonal, enabling multi-angle analysis. Library recipes get strict enforcement (MUST support musl) while CLI tools get warnings (SHOULD support musl). Opt-out mechanism allows exceptions for legitimate blockers with substantive reasons.
 
@@ -377,16 +379,19 @@ when = { libc = ["musl"] }
 **Goal:** Close M47 gap with minimal tooling.
 
 **Components:**
-1. CLI tool (`tsuku coverage analyze/validate/gaps`)
-2. Recipe metadata schema (`[coverage]` section with exclusions)
-3. Migrate 13 library recipes in 4 batches
-4. Contribution guide
+1. Coverage analysis package (`internal/coverage/`)
+2. Coverage analytics tool (`cmd/coverage-analytics/`)
+3. Recipe metadata schema (`[coverage]` section with exclusions)
+4. Migrate 13 library recipes in 4 batches
+5. Contribution guide
 
-**CLI Commands:**
+**Tool Usage:**
 ```bash
-tsuku coverage analyze [recipe]         # Show coverage report
-tsuku coverage validate [--strict]      # Validate coverage requirements
-tsuku coverage gaps [--category lib]    # List all gaps
+# Generate coverage metrics (run by CI or manually)
+coverage-analytics --recipes recipes/ --output website/coverage/coverage.json
+
+# CI validation (called from GitHub Actions)
+coverage-analytics --validate --strict --recipes recipes/
 ```
 
 **Recipe Migration:**
@@ -419,9 +424,10 @@ Each batch: feature branch, apply template, test glibc + musl, validate, PR, mer
 - Trends: coverage improving over time
 
 **Implementation:**
-- Extend `internal/dashboard/dashboard.go` (existing 335 LOC)
-- Use vanilla JS + static HTML (matches existing dashboard)
-- Load data from `coverage-metrics.json`
+- Create static HTML in `website/coverage/` (matches `website/pipeline/` structure)
+- Use vanilla JS + static HTML (matches existing pipeline dashboard)
+- Load data from `website/coverage/coverage.json` (generated by coverage-analytics)
+- Deploy alongside existing website at tsuku.dev/coverage
 
 **Success Criteria:**
 - Dashboard shows real-time coverage data
@@ -439,7 +445,8 @@ Each batch: feature branch, apply template, test glibc + musl, validate, PR, mer
 
 **Workflow:** `.github/workflows/coverage-check.yml`
 - Trigger: PRs modifying `recipes/**/*.toml`
-- Run: `tsuku coverage validate --strict`
+- Build: `go build -o coverage-analytics ./cmd/coverage-analytics`
+- Run: `coverage-analytics --validate --strict --recipes recipes/`
 - On failure: Post PR comment with fix guidance
 
 **Validation Rules:**
@@ -463,13 +470,12 @@ Each batch: feature branch, apply template, test glibc + musl, validate, PR, mer
 
 | Design | Target Repo | Purpose |
 |--------|-------------|---------|
-| DESIGN-coverage-cli-tool.md | tsuku | CLI commands for analyze, validate, gaps |
-| DESIGN-coverage-metrics-generator.md | tsuku | Batch analysis and metrics generation |
-| DESIGN-coverage-dashboard.md | tsuku | Dashboard expansion with coverage views |
+| DESIGN-coverage-analysis-package.md | tsuku | internal/coverage/ package with analysis logic |
+| DESIGN-coverage-analytics-tool.md | tsuku | cmd/coverage-analytics/ tool for generating JSON |
+| DESIGN-coverage-website.md | tsuku | website/coverage/ static HTML/JS for visualization |
 | DESIGN-ci-coverage-enforcement.md | tsuku | GitHub Actions workflow and validation |
 | DESIGN-recipe-coverage-metadata.md | tsuku | TOML schema for [coverage] section |
 | DESIGN-m47-library-migration.md | tsuku | Systematic migration of 13 libraries |
-| DESIGN-website-coverage-page.md | tsuku | Public-facing coverage page |
 | DESIGN-coverage-contribution-guide.md | tsuku | Documentation for contributors |
 
 ## Security Considerations
@@ -566,10 +572,10 @@ Dashboard runs as static site (no server-side processing), loads metrics from JS
 | libxslt | glibc-only | libxslt-dev | Easy |
 | libiconv | glibc-only | (built-in) | Special case |
 
-### Example CLI Output
+### Example Tool Output
 
 ```bash
-$ tsuku coverage analyze libcurl
+$ coverage-analytics --analyze libcurl
 
 Recipe Coverage Analysis
 ========================
