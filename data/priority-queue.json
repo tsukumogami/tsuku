@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T11:40:49Z",
+  "updated_at": "2026-02-06T13:15:23Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -3095,7 +3095,7 @@
       "source": "homebrew",
       "name": "openapi-generator",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3103,7 +3103,7 @@
       "source": "homebrew",
       "name": "cfn-lint",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3111,7 +3111,7 @@
       "source": "homebrew",
       "name": "pv",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3119,7 +3119,7 @@
       "source": "homebrew",
       "name": "hdf5",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3127,7 +3127,7 @@
       "source": "homebrew",
       "name": "nuget",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3135,7 +3135,7 @@
       "source": "homebrew",
       "name": "git-gui",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3151,7 +3151,7 @@
       "source": "homebrew",
       "name": "bitwarden-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3159,7 +3159,7 @@
       "source": "homebrew",
       "name": "aws-cdk",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3167,7 +3167,7 @@
       "source": "homebrew",
       "name": "grep",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3175,7 +3175,7 @@
       "source": "homebrew",
       "name": "prek",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
