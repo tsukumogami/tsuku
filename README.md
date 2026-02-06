@@ -459,6 +459,26 @@ For libraries, verification includes multiple tiers:
 
 Tier 2 validation also detects ABI mismatches (glibc vs musl) to catch incompatible binary combinations early.
 
+**Example output:**
+
+```bash
+$ tsuku verify ruby
+Verifying ruby 3.4.0...
+  Tier 1: Header validation... PASS
+  Tier 2: Dependency validation...
+    libyaml-0.so.2: OK (tsuku:libyaml@0.2.5)
+    libssl.so.3: OK (tsuku:openssl@3.2.1, external)
+    libc.so.6: OK (system)
+  Tier 2: 3 dependencies validated
+  Tier 3: dlopen load testing... PASS
+Verification: PASS
+```
+
+**Dependency categories:**
+- `tsuku:name@version` - Library installed and managed by tsuku
+- `tsuku:name@version, external` - Installed via package manager (apt/brew)
+- `system` - Operating system provided library (libc, libm, etc.)
+
 Library verification supports additional flags:
 
 ```bash
