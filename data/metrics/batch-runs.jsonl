@@ -922,3 +922,36 @@
   "timestamp": "2026-02-05T23:45:52Z",
   "duration_seconds": 6
 }
+{
+  "batch_id": "2026-02-06-homebrew",
+  "ecosystem": "homebrew",
+  "total": 1,
+  "generated": 1,
+  "platforms": {
+    "linux-x86_64": {
+      "tested": 5,
+      "passed": 4,
+      "failed": 1
+    },
+    "linux-arm64": {
+      "tested": 4,
+      "passed": 3,
+      "failed": 1
+    },
+    "darwin-arm64": {
+      "tested": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "darwin-x86_64": {
+      "tested": 1,
+      "passed": 1,
+      "failed": 0
+    }
+  },
+  "merged": 1,
+  "excluded": 0,
+  "constrained": 1,
+  "timestamp": "2026-02-06T02:40:59Z",
+  "duration_seconds": 3
+}
