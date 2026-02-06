@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   The batch-generate workflow runs hourly, creating PRs that modify shared state files
   (data/priority-queue.json, data/metrics/batch-runs.jsonl, data/failures/*.jsonl,
@@ -32,7 +32,7 @@ rationale: |
 
 # Design: Batch PR Coordination and Conflict Prevention
 
-**Status**: Proposed
+**Status**: Accepted
 
 ## Context and Problem Statement
 
