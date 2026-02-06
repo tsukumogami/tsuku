@@ -1,0 +1,35 @@
+[metadata]
+  name = "unar"
+  description = "Command-line unarchiving tools supporting multiple formats"
+  homepage = "https://theunarchiver.com/command-line"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+unsupported_platforms = ["linux/arm64", "linux/alpine"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "unar"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "unar"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/lsar", "bin/unar"]
+
+[verify]
+  command = "lsar --version"
+  pattern = ""
