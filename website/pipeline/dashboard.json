@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-06T06:02:35Z",
+  "generated_at": "2026-02-06T07:15:55Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 205,
-      "pending": 511,
+      "failed": 208,
+      "pending": 501,
       "skipped": 11,
-      "success": 162
+      "success": 169
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 168,
-        "pending": 511,
+        "failed": 171,
+        "pending": 501,
         "skipped": 6,
-        "success": 152
+        "success": 159
       }
     },
     "packages": {
@@ -444,6 +444,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:certbot",
+          "name": "certbot",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:cmake-docs",
           "name": "cmake-docs",
           "ecosystem": "homebrew",
@@ -568,6 +575,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:gallery-dl",
+          "name": "gallery-dl",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:gdal",
@@ -911,6 +925,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:mycli",
+          "name": "mycli",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:mysql",
@@ -1630,12 +1651,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:aws-vault",
-          "name": "aws-vault",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:awscli-local",
           "name": "awscli-local",
           "ecosystem": "homebrew",
@@ -1794,12 +1809,6 @@
         {
           "id": "homebrew:ceres-solver",
           "name": "ceres-solver",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:certbot",
-          "name": "certbot",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2254,20 +2263,8 @@
           "priority": 3
         },
         {
-          "id": "homebrew:freetype",
-          "name": "freetype",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:fswatch",
           "name": "fswatch",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:gallery-dl",
-          "name": "gallery-dl",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3034,12 +3031,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:luajit",
-          "name": "luajit",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:luarocks",
           "name": "luarocks",
           "ecosystem": "homebrew",
@@ -3262,12 +3253,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:mycli",
-          "name": "mycli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:mysql-client@8.0",
           "name": "mysql-client@8.0",
           "ecosystem": "homebrew",
@@ -3480,12 +3465,6 @@
         {
           "id": "homebrew:openldap",
           "name": "openldap",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:openshift-cli",
-          "name": "openshift-cli",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3786,12 +3765,6 @@
         {
           "id": "homebrew:pytorch",
           "name": "pytorch",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:qrencode",
-          "name": "qrencode",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4186,12 +4159,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:syncthing",
-          "name": "syncthing",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:ta-lib",
           "name": "ta-lib",
           "ecosystem": "homebrew",
@@ -4516,12 +4483,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:yj",
-          "name": "yj",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:ykman",
           "name": "ykman",
           "ecosystem": "homebrew",
@@ -4769,6 +4730,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:aws-vault",
+          "name": "aws-vault",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:azcopy",
           "name": "azcopy",
           "ecosystem": "homebrew",
@@ -4981,6 +4948,12 @@
         {
           "id": "homebrew:fnm",
           "name": "fnm",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:freetype",
+          "name": "freetype",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5279,6 +5252,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:luajit",
+          "name": "luajit",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:miller",
           "name": "miller",
           "ecosystem": "homebrew",
@@ -5311,6 +5290,12 @@
         {
           "id": "homebrew:oh-my-posh",
           "name": "oh-my-posh",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:openshift-cli",
+          "name": "openshift-cli",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5365,6 +5350,12 @@
         {
           "id": "homebrew:pulumi",
           "name": "pulumi",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:qrencode",
+          "name": "qrencode",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5473,6 +5464,12 @@
         {
           "id": "homebrew:syft",
           "name": "syft",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:syncthing",
+          "name": "syncthing",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5603,6 +5600,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:yj",
+          "name": "yj",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:zizmor",
           "name": "zizmor",
           "ecosystem": "homebrew",
@@ -5625,13 +5628,6 @@
   },
   "blockers": [
     {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -5651,11 +5647,18 @@
       "packages": [
         "homebrew:imagemagick"
       ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 161,
-    "deterministic_insufficient": 97,
+    "deterministic": 171,
+    "deterministic_insufficient": 100,
     "missing_dep": 4,
     "timeout": 3,
     "validation_failed": 111
