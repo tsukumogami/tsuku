@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-06T09:01:23Z",
+  "generated_at": "2026-02-06T09:58:19Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 208,
-      "pending": 501,
+      "failed": 215,
+      "pending": 491,
       "skipped": 11,
-      "success": 169
+      "success": 172
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 171,
-        "pending": 501,
+        "failed": 178,
+        "pending": 491,
         "skipped": 6,
-        "success": 159
+        "success": 162
       }
     },
     "packages": {
@@ -582,6 +582,20 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:gambit-scheme",
+          "name": "gambit-scheme",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:gauche",
+          "name": "gauche",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:gdal",
@@ -1151,6 +1165,20 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:php@8.4",
+          "name": "php@8.4",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:pillow",
+          "name": "pillow",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:pipenv",
           "name": "pipenv",
           "ecosystem": "homebrew",
@@ -1396,6 +1424,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:tesseract-lang",
+          "name": "tesseract-lang",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:tfenv",
           "name": "tfenv",
           "ecosystem": "homebrew",
@@ -1415,6 +1450,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:universal-ctags",
+          "name": "universal-ctags",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:uutils-findutils",
@@ -1464,6 +1506,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:whisper-cpp",
+          "name": "whisper-cpp",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:wireshark",
@@ -2265,18 +2314,6 @@
         {
           "id": "homebrew:fswatch",
           "name": "fswatch",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:gambit-scheme",
-          "name": "gambit-scheme",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:gauche",
-          "name": "gauche",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3187,12 +3224,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:mockolo",
-          "name": "mockolo",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:molten-vk",
           "name": "molten-vk",
           "ecosystem": "homebrew",
@@ -3559,12 +3590,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:php@8.4",
-          "name": "php@8.4",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:phrase-cli",
           "name": "phrase-cli",
           "ecosystem": "homebrew",
@@ -3573,12 +3598,6 @@
         {
           "id": "homebrew:pigz",
           "name": "pigz",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:pillow",
-          "name": "pillow",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4117,12 +4136,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:supabase",
-          "name": "supabase",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:superfile",
           "name": "superfile",
           "ecosystem": "homebrew",
@@ -4219,12 +4232,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:tesseract-lang",
-          "name": "tesseract-lang",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:testdisk",
           "name": "testdisk",
           "ecosystem": "homebrew",
@@ -4311,18 +4318,6 @@
         {
           "id": "homebrew:ugrep",
           "name": "ugrep",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:unar",
-          "name": "unar",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:universal-ctags",
-          "name": "universal-ctags",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4431,12 +4426,6 @@
         {
           "id": "homebrew:websocat",
           "name": "websocat",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:whisper-cpp",
-          "name": "whisper-cpp",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5276,6 +5265,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:mockolo",
+          "name": "mockolo",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ncdu",
           "name": "ncdu",
           "ecosystem": "homebrew",
@@ -5444,6 +5439,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:supabase",
+          "name": "supabase",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:swift-sh",
           "name": "swift-sh",
           "ecosystem": "homebrew",
@@ -5542,6 +5543,12 @@
         {
           "id": "homebrew:typos-cli",
           "name": "typos-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:unar",
+          "name": "unar",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5657,10 +5664,10 @@
     }
   ],
   "failures": {
-    "deterministic": 171,
-    "deterministic_insufficient": 100,
+    "deterministic": 179,
+    "deterministic_insufficient": 104,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 111
+    "validation_failed": 114
   }
 }
