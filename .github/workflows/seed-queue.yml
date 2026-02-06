@@ -22,6 +22,10 @@ env:
   SOURCE: ${{ inputs.source || 'homebrew' }}
   LIMIT: ${{ inputs.limit || '1000' }}
 
+concurrency:
+  group: queue-operations-${{ inputs.source || 'homebrew' }}
+  cancel-in-progress: false
+
 jobs:
   seed:
     name: Seed Priority Queue

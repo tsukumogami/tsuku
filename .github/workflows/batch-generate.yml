@@ -35,7 +35,7 @@ env:
   TIER: ${{ inputs.tier || '3' }}
 
 concurrency:
-  group: batch-generate
+  group: queue-operations-${{ inputs.ecosystem || 'homebrew' }}
   cancel-in-progress: false
 
 permissions:

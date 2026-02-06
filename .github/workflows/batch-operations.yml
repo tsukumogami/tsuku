@@ -7,6 +7,10 @@ on:
   # Allow manual trigger
   workflow_dispatch:
 
+concurrency:
+  group: batch-control
+  cancel-in-progress: false
+
 jobs:
   pre-flight:
     name: Pre-flight Checks
