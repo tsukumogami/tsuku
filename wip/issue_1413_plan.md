@@ -21,7 +21,7 @@ This approach audits each of the 20 disambiguation tools by:
 - `data/discovery-seeds/disambiguations.json` - Correct builder assignments for tools with existing recipes
 
 ## Implementation Steps
-- [ ] Create audit script to compare disambiguations.json against existing recipes
+- [x] Create audit script to compare disambiguations.json against existing recipes
 - [ ] Run audit to identify all mismatched builders
 - [ ] Document findings showing current vs. correct builder for each tool
 - [ ] Update disambiguations.json with correct builders for tools that have deterministic recipes
