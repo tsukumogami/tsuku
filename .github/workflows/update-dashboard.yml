@@ -1,0 +1,53 @@
+name: Update Dashboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'data/queues/**'
+      - 'data/metrics/**'
+      - 'data/failures/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-dashboard
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Generate dashboard
+        run: |
+          go build -o queue-analytics ./cmd/queue-analytics
+          ./queue-analytics
+
+      - name: Commit dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add website/pipeline/dashboard.json
+          if git diff --cached --quiet; then
+            echo "No dashboard changes"
+            exit 0
+          fi
+          git commit -m "chore(dashboard): update pipeline dashboard"
+
+          # Retry logic (in case of concurrent pushes)
+          for attempt in {1..3}; do
+            if git push; then
+              break
+            else
+              echo "Push failed (attempt $attempt/3), retrying..."
+              sleep $((2 ** attempt))
+              git pull --rebase
+            fi
+          done

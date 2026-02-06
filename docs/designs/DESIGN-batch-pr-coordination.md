@@ -70,9 +70,9 @@ Planned
 | _Splits the monolithic 7000-line priority-queue.json into per-ecosystem files in data/queues/ directory. Enables per-ecosystem batch PRs to modify only their own queue files, eliminating cross-ecosystem conflicts. Requires preflight check first to prevent new conflicts during migration._ | | |
 | ~~[#1506: refactor(workflows): timestamp metrics and failures files](https://github.com/tsukumogami/tsuku/issues/1506)~~ | ~~[#1505](https://github.com/tsukumogami/tsuku/issues/1505)~~ | ~~testable~~ |
 | _Replaces append-only metrics and failure logs with timestamped files using ISO 8601 format. Each batch run writes its own file instead of appending to shared logs, eliminating 2 more conflict sources. Updates queue-analytics to aggregate across multiple files._ | | |
-| [#1507: feat(workflows): add post-merge dashboard update workflow](https://github.com/tsukumogami/tsuku/issues/1507) | [#1506](https://github.com/tsukumogami/tsuku/issues/1506) | testable |
+| ~~[#1507: feat(workflows): add post-merge dashboard update workflow](https://github.com/tsukumogami/tsuku/issues/1507)~~ | ~~[#1506](https://github.com/tsukumogami/tsuku/issues/1506)~~ | ~~testable~~ |
 | _Creates update-dashboard.yml workflow triggered on push to main, moving dashboard generation from PR creation to post-merge. Dashboard reflects merged state within 60 seconds, eliminating the final conflict source caused by non-deterministic recomputation of speculative PR state._ | | |
-| [#1508: chore(repo): enable branch protection with required checks](https://github.com/tsukumogami/tsuku/issues/1508) | [#1507](https://github.com/tsukumogami/tsuku/issues/1507) | simple |
+| [#1508: chore(repo): enable branch protection with required checks](https://github.com/tsukumogami/tsuku/issues/1508) | ~~[#1507](https://github.com/tsukumogami/tsuku/issues/1507)~~ | simple |
 | _Enables branch protection on main requiring 3 always-run checks (lint-workflows, check-artifacts, validate-recipe-structure). Enforces CI validation on all PRs and enables GitHub auto-merge for batch PRs. Final validation that all state refactoring changes work correctly with workflows writing to main._ | | |
 
 ### Dependency Graph
@@ -110,9 +110,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1498,I1499,I1500,I1501,I1502,I1503,I1504,I1505,I1506 done
-    class I1507 ready
-    class I1508 blocked
+    class I1498,I1499,I1500,I1501,I1502,I1503,I1504,I1505,I1506,I1507 done
+    class I1508 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
