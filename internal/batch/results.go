@@ -74,9 +74,10 @@ type FailureFile struct {
 	Failures      []FailureRecord `json:"failures"`
 }
 
-// WriteFailures appends failure records to data/failures/<ecosystem>.jsonl.
-// Each call appends one JSON line containing all failures from a single batch
-// run for one environment.
+// WriteFailures writes failure records to data/failures/<ecosystem>-<timestamp>.jsonl.
+// Each call writes one JSON line containing all failures from a single batch
+// run for one environment. Uses timestamped filenames to eliminate append-only
+// conflicts when parallel workflows run simultaneously.
 func WriteFailures(dir, ecosystem string, failures []FailureRecord) error {
 	if len(failures) == 0 {
 		return nil
@@ -86,11 +87,12 @@ func WriteFailures(dir, ecosystem string, failures []FailureRecord) error {
 		return fmt.Errorf("create failures dir: %w", err)
 	}
 
+	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05Z")
 	record := FailureFile{
 		SchemaVersion: 1,
 		Ecosystem:     ecosystem,
 		Environment:   "linux-glibc-x86_64",
-		UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+		UpdatedAt:     timestamp,
 		Failures:      failures,
 	}
 
@@ -100,14 +102,11 @@ func WriteFailures(dir, ecosystem string, failures []FailureRecord) error {
 	}
 	data = append(data, '\n')
 
-	path := filepath.Join(dir, ecosystem+".jsonl")
-	f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("open failures file: %w", err)
-	}
-	defer f.Close()
+	// Write to timestamped file instead of appending to shared file
+	filename := fmt.Sprintf("%s-%s.jsonl", ecosystem, timestamp)
+	path := filepath.Join(dir, filename)
 
-	if _, err := f.Write(data); err != nil {
+	if err := os.WriteFile(path, data, 0644); err != nil {
 		return fmt.Errorf("write failures: %w", err)
 	}
 

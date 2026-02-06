@@ -11,7 +11,6 @@ import (
 func main() {
 	source := flag.String("source", "", "package source (homebrew)")
 	limit := flag.Int("limit", 100, "max packages to fetch")
-	output := flag.String("output", "data/priority-queue.json", "output file path")
 	recipesDir := flag.String("recipes-dir", "", "path to registry recipes directory (skip packages with existing recipes)")
 	embeddedDir := flag.String("embedded-dir", "", "path to embedded recipes directory (skip packages with existing recipes)")
 	flag.Parse()
@@ -22,6 +21,9 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Compute ecosystem-specific queue path
+	output := fmt.Sprintf("data/queues/priority-queue-%s.json", *source)
+
 	var src seed.Source
 	switch *source {
 	case "homebrew":
@@ -31,7 +33,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	queue, err := seed.Load(*output)
+	queue, err := seed.Load(output)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
@@ -52,7 +54,7 @@ func main() {
 	}
 
 	added := queue.Merge(packages)
-	if err := queue.Save(*output); err != nil {
+	if err := queue.Save(output); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		os.Exit(1)
 	}

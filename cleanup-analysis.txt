@@ -1,0 +1,100 @@
+Batch PR Cleanup Analysis
+Generated: 2026-02-06 17:09 UTC
+
+Found 20 open batch PR(s) to analyze
+
+Analyzing PR #1492...
+  New recipes: 7
+    aws-vault freetype luajit openshift-cli qrencode syncthing yj
+  Identical recipes: 0
+  Modified recipes: 0
+  RECOMMENDATION: RESCUE (7 unique new recipe(s) not yet in main)
+
+Analyzing PR #1490...
+  New recipes: 1
+    sevenzip
+  Identical recipes: 0
+  Modified recipes: 0
+  RECOMMENDATION: RESCUE (1 unique new recipe(s) not yet in main)
+
+Analyzing PR #1489...
+  New recipes: 1
+    sevenzip
+  Identical recipes: 0
+  Modified recipes: 0
+  RECOMMENDATION: RESCUE (1 unique new recipe(s) not yet in main)
+
+Analyzing PR #1486...
+  New recipes: 2
+    ctlptl witr
+  Identical recipes: 0
+  Modified recipes: 0
+  RECOMMENDATION: RESCUE (2 unique new recipe(s) not yet in main)
+
+Analyzing PR #1484...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 4
+    duckdb fresh-editor lua-language-server rust-analyzer
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1480...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 4
+    doxygen license-eye sourcery zizmor
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1478...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 1
+    docker-credential-helper
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1477...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 1
+    docker-credential-helper
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1476...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 1
+    docker-credential-helper
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1473...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 4
+    cloc dust swift-sh vale
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1470...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 2
+    act c-ares
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1468...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 2
+    docker-buildx uutils-coreutils
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1467...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 2
+    docker-buildx uutils-coreutils
+  RECOMMENDATION: MANUAL REVIEW (contains modified recipes - could be updates or conflicts)
+
+Analyzing PR #1465...
+  New recipes: 0
+  Identical recipes: 0
+  Modified recipes: 3
