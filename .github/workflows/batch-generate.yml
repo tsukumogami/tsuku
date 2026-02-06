@@ -50,6 +50,16 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
 
+      # Generate short-lived GitHub App token for PR creation and git operations.
+      # Provides automatic rotation (60min expiry), scoped permissions, and audit trail.
+      # Replaces long-lived PAT to reduce credential exposure risk.
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@df04723f4af75c05d0338a8c9f2a62f7e1b69b5c  # v2
+        with:
+          app-id: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_ID }}
+          private-key: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_PRIVATE_KEY }}
+
       - name: Preflight circuit breaker check
         id: preflight
         run: |
@@ -872,7 +882,7 @@ jobs:
           git commit -m "chore(batch): update state for ${{ env.ECOSYSTEM }}"
           git push
         env:
-          GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Create pull request
         if: steps.check.outputs.changes == 'true'
@@ -964,7 +974,7 @@ jobs:
           echo "PR_URL=$PR_URL" >> "$GITHUB_ENV"
           echo "Created PR: $PR_URL"
         env:
-          GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Enable auto-merge or post review notice
         if: steps.check.outputs.changes == 'true'
@@ -991,4 +1001,4 @@ jobs:
             gh pr comment "$PR_NUMBER" --body "Auto-merge was not enabled because ${EXCLUDED_COUNT} recipe(s) were excluded during validation. Please review the excluded recipes and merge manually."
           fi
         env:
-          GH_TOKEN: ${{ secrets.PAT_BATCH_GENERATE }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
