@@ -157,5 +157,19 @@ jobs:
             echo "No changes to commit"
           else
             git commit -m "chore(golden): regenerate ${{ inputs.recipe }} golden files"
-            git push
+
+            # Push with retry logic (3 attempts, exponential backoff)
+            for attempt in 1 2 3; do
+              if [ $attempt -gt 1 ]; then
+                echo "::warning::Push attempt $attempt after failure"
+                git pull --rebase || { echo "::error::Rebase failed"; exit 1; }
+                sleep $((2 ** attempt))
+              fi
+              if git push; then
+                echo "Push succeeded on attempt $attempt"
+                exit 0
+              fi
+            done
+            echo "::error::Push failed after 3 attempts"
+            exit 1
           fi

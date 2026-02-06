@@ -86,10 +86,21 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add batch-control.json
           git commit -m "chore: update circuit breaker state [skip ci]" || true
-          for i in 1 2 3; do
-            git pull --rebase origin main && git push && break
-            sleep $((i * 2))
-          done || echo "::warning::Control file update failed, will self-heal on next run"
+
+          # Push with retry logic (3 attempts, exponential backoff)
+          for attempt in 1 2 3; do
+            if [ $attempt -gt 1 ]; then
+              echo "::warning::Push attempt $attempt after failure"
+              git pull --rebase origin main || { echo "::error::Rebase failed"; exit 1; }
+              sleep $((2 ** attempt))
+            fi
+            if git push; then
+              echo "Push succeeded on attempt $attempt"
+              exit 0
+            fi
+          done
+          echo "::error::Push failed after 3 attempts"
+          exit 1
 
       - name: Upload batch metrics
         if: always() && steps.validate.outputs.batch_id != ''
