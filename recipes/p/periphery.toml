@@ -1,0 +1,35 @@
+[metadata]
+  name = "periphery"
+  description = "Identify unused code in Swift projects"
+  homepage = "https://github.com/peripheryapp/periphery"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_os = ["linux"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "periphery"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "periphery"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/periphery"]
+
+[verify]
+  command = "periphery --version"
+  pattern = ""
