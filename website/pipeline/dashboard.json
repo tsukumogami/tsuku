@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-06T11:42:38Z",
+  "generated_at": "2026-02-06T13:17:02Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 229,
-      "pending": 471,
+      "failed": 238,
+      "pending": 461,
       "skipped": 11,
-      "success": 178
+      "success": 179
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 192,
-        "pending": 471,
+        "failed": 201,
+        "pending": 461,
         "skipped": 6,
-        "success": 168
+        "success": 169
       }
     },
     "packages": {
@@ -388,6 +388,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:aws-cdk",
+          "name": "aws-cdk",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:aws-sam-cli",
           "name": "aws-sam-cli",
           "ecosystem": "homebrew",
@@ -414,6 +421,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:bitwarden-cli",
+          "name": "bitwarden-cli",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:boost",
@@ -453,6 +467,13 @@
         {
           "id": "homebrew:certifi",
           "name": "certifi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:cfn-lint",
+          "name": "cfn-lint",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -668,6 +689,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:git-gui",
+          "name": "git-gui",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:glances",
           "name": "glances",
           "ecosystem": "homebrew",
@@ -724,6 +752,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:grep",
+          "name": "grep",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:grpc",
           "name": "grpc",
           "ecosystem": "homebrew",
@@ -747,6 +782,13 @@
         {
           "id": "homebrew:guile",
           "name": "guile",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:hdf5",
+          "name": "hdf5",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -1060,6 +1102,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:nuget",
+          "name": "nuget",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:numpy",
           "name": "numpy",
           "ecosystem": "homebrew",
@@ -1083,6 +1132,13 @@
         {
           "id": "homebrew:openai-whisper",
           "name": "openai-whisper",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:openapi-generator",
+          "name": "openapi-generator",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1310,6 +1366,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:pv",
+          "name": "pv",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:pyenv-virtualenv",
@@ -1786,12 +1849,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:aws-cdk",
-          "name": "aws-cdk",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:aws-elasticbeanstalk",
           "name": "aws-elasticbeanstalk",
           "ecosystem": "homebrew",
@@ -1866,12 +1923,6 @@
         {
           "id": "homebrew:bind",
           "name": "bind",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:bitwarden-cli",
-          "name": "bitwarden-cli",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -1962,12 +2013,6 @@
         {
           "id": "homebrew:cffi",
           "name": "cffi",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:cfn-lint",
-          "name": "cfn-lint",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2422,12 +2467,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:git-gui",
-          "name": "git-gui",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:git-xet",
           "name": "git-xet",
           "ecosystem": "homebrew",
@@ -2542,12 +2581,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:grep",
-          "name": "grep",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:groonga",
           "name": "groonga",
           "ecosystem": "homebrew",
@@ -2628,12 +2661,6 @@
         {
           "id": "homebrew:hcloud",
           "name": "hcloud",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:hdf5",
-          "name": "hdf5",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3436,12 +3463,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:nuget",
-          "name": "nuget",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:nvtop",
           "name": "nvtop",
           "ecosystem": "homebrew",
@@ -3498,12 +3519,6 @@
         {
           "id": "homebrew:openal-soft",
           "name": "openal-soft",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:openapi-generator",
-          "name": "openapi-generator",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3670,12 +3685,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:prek",
-          "name": "prek",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:procs",
           "name": "procs",
           "ecosystem": "homebrew",
@@ -3714,12 +3723,6 @@
         {
           "id": "homebrew:putty",
           "name": "putty",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:pv",
-          "name": "pv",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5345,6 +5348,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:prek",
+          "name": "prek",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:proj",
           "name": "proj",
           "ecosystem": "homebrew",
@@ -5678,10 +5687,10 @@
     }
   ],
   "failures": {
-    "deterministic": 196,
-    "deterministic_insufficient": 113,
+    "deterministic": 198,
+    "deterministic_insufficient": 119,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 119
+    "validation_failed": 122
   }
 }
