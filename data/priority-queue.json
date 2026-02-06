@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T17:49:15Z",
+  "updated_at": "2026-02-06T19:02:02Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -3543,7 +3543,7 @@
       "source": "homebrew",
       "name": "pytorch",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3551,7 +3551,7 @@
       "source": "homebrew",
       "name": "ghidra",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3559,7 +3559,7 @@
       "source": "homebrew",
       "name": "bc",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3567,7 +3567,7 @@
       "source": "homebrew",
       "name": "smartmontools",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3575,7 +3575,7 @@
       "source": "homebrew",
       "name": "asciinema",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3583,7 +3583,7 @@
       "source": "homebrew",
       "name": "grpcurl",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3591,7 +3591,7 @@
       "source": "homebrew",
       "name": "at-spi2-core",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3599,7 +3599,7 @@
       "source": "homebrew",
       "name": "terminal-notifier",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3607,7 +3607,7 @@
       "source": "homebrew",
       "name": "skopeo",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3623,7 +3623,7 @@
       "source": "homebrew",
       "name": "websocat",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
