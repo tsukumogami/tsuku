@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   The batch-generate workflow runs hourly, creating PRs that modify shared state files
   (data/priority-queue.json, data/metrics/batch-runs.jsonl, data/failures/*.jsonl,
@@ -32,7 +32,87 @@ rationale: |
 
 # Design: Batch PR Coordination and Conflict Prevention
 
-**Status**: Accepted
+**Status**: Planned
+
+## Implementation Issues
+
+### Milestone: [Security and Baseline Cleanup](https://github.com/tsukumogami/tsuku/milestone/39)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1498: chore(workflows): add CODEOWNERS for workflow and script protection](https://github.com/tsukumogami/tsuku/issues/1498) | None | simple |
+| _Establishes workflow protection by requiring 2+ reviews from designated teams for changes to workflow and script files. Prevents workflow injection attacks before implementing security token changes._ | | |
+| [#1499: chore(workflows): replace PAT with GitHub App token](https://github.com/tsukumogami/tsuku/issues/1499) | None | testable |
+| _Replaces long-lived PAT with GitHub App installation tokens that auto-rotate every 60 minutes, providing scoped permissions and audit trail integration. Reduces blast radius of credential compromise._ | | |
+| [#1500: chore(workflows): pin GitHub Actions to commit SHAs](https://github.com/tsukumogami/tsuku/issues/1500) | None | testable |
+| _Pins all third-party actions to immutable commit SHAs instead of mutable tags, preventing supply chain attacks where action maintainers could inject malicious code into tagged releases. Enables Dependabot for automated security updates._ | | |
+| [#1501: chore(scripts): add batch PR cleanup script](https://github.com/tsukumogami/tsuku/issues/1501) | None | testable |
+| _Creates one-time analysis script to safely resolve the 16+ conflicting batch PRs by identifying which recipes are already merged and which need rescue. Clears the backlog without losing unique recipes before implementing prevention mechanisms._ | | |
+
+### Milestone: [PR Coordination and Workflow Serialization](https://github.com/tsukumogami/tsuku/milestone/40)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1502: chore(workflows): add concurrency groups for queue and batch-control operations](https://github.com/tsukumogami/tsuku/issues/1502) | None | testable |
+| _Adds GitHub Actions concurrency groups to serialize workflows writing to the same state files. Prevents race conditions where concurrent runs could both read-modify-write shared files, causing lost updates or conflicts._ | | |
+| [#1503: chore(workflows): add git push retry logic with exponential backoff](https://github.com/tsukumogami/tsuku/issues/1503) | [#1502](https://github.com/tsukumogami/tsuku/issues/1502) | testable |
+| _Enhances all direct-to-main pushes with 3-attempt retry pattern and exponential backoff (2s, 4s, 8s delays). Handles transient conflicts when concurrency groups queue operations but pushes still occasionally collide._ | | |
+| [#1504: feat(workflows): add preflight check to skip batch runs when PR exists](https://github.com/tsukumogami/tsuku/issues/1504) | None | testable |
+| _Queries GitHub API for open batch PRs before creating new ones, skipping workflow execution if conflicts would occur. Prevents creating new conflicting PRs while existing ones await merge, maintaining hourly cron schedule without accumulating backlog._ | | |
+
+### Milestone: [State File Refactoring and Branch Protection](https://github.com/tsukumogami/tsuku/milestone/41)
+
+| Issue | Dependencies | Tier |
+|-------|--------------|------|
+| [#1505: refactor(cli): split priority queue by ecosystem](https://github.com/tsukumogami/tsuku/issues/1505) | [#1504](https://github.com/tsukumogami/tsuku/issues/1504) | testable |
+| _Splits the monolithic 7000-line priority-queue.json into per-ecosystem files in data/queues/ directory. Enables per-ecosystem batch PRs to modify only their own queue files, eliminating cross-ecosystem conflicts. Requires preflight check first to prevent new conflicts during migration._ | | |
+| [#1506: refactor(workflows): timestamp metrics and failures files](https://github.com/tsukumogami/tsuku/issues/1506) | [#1505](https://github.com/tsukumogami/tsuku/issues/1505) | testable |
+| _Replaces append-only metrics and failure logs with timestamped files using ISO 8601 format. Each batch run writes its own file instead of appending to shared logs, eliminating 2 more conflict sources. Updates queue-analytics to aggregate across multiple files._ | | |
+| [#1507: feat(workflows): add post-merge dashboard update workflow](https://github.com/tsukumogami/tsuku/issues/1507) | [#1506](https://github.com/tsukumogami/tsuku/issues/1506) | testable |
+| _Creates update-dashboard.yml workflow triggered on push to main, moving dashboard generation from PR creation to post-merge. Dashboard reflects merged state within 60 seconds, eliminating the final conflict source caused by non-deterministic recomputation of speculative PR state._ | | |
+| [#1508: chore(repo): enable branch protection with required checks](https://github.com/tsukumogami/tsuku/issues/1508) | [#1507](https://github.com/tsukumogami/tsuku/issues/1507) | simple |
+| _Enables branch protection on main requiring 3 always-run checks (lint-workflows, check-artifacts, validate-recipe-structure). Enforces CI validation on all PRs and enables GitHub auto-merge for batch PRs. Final validation that all state refactoring changes work correctly with workflows writing to main._ | | |
+
+### Dependency Graph
+
+```mermaid
+graph TD
+    subgraph M1["Milestone 1: Security and Baseline Cleanup"]
+        I1498["#1498: CODEOWNERS"]
+        I1499["#1499: GitHub App token"]
+        I1500["#1500: Pin actions"]
+        I1501["#1501: Cleanup script"]
+    end
+
+    subgraph M2["Milestone 2: PR Coordination"]
+        I1502["#1502: Concurrency groups"]
+        I1503["#1503: Retry logic"]
+        I1504["#1504: Preflight check"]
+    end
+
+    subgraph M3["Milestone 3: State Refactoring"]
+        I1505["#1505: Split queue"]
+        I1506["#1506: Timestamp files"]
+        I1507["#1507: Post-merge dash..."]
+        I1508["#1508: Branch protection"]
+    end
+
+    I1502 --> I1503
+    I1504 --> I1505
+    I1505 --> I1506
+    I1506 --> I1507
+    I1507 --> I1508
+
+    classDef done fill:#c8e6c9
+    classDef ready fill:#bbdefb
+    classDef blocked fill:#fff9c4
+    classDef needsDesign fill:#e1bee7
+
+    class I1498,I1499,I1500,I1501,I1502,I1504 ready
+    class I1503,I1505,I1506,I1507,I1508 blocked
+```
+
+**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ## Context and Problem Statement
 
