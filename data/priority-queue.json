@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T16:57:07Z",
+  "updated_at": "2026-02-06T17:49:15Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -3447,7 +3447,7 @@
       "source": "homebrew",
       "name": "apktool",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3455,7 +3455,7 @@
       "source": "homebrew",
       "name": "tree-sitter",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3463,7 +3463,7 @@
       "source": "homebrew",
       "name": "mit-scheme",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3471,7 +3471,7 @@
       "source": "homebrew",
       "name": "cliproxyapi",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3479,7 +3479,7 @@
       "source": "homebrew",
       "name": "openvpn",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3487,7 +3487,7 @@
       "source": "homebrew",
       "name": "moreutils",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3503,7 +3503,7 @@
       "source": "homebrew",
       "name": "chicken",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3511,7 +3511,7 @@
       "source": "homebrew",
       "name": "mkvtoolnix",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3527,7 +3527,7 @@
       "source": "homebrew",
       "name": "docker-credential-helper-ecr",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3535,7 +3535,7 @@
       "source": "homebrew",
       "name": "neofetch",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {

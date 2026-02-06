@@ -1,0 +1,35 @@
+[metadata]
+  name = "moreutils"
+  description = "Collection of tools that nobody wrote when UNIX was young"
+  homepage = "https://joeyh.name/code/moreutils/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_libc = ["glibc"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "moreutils"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "moreutils"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/chronic", "bin/combine", "bin/errno", "bin/ifdata", "bin/ifne", "bin/isutf8", "bin/lckdo", "bin/mispipe", "bin/parallel", "bin/pee", "bin/sponge", "bin/ts", "bin/vidir", "bin/vipe", "bin/zrun"]
+
+[verify]
+  command = "chronic --version"
+  pattern = ""
