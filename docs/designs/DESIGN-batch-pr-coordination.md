@@ -32,7 +32,9 @@ rationale: |
 
 # Design: Batch PR Coordination and Conflict Prevention
 
-**Status**: Planned
+## Status
+
+Planned
 
 ## Implementation Issues
 
