@@ -73,7 +73,7 @@ Planned
 | ~~[#1507: feat(workflows): add post-merge dashboard update workflow](https://github.com/tsukumogami/tsuku/issues/1507)~~ | ~~[#1506](https://github.com/tsukumogami/tsuku/issues/1506)~~ | ~~testable~~ |
 | _Creates update-dashboard.yml workflow triggered on push to main, moving dashboard generation from PR creation to post-merge. Dashboard reflects merged state within 60 seconds, eliminating the final conflict source caused by non-deterministic recomputation of speculative PR state._ | | |
 | [#1508: chore(repo): enable branch protection with required checks](https://github.com/tsukumogami/tsuku/issues/1508) | [#1507](https://github.com/tsukumogami/tsuku/issues/1507) | simple |
-| _Validates the complete batch PR coordination system is fully implemented and working end-to-end. Branch protection is enabled, but end-to-end testing discovered additional batch workflow bugs (artifact filename format, jq processing errors) that must be fixed before closing._ | | |
+| _Validates the complete batch PR coordination system is fully implemented and working end-to-end. Branch protection enabled, workflow bugs fixed (artifact filename colons, jq null handling). Ready for final end-to-end validation test._ | | |
 
 ### Dependency Graph
 
