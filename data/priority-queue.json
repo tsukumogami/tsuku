@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T09:55:06Z",
+  "updated_at": "2026-02-06T10:51:31Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -2927,7 +2927,7 @@
       "source": "homebrew",
       "name": "kcov",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2935,7 +2935,7 @@
       "source": "homebrew",
       "name": "chibi-scheme",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2943,7 +2943,7 @@
       "source": "homebrew",
       "name": "git-flow",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2951,7 +2951,7 @@
       "source": "homebrew",
       "name": "unixodbc",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2959,7 +2959,7 @@
       "source": "homebrew",
       "name": "periphery",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2967,7 +2967,7 @@
       "source": "homebrew",
       "name": "openjpeg",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2975,7 +2975,7 @@
       "source": "homebrew",
       "name": "opus",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2983,7 +2983,7 @@
       "source": "homebrew",
       "name": "goreman",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2991,7 +2991,7 @@
       "source": "homebrew",
       "name": "certifi",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2999,7 +2999,7 @@
       "source": "homebrew",
       "name": "dos2unix",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {

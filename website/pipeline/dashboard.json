@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-06T09:58:19Z",
+  "generated_at": "2026-02-06T10:56:30Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 215,
-      "pending": 491,
+      "failed": 220,
+      "pending": 481,
       "skipped": 11,
-      "success": 172
+      "success": 177
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 178,
-        "pending": 491,
+        "failed": 183,
+        "pending": 481,
         "skipped": 6,
-        "success": 162
+        "success": 167
       }
     },
     "packages": {
@@ -451,6 +451,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:certifi",
+          "name": "certifi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:cmake-docs",
           "name": "cmake-docs",
           "ecosystem": "homebrew",
@@ -771,6 +778,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:kcov",
+          "name": "kcov",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:leptonica",
@@ -1102,6 +1116,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:openjpeg",
+          "name": "openjpeg",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:openssl@1.1",
           "name": "openssl@1.1",
           "ecosystem": "homebrew",
@@ -1118,6 +1139,13 @@
         {
           "id": "homebrew:openvino",
           "name": "openvino",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:opus",
+          "name": "opus",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1454,6 +1482,13 @@
         {
           "id": "homebrew:universal-ctags",
           "name": "universal-ctags",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:unixodbc",
+          "name": "unixodbc",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -1862,12 +1897,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:certifi",
-          "name": "certifi",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:cffi",
           "name": "cffi",
           "ecosystem": "homebrew",
@@ -1888,12 +1917,6 @@
         {
           "id": "homebrew:checkov",
           "name": "checkov",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:chibi-scheme",
-          "name": "chibi-scheme",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2150,12 +2173,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:dos2unix",
-          "name": "dos2unix",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:dotnet@8",
           "name": "dotnet@8",
           "ecosystem": "homebrew",
@@ -2354,12 +2371,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:git-flow",
-          "name": "git-flow",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:git-gui",
           "name": "git-gui",
           "ecosystem": "homebrew",
@@ -2458,12 +2469,6 @@
         {
           "id": "homebrew:goreleaser",
           "name": "goreleaser",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:goreman",
-          "name": "goreman",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2776,12 +2781,6 @@
         {
           "id": "homebrew:kcat",
           "name": "kcat",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:kcov",
-          "name": "kcov",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3488,12 +3487,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:openjpeg",
-          "name": "openjpeg",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:openldap",
           "name": "openldap",
           "ecosystem": "homebrew",
@@ -3508,12 +3501,6 @@
         {
           "id": "homebrew:openvpn",
           "name": "openvpn",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:opus",
-          "name": "opus",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3550,12 +3537,6 @@
         {
           "id": "homebrew:percona-toolkit",
           "name": "percona-toolkit",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:periphery",
-          "name": "periphery",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4322,12 +4303,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:unixodbc",
-          "name": "unixodbc",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:unzip",
           "name": "unzip",
           "ecosystem": "homebrew",
@@ -4797,6 +4772,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:chibi-scheme",
+          "name": "chibi-scheme",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:clang-format",
           "name": "clang-format",
           "ecosystem": "homebrew",
@@ -4887,6 +4868,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:dos2unix",
+          "name": "dos2unix",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:doxygen",
           "name": "doxygen",
           "ecosystem": "homebrew",
@@ -4971,6 +4958,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:git-flow",
+          "name": "git-flow",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:gitleaks",
           "name": "gitleaks",
           "ecosystem": "homebrew",
@@ -5021,6 +5014,12 @@
         {
           "id": "homebrew:gopls",
           "name": "gopls",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:goreman",
+          "name": "goreman",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5315,6 +5314,12 @@
         {
           "id": "homebrew:pcre2",
           "name": "pcre2",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:periphery",
+          "name": "periphery",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5635,20 +5640,6 @@
   },
   "blockers": [
     {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
-      ]
-    },
-    {
       "dependency": "glib",
       "count": 1,
       "packages": [
@@ -5661,13 +5652,27 @@
       "packages": [
         "homebrew:coreutils"
       ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 179,
-    "deterministic_insufficient": 104,
+    "deterministic": 194,
+    "deterministic_insufficient": 106,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 114
+    "validation_failed": 117
   }
 }
