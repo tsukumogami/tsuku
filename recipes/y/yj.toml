@@ -1,0 +1,34 @@
+[metadata]
+  name = "yj"
+  description = "CLI to convert between YAML, TOML, JSON and HCL"
+  homepage = "https://github.com/sclevine/yj"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "yj"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "yj"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/yj"]
+
+[verify]
+  command = "yj --version"
+  pattern = ""
