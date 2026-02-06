@@ -831,6 +831,10 @@ jobs:
           # Remove trailing comma and close
           PLATFORMS_JSON="${PLATFORMS_JSON%,}}"
 
+          # Write metrics to timestamped file (eliminates append-only conflicts)
+          METRICS_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          METRICS_FILE="data/metrics/batch-runs-${METRICS_TIMESTAMP}.jsonl"
+
           jq -n \
             --arg batch_id "$BATCH_ID" \
             --arg ecosystem "${{ env.ECOSYSTEM }}" \
@@ -840,12 +844,12 @@ jobs:
             --argjson merged "$INCLUDED_COUNT" \
             --argjson excluded "$EXCLUDED_COUNT" \
             --argjson constrained "$CONSTRAINED_COUNT" \
-            --arg timestamp "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+            --arg timestamp "$METRICS_TIMESTAMP" \
             --argjson duration_seconds "$DURATION" \
             '{batch_id: $batch_id, ecosystem: $ecosystem, total: $total, generated: $generated, platforms: $platforms, merged: $merged, excluded: $excluded, constrained: $constrained, timestamp: $timestamp, duration_seconds: $duration_seconds}' \
-            >> data/metrics/batch-runs.jsonl
+            > "$METRICS_FILE"
 
-          echo "SLI metrics appended for batch $BATCH_ID"
+          echo "SLI metrics written to $METRICS_FILE"
 
       - name: Generate dashboard
         run: |

@@ -308,10 +308,10 @@ func TestGenerate_integration(t *testing.T) {
 	outputPath := filepath.Join(dir, "dashboard.json")
 
 	opts := Options{
-		QueueFile:    filepath.Join("testdata", "priority-queue.json"),
-		FailuresFile: filepath.Join("testdata", "failures.jsonl"),
-		MetricsFile:  filepath.Join("testdata", "batch-runs.jsonl"),
-		OutputFile:   outputPath,
+		QueueFile:   filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir: "testdata",
+		MetricsDir:  "testdata",
+		OutputFile:  outputPath,
 	}
 
 	if err := Generate(opts); err != nil {
@@ -359,15 +359,15 @@ func TestGenerate_integration(t *testing.T) {
 	}
 }
 
-func TestGenerate_missingFailuresFile(t *testing.T) {
+func TestGenerate_missingFailuresDir(t *testing.T) {
 	dir := t.TempDir()
 	outputPath := filepath.Join(dir, "dashboard.json")
 
 	opts := Options{
-		QueueFile:    filepath.Join("testdata", "priority-queue.json"),
-		FailuresFile: "/nonexistent/failures.jsonl",
-		MetricsFile:  filepath.Join("testdata", "batch-runs.jsonl"),
-		OutputFile:   outputPath,
+		QueueFile:   filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir: "/nonexistent",
+		MetricsDir:  "testdata",
+		OutputFile:  outputPath,
 	}
 
 	// Should not error, failures are non-fatal
@@ -396,15 +396,15 @@ func TestGenerate_missingFailuresFile(t *testing.T) {
 	}
 }
 
-func TestGenerate_missingMetricsFile(t *testing.T) {
+func TestGenerate_missingMetricsDir(t *testing.T) {
 	dir := t.TempDir()
 	outputPath := filepath.Join(dir, "dashboard.json")
 
 	opts := Options{
-		QueueFile:    filepath.Join("testdata", "priority-queue.json"),
-		FailuresFile: filepath.Join("testdata", "failures.jsonl"),
-		MetricsFile:  "/nonexistent/metrics.jsonl",
-		OutputFile:   outputPath,
+		QueueFile:   filepath.Join("testdata", "priority-queue.json"),
+		FailuresDir: "testdata",
+		MetricsDir:  "/nonexistent",
+		OutputFile:  outputPath,
 	}
 
 	// Should not error, metrics are non-fatal
@@ -433,10 +433,10 @@ func TestGenerate_missingQueueFile(t *testing.T) {
 	outputPath := filepath.Join(dir, "dashboard.json")
 
 	opts := Options{
-		QueueFile:    "/nonexistent/queue.json",
-		FailuresFile: filepath.Join("testdata", "failures.jsonl"),
-		MetricsFile:  filepath.Join("testdata", "batch-runs.jsonl"),
-		OutputFile:   outputPath,
+		QueueFile:   "/nonexistent/queue.json",
+		FailuresDir: "testdata",
+		MetricsDir:  "testdata",
+		OutputFile:  outputPath,
 	}
 
 	// seed.Load returns empty queue for missing file, so this should succeed
