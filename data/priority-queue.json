@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-05T23:34:46Z",
+  "updated_at": "2026-02-06T06:00:37Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -2631,7 +2631,7 @@
       "source": "homebrew",
       "name": "icu4c@78",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2639,7 +2639,7 @@
       "source": "homebrew",
       "name": "elixir",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2655,7 +2655,7 @@
       "source": "homebrew",
       "name": "libarchive",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2663,7 +2663,7 @@
       "source": "homebrew",
       "name": "the_silver_searcher",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2671,7 +2671,7 @@
       "source": "homebrew",
       "name": "sbt",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2679,7 +2679,7 @@
       "source": "homebrew",
       "name": "php@8.3",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2687,7 +2687,7 @@
       "source": "homebrew",
       "name": "sevenzip",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2695,7 +2695,7 @@
       "source": "homebrew",
       "name": "libimobiledevice",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2703,7 +2703,7 @@
       "source": "homebrew",
       "name": "graphicsmagick",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -2719,7 +2719,7 @@
       "source": "homebrew",
       "name": "glances",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
