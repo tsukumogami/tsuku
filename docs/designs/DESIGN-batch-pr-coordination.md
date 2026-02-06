@@ -59,7 +59,7 @@ Planned
 | _Adds GitHub Actions concurrency groups to serialize workflows writing to the same state files. Prevents race conditions where concurrent runs could both read-modify-write shared files, causing lost updates or conflicts._ | | |
 | ~~[#1503: chore(workflows): add git push retry logic with exponential backoff](https://github.com/tsukumogami/tsuku/issues/1503)~~ | ~~[#1502](https://github.com/tsukumogami/tsuku/issues/1502)~~ | ~~testable~~ |
 | _Enhances all direct-to-main pushes with 3-attempt retry pattern and exponential backoff (2s, 4s, 8s delays). Handles transient conflicts when concurrency groups queue operations but pushes still occasionally collide._ | | |
-| [#1504: feat(workflows): add preflight check to skip batch runs when PR exists](https://github.com/tsukumogami/tsuku/issues/1504) | None | testable |
+| ~~[#1504: feat(workflows): add preflight check to skip batch runs when PR exists](https://github.com/tsukumogami/tsuku/issues/1504)~~ | ~~None~~ | ~~testable~~ |
 | _Queries GitHub API for open batch PRs before creating new ones, skipping workflow execution if conflicts would occur. Prevents creating new conflicting PRs while existing ones await merge, maintaining hourly cron schedule without accumulating backlog._ | | |
 
 ### Milestone: [State File Refactoring and Branch Protection](https://github.com/tsukumogami/tsuku/milestone/41)
@@ -110,9 +110,9 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1498,I1499,I1500,I1501,I1502,I1503 done
-    class I1504 ready
-    class I1505,I1506,I1507,I1508 blocked
+    class I1498,I1499,I1500,I1501,I1502,I1503,I1504 done
+    class I1505 ready
+    class I1506,I1507,I1508 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
