@@ -1,7 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-05T21:38:18Z",
-  "tiers": null,
+  "updated_at": "2026-02-06T19:01:18Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -2536,7 +2535,7 @@
       "source": "homebrew",
       "name": "git-delta",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
