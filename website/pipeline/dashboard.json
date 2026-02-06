@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-06T19:07:11Z",
+  "generated_at": "2026-02-06T19:47:46Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 273,
-      "pending": 411,
+      "failed": 281,
+      "pending": 401,
       "skipped": 11,
-      "success": 194
+      "success": 196
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 236,
-        "pending": 411,
+        "failed": 244,
+        "pending": 401,
         "skipped": 6,
-        "success": 184
+        "success": 186
       }
     },
     "packages": {
@@ -927,6 +927,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:krb5",
+          "name": "krb5",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:leptonica",
           "name": "leptonica",
           "ecosystem": "homebrew",
@@ -946,6 +953,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:libavif",
+          "name": "libavif",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:libffi",
@@ -1048,6 +1062,13 @@
         {
           "id": "homebrew:mactop",
           "name": "mactop",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:magic-wormhole",
+          "name": "magic-wormhole",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -1452,6 +1473,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:podman-compose",
+          "name": "podman-compose",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:poppler",
           "name": "poppler",
           "ecosystem": "homebrew",
@@ -1520,6 +1548,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:protoc-gen-go",
+          "name": "protoc-gen-go",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:pv",
@@ -1683,11 +1718,25 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:sdl2_image",
+          "name": "sdl2_image",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:semgrep",
           "name": "semgrep",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:shared-mime-info",
+          "name": "shared-mime-info",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:skopeo",
@@ -1951,6 +2000,13 @@
         {
           "id": "homebrew:yarn",
           "name": "yarn",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:ykman",
+          "name": "ykman",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
@@ -3000,12 +3056,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:krb5",
-          "name": "krb5",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:krew",
           "name": "krew",
           "ecosystem": "homebrew",
@@ -3050,12 +3100,6 @@
         {
           "id": "homebrew:lftp",
           "name": "lftp",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:libavif",
-          "name": "libavif",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3288,12 +3332,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:magic-wormhole",
-          "name": "magic-wormhole",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:mailpit",
           "name": "mailpit",
           "ecosystem": "homebrew",
@@ -3458,12 +3496,6 @@
         {
           "id": "homebrew:nano",
           "name": "nano",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:nasm",
-          "name": "nasm",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3714,12 +3746,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:podman-compose",
-          "name": "podman-compose",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:postgis",
           "name": "postgis",
           "ecosystem": "homebrew",
@@ -3740,12 +3766,6 @@
         {
           "id": "homebrew:protobuf-c",
           "name": "protobuf-c",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:protoc-gen-go",
-          "name": "protoc-gen-go",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3972,12 +3992,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:sdl2_image",
-          "name": "sdl2_image",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:sdl2_mixer",
           "name": "sdl2_mixer",
           "ecosystem": "homebrew",
@@ -3998,12 +4012,6 @@
         {
           "id": "homebrew:sentry-cli",
           "name": "sentry-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:shared-mime-info",
-          "name": "shared-mime-info",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4266,12 +4274,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:tree-sitter-cli",
-          "name": "tree-sitter-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:ty",
           "name": "ty",
           "ecosystem": "homebrew",
@@ -4400,12 +4402,6 @@
         {
           "id": "homebrew:yamlfmt",
           "name": "yamlfmt",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:ykman",
-          "name": "ykman",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5293,6 +5289,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:nasm",
+          "name": "nasm",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:ncdu",
           "name": "ncdu",
           "ecosystem": "homebrew",
@@ -5581,6 +5583,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:tree-sitter-cli",
+          "name": "tree-sitter-cli",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:trivy",
           "name": "trivy",
           "ecosystem": "homebrew",
@@ -5722,10 +5730,10 @@
     }
   ],
   "failures": {
-    "deterministic": 225,
-    "deterministic_insufficient": 140,
+    "deterministic": 229,
+    "deterministic_insufficient": 144,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 136
+    "validation_failed": 140
   }
 }
