@@ -647,10 +647,4 @@ go test ./...
 ./test-npm-install.sh
 ```
 
-**Note:** Testing auto-bootstrap features locally may install Node.js, Python, or Rust on your system.## Issue #1508 Complete
-
-Branch protection has been successfully enabled on the main branch with:
-- Required checks: lint-workflows, check-artifacts, validate
-- Strict mode: branches must be up-to-date before merging
-- Force pushes and deletions: blocked
-- Admin bypass: allowed (for emergencies)
+**Note:** Testing auto-bootstrap features locally may install Node.js, Python, or Rust on your system.

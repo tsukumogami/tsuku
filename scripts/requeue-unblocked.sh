@@ -56,13 +56,25 @@ recipe_exists() {
 blocked_pairs() {
   for f in "$FAILURES_DIR"/*.jsonl; do
     [[ -f "$f" ]] || continue
-    jq -r '
-      .failures[]
-      | select(.category == "missing_dep")
-      | .package_id as $pid
-      | .blocked_by[]
-      | [$pid, .] | @tsv
-    ' "$f"
+    # Filter out null/empty lines, then process each JSON object
+    # Handle both old format (.failures[]) and new format (one object per line)
+    grep -v '^\s*null\s*$' "$f" | grep -v '^\s*$' | jq -r '
+      # Handle old format with .failures array
+      if has("failures") then
+        .failures[]
+        | select(.category == "missing_dep")
+        | .package_id as $pid
+        | .blocked_by[]
+        | [$pid, .] | @tsv
+      # Handle new format (one failure object per line)
+      elif .category == "missing_dep" then
+        .package_id as $pid
+        | .blocked_by[]
+        | [$pid, .] | @tsv
+      else
+        empty
+      end
+    ' 2>/dev/null || true
   done | sort -u
 }
 
