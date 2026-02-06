@@ -1,0 +1,35 @@
+[metadata]
+  name = "mit-scheme"
+  description = "MIT/GNU Scheme development tools and runtime library"
+  homepage = "https://www.gnu.org/software/mit-scheme/"
+  version_format = ""
+  requires_sudo = false
+  tier = 0
+  type = ""
+  llm_validation = "skipped"
+supported_os = ["linux"]
+
+[version]
+  source = "homebrew"
+  github_repo = ""
+  tag_prefix = ""
+  module = ""
+  formula = "mit-scheme"
+  cask = ""
+  tap = ""
+  fossil_repo = ""
+  project_name = ""
+  version_separator = ""
+  timeline_tag = ""
+
+[[steps]]
+  action = "homebrew"
+  formula = "mit-scheme"
+
+[[steps]]
+  action = "install_binaries"
+  binaries = ["bin/mit-scheme-x86-64-12.1"]
+
+[verify]
+  command = "mit-scheme-x86-64-12.1 --version"
+  pattern = ""
