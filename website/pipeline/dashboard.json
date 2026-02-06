@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-06T15:52:25Z",
+  "generated_at": "2026-02-06T17:01:11Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 256,
-      "pending": 441,
+      "failed": 263,
+      "pending": 431,
       "skipped": 11,
-      "success": 181
+      "success": 184
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 219,
-        "pending": 441,
+        "failed": 226,
+        "pending": 431,
         "skipped": 6,
-        "success": 171
+        "success": 174
       }
     },
     "packages": {
@@ -542,6 +542,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:docutils",
+          "name": "docutils",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:dotnet",
           "name": "dotnet",
           "ecosystem": "homebrew",
@@ -913,6 +920,13 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:libass",
+          "name": "libass",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:libffi",
           "name": "libffi",
           "ecosystem": "homebrew",
@@ -1198,6 +1212,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:open-mpi",
+          "name": "open-mpi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:openai-whisper",
@@ -1592,6 +1613,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:rustls-ffi",
+          "name": "rustls-ffi",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:sbt",
           "name": "sbt",
           "ecosystem": "homebrew",
@@ -1620,6 +1648,20 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:sonar-scanner",
+          "name": "sonar-scanner",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:sox",
+          "name": "sox",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:sphinx-doc",
           "name": "sphinx-doc",
           "ecosystem": "homebrew",
@@ -1629,6 +1671,13 @@
         {
           "id": "homebrew:subversion",
           "name": "subversion",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:swift-protobuf",
+          "name": "swift-protobuf",
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
@@ -2053,12 +2102,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:buf",
-          "name": "buf",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:buildifier",
           "name": "buildifier",
           "ecosystem": "homebrew",
@@ -2371,12 +2414,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:docutils",
-          "name": "docutils",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:doggo",
           "name": "doggo",
           "ecosystem": "homebrew",
@@ -2565,12 +2602,6 @@
         {
           "id": "homebrew:gitui",
           "name": "gitui",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:glew",
-          "name": "glew",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3003,12 +3034,6 @@
         {
           "id": "homebrew:lftp",
           "name": "lftp",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:libass",
-          "name": "libass",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3565,12 +3590,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:open-mpi",
-          "name": "open-mpi",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:openal-soft",
           "name": "openal-soft",
           "ecosystem": "homebrew",
@@ -3937,12 +3956,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:rustls-ffi",
-          "name": "rustls-ffi",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:s2n",
           "name": "s2n",
           "ecosystem": "homebrew",
@@ -3969,12 +3982,6 @@
         {
           "id": "homebrew:scala",
           "name": "scala",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:sccache",
-          "name": "sccache",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4059,18 +4066,6 @@
         {
           "id": "homebrew:snyk-cli",
           "name": "snyk-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:sonar-scanner",
-          "name": "sonar-scanner",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:sox",
-          "name": "sox",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4185,12 +4180,6 @@
         {
           "id": "homebrew:swift-format",
           "name": "swift-format",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:swift-protobuf",
-          "name": "swift-protobuf",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4766,6 +4755,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:buf",
+          "name": "buf",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:c-ares",
           "name": "c-ares",
           "ecosystem": "homebrew",
@@ -4990,6 +4985,12 @@
         {
           "id": "homebrew:glab",
           "name": "glab",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:glew",
+          "name": "glew",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5426,6 +5427,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:sccache",
+          "name": "sccache",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:sdl2",
           "name": "sdl2",
           "ecosystem": "homebrew",
@@ -5676,13 +5683,6 @@
   },
   "blockers": [
     {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -5702,13 +5702,20 @@
       "packages": [
         "homebrew:imagemagick"
       ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 199,
-    "deterministic_insufficient": 129,
+    "deterministic": 204,
+    "deterministic_insufficient": 134,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 130
+    "validation_failed": 132
   }
 }

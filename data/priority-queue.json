@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T15:50:24Z",
+  "updated_at": "2026-02-06T16:57:07Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -3359,7 +3359,7 @@
       "source": "homebrew",
       "name": "sox",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3367,7 +3367,7 @@
       "source": "homebrew",
       "name": "sonar-scanner",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3375,7 +3375,7 @@
       "source": "homebrew",
       "name": "rustls-ffi",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3383,7 +3383,7 @@
       "source": "homebrew",
       "name": "libass",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3391,7 +3391,7 @@
       "source": "homebrew",
       "name": "docutils",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3399,7 +3399,7 @@
       "source": "homebrew",
       "name": "glew",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3407,7 +3407,7 @@
       "source": "homebrew",
       "name": "sccache",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3415,7 +3415,7 @@
       "source": "homebrew",
       "name": "buf",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3431,7 +3431,7 @@
       "source": "homebrew",
       "name": "swift-protobuf",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3439,7 +3439,7 @@
       "source": "homebrew",
       "name": "open-mpi",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
