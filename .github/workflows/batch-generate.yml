@@ -55,7 +55,7 @@ jobs:
       # Replaces long-lived PAT to reduce credential exposure risk.
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@df04723f4af75c05d0338a8c9f2a62f7e1b69b5c  # v2
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # v2
         with:
           app-id: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_ID }}
           private-key: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_PRIVATE_KEY }}
