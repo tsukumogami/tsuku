@@ -60,7 +60,24 @@ jobs:
           app-id: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_ID }}
           private-key: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_PRIVATE_KEY }}
 
+      - name: Check for open batch PRs
+        id: check-open-prs
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          # Query for open PRs with ecosystem-specific label
+          OPEN_PRS=$(gh pr list --label "batch:${{ env.ECOSYSTEM }}" --json number --jq 'length')
+
+          if [ "$OPEN_PRS" -gt 0 ]; then
+            echo "should_skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Skipping batch run - $OPEN_PRS open PR(s) exist for ${{ env.ECOSYSTEM }}"
+          else
+            echo "should_skip=false" >> "$GITHUB_OUTPUT"
+            echo "No open PRs for ${{ env.ECOSYSTEM }} - proceeding with batch generation"
+          fi
+
       - name: Preflight circuit breaker check
+        if: steps.check-open-prs.outputs.should_skip != 'true'
         id: preflight
         run: |
           STATE=$(jq -r --arg eco "${{ env.ECOSYSTEM }}" \
@@ -99,6 +116,7 @@ jobs:
           go-version-file: go.mod
 
       - name: Build binaries
+        if: steps.check-open-prs.outputs.should_skip != 'true'
         run: |
           go build -o batch-generate ./cmd/batch-generate
           CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o tsuku-linux-amd64 ./cmd/tsuku
@@ -109,6 +127,7 @@ jobs:
           echo "$PWD" >> "$GITHUB_PATH"
 
       - name: Run batch generation
+        if: steps.check-open-prs.outputs.should_skip != 'true'
         run: |
           OVERRIDE="${{ steps.preflight.outputs.batch_size_override }}"
           BATCH_SIZE="${OVERRIDE:-${{ env.BATCH_SIZE }}}"
@@ -118,9 +137,11 @@ jobs:
             -tier "${{ env.TIER }}"
 
       - name: Requeue unblocked packages
+        if: steps.check-open-prs.outputs.should_skip != 'true'
         run: ./scripts/requeue-unblocked.sh
 
       - name: Check for generated recipes
+        if: steps.check-open-prs.outputs.should_skip != 'true'
         id: check
         run: |
           if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard recipes/)" ]; then
@@ -861,6 +882,7 @@ jobs:
           fi
 
       - name: Check for recipes to merge
+        if: steps.check-open-prs.outputs.should_skip != 'true'
         id: check
         run: |
           if git diff --quiet recipes/ && [ -z "$(git ls-files --others --exclude-standard recipes/)" ]; then
@@ -870,7 +892,7 @@ jobs:
           fi
 
       - name: Persist circuit breaker and metrics state
-        if: steps.check.outputs.changes == 'false'
+        if: steps.check-open-prs.outputs.should_skip != 'true' && steps.check.outputs.changes == 'false'
         run: |
           git add batch-control.json data/metrics/ website/pipeline/dashboard.json 2>/dev/null || true
           if git diff --cached --quiet; then
@@ -899,7 +921,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Create pull request
-        if: steps.check.outputs.changes == 'true'
+        if: steps.check-open-prs.outputs.should_skip != 'true' && steps.check.outputs.changes == 'true'
         run: |
           # Update queue statuses for processed recipes
           for recipe in $INCLUDED_RECIPES; do
@@ -984,6 +1006,7 @@ jobs:
           PR_URL=$(gh pr create \
             --title "feat(recipes): add batch ${{ env.ECOSYSTEM }} recipes (${INCLUDED_COUNT} recipes)" \
             --body-file /tmp/pr-body.md \
+            --label "batch:${{ env.ECOSYSTEM }}" \
             --base main)
           echo "PR_URL=$PR_URL" >> "$GITHUB_ENV"
           echo "Created PR: $PR_URL"
@@ -991,7 +1014,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
 
       - name: Enable auto-merge or post review notice
-        if: steps.check.outputs.changes == 'true'
+        if: steps.check-open-prs.outputs.should_skip != 'true' && steps.check.outputs.changes == 'true'
         run: |
           PR_NUMBER=$(echo "$PR_URL" | grep -o '[0-9]*$')
           if [ "$EXCLUDED_COUNT" -eq 0 ]; then
