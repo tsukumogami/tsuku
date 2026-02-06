@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T14:46:56Z",
+  "updated_at": "2026-02-06T15:50:24Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -3279,7 +3279,7 @@
       "source": "homebrew",
       "name": "mariadb",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3287,7 +3287,7 @@
       "source": "homebrew",
       "name": "unzip",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3295,7 +3295,7 @@
       "source": "homebrew",
       "name": "mtr",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3303,7 +3303,7 @@
       "source": "homebrew",
       "name": "apache-arrow",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3311,7 +3311,7 @@
       "source": "homebrew",
       "name": "esphome",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3319,7 +3319,7 @@
       "source": "homebrew",
       "name": "fabric-ai",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3327,7 +3327,7 @@
       "source": "homebrew",
       "name": "oci-cli",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3335,7 +3335,7 @@
       "source": "homebrew",
       "name": "cryptography",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3343,7 +3343,7 @@
       "source": "homebrew",
       "name": "ruby-install",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3351,7 +3351,7 @@
       "source": "homebrew",
       "name": "checkov",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
