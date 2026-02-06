@@ -37,7 +37,7 @@ echo "Generated: $(date -u '+%Y-%m-%d %H:%M UTC')" | tee -a "$OUTPUT_FILE"
 echo "" | tee -a "$OUTPUT_FILE"
 
 # Query for open batch PRs
-OPEN_PRS=$(gh pr list --search "is:open feat(recipes): add batch" --json number --jq '.[].number')
+OPEN_PRS=$(gh pr list --state open --search "batch recipes in:title" --json number --jq '.[].number')
 
 if [ -z "$OPEN_PRS" ]; then
   echo "No open batch PRs found matching pattern 'feat(recipes): add batch'" | tee -a "$OUTPUT_FILE"
