@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-06T10:51:31Z",
+  "updated_at": "2026-02-06T11:40:49Z",
   "packages": [
     {
       "id": "homebrew:awscli",
@@ -3007,7 +3007,7 @@
       "source": "homebrew",
       "name": "docker-completion",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3015,7 +3015,7 @@
       "source": "homebrew",
       "name": "ipython",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3023,7 +3023,7 @@
       "source": "homebrew",
       "name": "expect",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3031,7 +3031,7 @@
       "source": "homebrew",
       "name": "rustup",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3039,7 +3039,7 @@
       "source": "homebrew",
       "name": "qt@5",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3047,7 +3047,7 @@
       "source": "homebrew",
       "name": "w3m",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3055,7 +3055,7 @@
       "source": "homebrew",
       "name": "sphinx-doc",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3063,7 +3063,7 @@
       "source": "homebrew",
       "name": "zellij",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3071,7 +3071,7 @@
       "source": "homebrew",
       "name": "xcodes",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {
@@ -3079,7 +3079,7 @@
       "source": "homebrew",
       "name": "powerlevel10k",
       "tier": 3,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-01T21:31:19Z"
     },
     {

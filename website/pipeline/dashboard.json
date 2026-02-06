@@ -1,13 +1,13 @@
 {
-  "generated_at": "2026-02-06T10:56:30Z",
+  "generated_at": "2026-02-06T11:42:38Z",
   "queue": {
     "total": 893,
     "by_status": {
       "blocked": 4,
-      "failed": 220,
-      "pending": 481,
+      "failed": 229,
+      "pending": 471,
       "skipped": 11,
-      "success": 177
+      "success": 178
     },
     "by_tier": {
       "1": {
@@ -22,10 +22,10 @@
         "success": 2
       },
       "3": {
-        "failed": 183,
-        "pending": 481,
+        "failed": 192,
+        "pending": 471,
         "skipped": 6,
-        "success": 167
+        "success": 168
       }
     },
     "packages": {
@@ -493,6 +493,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:docker-completion",
+          "name": "docker-completion",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:dotnet",
           "name": "dotnet",
           "ecosystem": "homebrew",
@@ -519,6 +526,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:expect",
+          "name": "expect",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:fastfetch",
@@ -757,6 +771,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:ipython",
+          "name": "ipython",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:jenv",
@@ -1270,6 +1291,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:powerlevel10k",
+          "name": "powerlevel10k",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:pre-commit",
           "name": "pre-commit",
           "ecosystem": "homebrew",
@@ -1354,6 +1382,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:qt@5",
+          "name": "qt@5",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:qwen-code",
           "name": "qwen-code",
           "ecosystem": "homebrew",
@@ -1415,6 +1450,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:sphinx-doc",
+          "name": "sphinx-doc",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
         },
         {
           "id": "homebrew:subversion",
@@ -1522,6 +1564,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:w3m",
+          "name": "w3m",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
+        },
+        {
           "id": "homebrew:wangle",
           "name": "wangle",
           "ecosystem": "homebrew",
@@ -1564,6 +1613,13 @@
           "category": "deterministic_insufficient"
         },
         {
+          "id": "homebrew:xcodes",
+          "name": "xcodes",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "deterministic_insufficient"
+        },
+        {
           "id": "homebrew:xcresultparser",
           "name": "xcresultparser",
           "ecosystem": "homebrew",
@@ -1590,6 +1646,13 @@
           "ecosystem": "homebrew",
           "priority": 3,
           "category": "deterministic_insufficient"
+        },
+        {
+          "id": "homebrew:zellij",
+          "name": "zellij",
+          "ecosystem": "homebrew",
+          "priority": 3,
+          "category": "validation_failed"
         },
         {
           "id": "homebrew:zsh",
@@ -2143,12 +2206,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:docker-completion",
-          "name": "docker-completion",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:docker-credential-helper-ecr",
           "name": "docker-credential-helper-ecr",
           "ecosystem": "homebrew",
@@ -2241,12 +2298,6 @@
         {
           "id": "homebrew:esphome",
           "name": "esphome",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:expect",
-          "name": "expect",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -2679,12 +2730,6 @@
         {
           "id": "homebrew:iproute2mac",
           "name": "iproute2mac",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:ipython",
-          "name": "ipython",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -3625,12 +3670,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:powerlevel10k",
-          "name": "powerlevel10k",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:prek",
           "name": "prek",
           "ecosystem": "homebrew",
@@ -3775,12 +3814,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:qt@5",
-          "name": "qt@5",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:r",
           "name": "r",
           "ecosystem": "homebrew",
@@ -3879,12 +3912,6 @@
         {
           "id": "homebrew:rustls-ffi",
           "name": "rustls-ffi",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:rustup",
-          "name": "rustup",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4029,12 +4056,6 @@
         {
           "id": "homebrew:speedtest-cli",
           "name": "speedtest-cli",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:sphinx-doc",
-          "name": "sphinx-doc",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -4369,12 +4390,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:w3m",
-          "name": "w3m",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:wakeonlan",
           "name": "wakeonlan",
           "ecosystem": "homebrew",
@@ -4423,12 +4438,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:xcodes",
-          "name": "xcodes",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:xh",
           "name": "xh",
           "ecosystem": "homebrew",
@@ -4467,12 +4476,6 @@
         {
           "id": "homebrew:zbar",
           "name": "zbar",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:zellij",
-          "name": "zellij",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -5390,6 +5393,12 @@
           "priority": 3
         },
         {
+          "id": "homebrew:rustup",
+          "name": "rustup",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
           "id": "homebrew:sdl2",
           "name": "sdl2",
           "ecosystem": "homebrew",
@@ -5640,20 +5649,6 @@
   },
   "blockers": [
     {
-      "dependency": "glib",
-      "count": 1,
-      "packages": [
-        "homebrew:imagemagick"
-      ]
-    },
-    {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
-      ]
-    },
-    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -5666,13 +5661,27 @@
       "packages": [
         "homebrew:ffmpeg"
       ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
+      ]
+    },
+    {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 194,
-    "deterministic_insufficient": 106,
+    "deterministic": 196,
+    "deterministic_insufficient": 113,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 117
+    "validation_failed": 119
   }
 }
