@@ -48,7 +48,7 @@ Planned
 | _Replaces long-lived PAT with GitHub App installation tokens that auto-rotate every 60 minutes, providing scoped permissions and audit trail integration. Reduces blast radius of credential compromise._ | | |
 | ~~[#1500: chore(workflows): pin GitHub Actions to commit SHAs](https://github.com/tsukumogami/tsuku/issues/1500)~~ | ~~None~~ | ~~testable~~ |
 | _Pins all third-party actions to immutable commit SHAs instead of mutable tags, preventing supply chain attacks where action maintainers could inject malicious code into tagged releases. Enables Dependabot for automated security updates._ | | |
-| [#1501: chore(scripts): add batch PR cleanup script](https://github.com/tsukumogami/tsuku/issues/1501) | None | testable |
+| ~~[#1501: chore(scripts): add batch PR cleanup script](https://github.com/tsukumogami/tsuku/issues/1501)~~ | ~~None~~ | ~~testable~~ |
 | _Creates one-time analysis script to safely resolve the 16+ conflicting batch PRs by identifying which recipes are already merged and which need rescue. Clears the backlog without losing unique recipes before implementing prevention mechanisms._ | | |
 
 ### Milestone: [PR Coordination and Workflow Serialization](https://github.com/tsukumogami/tsuku/milestone/40)
@@ -110,8 +110,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1498,I1499,I1500 done
-    class I1501,I1502,I1504 ready
+    class I1498,I1499,I1500,I1501 done
+    class I1502,I1504 ready
     class I1503,I1505,I1506,I1507,I1508 blocked
 ```
 
