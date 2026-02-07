@@ -33,7 +33,16 @@ jobs:
     permissions:
       contents: write
     steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # v2.2.1
+        with:
+          app-id: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_ID }}
+          private-key: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+        with:
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff  # v5
         with:
