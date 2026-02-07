@@ -14,7 +14,8 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-QUEUE="$REPO_ROOT/data/priority-queue.json"
+ECOSYSTEM="${ECOSYSTEM:-homebrew}"
+QUEUE="$REPO_ROOT/data/queues/priority-queue-$ECOSYSTEM.json"
 FAILURES_DIR="$REPO_ROOT/data/failures"
 RECIPES_DIR="$REPO_ROOT/recipes"
 EMBEDDED_DIR="$REPO_ROOT/internal/recipe/recipes"
