@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-07T03:35:00Z",
+  "updated_at": "2026-02-07T04:01:41Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
     "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
@@ -12,7 +12,7 @@
       "source": "homebrew",
       "name": "awscli",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-07T02:32:02Z"
     },
     {
@@ -36,7 +36,7 @@
       "source": "homebrew",
       "name": "uv",
       "tier": 2,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-07T02:32:02Z"
     },
     {
@@ -44,7 +44,7 @@
       "source": "homebrew",
       "name": "ffmpeg",
       "tier": 2,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-07T02:32:02Z"
     }
   ]
