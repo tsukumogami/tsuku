@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-07T16:13:32Z",
+  "updated_at": "2026-02-07T17:17:08Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
     "2": "Popular - >10K weekly downloads (>40K/30d)",
@@ -62,6 +62,30 @@
       "tier": 2,
       "status": "pending",
       "added_at": "2026-02-07T16:13:32Z"
+    },
+    {
+      "id": "homebrew:ripgrep",
+      "source": "homebrew",
+      "name": "ripgrep",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-07T17:17:08Z"
+    },
+    {
+      "id": "homebrew:bat",
+      "source": "homebrew",
+      "name": "bat",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-07T17:17:08Z"
+    },
+    {
+      "id": "homebrew:exa",
+      "source": "homebrew",
+      "name": "exa",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-07T17:17:08Z"
     }
   ]
 }
