@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-07T04:01:41Z",
+  "updated_at": "2026-02-07T16:13:32Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
-    "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
+    "2": "Popular - >10K weekly downloads (>40K/30d)",
     "3": "Standard - all other packages"
   },
   "packages": [
@@ -46,6 +46,22 @@
       "tier": 2,
       "status": "failed",
       "added_at": "2026-02-07T02:32:02Z"
+    },
+    {
+      "id": "homebrew:jq",
+      "source": "homebrew",
+      "name": "jq",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-07T16:13:32Z"
+    },
+    {
+      "id": "homebrew:yq",
+      "source": "homebrew",
+      "name": "yq",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-07T16:13:32Z"
     }
   ]
 }
