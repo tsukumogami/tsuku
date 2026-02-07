@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-07T03:59:34Z",
+  "generated_at": "2026-02-07T15:32:19Z",
   "queue": {
     "total": 0,
     "by_status": {},
@@ -37,10 +37,10 @@
     }
   ],
   "failures": {
-    "deterministic": 230,
-    "deterministic_insufficient": 144,
+    "deterministic": 232,
+    "deterministic_insufficient": 145,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 141
+    "validation_failed": 142
   }
 }
