@@ -28,7 +28,7 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o tsuku-linux-arm64 ./cmd/tsuku
 
       - name: Upload binaries
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: binaries
           path: tsuku-*
@@ -70,7 +70,7 @@ jobs:
         run: cp cmd/tsuku-dltest/target/release/tsuku-dltest tsuku-dltest-linux-${{ matrix.arch }}
 
       - name: Upload dltest binary
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: dltest-${{ matrix.arch }}
           path: tsuku-dltest-linux-${{ matrix.arch }}
@@ -103,7 +103,7 @@ jobs:
         run: cp cmd/tsuku-dltest/target/release/tsuku-dltest tsuku-dltest-linux-${{ matrix.arch }}-musl
 
       - name: Upload dltest binary
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0
         with:
           name: dltest-${{ matrix.arch }}-musl
           path: tsuku-dltest-linux-${{ matrix.arch }}-musl
