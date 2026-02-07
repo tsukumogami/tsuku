@@ -920,6 +920,10 @@ jobs:
               data/priority-queue.json > tmp.json && mv tmp.json data/priority-queue.json
           done
 
+          # Sync with latest main to avoid race conditions with other workflows
+          git fetch origin main
+          git rebase origin/main
+
           BRANCH="batch/${{ env.ECOSYSTEM }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
           git add recipes/ data/ batch-control.json
