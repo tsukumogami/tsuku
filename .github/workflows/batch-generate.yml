@@ -923,7 +923,7 @@ jobs:
 
           # Sync with latest main to avoid race conditions with other workflows
           git fetch origin main
-          git rebase origin/main
+          git rebase --autostash origin/main
 
           BRANCH="batch/${{ env.ECOSYSTEM }}-$(date +%Y%m%d-%H%M%S)"
           git checkout -b "$BRANCH"
