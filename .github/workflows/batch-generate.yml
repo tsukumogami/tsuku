@@ -55,7 +55,7 @@ jobs:
       # Replaces long-lived PAT to reduce credential exposure risk.
       - name: Generate GitHub App token
         id: app-token
-        uses: actions/create-github-app-token@df04723f4af75c05d0338a8c9f2a62f7e1b69b5c  # v2
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # v2
         with:
           app-id: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_ID }}
           private-key: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_PRIVATE_KEY }}
@@ -680,7 +680,9 @@ jobs:
           INCLUDED_RECIPES=""
           EXCLUDED_RECIPES=""
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          FAILURE_JSONL="data/failures/${{ env.ECOSYSTEM }}.jsonl"
+          # Use timestamp in filename (with hyphens instead of colons for artifact compatibility)
+          TIMESTAMP_SAFE=$(echo "$TIMESTAMP" | tr ':' '-')
+          FAILURE_JSONL="data/failures/${{ env.ECOSYSTEM }}-${TIMESTAMP_SAFE}.jsonl"
           mkdir -p "$(dirname "$FAILURE_JSONL")"
 
           for recipe in $RECIPES; do
@@ -833,7 +835,9 @@ jobs:
 
           # Write metrics to timestamped file (eliminates append-only conflicts)
           METRICS_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-          METRICS_FILE="data/metrics/batch-runs-${METRICS_TIMESTAMP}.jsonl"
+          # Use timestamp in filename (with hyphens instead of colons for artifact compatibility)
+          METRICS_TIMESTAMP_SAFE=$(echo "$METRICS_TIMESTAMP" | tr ':' '-')
+          METRICS_FILE="data/metrics/batch-runs-${METRICS_TIMESTAMP_SAFE}.jsonl"
 
           jq -n \
             --arg batch_id "$BATCH_ID" \
