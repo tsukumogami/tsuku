@@ -120,7 +120,10 @@ func AnalyzeVerifyFailure(stdout, stderr string, exitCode int, toolName string) 
 
 	// Consider repairable if we have strong signals
 	// (usage text alone, or multiple weaker signals)
-	if helpIndicators >= 2 && (exitCode == 1 || exitCode == 2) {
+	// Accept non-zero exit codes when help text is clearly present
+	// Common exit codes: 1 (general error), 2 (misuse), 129 (git invalid arg)
+	isAcceptableExitCode := exitCode != 0 && exitCode != 127
+	if helpIndicators >= 2 && isAcceptableExitCode {
 		analysis.Repairable = true
 		analysis.SuggestedMode = "output"
 
