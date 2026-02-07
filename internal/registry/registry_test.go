@@ -461,7 +461,7 @@ func TestLocalRegistryIsLocal(t *testing.T) {
 	}
 
 	// Test with default (unset)
-	os.Unsetenv(EnvRegistryURL)
+	_ = os.Unsetenv(EnvRegistryURL)
 	reg = New("/tmp/cache")
 	if reg.IsLocal() {
 		t.Error("Registry should not be local with default URL")
