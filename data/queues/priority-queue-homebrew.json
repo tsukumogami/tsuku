@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-07T02:32:02Z",
+  "updated_at": "2026-02-07T03:03:36Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
-    "2": "Popular - >10K weekly downloads (>40K/30d)",
+    "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
     "3": "Standard - all other packages"
   },
   "packages": [
@@ -20,7 +20,7 @@
       "source": "homebrew",
       "name": "gh",
       "tier": 1,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-07T02:32:02Z"
     },
     {
@@ -28,7 +28,7 @@
       "source": "homebrew",
       "name": "node",
       "tier": 1,
-      "status": "pending",
+      "status": "failed",
       "added_at": "2026-02-07T02:32:02Z"
     },
     {
