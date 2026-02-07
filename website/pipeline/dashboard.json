@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-07T23:07:08Z",
+  "generated_at": "2026-02-07T23:34:14Z",
   "queue": {
     "total": 0,
     "by_status": {},
@@ -7,20 +7,6 @@
     "packages": {}
   },
   "blockers": [
-    {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
-      ]
-    },
-    {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
-      ]
-    },
     {
       "dependency": "glib",
       "count": 1,
@@ -34,13 +20,27 @@
       "packages": [
         "homebrew:coreutils"
       ]
+    },
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
+      ]
     }
   ],
   "failures": {
-    "deterministic": 232,
-    "deterministic_insufficient": 145,
+    "deterministic": 234,
+    "deterministic_insufficient": 147,
     "missing_dep": 4,
     "timeout": 3,
-    "validation_failed": 142
+    "validation_failed": 149
   }
 }
