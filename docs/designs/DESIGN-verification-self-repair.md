@@ -1,5 +1,5 @@
 ---
-status: Proposed
+status: Accepted
 problem: |
   Recipe creation often fails at the verification step because generated recipes
   default to `tool --version`, which many CLI tools don't support. When this
@@ -28,7 +28,7 @@ rationale: |
 
 ## Status
 
-Proposed
+Accepted
 
 ## Context and Problem Statement
 
