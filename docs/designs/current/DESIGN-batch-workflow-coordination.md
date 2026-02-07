@@ -22,9 +22,7 @@ rationale: |
 
 # Batch Recipe Workflow Coordination
 
-## Status
-
-Current
+**Status**: Current
 
 ## Context and Problem Statement
 
@@ -44,87 +42,6 @@ The batch workflow system generates recipes in batches, validates them across mu
 - **Quality gates**: All recipes must validate on target platforms before merge
 - **Failure isolation**: One ecosystem's failures shouldn't block others
 - **Auditability**: Track what was generated, when, and why decisions were made
-
-## Considered Options
-
-### Decision 1: State File Organization
-
-How should batch state be organized to prevent merge conflicts between concurrent ecosystem runs?
-
-#### Chosen: Per-Ecosystem State Sections
-
-Each ecosystem gets its own section in `batch-control.json` with isolated circuit breaker state, budget tracking, and control flags. This design eliminates cross-ecosystem conflicts since each workflow only modifies its own section.
-
-```json
-{
-  "circuit_breaker": {
-    "homebrew": {"state": "closed", "failures": 0},
-    "npm": {"state": "closed", "failures": 0}
-  }
-}
-```
-
-Benefits:
-- Natural isolation between ecosystems
-- No coordination overhead between workflows
-- Each ecosystem independently managed
-
-#### Alternatives Considered
-
-**Single state file per ecosystem**: Create separate files like `batch-control-homebrew.json`, `batch-control-npm.json`.
-
-Rejected because: Would require N files for N ecosystems, complicating configuration management and increasing operational overhead. The single-file-with-sections approach provides the same isolation with simpler file structure.
-
-**Distributed state in PR metadata**: Store circuit breaker state in GitHub issue/PR labels or comments.
-
-Rejected because: GitHub API rate limits would become a bottleneck, and state persistence would be unreliable (PRs get closed, labels can be manually modified). File-based state is simpler and more reliable.
-
-### Decision 2: PR Coordination Strategy
-
-How should concurrent batch workflows avoid merge conflicts when creating PRs?
-
-#### Chosen: Race Detection + Rebase
-
-Workflows check for existing PRs with ecosystem labels before starting generation. Before creating a PR branch, workflows rebase with `origin/main` to incorporate any merged changes from other ecosystems.
-
-Benefits:
-- Detects same-ecosystem races (two homebrew runs)
-- Handles cross-ecosystem races (homebrew merges during npm generation)
-- Simple retry logic with `--autostash` handles uncommitted changes
-
-#### Alternatives Considered
-
-**Distributed locks via GitHub API**: Use GitHub Issues or PR drafts as distributed locks.
-
-Rejected because: Adds complexity and failure modes (lock cleanup, timeout handling). The rebase strategy is simpler and more robust—even if two workflows race, one will fail at PR creation (GitHub enforces unique branch names) and can retry.
-
-**Workflow concurrency groups**: Use GitHub Actions' built-in concurrency groups to serialize all batch runs.
-
-Rejected because: Would prevent concurrent execution of different ecosystems, defeating the purpose of the per-ecosystem state design. We want homebrew and npm to run simultaneously.
-
-### Decision 3: Authentication for Automated Merges
-
-How should workflows authenticate to bypass branch protection and enable auto-merge?
-
-#### Chosen: GitHub App with Restricted Permissions
-
-Create a dedicated GitHub App (`tsuku-batch-generator`) with minimal permissions: `contents:write`, `pull_requests:write`. Generate installation tokens at workflow runtime.
-
-Benefits:
-- Fine-grained permissions (only what workflows need)
-- Audit trail (all actions attributed to app, not a user)
-- Bypasses branch protection without granting broad access
-- Token expires after 1 hour (reduced blast radius)
-
-#### Alternatives Considered
-
-**Personal Access Token (PAT)**: Store a user's PAT in repository secrets.
-
-Rejected because: PATs have user-level permissions (too broad), don't expire automatically, and actions appear under that user's account (confusing audit trail). GitHub Apps are the modern, secure approach.
-
-**GitHub Actions default token with admin bypass**: Grant the default `GITHUB_TOKEN` admin privileges to bypass protection.
-
-Rejected because: Security anti-pattern. The default token should have minimal permissions. Using a dedicated app with explicit permissions is safer.
 
 ## Decision Outcome
 
@@ -738,7 +655,7 @@ gh pr merge "$PR_NUM" --squash --auto=false
 gh pr comment "$PR_NUM" --body "Manually merged after auto-merge timeout. All checks passed."
 ```
 
-## Security Considerations
+### Security Considerations
 
 **GitHub App Configuration**:
 - **Permissions**: Contents (write), Pull Requests (write), Administration (write)
@@ -787,112 +704,8 @@ gh pr comment "$PR_NUM" --body "Manually merged after auto-merge timeout. All ch
 - **Tier-based priority**: Requires classifying packages into tiers (subjective)
 - **Platform constraints**: Some recipes may only work on subset of platforms (expected)
 
-## Validation Results
-
-End-to-end validation of the batch workflow system completed on 2026-02-08. Testing identified and fixed several bugs before declaring the system production-ready.
-
-### Manual Batch E2E Test
-
-**PR #1559**: First successful end-to-end batch generation
-
-**Timeline:**
-- 02:30:32Z: Batch triggered manually (batch_size=11, tier=1)
-- 02:38:XX: Generation completed (4 recipes: procs, sd, tealdeer, xh)
-- 02:40:35Z: PR auto-merged after all CI checks passed
-- **Total time: 10 minutes from trigger to merge**
-
-**What worked:**
-1. ✅ Recipe generation from priority queue
-2. ✅ Multi-platform validation (Linux x86/arm64, macOS x86/arm64)
-3. ✅ PR creation with `batch:homebrew` label
-4. ✅ Auto-merge enabled via GitHub App token
-5. ✅ All CI checks passed (54 total checks)
-6. ✅ PR merged without conflicts
-7. ✅ Queue status updated correctly
-8. ✅ Circuit breaker did not trigger (successes reset counter)
-
-### Bugs Found and Fixed
-
-#### 1. Seed Queue Path Mismatch (PR #1552)
-
-**Problem**: `seed-queue.yml` workflow used wrong file paths
-- Used: `data/priority-queue.json`
-- Should be: `data/queues/priority-queue-{ecosystem}.json`
-
-**Root Cause**: Workflow not updated after migration to per-ecosystem queues.
-
-**Fix**: Updated all path references to per-ecosystem structure, added `--autostash` to retry logic.
-
-#### 2. Seed Queue Branch Protection (PR #1553)
-
-**Problem**: Workflow failed with `GH006: Protected branch update failed`
-
-**Root Cause**: Standard GitHub Actions token cannot bypass branch protection rules. Seed queue pushes directly to main with `[skip ci]` but lacked proper authentication.
-
-**Fix**: Added GitHub App token generation (same pattern as batch-generate and dashboard workflows).
-
-#### 3. Batch Generate Rebase Without Autostash (PR #1555)
-
-**Problem**: Merge job failed on "Create pull request" step with exit code 1.
-
-**Root Cause**: Workflow updates queue file with success/failure statuses before rebasing with origin/main, creating unstaged changes. Without `--autostash`, git rebase fails with "You have unstaged changes."
-
-**Fix**: Added `--autostash` flag to rebase command:
-```yaml
-git rebase --autostash origin/main
-```
-
-This allows rebase to proceed by stashing queue updates, rebasing, then restoring the stash.
-
-#### 4. Dashboard Queue Loading
-
-**Problem**: https://tsuku.dev/pipeline/ showed empty queue status after migration to per-ecosystem queues.
-
-**Root Cause**: Dashboard tried to load single `data/priority-queue.json` file instead of aggregating from `data/queues/` directory.
-
-**Fix**: Added `loadQueueFromPathOrDir` function to aggregate all `priority-queue-*.json` files. Function detects whether input is file or directory and handles both cases.
-
-#### 5. Category Mismatch: recipe_not_found vs missing_dep (Issue #1557)
-
-**Problem**: Packages with missing runtime dependencies counted as "failed" instead of "blocked", unnecessarily incrementing the circuit breaker failure counter.
-
-**Root Cause**: CLI returns `"category": "recipe_not_found"` for missing dependencies, but orchestrator only treats `"category": "missing_dep"` as blocked in validation logic (`internal/batch/orchestrator.go:113-120`).
-
-**Impact**: Packages that should be treated as "blocked on dependencies" trigger circuit breaker failures, potentially blocking all batch runs when the issue is just missing dependency recipes.
-
-**Status**: Issue filed, needs code fix in orchestrator to treat both categories as blocked.
-
-### Root Cause Analysis: Why Initial Batches Failed
-
-Most packages in the priority queue have C library runtime dependencies that don't exist as recipes yet:
-
-**Examples:**
-- neovim: 8 dependencies (tree-sitter, gettext, libuv, lpeg, luajit, luv, unibilium, utf8proc)
-- tmux: 3 dependencies (libevent, ncurses, utf8proc)
-- vim: 6 dependencies (gettext, libsodium, lua, ncurses, python@3.14, ruby)
-- wget: 4 dependencies (libidn2, openssl@3, gettext, libunistring)
-
-**Solution**: Identified standalone Rust binaries with no dependencies (procs, sd, xh, tealdeer). Triggered batch with size=11 to reach these packages in queue. 7 failed (have dependencies), 4 succeeded (standalone).
-
-**Category bug impact**: The 7 failed packages should have been marked "blocked" instead of "failed", which would have prevented circuit breaker failures. After fixing issue #1557, packages with missing dependencies will properly wait for those dependencies to be added rather than counting as failures.
-
-### Automatic Batch Validation
-
-**Status**: In progress (scheduled run at 03:00 UTC)
-
-GitHub Actions scheduled workflows typically delay 10-26 minutes during peak load. Historical data shows:
-- 02:00 UTC scheduled → started at 02:14:14Z (14 min delay)
-- 23:00 UTC scheduled → started at 23:26:16Z (26 min delay)
-
-Monitoring workflow runs to confirm scheduled trigger works correctly.
-
 ## Related Issues
 
 - #1508: Batch PR coordination and state refactoring (this design)
 - #1487: State refactoring implementation (merged)
-- #1552: Fix seed queue paths and autostash (merged)
-- #1553: Fix seed queue branch protection (merged)
-- #1555: Fix batch generate rebase autostash (merged)
-- #1557: Fix category mismatch for missing dependencies (open)
-- #1559: First successful batch PR (merged - 4 recipes)
 - PRs #1549, #1550: E2E validation runs
