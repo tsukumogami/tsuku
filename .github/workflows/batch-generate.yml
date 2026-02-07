@@ -682,7 +682,10 @@ jobs:
           TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           # Use timestamp in filename (with hyphens instead of colons for artifact compatibility)
           TIMESTAMP_SAFE=$(echo "$TIMESTAMP" | tr ':' '-')
-          FAILURE_JSONL="data/failures/${{ env.ECOSYSTEM }}-${TIMESTAMP_SAFE}.jsonl"
+          echo "DEBUG: TIMESTAMP=$TIMESTAMP"
+          echo "DEBUG: TIMESTAMP_SAFE=$TIMESTAMP_SAFE"
+          FAILURE_JSONL="data/failures/${{ env.ECOSYSTEM }}-$TIMESTAMP_SAFE.jsonl"
+          echo "DEBUG: FAILURE_JSONL=$FAILURE_JSONL"
           mkdir -p "$(dirname "$FAILURE_JSONL")"
 
           for recipe in $RECIPES; do
@@ -837,7 +840,10 @@ jobs:
           METRICS_TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           # Use timestamp in filename (with hyphens instead of colons for artifact compatibility)
           METRICS_TIMESTAMP_SAFE=$(echo "$METRICS_TIMESTAMP" | tr ':' '-')
-          METRICS_FILE="data/metrics/batch-runs-${METRICS_TIMESTAMP_SAFE}.jsonl"
+          echo "DEBUG: METRICS_TIMESTAMP=$METRICS_TIMESTAMP"
+          echo "DEBUG: METRICS_TIMESTAMP_SAFE=$METRICS_TIMESTAMP_SAFE"
+          METRICS_FILE="data/metrics/batch-runs-$METRICS_TIMESTAMP_SAFE.jsonl"
+          echo "DEBUG: METRICS_FILE=$METRICS_FILE"
 
           jq -n \
             --arg batch_id "$BATCH_ID" \
