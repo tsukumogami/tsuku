@@ -191,7 +191,29 @@ func (o *Orchestrator) Create(
 			}
 		}
 
-		// Repair the recipe
+		// Try deterministic verification self-repair first
+		// This can fix common cases (tool doesn't support --version) without LLM
+		if repaired, verifyMeta := o.attemptVerifySelfRepair(ctx, result.Recipe, sandboxResult); repaired != nil {
+			// Self-repair produced a candidate - validate it
+			repairedResult, err := o.validate(ctx, repaired)
+			if err != nil {
+				return nil, fmt.Errorf("sandbox validation error after self-repair: %w", err)
+			}
+
+			if repairedResult.Passed {
+				// Self-repair succeeded!
+				result.Recipe = repaired
+				result.VerifyRepair = verifyMeta
+				return &OrchestratorResult{
+					Recipe:         repaired,
+					BuildResult:    result,
+					RepairAttempts: repairAttempts,
+				}, nil
+			}
+			// Self-repair didn't help - fall through to LLM repair
+		}
+
+		// Repair the recipe using LLM
 		repairAttempts++
 		result, err = session.Repair(ctx, sandboxResult)
 		if err != nil {
@@ -272,6 +294,63 @@ func (o *Orchestrator) generatePlan(ctx context.Context, r *recipe.Recipe) (*exe
 	}
 
 	return plan, nil
+}
+
+// attemptVerifySelfRepair attempts to deterministically repair a verification failure.
+// This handles the common case where a tool doesn't support --version but does output
+// help text when given an invalid flag.
+//
+// Returns (nil, nil) if self-repair is not applicable or fails.
+// Returns (repairedRecipe, metadata) if self-repair produces a candidate.
+func (o *Orchestrator) attemptVerifySelfRepair(
+	ctx context.Context,
+	r *recipe.Recipe,
+	failure *sandbox.SandboxResult,
+) (*recipe.Recipe, *VerifyRepairMetadata) {
+	// Skip if not a verification-related exit code
+	// Exit code 127 = command not found (binary missing, can't self-repair)
+	// Exit code 0 = success (shouldn't be here)
+	if validate.IsNotFoundExitCode(failure.ExitCode) {
+		return nil, nil
+	}
+
+	// Skip if output is empty (nothing to analyze)
+	combined := failure.Stdout + failure.Stderr
+	if len(combined) == 0 {
+		return nil, nil
+	}
+
+	// Get tool name from recipe metadata
+	toolName := r.Metadata.Name
+
+	// Analyze the failure output
+	analysis := validate.AnalyzeVerifyFailure(failure.Stdout, failure.Stderr, failure.ExitCode, toolName)
+
+	if !analysis.Repairable {
+		return nil, nil
+	}
+
+	// Create repaired verify section
+	originalCommand := r.Verify.Command
+	repairedVerify := recipe.VerifySection{
+		Command:  originalCommand, // Keep the same command
+		Mode:     analysis.SuggestedMode,
+		Pattern:  analysis.SuggestedPattern,
+		ExitCode: &analysis.ExitCode,
+		Reason:   analysis.SuggestedReason,
+	}
+
+	// Create repaired recipe
+	repaired := r.WithVerify(repairedVerify)
+
+	meta := &VerifyRepairMetadata{
+		OriginalCommand:  originalCommand,
+		RepairedCommand:  originalCommand, // Command stays the same, mode/pattern changed
+		Method:           "output_detection",
+		DetectedExitCode: analysis.ExitCode,
+	}
+
+	return repaired, meta
 }
 
 // ValidationFailedError indicates that validation failed after all repair attempts.
