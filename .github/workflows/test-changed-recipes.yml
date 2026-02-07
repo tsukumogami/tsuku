@@ -11,33 +11,29 @@ on:
   workflow_dispatch:
 
 jobs:
-  # Detect changed recipes and build binaries
-  prepare:
-    name: Prepare
+  # Detect changed recipes and generate matrix
+  matrix:
+    name: Detect Changes
     runs-on: ubuntu-latest
     outputs:
       recipes: ${{ steps.changed.outputs.recipes }}
       has_changes: ${{ steps.changed.outputs.has_changes }}
+      macos_recipes: ${{ steps.changed.outputs.macos_recipes }}
+      has_macos: ${{ steps.changed.outputs.has_macos }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
         with:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff  # v5
         with:
           go-version-file: 'go.mod'
           cache-dependency-path: go.sum
 
-      - name: Build binaries for all platforms
-        run: |
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o tsuku-linux-amd64 ./cmd/tsuku
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o tsuku-linux-arm64 ./cmd/tsuku
-          CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -o tsuku-darwin-arm64 ./cmd/tsuku
-          CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o tsuku-darwin-amd64 ./cmd/tsuku
-          # Also build for local use in changed recipe detection
-          cp tsuku-linux-amd64 tsuku
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
 
       - name: Get changed recipes
         id: changed
@@ -62,18 +58,25 @@ jobs:
           }
 
           # Get list of changed recipe files (exclude deleted files)
+          # Check both embedded (internal/recipe/recipes) and registry (recipes/) locations
           CHANGED=$(git diff --name-only --diff-filter=d origin/main...HEAD -- 'internal/recipe/recipes/**/*.toml' 'recipes/**/*.toml')
 
           if [ -z "$CHANGED" ]; then
             echo "No recipe files changed"
             echo "has_changes=false" >> $GITHUB_OUTPUT
-            echo "recipes=" >> $GITHUB_OUTPUT
+            echo "recipes=[]" >> $GITHUB_OUTPUT
+            echo "has_macos=false" >> $GITHUB_OUTPUT
+            echo "macos_recipes=[]" >> $GITHUB_OUTPUT
           else
             echo "Changed recipes:"
             echo "$CHANGED"
 
-            # Collect recipe paths (space-separated, for shell iteration)
-            RECIPE_LIST=""
+            # Build JSON arrays of {tool, path} objects per platform
+            # Skip library recipes (type = "library") as they cannot be installed directly
+            JSON="["
+            MACOS_JSON="["
+            FIRST=true
+            MACOS_FIRST=true
             for path in $CHANGED; do
               # Skip if file doesn't exist (deleted in later commit)
               if [ ! -f "$path" ]; then
@@ -81,19 +84,19 @@ jobs:
                 continue
               fi
 
-              # Skip library recipes (type = "library") - they cannot be installed directly
+              # Check if recipe is a library type
               if grep -q 'type = "library"' "$path" 2>/dev/null; then
                 echo "Skipping library recipe: $path"
                 continue
               fi
 
-              # Skip system dependency recipes (action = "require_system")
+              # Check if recipe uses require_system (system dependencies can't be installed)
               if grep -q 'action = "require_system"' "$path" 2>/dev/null; then
                 echo "Skipping system dependency recipe: $path"
                 continue
               fi
 
-              # Skip excluded recipes (toolchain issues)
+              # Check if recipe is excluded from installation testing (toolchain issues)
               tool=$(basename "$path" .toml)
               exclusion_issue=$(is_execution_excluded "$tool" || true)
               if [ -n "$exclusion_issue" ]; then
@@ -101,441 +104,153 @@ jobs:
                 continue
               fi
 
-              RECIPE_LIST="$RECIPE_LIST $path"
+              # Determine platform support using tsuku info
+              has_linux="false"
+              has_macos="false"
+              if ! platforms=$(./tsuku info --json --metadata-only --recipe "$path" 2>/dev/null | jq -c '.supported_platforms // []'); then
+                platforms="[]"
+              fi
+
+              if [ "$platforms" = "[]" ] || [ -z "$platforms" ]; then
+                # No platform data or tsuku info failed: assume all platforms
+                has_linux="true"
+                has_macos="true"
+                echo "All platforms (no constraints): $path"
+              else
+                if echo "$platforms" | jq -e '[.[] | select(.os == "linux")] | length > 0' > /dev/null 2>&1; then
+                  has_linux="true"
+                fi
+                if echo "$platforms" | jq -e '[.[] | select(.os == "darwin")] | length > 0' > /dev/null 2>&1; then
+                  has_macos="true"
+                fi
+                echo "Platform support for $tool: linux=$has_linux macos=$has_macos"
+              fi
+
+              # Add to Linux list if supported
+              if [ "$has_linux" = "true" ]; then
+                if [ "$FIRST" = true ]; then
+                  FIRST=false
+                else
+                  JSON="$JSON,"
+                fi
+                JSON="$JSON{\"tool\":\"$tool\",\"path\":\"$path\"}"
+              fi
+
+              # Add to macOS list if supported
+              if [ "$has_macos" = "true" ]; then
+                if [ "$MACOS_FIRST" = true ]; then
+                  MACOS_FIRST=false
+                else
+                  MACOS_JSON="$MACOS_JSON,"
+                fi
+                MACOS_JSON="$MACOS_JSON{\"tool\":\"$tool\",\"path\":\"$path\"}"
+              fi
             done
+            JSON="$JSON]"
+            MACOS_JSON="$MACOS_JSON]"
 
-            # Trim leading space
-            RECIPE_LIST="${RECIPE_LIST# }"
-
-            if [ -z "$RECIPE_LIST" ]; then
+            # Check if we have any non-library recipes
+            if [ "$JSON" = "[]" ]; then
               echo "has_changes=false" >> $GITHUB_OUTPUT
-              echo "recipes=" >> $GITHUB_OUTPUT
             else
               echo "has_changes=true" >> $GITHUB_OUTPUT
-              echo "recipes=$RECIPE_LIST" >> $GITHUB_OUTPUT
             fi
-          fi
+            echo "recipes=$JSON" >> $GITHUB_OUTPUT
 
-      - name: Upload binaries
-        if: steps.changed.outputs.has_changes == 'true'
-        uses: actions/upload-artifact@v4
-        with:
-          name: tsuku-binaries
-          path: tsuku-*
-          retention-days: 1
-
-  # Validate on all Linux x86_64 families
-  validate-linux-x86_64:
-    name: "Linux x86_64"
-    needs: prepare
-    if: needs.prepare.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: tsuku-binaries
-
-      - name: Make binary executable
-        run: chmod +x tsuku-linux-amd64
-
-      - name: Validate on all Linux x86_64 families
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          RESULTS="[]"
-          IMAGES=("debian:bookworm-slim" "fedora:41" "archlinux:base" "opensuse/tumbleweed" "alpine:3.21")
-          NAMES=("debian" "rhel" "arch" "suse" "alpine")
-          LIBCS=("glibc" "glibc" "glibc" "glibc" "musl")
-          RECIPES="${{ needs.prepare.outputs.recipes }}"
-
-          for i in "${!IMAGES[@]}"; do
-            image="${IMAGES[$i]}"
-            family="${NAMES[$i]}"
-            libc="${LIBCS[$i]}"
-            platform="linux-${family}-${libc}-x86_64"
-
-            echo "=== Validating on $platform ($image) ==="
-
-            for recipe_path in $RECIPES; do
-              recipe_name=$(basename "$recipe_path" .toml)
-
-              echo "--- $recipe_name on $platform ---"
-              STATUS="pass"
-              EXIT_CODE=0
-              ATTEMPTS=1
-
-              for attempt in 0 1 2; do
-                ATTEMPTS=$((attempt + 1))
-                # Write tsuku exit code to file so Docker doesn't mask it
-                docker run --rm \
-                  -v "$PWD:/workspace" \
-                  -w /workspace \
-                  -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-                  "$image" \
-                  sh -c "
-                    case '$family' in
-                      alpine) apk add --no-cache curl bash ca-certificates ;;
-                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates ;;
-                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates ;;
-                      arch) pacman -Sy --noconfirm curl ca-certificates ;;
-                      suse) zypper -n install curl ca-certificates ;;
-                    esac
-                    timeout 300 ./tsuku-linux-amd64 install --force --recipe '$recipe_path'
-                    echo \$? > /workspace/.tsuku-exit-code
-                  " 2>&1 || true
-
-                if [ -f .tsuku-exit-code ]; then
-                  EXIT_CODE=$(cat .tsuku-exit-code)
-                  rm -f .tsuku-exit-code
-                else
-                  # Container failed before running tsuku (Docker error)
-                  EXIT_CODE=1
-                fi
-
-                if [ "$EXIT_CODE" = "0" ]; then
-                  STATUS="pass"
-                  break
-                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
-                  echo "Network error, retrying (attempt $((attempt+2)))..."
-                  sleep $((2 ** (attempt + 1)))
-                  continue
-                else
-                  STATUS="fail"
-                  break
-                fi
-              done
-
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
-            done
-          done
-
-          echo "$RESULTS" > validation-results-linux-x86_64.json
-          echo "### Linux x86_64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
-          echo '```json' >> "$GITHUB_STEP_SUMMARY"
-          echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: validation-results-linux-x86_64
-          path: validation-results-linux-x86_64.json
-          retention-days: 1
-
-  # Validate on all Linux arm64 families
-  validate-linux-arm64:
-    name: "Linux arm64"
-    needs: prepare
-    if: needs.prepare.outputs.has_changes == 'true'
-    runs-on: ubuntu-24.04-arm
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: tsuku-binaries
-
-      - name: Make binary executable
-        run: chmod +x tsuku-linux-arm64
-
-      - name: Validate on all Linux arm64 families
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          RESULTS="[]"
-          # archlinux:base excluded -- no ARM64 container image
-          IMAGES=("debian:bookworm-slim" "fedora:41" "opensuse/tumbleweed" "alpine:3.21")
-          NAMES=("debian" "rhel" "suse" "alpine")
-          LIBCS=("glibc" "glibc" "glibc" "musl")
-          RECIPES="${{ needs.prepare.outputs.recipes }}"
-
-          for i in "${!IMAGES[@]}"; do
-            image="${IMAGES[$i]}"
-            family="${NAMES[$i]}"
-            libc="${LIBCS[$i]}"
-            platform="linux-${family}-${libc}-arm64"
-
-            echo "=== Validating on $platform ($image) ==="
-
-            for recipe_path in $RECIPES; do
-              recipe_name=$(basename "$recipe_path" .toml)
-
-              echo "--- $recipe_name on $platform ---"
-              STATUS="pass"
-              EXIT_CODE=0
-              ATTEMPTS=1
-
-              for attempt in 0 1 2; do
-                ATTEMPTS=$((attempt + 1))
-                docker run --rm \
-                  -v "$PWD:/workspace" \
-                  -w /workspace \
-                  -e GITHUB_TOKEN="$GITHUB_TOKEN" \
-                  "$image" \
-                  sh -c "
-                    case '$family' in
-                      alpine) apk add --no-cache curl bash ca-certificates ;;
-                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates ;;
-                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates ;;
-                      suse) zypper -n install curl ca-certificates ;;
-                    esac
-                    timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'
-                    echo \$? > /workspace/.tsuku-exit-code
-                  " 2>&1 || true
-
-                if [ -f .tsuku-exit-code ]; then
-                  EXIT_CODE=$(cat .tsuku-exit-code)
-                  rm -f .tsuku-exit-code
-                else
-                  EXIT_CODE=1
-                fi
-
-                if [ "$EXIT_CODE" = "0" ]; then
-                  STATUS="pass"
-                  break
-                elif [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
-                  echo "Network error, retrying (attempt $((attempt+2)))..."
-                  sleep $((2 ** (attempt + 1)))
-                  continue
-                else
-                  STATUS="fail"
-                  break
-                fi
-              done
-
-              RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
-            done
-          done
-
-          echo "$RESULTS" > validation-results-linux-arm64.json
-          echo "### Linux arm64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
-          echo '```json' >> "$GITHUB_STEP_SUMMARY"
-          echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: validation-results-linux-arm64
-          path: validation-results-linux-arm64.json
-          retention-days: 1
-
-  # Validate on macOS arm64
-  validate-darwin-arm64:
-    name: "macOS arm64"
-    needs: prepare
-    if: needs.prepare.outputs.has_changes == 'true'
-    runs-on: macos-14
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: tsuku-binaries
-
-      - name: Make binary executable
-        run: chmod +x tsuku-darwin-arm64
-
-      - name: Install GNU coreutils for gtimeout
-        run: brew install coreutils
-
-      - name: Validate on macOS arm64
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          RESULTS="[]"
-          RECIPES="${{ needs.prepare.outputs.recipes }}"
-
-          for recipe_path in $RECIPES; do
-            recipe_name=$(basename "$recipe_path" .toml)
-
-            echo "--- $recipe_name on darwin-arm64 ---"
-            STATUS="pass"
-            EXIT_CODE=0
-            ATTEMPTS=1
-
-            for attempt in 0 1 2; do
-              ATTEMPTS=$((attempt + 1))
-              if gtimeout 300 ./tsuku-darwin-arm64 install --force --recipe "$recipe_path" 2>&1; then
-                EXIT_CODE=0
-                STATUS="pass"
-                break
-              else
-                EXIT_CODE=$?
-                if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
-                  echo "Network error, retrying (attempt $((attempt+2)))..."
-                  sleep $((2 ** (attempt + 1)))
-                  continue
-                fi
-                STATUS="fail"
-                break
-              fi
-            done
-
-            RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "darwin-arm64" \
-              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
-          done
-
-          echo "$RESULTS" > validation-results-darwin-arm64.json
-          echo "### macOS arm64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
-          echo '```json' >> "$GITHUB_STEP_SUMMARY"
-          echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: validation-results-darwin-arm64
-          path: validation-results-darwin-arm64.json
-          retention-days: 1
-
-  # Validate on macOS x86_64
-  validate-darwin-x86_64:
-    name: "macOS x86_64"
-    needs: prepare
-    if: needs.prepare.outputs.has_changes == 'true'
-    runs-on: macos-15-intel
-    timeout-minutes: 30
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Download binaries
-        uses: actions/download-artifact@v4
-        with:
-          name: tsuku-binaries
-
-      - name: Make binary executable
-        run: chmod +x tsuku-darwin-amd64
-
-      - name: Install GNU coreutils for gtimeout
-        run: brew install coreutils
-
-      - name: Validate on macOS x86_64
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          RESULTS="[]"
-          RECIPES="${{ needs.prepare.outputs.recipes }}"
-
-          for recipe_path in $RECIPES; do
-            recipe_name=$(basename "$recipe_path" .toml)
-
-            echo "--- $recipe_name on darwin-x86_64 ---"
-            STATUS="pass"
-            EXIT_CODE=0
-            ATTEMPTS=1
-
-            for attempt in 0 1 2; do
-              ATTEMPTS=$((attempt + 1))
-              if gtimeout 300 ./tsuku-darwin-amd64 install --force --recipe "$recipe_path" 2>&1; then
-                EXIT_CODE=0
-                STATUS="pass"
-                break
-              else
-                EXIT_CODE=$?
-                if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
-                  echo "Network error, retrying (attempt $((attempt+2)))..."
-                  sleep $((2 ** (attempt + 1)))
-                  continue
-                fi
-                STATUS="fail"
-                break
-              fi
-            done
-
-            RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "darwin-x86_64" \
-              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
-          done
-
-          echo "$RESULTS" > validation-results-darwin-x86_64.json
-          echo "### macOS x86_64 Validation Results" >> "$GITHUB_STEP_SUMMARY"
-          echo '```json' >> "$GITHUB_STEP_SUMMARY"
-          echo "$RESULTS" | jq . >> "$GITHUB_STEP_SUMMARY"
-          echo '```' >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload results
-        uses: actions/upload-artifact@v4
-        with:
-          name: validation-results-darwin-x86_64
-          path: validation-results-darwin-x86_64.json
-          retention-days: 1
-
-  # Aggregate results and report
-  report:
-    name: Report Results
-    needs: [prepare, validate-linux-x86_64, validate-linux-arm64, validate-darwin-arm64, validate-darwin-x86_64]
-    if: always() && needs.prepare.outputs.has_changes == 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download all results
-        uses: actions/download-artifact@v4
-        with:
-          pattern: validation-results-*
-          merge-multiple: true
-
-      - name: Aggregate and report
-        run: |
-          # Merge all validation results
-          jq -s 'add' validation-results-*.json > all-results.json
-
-          echo "## Platform Validation Summary" >> "$GITHUB_STEP_SUMMARY"
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-
-          # Get unique recipe names
-          RECIPES=$(jq -r '.[].recipe' all-results.json | sort -u)
-
-          # Build summary table
-          echo "| Recipe | Passed | Failed | Platforms |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|--------|--------|--------|-----------|" >> "$GITHUB_STEP_SUMMARY"
-
-          OVERALL_FAIL=false
-          for recipe in $RECIPES; do
-            TOTAL=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r)] | length' all-results.json)
-            PASSED=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "pass")] | length' all-results.json)
-            FAILED=$(jq --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "fail")] | length' all-results.json)
-
-            # Get failed platform names
-            FAILED_PLATFORMS=$(jq -r --arg r "$recipe" '[.[] | select(.recipe == $r and .status == "fail") | .platform] | join(", ")' all-results.json)
-
-            if [ "$FAILED" -gt 0 ]; then
-              echo "| $recipe | $PASSED/$TOTAL | $FAILED | $FAILED_PLATFORMS |" >> "$GITHUB_STEP_SUMMARY"
-              OVERALL_FAIL=true
+            # Check if we have any macOS-compatible recipes
+            if [ "$MACOS_JSON" = "[]" ]; then
+              echo "has_macos=false" >> $GITHUB_OUTPUT
             else
-              echo "| $recipe | $PASSED/$TOTAL | 0 | All passed ✓ |" >> "$GITHUB_STEP_SUMMARY"
+              echo "has_macos=true" >> $GITHUB_OUTPUT
             fi
+            echo "macos_recipes=$MACOS_JSON" >> $GITHUB_OUTPUT
+          fi
+
+  # Test each changed recipe on Linux
+  test-linux:
+    name: "Linux: ${{ matrix.recipe.tool }}"
+    needs: matrix
+    if: ${{ needs.matrix.outputs.has_changes == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        recipe: ${{ fromJson(needs.matrix.outputs.recipes) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff  # v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Setup PATH
+        run: echo "$HOME/.tsuku/bin" >> $GITHUB_PATH
+
+      - name: "Install ${{ matrix.recipe.tool }}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: ./tsuku install --force --recipe ${{ matrix.recipe.path }}
+
+  # Test all macOS-compatible recipes in a single job (reduces runner queue pressure)
+  test-macos:
+    name: "macOS (darwin-arm64)"
+    needs: matrix
+    if: ${{ needs.matrix.outputs.has_macos == 'true' }}
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4
+
+      - name: Set up Go
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff  # v5
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Build tsuku
+        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+
+      - name: Test all macOS recipes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RECIPES='${{ needs.matrix.outputs.macos_recipes }}'
+          CACHE_DIR="${{ runner.temp }}/tsuku-cache/downloads"
+          FAIL_FILE="${{ runner.temp }}/failed-recipes.txt"
+          mkdir -p "$CACHE_DIR"
+          : > "$FAIL_FILE"
+
+          COUNT=$(echo "$RECIPES" | jq 'length')
+          for i in $(seq 0 $((COUNT - 1))); do
+            tool=$(echo "$RECIPES" | jq -r ".[$i].tool")
+            recipe_path=$(echo "$RECIPES" | jq -r ".[$i].path")
+            echo "::group::Testing $tool"
+
+            # Fresh TSUKU_HOME per recipe with shared download cache
+            export TSUKU_HOME="${{ runner.temp }}/tsuku-$tool"
+            mkdir -p "$TSUKU_HOME/cache"
+            ln -s "$CACHE_DIR" "$TSUKU_HOME/cache/downloads"
+            echo "$TSUKU_HOME/bin" >> "$GITHUB_PATH"
+
+            if ! ./tsuku install --force --recipe "$recipe_path"; then
+              echo "$tool" >> "$FAIL_FILE"
+            fi
+            echo "::endgroup::"
           done
 
-          echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "**Total platforms tested**: 11 (5 Linux x86_64, 4 Linux arm64, 2 macOS)" >> "$GITHUB_STEP_SUMMARY"
-
-          # Fail the job if any recipe failed on any platform
-          if [ "$OVERALL_FAIL" = true ]; then
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "❌ **Some recipes failed validation on one or more platforms.**" >> "$GITHUB_STEP_SUMMARY"
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "Recipes must either:" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Fix the installation issues on failing platforms, OR" >> "$GITHUB_STEP_SUMMARY"
-            echo "- Add platform constraints to exclude unsupported platforms" >> "$GITHUB_STEP_SUMMARY"
+          # Report failures at end (don't fail fast)
+          if [ -s "$FAIL_FILE" ]; then
+            FAILED=$(cat "$FAIL_FILE" | tr '\n' ' ')
+            echo "::error::Failed recipes: $FAILED"
             exit 1
-          else
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            echo "✅ **All recipes passed validation on all platforms.**" >> "$GITHUB_STEP_SUMMARY"
           fi
+
+          echo "All macOS recipes passed"
