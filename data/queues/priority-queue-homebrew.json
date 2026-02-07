@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-07T18:27:01Z",
+  "updated_at": "2026-02-07T20:46:18Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
-    "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
+    "2": "Popular - >10K weekly downloads (>40K/30d)",
     "3": "Standard - all other packages"
   },
   "packages": [
@@ -622,6 +622,30 @@
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-07T18:27:01Z"
+    },
+    {
+      "id": "homebrew:asciinema",
+      "source": "homebrew",
+      "name": "asciinema",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-07T20:46:18Z"
+    },
+    {
+      "id": "homebrew:bc",
+      "source": "homebrew",
+      "name": "bc",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-07T20:46:18Z"
+    },
+    {
+      "id": "homebrew:grpcurl",
+      "source": "homebrew",
+      "name": "grpcurl",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-07T20:46:18Z"
     }
   ]
 }
