@@ -87,7 +87,9 @@ func WriteFailures(dir, ecosystem string, failures []FailureRecord) error {
 		return fmt.Errorf("create failures dir: %w", err)
 	}
 
-	timestamp := time.Now().UTC().Format("2006-01-02T15:04:05Z")
+	// Use hyphens instead of colons in timestamp for artifact upload compatibility
+	// GitHub Actions artifacts reject filenames containing colons
+	timestamp := time.Now().UTC().Format("2006-01-02T15-04-05Z")
 	record := FailureFile{
 		SchemaVersion: 1,
 		Ecosystem:     ecosystem,
