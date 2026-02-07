@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-07T03:03:36Z",
+  "updated_at": "2026-02-07T03:35:00Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
     "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
