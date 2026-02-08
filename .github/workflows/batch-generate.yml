@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       has_recipes: ${{ steps.check.outputs.changes }}
-      exit_code: ${{ steps.batch.outputs.exit_code }}
+      exit_code: ${{ steps.exit-code-default.outputs.exit_code }}
     steps:
       # Generate short-lived GitHub App token for PR creation and git operations.
       # Provides automatic rotation (60min expiry), scoped permissions, and audit trail.
@@ -144,6 +144,18 @@ jobs:
           set -e
           echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
           exit $EXIT_CODE
+
+      - name: Set default exit code if batch was skipped
+        if: always()
+        id: exit-code-default
+        run: |
+          # If batch step was skipped (open PRs exist), set exit code to 0
+          # This ensures circuit breaker gets a valid exit code
+          if [ -z "${{ steps.batch.outputs.exit_code }}" ]; then
+            echo "exit_code=0" >> "$GITHUB_OUTPUT"
+          else
+            echo "exit_code=${{ steps.batch.outputs.exit_code }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Requeue unblocked packages
         if: steps.check-open-prs.outputs.should_skip != 'true'
