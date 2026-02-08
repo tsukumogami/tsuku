@@ -256,6 +256,23 @@
         select:hover, button:hover {
             background: var(--bg);
         }
+
+        .sort-btn {
+            font-family: inherit;
+        }
+
+        .sort-indicator {
+            font-size: 0.9rem;
+        }
+
+        .filter-select {
+            min-width: 150px;
+        }
+
+        #filter-info {
+            flex: 1 0 100%;
+            margin-top: 0.5rem;
+        }
     </style>
 </head>
 <body>
@@ -347,14 +364,205 @@
     </footer>
 
     <script>
-        // Minimal loading state handling (data population happens in downstream issues)
-        document.addEventListener('DOMContentLoaded', function() {
-            // Placeholder for data loading logic
-            // Will be implemented in issues #1545, #1546, #1547
+        // State management
+        let currentData = null;
+        let currentSort = 'name';
+        let currentSortDirection = 'asc';
+        let currentFilter = null;
 
-            // For now, show loading state
-            console.log('Coverage dashboard loaded - awaiting data population from #1545, #1546');
-        });
+        // Sort recipes by field
+        function sortRecipes(recipes, sortBy, direction) {
+            const sorted = [...recipes];
+            sorted.sort((a, b) => {
+                let valA, valB;
+
+                if (sortBy === 'name') {
+                    valA = a.name.toLowerCase();
+                    valB = b.name.toLowerCase();
+                } else if (sortBy === 'type') {
+                    valA = a.type;
+                    valB = b.type;
+                }
+
+                if (direction === 'asc') {
+                    return valA < valB ? -1 : valA > valB ? 1 : 0;
+                } else {
+                    return valA > valB ? -1 : valA < valB ? 1 : 0;
+                }
+            });
+            return sorted;
+        }
+
+        // Filter recipes by platform gap
+        function filterRecipes(recipes, platform) {
+            if (!platform) return recipes;
+            return recipes.filter(r => r.platforms[platform] === false);
+        }
+
+        // Render coverage matrix table
+        function renderMatrix() {
+            if (!currentData) return;
+
+            let recipes = currentData.recipes;
+
+            // Apply filter
+            recipes = filterRecipes(recipes, currentFilter);
+
+            // Apply sort
+            recipes = sortRecipes(recipes, currentSort, currentSortDirection);
+
+            const tbody = document.querySelector('#coverage-matrix tbody');
+
+            if (recipes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                            No recipes found matching the current filter.
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            const rows = recipes.map(recipe => `
+                <tr>
+                    <td>${recipe.name}</td>
+                    <td>${recipe.type}</td>
+                    <td class="platform-cell ${recipe.platforms.glibc ? 'supported' : 'unsupported'}"
+                        aria-label="glibc ${recipe.platforms.glibc ? 'supported' : 'not supported'}">
+                        ${recipe.platforms.glibc ? '✓' : '✗'}
+                    </td>
+                    <td class="platform-cell ${recipe.platforms.musl ? 'supported' : 'unsupported'}"
+                        aria-label="musl ${recipe.platforms.musl ? 'supported' : 'not supported'}">
+                        ${recipe.platforms.musl ? '✓' : '✗'}
+                    </td>
+                    <td class="platform-cell ${recipe.platforms.darwin ? 'supported' : 'unsupported'}"
+                        aria-label="darwin ${recipe.platforms.darwin ? 'supported' : 'not supported'}">
+                        ${recipe.platforms.darwin ? '✓' : '✗'}
+                    </td>
+                </tr>
+            `).join('');
+
+            tbody.innerHTML = rows;
+
+            // Update filter count
+            const filterInfo = document.getElementById('filter-info');
+            if (currentFilter) {
+                filterInfo.textContent = `Showing ${recipes.length} recipe(s) missing ${currentFilter} support`;
+            } else {
+                filterInfo.textContent = `Showing all ${recipes.length} recipes`;
+            }
+        }
+
+        // Update sort state
+        function updateSort(sortBy) {
+            if (currentSort === sortBy) {
+                currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort = sortBy;
+                currentSortDirection = 'asc';
+            }
+
+            // Update sort indicators
+            document.querySelectorAll('.sort-indicator').forEach(el => {
+                el.textContent = '';
+            });
+            const indicator = sortBy === 'name' ? 'name-sort' : 'type-sort';
+            document.getElementById(indicator).textContent = currentSortDirection === 'asc' ? ' ↑' : ' ↓';
+
+            renderMatrix();
+        }
+
+        // Update filter state
+        function updateFilter(platform) {
+            currentFilter = platform === 'all' ? null : platform;
+            renderMatrix();
+        }
+
+        // Render controls
+        function renderControls() {
+            const controlsDiv = document.getElementById('matrix-controls');
+            controlsDiv.innerHTML = `
+                <div class="control-group">
+                    <label class="control-label">Sort by:</label>
+                    <button onclick="updateSort('name')" class="sort-btn">
+                        Name<span id="name-sort" class="sort-indicator"> ↑</span>
+                    </button>
+                    <button onclick="updateSort('type')" class="sort-btn">
+                        Type<span id="type-sort" class="sort-indicator"></span>
+                    </button>
+                </div>
+                <div class="control-group">
+                    <label class="control-label">Filter:</label>
+                    <select onchange="updateFilter(this.value)" class="filter-select">
+                        <option value="all">All recipes</option>
+                        <option value="glibc">Missing glibc</option>
+                        <option value="musl">Missing musl</option>
+                        <option value="darwin">Missing darwin</option>
+                    </select>
+                </div>
+                <div id="filter-info" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+            `;
+        }
+
+        // Render dashboard content
+        function renderDashboard(data) {
+            // Hide loading, show dashboard
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('error-state').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+
+            currentData = data;
+
+            // Render controls
+            renderControls();
+
+            // Create table structure if it doesn't exist
+            const matrixContainer = document.getElementById('coverage-matrix');
+            matrixContainer.innerHTML = `
+                <table class="coverage-matrix">
+                    <thead>
+                        <tr>
+                            <th>Recipe</th>
+                            <th>Type</th>
+                            <th>glibc</th>
+                            <th>musl</th>
+                            <th>darwin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            `;
+
+            // Render matrix
+            renderMatrix();
+        }
+
+        // Show error state
+        function showError() {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+            document.getElementById('error-state').style.display = 'block';
+        }
+
+        // Load coverage data
+        async function loadCoverageData() {
+            try {
+                const response = await fetch('/coverage/coverage.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                renderDashboard(data);
+            } catch (error) {
+                console.error('Failed to load coverage data:', error);
+                showError();
+            }
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', loadCoverageData);
     </script>
 </body>
 </html>

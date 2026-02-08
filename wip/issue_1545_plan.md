@@ -26,17 +26,17 @@ Since the HTML structure already exists with styled container divs (#coverage-ma
 
 ## Implementation Steps
 
-- [ ] Add data loading function with fetch API and error handling (loadCoverageData)
-- [ ] Add state management variables (currentData, currentSort, currentFilter)
-- [ ] Implement coverage matrix rendering function (renderMatrix) with table generation
-- [ ] Add sort functionality (by name ascending/descending, by type)
-- [ ] Add filter functionality (show recipes missing specific platforms)
-- [ ] Implement platform cell rendering with visual indicators (✓ green, ✗ red)
-- [ ] Add sort controls UI (clickable table headers or dedicated buttons)
-- [ ] Add filter controls UI (dropdown or checkboxes above table)
-- [ ] Wire up event handlers for sort and filter controls
-- [ ] Add empty state handling ("No recipes found" when filters return nothing)
-- [ ] Add ARIA labels and accessibility attributes for screen readers
+- [x] Add data loading function with fetch API and error handling (loadCoverageData)
+- [x] Add state management variables (currentData, currentSort, currentFilter)
+- [x] Implement coverage matrix rendering function (renderMatrix) with table generation
+- [x] Add sort functionality (by name ascending/descending, by type)
+- [x] Add filter functionality (show recipes missing specific platforms)
+- [x] Implement platform cell rendering with visual indicators (✓ green, ✗ red)
+- [x] Add sort controls UI (clickable table headers or dedicated buttons)
+- [x] Add filter controls UI (dropdown or checkboxes above table)
+- [x] Wire up event handlers for sort and filter controls
+- [x] Add empty state handling ("No recipes found" when filters return nothing)
+- [x] Add ARIA labels and accessibility attributes for screen readers
 - [ ] Test responsive behavior at 320px, 768px, and 1280px widths
 - [ ] Verify integration with existing HTML structure from #1544
 
