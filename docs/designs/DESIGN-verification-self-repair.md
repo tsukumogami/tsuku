@@ -36,7 +36,7 @@ Planned
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1541: feat(builders): add fallback command support for verification self-repair](https://github.com/tsukumogami/tsuku/issues/1541) | None | testable |
+| ~~[#1541: feat(builders): add fallback command support for verification self-repair](https://github.com/tsukumogami/tsuku/issues/1541)~~ | None | testable |
 | _Extends the existing output-detection self-repair to try `--help` and `-h` fallback commands when output analysis is inconclusive. This handles tools that don't produce clear help text with invalid flags._ | | |
 | [#1542: feat(telemetry): add verify_self_repair event tracking](https://github.com/tsukumogami/tsuku/issues/1542) | None | simple |
 | _Adds telemetry events to track self-repair frequency and method usage, enabling measurement of how often deterministic repair avoids LLM calls._ | | |
@@ -53,7 +53,8 @@ graph LR
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1541,I1542 ready
+    class I1541 done
+    class I1542 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
