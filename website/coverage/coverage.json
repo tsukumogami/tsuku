@@ -1,0 +1,3269 @@
+{
+  "generated_at": "2026-02-08T13:49:32Z",
+  "total_recipes": 265,
+  "summary": {
+    "by_platform": {
+      "darwin": {
+        "supported": 265,
+        "total": 265,
+        "pct": 100
+      },
+      "glibc": {
+        "supported": 265,
+        "total": 265,
+        "pct": 100
+      },
+      "musl": {
+        "supported": 265,
+        "total": 265,
+        "pct": 100
+      }
+    },
+    "by_category": {
+      "library": {
+        "total": 13,
+        "musl_support": 13,
+        "glibc_support": 13
+      },
+      "tool": {
+        "total": 252,
+        "musl_support": 252,
+        "glibc_support": 252
+      }
+    }
+  },
+  "recipes": [
+    {
+      "name": "ack",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "act",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "actionlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "age",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "air",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "amplify",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "annie",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "appwrite",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "argo-cd",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "asciinema",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "asdf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "ast-grep",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "atlantis",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "aws-iam-authenticator",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "aws-nuke",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "aws-vault",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "azcopy",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "azure-nuke",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bash",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bazelisk",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bc",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "biome",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bison",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "black",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "block-goose-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bombardier",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bottom",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "boundary",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "brotli",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "btop",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "buf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bun",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "bundler",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "c-ares",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "caddy",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cargo-audit",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cargo-deny",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cargo-edit",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cargo-watch",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "carton",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cdk",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cfssl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "chibi-scheme",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "chicken",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "clang-format",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cliproxyapi",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cloc",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cloud-nuke",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cloudflared",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cobra-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cocoapods",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "colima",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cosign",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "ctlptl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cuda",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "cue",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "curl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "dasel",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "devspace",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "direnv",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "dlv",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "docker",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "docker-buildx",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "docker-compose",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "docker-credential-helper",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "docker-credential-helper-ecr",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "doctl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "dos2unix",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "doxygen",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "draft",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "duckdb",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "duf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "dust",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "eksctl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "exiftool",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "expat",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "fabric-ai",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "fd",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "flux",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "fly",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "flyctl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "fnm",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "fpm",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "freetype",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "fresh-editor",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "fx",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "fzf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gdbm",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "geos",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "git",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "git-flow",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "git-lfs",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gitleaks",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gitleaks-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "glab",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "glew",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "glow",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gnu-sed",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gnu-tar",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "go-migrate",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "go-task",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gobuster",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gocloc",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gofumpt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "goimports",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "golang",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "golangci-lint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gomplate",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "goose",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gopls",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gore",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "goreman",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gosec",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gotop",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gron",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "grpcurl",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "grype",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "gum",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "helix",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "hello",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "hello-nix",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "helm",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "himalaya",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "htop",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "httpie",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "hugo",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "hyperfine",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "iterm2",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "jc",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "jekyll",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "jfrog-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "jj",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "jpeg",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "jpegoptim",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "jsonnet",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "just",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "k3d",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "k9s",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "kind",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "kopia",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "kubectx",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "kubens",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "kubernetes-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "kubeseal",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "kustomize",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "kustomize-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "lazygit",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "lcov",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "lf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "libcurl",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "liberica",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "libnghttp2",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "libnghttp3",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "libngtcp2",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "libpng",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "libssh2",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "libxml2",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "license-eye",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "lima",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "lsd",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "lua",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "lua-language-server",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "luajit",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "micro",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "migrate",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "miller",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "minikube",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "mint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "mise",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "mit-scheme",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "mkcert",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "mockgen",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "mockolo",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "moreutils",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "ncdu",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "ncurses",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "netlify-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "nix-portable",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "nomad",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "oh-my-posh",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "openshift-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "opentofu",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "p7zip",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "packer",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "periphery",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "perlcritic",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "perltidy",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "pipx",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "pkgconf",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "pngcrush",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "podman",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "poetry",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "popeye",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "prek",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "proj",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "pulumi",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "qrencode",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "railway",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "rancher",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "rclone",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "readline",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "render",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "ruff",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "rust-analyzer",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "rustup",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "scaleway-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "sccache",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "sdl2",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "serve",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "serverless",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "sevenzip",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "shfmt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "skaffold",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "smartmontools",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "sourcekitten",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "sourcery",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "spatialite",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "sqlite",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "sshpass",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "staticcheck",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "stern",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "supabase",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "swift-sh",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "swiftformat",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "swiftlint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "syft",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "syncthing",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "tailscale",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "television",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "temporal",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "terraform",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "terraform-docs",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "terragrunt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "test-tuples",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "tflint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "tfsec",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "tilt",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "tokei",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "tree",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "trivy",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "trufflehog",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "tsuku-dltest",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "turbo",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "typos-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "unar",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "uutils-coreutils",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "vale",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "vault",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "velero",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "vercel",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "watch",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "waypoint",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "websocat",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "wimlib",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "witr",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "wrangler",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "xclogparser",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "xmlstarlet",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "xz",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yazi",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yj",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "yq",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "zizmor",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "zoxide",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "zstd",
+      "type": "library",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    }
+  ],
+  "exclusions": [
+    {
+      "recipe": "amplify",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "cdk",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "curl",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/879",
+      "reason": "configure auto-detects homebrew nghttp2/libidn2 but linker cannot find them (macOS)"
+    },
+    {
+      "recipe": "git",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "compile_from_source toolchain version drift (macOS build failures)"
+    },
+    {
+      "recipe": "netlify-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "serve",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "serverless",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "turbo",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "vercel",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "wrangler",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/953",
+      "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    }
+  ]
+}
