@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-08T19:26:49Z",
+  "generated_at": "2026-02-08T20:28:05Z",
   "queue": {
     "total": 4778,
     "by_status": {
@@ -28990,6 +28990,13 @@
   },
   "blockers": [
     {
+      "dependency": "gmp",
+      "count": 1,
+      "packages": [
+        "homebrew:coreutils"
+      ]
+    },
+    {
       "dependency": "ada-url",
       "count": 1,
       "packages": [
@@ -29008,13 +29015,6 @@
       "count": 1,
       "packages": [
         "homebrew:imagemagick"
-      ]
-    },
-    {
-      "dependency": "gmp",
-      "count": 1,
-      "packages": [
-        "homebrew:coreutils"
       ]
     }
   ],
