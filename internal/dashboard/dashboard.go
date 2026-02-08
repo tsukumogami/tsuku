@@ -24,7 +24,7 @@ type Options struct {
 // DefaultOptions returns options with default file paths.
 func DefaultOptions() Options {
 	return Options{
-		QueueFile:   "data/priority-queue.json",
+		QueueFile:   "data/queues",
 		FailuresDir: "data/failures",
 		MetricsDir:  "data/metrics",
 		OutputFile:  "website/pipeline/dashboard.json",
@@ -110,6 +110,51 @@ type MetricsRecord struct {
 	DurationSeconds int    `json:"duration_seconds"`
 }
 
+// loadQueueFromPathOrDir loads queue from a file or aggregates all queues from a directory.
+func loadQueueFromPathOrDir(path string) (*seed.PriorityQueue, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+
+	// Single file case
+	if !info.IsDir() {
+		return seed.Load(path)
+	}
+
+	// Directory case: aggregate all ecosystem queue files
+	pattern := filepath.Join(path, "priority-queue-*.json")
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("glob queues: %w", err)
+	}
+
+	if len(files) == 0 {
+		return nil, fmt.Errorf("no queue files found in %s", path)
+	}
+
+	// Load and merge all queues
+	aggregated := &seed.PriorityQueue{
+		SchemaVersion: 1,
+		Packages:      []seed.Package{},
+		UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+	}
+
+	for _, file := range files {
+		q, err := seed.Load(file)
+		if err != nil {
+			continue // Skip malformed files
+		}
+		aggregated.Packages = append(aggregated.Packages, q.Packages...)
+		// Use the most recent update time
+		if q.UpdatedAt > aggregated.UpdatedAt {
+			aggregated.UpdatedAt = q.UpdatedAt
+		}
+	}
+
+	return aggregated, nil
+}
+
 // Generate reads pipeline data files and produces dashboard.json.
 func Generate(opts Options) error {
 	dash := Dashboard{
@@ -128,8 +173,8 @@ func Generate(opts Options) error {
 	dash.Blockers = computeTopBlockers(blockerCounts, 10)
 	dash.Failures = failureCounts
 
-	// Load queue
-	queue, err := seed.Load(opts.QueueFile)
+	// Load queue (from file or directory)
+	queue, err := loadQueueFromPathOrDir(opts.QueueFile)
 	if err != nil {
 		return fmt.Errorf("load queue: %w", err)
 	}
