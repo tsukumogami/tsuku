@@ -39,6 +39,7 @@ jobs:
           cp _site/recipes.json website/
 
       - name: Deploy to Cloudflare Pages
+        if: ${{ secrets.CLOUDFLARE_PAGES_DEPLOYER_TOKEN != '' }}
         uses: cloudflare/pages-action@f0a1cd58cd66095dee69bfa18fa5efd1dde93bca  # v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_PAGES_DEPLOYER_TOKEN }}
