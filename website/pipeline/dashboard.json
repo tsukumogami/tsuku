@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-08T05:04:49Z",
+  "generated_at": "2026-02-08T06:48:56Z",
   "queue": {
     "total": 0,
     "by_status": {},
@@ -7,6 +7,13 @@
     "packages": {}
   },
   "blockers": [
+    {
+      "dependency": "ada-url",
+      "count": 1,
+      "packages": [
+        "homebrew:node"
+      ]
+    },
     {
       "dependency": "dav1d",
       "count": 1,
@@ -26,13 +33,6 @@
       "count": 1,
       "packages": [
         "homebrew:coreutils"
-      ]
-    },
-    {
-      "dependency": "ada-url",
-      "count": 1,
-      "packages": [
-        "homebrew:node"
       ]
     }
   ],
