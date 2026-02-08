@@ -39,22 +39,7 @@ Current
 | ~~[#1541: feat(builders): add fallback command support for verification self-repair](https://github.com/tsukumogami/tsuku/issues/1541)~~ | None | testable |
 | ~~[#1542: feat(telemetry): add verify_self_repair event tracking](https://github.com/tsukumogami/tsuku/issues/1542)~~ | None | simple |
 
-### Dependency Graph
-
-```mermaid
-graph LR
-    I1541["#1541: Fallback commands"]
-    I1542["#1542: Telemetry events"]
-
-    classDef done fill:#c8e6c9
-    classDef ready fill:#bbdefb
-    classDef blocked fill:#fff9c4
-    classDef needsDesign fill:#e1bee7
-
-    class I1541,I1542 done
-```
-
-**Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
+All implementation issues completed.
 
 ## Context and Problem Statement
 
