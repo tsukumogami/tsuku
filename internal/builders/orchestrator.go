@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/executor"
@@ -300,6 +301,10 @@ func (o *Orchestrator) generatePlan(ctx context.Context, r *recipe.Recipe) (*exe
 // This handles the common case where a tool doesn't support --version but does output
 // help text when given an invalid flag.
 //
+// The repair strategy has two phases:
+// 1. Output detection: Analyze the existing failure output for help-text patterns
+// 2. Fallback commands: Try alternative commands (--help, -h) if output analysis is inconclusive
+//
 // Returns (nil, nil) if self-repair is not applicable or fails.
 // Returns (repairedRecipe, metadata) if self-repair produces a candidate.
 func (o *Orchestrator) attemptVerifySelfRepair(
@@ -307,48 +312,157 @@ func (o *Orchestrator) attemptVerifySelfRepair(
 	r *recipe.Recipe,
 	failure *sandbox.SandboxResult,
 ) (*recipe.Recipe, *VerifyRepairMetadata) {
-	// Skip if not a verification-related exit code
-	// Exit code 127 = command not found (binary missing, can't self-repair)
-	// Exit code 0 = success (shouldn't be here)
+	// Skip if exit code 127 (command not found) - binary is missing, can't self-repair
 	if validate.IsNotFoundExitCode(failure.ExitCode) {
 		return nil, nil
 	}
 
-	// Skip if output is empty (nothing to analyze)
-	combined := failure.Stdout + failure.Stderr
-	if len(combined) == 0 {
-		return nil, nil
-	}
-
-	// Get tool name from recipe metadata
+	originalCommand := r.Verify.Command
 	toolName := r.Metadata.Name
 
-	// Analyze the failure output
-	analysis := validate.AnalyzeVerifyFailure(failure.Stdout, failure.Stderr, failure.ExitCode, toolName)
+	// Phase 1: Analyze the existing failure output for help-text patterns
+	combined := failure.Stdout + failure.Stderr
+	if len(combined) > 0 {
+		analysis := validate.AnalyzeVerifyFailure(failure.Stdout, failure.Stderr, failure.ExitCode, toolName)
 
-	if !analysis.Repairable {
+		if analysis.Repairable {
+			// Output detection succeeded - create repaired recipe
+			repairedVerify := recipe.VerifySection{
+				Command:  originalCommand, // Keep the same command
+				Mode:     analysis.SuggestedMode,
+				Pattern:  analysis.SuggestedPattern,
+				ExitCode: &analysis.ExitCode,
+				Reason:   analysis.SuggestedReason,
+			}
+
+			repaired := r.WithVerify(repairedVerify)
+
+			meta := &VerifyRepairMetadata{
+				OriginalCommand:  originalCommand,
+				RepairedCommand:  originalCommand, // Command stays the same, mode/pattern changed
+				Method:           "output_detection",
+				DetectedExitCode: analysis.ExitCode,
+			}
+
+			return repaired, meta
+		}
+	}
+
+	// Phase 2: Try fallback commands when output analysis is inconclusive
+	// Extract binary name from the original command (first word)
+	binaryName := extractBinaryName(originalCommand)
+	if binaryName == "" {
 		return nil, nil
 	}
 
-	// Create repaired verify section
-	originalCommand := r.Verify.Command
-	repairedVerify := recipe.VerifySection{
-		Command:  originalCommand, // Keep the same command
-		Mode:     analysis.SuggestedMode,
-		Pattern:  analysis.SuggestedPattern,
-		ExitCode: &analysis.ExitCode,
-		Reason:   analysis.SuggestedReason,
+	// Define fallback commands in priority order
+	fallbacks := []struct {
+		command string
+		method  string
+	}{
+		{binaryName + " --help", "fallback_help"},
+		{binaryName + " -h", "fallback_h"},
 	}
 
-	// Create repaired recipe
-	repaired := r.WithVerify(repairedVerify)
+	for _, fb := range fallbacks {
+		repaired, meta := o.tryFallbackCommand(ctx, r, fb.command, fb.method, originalCommand)
+		if repaired != nil {
+			return repaired, meta
+		}
+	}
 
+	return nil, nil
+}
+
+// extractBinaryName extracts the binary name from a verify command.
+// It handles common formats like "tool --version", "tool -v", "./tool --version".
+func extractBinaryName(command string) string {
+	if command == "" {
+		return ""
+	}
+
+	// Split on whitespace and take the first token
+	fields := strings.Fields(command)
+	if len(fields) == 0 {
+		return ""
+	}
+
+	return fields[0]
+}
+
+// tryFallbackCommand attempts to validate a recipe with a fallback verify command.
+// Returns (repairedRecipe, metadata) if the fallback succeeds, (nil, nil) otherwise.
+func (o *Orchestrator) tryFallbackCommand(
+	ctx context.Context,
+	r *recipe.Recipe,
+	fallbackCommand string,
+	method string,
+	originalCommand string,
+) (*recipe.Recipe, *VerifyRepairMetadata) {
+	// Create a verify section for the fallback command
+	// Use "output" mode with "usage" pattern - help text typically contains "usage"
+	fallbackVerify := recipe.VerifySection{
+		Command: fallbackCommand,
+		Mode:    "output",
+		Pattern: "usage",
+		Reason:  "verification repaired: using " + method + " fallback",
+	}
+
+	// Create candidate recipe with fallback verification
+	candidate := r.WithVerify(fallbackVerify)
+
+	// Run sandbox validation on the candidate
+	result, err := o.validate(ctx, candidate)
+	if err != nil {
+		// Validation error - skip this fallback
+		return nil, nil
+	}
+
+	if result.Skipped {
+		// Sandbox was skipped - can't determine if fallback works
+		return nil, nil
+	}
+
+	if !result.Passed {
+		// Fallback command failed - try next one
+		// But first, check if the output is analyzable
+		analysis := validate.AnalyzeVerifyFailure(result.Stdout, result.Stderr, result.ExitCode, r.Metadata.Name)
+		if analysis.Repairable {
+			// The fallback produced analyzable help output - create repaired recipe
+			repairedVerify := recipe.VerifySection{
+				Command:  fallbackCommand,
+				Mode:     analysis.SuggestedMode,
+				Pattern:  analysis.SuggestedPattern,
+				ExitCode: &analysis.ExitCode,
+				Reason:   "verification repaired: " + method + " with output detection",
+			}
+
+			repaired := r.WithVerify(repairedVerify)
+
+			meta := &VerifyRepairMetadata{
+				OriginalCommand:  originalCommand,
+				RepairedCommand:  fallbackCommand,
+				Method:           method,
+				DetectedExitCode: analysis.ExitCode,
+			}
+
+			return repaired, meta
+		}
+		return nil, nil
+	}
+
+	// Fallback succeeded!
 	meta := &VerifyRepairMetadata{
 		OriginalCommand:  originalCommand,
-		RepairedCommand:  originalCommand, // Command stays the same, mode/pattern changed
-		Method:           "output_detection",
-		DetectedExitCode: analysis.ExitCode,
+		RepairedCommand:  fallbackCommand,
+		Method:           method,
+		DetectedExitCode: result.ExitCode,
 	}
+
+	// Update the verify section with the actual exit code from the successful run
+	exitCode := result.ExitCode
+	fallbackVerify.ExitCode = &exitCode
+	repaired := r.WithVerify(fallbackVerify)
 
 	return repaired, meta
 }
