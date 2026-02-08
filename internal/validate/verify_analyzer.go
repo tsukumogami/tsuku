@@ -80,14 +80,10 @@ func AnalyzeVerifyFailure(stdout, stderr string, exitCode int, toolName string) 
 		return analysis
 	}
 
-	// Only consider exit codes 1-2 as potentially repairable
-	// These are common "invalid argument" or "usage error" codes
-	if exitCode < 1 || exitCode > 2 {
-		// Some tools use higher exit codes for invalid args, but be conservative
-		// Still check for help text patterns
-	}
-
 	// Check for help text patterns
+	// Note: Exit codes 1-2 are common for "invalid argument", but some tools
+	// use higher codes (e.g., git uses 129). We check patterns regardless and
+	// validate acceptable exit codes in the decision logic below.
 	analysis.HasUsageText = usagePattern.MatchString(combined)
 	hasOptions := optionsPattern.MatchString(combined)
 	hasCommands := commandsPattern.MatchString(combined)
