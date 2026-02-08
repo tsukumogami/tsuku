@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-07T23:29:03Z",
+  "updated_at": "2026-02-08T02:13:28Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
     "2": "Popular - >10K weekly downloads (>40K/30d)",
@@ -2686,6 +2686,86 @@
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-07T22:09:43Z"
+    },
+    {
+      "id": "homebrew:procs",
+      "source": "homebrew",
+      "name": "procs",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:sd",
+      "source": "homebrew",
+      "name": "sd",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:xh",
+      "source": "homebrew",
+      "name": "xh",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:gitui",
+      "source": "homebrew",
+      "name": "gitui",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:tealdeer",
+      "source": "homebrew",
+      "name": "tealdeer",
+      "tier": 1,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:curlie",
+      "source": "homebrew",
+      "name": "curlie",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:grex",
+      "source": "homebrew",
+      "name": "grex",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:watchexec",
+      "source": "homebrew",
+      "name": "watchexec",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:jless",
+      "source": "homebrew",
+      "name": "jless",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
+    },
+    {
+      "id": "homebrew:hexyl",
+      "source": "homebrew",
+      "name": "hexyl",
+      "tier": 2,
+      "status": "pending",
+      "added_at": "2026-02-08T02:13:28Z"
     }
   ]
 }
