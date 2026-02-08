@@ -1,0 +1,48 @@
+name: Update Coverage Dashboard
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'recipes/**/*.toml'
+      - 'internal/recipe/recipes/**/*.toml'
+  workflow_dispatch:
+
+jobs:
+  update-coverage:
+    name: Regenerate coverage.json
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Go
+        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: go.sum
+
+      - name: Generate coverage data
+        run: go run cmd/coverage-analytics/main.go
+
+      - name: Check for changes
+        id: check
+        run: |
+          if git diff --quiet website/coverage/coverage.json; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes to coverage.json"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "coverage.json updated"
+          fi
+
+      - name: Commit and push changes
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add website/coverage/coverage.json
+          git commit -m "chore(website): regenerate coverage.json [skip ci]"
+          git push
