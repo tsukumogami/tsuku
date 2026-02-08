@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-08T15:04:11Z",
+  "updated_at": "2026-02-08T16:08:55Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
     "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
@@ -38150,6 +38150,86 @@
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-08T15:04:11Z"
+    },
+    {
+      "id": "homebrew:feluda",
+      "source": "homebrew",
+      "name": "feluda",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:gucharmap",
+      "source": "homebrew",
+      "name": "gucharmap",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:epstool",
+      "source": "homebrew",
+      "name": "epstool",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:dicklesworthstone/tap/cm",
+      "source": "homebrew",
+      "name": "dicklesworthstone/tap/cm",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:benbjohnson/litestream/litestream",
+      "source": "homebrew",
+      "name": "benbjohnson/litestream/litestream",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:wiremock-standalone",
+      "source": "homebrew",
+      "name": "wiremock-standalone",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:darcs",
+      "source": "homebrew",
+      "name": "darcs",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:tuist/tuist/tuist@4.133.1",
+      "source": "homebrew",
+      "name": "tuist/tuist/tuist@4.133.1",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:notmuch-mutt",
+      "source": "homebrew",
+      "name": "notmuch-mutt",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:shivammathur/extensions/imagick@8.4",
+      "source": "homebrew",
+      "name": "shivammathur/extensions/imagick@8.4",
+      "tier": 3,
+      "status": "pending",
+      "added_at": "2026-02-08T16:08:55Z"
     }
   ]
 }
