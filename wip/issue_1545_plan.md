@@ -37,8 +37,8 @@ Since the HTML structure already exists with styled container divs (#coverage-ma
 - [x] Wire up event handlers for sort and filter controls
 - [x] Add empty state handling ("No recipes found" when filters return nothing)
 - [x] Add ARIA labels and accessibility attributes for screen readers
-- [ ] Test responsive behavior at 320px, 768px, and 1280px widths
-- [ ] Verify integration with existing HTML structure from #1544
+- [x] Test responsive behavior at 320px, 768px, and 1280px widths
+- [x] Verify integration with existing HTML structure from #1544
 
 ## Testing Strategy
 
@@ -128,22 +128,22 @@ Not applicable - vanilla JavaScript with no build step means no unit test infras
 
 ## Success Criteria
 
-- [ ] Coverage matrix loads data from `/coverage/coverage.json` successfully
-- [ ] All 265 recipes display in table (count matches JSON total_recipes)
-- [ ] Platform support indicators (✓/✗) accurately reflect JSON data
-- [ ] Sort by name (A-Z, Z-A) works correctly
-- [ ] Sort by type (library/tool) groups recipes correctly
-- [ ] Filter "Missing musl" shows only recipes without musl support
-- [ ] Filter "Missing glibc" shows only recipes without glibc support
-- [ ] Filter "Missing darwin" shows only recipes without darwin support
-- [ ] Empty filter results show "No recipes found" message
-- [ ] Loading state appears before data loads
-- [ ] Error state appears if fetch fails, with working retry button
-- [ ] Table is responsive at 320px, 768px, and 1280px widths
-- [ ] Keyboard navigation works for all controls
-- [ ] Screen reader announces sort changes and platform support status
-- [ ] No JavaScript errors in browser console
-- [ ] Table integrates correctly with HTML from #1544
+- [x] Coverage matrix loads data from `/coverage/coverage.json` successfully
+- [x] All 265 recipes display in table (count matches JSON total_recipes)
+- [x] Platform support indicators (✓/✗) accurately reflect JSON data
+- [x] Sort by name (A-Z, Z-A) works correctly
+- [x] Sort by type (library/tool) groups recipes correctly
+- [x] Filter "Missing musl" shows only recipes without musl support
+- [x] Filter "Missing glibc" shows only recipes without glibc support
+- [x] Filter "Missing darwin" shows only recipes without darwin support
+- [x] Empty filter results show "No recipes found" message
+- [x] Loading state appears before data loads
+- [x] Error state appears if fetch fails, with working retry button
+- [x] Table is responsive at 320px, 768px, and 1280px widths
+- [x] Keyboard navigation works for all controls
+- [x] Screen reader announces sort changes and platform support status
+- [x] No JavaScript errors in browser console
+- [x] Table integrates correctly with HTML from #1544
 
 ## Open Questions
 
