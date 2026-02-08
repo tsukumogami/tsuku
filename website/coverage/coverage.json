@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-02-08T13:49:32Z",
-  "total_recipes": 265,
+  "generated_at": "2026-02-08T18:03:52Z",
+  "total_recipes": 274,
   "summary": {
     "by_platform": {
       "darwin": {
-        "supported": 265,
-        "total": 265,
+        "supported": 274,
+        "total": 274,
         "pct": 100
       },
       "glibc": {
-        "supported": 265,
-        "total": 265,
+        "supported": 274,
+        "total": 274,
         "pct": 100
       },
       "musl": {
-        "supported": 265,
-        "total": 265,
+        "supported": 274,
+        "total": 274,
         "pct": 100
       }
     },
@@ -26,9 +26,9 @@
         "glibc_support": 13
       },
       "tool": {
-        "total": 252,
-        "musl_support": 252,
-        "glibc_support": 252
+        "total": 261,
+        "musl_support": 261,
+        "glibc_support": 261
       }
     }
   },
@@ -1102,6 +1102,18 @@
       "warnings": null
     },
     {
+      "name": "gh",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "git",
       "type": "tool",
       "platforms": {
@@ -2122,6 +2134,18 @@
       "warnings": null
     },
     {
+      "name": "nasm",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "ncdu",
       "type": "tool",
       "platforms": {
@@ -2362,6 +2386,18 @@
       "warnings": null
     },
     {
+      "name": "procs",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "proj",
       "type": "library",
       "platforms": {
@@ -2507,6 +2543,18 @@
     },
     {
       "name": "sccache",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "sd",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -2770,6 +2818,18 @@
       "warnings": null
     },
     {
+      "name": "tealdeer",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "television",
       "type": "tool",
       "platforms": {
@@ -2902,6 +2962,18 @@
       "warnings": null
     },
     {
+      "name": "tree-sitter-cli",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "trivy",
       "type": "tool",
       "platforms": {
@@ -2975,6 +3047,18 @@
     },
     {
       "name": "uutils-coreutils",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "uv",
       "type": "tool",
       "platforms": {
         "darwin": true,
@@ -3106,7 +3190,31 @@
       "warnings": null
     },
     {
+      "name": "xcbeautify",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
       "name": "xclogparser",
+      "type": "tool",
+      "platforms": {
+        "darwin": true,
+        "glibc": true,
+        "musl": true
+      },
+      "gaps": null,
+      "errors": null,
+      "warnings": null
+    },
+    {
+      "name": "xh",
       "type": "tool",
       "platforms": {
         "darwin": true,
