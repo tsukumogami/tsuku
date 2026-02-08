@@ -15,7 +15,7 @@ jobs:
     name: Check Checksum Drift
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Run checksum drift check
         id: drift
