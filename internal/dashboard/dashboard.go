@@ -114,6 +114,14 @@ type MetricsRecord struct {
 func loadQueueFromPathOrDir(path string) (*seed.PriorityQueue, error) {
 	info, err := os.Stat(path)
 	if err != nil {
+		// Return empty queue for missing file (matches seed.Load behavior)
+		if os.IsNotExist(err) {
+			return &seed.PriorityQueue{
+				SchemaVersion: 1,
+				Packages:      []seed.Package{},
+				UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+			}, nil
+		}
 		return nil, err
 	}
 
@@ -130,7 +138,12 @@ func loadQueueFromPathOrDir(path string) (*seed.PriorityQueue, error) {
 	}
 
 	if len(files) == 0 {
-		return nil, fmt.Errorf("no queue files found in %s", path)
+		// Return empty queue if directory has no queue files (matches seed.Load behavior)
+		return &seed.PriorityQueue{
+			SchemaVersion: 1,
+			Packages:      []seed.Package{},
+			UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+		}, nil
 	}
 
 	// Load and merge all queues
