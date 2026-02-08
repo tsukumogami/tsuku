@@ -13,21 +13,32 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'dependabot[bot]'
     steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Generate GitHub App token
+        if: steps.metadata.outputs.alert-state == 'OPEN'
         id: app-token
         uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf  # v2
         with:
           app-id: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_ID }}
           private-key: ${{ secrets.TSUKU_BATCH_GENERATOR_APP_PRIVATE_KEY }}
 
-      - name: Auto-approve Dependabot PR
+      - name: Auto-approve security update
+        if: steps.metadata.outputs.alert-state == 'OPEN'
         run: |
-          gh pr review "$PR_NUMBER" --approve --body "Auto-approved by workflow"
+          gh pr review "$PR_NUMBER" --approve --body "Auto-approved: security update"
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
 
-      - name: Enable auto-merge
+      - name: Enable auto-merge for security update
+        if: steps.metadata.outputs.alert-state == 'OPEN'
         run: |
           gh pr merge "$PR_NUMBER" --auto --squash
         env:
