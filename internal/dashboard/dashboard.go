@@ -24,7 +24,7 @@ type Options struct {
 // DefaultOptions returns options with default file paths.
 func DefaultOptions() Options {
 	return Options{
-		QueueFile:   "data/priority-queue.json",
+		QueueFile:   "data/queues",
 		FailuresDir: "data/failures",
 		MetricsDir:  "data/metrics",
 		OutputFile:  "website/pipeline/dashboard.json",
@@ -110,6 +110,64 @@ type MetricsRecord struct {
 	DurationSeconds int    `json:"duration_seconds"`
 }
 
+// loadQueueFromPathOrDir loads queue from a file or aggregates all queues from a directory.
+func loadQueueFromPathOrDir(path string) (*seed.PriorityQueue, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		// Return empty queue for missing file (matches seed.Load behavior)
+		if os.IsNotExist(err) {
+			return &seed.PriorityQueue{
+				SchemaVersion: 1,
+				Packages:      []seed.Package{},
+				UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+			}, nil
+		}
+		return nil, err
+	}
+
+	// Single file case
+	if !info.IsDir() {
+		return seed.Load(path)
+	}
+
+	// Directory case: aggregate all ecosystem queue files
+	pattern := filepath.Join(path, "priority-queue-*.json")
+	files, err := filepath.Glob(pattern)
+	if err != nil {
+		return nil, fmt.Errorf("glob queues: %w", err)
+	}
+
+	if len(files) == 0 {
+		// Return empty queue if directory has no queue files (matches seed.Load behavior)
+		return &seed.PriorityQueue{
+			SchemaVersion: 1,
+			Packages:      []seed.Package{},
+			UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+		}, nil
+	}
+
+	// Load and merge all queues
+	aggregated := &seed.PriorityQueue{
+		SchemaVersion: 1,
+		Packages:      []seed.Package{},
+		UpdatedAt:     time.Now().UTC().Format(time.RFC3339),
+	}
+
+	for _, file := range files {
+		q, err := seed.Load(file)
+		if err != nil {
+			continue // Skip malformed files
+		}
+		aggregated.Packages = append(aggregated.Packages, q.Packages...)
+		// Use the most recent update time
+		if q.UpdatedAt > aggregated.UpdatedAt {
+			aggregated.UpdatedAt = q.UpdatedAt
+		}
+	}
+
+	return aggregated, nil
+}
+
 // Generate reads pipeline data files and produces dashboard.json.
 func Generate(opts Options) error {
 	dash := Dashboard{
@@ -128,8 +186,8 @@ func Generate(opts Options) error {
 	dash.Blockers = computeTopBlockers(blockerCounts, 10)
 	dash.Failures = failureCounts
 
-	// Load queue
-	queue, err := seed.Load(opts.QueueFile)
+	// Load queue (from file or directory)
+	queue, err := loadQueueFromPathOrDir(opts.QueueFile)
 	if err != nil {
 		return fmt.Errorf("load queue: %w", err)
 	}
@@ -260,28 +318,50 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 	return blockers, categories, details, scanner.Err()
 }
 
-func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
-	result := make([]Blocker, 0, len(blockers))
-	for dep, packages := range blockers {
-		// Deduplicate packages
-		seen := make(map[string]bool)
-		unique := make([]string, 0)
-		for _, pkg := range packages {
-			if !seen[pkg] {
-				seen[pkg] = true
-				unique = append(unique, pkg)
-			}
+// computeTransitiveBlockers computes all packages blocked by a dependency (directly or indirectly).
+func computeTransitiveBlockers(dep string, blockers map[string][]string, memo map[string][]string) []string {
+	if result, ok := memo[dep]; ok {
+		return result
+	}
+
+	blocked := make(map[string]bool)
+	// Add directly blocked packages
+	for _, pkg := range blockers[dep] {
+		blocked[pkg] = true
+		// Recursively add packages blocked by this package
+		for _, transitive := range computeTransitiveBlockers(pkg, blockers, memo) {
+			blocked[transitive] = true
 		}
+	}
+
+	// Convert to slice
+	result := make([]string, 0, len(blocked))
+	for pkg := range blocked {
+		result = append(result, pkg)
+	}
+	memo[dep] = result
+	return result
+}
+
+func computeTopBlockers(blockers map[string][]string, limit int) []Blocker {
+	memo := make(map[string][]string)
+	result := make([]Blocker, 0, len(blockers))
+
+	for dep := range blockers {
+		unique := computeTransitiveBlockers(dep, blockers, memo)
 
 		b := Blocker{
 			Dependency: dep,
 			Count:      len(unique),
 		}
-		// Keep first 5 packages
-		if len(unique) > 5 {
-			b.Packages = unique[:5]
+		// Keep first 5 packages (sorted by name for stability)
+		packages := make([]string, len(unique))
+		copy(packages, unique)
+		sort.Strings(packages)
+		if len(packages) > 5 {
+			b.Packages = packages[:5]
 		} else {
-			b.Packages = unique
+			b.Packages = packages
 		}
 		result = append(result, b)
 	}
