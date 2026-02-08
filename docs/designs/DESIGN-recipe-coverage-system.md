@@ -39,8 +39,8 @@ This design is being implemented through 9 issues across 2 sequential milestones
 | ~~_Creates website/coverage/index.html with container divs for three views: coverage matrix (recipes × platforms), gap list (missing platforms), and category breakdown (libraries vs tools). Follows website/pipeline pattern._~~ | | |
 | ~~[#1545: feat(website): implement coverage matrix visualization](https://github.com/tsukumogami/tsuku/issues/1545)~~ | ~~[#1544](https://github.com/tsukumogami/tsuku/issues/1544)~~ | ~~testable~~ |
 | ~~_Adds JavaScript to load coverage.json and render sortable/filterable table showing platform support. Uses vanilla JS with template literals, matching the pipeline dashboard approach._~~ | | |
-| [#1546: feat(website): implement gap list and category breakdown](https://github.com/tsukumogami/tsuku/issues/1546) | [#1544](https://github.com/tsukumogami/tsuku/issues/1544) | testable |
-| _Implements the remaining two dashboard views: gap list highlighting recipes missing musl/architecture support, and category breakdown showing coverage statistics split by recipe type._ | | |
+| ~~[#1546: feat(website): implement gap list and category breakdown](https://github.com/tsukumogami/tsuku/issues/1546)~~ | ~~[#1544](https://github.com/tsukumogami/tsuku/issues/1544)~~ | ~~testable~~ |
+| ~~_Implements the remaining two dashboard views: gap list highlighting recipes missing musl/architecture support, and category breakdown showing coverage statistics split by recipe type._~~ | | |
 | [#1547: feat(ci): add workflow to regenerate coverage.json on recipe changes](https://github.com/tsukumogami/tsuku/issues/1547) | None | testable |
 | _Creates GitHub Actions workflow that runs cmd/coverage-analytics when recipes/ changes, automatically committing updated coverage.json to main. Uses the push-to-main pattern with retry logic._ | | |
 | [#1548: docs(website): add coverage dashboard documentation](https://github.com/tsukumogami/tsuku/issues/1548) | [#1544](https://github.com/tsukumogami/tsuku/issues/1544), [#1545](https://github.com/tsukumogami/tsuku/issues/1545), [#1546](https://github.com/tsukumogami/tsuku/issues/1546), [#1547](https://github.com/tsukumogami/tsuku/issues/1547) | simple |
@@ -77,8 +77,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1538,I1539,I1544,I1545 done
-    class I1540,I1546,I1547 ready
+    class I1538,I1539,I1544,I1545,I1546 done
+    class I1540,I1547 ready
     class I1543,I1548 blocked
 ```
 
@@ -86,15 +86,15 @@ graph TD
 
 ### Work Sequencing
 
-**Completed** (3 issues):
+**Completed** (5 issues):
 - ~~#1538~~ (doc fix) ✓
 - ~~#1539~~ (musl tests) ✓
 - ~~#1544~~ (dashboard HTML) ✓
+- ~~#1545~~ (coverage matrix) ✓
+- ~~#1546~~ (gap list and category breakdown) ✓
 
-**Can start immediately** (4 issues):
+**Can start immediately** (2 issues):
 - #1540 (validation trigger - requires PR merge first)
-- #1545 (coverage matrix visualization)
-- #1546 (gap list and category breakdown)
 - #1547 (CI workflow)
 
 **Milestone ordering**: Complete Milestone 1 before starting Milestone 2 for accurate coverage data.
