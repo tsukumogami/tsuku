@@ -417,3 +417,178 @@ func TestRegistryHTTPClient_DisableCompression(t *testing.T) {
 		t.Error("Expected DisableCompression to be true, got false")
 	}
 }
+
+func TestIsLocalPath(t *testing.T) {
+	tests := []struct {
+		path     string
+		expected bool
+	}{
+		{"https://example.com", false},
+		{"http://example.com", false},
+		{"https://raw.githubusercontent.com/tsukumogami/tsuku/main", false},
+		{"/path/to/registry", true},
+		{"./relative/path", true},
+		{"../parent/path", true},
+		{"/home/user/recipes", true},
+		{"", true}, // Empty is treated as local (will fail later)
+	}
+
+	for _, tc := range tests {
+		got := isLocalPath(tc.path)
+		if got != tc.expected {
+			t.Errorf("isLocalPath(%q) = %v, want %v", tc.path, got, tc.expected)
+		}
+	}
+}
+
+func TestLocalRegistryIsLocal(t *testing.T) {
+	// Save original env
+	original := os.Getenv(EnvRegistryURL)
+	defer os.Setenv(EnvRegistryURL, original)
+
+	// Test with local path
+	os.Setenv(EnvRegistryURL, "/path/to/local/registry")
+	reg := New("/tmp/cache")
+	if !reg.IsLocal() {
+		t.Error("Registry should be local when BaseURL is a local path")
+	}
+
+	// Test with HTTP URL
+	os.Setenv(EnvRegistryURL, "https://example.com")
+	reg = New("/tmp/cache")
+	if reg.IsLocal() {
+		t.Error("Registry should not be local when BaseURL is an HTTP URL")
+	}
+
+	// Test with default (unset)
+	_ = os.Unsetenv(EnvRegistryURL)
+	reg = New("/tmp/cache")
+	if reg.IsLocal() {
+		t.Error("Registry should not be local with default URL")
+	}
+}
+
+func TestFetchRecipe_LocalRegistry(t *testing.T) {
+	// Create a local registry structure
+	localRegistry := t.TempDir()
+	recipesDir := filepath.Join(localRegistry, "recipes", "t")
+	if err := os.MkdirAll(recipesDir, 0755); err != nil {
+		t.Fatalf("Failed to create recipes dir: %v", err)
+	}
+
+	recipeContent := `[metadata]
+name = "test-tool"
+description = "A test tool"
+
+[[steps]]
+action = "download"
+url = "https://example.com/test.tar.gz"
+
+[verify]
+command = "test-tool --version"
+`
+	recipePath := filepath.Join(recipesDir, "test-tool.toml")
+	if err := os.WriteFile(recipePath, []byte(recipeContent), 0644); err != nil {
+		t.Fatalf("Failed to write recipe: %v", err)
+	}
+
+	// Create registry pointing to local directory
+	reg := &Registry{
+		BaseURL:  localRegistry,
+		CacheDir: t.TempDir(),
+		isLocal:  true,
+	}
+
+	// Test successful fetch
+	ctx := context.Background()
+	data, err := reg.FetchRecipe(ctx, "test-tool")
+	if err != nil {
+		t.Fatalf("FetchRecipe failed: %v", err)
+	}
+	if string(data) != recipeContent {
+		t.Errorf("FetchRecipe returned unexpected content:\ngot: %s\nwant: %s", data, recipeContent)
+	}
+
+	// Test not found
+	_, err = reg.FetchRecipe(ctx, "nonexistent")
+	if err == nil {
+		t.Error("FetchRecipe should fail for nonexistent recipe")
+	}
+	regErr, ok := err.(*RegistryError)
+	if !ok {
+		t.Fatalf("Expected *RegistryError, got %T", err)
+	}
+	if regErr.Type != ErrTypeNotFound {
+		t.Errorf("Error type = %v, want %v", regErr.Type, ErrTypeNotFound)
+	}
+}
+
+func TestFetchDiscoveryEntry_LocalRegistry(t *testing.T) {
+	// Create a local registry structure with discovery entries
+	localRegistry := t.TempDir()
+	discoveryDir := filepath.Join(localRegistry, "recipes", "discovery", "j", "jq")
+	if err := os.MkdirAll(discoveryDir, 0755); err != nil {
+		t.Fatalf("Failed to create discovery dir: %v", err)
+	}
+
+	entryContent := `{"builder":"homebrew","source":"jq"}`
+	entryPath := filepath.Join(discoveryDir, "jq.json")
+	if err := os.WriteFile(entryPath, []byte(entryContent), 0644); err != nil {
+		t.Fatalf("Failed to write discovery entry: %v", err)
+	}
+
+	// Create registry pointing to local directory
+	reg := &Registry{
+		BaseURL:  localRegistry,
+		CacheDir: t.TempDir(),
+		isLocal:  true,
+	}
+
+	// Test successful fetch
+	ctx := context.Background()
+	data, err := reg.FetchDiscoveryEntry(ctx, "j/jq/jq.json")
+	if err != nil {
+		t.Fatalf("FetchDiscoveryEntry failed: %v", err)
+	}
+	if string(data) != entryContent {
+		t.Errorf("FetchDiscoveryEntry returned %q, want %q", data, entryContent)
+	}
+
+	// Test not found
+	_, err = reg.FetchDiscoveryEntry(ctx, "z/zz/nonexistent.json")
+	if err == nil {
+		t.Error("FetchDiscoveryEntry should fail for nonexistent entry")
+	}
+	regErr, ok := err.(*RegistryError)
+	if !ok {
+		t.Fatalf("Expected *RegistryError, got %T", err)
+	}
+	if regErr.Type != ErrTypeNotFound {
+		t.Errorf("Error type = %v, want %v", regErr.Type, ErrTypeNotFound)
+	}
+}
+
+func TestFetchRecipe_EmptyLocalRegistry(t *testing.T) {
+	// Create an empty local registry (no recipes directory)
+	localRegistry := t.TempDir()
+
+	reg := &Registry{
+		BaseURL:  localRegistry,
+		CacheDir: t.TempDir(),
+		isLocal:  true,
+	}
+
+	// All fetches should return not found
+	ctx := context.Background()
+	_, err := reg.FetchRecipe(ctx, "any-tool")
+	if err == nil {
+		t.Error("FetchRecipe should fail when recipes directory doesn't exist")
+	}
+	regErr, ok := err.(*RegistryError)
+	if !ok {
+		t.Fatalf("Expected *RegistryError, got %T", err)
+	}
+	if regErr.Type != ErrTypeNotFound {
+		t.Errorf("Error type = %v, want %v", regErr.Type, ErrTypeNotFound)
+	}
+}

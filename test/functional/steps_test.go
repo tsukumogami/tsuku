@@ -31,10 +31,21 @@ func iRun(ctx context.Context, command string) (context.Context, error) {
 	cmd := exec.Command(args[0], args[1:]...)
 	// Run from the same directory as the binary, where .tsuku-test lives
 	cmd.Dir = filepath.Dir(state.binPath)
-	// Build environment: suppress telemetry, set home, optionally filter PATH
+
+	// Determine registry URL: empty directory for @empty-registry, or repo root for local recipes
+	registryURL := state.repoRoot // Uses recipes/ from the repo
+	if state.emptyRegistry {
+		// Create an empty directory to use as registry (no recipes will be found)
+		emptyRegistry := filepath.Join(state.homeDir, "empty-registry")
+		_ = os.MkdirAll(emptyRegistry, 0o755)
+		registryURL = emptyRegistry
+	}
+
+	// Build environment: suppress telemetry, set home, set registry URL, optionally filter PATH
 	env := append(os.Environ(),
 		"TSUKU_HOME="+state.homeDir,
 		"TSUKU_NO_TELEMETRY=1",
+		"TSUKU_REGISTRY_URL="+registryURL,
 	)
 	if len(state.hiddenBinaries) > 0 {
 		env = append(env, "PATH="+filteredPATH(state.hiddenBinaries))
