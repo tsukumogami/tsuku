@@ -1020,3 +1020,11 @@ func (r *Recipe) IsExternallyManagedFor(target Matchable, actionLookup func(stri
 	// All applicable steps are externally managed (or no steps apply)
 	return true
 }
+
+// WithVerify returns a shallow copy of the recipe with the given verify section.
+// This is useful for modifying verification without mutating the original recipe.
+func (r *Recipe) WithVerify(verify VerifySection) *Recipe {
+	copy := *r
+	copy.Verify = verify
+	return &copy
+}

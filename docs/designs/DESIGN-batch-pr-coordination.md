@@ -72,7 +72,7 @@ Planned
 | _Replaces append-only metrics and failure logs with timestamped files using ISO 8601 format. Each batch run writes its own file instead of appending to shared logs, eliminating 2 more conflict sources. Updates queue-analytics to aggregate across multiple files._ | | |
 | ~~[#1507: feat(workflows): add post-merge dashboard update workflow](https://github.com/tsukumogami/tsuku/issues/1507)~~ | ~~[#1506](https://github.com/tsukumogami/tsuku/issues/1506)~~ | ~~testable~~ |
 | _Creates update-dashboard.yml workflow triggered on push to main, moving dashboard generation from PR creation to post-merge. Dashboard reflects merged state within 60 seconds, eliminating the final conflict source caused by non-deterministic recomputation of speculative PR state._ | | |
-| ~~[#1508: chore(repo): enable branch protection with required checks](https://github.com/tsukumogami/tsuku/issues/1508)~~ | ~~[#1507](https://github.com/tsukumogami/tsuku/issues/1507)~~ | ~~simple~~ |
+| [#1508: chore(repo): enable branch protection with required checks](https://github.com/tsukumogami/tsuku/issues/1508) | [#1507](https://github.com/tsukumogami/tsuku/issues/1507) | simple |
 | _Validates the complete batch PR coordination system is fully implemented and working end-to-end. Branch protection enabled, workflow bugs fixed (artifact filename colons, jq null handling). Ready for final end-to-end validation test._ | | |
 
 ### Dependency Graph
@@ -111,7 +111,7 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1498,I1499,I1500,I1501,I1502,I1503,I1504,I1505,I1506,I1507 done
-    class I1508 done
+    class I1508 ready
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
