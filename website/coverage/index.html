@@ -505,6 +505,125 @@
             `;
         }
 
+        // Render gap list view
+        function renderGapList() {
+            if (!currentData) return;
+
+            const gapContainer = document.getElementById('gap-list');
+            const recipesWithGaps = currentData.recipes.filter(r => r.gaps && r.gaps.length > 0);
+            const recipesWithErrors = currentData.recipes.filter(r => r.errors && r.errors.length > 0);
+
+            if (recipesWithGaps.length === 0 && recipesWithErrors.length === 0) {
+                gapContainer.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                        <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">🎉 No platform gaps found!</p>
+                        <p>All ${currentData.total_recipes} recipes support all platforms (glibc, musl, darwin).</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+
+            // Missing platforms section
+            if (recipesWithGaps.length > 0) {
+                html += `<h3 style="margin-top: 0;">Missing Platform Support (${recipesWithGaps.length} recipes)</h3>`;
+                recipesWithGaps.forEach(recipe => {
+                    const gapBadges = recipe.gaps.map(platform =>
+                        `<span class="gap-badge">${platform}</span>`
+                    ).join('');
+                    html += `
+                        <div class="gap-item">
+                            <span class="gap-recipe">${recipe.name} <span style="color: var(--text-muted); font-size: 0.85rem;">[${recipe.type}]</span></span>
+                            <div class="gap-platforms">${gapBadges}</div>
+                        </div>
+                    `;
+                });
+            }
+
+            // M47 musl gaps (recipes with errors mentioning musl)
+            const m47MuslGaps = recipesWithErrors.filter(r =>
+                r.type === 'library' &&
+                r.errors.some(e => e.toLowerCase().includes('musl'))
+            );
+            if (m47MuslGaps.length > 0) {
+                html += `<h3 style="margin-top: 1.5rem;">M47 Library Gaps (${m47MuslGaps.length} recipes)</h3>`;
+                html += `<p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem;">M47 libraries missing musl platform support</p>`;
+                m47MuslGaps.forEach(recipe => {
+                    html += `
+                        <div class="gap-item">
+                            <span class="gap-recipe">${recipe.name}</span>
+                            <div class="gap-platforms"><span class="gap-badge">musl</span></div>
+                        </div>
+                    `;
+                });
+            }
+
+            gapContainer.innerHTML = html;
+        }
+
+        // Render category breakdown view
+        function renderCategoryBreakdown() {
+            if (!currentData || !currentData.summary) return;
+
+            const categoryContainer = document.getElementById('category-breakdown');
+            const summary = currentData.summary.by_category;
+            const total = currentData.total_recipes;
+
+            const libraryPct = ((summary.library.total / total) * 100).toFixed(1);
+            const toolPct = ((summary.tool.total / total) * 100).toFixed(1);
+
+            const libraryMuslPct = ((summary.library.musl_support / summary.library.total) * 100).toFixed(0);
+            const toolMuslPct = ((summary.tool.musl_support / summary.tool.total) * 100).toFixed(0);
+
+            categoryContainer.innerHTML = `
+                <div class="category-stat">
+                    <div class="category-label">
+                        <strong>Total Recipes</strong>
+                        <span>${total}</span>
+                    </div>
+                </div>
+
+                <div class="category-stat">
+                    <div class="category-label">
+                        <strong>Libraries</strong>
+                        <span>${summary.library.total} (${libraryPct}%)</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${libraryPct}%; ${summary.library.musl_support < summary.library.total ? 'background: #f85149;' : ''}">
+                            ${libraryMuslPct}% musl support
+                        </div>
+                    </div>
+                </div>
+
+                <div class="category-stat">
+                    <div class="category-label">
+                        <strong>Tools</strong>
+                        <span>${summary.tool.total} (${toolPct}%)</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: ${toolPct}%;">
+                            ${toolMuslPct}% musl support
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border);">
+                    <h3 style="font-size: 1rem; margin-bottom: 0.75rem;">Platform Support by Category</h3>
+                    <div style="font-size: 0.9rem; color: var(--text-muted);">
+                        <div style="margin-bottom: 0.5rem;">
+                            <strong>Libraries:</strong> ${summary.library.glibc_support}/${summary.library.total} glibc,
+                            ${summary.library.musl_support}/${summary.library.total} musl
+                        </div>
+                        <div>
+                            <strong>Tools:</strong> ${summary.tool.glibc_support}/${summary.tool.total} glibc,
+                            ${summary.tool.musl_support}/${summary.tool.total} musl
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         // Render dashboard content
         function renderDashboard(data) {
             // Hide loading, show dashboard
@@ -535,8 +654,10 @@
                 </table>
             `;
 
-            // Render matrix
+            // Render all three views
             renderMatrix();
+            renderGapList();
+            renderCategoryBreakdown();
         }
 
         // Show error state

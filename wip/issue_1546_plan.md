@@ -26,15 +26,15 @@ The category breakdown will count recipes by type (library vs tool), calculate p
 
 ## Implementation Steps
 
-- [ ] Add renderGapList() function to populate #gap-list container
-- [ ] Detect recipes with missing platforms from gaps array
-- [ ] Detect recipes with errors (M47 musl gaps from errors array)
-- [ ] Display execution exclusions from exclusions array
-- [ ] Add renderCategoryBreakdown() function to populate #category-breakdown container
-- [ ] Count recipes by type (library vs tool)
-- [ ] Calculate platform support percentages per category
-- [ ] Render progress bars for category statistics
-- [ ] Call both rendering functions from renderDashboard()
+- [x] Add renderGapList() function to populate #gap-list container
+- [x] Detect recipes with missing platforms from gaps array
+- [x] Detect recipes with errors (M47 musl gaps from errors array)
+- [x] Display execution exclusions from exclusions array
+- [x] Add renderCategoryBreakdown() function to populate #category-breakdown container
+- [x] Count recipes by type (library vs tool)
+- [x] Calculate platform support percentages per category
+- [x] Render progress bars for category statistics
+- [x] Call both rendering functions from renderDashboard()
 - [ ] Test gap list shows all three gap types correctly
 - [ ] Test category breakdown shows accurate statistics
 - [ ] Verify integration with existing coverage matrix view
