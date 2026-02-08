@@ -244,3 +244,40 @@ func NewDiscoveryErrorEvent(toolName, errorCategory string, durationMs int64) Di
 	e.DurationMs = durationMs
 	return e
 }
+
+// VerifySelfRepairEvent represents a telemetry event for verification self-repair operations.
+// This tracks when the deterministic self-repair mechanism successfully fixes verification
+// failures without needing LLM fallback.
+type VerifySelfRepairEvent struct {
+	Action        string `json:"action"`         // Event type: "verify_self_repair"
+	ToolName      string `json:"tool_name"`      // Name of the tool being repaired
+	Method        string `json:"method"`         // Repair method: "output_detection", "fallback_help", "fallback_h"
+	Success       bool   `json:"success"`        // Whether the repair produced a passing verification
+	OS            string `json:"os"`             // Operating system
+	Arch          string `json:"arch"`           // CPU architecture
+	TsukuVersion  string `json:"tsuku_version"`  // Version of tsuku CLI
+	SchemaVersion string `json:"schema_version"` // Event schema version
+}
+
+// verifySelfRepairSchemaVersion is the schema version for verify self-repair events.
+const verifySelfRepairSchemaVersion = "1"
+
+// newBaseVerifySelfRepairEvent creates a VerifySelfRepairEvent with common fields pre-filled.
+func newBaseVerifySelfRepairEvent() VerifySelfRepairEvent {
+	return VerifySelfRepairEvent{
+		OS:            runtime.GOOS,
+		Arch:          runtime.GOARCH,
+		TsukuVersion:  buildinfo.Version(),
+		SchemaVersion: verifySelfRepairSchemaVersion,
+	}
+}
+
+// NewVerifySelfRepairEvent creates an event for a verification self-repair operation.
+func NewVerifySelfRepairEvent(toolName, method string, success bool) VerifySelfRepairEvent {
+	e := newBaseVerifySelfRepairEvent()
+	e.Action = "verify_self_repair"
+	e.ToolName = toolName
+	e.Method = method
+	e.Success = success
+	return e
+}

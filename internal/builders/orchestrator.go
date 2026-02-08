@@ -205,6 +205,17 @@ func (o *Orchestrator) Create(
 				// Self-repair succeeded!
 				result.Recipe = repaired
 				result.VerifyRepair = verifyMeta
+
+				// Emit telemetry event for successful self-repair
+				if o.telemetryClient != nil {
+					event := telemetry.NewVerifySelfRepairEvent(
+						repaired.Metadata.Name,
+						verifyMeta.Method,
+						true,
+					)
+					o.telemetryClient.SendVerifySelfRepair(event)
+				}
+
 				return &OrchestratorResult{
 					Recipe:         repaired,
 					BuildResult:    result,
