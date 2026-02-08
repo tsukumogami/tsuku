@@ -22,10 +22,10 @@ This design is being implemented through 9 issues across 2 sequential milestones
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1538: fix(docs): update design doc status from Proposed to Accepted](https://github.com/tsukumogami/tsuku/issues/1538) | None | simple |
-| _Fixes status inconsistency where frontmatter shows "Accepted" but body text shows "Proposed". Ensures both match the current "Planned" status after issues are created._ | | |
-| [#1539: feat(tests): re-enable integration-tests.yml musl dlopen tests](https://github.com/tsukumogami/tsuku/issues/1539) | None | testable |
-| _Uncomments the library-dlopen-musl job with continue-on-error flag, maintaining visibility into musl test failures while allowing CI to pass. Tracks known gaps until #1092 adds musl library support._ | | |
+| ~~[#1538: fix(docs): update design doc status from Proposed to Accepted](https://github.com/tsukumogami/tsuku/issues/1538)~~ | ~~None~~ | ~~simple~~ |
+| ~~_Fixes status inconsistency where frontmatter shows "Accepted" but body text shows "Proposed". Ensures both match the current "Planned" status after issues are created._~~ | | |
+| ~~[#1539: feat(tests): re-enable integration-tests.yml musl dlopen tests](https://github.com/tsukumogami/tsuku/issues/1539)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Uncomments the library-dlopen-musl job with continue-on-error flag, maintaining visibility into musl test failures while allowing CI to pass. Tracks known gaps until #1092 adds musl library support._~~ | | |
 | [#1540: feat(workflows): trigger validate-all-recipes workflow and add platform constraints](https://github.com/tsukumogami/tsuku/issues/1540) | None | testable |
 | _Manually triggers the validation workflow across all 11 platforms to identify which recipes fail where. First run reviews failures, second run with auto_constrain creates a PR with platform constraints._ | | |
 | [#1543: feat(recipes): apply platform constraints from validation results](https://github.com/tsukumogami/tsuku/issues/1543) | [#1540](https://github.com/tsukumogami/tsuku/issues/1540) | testable |
@@ -77,7 +77,8 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1538,I1539,I1540,I1544,I1547 ready
+    class I1538,I1539 done
+    class I1540,I1544,I1547 ready
     class I1543,I1545,I1546,I1548 blocked
 ```
 
@@ -85,9 +86,11 @@ graph TD
 
 ### Work Sequencing
 
-**Can start immediately** (5 issues):
-- #1538 (doc fix)
-- #1539 (musl tests)
+**Completed** (2 issues):
+- ~~#1538~~ (doc fix) ✓
+- ~~#1539~~ (musl tests) ✓
+
+**Can start immediately** (3 issues):
 - #1540 (validation trigger - requires PR merge first)
 - #1544 (dashboard HTML)
 - #1547 (CI workflow)
