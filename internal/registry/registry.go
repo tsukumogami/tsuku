@@ -23,11 +23,12 @@ const (
 	EnvRegistryURL = "TSUKU_REGISTRY_URL"
 )
 
-// Registry handles fetching recipes from the remote registry
+// Registry handles fetching recipes from the remote registry or local directory
 type Registry struct {
-	BaseURL  string // Base URL for raw recipe files
-	CacheDir string // Local cache directory (~/.tsuku/registry)
+	BaseURL  string // Base URL for raw recipe files (HTTP URL or local path)
+	CacheDir string // Local cache directory ($TSUKU_HOME/registry)
 	client   *http.Client
+	isLocal  bool // true if BaseURL is a local filesystem path
 }
 
 // newRegistryHTTPClient creates a secure HTTP client for registry operations with:
@@ -60,7 +61,19 @@ func New(cacheDir string) *Registry {
 		BaseURL:  baseURL,
 		CacheDir: cacheDir,
 		client:   newRegistryHTTPClient(),
+		isLocal:  isLocalPath(baseURL),
 	}
+}
+
+// isLocalPath returns true if the given path is a local filesystem path
+// rather than an HTTP(S) URL.
+func isLocalPath(path string) bool {
+	return !strings.HasPrefix(path, "http://") && !strings.HasPrefix(path, "https://")
+}
+
+// IsLocal returns true if this registry uses a local filesystem path.
+func (r *Registry) IsLocal() bool {
+	return r.isLocal
 }
 
 // recipeURL returns the URL for a recipe file
@@ -82,17 +95,50 @@ func (r *Registry) cachePath(name string) string {
 	return filepath.Join(r.CacheDir, firstLetter, name+".toml")
 }
 
-// FetchRecipe fetches a recipe from the registry
-// Returns the recipe content as bytes, or an error if not found
+// FetchRecipe fetches a recipe from the registry (remote URL or local directory).
+// Returns the recipe content as bytes, or an error if not found.
 func (r *Registry) FetchRecipe(ctx context.Context, name string) ([]byte, error) {
-	url := r.recipeURL(name)
-	if url == "" {
+	if name == "" {
 		return nil, &RegistryError{
 			Type:    ErrTypeValidation,
 			Recipe:  name,
 			Message: "invalid recipe name",
 		}
 	}
+
+	// Handle local filesystem registry
+	if r.isLocal {
+		return r.fetchLocalRecipe(name)
+	}
+
+	return r.fetchRemoteRecipe(ctx, name)
+}
+
+// fetchLocalRecipe reads a recipe from a local filesystem registry.
+func (r *Registry) fetchLocalRecipe(name string) ([]byte, error) {
+	path := r.recipeURL(name) // Returns local path when isLocal is true
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, &RegistryError{
+				Type:    ErrTypeNotFound,
+				Recipe:  name,
+				Message: fmt.Sprintf("recipe %s not found in local registry", name),
+			}
+		}
+		return nil, &RegistryError{
+			Type:    ErrTypeNetwork, // Reuse for filesystem errors
+			Recipe:  name,
+			Message: "failed to read recipe from local registry",
+			Err:     err,
+		}
+	}
+	return data, nil
+}
+
+// fetchRemoteRecipe fetches a recipe from a remote HTTP registry.
+func (r *Registry) fetchRemoteRecipe(ctx context.Context, name string) ([]byte, error) {
+	url := r.recipeURL(name)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
@@ -166,9 +212,41 @@ func (r *Registry) DiscoveryCacheDir() string {
 	return filepath.Join(r.CacheDir, "discovery")
 }
 
-// FetchDiscoveryEntry fetches a single discovery entry from the remote registry
+// FetchDiscoveryEntry fetches a single discovery entry from the registry (remote or local)
 // and caches it locally. The relPath is the entry's relative path (e.g., "b/ba/bat.json").
 func (r *Registry) FetchDiscoveryEntry(ctx context.Context, relPath string) ([]byte, error) {
+	// Handle local filesystem registry
+	if r.isLocal {
+		return r.fetchLocalDiscoveryEntry(relPath)
+	}
+
+	return r.fetchRemoteDiscoveryEntry(ctx, relPath)
+}
+
+// fetchLocalDiscoveryEntry reads a discovery entry from a local filesystem registry.
+func (r *Registry) fetchLocalDiscoveryEntry(relPath string) ([]byte, error) {
+	path := r.discoveryEntryURL(relPath) // Returns local path when isLocal is true
+	data, err := os.ReadFile(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, &RegistryError{
+				Type:    ErrTypeNotFound,
+				Recipe:  relPath,
+				Message: "discovery entry not found in local registry",
+			}
+		}
+		return nil, &RegistryError{
+			Type:    ErrTypeNetwork,
+			Recipe:  relPath,
+			Message: "failed to read discovery entry from local registry",
+			Err:     err,
+		}
+	}
+	return data, nil
+}
+
+// fetchRemoteDiscoveryEntry fetches a discovery entry from a remote HTTP registry.
+func (r *Registry) fetchRemoteDiscoveryEntry(ctx context.Context, relPath string) ([]byte, error) {
 	url := r.discoveryEntryURL(relPath)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)

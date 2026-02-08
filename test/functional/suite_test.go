@@ -18,10 +18,12 @@ var stateKey = stateKeyType{}
 type testState struct {
 	homeDir        string
 	binPath        string
+	repoRoot       string
 	stdout         string
 	stderr         string
 	exitCode       int
 	hiddenBinaries []string // binaries to hide from PATH (e.g., "cargo", "gem")
+	emptyRegistry  bool     // when true, use an empty registry instead of repo's recipes/
 }
 
 func getState(ctx context.Context) *testState {
@@ -100,18 +102,25 @@ func initializeScenario(ctx *godog.ScenarioContext, binPath string) {
 		}
 
 		// Parse @requires-no-<binary> tags to hide binaries from PATH
+		// Parse @empty-registry tag to use an empty registry for discovery tests
 		var hidden []string
+		emptyRegistry := false
 		for _, tag := range sc.Tags {
 			if strings.HasPrefix(tag.Name, "@requires-no-") {
 				binary := strings.TrimPrefix(tag.Name, "@requires-no-")
 				hidden = append(hidden, binary)
+			}
+			if tag.Name == "@empty-registry" {
+				emptyRegistry = true
 			}
 		}
 
 		state := &testState{
 			homeDir:        homeDir,
 			binPath:        binPath,
+			repoRoot:       repoRoot,
 			hiddenBinaries: hidden,
+			emptyRegistry:  emptyRegistry,
 		}
 		return setState(ctx, state), nil
 	})
