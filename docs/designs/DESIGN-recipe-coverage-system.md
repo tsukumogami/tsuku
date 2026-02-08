@@ -35,8 +35,8 @@ This design is being implemented through 9 issues across 2 sequential milestones
 
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
-| [#1544: feat(website): create coverage dashboard HTML structure](https://github.com/tsukumogami/tsuku/issues/1544) | None | testable |
-| _Creates website/coverage/index.html with container divs for three views: coverage matrix (recipes × platforms), gap list (missing platforms), and category breakdown (libraries vs tools). Follows website/pipeline pattern._ | | |
+| ~~[#1544: feat(website): create coverage dashboard HTML structure](https://github.com/tsukumogami/tsuku/issues/1544)~~ | ~~None~~ | ~~testable~~ |
+| ~~_Creates website/coverage/index.html with container divs for three views: coverage matrix (recipes × platforms), gap list (missing platforms), and category breakdown (libraries vs tools). Follows website/pipeline pattern._~~ | | |
 | [#1545: feat(website): implement coverage matrix visualization](https://github.com/tsukumogami/tsuku/issues/1545) | [#1544](https://github.com/tsukumogami/tsuku/issues/1544) | testable |
 | _Adds JavaScript to load coverage.json and render sortable/filterable table showing platform support. Uses vanilla JS with template literals, matching the pipeline dashboard approach._ | | |
 | [#1546: feat(website): implement gap list and category breakdown](https://github.com/tsukumogami/tsuku/issues/1546) | [#1544](https://github.com/tsukumogami/tsuku/issues/1544) | testable |
@@ -77,22 +77,24 @@ graph TD
     classDef blocked fill:#fff9c4
     classDef needsDesign fill:#e1bee7
 
-    class I1538,I1539 done
-    class I1540,I1544,I1547 ready
-    class I1543,I1545,I1546,I1548 blocked
+    class I1538,I1539,I1544 done
+    class I1540,I1545,I1546,I1547 ready
+    class I1543,I1548 blocked
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
 
 ### Work Sequencing
 
-**Completed** (2 issues):
+**Completed** (3 issues):
 - ~~#1538~~ (doc fix) ✓
 - ~~#1539~~ (musl tests) ✓
+- ~~#1544~~ (dashboard HTML) ✓
 
-**Can start immediately** (3 issues):
+**Can start immediately** (4 issues):
 - #1540 (validation trigger - requires PR merge first)
-- #1544 (dashboard HTML)
+- #1545 (coverage matrix visualization)
+- #1546 (gap list and category breakdown)
 - #1547 (CI workflow)
 
 **Milestone ordering**: Complete Milestone 1 before starting Milestone 2 for accurate coverage data.
