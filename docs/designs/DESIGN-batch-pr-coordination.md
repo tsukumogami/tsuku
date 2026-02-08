@@ -111,7 +111,7 @@ graph TD
     classDef needsDesign fill:#e1bee7
 
     class I1498,I1499,I1500,I1501,I1502,I1503,I1504,I1505,I1506,I1507 done
-    class I1508 ready
+    class I1508 done
 ```
 
 **Legend**: Green = done, Blue = ready, Yellow = blocked, Purple = needs-design
