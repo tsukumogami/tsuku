@@ -130,13 +130,19 @@ jobs:
 
       - name: Run batch generation
         if: steps.check-open-prs.outputs.should_skip != 'true'
+        id: batch
         run: |
           OVERRIDE="${{ steps.preflight.outputs.batch_size_override }}"
           BATCH_SIZE="${OVERRIDE:-${{ env.BATCH_SIZE }}}"
+          set +e
           ./batch-generate \
             -ecosystem "${{ env.ECOSYSTEM }}" \
             -batch-size "$BATCH_SIZE" \
             -tier "${{ env.TIER }}"
+          EXIT_CODE=$?
+          set -e
+          echo "exit_code=$EXIT_CODE" >> "$GITHUB_OUTPUT"
+          exit $EXIT_CODE
 
       - name: Requeue unblocked packages
         if: steps.check-open-prs.outputs.should_skip != 'true'
@@ -804,12 +810,16 @@ jobs:
 
       - name: Update circuit breaker
         run: |
-          if [ "$INCLUDED_COUNT" -gt 0 ]; then
+          # Circuit breaker should only trip on systemic failures (non-zero exit),
+          # not on individual package failures (zero exit with no successes)
+          EXIT_CODE="${{ steps.batch.outputs.exit_code }}"
+          if [ "$EXIT_CODE" -eq 0 ]; then
             OUTCOME="success"
+            echo "Circuit breaker: batch process succeeded (exit $EXIT_CODE)"
           else
             OUTCOME="failure"
+            echo "::error::Circuit breaker: batch process failed (exit $EXIT_CODE)"
           fi
-          echo "Circuit breaker outcome: $OUTCOME"
           ./scripts/update_breaker.sh "${{ env.ECOSYSTEM }}" "$OUTCOME"
 
       - name: Requeue unblocked packages
