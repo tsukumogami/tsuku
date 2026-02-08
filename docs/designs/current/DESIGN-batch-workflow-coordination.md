@@ -22,7 +22,9 @@ rationale: |
 
 # Batch Recipe Workflow Coordination
 
-**Status**: Current
+## Status
+
+Current
 
 ## Context and Problem Statement
 
@@ -42,6 +44,87 @@ The batch workflow system generates recipes in batches, validates them across mu
 - **Quality gates**: All recipes must validate on target platforms before merge
 - **Failure isolation**: One ecosystem's failures shouldn't block others
 - **Auditability**: Track what was generated, when, and why decisions were made
+
+## Considered Options
+
+### Decision 1: State File Organization
+
+How should batch state be organized to prevent merge conflicts between concurrent ecosystem runs?
+
+#### Chosen: Per-Ecosystem State Sections
+
+Each ecosystem gets its own section in `batch-control.json` with isolated circuit breaker state, budget tracking, and control flags. This design eliminates cross-ecosystem conflicts since each workflow only modifies its own section.
+
+```json
+{
+  "circuit_breaker": {
+    "homebrew": {"state": "closed", "failures": 0},
+    "npm": {"state": "closed", "failures": 0}
+  }
+}
+```
+
+Benefits:
+- Natural isolation between ecosystems
+- No coordination overhead between workflows
+- Each ecosystem independently managed
+
+#### Alternatives Considered
+
+**Single state file per ecosystem**: Create separate files like `batch-control-homebrew.json`, `batch-control-npm.json`.
+
+Rejected because: Would require N files for N ecosystems, complicating configuration management and increasing operational overhead. The single-file-with-sections approach provides the same isolation with simpler file structure.
+
+**Distributed state in PR metadata**: Store circuit breaker state in GitHub issue/PR labels or comments.
+
+Rejected because: GitHub API rate limits would become a bottleneck, and state persistence would be unreliable (PRs get closed, labels can be manually modified). File-based state is simpler and more reliable.
+
+### Decision 2: PR Coordination Strategy
+
+How should concurrent batch workflows avoid merge conflicts when creating PRs?
+
+#### Chosen: Race Detection + Rebase
+
+Workflows check for existing PRs with ecosystem labels before starting generation. Before creating a PR branch, workflows rebase with `origin/main` to incorporate any merged changes from other ecosystems.
+
+Benefits:
+- Detects same-ecosystem races (two homebrew runs)
+- Handles cross-ecosystem races (homebrew merges during npm generation)
+- Simple retry logic with `--autostash` handles uncommitted changes
+
+#### Alternatives Considered
+
+**Distributed locks via GitHub API**: Use GitHub Issues or PR drafts as distributed locks.
+
+Rejected because: Adds complexity and failure modes (lock cleanup, timeout handling). The rebase strategy is simpler and more robust—even if two workflows race, one will fail at PR creation (GitHub enforces unique branch names) and can retry.
+
+**Workflow concurrency groups**: Use GitHub Actions' built-in concurrency groups to serialize all batch runs.
+
+Rejected because: Would prevent concurrent execution of different ecosystems, defeating the purpose of the per-ecosystem state design. We want homebrew and npm to run simultaneously.
+
+### Decision 3: Authentication for Automated Merges
+
+How should workflows authenticate to bypass branch protection and enable auto-merge?
+
+#### Chosen: GitHub App with Restricted Permissions
+
+Create a dedicated GitHub App (`tsuku-batch-generator`) with minimal permissions: `contents:write`, `pull_requests:write`. Generate installation tokens at workflow runtime.
+
+Benefits:
+- Fine-grained permissions (only what workflows need)
+- Audit trail (all actions attributed to app, not a user)
+- Bypasses branch protection without granting broad access
+- Token expires after 1 hour (reduced blast radius)
+
+#### Alternatives Considered
+
+**Personal Access Token (PAT)**: Store a user's PAT in repository secrets.
+
+Rejected because: PATs have user-level permissions (too broad), don't expire automatically, and actions appear under that user's account (confusing audit trail). GitHub Apps are the modern, secure approach.
+
+**GitHub Actions default token with admin bypass**: Grant the default `GITHUB_TOKEN` admin privileges to bypass protection.
+
+Rejected because: Security anti-pattern. The default token should have minimal permissions. Using a dedicated app with explicit permissions is safer.
 
 ## Decision Outcome
 
@@ -655,7 +738,7 @@ gh pr merge "$PR_NUM" --squash --auto=false
 gh pr comment "$PR_NUM" --body "Manually merged after auto-merge timeout. All checks passed."
 ```
 
-### Security Considerations
+## Security Considerations
 
 **GitHub App Configuration**:
 - **Permissions**: Contents (write), Pull Requests (write), Administration (write)
