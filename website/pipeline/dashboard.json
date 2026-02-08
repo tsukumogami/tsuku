@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-02-08T22:27:29Z",
+  "generated_at": "2026-02-08T23:32:49Z",
   "queue": {
     "total": 4778,
     "by_status": {
@@ -28990,13 +28990,6 @@
   },
   "blockers": [
     {
-      "dependency": "glib",
-      "count": 1,
-      "packages": [
-        "homebrew:imagemagick"
-      ]
-    },
-    {
       "dependency": "gmp",
       "count": 1,
       "packages": [
@@ -29015,6 +29008,13 @@
       "count": 1,
       "packages": [
         "homebrew:ffmpeg"
+      ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
       ]
     }
   ],
