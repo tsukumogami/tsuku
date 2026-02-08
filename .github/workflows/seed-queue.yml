@@ -20,7 +20,7 @@ on:
 
 env:
   SOURCE: ${{ inputs.source || 'homebrew' }}
-  LIMIT: ${{ inputs.limit || '1000' }}
+  LIMIT: ${{ inputs.limit || '5000' }}
 
 concurrency:
   group: queue-operations-${{ inputs.source || 'homebrew' }}
