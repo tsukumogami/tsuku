@@ -151,6 +151,25 @@ func (c *Client) SendDiscovery(event DiscoveryEvent) {
 	go c.sendJSON(event)
 }
 
+// SendVerifySelfRepair sends a verify self-repair event asynchronously.
+// It never blocks and never returns errors.
+// If telemetry is disabled, this is a no-op.
+// If debug mode is enabled, the event is printed to stderr instead of being sent.
+func (c *Client) SendVerifySelfRepair(event VerifySelfRepairEvent) {
+	if c.disabled {
+		return
+	}
+
+	if c.debug {
+		data, _ := json.Marshal(event)
+		fmt.Fprintf(os.Stderr, "[telemetry] %s\n", data)
+		return
+	}
+
+	// Fire-and-forget: spawn goroutine, no waiting
+	go c.sendJSON(event)
+}
+
 // sendJSON performs the actual HTTP request for any event type.
 func (c *Client) sendJSON(event interface{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), c.timeout)

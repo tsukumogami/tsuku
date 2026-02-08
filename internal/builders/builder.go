@@ -144,6 +144,28 @@ type BuildResult struct {
 	// Cost is the estimated cost in USD for LLM-based generation.
 	// Only populated by LLM-based builders (e.g., GitHubReleaseBuilder).
 	Cost float64
+
+	// VerifyRepair contains metadata about any verification self-repair that was applied.
+	// Only populated when the orchestrator's deterministic repair fixed a verification failure.
+	VerifyRepair *VerifyRepairMetadata
+}
+
+// VerifyRepairMetadata tracks how a recipe's verification was automatically repaired.
+type VerifyRepairMetadata struct {
+	// OriginalCommand is the original verify.command that failed.
+	OriginalCommand string
+
+	// RepairedCommand is the working verify.command after repair.
+	RepairedCommand string
+
+	// Method describes how the repair was performed:
+	// - "output_detection": detected help text in original failure output
+	// - "fallback_help": tried --help as fallback
+	// - "fallback_h": tried -h as fallback
+	Method string
+
+	// DetectedExitCode is the exit code that was detected during repair.
+	DetectedExitCode int
 }
 
 // BuildSession represents an active build session that maintains state across
