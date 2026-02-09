@@ -1,6 +1,7 @@
 package batch
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -247,11 +248,42 @@ exit 0
 	}
 }
 
-func TestRun_validationFailureMissingDep(t *testing.T) {
-	tmpDir := t.TempDir()
-	fakeBin := filepath.Join(tmpDir, "tsuku")
-	// Fake binary: "create" succeeds, "install" fails with missing dep error
-	script := `#!/bin/sh
+func TestRun_validationFailureBlocked(t *testing.T) {
+	tests := []struct {
+		name         string
+		category     string
+		exitCode     int
+		pkgName      string
+		blockedBy    string
+		stderrMsg    string
+		jsonResponse string
+	}{
+		{
+			name:      "missing_dep",
+			category:  "missing_dep",
+			exitCode:  8,
+			pkgName:   "coreutils",
+			blockedBy: "dav1d",
+			stderrMsg: `echo "Checking dependencies for coreutils..." >&2
+    echo "Error: failed to install dependency 'dav1d'" >&2`,
+			jsonResponse: `{"status":"error","category":"missing_dep","message":"failed to install dependency dav1d","missing_recipes":["dav1d"],"exit_code":8}`,
+		},
+		{
+			name:         "recipe_not_found",
+			category:     "recipe_not_found",
+			exitCode:     3,
+			pkgName:      "wget",
+			blockedBy:    "libidn2",
+			stderrMsg:    `echo "Error: recipe libidn2 not found in registry" >&2`,
+			jsonResponse: `{"status":"error","category":"recipe_not_found","message":"recipe libidn2 not found in registry","missing_recipes":["libidn2"],"exit_code":3}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			fakeBin := filepath.Join(tmpDir, "tsuku")
+			script := fmt.Sprintf(`#!/bin/sh
 case "$1" in
   create)
     while [ $# -gt 0 ]; do
@@ -263,71 +295,72 @@ case "$1" in
     exit 0
     ;;
   install)
-    echo "Checking dependencies for coreutils..." >&2
-    echo "Error: failed to install dependency 'dav1d'" >&2
-    echo '{"status":"error","category":"missing_dep","message":"failed to install dependency dav1d","missing_recipes":["dav1d"],"exit_code":8}'
-    exit 8
+    %s
+    echo '%s'
+    exit %d
     ;;
 esac
-`
-	if err := os.WriteFile(fakeBin, []byte(script), 0755); err != nil {
-		t.Fatal(err)
-	}
+`, tc.stderrMsg, tc.jsonResponse, tc.exitCode)
+			if err := os.WriteFile(fakeBin, []byte(script), 0755); err != nil {
+				t.Fatal(err)
+			}
 
-	queue := &seed.PriorityQueue{
-		SchemaVersion: 1,
-		Packages: []seed.Package{
-			{ID: "homebrew:coreutils", Name: "coreutils", Status: "pending", Tier: 1},
-		},
-	}
+			queue := &seed.PriorityQueue{
+				SchemaVersion: 1,
+				Packages: []seed.Package{
+					{ID: "homebrew:" + tc.pkgName, Name: tc.pkgName, Status: "pending", Tier: 1},
+				},
+			}
 
-	orch := NewOrchestrator(Config{
-		Ecosystem:   "homebrew",
-		BatchSize:   10,
-		MaxTier:     3,
-		QueuePath:   filepath.Join(tmpDir, "queue.json"),
-		OutputDir:   filepath.Join(tmpDir, "recipes"),
-		FailuresDir: filepath.Join(tmpDir, "failures"),
-		TsukuBin:    fakeBin,
-	}, queue)
+			orch := NewOrchestrator(Config{
+				Ecosystem:   "homebrew",
+				BatchSize:   10,
+				MaxTier:     3,
+				QueuePath:   filepath.Join(tmpDir, "queue.json"),
+				OutputDir:   filepath.Join(tmpDir, "recipes"),
+				FailuresDir: filepath.Join(tmpDir, "failures"),
+				TsukuBin:    fakeBin,
+			}, queue)
 
-	result, err := orch.Run()
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
+			result, err := orch.Run()
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
 
-	if result.Succeeded != 0 {
-		t.Errorf("expected succeeded 0, got %d", result.Succeeded)
-	}
-	if result.Blocked != 1 {
-		t.Errorf("expected blocked 1, got %d", result.Blocked)
-	}
-	if result.Failed != 0 {
-		t.Errorf("expected failed 0, got %d", result.Failed)
-	}
-	if len(result.Recipes) != 0 {
-		t.Errorf("expected 0 validated recipes, got %d", len(result.Recipes))
-	}
-	if len(result.Failures) != 1 {
-		t.Fatalf("expected 1 failure, got %d", len(result.Failures))
-	}
+			if result.Succeeded != 0 {
+				t.Errorf("expected succeeded 0, got %d", result.Succeeded)
+			}
+			if result.Blocked != 1 {
+				t.Errorf("expected blocked 1, got %d", result.Blocked)
+			}
+			if result.Failed != 0 {
+				t.Errorf("expected failed 0, got %d", result.Failed)
+			}
+			if len(result.Recipes) != 0 {
+				t.Errorf("expected 0 validated recipes, got %d", len(result.Recipes))
+			}
+			if len(result.Failures) != 1 {
+				t.Fatalf("expected 1 failure, got %d", len(result.Failures))
+			}
 
-	f := result.Failures[0]
-	if f.Category != "missing_dep" {
-		t.Errorf("expected category missing_dep, got %s", f.Category)
-	}
-	if len(f.BlockedBy) != 1 || f.BlockedBy[0] != "dav1d" {
-		t.Errorf("expected BlockedBy [dav1d], got %v", f.BlockedBy)
-	}
+			f := result.Failures[0]
+			if f.Category != tc.category {
+				t.Errorf("expected category %s, got %s", tc.category, f.Category)
+			}
+			if len(f.BlockedBy) != 1 || f.BlockedBy[0] != tc.blockedBy {
+				t.Errorf("expected BlockedBy [%s], got %v", tc.blockedBy, f.BlockedBy)
+			}
 
-	// Recipe file should be cleaned up
-	recipePath := recipeOutputPath(filepath.Join(tmpDir, "recipes"), "coreutils")
-	if _, err := os.Stat(recipePath); !os.IsNotExist(err) {
-		t.Errorf("expected recipe file to be removed after validation failure")
-	}
+			// Recipe file should be cleaned up
+			recipePath := recipeOutputPath(filepath.Join(tmpDir, "recipes"), tc.pkgName)
+			if _, err := os.Stat(recipePath); !os.IsNotExist(err) {
+				t.Errorf("expected recipe file to be removed after validation failure")
+			}
 
-	if queue.Packages[0].Status != "blocked" {
-		t.Errorf("expected queue status blocked, got %s", queue.Packages[0].Status)
+			if queue.Packages[0].Status != "blocked" {
+				t.Errorf("expected queue status blocked, got %s", queue.Packages[0].Status)
+			}
+		})
 	}
 }
 
