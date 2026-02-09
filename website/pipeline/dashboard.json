@@ -1,27 +1,73 @@
 {
-  "generated_at": "2026-02-09T02:02:44Z",
+  "generated_at": "2026-02-09T03:32:22Z",
   "queue": {
-    "total": 4778,
+    "total": 4905,
     "by_status": {
-      "failed": 19,
-      "pending": 4752,
-      "success": 7
+      "blocked": 4,
+      "failed": 14,
+      "pending": 4749,
+      "success": 138
     },
     "by_tier": {
       "1": {
-        "failed": 8,
+        "blocked": 1,
+        "failed": 7,
         "success": 5
       },
       "2": {
-        "failed": 11,
+        "blocked": 3,
+        "failed": 7,
         "pending": 19,
-        "success": 2
+        "success": 130
       },
       "3": {
-        "pending": 4733
+        "pending": 4730,
+        "success": 3
       }
     },
     "packages": {
+      "blocked": [
+        {
+          "id": "homebrew:node",
+          "name": "node",
+          "ecosystem": "homebrew",
+          "priority": 1,
+          "category": "missing_dep",
+          "blocked_by": [
+            "ada-url"
+          ]
+        },
+        {
+          "id": "homebrew:coreutils",
+          "name": "coreutils",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "missing_dep",
+          "blocked_by": [
+            "gmp"
+          ]
+        },
+        {
+          "id": "homebrew:ffmpeg",
+          "name": "ffmpeg",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "missing_dep",
+          "blocked_by": [
+            "dav1d"
+          ]
+        },
+        {
+          "id": "homebrew:imagemagick",
+          "name": "imagemagick",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "missing_dep",
+          "blocked_by": [
+            "glib"
+          ]
+        }
+      ],
       "failed": [
         {
           "id": "homebrew:eza",
@@ -43,16 +89,6 @@
           "ecosystem": "homebrew",
           "priority": 1,
           "category": "validation_failed"
-        },
-        {
-          "id": "homebrew:node",
-          "name": "node",
-          "ecosystem": "homebrew",
-          "priority": 1,
-          "category": "missing_dep",
-          "blocked_by": [
-            "ada-url"
-          ]
         },
         {
           "id": "homebrew:shellcheck",
@@ -97,16 +133,6 @@
           "category": "validation_failed"
         },
         {
-          "id": "homebrew:coreutils",
-          "name": "coreutils",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "missing_dep",
-          "blocked_by": [
-            "gmp"
-          ]
-        },
-        {
           "id": "homebrew:exa",
           "name": "exa",
           "ecosystem": "homebrew",
@@ -114,31 +140,11 @@
           "category": "validation_failed"
         },
         {
-          "id": "homebrew:ffmpeg",
-          "name": "ffmpeg",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "missing_dep",
-          "blocked_by": [
-            "dav1d"
-          ]
-        },
-        {
           "id": "homebrew:gemini-cli",
           "name": "gemini-cli",
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "validation_failed"
-        },
-        {
-          "id": "homebrew:imagemagick",
-          "name": "imagemagick",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "missing_dep",
-          "blocked_by": [
-            "glib"
-          ]
         },
         {
           "id": "homebrew:jq",
@@ -157,13 +163,6 @@
         {
           "id": "homebrew:ripgrep",
           "name": "ripgrep",
-          "ecosystem": "homebrew",
-          "priority": 2,
-          "category": "validation_failed"
-        },
-        {
-          "id": "homebrew:yq",
-          "name": "yq",
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "validation_failed"
@@ -1385,12 +1384,6 @@
           "priority": 3
         },
         {
-          "id": "homebrew:asciinema",
-          "name": "asciinema",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
           "id": "homebrew:asciiquarium",
           "name": "asciiquarium",
           "ecosystem": "homebrew",
@@ -2319,12 +2312,6 @@
         {
           "id": "homebrew:bbtools",
           "name": "bbtools",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:bc",
-          "name": "bc",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -9972,12 +9959,6 @@
         {
           "id": "homebrew:grpcui",
           "name": "grpcui",
-          "ecosystem": "homebrew",
-          "priority": 3
-        },
-        {
-          "id": "homebrew:grpcurl",
-          "name": "grpcurl",
           "ecosystem": "homebrew",
           "priority": 3
         },
@@ -28972,6 +28953,693 @@
           "priority": 1
         },
         {
+          "id": "homebrew:act",
+          "name": "act",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:asdf",
+          "name": "asdf",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:aws-vault",
+          "name": "aws-vault",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:azcopy",
+          "name": "azcopy",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:bash",
+          "name": "bash",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:bazelisk",
+          "name": "bazelisk",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:bison",
+          "name": "bison",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:block-goose-cli",
+          "name": "block-goose-cli",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:brotli",
+          "name": "brotli",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:buf",
+          "name": "buf",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:c-ares",
+          "name": "c-ares",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:chibi-scheme",
+          "name": "chibi-scheme",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:chicken",
+          "name": "chicken",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:clang-format",
+          "name": "clang-format",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:cliproxyapi",
+          "name": "cliproxyapi",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:cloc",
+          "name": "cloc",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:cloudflared",
+          "name": "cloudflared",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:cocoapods",
+          "name": "cocoapods",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:ctlptl",
+          "name": "ctlptl",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:docker-buildx",
+          "name": "docker-buildx",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:docker-credential-helper",
+          "name": "docker-credential-helper",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:docker-credential-helper-ecr",
+          "name": "docker-credential-helper-ecr",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:dos2unix",
+          "name": "dos2unix",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:doxygen",
+          "name": "doxygen",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:duckdb",
+          "name": "duckdb",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:dust",
+          "name": "dust",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:exiftool",
+          "name": "exiftool",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:expat",
+          "name": "expat",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:fabric-ai",
+          "name": "fabric-ai",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:fd",
+          "name": "fd",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:flyctl",
+          "name": "flyctl",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:freetype",
+          "name": "freetype",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:fresh-editor",
+          "name": "fresh-editor",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:gdbm",
+          "name": "gdbm",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:geos",
+          "name": "geos",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:git",
+          "name": "git",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:git-flow",
+          "name": "git-flow",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:git-lfs",
+          "name": "git-lfs",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:glab",
+          "name": "glab",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:glew",
+          "name": "glew",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:gnu-sed",
+          "name": "gnu-sed",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:gnu-tar",
+          "name": "gnu-tar",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:go-task",
+          "name": "go-task",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:gomplate",
+          "name": "gomplate",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:goreman",
+          "name": "goreman",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:hello",
+          "name": "hello",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:helm",
+          "name": "helm",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:himalaya",
+          "name": "himalaya",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:htop",
+          "name": "htop",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:hugo",
+          "name": "hugo",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:jfrog-cli",
+          "name": "jfrog-cli",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:jpeg",
+          "name": "jpeg",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:kubernetes-cli",
+          "name": "kubernetes-cli",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:lcov",
+          "name": "lcov",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:libcurl",
+          "name": "libcurl",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:libnghttp2",
+          "name": "libnghttp2",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:libnghttp3",
+          "name": "libnghttp3",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:libngtcp2",
+          "name": "libngtcp2",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:libpng",
+          "name": "libpng",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:libssh2",
+          "name": "libssh2",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:libxml2",
+          "name": "libxml2",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:license-eye",
+          "name": "license-eye",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:lima",
+          "name": "lima",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:lua",
+          "name": "lua",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:lua-language-server",
+          "name": "lua-language-server",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:luajit",
+          "name": "luajit",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:micro",
+          "name": "micro",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:mint",
+          "name": "mint",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:mit-scheme",
+          "name": "mit-scheme",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:mkcert",
+          "name": "mkcert",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:mockolo",
+          "name": "mockolo",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:moreutils",
+          "name": "moreutils",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:nasm",
+          "name": "nasm",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:ncdu",
+          "name": "ncdu",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:oh-my-posh",
+          "name": "oh-my-posh",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:openshift-cli",
+          "name": "openshift-cli",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:opentofu",
+          "name": "opentofu",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:p7zip",
+          "name": "p7zip",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:periphery",
+          "name": "periphery",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:pkgconf",
+          "name": "pkgconf",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:pngcrush",
+          "name": "pngcrush",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:podman",
+          "name": "podman",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:prek",
+          "name": "prek",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:proj",
+          "name": "proj",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:qrencode",
+          "name": "qrencode",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:rclone",
+          "name": "rclone",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:readline",
+          "name": "readline",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:rust-analyzer",
+          "name": "rust-analyzer",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:rustup",
+          "name": "rustup",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:sccache",
+          "name": "sccache",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:sdl2",
+          "name": "sdl2",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:sevenzip",
+          "name": "sevenzip",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:shfmt",
+          "name": "shfmt",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:smartmontools",
+          "name": "smartmontools",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:sourcekitten",
+          "name": "sourcekitten",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:sourcery",
+          "name": "sourcery",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:spatialite",
+          "name": "spatialite",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:sqlite",
+          "name": "sqlite",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:sshpass",
+          "name": "sshpass",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:supabase",
+          "name": "supabase",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:swift-sh",
+          "name": "swift-sh",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:swiftformat",
+          "name": "swiftformat",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:swiftlint",
+          "name": "swiftlint",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:syncthing",
+          "name": "syncthing",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:tailscale",
+          "name": "tailscale",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:television",
+          "name": "television",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:temporal",
+          "name": "temporal",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:terragrunt",
+          "name": "terragrunt",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:tokei",
+          "name": "tokei",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:tree",
+          "name": "tree",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:tree-sitter-cli",
+          "name": "tree-sitter-cli",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:typos-cli",
+          "name": "typos-cli",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:unar",
+          "name": "unar",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:uutils-coreutils",
+          "name": "uutils-coreutils",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
           "id": "homebrew:uv",
           "name": "uv",
           "ecosystem": "homebrew",
@@ -28979,30 +29647,119 @@
           "category": "validation_failed"
         },
         {
+          "id": "homebrew:vale",
+          "name": "vale",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:watch",
+          "name": "watch",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:websocat",
+          "name": "websocat",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:wimlib",
+          "name": "wimlib",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:witr",
+          "name": "witr",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
           "id": "homebrew:xcbeautify",
           "name": "xcbeautify",
           "ecosystem": "homebrew",
           "priority": 2,
           "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:xclogparser",
+          "name": "xclogparser",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:xmlstarlet",
+          "name": "xmlstarlet",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:xz",
+          "name": "xz",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:yazi",
+          "name": "yazi",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:yj",
+          "name": "yj",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:yq",
+          "name": "yq",
+          "ecosystem": "homebrew",
+          "priority": 2,
+          "category": "validation_failed"
+        },
+        {
+          "id": "homebrew:zizmor",
+          "name": "zizmor",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:zoxide",
+          "name": "zoxide",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:zstd",
+          "name": "zstd",
+          "ecosystem": "homebrew",
+          "priority": 2
+        },
+        {
+          "id": "homebrew:asciinema",
+          "name": "asciinema",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:bc",
+          "name": "bc",
+          "ecosystem": "homebrew",
+          "priority": 3
+        },
+        {
+          "id": "homebrew:grpcurl",
+          "name": "grpcurl",
+          "ecosystem": "homebrew",
+          "priority": 3
         }
       ]
     }
   },
   "blockers": [
-    {
-      "dependency": "dav1d",
-      "count": 1,
-      "packages": [
-        "homebrew:ffmpeg"
-      ]
-    },
-    {
-      "dependency": "glib",
-      "count": 1,
-      "packages": [
-        "homebrew:imagemagick"
-      ]
-    },
     {
       "dependency": "gmp",
       "count": 1,
@@ -29015,6 +29772,20 @@
       "count": 1,
       "packages": [
         "homebrew:node"
+      ]
+    },
+    {
+      "dependency": "dav1d",
+      "count": 1,
+      "packages": [
+        "homebrew:ffmpeg"
+      ]
+    },
+    {
+      "dependency": "glib",
+      "count": 1,
+      "packages": [
+        "homebrew:imagemagick"
       ]
     }
   ],
