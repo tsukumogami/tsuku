@@ -2,7 +2,8 @@
 name = "make"
 description = "GNU Make build automation tool"
 homepage = "https://www.gnu.org/software/make/"
-binaries = ["bin/gmake", "bin/make"]
+# Homebrew's make only provides gmake to avoid conflicting with system make
+binaries = ["bin/gmake"]
 
 [[steps]]
 action = "homebrew"
@@ -11,8 +12,8 @@ formula = "make"
 [[steps]]
 action = "install_binaries"
 install_mode = "directory"
-outputs = ["bin/gmake", "bin/make"]
+outputs = ["bin/gmake"]
 
 [verify]
-command = "make --version"
+command = "gmake --version"
 pattern = "GNU Make {version}"
