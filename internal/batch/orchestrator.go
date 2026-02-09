@@ -110,7 +110,7 @@ func (o *Orchestrator) Run() (*BatchResult, error) {
 		if valResult.Err != nil {
 			result.Failures = append(result.Failures, valResult.Failure)
 			os.Remove(recipePath)
-			if valResult.Failure.Category == "missing_dep" {
+			if valResult.Failure.Category == "missing_dep" || valResult.Failure.Category == "recipe_not_found" {
 				result.Blocked++
 				o.setStatus(pkg.ID, "blocked")
 			} else {
