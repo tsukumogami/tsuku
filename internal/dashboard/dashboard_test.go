@@ -114,9 +114,9 @@ func TestLoadFailures_perRecipeFormat(t *testing.T) {
 		t.Fatalf("loadFailures: %v", err)
 	}
 
-	// Per-recipe format has no blocked_by, so blockers should be empty
+	// These per-recipe records don't have blocked_by, so blockers should be empty
 	if len(blockers) != 0 {
-		t.Errorf("blockers should be empty for per-recipe format: %v", blockers)
+		t.Errorf("blockers should be empty for per-recipe format without blocked_by: %v", blockers)
 	}
 
 	// Check category counts
@@ -125,6 +125,54 @@ func TestLoadFailures_perRecipeFormat(t *testing.T) {
 	}
 	if categories["validation_failed"] != 1 {
 		t.Errorf("validation_failed: got %d, want 1", categories["validation_failed"])
+	}
+}
+
+func TestLoadFailures_perRecipeWithBlockedBy(t *testing.T) {
+	// Create temp file with per-recipe format including blocked_by
+	dir := t.TempDir()
+	path := filepath.Join(dir, "per-recipe-blocked.jsonl")
+	content := `{"schema_version":1,"recipe":"node","platform":"linux-x86_64","exit_code":8,"category":"missing_dep","blocked_by":["ada-url"]}
+{"schema_version":1,"recipe":"ffmpeg","platform":"linux-x86_64","exit_code":8,"category":"missing_dep","blocked_by":["dav1d","glib"]}
+{"schema_version":1,"recipe":"procs","platform":"linux-x86_64","exit_code":6,"category":"deterministic"}
+`
+	if err := os.WriteFile(path, []byte(content), 0644); err != nil {
+		t.Fatalf("write temp file: %v", err)
+	}
+
+	blockers, categories, details, err := loadFailures(path)
+	if err != nil {
+		t.Fatalf("loadFailures: %v", err)
+	}
+
+	// Check blockers were extracted from per-recipe format
+	if len(blockers) != 3 {
+		t.Errorf("blockers: got %d entries, want 3 (ada-url, dav1d, glib)", len(blockers))
+	}
+	if len(blockers["ada-url"]) != 1 {
+		t.Errorf("ada-url blocks: got %d, want 1", len(blockers["ada-url"]))
+	}
+	if len(blockers["dav1d"]) != 1 {
+		t.Errorf("dav1d blocks: got %d, want 1", len(blockers["dav1d"]))
+	}
+
+	// Check details were populated
+	if len(details) != 2 {
+		t.Errorf("details: got %d entries, want 2 (node, ffmpeg)", len(details))
+	}
+	if details["homebrew:node"].Category != "missing_dep" {
+		t.Errorf("node category: got %q, want %q", details["homebrew:node"].Category, "missing_dep")
+	}
+	if len(details["homebrew:ffmpeg"].BlockedBy) != 2 {
+		t.Errorf("ffmpeg blocked_by: got %d, want 2", len(details["homebrew:ffmpeg"].BlockedBy))
+	}
+
+	// Check category counts
+	if categories["missing_dep"] != 2 {
+		t.Errorf("missing_dep: got %d, want 2", categories["missing_dep"])
+	}
+	if categories["deterministic"] != 1 {
+		t.Errorf("deterministic: got %d, want 1", categories["deterministic"])
 	}
 }
 

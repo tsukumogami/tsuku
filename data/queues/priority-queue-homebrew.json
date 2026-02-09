@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-02-08T16:08:55Z",
+  "updated_at": "2026-02-09T03:20:00Z",
   "tiers": {
     "1": "Critical - manually curated high-impact tools",
-    "2": "Popular - \u003e10K weekly downloads (\u003e40K/30d)",
+    "2": "Popular - >10K weekly downloads (>40K/30d)",
     "3": "Standard - all other packages"
   },
   "packages": [
@@ -28,7 +28,7 @@
       "source": "homebrew",
       "name": "node",
       "tier": 1,
-      "status": "failed",
+      "status": "blocked",
       "added_at": "2026-02-07T02:32:02Z"
     },
     {
@@ -44,7 +44,7 @@
       "source": "homebrew",
       "name": "ffmpeg",
       "tier": 2,
-      "status": "failed",
+      "status": "blocked",
       "added_at": "2026-02-07T02:32:02Z"
     },
     {
@@ -60,7 +60,7 @@
       "source": "homebrew",
       "name": "yq",
       "tier": 2,
-      "status": "failed",
+      "status": "success",
       "added_at": "2026-02-07T16:13:32Z"
     },
     {
@@ -100,7 +100,7 @@
       "source": "homebrew",
       "name": "coreutils",
       "tier": 2,
-      "status": "failed",
+      "status": "blocked",
       "added_at": "2026-02-07T18:27:01Z"
     },
     {
@@ -124,7 +124,7 @@
       "source": "homebrew",
       "name": "imagemagick",
       "tier": 2,
-      "status": "failed",
+      "status": "blocked",
       "added_at": "2026-02-07T18:27:01Z"
     },
     {
@@ -628,7 +628,7 @@
       "source": "homebrew",
       "name": "asciinema",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-07T20:46:18Z"
     },
     {
@@ -636,7 +636,7 @@
       "source": "homebrew",
       "name": "bc",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-07T20:46:18Z"
     },
     {
@@ -644,7 +644,7 @@
       "source": "homebrew",
       "name": "grpcurl",
       "tier": 3,
-      "status": "pending",
+      "status": "success",
       "added_at": "2026-02-07T20:46:18Z"
     },
     {
@@ -38230,6 +38230,1022 @@
       "tier": 3,
       "status": "pending",
       "added_at": "2026-02-08T16:08:55Z"
+    },
+    {
+      "id": "homebrew:act",
+      "source": "homebrew",
+      "name": "act",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:asdf",
+      "source": "homebrew",
+      "name": "asdf",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:aws-vault",
+      "source": "homebrew",
+      "name": "aws-vault",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:azcopy",
+      "source": "homebrew",
+      "name": "azcopy",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:bash",
+      "source": "homebrew",
+      "name": "bash",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:bazelisk",
+      "source": "homebrew",
+      "name": "bazelisk",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:bison",
+      "source": "homebrew",
+      "name": "bison",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:block-goose-cli",
+      "source": "homebrew",
+      "name": "block-goose-cli",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:brotli",
+      "source": "homebrew",
+      "name": "brotli",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:buf",
+      "source": "homebrew",
+      "name": "buf",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:c-ares",
+      "source": "homebrew",
+      "name": "c-ares",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:chibi-scheme",
+      "source": "homebrew",
+      "name": "chibi-scheme",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:chicken",
+      "source": "homebrew",
+      "name": "chicken",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:clang-format",
+      "source": "homebrew",
+      "name": "clang-format",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:cliproxyapi",
+      "source": "homebrew",
+      "name": "cliproxyapi",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:cloc",
+      "source": "homebrew",
+      "name": "cloc",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:cloudflared",
+      "source": "homebrew",
+      "name": "cloudflared",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:cocoapods",
+      "source": "homebrew",
+      "name": "cocoapods",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:ctlptl",
+      "source": "homebrew",
+      "name": "ctlptl",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:docker-buildx",
+      "source": "homebrew",
+      "name": "docker-buildx",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:docker-credential-helper-ecr",
+      "source": "homebrew",
+      "name": "docker-credential-helper-ecr",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:docker-credential-helper",
+      "source": "homebrew",
+      "name": "docker-credential-helper",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:dos2unix",
+      "source": "homebrew",
+      "name": "dos2unix",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:doxygen",
+      "source": "homebrew",
+      "name": "doxygen",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:duckdb",
+      "source": "homebrew",
+      "name": "duckdb",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:dust",
+      "source": "homebrew",
+      "name": "dust",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:exiftool",
+      "source": "homebrew",
+      "name": "exiftool",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:expat",
+      "source": "homebrew",
+      "name": "expat",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:fabric-ai",
+      "source": "homebrew",
+      "name": "fabric-ai",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:fd",
+      "source": "homebrew",
+      "name": "fd",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:flyctl",
+      "source": "homebrew",
+      "name": "flyctl",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:freetype",
+      "source": "homebrew",
+      "name": "freetype",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:fresh-editor",
+      "source": "homebrew",
+      "name": "fresh-editor",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:gdbm",
+      "source": "homebrew",
+      "name": "gdbm",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:geos",
+      "source": "homebrew",
+      "name": "geos",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:git-flow",
+      "source": "homebrew",
+      "name": "git-flow",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:git-lfs",
+      "source": "homebrew",
+      "name": "git-lfs",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:git",
+      "source": "homebrew",
+      "name": "git",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:glab",
+      "source": "homebrew",
+      "name": "glab",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:glew",
+      "source": "homebrew",
+      "name": "glew",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:gnu-sed",
+      "source": "homebrew",
+      "name": "gnu-sed",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:gnu-tar",
+      "source": "homebrew",
+      "name": "gnu-tar",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:gomplate",
+      "source": "homebrew",
+      "name": "gomplate",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:goreman",
+      "source": "homebrew",
+      "name": "goreman",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:go-task",
+      "source": "homebrew",
+      "name": "go-task",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:hello",
+      "source": "homebrew",
+      "name": "hello",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:helm",
+      "source": "homebrew",
+      "name": "helm",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:himalaya",
+      "source": "homebrew",
+      "name": "himalaya",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:htop",
+      "source": "homebrew",
+      "name": "htop",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:hugo",
+      "source": "homebrew",
+      "name": "hugo",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:jfrog-cli",
+      "source": "homebrew",
+      "name": "jfrog-cli",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:jpeg",
+      "source": "homebrew",
+      "name": "jpeg",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:kubernetes-cli",
+      "source": "homebrew",
+      "name": "kubernetes-cli",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:lcov",
+      "source": "homebrew",
+      "name": "lcov",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:libcurl",
+      "source": "homebrew",
+      "name": "libcurl",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:libnghttp2",
+      "source": "homebrew",
+      "name": "libnghttp2",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:libnghttp3",
+      "source": "homebrew",
+      "name": "libnghttp3",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:libngtcp2",
+      "source": "homebrew",
+      "name": "libngtcp2",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:libpng",
+      "source": "homebrew",
+      "name": "libpng",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:libssh2",
+      "source": "homebrew",
+      "name": "libssh2",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:libxml2",
+      "source": "homebrew",
+      "name": "libxml2",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:license-eye",
+      "source": "homebrew",
+      "name": "license-eye",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:lima",
+      "source": "homebrew",
+      "name": "lima",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:luajit",
+      "source": "homebrew",
+      "name": "luajit",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:lua-language-server",
+      "source": "homebrew",
+      "name": "lua-language-server",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:lua",
+      "source": "homebrew",
+      "name": "lua",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:micro",
+      "source": "homebrew",
+      "name": "micro",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:mint",
+      "source": "homebrew",
+      "name": "mint",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:mit-scheme",
+      "source": "homebrew",
+      "name": "mit-scheme",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:mkcert",
+      "source": "homebrew",
+      "name": "mkcert",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:mockolo",
+      "source": "homebrew",
+      "name": "mockolo",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:moreutils",
+      "source": "homebrew",
+      "name": "moreutils",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:nasm",
+      "source": "homebrew",
+      "name": "nasm",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:ncdu",
+      "source": "homebrew",
+      "name": "ncdu",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:oh-my-posh",
+      "source": "homebrew",
+      "name": "oh-my-posh",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:openshift-cli",
+      "source": "homebrew",
+      "name": "openshift-cli",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:opentofu",
+      "source": "homebrew",
+      "name": "opentofu",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:p7zip",
+      "source": "homebrew",
+      "name": "p7zip",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:periphery",
+      "source": "homebrew",
+      "name": "periphery",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:pkgconf",
+      "source": "homebrew",
+      "name": "pkgconf",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:pngcrush",
+      "source": "homebrew",
+      "name": "pngcrush",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:podman",
+      "source": "homebrew",
+      "name": "podman",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:prek",
+      "source": "homebrew",
+      "name": "prek",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:proj",
+      "source": "homebrew",
+      "name": "proj",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:qrencode",
+      "source": "homebrew",
+      "name": "qrencode",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:rclone",
+      "source": "homebrew",
+      "name": "rclone",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:readline",
+      "source": "homebrew",
+      "name": "readline",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:rust-analyzer",
+      "source": "homebrew",
+      "name": "rust-analyzer",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:rustup",
+      "source": "homebrew",
+      "name": "rustup",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:sccache",
+      "source": "homebrew",
+      "name": "sccache",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:sdl2",
+      "source": "homebrew",
+      "name": "sdl2",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:sevenzip",
+      "source": "homebrew",
+      "name": "sevenzip",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:shfmt",
+      "source": "homebrew",
+      "name": "shfmt",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:smartmontools",
+      "source": "homebrew",
+      "name": "smartmontools",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:sourcekitten",
+      "source": "homebrew",
+      "name": "sourcekitten",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:sourcery",
+      "source": "homebrew",
+      "name": "sourcery",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:spatialite",
+      "source": "homebrew",
+      "name": "spatialite",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:sqlite",
+      "source": "homebrew",
+      "name": "sqlite",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:sshpass",
+      "source": "homebrew",
+      "name": "sshpass",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:supabase",
+      "source": "homebrew",
+      "name": "supabase",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:swiftformat",
+      "source": "homebrew",
+      "name": "swiftformat",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:swiftlint",
+      "source": "homebrew",
+      "name": "swiftlint",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:swift-sh",
+      "source": "homebrew",
+      "name": "swift-sh",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:syncthing",
+      "source": "homebrew",
+      "name": "syncthing",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:tailscale",
+      "source": "homebrew",
+      "name": "tailscale",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:television",
+      "source": "homebrew",
+      "name": "television",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:temporal",
+      "source": "homebrew",
+      "name": "temporal",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:terragrunt",
+      "source": "homebrew",
+      "name": "terragrunt",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:tokei",
+      "source": "homebrew",
+      "name": "tokei",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:tree-sitter-cli",
+      "source": "homebrew",
+      "name": "tree-sitter-cli",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:tree",
+      "source": "homebrew",
+      "name": "tree",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:typos-cli",
+      "source": "homebrew",
+      "name": "typos-cli",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:unar",
+      "source": "homebrew",
+      "name": "unar",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:uutils-coreutils",
+      "source": "homebrew",
+      "name": "uutils-coreutils",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:vale",
+      "source": "homebrew",
+      "name": "vale",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:watch",
+      "source": "homebrew",
+      "name": "watch",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:websocat",
+      "source": "homebrew",
+      "name": "websocat",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:wimlib",
+      "source": "homebrew",
+      "name": "wimlib",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:witr",
+      "source": "homebrew",
+      "name": "witr",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:xclogparser",
+      "source": "homebrew",
+      "name": "xclogparser",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:xmlstarlet",
+      "source": "homebrew",
+      "name": "xmlstarlet",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:xz",
+      "source": "homebrew",
+      "name": "xz",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:yazi",
+      "source": "homebrew",
+      "name": "yazi",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:yj",
+      "source": "homebrew",
+      "name": "yj",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:zizmor",
+      "source": "homebrew",
+      "name": "zizmor",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:zoxide",
+      "source": "homebrew",
+      "name": "zoxide",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
+    },
+    {
+      "id": "homebrew:zstd",
+      "source": "homebrew",
+      "name": "zstd",
+      "tier": 2,
+      "status": "success",
+      "added_at": "2026-02-09T03:20:00Z"
     }
   ]
 }
