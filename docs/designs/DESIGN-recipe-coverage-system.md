@@ -23,9 +23,7 @@ This design is being implemented through 9 issues across 2 sequential milestones
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1538: fix(docs): update design doc status from Proposed to Accepted](https://github.com/tsukumogami/tsuku/issues/1538)~~ | ~~None~~ | ~~simple~~ |
-| ~~_Fixes status inconsistency where frontmatter shows "Accepted" but body text shows "Proposed". Ensures both match the current "Planned" status after issues are created._~~ | | |
 | ~~[#1539: feat(tests): re-enable integration-tests.yml musl dlopen tests](https://github.com/tsukumogami/tsuku/issues/1539)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Uncomments the library-dlopen-musl job with continue-on-error flag, maintaining visibility into musl test failures while allowing CI to pass. Tracks known gaps until #1092 adds musl library support._~~ | | |
 | [#1540: feat(workflows): trigger validate-all-recipes workflow and add platform constraints](https://github.com/tsukumogami/tsuku/issues/1540) | None | testable |
 | _Manually triggers the validation workflow across all 11 platforms to identify which recipes fail where. First run reviews failures, second run with auto_constrain creates a PR with platform constraints._ | | |
 | [#1543: feat(recipes): apply platform constraints from validation results](https://github.com/tsukumogami/tsuku/issues/1543) | [#1540](https://github.com/tsukumogami/tsuku/issues/1540) | testable |
@@ -36,15 +34,10 @@ This design is being implemented through 9 issues across 2 sequential milestones
 | Issue | Dependencies | Tier |
 |-------|--------------|------|
 | ~~[#1544: feat(website): create coverage dashboard HTML structure](https://github.com/tsukumogami/tsuku/issues/1544)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Creates website/coverage/index.html with container divs for three views: coverage matrix (recipes × platforms), gap list (missing platforms), and category breakdown (libraries vs tools). Follows website/pipeline pattern._~~ | | |
 | ~~[#1545: feat(website): implement coverage matrix visualization](https://github.com/tsukumogami/tsuku/issues/1545)~~ | ~~[#1544](https://github.com/tsukumogami/tsuku/issues/1544)~~ | ~~testable~~ |
-| ~~_Adds JavaScript to load coverage.json and render sortable/filterable table showing platform support. Uses vanilla JS with template literals, matching the pipeline dashboard approach._~~ | | |
 | ~~[#1546: feat(website): implement gap list and category breakdown](https://github.com/tsukumogami/tsuku/issues/1546)~~ | ~~[#1544](https://github.com/tsukumogami/tsuku/issues/1544)~~ | ~~testable~~ |
-| ~~_Implements the remaining two dashboard views: gap list highlighting recipes missing musl/architecture support, and category breakdown showing coverage statistics split by recipe type._~~ | | |
 | ~~[#1547: feat(ci): add workflow to regenerate coverage.json on recipe changes](https://github.com/tsukumogami/tsuku/issues/1547)~~ | ~~None~~ | ~~testable~~ |
-| ~~_Creates GitHub Actions workflow that runs cmd/coverage-analytics when recipes/ changes, automatically committing updated coverage.json to main. Uses the push-to-main pattern with retry logic._~~ | | |
 | ~~[#1548: docs(website): add coverage dashboard documentation](https://github.com/tsukumogami/tsuku/issues/1548)~~ | ~~[#1544](https://github.com/tsukumogami/tsuku/issues/1544), [#1545](https://github.com/tsukumogami/tsuku/issues/1545), [#1546](https://github.com/tsukumogami/tsuku/issues/1546), [#1547](https://github.com/tsukumogami/tsuku/issues/1547)~~ | ~~simple~~ |
-| ~~_Documents the complete dashboard for contributors: how views work, how to regenerate coverage.json manually, how to interpret platform support data, and how the CI automation keeps it fresh._~~ | | |
 
 ### Dependency Graph
 
