@@ -185,6 +185,31 @@ func RunToolVerification(r *recipe.Recipe, toolName string, toolState *install.T
 	return runVisibleToolVerification(r, toolName, toolState, versionState, installDir, cfg, state, opts)
 }
 
+// makeVerifyEnv creates an environment for verification commands with proper PATH setup.
+// It filters out existing PATH entries and prepends the install directories to ensure
+// the installed tool's binaries are found before system binaries.
+func makeVerifyEnv(installDir string, cfg *config.Config) []string {
+	// Filter out existing PATH to avoid duplicate entries
+	env := make([]string, 0)
+	for _, e := range os.Environ() {
+		if !strings.HasPrefix(e, "PATH=") {
+			env = append(env, e)
+		}
+	}
+
+	// Build PATH with all possible bin directories:
+	// 1. cfg.CurrentDir - symlinks to current tool versions
+	// 2. installDir/bin - standard bin directory
+	// 3. installDir/.gem/bin - gem-installed executables (via install_gem_direct)
+	// 4. Original PATH
+	binDir := filepath.Join(installDir, "bin")
+	gemBinDir := filepath.Join(installDir, ".gem", "bin")
+	pathValue := cfg.CurrentDir + ":" + binDir + ":" + gemBinDir + ":" + os.Getenv("PATH")
+	env = append(env, "PATH="+pathValue)
+
+	return env
+}
+
 // runHiddenToolVerification verifies a hidden tool using absolute paths.
 // Returns nil on success, error on failure.
 func runHiddenToolVerification(r *recipe.Recipe, toolName, version, installDir string, versionState *install.VersionState, cfg *config.Config, state *install.State, opts ToolVerifyOptions) error {
@@ -201,12 +226,7 @@ func runHiddenToolVerification(r *recipe.Recipe, toolName, version, installDir s
 	}
 
 	cmdExec := exec.Command("sh", "-c", command)
-	// Add install directory bin/ and current/ symlink directory to PATH so binaries can be found
-	// current/ is needed for tools that use wrapper scripts (gem-based, runtime deps, etc.)
-	env := os.Environ()
-	binDir := filepath.Join(installDir, "bin")
-	env = append(env, "PATH="+cfg.CurrentDir+":"+binDir+":"+os.Getenv("PATH"))
-	cmdExec.Env = env
+	cmdExec.Env = makeVerifyEnv(installDir, cfg)
 
 	output, err := cmdExec.CombinedOutput()
 	if err != nil {
@@ -289,13 +309,7 @@ func runVisibleToolVerification(r *recipe.Recipe, toolName string, toolState *in
 		printInfof("    Running: %s\n", command)
 	}
 	cmdExec := exec.Command("sh", "-c", command)
-
-	// Add install directory bin/ and current/ symlink directory to PATH so binaries can be found
-	// current/ is needed for tools that use wrapper scripts (gem-based, runtime deps, etc.)
-	env := os.Environ()
-	binDir := filepath.Join(installDir, "bin")
-	env = append(env, "PATH="+cfg.CurrentDir+":"+binDir+":"+os.Getenv("PATH"))
-	cmdExec.Env = env
+	cmdExec.Env = makeVerifyEnv(installDir, cfg)
 
 	output, err := cmdExec.CombinedOutput()
 	if err != nil {
