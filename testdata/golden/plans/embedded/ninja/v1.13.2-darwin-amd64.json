@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "amd64"
   },
-  "recipe_hash": "e5080a0a9361c013b8fcb5f926d6ac28a4d79d50f9fa1c055dc7b8d540ae202f",
+  "recipe_hash": "3b84fee52331d0d11ee4da755450e8fbbca1172dd698fa0c173bea5c6515f132",
   "deterministic": false,
   "dependencies": [
     {
@@ -194,7 +194,7 @@
     {
       "tool": "make",
       "version": "4.4.1",
-      "recipe_hash": "f1513e89985d8719bd2a253a81beeabe061b039cac5ba731d764aaaae8626551",
+      "recipe_hash": "f3242838446154760bb7ce2bfb68196640174a2fee47913f2cfaa620e23c2f70",
       "steps": [
         {
           "action": "download_file",
@@ -232,8 +232,7 @@
           "params": {
             "install_mode": "directory",
             "outputs": [
-              "bin/gmake",
-              "bin/make"
+              "bin/gmake"
             ]
           },
           "evaluable": true,
@@ -241,7 +240,7 @@
         }
       ],
       "verify": {
-        "command": "make --version",
+        "command": "gmake --version",
         "pattern": "GNU Make {version}"
       }
     },
@@ -412,7 +411,7 @@
     }
   ],
   "verify": {
-    "command": "ninja --version",
+    "command": "{install_dir}/bin/ninja --version",
     "pattern": "{version}"
   }
 }

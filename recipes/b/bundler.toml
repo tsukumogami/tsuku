@@ -10,6 +10,7 @@ gem = "bundler"
 executables = ["bundle", "bundler"]
 
 [verify]
-command = "bundle --version"
+# Use absolute path to ensure we verify the installed gem, not system Ruby's bundler
+command = "{install_dir}/.gem/bin/bundle --version"
 # No pattern - Ruby's built-in bundler may report a different version
 # than the gem we installed. Just verify the command runs successfully.

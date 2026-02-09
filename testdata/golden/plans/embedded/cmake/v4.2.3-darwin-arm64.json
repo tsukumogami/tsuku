@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "c36e6b8935620d155ada6b9e9b06dc902a5b93ccf80da5b83293376dfed64196",
+  "recipe_hash": "5340bc0ac5737cf88a647993d875ef4443b332c56cd7ed7a7eb34d185e93c8db",
   "deterministic": true,
   "dependencies": [
     {
@@ -182,7 +182,7 @@
     }
   ],
   "verify": {
-    "command": "cmake --version",
+    "command": "{install_dir}/bin/cmake --version",
     "pattern": "cmake version {version}"
   }
 }

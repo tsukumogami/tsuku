@@ -30,5 +30,6 @@ install_mode = "directory"
 outputs = ["bin/ninja"]
 
 [verify]
-command = "ninja --version"
+# Use absolute path to ensure we verify the installed binary, not system ninja
+command = "{install_dir}/bin/ninja --version"
 pattern = "{version}"

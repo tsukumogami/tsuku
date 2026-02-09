@@ -15,5 +15,6 @@ install_mode = "directory"
 outputs = ["bin/gmake"]
 
 [verify]
-command = "gmake --version"
+# Use absolute path to ensure we verify the installed binary, not system gmake
+command = "{install_dir}/bin/gmake --version"
 pattern = "GNU Make {version}"
