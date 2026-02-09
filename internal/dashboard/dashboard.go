@@ -74,7 +74,8 @@ type RunSummary struct {
 	Timestamp string  `json:"timestamp"`
 }
 
-// FailureRecord represents one line in failures JSONL (legacy batch format).
+// FailureRecord represents one line in failures JSONL.
+// Supports both legacy batch format and per-recipe format.
 type FailureRecord struct {
 	SchemaVersion int              `json:"schema_version"`
 	Ecosystem     string           `json:"ecosystem,omitempty"`
@@ -82,10 +83,11 @@ type FailureRecord struct {
 	UpdatedAt     string           `json:"updated_at,omitempty"`
 	Failures      []PackageFailure `json:"failures,omitempty"`
 	// Per-recipe format fields
-	Recipe   string `json:"recipe,omitempty"`
-	Platform string `json:"platform,omitempty"`
-	Category string `json:"category,omitempty"`
-	ExitCode int    `json:"exit_code,omitempty"`
+	Recipe    string   `json:"recipe,omitempty"`
+	Platform  string   `json:"platform,omitempty"`
+	Category  string   `json:"category,omitempty"`
+	ExitCode  int      `json:"exit_code,omitempty"`
+	BlockedBy []string `json:"blocked_by,omitempty"` // Added for missing_dep tracking
 }
 
 // PackageFailure is a single failure entry in the legacy batch format.
@@ -312,6 +314,18 @@ func loadFailures(path string) (map[string][]string, map[string]int, map[string]
 		// Handle per-recipe format
 		if record.Recipe != "" && record.Category != "" {
 			categories[record.Category]++
+
+			// Track blocked_by for missing_dep failures in per-recipe format
+			if len(record.BlockedBy) > 0 {
+				pkgID := "homebrew:" + record.Recipe // Assume homebrew for now
+				details[pkgID] = FailureDetails{
+					Category:  record.Category,
+					BlockedBy: record.BlockedBy,
+				}
+				for _, dep := range record.BlockedBy {
+					blockers[dep] = append(blockers[dep], pkgID)
+				}
+			}
 		}
 	}
 

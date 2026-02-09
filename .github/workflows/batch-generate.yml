@@ -256,22 +256,23 @@ jobs:
               EXIT_CODE=0
               ATTEMPTS=1
 
+              BLOCKED_BY="[]"
               for attempt in 0 1 2; do
                 ATTEMPTS=$((attempt + 1))
-                # Write tsuku exit code to file so Docker doesn't mask it
+                # Write tsuku exit code and JSON output to files so Docker doesn't mask them
                 docker run --rm \
                   -v "$PWD:/workspace" \
                   -w /workspace \
                   "$image" \
                   sh -c "
                     case '$family' in
-                      alpine) apk add --no-cache curl bash ca-certificates ;;
-                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates ;;
-                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates ;;
-                      arch) pacman -Sy --noconfirm curl ca-certificates ;;
-                      suse) zypper -n install curl ca-certificates ;;
+                      alpine) apk add --no-cache curl bash ca-certificates jq ;;
+                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
+                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
+                      arch) pacman -Sy --noconfirm curl ca-certificates jq ;;
+                      suse) zypper -n install curl ca-certificates jq ;;
                     esac
-                    timeout 300 ./tsuku-linux-amd64 install --force --recipe '$recipe_path'
+                    timeout 300 ./tsuku-linux-amd64 install --json --force --recipe '$recipe_path' > /workspace/.tsuku-output.json 2>&1
                     echo \$? > /workspace/.tsuku-exit-code
                   " 2>&1 || true
 
@@ -281,6 +282,15 @@ jobs:
                 else
                   # Container failed before running tsuku (Docker error)
                   EXIT_CODE=1
+                fi
+
+                # Extract blocked_by from JSON output if exit code is 8 (missing_dep)
+                if [ -f .tsuku-output.json ]; then
+                  cat .tsuku-output.json  # Show output for logging
+                  if [ "$EXIT_CODE" = "8" ]; then
+                    BLOCKED_BY=$(jq -c '.missing_recipes // []' .tsuku-output.json 2>/dev/null || echo "[]")
+                  fi
+                  rm -f .tsuku-output.json
                 fi
 
                 if [ "$EXIT_CODE" = "0" ]; then
@@ -297,8 +307,8 @@ jobs:
               done
 
               RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
+                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
+                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
             done
           done
 
@@ -377,6 +387,7 @@ jobs:
               EXIT_CODE=0
               ATTEMPTS=1
 
+              BLOCKED_BY="[]"
               for attempt in 0 1 2; do
                 ATTEMPTS=$((attempt + 1))
                 docker run --rm \
@@ -385,12 +396,12 @@ jobs:
                   "$image" \
                   sh -c "
                     case '$family' in
-                      alpine) apk add --no-cache curl bash ca-certificates ;;
-                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates ;;
-                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates ;;
-                      suse) zypper -n install curl ca-certificates ;;
+                      alpine) apk add --no-cache curl bash ca-certificates jq ;;
+                      debian) apt-get update && apt-get install -y --no-install-recommends curl ca-certificates jq ;;
+                      rhel) dnf install -y --setopt=install_weak_deps=False curl ca-certificates jq ;;
+                      suse) zypper -n install curl ca-certificates jq ;;
                     esac
-                    timeout 300 ./tsuku-linux-arm64 install --force --recipe '$recipe_path'
+                    timeout 300 ./tsuku-linux-arm64 install --json --force --recipe '$recipe_path' > /workspace/.tsuku-output.json 2>&1
                     echo \$? > /workspace/.tsuku-exit-code
                   " 2>&1 || true
 
@@ -399,6 +410,15 @@ jobs:
                   rm -f .tsuku-exit-code
                 else
                   EXIT_CODE=1
+                fi
+
+                # Extract blocked_by from JSON output if exit code is 8 (missing_dep)
+                if [ -f .tsuku-output.json ]; then
+                  cat .tsuku-output.json  # Show output for logging
+                  if [ "$EXIT_CODE" = "8" ]; then
+                    BLOCKED_BY=$(jq -c '.missing_recipes // []' .tsuku-output.json 2>/dev/null || echo "[]")
+                  fi
+                  rm -f .tsuku-output.json
                 fi
 
                 if [ "$EXIT_CODE" = "0" ]; then
@@ -415,8 +435,8 @@ jobs:
               done
 
               RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "$platform" \
-                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
+                --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
+                '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
             done
           done
 
@@ -487,15 +507,24 @@ jobs:
             STATUS="pass"
             EXIT_CODE=0
             ATTEMPTS=1
+            BLOCKED_BY="[]"
 
             for attempt in 0 1 2; do
               ATTEMPTS=$((attempt + 1))
-              if gtimeout 300 ./tsuku-darwin-arm64 install --force --recipe "$recipe_path" 2>&1; then
+              if gtimeout 300 ./tsuku-darwin-arm64 install --json --force --recipe "$recipe_path" > .tsuku-output.json 2>&1; then
                 EXIT_CODE=0
                 STATUS="pass"
+                cat .tsuku-output.json  # Show output for logging
+                rm -f .tsuku-output.json
                 break
               else
                 EXIT_CODE=$?
+                cat .tsuku-output.json 2>/dev/null || true  # Show output for logging
+                # Extract blocked_by from JSON output if exit code is 8 (missing_dep)
+                if [ "$EXIT_CODE" = "8" ] && [ -f .tsuku-output.json ]; then
+                  BLOCKED_BY=$(jq -c '.missing_recipes // []' .tsuku-output.json 2>/dev/null || echo "[]")
+                fi
+                rm -f .tsuku-output.json
                 if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
                   echo "Network error, retrying (attempt $((attempt+2)))..."
                   sleep $((2 ** (attempt + 1)))
@@ -507,8 +536,8 @@ jobs:
             done
 
             RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "darwin-arm64" \
-              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
+              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
+              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
           done
 
           echo "$RESULTS" > validation-results-darwin-arm64.json
@@ -578,15 +607,24 @@ jobs:
             STATUS="pass"
             EXIT_CODE=0
             ATTEMPTS=1
+            BLOCKED_BY="[]"
 
             for attempt in 0 1 2; do
               ATTEMPTS=$((attempt + 1))
-              if gtimeout 300 ./tsuku-darwin-amd64 install --force --recipe "$recipe_path" 2>&1; then
+              if gtimeout 300 ./tsuku-darwin-amd64 install --json --force --recipe "$recipe_path" > .tsuku-output.json 2>&1; then
                 EXIT_CODE=0
                 STATUS="pass"
+                cat .tsuku-output.json  # Show output for logging
+                rm -f .tsuku-output.json
                 break
               else
                 EXIT_CODE=$?
+                cat .tsuku-output.json 2>/dev/null || true  # Show output for logging
+                # Extract blocked_by from JSON output if exit code is 8 (missing_dep)
+                if [ "$EXIT_CODE" = "8" ] && [ -f .tsuku-output.json ]; then
+                  BLOCKED_BY=$(jq -c '.missing_recipes // []' .tsuku-output.json 2>/dev/null || echo "[]")
+                fi
+                rm -f .tsuku-output.json
                 if [ "$EXIT_CODE" = "5" ] && [ "$attempt" -lt 2 ]; then
                   echo "Network error, retrying (attempt $((attempt+2)))..."
                   sleep $((2 ** (attempt + 1)))
@@ -598,8 +636,8 @@ jobs:
             done
 
             RESULTS=$(echo "$RESULTS" | jq --arg r "$recipe_name" --arg p "darwin-x86_64" \
-              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" \
-              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a}]')
+              --arg s "$STATUS" --argjson e "$EXIT_CODE" --argjson a "$ATTEMPTS" --argjson b "$BLOCKED_BY" \
+              '. + [{"recipe": $r, "platform": $p, "status": $s, "exit_code": $e, "attempts": $a, "blocked_by": $b}]')
           done
 
           echo "$RESULTS" > validation-results-darwin-x86_64.json
@@ -745,9 +783,10 @@ jobs:
                 recipe: .recipe,
                 platform: .platform,
                 exit_code: .exit_code,
-                category: (if .exit_code == 5 then "network" elif .exit_code == 124 or .exit_code == 137 then "timeout" else "deterministic" end),
+                category: (if .exit_code == 8 then "missing_dep" elif .exit_code == 5 then "network" elif .exit_code == 124 or .exit_code == 137 then "timeout" else "deterministic" end),
+                blocked_by: (if .exit_code == 8 and (.blocked_by | length) > 0 then .blocked_by else null end),
                 timestamp: $ts
-              }' all-results.json >> "$FAILURE_JSONL" 2>/dev/null || true
+              } | with_entries(select(.value != null))' all-results.json >> "$FAILURE_JSONL" 2>/dev/null || true
 
             # Effective results: pass + skipped count as "not failed"
             # A recipe with all skipped + pass should be included without constraints
