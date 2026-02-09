@@ -6,7 +6,7 @@
     "os": "darwin",
     "arch": "arm64"
   },
-  "recipe_hash": "f1513e89985d8719bd2a253a81beeabe061b039cac5ba731d764aaaae8626551",
+  "recipe_hash": "f3242838446154760bb7ce2bfb68196640174a2fee47913f2cfaa620e23c2f70",
   "deterministic": true,
   "steps": [
     {
@@ -45,8 +45,7 @@
       "params": {
         "install_mode": "directory",
         "outputs": [
-          "bin/gmake",
-          "bin/make"
+          "bin/gmake"
         ]
       },
       "evaluable": true,
@@ -54,7 +53,7 @@
     }
   ],
   "verify": {
-    "command": "make --version",
+    "command": "gmake --version",
     "pattern": "GNU Make {version}"
   }
 }
