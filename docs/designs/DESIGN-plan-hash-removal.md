@@ -336,11 +336,11 @@ Before code changes, update validation to be forward-compatible:
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
 | [#1584](https://github.com/tsukumogami/tsuku/issues/1584) | chore(golden): prep validation scripts for recipe_hash removal | None | simple |
-| [#1585](https://github.com/tsukumogami/tsuku/issues/1585) | refactor(executor): remove recipe_hash from plan structs | #1584 | testable |
-| [#1586](https://github.com/tsukumogami/tsuku/issues/1586) | feat(executor): implement content-based plan hashing | #1585 | testable |
-| [#1587](https://github.com/tsukumogami/tsuku/issues/1587) | test(executor): update tests for content-based caching | #1586 | testable |
-| [#1588](https://github.com/tsukumogami/tsuku/issues/1588) | chore(golden): regenerate local golden files for v4 format | #1587 | simple |
-| [#1589](https://github.com/tsukumogami/tsuku/issues/1589) | chore(golden): regenerate R2 golden files and cleanup | #1588 | simple |
+| [#1585](https://github.com/tsukumogami/tsuku/issues/1585) | refactor(executor): remove recipe_hash from plan structs | [#1584](https://github.com/tsukumogami/tsuku/issues/1584) | testable |
+| [#1586](https://github.com/tsukumogami/tsuku/issues/1586) | feat(executor): implement content-based plan hashing | [#1585](https://github.com/tsukumogami/tsuku/issues/1585) | testable |
+| [#1587](https://github.com/tsukumogami/tsuku/issues/1587) | test(executor): update tests for content-based caching | [#1586](https://github.com/tsukumogami/tsuku/issues/1586) | testable |
+| [#1588](https://github.com/tsukumogami/tsuku/issues/1588) | chore(golden): regenerate local golden files for v4 format | [#1587](https://github.com/tsukumogami/tsuku/issues/1587) | simple |
+| [#1589](https://github.com/tsukumogami/tsuku/issues/1589) | chore(golden): regenerate R2 golden files and cleanup | [#1588](https://github.com/tsukumogami/tsuku/issues/1588) | simple |
 
 **Milestone:** [Plan Hash Removal](https://github.com/tsukumogami/tsuku/milestone/75)
 
@@ -352,6 +352,8 @@ graph LR
     I1587 --> I1588["#1588<br/>local golden files"]
     I1588 --> I1589["#1589<br/>R2 + cleanup"]
 
-    classDef ready fill:#2196F3,stroke:#1565C0,color:white
+    classDef ready fill:#bbdefb,stroke:#1565C0,color:black
+    classDef blocked fill:#fff9c4,stroke:#f9a825,color:black
     class I1584 ready
+    class I1585,I1586,I1587,I1588,I1589 blocked
 ```
