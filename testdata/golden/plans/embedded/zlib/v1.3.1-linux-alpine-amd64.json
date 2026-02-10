@@ -1,0 +1,25 @@
+{
+  "format_version": 3,
+  "tool": "zlib",
+  "version": "1.3.1",
+  "platform": {
+    "os": "linux",
+    "arch": "amd64",
+    "linux_family": "alpine"
+  },
+  "recipe_hash": "9ee44727730f3ab4ee98be2a6e76eb90f9d6f1ff3077f10c494d64d77ba77e34",
+  "deterministic": false,
+  "steps": [
+    {
+      "action": "apk_install",
+      "params": {
+        "packages": [
+          "zlib-dev"
+        ]
+      },
+      "evaluable": false,
+      "deterministic": false
+    }
+  ],
+  "recipe_type": "library"
+}
