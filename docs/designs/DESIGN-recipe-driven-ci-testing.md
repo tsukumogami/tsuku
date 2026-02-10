@@ -76,10 +76,10 @@ graph TD
     I1576 --> I1578
     I1577 --> I1578
 
-    classDef done fill:#90EE90,stroke:#228B22
-    classDef ready fill:#87CEEB,stroke:#4169E1
-    classDef blocked fill:#FFE4B5,stroke:#DAA520
-    classDef needsDesign fill:#DDA0DD,stroke:#8B008B
+    classDef done fill:#c8e6c9,stroke:#388e3c
+    classDef ready fill:#bbdefb,stroke:#1976d2
+    classDef blocked fill:#fff9c4,stroke:#fbc02d
+    classDef needsDesign fill:#e1bee7,stroke:#7b1fa2
 
     class I1573 done
     class I1574 ready
