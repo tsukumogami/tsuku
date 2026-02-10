@@ -3,24 +3,75 @@ package main
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"sort"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"github.com/tsukumogami/tsuku/internal/actions"
 	"github.com/tsukumogami/tsuku/internal/config"
+	"github.com/tsukumogami/tsuku/internal/executor"
 	"github.com/tsukumogami/tsuku/internal/install"
+	"github.com/tsukumogami/tsuku/internal/platform"
 	"github.com/tsukumogami/tsuku/internal/recipe"
 )
 
 var infoCmd = &cobra.Command{
 	Use:   "info <tool> | --recipe <path>",
 	Short: "Show detailed information about a tool",
-	Long:  `Show detailed information about a tool, including description, homepage, and installation status.`,
-	Args:  cobra.MaximumNArgs(1),
+	Long: `Show detailed information about a tool, including description, homepage, and installation status.
+
+Use --deps-only to output only dependencies (one per line for shell consumption).
+Use --system with --deps-only to extract system package names instead of recipe names.
+Use --family with --system to specify the target Linux family.
+
+Examples:
+  tsuku info curl                                    # Show all info about curl
+  tsuku info --deps-only curl                        # Show recipe dependencies
+  tsuku info --deps-only --system --family alpine zlib  # Show Alpine packages
+  apk add $(tsuku info --deps-only --system --family alpine zlib)  # Install deps`,
+	Args: cobra.MaximumNArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		jsonOutput, _ := cmd.Flags().GetBool("json")
 		recipePath, _ := cmd.Flags().GetString("recipe")
 		metadataOnly, _ := cmd.Flags().GetBool("metadata-only")
+		depsOnly, _ := cmd.Flags().GetBool("deps-only")
+		system, _ := cmd.Flags().GetBool("system")
+		family, _ := cmd.Flags().GetString("family")
+
+		// Validate mutual exclusivity of --deps-only and --metadata-only
+		if depsOnly && metadataOnly {
+			printError(fmt.Errorf("cannot specify both --deps-only and --metadata-only"))
+			exitWithCode(ExitUsage)
+		}
+
+		// Validate --system requires --deps-only
+		if system && !depsOnly {
+			printError(fmt.Errorf("--system requires --deps-only"))
+			exitWithCode(ExitUsage)
+		}
+
+		// Validate --family requires --system
+		if family != "" && !system {
+			printError(fmt.Errorf("--family requires --system"))
+			exitWithCode(ExitUsage)
+		}
+
+		// Validate family value
+		validFamilies := []string{"alpine", "debian", "rhel", "arch", "suse"}
+		if family != "" {
+			valid := false
+			for _, f := range validFamilies {
+				if f == family {
+					valid = true
+					break
+				}
+			}
+			if !valid {
+				printError(fmt.Errorf("invalid family %q, must be one of: %s", family, strings.Join(validFamilies, ", ")))
+				exitWithCode(ExitUsage)
+			}
+		}
 
 		// Validate arguments: tool name XOR --recipe
 		if recipePath != "" && len(args) > 0 {
@@ -51,6 +102,12 @@ var infoCmd = &cobra.Command{
 				fmt.Printf("Tool '%s' not found in registry.\n", toolName)
 				exitWithCode(ExitRecipeNotFound)
 			}
+		}
+
+		// Handle --deps-only mode
+		if depsOnly {
+			runDepsOnly(cmd, r, toolName, jsonOutput, system, family)
+			return
 		}
 
 		// Check installation status and get dependencies
@@ -219,4 +276,140 @@ func init() {
 	infoCmd.Flags().Bool("json", false, "Output in JSON format")
 	infoCmd.Flags().String("recipe", "", "Path to a local recipe file (for testing)")
 	infoCmd.Flags().Bool("metadata-only", false, "Skip dependency resolution for fast static queries")
+	infoCmd.Flags().Bool("deps-only", false, "Output only dependencies (one per line)")
+	infoCmd.Flags().Bool("system", false, "With --deps-only: extract system packages instead of recipe names")
+	infoCmd.Flags().String("family", "", "With --system: target Linux family (alpine, debian, rhel, arch, suse)")
+}
+
+// runDepsOnly handles the --deps-only output mode.
+// Outputs dependencies as text (one per line) or JSON.
+func runDepsOnly(cmd *cobra.Command, r *recipe.Recipe, toolName string, jsonOutput, system bool, family string) {
+	ctx := context.Background()
+
+	// Build target from family or use current platform
+	target := buildInfoTarget(family)
+
+	if system {
+		// Extract system packages from transitive dependency tree
+		packages := extractSystemPackagesFromTree(ctx, r, toolName, target)
+
+		if jsonOutput {
+			type depsOutput struct {
+				Packages []string `json:"packages"`
+				Family   string   `json:"family,omitempty"`
+			}
+			output := depsOutput{
+				Packages: packages,
+				Family:   family,
+			}
+			printJSON(output)
+		} else {
+			// Text output: one package per line
+			for _, pkg := range packages {
+				fmt.Println(pkg)
+			}
+		}
+	} else {
+		// Extract recipe dependencies (tsuku-managed)
+		directDeps := actions.ResolveDependencies(r)
+		resolvedDeps, err := actions.ResolveTransitiveForPlatform(ctx, loader, directDeps, toolName, target.OS(), false)
+		if err != nil {
+			// Fall back to direct deps if transitive resolution fails
+			resolvedDeps = directDeps
+		}
+
+		// Combine install and runtime deps
+		seen := make(map[string]bool)
+		var deps []string
+		for name := range resolvedDeps.InstallTime {
+			if !seen[name] {
+				seen[name] = true
+				deps = append(deps, name)
+			}
+		}
+		for name := range resolvedDeps.Runtime {
+			if !seen[name] {
+				seen[name] = true
+				deps = append(deps, name)
+			}
+		}
+		sort.Strings(deps)
+
+		if jsonOutput {
+			type depsOutput struct {
+				Dependencies []string `json:"dependencies"`
+			}
+			printJSON(depsOutput{Dependencies: deps})
+		} else {
+			// Text output: one dependency per line
+			for _, dep := range deps {
+				fmt.Println(dep)
+			}
+		}
+	}
+}
+
+// buildInfoTarget creates a platform.Target from the family flag.
+// If family is empty, uses the current platform.
+func buildInfoTarget(family string) platform.Target {
+	os := runtime.GOOS
+	arch := runtime.GOARCH
+	platformStr := os + "/" + arch
+
+	// If family is specified, assume Linux
+	if family != "" {
+		os = "linux"
+		platformStr = "linux/" + arch
+	}
+
+	// Derive libc from family
+	libc := ""
+	if os == "linux" {
+		if family != "" {
+			libc = platform.LibcForFamily(family)
+		} else {
+			libc = platform.DetectLibc()
+		}
+	}
+
+	return platform.NewTarget(platformStr, family, libc)
+}
+
+// extractSystemPackagesFromTree extracts system packages from the root recipe
+// and all its transitive dependencies.
+func extractSystemPackagesFromTree(ctx context.Context, rootRecipe *recipe.Recipe, rootName string, target platform.Target) []string {
+	// Get packages from the root recipe first
+	seen := make(map[string]bool)
+	var packages []string
+
+	for _, pkg := range executor.ExtractSystemPackages(rootRecipe, target) {
+		if !seen[pkg] {
+			seen[pkg] = true
+			packages = append(packages, pkg)
+		}
+	}
+
+	// Resolve transitive dependencies
+	directDeps := actions.ResolveDependencies(rootRecipe)
+	resolvedDeps, err := actions.ResolveTransitiveForPlatform(ctx, loader, directDeps, rootName, target.OS(), false)
+	if err != nil {
+		// If resolution fails, just return what we have
+		return packages
+	}
+
+	// Extract packages from each dependency's recipe
+	for depName := range resolvedDeps.InstallTime {
+		depRecipe, err := loader.Get(depName, recipe.LoaderOptions{})
+		if err != nil {
+			continue
+		}
+		for _, pkg := range executor.ExtractSystemPackages(depRecipe, target) {
+			if !seen[pkg] {
+				seen[pkg] = true
+				packages = append(packages, pkg)
+			}
+		}
+	}
+
+	return packages
 }
