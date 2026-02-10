@@ -76,6 +76,46 @@
       "recipe": "gdbm-source",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1581",
       "reason": "Homebrew directory install binaries not found at expected path"
+    },
+    {
+      "recipe": "cocoapods",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "git-lfs",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "helm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "kubernetes-cli",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "mkcert",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "ncurses",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "pkgconf",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "swiftlint",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
     }
   ]
 }
