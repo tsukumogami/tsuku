@@ -1,5 +1,5 @@
 ---
-status: Accepted
+status: Planned
 problem: |
   Plans include a `recipe_hash` field (SHA256 of recipe TOML content) that creates
   artificial coupling between recipe source and plan identity. Different recipes
@@ -26,7 +26,7 @@ rationale: |
 
 ## Status
 
-**Status:** Accepted
+**Status:** Planned
 
 ## Context and Problem Statement
 
@@ -330,3 +330,28 @@ Before code changes, update validation to be forward-compatible:
 - Format version bump provides clean migration path
 - Regeneration scripts already exist and are automated
 - Cache invalidation is a one-time cost per installation
+
+## Implementation Issues
+
+| Issue | Title | Dependencies | Tier |
+|-------|-------|--------------|------|
+| [#1584](https://github.com/tsukumogami/tsuku/issues/1584) | chore(golden): prep validation scripts for recipe_hash removal | None | simple |
+| [#1585](https://github.com/tsukumogami/tsuku/issues/1585) | refactor(executor): remove recipe_hash from plan structs | #1584 | testable |
+| [#1586](https://github.com/tsukumogami/tsuku/issues/1586) | feat(executor): implement content-based plan hashing | #1585 | testable |
+| [#1587](https://github.com/tsukumogami/tsuku/issues/1587) | test(executor): update tests for content-based caching | #1586 | testable |
+| [#1588](https://github.com/tsukumogami/tsuku/issues/1588) | chore(golden): regenerate local golden files for v4 format | #1587 | simple |
+| [#1589](https://github.com/tsukumogami/tsuku/issues/1589) | chore(golden): regenerate R2 golden files and cleanup | #1588 | simple |
+
+**Milestone:** [Plan Hash Removal](https://github.com/tsukumogami/tsuku/milestone/75)
+
+```mermaid
+graph LR
+    I1584["#1584<br/>prep validation"] --> I1585["#1585<br/>remove RecipeHash"]
+    I1585 --> I1586["#1586<br/>content hashing"]
+    I1586 --> I1587["#1587<br/>test updates"]
+    I1587 --> I1588["#1588<br/>local golden files"]
+    I1588 --> I1589["#1589<br/>R2 + cleanup"]
+
+    classDef ready fill:#2196F3,stroke:#1565C0,color:white
+    class I1584 ready
+```
