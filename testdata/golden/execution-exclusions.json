@@ -51,6 +51,31 @@
       "recipe": "wrangler",
       "issue": "https://github.com/tsukumogami/tsuku/issues/953",
       "reason": "npm_install toolchain version drift (Node.js versions not pinned)"
+    },
+    {
+      "recipe": "bundler",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1580",
+      "reason": "gem_install binstubs execute system Ruby instead of installed gem"
+    },
+    {
+      "recipe": "fpm",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1580",
+      "reason": "gem_install binstubs execute system Ruby instead of installed gem"
+    },
+    {
+      "recipe": "jekyll",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1580",
+      "reason": "gem_install binstubs execute system Ruby instead of installed gem"
+    },
+    {
+      "recipe": "make",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1581",
+      "reason": "Homebrew directory install binaries not found at expected path"
+    },
+    {
+      "recipe": "gdbm-source",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1581",
+      "reason": "Homebrew directory install binaries not found at expected path"
     }
   ]
 }
