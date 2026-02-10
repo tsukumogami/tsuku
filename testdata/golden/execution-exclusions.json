@@ -371,6 +371,26 @@
       "recipe": "yj",
       "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
       "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "ncdu",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "uutils-coreutils",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "watch",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
+    },
+    {
+      "recipe": "wimlib",
+      "issue": "https://github.com/tsukumogami/tsuku/issues/1583",
+      "reason": "Homebrew relocation doesn't update all path references"
     }
   ]
 }
