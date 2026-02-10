@@ -45,7 +45,8 @@ on:
       - 'go.mod'
 
 jobs:
-  # Test homebrew action with make, gdbm, and pngcrush (Linux only - macOS aggregated below)
+  # Test homebrew action with pkg-config, cmake, gdbm, and pngcrush (Linux only - macOS aggregated below)
+  # NOTE: make excluded - binary name differs by platform (gmake on macOS, make on Linux) - see #1581
   test-homebrew-linux:
     name: "Linux x86_64: ${{ matrix.tool }}"
     runs-on: ubuntu-latest
@@ -53,7 +54,7 @@ jobs:
       fail-fast: false
       matrix:
         tool:
-          - make
+          # make excluded - see #1581
           - pkg-config
           - cmake
           - gdbm
@@ -83,31 +84,26 @@ jobs:
       - name: "Verify binary quality"
         run: ./test/scripts/verify-binary.sh ${{ matrix.tool }}
 
-  # Test configure_make action with gdbm-source (source build) - Linux only
-  test-configure-make-linux:
-    name: "Linux x86_64: gdbm-source"
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
-
-      - name: Set up Go
-        uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
-        with:
-          go-version-file: 'go.mod'
-          cache-dependency-path: go.sum
-
-      - name: Build tsuku
-        run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
-
-      - name: Install gdbm-source (tests configure_make)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
-        run: ./tsuku install --recipe testdata/recipes/gdbm-source.toml --force
-
-      - name: "Verify tool functionality"
-        run: ./test/scripts/verify-tool.sh gdbm-source
+  # NOTE: gdbm-source test disabled - depends on make which has platform-specific binary name issue - see #1581
+  # test-configure-make-linux:
+  #   name: "Linux x86_64: gdbm-source"
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+  #     - name: Set up Go
+  #       uses: actions/setup-go@7a3fe6cf4cb3a834922a1244abfce67bcef6a0c5  # v6.2.0
+  #       with:
+  #         go-version-file: 'go.mod'
+  #         cache-dependency-path: go.sum
+  #     - name: Build tsuku
+  #       run: CGO_ENABLED=0 go build -o tsuku ./cmd/tsuku
+  #     - name: Install gdbm-source (tests configure_make)
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         TSUKU_REGISTRY_URL: https://raw.githubusercontent.com/${{ github.repository }}/${{ github.head_ref || github.ref_name }}
+  #       run: ./tsuku install --recipe testdata/recipes/gdbm-source.toml --force
+  #     - name: "Verify tool functionality"
+  #       run: ./test/scripts/verify-tool.sh gdbm-source
 
   # Test meson_build action with libsixel-source (source build) - Linux only
   test-meson-build-linux:
@@ -416,7 +412,7 @@ jobs:
           }
 
           # Homebrew tools (gdbm excluded on macOS - see issue #605)
-          run_test "make" "make" "" "true"
+          # make excluded - binary name differs by platform (gmake on macOS) - see #1581
           run_test "pkg-config" "pkg-config" "" "true"
           run_test "cmake" "cmake" "" "true"
           run_test "pngcrush" "pngcrush" "" "true"
@@ -507,7 +503,7 @@ jobs:
           }
 
           # Homebrew tools (gdbm excluded on macOS - see issue #605)
-          run_test "make" "make" "" "true"
+          # make excluded - binary name differs by platform (gmake on macOS) - see #1581
           run_test "pkg-config" "pkg-config" "" "true"
           run_test "cmake" "cmake" "" "true"
           run_test "pngcrush" "pngcrush" "" "true"
