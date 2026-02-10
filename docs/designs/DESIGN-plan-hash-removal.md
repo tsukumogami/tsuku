@@ -346,11 +346,18 @@ Before code changes, update validation to be forward-compatible:
 
 ```mermaid
 graph LR
-    I1584["#1584<br/>prep validation"] --> I1585["#1585<br/>remove RecipeHash"]
-    I1585 --> I1586["#1586<br/>content hashing"]
-    I1586 --> I1587["#1587<br/>test updates"]
-    I1587 --> I1588["#1588<br/>local golden files"]
-    I1588 --> I1589["#1589<br/>R2 + cleanup"]
+    I1584["#1584: prep validation"]
+    I1585["#1585: remove RecipeHash"]
+    I1586["#1586: content hashing"]
+    I1587["#1587: test updates"]
+    I1588["#1588: local golden files"]
+    I1589["#1589: R2 + cleanup"]
+
+    I1584 --> I1585
+    I1585 --> I1586
+    I1586 --> I1587
+    I1587 --> I1588
+    I1588 --> I1589
 
     classDef done fill:#c8e6c9
     classDef ready fill:#bbdefb
