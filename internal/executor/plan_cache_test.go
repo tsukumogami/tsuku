@@ -551,3 +551,177 @@ func TestSortedParams(t *testing.T) {
 		}
 	})
 }
+
+// TestContentHashPortability verifies the key benefit of content-based hashing:
+// plans with identical functional content produce identical hashes regardless
+// of their recipe source. This enables plan portability across recipe sources.
+func TestContentHashPortability(t *testing.T) {
+	// Create two plans that would have been generated from different recipes
+	// (e.g., one from homebrew, one from a local TOML file) but contain
+	// identical functional content (same tool, version, steps, etc.)
+
+	t.Run("different recipe sources produce same hash", func(t *testing.T) {
+		// Plan from a homebrew-derived recipe
+		planFromHomebrew := &InstallationPlan{
+			FormatVersion: PlanFormatVersion,
+			Tool:          "ripgrep",
+			Version:       "14.1.0",
+			Platform:      Platform{OS: "linux", Arch: "amd64"},
+			GeneratedAt:   time.Now(),
+			RecipeSource:  "homebrew",
+			Deterministic: true,
+			Steps: []ResolvedStep{
+				{
+					Action:        "download_file",
+					Params:        map[string]interface{}{"url": "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz"},
+					Evaluable:     true,
+					Deterministic: true,
+					URL:           "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz",
+					Checksum:      "sha256:abc123def456",
+					Size:          2000000,
+				},
+				{
+					Action:        "extract",
+					Params:        map[string]interface{}{"format": "tar.gz", "strip_prefix": float64(1)},
+					Evaluable:     true,
+					Deterministic: true,
+				},
+				{
+					Action:        "install_binaries",
+					Params:        map[string]interface{}{"binaries": []interface{}{"rg"}},
+					Evaluable:     true,
+					Deterministic: true,
+				},
+			},
+		}
+
+		// Plan from a local TOML recipe file - identical functional content
+		planFromLocal := &InstallationPlan{
+			FormatVersion: PlanFormatVersion,
+			Tool:          "ripgrep",
+			Version:       "14.1.0",
+			Platform:      Platform{OS: "linux", Arch: "amd64"},
+			GeneratedAt:   time.Now().Add(time.Hour), // Different time
+			RecipeSource:  "/home/user/recipes/ripgrep.toml",
+			Deterministic: true,
+			Steps: []ResolvedStep{
+				{
+					Action:        "download_file",
+					Params:        map[string]interface{}{"url": "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz"},
+					Evaluable:     true,
+					Deterministic: true,
+					URL:           "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz",
+					Checksum:      "sha256:abc123def456",
+					Size:          2000000,
+				},
+				{
+					Action:        "extract",
+					Params:        map[string]interface{}{"format": "tar.gz", "strip_prefix": float64(1)},
+					Evaluable:     true,
+					Deterministic: true,
+				},
+				{
+					Action:        "install_binaries",
+					Params:        map[string]interface{}{"binaries": []interface{}{"rg"}},
+					Evaluable:     true,
+					Deterministic: true,
+				},
+			},
+		}
+
+		hashHomebrew := ComputePlanContentHash(planFromHomebrew)
+		hashLocal := ComputePlanContentHash(planFromLocal)
+
+		if hashHomebrew != hashLocal {
+			t.Errorf("Plans with identical content from different recipe sources should have same hash\n"+
+				"Homebrew: %s\n"+
+				"Local:    %s", hashHomebrew, hashLocal)
+		}
+	})
+
+	t.Run("plans with dependencies from different sources", func(t *testing.T) {
+		// Plan with nested dependency from registry
+		planRegistry := &InstallationPlan{
+			FormatVersion: PlanFormatVersion,
+			Tool:          "neovim",
+			Version:       "0.9.0",
+			Platform:      Platform{OS: "linux", Arch: "amd64"},
+			GeneratedAt:   time.Now(),
+			RecipeSource:  "registry",
+			Dependencies: []DependencyPlan{
+				{
+					Tool:    "libuv",
+					Version: "1.44.0",
+					Steps: []ResolvedStep{
+						{Action: "download_file", URL: "https://example.com/libuv.tar.gz", Checksum: "sha256:dep123"},
+					},
+				},
+			},
+			Steps: []ResolvedStep{
+				{Action: "download_file", URL: "https://example.com/neovim.tar.gz", Checksum: "sha256:main456"},
+			},
+		}
+
+		// Same plan from local recipe
+		planLocal := &InstallationPlan{
+			FormatVersion: PlanFormatVersion,
+			Tool:          "neovim",
+			Version:       "0.9.0",
+			Platform:      Platform{OS: "linux", Arch: "amd64"},
+			GeneratedAt:   time.Now().Add(2 * time.Hour),
+			RecipeSource:  "/custom/neovim.toml",
+			Dependencies: []DependencyPlan{
+				{
+					Tool:    "libuv",
+					Version: "1.44.0",
+					Steps: []ResolvedStep{
+						{Action: "download_file", URL: "https://example.com/libuv.tar.gz", Checksum: "sha256:dep123"},
+					},
+				},
+			},
+			Steps: []ResolvedStep{
+				{Action: "download_file", URL: "https://example.com/neovim.tar.gz", Checksum: "sha256:main456"},
+			},
+		}
+
+		hashRegistry := ComputePlanContentHash(planRegistry)
+		hashLocal := ComputePlanContentHash(planLocal)
+
+		if hashRegistry != hashLocal {
+			t.Errorf("Plans with dependencies from different sources should have same hash\n"+
+				"Registry: %s\n"+
+				"Local:    %s", hashRegistry, hashLocal)
+		}
+	})
+
+	t.Run("different functional content produces different hashes", func(t *testing.T) {
+		planV1 := &InstallationPlan{
+			FormatVersion: PlanFormatVersion,
+			Tool:          "ripgrep",
+			Version:       "14.0.0", // Different version
+			Platform:      Platform{OS: "linux", Arch: "amd64"},
+			RecipeSource:  "registry",
+			Steps: []ResolvedStep{
+				{Action: "download_file", URL: "https://example.com/rg-14.0.0.tar.gz", Checksum: "sha256:v1hash"},
+			},
+		}
+
+		planV2 := &InstallationPlan{
+			FormatVersion: PlanFormatVersion,
+			Tool:          "ripgrep",
+			Version:       "14.1.0", // Different version
+			Platform:      Platform{OS: "linux", Arch: "amd64"},
+			RecipeSource:  "registry",
+			Steps: []ResolvedStep{
+				{Action: "download_file", URL: "https://example.com/rg-14.1.0.tar.gz", Checksum: "sha256:v2hash"},
+			},
+		}
+
+		hashV1 := ComputePlanContentHash(planV1)
+		hashV2 := ComputePlanContentHash(planV2)
+
+		if hashV1 == hashV2 {
+			t.Error("Plans with different functional content should have different hashes")
+		}
+	})
+}
