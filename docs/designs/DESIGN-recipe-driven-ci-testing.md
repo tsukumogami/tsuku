@@ -62,6 +62,9 @@ The root cause is that CI doesn't validate recipes correctly declare their syste
 - Shared extraction library for info command and sandbox mode
 - GHA workflow changes to use recipe-driven package installation
 - Multi-family support (alpine, debian, rhel, arch, suse)
+- Validate ALL recipes (embedded + `recipes/`) against slim containers
+- Fix recipes that under-declare system dependencies
+- Use slimmest container images for each family
 
 **Out of scope:**
 - New CLI commands (reuse existing `info`)
@@ -483,6 +486,67 @@ fi
 **Files modified:**
 - `cmd/tsuku/main.go` - Remove `depsCmd` registration
 
+### Phase 5: Comprehensive Recipe Validation
+
+Validate ALL recipes against slim containers to catch under-declaration. This phase will likely expose recipes that depend on packages commonly pre-installed in developer environments but not declared.
+
+**Container images (slimmest available per family):**
+
+| Family | Image | Size | Notes |
+|--------|-------|------|-------|
+| alpine | `alpine:3.21` | ~8MB | Minimal, musl libc |
+| debian | `debian:bookworm-slim` | ~75MB | No recommended packages |
+| rhel | `fedora:41-minimal` | ~100MB | DNF microdnf variant |
+| arch | `archlinux:base` | ~150MB | Base without base-devel |
+| suse | `opensuse/tumbleweed` | ~100MB | Rolling release base |
+
+**Validation workflow:**
+
+```yaml
+validate-all-recipes:
+  strategy:
+    matrix:
+      family: [alpine, debian, rhel, arch, suse]
+      recipe: [... all recipes ...]
+  container:
+    image: ${{ matrix.family-image }}
+  steps:
+    - name: Bootstrap
+      run: |
+        # Install only Go and git for building tsuku
+        case "${{ matrix.family }}" in
+          alpine) apk add --no-cache go git ;;
+          debian) apt-get update && apt-get install -y golang git ;;
+          # ... etc
+        esac
+
+    - name: Build tsuku
+      run: go build -o tsuku ./cmd/tsuku
+
+    - name: Install recipe deps
+      run: ./.github/scripts/install-recipe-deps.sh ${{ matrix.family }} ${{ matrix.recipe }}
+
+    - name: Validate recipe
+      run: ./tsuku install --dry-run ${{ matrix.recipe }}
+```
+
+**Expected recipe fixes:**
+
+Running against slim containers will expose under-declared dependencies. Common patterns to fix:
+
+1. **Build tools**: Recipes may assume `gcc`, `make`, or `pkg-config` are available
+2. **SSL libraries**: Many recipes need `openssl-dev` or equivalent
+3. **Compression**: `zlib-dev`, `xz-dev` often assumed but not declared
+4. **Runtime libraries**: `libstdc++`, `libgcc` for C++ binaries
+
+Each failure triggers a recipe fix, ensuring the registry is complete.
+
+**Files created:**
+- `.github/workflows/validate-all-recipes.yml`
+
+**Files modified:**
+- Multiple recipes under `recipes/` - add missing system dependency declarations
+
 ## Security Considerations
 
 ### Download Verification
@@ -517,7 +581,12 @@ No data access or transmission. The command reads recipe files and outputs packa
 - **Flag complexity**: `--deps-only --system --family alpine` is verbose (but clear)
 - **Workflow updates needed**: Multiple workflows need migration to new pattern
 - **Bootstrap dependency**: Need Go installed to build tsuku before using the command
+- **Recipe fixes required**: Comprehensive validation will expose under-declared dependencies in existing recipes
 
 ### Migration
 
 The current `tsuku deps` command in PR #1572 will be removed and replaced with `tsuku info --deps-only --system`. Workflows updated to use the new syntax.
+
+### Expected Recipe Fixes
+
+Running all recipes against slim containers will surface under-declared dependencies. This is expected and desired—fixing these ensures users on minimal systems don't encounter failures that CI missed. The number of fixes depends on how many recipes currently rely on packages that happen to be pre-installed in typical development environments.
