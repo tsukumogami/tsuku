@@ -96,7 +96,6 @@ func init() {
 	rootCmd.AddCommand(evalCmd)
 	rootCmd.AddCommand(shellenvCmd)
 	rootCmd.AddCommand(doctorCmd)
-	rootCmd.AddCommand(depsCmd)
 }
 
 func main() {
