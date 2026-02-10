@@ -335,8 +335,8 @@ Before code changes, update validation to be forward-compatible:
 
 | Issue | Title | Dependencies | Tier |
 |-------|-------|--------------|------|
-| [#1584](https://github.com/tsukumogami/tsuku/issues/1584) | chore(golden): prep validation scripts for recipe_hash removal | None | simple |
-| [#1585](https://github.com/tsukumogami/tsuku/issues/1585) | refactor(executor): remove recipe_hash from plan structs | [#1584](https://github.com/tsukumogami/tsuku/issues/1584) | testable |
+| ~~[#1584](https://github.com/tsukumogami/tsuku/issues/1584)~~ | chore(golden): prep validation scripts for recipe_hash removal | None | simple |
+| [#1585](https://github.com/tsukumogami/tsuku/issues/1585) | refactor(executor): remove recipe_hash from plan structs | ~~[#1584](https://github.com/tsukumogami/tsuku/issues/1584)~~ | testable |
 | [#1586](https://github.com/tsukumogami/tsuku/issues/1586) | feat(executor): implement content-based plan hashing | [#1585](https://github.com/tsukumogami/tsuku/issues/1585) | testable |
 | [#1587](https://github.com/tsukumogami/tsuku/issues/1587) | test(executor): update tests for content-based caching | [#1586](https://github.com/tsukumogami/tsuku/issues/1586) | testable |
 | [#1588](https://github.com/tsukumogami/tsuku/issues/1588) | chore(golden): regenerate local golden files for v4 format | [#1587](https://github.com/tsukumogami/tsuku/issues/1587) | simple |
